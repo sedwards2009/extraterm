@@ -13,14 +13,21 @@ var term = pty.spawn('bash', [], {
 });
 
 term.on('data', function(data) {
-    process.stdout.write(data);
+  process.stdout.write(data);
 });
+
 term.on('exit', function() {
-    console.log("pty_bridge: term process exited.");
-    process.exit(0);
+  console.log("pty_bridge: term process exited.");
+  process.exit(0);
 });
-process.stdin.on('data', function(data) {
-    term.write(data);
+
+process.stdin.on('readable', function() {
+  var chunk = process.stdin.read();
+  while (null !== chunk) {
+    console.log('>>> got %d bytes of data', chunk.length);
+    term.write(chunk);
+    chunk = process.stdin.read();
+  }
 });
 
 //term.write('ls\r');
