@@ -1,0 +1,10 @@
+{
+"name": "extraterm",
+"main": "main.html",
+"js-flags": "--harmony",
+"node-main": "main.js",
+"window": {
+    "width": 1024,
+    "height": 800
+    }
+}
