@@ -39,11 +39,32 @@ exports.startUp = (function() {
     bridge.on('close', function (code) {
       term.destroy();
     });
+    
+    function sendData(text, callback) {
+      var jsonString = JSON.stringify({stream: text});
+      console.log("<<< json string is ",jsonString);
+      console.log("<<< json string length is ",jsonString.length);
+      var sizeHeaderBuffer = new Buffer(4);
+      sizeHeaderBuffer.writeUInt32BE(jsonString.length, 0);
+
+      bridge.stdin.write(sizeHeaderBuffer);
+      bridge.stdin.write(jsonString, callback);
+    }
+
+    function sendResize(cols, rows, callback) {
+      var jsonString = JSON.stringify({resize: [cols, rows]});
+      console.log("<<< json string is ",jsonString);
+      console.log("<<< json string length is ",jsonString.length);
+      var sizeHeaderBuffer = new Buffer(4);
+      sizeHeaderBuffer.writeUInt32BE(jsonString.length, 0);
+
+      bridge.stdin.write(sizeHeaderBuffer);
+      bridge.stdin.write(jsonString, callback);  
+    }
 
     term.on('data', function(data) {
-      bridge.stdin.write(data);
+      sendData(data);
     });
-
   }
     
   return startUp;
