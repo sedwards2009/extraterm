@@ -54,6 +54,7 @@ exports.startUp = (function() {
 
     bridge.on('close', function (code) {
       term.destroy();
+      window.close();
     });
     
     function sendData(text, callback) {
