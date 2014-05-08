@@ -1,9 +1,16 @@
 .terminal {
-    border: #000 solid 5px;
     font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
     font-size: 11px;
     color: #f0f0f0;
     background: #000;
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    white-space: nowrap;
+    
+    overflow: scroll;
 }
 .terminal-cursor {
     color: #000000;
