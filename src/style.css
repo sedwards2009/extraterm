@@ -12,7 +12,46 @@
     
     overflow: scroll;
 }
+
 .terminal-cursor {
     color: #000000;
     background: #ffffff;
+}
+
+DIV.extraterm_start_output {
+    border: 1px solid green;
+}
+
+DIV.extraterm_output {
+    border: 1px solid blue;
+}
+
+span[data-extraterm-type='directory'] {
+    padding-left: 18px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-right: 2px;
+    margin-right: 2px;
+    
+    display: inline-block;
+    min-height: 16px;
+    background-image: url(folder-yellow.png);
+    background-repeat: no-repeat;
+    background-position: 2px 2px;
+    
+    background-color: #008dc7;
+    border-radius: 2px;
+}
+
+span[data-extraterm-type='directory']:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.terminal > DIV.terminal-active {
+    /* background-color: #804040; */
+}
+
+.terminal > DIV.terminal-scrollback {
+/*    background-color: #404080; */
 }
