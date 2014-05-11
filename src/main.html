@@ -4,6 +4,13 @@
     <title>Extraterm</title>
     <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
-<body onload="process.mainModule.exports.startUp()"></body>
+<body onload="process.mainModule.exports.startUp()">
+    <div class="flexvlayout toplayout">
+        <div class="flexmin flexhlayout toolbar">
+            <div class="flexmax"></div>
+            <button class="flexmin" id="configure" title="Configure"><div class="configure_icon"></div></button>
+        </div>
+        <div id="terminal_container" class="flexmax terminal_container"></div>
+    </div>
+    </body>
 </html>
-

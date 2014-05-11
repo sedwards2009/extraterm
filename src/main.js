@@ -167,7 +167,7 @@ exports.startUp = (function() {
       
     });
     
-    term.open(window.document.body);
+    term.open(window.document.getElementById("terminal_container"));
     term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
 
     // Start our PTY bridge process and connect it to our terminal.

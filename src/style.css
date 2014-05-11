@@ -1,13 +1,52 @@
-.terminal {
-    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 13px;
-    color: #f0f0f0;
-    background: #000;
+/*
+
+*/
+
+DIV.toplayout {
     position: absolute;
     left: 0px;
     right: 0px;
     top: 0px;
     bottom: 0px;
+}
+
+DIV.flexvlayout {
+    display: flex;
+    flex-direction: column;
+}
+
+DIV.flexhlayout {
+    display: flex;
+    flex-direction: row;
+}
+
+.flexmin {
+    flex: 0 auto;
+}
+
+.flexmax {
+    flex: 1 auto;
+}
+
+.terminal_container {
+    position: relative;
+}
+
+.terminal {
+    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+    font-size: 13px;
+    color: #f0f0f0;
+    background: #000;
+    
+    width: 100%;
+    height: 100%;
+    
+    position: absolute;
+/*    
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px; */
     white-space: nowrap;
     
     overflow: scroll;
@@ -16,6 +55,16 @@
 .terminal-cursor {
     color: #000000;
     background: #ffffff;
+}
+
+.toolbar {
+    background-color: #D6D2D0;
+}
+
+.configure_icon {
+    width: 16px;
+    height: 16px;
+    background-image: url(configure.png);
 }
 
 DIV.extraterm_start_output {
