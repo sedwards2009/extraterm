@@ -2,69 +2,69 @@
 
 */
 
+/* ************ GUI and tabs. ************ */
 DIV.toplayout {
     position: absolute;
     left: 0px;
     right: 0px;
     top: 0px;
     bottom: 0px;
-}
-
-DIV.flexvlayout {
+    
     display: flex;
     flex-direction: column;
 }
 
-DIV.flexhlayout {
+DIV.tabbar {
+    flex: 0 auto;
+    
+    background-color: #D6D2D0;
+    
     display: flex;
     flex-direction: row;
 }
 
-.flexmin {
+.configure_button {
     flex: 0 auto;
-}
-
-.flexmax {
-    flex: 1 auto;
-}
-
-.terminal_container {
-    position: relative;
-}
-
-.terminal {
-    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-    font-size: 13px;
-    color: #f0f0f0;
-    background: #000;
-    
-    width: 100%;
-    height: 100%;
-    
-    position: absolute;
-/*    
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 0px; */
-    white-space: nowrap;
-    
-    overflow: scroll;
-}
-
-.terminal-cursor {
-    color: #000000;
-    background: #ffffff;
-}
-
-.toolbar {
-    background-color: #D6D2D0;
 }
 
 .configure_icon {
     width: 16px;
     height: 16px;
     background-image: url(configure.png);
+}
+
+.tabbar_space {
+    flex: 1 auto;
+}
+
+.terminal_container {
+    position: relative;
+    
+    flex: 1 auto;
+}
+
+.terminal {
+    width: 100%;
+    height: 100%;
+    
+    position: absolute;
+    white-space: nowrap;
+    
+    overflow: scroll;
+}
+
+/* ************ Theme ************ */
+
+.terminal {
+    font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+    font-size: 13px;
+    color: #f0f0f0;
+    background: #000;
+}
+
+.terminal-cursor {
+    color: #000000;
+    background: #ffffff;
 }
 
 DIV.extraterm_start_output {
