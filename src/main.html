@@ -8,9 +8,32 @@
     <div class="toplayout">
         <div class="tabbar">
             <div class="tabbar_space"></div>
-            <button class="configure_button" id="configure" title="Configure"><div class="configure_icon"></div></button>
+            <button class="configure_button" id="configure_button" title="Configure"><div class="configure_icon"></div></button>
         </div>
         <div id="tab_container" class="tab_container"></div>
     </div>
-    </body>
+    
+    <!-- Configure panel -->
+    <div id="configure_panel" class="configure_panel gui">
+        <div class="flexmax"></div>
+        <div class="flexhlayout">
+            <div class="flexmax"></div>    
+            <div class="configure_content flexmin">
+                <h1>Configure</h1>
+                <div class="flexhlayout">
+                    <div class="flexmin">Theme:</div>
+                    <div class="flexmin">pulldown</div>
+                </div>
+                <div class="vspace"></div>
+                <div class="flexhlayout">
+                    <button id="ok_configure_button" class="flexmax">OK</button>
+                    <div class="flexmax"></div>
+                    <button id="close_configure_button" class="flexmax">Close</button>
+                </div>
+            </div>
+            <div class="flexmax"></div>
+        </div>
+        <div class="flexmax"><div>
+    </div>
+</body>
 </html>

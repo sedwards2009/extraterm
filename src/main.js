@@ -330,10 +330,86 @@ Terminal.prototype._handleMineTypeClick = function(type, value) {
 };
 
 /*************************************************************************/
+
+/**
+ * 
+ * @param {type} options
+ * @returns {ConfigurePanel}
+ */
+function ConfigurePanel(options) {
+  var okButton;
+  var cancelButton;
+  var doc;
+  
+  if (!(this instanceof ConfigurePanel)) {
+    throw new Error("Call ConfigurePanel using the new keyword.");
+  }
+
+  _.bindAll(this);
+  
+//  this._parentElement = options.parentElement;
+  this._element = options.element;
+  doc = this._element.ownerDocument;
+
+  okButton = doc.getElementById("ok_configure_button");
+  okButton.addEventListener("click", this._handleOk);
+  
+  cancelButton = doc.getElementById("close_configure_button");
+  cancelButton.addEventListener("click", this._handleCancel);
+}
+
+/**
+ * 
+ * @param {type} config
+ */
+ConfigurePanel.prototype.open = function(config) {
+  var doc = this._element.ownerDocument;
+  var panel = doc.getElementById("configure_panel");
+
+  panel.classList.remove("configure_panel");
+  panel.classList.add("configure_panel_open");
+};
+
+/**
+ * 
+ */
+ConfigurePanel.prototype._handleOk = function() {
+  console.log("OK clicked");
+};
+
+/**
+ * 
+ */
+ConfigurePanel.prototype._handleCancel = function() {
+  console.log("cancel clicked");
+  this._close();
+};
+
+/**
+ * 
+ */
+ConfigurePanel.prototype._close = function() {
+  var doc = this._element.ownerDocument;
+  var panel = doc.getElementById("configure_panel");
+
+  panel.classList.remove("configure_panel_open");
+  panel.classList.add("configure_panel");
+};
+
+/*************************************************************************/
 exports.startUp = (function() {
   "use strict";
-
+  
+  var themes;
+  var configurePanel = null;
+  
   function startUp() {
+    
+    configurePanel = new ConfigurePanel({element: window.document.getElementById("configure_panel")});
+    window.document.getElementById("configure_button").addEventListener('click', function() {
+      configurePanel.open({});
+    });
+    
     var terminaltab = new Terminal(window.document.getElementById("tab_container"));
     terminaltab.startUp();
   }

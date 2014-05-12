@@ -1,6 +1,10 @@
 /*
 
 */
+HTML {
+    font-family: "Ubuntu", sans-serif;
+    font-size: 10pt;
+}
 
 /* ************ GUI and tabs. ************ */
 DIV.toplayout {
@@ -17,7 +21,7 @@ DIV.toplayout {
 DIV.tabbar {
     flex: 0 auto;
     
-    background-color: #D6D2D0;
+    background-color: #D6D2D0;  /* grey */
     
     display: flex;
     flex-direction: row;
@@ -51,6 +55,71 @@ DIV.tabbar {
     white-space: nowrap;
     
     overflow: scroll;
+}
+
+
+/* ************ Generic Flex classes ************ */
+DIV.flexvlayout {
+    display: flex;
+    flex-direction: column;
+}
+
+DIV.flexhlayout {
+    display: flex;
+    flex-direction: row;
+}
+
+.flexmin {
+    flex: 0 auto;
+}
+
+.flexmax {
+    flex: 1 auto;
+}
+
+.vspace {
+    width: 1px;
+    height: 1em;
+}
+
+/* ************ GUI elements ************ */
+.gui H1 {
+    font-size: 1.5em;
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 1em;
+}
+
+.gui BUTTON {
+    min-width: 5em;
+}
+
+/* ************ Configure Panel ************ */
+
+DIV.configure_panel {
+    display: none;
+}
+
+/* Panel open. Div covers the whole window. */
+DIV.configure_panel_open {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    
+    display: flex;
+    flex-direction: column;
+}
+
+/* Content of the configure panel */
+DIV.configure_content {
+    /* width: 40em;
+    height: 24em; */
+    background-color: #D6D2D0;  /* grey */
+    border-radius: 4px;
+    padding: 8px;
 }
 
 /* ************ Theme ************ */
