@@ -37,7 +37,7 @@ DIV.tabbar {
     flex: 1 auto;
 }
 
-.terminal_container {
+.tab_container {
     position: relative;
     
     flex: 1 auto;
