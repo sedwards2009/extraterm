@@ -1,10 +1,6 @@
 /*
 
 */
-HTML {
-    font-family: "Ubuntu", sans-serif;
-    font-size: 10pt;
-}
 
 /* ************ GUI and tabs. ************ */
 DIV.toplayout {
@@ -19,11 +15,11 @@ DIV.toplayout {
 }
 
 DIV.tabbar {
-    flex: 0 auto;
-    
-    background-color: #D6D2D0;  /* grey */
-    
+    background-color: #F4F4F4;    
+    padding: 2px;
+
     display: flex;
+    flex: 0 auto;
     flex-direction: row;
 }
 
@@ -57,7 +53,6 @@ DIV.tabbar {
     overflow: scroll;
 }
 
-
 /* ************ Generic Flex classes ************ */
 DIV.flexvlayout {
     display: flex;
@@ -74,7 +69,7 @@ DIV.flexhlayout {
 }
 
 .flexmax {
-    flex: 1 auto;
+    flex: 1 1;
 }
 
 .vspace {
@@ -83,16 +78,15 @@ DIV.flexhlayout {
 }
 
 /* ************ GUI elements ************ */
-.gui H1 {
-    font-size: 1.5em;
+
+H1.gui-heading {
+    font-size: 28px;
     margin-top: 0px;
     margin-left: 0px;
     margin-right: 0px;
     margin-bottom: 1em;
-}
-
-.gui BUTTON {
-    min-width: 5em;
+    font-weight: 200;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* ************ Configure Panel ************ */
@@ -115,11 +109,12 @@ DIV.configure_panel_open {
 
 /* Content of the configure panel */
 DIV.configure_content {
-    /* width: 40em;
-    height: 24em; */
-    background-color: #D6D2D0;  /* grey */
+    background-color: #F4F4F4;    
+
     border-radius: 4px;
     padding: 8px;
+    
+    flex-basis: 20rem;
 }
 
 /* ************ Theme ************ */

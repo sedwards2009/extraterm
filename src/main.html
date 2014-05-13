@@ -3,12 +3,16 @@
 <head>
     <title>Extraterm</title>
     <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="css/topcoat-desktop-light.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
 </head>
-<body onload="process.mainModule.exports.startUp()">
+<body onload="process.mainModule.exports.startUp(require('nw.gui'))">
     <div class="toplayout">
         <div class="tabbar">
             <div class="tabbar_space"></div>
-            <button class="configure_button" id="configure_button" title="Configure"><div class="configure_icon"></div></button>
+            <button class="topcoat-icon-button--large" id="configure_button" title="Configure">
+                <i class="fa fa-wrench"></i>
+            </button>
         </div>
         <div id="tab_container" class="tab_container"></div>
     </div>
@@ -19,16 +23,16 @@
         <div class="flexhlayout">
             <div class="flexmax"></div>    
             <div class="configure_content flexmin">
-                <h1>Configure</h1>
+                <h1 class="gui-heading">Configure</h1>
                 <div class="flexhlayout">
                     <div class="flexmin">Theme:</div>
                     <div class="flexmin">pulldown</div>
                 </div>
                 <div class="vspace"></div>
                 <div class="flexhlayout">
-                    <button id="ok_configure_button" class="flexmax">OK</button>
+                    <button id="ok_configure_button" class="flexmax topcoat-button--large--cta">OK</button>
                     <div class="flexmax"></div>
-                    <button id="close_configure_button" class="flexmax">Close</button>
+                    <button id="close_configure_button" class="flexmax topcoat-button--large">Cancel</button>
                 </div>
             </div>
             <div class="flexmax"></div>
