@@ -5,6 +5,7 @@
     <link rel="stylesheet" type="text/css" href="css/style.css" />
     <link rel="stylesheet" type="text/css" href="css/topcoat-desktop-light.css" />
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
+    <link id="theme_link" rel="stylesheet" type="text/css" href="themes/default/theme.css" />
 </head>
 <body onload="process.mainModule.exports.startUp(require('nw.gui'))">
     <div class="toplayout">
@@ -25,8 +26,12 @@
             <div class="configure_content flexmin">
                 <h1 class="gui-heading">Configure</h1>
                 <div class="flexhlayout">
-                    <div class="flexmin">Theme:</div>
-                    <div class="flexmin">pulldown</div>
+                    <div class="flexmax"></div>
+                    <div class="flexhlayout flexmin">
+                        <div class="flexmin">Theme:</div>
+                        <div class="flexmin"><select id="theme_select"></select></div>
+                    </div>
+                    <div class="flexmax"></div>
                 </div>
                 <div class="vspace"></div>
                 <div class="flexhlayout">
