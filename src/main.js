@@ -10,6 +10,14 @@ var path = require('path');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 
+var debug = false;
+function log() {
+  if (debug) {
+    console.log.apply(this, arguments);
+  }
+}
+/*************************************************************************/
+
 var EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 var SEMANTIC_TYPE = "data-extraterm-type";
 var SEMANTIC_VALUE = "data-extraterm-value";
@@ -126,7 +134,7 @@ Terminal.prototype._handleResize = function() {
  *     escape sequence.
  */
 Terminal.prototype._handleApplicationModeStart = function(params) {
-  console.log("application-mode started! ",params);
+  log("application-mode started! ",params);
   if (params.length === 1) {
     // Normal HTML mode.
     this._applicationMode = APPLICATION_MODE_HTML;
@@ -140,11 +148,11 @@ Terminal.prototype._handleApplicationModeStart = function(params) {
 
     case "3":
       this._applicationMode = APPLICATION_MODE_OUTPUT_BRACKET_END;
-      console.log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
+      log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
       break;
 
     default:
-      console.log("Unrecognized application escape parameters.");
+      log("Unrecognized application escape parameters.");
       break;
     }
   }
@@ -200,7 +208,7 @@ Terminal.prototype._handleApplicationModeEnd = function() {
       break;
 
     case APPLICATION_MODE_OUTPUT_BRACKET_END:
-      console.log("startdivs:", startdivs);
+      log("startdivs:", startdivs);
       this._term.moveRowsToScrollback();
       startdivs = this._term.element.querySelectorAll("DIV[" + SEMANTIC_TYPE + "='" + TYPE_OUTPUT_START + "']");
       if (startdivs.length !== 0) {
@@ -227,7 +235,7 @@ Terminal.prototype._handleApplicationModeEnd = function() {
   }
   this._applicationMode = APPLICATION_MODE_NONE;
 
-  console.log("html-mode end!",this._htmlData);
+  log("html-mode end!",this._htmlData);
   this._htmlData = null;
 };
 
@@ -240,7 +248,7 @@ Terminal.prototype._handleWindowClick = function(event) {
   var type;
   var value;
 
-//      console.log("body on click!",event);
+//      log("body on click!",event);
   type = event.srcElement.getAttribute(SEMANTIC_TYPE);
   value = event.srcElement.getAttribute(SEMANTIC_VALUE);
   this._handleMineTypeClick(type, value);
@@ -252,7 +260,7 @@ Terminal.prototype._handleWindowClick = function(event) {
  * @param {string} data New data.
  */
 Terminal.prototype._handlePtyStdoutData = function (data) {
-  console.log("incoming data:",""+data);
+  log("incoming data:",""+data);
   this._term.write("" + data);
 };
 
