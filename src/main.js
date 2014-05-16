@@ -76,6 +76,38 @@ Terminal.prototype._getWindow = function() {
   return this._parentElement.ownerDocument.defaultView;  
 };
 
+Terminal.prototype._colors = function() {
+  var colorList = termjs.Terminal.colors.slice();
+  var i;
+
+  var linuxColors = [
+    "#000000",
+    "#b21818",
+    "#18b218",
+    "#b26818",
+    "#1818b2",
+    "#b218b2",
+    "#18b2b2",
+    "#b2b2b2",
+    "#686868",
+    "#ff5454",
+    "#54ff54",
+    "#ffff54",
+    "#5454ff",
+    "#ff54ff",
+    "#54ffff",
+    "#ffffff"];
+
+  for (i=0; i < linuxColors.length; i++) {
+    colorList[i] = linuxColors[i];
+  }
+
+  colorList[256] = "#000000";
+  colorList[257] = "#b2b2b2";
+  
+  return colorList;
+};
+
 /**
  * Start the terminal up.
  * 
@@ -91,6 +123,7 @@ Terminal.prototype.startUp = function() {
   this._term = new termjs.Terminal({
     cols: 80,
     rows: 30,
+    colors: this._colors(),
     scrollback: 10000,
     cursorBlink: this._blinkingCursor,
     physicalScroll: true,
