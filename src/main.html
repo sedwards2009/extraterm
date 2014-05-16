@@ -25,11 +25,24 @@
             <div class="flexmax"></div>    
             <div class="configure_content flexmin">
                 <h1 class="gui-heading">Configure</h1>
-                <div class="flexhlayout">
+                
+                <div class="flexhlayout"><!-- horizonal center the lot. -->
                     <div class="flexmax"></div>
-                    <div class="flexhlayout flexmin">
-                        <div class="flexmin">Theme:</div>
-                        <div class="flexmin"><select id="theme_select"></select></div>
+                    
+                    <div class="flexvlayout flexmin"><!-- column to hold all widgets -->
+                        <div class="flexhlayout flexmin"><!-- Theme -->
+                            <div class="flex1">Theme:</div>
+                            <div class="flex2"><select id="theme_select"></select></div>
+                        </div>
+                        
+                        <div class="flexhlayout flexmin"><!-- Blinking cursor -->
+                            <div class="flex1"></div>
+                            <label class="topcoat-checkbox flex2">
+                              <input type="checkbox" id="blinking_cursor_checkbox">
+                              <div class="topcoat-checkbox__checkmark"></div>
+                              Blinking cursor
+                            </label>
+                        </div>
                     </div>
                     <div class="flexmax"></div>
                 </div>

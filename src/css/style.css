@@ -72,6 +72,14 @@ DIV.flexhlayout {
     flex: 1 1;
 }
 
+.flex1 {
+    flex: 1 1;
+}
+
+.flex2 {
+    flex: 2 2;
+}
+
 .vspace {
     width: 1px;
     height: 1em;

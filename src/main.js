@@ -47,11 +47,25 @@ function Terminal(parentElement) {
   this._parentElement = parentElement;
   _.bindAll(this);
   
+  this._term = null;
   this._htmlData = null;
   this._applicationMode = APPLICATION_MODE_NONE;
   this._bracketStyle = null;
   this._lastBashBracket = null;
+  this._blinkingCursor = false;
 }
+
+/**
+ * Set whether the cursor should blink.
+ * 
+ * @param {boolean} blink Set to true if the cursor should blink.
+ */
+Terminal.prototype.setBlinkingCursor = function(blinking) {
+  this._blinkingCursor = blinking;
+  if (this._term !== null) {
+    this._term.setCursorBlink(blinking);
+  }
+};
 
 /**
  * Get the window which this terminal is on.
@@ -78,7 +92,7 @@ Terminal.prototype.startUp = function() {
     cols: 80,
     rows: 30,
     scrollback: 10000,
-//      cursorBlink: false,
+    cursorBlink: this._blinkingCursor,
     physicalScroll: true,
     applicationModeCookie: cookie
   });
@@ -414,14 +428,21 @@ ConfigurePanel.prototype.open = function(config) {
 ConfigurePanel.prototype._configToGui = function(config) {
   var i;
   var doc = this._element.ownerDocument;
-  var themeSelect = doc.getElementById("theme_select");
+  var themeSelect;
+  var blinkingCursorCheckbox;
   
+  // Theme.
+  themeSelect = doc.getElementById("theme_select");
   for (i=0; i<themeSelect.options.length; i++) {
     if (themeSelect.options[i].value === config.theme) {
       themeSelect.selectedIndex = i;
       break;
     }
   }
+  
+  // Blinking cursor.
+  blinkingCursorCheckbox = doc.getElementById("blinking_cursor_checkbox");
+  blinkingCursorCheckbox.checked = config.blinkingCursor;
 };
 
 /**
@@ -432,7 +453,11 @@ ConfigurePanel.prototype._configToGui = function(config) {
 ConfigurePanel.prototype._guiToConfig = function() {
   var doc = this._element.ownerDocument;
   var themeSelect = doc.getElementById("theme_select");
-  return { theme: themeSelect.value };
+  
+  var blinkingCursorCheckbox = doc.getElementById("blinking_cursor_checkbox");
+  var blinkingCursor = blinkingCursorCheckbox.checked;
+  
+  return { theme: themeSelect.value, blinkingCursor: blinkingCursor };
 };
 
 /**
@@ -475,6 +500,7 @@ exports.startUp = (function() {
   var gui;
   var config;
   var doc;
+  var terminaltab = null;
   
   function startUp(windowGui) {
     var themesdir;
@@ -484,6 +510,8 @@ exports.startUp = (function() {
     
     config = readConfiguration();
     
+    config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
+            
     // Themes
     themesdir = path.join(__dirname, THEMES_DIRECTORY);
     themes = scanThemes(themesdir);
@@ -497,22 +525,26 @@ exports.startUp = (function() {
     configurePanel.on('ok', function(newConfig) {
       config = newConfig;
       writeConfiguration(newConfig);
-      setupConfiguration(config);
+      setupConfiguration(newConfig);
     });
     doc.getElementById("configure_button").addEventListener('click', function() {
       configurePanel.open(config);
     });
     
-    var terminaltab = new Terminal(window.document.getElementById("tab_container"));
+    terminaltab = new Terminal(window.document.getElementById("tab_container"));
+    terminaltab.setBlinkingCursor(config.blinkingCursor);
     terminaltab.startUp();
   }
   
   function setupConfiguration(config) {
     installTheme(config.theme);
+    if (terminaltab !== null) {
+      terminaltab.setBlinkingCursor(config.blinkingCursor);
+    }
   }
   
   /*
-   * config object format: { theme: "theme name" }
+   * config object format: { theme: String, blinkingCursor: boolean}
    */
   
   /**
