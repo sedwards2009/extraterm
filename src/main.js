@@ -25,7 +25,8 @@ exports.startUp = (function() {
   var config;
   var doc;
   var terminalList = [];
-  
+  var focusedTerminalInfo = null;
+
   function createTerminal() {
     var term;
     var info;
@@ -49,6 +50,8 @@ exports.startUp = (function() {
     term = new terminal.Terminal(terminaltab);
     term.setBlinkingCursor(config.blinkingCursor);
     term.on('ptyclose', handlePtyClose);
+    term.on('shift-left', handleShiftTabLeft);
+    term.on('shift-right', handleShiftTabRight);
     term.startUp();
     
     // Create the tab header.
@@ -73,6 +76,7 @@ exports.startUp = (function() {
         info.terminaltab.className = "terminal_tab_active";
         info.tabheader.className = "tab_active";
         info.terminal.focus();
+        focusedTerminalInfo = info;
       } else {
         // Deactive the rest.
         info.terminaltab.className = "terminal_tab_inactive";
@@ -89,6 +93,29 @@ exports.startUp = (function() {
     } else {
       quit();
     }
+  }
+  
+  function shiftTab(direction) {
+    if (terminalList.length === 0) {
+      return;
+    }
+    
+    var i = terminalList.indexOf(focusedTerminalInfo);
+    i = i + direction;
+    if (i < 0) {
+      i = terminalList.length - 1;
+    } else if (i >= terminalList.length) {
+      i = 0;
+    }
+    focusTerminal(terminalList[i].id);
+  }
+  
+  function handleShiftTabLeft() {
+    shiftTab(-1);
+  }
+  
+  function handleShiftTabRight() {
+    shiftTab(1);
   }
   
   function destroyTerminal(id) {

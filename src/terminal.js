@@ -149,6 +149,7 @@ Terminal.prototype.startUp = function() {
   this._term.on('title', this._handleTitle);
   this._term.on('data', this._handleTermData);
   this._getWindow().addEventListener('resize', this._handleResize);
+  this._term.on('unknown-keydown', this._handleUnknownKeyDown);
 
   // Application mode handlers    
   this._term.on('application-mode-start', this._handleApplicationModeStart);
@@ -197,6 +198,21 @@ Terminal.prototype._handleTitle = function(title) {
 Terminal.prototype._handleResize = function() {
   var size = this._term.resizeToContainer();
   this._sendResize(size.cols, size.rows);
+};
+
+Terminal.prototype._handleUnknownKeyDown = function(ev) {
+  // left-arrow
+  if (ev.keyCode === 37 && ev.shiftKey) {
+    this.emit('shift-left');
+    return true;
+    
+  } else if (ev.keyCode === 39 && ev.shiftKey) {
+    this.emit('shift-right');
+    return true;
+    
+  } else {
+    return false;
+  }
 };
 
 /**
