@@ -9,9 +9,13 @@
 </head>
 <body onload="process.mainModule.exports.startUp(require('nw.gui'))">
     <div class="toplayout">
-        <div class="tabbar">
+        <div id="tabbar" class="tabbar">
+            <!-- Tabs appear here. -->
+            <button class="topcoat-icon-button--large--quiet" id="new_tab_button" title="New Tab">
+                <i class="fa fa-plus"></i>
+            </button>
             <div class="tabbar_space"></div>
-            <button class="topcoat-icon-button--large" id="configure_button" title="Configure">
+            <button class="topcoat-icon-button--large--quiet" id="configure_button" title="Configure">
                 <i class="fa fa-wrench"></i>
             </button>
         </div>

@@ -3,6 +3,8 @@
  */
 var child_process = require('child_process');
 var termjs = require('term.js');
+var util = require('util');
+var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash-node');
 
 var debug = false;
@@ -48,6 +50,26 @@ function Terminal(parentElement) {
   this._lastBashBracket = null;
   this._blinkingCursor = false;
 }
+util.inherits(Terminal, EventEmitter);
+
+/**
+ * Destroy the terminal.
+ */
+Terminal.prototype.destroy = function() {
+  
+  if (this._ptyBridge !== null) {
+    this._ptyBridge.kill('SIGHUP');
+    this._ptyBridge.disconnect();
+    this._ptyBridge = null;
+  }
+  
+  if (this._term !== null) {
+    this._getWindow().removeEventListener('resize', this._handleResize);
+    this._getWindow().document.body.removeEventListener('click', this._handleWindowClick);
+    this._term.destroy();
+  }
+  this._term = null;
+};
 
 /**
  * Set whether the cursor should blink.
@@ -149,6 +171,15 @@ Terminal.prototype.startUp = function() {
 
   size = this._term.resizeToContainer();
   this._sendResize(size.cols, size.rows);
+};
+
+/**
+ * Focus on this terminal.
+ */
+Terminal.prototype.focus = function() {
+  if (this._term !== null) {
+    this._term.focus();
+  }
 };
 
 /**
@@ -320,8 +351,8 @@ Terminal.prototype._handlePtyStderrData = function(data) {
  * @param {string} data
  */
 Terminal.prototype._handlePtyClose = function(data) {
-  this._term.destroy();
-  this._getWindow().close();
+  this._ptyBridge = null;
+  this.emit('ptyclose', this);
 };
   
 /**

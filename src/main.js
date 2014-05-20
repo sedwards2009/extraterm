@@ -9,6 +9,7 @@ var path = require('path');
 var terminal = require('./terminal.js');
 var configure_panel = require('./configure_panel.js');
 
+
 /*************************************************************************/
 exports.startUp = (function() {
   "use strict";
@@ -17,12 +18,87 @@ exports.startUp = (function() {
   var THEMES_DIRECTORY = "themes";
   var THEME_CONFIG = "theme.json";
 
+  var terminalIdCounter = 0;
   var themes;
   var configurePanel = null;
   var gui;
   var config;
   var doc;
-  var terminaltab = null;
+  var terminalList = [];
+  
+  function createTerminal() {
+    var term;
+    var info;
+    var doc = window.document;
+    var container;
+    var terminaltab;
+    var tabbar;
+    var tabheader;
+    var thisId;
+    
+    thisId = terminalIdCounter;
+    terminalIdCounter++;
+    
+    // Create something to put the terminal in.
+    terminaltab = doc.createElement("div");
+    terminaltab.className = "terminal_tab_inactive";
+    container = doc.getElementById("tab_container");
+    container.appendChild(terminaltab);
+    
+    // Create the terminal itself.
+    term = new terminal.Terminal(terminaltab);
+    term.setBlinkingCursor(config.blinkingCursor);
+    term.on('ptyclose', handlePtyClose);
+    term.startUp();
+    
+    // Create the tab header.
+    tabheader = doc.createElement("div");
+    tabheader.className = "tab_active";
+    tabheader.innerText = "New Tab";
+    tabheader.addEventListener('click', function() {
+      focusTerminal(thisId);
+    });
+    tabbar = doc.getElementById("tabbar");
+    tabbar.insertBefore(tabheader, doc.getElementById("new_tab_button"));
+    
+    info = {id: thisId, terminal: term, terminaltab: terminaltab, tabheader: tabheader};
+    terminalList[thisId] = info;
+    return thisId;
+  }
+  
+  function focusTerminal(id) {
+    terminalList.forEach(function(info) {
+      if (info.id === id) {
+        // Activate this one.
+        info.terminaltab.className = "terminal_tab_active";
+        info.tabheader.className = "tab_active";
+        info.terminal.focus();
+      } else {
+        // Deactive the rest.
+        info.terminaltab.className = "terminal_tab_inactive";
+        info.tabheader.className = "tab_inactive";
+      }
+    });
+  }
+  
+  function handlePtyClose(term) {
+    destroyTerminal(_.find(terminalList, function(info) { return info.terminal === term; }).id);
+    
+    if (terminalList.length !== 0) {
+      focusTerminal(terminalList[0].id);
+    } else {
+      quit();
+    }
+  }
+  
+  function destroyTerminal(id) {
+    var i = terminalList.findIndex(function(item) { return item.id === id; });
+    var info = terminalList[i];
+    info.terminal.destroy();
+    info.terminaltab.remove();
+    info.tabheader.remove();
+    terminalList.splice(i, 1);
+  }
   
   function startUp(windowGui) {
     var themesdir;
@@ -53,17 +129,21 @@ exports.startUp = (function() {
     doc.getElementById("configure_button").addEventListener('click', function() {
       configurePanel.open(config);
     });
+
+    doc.getElementById("new_tab_button").addEventListener('click', function() { focusTerminal(createTerminal()); });
     
-    terminaltab = new terminal.Terminal(window.document.getElementById("tab_container"));
-    terminaltab.setBlinkingCursor(config.blinkingCursor);
-    terminaltab.startUp();
+    focusTerminal(createTerminal());
+  }
+
+  function quit() {
+    window.close();
   }
   
   function setupConfiguration(config) {
     installTheme(config.theme);
-    if (terminaltab !== null) {
-      terminaltab.setBlinkingCursor(config.blinkingCursor);
-    }
+    terminalList.forEach(function(info) {
+      info.term.setBlinkingCursor(config.blinkingCursor);
+    });
   }
   
   /*
