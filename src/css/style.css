@@ -53,7 +53,6 @@ DIV.terminal_tab_active {
     bottom: 0px;
     left: 0px;
     right: 0px;
-    z-index: 1;
 }
 
 DIV.terminal_tab_inactive {
@@ -62,7 +61,7 @@ DIV.terminal_tab_inactive {
     bottom: 0px;
     left: 0px;
     right: 0px;
-    z-index: 0;
+    visibility: hidden;
 }
 
 .terminal {
