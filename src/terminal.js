@@ -49,6 +49,7 @@ function Terminal(parentElement) {
   this._bracketStyle = null;
   this._lastBashBracket = null;
   this._blinkingCursor = false;
+  this._title = "New Tab";
 }
 util.inherits(Terminal, EventEmitter);
 
@@ -58,6 +59,8 @@ util.inherits(Terminal, EventEmitter);
 Terminal.prototype.destroy = function() {
   
   if (this._ptyBridge !== null) {
+    this._ptyBridge.removeAllListeners();
+
     this._ptyBridge.kill('SIGHUP');
     this._ptyBridge.disconnect();
     this._ptyBridge = null;
@@ -69,6 +72,10 @@ Terminal.prototype.destroy = function() {
     this._term.destroy();
   }
   this._term = null;
+};
+
+Terminal.prototype.getTitle = function() {
+  return this._title;
 };
 
 /**
@@ -189,7 +196,8 @@ Terminal.prototype.focus = function() {
  * @param {String} title The new window title for this terminal.
  */
 Terminal.prototype._handleTitle = function(title) {
-  this._getWindow().document.title = title;
+  this._title = title;
+  this.emit('title', this, title);
 };
 
 /**

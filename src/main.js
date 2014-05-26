@@ -24,7 +24,7 @@ exports.startUp = (function() {
   var gui;
   var config;
   var doc;
-  var terminalList = [];
+  var terminalList = [];  // -> {id, terminal, terminaltab, tabheader};
   var focusedTerminalInfo = null;
 
   function createTerminal() {
@@ -52,6 +52,7 @@ exports.startUp = (function() {
     term.on('ptyclose', handlePtyClose);
     term.on('shift-left', handleShiftTabLeft);
     term.on('shift-right', handleShiftTabRight);
+    term.on('title', handleTitle);
     term.startUp();
     
     // Create the tab header.
@@ -77,12 +78,17 @@ exports.startUp = (function() {
         info.tabheader.className = "tab_active";
         info.terminal.focus();
         focusedTerminalInfo = info;
+        setWindowTitle(info.terminal.getTitle());
       } else {
         // Deactive the rest.
         info.terminaltab.className = "terminal_tab_inactive";
         info.tabheader.className = "tab_inactive";
       }
     });
+  }
+  
+  function setWindowTitle(title) {
+    window.document.title = "Extraterm - " + title;
   }
   
   function handlePtyClose(term) {
@@ -116,6 +122,16 @@ exports.startUp = (function() {
   
   function handleShiftTabRight() {
     shiftTab(1);
+  }
+  
+  function handleTitle(term, title) {
+    var info = _.find(terminalList, function(info) { return info.terminal === term; });
+    var header = info.tabheader;
+    header.innerText = title;
+    header.setAttribute('title',title);
+    if (info === focusedTerminalInfo) {
+      setWindowTitle(title);
+    }
   }
   
   function destroyTerminal(id) {

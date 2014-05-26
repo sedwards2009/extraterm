@@ -92,7 +92,11 @@ DIV.tab_active {
     box-shadow: 0 -1px 1px -1px black, -1px 0px 1px -1px black, 1px 0px 1px -1px black;
     
     text-align: center;
-    flex-basis: 10rem;
+    flex-basis: 15rem;
+    
+    text-overflow: ellipsis;
+    white-space: pre;
+    overflow: hidden;
 }
 
 DIV.tab_inactive {
@@ -115,7 +119,11 @@ DIV.tab_inactive {
     margin-top: 3px;
     
     text-align: center;
-    flex-basis: 10rem;
+    flex-basis: 15rem;
+
+    text-overflow: ellipsis;
+    white-space: pre;
+    overflow: hidden;
 }
 
 
