@@ -190,6 +190,18 @@ Terminal.prototype.focus = function() {
   }
 };
 
+Terminal.prototype.write = function(text) {
+  if (this._term !== null) {
+    this._term.write(text);
+  }
+};
+
+Terminal.prototype.send = function(text) {
+  if (this._term !== null) {
+    this._sendDataToPty(text);
+  }
+};
+
 /**
  * Handler for window title change events from the pty.
  * 
@@ -209,18 +221,8 @@ Terminal.prototype._handleResize = function() {
 };
 
 Terminal.prototype._handleUnknownKeyDown = function(ev) {
-  // left-arrow
-  if (ev.keyCode === 37 && ev.shiftKey) {
-    this.emit('shift-left');
-    return true;
-    
-  } else if (ev.keyCode === 39 && ev.shiftKey) {
-    this.emit('shift-right');
-    return true;
-    
-  } else {
-    return false;
-  }
+  this.emit('unknown-keydown', this, ev);
+  return false;
 };
 
 /**

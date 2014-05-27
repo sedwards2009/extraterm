@@ -50,8 +50,7 @@ exports.startUp = (function() {
     term = new terminal.Terminal(terminaltab);
     term.setBlinkingCursor(config.blinkingCursor);
     term.on('ptyclose', handlePtyClose);
-    term.on('shift-left', handleShiftTabLeft);
-    term.on('shift-right', handleShiftTabRight);
+    term.on('unknown-keydown', handleUnknownKeyDown);
     term.on('title', handleTitle);
     term.startUp();
     
@@ -116,12 +115,47 @@ exports.startUp = (function() {
     focusTerminal(terminalList[i].id);
   }
   
-  function handleShiftTabLeft() {
-    shiftTab(-1);
+  function handleUnknownKeyDown(term, ev) {
+    if (ev.keyCode === 37 && ev.shiftKey) {
+      // left-arrow
+      shiftTab(-1);
+
+    } else if (ev.keyCode === 39 && ev.shiftKey) {
+      // right-arrow
+      shiftTab(1);
+
+    } else if (ev.keyCode === 67 && ev.shiftKey) {
+      // Ctrl+Shift+C
+      copyToClipboard();
+    } else if (ev.keyCode === 86 && ev.shiftKey) {
+      // Ctrl+Shift+V
+      pasteFromClipboard();
+      
+    } else {
+      console.log("Unknown key:",ev);
+    }
   }
   
-  function handleShiftTabRight() {
-    shiftTab(1);
+  function copyToClipboard() {
+    var text;
+    var selection;
+    var range;
+    var clipboard;
+    
+    selection = window.getSelection();
+    range = selection.getRangeAt(0);
+    if (range.collapsed) {
+      return;
+    }
+    text = range.toString();
+    clipboard = gui.Clipboard.get();
+    clipboard.set(text, 'text');
+  }
+  
+  function pasteFromClipboard() {
+    var clipboard = gui.Clipboard.get();
+    var text = clipboard.get();
+    focusedTerminalInfo.terminal.send(text);
   }
   
   function handleTitle(term, title) {
