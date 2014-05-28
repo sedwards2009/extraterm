@@ -156,6 +156,7 @@ Terminal.prototype.startUp = function() {
   this._term.on('title', this._handleTitle);
   this._term.on('data', this._handleTermData);
   this._getWindow().addEventListener('resize', this._handleResize);
+  this._term.on('key', this._handleKeyDown);
   this._term.on('unknown-keydown', this._handleUnknownKeyDown);
 
   // Application mode handlers    
@@ -218,6 +219,12 @@ Terminal.prototype._handleTitle = function(title) {
 Terminal.prototype._handleResize = function() {
   var size = this._term.resizeToContainer();
   this._sendResize(size.cols, size.rows);
+};
+
+Terminal.prototype._handleKeyDown = function(key, ev) {
+  if (key !== null) {
+    this._term.scrollToBottom();
+  }
 };
 
 Terminal.prototype._handleUnknownKeyDown = function(ev) {
