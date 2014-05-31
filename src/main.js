@@ -154,7 +154,7 @@ exports.startUp = (function() {
     }
     text = range.toString();
     clipboard = gui.Clipboard.get();
-    clipboard.set(text, 'text');
+    clipboard.set(text.replace(/\u00a0/g,' '), 'text');
   }
   
   function pasteFromClipboard() {
