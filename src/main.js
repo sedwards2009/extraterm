@@ -127,10 +127,15 @@ exports.startUp = (function() {
     } else if (ev.keyCode === 67 && ev.shiftKey) {
       // Ctrl+Shift+C
       copyToClipboard();
+
     } else if (ev.keyCode === 86 && ev.shiftKey) {
       // Ctrl+Shift+V
       pasteFromClipboard();
       
+    } else if (ev.keyCode === 84 && ev.shiftKey) {
+      // Ctrl+Shift+T
+      focusTerminal(createTerminal());
+
     } else {
       console.log("Unknown key:",ev);
     }
