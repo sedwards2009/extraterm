@@ -108,7 +108,7 @@ Terminal.prototype._colors = function() {
     "#b21818",
     "#18b218",
     "#b26818",
-    "#1818b2",
+    "#3535ff",
     "#b218b2",
     "#18b2b2",
     "#b2b2b2",
@@ -116,7 +116,7 @@ Terminal.prototype._colors = function() {
     "#ff5454",
     "#54ff54",
     "#ffff54",
-    "#5454ff",
+    "#7373ff",
     "#ff54ff",
     "#54ffff",
     "#ffffff"];
