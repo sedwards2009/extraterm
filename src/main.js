@@ -161,6 +161,7 @@ exports.startUp = (function() {
     var clipboard = gui.Clipboard.get();
     var text = clipboard.get();
     focusedTerminalInfo.terminal.send(text);
+    focusedTerminalInfo.terminal.scrollToBottom();
   }
   
   function handleTitle(term, title) {

@@ -203,6 +203,10 @@ Terminal.prototype.send = function(text) {
   }
 };
 
+Terminal.prototype.scrollToBottom = function() {
+  this._term.scrollToBottom();
+};
+
 /**
  * Handler for window title change events from the pty.
  * 
