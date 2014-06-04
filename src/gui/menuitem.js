@@ -1,4 +1,4 @@
-(function() {
+define([], function() {
 var ID = "CbMenuItemTemplate";
 
 var CbMenuItemProto = Object.create(HTMLElement.prototype);;
@@ -72,4 +72,5 @@ function updateKeyboardSelected(value) {
 }
 
 var CbMenuItem = document.registerElement('cb-menuitem', {prototype: CbMenuItemProto});
-})();
+return CbMenuItem;
+});

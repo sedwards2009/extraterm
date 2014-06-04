@@ -1,4 +1,4 @@
-(function() {
+define([], function() {
 var ID = "CbContextMenuTemplate";
 
 var CbContextMenuProto = Object.create(HTMLElement.prototype);;
@@ -208,4 +208,5 @@ CbContextMenuProto.close = function() {
 };
 
 var CbContextMenu = document.registerElement('cb-contextmenu', {prototype: CbContextMenuProto});
-})();
+return CbContextMenu;
+});
