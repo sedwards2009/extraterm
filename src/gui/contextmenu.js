@@ -1,8 +1,10 @@
 define([], function() {
 var ID = "CbContextMenuTemplate";
 
-var CbContextMenuProto = Object.create(HTMLElement.prototype);;
-console.log("document",document);
+/**
+ * A context menu.
+ */
+var CbContextMenuProto = Object.create(HTMLElement.prototype);
 
 function createClone() {
   var template = document.getElementById(ID);
@@ -11,7 +13,7 @@ function createClone() {
     template.id = ID;
     template.innerHTML = "<style>\n"
       + ".container {\n"
-      + "    position: absolute;\n"
+      + "    position: fixed;\n"
       + "    background-color: #F4F4F4;\n"
       + "    border-radius: 4px;\n"
       + "    padding: 4px 0px 4px 0px;\n"
@@ -23,9 +25,11 @@ function createClone() {
       + "}\n"
       + ".cover_open {\n"
       + "    visibility: visible;\n"
-      + "    position: absolute;\n"
-      + "    width: 100%;\n"
-      + "    height: 100%;\n"
+      + "    position: fixed;\n"
+      + "    left: 0px;\n"
+      + "    right: 0px;\n"
+      + "    top: 0px;\n"
+      + "    bottom: 0px;\n"
       + "    z-index: 100;\n"
       + "}\n"
       + "</style>\n"
@@ -54,7 +58,6 @@ CbContextMenuProto.createdCallback = function() {
   
   cover = this.__getById('cover');
   cover.addEventListener('mousedown', function(ev) {
-    console.log("cover mousedown", ev);
     if (ev.button === 0) {    
       ev.stopPropagation();
       ev.preventDefault();
@@ -192,12 +195,30 @@ function __handleKeyDown(ev) {
 };
 
 CbContextMenuProto.open = function(x, y) {
-  var cover = this.__getById('cover');
+  var sx;
+  var sy;
+  var cover;
+  var container;
+  var rect;
+
+  cover = this.__getById('cover');
   cover.className = "cover_open";
+
+  container = this.__getById('container');
+  rect = container.getBoundingClientRect();
+    
+  sx = x;
+  if (sx+rect.width > window.innerWidth) {
+    sx = window.innerWidth - rect.width;
+  }
   
-  var container = this.__getById('container');
-  container.style.left = "" + x + "px";
-  container.style.top = "" + y + "px";
+  sy = y;
+  if (sy+rect.height > window.innerHeight) {
+    sy = window.innerHeight - rect.height;
+  }
+  
+  container.style.left = "" + sx + "px";
+  container.style.top = "" + sy + "px";
   container.focus();
   
 };
