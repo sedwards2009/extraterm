@@ -2,12 +2,21 @@
 <html>
 <head>
     <title>GUI Test</title>
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
     <link rel="stylesheet" type="text/css" href="../css/topcoat-desktop-light.css" />
     <link rel="stylesheet" type="text/css" href="../css/font-awesome.css" />
     <style>
     html, body {
     height: 100%;
     }
+    
+    .fake_terminal {
+        width: 500px;
+        height: 300px;
+        position: relative;
+        margin: 20px;
+    }
+    
     </style>
     
     <script src="../require.js"></script>
@@ -20,7 +29,7 @@
         }
     });
 
-    require(['gui/menuitem', 'gui/contextmenu', 'domReady'], function() {
+    require(['gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'commandframe', 'domReady'], function() {
         document.getElementById("openmenu").addEventListener('click', function() {
             var cm = document.getElementById("contextmenu");
             cm.open(100,100);
@@ -30,22 +39,75 @@
         console.log("Got a selected event!",ev);
         });
 
-        document.body.addEventListener('contextmenu', function(ev) {
+        document.getElementById('contextmenufieldset').addEventListener('contextmenu', function(ev) {
           console.log("test contextmenu");
           ev.stopPropagation();
           ev.preventDefault();
-          cm.open(ev.x, ev.y);
+          var rect = this.getBoundingClientRect();
+          console.log("ev.clientX:",ev.clientX);
+          console.log("ev.clientY:",ev.clientY);
+          cm.open(ev.clientX, ev.clientY);
         });
     });
     </script>
 </head>
 <body class="light">
+<fieldset><legend>Dropdown menu</legend>
+    <cb-dropdown>
+        <button class="topcoat-button">Burger Menu</button>
+        <cb-contextmenu>
+            <cb-menuitem icon="bomb" name="close">Close Tab</cb-menuitem>
+            <cb-menuitem icon="copy" name="copy">Copy</cb-menuitem>
+            <cb-menuitem icon="paste" name="paste">Paste</cb-menuitem>
+        </cb-contextmenu>
+    </cb-dropdown>
+    <br />
+    <br />
+    <cb-dropdown>
+        <button class="topcoat-button"><i class="fa fa-bars"></i></button>
+        <cb-contextmenu>
+            <cb-menuitem icon="bomb" name="close">Close Tab</cb-menuitem>
+            <cb-menuitem icon="copy" name="copy">Copy</cb-menuitem>
+            <cb-menuitem icon="paste" name="paste">Paste</cb-menuitem>
+        </cb-contextmenu>
+    </cb-dropdown>
+        
+</fieldset>
     
+<fieldset><legend>Command frames</legend>
+<div class="fake_terminal">
+<div class="terminal">
+<et-commandframe command-line="python3 some_big_script.py">
+    Some lines of output of a running process.
+</et-commandframe>
+</div>
+</div>
+
+<div class="fake_terminal">
+<div class="terminal">
+<et-commandframe command-line="python3 some_big_script.py" return-code="0">
+    Some lines of successful output.
+</et-commandframe>
+</div>
+</div>
+
+<div class="fake_terminal">
+<div class="terminal">
+<et-commandframe command-line="python3 some_big_script.py" return-code="1">
+    Some lines of output which went wrong.
+</et-commandframe>
+</div>
+</div>
+</fieldset>
+
+<fieldset id="contextmenufieldset"><legend>Context Menu</legend>
 <cb-contextmenu id="contextmenu">
     <cb-menuitem icon="bomb" name="close">Close Tab</cb-menuitem>
     <cb-menuitem icon="copy" name="copy">Copy</cb-menuitem>
     <cb-menuitem icon="paste" name="paste">Paste</cb-menuitem>
 </cb-contextmenu>
 <button id="openmenu">Open Context Menu</button>
+</fieldset>
+    
 </body>
 </html>
