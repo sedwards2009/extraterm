@@ -1,38 +1,56 @@
 define([], function() {
-var ID = "CbMenuItemTemplate";
 
 var CbMenuItemProto = Object.create(HTMLElement.prototype);;
 var SELECTED_ATTR = "selected";
 
-function createClone() {
-  var template = document.getElementById(ID);
-  if (template === null) {
-    template = document.createElement('template');
-    template.id = ID;
-    template.innerHTML = "<style>\n"
-      + ":host {\n"
+CbMenuItemProto._id = "CbMenuItemTemplate";
+
+CbMenuItemProto._css = function() {
+  return ":host {\n"
       + "    display: block;\n"
       + "}\n"
-      + "\n"
+
       + "#container {\n"
       + "    cursor: default;\n"
       + "    padding: 1px;\n"
+      + "    display: flex;\n"
       + "}\n"
+      
       + ".selected {\n"
       + "    background-color: #288edf;\n"
       + "    color: #ffffff;\n"
       + "}\n"
-      + "\n"
-      + "#iconcontainer {\n"
-      + "    display: inline-block;\n"
+
+      + "#icon1, #icon2 {\n"
+      + "    flex: auto 0 0;\n"
       + "    white-space: pre;\n"
       + "}\n"
-      + "</style>\n"
-      + "<div id='container'><div id='iconcontainer'></div><content></content></div>";
+      
+      + "#label {\n"
+      + "    flex: auto 1 1;\n"
+      + "    padding-left: 0.5rem;\n"
+      + "    white-space: pre;\n"
+      + "}\n";
+};
+
+CbMenuItemProto._html = function() {
+  return "<div id='container'>"
+      +   "<div id='icon1'><i class='fa fa-fw'></i></div>"
+      +   "<div id='icon2'></div>"
+      +   "<div id='label'><content></content></div>"
+      + "</div>";
+};
+
+CbMenuItemProto._createClone = function() {
+  var template = document.getElementById(this._id);
+  if (template === null) {
+    template = document.createElement('template');
+    template.id = this._id;
+    template.innerHTML = "<style>" + this._css() + "</style>\n" + this._html();
     document.body.appendChild(template);
   }
   return document.importNode(template.content, true);
-}
+};
 
 CbMenuItemProto.createdCallback = function() {
   var icon;
@@ -40,18 +58,17 @@ CbMenuItemProto.createdCallback = function() {
   var shadow = this.webkitCreateShadowRoot();
   shadow.applyAuthorStyles = true;
   
-  var clone = createClone();
+  var clone = this._createClone();
   shadow.appendChild(clone);
-  
-  iconhtml = "<i class='fa fa-fw'></i>";
+
+  iconhtml = "";
   icon = this.getAttribute('icon');
   if (icon !== null && icon !== "") {
     iconhtml += "<i class='fa fa-fw fa-" + icon + "'></i>";
   } else {
     iconhtml += "<i class='fa fa-fw'></i>";
   }
-  
-  shadow.querySelector("#iconcontainer").innerHTML = iconhtml; 
+  shadow.querySelector("#icon2").innerHTML = iconhtml; 
 
   updateKeyboardSelected.call(this, this.getAttribute(SELECTED_ATTR));
 };

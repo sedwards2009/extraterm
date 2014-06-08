@@ -1,4 +1,4 @@
-define([], function() {
+define(["gui/menuitem"], function(menuitem) {
 var ID = "CbContextMenuTemplate";
 
 /**
@@ -103,12 +103,11 @@ CbContextMenuProto.createdCallback = function() {
   
   container.addEventListener('click', function(ev) {
     var name;
-    var event
+    var event;
     var checked;
     var menuitem;
     
-    // FIXME use instanceof or some other kind of test for a base menu item class.
-    if (ev.srcElement.tagName === 'CB-MENUITEM' || ev.srcElement.tagName === 'CB-CHECKBOXMENUITEM') {
+    if (ev.srcElement instanceof menuitem) {
       menuitem = ev.srcElement;
       menuitem._clicked();
       
@@ -137,8 +136,7 @@ function fetchCbMenuItems(kids) {
   for (i=0; i<len; i++) {
     item = kids[i];
     
-    // FIXME
-    if(item.nodeName === 'CB-MENUITEM' || item.nodeName === 'CB-CHECKBOXMENUITEM') {
+    if(item instanceof menuitem) {
       result.push(item);
     }
   }
@@ -154,8 +152,7 @@ function selectMenuItem(kids, selectitem) {
   for (i=0; i<len; i++) {
     item = kids[i];
     
-    // FIXME
-    if (item.nodeName === 'CB-MENUITEM' || item.nodeName === 'CB-CHECKBOXMENUITEM') {
+    if (item instanceof menuitem) {
       item.setAttribute('selected', '' + (selectitem === item) );
     }
   }
