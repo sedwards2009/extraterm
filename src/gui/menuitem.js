@@ -14,7 +14,7 @@ function createClone() {
       + "    display: block;\n"
       + "}\n"
       + "\n"
-      + ".container {\n"
+      + "#container {\n"
       + "    cursor: default;\n"
       + "    padding: 1px;\n"
       + "}\n"
@@ -23,12 +23,12 @@ function createClone() {
       + "    color: #ffffff;\n"
       + "}\n"
       + "\n"
-      + ".iconcontainer {\n"
+      + "#iconcontainer {\n"
       + "    display: inline-block;\n"
-      + "    width: 1.5rem;\n"
+      + "    white-space: pre;\n"
       + "}\n"
       + "</style>\n"
-      + "<div class='container'><div class='iconcontainer'></div><content></content></div>";
+      + "<div id='container'><div id='iconcontainer'></div><content></content></div>";
     document.body.appendChild(template);
   }
   return document.importNode(template.content, true);
@@ -43,13 +43,15 @@ CbMenuItemProto.createdCallback = function() {
   var clone = createClone();
   shadow.appendChild(clone);
   
-  iconhtml = "";
+  iconhtml = "<i class='fa fa-fw'></i>";
   icon = this.getAttribute('icon');
   if (icon !== null && icon !== "") {
-    iconhtml += "<i class='fa fa-" + icon + "'></i>";
+    iconhtml += "<i class='fa fa-fw fa-" + icon + "'></i>";
+  } else {
+    iconhtml += "<i class='fa fa-fw'></i>";
   }
   
-  shadow.querySelector(".iconcontainer").innerHTML = iconhtml; 
+  shadow.querySelector("#iconcontainer").innerHTML = iconhtml; 
 
   updateKeyboardSelected.call(this, this.getAttribute(SELECTED_ATTR));
 };
@@ -60,9 +62,11 @@ CbMenuItemProto.attributeChangedCallback = function(attrName, oldValue, newValue
   }
 };
 
+CbMenuItemProto._clicked = function() {};
+
 function updateKeyboardSelected(value) {
   var shadow = this.webkitShadowRoot;
-  var container = shadow.querySelector(".container");
+  var container = shadow.querySelector("#container");
   var on = value === "true" || value === true;
   if (on) {
     container.classList.add('selected');

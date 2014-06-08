@@ -41,8 +41,7 @@ CbDropDownProto.createdCallback = function() {
     if (kid.nodeName.slice(0,1) !== '#' && kid.nodeName !== 'CB-CONTEXTMENU') {
       kid.addEventListener('click', function(ev) {
         var cm = self.querySelector('cb-contextmenu');
-        var rect = this.getBoundingClientRect();
-        cm.open(rect.left, rect.bottom);
+        cm.openAround(this);        
       });
     }
   }

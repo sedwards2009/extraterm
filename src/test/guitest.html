@@ -16,20 +16,19 @@
         position: relative;
         margin: 20px;
     }
-    
+    .burger_right {
+        float: right;
+    }
     </style>
     
     <script src="../require.js"></script>
     <script>
     requirejs.config({
         //By default load any module IDs from js/lib
-        baseUrl: '../',
-        paths: {
-            domReady: "test/domReady"
-        }
+        baseUrl: '../'
     });
 
-    require(['gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'commandframe', 'domReady'], function() {
+    require(['gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'commandframe', 'domReady'], function() {
         document.getElementById("openmenu").addEventListener('click', function() {
             var cm = document.getElementById("contextmenu");
             cm.open(100,100);
@@ -59,11 +58,14 @@
             <cb-menuitem icon="bomb" name="close">Close Tab</cb-menuitem>
             <cb-menuitem icon="copy" name="copy">Copy</cb-menuitem>
             <cb-menuitem icon="paste" name="paste">Paste</cb-menuitem>
+            <cb-checkboxmenuitem icon="list-ol" checked="false" name="showlines">Show line numbers</cb-checkboxmenuitem>
+            <cb-checkboxmenuitem icon="euro" checked="true" name="extramoney">Extra money</cb-checkboxmenuitem>
+            
         </cb-contextmenu>
     </cb-dropdown>
     <br />
     <br />
-    <cb-dropdown>
+    <cb-dropdown class="burger_right">
         <button class="topcoat-button"><i class="fa fa-bars"></i></button>
         <cb-contextmenu>
             <cb-menuitem icon="bomb" name="close">Close Tab</cb-menuitem>

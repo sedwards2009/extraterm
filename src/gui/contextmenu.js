@@ -17,9 +17,19 @@ function createClone() {
       + "    background-color: #F4F4F4;\n"
       + "    border-radius: 4px;\n"
       + "    padding: 4px 0px 4px 0px;\n"
-      + "    width: 10rem;\n"
+      + "    width: 15rem;\n"
       + "    box-shadow: 0px 0px 8px black;\n"
+      + "    z-index: 101;\n"
       + "}\n"
+      
+      + ".container_closed {\n"
+      + "    display: none;\n"
+      + "}\n"
+      
+      + ".container_open {\n"
+      + "\n"
+      + "}\n"
+      
       + ".cover_closed {\n"
       + "    visibility: hidden;\n"
       + "}\n"
@@ -31,11 +41,12 @@ function createClone() {
       + "    top: 0px;\n"
       + "    bottom: 0px;\n"
       + "    z-index: 100;\n"
+//      + " background-color: rgba(255, 0, 0, 0.5);\n"
       + "}\n"
       + "</style>\n"
-      + "<div id='cover' class='cover_closed'>"
-      + "<div id='container' class='container container_closed' tabindex='0'><content></content></div>"
-      + "</div>";
+      + "<div id='cover' class='cover_closed'></div>"
+      + "<div id='container' class='container container_closed' tabindex='0'><content></content></div>";
+      
     document.body.appendChild(template);
   }
   
@@ -79,7 +90,7 @@ CbContextMenuProto.createdCallback = function() {
   });
   
   container.addEventListener('mousemove', function(ev) {
-    if (ev.srcElement.nodeName.toLowerCase() === 'cb-menuitem') {
+    if (ev.srcElement.nodeName === 'CB-MENUITEM' || ev.srcElement.nodeName === 'CB-CHECKBOXMENUITEM') {
       selectMenuItem(self.childNodes, ev.srcElement);
     } else {
       selectMenuItem(self.childNodes, null);
@@ -92,12 +103,20 @@ CbContextMenuProto.createdCallback = function() {
   
   container.addEventListener('click', function(ev) {
     var name;
-
-    if (ev.srcElement.tagName.toLowerCase() === 'cb-menuitem') {
-      name = ev.srcElement.getAttribute('name');
+    var event
+    var checked;
+    var menuitem;
+    
+    // FIXME use instanceof or some other kind of test for a base menu item class.
+    if (ev.srcElement.tagName === 'CB-MENUITEM' || ev.srcElement.tagName === 'CB-CHECKBOXMENUITEM') {
+      menuitem = ev.srcElement;
+      menuitem._clicked();
+      
+      name = menuitem.getAttribute('name');
+      checked = menuitem.getAttribute('checked');
       self.close();
       
-      var event = new CustomEvent('selected', { detail: name });
+      event = new CustomEvent('selected', { detail: {name: name, checked: checked } });
       this.dispatchEvent(event);
     }
   });
@@ -117,7 +136,9 @@ function fetchCbMenuItems(kids) {
   result = [];
   for (i=0; i<len; i++) {
     item = kids[i];
-    if(item.nodeName.toLowerCase() === 'cb-menuitem') {
+    
+    // FIXME
+    if(item.nodeName === 'CB-MENUITEM' || item.nodeName === 'CB-CHECKBOXMENUITEM') {
       result.push(item);
     }
   }
@@ -132,7 +153,9 @@ function selectMenuItem(kids, selectitem) {
   len = kids.length;
   for (i=0; i<len; i++) {
     item = kids[i];
-    if (item.nodeName.toLowerCase() === 'cb-menuitem') {
+    
+    // FIXME
+    if (item.nodeName === 'CB-MENUITEM' || item.nodeName === 'CB-CHECKBOXMENUITEM') {
       item.setAttribute('selected', '' + (selectitem === item) );
     }
   }
@@ -201,10 +224,10 @@ CbContextMenuProto.open = function(x, y) {
   var container;
   var rect;
 
-  cover = this.__getById('cover');
-  cover.className = "cover_open";
-
   container = this.__getById('container');
+  container.classList.remove('container_closed');  
+  container.classList.add('container_open');  
+  
   rect = container.getBoundingClientRect();
     
   sx = x;
@@ -219,13 +242,54 @@ CbContextMenuProto.open = function(x, y) {
   
   container.style.left = "" + sx + "px";
   container.style.top = "" + sy + "px";
-  container.focus();
+
+  cover = this.__getById('cover');
+  cover.className = "cover_open";
   
+  container.focus();
+};
+
+CbContextMenuProto.openAround = function(el) {
+  var sx;
+  var sy;
+  var elrect;
+  var containerrect;
+  var container;
+  var cover;
+  
+  elrect = el.getBoundingClientRect();
+  
+  container = this.__getById('container');
+  container.classList.remove('container_closed');  
+  container.classList.add('container_open');  
+  containerrect = container.getBoundingClientRect();
+  
+  sx = elrect.left;
+  if (sx+containerrect.width > window.innerWidth) {
+    sx = window.innerWidth - containerrect.width;
+  }
+  
+  sy = elrect.bottom;
+  if (sy+containerrect.height > window.innerHeight) {
+    sy = elrect.top - containerrect.height;
+  }
+  
+  container.style.left = "" + sx + "px";
+  container.style.top = "" + sy + "px";
+
+  cover = this.__getById('cover');
+  cover.className = "cover_open";
+  
+  container.focus();
 };
 
 CbContextMenuProto.close = function() {
-  var cover = this.webkitShadowRoot.querySelector('#cover');
+  var cover = this.__getById('cover');
   cover.className = "cover_closed";
+  
+  var container = this.__getById('container');
+  container.classList.remove('container_open');  
+  container.classList.add('container_closed');  
 };
 
 var CbContextMenu = document.registerElement('cb-contextmenu', {prototype: CbContextMenuProto});
