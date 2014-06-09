@@ -77,7 +77,6 @@ CbContextMenuProto.createdCallback = function() {
   });
   
   cover.addEventListener('contextmenu', function(ev) {
-    console.log("cover contextmenu");
     ev.stopPropagation();
     ev.preventDefault();
     self.close();
@@ -105,14 +104,14 @@ CbContextMenuProto.createdCallback = function() {
     var name;
     var event;
     var checked;
-    var menuitem;
-    
+    var item;
+
     if (ev.srcElement instanceof menuitem) {
-      menuitem = ev.srcElement;
-      menuitem._clicked();
+      item = ev.srcElement;
+      item._clicked();
       
-      name = menuitem.getAttribute('name');
-      checked = menuitem.getAttribute('checked');
+      name = item.getAttribute('name');
+      checked = item.getAttribute('checked');
       self.close();
       
       event = new CustomEvent('selected', { detail: {name: name, checked: checked } });
@@ -120,7 +119,7 @@ CbContextMenuProto.createdCallback = function() {
     }
   });
   container.addEventListener('keydown', function(ev) {
-    __handleKeyDown.call(self, ev);
+    handleKeyDown.call(self, ev);
   });
   
 };
@@ -147,7 +146,7 @@ function selectMenuItem(kids, selectitem) {
   var i;
   var len;
   var item;
-  
+
   len = kids.length;
   for (i=0; i<len; i++) {
     item = kids[i];
@@ -158,11 +157,13 @@ function selectMenuItem(kids, selectitem) {
   }
 }
 
-function __handleKeyDown(ev) {
+function handleKeyDown(ev) {
   var keyboardselected;
   var menuitems;
   var i;
   var name;
+  
+  ev.preventDefault();
   
   // Escape.
   if (ev.keyIdentifier === "U+001B") {
@@ -243,6 +244,8 @@ CbContextMenuProto.open = function(x, y) {
   cover = this.__getById('cover');
   cover.className = "cover_open";
   
+  selectMenuItem(this.childNodes, null);
+  
   container.focus();
 };
 
@@ -276,6 +279,8 @@ CbContextMenuProto.openAround = function(el) {
 
   cover = this.__getById('cover');
   cover.className = "cover_open";
+  
+  selectMenuItem(this.childNodes, null);
   
   container.focus();
 };
