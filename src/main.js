@@ -1,19 +1,10 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-
-var _ = require('lodash-node');
-var fs = require('fs');
-var path = require('path');
-
-var terminal = require('./terminal.js');
-var configure_panel = require('./configure_panel.js');
-
-
-/*************************************************************************/
-exports.startUp = (function() {
+define(['lodash-node' , 'fs', 'path', 'nw.gui', './terminal', './configure_panel'],
+function(_, fs, path, gui, terminal, configure_panel) {
   "use strict";
-  
+
   var CONFIG_FILENAME = "config";
   var THEMES_DIRECTORY = "themes";
   var THEME_CONFIG = "theme.json";
@@ -21,7 +12,6 @@ exports.startUp = (function() {
   var terminalIdCounter = 0;
   var themes;
   var configurePanel = null;
-  var gui;
   var config;
   var doc;
   var terminalList = [];  // -> {id, terminal, terminaltab, tabheader};
@@ -183,10 +173,9 @@ exports.startUp = (function() {
     terminalList.splice(i, 1);
   }
   
-  function startUp(windowGui) {
+  function startUp(__dirname) {
     var themesdir;
     
-    gui = windowGui;
     doc = window.document;
     
     config = readConfiguration();
@@ -300,4 +289,4 @@ exports.startUp = (function() {
   }
   
   return startUp;
-})();
+});

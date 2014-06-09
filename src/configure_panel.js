@@ -1,9 +1,10 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-var _ = require('lodash-node');
-var util = require('util');
-var EventEmitter = require('events').EventEmitter;
+define(['lodash-node', 'util', 'events'],
+function(_, util, events) {
+  
+var EventEmitter = events.EventEmitter;
 
 /**
  * Configure Panel.
@@ -134,4 +135,7 @@ ConfigurePanel.prototype._close = function() {
   panel.classList.add("configure_panel");
 };
 
-exports.ConfigurePanel = ConfigurePanel;
+return {
+  ConfigurePanel: ConfigurePanel
+};
+});

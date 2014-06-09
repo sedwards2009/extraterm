@@ -6,8 +6,19 @@
     <link rel="stylesheet" type="text/css" href="css/topcoat-desktop-light.css" />
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
     <link id="theme_link" rel="stylesheet" type="text/css" href="themes/default/theme.css" />
+    
+    <script>
+    function startUp() {
+        var requirejs = require('requirejs');
+        var dirname = require('./dirname');
+        requirejs.config({ nodeRequire: require });
+        requirejs(['main'], function(main) {
+            main(dirname.dirname);
+        });
+    }
+    </script>
 </head>
-<body onload="process.mainModule.exports.startUp(require('nw.gui'))">
+<body onload="startUp();">
     <div class="toplayout">
         <div id="tabbar" class="tabbar">
             <!-- Tabs appear here. -->

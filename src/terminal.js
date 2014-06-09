@@ -1,16 +1,14 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-var child_process = require('child_process');
-var termjs = require('term.js');
-var util = require('util');
-var EventEmitter = require('events').EventEmitter;
-var _ = require('lodash-node');
+define(['child_process', 'term.js', 'util', 'events', 'lodash-node'],
+function(child_process, termjs, util, events, _) {
+var EventEmitter = events.EventEmitter;
 
 var debug = false;
 function log() {
   if (debug) {
-    console.log.apply(this, arguments);
+    console.log.apply(console, arguments);
   }
 }
 
@@ -450,4 +448,9 @@ Terminal.prototype._handleMineTypeClick = function(type, value) {
     this._sendDataToPty("cd " + value + "\n"); // FIXME escaping
   }
 };
-exports.Terminal = Terminal;
+
+return {
+  Terminal: Terminal
+};
+
+});
