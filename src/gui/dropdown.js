@@ -20,16 +20,15 @@ function createClone() {
   return document.importNode(template.content, true);
 }
 
-function getById(self, id) {
-  return self.webkitShadowRoot.querySelector('#'+id);
-};
-
 CbDropDownProto.createdCallback = function() {
   var i;
   var len;
   var kid;
+  var shadow;
+  var cm;
   var self = this;
-  var shadow = this.webkitCreateShadowRoot();
+  
+  shadow = this.webkitCreateShadowRoot();
   shadow.applyAuthorStyles = true;
   
   var clone = createClone();
@@ -46,6 +45,11 @@ CbDropDownProto.createdCallback = function() {
     }
   }
   
+  cm = this.querySelector('cb-contextmenu');  
+  cm.addEventListener('selected', function(ev) {
+      var event = new CustomEvent('selected', { detail: ev.detail });
+      self.dispatchEvent(event);
+  });
 };
 
 var CbDropDown = document.registerElement('cb-dropdown', {prototype: CbDropDownProto});
