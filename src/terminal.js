@@ -1,8 +1,8 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-define(['child_process', 'term.js', 'util', 'events', 'lodash-node'],
-function(child_process, termjs, util, events, _) {
+define(['child_process', 'term.js', 'util', 'events', 'lodash-node', 'commandframe'],
+function(child_process, termjs, util, events, _, commandframe) {
 var EventEmitter = events.EventEmitter;
 
 var debug = false;
@@ -299,16 +299,14 @@ Terminal.prototype._handleApplicationModeEnd = function() {
 
     case APPLICATION_MODE_OUTPUT_BRACKET_START:
       if (this._lastBashBracket !== this._htmlData) {
-        el = this._getWindow().document.createElement("div");
-        el.className = "extraterm_start_output";
+        el = this._getWindow().document.createElement("et-commandframe");
         cleancommand = this._htmlData;
         if (this._bracketStyle === "bash") {
           // Bash includes the history number. Remove it.
           trimmed = this._htmlData.trimLeft();
           cleancommand = trimmed.slice(trimmed.indexOf(" ")).trimLeft();
         }
-        el.setAttribute(SEMANTIC_TYPE, TYPE_OUTPUT_START);
-        el.setAttribute(SEMANTIC_VALUE, cleancommand);
+        el.setAttribute('command-line', cleancommand);
         this._term.appendElement(el);
         this._lastBashBracket = this._htmlData;
       }
@@ -317,7 +315,7 @@ Terminal.prototype._handleApplicationModeEnd = function() {
     case APPLICATION_MODE_OUTPUT_BRACKET_END:
       log("startdivs:", startdivs);
       this._term.moveRowsToScrollback();
-      startdivs = this._term.element.querySelectorAll("DIV[" + SEMANTIC_TYPE + "='" + TYPE_OUTPUT_START + "']");
+      startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
       if (startdivs.length !== 0) {
         outputdiv = startdivs[startdivs.length-1];
         node = outputdiv.nextSibling;
@@ -330,8 +328,7 @@ Terminal.prototype._handleApplicationModeEnd = function() {
         nodelist.forEach(function(node) {
           outputdiv.appendChild(node);
         });
-        outputdiv.setAttribute(SEMANTIC_TYPE, TYPE_OUTPUT);
-        outputdiv.setAttribute(SEMANTIC_RETURN_CODE, this._htmlData);
+        outputdiv.setAttribute('return-code', this._htmlData);
         outputdiv.className = "extraterm_output";
       }
 

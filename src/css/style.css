@@ -245,8 +245,10 @@ span[data-extraterm-type='directory']:hover {
 
 .terminal > DIV.terminal-active {
     /* background-color: #804040; */
+    margin-left: calc(2rem + 3px);
 }
 
 .terminal > DIV.terminal-scrollback {
 /*    background-color: #404080; */
+    margin-left: calc(2rem + 3px);
 }

@@ -4,12 +4,12 @@ var ID = "EtCommandFrameTemplate";
 var COMMANDLINE_ATTR = "command-line";
 var RETURN_CODE_ATTR = "return-code";
 
-var EtCommandFrameProto = Object.create(HTMLElement.prototype);
+var EtCommandFrameProto = Object.create(window.HTMLElement.prototype);
 
 function createClone() {
-  var template = document.getElementById(ID);
+  var template = window.document.getElementById(ID);
   if (template === null) {
-    template = document.createElement('template');
+    template = window.document.createElement('template');
     template.id = ID;
     
     var success_color = "#00ff00";
@@ -22,16 +22,31 @@ function createClone() {
     
       + "#main {\n"
       + "  flex: auto 1 1;\n"
-//      + "  border: 1px solid green;"
       + "}\n"
       
       + "#header {\n"
-      + "  border: 1px solid green;\n"
-      + "  border-radius: 0.5em;\n"
+      + "  border-top-right-radius: 0.5em;\n"
+      + "  border-bottom-right-radius: 0.5em;\n"
       + "  padding-top: 1px;\n"
       + "  padding-left: 0.5em;\n"
       + "  padding-right: 0.5em;\n"
       + "  padding-bottom: 1px;\n"
+      + "}\n"
+      
+      + "#header.running {\n"
+      + "  border: 1px solid white;\n"
+      + "}\n"
+      
+      + "#header.success {\n"
+      + "  border-top: 1px solid " + success_color + ";\n"
+      + "  border-bottom: 1px solid " + success_color + ";\n"
+      + "  border-right: 1px solid " + success_color + ";\n"
+      + "}\n"
+      
+      + "#header.fail {\n"
+      + "  border-top: 1px solid " + fail_color + ";\n"
+      + "  border-bottom: 1px solid " + fail_color + ";\n"
+      + "  border-right: 1px solid " + fail_color + ";\n"
       + "}\n"
       
       + "#gutter {\n"
@@ -45,13 +60,11 @@ function createClone() {
       
       + "#gutter.success {\n"
       + "  color: " + success_color + ";\n"
-      + "  border-top: 1px solid " + success_color + ";\n"
       + "  border-right: 1px solid " + success_color + ";\n"
       + "}\n"
       
       + "#gutter.fail {\n"
       + "  color: " + fail_color + ";\n"
-      + "  border-top: 1px solid " + fail_color + ";\n"
       + "  border-right: 1px solid " + fail_color + ";\n"
       + "}\n"
       
@@ -67,10 +80,10 @@ function createClone() {
       + "    <div id='output'><content></content></div>"
       + "  </div>"
       + "</div>";
-    document.body.appendChild(template);
+    window.document.body.appendChild(template);
   }
   
-  return document.importNode(template.content, true);
+  return window.document.importNode(template.content, true);
 }
 
 function getById(self, id) {
@@ -96,17 +109,21 @@ function setAttr(self, attrName, newValue) {
     if (newValue === null || newValue === undefined || newValue === "") {
       icon.className = "fa fa-cog";
       gutter.classList.add('running');
+      header.classList.add('running');
     } else {
       
       rc = parseInt(newValue, 10);
       gutter.classList.remove('running');
+      header.classList.remove('running');
       gutter.setAttribute('title', 'Return code: ' + rc);
       if (rc === 0) {
         icon.className = "fa fa-check";
         gutter.classList.add('success');
+        header.classList.add('success');
       } else {
-        icon.className = "fa fa-exclamation-triangle";
+        icon.className = "fa fa-times";
         gutter.classList.add('fail');
+        header.classList.add('fail');
       }
     }
     
@@ -198,6 +215,6 @@ EtCommandFrameProto.attributeChangedCallback = function(attrName, oldValue, newV
   setAttr(this, attrName, newValue);
 };
 
-var EtCommandFrame = document.registerElement('et-commandframe', {prototype: EtCommandFrameProto});
+var EtCommandFrame = window.document.registerElement('et-commandframe', {prototype: EtCommandFrameProto});
 return EtCommandFrame;  
 });
