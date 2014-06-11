@@ -31,6 +31,7 @@ function createClone() {
       + "  padding-left: 0.5em;\n"
       + "  padding-right: 0.5em;\n"
       + "  padding-bottom: 1px;\n"
+      + "  display: flex;\n"
       + "}\n"
       
       + "#header.running {\n"
@@ -68,6 +69,22 @@ function createClone() {
       + "  border-right: 1px solid " + fail_color + ";\n"
       + "}\n"
       
+      + "#commandline {\n"
+      + "  flex: auto 1 1;\n"
+      + "}\n"
+      
+      +"#closebutton {\n"
+      + "  flex: auto 0 0;\n"
+      + "  padding: 0px;\n"
+      + "  background-color: transparent;\n"
+      + "  border: 0px;\n"
+      + "  color: white;\n"
+      + "}\n"
+
+      +"#closebutton:hover {\n"
+      + "  color: red;\n"
+      + "}\n"
+      
       + "#icon_div {\n"
       + "  width: 1em;\n"
       + "  height: 1em;\n"
@@ -76,7 +93,7 @@ function createClone() {
       + "<div id='container'>"
       + "  <div id='gutter' class='running'><div id='icon_div'><i id='icon'></i></div></div>"
       + "  <div id='main'>"
-      + "    <div id='header'><div id='commandline'></div></div>"
+      + "    <div id='header'><div id='commandline'></div><button id='closebutton'><i class='fa fa-times-circle'></i></button></div>"
       + "    <div id='output'><content></content></div>"
       + "  </div>"
       + "</div>";
@@ -134,7 +151,8 @@ function setAttr(self, attrName, newValue) {
 EtCommandFrameProto.createdCallback = function() {
 //  var cover;
 //  var container;
-//  var self = this;
+  var self = this;
+  var closebutton;
   var shadow = this.webkitCreateShadowRoot();
   shadow.applyAuthorStyles = true;
   
@@ -143,6 +161,12 @@ EtCommandFrameProto.createdCallback = function() {
   
   setAttr(this, COMMANDLINE_ATTR, this.getAttribute(COMMANDLINE_ATTR));
   setAttr(this, RETURN_CODE_ATTR, this.getAttribute(RETURN_CODE_ATTR));
+
+  closebutton = getById(this, 'closebutton');
+  closebutton.addEventListener('click', function() {
+      var event = new window.CustomEvent('close-request', { detail: null });
+      self.dispatchEvent(event);
+  });
   
 //  cover = this.__getById('cover');
 //  cover.addEventListener('mousedown', function(ev) {

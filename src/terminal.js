@@ -300,6 +300,9 @@ Terminal.prototype._handleApplicationModeEnd = function() {
     case APPLICATION_MODE_OUTPUT_BRACKET_START:
       if (this._lastBashBracket !== this._htmlData) {
         el = this._getWindow().document.createElement("et-commandframe");
+        el.addEventListener('close-request', function() {
+          el.remove();
+        });
         cleancommand = this._htmlData;
         if (this._bracketStyle === "bash") {
           // Bash includes the history number. Remove it.
