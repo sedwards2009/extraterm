@@ -55,7 +55,7 @@ function(_, fs, path, gui, terminal, configure_panel) {
     tabbar.insertBefore(tabheader, doc.getElementById("new_tab_button"));
     
     info = {id: thisId, terminal: term, terminaltab: terminaltab, tabheader: tabheader};
-    terminalList[thisId] = info;
+    terminalList.push(info);
     return thisId;
   }
   
