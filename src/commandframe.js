@@ -1,8 +1,9 @@
-define([], function() {
+define(['gui/util'], function(util) {
 
 var ID = "EtCommandFrameTemplate";
 var COMMANDLINE_ATTR = "command-line";
 var RETURN_CODE_ATTR = "return-code";
+var EXPAND_ATTR = "expand";
 
 var EtCommandFrameProto = Object.create(window.HTMLElement.prototype);
 
@@ -50,6 +51,13 @@ function createClone() {
       + "  border-right: 1px solid " + fail_color + ";\n"
       + "}\n"
       
+      + "#output.closed {\n"
+      + "  display: none;\n"
+      + "  height: 1px;\n"
+      + "  overflow: hidden;\n"
+      + "}\n"
+      
+      
       + "#gutter {\n"
       + "  flex: 2rem 0 0;\n"
       + "  width: 2rem;\n"
@@ -73,7 +81,7 @@ function createClone() {
       + "  flex: auto 1 1;\n"
       + "}\n"
       
-      +"#closebutton {\n"
+      +"#close_button {\n"
       + "  flex: auto 0 0;\n"
       + "  padding: 0px;\n"
       + "  background-color: transparent;\n"
@@ -81,19 +89,34 @@ function createClone() {
       + "  color: white;\n"
       + "}\n"
 
-      +"#closebutton:hover {\n"
+      +"#close_button:hover {\n"
       + "  color: red;\n"
       + "}\n"
       
       + "#icon_div {\n"
+      + "  display: inline-block;\n"
       + "  width: 1em;\n"
       + "  height: 1em;\n"
       + "}\n"
+      
+      + "#expand_button {\n"
+      + "  display: inline-block;\n"
+      + "  padding: 0px;\n"
+      + "  background-color: transparent;\n"
+      + "  color: white;\n"
+      + "  border: 0px;\n"
+      + "  width: 1em;\n"
+      + "  height: 1em;\n"
+      + "}\n"
+      
       + "</style>\n"
       + "<div id='container'>"
-      + "  <div id='gutter' class='running'><div id='icon_div'><i id='icon'></i></div></div>"
+      + "  <div id='gutter' class='running'>"
+      +     "<div id='icon_div'><i id='icon'></i></div>"
+      +     "<button id='expand_button'><i id='expand_icon' class='fa fa-caret-down'></i></button>"
+      + "  </div>"
       + "  <div id='main'>"
-      + "    <div id='header'><div id='commandline'></div><button id='closebutton'><i class='fa fa-times-circle'></i></button></div>"
+      + "    <div id='header'><div id='commandline'></div><button id='close_button'><i class='fa fa-times-circle'></i></button></div>"
       + "    <div id='output'><content></content></div>"
       + "  </div>"
       + "</div>";
@@ -112,6 +135,8 @@ function setAttr(self, attrName, newValue) {
   var gutter;
   var rc;
   var header;
+  var output;
+  var expandicon;
 
   if (attrName === COMMANDLINE_ATTR) {
     getById(self, 'commandline').innerText = newValue;
@@ -146,6 +171,22 @@ function setAttr(self, attrName, newValue) {
     
     return;
   }
+  
+  if (attrName === EXPAND_ATTR) {
+    output = getById(self, 'output');
+    expandicon = getById(self, 'expand_icon');
+    if (util.htmlValueToBool(newValue, true)) {
+      // Expanded.
+      output.classList.remove('closed');
+      expandicon.classList.remove('fa-plus-square-o');
+      expandicon.classList.add('fa-minus-square-o');
+    } else {
+      // Collapsed.
+      output.classList.add('closed');
+      expandicon.classList.add('fa-plus-square-o');
+      expandicon.classList.remove('fa-minus-square-o');
+    }
+  }
 }
 
 EtCommandFrameProto.createdCallback = function() {
@@ -153,6 +194,7 @@ EtCommandFrameProto.createdCallback = function() {
 //  var container;
   var self = this;
   var closebutton;
+  var expandbutton;
   var shadow = this.webkitCreateShadowRoot();
   shadow.applyAuthorStyles = true;
   
@@ -161,11 +203,18 @@ EtCommandFrameProto.createdCallback = function() {
   
   setAttr(this, COMMANDLINE_ATTR, this.getAttribute(COMMANDLINE_ATTR));
   setAttr(this, RETURN_CODE_ATTR, this.getAttribute(RETURN_CODE_ATTR));
+  setAttr(this, EXPAND_ATTR, this.getAttribute(EXPAND_ATTR));
 
-  closebutton = getById(this, 'closebutton');
+  closebutton = getById(this, 'close_button');
   closebutton.addEventListener('click', function() {
       var event = new window.CustomEvent('close-request', { detail: null });
       self.dispatchEvent(event);
+  });
+  
+  expandbutton = getById(this, 'expand_button');
+  expandbutton.addEventListener('click', function() {
+    var expanded = util.htmlValueToBool(self.getAttribute(EXPAND_ATTR), true);
+    self.setAttribute(EXPAND_ATTR, !expanded);
   });
   
 //  cover = this.__getById('cover');
