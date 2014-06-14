@@ -1,4 +1,4 @@
-define(["gui/menuitem"], function(menuitem) {
+define(["require", "gui/menuitem", "gui/util"], function(require, menuitem, util) {
 var ID = "CbContextMenuTemplate";
 
 /**
@@ -54,14 +54,14 @@ function createClone() {
 }
 
 CbContextMenuProto.__getById = function(id) {
-  return this.webkitShadowRoot.querySelector('#'+id);
+  return util.getShadowRoot(this).querySelector('#'+id);
 };
 
 CbContextMenuProto.createdCallback = function() {
   var cover;
   var container;
   var self = this;
-  var shadow = this.webkitCreateShadowRoot();
+  var shadow = util.createShadowRoot(this);
   shadow.applyAuthorStyles = true;
   
   var clone = createClone();

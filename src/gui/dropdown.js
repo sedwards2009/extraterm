@@ -1,4 +1,4 @@
-define([], function() {
+define(['gui/util'], function(util) {
 var ID = "CbDropDownTemplate";
 
 /**
@@ -28,7 +28,7 @@ CbDropDownProto.createdCallback = function() {
   var cm;
   var self = this;
   
-  shadow = this.webkitCreateShadowRoot();
+  shadow = util.createShadowRoot(this);
   shadow.applyAuthorStyles = true;
   
   var clone = createClone();

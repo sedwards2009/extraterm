@@ -1,4 +1,4 @@
-define(['gui/util'], function(util) {
+define(['require', 'gui/util'], function(require, util) {
 
 var ID = "EtCommandFrameTemplate";
 var COMMANDLINE_ATTR = "command-line";
@@ -17,6 +17,7 @@ function createClone() {
     var fail_color = "#ff0000";
     
     template.innerHTML = "<style>\n"
+      + "@import url('" + require.toUrl("css/font-awesome.css") + "');\n"
       + "#container {\n"
       + "  display: flex;\n"
       + "}\n"
@@ -127,7 +128,7 @@ function createClone() {
 }
 
 function getById(self, id) {
-  return self.webkitShadowRoot.querySelector('#'+id);
+  return util.getShadowRoot(self).querySelector('#'+id);
 }
 
 function setAttr(self, attrName, newValue) {
@@ -195,7 +196,7 @@ EtCommandFrameProto.createdCallback = function() {
   var self = this;
   var closebutton;
   var expandbutton;
-  var shadow = this.webkitCreateShadowRoot();
+  var shadow = util.createShadowRoot(this);
   shadow.applyAuthorStyles = true;
   
   var clone = createClone();

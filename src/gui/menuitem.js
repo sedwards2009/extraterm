@@ -1,4 +1,4 @@
-define([], function() {
+define(["require", 'gui/util'], function(require, util) {
 
 var CbMenuItemProto = Object.create(HTMLElement.prototype);;
 var SELECTED_ATTR = "selected";
@@ -6,7 +6,8 @@ var SELECTED_ATTR = "selected";
 CbMenuItemProto._id = "CbMenuItemTemplate";
 
 CbMenuItemProto._css = function() {
-  return ":host {\n"
+  return "@import url('" + require.toUrl("../css/font-awesome.css") + "');\n"
+      + ":host {\n"
       + "    display: block;\n"
       + "}\n"
 
@@ -55,7 +56,7 @@ CbMenuItemProto._createClone = function() {
 CbMenuItemProto.createdCallback = function() {
   var icon;
   var iconhtml;
-  var shadow = this.webkitCreateShadowRoot();
+  var shadow = util.createShadowRoot(this);
   shadow.applyAuthorStyles = true;
   
   var clone = this._createClone();
@@ -82,7 +83,7 @@ CbMenuItemProto.attributeChangedCallback = function(attrName, oldValue, newValue
 CbMenuItemProto._clicked = function() {};
 
 function updateKeyboardSelected(value) {
-  var shadow = this.webkitShadowRoot;
+  var shadow = util.getShadowRoot(this);
   var container = shadow.querySelector("#container");
   var on = value === "true" || value === true;
   if (on) {

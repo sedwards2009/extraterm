@@ -26,7 +26,7 @@ CbCheckBoxMenuItemProto.attributeChangedCallback = function(attrName, oldValue, 
 
 function updateChecked(checked) {
   var checkedhtml;
-  var shadow = this.webkitShadowRoot;
+  var shadow = util.getShadowRoot(this);
 
   checkedhtml = "<i class='fa fa-fw fa-" + (util.htmlValueToBool(checked) ? "check-" : "") + "square-o'></i>";
   shadow.querySelector("#icon1").innerHTML = checkedhtml; 
