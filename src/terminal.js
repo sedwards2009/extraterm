@@ -317,9 +317,9 @@ Terminal.prototype._handleApplicationModeEnd = function() {
 
     case APPLICATION_MODE_OUTPUT_BRACKET_END:
       log("startdivs:", startdivs);
-      this._term.moveRowsToScrollback();
       startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
       if (startdivs.length !== 0) {
+        this._term.moveRowsToScrollback();
         outputdiv = startdivs[startdivs.length-1];
         node = outputdiv.nextSibling;
 
