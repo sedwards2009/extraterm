@@ -319,20 +319,23 @@ Terminal.prototype._handleApplicationModeEnd = function() {
       log("startdivs:", startdivs);
       startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
       if (startdivs.length !== 0) {
-        this._term.moveRowsToScrollback();
-        outputdiv = startdivs[startdivs.length-1];
-        node = outputdiv.nextSibling;
+        
+        this.preserveScroll(function() {
+          this._term.moveRowsToScrollback();
+          outputdiv = startdivs[startdivs.length-1];
+          node = outputdiv.nextSibling;
 
-        nodelist = [];
-        while (node !== null) {
-          nodelist.push(node);
-          node = node.nextSibling;
-        }
-        nodelist.forEach(function(node) {
-          outputdiv.appendChild(node);
+          nodelist = [];
+          while (node !== null) {
+            nodelist.push(node);
+            node = node.nextSibling;
+          }
+          nodelist.forEach(function(node) {
+            outputdiv.appendChild(node);
+          });
+          outputdiv.setAttribute('return-code', this._htmlData);
+          outputdiv.className = "extraterm_output";
         });
-        outputdiv.setAttribute('return-code', this._htmlData);
-        outputdiv.className = "extraterm_output";
       }
 
       break;
@@ -344,6 +347,15 @@ Terminal.prototype._handleApplicationModeEnd = function() {
 
   log("html-mode end!",this._htmlData);
   this._htmlData = null;
+};
+
+Terminal.prototype.preserveScroll = function(task) {
+  var scrollatbottom = this._term.isScrollAtBottom();
+  task.call(this);
+  if (scrollatbottom) {
+    // Scroll the terminal down to the bottom.
+    this._term.scrollToBottom();
+  }
 };
 
 /**
