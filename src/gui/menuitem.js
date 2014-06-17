@@ -1,6 +1,6 @@
 define(["require", 'gui/util'], function(require, util) {
 
-var CbMenuItemProto = Object.create(HTMLElement.prototype);;
+var CbMenuItemProto = Object.create(window.HTMLElement.prototype);;
 var SELECTED_ATTR = "selected";
 
 CbMenuItemProto._id = "CbMenuItemTemplate";
@@ -9,6 +9,9 @@ CbMenuItemProto._css = function() {
   return "@import url('" + require.toUrl("../css/font-awesome.css") + "');\n"
       + ":host {\n"
       + "    display: block;\n"
+      + "    color: #000;\n"
+      + "    font: 16px 'Source Sans', helvetica, arial, sans-serif;\n"
+      + "    font-weight: 400;\n"
       + "}\n"
 
       + "#container {\n"
@@ -43,21 +46,21 @@ CbMenuItemProto._html = function() {
 };
 
 CbMenuItemProto._createClone = function() {
-  var template = document.getElementById(this._id);
+  var template = window.document.getElementById(this._id);
   if (template === null) {
-    template = document.createElement('template');
+    template = window.document.createElement('template');
     template.id = this._id;
     template.innerHTML = "<style>" + this._css() + "</style>\n" + this._html();
-    document.body.appendChild(template);
+    window.document.body.appendChild(template);
   }
-  return document.importNode(template.content, true);
+  return window.document.importNode(template.content, true);
 };
 
 CbMenuItemProto.createdCallback = function() {
   var icon;
   var iconhtml;
   var shadow = util.createShadowRoot(this);
-  shadow.applyAuthorStyles = true;
+//  shadow.applyAuthorStyles = true;
   
   var clone = this._createClone();
   shadow.appendChild(clone);
@@ -93,6 +96,6 @@ function updateKeyboardSelected(value) {
   }
 }
 
-var CbMenuItem = document.registerElement('cb-menuitem', {prototype: CbMenuItemProto});
+var CbMenuItem = window.document.registerElement('cb-menuitem', {prototype: CbMenuItemProto});
 return CbMenuItem;
 });

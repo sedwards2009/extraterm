@@ -29,7 +29,7 @@ CbDropDownProto.createdCallback = function() {
   var self = this;
   
   shadow = util.createShadowRoot(this);
-  shadow.applyAuthorStyles = true;
+//  shadow.applyAuthorStyles = true;
   
   var clone = createClone();
   shadow.appendChild(clone);

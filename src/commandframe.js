@@ -1,9 +1,11 @@
-define(['require', 'gui/util'], function(require, util) {
+define(['require', 'gui/contextmenu', 'gui/menuitem', 'gui/checkboxmenuitem', 'gui/util'],
+function(require, contextmenu, menuitem, checkboxmenuitem, util) {
 
 var ID = "EtCommandFrameTemplate";
 var COMMANDLINE_ATTR = "command-line";
 var RETURN_CODE_ATTR = "return-code";
 var EXPAND_ATTR = "expand";
+var LINE_NUMBERS_ATTR = "line-numbers";
 
 var EtCommandFrameProto = Object.create(window.HTMLElement.prototype);
 
@@ -17,7 +19,13 @@ function createClone() {
     var fail_color = "#ff0000";
     
     template.innerHTML = "<style>\n"
+      + "@import url('" + require.toUrl("css/topcoat-desktop-light.css") + "');\n"
       + "@import url('" + require.toUrl("css/font-awesome.css") + "');\n"
+      
+      + ":host {\n"
+      + "display: block;\n"
+      + "}\n"
+      
       + "#container {\n"
       + "  display: flex;\n"
       + "}\n"
@@ -110,17 +118,38 @@ function createClone() {
       + "  height: 1em;\n"
       + "}\n"
       
+      +"content.line_numbers::content > div {\n"
+      + "  counter-increment: lines;\n"
+      + "  position: relative;\n"
+      + "  left: calc(-2rem - 2px);\n"
+      +"  }\n"
+      
+      + "content.line_numbers::content > div:before {\n"
+      + "  display: inline-block;\n"
+      + "  width: 2rem;\n"
+      + "  margin-right: 2px;\n"
+      + "  content: counter(lines);\n"
+      + "  color: white;\n"
+      + "  text-align: right;\n"
+      + "  font-size: 0.7rem;\n"
+      +"  }\n"
+
       + "</style>\n"
       + "<div id='container'>"
       + "  <div id='gutter' class='running'>"
       +     "<div id='icon_div'><i id='icon'></i></div>"
-      +     "<button id='expand_button'><i id='expand_icon' class='fa fa-caret-down'></i></button>"
+      +     "<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>"
       + "  </div>"
       + "  <div id='main'>"
       + "    <div id='header'><div id='commandline'></div><button id='close_button'><i class='fa fa-times-circle'></i></button></div>"
-      + "    <div id='output'><content></content></div>"
+      + "    <div id='output'><content id='lines_content'></content></div>"
       + "  </div>"
-      + "</div>";
+      + "</div>"
+      + "<cb-contextmenu id='contextmenu'>\n"
+      +   "<cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>\n"
+      +   "<cb-checkboxmenuitem icon='list-ol' id='linesnumbersmenuitem' checked='false' name='showlines'>Line numbers</cb-checkboxmenuitem>\n"
+      +   "<cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>\n"
+      + "</cb-contextmenu>\n";
     window.document.body.appendChild(template);
   }
   
@@ -138,6 +167,8 @@ function setAttr(self, attrName, newValue) {
   var header;
   var output;
   var expandicon;
+  var linescontent;
+  var menuitem;
 
   if (attrName === COMMANDLINE_ATTR) {
     getById(self, 'commandline').innerText = newValue;
@@ -181,12 +212,25 @@ function setAttr(self, attrName, newValue) {
       output.classList.remove('closed');
       expandicon.classList.remove('fa-plus-square-o');
       expandicon.classList.add('fa-minus-square-o');
+      getById(self, 'expandmenuitem').setAttribute('checked', true);
     } else {
       // Collapsed.
       output.classList.add('closed');
       expandicon.classList.add('fa-plus-square-o');
       expandicon.classList.remove('fa-minus-square-o');
+      getById(self, 'expandmenuitem').setAttribute('checked', false);
     }
+    return;
+  }
+  
+  if (attrName === LINE_NUMBERS_ATTR) {
+    linescontent = getById(self, 'lines_content');
+    if (util.htmlValueToBool(newValue, false)) {
+      linescontent.classList.add('line_numbers');
+    } else {
+      linescontent.classList.remove('line_numbers');      
+    }
+    return;
   }
 }
 
@@ -196,8 +240,9 @@ EtCommandFrameProto.createdCallback = function() {
   var self = this;
   var closebutton;
   var expandbutton;
+  var cm;
   var shadow = util.createShadowRoot(this);
-  shadow.applyAuthorStyles = true;
+//  shadow.applyAuthorStyles = true;
   
   var clone = createClone();
   shadow.appendChild(clone);
@@ -205,6 +250,7 @@ EtCommandFrameProto.createdCallback = function() {
   setAttr(this, COMMANDLINE_ATTR, this.getAttribute(COMMANDLINE_ATTR));
   setAttr(this, RETURN_CODE_ATTR, this.getAttribute(RETURN_CODE_ATTR));
   setAttr(this, EXPAND_ATTR, this.getAttribute(EXPAND_ATTR));
+  setAttr(this, LINE_NUMBERS_ATTR, this.getAttribute(LINE_NUMBERS_ATTR));
 
   closebutton = getById(this, 'close_button');
   closebutton.addEventListener('click', function() {
@@ -216,6 +262,30 @@ EtCommandFrameProto.createdCallback = function() {
   expandbutton.addEventListener('click', function() {
     var expanded = util.htmlValueToBool(self.getAttribute(EXPAND_ATTR), true);
     self.setAttribute(EXPAND_ATTR, !expanded);
+  });
+  
+  cm = getById(self, 'contextmenu');
+  getById(this, 'container').addEventListener('contextmenu', function(ev) {
+    var cm;
+    ev.stopPropagation();
+    ev.preventDefault();
+    cm = getById(self, 'contextmenu');
+    cm.open(ev.clientX, ev.clientY);
+  });
+
+  cm.addEventListener('selected', function(ev) {
+    switch (ev.detail.name) {
+      case "showlines":
+        self.setAttribute(LINE_NUMBERS_ATTR, ev.detail.checked);
+        break;
+        
+      case "expand":
+        self.setAttribute(EXPAND_ATTR, ev.detail.checked);
+        break;
+        
+      default:
+        break;
+    }
   });
   
 //  cover = this.__getById('cover');

@@ -4,12 +4,12 @@ var ID = "CbContextMenuTemplate";
 /**
  * A context menu.
  */
-var CbContextMenuProto = Object.create(HTMLElement.prototype);
+var CbContextMenuProto = Object.create(window.HTMLElement.prototype);
 
 function createClone() {
-  var template = document.getElementById(ID);
+  var template = window.document.getElementById(ID);
   if (template === null) {
-    template = document.createElement('template');
+    template = window.document.createElement('template');
     template.id = ID;
     template.innerHTML = "<style>\n"
       + ".container {\n"
@@ -47,10 +47,10 @@ function createClone() {
       + "<div id='cover' class='cover_closed'></div>"
       + "<div id='container' class='container container_closed' tabindex='0'><content></content></div>";
       
-    document.body.appendChild(template);
+    window.document.body.appendChild(template);
   }
   
-  return document.importNode(template.content, true);
+  return window.document.importNode(template.content, true);
 }
 
 CbContextMenuProto.__getById = function(id) {
@@ -62,7 +62,7 @@ CbContextMenuProto.createdCallback = function() {
   var container;
   var self = this;
   var shadow = util.createShadowRoot(this);
-  shadow.applyAuthorStyles = true;
+//  shadow.applyAuthorStyles = true;
   
   var clone = createClone();
   shadow.appendChild(clone);
@@ -114,7 +114,7 @@ CbContextMenuProto.createdCallback = function() {
       checked = item.getAttribute('checked');
       self.close();
       
-      event = new CustomEvent('selected', { detail: {name: name, checked: checked } });
+      event = new window.CustomEvent('selected', { detail: {name: name, checked: checked } });
       this.dispatchEvent(event);
     }
   });
@@ -294,6 +294,6 @@ CbContextMenuProto.close = function() {
   container.classList.add('container_closed');  
 };
 
-var CbContextMenu = document.registerElement('cb-contextmenu', {prototype: CbContextMenuProto});
+var CbContextMenu = window.document.registerElement('cb-contextmenu', {prototype: CbContextMenuProto});
 return CbContextMenu;
 });

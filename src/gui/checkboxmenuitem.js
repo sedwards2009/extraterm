@@ -32,7 +32,7 @@ function updateChecked(checked) {
   shadow.querySelector("#icon1").innerHTML = checkedhtml; 
 }
 
-var CbCheckBoxMenuItem = document.registerElement('cb-checkboxmenuitem', {prototype: CbCheckBoxMenuItemProto});
+var CbCheckBoxMenuItem = window.document.registerElement('cb-checkboxmenuitem', {prototype: CbCheckBoxMenuItemProto});
 return CbCheckBoxMenuItem;
 });
 
