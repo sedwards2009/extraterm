@@ -101,27 +101,16 @@ CbContextMenuProto.createdCallback = function() {
   });
   
   container.addEventListener('click', function(ev) {
-    var name;
-    var event;
-    var checked;
     var item;
 
     if (ev.srcElement instanceof menuitem) {
       item = ev.srcElement;
-      item._clicked();
-      
-      name = item.getAttribute('name');
-      checked = item.getAttribute('checked');
-      self.close();
-      
-      event = new window.CustomEvent('selected', { detail: {name: name, checked: checked } });
-      this.dispatchEvent(event);
+      activateItem.call(self, item);
     }
   });
-  container.addEventListener('keydown', function(ev) {
-    handleKeyDown.call(self, ev);
-  });
   
+  container.addEventListener('keydown', handleKeyDown.bind(this));
+  container.addEventListener('keypress', handleKeyPress.bind(this)); 
 };
 
 function fetchCbMenuItems(kids) {
@@ -161,13 +150,12 @@ function handleKeyDown(ev) {
   var keyboardselected;
   var menuitems;
   var i;
-  var name;
-  
-  ev.preventDefault();
   
   // Escape.
   if (ev.keyIdentifier === "U+001B") {
     this.close();
+    ev.preventDefault();
+    ev.stopPropagation();
     return;
   }
   
@@ -203,17 +191,53 @@ function handleKeyDown(ev) {
       }
     } else {
       // Enter
-      if (keyboardselected.length !== 0) {
-        name = keyboardselected[0].getAttribute('name');
-        this.close();
-
-        var event = new CustomEvent('selected', { detail: name });
-        this.dispatchEvent(event);
-      }
+      ev.stopPropagation();
+      return;
     }
-    return;
   }
+  ev.preventDefault();
+  ev.stopPropagation();
 };
+
+function activateItem(item) {
+  var name;
+  var checked;
+  var event;
+  
+  item._clicked();
+      
+  name = item.getAttribute('name');
+  checked = item.getAttribute('checked');
+  this.close();
+
+  event = new window.CustomEvent('selected', { detail: {name: name, checked: checked } });
+  this.dispatchEvent(event);
+}
+
+function handleKeyPress(ev) {
+  var keyboardselected;
+  var menuitems;
+
+  ev.preventDefault();
+  ev.stopPropagation();
+
+  if (ev.keyIdentifier === "Enter") {
+    menuitems = fetchCbMenuItems(this.childNodes);
+    if (menuitems.length === 0) {
+      return;
+    }
+    
+    keyboardselected = menuitems.filter(function(item) {
+      var value;
+      value = item.getAttribute("selected");
+      return value === "true" || value === true;
+    });
+    
+    if (keyboardselected.length !== 0) {
+      activateItem.call(this, keyboardselected[0]);
+    }
+  }  
+}
 
 CbContextMenuProto.open = function(x, y) {
   var sx;

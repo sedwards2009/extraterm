@@ -60,6 +60,10 @@ function createClone() {
       + "  border-right: 1px solid " + fail_color + ";\n"
       + "}\n"
       
+      + "#header:focus {\n"
+      + "  box-shadow: inset 0px 0px 5px 5px rgba(255,165,0, 0.75);\n"
+      + "}\n"
+      
       + "#output.closed {\n"
       + "  display: none;\n"
       + "  height: 1px;\n"
@@ -141,7 +145,7 @@ function createClone() {
       +     "<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>"
       + "  </div>"
       + "  <div id='main'>"
-      + "    <div id='header'><div id='commandline'></div><button id='close_button'><i class='fa fa-times-circle'></i></button></div>"
+      + "    <div id='header' tabindex='-1'><div id='commandline'></div><button id='close_button'><i class='fa fa-times-circle'></i></button></div>"
       + "    <div id='output'><content id='lines_content'></content></div>"
       + "  </div>"
       + "</div>"
@@ -168,7 +172,6 @@ function setAttr(self, attrName, newValue) {
   var output;
   var expandicon;
   var linescontent;
-  var menuitem;
 
   if (attrName === COMMANDLINE_ATTR) {
     getById(self, 'commandline').innerText = newValue;
@@ -235,14 +238,10 @@ function setAttr(self, attrName, newValue) {
 }
 
 EtCommandFrameProto.createdCallback = function() {
-//  var cover;
-//  var container;
-  var self = this;
   var closebutton;
   var expandbutton;
   var cm;
   var shadow = util.createShadowRoot(this);
-//  shadow.applyAuthorStyles = true;
   
   var clone = createClone();
   shadow.appendChild(clone);
@@ -253,110 +252,71 @@ EtCommandFrameProto.createdCallback = function() {
   setAttr(this, LINE_NUMBERS_ATTR, this.getAttribute(LINE_NUMBERS_ATTR));
 
   closebutton = getById(this, 'close_button');
-  closebutton.addEventListener('click', function() {
+  closebutton.addEventListener('click', (function() {
       var event = new window.CustomEvent('close-request', { detail: null });
-      self.dispatchEvent(event);
-  });
+      this.dispatchEvent(event);
+  }).bind(this));
   
   expandbutton = getById(this, 'expand_button');
-  expandbutton.addEventListener('click', function() {
-    var expanded = util.htmlValueToBool(self.getAttribute(EXPAND_ATTR), true);
-    self.setAttribute(EXPAND_ATTR, !expanded);
-  });
-  
-  cm = getById(self, 'contextmenu');
-  getById(this, 'container').addEventListener('contextmenu', function(ev) {
+  expandbutton.addEventListener('click', (function() {
+    var expanded = util.htmlValueToBool(this.getAttribute(EXPAND_ATTR), true);
+    this.setAttribute(EXPAND_ATTR, !expanded);
+  }).bind(this));
+
+  cm = getById(this, 'contextmenu');
+  getById(this, 'container').addEventListener('contextmenu', (function(ev) {
     var cm;
     ev.stopPropagation();
     ev.preventDefault();
-    cm = getById(self, 'contextmenu');
+    cm = getById(this, 'contextmenu');
     cm.open(ev.clientX, ev.clientY);
-  });
+  }).bind(this));
 
-  cm.addEventListener('selected', function(ev) {
+  cm.addEventListener('selected', (function(ev) {
+    var event;
     switch (ev.detail.name) {
       case "showlines":
-        self.setAttribute(LINE_NUMBERS_ATTR, ev.detail.checked);
+        this.setAttribute(LINE_NUMBERS_ATTR, ev.detail.checked);
         break;
         
       case "expand":
-        self.setAttribute(EXPAND_ATTR, ev.detail.checked);
+        this.setAttribute(EXPAND_ATTR, ev.detail.checked);
+        break;
+        
+      case 'close':
+        event = new window.CustomEvent('close-request', { detail: null });
+        this.dispatchEvent(event);
         break;
         
       default:
         break;
     }
-  });
-  
-//  cover = this.__getById('cover');
-//  cover.addEventListener('mousedown', function(ev) {
-//    console.log("cover mousedown", ev);
-//    if (ev.button === 0) {    
-//      ev.stopPropagation();
-//      ev.preventDefault();
-//      self.close();
-//    }
-//  });
-//  
-//  cover.addEventListener('contextmenu', function(ev) {
-//    console.log("cover contextmenu");
-//    ev.stopPropagation();
-//    ev.preventDefault();
-//    self.close();
-//  }, true);
-//  
-//  container = this.__getById('container');
-//  container.addEventListener('mousedown', function(ev) {
-//    ev.stopPropagation();
-//    ev.preventDefault();
-//  });
-//  
-//  container.addEventListener('mousemove', function(ev) {
-//    if (ev.srcElement.nodeName.toLowerCase() === 'cb-menuitem') {
-//      selectMenuItem(self.childNodes, ev.srcElement);
-//    } else {
-//      selectMenuItem(self.childNodes, null);
-//    }
-//  });
-//  
-//  container.addEventListener('mouseleave', function(ev) {
-//    selectMenuItem(self.childNodes, null);
-//  });
-//  
-//  container.addEventListener('click', function(ev) {
-//    var name;
-//
-//    if (ev.srcElement.tagName.toLowerCase() === 'cb-menuitem') {
-//      name = ev.srcElement.getAttribute('name');
-//      self.close();
-//      
-//      var event = new CustomEvent('selected', { detail: name });
-//      this.dispatchEvent(event);
-//    }
-//  });
-//  container.addEventListener('keydown', function(ev) {
-//    __handleKeyDown.call(self, ev);
-//  });
-  
+    getById(this, 'header').focus();
+  }).bind(this));
 };
 
-//EtCommandFrameProto.open = function(x, y) {
-//  var cover = this.__getById('cover');
-//  cover.className = "cover_open";
-//  
-//  var container = this.__getById('container');
-//  container.style.left = "" + x + "px";
-//  container.style.top = "" + y + "px";
-//  container.focus();
-//  
-//};
-
-//CbContextMenuProto.close = function() {
-//  var cover = this.webkitShadowRoot.querySelector('#cover');
-//  cover.className = "cover_closed";
-//};
 EtCommandFrameProto.attributeChangedCallback = function(attrName, oldValue, newValue) {
   setAttr(this, attrName, newValue);
+};
+
+EtCommandFrameProto.focusLast = function() {
+  var header = getById(this, 'header');
+  header.focus();
+};
+
+EtCommandFrameProto.focusFirst = function() {
+  var header = getById(this, 'header');
+  header.focus();
+};
+
+EtCommandFrameProto.openMenu = function() {
+  var header = getById(this, 'header');
+  var cm;
+  var rect;
+
+  cm = getById(this, 'contextmenu');
+  rect = header.getBoundingClientRect();
+  cm.openAround(header); //(rect.left, rect.top );
 };
 
 var EtCommandFrame = window.document.registerElement('et-commandframe', {prototype: EtCommandFrameProto});

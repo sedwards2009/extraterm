@@ -15,15 +15,11 @@ function log() {
 var EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 var SEMANTIC_TYPE = "data-extraterm-type";
 var SEMANTIC_VALUE = "data-extraterm-value";
-var SEMANTIC_START_OUTPUT = "data-extraterm-start-output";
-var SEMANTIC_RETURN_CODE = "data-extraterm-return-code";
 
 var APPLICATION_MODE_NONE = 0;
 var APPLICATION_MODE_HTML = 1;
 var APPLICATION_MODE_OUTPUT_BRACKET_START = 2;
 var APPLICATION_MODE_OUTPUT_BRACKET_END = 3;
-var TYPE_OUTPUT_START = "command-output-start";
-var TYPE_OUTPUT = "command-output";
 
 /**
  * Create a new terminal.
@@ -145,7 +141,7 @@ Terminal.prototype.startUp = function() {
     cols: 80,
     rows: 30,
     colors: this._colors(),
-    scrollback: 10000,
+    scrollback: 1000,
     cursorBlink: this._blinkingCursor,
     physicalScroll: true,
     applicationModeCookie: cookie
@@ -166,6 +162,10 @@ Terminal.prototype.startUp = function() {
   this._getWindow().document.body.addEventListener('click', this._handleWindowClick);
 
   this._term.open(this._parentElement);
+  
+  this._term.element.addEventListener('keypress', this._handleKeyPressTerminal);
+  this._term.element.addEventListener('keydown', this._handleKeyDownTerminal);
+ 
   this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
 
   // Start our PTY bridge process and connect it to our terminal.
@@ -234,6 +234,65 @@ Terminal.prototype._handleUnknownKeyDown = function(ev) {
   return false;
 };
 
+Terminal.prototype._handleKeyPressTerminal = function(ev) {
+  console.log("._handleKeyPressTerminal: ",ev.keyCode);
+  this._term.keyPress(ev);
+};
+
+Terminal.prototype._handleKeyDownTerminal = function(ev) {
+  var lastFrame;
+  var frames;
+  var index;
+  
+  // Key down on a command frame.
+  if (ev.target.tagName === "ET-COMMANDFRAME") {
+    if (ev.keyCode === 27) {
+      // 27 = esc.
+      this._term.element.focus();
+      this._term.scrollToBottom();
+      return;
+      
+    } else if (ev.keyCode === 32 && ev.ctrlKey) {
+      // 32 = space
+      ev.target.openMenu();
+      return;
+      
+    } else if (ev.keyCode === 38) {
+      // 38 = update arrow.
+
+      // Note ugly convert-to-array code. ES6 Array.from() help us!
+      frames = Array.prototype.slice.call(this._term.element.querySelectorAll("et-commandframe"));
+      index = frames.indexOf(ev.target);
+      if (index > 0) {
+        frames[index-1].focusLast();
+      }
+      return;
+      
+    } else if (ev.keyCode === 40) {
+      // 40 = down arros.
+      
+      frames = Array.prototype.slice.call(this._term.element.querySelectorAll("et-commandframe"));
+      index = frames.indexOf(ev.target);
+      if (index < frames.length -1) {
+        frames[index+1].focusFirst();
+      }
+      return;
+    }
+    
+  } else if (ev.target === this._term.element) {
+    if (ev.keyCode === 32 && ev.ctrlKey) {
+      // 32 = space.
+      lastFrame = this._term.element.querySelector("et-commandframe:last-of-type");
+      if (lastFrame !== null) {
+        lastFrame.focusLast();
+      }
+    }
+  }
+  
+  
+  this._term.keyDown(ev);
+};
+
 /**
  * Handle when the embedded term.js enters start of application mode.
  * 
@@ -300,9 +359,10 @@ Terminal.prototype._handleApplicationModeEnd = function() {
     case APPLICATION_MODE_OUTPUT_BRACKET_START:
       if (this._lastBashBracket !== this._htmlData) {
         el = this._getWindow().document.createElement("et-commandframe");
-        el.addEventListener('close-request', function() {
+        el.addEventListener('close-request', (function() {
           el.remove();
-        });
+          this.focus();
+        }).bind(this));
         cleancommand = this._htmlData;
         if (this._bracketStyle === "bash") {
           // Bash includes the history number. Remove it.
