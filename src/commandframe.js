@@ -60,8 +60,17 @@ function createClone() {
       + "  border-right: 1px solid " + fail_color + ";\n"
       + "}\n"
       
+      + "@-webkit-keyframes PULSE_ANIMATION {\n"
+      + "  0%   { background-color: rgba(255, 165, 0, 1.0); }\n"
+      + "  25%   { background-color: rgba(255, 165, 0, 1.0); }\n"
+      + "  50% { background-color: rgba(255, 165, 0, 0.5); }\n"
+      + "  75% { background-color: rgba(255, 165, 0, 1.0); }\n"
+      + "  100%   { background-color: rgba(255, 165, 0, 1.0); }\n"
+      + "}\n"
+      
       + "#header:focus {\n"
-      + "  box-shadow: inset 0px 0px 5px 5px rgba(255,165,0, 0.75);\n"
+      + "  -webkit-animation: PULSE_ANIMATION 2s infinite;\n"
+      + "  animation: PULSE_ANIMATION 2s infinite;\n"
       + "}\n"
       
       + "#output.closed {\n"
