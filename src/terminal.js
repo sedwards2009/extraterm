@@ -250,11 +250,13 @@ Terminal.prototype._handleKeyDownTerminal = function(ev) {
       // 27 = esc.
       this._term.element.focus();
       this._term.scrollToBottom();
+      ev.preventDefault();
       return;
       
     } else if (ev.keyCode === 32 && ev.ctrlKey) {
       // 32 = space
       ev.target.openMenu();
+      ev.preventDefault();
       return;
       
     } else if (ev.keyCode === 38) {
@@ -266,6 +268,7 @@ Terminal.prototype._handleKeyDownTerminal = function(ev) {
       if (index > 0) {
         frames[index-1].focusLast();
       }
+      ev.preventDefault();
       return;
       
     } else if (ev.keyCode === 40) {
@@ -276,16 +279,21 @@ Terminal.prototype._handleKeyDownTerminal = function(ev) {
       if (index < frames.length -1) {
         frames[index+1].focusFirst();
       }
+      ev.preventDefault();
       return;
     }
     
   } else if (ev.target === this._term.element) {
+    // In normal typing mode.
+    
     if (ev.keyCode === 32 && ev.ctrlKey) {
+      // Enter cursor mode.
       // 32 = space.
       lastFrame = this._term.element.querySelector("et-commandframe:last-of-type");
       if (lastFrame !== null) {
         lastFrame.focusLast();
       }
+      ev.preventDefault();
     }
   }
   

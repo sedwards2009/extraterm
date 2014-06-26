@@ -311,11 +311,13 @@ EtCommandFrameProto.attributeChangedCallback = function(attrName, oldValue, newV
 EtCommandFrameProto.focusLast = function() {
   var header = getById(this, 'header');
   header.focus();
+  header.scrollIntoView(true);
 };
 
 EtCommandFrameProto.focusFirst = function() {
   var header = getById(this, 'header');
   header.focus();
+  header.scrollIntoView(true);
 };
 
 EtCommandFrameProto.openMenu = function() {
