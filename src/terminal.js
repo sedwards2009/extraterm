@@ -294,6 +294,7 @@ Terminal.prototype._handleKeyDownTerminal = function(ev) {
         lastFrame.focusLast();
       }
       ev.preventDefault();
+      return;
     }
   }
   
