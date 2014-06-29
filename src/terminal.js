@@ -30,13 +30,14 @@ var APPLICATION_MODE_OUTPUT_BRACKET_END = 3;
  *     be placed.
  * @returns {Terminal}
  */
-function Terminal(parentElement) {
+function Terminal(parentElement, gui) {
   if (!(this instanceof Terminal)) {
     throw new Error("Call Terminal using the new keyword.");
   }
   this._parentElement = parentElement;
   _.bindAll(this);
-  
+
+  this._gui = gui;  // node-webkit gui module
   this._term = null;
   this._htmlData = null;
   this._applicationMode = APPLICATION_MODE_NONE;
@@ -367,6 +368,7 @@ Terminal.prototype._handleApplicationModeEnd = function() {
 
     case APPLICATION_MODE_OUTPUT_BRACKET_START:
       if (this._lastBashBracket !== this._htmlData) {
+        // Create and set up a new command-frame.
         el = this._getWindow().document.createElement("et-commandframe");
         
         el.addEventListener('close-request', (function() {
@@ -376,6 +378,11 @@ Terminal.prototype._handleApplicationModeEnd = function() {
         
         el.addEventListener('type', (function(ev) {
           this._sendDataToPty(ev.detail);
+        }).bind(this));
+        
+        el.addEventListener('copy-clipboard-request', (function(ev) {
+          var clipboard = this._gui.Clipboard.get();
+          clipboard.set(ev.detail, 'text');
         }).bind(this));
         
         cleancommand = this._htmlData;

@@ -160,6 +160,7 @@ function createClone() {
       + "</div>"
       + "<cb-contextmenu id='contextmenu'>\n"
       +   "<cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>\n"
+      +   "<cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>\n"
       +   "<cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>\n"
       +   "<cb-checkboxmenuitem icon='list-ol' id='linesnumbersmenuitem' checked='false' name='showlines'>Line numbers</cb-checkboxmenuitem>\n"
       +   "<cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>\n"
@@ -285,6 +286,11 @@ EtCommandFrameProto.createdCallback = function() {
   cm.addEventListener('selected', (function(ev) {
     var event;
     switch (ev.detail.name) {
+      case "copycommand":
+        event = new window.CustomEvent('copy-clipboard-request', { detail: this.getAttribute(COMMANDLINE_ATTR) });
+        this.dispatchEvent(event);
+        break;
+        
       case "typecommand":
         event = new window.CustomEvent('type', { detail: this.getAttribute(COMMANDLINE_ATTR) });
         this.dispatchEvent(event);

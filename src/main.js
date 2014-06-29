@@ -37,7 +37,7 @@ function(_, fs, path, gui, terminal, configure_panel) {
     container.appendChild(terminaltab);
     
     // Create the terminal itself.
-    term = new terminal.Terminal(terminaltab);
+    term = new terminal.Terminal(terminaltab, gui);
     term.setBlinkingCursor(config.blinkingCursor);
     term.on('ptyclose', handlePtyClose);
     term.on('unknown-keydown', handleUnknownKeyDown);
