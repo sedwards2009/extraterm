@@ -1,0 +1,4 @@
+{
+  "predef": [ "window", "define"],
+  "node": "true"
+}

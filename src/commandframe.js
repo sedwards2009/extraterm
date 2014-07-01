@@ -18,153 +18,151 @@ function createClone() {
     var success_color = "#00ff00";
     var fail_color = "#ff0000";
     
-    template.innerHTML = "<style>\n"
-      + "@import url('" + require.toUrl("css/topcoat-desktop-light.css") + "');\n"
-      + "@import url('" + require.toUrl("css/font-awesome.css") + "');\n"
-      
-      + ":host {\n"
-      + "display: block;\n"
-      + "}\n"
-      
-      + "#container {\n"
-      + "  display: flex;\n"
-      + "}\n"
-    
-      + "#main {\n"
-      + "  flex: auto 1 1;\n"
-      + "}\n"
-      
-      + "#header {\n"
-      + "  border-top-right-radius: 0.5em;\n"
-      + "  border-bottom-right-radius: 0.5em;\n"
-      + "  padding-top: 1px;\n"
-      + "  padding-left: 0.5em;\n"
-      + "  padding-right: 0.5em;\n"
-      + "  padding-bottom: 1px;\n"
-      + "  display: flex;\n"
-      + "}\n"
-      
-      + "#header.running {\n"
-      + "  border: 1px solid white;\n"
-      + "}\n"
-      
-      + "#header.success {\n"
-      + "  border-top: 1px solid " + success_color + ";\n"
-      + "  border-bottom: 1px solid " + success_color + ";\n"
-      + "  border-right: 1px solid " + success_color + ";\n"
-      + "}\n"
-      
-      + "#header.fail {\n"
-      + "  border-top: 1px solid " + fail_color + ";\n"
-      + "  border-bottom: 1px solid " + fail_color + ";\n"
-      + "  border-right: 1px solid " + fail_color + ";\n"
-      + "}\n"
-      
-      + "@-webkit-keyframes PULSE_ANIMATION {\n"
-      + "  0%   { background-color: rgba(255, 165, 0, 1.0); }\n"
-      + "  25%   { background-color: rgba(255, 165, 0, 1.0); }\n"
-      + "  50% { background-color: rgba(255, 165, 0, 0.5); }\n"
-      + "  75% { background-color: rgba(255, 165, 0, 1.0); }\n"
-      + "  100%   { background-color: rgba(255, 165, 0, 1.0); }\n"
-      + "}\n"
-      
-      + "#header:focus {\n"
-      + "  -webkit-animation: PULSE_ANIMATION 2s infinite;\n"
-      + "  animation: PULSE_ANIMATION 2s infinite;\n"
-      + "}\n"
-      
-      + "#output.closed {\n"
-      + "  display: none;\n"
-      + "  height: 1px;\n"
-      + "  overflow: hidden;\n"
-      + "}\n"
-      
-      
-      + "#gutter {\n"
-      + "  flex: 2rem 0 0;\n"
-      + "  width: 2rem;\n"
-      + "  padding: 1px\n"
-      + "}\n"
-      
-      + "#gutter.running {\n"
-      + "}\n"
-      
-      + "#gutter.success {\n"
-      + "  color: " + success_color + ";\n"
-      + "  border-right: 1px solid " + success_color + ";\n"
-      + "}\n"
-      
-      + "#gutter.fail {\n"
-      + "  color: " + fail_color + ";\n"
-      + "  border-right: 1px solid " + fail_color + ";\n"
-      + "}\n"
-      
-      + "#commandline {\n"
-      + "  flex: auto 1 1;\n"
-      + "}\n"
-      
-      +"#close_button {\n"
-      + "  flex: auto 0 0;\n"
-      + "  padding: 0px;\n"
-      + "  background-color: transparent;\n"
-      + "  border: 0px;\n"
-      + "  color: white;\n"
-      + "}\n"
+    template.innerHTML = "<style>\n" +
+      "@import url('" + require.toUrl("css/topcoat-desktop-light.css") + "');\n" +
+      "@import url('" + require.toUrl("css/font-awesome.css") + "');\n" +
 
-      +"#close_button:hover {\n"
-      + "  color: red;\n"
-      + "}\n"
-      
-      + "#icon_div {\n"
-      + "  display: inline-block;\n"
-      + "  width: 1em;\n"
-      + "  height: 1em;\n"
-      + "}\n"
-      
-      + "#expand_button {\n"
-      + "  display: inline-block;\n"
-      + "  padding: 0px;\n"
-      + "  background-color: transparent;\n"
-      + "  color: white;\n"
-      + "  border: 0px;\n"
-      + "  width: 1em;\n"
-      + "  height: 1em;\n"
-      + "}\n"
-      
-      +"content.line_numbers::content > div {\n"
-      + "  counter-increment: lines;\n"
-      + "  position: relative;\n"
-      + "  left: calc(-2rem - 2px);\n"
-      +"  }\n"
-      
-      + "content.line_numbers::content > div:before {\n"
-      + "  display: inline-block;\n"
-      + "  width: 2rem;\n"
-      + "  margin-right: 2px;\n"
-      + "  content: counter(lines);\n"
-      + "  color: white;\n"
-      + "  text-align: right;\n"
-      + "  font-size: 0.7rem;\n"
-      +"  }\n"
+      ":host {\n" +
+      "display: block;\n" +
+      "}\n" +
 
-      + "</style>\n"
-      + "<div id='container'>"
-      + "  <div id='gutter' class='running'>"
-      +     "<div id='icon_div'><i id='icon'></i></div>"
-      +     "<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>"
-      + "  </div>"
-      + "  <div id='main'>"
-      + "    <div id='header' tabindex='-1'><div id='commandline'></div><button id='close_button'><i class='fa fa-times-circle'></i></button></div>"
-      + "    <div id='output'><content id='lines_content'></content></div>"
-      + "  </div>"
-      + "</div>"
-      + "<cb-contextmenu id='contextmenu'>\n"
-      +   "<cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>\n"
-      +   "<cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>\n"
-      +   "<cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>\n"
-      +   "<cb-checkboxmenuitem icon='list-ol' id='linesnumbersmenuitem' checked='false' name='showlines'>Line numbers</cb-checkboxmenuitem>\n"
-      +   "<cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>\n"
-      + "</cb-contextmenu>\n";
+      "#container {\n" +
+      "  display: flex;\n" +
+      "}\n" +
+
+      "#main {\n" +
+      "  flex: auto 1 1;\n" +
+      "}\n" +
+
+      "#header {\n" +
+      "  border-top-right-radius: 0.5em;\n" +
+      "  border-bottom-right-radius: 0.5em;\n" +
+      "  padding-top: 1px;\n" +
+      "  padding-left: 0.5em;\n" +
+      "  padding-right: 0.5em;\n" +
+      "  padding-bottom: 1px;\n" +
+      "  display: flex;\n" +
+      "}\n" +
+
+      "#header.running {\n" +
+      "  border: 1px solid white;\n" +
+      "}\n" +
+
+      "#header.success {\n" +
+      "  border-top: 1px solid " + success_color + ";\n" +
+      "  border-bottom: 1px solid " + success_color + ";\n" +
+      "  border-right: 1px solid " + success_color + ";\n" +
+      "}\n" +
+
+      "#header.fail {\n" +
+      "  border-top: 1px solid " + fail_color + ";\n" +
+      "  border-bottom: 1px solid " + fail_color + ";\n" +
+      "  border-right: 1px solid " + fail_color + ";\n" +
+      "}\n" +
+
+      "@-webkit-keyframes PULSE_ANIMATION {\n" +
+      "  0%   { background-color: rgba(255, 165, 0, 1.0); }\n" +
+      "  25%   { background-color: rgba(255, 165, 0, 1.0); }\n" +
+      "  50% { background-color: rgba(255, 165, 0, 0.5); }\n" +
+      "  75% { background-color: rgba(255, 165, 0, 1.0); }\n" +
+      "  100%   { background-color: rgba(255, 165, 0, 1.0); }\n" +
+      "}\n" +
+
+      "#header:focus {\n" +
+      "  -webkit-animation: PULSE_ANIMATION 2s infinite;\n" +
+      "  animation: PULSE_ANIMATION 2s infinite;\n" +
+      "}\n" +
+
+      "#output.closed {\n" +
+      "  display: none;\n" +
+      "  height: 1px;\n" +
+      "  overflow: hidden;\n" +
+      "}\n" +
+       
+
+      "#gutter {\n" +
+      "  flex: 2rem 0 0;\n" +
+      "  width: 2rem;\n" +
+      "  padding: 1px\n" +
+      "}\n" +
+
+      "#gutter.running {\n" +
+      "}\n" +
+
+      "#gutter.success {\n" +
+      "  color: " + success_color + ";\n" +
+      "  border-right: 1px solid " + success_color + ";\n" +
+      "}\n" +
+
+      "#gutter.fail {\n" +
+      "  color: " + fail_color + ";\n" +
+      "  border-right: 1px solid " + fail_color + ";\n" +
+      "}\n" +
+
+      "#commandline {\n" +
+      "  flex: auto 1 1;\n" +
+      "}\n" +
+
+      "#close_button {\n" +
+      "  flex: auto 0 0;\n" +
+      "  padding: 0px;\n" +
+      "  background-color: transparent;\n" +
+      "  border: 0px;\n" +
+      "  color: white;\n" +
+      "}\n" +
+      "#close_button:hover {\n" +
+      "  color: red;\n" +
+      "}\n" +
+
+      "#icon_div {\n" +
+      "  display: inline-block;\n" +
+      "  width: 1em;\n" +
+      "  height: 1em;\n" +
+      "}\n" +
+
+      "#expand_button {\n" +
+      "  display: inline-block;\n" +
+      "  padding: 0px;\n" +
+      "  background-color: transparent;\n" +
+      "  color: white;\n" +
+      "  border: 0px;\n" +
+      "  width: 1em;\n" +
+      "  height: 1em;\n" +
+      "}\n" +
+       
+      "content.line_numbers::content > div {\n" +
+      "  counter-increment: lines;\n" +
+      "  position: relative;\n" +
+      "  left: calc(-2rem - 2px);\n" +
+      "}\n" +
+
+      "content.line_numbers::content > div:before {\n" +
+      "  display: inline-block;\n" +
+      "  width: 2rem;\n" +
+      "  margin-right: 2px;\n" +
+      "  content: counter(lines);\n" +
+      "  color: white;\n" +
+      "  text-align: right;\n" +
+      "  font-size: 0.7rem;\n" +
+      "  }\n" +
+      "</style>\n" +
+      "<div id='container'>" +
+      "  <div id='gutter' class='running'>" +
+       "<div id='icon_div'><i id='icon'></i></div>" +
+       "<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>" +
+      "  </div>" +
+      "  <div id='main'>" +
+      "    <div id='header' tabindex='-1'><div id='commandline'></div><button id='close_button'><i class='fa fa-times-circle'></i></button></div>" +
+      "    <div id='output'><content id='lines_content'></content></div>" +
+      "  </div>" +
+      "</div>" +
+      "<cb-contextmenu id='contextmenu'>\n" +
+      "<cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>\n" +
+      "<cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>\n" +
+      "<cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>\n" +
+      "<cb-checkboxmenuitem icon='list-ol' id='linesnumbersmenuitem' checked='false' name='showlines'>Line numbers</cb-checkboxmenuitem>\n" +
+      "<cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>\n" +
+      "</cb-contextmenu>\n";
     window.document.body.appendChild(template);
   }
   
@@ -313,6 +311,11 @@ EtCommandFrameProto.createdCallback = function() {
         break;
     }
     getById(this, 'header').focus();
+  }).bind(this));
+  
+  cm.addEventListener('before-close', (function(ev) {
+    var header = getById(this, 'header');
+    header.focus();
   }).bind(this));
 };
 

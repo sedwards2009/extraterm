@@ -1,50 +1,50 @@
 define(["require", 'gui/util'], function(require, util) {
 
-var CbMenuItemProto = Object.create(window.HTMLElement.prototype);;
+var CbMenuItemProto = Object.create(window.HTMLElement.prototype);
 var SELECTED_ATTR = "selected";
 
 CbMenuItemProto._id = "CbMenuItemTemplate";
 
 CbMenuItemProto._css = function() {
-  return "@import url('" + require.toUrl("../css/font-awesome.css") + "');\n"
-      + ":host {\n"
-      + "    display: block;\n"
-      + "    color: #000;\n"
-      + "    font: 16px 'Source Sans', helvetica, arial, sans-serif;\n"
-      + "    font-weight: 400;\n"
-      + "}\n"
+  return "@import url('" + require.toUrl("../css/font-awesome.css") + "');\n" +
+    ":host {\n" +
+    "    display: block;\n" +
+    "    color: #000;\n" +
+    "    font: 16px 'Source Sans', helvetica, arial, sans-serif;\n" +
+    "    font-weight: 400;\n" +
+    "}\n" +
 
-      + "#container {\n"
-      + "    cursor: default;\n"
-      + "    padding: 1px;\n"
-      + "    display: flex;\n"
-      + "}\n"
-      
-      + ".selected {\n"
-      + "    background-color: #288edf;\n"
-      + "    color: #ffffff;\n"
-      + "}\n"
+    "#container {\n" +
+    "    cursor: default;\n" +
+    "    padding: 1px;\n" +
+    "    display: flex;\n" +
+    "}\n" +
 
-      + "#icon1, #icon2 {\n"
-      + "    flex: auto 0 0;\n"
-      + "    white-space: pre;\n"
-      + "}\n"
-      
-      + "#label {\n"
-      + "    flex: auto 1 1;\n"
-      + "    padding-left: 0.5rem;\n"
-      + "    white-space: pre;\n"
-      + "}\n";
+    ".selected {\n" +
+    "    background-color: #288edf;\n" +
+    "    color: #ffffff;\n" +
+    "}\n" +
+
+    "#icon1, #icon2 {\n" +
+    "    flex: auto 0 0;\n" +
+    "    white-space: pre;\n" +
+    "}\n" +
+
+    "#label {\n" +
+    "    flex: auto 1 1;\n" +
+    "    padding-left: 0.5rem;\n" +
+    "    white-space: pre;\n" +
+    "}\n";
 };
 
-CbMenuItemProto._html = function() {
-  return "<div id='container'>"
-      +   "<div id='icon1'><i class='fa fa-fw'></i></div>"
-      +   "<div id='icon2'></div>"
-      +   "<div id='label'><content></content></div>"
-      + "</div>";
+CbMenuItemProto._html = function () {
+  return "<div id='container'>" +
+    "<div id='icon1'><i class='fa fa-fw'></i></div>" +
+    "<div id='icon2'></div>" +
+    "<div id='label'><content></content></div>" +
+    "</div>";
 };
-
+  
 CbMenuItemProto._createClone = function() {
   var template = window.document.getElementById(this._id);
   if (template === null) {
@@ -60,7 +60,6 @@ CbMenuItemProto.createdCallback = function() {
   var icon;
   var iconhtml;
   var shadow = util.createShadowRoot(this);
-//  shadow.applyAuthorStyles = true;
   
   var clone = this._createClone();
   shadow.appendChild(clone);

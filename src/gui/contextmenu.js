@@ -11,42 +11,41 @@ function createClone() {
   if (template === null) {
     template = window.document.createElement('template');
     template.id = ID;
-    template.innerHTML = "<style>\n"
-      + ".container {\n"
-      + "    position: fixed;\n"
-      + "    background-color: #F4F4F4;\n"
-      + "    border-radius: 4px;\n"
-      + "    padding: 4px 0px 4px 0px;\n"
-      + "    width: 15rem;\n"
-      + "    box-shadow: 0px 0px 8px black;\n"
-      + "    z-index: 101;\n"
-      + "}\n"
+    template.innerHTML = "<style>\n" +
+      ".container {\n" +
+      "    position: fixed;\n" +
+      "    background-color: #F4F4F4;\n" +
+      "    border-radius: 4px;\n" +
+      "    padding: 4px 0px 4px 0px;\n" +
+      "    box-shadow: 0px 0px 8px black;\n" +
+      "    z-index: 101;\n" +
+      "}\n" +
       
-      + ".container_closed {\n"
-      + "    display: none;\n"
-      + "}\n"
+      ".container_closed {\n" +
+      "    display: none;\n" +
+      "}\n" +
       
-      + ".container_open {\n"
-      + "\n"
-      + "}\n"
+      ".container_open {\n" +
+      "\n" +
+      "}\n" +
       
-      + ".cover_closed {\n"
-      + "    visibility: hidden;\n"
-      + "}\n"
-      + ".cover_open {\n"
-      + "    visibility: visible;\n"
-      + "    position: fixed;\n"
-      + "    left: 0px;\n"
-      + "    right: 0px;\n"
-      + "    top: 0px;\n"
-      + "    bottom: 0px;\n"
-      + "    z-index: 100;\n"
-//      + " background-color: rgba(255, 0, 0, 0.5);\n"
-      + "}\n"
-      + "</style>\n"
-      + "<div id='cover' class='cover_closed'></div>"
-      + "<div id='container' class='container container_closed' tabindex='0'><content></content></div>";
+      ".cover_closed {\n" +
+      "    visibility: hidden;\n" +
+      "}\n" +
       
+      ".cover_open {\n" +
+      "    visibility: visible;\n" +
+      "    position: fixed;\n" +
+      "    left: 0px;\n" +
+      "    right: 0px;\n" +
+      "    top: 0px;\n" +
+      "    bottom: 0px;\n" +
+      "    z-index: 100;\n" +
+//    " background-color: rgba(255, 0, 0, 0.5);\n" +
+      "}\n" +
+      "</style>\n" +
+      "<div id='cover' class='cover_closed'></div>" +
+      "<div id='container' class='container container_closed' tabindex='0'><content></content></div>";
     window.document.body.appendChild(template);
   }
   
@@ -62,16 +61,15 @@ CbContextMenuProto.createdCallback = function() {
   var container;
   var self = this;
   var shadow = util.createShadowRoot(this);
-//  shadow.applyAuthorStyles = true;
   
   var clone = createClone();
   shadow.appendChild(clone);
   
   cover = this.__getById('cover');
   cover.addEventListener('mousedown', function(ev) {
-    if (ev.button === 0) {    
-      ev.stopPropagation();
-      ev.preventDefault();
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (ev.button === 0) {
       self.close();
     }
   });
@@ -197,7 +195,7 @@ function handleKeyDown(ev) {
   }
   ev.preventDefault();
   ev.stopPropagation();
-};
+}
 
 function activateItem(item) {
   var name;
@@ -245,7 +243,7 @@ CbContextMenuProto.open = function(x, y) {
   var cover;
   var container;
   var rect;
-
+  
   container = this.__getById('container');
   container.classList.remove('container_closed');  
   container.classList.add('container_open');  
@@ -273,6 +271,18 @@ CbContextMenuProto.open = function(x, y) {
   container.focus();
 };
 
+function debugScroll(msg) {
+  var text = msg !== undefined ? msg : "";
+  var termdiv = window.document.querySelector('div.terminal');
+  console.log(text + " -- termdiv.scrollTop: " + termdiv.scrollTop);
+  
+  var active = window.document.activeElement;
+  console.log("active element: " + active);
+  if (active !== null) {
+    console.log("active element nodeName: " + active.nodeName);
+    console.log("active element class: " + active.getAttribute('class'));
+  }
+}
 CbContextMenuProto.openAround = function(el) {
   var sx;
   var sy;
@@ -280,7 +290,7 @@ CbContextMenuProto.openAround = function(el) {
   var containerrect;
   var container;
   var cover;
-  
+
   elrect = el.getBoundingClientRect();
   
   container = this.__getById('container');
@@ -305,17 +315,23 @@ CbContextMenuProto.openAround = function(el) {
   cover.className = "cover_open";
   
   selectMenuItem(this.childNodes, null);
-  
+
   container.focus();
 };
 
 CbContextMenuProto.close = function() {
+  var event = new window.CustomEvent('before-close', { detail: null });
+  this.dispatchEvent(event);
+  
   var cover = this.__getById('cover');
   cover.className = "cover_closed";
   
   var container = this.__getById('container');
   container.classList.remove('container_open');  
-  container.classList.add('container_closed');  
+  container.classList.add('container_closed');
+  
+  event = new window.CustomEvent('close', { detail: null });
+  this.dispatchEvent(event);
 };
 
 var CbContextMenu = window.document.registerElement('cb-contextmenu', {prototype: CbContextMenuProto});

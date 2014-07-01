@@ -1,6 +1,6 @@
 define(["gui/menuitem", "gui/util"], function(menuitem, util) {
 
-var CbCheckBoxMenuItemProto = Object.create(menuitem.prototype);;
+var CbCheckBoxMenuItemProto = Object.create(menuitem.prototype);
 
 var CHECKED_ATTR = "checked";
 
