@@ -285,12 +285,14 @@ EtCommandFrameProto.createdCallback = function() {
     var event;
     switch (ev.detail.name) {
       case "copycommand":
-        event = new window.CustomEvent('copy-clipboard-request', { detail: this.getAttribute(COMMANDLINE_ATTR) });
+        event = new window.CustomEvent('copy-clipboard-request');
+        event.initCustomEvent('copy-clipboard-request', true, true, this.getAttribute(COMMANDLINE_ATTR));
         this.dispatchEvent(event);
         break;
         
       case "typecommand":
         event = new window.CustomEvent('type', { detail: this.getAttribute(COMMANDLINE_ATTR) });
+        event.initCustomEvent('type', true, true, this.getAttribute(COMMANDLINE_ATTR));
         this.dispatchEvent(event);
         break;
         
@@ -303,7 +305,8 @@ EtCommandFrameProto.createdCallback = function() {
         break;
         
       case 'close':
-        event = new window.CustomEvent('close-request', { detail: null });
+        event = new window.CustomEvent('close-request');
+        event.initCustomEvent('close-request', true, true, null);
         this.dispatchEvent(event);
         break;
         

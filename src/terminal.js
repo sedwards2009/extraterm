@@ -166,6 +166,9 @@ Terminal.prototype.startUp = function() {
   
   this._term.element.addEventListener('keypress', this._handleKeyPressTerminal);
   this._term.element.addEventListener('keydown', this._handleKeyDownTerminal);
+  this._term.element.addEventListener('type', (function(ev) {
+    this._sendDataToPty(ev.detail);
+  }).bind(this));
  
   this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
 
