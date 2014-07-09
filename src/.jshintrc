@@ -1,4 +1,6 @@
 {
   "predef": [ "window", "define"],
-  "node": "true"
+  "node": true,
+  "undef": true,
+  "unused": true
 }
