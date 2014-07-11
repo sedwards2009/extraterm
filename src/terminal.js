@@ -1,8 +1,8 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-define(['child_process', 'term.js', 'util', 'events', 'lodash-node', 'commandframe'],
-function(child_process, termjs, util, events, _, commandframe) {
+define(['child_process', 'term.js', 'util', 'events', 'lodash-node', 'commandframe', 'domutils'],
+function(child_process, termjs, util, events, _, commandframe, domutils) {
 var EventEmitter = events.EventEmitter;
 
 var debug = false;
@@ -134,6 +134,7 @@ Terminal.prototype._colors = function() {
 Terminal.prototype.startUp = function() {
   var size;
   var cookie;
+  var defaultLineToHTML;
   
   cookie = "DEADBEEF";  // FIXME
   process.env[EXTRATERM_COOKIE_ENV] = cookie;
@@ -147,6 +148,11 @@ Terminal.prototype.startUp = function() {
     physicalScroll: true,
     applicationModeCookie: cookie
   });
+  
+  defaultLineToHTML = this._term._lineToHTML;
+  this._super_lineToHTML = this._term._lineToHTML;
+  this._term._lineToHTML=  this._lineToHTML;
+  
   this._term.debug = true;
   this._term.on('title', this._handleTitle);
   this._term.on('data', this._handleTermData);
@@ -448,6 +454,7 @@ Terminal.prototype.preserveScroll = function(task) {
  * 
  * @param {event} event
  */
+// FIXME this is an obsolete way of working.
 Terminal.prototype._handleWindowClick = function(event) {
   var type;
   var value;
@@ -532,6 +539,54 @@ Terminal.prototype._sendResize = function(cols, rows, callback) {
 
   this._ptyBridge.stdin.write(sizeHeaderBuffer);
   this._ptyBridge.stdin.write(jsonString, callback);  
+};
+    
+// git diff scroll speed test
+// --------------------------
+// Original with innerHTML: 11-14ms per line scroll update.
+// DOM work, no decorate:   10-15ms per line scroll update.
+// decorate SPAN:           20-25ms per line scroll update.
+// decorate et-word:        28-34ms per line scroll update.
+// SPAN with innerHTML:     12-19ms per line scroll update.
+// et-word with innerHTML:  20-24ms per line scroll update.
+
+Terminal.prototype._lineToHTML = function(line) {
+  var i;
+  var len = line.length;
+  var isWhite;
+  var whiteState = true;
+  var tempLine;
+  var tuple;
+  var output = "";
+  var WORD_SPAN = "<span class='et-word' tabindex='-1'>";
+  
+  tempLine = [];
+  for (i=0; i<len; i++) {
+    tuple = line[i];
+    isWhite = tuple[1] === ' ';
+    if (whiteState !== isWhite) {
+      if (tempLine.length !== 0) {
+        if (whiteState) {
+          output = output + this._super_lineToHTML.call(this._term, tempLine);
+        } else {
+          output = output + WORD_SPAN + this._super_lineToHTML.call(this._term, tempLine) + "</span>";
+        }
+        tempLine = [];
+      }
+      whiteState = isWhite;
+    }
+    tempLine.push(tuple);
+  }
+  
+  if (tempLine.length !== 0) {
+    if (whiteState) {
+      output = output + this._super_lineToHTML.call(this._term, tempLine);
+    } else {
+      output = output + WORD_SPAN + this._super_lineToHTML.call(this._term, tempLine) + "</span>";
+    }
+  }
+  
+  return output;
 };
 
 /**

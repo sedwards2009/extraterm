@@ -252,3 +252,7 @@ span[data-extraterm-type='directory']:hover {
 /*    background-color: #404080; */
     margin-left: calc(2rem + 3px);
 }
+.et-word:focus {
+  outline: 2px dashed rgb(255, 165, 0);
+  outline-offset: -2px;
+}
