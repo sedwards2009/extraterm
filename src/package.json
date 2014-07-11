@@ -1,9 +1,17 @@
 {
-"name": "extraterm",
-"main": "main.html",
-"js-flags": "--harmony",
-"window": {
+  "name": "extraterm",
+  "main": "main.html",
+  "js-flags": "--harmony",
+  "window": {
     "width": 1024,
     "height": 800
-    }
+  },
+  "dependencies": {
+    "lodash-node": "^2.4.1",
+    "pty.js": "^0.2.4",
+    "requirejs": "^2.1.14"
+  },
+  "devDependencies": {
+    "nodeunit": "^0.9.0"
+  }
 }
