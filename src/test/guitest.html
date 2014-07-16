@@ -25,9 +25,13 @@
     <script>
     requirejs.config({
         //By default load any module IDs from js/lib
-        baseUrl: '../'
+        baseUrl: '../',
+      paths: {
+        "gui": "build_js/gui"
+      }
     });
-
+    HTMLElement_obj = HTMLElement;
+      
     require(['gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'commandframe', 'domReady'], function() {
         document.getElementById("openmenu").addEventListener('click', function() {
             var cm = document.getElementById("contextmenu");
@@ -87,8 +91,13 @@
 
 <div class="fake_terminal">
 <div class="terminal">
-<et-commandframe command-line="python3 some_big_script.py" return-code="0">
-    Some lines of successful output.
+<et-commandframe command-line="python3 some_big_script.py" return-code="0" expand="true">
+    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
+    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
+    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
+    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
+    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
+    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
 </et-commandframe>
 </div>
 </div>
@@ -110,6 +119,5 @@
 </cb-contextmenu>
 <button id="openmenu">Open Context Menu</button>
 </fieldset>
-    
 </body>
 </html>
