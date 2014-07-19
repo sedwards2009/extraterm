@@ -1,10 +1,19 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-define(['lodash-node' , 'fs', 'path', 'nw.gui', './terminal', './configure_panel'],
-function(_, fs, path, gui, terminal, configure_panel) {
+define(['lodash', './terminal', './configure_panel'],
+function(_, terminal, configure_panel) {
   "use strict";
-
+  
+  // -- Node modules --
+  var tmprequire = window.require;
+  window.require = window.nodeRequire;
+  var fs = window.nodeRequire('fs');
+  var path = window.nodeRequire('path');
+  var gui = window.nodeRequire('nw.gui');
+  window.require = tmprequire;
+  // -- End Node modules --
+  
   var CONFIG_FILENAME = "config";
   var THEMES_DIRECTORY = "themes";
   var THEME_CONFIG = "theme.json";

@@ -6,15 +6,34 @@
     <link rel="stylesheet" type="text/css" href="css/topcoat-desktop-light.css" />
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
     <link id="theme_link" rel="stylesheet" type="text/css" href="themes/default/theme.css" />
-    
+
     <script>
+      window.nodeRequire = window.require;
+      window.require = undefined;
+    </script>
+    <script src="bower_components/requirejs/require.js"></script>
+    <script>
+    requirejs.config({
+        //By default load any module IDs from js/lib
+      baseUrl: '',
+      paths: {
+        "gui": "build_js/gui"
+      },
+      map: {
+        "*": {
+          "lodash": "bower_components/lodash/dist/lodash"
+        }
+      }
+    });
+
     function startUp() {
-        var requirejs = require('requirejs');
-        var dirname = require('./dirname');
-        requirejs.config({ nodeRequire: require });
-        requirejs(['main'], function(main) {
-            main(dirname.dirname);
-        });
+      var dirname = nodeRequire('./dirname');
+      HTMLElement_obj = HTMLElement;
+      window.HTMLElement_obj = HTMLElement;
+
+      requirejs(['main'], function(main) {
+          main(dirname.dirname);
+      });
     }
     </script>
 </head>

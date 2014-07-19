@@ -1,8 +1,11 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-define(['lodash-node', 'util', 'events'],
-function(_, util, events) {
+define(['lodash'],
+function(_) {
+  
+var util = nodeRequire('util');
+var events = nodeRequire('events');
   
 var EventEmitter = events.EventEmitter;
 

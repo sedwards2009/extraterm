@@ -1,0 +1,23 @@
+{
+  "name": "extraterm",
+  "version": "0.0.0",
+  "authors": [
+    "Simon Edwards <simon@simonzone.com>"
+  ],
+  "moduleType": [
+    "amd"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "requirejs": "~2.1.14",
+    "lodash": "~2.4.1"
+  }
+}

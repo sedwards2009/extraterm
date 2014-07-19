@@ -1,8 +1,13 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-define(['child_process', 'term.js', 'util', 'events', 'lodash-node', 'commandframe', 'domutils'],
-function(child_process, termjs, util, events, _, commandframe, domutils) {
+define(['lodash', 'commandframe', 'domutils'],
+function(_, commandframe, domutils) {
+  
+var termjs = nodeRequire('term.js');
+var util = nodeRequire('util');
+var events = nodeRequire('events');  
+var child_process = nodeRequire('child_process');
 var EventEmitter = events.EventEmitter;
 
 var debug = false;
