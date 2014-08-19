@@ -16,7 +16,9 @@ gulp.task('typescript', function() {
 
       // Specify module code generation: 'commonjs' or 'amd'  
       module : 'amd',
-
+      
+      noLib: true,
+      
       // Specify ECMAScript target version: 'ES3' (default), or 'ES5'
       target : 'ES5',
 

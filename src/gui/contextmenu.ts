@@ -1,13 +1,13 @@
-///<reference path='../extra_dom.d.ts'/>
-import menuitem = require("gui/menuitem");
-import util = require("gui/util");
+///<reference path='../chrome_lib.d.ts'/>
+import menuitem = require("./menuitem");
+import util = require("./util");
 
 var ID = "CbContextMenuTemplate";
 
 /**
  * A context menu.
  */
-class CbContextMenu extends HTMLElement_obj {
+class CbContextMenu extends HTMLElement {
   
   private createClone() {
     var template = <HTMLTemplate>window.document.getElementById(ID);

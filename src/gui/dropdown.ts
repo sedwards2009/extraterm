@@ -1,12 +1,13 @@
+///<reference path='../chrome_lib.d.ts'/>
 import CbContextMenu = require('gui/contextmenu');
-import util = require('gui/util');
+import util = require('./util');
 
 var ID = "CbDropDownTemplate";
 
 /**
  * A Drop Down.
  */
-class CbDropDown extends HTMLElement_obj {
+class CbDropDown extends HTMLElement {
   
   private createClone() {
     var template = <HTMLTemplate>window.document.getElementById(ID);

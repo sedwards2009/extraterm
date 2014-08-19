@@ -1,10 +1,11 @@
-///<reference path='../extra_dom.d.ts'/>
-import util = require('gui/util');
+///<reference path='../chrome_lib.d.ts'/>
+///<reference path='../requirejs.d.ts'/>
+import util = require('./util');
 
 var SELECTED_ATTR = "selected";
 
-class CbMenuItem extends HTMLElement_obj {
- 
+class CbMenuItem extends HTMLElement {
+  
   private _id = "CbMenuItemTemplate";
   
   private _css() {

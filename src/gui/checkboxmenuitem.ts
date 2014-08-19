@@ -1,6 +1,6 @@
-///<reference path='../extra_dom.d.ts'/>
-import menuitem = require("gui/menuitem");
-import util = require("gui/util");
+///<reference path='../chrome_lib.d.ts'/>
+import menuitem = require("./menuitem");
+import util = require("./util");
 
 var CHECKED_ATTR = "checked";
 var _id = "CbCheckBoxMenuItemTemplate";
