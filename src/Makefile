@@ -1,11 +1,17 @@
+#
+#
+# Simon Edwards <simon@simonzone.com>
 
 TEST_FILES = flexbuffertest.js
 
+NPM_BIN = npm
 TSC_BIN = ./node_modules/.bin/tsc
-NODEUNIT_BIN = ./node_modules/nodeunit/bin/nodeunit
+NODEUNIT_BIN = ./node_modules/.bin/nodeunit
+BOWER_BIN = ./node_modules/.bin/bower
+
 TS_OUTPUT = build_js
 
-.PHONEY : unittest watch typescript build
+.PHONEY : unittest watch typescript build init
 
 SOURCES = gui/checkboxmenuitem.ts \
           gui/contextmenu.ts \
@@ -27,6 +33,13 @@ unittest:
 	@for file in $(TEST_FILES); do \
 		${NODEUNIT_BIN} $$file ; \
 	done
+
+init:
+	@echo "Setting up modules"
+	${NPM_BIN} install
+	${BOWER_BIN} install
+	@echo
+	@echo "Done"
 	
 watch:
 	@echo "Watching for changes."
