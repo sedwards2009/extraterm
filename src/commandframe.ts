@@ -1,5 +1,5 @@
-///<reference path='../chrome_lib.d.ts'/>
-///<reference path='../requirejs.d.ts'/>
+///<reference path='./chrome_lib.d.ts'/>
+///<reference path='./requirejs.d.ts'/>
 
 import contextmenu = require('gui/contextmenu');
 import menuitem = require('gui/menuitem');
@@ -256,7 +256,7 @@ class EtCommandFrame extends HTMLElement {
 
     var closebutton = this._getById('close_button');
     closebutton.addEventListener('click', (function() {
-        var event = new window.CustomEvent('close-request', { detail: null });
+        var event = new CustomEvent('close-request', { detail: null });
         this.dispatchEvent(event);
     }).bind(this));
 
@@ -274,17 +274,17 @@ class EtCommandFrame extends HTMLElement {
       cm.open(ev.clientX, ev.clientY);
     }).bind(this));
 
-    cm.addEventListener('selected', (function(ev: Event) {
+    cm.addEventListener('selected', (function(ev: CustomEvent) {
       var event: CustomEvent;
       switch (ev.detail.name) {
         case "copycommand":
-          event = new window.CustomEvent('copy-clipboard-request');
+          event = new CustomEvent('copy-clipboard-request');
           event.initCustomEvent('copy-clipboard-request', true, true, this.getAttribute(COMMANDLINE_ATTR));
           this.dispatchEvent(event);
           break;
 
         case "typecommand":
-          event = new window.CustomEvent('type', { detail: this.getAttribute(COMMANDLINE_ATTR) });
+          event = new CustomEvent('type', { detail: this.getAttribute(COMMANDLINE_ATTR) });
           event.initCustomEvent('type', true, true, this.getAttribute(COMMANDLINE_ATTR));
           this.dispatchEvent(event);
           break;
@@ -298,7 +298,7 @@ class EtCommandFrame extends HTMLElement {
           break;
 
         case 'close':
-          event = new window.CustomEvent('close-request');
+          event = new CustomEvent('close-request');
           event.initCustomEvent('close-request', true, true, null);
           this.dispatchEvent(event);
           break;

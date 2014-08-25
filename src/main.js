@@ -1,18 +1,9 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-define(['lodash', './terminal', './configure_panel'],
-function(_, terminal, configure_panel) {
+define(['nw.gui', 'path', 'fs', 'lodash', './terminal', './configure_panel'],
+function(gui, path, fs, _, terminal, configure_panel) {
   "use strict";
-  
-  // -- Node modules --
-  var tmprequire = window.require;
-  window.require = window.nodeRequire;
-  var fs = window.nodeRequire('fs');
-  var path = window.nodeRequire('path');
-  var gui = window.nodeRequire('nw.gui');
-  window.require = tmprequire;
-  // -- End Node modules --
   
   var CONFIG_FILENAME = "config";
   var THEMES_DIRECTORY = "themes";
@@ -48,9 +39,9 @@ function(_, terminal, configure_panel) {
     // Create the terminal itself.
     term = new terminal.Terminal(terminaltab, gui);
     term.setBlinkingCursor(config.blinkingCursor);
-    term.on('ptyclose', handlePtyClose);
-    term.on('unknown-keydown', handleUnknownKeyDown);
-    term.on('title', handleTitle);
+    term.events.on('ptyclose', handlePtyClose);
+    term.events.on('unknown-keydown', handleUnknownKeyDown);
+    term.events.on('title', handleTitle);
     term.startUp();
     
     // Create the tab header.
@@ -202,7 +193,7 @@ function(_, terminal, configure_panel) {
     // Configure panel.
     configurePanel = new configure_panel.ConfigurePanel(
             {element: window.document.getElementById("configure_panel"), themes: themes});
-    configurePanel.on('ok', function(newConfig) {
+    configurePanel.events.on('ok', function(newConfig) {
       config = newConfig;
       writeConfiguration(newConfig);
       setupConfiguration(newConfig);

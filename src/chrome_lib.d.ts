@@ -1,3 +1,4 @@
+// Generated at Sat Aug 23 2014 09:09:00 GMT+0200 (CEST)
 /* *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved. 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -8569,10 +8570,6 @@ interface CustomEvent extends Event {
     detail: any;
     initCustomEvent(typeArg: string, canBubbleArg: boolean, cancelableArg: boolean, detailArg: any): void;
 }
-declare var CustomEvent: {
-    prototype: CustomEvent;
-    new (): CustomEvent;
-}
 declare class HTMLBaseFontElement extends HTMLElement implements DOML2DeprecatedColorProperty {
     color: string;
     /**
@@ -10304,6 +10301,7 @@ declare class HTMLElement implements MSEventAttachmentTarget, ElementCSSInlineSt
     addEventListener(type: "mspointerenter", listener: (ev: any) => any, useCapture?: boolean): void;
     addEventListener(type: "gotpointercapture", listener: (ev: PointerEvent) => any, useCapture?: boolean): void;
     addEventListener(type: "mspointerleave", listener: (ev: any) => any, useCapture?: boolean): void;
+  remove(): void; // FF and Chrome specific.
     swapNode(otherNode: Node): Node;
     removeNode(deep?: boolean): Node;
     replaceNode(replacement: Node): Node;
@@ -14888,12 +14886,14 @@ declare var WScript: {
     ScriptFullName: string;
     Quit(exitCode?: number): number;
 }
-/*
- * Extra declarations for Chrome specific features and new APIs.
+/**************************************************************************
+ * Extra Chrome specific features and new APIs which need to be mixed in.
  * 
- * The contents of this file are appending to chrome_lib.d.ts.
+ * The contents of this file is appending to lib.d.ts *before* processing.
  */
-
+interface Element {
+  remove(): void; // FF and Chrome specific.
+}
 declare class HTMLTemplate extends HTMLElement {
   content: HTMLElement;
 }
@@ -14904,13 +14904,25 @@ interface Document {
 }
 
 interface Window {
-  CustomEvent:CustomEvent;
+  CustomEvent: CustomEvent;
 }
 
-interface CustomEvent {
-  new(a:string, b:any): CustomEvent;
+interface CustomEventOptions {
+  type?: string;
+  canBubble?: boolean;
+  cancelable?: boolean;
+  detail?: any;
 }
 
 interface KeyboardEvent {
   keyIdentifier: string;
 }
+/**************************************************************************
+ * Extra Chrome specific features and new APIs.
+ * 
+ * The contents of this file are appending to chrome_lib.d.ts.
+ */
+declare var CustomEvent: {
+  prototype: CustomEvent;
+  new(type?: string, options?:CustomEventOptions): CustomEvent;
+};

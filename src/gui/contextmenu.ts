@@ -205,7 +205,7 @@ class CbContextMenu extends HTMLElement {
     checked = item.getAttribute('checked');
     this.close();
 
-    event = new window.CustomEvent('selected', { detail: {name: name, checked: checked } });
+    event = new CustomEvent('selected', { detail: {name: name, checked: checked } });
     this.dispatchEvent(event);
   }
 
@@ -314,7 +314,7 @@ class CbContextMenu extends HTMLElement {
   }
 
   close() {
-    var event = new window.CustomEvent('before-close', { detail: null });
+    var event = new CustomEvent('before-close', { detail: null });
     this.dispatchEvent(event);
 
     var cover = this.__getById('cover');
@@ -324,7 +324,7 @@ class CbContextMenu extends HTMLElement {
     container.classList.remove('container_open');  
     container.classList.add('container_closed');
 
-    event = new window.CustomEvent('close', { detail: null });
+    event = new CustomEvent('close', { detail: null });
     this.dispatchEvent(event);
   }
 }

@@ -7,10 +7,6 @@
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
     <link id="theme_link" rel="stylesheet" type="text/css" href="themes/default/theme.css" />
 
-    <script>
-      window.nodeRequire = window.require;
-      window.require = undefined;
-    </script>
     <script src="bower_components/requirejs/require.js"></script>
     <script>
     requirejs.config({
@@ -21,15 +17,24 @@
       },
       map: {
         "*": {
-          "lodash": "bower_components/lodash/dist/lodash"
+          "lodash": "bower_components/lodash/dist/lodash",
+          "commandframe": "build_js/commandframe.js",
+          "configure_panel": "build_js/configure_panel.js",
+          "terminal": "build_js/terminal.js",
         }
       }
     });
 
     function startUp() {
-      var dirname = nodeRequire('./dirname');
-      HTMLElement_obj = HTMLElement;
-      window.HTMLElement_obj = HTMLElement;
+      // Tell require.js about some Node loaded modules.
+      ['nw.gui', 'path', 'fs', 'events', 'term.js', 'child_process'].forEach( function(nodeMod) {
+        var mod = require(nodeMod);
+        define(nodeMod, [], function() {
+          return mod;
+        });
+      });
+      
+      var dirname = require('./dirname');
 
       requirejs(['main'], function(main) {
           main(dirname.dirname);

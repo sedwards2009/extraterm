@@ -5,13 +5,9 @@
 ///<reference path='./typings/lodash/lodash.d.ts'/>
 ///<reference path="./typings/node/node.d.ts" />
 import _ = require('lodash');
+import events = require('events');
 
-declare var nodeRequire: (s:string) => any;
-var events = nodeRequire('events');
-interface NewEventEmitter {
-  new(): NodeJS.EventEmitter;
-}
-var EventEmitter = <NewEventEmitter>events.EventEmitter;
+var EventEmitter = events.EventEmitter;
 
 /**
  * Configure Panel.
@@ -22,13 +18,13 @@ var EventEmitter = <NewEventEmitter>events.EventEmitter;
  * @param {Object} options Object with format 'element', 'themes'
  * @returns {ConfigurePanel} The configuration panel.
  */
-class ConfigurePanel {
+export class ConfigurePanel {
   
   private _element: Node;
   
   private _themes: any; // FIXME
   
-  event: NodeJS.EventEmitter = new EventEmitter();
+  events: NodeJS.EventEmitter = new EventEmitter();
   
   constructor(options: { element: Node; themes: any[]; }) {
     _.bindAll(this);
@@ -112,7 +108,7 @@ class ConfigurePanel {
    */
   _handleOk(): void {
     this._close();
-    this.event.emit('ok', this._guiToConfig());
+    this.events.emit('ok', this._guiToConfig());
   }
 
   /**
@@ -120,7 +116,7 @@ class ConfigurePanel {
    */
   _handleCancel(): void {
     this._close();
-    this.event.emit('cancel');
+    this.events.emit('cancel');
   }
 
   /**
