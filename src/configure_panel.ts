@@ -6,6 +6,7 @@
 ///<reference path="./typings/node/node.d.ts" />
 import _ = require('lodash');
 import events = require('events');
+import Theme = require('./theme');
 
 var EventEmitter = events.EventEmitter;
 
@@ -18,15 +19,15 @@ var EventEmitter = events.EventEmitter;
  * @param {Object} options Object with format 'element', 'themes'
  * @returns {ConfigurePanel} The configuration panel.
  */
-export class ConfigurePanel {
+class ConfigurePanel {
   
   private _element: Node;
   
-  private _themes: any; // FIXME
+  private _themes: Map<string, Theme>;
   
   events: NodeJS.EventEmitter = new EventEmitter();
   
-  constructor(options: { element: Node; themes: any[]; }) {
+  constructor(options: { element: Node; themes: Map<string, Theme>; }) {
     _.bindAll(this);
 
     this._element = options.element;
@@ -41,9 +42,9 @@ export class ConfigurePanel {
     cancelButton.addEventListener("click", this._handleCancel);
 
     var themeSelect = <HTMLSelectElement>doc.getElementById("theme_select");
-    _.sortBy(_.keys(this._themes), (a) => this._themes[a].name)
+    _.sortBy(_.keys(this._themes), (a) => this._themes.get(a).name)
       .forEach( (key) => {
-        var value = this._themes[key];
+        var value = this._themes.get(key);
         var option = doc.createElement('option');
         option.value = key;
         option.text = value.name;
@@ -130,3 +131,4 @@ export class ConfigurePanel {
     panel.classList.add("configure_panel");
   }
 }
+export = ConfigurePanel;

@@ -6,12 +6,14 @@
 ///<reference path="./typings/node-webkit/node-webkit.d.ts" />
 ///<reference path="./term_js.d.ts" />
 ///<reference path='./typings/lodash/lodash.d.ts'/>
+///<amd-dependency path="nw.gui" />
 import _ = require('lodash');
 import commandframe = require('commandframe');
 import domutils = require('domutils');
 import termjs = require('term.js');
 import child_process = require('child_process');
 import events = require('events');
+
 var EventEmitter = events.EventEmitter;
 
 var gui: typeof nw.gui = require('nw.gui');

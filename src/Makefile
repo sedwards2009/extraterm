@@ -21,7 +21,9 @@ SOURCES = gui/checkboxmenuitem.ts \
           commandframe.ts \
           configure_panel.ts \
           domutils.ts \
-          terminal.ts
+          terminal.ts \
+          main.ts \
+          theme.ts
 
 build: $(patsubst %.ts,${TS_OUTPUT}/%.js,${SOURCES})
 	@echo "Build complete."
