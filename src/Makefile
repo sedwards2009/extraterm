@@ -11,6 +11,9 @@ BOWER_BIN = ./node_modules/.bin/bower
 
 TS_OUTPUT = build_js
 
+START_COLOR = \033[1;32m
+END_COLOR = \033[0m
+
 .PHONEY : unittest watch typescript build init
 
 SOURCES = gui/checkboxmenuitem.ts \
@@ -26,7 +29,7 @@ SOURCES = gui/checkboxmenuitem.ts \
           theme.ts
 
 build: $(patsubst %.ts,${TS_OUTPUT}/%.js,${SOURCES})
-	@echo "Build complete."
+	@echo "$(START_COLOR)Build complete.$(END_COLOR)"
 
 build_js/%.js: %.ts
 	${TSC_BIN} --noLib -m amd --outDir ${TS_OUTPUT}/$(dir $<) $<
@@ -48,4 +51,5 @@ watch:
 	@echo ${SOURCES} | sed 's/ /\n/g' | entr -r make
 
 clean:
-	rm ${TS_OUTPUT}/**.js
+	rm -rf ${TS_OUTPUT}
+	mkdir ${TS_OUTPUT}
