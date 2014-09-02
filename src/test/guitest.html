@@ -19,6 +19,14 @@
     .burger_right {
         float: right;
     }
+      
+    #scrollbar {
+      display: block;
+      width: 15px;
+      height: 200px;
+      background-color: green;
+    }
+      
     </style>
     
     <script src="../bower_components/requirejs/require.js"></script>
@@ -39,14 +47,15 @@
     });
     HTMLElement_obj = HTMLElement;
       
-    require(['gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem',
+    require(['gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'gui/scrollbar',
              'commandframe', 'domReady'],
-            function(menuitem, contextmenu, dropdown, checkboxmenuitem, commandframe) {
+            function(menuitem, contextmenu, dropdown, checkboxmenuitem, scrollbar, commandframe) {
 
         menuitem.init();
         contextmenu.init();
         dropdown.init();
         checkboxmenuitem.init();
+        scrollbar.init();
         commandframe.init();
 
         document.getElementById("openmenu").addEventListener('click', function() {
@@ -67,6 +76,11 @@
           console.log("ev.clientY:",ev.clientY);
           cm.open(ev.clientX, ev.clientY);
         });
+              
+        document.getElementById('scrollbar').addEventListener('scroll', function(ev) {
+          document.getElementById('scrollbarinfo').innerHTML = "Position: " + ev.detail.position;
+        });
+              
     });
     </script>
 </head>
@@ -135,5 +149,10 @@
 </cb-contextmenu>
 <button id="openmenu">Open Context Menu</button>
 </fieldset>
+  
+  <fieldset><legend>Scrollbar</legend>
+    <cb-scrollbar id="scrollbar" size="1024"></cb-scrollbar>
+    <div id="scrollbarinfo">Position:</div>
+  </fieldset>
 </body>
 </html>

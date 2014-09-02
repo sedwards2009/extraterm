@@ -21,6 +21,7 @@ SOURCES = gui/checkboxmenuitem.ts \
           gui/dropdown.ts \
           gui/popup.ts \
           gui/util.ts \
+          gui/scrollbar.ts \
           commandframe.ts \
           configure_panel.ts \
           domutils.ts \
@@ -32,7 +33,7 @@ build: $(patsubst %.ts,${TS_OUTPUT}/%.js,${SOURCES})
 	@echo "$(START_COLOR)Build complete.$(END_COLOR)"
 
 build_js/%.js: %.ts
-	${TSC_BIN} --noLib -m amd --outDir ${TS_OUTPUT}/$(dir $<) $<
+	${TSC_BIN} --noLib -t ES5 -m amd --outDir ${TS_OUTPUT}/$(dir $<) $<
 
 unittest:
 	@for file in $(TEST_FILES); do \
