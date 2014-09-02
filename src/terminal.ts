@@ -18,6 +18,8 @@ var EventEmitter = events.EventEmitter;
 
 var gui: typeof nw.gui = require('nw.gui');
 
+commandframe.init();
+
 var debug = false;
 function log(...msgs:any[]) {
   if (debug) {
@@ -29,13 +31,18 @@ var EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 var SEMANTIC_TYPE = "data-extraterm-type";
 var SEMANTIC_VALUE = "data-extraterm-value";
 
-var APPLICATION_MODE_NONE = 0;
-var APPLICATION_MODE_HTML = 1;
-var APPLICATION_MODE_OUTPUT_BRACKET_START = 2;
-var APPLICATION_MODE_OUTPUT_BRACKET_END = 3;
+enum ApplicationMode {
+  APPLICATION_MODE_NONE = 0,
+  APPLICATION_MODE_HTML = 1,
+  APPLICATION_MODE_OUTPUT_BRACKET_START = 2,
+  APPLICATION_MODE_OUTPUT_BRACKET_END = 3
+}
 
 /**
  * Create a new terminal.
+ * 
+ * A terminal is full terminal emulator with GUI intergration. It handles the
+ * UI chrome wrapped around the smaller terminal emulation part (term.js).
  * 
  * See startUp().
  * 
@@ -48,7 +55,7 @@ export class Terminal {
   private _parentElement: HTMLElement;
   private _term: termjs.Terminal = null;
   private _htmlData: string = null;
-  private _applicationMode: number = APPLICATION_MODE_NONE;
+  private _applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
   private _bracketStyle: string = null;
   private _lastBashBracket: string = null;
   private _blinkingCursor = false;
@@ -66,7 +73,7 @@ export class Terminal {
   /**
    * Destroy the terminal.
    */
-  destroy() {
+  destroy(): void {
     if (this._ptyBridge !== null) {
       this._ptyBridge.removeAllListeners();
 
@@ -83,7 +90,10 @@ export class Terminal {
     this._term = null;
   }
 
-  getTitle() {
+  /**
+   * Get this terminal's title.
+   */
+  getTitle(): string {
     return this._title;
   }
 
@@ -144,7 +154,7 @@ export class Terminal {
    * 
    * This method should be called once all event handlers have been set up.
    */
-  startUp() {
+  startUp(): void {
     var cookie = "DEADBEEF";  // FIXME
     process.env[EXTRATERM_COOKIE_ENV] = cookie;
 
@@ -179,6 +189,8 @@ export class Terminal {
 
     this._term.open(this._parentElement);
 
+    this._term.element.addEventListener('scroll', (ev: Event) => this._handleScroll(ev) );
+
     this._term.element.addEventListener('keypress', this._handleKeyPressTerminal);
     this._term.element.addEventListener('keydown', this._handleKeyDownTerminal);
     this._term.element.addEventListener('type', (function(ev: CustomEvent) {
@@ -198,66 +210,86 @@ export class Terminal {
     var size = this._term.resizeToContainer();
     this._sendResize(size.cols, size.rows);
   }
-    /**
-     * Focus on this terminal.
-     */
-  focus() {
+  
+  /**
+   * Focus on this terminal.
+   */
+  focus(): void {
     if (this._term !== null) {
       this._term.focus();
     }
   }
 
+  /**
+   * Write data to the terminal screen.
+   * 
+   * @param text the stream of data to write.
+   */
   write(text: string): void {
     if (this._term !== null) {
       this._term.write(text);
     }
   }
-
+  
+  /**
+   * Send data to the pty and process connected to the terminal.
+   * @param text the data to send.
+   */
   send(text: string): void {
     if (this._term !== null) {
       this._sendDataToPty(text);
     }
   }
-
-  scrollToBottom() {
+  
+  /**
+   * Scroll the terminal down as far as possible.
+   */
+  scrollToBottom(): void {
     this._term.scrollToBottom();
   }
 
   /**
    * Handler for window title change events from the pty.
    * 
-   * @param {String} title The new window title for this terminal.
+   * @param title The new window title for this terminal.
    */
-  _handleTitle(title: string) {
+  _handleTitle(title: string): void {
     this._title = title;
     this.events.emit('title', this, title);
   }
-
+  
+  _handleScroll(ev: Event): void {
+//    console.log("scroll top:" + this._term.element.scrollTop);
+  }
+  
   /**
    * Handle a resize event from the window.
    */
-  _handleResize() {
+  _handleResize(): void {
     var size = this._term.resizeToContainer();
     this._sendResize(size.cols, size.rows);
   }
 
-  _handleKeyDown(key: string, ev: KeyboardEvent) {
+  _handleKeyDown(key: string, ev: KeyboardEvent): void {
     if (key !== null) {
       this._term.scrollToBottom();
     }
   }
-
-  _handleUnknownKeyDown(ev: KeyboardEvent) {
+  
+  /**
+   * Handle an unknown key down event from the term.
+   */
+  _handleUnknownKeyDown(ev: KeyboardEvent): boolean {
     this.events.emit('unknown-keydown', this, ev);
     return false;
   }
 
-  _handleKeyPressTerminal(ev: KeyboardEvent) {
-    console.log("._handleKeyPressTerminal: ", ev.keyCode);
+  _handleKeyPressTerminal(ev: KeyboardEvent): void {
+//    console.log("._handleKeyPressTerminal: ", ev.keyCode);
     this._term.keyPress(ev);
   }
 
-  _handleKeyDownTerminal(ev: KeyboardEvent) {
+  _handleKeyDownTerminal(ev: KeyboardEvent): void {
     var frames: commandframe[];
     var index: number;
 
@@ -329,23 +361,23 @@ export class Terminal {
     log("application-mode started! ",params);
     if (params.length === 1) {
       // Normal HTML mode.
-      this._applicationMode = APPLICATION_MODE_HTML;
+      this._applicationMode = ApplicationMode.APPLICATION_MODE_HTML;
 
     } else if(params.length >= 2) {
       switch ("" + params[1]) {
         case "2":
-        this._applicationMode = APPLICATION_MODE_OUTPUT_BRACKET_START;
-        this._bracketStyle = params[2];
-        break;
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
+          this._bracketStyle = params[2];
+          break;
 
-      case "3":
-        this._applicationMode = APPLICATION_MODE_OUTPUT_BRACKET_END;
-        log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
-        break;
+        case "3":
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
+          log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
+          break;
 
-      default:
-        log("Unrecognized application escape parameters.");
-        break;
+        default:
+          log("Unrecognized application escape parameters.");
+          break;
       }
     }
     this._htmlData = "";
@@ -356,9 +388,9 @@ export class Terminal {
    * 
    * @param {string} data The new data.
    */
-  _handleApplicationModeData(data: string) {
-//      console.log("html-mode data!", data);
-    if (this._applicationMode !== APPLICATION_MODE_NONE) {
+  _handleApplicationModeData(data: string): void {
+    console.log("html-mode data!", data);
+    if (this._applicationMode !== ApplicationMode.APPLICATION_MODE_NONE) {
       this._htmlData = this._htmlData + data;
     }
   }
@@ -366,18 +398,18 @@ export class Terminal {
   /**
    * Handle the exit from application mode.
    */
-  _handleApplicationModeEnd() {
+  _handleApplicationModeEnd(): void {
     var el: HTMLElement;
 
     switch (this._applicationMode) {
-      case APPLICATION_MODE_HTML:
+      case ApplicationMode.APPLICATION_MODE_HTML:
         el = this._getWindow().document.createElement("div");
         el.innerHTML = this._htmlData;
         this._term.appendElement(el);
         break;
 
-      case APPLICATION_MODE_OUTPUT_BRACKET_START:
-        if (this._lastBashBracket !== this._htmlData) {
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+//        if (this._lastBashBracket !== this._htmlData) {
           // Create and set up a new command-frame.
           el = this._getWindow().document.createElement("et-commandframe");
 
@@ -403,11 +435,11 @@ export class Terminal {
           }
           el.setAttribute('command-line', cleancommand);
           this._term.appendElement(el);
-          this._lastBashBracket = this._htmlData;
-        }
+//          this._lastBashBracket = this._htmlData;
+//        }
         break;
 
-      case APPLICATION_MODE_OUTPUT_BRACKET_END:
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
         var startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
         log("startdivs:", startdivs);
         if (startdivs.length !== 0) {
@@ -435,13 +467,13 @@ export class Terminal {
       default:
         break;
     }
-    this._applicationMode = APPLICATION_MODE_NONE;
+    this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
 
     log("html-mode end!",this._htmlData);
     this._htmlData = null;
   }
 
-  preserveScroll(task:()=>void) {
+  preserveScroll(task:()=>void): void {
     var scrollatbottom = this._term.isScrollAtBottom();
     task.call(this);
     if (scrollatbottom) {
@@ -498,7 +530,7 @@ export class Terminal {
    * This just pushes the keys from the user through to the pty.
    * @param {string} data The data to process.
    */
-  _handleTermData(data: string) {
+  _handleTermData(data: string): void {
     this._sendDataToPty(data);
   }
 
@@ -509,7 +541,7 @@ export class Terminal {
    * @param {function} callback (Optional) Callback to call once the data has
    *     been sent.
    */
-  _sendDataToPty(text: string, callback?: Function) {
+  _sendDataToPty(text: string, callback?: Function): void {
     var jsonString = JSON.stringify({stream: text});
   //      console.log("<<< json string is ",jsonString);
   //      console.log("<<< json string length is ",jsonString.length);
@@ -528,7 +560,7 @@ export class Terminal {
    * @param {function} callback (Optional) Callback to call once the data has
    *     been sent.
    */
-  _sendResize(cols: number, rows: number, callback?: Function) {
+  _sendResize(cols: number, rows: number, callback?: Function): void {
     var jsonString = JSON.stringify({resize: [cols, rows]});
   //      console.log("<<< json string is ",jsonString);
   //      console.log("<<< json string length is ",jsonString.length);

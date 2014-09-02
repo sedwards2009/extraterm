@@ -26,20 +26,36 @@
     requirejs.config({
         //By default load any module IDs from js/lib
         baseUrl: '../',
-      paths: {
-        "gui": "build_js/gui"
-      }
+        paths: {
+          "gui": "build_js/gui"
+        },
+
+        map: {
+          "*": {
+            "commandframe": "../build_js/commandframe.js",
+            "domReady": "domReady.js"
+          }
+        }
     });
     HTMLElement_obj = HTMLElement;
       
-    require(['gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'commandframe', 'domReady'], function() {
+    require(['gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem',
+             'commandframe', 'domReady'],
+            function(menuitem, contextmenu, dropdown, checkboxmenuitem, commandframe) {
+
+        menuitem.init();
+        contextmenu.init();
+        dropdown.init();
+        checkboxmenuitem.init();
+        commandframe.init();
+
         document.getElementById("openmenu").addEventListener('click', function() {
             var cm = document.getElementById("contextmenu");
             cm.open(100,100);
         });
         var cm = document.getElementById("contextmenu");
         cm.addEventListener('selected', function(ev) {
-        console.log("Got a selected event!",ev);
+          console.log("Got a selected event!",ev);
         });
 
         document.getElementById('contextmenufieldset').addEventListener('contextmenu', function(ev) {

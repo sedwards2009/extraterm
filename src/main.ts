@@ -4,6 +4,7 @@
 ///<reference path='./chrome_lib.d.ts'/>
 ///<reference path="./typings/node/node.d.ts" />
 ///<reference path="./typings/node-webkit/node-webkit.d.ts" />
+///<reference path="./bower_components/immutable-js/dist/Immutable.d.ts" />
 ///<amd-dependency path="nw.gui" />
 import path = require('path');
 import fs = require('fs');
@@ -11,6 +12,7 @@ import _ = require('lodash');
 import terminal = require('./terminal');
 import ConfigurePanel = require('./configure_panel');
 import Theme = require('./theme');
+import im = require('immutable');
 
 var gui: typeof nw.gui = require('nw.gui');
   
@@ -19,7 +21,7 @@ var THEMES_DIRECTORY = "themes";
 var THEME_CONFIG = "theme.json";
 
 var terminalIdCounter = 0;
-var themes: Map<string, Theme>;
+var themes: im.Map<string, Theme>;
 var configurePanel: ConfigurePanel = null;
 var config: Config;
 var terminalList: TerminalTab[] = [];  // -> {id, terminal, terminaltab, tabheader};
@@ -36,6 +38,9 @@ class TerminalTab {
   }
 }
 
+/**
+ * 
+ */
 function createTerminal(): number {
   var doc = window.document;
 
@@ -71,6 +76,9 @@ function createTerminal(): number {
   return thisId;
 }
 
+/**
+ * 
+ */
 function focusTerminal(id: number) {
   terminalList.forEach(function(info) {
     if (info.id === id) {
@@ -88,10 +96,16 @@ function focusTerminal(id: number) {
   });
 }
 
+/**
+ * Set the window title.
+ */
 function setWindowTitle(title: string): void {
   window.document.title = "Extraterm - " + title;
 }
 
+/**
+ * 
+ */
 function handlePtyClose(term: terminal.Terminal): void {
   destroyTerminal(_.find(terminalList, function(info) { return info.terminal === term; }).id);
 
@@ -102,6 +116,9 @@ function handlePtyClose(term: terminal.Terminal): void {
   }
 }
 
+/**
+ * 
+ */
 function shiftTab(direction: number): void {
   if (terminalList.length === 0) {
     return;
@@ -117,6 +134,9 @@ function shiftTab(direction: number): void {
   focusTerminal(terminalList[i].id);
 }
 
+/**
+ * 
+ */
 function handleUnknownKeyDown(term: terminal.Terminal, ev: KeyboardEvent): void {
   if (ev.keyCode === 37 && ev.shiftKey) {
     // left-arrow
@@ -143,6 +163,9 @@ function handleUnknownKeyDown(term: terminal.Terminal, ev: KeyboardEvent): void 
   }
 }
 
+/**
+ * Copy the selection to the clipboard.
+ */
 function copyToClipboard(): void {
   var selection = window.getSelection();
   var range = selection.getRangeAt(0);
@@ -154,6 +177,9 @@ function copyToClipboard(): void {
   clipboard.set(text.replace(/\u00a0/g,' '), 'text');
 }
 
+/**
+ * Paste text from the clipboard.
+ */
 function pasteFromClipboard(): void {
   var clipboard = gui.Clipboard.get();
   var text = clipboard.get();
@@ -161,6 +187,9 @@ function pasteFromClipboard(): void {
   focusedTerminalInfo.terminal.scrollToBottom();
 }
 
+/**
+ * 
+ */
 function handleTitle(term: terminal.Terminal, title: string): void {
   var info = _.find(terminalList, function(info) { return info.terminal === term; });
   var header = info.tabheader;
@@ -171,6 +200,9 @@ function handleTitle(term: terminal.Terminal, title: string): void {
   }
 }
 
+/**
+ * 
+ */
 function destroyTerminal(id: number): void {
   var i = _.findIndex(terminalList, (item) => item.id === id);
   var info = terminalList[i];
@@ -180,6 +212,9 @@ function destroyTerminal(id: number): void {
   terminalList.splice(i, 1);
 }
 
+/**
+ * 
+ */
 function startUp(__dirname: string): void {
   var doc = window.document;
 
@@ -212,10 +247,16 @@ function startUp(__dirname: string): void {
   focusTerminal(createTerminal());
 }
 
+/**
+ * Quit the application.
+ */
 function quit(): void {
   window.close();
 }
 
+/**
+ * 
+ */
 function setupConfiguration(config: Config): void {
   installTheme(config.theme);
   terminalList.forEach(function(info) {
@@ -256,12 +297,11 @@ function writeConfiguration(config: Config): void {
 /**
  * Scan for themes.
  * 
- * @param {String} themesdir The directory to scan for themes.
- * @returns {Array} Array of found theme config objects.
+ * @param themesdir The directory to scan for themes.
+ * @returns Map of found theme config objects.
  */
-function scanThemes(themesdir: string): Map<string, Theme> {
-  var thememap = new Map<string, Theme>();
-
+function scanThemes(themesdir: string): im.Map<string, Theme> {
+  var thememap = im.Map<string, Theme>();
   if (fs.existsSync(themesdir)) {
     var contents = fs.readdirSync(themesdir);
     contents.forEach(function(item) {
@@ -271,7 +311,7 @@ function scanThemes(themesdir: string): Map<string, Theme> {
         var themeinfo = <Theme>JSON.parse(infostr);
 
         if (validateThemeInfo(themeinfo)) {
-          thememap.set(item, themeinfo);
+          thememap = thememap.set(item, themeinfo);
         }
 
       } catch(err) {
@@ -282,10 +322,16 @@ function scanThemes(themesdir: string): Map<string, Theme> {
   }
 }
 
+/**
+ * 
+ */
 function validateThemeInfo(themeinfo: Theme): boolean {
   return _.isString(themeinfo.name) && themeinfo.name !== "";
 }
 
+/**
+ * 
+ */
 function installTheme(themename: string): void {
   var doc = window.document;
   var themeLink = <HTMLLinkElement>doc.getElementById("theme_link");

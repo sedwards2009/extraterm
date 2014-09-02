@@ -3,21 +3,30 @@ import menuitem = require("./menuitem");
 import util = require("./util");
 
 var CHECKED_ATTR = "checked";
-var _id = "CbCheckBoxMenuItemTemplate";
+var ID = "CbCheckBoxMenuItemTemplate";
+
+var registered = false;
 
 class CbCheckBoxMenuItem extends menuitem {
+  
+  static init(): void {
+    if (registered === false) {
+      window.document.registerElement('cb-checkboxmenuitem', {prototype: CbCheckBoxMenuItem.prototype});
+      registered = true;
+    }
+  }
 
   createdCallback() {
     super.createdCallback();
     this.updateChecked(this.getAttribute(CHECKED_ATTR));
   }
 
-  _clicked() {
-    var checked:string = this.getAttribute(CHECKED_ATTR);
+  _clicked(): void {
+    var checked = this.getAttribute(CHECKED_ATTR);
     this.setAttribute(CHECKED_ATTR, (! util.htmlValueToBool(checked)) ? "true" : "false");
   }
 
-  attributeChangedCallback(attrName: string, oldValue: string, newValue: string) {
+  attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     super.attributeChangedCallback(attrName, oldValue, newValue);
 
     if (attrName === CHECKED_ATTR) {
@@ -25,14 +34,11 @@ class CbCheckBoxMenuItem extends menuitem {
     }
   }
 
-  private updateChecked(checked: string) {
-    var checkedhtml:string;
+  private updateChecked(checked: string): void {
     var shadow = util.getShadowRoot(this);
-
-    checkedhtml = "<i class='fa fa-fw fa-" + (util.htmlValueToBool(checked) ? "check-" : "") + "square-o'></i>";
-    shadow.querySelector("#icon1").innerHTML = checkedhtml; 
+    var checkedhtml = "<i class='fa fa-fw fa-" + (util.htmlValueToBool(checked) ? "check-" : "") + "square-o'></i>";
+    (<HTMLDivElement>shadow.querySelector("#icon1")).innerHTML = checkedhtml; 
   }
 }
 
-window.document.registerElement('cb-checkboxmenuitem', {prototype: CbCheckBoxMenuItem.prototype});
 export = CbCheckBoxMenuItem;

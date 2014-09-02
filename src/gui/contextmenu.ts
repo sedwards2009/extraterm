@@ -2,12 +2,23 @@
 import menuitem = require("./menuitem");
 import util = require("./util");
 
+menuitem.init();
+
 var ID = "CbContextMenuTemplate";
+
+var registered = false;
 
 /**
  * A context menu.
  */
 class CbContextMenu extends HTMLElement {
+  
+  static init(): void {
+    if (registered === false) {
+      window.document.registerElement('cb-contextmenu', {prototype: CbContextMenu.prototype});
+      registered = true;
+    }
+  }
   
   private createClone() {
     var template = <HTMLTemplate>window.document.getElementById(ID);
@@ -55,18 +66,16 @@ class CbContextMenu extends HTMLElement {
     return window.document.importNode(template.content, true);
   }
 
-  private __getById(id:string) {
+  private __getById(id:string): Element {
     return util.getShadowRoot(this).querySelector('#'+id);
   }
 
   createdCallback() {
-    var cover: HTMLDivElement;
-    var container: HTMLDivElement;
     var shadow = util.createShadowRoot(this);
     var clone = this.createClone();
     shadow.appendChild(clone);
 
-    cover = this.__getById('cover');
+    var cover = <HTMLDivElement>this.__getById('cover');
     cover.addEventListener('mousedown', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
@@ -81,7 +90,7 @@ class CbContextMenu extends HTMLElement {
       this.close();
     }, true);
 
-    container = this.__getById('container');
+    var container = <HTMLDivElement>this.__getById('container');
     container.addEventListener('mousedown', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
@@ -100,11 +109,11 @@ class CbContextMenu extends HTMLElement {
     });
 
     container.addEventListener('click', (ev: MouseEvent) => {
-      var item:menuitem;
+      var item: menuitem;
 
       if (ev.srcElement instanceof menuitem) {
         item = <menuitem>ev.srcElement;
-        this.activateItem.call(self, item);
+        this.activateItem(item);
       }
     });
 
@@ -195,34 +204,27 @@ class CbContextMenu extends HTMLElement {
   }
 
   private activateItem(item: menuitem) {
-    var name: string;
-    var checked: string;
-    var event: CustomEvent;
-
     item._clicked();
 
-    name = item.getAttribute('name');
-    checked = item.getAttribute('checked');
+    var name = item.getAttribute('name');
+    var checked = item.getAttribute('checked');
     this.close();
 
-    event = new CustomEvent('selected', { detail: {name: name, checked: checked } });
+    var event = new CustomEvent('selected', { detail: {name: name, checked: checked } });
     this.dispatchEvent(event);
   }
 
   private handleKeyPress(ev: KeyboardEvent) {
-    var keyboardselected: menuitem[];
-    var menuitems: menuitem[];
-
     ev.preventDefault();
     ev.stopPropagation();
 
     if (ev.keyIdentifier === "Enter") {
-      menuitems = this.fetchCbMenuItems(this.childNodes);
+      var menuitems = this.fetchCbMenuItems(this.childNodes);
       if (menuitems.length === 0) {
         return;
       }
 
-      keyboardselected = menuitems.filter( (item:menuitem) => util.htmlValueToBool(item.getAttribute("selected")) );
+      var keyboardselected = menuitems.filter( (item:menuitem) => util.htmlValueToBool(item.getAttribute("selected")) );
 
       if (keyboardselected.length !== 0) {
         this.activateItem(keyboardselected[0]);
@@ -230,25 +232,22 @@ class CbContextMenu extends HTMLElement {
     }  
   }
 
-  open(x: number, y: number) {
-    var sx: number;
-    var sy: number;
-    var cover: HTMLDivElement;
-    var container: HTMLDivElement;
-    var rect: ClientRect;
-
-    container = this.__getById('container');
-    container.classList.remove('container_closed');  
+  open(x: number, y: number): void {
+    // Nuke any style like 'display: none' which can be use to prevent flicker.
+    this.setAttribute('style', '');
+    
+    var container = <HTMLDivElement>this.__getById('container');
+    container.classList.remove('container_closed');
     container.classList.add('container_open');  
 
-    rect = container.getBoundingClientRect();
+    var rect = container.getBoundingClientRect();
 
-    sx = x;
+    var sx = x;
     if (sx+rect.width > window.innerWidth) {
       sx = window.innerWidth - rect.width;
     }
 
-    sy = y;
+    var sy = y;
     if (sy+rect.height > window.innerHeight) {
       sy = window.innerHeight - rect.height;
     }
@@ -256,7 +255,7 @@ class CbContextMenu extends HTMLElement {
     container.style.left = "" + sx + "px";
     container.style.top = "" + sy + "px";
 
-    cover = this.__getById('cover');
+    var cover = <HTMLDivElement>this.__getById('cover');
     cover.className = "cover_open";
 
     this.selectMenuItem(this.childNodes, null);
@@ -278,26 +277,19 @@ class CbContextMenu extends HTMLElement {
   }
 
   openAround(el: HTMLElement) {
-    var sx: number;
-    var sy: number;
-    var elrect: ClientRect;
-    var containerrect: ClientRect;
-    var container: HTMLDivElement;
-    var cover: HTMLDivElement;
+    var elrect = el.getBoundingClientRect();
 
-    elrect = el.getBoundingClientRect();
-
-    container = this.__getById('container');
+    var container = <HTMLDivElement>this.__getById('container');
     container.classList.remove('container_closed');  
     container.classList.add('container_open');  
-    containerrect = container.getBoundingClientRect();
+    var containerrect = container.getBoundingClientRect();
 
-    sx = elrect.left;
+    var sx = elrect.left;
     if (sx+containerrect.width > window.innerWidth) {
       sx = window.innerWidth - containerrect.width;
     }
 
-    sy = elrect.bottom;
+    var sy = elrect.bottom;
     if (sy+containerrect.height > window.innerHeight) {
       sy = elrect.top - containerrect.height;
     }
@@ -305,7 +297,7 @@ class CbContextMenu extends HTMLElement {
     container.style.left = "" + sx + "px";
     container.style.top = "" + sy + "px";
 
-    cover = this.__getById('cover');
+    var cover = <HTMLDivElement>this.__getById('cover');
     cover.className = "cover_open";
 
     this.selectMenuItem(this.childNodes, null);
@@ -313,14 +305,14 @@ class CbContextMenu extends HTMLElement {
     container.focus();
   }
 
-  close() {
+  close(): void {
     var event = new CustomEvent('before-close', { detail: null });
     this.dispatchEvent(event);
 
-    var cover = this.__getById('cover');
+    var cover = <HTMLDivElement>this.__getById('cover');
     cover.className = "cover_closed";
 
-    var container = this.__getById('container');
+    var container = <HTMLDivElement>this.__getById('container');
     container.classList.remove('container_open');  
     container.classList.add('container_closed');
 
@@ -328,6 +320,5 @@ class CbContextMenu extends HTMLElement {
     this.dispatchEvent(event);
   }
 }
-console.log('contextmenu run');
-window.document.registerElement('cb-contextmenu', {prototype: CbContextMenu.prototype});
+
 export = CbContextMenu;

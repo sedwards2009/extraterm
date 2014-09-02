@@ -4,9 +4,11 @@
 ///<reference path='chrome_lib.d.ts'/>
 ///<reference path='./typings/lodash/lodash.d.ts'/>
 ///<reference path="./typings/node/node.d.ts" />
+///<reference path="./bower_components/immutable-js/dist/Immutable.d.ts" />
 import _ = require('lodash');
 import events = require('events');
 import Theme = require('./theme');
+import im = require('immutable');
 
 var EventEmitter = events.EventEmitter;
 
@@ -23,11 +25,11 @@ class ConfigurePanel {
   
   private _element: Node;
   
-  private _themes: Map<string, Theme>;
+  private _themes: im.Map<string, Theme>;
   
   events: NodeJS.EventEmitter = new EventEmitter();
   
-  constructor(options: { element: Node; themes: Map<string, Theme>; }) {
+  constructor(options: { element: Node; themes: im.Map<string, Theme>; }) {
     _.bindAll(this);
 
     this._element = options.element;
@@ -42,8 +44,8 @@ class ConfigurePanel {
     cancelButton.addEventListener("click", this._handleCancel);
 
     var themeSelect = <HTMLSelectElement>doc.getElementById("theme_select");
-    _.sortBy(_.keys(this._themes), (a) => this._themes.get(a).name)
-      .forEach( (key) => {
+    this._themes.keySeq().sort().forEach( 
+      (key) => {
         var value = this._themes.get(key);
         var option = doc.createElement('option');
         option.value = key;
@@ -61,6 +63,17 @@ class ConfigurePanel {
     var doc = this._element.ownerDocument;
     var panel = doc.getElementById("configure_panel");
 
+    var themeSelect = <HTMLSelectElement>doc.getElementById("theme_select");
+    this._themes.keySeq().sort().forEach( 
+      (key) => {
+        var value = this._themes.get(key);
+        var option = doc.createElement('option');
+        option.value = key;
+        option.text = value.name;
+        themeSelect.add(option, null);
+      });
+    
+    
     this._configToGui(config);
 
     panel.classList.remove("configure_panel");

@@ -6,14 +6,27 @@ import menuitem = require('gui/menuitem');
 import checkboxmenuitem = require('gui/checkboxmenuitem');
 import util = require('gui/util');
 
+contextmenu.init();
+menuitem.init();
+checkboxmenuitem.init();
+
 var ID = "EtCommandFrameTemplate";
 var COMMANDLINE_ATTR = "command-line";
 var RETURN_CODE_ATTR = "return-code";
 var EXPAND_ATTR = "expand";
 var LINE_NUMBERS_ATTR = "line-numbers";
 
-class EtCommandFrame extends HTMLElement {
+var registered = false;
 
+class EtCommandFrame extends HTMLElement {
+  
+  static init(): void {
+    if (registered === false) {
+      window.document.registerElement('et-commandframe', {prototype: EtCommandFrame.prototype});
+      registered = true;
+    }
+  }
+  
   private _createClone(): Node {
     var template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
@@ -22,7 +35,6 @@ class EtCommandFrame extends HTMLElement {
 
       var success_color = "#00ff00";
       var fail_color = "#ff0000";
-
       template.innerHTML = "<style>\n" +
         "@import url('" + requirejs.toUrl("css/topcoat-desktop-light.css") + "');\n" +
         "@import url('" + requirejs.toUrl("css/font-awesome.css") + "');\n" +
@@ -30,7 +42,7 @@ class EtCommandFrame extends HTMLElement {
         ":host {\n" +
         "display: block;\n" +
         "}\n" +
-
+      
         "#container {\n" +
         "  display: flex;\n" +
         "}\n" +
@@ -151,7 +163,7 @@ class EtCommandFrame extends HTMLElement {
         "  font-size: 0.7rem;\n" +
         "  }\n" +
         "</style>\n" +
-        "<div id='container'>" +
+        "<div id='container' style='display: none;'>" +
         "  <div id='gutter' class='running'>" +
          "<div id='icon_div'><i id='icon'></i></div>" +
          "<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>" +
@@ -161,7 +173,7 @@ class EtCommandFrame extends HTMLElement {
         "    <div id='output'><content id='lines_content'></content></div>" +
         "  </div>" +
         "</div>" +
-        "<cb-contextmenu id='contextmenu'>\n" +
+        "<cb-contextmenu id='contextmenu' style='display: none;'>\n" +
         "<cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>\n" +
         "<cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>\n" +
         "<cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>\n" +
@@ -174,7 +186,7 @@ class EtCommandFrame extends HTMLElement {
     return window.document.importNode(template.content, true);
   }
 
-  private _getById(id: string): Node {
+  private _getById(id: string): Element {
     return util.getShadowRoot(this).querySelector('#'+id);
   }
 
@@ -313,6 +325,11 @@ class EtCommandFrame extends HTMLElement {
       var header = this._getById('header');
       header.focus();
     }).bind(this));
+    
+    // Remove the anti-flicker style.
+    window.requestAnimationFrame( () => {
+      this._getById('container').setAttribute('style', '');
+    });
   }
 
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string) {
@@ -339,5 +356,4 @@ class EtCommandFrame extends HTMLElement {
   }
 }
 
-window.document.registerElement('et-commandframe', {prototype: EtCommandFrame.prototype});
 export = EtCommandFrame;

@@ -13,10 +13,10 @@ export function htmlValueToBool(value: any, defaultValue?: boolean): boolean {
   return ! (value === false || value === "false");
 }
 
-export function createShadowRoot(self: any) {
+export function createShadowRoot(self: HTMLElement): ShadowRoot {
     return self.webkitCreateShadowRoot ? self.webkitCreateShadowRoot() : self.createShadowRoot();
 }
   
-export function getShadowRoot(self: any) {
+export function getShadowRoot(self: HTMLElement): ShadowRoot {
     return self.webkitShadowRoot ? self.webkitShadowRoot : self.shadowRoot;
 }

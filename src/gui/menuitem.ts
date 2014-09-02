@@ -2,13 +2,21 @@
 ///<reference path='../requirejs.d.ts'/>
 import util = require('./util');
 
+var ID = "CbMenuItemTemplate";
+
 var SELECTED_ATTR = "selected";
+var registered = false;
 
 class CbMenuItem extends HTMLElement {
   
-  private _id = "CbMenuItemTemplate";
+  static init(): void {
+    if (registered === false) {
+      window.document.registerElement('cb-menuitem', {prototype: CbMenuItem.prototype});
+      registered = true;
+    }
+  }
   
-  private _css() {
+  private _css(): string {
     return "@import url('" + requirejs.toUrl("css/font-awesome.css") + "');\n" +
       ":host {\n" +
       "    display: block;\n" +
@@ -40,26 +48,15 @@ class CbMenuItem extends HTMLElement {
       "}\n";
   }
 
-  private _html() {
+  private _html(): string {
     return "<div id='container'>" +
       "<div id='icon1'><i class='fa fa-fw'></i></div>" +
       "<div id='icon2'></div>" +
       "<div id='label'><content></content></div>" +
       "</div>";
   }
-  
-  private _createClone() {
-    var template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(this._id);
-    if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
-      template.id = this._id;
-      template.innerHTML = "<style>" + this._css() + "</style>\n" + this._html();
-      window.document.body.appendChild(template);
-    }
-    return window.document.importNode(template.content, true);
-  }
 
-  createdCallback() {
+  createdCallback(): void {
     var icon: string;
     var iconhtml: string;
     var shadow = util.createShadowRoot(this);
@@ -73,22 +70,33 @@ class CbMenuItem extends HTMLElement {
     } else {
       iconhtml += "<i class='fa fa-fw'></i>";
     }
-    shadow.querySelector("#icon2").innerHTML = iconhtml; 
+    (<HTMLElement>shadow.querySelector("#icon2")).innerHTML = iconhtml; 
 
     this.updateKeyboardSelected(this.getAttribute(SELECTED_ATTR));
   }
+  
+  private _createClone(): Node {
+    var template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
+    if (template === null) {
+      template = <HTMLTemplate>window.document.createElement('template');
+      template.id = ID;
+      template.innerHTML = "<style>" + this._css() + "</style>\n" + this._html();
+      window.document.body.appendChild(template);
+    }
+    return window.document.importNode(template.content, true);
+  }
 
-  attributeChangedCallback(attrName: string, oldValue: string, newValue: string) {
+  attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     if (attrName === SELECTED_ATTR ) {
       this.updateKeyboardSelected(newValue);
     }
   }
 
-  _clicked() {}
+  _clicked(): void {}
   
-  private updateKeyboardSelected(value: string) {
+  private updateKeyboardSelected(value: string): void {
     var shadow = util.getShadowRoot(this);
-    var container = shadow.querySelector("#container");
+    var container = <HTMLDivElement>shadow.querySelector("#container");
     var on = value === "true";
     if (on) {
       container.classList.add('selected');
@@ -98,5 +106,4 @@ class CbMenuItem extends HTMLElement {
   }
 }
 
-window.document.registerElement('cb-menuitem', {prototype: CbMenuItem.prototype});
 export = CbMenuItem;

@@ -1,4 +1,4 @@
-// Generated at Sat Aug 23 2014 09:09:00 GMT+0200 (CEST)
+// Generated at Sat Aug 30 2014 16:35:06 GMT+0200 (CEST)
 /* *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved. 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10302,6 +10302,15 @@ declare class HTMLElement implements MSEventAttachmentTarget, ElementCSSInlineSt
     addEventListener(type: "gotpointercapture", listener: (ev: PointerEvent) => any, useCapture?: boolean): void;
     addEventListener(type: "mspointerleave", listener: (ev: any) => any, useCapture?: boolean): void;
   remove(): void; // FF and Chrome specific.
+
+  // Shadow DOM
+  createShadowRoot(): ShadowRoot;
+  
+  webkitCreateShadowRoot(): ShadowRoot;
+  
+  getDestinationInsertionPoints(): NodeList;
+  shadowRoot: ShadowRoot;
+  webkitShadowRoot: ShadowRoot;
     swapNode(otherNode: Node): Node;
     removeNode(deep?: boolean): Node;
     replaceNode(replacement: Node): Node;
@@ -14893,15 +14902,45 @@ declare var WScript: {
  */
 interface Element {
   remove(): void; // FF and Chrome specific.
+
+  // Shadow DOM
+  createShadowRoot(): ShadowRoot;
+  
+  webkitCreateShadowRoot(): ShadowRoot;
+  
+  getDestinationInsertionPoints(): NodeList;
+  shadowRoot: ShadowRoot;
+  webkitShadowRoot: ShadowRoot;
+}
+
+// Shadow DOM
+interface ShadowRoot extends DocumentFragment {
+  getElementById(elementId: string): HTMLElement;
+  getElementsByClassName(className: string): NodeList;
+  getElementsByTagName(tagName: string): NodeList;
+  getElementsByTagNameNS(namespace: string, localName: string): NodeList;
+  getSelection(): Selection;
+  elementFromPoint(x: number, y: number): Element;
+  
+  activeElement: Element;
+  host: Element;
+  olderShadowRoot: ShadowRoot;
+  innerHTML: string;
+  styleSheets: StyleSheetList;
 }
 declare class HTMLTemplate extends HTMLElement {
   content: HTMLElement;
+}
+declare class HTMLContentElement extends HTMLElement {
+  select: string;
+  getDistributedNodes(): NodeList;
 }
 
 interface Document {
   createElement(tagName: "template"): HTMLTemplate;
   registerElement(tagName:string, props:any): any;
 }
+
 
 interface Window {
   CustomEvent: CustomEvent;

@@ -1,13 +1,24 @@
 ///<reference path='../chrome_lib.d.ts'/>
-import CbContextMenu = require('gui/contextmenu');
+import contextmenu = require('./contextmenu');
 import util = require('./util');
 
+contextmenu.init();
+
 var ID = "CbDropDownTemplate";
+
+var registered = false;
 
 /**
  * A Drop Down.
  */
 class CbDropDown extends HTMLElement {
+  
+  static init(): void {
+    if (registered === false) {
+      window.document.registerElement('cb-dropdown', {prototype: CbDropDown.prototype});      
+      registered = true;
+    }
+  }
   
   private createClone() {
     var template = <HTMLTemplate>window.document.getElementById(ID);
@@ -28,7 +39,7 @@ class CbDropDown extends HTMLElement {
     var len: number;
     var kid: Node;
     var shadow: HTMLElement;
-    var cm: CbContextMenu;
+    var cm: contextmenu;
     var clickHandler: (ev: MouseEvent) => void;
     var clone: Node;
 
@@ -37,7 +48,7 @@ class CbDropDown extends HTMLElement {
     shadow.appendChild(clone);
 
     clickHandler = (ev: MouseEvent) => {
-      var cm = <CbContextMenu>this.querySelector('cb-contextmenu');
+      var cm = <contextmenu>this.querySelector('cb-contextmenu');
       cm.openAround(this);        
     };
 
@@ -49,13 +60,12 @@ class CbDropDown extends HTMLElement {
       }
     }
 
-    cm = <CbContextMenu>this.querySelector('cb-contextmenu');  
+    cm = <contextmenu>this.querySelector('cb-contextmenu');  
     cm.addEventListener('selected', (ev: MouseEvent) => {
-        var event = new window.CustomEvent('selected', { detail: ev.detail });
+        var event = new CustomEvent('selected', { detail: ev.detail });
         this.dispatchEvent(event);
     });
   }
 }
 
-window.document.registerElement('cb-dropdown', {prototype: CbDropDown.prototype});
 export = CbDropDown;
