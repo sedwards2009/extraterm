@@ -13,11 +13,13 @@ import domutils = require('domutils');
 import termjs = require('term.js');
 import child_process = require('child_process');
 import events = require('events');
+import scrollbar = require('gui/scrollbar');
 
 var EventEmitter = events.EventEmitter;
 
 var gui: typeof nw.gui = require('nw.gui');
 
+scrollbar.init();
 commandframe.init();
 
 var debug = false;
@@ -53,6 +55,14 @@ enum ApplicationMode {
 export class Terminal {
   
   private _parentElement: HTMLElement;
+  private _container: HTMLElement;
+  
+  private _scrollbar: scrollbar;
+  private _scrollSyncID: number = -1;
+  private _autoscroll = true;
+  
+  private _termContainer: HTMLElement;
+
   private _term: termjs.Terminal = null;
   private _htmlData: string = null;
   private _applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
@@ -117,7 +127,11 @@ export class Terminal {
   _getWindow(): Window {
     return this._parentElement.ownerDocument.defaultView;  
   }
-
+  
+  _getDocument(): Document {
+    return this._parentElement.ownerDocument;
+  }
+  
   _colors(): string[] {
     var colorList = termjs.Terminal.colors.slice();
 
@@ -155,6 +169,14 @@ export class Terminal {
    * This method should be called once all event handlers have been set up.
    */
   startUp(): void {
+    this._parentElement.innerHTML = "<div class='terminal_container'>" +
+      "<div class='term_container'></div>" +
+      "<cb-scrollbar class='terminal_scrollbar'></cb-scrollbar>" +
+      "</div>";
+    this._container = <HTMLElement>this._parentElement.firstElementChild;
+    this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
+    this._termContainer = <HTMLElement>this._container.firstElementChild;
+    
     var cookie = "DEADBEEF";  // FIXME
     process.env[EXTRATERM_COOKIE_ENV] = cookie;
 
@@ -178,7 +200,8 @@ export class Terminal {
     this._getWindow().addEventListener('resize', this._handleResize);
     this._term.on('key', this._handleKeyDown);
     this._term.on('unknown-keydown', this._handleUnknownKeyDown);
-
+    this._term.on('manual-scroll', this._handleManualScroll);
+    
     // Application mode handlers    
     this._term.on('application-mode-start', this._handleApplicationModeStart);
     this._term.on('application-mode-data', this._handleApplicationModeData);
@@ -187,9 +210,7 @@ export class Terminal {
     // Window DOM event handlers
     this._getWindow().document.body.addEventListener('click', this._handleWindowClick);
 
-    this._term.open(this._parentElement);
-
-    this._term.element.addEventListener('scroll', (ev: Event) => this._handleScroll(ev) );
+    this._term.open(this._termContainer);
 
     this._term.element.addEventListener('keypress', this._handleKeyPressTerminal);
     this._term.element.addEventListener('keydown', this._handleKeyDownTerminal);
@@ -207,8 +228,37 @@ export class Terminal {
     this._ptyBridge.stderr.on('data', this._handlePtyStderrData);
     this._ptyBridge.on('close', this._handlePtyClose);
 
+    this._scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
+      this._autoscroll = ev.detail.isBottom;
+    });
+    
     var size = this._term.resizeToContainer();
     this._sendResize(size.cols, size.rows);
+    
+    this._syncScrolling();
+  }
+  
+  private _syncScrolling(): void {
+    this._scrollbar.size = this._term.element.scrollHeight;
+    if (this._autoscroll) {
+      // Scroll to the bottom.
+      this._scrollbar.position = Number.MAX_VALUE;
+      this._term.element.scrollTop = this._term.element.scrollHeight - this._term.element.clientHeight;
+    } else {
+       this._term.element.scrollTop = this._scrollbar.position;
+    }
+    
+    this._scrollSyncID = this._getWindow().requestAnimationFrame( (id: number): void => {
+      this._syncScrolling();
+    });
+  }
+  
+  private _handleManualScroll(scrollDetail: termjs.ScrollDetail): void {
+    this._autoscroll = scrollDetail.isBottom;
+    if (scrollDetail.isBottom === false) {
+      this._scrollbar.size = this._term.element.scrollHeight;
+      this._scrollbar.position = scrollDetail.position;
+    }
   }
   
   /**
@@ -256,10 +306,6 @@ export class Terminal {
   _handleTitle(title: string): void {
     this._title = title;
     this.events.emit('title', this, title);
-  }
-  
-  _handleScroll(ev: Event): void {
-//    console.log("scroll top:" + this._term.element.scrollTop);
   }
   
   /**

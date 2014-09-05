@@ -78,9 +78,22 @@
         });
               
         document.getElementById('scrollbar').addEventListener('scroll', function(ev) {
-          document.getElementById('scrollbarinfo').innerHTML = "Position: " + ev.detail.position;
+          console.log("scrollbar scroll event");
+          document.getElementById('scrollbarinfo').innerHTML = "Position: " + ev.detail.position + " isBottom: " + ev.detail.isBottom;
         });
               
+      
+        document.getElementById('scrollbar_200').addEventListener('click', function(ev) {
+          console.log("set size");
+          document.getElementById('scrollbar').size = 200;
+          console.log("done set size");
+        });
+        document.getElementById('scrollbar_500').addEventListener('click', function(ev) {
+          console.log("set size");
+          document.getElementById('scrollbar').size = 500;
+          console.log("done set size");
+        });
+      
     });
     </script>
 </head>
@@ -153,6 +166,8 @@
   <fieldset><legend>Scrollbar</legend>
     <cb-scrollbar id="scrollbar" size="1024"></cb-scrollbar>
     <div id="scrollbarinfo">Position:</div>
+    <button id="scrollbar_200">Set Size -> 200</button>
+    <button id="scrollbar_500">Set Size -> 500</button>
   </fieldset>
 </body>
 </html>

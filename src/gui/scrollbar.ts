@@ -62,9 +62,14 @@ class CbScrollbar extends HTMLElement {
     var clone = this._createClone();
     shadow.appendChild(clone);
     this._getById(ID_CONTAINER).addEventListener('scroll', (ev: Event) => {
-      var top = this._getById(ID_CONTAINER).scrollTop;
+      var container = this._getById(ID_CONTAINER);
+      var top = container.scrollTop;
       this._position = top;
-      var event = new CustomEvent('scroll', { detail: {position: top } });
+      var event = new CustomEvent('scroll',
+          { detail: {
+            position: top,
+            isTop: top === 0,
+            isBottom: (container.scrollHeight - container.clientHeight) === top } });
       this.dispatchEvent(event);
     });
     
@@ -105,8 +110,10 @@ class CbScrollbar extends HTMLElement {
   
   // --- Size attribute ---
   set size(value: number) {
-    this._size = Math.max(0, value);
-    this._updateSizeNumber(this._size);
+    if (value !== this._size) {
+      this._size = Math.max(0, value);
+      this._updateSizeNumber(this._size);
+    }
   }
   
   get size(): number {
@@ -132,8 +139,12 @@ class CbScrollbar extends HTMLElement {
   
   // --- Position attribute ---
   set position(value: number) {
-    this._position = value;
-    this._updatePositionNumber(this._position);
+    var container = this._getById(ID_CONTAINER);
+    var cleanValue = Math.min(container.scrollHeight-container.clientHeight, Math.max(0, value));
+    if (cleanValue !== this._position) {
+      this._position = cleanValue;
+      this._updatePositionNumber(this._position);
+    }
   }
   
   get position(): number {
@@ -153,8 +164,8 @@ class CbScrollbar extends HTMLElement {
   }
   
   private _updatePositionNumber(value: number): void {
-     var containerElement = this._getById(ID_CONTAINER);
-     containerElement.scrollTop = value;
+    var containerElement = this._getById(ID_CONTAINER);
+    containerElement.scrollTop = value;
   }
 }
 

@@ -39,5 +39,9 @@ declare module "term.js" {
     listeners(event: string): Function[];
     emit(event: string, ...args: any[]): boolean;
   }
-
+  
+  export interface ScrollDetail {
+    position: number;
+    isBottom: boolean;
+  }
 }
