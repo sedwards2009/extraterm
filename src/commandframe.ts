@@ -340,14 +340,22 @@ class EtCommandFrame extends HTMLElement {
     var header = <HTMLDivElement>this._getById('header');
     header.focus();
     header.scrollIntoView(true);
+    this._emitManualScroll();
   }
 
   focusFirst(): void {
     var header = <HTMLDivElement>this._getById('header');
     header.focus();
     header.scrollIntoView(true);
+    this._emitManualScroll();
   }
-
+  
+  private _emitManualScroll(): void {
+    var event = new CustomEvent('close-request');
+    event.initCustomEvent('scroll-move', true, true, null);
+    this.dispatchEvent(event);
+  }
+  
   openMenu(): void {
     var header = <HTMLDivElement>this._getById('header');
     var cm = <contextmenu>this._getById('contextmenu');

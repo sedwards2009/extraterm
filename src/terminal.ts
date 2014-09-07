@@ -214,9 +214,9 @@ export class Terminal {
 
     this._term.element.addEventListener('keypress', this._handleKeyPressTerminal);
     this._term.element.addEventListener('keydown', this._handleKeyDownTerminal);
-    this._term.element.addEventListener('type', (function(ev: CustomEvent) {
-      this._sendDataToPty(ev.detail);
-    }).bind(this));
+    this._container.addEventListener('scroll-move', (ev: CustomEvent) => {
+      this._syncManualScroll();  
+    });
 
     this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
 
@@ -238,6 +238,9 @@ export class Terminal {
     this._syncScrolling();
   }
   
+  /**
+   * Synchronize the scrollbar with the term.
+   */
   private _syncScrolling(): void {
     this._scrollbar.size = this._term.element.scrollHeight;
     if (this._autoscroll) {
@@ -253,12 +256,24 @@ export class Terminal {
     });
   }
   
+  /**
+   * Handle manual-scroll events from the term.
+   * 
+   * These happen when the user does something in the terminal which
+   * intentionally scrolls the contents.
+   */
   private _handleManualScroll(scrollDetail: termjs.ScrollDetail): void {
     this._autoscroll = scrollDetail.isBottom;
     if (scrollDetail.isBottom === false) {
       this._scrollbar.size = this._term.element.scrollHeight;
       this._scrollbar.position = scrollDetail.position;
     }
+  }
+
+  private _syncManualScroll(): void {
+    var el = this._term.element;
+    this._autoscroll = el.scrollTop === el.scrollHeight - el.clientHeight;
+    this._scrollbar.position = el.scrollTop;
   }
   
   /**
@@ -435,7 +450,7 @@ export class Terminal {
    * @param {string} data The new data.
    */
   _handleApplicationModeData(data: string): void {
-    console.log("html-mode data!", data);
+    log("html-mode data!", data);
     if (this._applicationMode !== ApplicationMode.APPLICATION_MODE_NONE) {
       this._htmlData = this._htmlData + data;
     }
