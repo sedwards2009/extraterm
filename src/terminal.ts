@@ -81,26 +81,6 @@ export class Terminal {
   }
 
   /**
-   * Destroy the terminal.
-   */
-  destroy(): void {
-    if (this._ptyBridge !== null) {
-      this._ptyBridge.removeAllListeners();
-
-      this._ptyBridge.kill('SIGHUP');
-      this._ptyBridge.disconnect();
-      this._ptyBridge = null;
-    }
-
-    if (this._term !== null) {
-      this._getWindow().removeEventListener('resize', this._handleResize);
-      this._getWindow().document.body.removeEventListener('click', this._handleWindowClick);
-      this._term.destroy();
-    }
-    this._term = null;
-  }
-
-  /**
    * Get this terminal's title.
    */
   getTitle(): string {
@@ -275,6 +255,31 @@ export class Terminal {
     this._autoscroll = el.scrollTop === el.scrollHeight - el.clientHeight;
     this._scrollbar.position = el.scrollTop;
   }
+  
+  /**
+   * Destroy the terminal.
+   */
+  destroy(): void {
+    if (this._scrollSyncID !== -1) {
+      cancelAnimationFrame(this._scrollSyncID);
+    }
+    
+    if (this._ptyBridge !== null) {
+      this._ptyBridge.removeAllListeners();
+
+      this._ptyBridge.kill('SIGHUP');
+      this._ptyBridge.disconnect();
+      this._ptyBridge = null;
+    }
+
+    if (this._term !== null) {
+      this._getWindow().removeEventListener('resize', this._handleResize);
+      this._getWindow().document.body.removeEventListener('click', this._handleWindowClick);
+      this._term.destroy();
+    }
+    this._term = null;
+  }
+
   
   /**
    * Focus on this terminal.
