@@ -20,6 +20,9 @@ var registered = false;
 
 class EtCommandFrame extends HTMLElement {
   
+  /**
+   * 
+   */
   static init(): void {
     if (registered === false) {
       window.document.registerElement('et-commandframe', {prototype: EtCommandFrame.prototype});
@@ -27,6 +30,9 @@ class EtCommandFrame extends HTMLElement {
     }
   }
   
+  /**
+   * 
+   */
   private _createClone(): Node {
     var template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
@@ -186,10 +192,16 @@ class EtCommandFrame extends HTMLElement {
     return window.document.importNode(template.content, true);
   }
 
+  /**
+   * 
+   */
   private _getById(id: string): Element {
     return util.getShadowRoot(this).querySelector('#'+id);
   }
 
+  /**
+   * Process an attribute value change.
+   */
   private _setAttr(attrName: string, newValue: string): void {
     if (attrName === COMMANDLINE_ATTR) {
       (<HTMLDivElement>this._getById('commandline')).innerText = newValue;
@@ -255,7 +267,10 @@ class EtCommandFrame extends HTMLElement {
     }
   }
 
-  createdCallback() {
+  /**
+   * Callback invoked by the browser after an instance of this element has been created.
+   */
+  createdCallback(): void {
     var shadow = util.createShadowRoot(this);
 
     var clone = this._createClone();
@@ -279,12 +294,12 @@ class EtCommandFrame extends HTMLElement {
     }).bind(this));
 
     var cm = <contextmenu>this._getById('contextmenu');
-    this._getById('container').addEventListener('contextmenu', (function(ev: MouseEvent) {
+    this._getById('container').addEventListener('contextmenu', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
-      var cm = this._getById('contextmenu');
+      var cm = <contextmenu>this._getById('contextmenu');
       cm.open(ev.clientX, ev.clientY);
-    }).bind(this));
+    });
 
     cm.addEventListener('selected', (function(ev: CustomEvent) {
       var event: CustomEvent;
@@ -332,30 +347,45 @@ class EtCommandFrame extends HTMLElement {
     });
   }
 
+  /**
+   * 
+   */
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string) {
     this._setAttr(attrName, newValue);
   }
 
+  /**
+   * 
+   */
   focusLast(): void {
     var header = <HTMLDivElement>this._getById('header');
     header.focus();
-    header.scrollIntoView(true);
+    this.scrollIntoView(true);
     this._emitManualScroll();
   }
 
+  /**
+   * 
+   */
   focusFirst(): void {
     var header = <HTMLDivElement>this._getById('header');
     header.focus();
-    header.scrollIntoView(true);
+    this.scrollIntoView(true);
     this._emitManualScroll();
   }
   
+  /**
+   * 
+   */
   private _emitManualScroll(): void {
     var event = new CustomEvent('close-request');
     event.initCustomEvent('scroll-move', true, true, null);
     this.dispatchEvent(event);
   }
   
+  /**
+   * 
+   */
   openMenu(): void {
     var header = <HTMLDivElement>this._getById('header');
     var cm = <contextmenu>this._getById('contextmenu');

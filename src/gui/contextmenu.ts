@@ -20,6 +20,9 @@ class CbContextMenu extends HTMLElement {
     }
   }
   
+  /**
+   * 
+   */
   private createClone() {
     var template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
@@ -66,10 +69,16 @@ class CbContextMenu extends HTMLElement {
     return window.document.importNode(template.content, true);
   }
 
+  /**
+   * 
+   */
   private __getById(id:string): Element {
     return util.getShadowRoot(this).querySelector('#'+id);
   }
-
+  
+  /**
+   * 
+   */
   createdCallback() {
     var shadow = util.createShadowRoot(this);
     var clone = this.createClone();
@@ -121,6 +130,9 @@ class CbContextMenu extends HTMLElement {
     container.addEventListener('keypress', (ev: KeyboardEvent) => { this.handleKeyPress(ev); });
   }
 
+  /**
+   * 
+   */
   private fetchCbMenuItems(kids: NodeList): menuitem[] {
     var i: number;
     var len: number;
@@ -139,6 +151,9 @@ class CbContextMenu extends HTMLElement {
     return result;
   }
 
+  /**
+   * 
+   */
   private selectMenuItem(kids: NodeList, selectitem: Element) {
     var i: number;
     var len: number;
@@ -154,6 +169,9 @@ class CbContextMenu extends HTMLElement {
     }
   }
 
+  /**
+   * 
+   */
   private handleKeyDown(ev: KeyboardEvent) {
     var keyboardselected: menuitem[];
     var menuitems: menuitem[];
@@ -203,6 +221,9 @@ class CbContextMenu extends HTMLElement {
     ev.stopPropagation();
   }
 
+  /**
+   * 
+   */
   private activateItem(item: menuitem) {
     item._clicked();
 
@@ -214,6 +235,9 @@ class CbContextMenu extends HTMLElement {
     this.dispatchEvent(event);
   }
 
+  /**
+   * 
+   */
   private handleKeyPress(ev: KeyboardEvent) {
     ev.preventDefault();
     ev.stopPropagation();
@@ -232,6 +256,9 @@ class CbContextMenu extends HTMLElement {
     }  
   }
 
+  /**
+   * 
+   */
   open(x: number, y: number): void {
     // Nuke any style like 'display: none' which can be use to prevent flicker.
     this.setAttribute('style', '');
@@ -263,6 +290,9 @@ class CbContextMenu extends HTMLElement {
     container.focus();
   }
 
+  /**
+   * 
+   */
   private debugScroll(msg?: string) {
     var text = msg !== undefined ? msg : "";
     var termdiv = window.document.querySelector('div.terminal');
@@ -276,7 +306,13 @@ class CbContextMenu extends HTMLElement {
     }
   }
 
+  /**
+   * 
+   */
   openAround(el: HTMLElement) {
+    // Nuke any style like 'display: none' which can be use to prevent flicker.
+    this.setAttribute('style', '');
+    
     var elrect = el.getBoundingClientRect();
 
     var container = <HTMLDivElement>this.__getById('container');
@@ -305,6 +341,9 @@ class CbContextMenu extends HTMLElement {
     container.focus();
   }
 
+  /**
+   * 
+   */
   close(): void {
     var event = new CustomEvent('before-close', { detail: null });
     this.dispatchEvent(event);
