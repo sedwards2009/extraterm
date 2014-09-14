@@ -475,34 +475,37 @@ export class Terminal {
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-//        if (this._lastBashBracket !== this._htmlData) {
-          // Create and set up a new command-frame.
-          el = this._getWindow().document.createElement("et-commandframe");
+        var startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
+        log("startdivs:", startdivs);
+        if (startdivs.length !== 0) {
+          break;  // Don't open a new frame.
+        }
+        
+        // Create and set up a new command-frame.
+        el = this._getWindow().document.createElement("et-commandframe");
 
-          el.addEventListener('close-request', (function() {
-            el.remove();
-            this.focus();
-          }).bind(this));
+        el.addEventListener('close-request', (function() {
+          el.remove();
+          this.focus();
+        }).bind(this));
 
-          el.addEventListener('type', (function(ev: CustomEvent) {
-            this._sendDataToPty(ev.detail);
-          }).bind(this));
+        el.addEventListener('type', (function(ev: CustomEvent) {
+          this._sendDataToPty(ev.detail);
+        }).bind(this));
 
-          el.addEventListener('copy-clipboard-request', (function(ev: CustomEvent) {
-            var clipboard = gui.Clipboard.get();
-            clipboard.set(ev.detail, 'text');
-          }).bind(this));
+        el.addEventListener('copy-clipboard-request', (function(ev: CustomEvent) {
+          var clipboard = gui.Clipboard.get();
+          clipboard.set(ev.detail, 'text');
+        }).bind(this));
 
-          var cleancommand = this._htmlData;
-          if (this._bracketStyle === "bash") {
-            // Bash includes the history number. Remove it.
-            var trimmed = this._htmlData.trim();
-            cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
-          }
-          el.setAttribute('command-line', cleancommand);
-          this._term.appendElement(el);
-//          this._lastBashBracket = this._htmlData;
-//        }
+        var cleancommand = this._htmlData;
+        if (this._bracketStyle === "bash") {
+          // Bash includes the history number. Remove it.
+          var trimmed = this._htmlData.trim();
+          cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
+        }
+        el.setAttribute('command-line', cleancommand);
+        this._term.appendElement(el);
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
