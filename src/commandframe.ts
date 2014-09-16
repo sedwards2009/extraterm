@@ -15,8 +15,10 @@ var COMMANDLINE_ATTR = "command-line";
 var RETURN_CODE_ATTR = "return-code";
 var EXPAND_ATTR = "expand";
 var LINE_NUMBERS_ATTR = "line-numbers";
+var TAG_ATTR = "tag";
 
 var registered = false;
+var REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
 
 class EtCommandFrame extends HTMLElement {
   
@@ -54,7 +56,7 @@ class EtCommandFrame extends HTMLElement {
         "}\n" +
 
         "#main {\n" +
-        "  flex: auto 1 1;\n" +
+        "  flex: 1 1 auto;\n" +
         "}\n" +
 
         "#header {\n" +
@@ -102,7 +104,6 @@ class EtCommandFrame extends HTMLElement {
         "  overflow: hidden;\n" +
         "}\n" +
 
-
         "#gutter {\n" +
         "  flex: 2rem 0 0;\n" +
         "  width: 2rem;\n" +
@@ -127,7 +128,7 @@ class EtCommandFrame extends HTMLElement {
         "}\n" +
 
         "#close_button {\n" +
-        "  flex: auto 0 0;\n" +
+        "  flex: 0 0 auto;\n" +
         "  padding: 0px;\n" +
         "  background-color: transparent;\n" +
         "  border: 0px;\n" +
@@ -136,7 +137,16 @@ class EtCommandFrame extends HTMLElement {
         "#close_button:hover {\n" +
         "  color: red;\n" +
         "}\n" +
-
+      
+        ".header_spacer {\n" +
+        "  flex: 2em 0 0;\n" +
+        "  min-width: 2em;\n" +
+        "}\n" +
+      
+        "#tag_name {\n" +
+        "  flex: 0 1 auto;\n" +
+        "}\n" +
+      
         "#icon_div {\n" +
         "  display: inline-block;\n" +
         "  width: 1em;\n" +
@@ -175,7 +185,13 @@ class EtCommandFrame extends HTMLElement {
          "<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>" +
         "  </div>" +
         "  <div id='main'>" +
-        "    <div id='header' tabindex='-1'><div id='commandline'></div><button id='close_button'><i class='fa fa-times-circle'></i></button></div>" +
+        "    <div id='header' tabindex='-1'>" +
+              "<div id='commandline'></div>" +
+              "<i class='fa fa-tag'></i>" +
+              "<div id='tag_name'></div>" +
+              "<div class='header_spacer'></div>" +
+              "<button id='close_button'><i class='fa fa-times-circle'></i></button>" +
+        "    </div>" +
         "    <div id='output'><content id='lines_content'></content></div>" +
         "  </div>" +
         "</div>" +
@@ -265,6 +281,11 @@ class EtCommandFrame extends HTMLElement {
       }
       return;
     }
+    
+    if (attrName === TAG_ATTR) {
+      var tagName = <HTMLDivElement>this._getById('tag_name');
+      tagName.innerText = newValue;
+    }
   }
 
   /**
@@ -280,6 +301,7 @@ class EtCommandFrame extends HTMLElement {
     this._setAttr(RETURN_CODE_ATTR, this.getAttribute(RETURN_CODE_ATTR));
     this._setAttr(EXPAND_ATTR, this.getAttribute(EXPAND_ATTR));
     this._setAttr(LINE_NUMBERS_ATTR, this.getAttribute(LINE_NUMBERS_ATTR));
+    this._setAttr(TAG_ATTR, this.getAttribute(TAG_ATTR));
 
     var closebutton = this._getById('close_button');
     closebutton.addEventListener('click', (function() {
@@ -391,6 +413,23 @@ class EtCommandFrame extends HTMLElement {
     var cm = <contextmenu>this._getById('contextmenu');
     var rect = header.getBoundingClientRect();
     cm.openAround(header); //(rect.left, rect.top );
+  }
+  
+  /**
+   * 
+   */
+  get text(): string {
+    var kids = this.childNodes;
+    var result = "";
+    for (var i=0; i<kids.length; i++) {
+      var kid = kids[i];
+      if (kid.nodeName === "DIV") {
+        var text = (<HTMLDivElement>kid).innerText;
+        text = text.replace(REPLACE_NBSP_REGEX," ");
+        result += util.trimRight(text) + "\n"
+      }
+    }
+    return result;
   }
 }
 

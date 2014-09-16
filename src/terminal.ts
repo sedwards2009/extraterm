@@ -6,7 +6,10 @@
 ///<reference path="./typings/node-webkit/node-webkit.d.ts" />
 ///<reference path="./term_js.d.ts" />
 ///<reference path='./typings/lodash/lodash.d.ts'/>
+///<reference path="./jsBase64.d.ts" />
 ///<amd-dependency path="nw.gui" />
+///<amd-dependency path="base64" />
+
 import _ = require('lodash');
 import commandframe = require('commandframe');
 import domutils = require('domutils');
@@ -14,7 +17,8 @@ import termjs = require('term.js');
 import child_process = require('child_process');
 import events = require('events');
 import scrollbar = require('gui/scrollbar');
-
+//import base64 = require('base64');
+  
 var EventEmitter = events.EventEmitter;
 
 var gui: typeof nw.gui = require('nw.gui');
@@ -22,7 +26,7 @@ var gui: typeof nw.gui = require('nw.gui');
 scrollbar.init();
 commandframe.init();
 
-var debug = false;
+var debug = true;
 function log(...msgs:any[]) {
   if (debug) {
     console.log.apply(console, msgs);
@@ -37,7 +41,8 @@ enum ApplicationMode {
   APPLICATION_MODE_NONE = 0,
   APPLICATION_MODE_HTML = 1,
   APPLICATION_MODE_OUTPUT_BRACKET_START = 2,
-  APPLICATION_MODE_OUTPUT_BRACKET_END = 3
+  APPLICATION_MODE_OUTPUT_BRACKET_END = 3,
+  APPLICATION_MODE_REQUEST_FRAME = 4
 }
 
 /**
@@ -74,7 +79,9 @@ export class Terminal {
   private _super_lineToHTML: (line: any[]) => string;
   
   events: NodeJS.EventEmitter = new EventEmitter();
-
+  
+  private _tagCounter: number = 0;
+  
   constructor(parentElement: HTMLElement) {
     this._parentElement = parentElement;
     _.bindAll(this);
@@ -431,16 +438,21 @@ export class Terminal {
 
     } else if(params.length >= 2) {
       switch ("" + params[1]) {
-        case "2":
+        case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
           this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
           this._bracketStyle = params[2];
           break;
 
-        case "3":
+        case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
           this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
           log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
           break;
-
+          
+        case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
+          log("Starting APPLICATION_MODE_REQUEST_FRAME");
+          break;
+          
         default:
           log("Unrecognized application escape parameters.");
           break;
@@ -505,6 +517,7 @@ export class Terminal {
           cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
         }
         el.setAttribute('command-line', cleancommand);
+        el.setAttribute('tag', "" + this._getNextTag());
         this._term.appendElement(el);
         break;
 
@@ -533,6 +546,10 @@ export class Terminal {
 
         break;
 
+      case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
+        this.handleRequestFrame(this._htmlData);
+        break;
+        
       default:
         break;
     }
@@ -542,6 +559,7 @@ export class Terminal {
     this._htmlData = null;
   }
 
+// FIXME delete this.
   preserveScroll(task:()=>void): void {
     var scrollatbottom = this._term.isScrollAtBottom();
     task.call(this);
@@ -612,8 +630,8 @@ export class Terminal {
    */
   _sendDataToPty(text: string, callback?: Function): void {
     var jsonString = JSON.stringify({stream: text});
-  //      console.log("<<< json string is ",jsonString);
-  //      console.log("<<< json string length is ",jsonString.length);
+//console.log("<<< json string is ",jsonString);
+//console.log("<<< json string length is ",jsonString.length);
     var sizeHeaderBuffer = new Buffer(4);
     sizeHeaderBuffer.writeUInt32BE(jsonString.length, 0);
 
@@ -685,7 +703,35 @@ export class Terminal {
 
     return output;
   }
+  
+  handleRequestFrame(frameId: string): void {
+    var sourceFrame: commandframe = this._findFrame(frameId);
+    var data = sourceFrame !== null ? sourceFrame.text : "";
+    var lines = data.split("\n");
+    var encodedData: string = "";
+    lines.forEach( (line: string) => {
+      encodedData = Base64.encode(line +"\n");
+      this._sendDataToPty(encodedData+"\n");
+    });
+      
+    this._sendDataToPty("\x04");
+    
+    if (encodedData.length !== 0) {
+      this._sendDataToPty("\x04");
+    }
+  }
 
+  /**
+   * Find a command frame by ID.
+   */
+  _findFrame(frameId: string): commandframe {
+    if (/[^0-9]/.test(frameId)) {
+      return null;
+    }
+    var matches = this._term.element.querySelectorAll("et-commandframe[tag='" + frameId + "']");
+    return matches.length === 0 ? null : <commandframe>matches[0];
+  }
+  
   /**
    * Process a click on a item of the given mimetype and value.
    * 
@@ -696,5 +742,10 @@ export class Terminal {
     if (type === "directory") {
       this._sendDataToPty("cd " + value + "\n"); // FIXME escaping
     }
+  }
+  
+  _getNextTag(): number {
+    this._tagCounter++;
+    return this._tagCounter;
   }
 }

@@ -126,7 +126,7 @@
 <fieldset><legend>Command frames</legend>
 <div class="fake_terminal">
 <div class="terminal">
-<et-commandframe command-line="python3 some_big_script.py">
+<et-commandframe command-line="python3 some_big_script.py" tag="3">
     Some lines of output of a running process.
 </et-commandframe>
 </div>
@@ -134,7 +134,7 @@
 
 <div class="fake_terminal">
 <div class="terminal">
-<et-commandframe command-line="python3 some_big_script.py" return-code="0" expand="true">
+<et-commandframe command-line="python3 some_big_script.py" return-code="0" expand="true" tag="1">
     <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
     <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
     <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
@@ -147,7 +147,7 @@
 
 <div class="fake_terminal">
 <div class="terminal">
-<et-commandframe command-line="python3 some_big_script.py" return-code="1">
+<et-commandframe command-line="python3 some_big_script.py" return-code="1" tag="2">
     Some lines of output which went wrong.
 </et-commandframe>
 </div>

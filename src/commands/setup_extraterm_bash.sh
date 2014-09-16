@@ -27,5 +27,6 @@ if [ -n "$EXTRATERM_COOKIE" ]; then
         }
         trap 'preexec_invoke_exec' DEBUG
 
+        alias from="exfrom.py"
     fi
 fi

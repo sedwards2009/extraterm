@@ -20,3 +20,10 @@ export function createShadowRoot(self: HTMLElement): ShadowRoot {
 export function getShadowRoot(self: HTMLElement): ShadowRoot {
     return self.webkitShadowRoot ? self.webkitShadowRoot : self.shadowRoot;
 }
+
+export function trimRight(source: string): string {
+  if (source === null) {
+    return null;
+  }
+  return ("|"+source).trim().substr(1);
+}

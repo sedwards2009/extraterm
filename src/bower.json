@@ -19,6 +19,7 @@
   "dependencies": {
     "requirejs": "~2.1.14",
     "lodash": "~2.4.1",
-    "immutable-js": "facebook/immutable-js#~2.0.16"
+    "immutable-js": "facebook/immutable-js#~2.0.16",
+    "js-base64": "~2.1.5"
   }
 }

@@ -1,6 +1,9 @@
 #
 
 import os
+import sys
+
+INTRO = "\x1b&"
 
 def cookie():
     if "EXTRATERM_COOKIE" in os.environ:
@@ -12,7 +15,7 @@ def isExtraterm():
     return cookie() is not None
 
 def startHtml():
-    print("\x1b&" + cookie() + "\x07", end="")
+    print(INTRO + cookie() + "\x07", end="")
 
 def endHtml():
     print("\x00", end="")
@@ -21,7 +24,11 @@ def startCommand():
     pass
 
 def markEndCommand(rc=None):
-    print("\x1b&" + cookie() + ";3\x07", end="")
+    print(INTRO + cookie() + ";3\x07", end="")
     if rc is not None:
         print(rc, end="")
     print("\x00", end="")
+
+def requestFrame(frameName):
+    print(INTRO + cookie() + ";4\x07" + frameName + "\x00", end="", file=sys.stderr)
+    sys.stderr.flush()

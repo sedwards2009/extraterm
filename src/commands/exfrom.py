@@ -11,27 +11,8 @@ from signal import signal, SIGPIPE, SIG_DFL
 import extratermclient
 
 BUFFER_SIZE = 2048
-def rawMain():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    tty.setraw(sys.stdin)
-  
-    data = sys.stdin.read(BUFFER_SIZE)
-    while len(data) != 0:
-        print(repr(data), file=sys.stderr)
-        sys.stdout.write(data)
-        data = sys.stdin.read(BUFFER_SIZE)
-        
-    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-  
-def cookedMain():
-    data = sys.stdin.read(BUFFER_SIZE)
-    while len(data) != 0:
-        print(repr(data), file=sys.stderr)
-        sys.stdout.write(data)
-        data = sys.stdin.read(BUFFER_SIZE)
 
-def noEchoMain(frame_name):
+def processRequest(frame_name):
     # Turn off echo on the tty.
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
@@ -42,7 +23,6 @@ def noEchoMain(frame_name):
     # Set up a hook to restore the tty settings at exit.
     def restoreTty():
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-#        print("Done restoreTty", file=sys.stderr)
         sys.stderr.flush()
     atexit.register(restoreTty)
     
@@ -65,22 +45,19 @@ def noEchoMain(frame_name):
         
         #Ignore further SIG_PIPE signals and don't throw exceptions
         signal(SIGPIPE,SIG_DFL)
-
-def foo():        
-    print(base64.b64decode("ZGF0YSBvbmUKZGF0YSB0d28KZGF0YSB0aHJlZXgK").decode('utf-8'))
         
 def main():
-#    if len(sys.argv) != 2:
-#        print("[Error] 'from' command requires one argument: frame ID.", file=sys.stderr)
-#        sys.exit(1)
-#    if not extratermclient.isExtraterm():
-#        print("[Error] 'from' command can only be run inside Extraterm.", file=sys.stderr)
-#        sys.exit(1)
-# make sure that stdin is a tty.
+    if len(sys.argv) != 2:
+        print("[Error] 'from' command requires one argument: frame ID.", file=sys.stderr)
+        sys.exit(1)
+    if not extratermclient.isExtraterm():
+        print("[Error] 'from' command can only be run inside Extraterm.", file=sys.stderr)
+        sys.exit(1)
+
+    # make sure that stdin is a tty.
     if not os.isatty(sys.stdin.fileno()):
         print("[Error] 'from' command must be connected to tty on stdin.", file=sys.stderr)
         sys.exit(1)
-    noEchoMain(sys.argv[1])
+    processRequest(sys.argv[1])
 
-#foo()
 main()
