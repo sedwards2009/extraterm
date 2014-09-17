@@ -16,7 +16,7 @@ if [ -n "$EXTRATERM_COOKIE" ]; then
         export PROMPT_COMMAND="exbashpostcommand.py \$?"
 
         preexec () {
-            echo -e "\033&${EXTRATERM_COOKIE};2;bash\007$1\000"
+            echo -n -e "\033&${EXTRATERM_COOKIE};2;bash\007$1\000"
         }
 
         preexec_invoke_exec () {
