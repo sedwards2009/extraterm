@@ -27,9 +27,14 @@ scrollbar.init();
 commandframe.init();
 
 var debug = true;
-function log(...msgs:any[]) {
+var startTime: number = window.performance.now();
+
+function log(...msgs: any[]) {
   if (debug) {
-    console.log.apply(console, msgs);
+    var offset = window.performance.now() - startTime;
+    var msg: string = msgs.reduce( (accu: string, value: string) => accu + value, "");
+    console.timeStamp(msg);
+    console.log(""+offset + ": " + msg);
   }
 }
 
