@@ -66,3 +66,13 @@ process.stdin.on('readable', function() {
     chunk = process.stdin.read();
   }
 });
+
+process.stdin.on('close', function() {
+  console.log("stdin closed. exiting");
+  process.exit(0);
+});
+
+process.stdin.on('error', function() {
+  console.log("stdin errored. exiting");
+  process.exit(0);
+});
