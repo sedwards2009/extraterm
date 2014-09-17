@@ -14965,3 +14965,6 @@ declare var CustomEvent: {
   prototype: CustomEvent;
   new(type?: string, options?:CustomEventOptions): CustomEvent;
 };
+interface Console {
+  timeStamp(label: string): void;
+}
