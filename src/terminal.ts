@@ -8,7 +8,7 @@
 ///<reference path='./typings/lodash/lodash.d.ts'/>
 ///<reference path="./jsBase64.d.ts" />
 ///<amd-dependency path="nw.gui" />
-///<amd-dependency path="base64" />
+///<amd-dependency path="js-base64" />
 
 import _ = require('lodash');
 import commandframe = require('commandframe');
@@ -17,8 +17,7 @@ import termjs = require('term.js');
 import child_process = require('child_process');
 import events = require('events');
 import scrollbar = require('gui/scrollbar');
-//import base64 = require('base64');
-  
+
 var EventEmitter = events.EventEmitter;
 
 var gui: typeof nw.gui = require('nw.gui');

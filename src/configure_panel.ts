@@ -4,7 +4,7 @@
 ///<reference path='chrome_lib.d.ts'/>
 ///<reference path='./typings/lodash/lodash.d.ts'/>
 ///<reference path="./typings/node/node.d.ts" />
-///<reference path="./bower_components/immutable-js/dist/Immutable.d.ts" />
+///<reference path="./node_modules/immutable/dist/Immutable.d.ts" />
 import _ = require('lodash');
 import events = require('events');
 import Theme = require('./theme');

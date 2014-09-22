@@ -8,13 +8,14 @@ NPM_BIN = npm
 TSC_BIN = ./node_modules/.bin/tsc
 NODEUNIT_BIN = ./node_modules/.bin/nodeunit
 BOWER_BIN = ./node_modules/.bin/bower
+RJS_BIN = ./node_modules/.bin/r.js
 
 TS_OUTPUT = build_js
 
 START_COLOR = \033[1;32m
 END_COLOR = \033[0m
 
-.PHONEY : unittest watch typescript build init
+.PHONEY : unittest watch typescript build init modules install_modules
 
 SOURCES = gui/checkboxmenuitem.ts \
           gui/contextmenu.ts \
@@ -28,6 +29,10 @@ SOURCES = gui/checkboxmenuitem.ts \
           terminal.ts \
           main.ts \
           theme.ts
+          
+MODULES = immutable \
+          qs \
+          lodash
 
 build: $(patsubst %.ts,${TS_OUTPUT}/%.js,${SOURCES})
 	@echo "$(START_COLOR)Build complete.$(END_COLOR)"
@@ -40,12 +45,23 @@ unittest:
 		${NODEUNIT_BIN} $$file ; \
 	done
 
-init:
-	@echo "Setting up modules"
+install_modules:
+	@echo "Downloading and installing modules"
 	${NPM_BIN} install
 	${BOWER_BIN} install
 	@echo
-	@echo "Done"
+	@echo "Done installing modules"
+	
+modules:
+	@echo "Converting modules to AMD format"
+	@for file in $(MODULES); do \
+		echo "    $$file..." ; \
+		${RJS_BIN} -convert node_modules/$$file build_modules/$$file ; \
+	done
+	@echo "Done converting modules"
+
+init: install_modules modules
+	@echo "init done"
 	
 watch:
 	@echo "Watching for changes."
