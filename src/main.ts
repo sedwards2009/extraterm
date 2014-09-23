@@ -13,6 +13,12 @@ import terminal = require('./terminal');
 import ConfigurePanel = require('./configure_panel');
 import Theme = require('./theme');
 import im = require('immutable');
+import commandframe = require('commandframe');
+import windowmessages = require('windowmessages');
+import config_interface = require('config');
+
+// Alias Config.
+interface Config extends config_interface.Config {}
 
 var gui: typeof nw.gui = require('nw.gui');
   
@@ -26,11 +32,7 @@ var configurePanel: ConfigurePanel = null;
 var config: Config;
 var terminalList: TerminalTab[] = [];  // -> {id, terminal, terminaltab, tabheader};
 var focusedTerminalInfo: TerminalTab = null;
-
-interface Config {
-  blinkingCursor?: boolean;
-  theme?: string;
-}
+var frameMapping: im.Map<string, commandframe> = im.Map<string, commandframe>();
 
 class TerminalTab {
   constructor(public id: number, public terminal: terminal.Terminal, public terminaltab: HTMLDivElement,
@@ -59,6 +61,8 @@ function createTerminal(): number {
   term.events.on('ptyclose', handlePtyClose);
   term.events.on('unknown-keydown', handleUnknownKeyDown);
   term.events.on('title', handleTitle);
+  term.events.on('frame-pop-out', handleFramePopOut);
+  
   term.startUp();
 
   // Create the tab header.
@@ -200,6 +204,13 @@ function handleTitle(term: terminal.Terminal, title: string): void {
   }
 }
 
+function handleFramePopOut(term: terminal.Terminal, frameElement: HTMLElement): void {
+  console.log("Got frame pop out message.");
+  var frame = <commandframe>frameElement;
+  frameMapping = frameMapping.set(frame.tag, frame);
+  gui.Window.open("frame.html?frametag="+ frame.tag, { position: "mouse", width: 512, height: 512 });
+}
+
 /**
  * 
  */
@@ -210,6 +221,45 @@ function destroyTerminal(id: number): void {
   info.terminaltab.remove();
   info.tabheader.remove();
   terminalList.splice(i, 1);
+}
+
+/**
+ * 
+ */
+function handleMessages(ev: MessageEvent): void {
+  var topMsg: windowmessages.Message = ev.data;
+console.log("main.ts: handleMessages");
+  switch(topMsg.type) {
+    case windowmessages.MessageType.REQUEST_FRAME:
+      
+      // First transmit the config.
+      var configMsg: windowmessages.MessageConfig = {
+        type: windowmessages.MessageType.CONFIG,
+        config: config
+      };
+      ev.source.postMessage(configMsg, ev.origin);
+  
+      var msg: windowmessages.MessageRequestFrame = ev.data;
+      if (frameMapping.has(msg.frameTag)) {
+        var frame = frameMapping.get(msg.frameTag);
+        frameMapping = frameMapping.remove(msg.frameTag);
+        
+        var reply: windowmessages.MessageFrameData = {
+          type: windowmessages.MessageType.FRAME_DATA,
+          frameTag: msg.frameTag,
+          frameHTML: frame.outerHTML
+        };
+        ev.source.postMessage(reply, ev.origin);
+        
+      } else {
+        console.log("Request for unknown frame tag: "+ msg.frameTag);
+      }
+      break;
+      
+    default:
+      console.log("Received an unrecognised message.");
+      break;
+  }
 }
 
 /**
@@ -244,6 +294,8 @@ function startUp(__dirname: string): void {
 
   doc.getElementById("new_tab_button").addEventListener('click', function() { focusTerminal(createTerminal()); });
 
+  window.addEventListener('message', handleMessages, false);
+  
   focusTerminal(createTerminal());
 }
 

@@ -127,7 +127,9 @@ class EtCommandFrame extends HTMLElement {
         "  flex: auto 1 1;\n" +
         "}\n" +
 
-        "#close_button {\n" +
+      
+      
+        "#close_button, #pop_out_button {\n" +
         "  flex: 0 0 auto;\n" +
         "  padding: 0px;\n" +
         "  background-color: transparent;\n" +
@@ -189,6 +191,8 @@ class EtCommandFrame extends HTMLElement {
               "<div id='commandline'></div>" +
               "<i class='fa fa-tag'></i>" +
               "<div id='tag_name'></div>" +
+              "<div class='header_spacer'></div>" +
+              "<button id='pop_out_button'><i class='fa fa-external-link'></i></button>" +
               "<div class='header_spacer'></div>" +
               "<button id='close_button'><i class='fa fa-times-circle'></i></button>" +
         "    </div>" +
@@ -303,27 +307,33 @@ class EtCommandFrame extends HTMLElement {
     this._setAttr(LINE_NUMBERS_ATTR, this.getAttribute(LINE_NUMBERS_ATTR));
     this._setAttr(TAG_ATTR, this.getAttribute(TAG_ATTR));
 
+    var popOutButton = this._getById('pop_out_button');
+    popOutButton.addEventListener('click', (): void => {
+        var event = new CustomEvent('frame-pop-out', { detail: this });
+        this.dispatchEvent(event);
+    });
+    
     var closebutton = this._getById('close_button');
-    closebutton.addEventListener('click', (function() {
+    closebutton.addEventListener('click', (): void => {
         var event = new CustomEvent('close-request', { detail: null });
         this.dispatchEvent(event);
-    }).bind(this));
+    });
 
     var expandbutton = this._getById('expand_button');
-    expandbutton.addEventListener('click', (function() {
+    expandbutton.addEventListener('click', (): void => {
       var expanded = util.htmlValueToBool(this.getAttribute(EXPAND_ATTR), true);
-      this.setAttribute(EXPAND_ATTR, !expanded);
-    }).bind(this));
+      this.setAttribute(EXPAND_ATTR, "" + !expanded);
+    });
 
     var cm = <contextmenu>this._getById('contextmenu');
-    this._getById('container').addEventListener('contextmenu', (ev: MouseEvent) => {
+    this._getById('container').addEventListener('contextmenu', (ev: MouseEvent): void => {
       ev.stopPropagation();
       ev.preventDefault();
       var cm = <contextmenu>this._getById('contextmenu');
       cm.open(ev.clientX, ev.clientY);
     });
 
-    cm.addEventListener('selected', (function(ev: CustomEvent) {
+    cm.addEventListener('selected', (ev: CustomEvent): void => {
       var event: CustomEvent;
       switch (ev.detail.name) {
         case "copycommand":
@@ -355,8 +365,8 @@ class EtCommandFrame extends HTMLElement {
         default:
           break;
       }
-      this._getById('header').focus();
-    }).bind(this));
+      (<HTMLDivElement>this._getById('header')).focus();
+    });
 
     cm.addEventListener('before-close', (function(ev: Event) {
       var header = this._getById('header');
@@ -400,8 +410,14 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   private _emitManualScroll(): void {
-    var event = new CustomEvent('close-request');
+    var event = new CustomEvent('scroll-move');
     event.initCustomEvent('scroll-move', true, true, null);
+    this.dispatchEvent(event);
+  }
+  
+  private _emitFramePopOut(frame: EtCommandFrame): void {
+    var event = new CustomEvent('frame-pop-out');
+    event.initCustomEvent('frame-pop-out', true, true, frame);
     this.dispatchEvent(event);
   }
   
@@ -430,6 +446,14 @@ class EtCommandFrame extends HTMLElement {
       }
     }
     return result;
+  }
+  
+  set tag(tag: string) {
+    this.setAttribute(TAG_ATTR, tag);
+  }
+  
+  get tag(): string {
+    return this.getAttribute(TAG_ATTR);
   }
 }
 

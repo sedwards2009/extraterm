@@ -514,6 +514,10 @@ export class Terminal {
           clipboard.set(ev.detail, 'text');
         }).bind(this));
 
+        el.addEventListener('frame-pop-out', (ev: CustomEvent): void => {
+          this.events.emit('frame-pop-out', this, ev.detail);
+        });
+        
         var cleancommand = this._htmlData;
         if (this._bracketStyle === "bash") {
           // Bash includes the history number. Remove it.

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extraterm</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/topcoat-desktop-light.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
+    <link id="theme_link" rel="stylesheet" type="text/css" href="themes/default/theme.css" />
+
+    <script src="node_modules/requirejs/require.js"></script>
+    <script>
+    requirejs.config({
+        //By default load any module IDs from js/lib
+      baseUrl: '',
+      paths: {
+        "gui": "build_js/gui"
+      },
+      map: {
+        "*": {
+          "js-base64" : "node_modules/js-base64/base64.js",
+          "lodash": "build_modules/lodash/dist/lodash",
+          "immutable": "build_modules/immutable/dist/Immutable",
+          "qs": "build_modules/qs/lib/index.js",
+          
+          "commandframe": "build_js/commandframe.js",
+          "configure_panel": "build_js/configure_panel.js",
+          "terminal": "build_js/terminal.js",
+          "main": "build_js/main.js",
+          "framewindow": "build_js/framewindow.js",
+          "windowmessages": "build_js/windowmessages.js"
+        }
+      }
+    });
+
+    function startUp() {
+      // Tell require.js about some Node loaded modules.
+      
+      // 'buffer' is needed by js-base64.
+      ['nw.gui', 'path', 'fs', 'events', 'term.js', 'child_process', 'buffer'].forEach( function(nodeMod) {
+        var mod = require(nodeMod);
+        define(nodeMod, function() {
+          return mod;
+        });
+      });
+      
+      var dirname = require('./dirname');
+
+      requirejs(['framewindow'], function(framewindow) {
+          framewindow(dirname.dirname);
+      });
+    }
+    </script>
+</head>
+<body onload="startUp();">
+</body>
+</html>

@@ -28,6 +28,8 @@ SOURCES = gui/checkboxmenuitem.ts \
           domutils.ts \
           terminal.ts \
           main.ts \
+          framewindow.ts \
+          windowmessages.ts \
           theme.ts
           
 MODULES = immutable \
