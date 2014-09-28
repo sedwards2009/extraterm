@@ -1,4 +1,4 @@
-// Generated at Sat Aug 30 2014 16:35:06 GMT+0200 (CEST)
+// Generated at Sun Sep 28 2014 21:18:09 GMT+0200 (CEST)
 /* *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved. 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -14934,6 +14934,15 @@ declare class HTMLTemplate extends HTMLElement {
 declare class HTMLContentElement extends HTMLElement {
   select: string;
   getDistributedNodes(): NodeList;
+}
+declare class HTMLDialogElement extends HTMLElement {
+  open: boolean;
+  returnValue: string;
+  show(anchor?: Element): void;
+  show(anchor?: MouseEvent): void;
+  showModal(anchor?: Element): void;
+  showModal(anchor?: MouseEvent): void;
+  close(returnValue?: string): void;
 }
 
 interface Document {
