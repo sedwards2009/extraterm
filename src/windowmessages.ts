@@ -2,7 +2,7 @@
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
 
-import config = require('config');
+import Config = require('config');
 
 export enum MessageType {
   REQUEST_FRAME,
@@ -24,5 +24,5 @@ export interface MessageFrameData extends Message {
 }
 
 export interface MessageConfig extends Message {
-  config: config.Config;
+  config: Config;
 }

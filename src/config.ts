@@ -1,5 +1,9 @@
+/**
+ * Copyright 2014 Simon Edwards <simon@simonzone.com>
+ */
 
-export interface Config {
+interface Config {
   blinkingCursor?: boolean;
   theme?: string;
 }
+export = Config;

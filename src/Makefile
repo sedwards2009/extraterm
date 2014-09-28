@@ -30,7 +30,10 @@ SOURCES = gui/checkboxmenuitem.ts \
           main.ts \
           framewindow.ts \
           windowmessages.ts \
-          theme.ts
+          theme.ts \
+          corenode.ts \
+          coreweb.ts \
+          corenodeapi.ts
           
 MODULES = immutable \
           qs \

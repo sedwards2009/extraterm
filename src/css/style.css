@@ -84,12 +84,24 @@ DIV.terminal_tab_inactive {
 
 .terminal {
     width: 100%;
-    height : 100%;
+    height: 100%;
 
     white-space: nowrap;
     
     overflow-x: scroll;
     overflow-y: hidden;
+}
+
+.terminal.frameterminal {
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    white-space: nowrap;
+    position: absolute;
+  
+    overflow-x: auto;
+    overflow-y: auto;
 }
 
 DIV.tab_active {
@@ -273,4 +285,10 @@ span[data-extraterm-type='directory']:hover {
 .et-word:focus {
   outline: 2px dashed rgb(255, 165, 0);
   outline-offset: -2px;
+}
+
+/*et-commandframe*/
+*:unresolved {
+  background-color: red;
+  border: 1px dashed red;
 }

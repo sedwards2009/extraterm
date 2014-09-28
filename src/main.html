@@ -27,7 +27,8 @@
           "terminal": "build_js/terminal.js",
           "main": "build_js/main.js",
           "framewindow": "build_js/framewindow.js",
-          "windowmessages": "build_js/windowmessages.js"
+          "windowmessages": "build_js/windowmessages.js",
+          "coreweb": "build_js/coreweb.js"
         }
       }
     });
@@ -42,11 +43,9 @@
           return mod;
         });
       });
-      
-      var dirname = require('./dirname');
 
       requirejs(['main'], function(main) {
-          main(dirname.dirname);
+          main();
       });
     }
     </script>
@@ -82,7 +81,7 @@
                             <div class="flex1">Theme:</div>
                             <div class="flex2"><select id="theme_select"></select></div>
                         </div>
-                        
+                          
                         <div class="flexhlayout flexmin"><!-- Blinking cursor -->
                             <div class="flex1"></div>
                             <label class="topcoat-checkbox flex2">

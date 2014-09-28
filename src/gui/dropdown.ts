@@ -38,7 +38,7 @@ class CbDropDown extends HTMLElement {
     var i: number;
     var len: number;
     var kid: Node;
-    var shadow: HTMLElement;
+    var shadow: ShadowRoot;
     var cm: contextmenu;
     var clickHandler: (ev: MouseEvent) => void;
     var clone: Node;

@@ -57,6 +57,7 @@ function handleMessages(ev: MessageEvent): void {
       var frameDataMsg = <windowmessages.MessageFrameData> topMsg;
       var div = window.document.createElement('div');
       div.classList.add('terminal');
+      div.classList.add('frameterminal');
       div.innerHTML = frameDataMsg.frameHTML;
       window.document.body.appendChild(div);
       break;

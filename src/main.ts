@@ -5,34 +5,28 @@
 ///<reference path="./typings/node/node.d.ts" />
 ///<reference path="./typings/node-webkit/node-webkit.d.ts" />
 ///<reference path="./node_modules/immutable/dist/Immutable.d.ts" />
+///<reference path="./typings/lodash/lodash.d.ts" />
 ///<amd-dependency path="nw.gui" />
-import path = require('path');
-import fs = require('fs');
+
+import CoreWeb = require('coreweb');
+import Config = require('config');
+import Theme = require('./theme');
+import im = require('immutable');
 import _ = require('lodash');
 import terminal = require('./terminal');
 import ConfigurePanel = require('./configure_panel');
-import Theme = require('./theme');
-import im = require('immutable');
 import commandframe = require('commandframe');
 import windowmessages = require('windowmessages');
-import config_interface = require('config');
-
-// Alias Config.
-interface Config extends config_interface.Config {}
-
 var gui: typeof nw.gui = require('nw.gui');
-  
-var CONFIG_FILENAME = "config";
-var THEMES_DIRECTORY = "themes";
-var THEME_CONFIG = "theme.json";
 
 var terminalIdCounter = 0;
-var themes: im.Map<string, Theme>;
 var configurePanel: ConfigurePanel = null;
 var config: Config;
 var terminalList: TerminalTab[] = [];  // -> {id, terminal, terminaltab, tabheader};
 var focusedTerminalInfo: TerminalTab = null;
 var frameMapping: im.Map<string, commandframe> = im.Map<string, commandframe>();
+
+var themes: im.Map<string, Theme>;
 
 class TerminalTab {
   constructor(public id: number, public terminal: terminal.Terminal, public terminaltab: HTMLDivElement,
@@ -265,27 +259,23 @@ console.log("main.ts: handleMessages");
 /**
  * 
  */
-function startUp(__dirname: string): void {
+function startUp(): void {
   var doc = window.document;
-
-  config = readConfiguration();
-
-  config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
-
-  // Themes
-  var themesdir = path.join(__dirname, THEMES_DIRECTORY);
-  themes = scanThemes(themesdir);
-  if (themes.get(config.theme) === undefined) {
-    config.theme = "default";
-  }
+  
+  config = CoreWeb.getConfig();
   setupConfiguration(config);
-
+  var themeArray = CoreWeb.getThemes();
+  themes = im.Map<string, Theme>();
+  themeArray.forEach( (item: Theme) => {
+    themes = themes.set(item.name, item);
+  });
+  
   // Configure panel.
   configurePanel = new ConfigurePanel(
           {element: window.document.getElementById("configure_panel"), themes: themes});
   configurePanel.events.on('ok', function(newConfig: Config) {
     config = newConfig;
-    writeConfiguration(newConfig);
+//    writeConfiguration(newConfig);
     setupConfiguration(newConfig);
   });
   doc.getElementById("configure_button").addEventListener('click', function() {
@@ -316,77 +306,12 @@ function setupConfiguration(config: Config): void {
   });
 }
 
-/*
- * config object format: { theme: String, blinkingCursor: boolean}
- */
-
-/**
- * Read the configuration.
- * 
- * @returns {Object} The configuration object.
- */
-function readConfiguration(): Config {
-  var filename = path.join(gui.App.dataPath, CONFIG_FILENAME);
-  var config: Config = {};
-
-  if (fs.existsSync(filename)) {
-    var configJson = fs.readFileSync(filename, {encoding: "utf8"});
-    config = <Config>JSON.parse(configJson);
-  }
-  return config;
-}
-
-/**
- * Write out the configuration to disk.
- * 
- * @param {Object} config The configuration to write.
- */
-function writeConfiguration(config: Config): void {
-  var filename = path.join(gui.App.dataPath, CONFIG_FILENAME);
-  fs.writeFileSync(filename, JSON.stringify(config));
-}
-
-/**
- * Scan for themes.
- * 
- * @param themesdir The directory to scan for themes.
- * @returns Map of found theme config objects.
- */
-function scanThemes(themesdir: string): im.Map<string, Theme> {
-  var thememap = im.Map<string, Theme>();
-  if (fs.existsSync(themesdir)) {
-    var contents = fs.readdirSync(themesdir);
-    contents.forEach(function(item) {
-      var infopath = path.join(themesdir, item, THEME_CONFIG);
-      try {
-        var infostr = fs.readFileSync(infopath, {encoding: "utf8"});
-        var themeinfo = <Theme>JSON.parse(infostr);
-
-        if (validateThemeInfo(themeinfo)) {
-          thememap = thememap.set(item, themeinfo);
-        }
-
-      } catch(err) {
-        console.log("Warning: Unable to read file ",infopath);
-      }
-    });
-    return thememap;
-  }
-}
-
-/**
- * 
- */
-function validateThemeInfo(themeinfo: Theme): boolean {
-  return _.isString(themeinfo.name) && themeinfo.name !== "";
-}
-
 /**
  * 
  */
 function installTheme(themename: string): void {
   var doc = window.document;
   var themeLink = <HTMLLinkElement>doc.getElementById("theme_link");
-  themeLink.href = THEMES_DIRECTORY+ "/" + themename + "/theme.css";
+  themeLink.href = CoreWeb.getThemesDirectory() + "/" + themename + "/theme.css";
 }
 export = startUp;

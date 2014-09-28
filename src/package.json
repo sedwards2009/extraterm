@@ -1,6 +1,7 @@
 {
   "name": "extraterm",
   "main": "main.html",
+  "node-main": "bootstrap.js",
   "js-flags": "--harmony",
   "window": {
     "width": 1024,
