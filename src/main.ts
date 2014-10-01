@@ -14,19 +14,21 @@ import Theme = require('./theme');
 import im = require('immutable');
 import _ = require('lodash');
 import terminal = require('./terminal');
-import ConfigurePanel = require('./configure_panel');
+import configuredialog = require('./configuredialog');
 import commandframe = require('commandframe');
 import windowmessages = require('windowmessages');
 var gui: typeof nw.gui = require('nw.gui');
 
 var terminalIdCounter = 0;
-var configurePanel: ConfigurePanel = null;
+var configureDialog: configuredialog = null;
 var config: Config;
 var terminalList: TerminalTab[] = [];  // -> {id, terminal, terminaltab, tabheader};
 var focusedTerminalInfo: TerminalTab = null;
 var frameMapping: im.Map<string, commandframe> = im.Map<string, commandframe>();
 
 var themes: im.Map<string, Theme>;
+
+configuredialog.init();
 
 class TerminalTab {
   constructor(public id: number, public terminal: terminal.Terminal, public terminaltab: HTMLDivElement,
@@ -270,19 +272,22 @@ function startUp(): void {
     themes = themes.set(item.name, item);
   });
   
-  // Configure panel.
-  configurePanel = new ConfigurePanel(
-          {element: window.document.getElementById("configure_panel"), themes: themes});
-  configurePanel.events.on('ok', function(newConfig: Config) {
+  // Configure dialog.
+  configureDialog = <configuredialog>doc.createElement(configuredialog.tagName);
+  doc.body.appendChild(configureDialog);
+  
+  configureDialog.addEventListener('ok', (newConfig: Config) => {
     config = newConfig;
-//    writeConfiguration(newConfig);
+//    writeConfiguration(newConfig); // FIXME
     setupConfiguration(newConfig);
   });
   doc.getElementById("configure_button").addEventListener('click', function() {
-    configurePanel.open(config);
+    configureDialog.open(config, themes);
   });
 
-  doc.getElementById("new_tab_button").addEventListener('click', function() { focusTerminal(createTerminal()); });
+  doc.getElementById("new_tab_button").addEventListener('click', function() {
+    focusTerminal(createTerminal());
+  });
 
   window.addEventListener('message', handleMessages, false);
   

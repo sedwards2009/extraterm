@@ -156,39 +156,6 @@ DIV.tab_inactive {
     overflow: hidden;
 }
 
-
-/* ************ Generic Flex classes ************ */
-DIV.flexvlayout {
-    display: flex;
-    flex-direction: column;
-}
-
-DIV.flexhlayout {
-    display: flex;
-    flex-direction: row;
-}
-
-.flexmin {
-    flex: 0 auto;
-}
-
-.flexmax {
-    flex: 1 1;
-}
-
-.flex1 {
-    flex: 1 1;
-}
-
-.flex2 {
-    flex: 2 2;
-}
-
-.vspace {
-    width: 1px;
-    height: 1em;
-}
-
 /* ************ GUI elements ************ */
 
 H1.gui-heading {

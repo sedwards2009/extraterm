@@ -3,6 +3,7 @@
   "main": "main.html",
   "node-main": "bootstrap.js",
   "js-flags": "--harmony",
+  "chromium-args": "--enable-experimental-web-platform-features",
   "window": {
     "width": 1024,
     "height": 800

@@ -3,6 +3,7 @@
 <head>
     <title>Extraterm</title>
     <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/flexlayout.css" />
     <link rel="stylesheet" type="text/css" href="css/topcoat-desktop-light.css" />
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
     <link id="theme_link" rel="stylesheet" type="text/css" href="themes/default/theme.css" />
@@ -23,7 +24,6 @@
           "qs": "build_modules/qs/lib/index.js",
           
           "commandframe": "build_js/commandframe.js",
-          "configure_panel": "build_js/configure_panel.js",
           "terminal": "build_js/terminal.js",
           "main": "build_js/main.js",
           "framewindow": "build_js/framewindow.js",
@@ -63,46 +63,6 @@
             </button>
         </div>
         <div id="tab_container" class="tab_container"></div>
-    </div>
-    
-    <!-- Configure panel -->
-    <div id="configure_panel" class="configure_panel gui">
-        <div class="flexmax"></div>
-        <div class="flexhlayout">
-            <div class="flexmax"></div>    
-            <div class="configure_content flexmin">
-                <h1 class="gui-heading">Configure</h1>
-                
-                <div class="flexhlayout"><!-- horizonal center the lot. -->
-                    <div class="flexmax"></div>
-                    
-                    <div class="flexvlayout flexmin"><!-- column to hold all widgets -->
-                        <div class="flexhlayout flexmin"><!-- Theme -->
-                            <div class="flex1">Theme:</div>
-                            <div class="flex2"><select id="theme_select"></select></div>
-                        </div>
-                          
-                        <div class="flexhlayout flexmin"><!-- Blinking cursor -->
-                            <div class="flex1"></div>
-                            <label class="topcoat-checkbox flex2">
-                              <input type="checkbox" id="blinking_cursor_checkbox">
-                              <div class="topcoat-checkbox__checkmark"></div>
-                              Blinking cursor
-                            </label>
-                        </div>
-                    </div>
-                    <div class="flexmax"></div>
-                </div>
-                <div class="vspace"></div>
-                <div class="flexhlayout">
-                    <button id="ok_configure_button" class="flexmax topcoat-button--large--cta">OK</button>
-                    <div class="flexmax"></div>
-                    <button id="close_configure_button" class="flexmax topcoat-button--large">Cancel</button>
-                </div>
-            </div>
-            <div class="flexmax"></div>
-        </div>
-        <div class="flexmax"><div>
     </div>
 </body>
 </html>

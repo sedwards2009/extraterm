@@ -24,7 +24,6 @@ SOURCES = gui/checkboxmenuitem.ts \
           gui/util.ts \
           gui/scrollbar.ts \
           commandframe.ts \
-          configure_panel.ts \
           domutils.ts \
           terminal.ts \
           main.ts \
@@ -33,7 +32,8 @@ SOURCES = gui/checkboxmenuitem.ts \
           theme.ts \
           corenode.ts \
           coreweb.ts \
-          corenodeapi.ts
+          corenodeapi.ts \
+          configuredialog.ts
           
 MODULES = immutable \
           qs \

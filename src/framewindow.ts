@@ -8,13 +8,6 @@
 ///<reference path="./qs.d.ts" />
 ///<amd-dependency path="nw.gui" />
 
-//import path = require('path');
-//import fs = require('fs');
-//import _ = require('lodash');
-//import terminal = require('./terminal');
-//import ConfigurePanel = require('./configure_panel');
-//import Theme = require('./theme');
-//import im = require('immutable');
 import qs = require('qs');
 import windowmessages = require('windowmessages');
 
