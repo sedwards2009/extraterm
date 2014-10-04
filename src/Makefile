@@ -23,6 +23,7 @@ SOURCES = gui/checkboxmenuitem.ts \
           gui/popup.ts \
           gui/util.ts \
           gui/scrollbar.ts \
+          gui/stackedwidget.ts \
           commandframe.ts \
           domutils.ts \
           terminal.ts \

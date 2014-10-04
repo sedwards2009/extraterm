@@ -26,7 +26,6 @@
       height: 200px;
       background-color: green;
     }
-      
     </style>
     
     <script src="../node_modules/requirejs/require.js"></script>
@@ -50,15 +49,16 @@
     });
     HTMLElement_obj = HTMLElement;
       
-    require(['immutable', 'gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'gui/scrollbar',
+    require(['immutable', 'gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'gui/scrollbar', 'gui/stackedwidget',
              'commandframe', 'configuredialog', 'domReady'],
-            function(im, menuitem, contextmenu, dropdown, checkboxmenuitem, scrollbar, commandframe, configuredialog) {
+            function(im, menuitem, contextmenu, dropdown, checkboxmenuitem, scrollbar, stackedwidget, commandframe, configuredialog) {
 
         menuitem.init();
         contextmenu.init();
         dropdown.init();
         checkboxmenuitem.init();
         scrollbar.init();
+        stackedwidget.init();
         commandframe.init();
         configuredialog.init();
 
@@ -106,6 +106,16 @@
           };
           
           document.getElementById('configure_dialog').open(config, themes);
+        });
+
+        document.getElementById("show_page_0").addEventListener('click', function() {
+         document.getElementById("stackedwidget").currentIndex = 0;
+        });
+        document.getElementById("show_page_1").addEventListener('click', function() {
+         document.getElementById("stackedwidget").currentIndex = 1;
+        });
+        document.getElementById("show_page_2").addEventListener('click', function() {
+         document.getElementById("stackedwidget").currentIndex = 2;
         });
       
     });
@@ -188,6 +198,17 @@
     <legend>Configure Dialog</legend>
     <et-configure-dialog id="configure_dialog"></et-configure-dialog>
     <button id="open_configure_dialog">Open Configure Dialog</button>
+  </fieldset>
+  
+  <fieldset><legend>Stacked Widget</legend>
+  <button id="show_page_0">Show Page 0</button>
+  <button id="show_page_1">Show Page 1</button>
+  <button id="show_page_2">Show Page 2</button>
+    <cb-stackedwidget id="stackedwidget">
+      <div>Page 1</div>
+      <div>Page 2</div>
+      <div>Page 3</div>
+    </cb-stackedwidget>
   </fieldset>
 </body>
 </html>
