@@ -5,7 +5,7 @@
 ///<reference path="./typings/node/node.d.ts" />
 ///<reference path="./typings/node-webkit/node-webkit.d.ts" />
 ///<reference path="./typings/lodash/lodash.d.ts" />
-///<reference path="./node_modules/immutable/dist/Immutable.d.ts" />
+///<reference path="./node_modules/immutable/dist/immutable.d.ts" />
 
 import path = require('path');
 import fs = require('fs');

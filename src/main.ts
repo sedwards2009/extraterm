@@ -4,7 +4,7 @@
 ///<reference path='./chrome_lib.d.ts'/>
 ///<reference path="./typings/node/node.d.ts" />
 ///<reference path="./typings/node-webkit/node-webkit.d.ts" />
-///<reference path="./node_modules/immutable/dist/Immutable.d.ts" />
+///<reference path="./node_modules/immutable/dist/immutable.d.ts" />
 ///<reference path="./typings/lodash/lodash.d.ts" />
 ///<amd-dependency path="nw.gui" />
 

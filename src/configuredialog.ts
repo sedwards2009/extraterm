@@ -1,6 +1,6 @@
 ///<reference path='./chrome_lib.d.ts'/>
 ///<reference path='./requirejs.d.ts'/>
-///<reference path="./node_modules/immutable/dist/Immutable.d.ts" />
+///<reference path="./node_modules/immutable/dist/immutable.d.ts" />
 import im = require('immutable');
 import util = require('gui/util');
 
