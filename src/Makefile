@@ -44,7 +44,7 @@ build: $(patsubst %.ts,${TS_OUTPUT}/%.js,${SOURCES})
 	@echo "$(START_COLOR)Build complete.$(END_COLOR)"
 
 build_js/%.js: %.ts
-	${TSC_BIN} --noLib -t ES5 -m amd --outDir ${TS_OUTPUT}/$(dir $<) $<
+	${TSC_BIN} --noLib -t ES6 -m amd --outDir ${TS_OUTPUT}/$(dir $<) $<
 
 unittest:
 	@for file in $(TEST_FILES); do \
