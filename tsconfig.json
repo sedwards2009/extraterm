@@ -1,0 +1,46 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "amd",
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": false,
+        "noLib": true,
+        "outDir": "src/build_js/"
+    },
+    "filesGlob": [
+        "./src/*.ts",
+        "./src/gui/*.ts",
+        "!./src/node_modules/**/*.ts"
+    ],
+    "files": [
+        "./src/chrome_lib.d.ts",
+        "./src/commandframe.ts",
+        "./src/config.ts",
+        "./src/configuredialog.ts",
+        "./src/corenode.ts",
+        "./src/corenodeapi.ts",
+        "./src/coreweb.ts",
+        "./src/domutils.ts",
+        "./src/extra_dom.d.ts",
+        "./src/framewindow.ts",
+        "./src/jsBase64.d.ts",
+        "./src/main.ts",
+        "./src/qs.d.ts",
+        "./src/requirejs.d.ts",
+        "./src/term_js.d.ts",
+        "./src/terminal.ts",
+        "./src/theme.ts",
+        "./src/windowmessages.ts",
+        "./src/gui/checkboxmenuitem.ts",
+        "./src/gui/contextmenu.ts",
+        "./src/gui/dropdown.ts",
+        "./src/gui/menuitem.ts",
+        "./src/gui/popup.ts",
+        "./src/gui/scrollbar.ts",
+        "./src/gui/stackedwidget.ts",
+        "./src/gui/tab.ts",
+        "./src/gui/tabwidget.ts",
+        "./src/gui/util.ts"
+    ]
+}
