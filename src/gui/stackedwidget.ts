@@ -1,11 +1,11 @@
 ///<reference path='../chrome_lib.d.ts'/>
 import util = require("./util");
+"use strict";
+const ID = "CbStackedWidgetTemplate";
+const ID_CONTAINER = 'container';
+const ATTR_INDEX = 'data-cb-index';
 
-var ID = "CbStackedWidgetTemplate";
-var ID_CONTAINER_ = 'container';
-var ATTR_INDEX = 'data-cb-index';
-
-var registered = false;
+let registered = false;
 
 /**
  * A widget which displays one of its DIV contents at a time.
@@ -25,22 +25,40 @@ class CbStackedWidget extends HTMLElement {
    * 
    */
   private createClone() {
-    var template = <HTMLTemplate>window.document.getElementById(ID);
+    let template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = "<style>\n" +
-        ".container {\n" +
-        "}\n" +
+      template.innerHTML = `
+<style>
+.container {
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+}
 
-        ".visible {\n" +
-        "}\n" +
+.container > DIV {
+  width: 100%;
+  
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 100%;
+  
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: top;
+}
 
-        ".hidden {\n" +
-        "  display: none;\n" +
-        "}\n" +
-        "</style>\n" +
-        "<div id='" + ID_CONTAINER_ + "' class='container'></div>";
+.visible {
+  order: 0;
+}
+
+.hidden {
+  order: 1;
+  visibility: hidden;
+}
+</style>
+<div id='${ID_CONTAINER}' class='container'></div>`;
       window.document.body.appendChild(template);
     }
 
@@ -60,8 +78,8 @@ class CbStackedWidget extends HTMLElement {
   createdCallback() {
     this._currentIndex = 0;
     
-    var shadow = util.createShadowRoot(this);
-    var clone = this.createClone();
+    const shadow = util.createShadowRoot(this);
+    const clone = this.createClone();
     shadow.appendChild(clone);
     this.createPageHolders();
     
@@ -70,15 +88,20 @@ class CbStackedWidget extends HTMLElement {
   
   // Override
   appendChild(newNode: Node): Node {
-    var result = super.appendChild(newNode);
+    const result = super.appendChild(newNode);
     this.createPageHolders();
+    this.showIndex(this._currentIndex);
     return result;
   }
   
   // Override
   removeChild(oldNode: Node): Node {
-    var result = super.removeChild(oldNode);
+    const result = super.removeChild(oldNode);
     this.createPageHolders();
+    if (this._currentIndex >= this.childElementCount) {
+      this._currentIndex = this.childElementCount - 1;
+    }
+    this.showIndex(this._currentIndex);
     return result;
   }
   
@@ -92,9 +115,9 @@ class CbStackedWidget extends HTMLElement {
   }
   
   private showIndex(index: number): void {
-    var container = <HTMLDivElement>this.__getById('container');
-    for (var i=0; i<container.children.length; i++) {
-      var kid = <HTMLElement>container.children.item(i);
+    const container = <HTMLDivElement>this.__getById('container');
+    for (let i=0; i<container.children.length; i++) {
+      const kid = <HTMLElement>container.children.item(i);
       if (i === index) {
         kid.classList.add('visible');
         kid.classList.remove('hidden');
@@ -106,17 +129,17 @@ class CbStackedWidget extends HTMLElement {
   }
 
   private createPageHolders(): void {
-    var container = <HTMLDivElement>this.__getById('container');
+    const container = <HTMLDivElement>this.__getById('container');
     
-    for (var i=0; i<this.children.length; i++) {
-      var kid = this.children.item(i);
+    for (let i=0; i<this.children.length; i++) {
+      const kid = this.children.item(i);
       kid.setAttribute(ATTR_INDEX, "" + i);
     }
     
     while (container.childElementCount < this.childElementCount) {
-      var holderDiv = this.ownerDocument.createElement('div');
-      var contentElement = this.ownerDocument.createElement('content');
-      contentElement.setAttribute('select', 'div[' + ATTR_INDEX + '="' + container.childElementCount + '"]');
+      const holderDiv = this.ownerDocument.createElement('div');
+      const contentElement = this.ownerDocument.createElement('content');
+      contentElement.setAttribute('select', '[' + ATTR_INDEX + '="' + container.childElementCount + '"]');
       holderDiv.appendChild(contentElement);
       container.appendChild(holderDiv);
     }
