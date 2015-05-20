@@ -49,9 +49,9 @@
     });
     HTMLElement_obj = HTMLElement;
       
-    require(['immutable', 'gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'gui/scrollbar', 'gui/stackedwidget',
+    require(['immutable', 'gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'gui/scrollbar', 'gui/stackedwidget', 'gui/tabwidget', 'gui/tab',
              'commandframe', 'configuredialog', 'domReady'],
-            function(im, menuitem, contextmenu, dropdown, checkboxmenuitem, scrollbar, stackedwidget, commandframe, configuredialog) {
+            function(im, menuitem, contextmenu, dropdown, checkboxmenuitem, scrollbar, stackedwidget, tabwidget, tab, commandframe, configuredialog) {
 
         menuitem.init();
         contextmenu.init();
@@ -59,6 +59,8 @@
         checkboxmenuitem.init();
         scrollbar.init();
         stackedwidget.init();
+        tabwidget.init();
+        tab.init();
         commandframe.init();
         configuredialog.init();
 
@@ -80,7 +82,8 @@
           console.log("ev.clientY:",ev.clientY);
           cm.open(ev.clientX, ev.clientY);
         });
-
+      
+        // Scrollbar
         document.getElementById('scrollbar').addEventListener('scroll', function(ev) {
           console.log("scrollbar scroll event");
           document.getElementById('scrollbarinfo').innerHTML = "Position: " + ev.detail.position + " isBottom: " + ev.detail.isBottom;
@@ -97,6 +100,7 @@
           console.log("done set size");
         });
       
+        // Configure dialog
         document.getElementById('open_configure_dialog').addEventListener('click', function(ev) {
           
           var themes = im.Map().set("Light", { name: "Light"});
@@ -107,17 +111,29 @@
           
           document.getElementById('configure_dialog').open(config, themes);
         });
+      
+        // Stacked widget.
+        document.getElementById("previous_page").addEventListener('click', function() {
+         var stacked = document.getElementById("stackedwidget");
+          stacked.currentIndex = stacked.currentIndex-1 < 0 ? (stacked.children.length-1) : (stacked.currentIndex-1);
+        });
 
-        document.getElementById("show_page_0").addEventListener('click', function() {
-         document.getElementById("stackedwidget").currentIndex = 0;
+        document.getElementById("next_page").addEventListener('click', function() {
+          var stacked = document.getElementById("stackedwidget");
+          stacked.currentIndex = (stacked.currentIndex+1 >= stacked.children.length) ? 0 : (stacked.currentIndex+1);
         });
-        document.getElementById("show_page_1").addEventListener('click', function() {
-         document.getElementById("stackedwidget").currentIndex = 1;
-        });
-        document.getElementById("show_page_2").addEventListener('click', function() {
-         document.getElementById("stackedwidget").currentIndex = 2;
+
+        document.getElementById("add_page").addEventListener('click', function() {
+          var stacked = document.getElementById("stackedwidget");
+          var newPage = document.createElement('div');
+          newPage.innerHTML = "New Page " + Math.random();
+          stacked.appendChild(newPage);
         });
       
+        document.getElementById("remove_page").addEventListener('click', function() {
+          var stacked = document.getElementById("stackedwidget");
+          stacked.removeChild(stacked.children.item(stacked.children.length-1));
+        });
     });
     </script>
 </head>
@@ -201,14 +217,27 @@
   </fieldset>
   
   <fieldset><legend>Stacked Widget</legend>
-  <button id="show_page_0">Show Page 0</button>
-  <button id="show_page_1">Show Page 1</button>
-  <button id="show_page_2">Show Page 2</button>
+    <button id="previous_page">Previous Page</button>
+    <button id="next_page">Next Page</button>
+    <button id="add_page">+ Page</button>
+    <button id="remove_page">- Page</button>
     <cb-stackedwidget id="stackedwidget">
+      <div>Page 0</div>
       <div>Page 1</div>
       <div>Page 2</div>
-      <div>Page 3</div>
     </cb-stackedwidget>
   </fieldset>
+
+  <fieldset><legend>Tabs Widget</legend>
+    <cb-tabwidget id="tabswidget">
+      <cb-tab>Tab 1</cb-tab>
+      <div>Tab 1 contents and stuff.</div>
+
+      <cb-tab>Tab 2</cb-tab>
+      <div><p>Tab 2 contents and stuff.</p><p>This is a bit taller.</p></div>
+    </cb-tabwidget>
+  </fieldset>
+
+  
 </body>
 </html>
