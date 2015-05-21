@@ -1,4 +1,3 @@
-///<reference path='../chrome_lib.d.ts'/>
 import CbStackedWidget = require("./stackedwidget");
 import util = require("./util");
 "use strict";

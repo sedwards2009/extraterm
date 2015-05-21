@@ -1,4 +1,3 @@
-///<reference path='../chrome_lib.d.ts'/>
 import util = require('./util');
 
 var ID = "CbScrollbarTemplate";

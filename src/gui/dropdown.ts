@@ -1,4 +1,3 @@
-///<reference path='../chrome_lib.d.ts'/>
 import contextmenu = require('./contextmenu');
 import util = require('./util');
 

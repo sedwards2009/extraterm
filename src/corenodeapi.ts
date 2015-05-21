@@ -1,7 +1,6 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-///<reference path='./chrome_lib.d.ts'/>
 
 import Config = require('config');
 import Theme = require('theme');

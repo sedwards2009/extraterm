@@ -1,12 +1,7 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-///<reference path='./chrome_lib.d.ts'/>
-///<reference path="./typings/node/node.d.ts" />
-///<reference path="./typings/node-webkit/node-webkit.d.ts" />
-///<reference path="./term_js.d.ts" />
-///<reference path='./typings/lodash/lodash.d.ts'/>
-///<reference path="./jsBase64.d.ts" />
+
 ///<amd-dependency path="nw.gui" />
 ///<amd-dependency path="js-base64" />
 

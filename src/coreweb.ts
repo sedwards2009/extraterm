@@ -7,9 +7,6 @@
  * called by code running inside a window.
  */
 
-///<reference path='./chrome_lib.d.ts'/>
-///<reference path="./typings/node/node.d.ts" />
-///<reference path="./typings/node-webkit/node-webkit.d.ts" />
 ///<amd-dependency path="nw.gui" />
 
 var gui: typeof nw.gui = require('nw.gui');

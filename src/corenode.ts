@@ -1,11 +1,6 @@
 /**
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
-///<reference path='./chrome_lib.d.ts'/>
-///<reference path="./typings/node/node.d.ts" />
-///<reference path="./typings/node-webkit/node-webkit.d.ts" />
-///<reference path="./typings/lodash/lodash.d.ts" />
-///<reference path="./node_modules/immutable/dist/immutable.d.ts" />
 
 import path = require('path');
 import fs = require('fs');

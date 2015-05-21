@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "es6",
+        "target": "es5",
         "module": "amd",
         "declaration": false,
         "noImplicitAny": false,
@@ -11,7 +11,9 @@
     "filesGlob": [
         "./src/*.ts",
         "./src/gui/*.ts",
-        "!./src/node_modules/**/*.ts"
+        "./src/typings/**/*.ts",
+        "!./src/node_modules/**/*.ts",
+        "./src/node_modules/immutable/dist/*.ts"
     ],
     "files": [
         "./src/chrome_lib.d.ts",
@@ -41,6 +43,11 @@
         "./src/gui/stackedwidget.ts",
         "./src/gui/tab.ts",
         "./src/gui/tabwidget.ts",
-        "./src/gui/util.ts"
+        "./src/gui/util.ts",
+        "./src/typings/lodash/lodash.d.ts",
+        "./src/typings/node/node.d.ts",
+        "./src/typings/requirejs/require.d.ts",
+        "./src/typings/tsd.d.ts",
+        "./src/node_modules/immutable/dist/immutable.d.ts"
     ]
 }

@@ -1,5 +1,3 @@
-///<reference path='./chrome_lib.d.ts'/>
-///<reference path='./requirejs.d.ts'/>
 
 import contextmenu = require('gui/contextmenu');
 import menuitem = require('gui/menuitem');

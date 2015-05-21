@@ -5,46 +5,26 @@
 TEST_FILES = flexbuffertest.js
 
 NPM_BIN = npm
-TSC_BIN = ./node_modules/.bin/tsc
-NODEUNIT_BIN = ./node_modules/.bin/nodeunit
-BOWER_BIN = ./node_modules/.bin/bower
-RJS_BIN = ./node_modules/.bin/r.js
+TSC_BIN = ./src/node_modules/.bin/tsc
+NODEUNIT_BIN = ./src/node_modules/.bin/nodeunit
+BOWER_BIN = ./src/node_modules/.bin/bower
+RJS_BIN = ./src/node_modules/.bin/r.js
 
 TS_OUTPUT = build_js
 
 START_COLOR = \033[1;32m
 END_COLOR = \033[0m
 
-.PHONEY : unittest watch typescript build init modules install_modules
-
-SOURCES = gui/checkboxmenuitem.ts \
-          gui/contextmenu.ts \
-          gui/dropdown.ts \
-          gui/popup.ts \
-          gui/util.ts \
-          gui/scrollbar.ts \
-          gui/stackedwidget.ts \
-          commandframe.ts \
-          domutils.ts \
-          terminal.ts \
-          main.ts \
-          framewindow.ts \
-          windowmessages.ts \
-          theme.ts \
-          corenode.ts \
-          coreweb.ts \
-          corenodeapi.ts \
-          configuredialog.ts
+.PHONEY : build unittest watch typescript build init modules install_modules
           
 MODULES = immutable \
           qs \
           lodash
 
-build: $(patsubst %.ts,${TS_OUTPUT}/%.js,${SOURCES})
+build:
+	@echo "$(START_COLOR)Building...$(END_COLOR)"
+	${TSC_BIN}
 	@echo "$(START_COLOR)Build complete.$(END_COLOR)"
-
-build_js/%.js: %.ts
-	${TSC_BIN} --noLib -t ES6 -m amd --outDir ${TS_OUTPUT}/$(dir $<) $<
 
 unittest:
 	@for file in $(TEST_FILES); do \

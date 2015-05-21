@@ -1,4 +1,3 @@
-///<reference path='chrome_lib.d.ts'/>
 /**
  * Convert an array-like object to a real array.
  * 

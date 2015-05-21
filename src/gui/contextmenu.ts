@@ -1,4 +1,3 @@
-///<reference path='../chrome_lib.d.ts'/>
 import menuitem = require("./menuitem");
 import util = require("./util");
 
