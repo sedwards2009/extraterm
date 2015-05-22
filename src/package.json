@@ -1,23 +1,21 @@
 {
   "name": "extraterm",
-  "main": "main.html",
-  "node-main": "bootstrap.js",
-  "js-flags": "--harmony",
-  "chromium-args": "--enable-experimental-web-platform-features",
-  "window": {
-    "width": 1024,
-    "height": 800
-  },
+  "version": "0.1.0",
+  "description": "A terminal",
+  "author": "Simon Edwards",
+  "license": "GPL v3",
+  "main": "main.js",
   "dependencies": {
     "immutable": "^3.7.3",
     "js-base64": "^2.1.8",
     "lodash": "^3.9.1",
-    "nw": "^0.12.0",
     "pty.js": "^0.2.6",
     "qs": "^2.4.2",
     "requirejs": "^2.1.17"
   },
   "devDependencies": {
+    "cajon": "^0.2.8",
+    "electron-prebuilt": "^0.26.0",
     "nodeunit": "^0.9.1",
     "tsd": "^0.6.0-beta.5",
     "typescript": "^1.5.0-beta",

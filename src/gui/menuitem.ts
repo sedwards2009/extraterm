@@ -1,4 +1,5 @@
 import util = require('./util');
+import resourceLoader = require('../resourceloader');
 
 var ID = "CbMenuItemTemplate";
 
@@ -15,7 +16,7 @@ class CbMenuItem extends HTMLElement {
   }
   
   private _css(): string {
-    return "@import url('" + requirejs.toUrl("css/font-awesome.css") + "');\n" +
+    return "@import url('" + resourceLoader.toUrl("css/font-awesome.css") + "');\n" +
       ":host {\n" +
       "    display: block;\n" +
       "    color: #000;\n" +

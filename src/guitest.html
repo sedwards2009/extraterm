@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+<!-- Note: You may have to start chrome or chromium with the --allow-file-access-from-files
+ switch to get this file to work over file:// -->
 <html>
 <head>
     <title>GUI Test</title>
-    <link rel="stylesheet" type="text/css" href="../css/style.css" />
-    <link rel="stylesheet" type="text/css" href="../css/topcoat-desktop-light.css" />
-    <link rel="stylesheet" type="text/css" href="../css/font-awesome.css" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/topcoat-desktop-light.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
     <style>
     html, body {
     height: 100%;
@@ -28,22 +30,20 @@
     }
     </style>
     
-    <script src="../node_modules/requirejs/require.js"></script>
+    <script src="node_modules/cajon/cajon.js"></script>
     <script>
     requirejs.config({
         //By default load any module IDs from js/lib
-        baseUrl: '../',
+        // baseUrl: '../',
         paths: {
-          "gui": "build_js/gui"
+          "gui": "gui"
         },
 
         map: {
           "*": {
-            "commandframe": "../build_js/commandframe.js",
-            "configuredialog": "../build_js/configuredialog.js",
-            "immutable": "build_modules/immutable/dist/Immutable",
-            
-            "domReady": "domReady.js"
+            "immutable": "node_modules/immutable/dist/immutable.js",
+            "resourceloader": "webresourceloader.js",
+            "domReady": "test/domReady.js"
           }
         }
     });

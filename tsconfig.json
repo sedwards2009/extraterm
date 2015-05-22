@@ -1,12 +1,13 @@
 {
     "compilerOptions": {
         "target": "es5",
-        "module": "amd",
+        "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
         "removeComments": false,
+        "sourceMap": true,
         "noLib": true,
-        "outDir": "src/build_js/"
+        "outDir": "src"
     },
     "filesGlob": [
         "./src/*.ts",
@@ -28,11 +29,14 @@
         "./src/framewindow.ts",
         "./src/jsBase64.d.ts",
         "./src/main.ts",
+        "./src/mainweb.ts",
         "./src/qs.d.ts",
         "./src/requirejs.d.ts",
+        "./src/resourceloader.ts",
         "./src/term_js.d.ts",
         "./src/terminal.ts",
         "./src/theme.ts",
+        "./src/webresourceloader.ts",
         "./src/windowmessages.ts",
         "./src/gui/checkboxmenuitem.ts",
         "./src/gui/contextmenu.ts",
@@ -44,6 +48,9 @@
         "./src/gui/tab.ts",
         "./src/gui/tabwidget.ts",
         "./src/gui/util.ts",
+        "./src/typings/github-electron/github-electron-main.d.ts",
+        "./src/typings/github-electron/github-electron-renderer.d.ts",
+        "./src/typings/github-electron/github-electron.d.ts",
         "./src/typings/lodash/lodash.d.ts",
         "./src/typings/node/node.d.ts",
         "./src/typings/requirejs/require.d.ts",
