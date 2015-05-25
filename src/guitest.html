@@ -134,6 +134,12 @@
           var stacked = document.getElementById("stackedwidget");
           stacked.removeChild(stacked.children.item(stacked.children.length-1));
         });
+        document.getElementById("tabswidget2_showframe").addEventListener('change', function() {
+          var tabs = document.getElementById("tabswidget2");
+          console.log(document.getElementById("tabswidget2_showframe").checked);
+          
+          tabs.setAttribute("show-frame", document.getElementById("tabswidget2_showframe").checked);
+        });
     });
     </script>
 </head>
@@ -228,7 +234,7 @@
     </cb-stackedwidget>
   </fieldset>
 
-  <fieldset><legend>Tabs Widget</legend>
+  <fieldset><legend>Tabs Widget (Plain)</legend>
     <cb-tabwidget id="tabswidget">
       <cb-tab>Tab 1</cb-tab>
       <div>Tab 1 contents and stuff.</div>
@@ -238,6 +244,22 @@
     </cb-tabwidget>
   </fieldset>
 
+  <fieldset><legend>Tabs Widget (without frame)</legend>
+  
+    <label class="topcoat-checkbox">
+      <input type="checkbox" id="tabswidget2_showframe">
+      <div class="topcoat-checkbox__checkmark"></div>
+      Show frame
+    </label>
+  
+    <cb-tabwidget id="tabswidget2" show-frame="false">
+      <cb-tab>Tab 1</cb-tab>
+      <div>Tab 1 contents and stuff.</div>
+
+      <cb-tab>Tab 2</cb-tab>
+      <div><p>Tab 2 contents and stuff.</p><p>This is a bit taller.</p></div>
+    </cb-tabwidget>
+  </fieldset>
   
 </body>
 </html>
