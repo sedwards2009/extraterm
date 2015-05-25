@@ -46,8 +46,18 @@ DIV.tabbar {
   -webkit-user-select: none;
 }
 
-DIV.tabbar > DIV.tab + DIV.tab {
+DIV.tabbar > DIV.tab + DIV.tab,
+DIV.tabbar > DIV.tab + DIV.catch_all {
   margin-left: 2px;
+}
+
+DIV.tab {
+  text-align: center;
+  flex-basis: 15rem;
+  flex-grow: 0;
+  text-overflow: ellipsis;
+  white-space: pre;
+  overflow: hidden;
 }
 
 DIV.tab_active {
@@ -67,13 +77,6 @@ DIV.tab_active {
   border-radius: 4px;
   border-bottom-left-radius: 0px;
   border-bottom-right-radius: 0px;
-
-  text-align: center;
-  flex-basis: 15rem;
-  
-  text-overflow: ellipsis;
-  white-space: pre;
-  overflow: hidden;
 }
 
 DIV.tab_inactive {
@@ -95,17 +98,14 @@ DIV.tab_inactive {
   background-color: #D2D6D6;
 
   margin-top: 3px;
-  
-  text-align: center;
-  flex-basis: 15rem;
-
-  text-overflow: ellipsis;
-  white-space: pre;
-  overflow: hidden;
 }
 
 DIV.tab_inactive:hover {
   background-color: #eff1f1;
+}
+
+DIV.catch_all {
+  flex-grow: 1;
 }
 
 DIV.show_frame > DIV.tabbar > DIV.tab_inactive {
@@ -119,6 +119,7 @@ DIV.show_frame > #tabbar {
   position: relative;
   top: 1px;
 }
+
 </style>\n
 <div id='top' class='top'>
 <div id='tabbar' class='tabbar'></div>
@@ -191,6 +192,8 @@ DIV.show_frame > #tabbar {
       } else if (kid.nodeName === "DIV" && stateInTab) {
         kid.setAttribute(ATTR_TAG, 'content_' + (tabCount-1));
         stateInTab = false;
+      } else if (kid.nodeName=== "DIV") {
+        kid.setAttribute(ATTR_TAG, 'rest');
       }
     }
     
@@ -216,6 +219,13 @@ DIV.show_frame > #tabbar {
       wrapperDiv.appendChild(contentElement);
       contentsStack.appendChild(wrapperDiv);
     }
+    
+    const catchAllDiv = this.ownerDocument.createElement('div');
+    catchAllDiv.classList.add('catch_all');
+    const catchAll = this.ownerDocument.createElement('content');
+    catchAll.setAttribute('select', '[' + ATTR_TAG + '="rest"]');
+    catchAllDiv.appendChild(catchAll);
+    tabbar.appendChild(catchAllDiv);
     
 //    while (container.childElementCount > this.childElementCount) {
 //      container.removeChild(container.children.item(container.children.length-1));
@@ -261,12 +271,14 @@ DIV.show_frame > #tabbar {
     const tabbar = this._getTabbar();
     for (let i=0; i<tabbar.children.length; i++) {
       const item = <HTMLElement> tabbar.children.item(i);
-      if (i === index) {
-        item.classList.remove('tab_inactive');
-        item.classList.add('tab_active');
-      } else {
-        item.classList.remove('tab_active');
-        item.classList.add('tab_inactive');
+      if (item.classList.contains('tab')) {
+        if (i === index) {
+          item.classList.remove('tab_inactive');
+          item.classList.add('tab_active');
+        } else {
+          item.classList.remove('tab_active');
+          item.classList.add('tab_inactive');
+        }
       }
     }
   }  

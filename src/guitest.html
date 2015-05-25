@@ -28,6 +28,20 @@
       height: 200px;
       background-color: green;
     }
+    
+    DIV.tab_bar_rest {
+      display: flex;
+      
+    }
+    
+    DIV.tab_bar_rest > DIV.space {
+      flex-grow: 1;
+    }
+    
+    DIV.tab_bar_burger {
+      flex-grow: 0;
+    }
+    
     </style>
     
     <script src="node_modules/cajon/cajon.js"></script>
@@ -260,6 +274,25 @@
       <div><p>Tab 2 contents and stuff.</p><p>This is a bit taller.</p></div>
     </cb-tabwidget>
   </fieldset>
+  
+  <fieldset><legend>Tabs Widget (Flank)</legend>
+    <cb-tabwidget id="tabswidget3" show-frame="false">
+      <cb-tab>Tab 1</cb-tab>
+      <div>Tab 1 contents and stuff.</div>
+
+      <cb-tab>Tab 2</cb-tab>
+      <div><p>Tab 2 contents and stuff.</p><p>This is a bit taller.</p></div>
+      
+      <div class="tab_bar_rest">
+        <button class="topcoat-icon-button--quiet">
+          <i class="fa fa-plus"></i>
+        </button>
+        <div class="space"></div>
+        <button class="tab_bar_burger topcoat-button"><i class="fa fa-bars"></i></button>
+        </div>
+    </cb-tabwidget>
+  </fieldset>
+
   
 </body>
 </html>
