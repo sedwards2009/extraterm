@@ -3,26 +3,44 @@
  */
 
 import Config = require('config');
+import Theme = require('theme');
 
-export enum MessageType {
-  REQUEST_FRAME,
+export const CHANNEL_NAME = "async-message";
+
+export const enum MessageType {
+  CONFIG_REQUEST,
+  CONFIG,
+  FRAME_DATA_REQUEST,
   FRAME_DATA,
-  CONFIG
+  THEMES_REQUEST,
+  THEMES
 }
 
 export interface Message {
   type: MessageType;
 }
 
-export interface MessageRequestFrame extends Message {
+export interface ConfigRequestMessage extends Message {
+
+}
+
+export interface ConfigMessage extends Message {
+  config: Config;
+}
+
+export interface FrameDataRequestMessage extends Message {
   frameTag: string;
 }
 
-export interface MessageFrameData extends Message {
+export interface FrameDataMessage extends Message {
   frameTag: string;
   frameHTML: string;
 }
 
-export interface MessageConfig extends Message {
-  config: Config;
+export interface ThemesRequestMessage extends Message {
+  
+}
+
+export interface ThemesMessage extends Message {
+  themes: Theme[];
 }

@@ -8,7 +8,6 @@
     <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
     <link id="theme_link" rel="stylesheet" type="text/css" href="themes/default/theme.css" />
 
-    <!-- <script src="node_modules/requirejs/require.js"></script> -->
     <script>
     // requirejs.config({
     //     //By default load any module IDs from js/lib
@@ -33,17 +32,21 @@
     //   }
     // });
     // 
-    var cbContextMenu = require('./gui/contextmenu');
-    var cbMenuItem = require('./gui/menuitem');
-    var cbCheckboxMenuItem = require('./gui/checkboxmenuitem');
-    var cbDropDown = require('./gui/dropdown');
-    
-    cbContextMenu.init();
-    cbMenuItem.init();
-    cbCheckboxMenuItem.init();
-    cbDropDown.init();
+
+    // var cbContextMenu = require('./gui/contextmenu');
+    // var cbMenuItem = require('./gui/menuitem');
+    // var cbCheckboxMenuItem = require('./gui/checkboxmenuitem');
+    // var cbDropDown = require('./gui/dropdown');
+    // 
+    // cbContextMenu.init();
+    // cbMenuItem.init();
+    // cbCheckboxMenuItem.init();
+    // cbDropDown.init();
     
     function startUp() {
+      var mainweb = require('./mainweb');
+      mainweb.startUp();
+      
     //   // Tell require.js about some Node loaded modules.
     //   
     //   // 'buffer' is needed by js-base64.
@@ -61,9 +64,8 @@
     </script>
 </head>
 <body onload="startUp();">
-    <div class="toplayout">
+    <!-- <div class="toplayout">
         <div id="tabbar" class="tabbar">
-            <!-- Tabs appear here. -->
             <button class="topcoat-icon-button--large--quiet" id="new_tab_button" title="New Tab">
                 <i class="fa fa-plus"></i>
             </button>
@@ -86,6 +88,6 @@
             
         </div>
         <div id="tab_container" class="tab_container"></div>
-    </div>
+    </div> -->
 </body>
 </html>

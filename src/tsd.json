@@ -19,6 +19,9 @@
     },
     "github-electron/github-electron-renderer.d.ts": {
       "commit": "2e904baa7f46d2752b63e6aeb8687ed471e7569b"
+    },
+    "es6-promise/es6-promise.d.ts": {
+      "commit": "f23cd55e319a0f67362ca0dbc4cf3e2ec1339f4e"
     }
   }
 }
