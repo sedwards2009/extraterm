@@ -30,6 +30,7 @@
         "./src/jsBase64.d.ts",
         "./src/main.ts",
         "./src/mainweb.ts",
+        "./src/mainwebui.ts",
         "./src/qs.d.ts",
         "./src/requirejs.d.ts",
         "./src/resourceloader.ts",

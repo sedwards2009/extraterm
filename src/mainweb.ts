@@ -10,6 +10,7 @@ import _ = require('lodash');
 // import commandframe = require('commandframe');
 import Messages = require('./windowmessages');
 import webipc = require('./webipc');
+import MainWebUi = require('./mainwebui');
 
 
 let terminalIdCounter = 0;
@@ -20,6 +21,7 @@ let config: Config = null;
 // let frameMapping: im.Map<string, commandframe> = im.Map<string, commandframe>();
 
 let themes: im.Map<string, Theme>;
+let mainWebUi: MainWebUi = null;
 
 /**
  * 
@@ -39,7 +41,9 @@ export function startUp(): void {
   const allPromise = Promise.all<void>( [webipc.requestConfig().then(handleConfigMessage),
                       webipc.requestThemes().then(handleThemesMessage)] );
   allPromise.then( () => {
-    console.log("Continuing with start up!");
+    MainWebUi.init();
+    mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
+    doc.body.appendChild(mainWebUi);
   });
   
   // Configure dialog.
