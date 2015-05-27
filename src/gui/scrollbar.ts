@@ -1,13 +1,13 @@
 import util = require('./util');
 
-var ID = "CbScrollbarTemplate";
+const ID = "CbScrollbarTemplate";
 
-var ATTR_SIZE = "size";
-var ATTR_POSITION = "position";
-var ID_AREA = "area";
-var ID_CONTAINER = "container";
+const ATTR_SIZE = "size";
+const ATTR_POSITION = "position";
+const ID_AREA = "area";
+const ID_CONTAINER = "container";
 
-var registered = false;
+let registered = false;
 
 class CbScrollbar extends HTMLElement {
   
