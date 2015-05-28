@@ -39,7 +39,10 @@ class CbContextMenu extends HTMLElement {
             box-shadow: 0px 0px 8px black;
             z-index: 101;
         }
-
+        
+        .container:focus {
+            outline: none;
+        }
         .container_closed {
             display: none;
         }
