@@ -10,6 +10,9 @@ import _ = require('lodash');
 // import commandframe = require('commandframe');
 import Messages = require('./windowmessages');
 import webipc = require('./webipc');
+import CbContextMenu = require('./gui/contextmenu');
+import CbMenuItem = require('./gui/menuitem');
+import CbDropDown = require('./gui/dropdown');
 import MainWebUi = require('./mainwebui');
 
 
@@ -41,9 +44,44 @@ export function startUp(): void {
   const allPromise = Promise.all<void>( [webipc.requestConfig().then(handleConfigMessage),
                       webipc.requestThemes().then(handleThemesMessage)] );
   allPromise.then( () => {
+    CbContextMenu.init();
+    CbMenuItem.init();
+    CbDropDown.init();
     MainWebUi.init();
     mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
+    mainWebUi.innerHTML = `<div class="tab_bar_rest">
+      <button class="topcoat-icon-button--quiet">
+        <i class="fa fa-plus"></i>
+      </button>
+      <div class="space"></div>
+      <cb-dropdown>
+          <button class="topcoat-icon-button--large--quiet"><i class="fa fa-bars"></i></button>
+          <cb-contextmenu id="main_menu">
+              <cb-menuitem icon="wrench" name="settings">Settings</cb-menuitem>
+              <cb-menuitem icon="lightbulb-o" name="about">About</cb-menuitem>
+          </cb-contextmenu>
+      </cb-dropdown>
+    </div>`;
+    
     doc.body.appendChild(mainWebUi);
+    
+    const mainMenu = doc.getElementById('main_menu');
+    mainMenu.addEventListener('selected', (ev: CustomEvent) => {
+      switch(ev.detail.name) {
+        case 'settings':
+          
+          break;
+          
+        case 'about':
+          
+          break;
+          
+        default:
+          
+          break;
+      }
+    });
+    
   });
   
   // Configure dialog.

@@ -9,85 +9,12 @@
     <link id="theme_link" rel="stylesheet" type="text/css" href="themes/default/theme.css" />
 
     <script>
-    // requirejs.config({
-    //     //By default load any module IDs from js/lib
-    //   baseUrl: '',
-    //   paths: {
-    //     "gui": "build_js/gui"
-    //   },
-    //   map: {
-    //     "*": {
-    //       "js-base64" : "node_modules/js-base64/base64.js",
-    //       "lodash": "build_modules/lodash/dist/lodash",
-    //       "immutable": "build_modules/immutable/dist/Immutable",
-    //       "qs": "build_modules/qs/lib/index.js",
-    //       
-    //       "commandframe": "build_js/commandframe.js",
-    //       "terminal": "build_js/terminal.js",
-    //       "main": "build_js/main.js",
-    //       "framewindow": "build_js/framewindow.js",
-    //       "windowmessages": "build_js/windowmessages.js",
-    //       "coreweb": "build_js/coreweb.js"
-    //     }
-    //   }
-    // });
-    // 
-
-    // var cbContextMenu = require('./gui/contextmenu');
-    // var cbMenuItem = require('./gui/menuitem');
-    // var cbCheckboxMenuItem = require('./gui/checkboxmenuitem');
-    // var cbDropDown = require('./gui/dropdown');
-    // 
-    // cbContextMenu.init();
-    // cbMenuItem.init();
-    // cbCheckboxMenuItem.init();
-    // cbDropDown.init();
-    
     function startUp() {
       var mainweb = require('./mainweb');
       mainweb.startUp();
-      
-    //   // Tell require.js about some Node loaded modules.
-    //   
-    //   // 'buffer' is needed by js-base64.
-    //   ['nw.gui', 'path', 'fs', 'events', 'term.js', 'child_process', 'buffer'].forEach( function(nodeMod) {
-    //     var mod = require(nodeMod);
-    //     define(nodeMod, function() {
-    //       return mod;
-    //     });
-    //   });
-    // 
-    //   requirejs(['main'], function(main) {
-    //       main();
-    //   });
     }
     </script>
 </head>
 <body onload="startUp();">
-    <!-- <div class="toplayout">
-        <div id="tabbar" class="tabbar">
-            <button class="topcoat-icon-button--large--quiet" id="new_tab_button" title="New Tab">
-                <i class="fa fa-plus"></i>
-            </button>
-            <div class="tabbar_space"></div>
-            <button class="topcoat-icon-button--large--quiet" id="configure_button" title="Configure">
-                <i class="fa fa-wrench"></i>
-            </button>
-            
-<cb-dropdown>
-    <button class="topcoat-icon-button--large--quiet"><i class="fa fa-bars"></i></button>
-    <cb-contextmenu>
-        <cb-menuitem icon="bomb" name="close">Close Tab</cb-menuitem>
-        <cb-menuitem icon="copy" name="copy">Copy</cb-menuitem>
-        <cb-menuitem icon="paste" name="paste">Paste</cb-menuitem>
-        <cb-checkboxmenuitem icon="list-ol" checked="false" name="showlines">Show line numbers</cb-checkboxmenuitem>
-        <cb-checkboxmenuitem icon="euro" checked="true" name="extramoney">Extra money</cb-checkboxmenuitem>
-        
-    </cb-contextmenu>
-</cb-dropdown>
-            
-        </div>
-        <div id="tab_container" class="tab_container"></div>
-    </div> -->
 </body>
 </html>
