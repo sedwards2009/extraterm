@@ -14,7 +14,7 @@ import CbContextMenu = require('./gui/contextmenu');
 import CbMenuItem = require('./gui/menuitem');
 import CbDropDown = require('./gui/dropdown');
 import MainWebUi = require('./mainwebui');
-
+import AboutDialog = require('./aboutdialog');
 
 let terminalIdCounter = 0;
 // let configureDialog: configuredialog = null;
@@ -25,6 +25,7 @@ let config: Config = null;
 
 let themes: im.Map<string, Theme>;
 let mainWebUi: MainWebUi = null;
+let aboutDialog: AboutDialog = null;
 
 /**
  * 
@@ -73,7 +74,12 @@ export function startUp(): void {
           break;
           
         case 'about':
-          
+          if (aboutDialog == null) {
+            AboutDialog.init();
+            aboutDialog = <AboutDialog>doc.createElement(AboutDialog.TAG_NAME);
+            doc.body.appendChild(aboutDialog);
+          }
+          aboutDialog.open();
           break;
           
         default:

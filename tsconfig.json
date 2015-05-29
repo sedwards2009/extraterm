@@ -20,6 +20,7 @@
         "./src/node_modules/immutable/dist/*.ts"
     ],
     "files": [
+        "./src/aboutdialog.ts",
         "./src/chrome_lib.d.ts",
         "./src/commandframe.ts",
         "./src/config.ts",
