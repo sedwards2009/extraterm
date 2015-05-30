@@ -1,4 +1,8 @@
+/**
+ * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
+ */
 
+import resourceLoader = require('./resourceloader');
 import contextmenu = require('gui/contextmenu');
 import menuitem = require('gui/menuitem');
 import checkboxmenuitem = require('gui/checkboxmenuitem');
@@ -8,15 +12,15 @@ contextmenu.init();
 menuitem.init();
 checkboxmenuitem.init();
 
-var ID = "EtCommandFrameTemplate";
-var COMMANDLINE_ATTR = "command-line";
-var RETURN_CODE_ATTR = "return-code";
-var EXPAND_ATTR = "expand";
-var LINE_NUMBERS_ATTR = "line-numbers";
-var TAG_ATTR = "tag";
+const ID = "EtCommandFrameTemplate";
+const COMMANDLINE_ATTR = "command-line";
+const RETURN_CODE_ATTR = "return-code";
+const EXPAND_ATTR = "expand";
+const LINE_NUMBERS_ATTR = "line-numbers";
+const TAG_ATTR = "tag";
 
-var registered = false;
-var REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
+let registered = false;
+const REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
 
 class EtCommandFrame extends HTMLElement {
   
@@ -34,176 +38,174 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   private _createClone(): Node {
-    var template = <HTMLTemplate>window.document.getElementById(ID);
+    let template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
       template = window.document.createElement('template');
       template.id = ID;
 
-      var success_color = "#00ff00";
-      var fail_color = "#ff0000";
-      template.innerHTML = "<style>\n" +
-        "@import url('" + requirejs.toUrl("css/topcoat-desktop-light.css") + "');\n" +
-        "@import url('" + requirejs.toUrl("css/font-awesome.css") + "');\n" +
+      const success_color = "#00ff00";
+      const fail_color = "#ff0000";
+      template.innerHTML = `<style>
+        @import '${resourceLoader.toUrl('css/font-awesome.css')}';
+        @import '${resourceLoader.toUrl('css/topcoat-desktop-light.css')}';
 
-        ":host {\n" +
-        "display: block;\n" +
-        "}\n" +
+        :host {
+          display: block;
+        }
       
-        "#container {\n" +
-        "  display: flex;\n" +
-        "}\n" +
+        #container {
+          display: flex;
+        }
 
-        "#main {\n" +
-        "  flex: 1 1 auto;\n" +
-        "}\n" +
+        #main {
+          flex: 1 1 auto;
+        }
 
-        "#header {\n" +
-        "  border-top-right-radius: 0.5em;\n" +
-        "  border-bottom-right-radius: 0.5em;\n" +
-        "  padding-top: 1px;\n" +
-        "  padding-left: 0.5em;\n" +
-        "  padding-right: 0.5em;\n" +
-        "  padding-bottom: 1px;\n" +
-        "  display: flex;\n" +
-        "}\n" +
+        #header {
+          border-top-right-radius: 0.5em;
+          border-bottom-right-radius: 0.5em;
+          padding-top: 1px;
+          padding-left: 0.5em;
+          padding-right: 0.5em;
+          padding-bottom: 1px;
+          display: flex;
+        }
 
-        "#header.running {\n" +
-        "  border: 1px solid white;\n" +
-        "}\n" +
+        #header.running {
+          border: 1px solid white;
+        }
 
-        "#header.success {\n" +
-        "  border-top: 1px solid " + success_color + ";\n" +
-        "  border-bottom: 1px solid " + success_color + ";\n" +
-        "  border-right: 1px solid " + success_color + ";\n" +
-        "}\n" +
+        #header.success {
+          border-top: 1px solid ${success_color};
+          border-bottom: 1px solid ${success_color};
+          border-right: 1px solid ${success_color};
+        }
 
-        "#header.fail {\n" +
-        "  border-top: 1px solid " + fail_color + ";\n" +
-        "  border-bottom: 1px solid " + fail_color + ";\n" +
-        "  border-right: 1px solid " + fail_color + ";\n" +
-        "}\n" +
+        #header.fail {
+          border-top: 1px solid ${fail_color};
+          border-bottom: 1px solid ${fail_color};
+          border-right: 1px solid ${fail_color};
+        }
 
-        "@-webkit-keyframes PULSE_ANIMATION {\n" +
-        "  0%   { background-color: rgba(255, 165, 0, 1.0); }\n" +
-        "  25%   { background-color: rgba(255, 165, 0, 1.0); }\n" +
-        "  50% { background-color: rgba(255, 165, 0, 0.5); }\n" +
-        "  75% { background-color: rgba(255, 165, 0, 1.0); }\n" +
-        "  100%   { background-color: rgba(255, 165, 0, 1.0); }\n" +
-        "}\n" +
+        @-webkit-keyframes PULSE_ANIMATION {
+          0%   { background-color: rgba(255, 165, 0, 1.0); }
+          25%   { background-color: rgba(255, 165, 0, 1.0); }
+          50% { background-color: rgba(255, 165, 0, 0.5); }
+          75% { background-color: rgba(255, 165, 0, 1.0); }
+          100%   { background-color: rgba(255, 165, 0, 1.0); }
+        }
 
-        "#header:focus {\n" +
-        "  -webkit-animation: PULSE_ANIMATION 2s infinite;\n" +
-        "  animation: PULSE_ANIMATION 2s infinite;\n" +
-        "}\n" +
+        #header:focus {
+          -webkit-animation: PULSE_ANIMATION 2s infinite;
+          animation: PULSE_ANIMATION 2s infinite;
+        }
 
-        "#output.closed {\n" +
-        "  display: none;\n" +
-        "  height: 1px;\n" +
-        "  overflow: hidden;\n" +
-        "}\n" +
+        #output.closed {
+          display: none;
+          height: 1px;
+          overflow: hidden;
+        }
 
-        "#gutter {\n" +
-        "  flex: 2rem 0 0;\n" +
-        "  width: 2rem;\n" +
-        "  padding: 1px\n" +
-        "}\n" +
+        #gutter {
+          flex: 2rem 0 0;
+          width: 2rem;
+          padding: 1px
+        }
 
-        "#gutter.running {\n" +
-        "}\n" +
+        #gutter.running {
+        }
 
-        "#gutter.success {\n" +
-        "  color: " + success_color + ";\n" +
-        "  border-right: 1px solid " + success_color + ";\n" +
-        "}\n" +
+        #gutter.success {
+          color: ${success_color};
+          border-right: 1px solid ${success_color};
+        }
 
-        "#gutter.fail {\n" +
-        "  color: " + fail_color + ";\n" +
-        "  border-right: 1px solid " + fail_color + ";\n" +
-        "}\n" +
+        #gutter.fail {
+          color: ${fail_color};
+          border-right: 1px solid ${fail_color};
+        }
 
-        "#commandline {\n" +
-        "  flex: auto 1 1;\n" +
-        "}\n" +
+        #commandline {
+          flex: auto 1 1;
+        }
 
+        #close_button, #pop_out_button {
+          flex: 0 0 auto;
+          padding: 0px;
+          background-color: transparent;
+          border: 0px;
+          color: white;
+        }
+        #close_button:hover {
+          color: red;
+        }
       
+        .header_spacer {
+          flex: 2em 0 0;
+          min-width: 2em;
+        }
       
-        "#close_button, #pop_out_button {\n" +
-        "  flex: 0 0 auto;\n" +
-        "  padding: 0px;\n" +
-        "  background-color: transparent;\n" +
-        "  border: 0px;\n" +
-        "  color: white;\n" +
-        "}\n" +
-        "#close_button:hover {\n" +
-        "  color: red;\n" +
-        "}\n" +
+        #tag_name {
+          flex: 0 1 auto;
+        }
       
-        ".header_spacer {\n" +
-        "  flex: 2em 0 0;\n" +
-        "  min-width: 2em;\n" +
-        "}\n" +
-      
-        "#tag_name {\n" +
-        "  flex: 0 1 auto;\n" +
-        "}\n" +
-      
-        "#icon_div {\n" +
-        "  display: inline-block;\n" +
-        "  width: 1em;\n" +
-        "  height: 1em;\n" +
-        "}\n" +
+        #icon_div {
+          display: inline-block;
+          width: 1em;
+          height: 1em;
+        }
 
-        "#expand_button {\n" +
-        "  display: inline-block;\n" +
-        "  padding: 0px;\n" +
-        "  background-color: transparent;\n" +
-        "  color: white;\n" +
-        "  border: 0px;\n" +
-        "  width: 1em;\n" +
-        "  height: 1em;\n" +
-        "}\n" +
+        #expand_button {
+          display: inline-block;
+          padding: 0px;
+          background-color: transparent;
+          color: white;
+          border: 0px;
+          width: 1em;
+          height: 1em;
+        }
 
-        "content.line_numbers::content > div {\n" +
-        "  counter-increment: lines;\n" +
-        "  position: relative;\n" +
-        "  left: calc(-2rem - 2px);\n" +
-        "}\n" +
+        content.line_numbers::content > div {
+          counter-increment: lines;
+          position: relative;
+          left: calc(-2rem - 2px);
+        }
 
-        "content.line_numbers::content > div:before {\n" +
-        "  display: inline-block;\n" +
-        "  width: 2rem;\n" +
-        "  margin-right: 2px;\n" +
-        "  content: counter(lines);\n" +
-        "  color: white;\n" +
-        "  text-align: right;\n" +
-        "  font-size: 0.7rem;\n" +
-        "  }\n" +
-        "</style>\n" +
-        "<div id='container' style='display: none;'>" +
-        "  <div id='gutter' class='running'>" +
-         "<div id='icon_div'><i id='icon'></i></div>" +
-         "<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>" +
-        "  </div>" +
-        "  <div id='main'>" +
-        "    <div id='header' tabindex='-1'>" +
-              "<div id='commandline'></div>" +
-              "<i class='fa fa-tag'></i>" +
-              "<div id='tag_name'></div>" +
-              "<div class='header_spacer'></div>" +
-              "<button id='pop_out_button'><i class='fa fa-external-link'></i></button>" +
-              "<div class='header_spacer'></div>" +
-              "<button id='close_button'><i class='fa fa-times-circle'></i></button>" +
-        "    </div>" +
-        "    <div id='output'><content id='lines_content'></content></div>" +
-        "  </div>" +
-        "</div>" +
-        "<cb-contextmenu id='contextmenu' style='display: none;'>\n" +
-        "<cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>\n" +
-        "<cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>\n" +
-        "<cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>\n" +
-        "<cb-checkboxmenuitem icon='list-ol' id='linesnumbersmenuitem' checked='false' name='showlines'>Line numbers</cb-checkboxmenuitem>\n" +
-        "<cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>\n" +
-        "</cb-contextmenu>\n";
+        content.line_numbers::content > div:before {
+          display: inline-block;
+          width: 2rem;
+          margin-right: 2px;
+          content: counter(lines);
+          color: white;
+          text-align: right;
+          font-size: 0.7rem;
+          }
+        </style>
+        <div id='container' style='display: none;'>
+          <div id='gutter' class='running'>
+         <div id='icon_div'><i id='icon'></i></div>
+         <button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>
+          </div>
+          <div id='main'>
+            <div id='header' tabindex='-1'>
+              <div id='commandline'></div>
+              <i class='fa fa-tag'></i>
+              <div id='tag_name'></div>
+              <div class='header_spacer'></div>
+              <button id='pop_out_button'><i class='fa fa-external-link'></i></button>
+              <div class='header_spacer'></div>
+              <button id='close_button'><i class='fa fa-times-circle'></i></button>
+            </div>
+            <div id='output'><content id='lines_content'></content></div>
+          </div>
+        </div>
+        <cb-contextmenu id='contextmenu' style='display: none;'>
+        <cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>
+        <cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>
+        <cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>
+        <cb-checkboxmenuitem icon='list-ol' id='linesnumbersmenuitem' checked='false' name='showlines'>Line numbers</cb-checkboxmenuitem>
+        <cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>
+        </cb-contextmenu>`;
       window.document.body.appendChild(template);
     }
 
@@ -227,9 +229,9 @@ class EtCommandFrame extends HTMLElement {
     }
 
     if (attrName === RETURN_CODE_ATTR) {
-      var gutter = <HTMLDivElement>this._getById('gutter');
-      var icon = <HTMLDivElement>this._getById("icon");
-      var header= <HTMLDivElement>this._getById('header');
+      const gutter = <HTMLDivElement>this._getById('gutter');
+      const icon = <HTMLDivElement>this._getById("icon");
+      const header= <HTMLDivElement>this._getById('header');
 
       if (newValue === null || newValue === undefined || newValue === "") {
         icon.className = "fa fa-cog";
@@ -237,7 +239,7 @@ class EtCommandFrame extends HTMLElement {
         header.classList.add('running');
       } else {
 
-        var rc = parseInt(newValue, 10);
+        const rc = parseInt(newValue, 10);
         gutter.classList.remove('running');
         header.classList.remove('running');
         gutter.setAttribute('title', 'Return code: ' + rc);
@@ -256,8 +258,8 @@ class EtCommandFrame extends HTMLElement {
     }
 
     if (attrName === EXPAND_ATTR) {
-      var output = <HTMLDivElement>this._getById('output');
-      var expandicon = <HTMLDivElement>this._getById('expand_icon');
+      const output = <HTMLDivElement>this._getById('output');
+      const expandicon = <HTMLDivElement>this._getById('expand_icon');
       if (util.htmlValueToBool(newValue, true)) {
         // Expanded.
         output.classList.remove('closed');
@@ -275,7 +277,7 @@ class EtCommandFrame extends HTMLElement {
     }
 
     if (attrName === LINE_NUMBERS_ATTR) {
-      var linescontent = <HTMLDivElement>this._getById('lines_content');
+      const linescontent = <HTMLDivElement>this._getById('lines_content');
       if (util.htmlValueToBool(newValue, false)) {
         linescontent.classList.add('line_numbers');
       } else {
@@ -285,7 +287,7 @@ class EtCommandFrame extends HTMLElement {
     }
     
     if (attrName === TAG_ATTR) {
-      var tagName = <HTMLDivElement>this._getById('tag_name');
+      const tagName = <HTMLDivElement>this._getById('tag_name');
       tagName.innerText = newValue;
     }
   }
@@ -294,9 +296,9 @@ class EtCommandFrame extends HTMLElement {
    * Callback invoked by the browser after an instance of this element has been created.
    */
   createdCallback(): void {
-    var shadow = util.createShadowRoot(this);
+    const shadow = util.createShadowRoot(this);
 
-    var clone = this._createClone();
+    const clone = this._createClone();
     shadow.appendChild(clone);
 
     this._setAttr(COMMANDLINE_ATTR, this.getAttribute(COMMANDLINE_ATTR));
@@ -305,34 +307,34 @@ class EtCommandFrame extends HTMLElement {
     this._setAttr(LINE_NUMBERS_ATTR, this.getAttribute(LINE_NUMBERS_ATTR));
     this._setAttr(TAG_ATTR, this.getAttribute(TAG_ATTR));
 
-    var popOutButton = this._getById('pop_out_button');
+    const popOutButton = this._getById('pop_out_button');
     popOutButton.addEventListener('click', (): void => {
         var event = new CustomEvent('frame-pop-out', { detail: this });
         this.dispatchEvent(event);
     });
     
-    var closebutton = this._getById('close_button');
+    const closebutton = this._getById('close_button');
     closebutton.addEventListener('click', (): void => {
         var event = new CustomEvent('close-request', { detail: null });
         this.dispatchEvent(event);
     });
 
-    var expandbutton = this._getById('expand_button');
+    const expandbutton = this._getById('expand_button');
     expandbutton.addEventListener('click', (): void => {
       var expanded = util.htmlValueToBool(this.getAttribute(EXPAND_ATTR), true);
       this.setAttribute(EXPAND_ATTR, "" + !expanded);
     });
 
-    var cm = <contextmenu>this._getById('contextmenu');
+    const cm = <contextmenu>this._getById('contextmenu');
     this._getById('container').addEventListener('contextmenu', (ev: MouseEvent): void => {
       ev.stopPropagation();
       ev.preventDefault();
-      var cm = <contextmenu>this._getById('contextmenu');
+      const cm = <contextmenu>this._getById('contextmenu');
       cm.open(ev.clientX, ev.clientY);
     });
 
     cm.addEventListener('selected', (ev: CustomEvent): void => {
-      var event: CustomEvent;
+      let event: CustomEvent;
       switch (ev.detail.name) {
         case "copycommand":
           event = new CustomEvent('copy-clipboard-request');
@@ -367,7 +369,7 @@ class EtCommandFrame extends HTMLElement {
     });
 
     cm.addEventListener('before-close', (function(ev: Event) {
-      var header = this._getById('header');
+      const header = this._getById('header');
       header.focus();
     }).bind(this));
     
@@ -388,7 +390,7 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   focusLast(): void {
-    var header = <HTMLDivElement>this._getById('header');
+    const header = <HTMLDivElement>this._getById('header');
     header.focus();
     this.scrollIntoView(true);
     this._emitManualScroll();
@@ -398,7 +400,7 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   focusFirst(): void {
-    var header = <HTMLDivElement>this._getById('header');
+    const header = <HTMLDivElement>this._getById('header');
     header.focus();
     this.scrollIntoView(true);
     this._emitManualScroll();
@@ -408,13 +410,13 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   private _emitManualScroll(): void {
-    var event = new CustomEvent('scroll-move');
+    const event = new CustomEvent('scroll-move');
     event.initCustomEvent('scroll-move', true, true, null);
     this.dispatchEvent(event);
   }
   
   private _emitFramePopOut(frame: EtCommandFrame): void {
-    var event = new CustomEvent('frame-pop-out');
+    const event = new CustomEvent('frame-pop-out');
     event.initCustomEvent('frame-pop-out', true, true, frame);
     this.dispatchEvent(event);
   }
@@ -423,9 +425,9 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   openMenu(): void {
-    var header = <HTMLDivElement>this._getById('header');
-    var cm = <contextmenu>this._getById('contextmenu');
-    var rect = header.getBoundingClientRect();
+    const header = <HTMLDivElement>this._getById('header');
+    const cm = <contextmenu>this._getById('contextmenu');
+    const rect = header.getBoundingClientRect();
     cm.openAround(header); //(rect.left, rect.top );
   }
   
@@ -433,10 +435,10 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   get text(): string {
-    var kids = this.childNodes;
-    var result = "";
+    const kids = this.childNodes;
+    let result = "";
     for (var i=0; i<kids.length; i++) {
-      var kid = kids[i];
+      const kid = kids[i];
       if (kid.nodeName === "DIV") {
         var text = (<HTMLDivElement>kid).innerText;
         text = text.replace(REPLACE_NBSP_REGEX," ");
