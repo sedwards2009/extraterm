@@ -154,6 +154,31 @@
           
           tabs.setAttribute("show-frame", document.getElementById("tabswidget2_showframe").checked);
         });
+        
+        document.getElementById("add_tab").addEventListener('click', function() {
+          var tabs = document.getElementById("tabswidget2");
+          var frag = document.createDocumentFragment();
+          
+          var newTabPart = document.createElement('cb-tab');
+          newTabPart.innerHTML = "New Tab " + (new Date());
+          frag.appendChild(newTabPart);
+          
+          var newTabPage = document.createElement('div');
+          newTabPage.innerHTML = "New tab contents " + (new Date());
+          
+          frag.appendChild(newTabPage);
+          
+          tabs.appendChild(frag);
+        });
+        
+        document.getElementById("remove_tab").addEventListener('click', function() {
+          var tabWidget = document.getElementById("tabswidget2");
+          var tabs = tabWidget.querySelectorAll("cb-tab");
+          var tab = tabs[0];
+          var sib = tab.nextSibling;
+          tabWidget.removeChild(sib);
+          tabWidget.removeChild(tab);          
+        });
     });
     </script>
 </head>
@@ -258,13 +283,16 @@
     </cb-tabwidget>
   </fieldset>
 
-  <fieldset><legend>Tabs Widget (without frame)</legend>
+  <fieldset><legend>Tabs Widget (controls)</legend>
   
     <label class="topcoat-checkbox">
       <input type="checkbox" id="tabswidget2_showframe">
       <div class="topcoat-checkbox__checkmark"></div>
       Show frame
     </label>
+    <br />
+    <button class="topcoat-button" id="add_tab">Add Tab</button>
+    <button class="topcoat-button" id="remove_tab">Remove 1st Tab</button>
   
     <cb-tabwidget id="tabswidget2" show-frame="false">
       <cb-tab>Tab 1</cb-tab>

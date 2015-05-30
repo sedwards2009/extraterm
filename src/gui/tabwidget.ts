@@ -22,6 +22,8 @@ class CbTabWidget extends HTMLElement {
     }
   }
   
+  private _mutationObserver: MutationObserver;
+  
   /**
    * 
    */
@@ -162,6 +164,11 @@ DIV.show_frame > #tabbar {
     this.createTabHolders();
     this.currentIndex = 0;
     this._showFrame(this.showFrame);
+    
+    this._mutationObserver = new MutationObserver( (mutations) => {
+      this.createTabHolders();
+    });
+    this._mutationObserver.observe(this, { childList: true });
   }
   
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
@@ -174,7 +181,7 @@ DIV.show_frame > #tabbar {
         break;
     }
   }
-    
+
   private createTabHolders(): void {
     const tabbar = this._getTabbar();
     const contentsStack = this._getContentsStack();
@@ -197,8 +204,10 @@ DIV.show_frame > #tabbar {
       }
     }
     
+    let tabElementCount = tabbar.querySelectorAll(".tab").length;
+    
     // Create tabs and content DIVs.
-    while (tabbar.childElementCount < tabCount) {
+    while (tabElementCount < tabCount) {
       // The tab part.
       const tabDiv = this.ownerDocument.createElement('div');
       tabDiv.classList.add('tab');
@@ -218,18 +227,29 @@ DIV.show_frame > #tabbar {
       
       wrapperDiv.appendChild(contentElement);
       contentsStack.appendChild(wrapperDiv);
+      
+      tabElementCount = tabbar.querySelectorAll(".tab").length;
     }
     
-    const catchAllDiv = this.ownerDocument.createElement('div');
-    catchAllDiv.classList.add('catch_all');
-    const catchAll = this.ownerDocument.createElement('content');
-    catchAll.setAttribute('select', '[' + ATTR_TAG + '="rest"]');
-    catchAllDiv.appendChild(catchAll);
-    tabbar.appendChild(catchAllDiv);
+    // Delete any excess tab tags.
+    let tabElements = tabbar.querySelectorAll(".tab");
+    while (tabElements.length > tabCount) {
+      const tabToDelete = tabElements[tabElements.length-1];
+      tabbar.removeChild(tabToDelete);
+      contentsStack.removeChild(contentsStack.children[contentsStack.children.length-1]);
+      tabElements = tabbar.querySelectorAll(".tab");
+    }
     
-//    while (container.childElementCount > this.childElementCount) {
-//      container.removeChild(container.children.item(container.children.length-1));
-//    }
+    // Make sure that is a catch all element at the end.
+    const catchAllCount = tabbar.querySelectorAll(".catch_all").length;    
+    if (catchAllCount === 0) {
+      const catchAllDiv = this.ownerDocument.createElement('div');
+      catchAllDiv.classList.add('catch_all');
+      const catchAll = this.ownerDocument.createElement('content');
+      catchAll.setAttribute('select', '[' + ATTR_TAG + '="rest"]');
+      catchAllDiv.appendChild(catchAll);
+      tabbar.appendChild(catchAllDiv);
+    }    
   }
   
   _createTabClickHandler(index: number) {
@@ -283,7 +303,12 @@ DIV.show_frame > #tabbar {
     }
   }  
 }
-
+/**
+ * Parse a string as a boolean value
+ * 
+ * @param  value string to parse
+ * @return the boolean value or false if it could not be parsed
+ */
 function toBoolean(value: any): boolean {
   if (value === true || value === false) {
     return value;
