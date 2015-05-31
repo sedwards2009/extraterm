@@ -1,3 +1,6 @@
+/**
+ * Copyright 2015 Simon Edwards <simon@simonzone.com>
+ */
 import CbStackedWidget = require("./stackedwidget");
 import util = require("./util");
 "use strict";
@@ -15,9 +18,11 @@ let registered = false;
  */
 class CbTabWidget extends HTMLElement {
   
+  static TAG_NAME = "cb-tabwidget";
+  
   static init(): void {
     if (registered === false) {
-      window.document.registerElement('cb-tabwidget', {prototype: CbTabWidget.prototype});
+      window.document.registerElement(CbTabWidget.TAG_NAME, {prototype: CbTabWidget.prototype});
       registered = true;
     }
   }
@@ -204,7 +209,22 @@ DIV.show_frame > #tabbar {
       }
     }
     
+    // Make sure that is a catch all element at the end.
+    const catchAlls = tabbar.querySelectorAll(".catch_all");
+    let catchAllDiv: HTMLDivElement = null;
+    if (catchAlls.length === 0) {
+      catchAllDiv = <HTMLDivElement> this.ownerDocument.createElement('DIV');
+      catchAllDiv.classList.add('catch_all');
+      const catchAll = this.ownerDocument.createElement('content');
+      catchAll.setAttribute('select', '[' + ATTR_TAG + '="rest"]');
+      catchAllDiv.appendChild(catchAll);
+      tabbar.appendChild(catchAllDiv);
+    } else {
+      catchAllDiv = <HTMLDivElement> catchAlls[0];
+    }
+    
     let tabElementCount = tabbar.querySelectorAll(".tab").length;
+    const selectTab = tabElementCount === 0;
     
     // Create tabs and content DIVs.
     while (tabElementCount < tabCount) {
@@ -213,17 +233,17 @@ DIV.show_frame > #tabbar {
       tabDiv.classList.add('tab');
       tabDiv.classList.add('tab_inactive');
       let contentElement = this.ownerDocument.createElement('content');
-      contentElement.setAttribute('select', '[' + ATTR_TAG + '="tab_' + tabbar.childElementCount + '"]');
+      contentElement.setAttribute('select', '[' + ATTR_TAG + '="tab_' + tabElementCount + '"]');
       
       tabDiv.appendChild(contentElement);
-      tabDiv.addEventListener('click', this._createTabClickHandler(tabbar.childElementCount));
+      tabDiv.addEventListener('click', this._createTabClickHandler(tabElementCount));
       
       // Pages for the contents stack.
       const wrapperDiv = this.ownerDocument.createElement('div');
       contentElement = this.ownerDocument.createElement('content');
-      contentElement.setAttribute('select', '[' + ATTR_TAG + '="content_' + tabbar.childElementCount + '"]');
+      contentElement.setAttribute('select', '[' + ATTR_TAG + '="content_' + tabElementCount + '"]');
       
-      tabbar.appendChild(tabDiv);  
+      tabbar.insertBefore(tabDiv, catchAllDiv);
       
       wrapperDiv.appendChild(contentElement);
       contentsStack.appendChild(wrapperDiv);
@@ -240,16 +260,9 @@ DIV.show_frame > #tabbar {
       tabElements = tabbar.querySelectorAll(".tab");
     }
     
-    // Make sure that is a catch all element at the end.
-    const catchAllCount = tabbar.querySelectorAll(".catch_all").length;    
-    if (catchAllCount === 0) {
-      const catchAllDiv = this.ownerDocument.createElement('div');
-      catchAllDiv.classList.add('catch_all');
-      const catchAll = this.ownerDocument.createElement('content');
-      catchAll.setAttribute('select', '[' + ATTR_TAG + '="rest"]');
-      catchAllDiv.appendChild(catchAll);
-      tabbar.appendChild(catchAllDiv);
-    }    
+    if (selectTab) {
+      this.currentIndex = 0;
+    }
   }
   
   _createTabClickHandler(index: number) {
