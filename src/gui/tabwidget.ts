@@ -39,11 +39,12 @@ class CbTabWidget extends HTMLElement {
       template.id = ID;
       template.innerHTML = `
 <style>
-DIV.top {
+#top {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
-DIV.tabbar {
+#tabbar {
   display: flex;
   flex: 0 auto;
   flex-direction: row;
@@ -53,8 +54,8 @@ DIV.tabbar {
   -webkit-user-select: none;
 }
 
-DIV.tabbar > DIV.tab + DIV.tab,
-DIV.tabbar > DIV.tab + DIV.catch_all {
+#tabbar > DIV.tab + DIV.tab,
+#tabbar > DIV.tab + DIV.catch_all {
   margin-left: 2px;
 }
 
@@ -111,11 +112,31 @@ DIV.tab_inactive:hover {
   background-color: #eff1f1;
 }
 
+
+#contents {
+  flex: 1 1 auto;
+  position: relative;
+}
+#contentsstack {
+  /* This and the pos:relative above are needed to get this at the correct height. */
+  /* See: https://stackoverflow.com/questions/15381172/css-flexbox-child-height-100 */
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  
+  display: block;
+}
+
+DIV.wrapper {
+  height: 100%;
+  width: 100%;  
+}
+
 DIV.catch_all {
   flex-grow: 1;
 }
 
-DIV.show_frame > DIV.tabbar > DIV.tab_inactive {
+DIV.show_frame > #tabbar > DIV.tab_inactive {
   border-bottom: 1px solid #9daca9;
 }
 
@@ -127,10 +148,10 @@ DIV.show_frame > #tabbar {
   top: 1px;
 }
 
-</style>\n
+</style>
 <div id='top' class='top'>
 <div id='tabbar' class='tabbar'></div>
-<cb-stackedwidget id='contentsstack' class='contentsstack'></cb-stackedwidget>
+<div id='contents'><cb-stackedwidget id='contentsstack' class='contentsstack'></cb-stackedwidget></div>
 </div>
 `;
       window.document.body.appendChild(template);
@@ -240,6 +261,7 @@ DIV.show_frame > #tabbar {
       
       // Pages for the contents stack.
       const wrapperDiv = this.ownerDocument.createElement('div');
+      wrapperDiv.classList.add('wrapper');
       contentElement = this.ownerDocument.createElement('content');
       contentElement.setAttribute('select', '[' + ATTR_TAG + '="content_' + tabElementCount + '"]');
       

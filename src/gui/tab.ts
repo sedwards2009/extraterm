@@ -7,9 +7,11 @@ let registered = false;
 
 class CbTab extends HTMLElement {
   
+  static TAG_NAME = "cb-tab";
+
   static init(): void {
     if (registered === false) {
-      window.document.registerElement('cb-tab', {prototype: CbTab.prototype});
+      window.document.registerElement(CbTab.TAG_NAME, {prototype: CbTab.prototype});
       registered = true;
     }
   }

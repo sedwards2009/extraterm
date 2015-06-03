@@ -27,3 +27,7 @@ export function trimRight(source: string): string {
   }
   return ("|"+source).trim().substr(1);
 }
+
+export function getShadowId(el: HTMLElement, id: string): HTMLElement {
+  return <HTMLElement> getShadowRoot(el).querySelector('#' + id);
+}

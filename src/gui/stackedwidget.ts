@@ -34,10 +34,12 @@ class CbStackedWidget extends HTMLElement {
   overflow: hidden;
   display: flex;
   width: 100%;
+  height: 100%;
 }
 
 .container > DIV {
   width: 100%;
+  height: 100%;
   
   flex-grow: 0;
   flex-shrink: 0;

@@ -2,41 +2,39 @@
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
 
-///<amd-dependency path="nw.gui" />
 ///<amd-dependency path="js-base64" />
 
 import _ = require('lodash');
-import commandframe = require('commandframe');
-import domutils = require('domutils');
+import commandframe = require('./commandframe');
+import domutils = require('./domutils');
 import termjs = require('term.js');
 import child_process = require('child_process');
 import events = require('events');
-import scrollbar = require('gui/scrollbar');
+import scrollbar = require('./gui/scrollbar');
+import util = require('./gui/util');
 
-var EventEmitter = events.EventEmitter;
+const EventEmitter = events.EventEmitter;
 
-var gui: typeof nw.gui = require('nw.gui');
+const debug = true;
+let startTime: number = window.performance.now();
+let registered = false;
 
-scrollbar.init();
-commandframe.init();
-
-var debug = true;
-var startTime: number = window.performance.now();
-
-function log(...msgs: any[]) {
+function log(...msgs: any[]): void {
   if (debug) {
-    var offset = window.performance.now() - startTime;
-    var msg: string = msgs.reduce( (accu: string, value: string) => accu + value, "");
+    const offset = window.performance.now() - startTime;
+    const msg: string = msgs.reduce( (accu: string, value: string) => accu + value, "");
     console.timeStamp(msg);
     console.log(""+offset + ": " + msg);
   }
 }
 
-var EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
-var SEMANTIC_TYPE = "data-extraterm-type";
-var SEMANTIC_VALUE = "data-extraterm-value";
+const ID = "EtTerminalTemplate";
+const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
+const SEMANTIC_TYPE = "data-extraterm-type";
+const SEMANTIC_VALUE = "data-extraterm-value";
+const ID_CONTAINER = "terminal_container";
 
-enum ApplicationMode {
+const enum ApplicationMode {
   APPLICATION_MODE_NONE = 0,
   APPLICATION_MODE_HTML = 1,
   APPLICATION_MODE_OUTPUT_BRACKET_START = 2,
@@ -56,34 +54,116 @@ enum ApplicationMode {
  *     be placed.
  * @returns {Terminal}
  */
-export class Terminal {
+class EtTerminal extends HTMLElement {
   
-  private _parentElement: HTMLElement;
-  private _container: HTMLElement;
+  static TAG_NAME: string = "et-terminal";
   
+  /**
+   * 
+   */
+  static init(): void {
+    if (registered === false) {
+      scrollbar.init();
+      commandframe.init();
+      window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
+      registered = true;
+    }
+  }
+  
+  // WARNING: Fields like this will not be initialised automatically.
+  private _container: HTMLDivElement;
   private _scrollbar: scrollbar;
-  private _scrollSyncID: number = -1;
-  private _autoscroll = true;
+  private _scrollSyncID: number;
+  private _autoscroll: boolean;
   
   private _termContainer: HTMLElement;
 
-  private _term: termjs.Terminal = null;
-  private _htmlData: string = null;
-  private _applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
-  private _bracketStyle: string = null;
-  private _lastBashBracket: string = null;
-  private _blinkingCursor = false;
-  private _title = "New Tab";
-  private _ptyBridge: child_process.ChildProcess;
+  private _term: termjs.Terminal;
+  private _htmlData: string;
+  private _applicationMode: ApplicationMode;
+  private _bracketStyle: string;
+  private _lastBashBracket: string;
+  private _blinkingCursor: boolean;
+  private _title: string;
+//  private _ptyBridge: child_process.ChildProcess;
   private _super_lineToHTML: (line: any[]) => string;
   
-  events: NodeJS.EventEmitter = new EventEmitter();
+  events: NodeJS.EventEmitter;
   
-  private _tagCounter: number = 0;
+  private _tagCounter: number;
   
-  constructor(parentElement: HTMLElement) {
-    this._parentElement = parentElement;
-    _.bindAll(this);
+  private _initProperties(): void {
+    this._scrollSyncID = -1;
+    this._autoscroll = true;
+    this._term = null;
+    this._htmlData = null;
+    this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
+    this._bracketStyle = null;
+    this._lastBashBracket = null;
+    this._blinkingCursor = false;
+    this._title = "New Tab";
+    this.events = new EventEmitter();
+    this._tagCounter = 0;    
+  }
+  
+  createdCallback(): void {
+    this._initProperties();
+    const shadow = util.createShadowRoot(this);
+
+    const clone = this._createClone();
+    shadow.appendChild(clone);
+    this.startUp();
+  }
+
+  private _createClone(): Node {
+    let template = <HTMLTemplate>window.document.getElementById(ID);
+    if (template === null) {
+      template = window.document.createElement('template');
+      template.id = ID;
+
+      const success_color = "#00ff00";
+      const fail_color = "#ff0000";
+      template.innerHTML = `<style>
+        :host {
+          display: block;
+        }
+        
+        .terminal_container {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            height: 100%;
+        }
+
+        .terminal_scrollbar {
+            flex: 0;
+            min-width: 15px;
+            height: 100%;
+        }
+
+        .term_container {
+            flex: 1;
+            height: 100%;
+        }
+
+        .terminal {
+            width: 100%;
+            height: 100%;
+
+            white-space: nowrap;
+            
+            overflow-x: scroll;
+            overflow-y: hidden;
+        }
+        </style>
+        <div class='terminal_container' id='${ID_CONTAINER}'>
+          <div class='term_container'></div>
+          <cb-scrollbar class='terminal_scrollbar'></cb-scrollbar>
+        </div>`;
+      window.document.body.appendChild(template);
+    }
+
+    return window.document.importNode(template.content, true);
   }
 
   /**
@@ -110,18 +190,18 @@ export class Terminal {
    * 
    * @returns {Window} The window object.
    */
-  _getWindow(): Window {
-    return this._parentElement.ownerDocument.defaultView;  
+  private _getWindow(): Window {
+    return this.ownerDocument.defaultView;  
   }
   
-  _getDocument(): Document {
-    return this._parentElement.ownerDocument;
+  private _getDocument(): Document {
+    return this.ownerDocument;
   }
   
-  _colors(): string[] {
-    var colorList = termjs.Terminal.colors.slice();
+  private _colors(): string[] {
+    const colorList = termjs.Terminal.colors.slice();
 
-    var linuxColors = [
+    const linuxColors = [
       "#000000",
       "#b21818",
       "#18b218",
@@ -139,7 +219,7 @@ export class Terminal {
       "#54ffff",
       "#ffffff"];
 
-    for (var i=0; i < linuxColors.length; i++) {
+    for (let i=0; i < linuxColors.length; i++) {
       colorList[i] = linuxColors[i];
     }
 
@@ -155,15 +235,11 @@ export class Terminal {
    * This method should be called once all event handlers have been set up.
    */
   startUp(): void {
-    this._parentElement.innerHTML = "<div class='terminal_container'>" +
-      "<div class='term_container'></div>" +
-      "<cb-scrollbar class='terminal_scrollbar'></cb-scrollbar>" +
-      "</div>";
-    this._container = <HTMLElement>this._parentElement.firstElementChild;
+    this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
     this._termContainer = <HTMLElement>this._container.firstElementChild;
     
-    var cookie = "DEADBEEF";  // FIXME
+    const cookie = "DEADBEEF";  // FIXME
     process.env[EXTRATERM_COOKIE_ENV] = cookie;
 
     this._term = new termjs.Terminal({
@@ -176,49 +252,50 @@ export class Terminal {
       applicationModeCookie: cookie
     });
 
-    var defaultLineToHTML = this._term._lineToHTML;
+    const defaultLineToHTML = this._term._lineToHTML;
     this._super_lineToHTML = this._term._lineToHTML;
-    this._term._lineToHTML=  this._lineToHTML;
+    this._term._lineToHTML=  this._lineToHTML.bind(this);
 
     this._term.debug = true;
-    this._term.on('title', this._handleTitle);
-    this._term.on('data', this._handleTermData);
-    this._getWindow().addEventListener('resize', this._handleResize);
-    this._term.on('key', this._handleKeyDown);
-    this._term.on('unknown-keydown', this._handleUnknownKeyDown);
-    this._term.on('manual-scroll', this._handleManualScroll);
+    this._term.on('title', this._handleTitle.bind(this));
+    this._term.on('data', this._handleTermData.bind(this));
+    this._getWindow().addEventListener('resize', this._handleResize.bind(this));
+    this._term.on('key', this._handleKeyDown.bind(this));
+    this._term.on('unknown-keydown', this._handleUnknownKeyDown.bind(this));
+    this._term.on('manual-scroll', this._handleManualScroll.bind(this));
     
     // Application mode handlers    
-    this._term.on('application-mode-start', this._handleApplicationModeStart);
-    this._term.on('application-mode-data', this._handleApplicationModeData);
-    this._term.on('application-mode-end', this._handleApplicationModeEnd);
+    this._term.on('application-mode-start', this._handleApplicationModeStart.bind(this));
+    this._term.on('application-mode-data', this._handleApplicationModeData.bind(this));
+    this._term.on('application-mode-end', this._handleApplicationModeEnd.bind(this));
 
     // Window DOM event handlers
-    this._getWindow().document.body.addEventListener('click', this._handleWindowClick);
+    this._getWindow().document.body.addEventListener('click', this._handleWindowClick.bind(this));
 
     this._term.open(this._termContainer);
 
-    this._term.element.addEventListener('keypress', this._handleKeyPressTerminal);
-    this._term.element.addEventListener('keydown', this._handleKeyDownTerminal);
+    this._term.element.addEventListener('keypress', this._handleKeyPressTerminal.bind(this));
+    this._term.element.addEventListener('keydown', this._handleKeyDownTerminal.bind(this));
     this._container.addEventListener('scroll-move', (ev: CustomEvent) => {
       this._syncManualScroll();  
     });
 
     this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
 
+// FIXME
     // Start our PTY bridge process and connect it to our terminal.
-    this._ptyBridge = child_process.spawn('node', ['pty_bridge.js'], {
-      env: process.env
-    });
-    this._ptyBridge.stdout.on('data', this._handlePtyStdoutData);
-    this._ptyBridge.stderr.on('data', this._handlePtyStderrData);
-    this._ptyBridge.on('close', this._handlePtyClose);
+    // this._ptyBridge = child_process.spawn('node', ['pty_bridge.js'], {
+    //   env: process.env
+    // });
+    // this._ptyBridge.stdout.on('data', this._handlePtyStdoutData.bind(this));
+    // this._ptyBridge.stderr.on('data', this._handlePtyStderrData.bind(this));
+    // this._ptyBridge.on('close', this._handlePtyClose.bind(this));
 
     this._scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
       this._autoscroll = ev.detail.isBottom;
     });
     
-    var size = this._term.resizeToContainer();
+    const size = this._term.resizeToContainer();
     this._sendResize(size.cols, size.rows);
     
     this._syncScrolling();
@@ -270,13 +347,13 @@ export class Terminal {
       cancelAnimationFrame(this._scrollSyncID);
     }
     
-    if (this._ptyBridge !== null) {
-      this._ptyBridge.removeAllListeners();
-
-      this._ptyBridge.kill('SIGHUP');
-      this._ptyBridge.disconnect();
-      this._ptyBridge = null;
-    }
+    // if (this._ptyBridge !== null) {
+    //   this._ptyBridge.removeAllListeners();
+    // 
+    //   this._ptyBridge.kill('SIGHUP');
+    //   this._ptyBridge.disconnect();
+    //   this._ptyBridge = null;
+    // }
 
     if (this._term !== null) {
       this._getWindow().removeEventListener('resize', this._handleResize);
@@ -362,8 +439,8 @@ export class Terminal {
   }
 
   _handleKeyDownTerminal(ev: KeyboardEvent): void {
-    var frames: commandframe[];
-    var index: number;
+    let frames: commandframe[];
+    let index: number;
 
     // Key down on a command frame.
     if ((<HTMLElement>ev.target).tagName === "ET-COMMANDFRAME") {
@@ -410,7 +487,7 @@ export class Terminal {
       if (ev.keyCode === 32 && ev.ctrlKey) {
         // Enter cursor mode.
         // 32 = space.
-        var lastFrame = <commandframe>this._term.element.querySelector("et-commandframe:last-of-type");
+        const lastFrame = <commandframe>this._term.element.querySelector("et-commandframe:last-of-type");
         if (lastFrame !== null) {
           lastFrame.focusLast();
         }
@@ -476,8 +553,9 @@ export class Terminal {
    * Handle the exit from application mode.
    */
   _handleApplicationModeEnd(): void {
-    var el: HTMLElement;
-
+    let el: HTMLElement;
+    let startdivs: NodeList;
+    
     switch (this._applicationMode) {
       case ApplicationMode.APPLICATION_MODE_HTML:
         el = this._getWindow().document.createElement("div");
@@ -486,7 +564,7 @@ export class Terminal {
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-        var startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
+        startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
         log("startdivs:", startdivs);
         if (startdivs.length !== 0) {
           break;  // Don't open a new frame.
@@ -504,10 +582,10 @@ export class Terminal {
           this._sendDataToPty(ev.detail);
         }).bind(this));
 
-        el.addEventListener('copy-clipboard-request', (function(ev: CustomEvent) {
-          var clipboard = gui.Clipboard.get();
-          clipboard.set(ev.detail, 'text');
-        }).bind(this));
+        // el.addEventListener('copy-clipboard-request', (function(ev: CustomEvent) {
+        //   var clipboard = gui.Clipboard.get();
+        //   clipboard.set(ev.detail, 'text');
+        // }).bind(this));
 
         el.addEventListener('frame-pop-out', (ev: CustomEvent): void => {
           this.events.emit('frame-pop-out', this, ev.detail);
@@ -525,16 +603,16 @@ export class Terminal {
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-        var startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
+        startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
         log("startdivs:", startdivs);
         if (startdivs.length !== 0) {
 
           this.preserveScroll(function() {
             this._term.moveRowsToScrollback();
-            var outputdiv = <HTMLDivElement>startdivs[startdivs.length-1];
-            var node = outputdiv.nextSibling;
+            const outputdiv = <HTMLDivElement>startdivs[startdivs.length-1];
+            let node = outputdiv.nextSibling;
 
-            var nodelist: Node[] = [];
+            const nodelist: Node[] = [];
             while (node !== null) {
               nodelist.push(node);
               node = node.nextSibling;
@@ -564,7 +642,7 @@ export class Terminal {
 
 // FIXME delete this.
   preserveScroll(task:()=>void): void {
-    var scrollatbottom = this._term.isScrollAtBottom();
+    const scrollatbottom = this._term.isScrollAtBottom();
     task.call(this);
     if (scrollatbottom) {
       // Scroll the terminal down to the bottom.
@@ -580,8 +658,8 @@ export class Terminal {
 // FIXME this is an obsolete way of working.
   _handleWindowClick(event: Event) {
   //      log("body on click!",event);
-    var type = event.srcElement.getAttribute(SEMANTIC_TYPE);
-    var value = event.srcElement.getAttribute(SEMANTIC_VALUE);
+    const type = event.srcElement.getAttribute(SEMANTIC_TYPE);
+    const value = event.srcElement.getAttribute(SEMANTIC_VALUE);
     this._handleMineTypeClick(type, value);
   }
 
@@ -610,7 +688,7 @@ export class Terminal {
    * @param {string} data
    */
   _handlePtyClose(data: string): void {
-    this._ptyBridge = null;
+    // this._ptyBridge = null;
     this.events.emit('ptyclose', this);
   }
   
@@ -632,14 +710,14 @@ export class Terminal {
    *     been sent.
    */
   _sendDataToPty(text: string, callback?: Function): void {
-    var jsonString = JSON.stringify({stream: text});
+    const jsonString = JSON.stringify({stream: text});
 //console.log("<<< json string is ",jsonString);
 //console.log("<<< json string length is ",jsonString.length);
-    var sizeHeaderBuffer = new Buffer(4);
+    const sizeHeaderBuffer = new Buffer(4);
     sizeHeaderBuffer.writeUInt32BE(jsonString.length, 0);
 
-    this._ptyBridge.stdin.write(sizeHeaderBuffer);
-    this._ptyBridge.stdin.write(jsonString, callback);
+    // this._ptyBridge.stdin.write(sizeHeaderBuffer);
+    // this._ptyBridge.stdin.write(jsonString, callback);
   }
 
   /**
@@ -651,14 +729,14 @@ export class Terminal {
    *     been sent.
    */
   _sendResize(cols: number, rows: number, callback?: Function): void {
-    var jsonString = JSON.stringify({resize: [cols, rows]});
+    const jsonString = JSON.stringify({resize: [cols, rows]});
   //      console.log("<<< json string is ",jsonString);
   //      console.log("<<< json string length is ",jsonString.length);
-    var sizeHeaderBuffer = new Buffer(4);
+    const sizeHeaderBuffer = new Buffer(4);
     sizeHeaderBuffer.writeUInt32BE(jsonString.length, 0);
 
-    this._ptyBridge.stdin.write(sizeHeaderBuffer);
-    this._ptyBridge.stdin.write(jsonString, callback);
+    // this._ptyBridge.stdin.write(sizeHeaderBuffer);
+    // this._ptyBridge.stdin.write(jsonString, callback);
   }
     
   // git diff scroll speed test
@@ -671,17 +749,17 @@ export class Terminal {
   // et-word with innerHTML:  20-24ms per line scroll update.
 
   _lineToHTML(line: any[]): string {
-    var len = line.length;
-    var whiteState = true;
-    var tempLine: any[];
-    var tuple: any;
-    var output = "";
-    var WORD_SPAN = "<span class='et-word' tabindex='-1'>";
+    const len = line.length;
+    let whiteState = true;
+    let tempLine: any[];
+    let tuple: any;
+    let output = "";
+    const WORD_SPAN = "<span class='et-word' tabindex='-1'>";
 
     tempLine = [];
-    for (var i=0; i<len; i++) {
+    for (let i=0; i<len; i++) {
       tuple = line[i];
-      var isWhite = tuple[1] === ' ';
+      const isWhite = tuple[1] === ' ';
       if (whiteState !== isWhite) {
         if (tempLine.length !== 0) {
           if (whiteState) {
@@ -708,10 +786,10 @@ export class Terminal {
   }
   
   handleRequestFrame(frameId: string): void {
-    var sourceFrame: commandframe = this._findFrame(frameId);
-    var data = sourceFrame !== null ? sourceFrame.text : "";
-    var lines = data.split("\n");
-    var encodedData: string = "";
+    const sourceFrame: commandframe = this._findFrame(frameId);
+    const data = sourceFrame !== null ? sourceFrame.text : "";
+    const lines = data.split("\n");
+    let encodedData: string = "";
     lines.forEach( (line: string) => {
       encodedData = Base64.encode(line +"\n");
       this._sendDataToPty(encodedData+"\n");
@@ -731,7 +809,7 @@ export class Terminal {
     if (/[^0-9]/.test(frameId)) {
       return null;
     }
-    var matches = this._term.element.querySelectorAll("et-commandframe[tag='" + frameId + "']");
+    const matches = this._term.element.querySelectorAll("et-commandframe[tag='" + frameId + "']");
     return matches.length === 0 ? null : <commandframe>matches[0];
   }
   
@@ -752,3 +830,4 @@ export class Terminal {
     return this._tagCounter;
   }
 }
+export = EtTerminal;

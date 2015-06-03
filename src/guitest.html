@@ -41,6 +41,24 @@
     DIV.tab_bar_burger {
       flex-grow: 0;
     }
+
+    #stackedwidgetfixed {
+      display: block;
+      width: 500px;
+      height: 500px;
+      border: 1px solid green;
+    }
+    #stackedwidgetfixed_0 {
+      width: 100%;
+      height: 100%;
+      background-color: #ff0000;
+    }
+    #stackedwidgetfixed_1 {
+      width: 100%;
+      height: 100%;
+      background-color: #00ff00;
+    }
+
     
     </style>
     
@@ -179,6 +197,19 @@
           tabWidget.removeChild(sib);
           tabWidget.removeChild(tab);          
         });
+        
+        // Stacked widget fixed size
+        document.getElementById("stackedwidgetfixed_previous_page").addEventListener('click', function() {
+         var stacked = document.getElementById("stackedwidgetfixed");
+          stacked.currentIndex = stacked.currentIndex-1 < 0 ? (stacked.children.length-1) : (stacked.currentIndex-1);
+        });
+
+        document.getElementById("stackedwidgetfixed_next_page").addEventListener('click', function() {
+          var stacked = document.getElementById("stackedwidgetfixed");
+          stacked.currentIndex = (stacked.currentIndex+1 >= stacked.children.length) ? 0 : (stacked.currentIndex+1);
+        });
+        
+
     });
     </script>
 </head>
@@ -270,6 +301,15 @@
       <div>Page 0</div>
       <div>Page 1</div>
       <div>Page 2</div>
+    </cb-stackedwidget>
+  </fieldset>
+
+  <fieldset><legend>Stacked Widget fixed size</legend>
+    <button id="stackedwidgetfixed_previous_page">Previous Page</button>
+    <button id="stackedwidgetfixed_next_page">Next Page</button>
+    <cb-stackedwidget id="stackedwidgetfixed">
+      <div id="stackedwidgetfixed_0">Page 0</div>
+      <div id="stackedwidgetfixed_1">Page 1</div>
     </cb-stackedwidget>
   </fieldset>
 
