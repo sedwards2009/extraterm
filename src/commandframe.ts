@@ -3,10 +3,10 @@
  */
 
 import resourceLoader = require('./resourceloader');
-import contextmenu = require('gui/contextmenu');
-import menuitem = require('gui/menuitem');
-import checkboxmenuitem = require('gui/checkboxmenuitem');
-import util = require('gui/util');
+import contextmenu = require('./gui/contextmenu');
+import menuitem = require('./gui/menuitem');
+import checkboxmenuitem = require('./gui/checkboxmenuitem');
+import util = require('./gui/util');
 
 contextmenu.init();
 menuitem.init();
