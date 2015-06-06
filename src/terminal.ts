@@ -33,6 +33,7 @@ const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 const SEMANTIC_TYPE = "data-extraterm-type";
 const SEMANTIC_VALUE = "data-extraterm-value";
 const ID_CONTAINER = "terminal_container";
+const THEME_TAG = "theme";
 
 const enum ApplicationMode {
   APPLICATION_MODE_NONE = 0,
@@ -57,6 +58,10 @@ const enum ApplicationMode {
 class EtTerminal extends HTMLElement {
   
   static TAG_NAME: string = "et-terminal";
+  
+  static USER_INPUT_EVENT: string = "user-input";
+  
+  static TERMINAL_RESIZE_EVENT: string = "terminal-resize";  
   
   /**
    * 
@@ -83,9 +88,27 @@ class EtTerminal extends HTMLElement {
   private _applicationMode: ApplicationMode;
   private _bracketStyle: string;
   private _lastBashBracket: string;
+  
+  /**
+   * Blinking cursor
+   * 
+   * True means the cursor should blink, otherwise it doesn't.
+   */
+  set blinkingCursor(blink: boolean) {
+    this._blinkingCursor = blink;
+    if (this._term !== null) {
+      this._term.setCursorBlink(blink);
+    }
+  }
+  
+  set themeCss(path: string) {
+    const themeTag = <HTMLStyleElement> util.getShadowId(this, THEME_TAG);
+    console.log("Setting theme css ",path);
+    themeTag.innerHTML = "@import '" + path + "';";
+  }
+  
   private _blinkingCursor: boolean;
   private _title: string;
-//  private _ptyBridge: child_process.ChildProcess;
   private _super_lineToHTML: (line: any[]) => string;
   
   events: NodeJS.EventEmitter;
@@ -156,6 +179,7 @@ class EtTerminal extends HTMLElement {
             overflow-y: hidden;
         }
         </style>
+        <style id="theme"></style>
         <div class='terminal_container' id='${ID_CONTAINER}'>
           <div class='term_container'></div>
           <cb-scrollbar class='terminal_scrollbar'></cb-scrollbar>
@@ -171,18 +195,6 @@ class EtTerminal extends HTMLElement {
    */
   getTitle(): string {
     return this._title;
-  }
-
-  /**
-   * Set whether the cursor should blink.
-   * 
-   * @param {boolean} blink Set to true if the cursor should blink.
-   */
-  setBlinkingCursor(blinking: boolean): void {
-    this._blinkingCursor = blinking;
-    if (this._term !== null) {
-      this._term.setCursorBlink(blinking);
-    }
   }
 
   /**
@@ -281,15 +293,6 @@ class EtTerminal extends HTMLElement {
     });
 
     this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
-
-// FIXME
-    // Start our PTY bridge process and connect it to our terminal.
-    // this._ptyBridge = child_process.spawn('node', ['pty_bridge.js'], {
-    //   env: process.env
-    // });
-    // this._ptyBridge.stdout.on('data', this._handlePtyStdoutData.bind(this));
-    // this._ptyBridge.stderr.on('data', this._handlePtyStderrData.bind(this));
-    // this._ptyBridge.on('close', this._handlePtyClose.bind(this));
 
     this._scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
       this._autoscroll = ev.detail.isBottom;
@@ -706,18 +709,10 @@ class EtTerminal extends HTMLElement {
    * Send data to the pseudoterminal.
    * 
    * @param {string} text
-   * @param {function} callback (Optional) Callback to call once the data has
-   *     been sent.
    */
-  _sendDataToPty(text: string, callback?: Function): void {
-    const jsonString = JSON.stringify({stream: text});
-//console.log("<<< json string is ",jsonString);
-//console.log("<<< json string length is ",jsonString.length);
-    const sizeHeaderBuffer = new Buffer(4);
-    sizeHeaderBuffer.writeUInt32BE(jsonString.length, 0);
-
-    // this._ptyBridge.stdin.write(sizeHeaderBuffer);
-    // this._ptyBridge.stdin.write(jsonString, callback);
+  _sendDataToPty(text: string): void {
+    const event = new CustomEvent(EtTerminal.USER_INPUT_EVENT, { detail: {data: text } });
+    this.dispatchEvent(event);
   }
 
   /**
@@ -725,18 +720,10 @@ class EtTerminal extends HTMLElement {
    * 
    * @param {number} cols The new number of columns in the terminal.
    * @param {number} rows The new number of rows in the terminal.
-   * @param {function} callback (Optional) Callback to call once the data has
-   *     been sent.
    */
   _sendResize(cols: number, rows: number, callback?: Function): void {
-    const jsonString = JSON.stringify({resize: [cols, rows]});
-  //      console.log("<<< json string is ",jsonString);
-  //      console.log("<<< json string length is ",jsonString.length);
-    const sizeHeaderBuffer = new Buffer(4);
-    sizeHeaderBuffer.writeUInt32BE(jsonString.length, 0);
-
-    // this._ptyBridge.stdin.write(sizeHeaderBuffer);
-    // this._ptyBridge.stdin.write(jsonString, callback);
+    const event = new CustomEvent(EtTerminal.TERMINAL_RESIZE_EVENT, { detail: {columns: cols, rows: rows } });
+    this.dispatchEvent(event);    
   }
     
   // git diff scroll speed test

@@ -63,7 +63,9 @@ export function startUp(): void {
           </cb-contextmenu>
       </cb-dropdown>
     </div>`;
-    
+    if (config !== null) {
+      mainWebUi.config = config;
+    }
     doc.body.appendChild(mainWebUi);
     
     const mainMenu = doc.getElementById('main_menu');
@@ -111,6 +113,7 @@ export function startUp(): void {
 }
 
 function handleConfigMessage(msg: Messages.Message): void {
+  console.log("mainweb.handleConfigMessage");
   const configMessage = <Messages.ConfigMessage> msg;
   config = configMessage.config;
   setupConfiguration(configMessage.config);
@@ -125,54 +128,6 @@ function handleThemesMessage(msg: Messages.Message): void {
 }
 
 //-------------------------------------------------------------------------
-
-// configuredialog.init();
-
-// class TerminalTab {
-//   constructor(public id: number, public terminal: terminal.Terminal, public terminaltab: HTMLDivElement,
-//     public tabheader: HTMLDivElement) {
-//   }
-// }
-
-/**
- * 
- */
-// function createTerminal(): number {
-//   var doc = window.document;
-// 
-//   var thisId = terminalIdCounter;
-//   terminalIdCounter++;
-// 
-//   // Create something to put the terminal in.
-//   var terminaltab = doc.createElement("div");
-//   terminaltab.className = "terminal_tab_inactive";
-//   var container = doc.getElementById("tab_container");
-//   container.appendChild(terminaltab);
-// 
-//   // Create the terminal itself.
-//   var term = new terminal.Terminal(terminaltab);
-//   term.setBlinkingCursor(config.blinkingCursor);
-// //  term.events.on('ptyclose', handlePtyClose);
-//   term.events.on('unknown-keydown', handleUnknownKeyDown);
-//   term.events.on('title', handleTitle);
-// //  term.events.on('frame-pop-out', handleFramePopOut);
-//   
-//   term.startUp();
-// 
-//   // Create the tab header.
-//   var tabheader = doc.createElement("div");
-//   tabheader.className = "tab_active";
-//   tabheader.innerText = "New Tab";
-//   tabheader.addEventListener('click', function() {
-//     focusTerminal(thisId);
-//   });
-//   var tabbar = doc.getElementById("tabbar");
-//   tabbar.insertBefore(tabheader, doc.getElementById("new_tab_button"));
-// 
-//   var info = new TerminalTab(thisId, term, terminaltab, tabheader);
-//   terminalList.push(info);
-//   return thisId;
-// }
 
 /**
  * 
@@ -318,46 +273,6 @@ function setWindowTitle(title: string): void {
 //}
 
 /**
- * 
- */
-//function handleMessages(ev: MessageEvent): void {
-//  var topMsg: windowmessages.Message = ev.data;
-//console.log("main.ts: handleMessages");
-//  switch(topMsg.type) {
-//    case windowmessages.MessageType.REQUEST_FRAME:
-//      
-//      // First transmit the config.
-//      var configMsg: windowmessages.MessageConfig = {
-//        type: windowmessages.MessageType.CONFIG,
-//        config: config
-//      };
-//      ev.source.postMessage(configMsg, ev.origin);
-//  
-//      var msg: windowmessages.MessageRequestFrame = ev.data;
-//      if (frameMapping.has(msg.frameTag)) {
-//        var frame = frameMapping.get(msg.frameTag);
-//        frameMapping = frameMapping.remove(msg.frameTag);
-//        
-//        var reply: windowmessages.MessageFrameData = {
-//          type: windowmessages.MessageType.FRAME_DATA,
-//          frameTag: msg.frameTag,
-//          frameHTML: frame.outerHTML
-//        };
-//        ev.source.postMessage(reply, ev.origin);
-//        
-//      } else {
-//        console.log("Request for unknown frame tag: "+ msg.frameTag);
-//      }
-//      break;
-//      
-//    default:
-//      console.log("Received an unrecognised message.");
-//      break;
-//  }
-//}
-
-
-/**
  * Quit the application.
  */
 //function quit(): void {
@@ -369,9 +284,9 @@ function setWindowTitle(title: string): void {
  */
 function setupConfiguration(config: Config): void {
   installTheme(config.theme);
-  // terminalList.forEach(function(info) {
-  //   info.terminal.setBlinkingCursor(config.blinkingCursor);
-  // });
+  if (mainWebUi !== null) {
+    mainWebUi.config = config;
+  }
 }
 
 /**

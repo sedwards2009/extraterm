@@ -16,6 +16,7 @@ import im = require('immutable');
 import _ = require('lodash');
 import crashReporter = require('crash-reporter');
 import ipc = require('ipc');
+import pty = require('pty.js');
 
 import Config = require('config');
 import Theme = require('./theme');
@@ -144,6 +145,14 @@ function getConfig(): Config {
   return config;
 }
 
+function getFullConfig(): Config {
+  const fullConfig = _.cloneDeep(config);
+  const themesDir = path.join(__dirname, THEMES_DIRECTORY);
+  fullConfig.themePath = path.join(themesDir, config.theme);
+  console.log("Full config: ",fullConfig);
+  return fullConfig;
+}
+
 function getThemes(): Theme[] {
   return themes.toArray();
 }
@@ -175,21 +184,92 @@ function handleAsyncIpc(event: any, arg: any): void {
       reply = handleThemesRequest(<Messages.ThemesRequestMessage> msg);
       break;
       
+    case Messages.MessageType.PTY_CREATE:
+      reply = handlePtyCreate(event.sender, <Messages.CreatePtyRequestMessage> msg);
+      break;
+      
+    case Messages.MessageType.PTY_RESIZE:
+      handlePtyResize(<Messages.PtyResize> msg);
+      break;
+      
+    case Messages.MessageType.PTY_INPUT:
+      handlePtyInput(<Messages.PtyInput> msg);
+      break;
+      
     default:
       break;
   }
   
-  event.sender.send(Messages.CHANNEL_NAME, reply);
+  if (reply !== null) {
+    event.sender.send(Messages.CHANNEL_NAME, reply);
+  }
 }
 
 function handleConfigRequest(msg: Messages.ConfigRequestMessage): Messages.ConfigMessage {
-  let reply: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, config: getConfig() };
+  const reply: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, config: getFullConfig() };
   return reply;
 }
 
 function handleThemesRequest(msg: Messages.ThemesRequestMessage): Messages.ThemesMessage {
-  let reply: Messages.ThemesMessage = { type: Messages.MessageType.THEMES, themes: getThemes() };
+  const reply: Messages.ThemesMessage = { type: Messages.MessageType.THEMES, themes: getThemes() };
   return reply;
+}
+
+//-------------------------------------------------------------------------
+
+let ptyCounter = 0;
+const ptyMap: Map<number, pty.Terminal> = new Map<number, pty.Terminal>();
+
+function createPty(sender: GitHubElectron.WebContents, file: string, args: string[], cols: number, rows: number): number {
+  const term = pty.spawn(file, args, {
+      name: 'xterm-color',
+      cols: cols,
+      rows: rows,
+  //    cwd: process.env.HOME,
+      env: process.env});
+      
+  ptyCounter++;
+  const ptyId = ptyCounter;
+  ptyMap[ptyId] = term;
+  
+  term.on('data', function(data) {
+    log("pty process got data.");
+    log(data);
+    
+    const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: ptyId, data: data };
+    sender.send(Messages.CHANNEL_NAME, msg);    
+  });
+
+  term.on('exit', function() {
+    log("pty process exited.");
+    // process.exit(0);
+  });
+
+  return ptyId;
+}
+
+function handlePtyCreate(sender: GitHubElectron.WebContents, msg: Messages.CreatePtyRequestMessage): Messages.CreatedPtyMessage {
+  const id = createPty(sender, msg.command, msg.args, msg.columns, msg.rows);
+  const reply: Messages.CreatedPtyMessage = { type: Messages.MessageType.PTY_CREATED, id: id };
+  return reply;
+}
+
+function handlePtyInput(msg: Messages.PtyInput): void {
+  const ptyTerminal: pty.Terminal = ptyMap[msg.id];
+  if (ptyTerminal === undefined) {
+    log("WARNING: Input arrived for a terminal which doesn't exist.");
+    return;
+  }
+  ptyTerminal.write(msg.data);
+}
+
+function handlePtyResize(msg: Messages.PtyResize): void {
+  const ptyTerminal: pty.Terminal = ptyMap[msg.id];
+  if (ptyTerminal === undefined) {
+    log("WARNING: Input arrived for a terminal which doesn't exist.");
+    return;
+  }
+  ptyTerminal.resize(msg.columns, msg.rows);  
 }
 
 main();

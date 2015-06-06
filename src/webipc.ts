@@ -72,3 +72,27 @@ export function requestThemes(): Promise<Messages.ThemesMessage> {
   const msg: Messages.ThemesRequestMessage = {type: Messages.MessageType.THEMES_REQUEST};
   return request(msg, Messages.MessageType.THEMES);
 }
+
+export function requestPtyCreate(command: string, args: string[], columns: number, rows: number,
+    env: Messages.EnvironmentMap): Promise<Messages.CreatedPtyMessage> {
+      
+  const msg: Messages.CreatePtyRequestMessage = {
+    type: Messages.MessageType.PTY_CREATE,
+    command: command,
+    args: args,
+    columns: columns,
+    rows: rows,
+    env: env
+  };
+  return request(msg, Messages.MessageType.PTY_CREATED);
+}
+
+export function ptyInput(id: number, data: string): void {
+  const msg: Messages.PtyInput = {type: Messages.MessageType.PTY_INPUT, id: id, data: data };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function ptyResize(id: number, columns: number, rows: number): void {
+  const msg: Messages.PtyResize = {type: Messages.MessageType.PTY_RESIZE, id: id, columns: columns, rows: rows };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}

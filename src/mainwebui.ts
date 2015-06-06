@@ -2,10 +2,14 @@
  * Copyright 2015 Simon Edwards <simon@simonzone.com>
  */
 import util = require('./gui/util');
+import Config = require('config');
 import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
 import CbTab = require('./gui/tab');
+import webipc = require('./webipc');
+import Messages = require('./windowmessages');
+import path = require('path');
 
 const ID = "ExtratermMainWebUITemplate";
 
@@ -19,6 +23,7 @@ interface TerminalTab {
   terminalDiv: HTMLDivElement;
   cbTab: CbTab;
   terminal: EtTerminal;
+  ptyId: number;
 };
 
 let terminalIdCounter = 1;
@@ -36,6 +41,21 @@ class ExtratermMainWebUI extends HTMLElement {
   }
   
   static TAG_NAME: string = 'extraterm-mainwebui';
+
+  set config(config: Config) {
+    console.log("mainwebui.config");
+    this._config = config;
+    this._terminalTabs.forEach( (tab) => {
+      this._setConfigOnTerminal(tab.terminal, config);
+    });    
+  }
+
+  private _setConfigOnTerminal(terminal: EtTerminal, config: Config): void {
+    terminal.blinkingCursor = config.blinkingCursor;
+    terminal.themeCss = "file://" + path.join(config.themePath, "theme.css");
+  }
+  
+  private _config: Config;
 
   // WARNING: Fields like this will not be initialised automatically.
   private _terminalTabs: TerminalTab[];
@@ -80,6 +100,9 @@ class ExtratermMainWebUI extends HTMLElement {
     var shadow = util.createShadowRoot(this);
     var clone = this._createClone();
     shadow.appendChild(clone);
+    
+    this._setupIpc();
+    
     this.newTerminalTab();
   }
   
@@ -98,16 +121,55 @@ class ExtratermMainWebUI extends HTMLElement {
     newDiv.classList.add('terminal_holder');
     
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
+    
     newDiv.appendChild(newTerminal);
-    this._terminalTabs.push( { id: newId, terminalDiv: newDiv, cbTab: newCbTab, terminal: newTerminal } );
+    const terminalEntry = { id: newId, terminalDiv: newDiv, cbTab: newCbTab, terminal: newTerminal,
+      ptyId: null };
+    this._terminalTabs.push(terminalEntry);
     
     const restDiv = this._getById(ID_REST_DIV);
     const containerDiv = this._getById(ID_CONTAINER);
     containerDiv.insertBefore(newCbTab, restDiv);
     containerDiv.insertBefore(newDiv, restDiv);
     
+    newTerminal.addEventListener(EtTerminal.USER_INPUT_EVENT, (e) => {
+      console.log("USER_INPUT_EVENT ",e);
+      if (terminalEntry.ptyId !== null) {
+        webipc.ptyInput(terminalEntry.ptyId, (<any> e).detail.data);
+      }
+    });
+    
+    newTerminal.addEventListener(EtTerminal.TERMINAL_RESIZE_EVENT, (e) => {
+      if (terminalEntry.ptyId !== null) {
+        webipc.ptyResize(terminalEntry.ptyId, (<any> e).detail.columns, (<any> e).detail.rows);
+      }      
+    });
+
+    webipc.requestPtyCreate("bash", [], 80, 24, process.env).then(
+      (msg: Messages.CreatedPtyMessage) => {
+        terminalEntry.ptyId = msg.id;
+      }
+    );
+    
     return newId;
   }
+  
+  //-----------------------------------------------------------------------
+  // PTY and IPC handling
+  //-----------------------------------------------------------------------
+  private _setupIpc(): void {
+    webipc.registerDefaultHandler(Messages.MessageType.PTY_OUTPUT, this._handlePtyOutput.bind(this));
+  }
+  
+  private _handlePtyOutput(msg: Messages.PtyOutput): void {
+    this._terminalTabs.forEach( (t) => {
+      if (t.ptyId === msg.id) {
+        t.terminal.write(msg.data);
+      }
+    });
+  }
+  
+  //-----------------------------------------------------------------------
   
   private _createClone(): Node {
     var template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
