@@ -6,17 +6,17 @@
   "license": "GPL v3",
   "main": "main.js",
   "dependencies": {
+    "electron-prebuilt": "^0.27.2",
     "immutable": "^3.7.3",
     "js-base64": "^2.1.8",
     "lodash": "^3.9.1",
-    "pty.js": "^0.2.6",
-    "qs": "^2.4.2",
+    "pty.js": "^0.2.7-1",
+    "qs": "^3.1.0",
     "requirejs": "^2.1.17",
-    "source-map-support": "^0.2.10"
+    "source-map-support": "^0.3.1"
   },
   "devDependencies": {
     "cajon": "^0.2.8",
-    "electron-prebuilt": "^0.26.0",
     "nodeunit": "^0.9.1",
     "tsd": "^0.6.0-beta.5",
     "typescript": "^1.5.0-beta",
