@@ -135,9 +135,65 @@ class EtTerminal extends HTMLElement {
 
     const clone = this._createClone();
     shadow.appendChild(clone);
-    this.startUp();
-  }
+  
+    this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
+    this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
+    this._termContainer = <HTMLElement>this._container.firstElementChild;
+    
+    const cookie = "DEADBEEF";  // FIXME
+    process.env[EXTRATERM_COOKIE_ENV] = cookie;
 
+    this._term = new termjs.Terminal({
+      cols: 80,
+      rows: 30,
+      colors: this._colors(),
+      scrollback: 1000,
+      cursorBlink: this._blinkingCursor,
+      physicalScroll: true,
+      applicationModeCookie: cookie
+    });
+
+    const defaultLineToHTML = this._term._lineToHTML;
+    this._super_lineToHTML = this._term._lineToHTML;
+    this._term._lineToHTML=  this._lineToHTML.bind(this);
+
+    this._term.debug = true;
+    this._term.on('title', this._handleTitle.bind(this));
+    this._term.on('data', this._handleTermData.bind(this));
+    this._getWindow().addEventListener('resize', this._handleResize.bind(this));
+    this._term.on('key', this._handleKeyDown.bind(this));
+    this._term.on('unknown-keydown', this._handleUnknownKeyDown.bind(this));
+    this._term.on('manual-scroll', this._handleManualScroll.bind(this));
+    
+    // Application mode handlers    
+    this._term.on('application-mode-start', this._handleApplicationModeStart.bind(this));
+    this._term.on('application-mode-data', this._handleApplicationModeData.bind(this));
+    this._term.on('application-mode-end', this._handleApplicationModeEnd.bind(this));
+  }
+  
+  attachedCallback(): void {
+    // Window DOM event handlers
+    this._getWindow().document.body.addEventListener('click', this._handleWindowClick.bind(this));
+    this._term.open(this._termContainer);
+
+    this._term.element.addEventListener('keypress', this._handleKeyPressTerminal.bind(this));
+    this._term.element.addEventListener('keydown', this._handleKeyDownTerminal.bind(this));
+    this._container.addEventListener('scroll-move', (ev: CustomEvent) => {
+      this._syncManualScroll();  
+    });
+
+    this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
+
+    this._scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
+      this._autoscroll = ev.detail.isBottom;
+    });
+    
+    const size = this._term.resizeToContainer();
+    this._sendResize(size.cols, size.rows);
+    
+    this._syncScrolling();
+  }
+  
   private _createClone(): Node {
     let template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
@@ -241,68 +297,6 @@ class EtTerminal extends HTMLElement {
     return colorList;
   }
 
-  /**
-   * Start the terminal up.
-   * 
-   * This method should be called once all event handlers have been set up.
-   */
-  startUp(): void {
-    this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
-    this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
-    this._termContainer = <HTMLElement>this._container.firstElementChild;
-    
-    const cookie = "DEADBEEF";  // FIXME
-    process.env[EXTRATERM_COOKIE_ENV] = cookie;
-
-    this._term = new termjs.Terminal({
-      cols: 80,
-      rows: 30,
-      colors: this._colors(),
-      scrollback: 1000,
-      cursorBlink: this._blinkingCursor,
-      physicalScroll: true,
-      applicationModeCookie: cookie
-    });
-
-    const defaultLineToHTML = this._term._lineToHTML;
-    this._super_lineToHTML = this._term._lineToHTML;
-    this._term._lineToHTML=  this._lineToHTML.bind(this);
-
-    this._term.debug = true;
-    this._term.on('title', this._handleTitle.bind(this));
-    this._term.on('data', this._handleTermData.bind(this));
-    this._getWindow().addEventListener('resize', this._handleResize.bind(this));
-    this._term.on('key', this._handleKeyDown.bind(this));
-    this._term.on('unknown-keydown', this._handleUnknownKeyDown.bind(this));
-    this._term.on('manual-scroll', this._handleManualScroll.bind(this));
-    
-    // Application mode handlers    
-    this._term.on('application-mode-start', this._handleApplicationModeStart.bind(this));
-    this._term.on('application-mode-data', this._handleApplicationModeData.bind(this));
-    this._term.on('application-mode-end', this._handleApplicationModeEnd.bind(this));
-
-    // Window DOM event handlers
-    this._getWindow().document.body.addEventListener('click', this._handleWindowClick.bind(this));
-
-    this._term.open(this._termContainer);
-
-    this._term.element.addEventListener('keypress', this._handleKeyPressTerminal.bind(this));
-    this._term.element.addEventListener('keydown', this._handleKeyDownTerminal.bind(this));
-    this._container.addEventListener('scroll-move', (ev: CustomEvent) => {
-      this._syncManualScroll();  
-    });
-
-    this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
-
-    this._scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-      this._autoscroll = ev.detail.isBottom;
-    });
-    
-    const size = this._term.resizeToContainer();
-    this._sendResize(size.cols, size.rows);
-    
-    this._syncScrolling();
-  }
   
   /**
    * Synchronize the scrollbar with the term.
