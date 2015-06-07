@@ -36,7 +36,7 @@
         "./src/requirejs.d.ts",
         "./src/resourceloader.ts",
         "./src/source-map-support.d.ts",
-        "./src/term_js.d.ts",
+        "./src/term.ts",
         "./src/terminal.ts",
         "./src/theme.ts",
         "./src/webipc.ts",

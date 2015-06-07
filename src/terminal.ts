@@ -7,7 +7,7 @@
 import _ = require('lodash');
 import commandframe = require('./commandframe');
 import domutils = require('./domutils');
-import termjs = require('term.js');
+import termjs = require('./term');
 import child_process = require('child_process');
 import events = require('events');
 import scrollbar = require('./gui/scrollbar');
@@ -297,7 +297,6 @@ class EtTerminal extends HTMLElement {
     return colorList;
   }
 
-  
   /**
    * Synchronize the scrollbar with the term.
    */
