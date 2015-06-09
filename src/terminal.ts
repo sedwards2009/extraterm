@@ -81,7 +81,7 @@ class EtTerminal extends HTMLElement {
   private _scrollSyncID: number;
   private _autoscroll: boolean;
   
-  private _termContainer: HTMLElement;
+  private _termContainer: HTMLDivElement;
 
   private _term: termjs.Terminal;
   private _htmlData: string;
@@ -138,7 +138,7 @@ class EtTerminal extends HTMLElement {
   
     this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
-    this._termContainer = <HTMLElement>this._container.firstElementChild;
+    this._termContainer = <HTMLDivElement>this._container.firstElementChild;
     
     const cookie = "DEADBEEF";  // FIXME
     process.env[EXTRATERM_COOKIE_ENV] = cookie;

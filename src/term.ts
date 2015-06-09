@@ -477,7 +477,7 @@ export class Terminal {
     this.showCursor();
     this.element.focus();
     this.hasFocus = true;
-  };
+  }
 
   blur() {
     if (!this.hasFocus) {
@@ -490,7 +490,7 @@ export class Terminal {
 
     this.element.blur();
     this.hasFocus = false;
-  };
+  }
 
   /**
    * Initialize global behavior
@@ -500,7 +500,7 @@ export class Terminal {
     if (this.useStyle) {
       Terminal.insertStyle(document, this.colors[256], this.colors[257]);
     }
-  };
+  }
 
   /**
    * Insert an extra style of adding extra padding to the last row in the terminal.
@@ -510,35 +510,40 @@ export class Terminal {
    * containing element. When using curses based programs like editors you don't want to 
    * see part of the scrollback cut off and just above the top row of your editor.
    */
-  _initLastLinePadding() {
-    var style;
-    var doc = this.document;
-    var head = doc.getElementsByTagName('head')[0];
-    if (!head) {
-      return;
-    }
-
-    style = doc.createElement('style');
+  _initLastLinePadding(): void {
+    console.log("_initLastLinePadding");
+    const style = this.document.createElement('style');
     style.id = 'term-padding-style' + this._termId;
 
-    // textContent doesn't work well with IE for <style> elements.
-    style.innerHTML = 'DIV.' + TERMINAL_ACTIVE_CLASS + ':last-child {\n' +
-      '}\n';
+    style.innerHTML = '';
 
-    head.insertBefore(style, head.firstChild);
-  };
+    const domRoot = getDOMRoot(this.element);
+    if (domRoot.nodeName === "#document") {
+      const head = this.document.getElementsByTagName('head')[0];
+      if (!head) {
+        return;
+      }
+      head.insertBefore(style, head.firstChild);
+      
+    } else {
+      // Shadow DOM.
+      domRoot.appendChild(style);
+    }
+  }
 
   /**
    * Set the size of the extra padding for the last row.
    * 
    * @param {number} padh The size of the pad in pixels
    */
-  _setLastLinePadding = function(padh) {
-    var style;
-    var doc = this.document;
-    style = doc.getElementById('term-padding-style' + this._termId);
-    style.sheet.cssRules[0].style.paddingBottom = '' + padh + 'px';
-  };
+  _setLastLinePadding(padh: number): void {
+    const style = <HTMLStyleElement> getDOMRoot(this.element).getElementById('term-padding-style' + this._termId);
+    const cssStyleSheet = <CSSStyleSheet> style.sheet;
+    while (cssStyleSheet.cssRules.length !== 0) {
+      cssStyleSheet.deleteRule(0);
+    }
+    cssStyleSheet.insertRule(`DIV.${TERMINAL_ACTIVE_CLASS}:last-child{padding-bottom:${padh}px}`, 0);
+  }
 
   /**
    * Bind to paste event
@@ -728,18 +733,17 @@ export class Terminal {
    * 
    * @param {Element} element The DOM element to append.
    */
-  appendElement(element) {
-    
+  appendElement(element: HTMLElement): void {
     this.moveRowsToScrollback();
     this.element.appendChild(element);
-  };
+  }
 
   _getLine(row) {
     while (row >= this.lines.length) {
       this.lines.push(this.blankLine());
     }
     return this.lines[row];
-  };
+  }
 
   getDimensions() {
     return {
@@ -749,18 +753,18 @@ export class Terminal {
       cursorX: this.x,
       cursorY: this.y
       };  
-  };
+  }
 
-  getLineText(y) {
+  getLineText(y: number): string {
     var row;
     if (y <0 || y >= this.lines.length) {
       return null;
     }
     row = this.lines[y];
-      return row.map(function(tup) {
-        return tup[1];
-      }).join("");
-  };
+    return row.map(function(tup) {
+      return tup[1];
+    }).join("");
+  }
 
   _getChildDiv(y) {
     var div;
@@ -772,16 +776,15 @@ export class Terminal {
         this.children.push(div);
     }
     return this.children[y];
-  };
+  }
 
   /**
    * Open Terminal
    */
-  open(parent) {
+  open(parent: HTMLDivElement): void {
     var self = this;
-    var i = 0;
 
-    this.parent = parent || this.parent;
+    this.parent = parent;
 
     if (!this.parent) {
       throw new Error('Terminal requires a parent element.');
@@ -809,7 +812,7 @@ export class Terminal {
     // Create the lines for our terminal.
     this.children = [];
     if ( !this.physicalScroll) {
-      for (; i < this.rows; i++) {
+      for (let i=0; i < this.rows; i++) {
         this._getChildDiv(i);
       }
     }
@@ -5271,4 +5274,21 @@ function matchColorDistance(r1, g1, b1, r2, g2, b2) {
 export interface ScrollDetail {
   position: number;
   isBottom: boolean;
+}
+
+/**
+ * Get the root of the DOM tree or Shadow DOM holding a node.
+ * 
+ * @param  startElement the element to search from.
+ * @return The root of the DOM tree containing the node.
+ */
+function getDOMRoot(startElement: Node): Document | ShadowRoot {
+  let el: Node = startElement;
+  do {
+    if (el.nodeName === "#document-fragment" || el.nodeName === "#document") {
+      return <Document | ShadowRoot> el;
+    }
+    el = el.parentNode;
+  } while (el !== null);
+  return null;
 }
