@@ -899,25 +899,22 @@ export class Terminal {
   //   button.c, charproc.c, misc.c
   // Relevant functions in xterm/button.c:
   //   BtnCode, EmitButtonCode, EditorButton, SendMousePosition
-  bindMouse() {
-    var el = this.element;
-    var self = this;
-    var pressed = 32;
+  bindMouse(): void {
+    const el = this.element;
+    const self = this;
+    let pressed = 32;
 
-    var wheelEvent = 'onmousewheel' in this.context ? 'mousewheel' : 'DOMMouseScroll';
+    const wheelEvent = 'onmousewheel' in this.context ? 'mousewheel' : 'DOMMouseScroll';
 
     // mouseup, mousedown, mousewheel
     // left click: ^[[M 3<^[[M#3<
     // mousewheel up: ^[[M`3>
-    function sendButton(ev) {
-      var button;
-      var pos;
-
+    function sendButton(ev: MouseEvent): void {
       // get the xterm-style button
-      button = getButton(ev);
+      const button = getButton(ev);
 
       // get mouse coordinates
-      pos = getCoords(ev);
+      const pos = getCoords(ev);
       if (!pos) return;
 
       sendEvent(button, pos);
@@ -941,12 +938,12 @@ export class Terminal {
 
     // motion example of a left click:
     // ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
-    function sendMove(ev) {
-      var button = pressed;
-      var pos;
-  console.log("ev",ev);
-      pos = getCoords(ev);
-      if (!pos) return;
+    function sendMove(ev: MouseEvent): void {
+      let button = pressed;
+      const pos = getCoords(ev);
+      if (!pos) {
+        return;
+      }
 
       // buttons marked as motions
       // are incremented by 32
@@ -1059,12 +1056,7 @@ export class Terminal {
       self.send('\x1b[M' + String.fromCharCode.apply(String, data));
     }
 
-    function getButton(ev) {
-      var button;
-      var shift;
-      var meta;
-      var ctrl;
-      var mod;
+    function getButton(ev: MouseEvent): number {
 
       // two low bits:
       // 0 = left
@@ -1073,6 +1065,7 @@ export class Terminal {
       // 3 = release
       // wheel up/down:
       // 1, and 2 - with 64 added
+      let button: number;
       switch (ev.type) {
         case 'mousedown':
           button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
@@ -1088,16 +1081,16 @@ export class Terminal {
           button = ev.detail < 0 ? 64 : 65;
           break;
         case 'mousewheel':
-          button = ev.wheelDeltaY > 0 ? 64 : 65;
+          button = (<any>ev).wheelDeltaY > 0 ? 64 : 65;
           break;
       }
 
       // next three bits are the modifiers:
       // 4 = shift, 8 = meta, 16 = control
-      shift = ev.shiftKey ? 4 : 0;
-      meta = ev.metaKey ? 8 : 0;
-      ctrl = ev.ctrlKey ? 16 : 0;
-      mod = shift | meta | ctrl;
+      const shift = ev.shiftKey ? 4 : 0;
+      const meta = ev.metaKey ? 8 : 0;
+      const ctrl = ev.ctrlKey ? 16 : 0;
+      let mod = shift | meta | ctrl;
 
       // no mods
       if (self.vt200Mouse) {
@@ -1114,40 +1107,49 @@ export class Terminal {
     }
 
     // mouse coordinates measured in cols/rows
-    function getCoords(ev) {
-      var x, col, row, w, el, target, rowElement;
-      
+    function getCoords(ev: MouseEvent): {x: number; y: number; type: string; } {
       // ignore browsers without pageX for now
       if (ev.pageX === null) {
         return null;
       }
 
       // Identify the row DIV that was clicked.
-      target = ev.target;
-      rowElement = null;
-      while (target !== self.element) {
-        if (target.className === TERMINAL_ACTIVE_CLASS) {
-          rowElement = target;
-          break;
+      let rowElement = null;
+      if (getDOMRoot(self.element).nodeName === "#document") {
+        let target: HTMLElement = <HTMLElement> ev.target;
+        while (target !== self.element) {
+          if (target.className === TERMINAL_ACTIVE_CLASS) {
+            rowElement = target;
+            break;
+          }
+          target = <HTMLElement> target.parentNode;
         }
-        target = target.parentNode;
+      } else {
+        // Inside a Shadow DOM.
+        const matches = ev.path.filter(
+          (pathEl) => (<HTMLElement> pathEl).className === TERMINAL_ACTIVE_CLASS );
+        if (matches.length === 0) {
+          return null;
+        }
+        rowElement = matches[0];
       }
+      
       if (rowElement === null) {
         return null;
       }
       
-      row = self.children.indexOf(rowElement) + 1;
+      let row = self.children.indexOf(rowElement) + 1;
       
-      x = ev.pageX;
-      el = rowElement;
+      let x = ev.pageX;
+      let el = rowElement;
       while (el && el !== self.document.documentElement) {
         x -= el.offsetLeft;
         el = 'offsetParent' in el ? el.offsetParent : el.parentNode;
       }
 
       // convert to cols
-      w = rowElement.clientWidth;
-      col = Math.floor((x / w) * self.cols) + 1;
+      const w = rowElement.clientWidth;
+      let col = Math.floor((x / w) * self.cols) + 1;
 
       // be sure to avoid sending
       // bad positions to the program
@@ -1168,7 +1170,7 @@ export class Terminal {
       };
     }
 
-    on(el, 'mousedown', function(ev) {
+    on(el, 'mousedown', function(ev: MouseEvent) {
       if (!self.mouseEvents) return;
 
       // send the button
@@ -1180,7 +1182,7 @@ export class Terminal {
       // fix for odd bug
       //if (self.vt200Mouse && !self.normalMouse) {
       if (self.vt200Mouse) {
-        sendButton({ __proto__: ev, type: 'mouseup' });
+        sendButton(Object.create(ev, { type: 'mouseup' }));
         return cancel(ev);
       }
 
@@ -1189,7 +1191,7 @@ export class Terminal {
 
       // x10 compatibility mode can't send button releases
       if (!self.x10Mouse) {
-        on(self.document, 'mouseup', function up(ev) {
+        on(self.document, 'mouseup', function up(ev: MouseEvent) {
           sendButton(ev);
           if (self.normalMouse) off(self.document, 'mousemove', sendMove);
           off(self.document, 'mouseup', up);
@@ -1204,7 +1206,7 @@ export class Terminal {
     //  on(self.document, 'mousemove', sendMove);
     //}
 
-    on(el, wheelEvent, function(ev) {
+    on(el, wheelEvent, function(ev: MouseEvent) {
       if (!self.mouseEvents) return;
       if (self.x10Mouse || self.vt300Mouse || self.decLocator) return;
       sendButton(ev);
