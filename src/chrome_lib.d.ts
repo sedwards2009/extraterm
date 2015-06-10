@@ -1,4 +1,4 @@
-// Generated at Mon Mar 16 2015 19:34:44 GMT+0100 (CET)
+// Generated at Wed Jun 10 2015 22:11:50 GMT+0200 (CEST)
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved. 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -14334,6 +14334,12 @@ interface CustomEventOptions {
 
 interface KeyboardEvent {
   keyIdentifier: string;
+}
+
+interface Event {
+  path: Node[]; // <- obsolute. Removed from later the Shadow DOM spec.
+  deepPath: Node[];
+  encapsulated: boolean;
 }
 /**************************************************************************
  * Extra Chrome specific features and new APIs.
