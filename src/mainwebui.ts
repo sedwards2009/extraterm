@@ -133,7 +133,6 @@ class ExtratermMainWebUI extends HTMLElement {
     containerDiv.insertBefore(newDiv, restDiv);
     
     newTerminal.addEventListener(EtTerminal.USER_INPUT_EVENT, (e) => {
-      console.log("USER_INPUT_EVENT ",e);
       if (terminalEntry.ptyId !== null) {
         webipc.ptyInput(terminalEntry.ptyId, (<any> e).detail.data);
       }
@@ -154,11 +153,29 @@ class ExtratermMainWebUI extends HTMLElement {
     return newId;
   }
   
+  closeTerminalTab(id: number): void {
+    const matches = this._terminalTabs.filter( (p) => p.id === id );
+    if (matches.length === 0) {
+      return;
+    }
+    const tup = matches[0];
+    
+    // Remove the tab from the list.
+    this._terminalTabs = this._terminalTabs.filter( (p) => p.id !== id );
+    
+    tup.terminalDiv.parentNode.removeChild(tup.terminalDiv);
+    tup.cbTab.parentNode.removeChild(tup.cbTab);
+    if (tup.ptyId !== null) {
+      webipc.ptyClose(tup.ptyId);
+    }
+  }
+  
   //-----------------------------------------------------------------------
   // PTY and IPC handling
   //-----------------------------------------------------------------------
   private _setupIpc(): void {
     webipc.registerDefaultHandler(Messages.MessageType.PTY_OUTPUT, this._handlePtyOutput.bind(this));
+    webipc.registerDefaultHandler(Messages.MessageType.PTY_CLOSE, this._handlePtyClose.bind(this));
   }
   
   private _handlePtyOutput(msg: Messages.PtyOutput): void {
@@ -167,6 +184,15 @@ class ExtratermMainWebUI extends HTMLElement {
         t.terminal.write(msg.data);
       }
     });
+  }
+  
+  private _handlePtyClose(msg: Messages.PtyClose): void {
+    const matches = this._terminalTabs.filter( (t) => t.ptyId === msg.id );
+    if (matches.length === 0) {
+      return;
+    }
+    matches[0].ptyId = null;
+    this.closeTerminalTab(matches[0].id);
   }
   
   //-----------------------------------------------------------------------

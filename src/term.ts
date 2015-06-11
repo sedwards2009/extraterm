@@ -889,7 +889,7 @@ export class Terminal {
     setTimeout(function() {
       self.element.focus();
     }, 100);
-  };
+  }
 
   // XTerm mouse events
   // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
@@ -1247,11 +1247,7 @@ export class Terminal {
   /**
    * Destroy Terminal
    */
-
-  destroy() {
-    var style;  
-    var doc = this.document;
-    
+  destroy(): void {
     if (this._processWriteChunkTimer !== -1) {
       window.clearTimeout(this._processWriteChunkTimer);
       this._processWriteChunkTimer = -1;
@@ -1262,8 +1258,9 @@ export class Terminal {
     }
     
     if (this.physicalScroll) {
-      style = doc.getElementById('term-padding-style' + this._termId);
-      style.remove();
+      const domRoot = getDOMRoot(this.element);
+      const style = domRoot.getElementById('term-padding-style' + this._termId);
+      style.parentNode.removeChild(style);
     }
     this.readable = false;
     this.writable = false;
@@ -1273,8 +1270,7 @@ export class Terminal {
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
     }
-    //this.emit('close');
-  };
+  }
 
   /**
    * Rendering Engine
@@ -1294,7 +1290,7 @@ export class Terminal {
         self._refreshFrame();
       }, immediate ? 0 : REFRESH_DELAY);
     }
-  };
+  }
 
   /**
    * Refresh and update the screen.
@@ -1306,7 +1302,7 @@ export class Terminal {
     this._refreshScrollback();
     this.refreshStart = REFRESH_START_NULL;
     this.refreshEnd = REFRESH_END_NULL;
-  };
+  }
 
   // In the screen buffer, each character
   // is stored as a an array with a character
@@ -1348,7 +1344,7 @@ export class Terminal {
 
       this._getChildDiv(y).innerHTML = this._lineToHTML(line);
     }
-  };
+  }
     
   /**
    * Render a line to a HTML string.
@@ -1467,7 +1463,7 @@ export class Terminal {
       out += '</span>';
     }
     return out;
-  };
+  }
 
   /**
    * Render any pending scrollback lines.
@@ -1528,7 +1524,7 @@ export class Terminal {
       
       this._scrollbackBuffer = [];
     }
-  };
+  }
 
   _cursorBlink() {
     if ( ! this.hasFocus) {
@@ -1536,7 +1532,7 @@ export class Terminal {
     }
     this.cursorState ^= 1;
     this.refresh(this.y, this.y);
-  };
+  }
 
   showCursor() {
     if (!this.cursorState) {
@@ -1546,7 +1542,7 @@ export class Terminal {
       // Temporarily disabled:
       // this.refreshBlink();
     }
-  };
+  }
 
   /**
    * Set cursor blinking on or off.
@@ -1564,7 +1560,7 @@ export class Terminal {
       this.showCursor();
       this.startBlink();
     }
-  };
+  }
 
   startBlink() {
     if (!this.cursorBlink) return;
@@ -1573,13 +1569,13 @@ export class Terminal {
       self._cursorBlink();
     };
     this._blink = setInterval(this._blinker, 500);
-  };
+  }
 
   refreshBlink() {
     if (!this.cursorBlink) return;
     clearInterval(this._blink);
     this._blink = setInterval(this._blinker, 500);
-  };
+  }
 
   scroll() {
     var row;
@@ -1624,18 +1620,18 @@ export class Terminal {
     // this.maxRange();
     this.updateRange(this.scrollTop);
     this.updateRange(this.scrollBottom);
-  };
+  }
 
   // Physical scroll to the bottom.
   scrollToBottom() {
     var newScrollPosition = this.element.scrollHeight - this.element.clientHeight;
     this.element.scrollTop = newScrollPosition;
     this.emit('manual-scroll', { position: newScrollPosition, isBottom: true });
-  };
+  }
 
   isScrollAtBottom() {
     return this.element.scrollTop === this.element.scrollHeight - this.element.clientHeight;
-  };
+  }
 
   scrollDisp(disp) {
     this.ydisp += disp;
@@ -1647,12 +1643,12 @@ export class Terminal {
     }
 
     this.refresh(0, this.rows - 1);
-  };
+  }
 
   write(data) {
     this._writeBuffers.push(data);
     this._scheduleProcessWriteChunk();
-  };
+  }
 
   /**
    * Schedule the write chunk process to run the next time the event loop is entered.
@@ -1666,7 +1662,7 @@ export class Terminal {
         self._processWriteChunkRealTime();
       }, 0);
     }
-  };
+  }
 
   /**
    * Process the next chunk of data to written into a the line array.
@@ -1697,7 +1693,7 @@ export class Terminal {
       }
     }
   //  console.log("---------- _processWriteChunk() end time: " + window.performance.now());
-  };
+  }
 
   /**
    * Process one chunk of written data.

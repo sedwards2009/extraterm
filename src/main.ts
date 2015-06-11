@@ -196,6 +196,10 @@ function handleAsyncIpc(event: any, arg: any): void {
       handlePtyInput(<Messages.PtyInput> msg);
       break;
       
+    case Messages.MessageType.PTY_CLOSE:
+      handlePtyClose(<Messages.PtyClose> msg);
+      break;
+      
     default:
       break;
   }
@@ -232,7 +236,7 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
   const ptyId = ptyCounter;
   ptyMap[ptyId] = term;
   
-  term.on('data', function(data) {
+  term.on('data', (data) => {
     log("pty process got data.");
     log(data);
     
@@ -240,9 +244,13 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
     sender.send(Messages.CHANNEL_NAME, msg);    
   });
 
-  term.on('exit', function() {
+  term.on('exit', () => {
     log("pty process exited.");
-    // process.exit(0);
+    const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
+    sender.send(Messages.CHANNEL_NAME, msg);
+    
+    term.destroy();
+    ptyMap.delete(ptyId);
   });
 
   return ptyId;
@@ -270,6 +278,16 @@ function handlePtyResize(msg: Messages.PtyResize): void {
     return;
   }
   ptyTerminal.resize(msg.columns, msg.rows);  
+}
+
+function handlePtyClose(msg: Messages.PtyClose): void {
+  const ptyTerminal: pty.Terminal = ptyMap[msg.id];
+  if (ptyTerminal === undefined) {
+    log("WARNING: Input arrived for a terminal which doesn't exist.");
+    return;
+  }
+  ptyTerminal.destroy();
+  ptyMap.delete(msg.id);
 }
 
 main();

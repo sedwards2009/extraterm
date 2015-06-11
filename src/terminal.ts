@@ -160,7 +160,10 @@ class EtTerminal extends HTMLElement {
     this._term.debug = true;
     this._term.on('title', this._handleTitle.bind(this));
     this._term.on('data', this._handleTermData.bind(this));
-    this._getWindow().addEventListener('resize', this._handleResize.bind(this));
+    
+    this._handleResize = this._handleResize.bind(this);
+    this._getWindow().addEventListener('resize', this._handleResize);
+    
     this._term.on('key', this._handleKeyDown.bind(this));
     this._term.on('unknown-keydown', this._handleUnknownKeyDown.bind(this));
     this._term.on('manual-scroll', this._handleManualScroll.bind(this));
@@ -173,7 +176,9 @@ class EtTerminal extends HTMLElement {
   
   attachedCallback(): void {
     // Window DOM event handlers
-    this._getWindow().document.body.addEventListener('click', this._handleWindowClick.bind(this));
+    this._handleWindowClick = this._handleWindowClick.bind(this);
+    this._getWindow().document.body.addEventListener('click', this._handleWindowClick);
+    
     this._term.open(this._termContainer);
 
     this._term.element.addEventListener('keypress', this._handleKeyPressTerminal.bind(this));
@@ -192,6 +197,10 @@ class EtTerminal extends HTMLElement {
     this._sendResize(size.cols, size.rows);
     
     this._syncScrolling();
+  }
+  
+  detachedCallback(): void {
+    this.destroy();
   }
   
   private _createClone(): Node {

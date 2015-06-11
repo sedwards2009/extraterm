@@ -96,3 +96,8 @@ export function ptyResize(id: number, columns: number, rows: number): void {
   const msg: Messages.PtyResize = {type: Messages.MessageType.PTY_RESIZE, id: id, columns: columns, rows: rows };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
+
+export function ptyClose(id: number): void {
+  const msg: Messages.PtyClose = {type: Messages.MessageType.PTY_CLOSE, id: id };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
