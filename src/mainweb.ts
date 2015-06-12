@@ -1,11 +1,11 @@
 /**
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
+import sourceMapSupport = require('source-map-support');
 import Config = require('config');
 import Theme = require('./theme');
 import im = require('immutable');
 import _ = require('lodash');
-// import terminal = require('./terminal');
 // import configuredialog = require('./configuredialog');
 // import commandframe = require('commandframe');
 import Messages = require('./windowmessages');
@@ -15,6 +15,13 @@ import CbMenuItem = require('./gui/menuitem');
 import CbDropDown = require('./gui/dropdown');
 import MainWebUi = require('./mainwebui');
 import AboutDialog = require('./aboutdialog');
+
+sourceMapSupport.install();
+
+/**
+ * This module is responsible has control of a window and is responsible for
+ * starting up the main component and handling the window directly.
+ */
 
 let terminalIdCounter = 0;
 // let configureDialog: configuredialog = null;
@@ -67,6 +74,15 @@ export function startUp(): void {
       mainWebUi.config = config;
     }
     doc.body.appendChild(mainWebUi);
+    
+    // Detect when the last tab has closed.
+    mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
+      window.setTimeout( () => {
+        if (mainWebUi.tabCount === 0) {
+          window.close();
+        }
+      }, 0);
+    });
     
     const mainMenu = doc.getElementById('main_menu');
     mainMenu.addEventListener('selected', (ev: CustomEvent) => {
@@ -155,19 +171,6 @@ function handleThemesMessage(msg: Messages.Message): void {
 function setWindowTitle(title: string): void {
   window.document.title = "Extraterm - " + title;
 }
-
-/**
- * 
- */
-// function handlePtyClose(term: terminal.Terminal): void {
-//  destroyTerminal(_.find(terminalList, function(info) { return info.terminal === term; }).id);
-// 
-//  if (terminalList.length !== 0) {
-//    focusTerminal(terminalList[0].id);
-//  } else {
-//    quit();
-//  }
-// }
 
 /**
  * 

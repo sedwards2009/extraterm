@@ -28,7 +28,14 @@ interface TerminalTab {
 
 let terminalIdCounter = 1;
 
+/**
+ * Top level UI component for a normal terminal window
+ *
+ */
 class ExtratermMainWebUI extends HTMLElement {
+  
+  //-----------------------------------------------------------------------
+  // Statics
   
   static init(): void {
     TabWidget.init();
@@ -40,60 +47,26 @@ class ExtratermMainWebUI extends HTMLElement {
     }
   }
   
-  static TAG_NAME: string = 'extraterm-mainwebui';
-
-  set config(config: Config) {
-    console.log("mainwebui.config");
-    this._config = config;
-    this._terminalTabs.forEach( (tab) => {
-      this._setConfigOnTerminal(tab.terminal, config);
-    });    
-  }
-
-  private _setConfigOnTerminal(terminal: EtTerminal, config: Config): void {
-    terminal.blinkingCursor = config.blinkingCursor;
-    terminal.themeCss = "file://" + path.join(config.themePath, "theme.css");
-  }
+  static TAG_NAME = 'extraterm-mainwebui';
   
-  private _config: Config;
-
-  // WARNING: Fields like this will not be initialised automatically.
+  static EVENT_TAB_OPENED = 'tab-opened';
+  
+  static EVENT_TAB_CLOSED = 'tab-closed';
+  
+  //-----------------------------------------------------------------------
+  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _terminalTabs: TerminalTab[];
   
-  
-  private _css() {
-    return `
-    @import '${resourceLoader.toUrl('css/font-awesome.css')}';
-    @import '${resourceLoader.toUrl('css/topcoat-desktop-light.css')}';
-    #${ID_CONTAINER} {
-      position: absolute;
-      top: 2px;
-      bottom: 0;
-      left: 0;
-      right: 0;
-    }    
-    
-    DIV.terminal_holder {
-      height: 100%;
-      width: 100%;
-    }
-    et-terminal {
-      height: 100%;
-      width: 100%;
-    }
-    `;
-  }
-
-  private _html(): string {
-    return `<cb-tabwidget id="${ID_CONTAINER}" show-frame="false">
-        <div id="${ID_REST_DIV}"><content></content></div>
-      </cb-tabwidget>`;
-  }
+  private _config: Config;
   
   private _initProperties(): void {
     this._terminalTabs = [];
   }
+  //-----------------------------------------------------------------------
   
+  /**
+   * Custom element API call back.
+   */
   createdCallback(): void {
     this._initProperties(); // Initialise our properties. The constructor was not called.
     
@@ -104,6 +77,20 @@ class ExtratermMainWebUI extends HTMLElement {
     this._setupIpc();
     
     this.newTerminalTab();
+  }
+
+  destroy(): void {
+  }
+
+  set config(config: Config) {
+    this._config = config;
+    this._terminalTabs.forEach( (tab) => {
+      this._setConfigOnTerminal(tab.terminal, config);
+    });    
+  }
+  
+  get tabCount(): number {
+    return this._terminalTabs.length;
   }
   
   /**
@@ -150,24 +137,75 @@ class ExtratermMainWebUI extends HTMLElement {
       }
     );
     
+    this._sendTabOpenedEvent();
     return newId;
   }
   
-  closeTerminalTab(id: number): void {
-    const matches = this._terminalTabs.filter( (p) => p.id === id );
+  /**
+   *
+   */
+  closeTerminalTab(terminalId: number): void {
+    const matches = this._terminalTabs.filter( (p) => p.id === terminalId );
     if (matches.length === 0) {
       return;
     }
     const tup = matches[0];
     
     // Remove the tab from the list.
-    this._terminalTabs = this._terminalTabs.filter( (p) => p.id !== id );
+    this._terminalTabs = this._terminalTabs.filter( (p) => p.id !== terminalId );
     
     tup.terminalDiv.parentNode.removeChild(tup.terminalDiv);
     tup.cbTab.parentNode.removeChild(tup.cbTab);
     if (tup.ptyId !== null) {
       webipc.ptyClose(tup.ptyId);
     }
+    
+    this._sendTabClosedEvent();
+  }
+
+  //-----------------------------------------------------------------------
+  private _sendTabOpenedEvent(): void {
+    const event = new CustomEvent(ExtratermMainWebUI.EVENT_TAB_OPENED, { detail: null });
+    this.dispatchEvent(event);
+  }
+  
+  private _sendTabClosedEvent(): void {
+    const event = new CustomEvent(ExtratermMainWebUI.EVENT_TAB_CLOSED, { detail: null });
+    this.dispatchEvent(event);    
+  }
+  
+  private _setConfigOnTerminal(terminal: EtTerminal, config: Config): void {
+    terminal.blinkingCursor = config.blinkingCursor;
+    terminal.themeCss = "file://" + path.join(config.themePath, "theme.css");
+  }
+    
+  private _css() {
+    return `
+    @import '${resourceLoader.toUrl('css/font-awesome.css')}';
+    @import '${resourceLoader.toUrl('css/topcoat-desktop-light.css')}';
+    #${ID_CONTAINER} {
+      position: absolute;
+      top: 2px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }    
+    
+    DIV.terminal_holder {
+      height: 100%;
+      width: 100%;
+    }
+    et-terminal {
+      height: 100%;
+      width: 100%;
+    }
+    `;
+  }
+
+  private _html(): string {
+    return `<cb-tabwidget id="${ID_CONTAINER}" show-frame="false">
+        <div id="${ID_REST_DIV}"><content></content></div>
+      </cb-tabwidget>`;
   }
   
   //-----------------------------------------------------------------------
