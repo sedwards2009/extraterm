@@ -170,13 +170,6 @@ function handleThemesMessage(msg: Messages.Message): void {
 // }
 
 /**
- * Set the window title.
- */
-function setWindowTitle(title: string): void {
-  window.document.title = "Extraterm - " + title;
-}
-
-/**
  * 
  */
 // function shiftTab(direction: number): void {

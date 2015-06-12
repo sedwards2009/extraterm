@@ -8,12 +8,9 @@ import _ = require('lodash');
 import commandframe = require('./commandframe');
 import domutils = require('./domutils');
 import termjs = require('./term');
-import child_process = require('child_process');
-import events = require('events');
 import scrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
-
-const EventEmitter = events.EventEmitter;
+import clipboard = require('clipboard');
 
 const debug = true;
 let startTime: number = window.performance.now();
@@ -438,8 +435,18 @@ class EtTerminal extends HTMLElement {
    * Handle an unknown key down event from the term.
    */
   _handleUnknownKeyDown(ev: KeyboardEvent): boolean {
-// FIXME
     // this.events.emit('unknown-keydown', this, ev);
+    if (ev.keyCode === 67 && ev.shiftKey) {
+      // Ctrl+Shift+C
+      this._copyToClipboard();
+      return false;
+      
+    } else if (ev.keyCode === 86 && ev.shiftKey) {
+      // Ctrl+Shift+V
+      this._pasteFromClipboard();
+      return false;  
+    }
+    
     return false;
   }
 
@@ -648,6 +655,28 @@ class EtTerminal extends HTMLElement {
 
     log("html-mode end!",this._htmlData);
     this._htmlData = null;
+  }
+
+  /**
+   * Copy the selection to the clipboard.
+   */
+  private _copyToClipboard(): void {
+    const selection = this.shadowRoot.getSelection();
+    const range = selection.getRangeAt(0);
+    if (range.collapsed) {
+      return;
+    }
+    const text = range.toString();
+    clipboard.writeText(text.replace(/\u00a0/g,' '));
+  }
+
+  /**
+   * Paste text from the clipboard.
+   */
+  private _pasteFromClipboard(): void {
+    const text = clipboard.readText();
+    this.send(text);
+    this._term.scrollToBottom();
   }
 
 // FIXME delete this.
