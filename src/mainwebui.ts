@@ -53,6 +53,8 @@ class ExtratermMainWebUI extends HTMLElement {
   
   static EVENT_TAB_CLOSED = 'tab-closed';
   
+  static EVENT_TITLE = 'title';
+  
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _terminalTabs: TerminalTab[];
@@ -119,16 +121,21 @@ class ExtratermMainWebUI extends HTMLElement {
     containerDiv.insertBefore(newCbTab, restDiv);
     containerDiv.insertBefore(newDiv, restDiv);
     
-    newTerminal.addEventListener(EtTerminal.USER_INPUT_EVENT, (e) => {
+    newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (e) => {
       if (terminalEntry.ptyId !== null) {
         webipc.ptyInput(terminalEntry.ptyId, (<any> e).detail.data);
       }
     });
     
-    newTerminal.addEventListener(EtTerminal.TERMINAL_RESIZE_EVENT, (e) => {
+    newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_RESIZE, (e) => {
       if (terminalEntry.ptyId !== null) {
         webipc.ptyResize(terminalEntry.ptyId, (<any> e).detail.columns, (<any> e).detail.rows);
       }      
+    });
+
+    newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (e: CustomEvent) => {
+      newCbTab.innerText = e.detail.title;
+      this._sendTitleEvent(e.detail.title);
     });
 
     webipc.requestPtyCreate("bash", [], 80, 24, process.env).then(
@@ -174,6 +181,12 @@ class ExtratermMainWebUI extends HTMLElement {
     this.dispatchEvent(event);    
   }
   
+  private _sendTitleEvent(title: string): void {
+    const event = new CustomEvent(ExtratermMainWebUI.EVENT_TITLE, { detail: {title: title} });
+    this.dispatchEvent(event);        
+  }
+   
+  //-----------------------------------------------------------------------
   private _setConfigOnTerminal(terminal: EtTerminal, config: Config): void {
     terminal.blinkingCursor = config.blinkingCursor;
     terminal.themeCss = "file://" + path.join(config.themePath, "theme.css");

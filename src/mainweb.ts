@@ -84,6 +84,10 @@ export function startUp(): void {
       }, 0);
     });
     
+    mainWebUi.addEventListener(MainWebUi.EVENT_TITLE, (ev: CustomEvent) => {
+      window.document.title = "Extraterm - " + ev.detail.title;
+    });
+    
     const mainMenu = doc.getElementById('main_menu');
     mainMenu.addEventListener('selected', (ev: CustomEvent) => {
       switch(ev.detail.name) {

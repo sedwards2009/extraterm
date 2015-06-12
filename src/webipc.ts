@@ -38,7 +38,7 @@ export function registerDefaultHandler(type: Messages.MessageType, handler: Hand
 
 function handleAsyncIpc(event: any, arg: any): void {
   const msg: Messages.Message = event;
-console.log("IPC incoming: ", msg);
+// console.log("IPC incoming: ", msg);
 
   const matchingPromises = promiseQueue.filter( p => p.messageType === msg.type );
   const nonMatchingPromises = promiseQueue.filter( p => p.messageType !== msg.type );

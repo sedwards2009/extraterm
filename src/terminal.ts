@@ -57,11 +57,16 @@ const enum ApplicationMode {
  */
 class EtTerminal extends HTMLElement {
   
-  static TAG_NAME: string = "et-terminal";
+  //-----------------------------------------------------------------------
+  // Statics
   
-  static USER_INPUT_EVENT: string = "user-input";
+  static TAG_NAME = "et-terminal";
   
-  static TERMINAL_RESIZE_EVENT: string = "terminal-resize";  
+  static EVENT_USER_INPUT = "user-input";
+  
+  static EVENT_TERMINAL_RESIZE = "terminal-resize";
+  
+  static EVENT_TITLE = "title";
   
   /**
    * 
@@ -75,6 +80,7 @@ class EtTerminal extends HTMLElement {
     }
   }
   
+  //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
   private _container: HTMLDivElement;
   private _scrollbar: scrollbar;
@@ -89,29 +95,9 @@ class EtTerminal extends HTMLElement {
   private _bracketStyle: string;
   private _lastBashBracket: string;
   
-  /**
-   * Blinking cursor
-   * 
-   * True means the cursor should blink, otherwise it doesn't.
-   */
-  set blinkingCursor(blink: boolean) {
-    this._blinkingCursor = blink;
-    if (this._term !== null) {
-      this._term.setCursorBlink(blink);
-    }
-  }
-  
-  set themeCss(path: string) {
-    const themeTag = <HTMLStyleElement> util.getShadowId(this, THEME_TAG);
-    console.log("Setting theme css ",path);
-    themeTag.innerHTML = "@import '" + path + "';";
-  }
-  
   private _blinkingCursor: boolean;
   private _title: string;
   private _super_lineToHTML: (line: any[]) => string;
-  
-  events: NodeJS.EventEmitter;
   
   private _tagCounter: number;
   
@@ -125,10 +111,10 @@ class EtTerminal extends HTMLElement {
     this._lastBashBracket = null;
     this._blinkingCursor = false;
     this._title = "New Tab";
-    this.events = new EventEmitter();
     this._tagCounter = 0;    
   }
   
+  //-----------------------------------------------------------------------
   createdCallback(): void {
     this._initProperties();
     const shadow = util.createShadowRoot(this);
@@ -194,7 +180,7 @@ class EtTerminal extends HTMLElement {
     });
     
     const size = this._term.resizeToContainer();
-    this._sendResize(size.cols, size.rows);
+    this._sendResizeEvent(size.cols, size.rows);
     
     this._syncScrolling();
   }
@@ -202,6 +188,24 @@ class EtTerminal extends HTMLElement {
   detachedCallback(): void {
     this.destroy();
   }
+  
+  /**
+   * Blinking cursor
+   * 
+   * True means the cursor should blink, otherwise it doesn't.
+   */
+  set blinkingCursor(blink: boolean) {
+    this._blinkingCursor = blink;
+    if (this._term !== null) {
+      this._term.setCursorBlink(blink);
+    }
+  }
+  
+  set themeCss(path: string) {
+    const themeTag = <HTMLStyleElement> util.getShadowId(this, THEME_TAG);
+    console.log("Setting theme css ",path);
+    themeTag.innerHTML = "@import '" + path + "';";
+  }  
   
   private _createClone(): Node {
     let template = <HTMLTemplate>window.document.getElementById(ID);
@@ -395,7 +399,7 @@ class EtTerminal extends HTMLElement {
    */
   send(text: string): void {
     if (this._term !== null) {
-      this._sendDataToPty(text);
+      this._sendDataToPtyEvent(text);
     }
   }
   
@@ -413,7 +417,7 @@ class EtTerminal extends HTMLElement {
    */
   _handleTitle(title: string): void {
     this._title = title;
-    this.events.emit('title', this, title);
+    this._sendTitleEvent(title);
   }
   
   /**
@@ -421,7 +425,7 @@ class EtTerminal extends HTMLElement {
    */
   _handleResize(): void {
     var size = this._term.resizeToContainer();
-    this._sendResize(size.cols, size.rows);
+    this._sendResizeEvent(size.cols, size.rows);
   }
 
   _handleKeyDown(key: string, ev: KeyboardEvent): void {
@@ -434,7 +438,8 @@ class EtTerminal extends HTMLElement {
    * Handle an unknown key down event from the term.
    */
   _handleUnknownKeyDown(ev: KeyboardEvent): boolean {
-    this.events.emit('unknown-keydown', this, ev);
+// FIXME
+    // this.events.emit('unknown-keydown', this, ev);
     return false;
   }
 
@@ -591,10 +596,10 @@ class EtTerminal extends HTMLElement {
         //   var clipboard = gui.Clipboard.get();
         //   clipboard.set(ev.detail, 'text');
         // }).bind(this));
-
-        el.addEventListener('frame-pop-out', (ev: CustomEvent): void => {
-          this.events.emit('frame-pop-out', this, ev.detail);
-        });
+// FIXME
+        // el.addEventListener('frame-pop-out', (ev: CustomEvent): void => {
+        //   this.events.emit('frame-pop-out', this, ev.detail);
+        // });
         
         var cleancommand = this._htmlData;
         if (this._bracketStyle === "bash") {
@@ -688,23 +693,13 @@ class EtTerminal extends HTMLElement {
   }
 
   /**
-   * Handle a pty close event.
-   * 
-   * @param {string} data
-   */
-  _handlePtyClose(data: string): void {
-    // this._ptyBridge = null;
-    this.events.emit('ptyclose', this);
-  }
-  
-  /**
    * Handle data coming from the user.
    * 
    * This just pushes the keys from the user through to the pty.
    * @param {string} data The data to process.
    */
   _handleTermData(data: string): void {
-    this._sendDataToPty(data);
+    this._sendDataToPtyEvent(data);
   }
 
   /**
@@ -712,8 +707,8 @@ class EtTerminal extends HTMLElement {
    * 
    * @param {string} text
    */
-  _sendDataToPty(text: string): void {
-    const event = new CustomEvent(EtTerminal.USER_INPUT_EVENT, { detail: {data: text } });
+  _sendDataToPtyEvent(text: string): void {
+    const event = new CustomEvent(EtTerminal.EVENT_USER_INPUT, { detail: {data: text } });
     this.dispatchEvent(event);
   }
 
@@ -723,8 +718,13 @@ class EtTerminal extends HTMLElement {
    * @param {number} cols The new number of columns in the terminal.
    * @param {number} rows The new number of rows in the terminal.
    */
-  _sendResize(cols: number, rows: number, callback?: Function): void {
-    const event = new CustomEvent(EtTerminal.TERMINAL_RESIZE_EVENT, { detail: {columns: cols, rows: rows } });
+  _sendResizeEvent(cols: number, rows: number, callback?: Function): void {
+    const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_RESIZE, { detail: {columns: cols, rows: rows } });
+    this.dispatchEvent(event);    
+  }
+
+  _sendTitleEvent(title: string): void {
+    const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
     this.dispatchEvent(event);    
   }
     
@@ -781,13 +781,13 @@ class EtTerminal extends HTMLElement {
     let encodedData: string = "";
     lines.forEach( (line: string) => {
       encodedData = Base64.encode(line +"\n");
-      this._sendDataToPty(encodedData+"\n");
+      this._sendDataToPtyEvent(encodedData+"\n");
     });
       
-    this._sendDataToPty("\x04");
+    this._sendDataToPtyEvent("\x04");
     
     if (encodedData.length !== 0) {
-      this._sendDataToPty("\x04");
+      this._sendDataToPtyEvent("\x04");
     }
   }
 
@@ -810,7 +810,7 @@ class EtTerminal extends HTMLElement {
    */
   _handleMineTypeClick(type: string, value: string): void {
     if (type === "directory") {
-      this._sendDataToPty("cd " + value + "\n"); // FIXME escaping
+      this._sendDataToPtyEvent("cd " + value + "\n"); // FIXME escaping
     }
   }
   
