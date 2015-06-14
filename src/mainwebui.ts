@@ -85,6 +85,7 @@ class ExtratermMainWebUI extends HTMLElement {
       const tup = this._terminalTabs[tabWidget.currentIndex];
       this._sendTitleEvent(tup.terminal.terminalTitle);
       tup.terminal.resizeToContainer();
+      tup.terminal.focus();
     });
     
     this._setupIpc();
