@@ -18,6 +18,8 @@ let registered = false;
  */
 class CbTabWidget extends HTMLElement {
   
+  //-----------------------------------------------------------------------
+  // Statics
   static TAG_NAME = "cb-tabwidget";
   
   static init(): void {
@@ -27,7 +29,35 @@ class CbTabWidget extends HTMLElement {
     }
   }
   
+  static EVENT_TAB_SWITCH = "tab-switch";
+  
+  //-----------------------------------------------------------------------
+  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _mutationObserver: MutationObserver;
+  
+  private _initProperties(): void {
+    this._mutationObserver = null;  
+  }
+  
+  //-----------------------------------------------------------------------
+  /**
+   * 
+   */
+  createdCallback() {
+    this._initProperties();
+    const shadow = util.createShadowRoot(this);
+    const clone = this.createClone();
+    shadow.appendChild(clone);
+    
+    this.createTabHolders();
+    this.currentIndex = 0;
+    this._showFrame(this.showFrame);
+    
+    this._mutationObserver = new MutationObserver( (mutations) => {
+      this.createTabHolders();
+    });
+    this._mutationObserver.observe(this, { childList: true });
+  }
   
   /**
    * 
@@ -179,28 +209,10 @@ DIV.show_frame > #tabbar {
     return <CbStackedWidget> this.__getById('contentsstack');
   }
   
-  /**
-   * 
-   */
-  createdCallback() {
-    const shadow = util.createShadowRoot(this);
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    
-    this.createTabHolders();
-    this.currentIndex = 0;
-    this._showFrame(this.showFrame);
-    
-    this._mutationObserver = new MutationObserver( (mutations) => {
-      this.createTabHolders();
-    });
-    this._mutationObserver.observe(this, { childList: true });
-  }
-  
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     switch (attrName) {
       case ATTR_SHOW_FRAME:
-        this._showFrame(toBoolean(newValue));
+        this._showFrame(util.toBoolean(newValue));
         break;
         
       default:
@@ -294,8 +306,14 @@ DIV.show_frame > #tabbar {
   }
   
   set currentIndex(index: number) {
+    if (this._getContentsStack().currentIndex === index) {
+      return;
+    }
+    
     this._getContentsStack().currentIndex = index;
     this._showTab(index);
+console.log("index changed");    
+    util.doLater(this._sendSwitchEvent.bind(this));
   }
   
   get currentIndex(): number {
@@ -308,7 +326,7 @@ DIV.show_frame > #tabbar {
   
   get showFrame(): boolean {
     if (this.hasAttribute(ATTR_SHOW_FRAME)) {
-      return toBoolean(this.getAttribute(ATTR_SHOW_FRAME));
+      return util.toBoolean(this.getAttribute(ATTR_SHOW_FRAME));
     } else {
       return true;
     }
@@ -336,28 +354,13 @@ DIV.show_frame > #tabbar {
         }
       }
     }
-  }  
-}
-/**
- * Parse a string as a boolean value
- * 
- * @param  value string to parse
- * @return the boolean value or false if it could not be parsed
- */
-function toBoolean(value: any): boolean {
-  if (value === true || value === false) {
-    return value;
   }
-  if (value === 0) {
-    return false;
+  
+  _sendSwitchEvent(): void {
+    console.log("tab widget _sendSwitchEvent");
+    const event = new CustomEvent(CbTabWidget.EVENT_TAB_SWITCH, { detail: null });
+    this.dispatchEvent(event);
   }
-  if (value === 'true') {
-    return true;
-  }
-  if (value === 'false') {
-    return false;
-  }
-  return Boolean(value);
 }
 
 export = CbTabWidget;

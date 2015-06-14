@@ -26,8 +26,6 @@ sourceMapSupport.install();
 let terminalIdCounter = 0;
 // let configureDialog: configuredialog = null;
 let config: Config = null;
-// let terminalList: TerminalTab[] = [];  // -> {id, terminal, terminaltab, tabheader};
-// let focusedTerminalInfo: TerminalTab = null;
 // let frameMapping: im.Map<string, commandframe> = im.Map<string, commandframe>();
 
 let themes: im.Map<string, Theme>;
@@ -58,7 +56,7 @@ export function startUp(): void {
     MainWebUi.init();
     mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
-      <button class="topcoat-icon-button--quiet">
+      <button class="topcoat-icon-button--quiet" id="new_tab_button">
         <i class="fa fa-plus"></i>
       </button>
       <div class="space"></div>
@@ -84,6 +82,7 @@ export function startUp(): void {
       }, 0);
     });
     
+    // Update the window title on request.
     mainWebUi.addEventListener(MainWebUi.EVENT_TITLE, (ev: CustomEvent) => {
       window.document.title = "Extraterm - " + ev.detail.title;
     });
@@ -108,6 +107,11 @@ export function startUp(): void {
           
           break;
       }
+    });
+    
+    const newTabButton = <HTMLButtonElement> document.getElementById('new_tab_button');
+    newTabButton.addEventListener('click', () => {
+      mainWebUi.focusTerminalTab(mainWebUi.newTerminalTab());
     });
     
   });
@@ -216,67 +220,11 @@ function handleThemesMessage(msg: Messages.Message): void {
 //   }
 // }
 
-/**
- * Copy the selection to the clipboard.
- */
-//function copyToClipboard(): void {
-//  var selection = window.getSelection();
-//  var range = selection.getRangeAt(0);
-//  if (range.collapsed) {
-//    return;
-//  }
-//  var text = range.toString();
-//  var clipboard = gui.Clipboard.get();
-//  clipboard.set(text.replace(/\u00a0/g,' '), 'text');
-//}
-
-/**
- * Paste text from the clipboard.
- */
-//function pasteFromClipboard(): void {
-//  var clipboard = gui.Clipboard.get();
-//  var text = clipboard.get();
-//  focusedTerminalInfo.terminal.send(text);
-//  focusedTerminalInfo.terminal.scrollToBottom();
-//}
-
-/**
- * 
- */
-// function handleTitle(term: terminal.Terminal, title: string): void {
-//   var info = _.find(terminalList, function(info) { return info.terminal === term; });
-//   var header = info.tabheader;
-//   header.innerText = title;
-//   header.setAttribute('title',title);
-//   if (info === focusedTerminalInfo) {
-//     setWindowTitle(title);
-//   }
-// }
-
 //function handleFramePopOut(term: terminal.Terminal, frameElement: HTMLElement): void {
 //  console.log("Got frame pop out message.");
 //  var frame = <commandframe>frameElement;
 //  frameMapping = frameMapping.set(frame.tag, frame);
 //  gui.Window.open("frame.html?frametag="+ frame.tag, { position: "mouse", width: 512, height: 512 });
-//}
-
-/**
- * 
- */
-//function destroyTerminal(id: number): void {
-//  var i = _.findIndex(terminalList, (item) => item.id === id);
-//  var info = terminalList[i];
-//  info.terminal.destroy();
-//  info.terminaltab.remove();
-//  info.tabheader.remove();
-//  terminalList.splice(i, 1);
-//}
-
-/**
- * Quit the application.
- */
-//function quit(): void {
-//  window.close();
 //}
 
 /**

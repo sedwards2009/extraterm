@@ -63,7 +63,9 @@ class ExtratermMainWebUI extends HTMLElement {
   
   private _initProperties(): void {
     this._terminalTabs = [];
+    this._config = null;
   }
+  
   //-----------------------------------------------------------------------
   
   /**
@@ -75,6 +77,15 @@ class ExtratermMainWebUI extends HTMLElement {
     var shadow = util.createShadowRoot(this);
     var clone = this._createClone();
     shadow.appendChild(clone);
+    
+    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+    
+    // Update the window title when the selected tab changes and resize the terminal.
+    tabWidget.addEventListener(TabWidget.EVENT_TAB_SWITCH, (e) => {
+      const tup = this._terminalTabs[tabWidget.currentIndex];
+      this._sendTitleEvent(tup.terminal.terminalTitle);
+      tup.terminal.resizeToContainer();
+    });
     
     this._setupIpc();
     
@@ -117,9 +128,9 @@ class ExtratermMainWebUI extends HTMLElement {
     this._terminalTabs.push(terminalEntry);
     
     const restDiv = this._getById(ID_REST_DIV);
-    const containerDiv = this._getById(ID_CONTAINER);
-    containerDiv.insertBefore(newCbTab, restDiv);
-    containerDiv.insertBefore(newDiv, restDiv);
+    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+    tabWidget.insertBefore(newCbTab, restDiv);
+    tabWidget.insertBefore(newDiv, restDiv);
     
     newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (e) => {
       if (terminalEntry.ptyId !== null) {
@@ -138,6 +149,10 @@ class ExtratermMainWebUI extends HTMLElement {
       this._sendTitleEvent(e.detail.title);
     });
 
+    if (this._config !== null) {
+      this._setConfigOnTerminal(newTerminal, this._config);
+    }
+    
     webipc.requestPtyCreate("bash", [], 80, 24, process.env).then(
       (msg: Messages.CreatedPtyMessage) => {
         terminalEntry.ptyId = msg.id;
@@ -169,7 +184,11 @@ class ExtratermMainWebUI extends HTMLElement {
     
     this._sendTabClosedEvent();
   }
-
+  
+  focusTerminalTab(terminalId: number): void {
+    
+  }
+  
   //-----------------------------------------------------------------------
   private _sendTabOpenedEvent(): void {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_TAB_OPENED, { detail: null });

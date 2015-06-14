@@ -28,7 +28,7 @@
  *   The original design remains. The terminal itself
  *   has been extended to include xterm CSI codes, among
  *   other features.
- 
+ *
  * Forked again from Christopher Jeffrey's work by Simon Edwards in 2014 and
  * converted over to TypeScript.
  */
@@ -511,7 +511,6 @@ export class Terminal {
    * see part of the scrollback cut off and just above the top row of your editor.
    */
   _initLastLinePadding(): void {
-    console.log("_initLastLinePadding");
     const style = this.document.createElement('style');
     style.id = 'term-padding-style' + this._termId;
 
@@ -1314,7 +1313,7 @@ export class Terminal {
   // Next 14 bits: a mask for misc. flags:
   //   1=bold, 2=underline, 4=blink, 8=inverse, 16=invisible
 
-  refresh(start, end) {
+  refresh(start, end): void {
     var x;
     var y;
     var line;
@@ -1323,7 +1322,7 @@ export class Terminal {
       this.log('`end` is too large. Most likely a bad CSR.');
       end = this.lines.length - 1;
     }
-
+    
     for (y = start; y <= end; y++) {
       row = y + this.ydisp;
       line = this._getLine(row);
@@ -3130,42 +3129,36 @@ export class Terminal {
     if (this.popOnBell) this.focus();
   }
 
-  log(...args: string[]): void {
+  log(...args: any[]): void {
     if (!this.debug) return;
     if (!this.context.console || !this.context.console.log) return;
-    this.context.console.log.apply(this.context.console, args);
-  };
+    this.context.console.log.apply(this.context.console, ["[TERM=",this._termId,"] ", ...args]);
+  }
 
   error(...args: string[]): void {
     if (!this.debug) return;
     if (!this.context.console || !this.context.console.error) return;
     this.context.console.error.apply(this.context.console, args);
-  };
+  }
 
-  resize(newcols, newrows) {
-    var line;
-    var el;
-    var i;
-    var j;
-    var ch;
-
+  resize(newcols: number, newrows: number): void {
     newcols = Math.max(newcols, 1);
     newrows = Math.max(newrows, 1);
-
+    
     // resize cols
     if (this.cols < newcols) {
       // Add chars to the lines to match the new (bigger) cols value.
-      ch = [this.defAttr, ' ']; // does xterm use the default attr?
-      for (i = this.lines.length-1; i >= 0; i--) {
-        line = this.lines[i];
+      const ch = [this.defAttr, ' ']; // does xterm use the default attr?
+      for (let i = this.lines.length-1; i >= 0; i--) {
+        const line = this.lines[i];
         while (line.length < newcols) {
           line.push(ch);
         }
       }
     } else if (this.cols > newcols) {
       // Remove chars from the lines to match the new (smaller) cols value.
-      for (i = this.lines.length-1; i >= 0; i--) {
-        line = this.lines[i];
+      for (let i = this.lines.length-1; i >= 0; i--) {
+        const line = this.lines[i];
         while (line.length > newcols) {
           line.pop();
         }
@@ -3178,13 +3171,13 @@ export class Terminal {
     if (this.rows < newrows) {
       // Add new rows to match the new bigger rows value.
       if ( !this.physicalScroll) {
-        el = this.element;
-        for (j = this.rows; j < newrows; j++) {
+        const el = this.element;
+        for (let j = this.rows; j < newrows; j++) {
           if (this.lines.length < newrows + this.ybase) {
             this.lines.push(this.blankLine());
           }
           if (this.children.length < newrows) {
-            line = this.document.createElement('div');
+            const line = this.document.createElement('div');
             el.appendChild(line);
             this.children.push(line);
           }
@@ -3197,7 +3190,7 @@ export class Terminal {
       }
       
       while (this.children.length > newrows) {
-        el = this.children.pop();
+        const el = this.children.pop();
         el.parentNode.removeChild(el);
       }
     }
@@ -3221,32 +3214,30 @@ export class Terminal {
     // screen buffer. just set it
     // to null for now.
     this.normal = null;
-  };
+  }
 
   /**
    * Resize the terminal to fill its containing element.
    * 
    * @returns Object with the new colums (cols field) and rows (rows field) information.
    */
-  resizeToContainer() {
-    var rect;
-    var charWidth;
-    var charHeight;
-    var newCols;
-    var newRows;
-    var range;
-    var lineEl = this.children[0];
-    var computedStyle;
-    var width;
+  resizeToContainer(): {cols: number; rows: number; } {
+    const lineEl = this.children[0];
     
-    range = this.document.createRange();
+    const range = this.document.createRange();
     range.setStart(lineEl, 0);
     range.setEnd(lineEl, lineEl.childNodes.length);
     
-    rect = range.getBoundingClientRect();
+    const rect = range.getBoundingClientRect();
     
-    charWidth = rect.width / this.cols;
-    charHeight = rect.height;
+    if (rect.width === 0 || rect.height === 0) {
+      // The containing element has an invalid size.
+      return {cols: this.cols, rows: this.rows};
+    }
+    
+this.log("resizeToContainer() rect=",rect);    
+    const charWidth = rect.width / this.cols;
+    const charHeight = rect.height;
       
     this.charHeight = charHeight;
     
@@ -3256,16 +3247,18 @@ export class Terminal {
       }
       return parseInt(value.slice(0,-2),10);
     }  
-    computedStyle = window.getComputedStyle(lineEl);
-    width = this.element.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
+    const computedStyle = window.getComputedStyle(lineEl);
+    const width = this.element.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
     
-    newCols = Math.floor(width / charWidth);
-    newRows = Math.floor(this.element.clientHeight / charHeight);
-
-    this.resize(newCols, newRows);
-    this._setLastLinePadding(Math.floor(this.element.clientHeight % charHeight));
+    const newCols = Math.floor(width / charWidth);
+    const newRows = Math.floor(this.element.clientHeight / charHeight);
+    
+    if (newCols !== this.cols || newRows !== this.rows) {
+      this.resize(newCols, newRows);
+      this._setLastLinePadding(Math.floor(this.element.clientHeight % charHeight));
+    }
     return {cols: newCols, rows: newRows};
-  };
+  }
 
   updateRange(y) {
     if (y < this.refreshStart) this.refreshStart = y;
@@ -3276,12 +3269,12 @@ export class Terminal {
     //     this.refreshEnd = this.rows - 1;
     //   }
     // }
-  };
+  }
 
   maxRange() {
     this.refreshStart = 0;
     this.refreshEnd = this.rows - 1;
-  };
+  }
 
   setupStops(i?: number): void {
     if (i !== undefined && i !== null) {
@@ -3296,19 +3289,19 @@ export class Terminal {
     for (; i < this.cols; i += 8) {
       this.tabs[i] = true;
     }
-  };
+  }
 
   prevStop(x?) {
     if (x === undefined) x = this.x;
     while (!this.tabs[--x] && x > 0);
     return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
-  };
+  }
 
   nextStop(x?) {
     if (x === undefined) x = this.x;
     while (!this.tabs[++x] && x < this.cols);
     return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
-  };
+  }
 
   eraseRight(x, y) {
     var line = this._getLine(this.ybase + y);
@@ -4034,7 +4027,7 @@ export class Terminal {
     if (this.y >= this.rows) {
       this.y = this.rows - 1;
     }
-  };
+  }
 
   // CSI Ps ; Ps f
   //   Horizontal and Vertical Position [row;column] (default =
@@ -4052,7 +4045,7 @@ export class Terminal {
     if (this.x >= this.cols) {
       this.x = this.cols - 1;
     }
-  };
+  }
 
   // CSI Pm h  Set Mode (SM).
   //     Ps = 2  -> Keyboard Action Mode (AM).
@@ -4260,7 +4253,7 @@ export class Terminal {
           break;
       }
     }
-  };
+  }
 
   // CSI Pm l  Reset Mode (RM).
   //     Ps = 2  -> Keyboard Action Mode (AM).
@@ -4444,7 +4437,7 @@ export class Terminal {
           break;
       }
     }
-  };
+  }
 
   // CSI Ps ; Ps r
   //   Set Scrolling Region [top;bottom] (default = full size of win-
@@ -4495,7 +4488,7 @@ export class Terminal {
     // this.maxRange();
     this.updateRange(this.scrollTop);
     this.updateRange(this.scrollBottom);
-  };
+  }
 
   // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
   scrollDown(params) {
@@ -4507,7 +4500,7 @@ export class Terminal {
     // this.maxRange();
     this.updateRange(this.scrollTop);
     this.updateRange(this.scrollBottom);
-  };
+  }
 
   // CSI Ps ; Ps ; Ps ; Ps ; Ps T
   //   Initiate highlight mouse tracking.  Parameters are
@@ -4515,7 +4508,7 @@ export class Terminal {
   //   Tracking.
   initMouseTracking(params) {
     // Relevant: DECSET 1001
-  };
+  }
 
   // CSI > Ps; Ps T
   //   Reset one or more features of the title modes to the default
@@ -4529,7 +4522,7 @@ export class Terminal {
   //     Ps = 3  -> Do not query window/icon labels using UTF-8.
   //   (See discussion of "Title Modes").
   resetTitleModes(params) {
-  };
+  }
 
   // CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
   cursorBackwardTab(params) {
@@ -4537,7 +4530,7 @@ export class Terminal {
     while (param--) {
       this.x = this.prevStop();
     }
-  };
+  }
 
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
   repeatPrecedingCharacter(params) {
@@ -4549,7 +4542,7 @@ export class Terminal {
       line[this.x] = ch;
       this.x++;
     }
-  };
+  }
 
   // CSI Ps g  Tab Clear (TBC).
   //     Ps = 0  -> Clear Current Column (default).
@@ -4564,7 +4557,7 @@ export class Terminal {
     } else if (param === 3) {
       this.tabs = {};
     }
-  };
+  }
 
   // CSI Pm i  Media Copy (MC).
   //     Ps = 0  -> Print screen (default).
@@ -4578,7 +4571,7 @@ export class Terminal {
   //     Ps = 1  0  -> Print composed display, ignores DECPEX.
   //     Ps = 1  1  -> Print all pages.
   mediaCopy(params) {
-  };
+  }
 
   // CSI > Ps; Ps m
   //   Set or reset resource-values used by xterm to decide whether
@@ -4593,7 +4586,7 @@ export class Terminal {
   //   If no parameters are given, all resources are reset to their
   //   initial values.
   setResources(params) {
-  };
+  }
 
   // CSI > Ps n
   //   Disable modifiers which may be enabled via the CSI > Ps; Ps m
@@ -4609,7 +4602,7 @@ export class Terminal {
   //   adding a parameter to each function key to denote the modi-
   //   fiers.
   disableModifiers(params) {
-  };
+  }
 
   // CSI > Ps p
   //   Set resource value pointerMode.  This is used by xterm to
@@ -4620,7 +4613,7 @@ export class Terminal {
   //     Ps = 2  -> always hide the pointer.  If no parameter is
   //     given, xterm uses the default, which is 1 .
   setPointerMode(params) {
-  };
+  }
 
   // CSI ! p   Soft terminal reset (DECSTR).
   // http://vt100.net/docs/vt220-rm/table4-10.html
@@ -4638,7 +4631,7 @@ export class Terminal {
     this.charset = null;
     this.glevel = 0; // ??
     this.charsets = [null]; // ??
-  };
+  }
 
   // CSI Ps$ p
   //   Request ANSI mode (DECRQM).  For VT300 and up, reply is
@@ -4651,7 +4644,7 @@ export class Terminal {
   //     3 - permanently set
   //     4 - permanently reset
   requestAnsiMode(params) {
-  };
+  }
 
   // CSI ? Ps$ p
   //   Request DEC private mode (DECRQM).  For VT300 and up, reply is
@@ -4659,7 +4652,7 @@ export class Terminal {
   //   where Ps is the mode number as in DECSET, Pm is the mode value
   //   as in the ANSI DECRQM.
   requestPrivateMode(params) {
-  };
+  }
 
   // CSI Ps ; Ps " p
   //   Set conformance level (DECSCL).  Valid values for the first
@@ -4672,7 +4665,7 @@ export class Terminal {
   //     Ps = 1  -> 7-bit controls (always set for VT100).
   //     Ps = 2  -> 8-bit controls.
   setConformanceLevel(params) {
-  };
+  }
 
   // CSI Ps q  Load LEDs (DECLL).
   //     Ps = 0  -> Clear all LEDS (default).
@@ -4683,7 +4676,7 @@ export class Terminal {
   //     Ps = 2  2  -> Extinguish Caps Lock.
   //     Ps = 2  3  -> Extinguish Scroll Lock.
   loadLEDs(params) {
-  };
+  }
 
   // CSI Ps SP q
   //   Set cursor style (DECSCUSR, VT520).
@@ -4693,7 +4686,7 @@ export class Terminal {
   //     Ps = 3  -> blinking underline.
   //     Ps = 4  -> steady underline.
   setCursorStyle(params) {
-  };
+  }
 
   // CSI Ps " q
   //   Select character protection attribute (DECSCA).  Valid values
@@ -4702,13 +4695,13 @@ export class Terminal {
   //     Ps = 1  -> DECSED and DECSEL cannot erase.
   //     Ps = 2  -> DECSED and DECSEL can erase.
   setCharProtectionAttr(params) {
-  };
+  }
 
   // CSI ? Pm r
   //   Restore DEC Private Mode Values.  The value of Ps previously
   //   saved is restored.  Ps values are the same as for DECSET.
   restorePrivateValues(params) {
-  };
+  }
 
   // CSI Pt; Pl; Pb; Pr; Ps$ r
   //   Change Attributes in Rectangular Area (DECCARA), VT400 and up.
@@ -4735,13 +4728,13 @@ export class Terminal {
     // this.maxRange();
     this.updateRange(params[0]);
     this.updateRange(params[2]);
-  };
+  }
 
   // CSI ? Pm s
   //   Save DEC Private Mode Values.  Ps values are the same as for
   //   DECSET.
   savePrivateValues(params) {
-  };
+  }
 
   // CSI Ps ; Ps ; Ps t
   //   Window manipulation (from dtterm, as well as extensions).
@@ -4790,7 +4783,7 @@ export class Terminal {
   //     Ps = 2 3  ;  2  -> Restore xterm window title from stack.
   //     Ps >= 2 4  -> Resize to Ps lines (DECSLPP).
   manipulateWindow(params) {
-  };
+  }
 
   // CSI Pt; Pl; Pb; Pr; Ps$ t
   //   Reverse Attributes in Rectangular Area (DECRARA), VT400 and
@@ -4799,7 +4792,7 @@ export class Terminal {
   //     Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
   // NOTE: xterm doesn't enable this code by default.
   reverseAttrInRectangle(params) {
-  };
+  }
 
   // CSI > Ps; Ps t
   //   Set one or more features of the title modes.  Each parameter
@@ -4810,7 +4803,7 @@ export class Terminal {
   //     Ps = 3  -> Query window/icon labels using UTF-8.  (See dis-
   //     cussion of "Title Modes")
   setTitleModeFeature(params) {
-  };
+  }
 
   // CSI Ps SP t
   //   Set warning-bell volume (DECSWBV, VT520).
@@ -4818,7 +4811,7 @@ export class Terminal {
   //     Ps = 2 , 3  or 4  -> low.
   //     Ps = 5 , 6 , 7 , or 8  -> high.
   setWarningBellVolume(params) {
-  };
+  }
 
   // CSI Ps SP u
   //   Set margin-bell volume (DECSMBV, VT520).
@@ -4826,7 +4819,7 @@ export class Terminal {
   //     Ps = 2 , 3  or 4  -> low.
   //     Ps = 0 , 5 , 6 , 7 , or 8  -> high.
   setMarginBellVolume(params) {
-  };
+  }
 
   // CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
   //   Copy Rectangular Area (DECCRA, VT400 and up).
@@ -4836,7 +4829,7 @@ export class Terminal {
   //     Pp denotes the target page.
   // NOTE: xterm doesn't enable this code by default.
   copyRectangle(params) {
-  };
+  }
 
   // CSI Pt ; Pl ; Pb ; Pr ' w
   //   Enable Filter Rectangle (DECEFR), VT420 and up.
@@ -4850,7 +4843,7 @@ export class Terminal {
   //   ted, any locator motion will be reported.  DECELR always can-
   //   cels any prevous rectangle definition.
   enableFilterRectangle(params) {
-  };
+  }
 
   // CSI Ps x  Request Terminal Parameters (DECREQTPARM).
   //   if Ps is a "0" (default) or "1", and xterm is emulating VT100,
@@ -4864,14 +4857,14 @@ export class Terminal {
   //     Pn = 1  <- clock multiplier.
   //     Pn = 0  <- STP flags.
   requestParameters(params) {
-  };
+  }
 
   // CSI Ps x  Select Attribute Change Extent (DECSACE).
   //     Ps = 0  -> from start to end position, wrapped.
   //     Ps = 1  -> from start to end position, wrapped.
   //     Ps = 2  -> rectangle (exact).
   selectChangeExtent(params) {
-  };
+  }
 
   // CSI Pc; Pt; Pl; Pb; Pr$ x
   //   Fill Rectangular Area (DECFRA), VT420 and up.
@@ -4898,7 +4891,7 @@ export class Terminal {
     // this.maxRange();
     this.updateRange(params[1]);
     this.updateRange(params[3]);
-  };
+  }
 
   // CSI Ps ; Pu ' z
   //   Enable Locator Reporting (DECELR).
@@ -4916,7 +4909,7 @@ export class Terminal {
   //  var val = params[0] > 0;
     //this.mouseEvents = val;
     //this.decLocator = val;
-  };
+  }
 
   // CSI Pt; Pl; Pb; Pr$ z
   //   Erase Rectangular Area (DECERA), VT400 and up.
@@ -4944,7 +4937,7 @@ export class Terminal {
     // this.maxRange();
     this.updateRange(params[0]);
     this.updateRange(params[2]);
-  };
+  }
 
   // CSI Pm ' {
   //   Select Locator Events (DECSLE).
@@ -5160,8 +5153,8 @@ export class Terminal {
   listeners(type) {
     return this._events[type] !== undefined ? this._events[type] : [];
   }
-  /*************************************************************************/
   
+  /*************************************************************************/
 }
 
 /**

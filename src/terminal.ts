@@ -112,6 +112,7 @@ class EtTerminal extends HTMLElement {
   }
   
   //-----------------------------------------------------------------------
+  // Public members.
   createdCallback(): void {
     this._initProperties();
     const shadow = util.createShadowRoot(this);
@@ -133,7 +134,8 @@ class EtTerminal extends HTMLElement {
       scrollback: 1000,
       cursorBlink: this._blinkingCursor,
       physicalScroll: true,
-      applicationModeCookie: cookie
+      applicationModeCookie: cookie,
+      debug: true
     });
 
     const defaultLineToHTML = this._term._lineToHTML;
@@ -202,8 +204,84 @@ class EtTerminal extends HTMLElement {
     const themeTag = <HTMLStyleElement> util.getShadowId(this, THEME_TAG);
     console.log("Setting theme css ",path);
     themeTag.innerHTML = "@import '" + path + "';";
-  }  
+  }
   
+  /**
+   * Get this terminal's title.
+   *
+   * This is the window title of the terminal, don't confuse it with more
+   * general HTML title of the element.
+   */
+  get terminalTitle(): string {
+    return this._title;
+  }
+  
+  /**
+   * Destroy the terminal.
+   */
+  destroy(): void {
+    if (this._scrollSyncID !== -1) {
+      cancelAnimationFrame(this._scrollSyncID);
+    }
+    
+    // if (this._ptyBridge !== null) {
+    //   this._ptyBridge.removeAllListeners();
+    // 
+    //   this._ptyBridge.kill('SIGHUP');
+    //   this._ptyBridge.disconnect();
+    //   this._ptyBridge = null;
+    // }
+
+    if (this._term !== null) {
+      this._getWindow().removeEventListener('resize', this._handleResize);
+      this._getWindow().document.body.removeEventListener('click', this._handleWindowClick);
+      this._term.destroy();
+    }
+    this._term = null;
+  }
+
+  /**
+   * Focus on this terminal.
+   */
+  focus(): void {
+    if (this._term !== null) {
+      this._term.focus();
+    }
+  }
+
+  /**
+   * Write data to the terminal screen.
+   * 
+   * @param text the stream of data to write.
+   */
+  write(text: string): void {
+    if (this._term !== null) {
+      this._term.write(text);
+    }
+  }
+  
+  /**
+   * Send data to the pty and process connected to the terminal.
+   * @param text the data to send.
+   */
+  send(text: string): void {
+    if (this._term !== null) {
+      this._sendDataToPtyEvent(text);
+    }
+  }
+  
+  /**
+   * Scroll the terminal down as far as possible.
+   */
+  scrollToBottom(): void {
+    this._term.scrollToBottom();
+  }
+  
+  resizeToContainer(): void {
+    this._handleResize();
+  }
+  
+  //-----------------------------------------------------------------------
   private _createClone(): Node {
     let template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
@@ -254,13 +332,6 @@ class EtTerminal extends HTMLElement {
     }
 
     return window.document.importNode(template.content, true);
-  }
-
-  /**
-   * Get this terminal's title.
-   */
-  getTitle(): string {
-    return this._title;
   }
 
   /**
@@ -345,68 +416,7 @@ class EtTerminal extends HTMLElement {
     this._scrollbar.position = el.scrollTop;
   }
   
-  /**
-   * Destroy the terminal.
-   */
-  destroy(): void {
-    if (this._scrollSyncID !== -1) {
-      cancelAnimationFrame(this._scrollSyncID);
-    }
-    
-    // if (this._ptyBridge !== null) {
-    //   this._ptyBridge.removeAllListeners();
-    // 
-    //   this._ptyBridge.kill('SIGHUP');
-    //   this._ptyBridge.disconnect();
-    //   this._ptyBridge = null;
-    // }
-
-    if (this._term !== null) {
-      this._getWindow().removeEventListener('resize', this._handleResize);
-      this._getWindow().document.body.removeEventListener('click', this._handleWindowClick);
-      this._term.destroy();
-    }
-    this._term = null;
-  }
-
   
-  /**
-   * Focus on this terminal.
-   */
-  focus(): void {
-    if (this._term !== null) {
-      this._term.focus();
-    }
-  }
-
-  /**
-   * Write data to the terminal screen.
-   * 
-   * @param text the stream of data to write.
-   */
-  write(text: string): void {
-    if (this._term !== null) {
-      this._term.write(text);
-    }
-  }
-  
-  /**
-   * Send data to the pty and process connected to the terminal.
-   * @param text the data to send.
-   */
-  send(text: string): void {
-    if (this._term !== null) {
-      this._sendDataToPtyEvent(text);
-    }
-  }
-  
-  /**
-   * Scroll the terminal down as far as possible.
-   */
-  scrollToBottom(): void {
-    this._term.scrollToBottom();
-  }
-
   /**
    * Handler for window title change events from the pty.
    * 

@@ -31,3 +31,58 @@ export function trimRight(source: string): string {
 export function getShadowId(el: HTMLElement, id: string): HTMLElement {
   return <HTMLElement> getShadowRoot(el).querySelector('#' + id);
 }
+
+//-------------------------------------------------------------------------
+interface LaterHandle {
+  cancel(): void;
+}
+
+let doLaterId: number = -1;
+let laterList: Function[] = [];
+
+function doLaterTimeoutHandler(): void {
+  doLaterId = -1;
+  const workingList = [...laterList];
+  laterList = [];
+  workingList.forEach( f => f() );
+}
+
+/**
+ * Shedule a function to be executed later.
+ * 
+ * @param  {Function}    func [description]
+ * @return {LaterHandle} This object can be used to cancel the scheduled execution.
+ */
+export function doLater(func: Function): LaterHandle {
+  laterList.push(func);
+  if (doLaterId === -1) {
+    doLaterId = window.setTimeout(doLaterTimeoutHandler, 0);
+  }
+  return { cancel: () => {
+    laterList = laterList.filter( f => f!== func );
+  } };
+}
+
+//-------------------------------------------------------------------------
+
+/**
+ * Parse a string as a boolean value
+ * 
+ * @param  value string to parse
+ * @return the boolean value or false if it could not be parsed
+ */
+export function toBoolean(value: any): boolean {
+  if (value === true || value === false) {
+    return value;
+  }
+  if (value === 0) {
+    return false;
+  }
+  if (value === 'true') {
+    return true;
+  }
+  if (value === 'false') {
+    return false;
+  }
+  return Boolean(value);
+}
