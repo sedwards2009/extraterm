@@ -296,6 +296,7 @@ DIV.show_frame > #tabbar {
     
     if (selectTab) {
       this.currentIndex = 0;
+      this._showTab(0);
     }
   }
   
@@ -312,7 +313,6 @@ DIV.show_frame > #tabbar {
     
     this._getContentsStack().currentIndex = index;
     this._showTab(index);
-console.log("index changed");    
     util.doLater(this._sendSwitchEvent.bind(this));
   }
   
