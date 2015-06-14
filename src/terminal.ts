@@ -65,6 +65,8 @@ class EtTerminal extends HTMLElement {
   
   static EVENT_TITLE = "title";
   
+  static EVENT_UNKNOWN_KEY_DOWN = "unknown-key-down";
+  
   /**
    * 
    */
@@ -457,6 +459,7 @@ class EtTerminal extends HTMLElement {
       return false;  
     }
     
+    this._sendUnknownKeyDown(ev);
     return false;
   }
 
@@ -766,7 +769,12 @@ class EtTerminal extends HTMLElement {
     const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
     this.dispatchEvent(event);    
   }
-    
+  
+  _sendUnknownKeyDown(ev: KeyboardEvent): void {
+    const event = new CustomEvent(EtTerminal.EVENT_UNKNOWN_KEY_DOWN, { detail: ev });
+    this.dispatchEvent(event);
+  }
+  
   // git diff scroll speed test
   // --------------------------
   // Original with innerHTML: 11-14ms per line scroll update.

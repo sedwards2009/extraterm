@@ -148,6 +148,25 @@ class ExtratermMainWebUI extends HTMLElement {
       newCbTab.innerText = e.detail.title;
       this._sendTitleEvent(e.detail.title);
     });
+    
+    newTerminal.addEventListener(EtTerminal.EVENT_UNKNOWN_KEY_DOWN, (e: CustomEvent) => {
+      const ev = <KeyboardEvent> e.detail;
+      if (ev.keyCode === 37 && ev.shiftKey) {
+        // left-arrow
+        this._shiftTab(-1);
+    
+      } else if (ev.keyCode === 39 && ev.shiftKey) {
+        // right-arrow
+        this._shiftTab(1);
+    
+      } else if (ev.keyCode === 84 && ev.shiftKey) {
+        // // Ctrl+Shift+T
+        // focusTerminal(createTerminal());
+    
+      } else {
+        console.log("Unknown key:",ev);
+      }      
+    });
 
     if (this._config !== null) {
       this._setConfigOnTerminal(newTerminal, this._config);
@@ -266,6 +285,24 @@ class ExtratermMainWebUI extends HTMLElement {
   }
   
   //-----------------------------------------------------------------------
+  
+  private _shiftTab(direction: number): void {
+    const len = this._terminalTabs.length;
+    if (len === 0) {
+      return;
+    }
+  
+    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+    let i = tabWidget.currentIndex;
+    i = i + direction;
+    if (i < 0) {
+      i = len - 1;
+    } else if (i >= len) {
+      i = 0;
+    }
+    tabWidget.currentIndex = i;
+    this._terminalTabs[i].terminal.focus();
+  }
   
   private _createClone(): Node {
     var template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);

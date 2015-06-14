@@ -156,69 +156,6 @@ function handleThemesMessage(msg: Messages.Message): void {
 /**
  * 
  */
-// function focusTerminal(id: number) {
-//   terminalList.forEach(function(info) {
-//     if (info.id === id) {
-//       // Activate this one.
-//       info.terminaltab.className = "terminal_tab_active";
-//       info.tabheader.className = "tab_active";
-//       info.terminal.focus();
-//       focusedTerminalInfo = info;
-//       setWindowTitle(info.terminal.getTitle());
-//     } else {
-//       // Deactive the rest.
-//       info.terminaltab.className = "terminal_tab_inactive";
-//       info.tabheader.className = "tab_inactive";
-//     }
-//   });
-// }
-
-/**
- * 
- */
-// function shiftTab(direction: number): void {
-//   if (terminalList.length === 0) {
-//     return;
-//   }
-// 
-//   var i = terminalList.indexOf(focusedTerminalInfo);
-//   i = i + direction;
-//   if (i < 0) {
-//     i = terminalList.length - 1;
-//   } else if (i >= terminalList.length) {
-//     i = 0;
-//   }
-//   focusTerminal(terminalList[i].id);
-// }
-
-/**
- * 
- */
-// function handleUnknownKeyDown(term: terminal.Terminal, ev: KeyboardEvent): void {
-//   if (ev.keyCode === 37 && ev.shiftKey) {
-//     // left-arrow
-//     shiftTab(-1);
-// 
-//   } else if (ev.keyCode === 39 && ev.shiftKey) {
-//     // right-arrow
-//     shiftTab(1);
-// 
-//   } else if (ev.keyCode === 67 && ev.shiftKey) {
-//     // Ctrl+Shift+C
-// //    copyToClipboard();
-// 
-//   } else if (ev.keyCode === 86 && ev.shiftKey) {
-//     // Ctrl+Shift+V
-// //    pasteFromClipboard();
-// 
-//   } else if (ev.keyCode === 84 && ev.shiftKey) {
-//     // Ctrl+Shift+T
-//     focusTerminal(createTerminal());
-// 
-//   } else {
-//     console.log("Unknown key:",ev);
-//   }
-// }
 
 //function handleFramePopOut(term: terminal.Terminal, frameElement: HTMLElement): void {
 //  console.log("Got frame pop out message.");
