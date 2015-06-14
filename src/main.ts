@@ -76,8 +76,34 @@ function main(): void {
   });
 }
 
+
+
 function log(msg: any, ...opts: any[]): void {
   console.log(msg, ...opts);
+}
+
+function mapBadChar(m: string): string {
+  const c = m.charCodeAt(0);
+  switch (c) {
+    case 8:
+      return "\\b";
+    case 12:
+      return "\\f";
+    case 13:
+      return "\\r";
+    case 11:
+      return "\\v";
+    default:
+      return "\\x" + (c < 16 ? "0" : "") + c.toString(16);
+  }
+}
+
+function substituteBadChars(data: string): string {
+  return data.replace(/[^ /{},.:;<>!@#$%^&*()+=_'"a-zA-Z0-9-]/g, mapBadChar);
+}
+
+function logData(data: string): void {
+  log(substituteBadChars(data));
 }
 
 /**
@@ -237,8 +263,8 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
   ptyMap[ptyId] = term;
   
   term.on('data', (data) => {
-    log("pty process got data.");
-    log(data);
+    log("pty process got data for ptyID="+ptyId);
+    logData(data);
     
     const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: ptyId, data: data };
     sender.send(Messages.CHANNEL_NAME, msg);    
