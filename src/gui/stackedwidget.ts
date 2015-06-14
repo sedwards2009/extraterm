@@ -11,14 +11,26 @@ let registered = false;
  */
 class CbStackedWidget extends HTMLElement {
   
+  //-----------------------------------------------------------------------
+  // Statics
+  static TAG_NAME = 'cb-stackedwidget';
+  
   static init(): void {
     if (registered === false) {
-      window.document.registerElement('cb-stackedwidget', {prototype: CbStackedWidget.prototype});
+      window.document.registerElement(CbStackedWidget.TAG_NAME, {prototype: CbStackedWidget.prototype});
       registered = true;
     }
   }
   
+  //-----------------------------------------------------------------------
+  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _currentIndex: number;
+  
+  private _initProperties(): void {
+    this._currentIndex = 0;  
+  }
+  
+  //-----------------------------------------------------------------------
   
   /**
    * 
@@ -77,7 +89,7 @@ class CbStackedWidget extends HTMLElement {
    * 
    */
   createdCallback() {
-    this._currentIndex = 0;
+    this._initProperties();
     
     const shadow = util.createShadowRoot(this);
     const clone = this.createClone();
