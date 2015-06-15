@@ -140,9 +140,9 @@ class EtTerminal extends HTMLElement {
       debug: true
     });
 
-    const defaultLineToHTML = this._term._lineToHTML;
-    this._super_lineToHTML = this._term._lineToHTML;
-    this._term._lineToHTML=  this._lineToHTML.bind(this);
+    // const defaultLineToHTML = this._term._lineToHTML;
+    // this._super_lineToHTML = this._term._lineToHTML;
+    // this._term._lineToHTML=  this._lineToHTML.bind(this);
 
     this._term.debug = true;
     this._term.on('title', this._handleTitle.bind(this));
