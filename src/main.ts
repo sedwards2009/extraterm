@@ -62,7 +62,7 @@ function main(): void {
     
     // Create the browser window.
     mainWindow = new BrowserWindow({width: 1200, height: 600});
-
+    
     // and load the index.html of the app.
     mainWindow.loadUrl(resourceLoader.toUrl('main.html'));
 
@@ -71,6 +71,7 @@ function main(): void {
 
     // Emitted when the window is closed.
     mainWindow.on('closed', function() {
+      cleanUpPtyWindow(mainWindow);
       mainWindow = null;
     });
   });
@@ -195,7 +196,7 @@ function handleAsyncIpc(event: any, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
   
-  log("Main IPC incoming:",msg);
+  log("Main IPC incoming: ",msg);
   
   switch(msg.type) {
     case Messages.MessageType.CONFIG_REQUEST:
@@ -248,7 +249,12 @@ function handleThemesRequest(msg: Messages.ThemesRequestMessage): Messages.Theme
 //-------------------------------------------------------------------------
 
 let ptyCounter = 0;
-const ptyMap: Map<number, pty.Terminal> = new Map<number, pty.Terminal>();
+interface PtyTuple {
+  windowId: number;
+  ptyTerm: pty.Terminal;
+};
+
+const ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
 
 function createPty(sender: GitHubElectron.WebContents, file: string, args: string[], cols: number, rows: number): number {
   const term = pty.spawn(file, args, {
@@ -260,7 +266,7 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
       
   ptyCounter++;
   const ptyId = ptyCounter;
-  ptyMap[ptyId] = term;
+  ptyMap.set(ptyId, { windowId: BrowserWindow.fromWebContents(sender).id, ptyTerm: term });
   
   term.on('data', (data) => {
     log("pty process got data for ptyID="+ptyId);
@@ -289,31 +295,53 @@ function handlePtyCreate(sender: GitHubElectron.WebContents, msg: Messages.Creat
 }
 
 function handlePtyInput(msg: Messages.PtyInput): void {
-  const ptyTerminal: pty.Terminal = ptyMap[msg.id];
-  if (ptyTerminal === undefined) {
+  const ptyTerminalTuple = ptyMap.get(msg.id);
+  if (ptyTerminalTuple === undefined) {
     log("WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
-  ptyTerminal.write(msg.data);
+
+  ptyTerminalTuple.ptyTerm.write(msg.data);
 }
 
 function handlePtyResize(msg: Messages.PtyResize): void {
-  const ptyTerminal: pty.Terminal = ptyMap[msg.id];
-  if (ptyTerminal === undefined) {
+  const ptyTerminalTuple = ptyMap.get(msg.id);
+  if (ptyTerminalTuple === undefined) {
     log("WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
-  ptyTerminal.resize(msg.columns, msg.rows);  
+  ptyTerminalTuple.ptyTerm.resize(msg.columns, msg.rows);  
 }
 
 function handlePtyClose(msg: Messages.PtyClose): void {
-  const ptyTerminal: pty.Terminal = ptyMap[msg.id];
-  if (ptyTerminal === undefined) {
+  const ptyTerminalTuple = ptyMap.get(msg.id);
+  if (ptyTerminalTuple === undefined) {
     log("WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
-  ptyTerminal.destroy();
+  ptyTerminalTuple.ptyTerm.destroy();
   ptyMap.delete(msg.id);
+}
+
+function cleanUpPtyWindow(window: GitHubElectron.BrowserWindow): void {
+  const it = ptyMap.keys();
+  
+  const keys: number[] = [];
+  
+  // FIXME remove this direct iterator usage.
+  let iterResult = it.next();
+  while (!iterResult.done) {
+    keys.push(iterResult.value);
+    iterResult = it.next();
+  }
+  
+  keys.forEach( k => {
+    const tup = ptyMap.get(k);
+    if (tup.windowId === window.id) {
+      tup.ptyTerm.destroy();
+      ptyMap.delete(k);
+    }
+  });
 }
 
 main();
