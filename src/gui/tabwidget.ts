@@ -92,7 +92,7 @@ class CbTabWidget extends HTMLElement {
 DIV.tab {
   text-align: center;
   flex-basis: 15rem;
-  flex-grow: 0;
+  flex-grow: 1;
   text-overflow: ellipsis;
   white-space: pre;
   overflow: hidden;
