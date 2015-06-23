@@ -1,13 +1,16 @@
 import util = require('./util');
 import resourceLoader = require('../resourceloader');
 
-var ID = "CbMenuItemTemplate";
+const ID = "CbMenuItemTemplate";
 
-var SELECTED_ATTR = "selected";
-var registered = false;
+const SELECTED_ATTR = "selected";
+let registered = false;
 
 class CbMenuItem extends HTMLElement {
   
+  //-----------------------------------------------------------------------
+  // Statics
+
   static init(): void {
     if (registered === false) {
       window.document.registerElement('cb-menuitem', {prototype: CbMenuItem.prototype});
@@ -15,6 +18,31 @@ class CbMenuItem extends HTMLElement {
     }
   }
   
+  //-----------------------------------------------------------------------
+  createdCallback(): void {
+    const shadow = util.createShadowRoot(this);
+    const clone = this._createClone();
+    shadow.appendChild(clone);
+
+    let iconhtml = "";
+    const icon = this.getAttribute('icon');
+    if (icon !== null && icon !== "") {
+      iconhtml += "<i class='fa fa-fw fa-" + icon + "'></i>";
+    } else {
+      iconhtml += "<i class='fa fa-fw'></i>";
+    }
+    (<HTMLElement>shadow.querySelector("#icon2")).innerHTML = iconhtml; 
+
+    this.updateKeyboardSelected(this.getAttribute(SELECTED_ATTR));
+  }
+  
+  attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
+    if (attrName === SELECTED_ATTR ) {
+      this.updateKeyboardSelected(newValue);
+    }
+  }
+  
+  //-----------------------------------------------------------------------
   private _css(): string {
     return "@import url('" + resourceLoader.toUrl("css/font-awesome.css") + "');\n" +
       ":host {\n" +
@@ -55,27 +83,8 @@ class CbMenuItem extends HTMLElement {
       "</div>";
   }
 
-  createdCallback(): void {
-    var icon: string;
-    var iconhtml: string;
-    var shadow = util.createShadowRoot(this);
-    var clone = this._createClone();
-    shadow.appendChild(clone);
-
-    iconhtml = "";
-    icon = this.getAttribute('icon');
-    if (icon !== null && icon !== "") {
-      iconhtml += "<i class='fa fa-fw fa-" + icon + "'></i>";
-    } else {
-      iconhtml += "<i class='fa fa-fw'></i>";
-    }
-    (<HTMLElement>shadow.querySelector("#icon2")).innerHTML = iconhtml; 
-
-    this.updateKeyboardSelected(this.getAttribute(SELECTED_ATTR));
-  }
-  
   private _createClone(): Node {
-    var template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
+    let template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
@@ -85,18 +94,12 @@ class CbMenuItem extends HTMLElement {
     return window.document.importNode(template.content, true);
   }
 
-  attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
-    if (attrName === SELECTED_ATTR ) {
-      this.updateKeyboardSelected(newValue);
-    }
-  }
-
   _clicked(): void {}
   
   private updateKeyboardSelected(value: string): void {
-    var shadow = util.getShadowRoot(this);
-    var container = <HTMLDivElement>shadow.querySelector("#container");
-    var on = value === "true";
+    const shadow = util.getShadowRoot(this);
+    const container = <HTMLDivElement>shadow.querySelector("#container");
+    const on = value === "true";
     if (on) {
       container.classList.add('selected');
     } else {

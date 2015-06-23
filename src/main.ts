@@ -63,17 +63,23 @@ function main(): void {
     // Create the browser window.
     mainWindow = new BrowserWindow({width: 1200, height: 600});
     
-    // and load the index.html of the app.
-    mainWindow.loadUrl(resourceLoader.toUrl('main.html'));
-
-    // Open the devtools.
-    mainWindow.openDevTools();
-
     // Emitted when the window is closed.
     mainWindow.on('closed', function() {
       cleanUpPtyWindow(mainWindow);
       mainWindow = null;
     });
+    
+    // and load the index.html of the app.
+    mainWindow.loadUrl(resourceLoader.toUrl('main.html'));
+
+    mainWindow.on('devtools-closed', function() {
+      sendDevToolStatus(mainWindow, false);
+    });
+    
+    mainWindow.on('devtools-opened', function() {
+      sendDevToolStatus(mainWindow, true);
+    });
+
   });
 }
 
@@ -227,6 +233,10 @@ function handleAsyncIpc(event: any, arg: any): void {
       handlePtyClose(<Messages.PtyClose> msg);
       break;
       
+    case Messages.MessageType.DEV_TOOLS_REQUEST:
+      handleDevToolsRequest(event.sender, <Messages.DevToolsRequestMessage> msg);
+      break;
+      
     default:
       break;
   }
@@ -323,25 +333,40 @@ function handlePtyClose(msg: Messages.PtyClose): void {
   ptyMap.delete(msg.id);
 }
 
-function cleanUpPtyWindow(window: GitHubElectron.BrowserWindow): void {
-  const it = ptyMap.keys();
-  
-  const keys: number[] = [];
-  
-  // FIXME remove this direct iterator usage.
-  let iterResult = it.next();
-  while (!iterResult.done) {
-    keys.push(iterResult.value);
-    iterResult = it.next();
+function handleDevToolsRequest(sender: GitHubElectron.WebContents, msg: Messages.DevToolsRequestMessage): void {
+  const senderWindow = BrowserWindow.fromWebContents(sender);
+  if (msg.open) {
+    senderWindow.openDevTools();
+  } else {
+    senderWindow.closeDevTools();
   }
-  
-  keys.forEach( k => {
+}
+
+function cleanUpPtyWindow(window: GitHubElectron.BrowserWindow): void {
+  mapKeys(ptyMap).forEach( k => {
     const tup = ptyMap.get(k);
     if (tup.windowId === window.id) {
       tup.ptyTerm.destroy();
       ptyMap.delete(k);
     }
   });
+}
+
+function sendDevToolStatus(window: GitHubElectron.BrowserWindow, open: boolean): void {
+  const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };
+  window.webContents.send(Messages.CHANNEL_NAME, msg);
+}
+
+// FIXME use for-of when it become available instead of this.
+function mapKeys<K,V>(map: Map<K,V>): K[] {
+  const it = map.keys();
+  const keys: K[] = [];
+  let iterResult = it.next();
+  while (!iterResult.done) {
+    keys.push(iterResult.value);
+    iterResult = it.next();
+  }
+  return keys;
 }
 
 main();

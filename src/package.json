@@ -13,7 +13,7 @@
     "pty.js": "^0.2.7-1",
     "qs": "^3.1.0",
     "requirejs": "^2.1.17",
-    "source-map-support": "^0.3.1"
+    "source-map-support": "^0.2.10"
   },
   "devDependencies": {
     "cajon": "^0.2.8",

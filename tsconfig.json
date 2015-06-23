@@ -21,7 +21,7 @@
     ],
     "files": [
         "./src/aboutdialog.ts",
-        "./src/chrome_lib.d.ts",
+        "./src/chrome_lib.es6.d.ts",
         "./src/commandframe.ts",
         "./src/config.ts",
         "./src/configuredialog.ts",
@@ -52,7 +52,6 @@
         "./src/gui/tab.ts",
         "./src/gui/tabwidget.ts",
         "./src/gui/util.ts",
-        "./src/typings/es6-promise/es6-promise.d.ts",
         "./src/typings/github-electron/github-electron.d.ts",
         "./src/typings/lodash/lodash.d.ts",
         "./src/typings/node/node.d.ts",

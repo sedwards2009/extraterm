@@ -101,3 +101,9 @@ export function ptyClose(id: number): void {
   const msg: Messages.PtyClose = {type: Messages.MessageType.PTY_CLOSE, id: id };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
+
+export function devToolsRequest(open: boolean): void {
+  const msg: Messages.DevToolsRequestMessage = { type: Messages.MessageType.DEV_TOOLS_REQUEST, open: open };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+

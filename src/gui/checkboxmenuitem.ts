@@ -1,41 +1,50 @@
 import menuitem = require("./menuitem");
 import util = require("./util");
 
-var CHECKED_ATTR = "checked";
-var ID = "CbCheckBoxMenuItemTemplate";
+const ID = "CbCheckBoxMenuItemTemplate";
 
-var registered = false;
+let registered = false;
 
 class CbCheckBoxMenuItem extends menuitem {
   
+  //-----------------------------------------------------------------------
+  // Statics
+
   static init(): void {
     if (registered === false) {
-      window.document.registerElement('cb-checkboxmenuitem', {prototype: CbCheckBoxMenuItem.prototype});
+      window.document.registerElement(CbCheckBoxMenuItem.TAG_NAME, {prototype: CbCheckBoxMenuItem.prototype});
       registered = true;
     }
   }
 
+  static TAG_NAME = 'cb-checkboxmenuitem';
+  
+  static ATTR_CHECKED = "checked";
+  
+  //-----------------------------------------------------------------------
+  
   createdCallback() {
     super.createdCallback();
-    this.updateChecked(this.getAttribute(CHECKED_ATTR));
-  }
-
-  _clicked(): void {
-    var checked = this.getAttribute(CHECKED_ATTR);
-    this.setAttribute(CHECKED_ATTR, (! util.htmlValueToBool(checked)) ? "true" : "false");
+    this._updateChecked(this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
   }
 
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     super.attributeChangedCallback(attrName, oldValue, newValue);
 
-    if (attrName === CHECKED_ATTR) {
-      this.updateChecked(newValue);
+    if (attrName === CbCheckBoxMenuItem.ATTR_CHECKED) {
+      this._updateChecked(newValue);
     }
   }
 
-  private updateChecked(checked: string): void {
-    var shadow = util.getShadowRoot(this);
-    var checkedhtml = "<i class='fa fa-fw fa-" + (util.htmlValueToBool(checked) ? "check-" : "") + "square-o'></i>";
+  //-----------------------------------------------------------------------
+  _clicked(): void {
+    const checked = this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED);
+    this.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, (! util.htmlValueToBool(checked)) ? "true" : "false");
+  }
+
+  private _updateChecked(checked: string): void {
+    const shadow = util.getShadowRoot(this);
+    const checkedhtml = "<i class='fa fa-fw fa-" + (util.htmlValueToBool(checked) ? "check-" : "") + "square-o'></i>";
     (<HTMLDivElement>shadow.querySelector("#icon1")).innerHTML = checkedhtml; 
   }
 }

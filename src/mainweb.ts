@@ -13,8 +13,10 @@ import webipc = require('./webipc');
 import CbContextMenu = require('./gui/contextmenu');
 import CbMenuItem = require('./gui/menuitem');
 import CbDropDown = require('./gui/dropdown');
+import CbCheckBoxMenuItem = require('./gui/checkboxmenuitem');
 import MainWebUi = require('./mainwebui');
 import AboutDialog = require('./aboutdialog');
+import util = require('./gui/util');
 
 sourceMapSupport.install();
 
@@ -45,6 +47,8 @@ export function startUp(): void {
   
   // Default handling for theme messages.
   webipc.registerDefaultHandler(Messages.MessageType.THEMES, handleThemesMessage);
+
+  webipc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
   
   // Get the config and theme info in and then continue starting up.
   const allPromise = Promise.all<void>( [webipc.requestConfig().then(handleConfigMessage),
@@ -54,6 +58,8 @@ export function startUp(): void {
     CbMenuItem.init();
     CbDropDown.init();
     MainWebUi.init();
+    CbCheckBoxMenuItem.init();
+
     mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
       <button class="topcoat-icon-button--quiet" id="new_tab_button">
@@ -64,6 +70,7 @@ export function startUp(): void {
           <button class="topcoat-icon-button--large--quiet"><i class="fa fa-bars"></i></button>
           <cb-contextmenu id="main_menu">
               <cb-menuitem icon="wrench" name="settings">Settings</cb-menuitem>
+              <cb-checkboxmenuitem icon="cogs" id="developer_tools" name="developer_tools">Developer Tools</cb-checkboxmenuitem>
               <cb-menuitem icon="lightbulb-o" name="about">About</cb-menuitem>
           </cb-contextmenu>
       </cb-dropdown>
@@ -94,6 +101,11 @@ export function startUp(): void {
           
           break;
           
+        case 'developer_tools':
+          const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
+          webipc.devToolsRequest(util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED)));
+          break;
+
         case 'about':
           if (aboutDialog == null) {
             AboutDialog.init();
@@ -128,12 +140,6 @@ export function startUp(): void {
 //   doc.getElementById("configure_button").addEventListener('click', function() {
 //     configureDialog.open(config, themes);
 //   });
-// 
-//   doc.getElementById("new_tab_button").addEventListener('click', function() {
-//     focusTerminal(createTerminal());
-//   });
-//   
-//   focusTerminal(createTerminal());
 }
 
 function handleConfigMessage(msg: Messages.Message): void {
@@ -149,6 +155,12 @@ function handleThemesMessage(msg: Messages.Message): void {
   themesMessage.themes.forEach( (item: Theme) => {
     themes = themes.set(item.name, item);
   });
+}
+
+function handleDevToolsStatus(msg: Messages.Message): void {
+  const devToolsStatusMessage = <Messages.DevToolsStatusMessage> msg;
+  const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
+  developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + devToolsStatusMessage.open);
 }
 
 //-------------------------------------------------------------------------

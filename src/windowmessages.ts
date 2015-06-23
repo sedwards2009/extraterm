@@ -19,7 +19,9 @@ export const enum MessageType {
   PTY_RESIZE,
   PTY_OUTPUT,
   PTY_INPUT,
-  PTY_CLOSE
+  PTY_CLOSE,
+  DEV_TOOLS_REQUEST,
+  DEV_TOOLS_STATUS
 }
 
 export interface Message {
@@ -90,3 +92,12 @@ export interface PtyClose extends Message {
   id: number;
 }
 
+// ********************************************************************
+
+export interface DevToolsRequestMessage extends Message {
+  open: boolean;
+}
+
+export interface DevToolsStatusMessage extends Message {
+  open: boolean;
+}
