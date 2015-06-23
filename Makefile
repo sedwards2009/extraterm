@@ -7,7 +7,6 @@ TEST_FILES = flexbuffertest.js
 NPM_BIN = npm
 TSC_BIN = ./src/node_modules/.bin/tsc
 NODEUNIT_BIN = ./src/node_modules/.bin/nodeunit
-BOWER_BIN = ./src/node_modules/.bin/bower
 RJS_BIN = ./src/node_modules/.bin/r.js
 ELECTRON_BIN = ./src/node_modules/electron-prebuilt/dist/electron
 
@@ -39,7 +38,6 @@ unittest:
 install_modules:
 	@echo "Downloading and installing modules"
 	${NPM_BIN} install
-	${BOWER_BIN} install
 	@echo
 	@echo "Done installing modules"
 	

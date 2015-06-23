@@ -25,3 +25,4 @@ src/webipc.js
 src/webresourceloader.js
 src/windowmessages.js
 src/mainwebui.js
+src/aboutdialog.js
