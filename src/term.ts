@@ -470,7 +470,7 @@ export class Terminal {
     return out;
   })();
 
-  focus() {
+  focus(): void {
     if (this.sendFocus) {
       this.send('\x1b[I');
     }
@@ -479,7 +479,7 @@ export class Terminal {
     this.hasFocus = true;
   }
 
-  blur() {
+  blur(): void {
     if (!this.hasFocus) {
       return;
     }
@@ -568,40 +568,42 @@ export class Terminal {
   /**
    * Global Events for key handling
    */
-
-  bindKeys() {
-    var self = this;
-    
+  /**
+   * Set up key event handlers
+   */
+  bindKeys(): void {
     // We should only need to check `target === body` below,
     // but we can check everything for good measure.
-    on(this.element, 'keydown', function(ev) {
-      var target = ev.target || ev.srcElement;
+    on(this.element, 'keydown', (ev: KeyboardEvent) => {
+      const target = ev.target || ev.srcElement;
       if (!target) {
         return;
       }
-      if (target === self.element ||
-          target === self.context ||
-          target === self.document ||
-          target === self.body ||
+      if (target === this.element ||
+          target === this.context ||
+          target === this.document ||
+          target === this.body ||
           // target === self._textarea ||
-          target === self.parent) {
-        return self.keyDown(ev);
+          target === this.parent) {
+        return this.keyDown(ev);
       }
     }, true);
 
-    on(this.element, 'keypress', function(ev) {
-      var target = ev.target || ev.srcElement;
-      if (!target) return;
-      if (target === self.element ||
-          target === self.context ||
-          target === self.document ||
-          target === self.body ||
+    on(this.element, 'keypress', (ev: KeyboardEvent) => {
+      const target = ev.target || ev.srcElement;
+      if (!target) {
+        return;
+      }
+      if (target === this.element ||
+          target === this.context ||
+          target === this.document ||
+          target === this.body ||
           // target === self._textarea ||
-          target === self.parent) {
-        return self.keyPress(ev);
+          target === this.parent) {
+        return this.keyPress(ev);
       }
     }, true);
-  };
+  }
 
   /**
    * Copy Selection w/ Ctrl-C (Select Mode)
@@ -687,7 +689,7 @@ export class Terminal {
     // style.innerHTML += out + '\n';
 
     head.insertBefore(style, head.firstChild);
-  };
+  }
 
   /**
    * Effectively move all rendered rows into the physical scrollback area.
@@ -722,7 +724,7 @@ export class Terminal {
     this.x = 0;
     this.y = 0;
     this.oldy = 0;
-  };
+  }
 
   /**
    * Append a DOM element to the bottom of the terminal.
@@ -781,8 +783,6 @@ export class Terminal {
    * Open Terminal
    */
   open(parent: HTMLDivElement): void {
-    var self = this;
-
     this.parent = parent;
 
     if (!this.parent) {
@@ -838,8 +838,8 @@ export class Terminal {
 
     // Bind to DOM events related
     // to focus and paste behavior.
-    on(this.element, 'focus', function() {
-      self.focus();
+    on(this.element, 'focus', () => {
+      this.focus();
     });
 
     // This causes slightly funky behavior.
@@ -847,27 +847,27 @@ export class Terminal {
     //   self.blur();
     // });
 
-    on(this.element, 'mousedown', function(ev: MouseEvent) {
-      self.focus();
+    on(this.element, 'mousedown', (ev: MouseEvent) => {
+      this.focus();
     });
 
     // Clickable paste workaround, using contentEditable.
     // This probably shouldn't work,
     // ... but it does. Firefox's paste
     // event seems to only work for textareas?
-    on(this.element, 'mousedown', function(ev: MouseEvent) {
+    on(this.element, 'mousedown', (ev: MouseEvent) => {
       var button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
 
       // Does IE9 do this?
-      if (self.isMSIE) {
+      if (this.isMSIE) {
         button = button === 1 ? 0 : button === 4 ? 1 : button;
       }
 
       if (button !== 2) return;
 
-      self.element.contentEditable = 'true';
-      setTimeout(function() {
-        self.element.contentEditable = 'inherit'; // 'false';
+      this.element.contentEditable = 'true';
+      setTimeout(() => {
+        this.element.contentEditable = 'inherit'; // 'false';
       }, 1);
     }, true);
     
@@ -885,8 +885,8 @@ export class Terminal {
 
     // This can be useful for pasting,
     // as well as the iPad fix.
-    setTimeout(function() {
-      self.element.focus();
+    setTimeout(() => {
+      this.element.focus();
     }, 100);
   }
 
@@ -1241,7 +1241,7 @@ export class Terminal {
       }
       return cancel(ev);
     });
-  };
+  }
 
   /**
    * Destroy Terminal
@@ -2800,10 +2800,9 @@ export class Terminal {
 
   // Key Resources:
   // https://developer.mozilla.org/en-US/docs/DOM/KeyboardEvent
-  keyDown(ev) {
-    var self = this;
-    var key = null;
-    var newScrollPosition;
+  keyDown(ev: KeyboardEvent): boolean {
+    let key: string = null;
+    let newScrollPosition: number;
     
     switch (ev.keyCode) {
       // backspace
@@ -3077,8 +3076,8 @@ export class Terminal {
     }
   }
 
-  keyPress(ev) {
-    var key;
+  keyPress(ev: KeyboardEvent): boolean {
+    let key;
 
     cancel(ev);
 
@@ -3092,7 +3091,9 @@ export class Terminal {
       return false;
     }
 
-    if (!key || ev.ctrlKey || ev.altKey || ev.metaKey) return false;
+    if (!key || ev.ctrlKey || ev.altKey || ev.metaKey) {
+      return false;
+    }
 
     key = String.fromCharCode(key);
 
@@ -3103,7 +3104,7 @@ export class Terminal {
     this.handler(key);
 
     return false;
-  };
+  }
 
   send(data) {
     var self = this;
