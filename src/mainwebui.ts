@@ -161,9 +161,14 @@ class ExtratermMainWebUI extends HTMLElement {
         this._shiftTab(1);
     
       } else if (ev.keyCode === 84 && ev.shiftKey) {
-        // // Ctrl+Shift+T
-        // focusTerminal(createTerminal());
-    
+        // Ctrl+Shift+T - New tab.
+        this.focusTerminalTab(this.newTerminalTab());
+        
+      } else if (ev.keyCode === 87 && ev.shiftKey) {
+        // Ctrl+Shift+W - Close tab.
+        const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+        this.closeTerminalTab(this._terminalTabs[tabWidget.currentIndex].id);
+
       } else {
         console.log("Unknown key:",ev);
       }      
@@ -193,6 +198,8 @@ class ExtratermMainWebUI extends HTMLElement {
     }
     const tup = matches[0];
     
+    let index = this._terminalTabs.indexOf(tup);
+    
     // Remove the tab from the list.
     this._terminalTabs = this._terminalTabs.filter( (p) => p.id !== terminalId );
     
@@ -203,10 +210,23 @@ class ExtratermMainWebUI extends HTMLElement {
     }
     
     this._sendTabClosedEvent();
+    
+    if (index >= this._terminalTabs.length) {
+      index--;
+    }
+    if (this._terminalTabs.length !== 0) {
+      this.focusTerminalTab(this._terminalTabs[index].id);
+    }
   }
   
   focusTerminalTab(terminalId: number): void {
-    
+    for (let i=0; i<this._terminalTabs.length; i++) {
+      if (this._terminalTabs[i].id === terminalId) {
+        const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+        tabWidget.currentIndex = i;
+        this._terminalTabs[i].terminal.focus();
+      }
+    }
   }
   
   //-----------------------------------------------------------------------
