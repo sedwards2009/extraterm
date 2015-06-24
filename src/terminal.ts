@@ -446,7 +446,7 @@ class EtTerminal extends HTMLElement {
   /**
    * Handle an unknown key down event from the term.
    */
-  _handleUnknownKeyDown(ev: KeyboardEvent): boolean {
+  private _handleUnknownKeyDown(ev: KeyboardEvent): boolean {
     // this.events.emit('unknown-keydown', this, ev);
     if (ev.keyCode === 67 && ev.shiftKey) {
       // Ctrl+Shift+C
@@ -468,7 +468,7 @@ class EtTerminal extends HTMLElement {
     this._term.keyPress(ev);
   }
 
-  _handleKeyDownTerminal(ev: KeyboardEvent): void {
+  private _handleKeyDownTerminal(ev: KeyboardEvent): void {
     let frames: commandframe[];
     let index: number;
 
@@ -720,7 +720,7 @@ class EtTerminal extends HTMLElement {
    * 
    * @param {string} data New data.
    */
-  _handlePtyStdoutData (data: string): void {
+  private _handlePtyStdoutData (data: string): void {
     log("incoming data:",""+data);
     this._term.write("" + data);
   }
@@ -730,7 +730,7 @@ class EtTerminal extends HTMLElement {
    * 
    * @param {type} data New data.
    */
-  _handlePtyStderrData(data: string): void {
+  private _handlePtyStderrData(data: string): void {
     this._term.write(data);
   }
 
@@ -740,7 +740,7 @@ class EtTerminal extends HTMLElement {
    * This just pushes the keys from the user through to the pty.
    * @param {string} data The data to process.
    */
-  _handleTermData(data: string): void {
+  private _handleTermData(data: string): void {
     this._sendDataToPtyEvent(data);
   }
 
@@ -749,7 +749,7 @@ class EtTerminal extends HTMLElement {
    * 
    * @param {string} text
    */
-  _sendDataToPtyEvent(text: string): void {
+  private _sendDataToPtyEvent(text: string): void {
     const event = new CustomEvent(EtTerminal.EVENT_USER_INPUT, { detail: {data: text } });
     this.dispatchEvent(event);
   }
@@ -760,17 +760,17 @@ class EtTerminal extends HTMLElement {
    * @param {number} cols The new number of columns in the terminal.
    * @param {number} rows The new number of rows in the terminal.
    */
-  _sendResizeEvent(cols: number, rows: number, callback?: Function): void {
+  private _sendResizeEvent(cols: number, rows: number, callback?: Function): void {
     const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_RESIZE, { detail: {columns: cols, rows: rows } });
     this.dispatchEvent(event);    
   }
 
-  _sendTitleEvent(title: string): void {
+  private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
     this.dispatchEvent(event);    
   }
   
-  _sendUnknownKeyDown(ev: KeyboardEvent): void {
+  private _sendUnknownKeyDown(ev: KeyboardEvent): void {
     const event = new CustomEvent(EtTerminal.EVENT_UNKNOWN_KEY_DOWN, { detail: ev });
     this.dispatchEvent(event);
   }
@@ -784,7 +784,7 @@ class EtTerminal extends HTMLElement {
   // SPAN with innerHTML:     12-19ms per line scroll update.
   // et-word with innerHTML:  20-24ms per line scroll update.
 
-  _lineToHTML(line: any[]): string {
+  private _lineToHTML(line: any[]): string {
     const len = line.length;
     let whiteState = true;
     let tempLine: any[];
@@ -841,7 +841,7 @@ class EtTerminal extends HTMLElement {
   /**
    * Find a command frame by ID.
    */
-  _findFrame(frameId: string): commandframe {
+  private _findFrame(frameId: string): commandframe {
     if (/[^0-9]/.test(frameId)) {
       return null;
     }
@@ -855,13 +855,13 @@ class EtTerminal extends HTMLElement {
    * @param {string} type
    * @param {string} value
    */
-  _handleMineTypeClick(type: string, value: string): void {
+  private _handleMineTypeClick(type: string, value: string): void {
     if (type === "directory") {
       this._sendDataToPtyEvent("cd " + value + "\n"); // FIXME escaping
     }
   }
   
-  _getNextTag(): number {
+  private _getNextTag(): number {
     this._tagCounter++;
     return this._tagCounter;
   }
