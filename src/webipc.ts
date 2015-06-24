@@ -38,7 +38,7 @@ export function registerDefaultHandler(type: Messages.MessageType, handler: Hand
 
 function handleAsyncIpc(event: any, arg: any): void {
   const msg: Messages.Message = event;
-// console.log("IPC incoming: ", msg);
+ // console.log("IPC incoming: ", msg);
 
   const matchingPromises = promiseQueue.filter( p => p.messageType === msg.type );
   const nonMatchingPromises = promiseQueue.filter( p => p.messageType !== msg.type );
@@ -98,7 +98,7 @@ export function ptyResize(id: number, columns: number, rows: number): void {
 }
 
 export function ptyClose(id: number): void {
-  const msg: Messages.PtyClose = {type: Messages.MessageType.PTY_CLOSE, id: id };
+  const msg: Messages.PtyCloseRequest = {type: Messages.MessageType.PTY_CLOSE_REQUEST, id: id };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 

@@ -229,8 +229,8 @@ function handleAsyncIpc(event: any, arg: any): void {
       handlePtyInput(<Messages.PtyInput> msg);
       break;
       
-    case Messages.MessageType.PTY_CLOSE:
-      handlePtyClose(<Messages.PtyClose> msg);
+    case Messages.MessageType.PTY_CLOSE_REQUEST:
+      handlePtyCloseRequest(<Messages.PtyClose> msg);
       break;
       
     case Messages.MessageType.DEV_TOOLS_REQUEST:
@@ -323,7 +323,7 @@ function handlePtyResize(msg: Messages.PtyResize): void {
   ptyTerminalTuple.ptyTerm.resize(msg.columns, msg.rows);  
 }
 
-function handlePtyClose(msg: Messages.PtyClose): void {
+function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
   const ptyTerminalTuple = ptyMap.get(msg.id);
   if (ptyTerminalTuple === undefined) {
     log("WARNING: Input arrived for a terminal which doesn't exist.");
