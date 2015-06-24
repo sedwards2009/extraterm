@@ -257,7 +257,7 @@ DIV.show_frame > #tabbar {
     }
     
     let tabElementCount = tabbar.querySelectorAll(".tab").length;
-    const selectTab = tabElementCount === 0;
+    const selectTab = tabElementCount === 0 ? 0 : this.currentIndex;
     
     // Create tabs and content DIVs.
     while (tabElementCount < tabCount) {
@@ -294,10 +294,8 @@ DIV.show_frame > #tabbar {
       tabElements = tabbar.querySelectorAll(".tab");
     }
     
-    if (selectTab) {
-      this.currentIndex = 0;
-      this._showTab(0);
-    }
+    this.currentIndex = selectTab;
+    this._showTab(selectTab);
   }
   
   _createTabClickHandler(index: number) {
