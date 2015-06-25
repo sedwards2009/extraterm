@@ -5,6 +5,10 @@
   "author": "Simon Edwards",
   "license": "GPL v3",
   "main": "main.js",
+  "scripts": {
+    "run": "electron main.js",
+    "build": "tsc"
+  },
   "dependencies": {
     "electron-prebuilt": "^0.27.2",
     "immutable": "^3.7.3",
@@ -12,14 +16,11 @@
     "lodash": "^3.9.1",
     "pty.js": "^0.2.7-1",
     "qs": "^3.1.0",
-    "requirejs": "^2.1.17",
     "source-map-support": "^0.2.10"
   },
   "devDependencies": {
-    "cajon": "^0.2.8",
     "nodeunit": "^0.9.1",
     "tsd": "^0.6.0-beta.5",
-    "typescript": "^1.5.0-beta",
-    "typescript-services": "^0.1.5"
+    "typescript": "^1.5.0-beta"
   }
 }
