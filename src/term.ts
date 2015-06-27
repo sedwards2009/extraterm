@@ -102,6 +102,8 @@ interface Options {
   applicationModeCookie?: string;
 };
 
+type LineCell = [number, string];
+
 /**
  * Terminal
  */
@@ -168,8 +170,8 @@ export class Terminal {
   private postfix = '';
   
   private _blink = null;
-  
-  private lines = [];
+    
+  private lines: LineCell[][] = [];
   private _termId: number;
   
   private colors: string[];
@@ -363,7 +365,7 @@ export class Terminal {
   }
 
   // back_color_erase feature for xterm.
-  eraseAttr() {
+  eraseAttr(): number {
     // if (this.is('screen')) return this.defAttr;
     return (this.defAttr & ~0x1ff) | (this.curAttr & 0x1ff);
   }
@@ -486,7 +488,9 @@ export class Terminal {
 
     this.cursorState = 0;
     this.refresh(this.y, this.y);
-    if (this.sendFocus) this.send('\x1b[O');
+    if (this.sendFocus) {
+      this.send('\x1b[O');
+    }
 
     this.element.blur();
     this.hasFocus = false;
@@ -495,8 +499,8 @@ export class Terminal {
   /**
    * Initialize global behavior
    */
-  initGlobal() {
-    var document = this.document;
+  initGlobal(): void {
+    const document = this.document;
     if (this.useStyle) {
       Terminal.insertStyle(document, this.colors[256], this.colors[257]);
     }
@@ -698,7 +702,7 @@ export class Terminal {
    * not have been rendered or added to the DOM yet. Future terminal rows 
    * will appear below the old last row in the window.
    */
-  moveRowsToScrollback() {
+  moveRowsToScrollback(): void {
     
     if (this.x === 0 && this.lines.length-1 === this.y) {
       if (this.getLineText(this.y).trim() === '') {
@@ -739,7 +743,7 @@ export class Terminal {
     this.element.appendChild(element);
   }
 
-  _getLine(row) {
+  _getLine(row: number): LineCell[] {
     while (row >= this.lines.length) {
       this.lines.push(this.blankLine());
     }
@@ -757,21 +761,18 @@ export class Terminal {
   }
 
   getLineText(y: number): string {
-    var row;
     if (y <0 || y >= this.lines.length) {
       return null;
     }
-    row = this.lines[y];
+    const row = this.lines[y];
     return row.map(function(tup) {
       return tup[1];
     }).join("");
   }
 
-  _getChildDiv(y) {
-    var div;
-    
+  private _getChildDiv(y: number): HTMLDivElement {
     while (y >= this.children.length) {
-        div = this.document.createElement('div');
+        const div = this.document.createElement('div');
         div.className = TERMINAL_ACTIVE_CLASS;
         this.element.appendChild(div);
         this.children.push(div);
@@ -1280,13 +1281,12 @@ export class Terminal {
    * 
    * @param {boolean} immediate True if the refresh should occur as soon as possible. False if a slight delay is permitted.
    */
-  _scheduleRefresh(immediate) {
-    var self = this;
-    var window = this.document.defaultView;
+  private _scheduleRefresh(immediate: boolean): void {
+    const window = this.document.defaultView;
     if (this._refreshTimer === -1) {
-      self._refreshTimer = window.setTimeout(function() {
-        self._refreshTimer = -1;
-        self._refreshFrame();
+      this._refreshTimer = window.setTimeout(() => {
+        this._refreshTimer = -1;
+        this._refreshFrame();
       }, immediate ? 0 : REFRESH_DELAY);
     }
   }
@@ -1296,7 +1296,7 @@ export class Terminal {
    * 
    * Usually call via a timer.
    */
-  _refreshFrame() {
+  private _refreshFrame(): void {
     this.refresh(this.refreshStart, this.refreshEnd);
     this._refreshScrollback();
     this.refreshStart = REFRESH_START_NULL;
@@ -1313,19 +1313,15 @@ export class Terminal {
   // Next 14 bits: a mask for misc. flags:
   //   1=bold, 2=underline, 4=blink, 8=inverse, 16=invisible
 
-  refresh(start, end): void {
-    var x;
-    var y;
-    var line;
-    var row;
+  refresh(start: number, end: number): void {
     if ( !this.physicalScroll && end >= this.lines.length) {
       this.log('`end` is too large. Most likely a bad CSR.');
       end = this.lines.length - 1;
     }
     
-    for (y = start; y <= end; y++) {
-      row = y + this.ydisp;
-      line = this._getLine(row);
+    for (let y = start; y <= end; y++) {
+      const row = y + this.ydisp;
+      let line = this._getLine(row);
 
       // Place the cursor in the row.
       if (y === this.y &&
@@ -1334,11 +1330,9 @@ export class Terminal {
           !this.cursorHidden &&
           this.x < this.cols) {
 
-        x = this.x;
+        const x = this.x;
         line = line.slice();
         line[x] = [-1, line[x][1]];
-      } else {
-        x = -1;
       }
 
       this._getChildDiv(y).innerHTML = this._lineToHTML(line);
@@ -1351,7 +1345,7 @@ export class Terminal {
    * @param {Array} line Array describing a line of characters and attributes.
    * @returns {string} A HTML rendering of the line as a HTML string.
    */
-  _lineToHTML(line) {
+  _lineToHTML(line: LineCell[]): string {
     var attr;
     var data;
     var ch;
@@ -1644,7 +1638,7 @@ export class Terminal {
     this.refresh(0, this.rows - 1);
   }
 
-  write(data) {
+  write(data): void {
     this._writeBuffers.push(data);
     this._scheduleProcessWriteChunk();
   }
@@ -1652,13 +1646,12 @@ export class Terminal {
   /**
    * Schedule the write chunk process to run the next time the event loop is entered.
    */
-  _scheduleProcessWriteChunk() {
-    var self = this;
-    var window = this.document.defaultView;
+  private _scheduleProcessWriteChunk(): void {
+    const window = this.document.defaultView;
     if (this._processWriteChunkTimer === -1) {
-      this._processWriteChunkTimer = window.setTimeout(function() {
-        self._processWriteChunkTimer = -1;
-        self._processWriteChunkRealTime();
+      this._processWriteChunkTimer = window.setTimeout(() => {
+        this._processWriteChunkTimer = -1;
+        this._processWriteChunkRealTime();
       }, 0);
     }
   }
@@ -1666,11 +1659,8 @@ export class Terminal {
   /**
    * Process the next chunk of data to written into a the line array.
    */
-  _processWriteChunkRealTime() {
-    var starttime;
-    var nowtime;
-    
-    starttime = window.performance.now();
+  private _processWriteChunkRealTime(): void {
+    const starttime = window.performance.now();
   //console.log("++++++++ _processWriteChunk() start time: " + starttime);
     
     // Schedule a call back just in case. setTimeout(.., 0) still carries a ~4ms delay. 
@@ -1685,7 +1675,7 @@ export class Terminal {
         break;
       }
       
-      nowtime = window.performance.now();
+      const nowtime = window.performance.now();
       if ((nowtime - starttime) > MAX_BATCH_TIME) {
         this._scheduleRefresh(false);
         break;
@@ -1699,14 +1689,12 @@ export class Terminal {
    * 
    * @returns {boolean} True if there are extra chunks available which need processing.
    */
-  _processOneWriteChunk() {
-    var chunk;
-    
+  private _processOneWriteChunk(): boolean {
     if (this._writeBuffers.length === 0) {
       return false; // Nothing to do.
     }
     
-    chunk = this._writeBuffers[0];
+    let chunk = this._writeBuffers[0];
     if (chunk.length <= MAX_PROCESS_WRITE_SIZE) {
       this._writeBuffers.splice(0, 1);
     } else {
@@ -1718,7 +1706,7 @@ export class Terminal {
     return this._writeBuffers.length !== 0;
   };
 
-  _flushWriteBuffer() {
+  private _flushWriteBuffer(): void {
     while(this._processOneWriteChunk()) {
       // Keep on going until it is all done.
     }
@@ -1827,7 +1815,6 @@ export class Terminal {
                 }
 
                 line = this._getLine(this.y + this.ybase);
-                
                 if (this.insertMode) {
                   // Push the characters out of the way to make space.
                   line.splice(this.x, 0, [this.curAttr, ' ']);
@@ -2786,7 +2773,6 @@ export class Terminal {
         this.oldy = this.y;
       }
     }
-
     this.updateRange(this.y);
       
   //  endtime = window.performance.now();
@@ -3106,20 +3092,18 @@ export class Terminal {
     return false;
   }
 
-  send(data) {
-    var self = this;
-
+  send(data): void {
     if (!this.queue) {
-      setTimeout(function() {
-        self.handler(self.queue);
-        self.queue = '';
+      setTimeout(() => {
+        this.handler(this.queue);
+        this.queue = '';
       }, 1);
     }
 
     this.queue += data;
-  };
+  }
 
-  bell() {
+  bell(): void {
     this.emit('bell');
     if (!this.visualBell) return;
     var self = this;
@@ -3145,11 +3129,11 @@ export class Terminal {
   resize(newcols: number, newrows: number): void {
     newcols = Math.max(newcols, 1);
     newrows = Math.max(newrows, 1);
-    
+
     // resize cols
     if (this.cols < newcols) {
       // Add chars to the lines to match the new (bigger) cols value.
-      const ch = [this.defAttr, ' ']; // does xterm use the default attr?
+      const ch: LineCell = [this.defAttr, ' ']; // does xterm use the default attr?
       for (let i = this.lines.length-1; i >= 0; i--) {
         const line = this.lines[i];
         while (line.length < newcols) {
@@ -3224,7 +3208,7 @@ export class Terminal {
    */
   resizeToContainer(): {cols: number; rows: number; } {
     const lineEl = this.children[0];
-    
+
     const range = this.document.createRange();
     range.setStart(lineEl, 0);
     range.setEnd(lineEl, lineEl.childNodes.length);
@@ -3236,7 +3220,6 @@ export class Terminal {
       return {cols: this.cols, rows: this.rows};
     }
     
-this.log("resizeToContainer() rect=",rect);    
     const charWidth = rect.width / this.cols;
     const charHeight = rect.height;
       
@@ -3272,7 +3255,7 @@ this.log("resizeToContainer() rect=",rect);
     // }
   }
 
-  maxRange() {
+  maxRange(): void {
     this.refreshStart = 0;
     this.refreshEnd = this.rows - 1;
   }
@@ -3292,21 +3275,21 @@ this.log("resizeToContainer() rect=",rect);
     }
   }
 
-  prevStop(x?) {
+  prevStop(x?: number): number {
     if (x === undefined) x = this.x;
     while (!this.tabs[--x] && x > 0);
     return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
   }
 
-  nextStop(x?) {
+  nextStop(x?: number): number {
     if (x === undefined) x = this.x;
     while (!this.tabs[++x] && x < this.cols);
     return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
   }
 
-  eraseRight(x, y) {
-    var line = this._getLine(this.ybase + y);
-    var ch = [this.eraseAttr(), ' ']; // xterm
+  eraseRight(x: number, y: number): void {
+    const line = this._getLine(this.ybase + y);
+    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
 
     for (; x < this.cols; x++) {
       line[x] = ch;
@@ -3315,9 +3298,9 @@ this.log("resizeToContainer() rect=",rect);
     this.updateRange(y);
   }
 
-  eraseLeft(x, y) {
-    var line = this._getLine(this.ybase + y);
-    var ch = [this.eraseAttr(), ' ']; // xterm
+  eraseLeft(x: number, y: number): void {
+    const line = this._getLine(this.ybase + y);
+    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
 
     x++;
     while (x !== 0) {
@@ -3328,30 +3311,28 @@ this.log("resizeToContainer() rect=",rect);
     this.updateRange(y);
   }
 
-  eraseLine(y) {
+  eraseLine(y: number): void {
     this.eraseRight(0, y);
   }
 
-  blankLine(cur?) {
-    var attr = cur ? this.eraseAttr() : this.defAttr;
-
-    var ch = [attr, ' '];
-    var line = [];
-    var i = 0;
-
-    for (; i < this.cols; i++) {
+  blankLine(cur?: boolean): LineCell[] {
+    const attr = cur ? this.eraseAttr() : this.defAttr;
+    const ch: LineCell = [attr, ' '];
+    
+    const line: LineCell[] = [];
+    for (let i = 0; i < this.cols; i++) {
       line[i] = ch;
     }
 
     return line;
   }
 
-  ch(cur) {
+  ch(cur: boolean): LineCell {
     return cur ? [this.eraseAttr(), ' '] : [this.defAttr, ' '];
   }
 
-  is(term) {
-    var name = this.termName;
+  is(term: string): boolean {
+    const name = this.termName;
     return (name + '').indexOf(term) === 0;
   }
 
@@ -5155,6 +5136,11 @@ this.log("resizeToContainer() rect=",rect);
     return this._events[type] !== undefined ? this._events[type] : [];
   }
   
+  dumpLines(): void {
+    for (let y=0; y<this.lines.length; y++) {
+      this.log(""+y+": "+this.getLineText(y));
+    }
+  }
   /*************************************************************************/
 }
 
