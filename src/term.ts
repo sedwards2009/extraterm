@@ -3235,7 +3235,7 @@ export class Terminal {
     const width = this.element.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
     
     const newCols = Math.floor(width / charWidth);
-    const newRows = Math.floor(this.element.clientHeight / charHeight);
+    const newRows = Math.max(2, Math.floor(this.element.clientHeight / charHeight));
     
     if (newCols !== this.cols || newRows !== this.rows) {
       this.resize(newCols, newRows);
