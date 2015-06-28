@@ -229,6 +229,16 @@ class ExtratermMainWebUI extends HTMLElement {
     }
   }
   
+  copyToClipboard(): void {
+    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+    this._terminalTabs[tabWidget.currentIndex].terminal.copyToClipboard();
+  }
+  
+  pasteText(text: string): void {
+    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+    this._terminalTabs[tabWidget.currentIndex].terminal.pasteText(text);
+  }
+  
   //-----------------------------------------------------------------------
   private _sendTabOpenedEvent(): void {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_TAB_OPENED, { detail: null });

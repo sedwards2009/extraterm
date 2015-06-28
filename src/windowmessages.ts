@@ -22,7 +22,10 @@ export const enum MessageType {
   PTY_CLOSE,
   PTY_CLOSE_REQUEST,
   DEV_TOOLS_REQUEST,
-  DEV_TOOLS_STATUS
+  DEV_TOOLS_STATUS,
+  CLIPBOARD_WRITE,
+  CLIPBOARD_READ_REQUEST,
+  CLIPBOARD_READ
 }
 
 export interface Message {
@@ -104,4 +107,15 @@ export interface DevToolsRequestMessage extends Message {
 
 export interface DevToolsStatusMessage extends Message {
   open: boolean;
+}
+
+export interface ClipboardWriteMessage extends Message {
+  text: string; // Text to be placed on the clipboard.
+}
+
+export interface ClipboardReadRequestMessage extends Message {
+}
+
+export interface ClipboardReadMessage extends Message {
+  text: string;
 }

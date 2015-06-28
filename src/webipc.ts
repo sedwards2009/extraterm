@@ -107,3 +107,12 @@ export function devToolsRequest(open: boolean): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
+export function clipboardWrite(text: string): void {
+  const msg: Messages.ClipboardWriteMessage = { type: Messages.MessageType.CLIPBOARD_WRITE, text: text };
+  ipc.send(Messages.CHANNEL_NAME, msg);    
+}
+
+export function clipboardReadRequest(): void {
+  const msg: Messages.ClipboardReadRequestMessage = { type: Messages.MessageType.CLIPBOARD_READ_REQUEST };
+  ipc.send(Messages.CHANNEL_NAME, msg);      
+}

@@ -7,21 +7,23 @@
  *
  * This file is the main entry point for the node process and the whole application.
  */
-import sourceMapSupport = require('source-map-support');
-import app = require('app');
-import BrowserWindow = require('browser-window');
-import path = require('path');
-import fs = require('fs');
-import im = require('immutable');
-import _ = require('lodash');
-import crashReporter = require('crash-reporter');
-import ipc = require('ipc');
-import pty = require('pty.js');
+import * as sourceMapSupport from 'source-map-support';
+import * as app from 'app';
+import * as BrowserWindow from 'browser-window';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as im from 'immutable';
+import * as _ from 'lodash';
+import * as crashReporter from 'crash-reporter';
+import * as ipc from 'ipc';
+import * as pty from 'pty.js';
+import * as resourceLoader from './resourceloader';
+import * as Messages from './windowmessages';
+import * as clipboard from 'clipboard';
 
+// Interfaces.
 import Config = require('config');
-import Theme = require('./theme');
-import resourceLoader = require('./resourceloader');
-import Messages = require('./windowmessages');
+import Theme = require('theme');
 
 sourceMapSupport.install();
 crashReporter.start(); // Report crashes
@@ -237,6 +239,14 @@ function handleAsyncIpc(event: any, arg: any): void {
       handleDevToolsRequest(event.sender, <Messages.DevToolsRequestMessage> msg);
       break;
       
+    case Messages.MessageType.CLIPBOARD_WRITE:
+      handleClipboardWrite(<Messages.ClipboardWriteMessage> msg);
+      break;
+      
+    case Messages.MessageType.CLIPBOARD_READ_REQUEST:
+      reply = handleClipboardReadRequest(<Messages.ClipboardReadRequestMessage> msg);
+      break;
+      
     default:
       break;
   }
@@ -355,6 +365,18 @@ function cleanUpPtyWindow(window: GitHubElectron.BrowserWindow): void {
 function sendDevToolStatus(window: GitHubElectron.BrowserWindow, open: boolean): void {
   const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };
   window.webContents.send(Messages.CHANNEL_NAME, msg);
+}
+
+function handleClipboardWrite(msg: Messages.ClipboardWriteMessage): void {
+  if (msg.text.length !== 0) {
+    clipboard.writeText(msg.text);
+  }
+}
+
+function handleClipboardReadRequest(msg: Messages.ClipboardReadRequestMessage): Messages.ClipboardReadMessage {
+  const text = clipboard.readText();
+  const reply: Messages.ClipboardReadMessage = { type: Messages.MessageType.CLIPBOARD_READ, text: text };
+  return reply;
 }
 
 // FIXME use for-of when it become available instead of this.

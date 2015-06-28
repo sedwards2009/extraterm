@@ -50,6 +50,8 @@ export function startUp(): void {
 
   webipc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
   
+  webipc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
+  
   // Get the config and theme info in and then continue starting up.
   const allPromise = Promise.all<void>( [webipc.requestConfig().then(handleConfigMessage),
                       webipc.requestThemes().then(handleThemesMessage)] );
@@ -126,6 +128,14 @@ export function startUp(): void {
       mainWebUi.focusTerminalTab(mainWebUi.newTerminalTab());
     });
     
+    doc.addEventListener('selectionchange', () => {
+      mainWebUi.copyToClipboard();
+    });
+    doc.addEventListener('mousedown', (ev: MouseEvent) => {
+      if (ev.which === 2) {
+        webipc.clipboardReadRequest();
+      }
+    });
   });
   
   // Configure dialog.
@@ -161,6 +171,11 @@ function handleDevToolsStatus(msg: Messages.Message): void {
   const devToolsStatusMessage = <Messages.DevToolsStatusMessage> msg;
   const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
   developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + devToolsStatusMessage.open);
+}
+
+function handleClipboardRead(msg: Messages.Message): void {
+  const clipboardReadMessage = <Messages.ClipboardReadMessage> msg;
+  mainWebUi.pasteText(clipboardReadMessage.text);
 }
 
 //-------------------------------------------------------------------------

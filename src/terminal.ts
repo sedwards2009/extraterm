@@ -4,13 +4,14 @@
 
 ///<amd-dependency path="js-base64" />
 
-import _ = require('lodash');
+import * as _ from 'lodash';
 import commandframe = require('./commandframe');
-import domutils = require('./domutils');
-import termjs = require('./term');
+import * as domutils from './domutils';
+import * as termjs from './term';
 import scrollbar = require('./gui/scrollbar');
-import util = require('./gui/util');
-import clipboard = require('clipboard');
+import * as util from './gui/util';
+import * as clipboard from 'clipboard';
+import * as webipc from './webipc';
 
 const debug = true;
 let startTime: number = window.performance.now();
@@ -450,7 +451,7 @@ class EtTerminal extends HTMLElement {
     // this.events.emit('unknown-keydown', this, ev);
     if (ev.keyCode === 67 && ev.shiftKey) {
       // Ctrl+Shift+C
-      this._copyToClipboard();
+      this.copyToClipboard();
       return false;
       
     } else if (ev.keyCode === 86 && ev.shiftKey) {
@@ -673,25 +674,30 @@ class EtTerminal extends HTMLElement {
   /**
    * Copy the selection to the clipboard.
    */
-  private _copyToClipboard(): void {
+  copyToClipboard(): void {
     const selection = this.shadowRoot.getSelection();
     const range = selection.getRangeAt(0);
     if (range.collapsed) {
       return;
     }
     const text = range.toString();
-    clipboard.writeText(text.replace(/\u00a0/g,' '));
+    webipc.clipboardWrite(text.replace(/\u00a0/g,' '));
   }
-
-  /**
-   * Paste text from the clipboard.
-   */
-  private _pasteFromClipboard(): void {
-    const text = clipboard.readText();
+  
+  pasteText(text: string): void {
     this.send(text);
     this._term.scrollToBottom();
   }
 
+  /**
+   * Paste text from the clipboard.
+   *
+   * This method is async and returns before the paste is done.
+   */
+  private _pasteFromClipboard(): void {
+    webipc.clipboardReadRequest();
+  }
+  
 // FIXME delete this.
   preserveScroll(task:()=>void): void {
     const scrollatbottom = this._term.isScrollAtBottom();
