@@ -16,10 +16,13 @@ import * as im from 'immutable';
 import * as _ from 'lodash';
 import * as crashReporter from 'crash-reporter';
 import * as ipc from 'ipc';
-import * as pty from 'pty.js';
+import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions} from './ptyconnector';
+
 import * as resourceLoader from './resourceloader';
 import * as Messages from './windowmessages';
 import * as clipboard from 'clipboard';
+
+import * as ptyDirect from './ptydirect';
 
 // Interfaces.
 import Config = require('config');
@@ -38,11 +41,14 @@ const THEMES_DIRECTORY = "themes";
 
 let themes: im.Map<string, Theme>;
 let config: Config;
+let ptyConnector: PtyConnector;
 
 function main(): void {
   config = readConfigurationFile();
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
 
+  ptyConnector = ptyDirect.factory(config.pty);
+  
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
   themes = scanThemes(themesdir);
@@ -271,13 +277,13 @@ function handleThemesRequest(msg: Messages.ThemesRequestMessage): Messages.Theme
 let ptyCounter = 0;
 interface PtyTuple {
   windowId: number;
-  ptyTerm: pty.Terminal;
+  ptyTerm: Pty;
 };
 
 const ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
 
 function createPty(sender: GitHubElectron.WebContents, file: string, args: string[], cols: number, rows: number): number {
-  const term = pty.spawn(file, args, {
+  const term = ptyConnector.spawn(file, args, {
       name: 'xterm-color',
       cols: cols,
       rows: rows,
@@ -288,7 +294,7 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
   const ptyId = ptyCounter;
   ptyMap.set(ptyId, { windowId: BrowserWindow.fromWebContents(sender).id, ptyTerm: term });
   
-  term.on('data', (data) => {
+  term.onData( (data) => {
     log("pty process got data for ptyID="+ptyId);
     logData(data);
     
@@ -296,7 +302,7 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
     sender.send(Messages.CHANNEL_NAME, msg);    
   });
 
-  term.on('exit', () => {
+  term.onExit( () => {
     log("pty process exited.");
     const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
     sender.send(Messages.CHANNEL_NAME, msg);

@@ -6,5 +6,6 @@ interface Config {
   blinkingCursor?: boolean;
   theme?: string;
   themePath?: string;
+  pty?: any;
 }
 export = Config;
