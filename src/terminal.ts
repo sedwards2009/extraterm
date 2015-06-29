@@ -31,7 +31,8 @@ const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 const SEMANTIC_TYPE = "data-extraterm-type";
 const SEMANTIC_VALUE = "data-extraterm-value";
 const ID_CONTAINER = "terminal_container";
-const THEME_TAG = "theme";
+const ID_MAIN_STYLE = "main_style";
+const ID_THEME_STYLE = "theme_style";
 
 const enum ApplicationMode {
   APPLICATION_MODE_NONE = 0,
@@ -101,6 +102,8 @@ class EtTerminal extends HTMLElement {
   
   private _tagCounter: number;
   
+  private _mainStyleLoaded: boolean;
+  
   private _initProperties(): void {
     this._scrollSyncID = -1;
     this._autoscroll = true;
@@ -112,6 +115,7 @@ class EtTerminal extends HTMLElement {
     this._blinkingCursor = false;
     this._title = "New Tab";
     this._tagCounter = 0;    
+    this._mainStyleLoaded = false;
   }
   
   //-----------------------------------------------------------------------
@@ -122,6 +126,14 @@ class EtTerminal extends HTMLElement {
 
     const clone = this._createClone();
     shadow.appendChild(clone);
+    
+    this._handleResize = this._handleResize.bind(this);
+
+    util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
+      this._mainStyleLoaded = true;
+      this._handleResize();
+    });
+    util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', this._handleResize);
   
     this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
@@ -149,7 +161,6 @@ class EtTerminal extends HTMLElement {
     this._term.on('title', this._handleTitle.bind(this));
     this._term.on('data', this._handleTermData.bind(this));
     
-    this._handleResize = this._handleResize.bind(this);
     this._getWindow().addEventListener('resize', this._handleResize);
     
     this._term.on('key', this._handleKeyDown.bind(this));
@@ -180,17 +191,14 @@ class EtTerminal extends HTMLElement {
     this._scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
       this._autoscroll = ev.detail.isBottom;
     });
-    
-    const size = this._term.resizeToContainer();
-    this._sendResizeEvent(size.cols, size.rows);
-    
+  
     this._syncScrolling();
   }
   
   detachedCallback(): void {
     this.destroy();
   }
-  
+
   /**
    * Blinking cursor
    * 
@@ -204,8 +212,7 @@ class EtTerminal extends HTMLElement {
   }
   
   set themeCss(path: string) {
-    const themeTag = <HTMLStyleElement> util.getShadowId(this, THEME_TAG);
-    console.log("Setting theme css ",path);
+    const themeTag = <HTMLStyleElement> util.getShadowId(this, ID_THEME_STYLE);
     themeTag.innerHTML = "@import '" + path + "';";
   }
   
@@ -226,14 +233,6 @@ class EtTerminal extends HTMLElement {
     if (this._scrollSyncID !== -1) {
       cancelAnimationFrame(this._scrollSyncID);
     }
-    
-    // if (this._ptyBridge !== null) {
-    //   this._ptyBridge.removeAllListeners();
-    // 
-    //   this._ptyBridge.kill('SIGHUP');
-    //   this._ptyBridge.disconnect();
-    //   this._ptyBridge = null;
-    // }
 
     if (this._term !== null) {
       this._getWindow().removeEventListener('resize', this._handleResize);
@@ -293,7 +292,7 @@ class EtTerminal extends HTMLElement {
 
       const success_color = "#00ff00";
       const fail_color = "#ff0000";
-      template.innerHTML = `<style>
+      template.innerHTML = `<style id="${ID_MAIN_STYLE}">
         :host {
           display: block;
         }
@@ -326,7 +325,7 @@ class EtTerminal extends HTMLElement {
             overflow-y: hidden;
         }
         </style>
-        <style id="theme"></style>
+        <style id="${ID_THEME_STYLE}"></style>
         <div class='terminal_container' id='${ID_CONTAINER}'>
           <div class='term_container'></div>
           <cb-scrollbar class='terminal_scrollbar'></cb-scrollbar>
@@ -414,7 +413,7 @@ class EtTerminal extends HTMLElement {
   }
 
   private _syncManualScroll(): void {
-    var el = this._term.element;
+    const el = this._term.element;
     this._autoscroll = el.scrollTop === el.scrollHeight - el.clientHeight;
     this._scrollbar.position = el.scrollTop;
   }
@@ -434,8 +433,10 @@ class EtTerminal extends HTMLElement {
    * Handle a resize event from the window.
    */
   _handleResize(): void {
-    var size = this._term.resizeToContainer();
-    this._sendResizeEvent(size.cols, size.rows);
+    if (this._mainStyleLoaded) {
+      const size = this._term.resizeToContainer();
+      this._sendResizeEvent(size.cols, size.rows);
+    }
   }
 
   _handleKeyDown(key: string, ev: KeyboardEvent): void {

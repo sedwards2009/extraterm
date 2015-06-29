@@ -33,7 +33,7 @@ export function getShadowId(el: HTMLElement, id: string): HTMLElement {
 }
 
 //-------------------------------------------------------------------------
-interface LaterHandle {
+export interface LaterHandle {
   cancel(): void;
 }
 
@@ -48,7 +48,7 @@ function doLaterTimeoutHandler(): void {
 }
 
 /**
- * Shedule a function to be executed later.
+ * Schedule a function to be executed later.
  * 
  * @param  {Function}    func [description]
  * @return {LaterHandle} This object can be used to cancel the scheduled execution.
