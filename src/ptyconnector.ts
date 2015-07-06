@@ -8,7 +8,7 @@ export interface Pty {
    *
    * @param data data to write.
    */
-  write(data: any): boolean;
+  write(data: any): void;
   
   /**
    * Tell the pty that the size of the terminal has changed
@@ -37,6 +37,6 @@ export interface PtyOptions {
 }
 
 export interface PtyConnector {
-  spawn(file?: string, args?: string[], opt?: PtyOptions): Pty;
+  spawn(file: string, args: string[], opt: PtyOptions): Pty;
   destroy(): void;
 }

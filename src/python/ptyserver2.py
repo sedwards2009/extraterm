@@ -132,8 +132,22 @@ pty_list = []   # List of dicts with structure {id: string, pty: pty, reader: }
 #   type: string = "closed";
 #   id: number; // pty ID.
 # }
-
-
+#
+# write to pty message (from Extraterm process)
+# {
+#   type: string = "write";
+#   id: number; // pty ID.
+#   data: string;
+# }
+#
+# resize message (from Extraterm process)
+# {
+#   type: string = "resize";
+#   id: number; // pty ID.
+#   rows: number;
+#   columns: number;
+# }
+#
 pty_counter = 1
 
 def process_command(json_command):
@@ -153,14 +167,37 @@ def process_command(json_command):
         pty_counter += 1
         
         send_to_controller({ "type": "created", "id": pty_id })
-    else:
-        log("ptyserver receive unrecognized message:" + json_command)
+        return
+        
+    if cmd["type"] == "write":
+        pty = find_pty_by_id(cmd["id"])
+        if pty is None:
+            log("Received a write command for an unknown pty (id=" + str(cmd["id"]) + "");
+            return
+        pty.write(cmd["data"].encode())
+        return
+
+    if cmd["type"] == "resize":
+        pty = find_pty_by_id(cmd["id"])
+        if pty is None:
+            log("Received a resizee command for an unknown pty (id=" + str(cmd["id"]) + "");
+            return
+        pty.setwinsize(cmd["rows"], cmd["columns"])
+        return
+        
+    log("ptyserver receive unrecognized message:" + json_command)
 
 def send_to_controller(msg):
     msg_text = json.dumps(msg)+"\n"
     log("server >>> main : "+msg_text);
     sys.stdout.write(msg_text)
     sys.stdout.flush()
+
+def find_pty_by_id(pty_id):
+    for pty_tup in pty_list:
+        if pty_tup["id"] == pty_id:
+            return pty_tup["pty"]
+    return None
 
 def main():
     global pty_list
@@ -175,7 +212,8 @@ def main():
         # Check the stdin control channel.
         if stdin_reader.isEOF():
             log("server <<< main : EOF")
-        
+            return
+            
         chunk = stdin_reader.read()
         while chunk is not None:
             log("server <<< main : " + repr(chunk))

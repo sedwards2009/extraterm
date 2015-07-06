@@ -27,3 +27,7 @@ src/windowmessages.js
 src/mainwebui.js
 src/aboutdialog.js
 src/term.js
+src/ptyconnector.js
+src/ptydirect.js
+src/ptyfactory.js
+src/ptyproxy.js

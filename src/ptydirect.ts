@@ -10,11 +10,11 @@ class DirectPty implements Pty {
     this.realPty = pty.createTerminal(file, args, opt);
   }
   
-  write(data: any): boolean {
-    return this.realPty.write(data);
+  write(data: any): void {
+    this.realPty.write(data);
   }
   
-  resize(cols?: number, rows?: number): void {
+  resize(cols: number, rows: number): void {
     this.realPty.resize(cols, rows);
   }
   
@@ -31,7 +31,7 @@ class DirectPty implements Pty {
   }
 }
 
-function spawn(file?: string, args?: string[], opt?: PtyOptions): Pty {
+function spawn(file: string, args: string[], opt: PtyOptions): Pty {
   return new DirectPty(file, args, opt);
 }
 

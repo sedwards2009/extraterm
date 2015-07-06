@@ -34,6 +34,7 @@
         "./src/mainwebui.ts",
         "./src/ptyconnector.ts",
         "./src/ptydirect.ts",
+        "./src/ptyproxy.ts",
         "./src/qs.d.ts",
         "./src/requirejs.d.ts",
         "./src/resourceloader.ts",

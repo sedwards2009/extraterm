@@ -22,7 +22,8 @@ import * as resourceLoader from './resourceloader';
 import * as Messages from './windowmessages';
 import * as clipboard from 'clipboard';
 
-import * as ptyDirect from './ptydirect';
+/*import * as ptyDirect from './ptydirect';*/
+import * as ptyProxy from './ptyproxy';
 
 // Interfaces.
 import Config = require('config');
@@ -47,7 +48,8 @@ function main(): void {
   config = readConfigurationFile();
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
 
-  ptyConnector = ptyDirect.factory(config.pty);
+  /*ptyConnector = ptyDirect.factory(config.pty);*/
+  ptyConnector = ptyProxy.factory(config.pty);
   
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
