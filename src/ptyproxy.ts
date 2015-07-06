@@ -6,6 +6,7 @@ const TYPE_CREATED = "created";
 const TYPE_WRITE = "write";
 const TYPE_OUTPUT = "output";
 const TYPE_RESIZE = "resize";
+const TYPE_CLOSED = "closed";
 
 interface ProxyMessage {
   type: string;
@@ -36,6 +37,9 @@ interface OutputMessage extends ProxyMessage {
   data: string;
 }
 
+interface ClosedMessage extends ProxyMessage {
+}
+
 const NULL_ID = -1;
 
 class ProxyPty implements Pty {
@@ -51,6 +55,8 @@ class ProxyPty implements Pty {
   // Pre-open write queue.
   private _writeQueue: ProxyMessage[] = [];
   
+  private _live = true;
+  
   constructor(writeFunc) {
     this._writeFunc = writeFunc;
   }
@@ -61,20 +67,24 @@ class ProxyPty implements Pty {
   
   set id(id: number) {
     this._id = id;
-    this._writeQueue.forEach( (msg) => {
-      msg.id = this._id;
-      this._writeFunc(this._id, msg);
-    });
-    this._writeQueue = [];
+    if (this._live) {
+      this._writeQueue.forEach( (msg) => {
+        msg.id = this._id;
+        this._writeFunc(this._id, msg);
+      });
+      this._writeQueue = [];
+    }
   }
   
   private _writeMessage(id: number, msg: ProxyMessage): void {
-    if (this._id === -1) {
-      // We don't know what the ID of the pty in the proxy is.
-      // Queue up this message for later.
-      this._writeQueue.push(msg);
-    } else {
-      this._writeFunc(this._id, msg);
+    if (this._live) {
+      if (this._id === -1) {
+        // We don't know what the ID of the pty in the proxy is.
+        // Queue up this message for later.
+        this._writeQueue.push(msg);
+      } else {
+        this._writeFunc(this._id, msg);
+      }
     }
   }
   
@@ -93,13 +103,20 @@ class ProxyPty implements Pty {
   }
   
   data(data: string): void {
-    if (this._dataListener !== null) {
+    if (this._live && this._dataListener !== null) {
       this._dataListener(data);
     }
   }
   
   onExit(callback: () => void): void {
     this._exitListener = callback;
+  }
+  
+  exit(): void {
+    if (this._exitListener !== null) {
+      this._live = false;
+      this._exitListener();
+    }
   }
   
   destroy(): void {    
@@ -166,6 +183,14 @@ export function factory(config: any): PtyConnector {
       if (pty !== null) {
         pty.data(outputMsg.data);
       }
+    }
+    
+    if (msgType === TYPE_CLOSED) {
+      const closedMsg = <ClosedMessage> msg;
+      const pty = findPtyById(closedMsg.id);
+      if (pty !== null) {
+        pty.exit();
+      }      
     }
   }
   
