@@ -60,8 +60,8 @@ function main(): void {
   
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
-    if (process.platform !== 'darwin')
-      app.quit();
+    ptyConnector.destroy();
+    app.quit();
   });
 
   // This method will be called when Electron has done everything

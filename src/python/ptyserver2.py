@@ -48,6 +48,7 @@ class NonblockingFileReader:
         
         self.thread = threading.Thread(name="Nonblocking File Reader "+str(self.id),
             target=self._thread_start)
+        self.thread.daemon = True
         self.thread.start()
 
     def read(self):
@@ -80,6 +81,7 @@ class NonblockingFileReader:
                 activity_event.set()
         except EOFError:
             self._isEOF = True
+            log("NonblockingFileReader got EOF, bye!")
             activity_event.set()
             
     def _read_next(self):
@@ -148,6 +150,11 @@ pty_list = []   # List of dicts with structure {id: string, pty: pty, reader: }
 #   columns: number;
 # }
 #
+# terminate (from Extraterm process)
+# {
+#   type: string = "terminate";
+# }
+#
 pty_counter = 1
 
 def process_command(json_command):
@@ -167,29 +174,35 @@ def process_command(json_command):
         pty_counter += 1
         
         send_to_controller({ "type": "created", "id": pty_id })
-        return
+        return True
         
     if cmd["type"] == "write":
         pty = find_pty_by_id(cmd["id"])
         if pty is None:
-            log("Received a write command for an unknown pty (id=" + str(cmd["id"]) + "");
+            log("Received a write command for an unknown pty (id=" + str(cmd["id"]) + "")
             return
         pty.write(cmd["data"].encode())
-        return
+        return True
 
     if cmd["type"] == "resize":
         pty = find_pty_by_id(cmd["id"])
         if pty is None:
-            log("Received a resizee command for an unknown pty (id=" + str(cmd["id"]) + "");
+            log("Received a resizee command for an unknown pty (id=" + str(cmd["id"]) + "")
             return
         pty.setwinsize(cmd["rows"], cmd["columns"])
-        return
+        return True
+        
+    if cmd["type"] == "terminate":
+        for pty_tup in pty_list:
+            pty_tup["pty"].terminate(True)
+        return False
         
     log("ptyserver receive unrecognized message:" + json_command)
-
+    return True
+    
 def send_to_controller(msg):
     msg_text = json.dumps(msg)+"\n"
-    log("server >>> main : "+msg_text);
+    log("server >>> main : "+msg_text)
     sys.stdout.write(msg_text)
     sys.stdout.flush()
 
@@ -201,23 +214,26 @@ def find_pty_by_id(pty_id):
 
 def main():
     global pty_list
+    running = True
     
     log("pty server process starting up")
     stdin_reader = NonblockingLineReader(sys.stdin)
     
-    while True:
+    while running:
+        log("pty server active count: " + str(threading.active_count()))
         WaitOnIOActivity()
         log("Server awake")
         
         # Check the stdin control channel.
         if stdin_reader.isEOF():
             log("server <<< main : EOF")
-            return
+            running = False
             
         chunk = stdin_reader.read()
         while chunk is not None:
             log("server <<< main : " + repr(chunk))
-            process_command(chunk.strip())
+            running = False if not running or not process_command(chunk.strip()) else True
+            log("running: " + str(running))
             chunk = stdin_reader.read()
             
         # Check our ptys for output.
@@ -230,12 +246,17 @@ def main():
                 send_to_controller( {"type": "output", "id": pty_struct["id"], "data": data} )
                 pty_chunk = pty_struct["reader"].read()
 
-        # Check for exitted ptys
+        # Check for exited ptys
         for pty_struct in pty_list[:]:
             log("checking live pty: "+str(pty_struct["pty"].isalive()))
             if not pty_struct["pty"].isalive():
                 pty_list = [ t for t in pty_list if t["id"] != pty_struct["id"] ]
-                #pty_struct["reader"].close()
                 send_to_controller( {"type": "closed", "id": pty_struct["id"] } )
+        log("pty server active count: " + str(threading.active_count()))
+        for t in threading.enumerate():
+            log("Thread: " + t.name)
 
+    sys.stdin.buffer.raw.close()
+    log("pty server main thread exiting.")
+    sys.exit(0)
 main()

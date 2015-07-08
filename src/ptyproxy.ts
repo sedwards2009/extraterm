@@ -7,6 +7,7 @@ const TYPE_WRITE = "write";
 const TYPE_OUTPUT = "output";
 const TYPE_RESIZE = "resize";
 const TYPE_CLOSED = "closed";
+const TYPE_TERMINATE = "terminate";
 
 interface ProxyMessage {
   type: string;
@@ -38,6 +39,9 @@ interface OutputMessage extends ProxyMessage {
 }
 
 interface ClosedMessage extends ProxyMessage {
+}
+
+interface TerminateMessage extends ProxyMessage {  
 }
 
 const NULL_ID = -1;
@@ -141,6 +145,10 @@ export function factory(config: any): PtyConnector {
   });
 
   proxy.on('close', function (code) {
+    console.log('bridge process closed with code ' + code);
+  });
+  
+  proxy.on('exit', function (code) {
     console.log('bridge process exited with code ' + code);
   });
   
@@ -223,8 +231,13 @@ export function factory(config: any): PtyConnector {
     return pty;
   }
   
+  function destroy() {
+    const msg: TerminateMessage = { type: TYPE_TERMINATE, id: -1 };
+    sendMessage(null, msg);
+  }
+  
   return {
     spawn: spawn,
-    destroy() {}
+    destroy: destroy
   };
 }
