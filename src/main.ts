@@ -72,7 +72,8 @@ function main(): void {
     
     // Create the browser window.
     mainWindow = new BrowserWindow({width: 1200, height: 600});
-    
+    mainWindow.setMenu(null);
+
     // Emitted when the window is closed.
     mainWindow.on('closed', function() {
       cleanUpPtyWindow(mainWindow);
