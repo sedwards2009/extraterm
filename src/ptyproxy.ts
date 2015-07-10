@@ -18,6 +18,8 @@ interface CreatePtyMessage extends ProxyMessage {
   argv: string[];
   rows: number;
   columns: number;
+  env: { [key: string]: string; };
+  
   // the id field is not user for this message type.
 }
 
@@ -226,7 +228,7 @@ export function factory(config: any): PtyConnector {
     }
     const pty = new ProxyPty(sendMessage);
     ptys.push(pty);
-    const msg: CreatePtyMessage = { type: TYPE_CREATE, argv: [file, ...args], rows: rows, columns: columns, id: -1 };
+    const msg: CreatePtyMessage = { type: TYPE_CREATE, argv: [file, ...args], rows: rows, columns: columns, id: -1, env: opt.env };
     sendMessage(null, msg);
     return pty;
   }

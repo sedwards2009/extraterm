@@ -33,7 +33,6 @@
         "./src/mainweb.ts",
         "./src/mainwebui.ts",
         "./src/ptyconnector.ts",
-        "./src/ptyconnectorfactory.d.ts",
         "./src/ptydirect.ts",
         "./src/ptyproxy.ts",
         "./src/qs.d.ts",

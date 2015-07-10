@@ -284,12 +284,15 @@ interface PtyTuple {
 const ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
 
 function createPty(sender: GitHubElectron.WebContents, file: string, args: string[], cols: number, rows: number): number {
+  const ptyEnv = _.clone(process.env);
+  ptyEnv["TERM"] = 'xterm-color';
+
   const term = ptyConnector.spawn(file, args, {
       name: 'xterm-color',
       cols: cols,
       rows: rows,
   //    cwd: process.env.HOME,
-      env: process.env});
+      env: ptyEnv } );
       
   ptyCounter++;
   const ptyId = ptyCounter;

@@ -33,7 +33,7 @@ export interface PtyOptions {
   cols?: number;
   rows?: number;
   cwd?: string;
-  env?: any;
+  env?: { [key:string]: string; };
 }
 
 export interface PtyConnector {

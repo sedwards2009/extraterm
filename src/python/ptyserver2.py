@@ -113,6 +113,7 @@ pty_list = []   # List of dicts with structure {id: string, pty: pty, reader: }
 #   argv: string[];
 #   rows: number;
 #   columns: number;
+#   env: {string: string};  // dict
 # }
 #
 # Created message (to Extraterm process):
@@ -167,7 +168,8 @@ def process_command(json_command):
         # Create a new pty.
         rows = cmd["rows"]
         columns = cmd["columns"]
-        pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns) ) #cwd=, env=, )
+        env = cmd["env"]
+        pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns), env=env) #cwd=, )
         pty_reader = NonblockingFileReader(read=pty.read)
         pty_id = pty_counter
         pty_list.append( { "id": pty_id, "pty": pty, "reader": pty_reader } )
