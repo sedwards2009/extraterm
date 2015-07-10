@@ -133,7 +133,10 @@ class EtTerminal extends HTMLElement {
       this._mainStyleLoaded = true;
       this._handleResize();
     });
-    util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', this._handleResize);
+    util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', () => {
+      this._handleResize();
+      util.doLater(this._handleResize);
+      });
   
     this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
@@ -433,9 +436,11 @@ class EtTerminal extends HTMLElement {
    * Handle a resize event from the window.
    */
   _handleResize(): void {
-    if (this._mainStyleLoaded) {
-      const size = this._term.resizeToContainer();
-      this._sendResizeEvent(size.cols, size.rows);
+    if (this._term !== null) {
+      if (this._mainStyleLoaded) {
+        const size = this._term.resizeToContainer();
+        this._sendResizeEvent(size.cols, size.rows);
+      }
     }
   }
 
