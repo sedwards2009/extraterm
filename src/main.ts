@@ -17,13 +17,12 @@ import * as _ from 'lodash';
 import * as crashReporter from 'crash-reporter';
 import * as ipc from 'ipc';
 import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions} from './ptyconnector';
-
 import * as resourceLoader from './resourceloader';
 import * as Messages from './windowmessages';
 import * as clipboard from 'clipboard';
 
-/*import * as ptyDirect from './ptydirect';*/
-import * as ptyProxy from './ptyproxy';
+// Our special 'fake' module which selects the correct pty connector factory implementation.
+var PtyConnectorFactory = require("./ptyconnectorfactory");
 
 // Interfaces.
 import Config = require('config');
@@ -48,8 +47,7 @@ function main(): void {
   config = readConfigurationFile();
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
 
-  /*ptyConnector = ptyDirect.factory(config.pty);*/
-  ptyConnector = ptyProxy.factory(config.pty);
+  ptyConnector = PtyConnectorFactory.factory(config.pty);
   
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
