@@ -25,6 +25,7 @@
         "./src/commandframe.ts",
         "./src/config.ts",
         "./src/configuredialog.ts",
+        "./src/defaultsessionprofiles.ts",
         "./src/domutils.ts",
         "./src/extra_dom.d.ts",
         "./src/framewindow.ts",

@@ -25,7 +25,10 @@ import * as clipboard from 'clipboard';
 var PtyConnectorFactory = require("./ptyconnectorfactory");
 
 // Interfaces.
-import Config = require('config');
+import configInterfaces = require('config');
+type Config = configInterfaces.Config;
+type SessionProfile = configInterfaces.SessionProfile;
+
 import Theme = require('theme');
 
 sourceMapSupport.install();
@@ -47,7 +50,7 @@ function main(): void {
   config = readConfigurationFile();
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
 
-  ptyConnector = PtyConnectorFactory.factory(config.pty);
+  ptyConnector = PtyConnectorFactory.factory();
   
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);

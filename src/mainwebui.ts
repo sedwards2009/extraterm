@@ -2,7 +2,6 @@
  * Copyright 2015 Simon Edwards <simon@simonzone.com>
  */
 import util = require('./gui/util');
-import Config = require('config');
 import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
@@ -10,6 +9,10 @@ import CbTab = require('./gui/tab');
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import path = require('path');
+
+import configInterfaces = require('config');
+type Config = configInterfaces.Config;
+type SessionProfile = configInterfaces.SessionProfile;
 
 const ID = "ExtratermMainWebUITemplate";
 
@@ -89,8 +92,6 @@ class ExtratermMainWebUI extends HTMLElement {
     });
     
     this._setupIpc();
-    
-    this.newTerminalTab();
   }
 
   destroy(): void {
@@ -112,7 +113,8 @@ class ExtratermMainWebUI extends HTMLElement {
    *
    * @return ID of the new terminal.
    */
-  newTerminalTab(): number {
+  newTerminalTab(sessionProfile: SessionProfile): number {
+    console.log(sessionProfile);
     const newId = terminalIdCounter;
     terminalIdCounter++;
     const newCbTab = <CbTab> document.createElement(CbTab.TAG_NAME);
@@ -162,7 +164,7 @@ class ExtratermMainWebUI extends HTMLElement {
     
       } else if (ev.keyCode === 84 && ev.shiftKey) {
         // Ctrl+Shift+T - New tab.
-        this.focusTerminalTab(this.newTerminalTab());
+        this.focusTerminalTab(this.newTerminalTab(sessionProfile));
         
       } else if (ev.keyCode === 87 && ev.shiftKey) {
         // Ctrl+Shift+W - Close tab.
