@@ -8,5 +8,5 @@
  */
 export function toUrl(resourceName: string): string {
   let mainPath = __dirname;
-  return "file://" + mainPath + "/" + resourceName;
+  return "file://" + mainPath.replace(/\\/g, "/") + "/" + resourceName;
 }
