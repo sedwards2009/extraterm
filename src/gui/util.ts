@@ -86,3 +86,14 @@ export function toBoolean(value: any): boolean {
   }
   return Boolean(value);
 }
+
+/**
+ * Returns the new value if is is available otherwise de default value.
+ *
+ * @param defaultValue
+ * @param newValue
+ * @return Either the default value or the new value.
+ */
+export function override(defaultValue: any, newValue: any): any {
+  return newValue !== null && newValue !== undefined ? newValue : defaultValue;
+}

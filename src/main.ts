@@ -25,7 +25,7 @@ import * as clipboard from 'clipboard';
 var PtyConnectorFactory = require("./ptyconnectorfactory");
 
 // Interfaces.
-import configInterfaces = require('config');
+import configInterfaces = require('./config');
 type Config = configInterfaces.Config;
 type SessionProfile = configInterfaces.SessionProfile;
 

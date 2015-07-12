@@ -9,10 +9,10 @@ import CbTab = require('./gui/tab');
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import path = require('path');
-
-import configInterfaces = require('config');
-type Config = configInterfaces.Config;
-type SessionProfile = configInterfaces.SessionProfile;
+import _ = require('lodash');
+import config = require('./config');
+type Config = config.Config;
+type SessionProfile = config.SessionProfile;
 
 const ID = "ExtratermMainWebUITemplate";
 
@@ -114,7 +114,6 @@ class ExtratermMainWebUI extends HTMLElement {
    * @return ID of the new terminal.
    */
   newTerminalTab(sessionProfile: SessionProfile): number {
-    console.log(sessionProfile);
     const newId = terminalIdCounter;
     terminalIdCounter++;
     const newCbTab = <CbTab> document.createElement(CbTab.TAG_NAME);
@@ -180,7 +179,15 @@ class ExtratermMainWebUI extends HTMLElement {
       this._setConfigOnTerminal(newTerminal, this._config);
     }
     
-    webipc.requestPtyCreate("bash", [], 80, 24, process.env).then(
+    const newEnv = _.cloneDeep(process.env);
+    const expandedExtra = config.expandEnvVariables(sessionProfile, config.envContext());
+    
+    let prop: string;
+    for (prop in expandedExtra) {
+      newEnv[prop] = expandedExtra[prop];
+    }
+
+    webipc.requestPtyCreate(sessionProfile.command, [], 80, 24, process.env).then(
       (msg: Messages.CreatedPtyMessage) => {
         terminalEntry.ptyId = msg.id;
       }

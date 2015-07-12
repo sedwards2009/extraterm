@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
 
 ///<amd-dependency path="js-base64" />

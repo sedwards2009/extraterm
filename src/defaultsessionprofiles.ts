@@ -1,6 +1,9 @@
+/**
+ * Copyright 2015 Simon Edwards <simon@simonzone.com>
+ */
 
-import configInterfaces = require('config');
-type SessionProfile = configInterfaces.SessionProfile;
+import config = require('./config');
+type SessionProfile = config.SessionProfile;
 
 const DEFAULT_SESSION_PROFILES: SessionProfile[]  = [
   {

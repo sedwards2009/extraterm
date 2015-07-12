@@ -1,8 +1,8 @@
 /**
- * Copyright 2014 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
 
-import Config = require('config');
+import config = require('./config');
 import Theme = require('theme');
 
 export const CHANNEL_NAME = "async-message";
@@ -37,7 +37,7 @@ export interface ConfigRequestMessage extends Message {
 }
 
 export interface ConfigMessage extends Message {
-  config: Config;
+  config: config.Config;
 }
 
 export interface FrameDataRequestMessage extends Message {

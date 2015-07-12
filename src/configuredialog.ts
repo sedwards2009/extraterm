@@ -1,7 +1,7 @@
 import im = require('immutable');
 import util = require('gui/util');
 
-import Config = require('config');
+import config = require('./config');
 import Theme = require('theme');
 
 var ID = "EtConfigureDialog";
@@ -132,7 +132,7 @@ class EtConfigureDialog extends HTMLElement {
     this.dispatchEvent(event);
   }
   
-  open(config: Config, themes: im.Map<string, Theme>): void {
+  open(config: config.Config, themes: im.Map<string, Theme>): void {
     this._loadThemeSelect(themes);
     var dialog = <HTMLDialogElement> this._getById(ID_DIALOG);
     dialog.showModal();
@@ -165,7 +165,7 @@ class EtConfigureDialog extends HTMLElement {
    * 
    * @param {Object} config
    */
-  private _configToGui(config: Config): void {
+  private _configToGui(config: config.Config): void {
     // Theme.
     var themeSelect = <HTMLSelectElement>this._getById("theme_select");
     for (var i=0; i<themeSelect.options.length; i++) {
@@ -185,7 +185,7 @@ class EtConfigureDialog extends HTMLElement {
    * 
    * @returns {Object} The new config.
    */
-  private _guiToConfig(): Config {
+  private _guiToConfig(): config.Config {
     var themeSelect = <HTMLSelectElement>this._getById("theme_select");
 
     var blinkingCursorCheckbox = <HTMLInputElement>this._getById("blinking_cursor_checkbox");

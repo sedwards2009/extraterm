@@ -16,12 +16,11 @@ import MainWebUi = require('./mainwebui');
 import AboutDialog = require('./aboutdialog');
 import util = require('./gui/util');
 
-import configInterfaces = require('config');
-type Config = configInterfaces.Config;
-type SessionProfile = configInterfaces.SessionProfile;
+import config = require('./config');
+type Config = config.Config;
+type SessionProfile = config.SessionProfile;
 
 import Theme = require('./theme');
-import DEFAULT_SESSION_PROFILES = require('./defaultsessionprofiles');
 
 sourceMapSupport.install();
 
@@ -32,7 +31,7 @@ sourceMapSupport.install();
 
 let terminalIdCounter = 0;
 // let configureDialog: configuredialog = null;
-let config: Config = null;
+let configuration: Config = null;
 // let frameMapping: im.Map<string, commandframe> = im.Map<string, commandframe>();
 
 let themes: im.Map<string, Theme>;
@@ -84,7 +83,7 @@ export function startUp(): void {
     </div>`;
 
     if (config !== null) {
-      mainWebUi.config = config;
+      mainWebUi.config = configuration;
     }
     
     doc.body.appendChild(mainWebUi);
@@ -132,7 +131,7 @@ export function startUp(): void {
     
     const newTabButton = <HTMLButtonElement> document.getElementById('new_tab_button');
     newTabButton.addEventListener('click', () => {
-      mainWebUi.focusTerminalTab(mainWebUi.newTerminalTab(defaultSessionProfile()));
+      mainWebUi.focusTerminalTab(mainWebUi.newTerminalTab(config.defaultSessionProfile(configuration.sessionProfiles)));
     });
     
     doc.addEventListener('selectionchange', () => {
@@ -143,8 +142,7 @@ export function startUp(): void {
         webipc.clipboardReadRequest();
       }
     });
-    
-    mainWebUi.newTerminalTab(defaultSessionProfile());
+    mainWebUi.newTerminalTab(config.defaultSessionProfile(configuration.sessionProfiles));
   });
   
   // Configure dialog.
@@ -161,75 +159,9 @@ export function startUp(): void {
 //   });
 }
 
-function defaultSessionProfile(): SessionProfile {
-  const merged = mergeSessionProfiles(DEFAULT_SESSION_PROFILES, config.sessionProfiles);
-  const candidates = merged.filter( (sp) => {
-    if (sp.platform === null || sp.platform === undefined) {
-      return true;
-    }
-    return Array.isArray(sp.platform) ? sp.platform.indexOf(process.platform) !== -1 : sp.platform === process.platform;
-  });
-    
-  return candidates.length !== 0 ? candidates[0] : null;
-}
-
-function mergeSessionProfiles(primaryList: SessionProfile[], secondaryList: SessionProfile[]): SessionProfile[] {
-  const resultList = <SessionProfile[]> _.cloneDeep(primaryList);
-  if (secondaryList === null || secondaryList === undefined) {
-    return resultList;
-  }
-  
-  const nameMap = new Map<string, SessionProfile>();
-  // FIXME there is probably a simpler way of doing this once ES6 support improves.
-  secondaryList.forEach( (sp) => {
-    nameMap.set(sp.name, sp);
-  });
-  
-  resultList.forEach( (sp) => {
-    if (nameMap.has(sp.name)) {
-      // If the secondary list has a replacement or override for a a session profile, then process it now.
-      const secondary = nameMap.get(sp.name);
-      
-      sp.command = override(sp.command, secondary.command);
-      sp.platform = override(sp.platform, secondary.platform);
-      
-      if (secondary.extraEnv !== null && secondary.extraEnv !== undefined) {
-        if (sp.extraEnv !== null || sp.extraEnv === undefined) {
-          sp.extraEnv = {};
-        }
-        
-        let prop: string;
-        for (prop in secondary.extraEnv) {
-          sp.extraEnv[prop] = secondary.extraEnv[prop];          
-        }
-      }
-    }
-    nameMap.delete(sp.name);
-  });
-
-  // Append any sessions in the secondary list which didn't appear in the primary.
-  nameMap.forEach( (sp) => {
-    resultList.splice(0,0, sp);
-  });
-
-  return resultList;
-}
-
-/**
- * Returns the new value if is is available otherwise de default value.
- *
- * @param defaultValue
- * @param newValue
- * @return Either the default value or the new value.
- */
-function override(defaultValue: any, newValue: any): any {
-  return newValue !== null && newValue !== undefined ? newValue : defaultValue;
-}
-
 function handleConfigMessage(msg: Messages.Message): void {
-  console.log("mainweb.handleConfigMessage");
   const configMessage = <Messages.ConfigMessage> msg;
-  config = configMessage.config;
+  configuration = configMessage.config;
   setupConfiguration(configMessage.config);
 }
 
