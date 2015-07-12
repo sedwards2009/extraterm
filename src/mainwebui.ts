@@ -180,7 +180,7 @@ class ExtratermMainWebUI extends HTMLElement {
     }
     
     const newEnv = _.cloneDeep(process.env);
-    const expandedExtra = config.expandEnvVariables(sessionProfile, config.envContext());
+    const expandedExtra = config.expandEnvVariables(sessionProfile, config.envContext(this._config.systemConfig)).extraEnv;
     
     let prop: string;
     for (prop in expandedExtra) {

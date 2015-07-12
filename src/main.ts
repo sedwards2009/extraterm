@@ -28,6 +28,7 @@ var PtyConnectorFactory = require("./ptyconnectorfactory");
 import configInterfaces = require('./config');
 type Config = configInterfaces.Config;
 type SessionProfile = configInterfaces.SessionProfile;
+type SystemConfig = configInterfaces.SystemConfig;
 
 import Theme = require('theme');
 
@@ -48,6 +49,7 @@ let ptyConnector: PtyConnector;
 
 function main(): void {
   config = readConfigurationFile();
+  config.systemConfig = systemConfiguration();
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
 
   ptyConnector = PtyConnectorFactory.factory();
@@ -126,13 +128,20 @@ function logData(data: string): void {
 }
 
 /**
+ * Extra information about the system configuration and platform.
+ */
+function systemConfiguration(): SystemConfig {
+  return { homeDir: app.getPath('home') };
+}
+
+/**
  * Read the configuration.
  * 
  * @returns The configuration object.
  */
 function readConfigurationFile(): Config {
   const filename = path.join(app.getPath('appData'), CONFIG_FILENAME);
-  let config: Config = {};
+  let config: Config = { systemConfig: null };
 
   if (fs.existsSync(filename)) {
     const configJson = fs.readFileSync(filename, {encoding: "utf8"});
@@ -147,6 +156,9 @@ function readConfigurationFile(): Config {
  * @param {Object} config The configuration to write.
  */
 function writeConfiguration(config: Config): void {
+  const cleanConfig = <Config> _.cloneDeep(config);
+  cleanConfig.systemConfig = null;
+  
   const filename = path.join(app.getPath('appData'), CONFIG_FILENAME);
   fs.writeFileSync(filename, JSON.stringify(config));
 }

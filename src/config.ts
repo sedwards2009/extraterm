@@ -11,6 +11,11 @@ export interface Config {
   theme?: string;
   themePath?: string;
   sessionProfiles?: SessionProfile[];
+  systemConfig: SystemConfig;
+}
+
+export interface SystemConfig {
+  homeDir: string;
 }
 
 export interface SessionProfile {
@@ -74,10 +79,9 @@ export function mergeSessionProfiles(primaryList: SessionProfile[], secondaryLis
   return resultList;
 }
 
-export function envContext(): Map<string, string> {
+export function envContext(systemConfig: SystemConfig): Map<string, string> {
   const context = new Map<string, string>();
-  /*context.set("HOME", os.homedir());*/
-  console.log(context);
+  context.set("HOME_DIR", systemConfig.homeDir);
   return context;
 }
 
@@ -86,19 +90,20 @@ export function expandEnvVariables(sessionProfile: SessionProfile, context: Map<
   if (result.extraEnv !== null && result.extraEnv !== undefined) {
     let prop: string;
     for (prop in result.extraEnv) {
-      result.extraEnv = expandEnvVariable(result.extraEnv[prop], context);
+      result.extraEnv[prop] = expandEnvVariable(result.extraEnv[prop], context);
     }
   }
   
   return result;
 }
 
-export function expandEnvVariable(value: string, context: Object): string {
+export function expandEnvVariable(value: string, context: Map<string, string>): string {
   let result = value;
   let prop: string;
-  for (prop in context) {
-    const re = new RegExp("${" + prop + "}", "g");
-    result = result.replace(re, context[prop]);
-  }
+  context.forEach( (value, prop) => {
+    console.log("replacing "+prop);
+    const re = new RegExp("\\$\\{" + prop + "\\}", "g");
+    result = result.replace(re, value);
+  });
   return result;
 }
