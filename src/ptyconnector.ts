@@ -28,12 +28,16 @@ export interface Pty {
   onExit(callback: () => void): void;
 }
 
+export interface EnvironmentMap {
+  [key:string]: string;
+}
+
 export interface PtyOptions {
   name?: string;
   cols?: number;
   rows?: number;
   cwd?: string;
-  env?: { [key:string]: string; };
+  env?: EnvironmentMap;
 }
 
 export interface PtyConnector {

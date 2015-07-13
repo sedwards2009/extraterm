@@ -21,6 +21,7 @@ export interface SystemConfig {
 export interface SessionProfile {
   name: string;
   command?: string;
+  arguments?: string[];
   extraEnv?: Object;
   platform?: string | string[]; // "win32", "linux" etc.
 }
@@ -58,7 +59,7 @@ export function mergeSessionProfiles(primaryList: SessionProfile[], secondaryLis
       sp.platform = util.override(sp.platform, secondary.platform);
       
       if (secondary.extraEnv !== null && secondary.extraEnv !== undefined) {
-        if (sp.extraEnv !== null || sp.extraEnv === undefined) {
+        if (sp.extraEnv === null || sp.extraEnv === undefined) {
           sp.extraEnv = {};
         }
         

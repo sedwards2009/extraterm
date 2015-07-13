@@ -76,6 +76,10 @@ export function requestThemes(): Promise<Messages.ThemesMessage> {
 export function requestPtyCreate(command: string, args: string[], columns: number, rows: number,
     env: Messages.EnvironmentMap): Promise<Messages.CreatedPtyMessage> {
       
+  if (args === undefined) {
+    args = [];
+  }
+
   const msg: Messages.CreatePtyRequestMessage = {
     type: Messages.MessageType.PTY_CREATE,
     command: command,

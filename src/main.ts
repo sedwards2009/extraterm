@@ -16,7 +16,7 @@ import * as im from 'immutable';
 import * as _ from 'lodash';
 import * as crashReporter from 'crash-reporter';
 import * as ipc from 'ipc';
-import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions} from './ptyconnector';
+import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions, EnvironmentMap as EnvironmentMap} from './ptyconnector';
 import * as resourceLoader from './resourceloader';
 import * as Messages from './windowmessages';
 import * as clipboard from 'clipboard';
@@ -298,8 +298,10 @@ interface PtyTuple {
 
 const ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
 
-function createPty(sender: GitHubElectron.WebContents, file: string, args: string[], cols: number, rows: number): number {
-  const ptyEnv = _.clone(process.env);
+function createPty(sender: GitHubElectron.WebContents, file: string, args: string[], env: EnvironmentMap,
+    cols: number, rows: number): number {
+    
+  const ptyEnv = _.clone(env);
   ptyEnv["TERM"] = 'xterm-color';
 
   const term = ptyConnector.spawn(file, args, {
@@ -334,7 +336,7 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
 }
 
 function handlePtyCreate(sender: GitHubElectron.WebContents, msg: Messages.CreatePtyRequestMessage): Messages.CreatedPtyMessage {
-  const id = createPty(sender, msg.command, msg.args, msg.columns, msg.rows);
+  const id = createPty(sender, msg.command, msg.args, msg.env, msg.columns, msg.rows);
   const reply: Messages.CreatedPtyMessage = { type: Messages.MessageType.PTY_CREATED, id: id };
   return reply;
 }
