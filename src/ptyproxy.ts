@@ -1,6 +1,12 @@
 import * as child_process from 'child_process';
 import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions} from './ptyconnector';
 
+const DEBUG_FINE = false;
+
+function log(msg: any, ...opts: any[]): void {
+  console.log("ptyproxy.ts: " + msg, ...opts);
+}
+
 const TYPE_CREATE = "create";
 const TYPE_CREATED = "created";
 const TYPE_WRITE = "write";
@@ -137,27 +143,29 @@ export function factory(config: any): PtyConnector {
   let messageBuffer = "";
 
   proxy.stdout.on('data', function(data: Buffer) {
-    console.log("main <<< server : ",data);
+    if (DEBUG_FINE) {
+      log("main <<< server : ",data);
+    }
     messageBuffer = messageBuffer + data.toString('utf8');
     processMessageBuffer();
   });
 
   proxy.stderr.on('data', function (data: Buffer) {
-    console.log('ptyproxy received stderr from proxy process :  ' + data);
+    log('ptyproxy process stderr: ' + data);
   });
 
   proxy.on('close', function (code) {
-    console.log('bridge process closed with code ' + code);
+    log('bridge process closed with code ' + code);
   });
   
   proxy.on('exit', function (code) {
-    console.log('bridge process exited with code ' + code);
+    log('bridge process exited with code ' + code);
   });
   
   proxy.on('error', (err) => {
-    console.log("Failed to start process " + pythonExe + ". "+err);
+    log("Failed to start process " + pythonExe + ". "+err);
   });
-    
+
   function processMessageBuffer(): void {
     while (true) {
       const end = messageBuffer.indexOf('\n');

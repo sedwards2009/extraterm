@@ -102,7 +102,6 @@ export function expandEnvVariable(value: string, context: Map<string, string>): 
   let result = value;
   let prop: string;
   context.forEach( (value, prop) => {
-    console.log("replacing "+prop);
     const re = new RegExp("\\$\\{" + prop + "\\}", "g");
     result = result.replace(re, value);
   });

@@ -35,6 +35,8 @@ import Theme = require('theme');
 sourceMapSupport.install();
 crashReporter.start(); // Report crashes
 
+const LOG_FINE = false;
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
 let mainWindow: GitHubElectron.BrowserWindow = null;
@@ -226,7 +228,9 @@ function handleAsyncIpc(event: any, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
   
-  log("Main IPC incoming: ",msg);
+  if (LOG_FINE) {
+    log("Main IPC incoming: ",msg);
+  }
   
   switch(msg.type) {
     case Messages.MessageType.CONFIG_REQUEST:
@@ -316,15 +320,18 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
   ptyMap.set(ptyId, { windowId: BrowserWindow.fromWebContents(sender).id, ptyTerm: term });
   
   term.onData( (data) => {
-    log("pty process got data for ptyID="+ptyId);
-    logData(data);
-    
+    if (LOG_FINE) {
+      log("pty process got data for ptyID="+ptyId);
+      logData(data);
+    }
     const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: ptyId, data: data };
     sender.send(Messages.CHANNEL_NAME, msg);    
   });
 
   term.onExit( () => {
-    log("pty process exited.");
+    if (LOG_FINE) {
+      log("pty process exited.");
+    }
     const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
     sender.send(Messages.CHANNEL_NAME, msg);
     

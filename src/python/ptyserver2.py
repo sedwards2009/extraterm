@@ -12,6 +12,13 @@ import array
 import threading
 import json
 
+LOG_FINE = False
+LOG_FINER = False
+def log(msg):
+    print(msg, file=sys.stderr)
+    sys.stderr.flush()
+
+###########################################################################
 def processPacket(byte_data):
     """
     byte_data - String of bytes containing JSON data in utf-8 encoding.
@@ -22,10 +29,6 @@ def processPacket(byte_data):
 def sendToMaster(data):
     print(data)
     sys.stdout.flush()
-
-def log(msg):
-    print(msg, file=sys.stderr)
-    sys.stderr.flush()
 
 ###########################################################################
 activity_event = threading.Event()
@@ -73,15 +76,18 @@ class NonblockingFileReader:
         try:
             while True:
                 chunk = self._read_next()
-                # log("_thread_start read:" + repr(chunk))
+                if LOG_FINER:
+                    log("_thread_start read:" + repr(chunk))
                 with self.buffer_lock:
                     self.buffer.append(chunk)
                 # Tick the alarm
-                log("reading setting flag!")
+                if LOG_FINER:
+                    log("reading setting flag!")
                 activity_event.set()
         except EOFError:
             self._isEOF = True
-            log("NonblockingFileReader got EOF, bye!")
+            if LOG_FINE:
+                log("NonblockingFileReader got EOF, bye!")
             activity_event.set()
             
     def _read_next(self):
@@ -96,9 +102,11 @@ class NonblockingLineReader(NonblockingFileReader):
 
 def WaitOnIOActivity():
     global activity_event
-    # log("activity_event.wait()")
+    if LOG_FINER:
+        log("activity_event.wait()")
     activity_event.wait()
-    # log("activity_event.clear()")
+    if LOG_FINER:
+        log("activity_event.clear()")
     activity_event.clear()
 
 ###########################################################################
@@ -162,7 +170,8 @@ def process_command(json_command):
     global pty_list
     global pty_counter
     
-    log("server process command:"+repr(json_command))
+    if LOG_FINE:
+        log("server process command:"+repr(json_command))
     cmd = json.loads(json_command)
     if cmd["type"] == "create":
         # Create a new pty.
@@ -204,7 +213,8 @@ def process_command(json_command):
     
 def send_to_controller(msg):
     msg_text = json.dumps(msg)+"\n"
-    log("server >>> main : "+msg_text)
+    if LOG_FINE:
+        log("server >>> main : "+msg_text)
     sys.stdout.write(msg_text)
     sys.stdout.flush()
 
@@ -218,31 +228,38 @@ def main():
     global pty_list
     running = True
     
-    log("pty server process starting up")
+    if LOG_FINE:
+        log("pty server process starting up")
     stdin_reader = NonblockingLineReader(sys.stdin)
     
     while running:
-        log("pty server active count: " + str(threading.active_count()))
+        if LOG_FINER:
+            log("pty server thread active count: " + str(threading.active_count()))
         WaitOnIOActivity()
-        log("Server awake")
+        if LOG_FINER:
+            log("Server awake")
         
         # Check the stdin control channel.
         if stdin_reader.isEOF():
-            log("server <<< main : EOF")
+            if LOG_FINE:
+                log("server <<< main : EOF")
             running = False
             
         chunk = stdin_reader.read()
         while chunk is not None:
-            log("server <<< main : " + repr(chunk))
+            if LOG_FINE:
+                log("server <<< main : " + repr(chunk))
             running = False if not running or not process_command(chunk.strip()) else True
-            log("running: " + str(running))
+            if LOG_FINE:
+                log("running: " + str(running))
             chunk = stdin_reader.read()
             
         # Check our ptys for output.
         for pty_struct in pty_list:
             pty_chunk = pty_struct["reader"].read()
             while pty_chunk is not None:
-                log("server <<< pty : " + repr(pty_chunk))
+                if LOG_FINE:
+                    log("server <<< pty : " + repr(pty_chunk))
                 # Decode the chunk of bytes.
                 data = pty_chunk.decode(errors='ignore')
                 send_to_controller( {"type": "output", "id": pty_struct["id"], "data": data} )
@@ -250,15 +267,19 @@ def main():
 
         # Check for exited ptys
         for pty_struct in pty_list[:]:
-            log("checking live pty: "+str(pty_struct["pty"].isalive()))
+            if LOG_FINER:
+                log("checking live pty: "+str(pty_struct["pty"].isalive()))
             if not pty_struct["pty"].isalive():
                 pty_list = [ t for t in pty_list if t["id"] != pty_struct["id"] ]
                 send_to_controller( {"type": "closed", "id": pty_struct["id"] } )
-        log("pty server active count: " + str(threading.active_count()))
-        for t in threading.enumerate():
-            log("Thread: " + t.name)
+
+        if LOG_FINER:
+            log("pty server active count: " + str(threading.active_count()))
+            for t in threading.enumerate():
+                log("Thread: " + t.name)
 
     sys.stdin.buffer.raw.close()
-    log("pty server main thread exiting.")
+    if LOG_FINE:
+        log("pty server main thread exiting.")
     sys.exit(0)
 main()

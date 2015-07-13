@@ -355,7 +355,6 @@ DIV.show_frame > #tabbar {
   }
   
   _sendSwitchEvent(): void {
-    console.log("tab widget _sendSwitchEvent");
     const event = new CustomEvent(CbTabWidget.EVENT_TAB_SWITCH, { detail: null });
     this.dispatchEvent(event);
   }
