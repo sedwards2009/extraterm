@@ -718,6 +718,9 @@ class EtTerminal extends HTMLElement {
    */
   copyToClipboard(): void {
     const selection = this.shadowRoot.getSelection();
+    if (selection.rangeCount === 0) {
+      return;
+    }
     const range = selection.getRangeAt(0);
     if (range.collapsed) {
       return;
