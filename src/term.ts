@@ -111,6 +111,8 @@ export class Terminal {
 
   static brokenBold: boolean;
   
+  static NO_STYLE_HACK = "NO_STYLE_HACK";
+  
   private parent: HTMLElement = null;
   public element: HTMLElement = null;
 
@@ -3201,20 +3203,29 @@ export class Terminal {
     this.normal = null;
   }
 
+  effectiveFontFamily(): string {
+    const lineEl = this.children[0];    
+    const cs = window.getComputedStyle(lineEl,null);
+    return cs.getPropertyValue("font-family");
+  }
+
   /**
    * Resize the terminal to fill its containing element.
    * 
    * @returns Object with the new colums (cols field) and rows (rows field) information.
    */
   resizeToContainer(): {cols: number; rows: number; } {
+    if (this.effectiveFontFamily().indexOf(Terminal.NO_STYLE_HACK) !== -1) {
+      // Styles have not been applied yet.
+      return {cols: this.cols, rows: this.rows};
+    }
+    
     const lineEl = this.children[0];
-
     const range = this.document.createRange();
     range.setStart(lineEl, 0);
     range.setEnd(lineEl, lineEl.childNodes.length);
     
     const rect = range.getBoundingClientRect();
-    
     if (rect.width === 0 || rect.height === 0) {
       // The containing element has an invalid size.
       return {cols: this.cols, rows: this.rows};
@@ -3240,7 +3251,7 @@ export class Terminal {
     if (newCols !== this.cols || newRows !== this.rows) {
       this.resize(newCols, newRows);
       this._setLastLinePadding(Math.floor(this.element.clientHeight % charHeight));
-    }
+    }    
     return {cols: newCols, rows: newRows};
   }
 

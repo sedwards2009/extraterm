@@ -103,6 +103,8 @@ class EtTerminal extends HTMLElement {
   private _tagCounter: number;
   
   private _mainStyleLoaded: boolean;
+  private _themeStyleLoaded: boolean;
+  private _resizePollHandle: util.LaterHandle;
   
   private _initProperties(): void {
     this._scrollSyncID = -1;
@@ -116,6 +118,8 @@ class EtTerminal extends HTMLElement {
     this._title = "New Tab";
     this._tagCounter = 0;    
     this._mainStyleLoaded = false;
+    this._themeStyleLoaded = false;
+    this._resizePollHandle = null;
   }
   
   //-----------------------------------------------------------------------
@@ -131,13 +135,14 @@ class EtTerminal extends HTMLElement {
 
     util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
       this._mainStyleLoaded = true;
-      this._handleResize();
+      this._handleStyleLoad();
     });
+
     util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', () => {
-      this._handleResize();
-      util.doLater(this._handleResize);
+      this._themeStyleLoaded = true;
+      this._handleStyleLoad();
       });
-  
+
     this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
     this._termContainer = <HTMLDivElement>this._container.firstElementChild;
@@ -237,6 +242,11 @@ class EtTerminal extends HTMLElement {
       cancelAnimationFrame(this._scrollSyncID);
     }
 
+    if (this._resizePollHandle !== null) {
+      this._resizePollHandle.cancel();
+      this._resizePollHandle = null;
+    }
+
     if (this._term !== null) {
       this._getWindow().removeEventListener('resize', this._handleResize);
       this._getWindow().document.body.removeEventListener('click', this._handleWindowClick);
@@ -323,7 +333,7 @@ class EtTerminal extends HTMLElement {
             height: 100%;
 
             white-space: nowrap;
-            
+            font-family: sans-serif, ${termjs.Terminal.NO_STYLE_HACK};
             overflow-x: scroll;
             overflow-y: hidden;
         }
@@ -437,13 +447,39 @@ class EtTerminal extends HTMLElement {
    */
   _handleResize(): void {
     if (this._term !== null) {
-      if (this._mainStyleLoaded) {
+      if (this._mainStyleLoaded && this._themeStyleLoaded) {
         const size = this._term.resizeToContainer();
         this._sendResizeEvent(size.cols, size.rows);
       }
     }
   }
-
+  
+  _resizePoll(): void {
+    if (this._term !== null && this._mainStyleLoaded && this._themeStyleLoaded) {
+      if (this._term.effectiveFontFamily().indexOf(termjs.Terminal.NO_STYLE_HACK) !== -1) {
+        // Font has not been correctly applied yet.
+        this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
+      } else {
+        // Yay! the font is correct. Resize the term now.
+        this._handleResize();
+      }
+    }
+  }
+  
+  _handleStyleLoad(): void {
+    if (this._mainStyleLoaded && this._themeStyleLoaded) {
+      // Force load all of the fonts.
+      document.fonts.forEach( (f) => {
+        if (f.status === 'unloaded') {
+          f.load();
+        }
+      });
+      
+      // Start polling the term for application of the font.
+      this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
+    }
+  }
+  
   _handleKeyDown(key: string, ev: KeyboardEvent): void {
     if (key !== null) {
       this._term.scrollToBottom();

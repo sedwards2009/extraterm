@@ -63,6 +63,32 @@ export function doLater(func: Function): LaterHandle {
   } };
 }
 
+let doLaterFrameId: number = -1;
+let laterFrameList: Function[] = [];
+
+/**
+ * Schedule a function to run at the next animation frame.
+ */
+function doLaterFrameHandler(): void {
+  const workingList = [...laterFrameList];
+  laterFrameList = [];
+  
+  window.cancelAnimationFrame(doLaterFrameId);
+  doLaterFrameId = -1;
+  
+  workingList.forEach( f => f() );
+}
+
+export function doLaterFrame(func: Function): LaterHandle {
+  laterFrameList.push(func);
+  if (doLaterFrameId === -1) {
+    doLaterFrameId = window.requestAnimationFrame(doLaterFrameHandler);
+  }
+  return { cancel: () => {
+    laterFrameList = laterFrameList.filter( f => f!== func );
+  } };
+}
+
 //-------------------------------------------------------------------------
 
 /**
