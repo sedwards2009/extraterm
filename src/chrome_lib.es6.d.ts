@@ -1,4 +1,4 @@
-// Generated at Mon Jun 22 2015 20:55:59 GMT+0200 (CEST)
+// Generated at Tue Jul 14 2015 22:18:38 GMT+0200 (CEST)
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved. 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -19272,4 +19272,44 @@ declare var CustomEvent: {
 };
 interface Console {
   timeStamp(label: string): void;
+}
+
+interface FontFace {
+  family: string;
+  style: string;
+  weight: string;
+  stretch: string;
+  unicodeRange: string;
+  variant: string;
+  featureSettings: string;
+
+  status: string;
+
+  load(): Promise<FontFace>;
+  
+  loaded: Promise<FontFace>;
+}
+
+interface FontFaceSet extends Set<FontFace> {
+  onloading: (ev: Event) => any;
+  onloadingdone: (ev: Event) => any;
+  onloadingerror: (ev: Event) => any;
+  
+  // check and start loads if appropriate
+  // and fulfill promise when all loads complete
+  load(font: string, text?: string): Promise< ArrayLike<FontFace> >;
+  
+  // return whether all fonts in the fontlist are loaded
+  // (does not initiate load if not available)
+  check(font: string, text?: string): boolean;
+  
+  // async notification that font loading and layout operations are done
+  ready: Promise<FontFaceSet>;
+  
+  // loading state, "loading" while one or more fonts loading, "loaded" otherwise
+  status: string;
+}
+
+interface Document {
+  fonts: FontFaceSet;
 }
