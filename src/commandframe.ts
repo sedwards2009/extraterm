@@ -182,10 +182,10 @@ class EtCommandFrame extends HTMLElement {
           }
         </style>
         <div id='container' style='display: none;'>
-          <div id='gutter' class='running'>
-         <div id='icon_div'><i id='icon'></i></div>
-         <button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>
-          </div>
+          <div id='gutter' class='running'>` +
+          `<div id='icon_div'><i id='icon'></i></div>` +
+          `<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>` +
+          `</div>
           <div id='main'>
             <div id='header' tabindex='-1'>
               <div id='commandline'></div>
