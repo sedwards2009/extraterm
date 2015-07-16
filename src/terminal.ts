@@ -2,8 +2,6 @@
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
 
-///<amd-dependency path="js-base64" />
-
 import * as _ from 'lodash';
 import commandframe = require('./commandframe');
 import * as domutils from './domutils';
@@ -878,7 +876,7 @@ class EtTerminal extends HTMLElement {
     const lines = data.split("\n");
     let encodedData: string = "";
     lines.forEach( (line: string) => {
-      encodedData = Base64.encode(line +"\n");
+      encodedData = window.btoa(line +"\n");
       this._sendDataToPtyEvent(encodedData+"\n");
     });
       

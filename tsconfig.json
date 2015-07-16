@@ -28,8 +28,6 @@
         "./src/defaultsessionprofiles.ts",
         "./src/domutils.ts",
         "./src/extra_dom.d.ts",
-        "./src/framewindow.ts",
-        "./src/jsBase64.d.ts",
         "./src/main.ts",
         "./src/mainweb.ts",
         "./src/mainwebui.ts",

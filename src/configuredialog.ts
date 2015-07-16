@@ -4,10 +4,10 @@ import util = require('gui/util');
 import config = require('./config');
 import Theme = require('theme');
 
-var ID = "EtConfigureDialog";
-var ID_DIALOG = "dialog";
+const ID = "EtConfigureDialog";
+const ID_DIALOG = "dialog";
 
-var registered = false;
+let registered = false;
 
 class EtConfigureDialog extends HTMLElement {
   
@@ -191,7 +191,7 @@ class EtConfigureDialog extends HTMLElement {
     var blinkingCursorCheckbox = <HTMLInputElement>this._getById("blinking_cursor_checkbox");
     var blinkingCursor = blinkingCursorCheckbox.checked;
 
-    return { theme: themeSelect.value, blinkingCursor: blinkingCursor };
+    return { theme: themeSelect.value, blinkingCursor: blinkingCursor, systemConfig: null };
   }
   
 }
