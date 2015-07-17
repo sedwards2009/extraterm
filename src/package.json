@@ -7,7 +7,8 @@
   "main": "main.js",
   "scripts": {
     "run": "electron main.js",
-    "build": "tsc"
+    "build": "tsc",
+    "serve-test": "node test/httpserver.js"
   },
   "dependencies": {
     "electron-prebuilt": "^0.27.2",
@@ -21,7 +22,10 @@
     "pty.js": "^0.2.7-1"
   },
   "devDependencies": {
+    "cajon": "^0.2.10",
+    "finalhandler": "^0.4.0",
     "nodeunit": "^0.9.1",
+    "serve-static": "^1.10.0",
     "tsd": "^0.6.0-beta.5",
     "typescript": "^1.5.0-beta"
   }
