@@ -42,9 +42,11 @@ class EtCommandFrame extends HTMLElement {
     if (template === null) {
       template = window.document.createElement('template');
       template.id = ID;
-
-      const success_color = "#00ff00";
-      const fail_color = "#ff0000";
+      
+      const RUNNING_COLOR = new util.Color("#ffffff");
+      const SUCCESS_COLOR = new util.Color("#54ff54");  // Linux green
+      const FAIL_COLOR = new util.Color("#ff5454"); // Linux red
+      
       template.innerHTML = `<style>
         @import '${resourceLoader.toUrl('css/font-awesome.css')}';
         @import '${resourceLoader.toUrl('css/topcoat-desktop-light.css')}';
@@ -62,29 +64,7 @@ class EtCommandFrame extends HTMLElement {
         }
 
         #header {
-          border-top-right-radius: 0.5em;
-          border-bottom-right-radius: 0.5em;
-          padding-top: 1px;
-          padding-left: 0.5em;
-          padding-right: 0.5em;
-          padding-bottom: 1px;
           display: flex;
-        }
-
-        #header.running {
-          border: 1px solid white;
-        }
-
-        #header.success {
-          border-top: 1px solid ${success_color};
-          border-bottom: 1px solid ${success_color};
-          border-right: 1px solid ${success_color};
-        }
-
-        #header.fail {
-          border-top: 1px solid ${fail_color};
-          border-bottom: 1px solid ${fail_color};
-          border-right: 1px solid ${fail_color};
         }
 
         @-webkit-keyframes PULSE_ANIMATION {
@@ -116,17 +96,60 @@ class EtCommandFrame extends HTMLElement {
         }
 
         #gutter.success {
-          color: ${success_color};
-          border-right: 1px solid ${success_color};
+          color: ${SUCCESS_COLOR.toString()};
+          border-right: 1px solid ${SUCCESS_COLOR.toString()};
         }
 
         #gutter.fail {
-          color: ${fail_color};
-          border-right: 1px solid ${fail_color};
+          color: ${FAIL_COLOR.toString()};
+          border-right: 1px solid ${FAIL_COLOR.toString()};
+        }
+        
+        /* Block of controls top right */
+        .right_block {
+          flex: 0 0 auto;
+          display: flex;
+          border-top-right-radius: 0.5em;
+          border-bottom-left-radius: 0.5em;
+          padding-top: 1px;
+          padding-left: 0.5em;
+          padding-right: 0.5em;
+          padding-bottom: 1px;
+        }
+        
+        #header.running > .right_block {
+          border: 1px solid ${RUNNING_COLOR.toString()};
+        }
+
+        #header.success > .right_block {
+          border: 1px solid ${SUCCESS_COLOR.toString()};          
+        }
+
+        #header.fail > .right_block {
+          border: 1px solid ${FAIL_COLOR.toString()};
         }
 
         #commandline {
-          flex: auto 1 1;
+          flex: auto 0 1;
+          border-bottom-right-radius: 0.5em;
+          padding-top: 1px;
+          padding-left: 0.5em;
+          padding-right: 0.5em;
+          padding-bottom: 1px;
+        }
+        
+        #header.running > #commandline {
+          border: 1px solid ${RUNNING_COLOR.toString()};
+        }
+        
+        #header.success > #commandline {
+          border: 1px solid ${SUCCESS_COLOR.toString()};
+          border-left: 0px;
+        }
+
+        #header.fail > #commandline {
+          border: 1px solid ${FAIL_COLOR.toString()};
+          border-left: 0px;
         }
 
         #close_button, #pop_out_button {
@@ -139,12 +162,28 @@ class EtCommandFrame extends HTMLElement {
         #close_button:hover {
           color: red;
         }
-      
+        
+        #header.running > .header_spacer {
+          border-top: 1px solid ${RUNNING_COLOR.opacity(0.5).toString()};
+        }
+        
+        #header.success > .header_spacer {
+          border-top: 1px solid ${SUCCESS_COLOR.opacity(0.5).toString()};            
+        }
+        
+        #header.fail > .header_spacer {
+          border-top: 1px solid ${FAIL_COLOR.opacity(0.5).toString()};
+        }
+        
         .header_spacer {
+          flex: 0em 1 1;
+        }
+        
+        .spacer {
           flex: 2em 0 0;
           min-width: 2em;
         }
-      
+                
         #tag_name {
           flex: 0 1 auto;
         }
@@ -183,19 +222,22 @@ class EtCommandFrame extends HTMLElement {
         </style>
         <div id='container' style='display: none;'>
           <div id='gutter' class='running'>` +
-          `<div id='icon_div'><i id='icon'></i></div>` +
-          `<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>` +
+            `<div id='icon_div'><i id='icon'></i></div>` +
+            `<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>` +
           `</div>
           <div id='main'>
             <div id='header' tabindex='-1'>
               <div id='commandline'></div>
-              <i class='fa fa-tag'></i>
-              <div id='tag_name'></div>
               <div class='header_spacer'></div>
-              <button id='pop_out_button'><i class='fa fa-external-link'></i></button>
-              <div class='header_spacer'></div>
-              <button id='close_button'><i class='fa fa-times-circle'></i></button>
-            </div>
+              <div class='right_block'>
+                <div id='tag_icon'><i class='fa fa-tag'></i></div>
+                <div id='tag_name'></div>
+                <div class='spacer'></div>
+                <button id='pop_out_button'><i class='fa fa-external-link'></i></button>
+                <div class='spacer'></div>
+                <button id='close_button'><i class='fa fa-times-circle'></i></button>` +
+              `</div>` +
+            `</div>
             <div id='output'><content id='lines_content'></content></div>
           </div>
         </div>

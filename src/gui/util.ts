@@ -123,3 +123,110 @@ export function toBoolean(value: any): boolean {
 export function override(defaultValue: any, newValue: any): any {
   return newValue !== null && newValue !== undefined ? newValue : defaultValue;
 }
+//-------------------------------------------------------------------------
+/**
+ * Small class for handling CSS colors.
+ */
+export class Color {
+  
+  _red: number;
+  _green: number;
+  _blue: number;
+  _opacity: number;
+  _hexString: string = null;
+  _rgbaString: string = null;
+  
+  /**
+   * Creates a color object.
+   * 
+   * @param  {string |       number}      redOrString [description]
+   * @param  {number}    green   [description]
+   * @param  {number}    blue    [description]
+   * @param  {number}    opacity [description]
+   * @return {[type]}            [description]
+   */
+  constructor(redOrString: string | number, green?: number, blue?: number, opacity?: number) {
+    if (typeof redOrString === "string") {
+      const stringColor = <string> redOrString;
+      if (stringColor.startsWith("#")) {
+        if (stringColor.length === 4) {
+          // Parse the 4bit colour values and expand then to 8bit.
+          this._red = parseInt(stringColor.slice(1,2), 16) * 17;
+          this._green = parseInt(stringColor.slice(2,3), 16) * 17;
+          this._blue = parseInt(stringColor.slice(3,4), 16) * 17;
+          
+        } else if (stringColor.length === 7) {
+          this._red = parseInt(stringColor.slice(1,3), 16);
+          this._green = parseInt(stringColor.slice(3,5), 16);
+          this._blue = parseInt(stringColor.slice(5,7), 16);          
+        } else {
+          // Malformed hex colour.
+          
+        }
+        this._opacity = 1;
+        
+      } else {
+        // What now?!
+      }
+    } else {
+      // Assume numbers.
+      const red = <number> redOrString;
+      this._red = red;
+      this._green = green !== undefined ? green : 0;
+      this._blue = blue !== undefined ? blue : 0;
+      this._opacity = opacity !== undefined ? opacity : 1;
+    }
+  }
+  /**
+   * Returns the color as a 6 digit hex string.
+   * 
+   * @return the color as a CSS style hex string.
+   */
+  toHexString(): string {
+    if (this._hexString === null) {
+      this._hexString = "#" + to2DigitHex(this._red) + to2DigitHex(this._green) + to2DigitHex(this._blue);
+    }
+    return this._hexString;
+  }  
+  
+  /**
+   * Returns the color as a CSS rgba() value.
+   * 
+   * @return the color as a CSS rgba() value.
+   */
+  toRGBAString(): string {
+    if (this._rgbaString === null) {
+      this._rgbaString = "rgba(" + this._red + "," + this._green + "," + this._blue + "," + this._opacity + ")";
+    }
+    return this._rgbaString;
+  }
+  
+  /**
+   * Returns the color as a CSS string.
+   * 
+   * @return the color as a CSS formatted string.
+   */
+  toString(): string {
+    if (this._opacity == 1) {
+      // Use a hex representation.
+      return this.toHexString();
+    } else {
+      return this.toRGBAString();
+    }
+  }
+
+  /**
+   * Creates a new color with the given opacity value.
+   * 
+   * @param  newOpacity A number from 0 to 1.
+   * @return the new color.
+   */
+  opacity(newOpacity: number): Color {
+    return new Color(this._red, this._green, this._blue, newOpacity);
+  }
+}
+
+function to2DigitHex(value: number): string {
+  const h = value.toString(16);
+  return h.length === 1 ? "0" + h : h;
+}
