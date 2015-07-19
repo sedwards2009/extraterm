@@ -74,16 +74,20 @@
         map: {
           "*": {
             "immutable": "node_modules/immutable/dist/immutable.js",
+            "markdown": "node_modules/markdown/lib/index.js",
             "resourceloader": "webresourceloader.js",
-            "domReady": "test/domReady.js"
+            "domReady": "test/domReady.js",
+            "util": "gui/util.js" //<- this should not be needed, but the markdownviewer will not load with out it.
           }
         }
     });
     HTMLElement_obj = HTMLElement;
       
-    require(['immutable', 'gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'gui/scrollbar', 'gui/stackedwidget', 'gui/tabwidget', 'gui/tab',
-             'commandframe', 'configuredialog', 'domReady'],
-            function(im, menuitem, contextmenu, dropdown, checkboxmenuitem, scrollbar, stackedwidget, tabwidget, tab, commandframe, configuredialog) {
+    require(['immutable', 'markdown', 'gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'gui/scrollbar',
+            'gui/stackedwidget', 'gui/tabwidget', 'gui/tab', 'gui/markdownviewer', 'commandframe', 'configuredialog',
+            'domReady'],
+            function(im, markdown, menuitem, contextmenu, dropdown, checkboxmenuitem, scrollbar, stackedwidget, tabwidget, tab,
+              markdownviewer, commandframe, configuredialog) {
 
         menuitem.init();
         contextmenu.init();
@@ -93,6 +97,7 @@
         stackedwidget.init();
         tabwidget.init();
         tab.init();
+        markdownviewer.init();
         commandframe.init();
         configuredialog.init();
 
@@ -360,7 +365,13 @@
         </div>
     </cb-tabwidget>
   </fieldset>
-
+  
+  <fieldset><legend>Markdown Viewer</legend>
+    <cb-markdown-viewer>*Some Markdown text*
+    
+   What happens now.
+    </cb-markdown-viewer>
+  </fieldset>
   
 </body>
 </html>
