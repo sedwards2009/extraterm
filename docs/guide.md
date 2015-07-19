@@ -5,7 +5,8 @@ Tabs
 ----
 Tabs are located at the top of the window. New tabs can be created by clicking on the + (plus) icon.
 
-Use Shift+Left and Shift+Right to move between tabs.
+* Use Shift+Left and Shift+Right to move between tabs.
+* Ctrl+T opens a new tab.
 
 
 Frames
