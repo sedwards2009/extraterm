@@ -19,8 +19,8 @@ Show a icon or something in the tab label to indicate when the tab has activity.
 
 Support New Window
 ==================
-
 Support Ctrl+N to open a new window.
+
 
 Support context menu on tabs and terminals
 ==========================================
@@ -55,3 +55,9 @@ Minimise flicker with command frames by delaying the initial rendering
 
 Minimise flicker when exiting the 'less' command and removing the blank line
 ============================================================================
+
+
+Add configuration options to not frame certain commands
+=======================================================
+The 'cd' command doesn't need a command frame ever.
+
