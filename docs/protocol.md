@@ -48,3 +48,12 @@ Data Request
 
 [frame_id] = ID this identifies the frame of data which the terminal should transmit.
 
+
+Show MIME data
+--------------
+
+    ESC "&" <cookie> ";5;" [mime type] 0x07 ";" [size] 0x07 [base 64 data] 0x00
+
+[mime type] = 
+[size] = size of the data in bytes (not base 64 encoded size!)
+[base 64 data] = The stream of base64 encoded data.

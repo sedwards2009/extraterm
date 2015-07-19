@@ -29,6 +29,12 @@ def markEndCommand(rc=None):
         print(rc, end="")
     print("\x00", end="")
 
+def startMimeType(mimeType):
+    print(INTRO + cookie() + ";5;" + mimeType + "\x07", end="")
+
+def endMimeType():
+    print("\x00", end="")
+    
 def requestFrame(frameName):
     print(INTRO + cookie() + ";4\x07" + frameName + "\x00", end="", file=sys.stderr)
     sys.stderr.flush()

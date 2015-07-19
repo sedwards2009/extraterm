@@ -4,6 +4,7 @@
 
 import * as _ from 'lodash';
 import commandframe = require('./commandframe');
+import markdownviewer = require('./gui/markdownviewer');
 import * as domutils from './domutils';
 import * as termjs from './term';
 import scrollbar = require('./gui/scrollbar');
@@ -37,7 +38,8 @@ const enum ApplicationMode {
   APPLICATION_MODE_HTML = 1,
   APPLICATION_MODE_OUTPUT_BRACKET_START = 2,
   APPLICATION_MODE_OUTPUT_BRACKET_END = 3,
-  APPLICATION_MODE_REQUEST_FRAME = 4
+  APPLICATION_MODE_REQUEST_FRAME = 4,
+  APPLICATION_MODE_SHOW_MIME = 5,
 }
 
 /**
@@ -74,6 +76,7 @@ class EtTerminal extends HTMLElement {
     if (registered === false) {
       scrollbar.init();
       commandframe.init();
+      markdownviewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
       registered = true;
     }
@@ -90,6 +93,10 @@ class EtTerminal extends HTMLElement {
 
   private _term: termjs.Terminal;
   private _htmlData: string;
+  
+  private _mimeType: string;
+  private _mimeData: string;
+  
   private _applicationMode: ApplicationMode;
   private _bracketStyle: string;
   private _lastBashBracket: string;
@@ -109,6 +116,8 @@ class EtTerminal extends HTMLElement {
     this._autoscroll = true;
     this._term = null;
     this._htmlData = null;
+    this._mimeType = null;
+    this._mimeData = null;
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
     this._bracketStyle = null;
     this._lastBashBracket = null;
@@ -589,6 +598,9 @@ class EtTerminal extends HTMLElement {
    */
   _handleApplicationModeStart(params: string[]): void {
     log("application-mode started! ",params);
+    
+    // FIXME check cookie!
+
     if (params.length === 1) {
       // Normal HTML mode.
       this._applicationMode = ApplicationMode.APPLICATION_MODE_HTML;
@@ -610,6 +622,13 @@ class EtTerminal extends HTMLElement {
           log("Starting APPLICATION_MODE_REQUEST_FRAME");
           break;
           
+        case "" + ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+          log("Starting APPLICATION_MODE_SHOW_MIME");
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_MIME;
+          this._mimeData = "";
+          this._mimeType = params[2];
+          break;
+        
         default:
           log("Unrecognized application escape parameters.");
           break;
@@ -624,12 +643,22 @@ class EtTerminal extends HTMLElement {
    * @param {string} data The new data.
    */
   _handleApplicationModeData(data: string): void {
-    log("html-mode data!", data);
-    if (this._applicationMode !== ApplicationMode.APPLICATION_MODE_NONE) {
-      this._htmlData = this._htmlData + data;
+    log("html-mode data!", data);    
+    switch (this._applicationMode) {
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+        this._htmlData = this._htmlData + data;
+        break;
+        
+      case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+        this._mimeData = this._mimeData + data;
+        break;
+        
+      default:
+        break;
     }
   }
-
+  
   /**
    * Handle the exit from application mode.
    */
@@ -710,6 +739,12 @@ class EtTerminal extends HTMLElement {
 
       case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
         this.handleRequestFrame(this._htmlData);
+        break;
+        
+      case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+        this._handleShowMimeType(this._mimeType, this._mimeData);
+        this._mimeType = "";
+        this._mimeData = "";
         break;
         
       default:
@@ -895,6 +930,18 @@ class EtTerminal extends HTMLElement {
     if (encodedData.length !== 0) {
       this._sendDataToPtyEvent("\x04");
     }
+  }
+
+  _handleShowMimeType(mimeType: string, mimeData: string): void {
+    if (mimeType === "text/markdown") {
+      const win = this._getWindow();
+      const el = win.document.createElement(markdownviewer.TAG_NAME);
+      const decodedMimeData = window.atob(mimeData);
+      el.appendChild(win.document.createTextNode(decodedMimeData));
+      this._term.appendElement(el);
+    } else {
+      log("Unknown mime type: " + mimeType);
+    }    
   }
 
   /**

@@ -5,29 +5,31 @@ import base64
 
 import extratermclient
 
-def ShowImage(filename, format):
-    extratermclient.startHtml()
-    print("<img src=\"data:image/",end='')
-    print(format,end='')
-    print(";base64,",end='')
+def SendMimeTypeData(filename, mimeType):
+    extratermclient.startMimeType(mimeType)
     with open(filename,'rb') as fhandle:
-        contents = fhandle.read()
-    print(base64.b64encode(contents).decode(),end='')
-    print("\" />")
-    extratermclient.endHtml()
+        contents = fhandle.read(3*10240)    # This must be a multiple of 3 to keep concatinated base64 working.
+        print(base64.b64encode(contents).decode(),end='')
+    extratermclient.endMimeType()
+
+mimeTypeMap = {
+    "png": "image/png",
+    "git": "image/git",
+    "jpg": "image/jpg",
+    "md": "text/markdown"
+}
 
 def Show(filename):
-
     if os.path.exists(filename):
-        lowerfilename = filename.lower()
-        if lowerfilename.endswith(".png"):
-            ShowImage(filename, "png")
-        elif lowerfilename.endswith(".gif"):
-            ShowImage(filename, "gif")
-        elif lowerfilename.endswith(".jpg"):
-            ShowImage(filename, "jpg")
+        lowerfilename = os.path.basename(filename).lower()
+        if '.' in lowerfilename:
+            extension = lowerfilename.split('.')[-1]
+            if extension in mimeTypeMap:
+                SendMimeTypeData(filename, mimeTypeMap[extension])
+            else:
+                print("Unrecognised file extension.")
         else:
-            print("Unsupported file format.")
+            print("Unrecognised file extension.")
     else:
         print("Unable to open file {0}.".format(filename))
 

@@ -8,6 +8,7 @@ src/framewindow.js
 src/gui/checkboxmenuitem.js
 src/gui/contextmenu.js
 src/gui/dropdown.js
+src/gui/markdownviewer.js
 src/gui/menuitem.js
 src/gui/popup.js
 src/gui/scrollbar.js

@@ -2722,7 +2722,9 @@ export class Terminal {
           break;
           
         case application_start:
-          if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')) {
+          if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch === '-'
+              || ch === '/') {
+
             // Add to the current parameter.
             this.currentParam += ch;  // FIXME don't absorb infinite data here.
             
@@ -2736,6 +2738,7 @@ export class Terminal {
             this.params.push(this.currentParam);
             if (this.params[0] === this.applicationModeCookie) {
               this.state = application;
+              console.log("term.ts start app mode!" + this.params);
               this.emit('application-mode-start', this.params);
             } else {
               this.log("Invalid application mode cookie.");

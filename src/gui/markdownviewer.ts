@@ -28,7 +28,7 @@ class CbMarkdownViewer extends HTMLElement {
   /**
    * 
    */
-  private createClone() {
+  private createClone(): Node {
     let template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
@@ -37,6 +37,7 @@ class CbMarkdownViewer extends HTMLElement {
         :host {
           display: block;
           width: 100%;
+          white-space: normal;
         }
         </style>
         <div id="${ID_CONTAINER}" class="markdown_viewer"></div>`;
@@ -47,7 +48,7 @@ class CbMarkdownViewer extends HTMLElement {
     return window.document.importNode(template.content, true);
   }
 
-  createdCallback() {
+  createdCallback(): void {
     const shadow = util.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
