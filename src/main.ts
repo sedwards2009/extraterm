@@ -273,6 +273,10 @@ function handleAsyncIpc(event: any, arg: any): void {
       reply = handleClipboardReadRequest(<Messages.ClipboardReadRequestMessage> msg);
       break;
       
+    case Messages.MessageType.WINDOW_CLOSE_REQUEST:
+      mainWindow.close();
+      break;
+      
     default:
       break;
   }

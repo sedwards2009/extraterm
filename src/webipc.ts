@@ -120,3 +120,8 @@ export function clipboardReadRequest(): void {
   const msg: Messages.ClipboardReadRequestMessage = { type: Messages.MessageType.CLIPBOARD_READ_REQUEST };
   ipc.send(Messages.CHANNEL_NAME, msg);      
 }
+
+export function windowCloseRequest(): void {
+  const msg: Messages.WindowCloseRequestMessage = { type: Messages.MessageType.WINDOW_CLOSE_REQUEST };
+  ipc.send(Messages.CHANNEL_NAME, msg);  
+}

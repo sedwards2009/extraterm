@@ -25,7 +25,8 @@ export const enum MessageType {
   DEV_TOOLS_STATUS,
   CLIPBOARD_WRITE,
   CLIPBOARD_READ_REQUEST,
-  CLIPBOARD_READ
+  CLIPBOARD_READ,
+  WINDOW_CLOSE_REQUEST
 }
 
 export interface Message {
@@ -118,4 +119,7 @@ export interface ClipboardReadRequestMessage extends Message {
 
 export interface ClipboardReadMessage extends Message {
   text: string;
+}
+
+export interface WindowCloseRequestMessage extends Message {  
 }

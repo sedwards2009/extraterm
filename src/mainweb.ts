@@ -90,11 +90,9 @@ export function startUp(): void {
     
     // Detect when the last tab has closed.
     mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
-      window.setTimeout( () => {
-        if (mainWebUi.tabCount === 0) {
-          window.close();
-        }
-      }, 0);
+      if (mainWebUi.tabCount === 0) {
+        webipc.windowCloseRequest();
+      }
     });
     
     // Update the window title on request.
