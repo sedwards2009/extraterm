@@ -722,9 +722,12 @@ class EtTerminal extends HTMLElement {
             const outputdiv = <HTMLDivElement>startdivs[startdivs.length-1];
             let node = outputdiv.nextSibling;
 
+            // Collect the DIVs in the scrollback from the et-commandframe up to the end of the scrollback.
             const nodelist: Node[] = [];
             while (node !== null) {
-              nodelist.push(node);
+              if (node.nodeName !== "DIV" || ! (<HTMLElement> node).classList.contains("terminal-active")) {
+                nodelist.push(node);
+              }
               node = node.nextSibling;
             }
             nodelist.forEach(function(node) {

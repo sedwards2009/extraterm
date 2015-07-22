@@ -698,33 +698,46 @@ export class Terminal {
   }
 
   /**
-   * Effectively move all rendered rows into the physical scrollback area.
+   * Moves all of the rendered rows into the physical scrollback area.
    * 
-   * Visually this does nothing because the new rows for the terminal will
-   * not have been rendered or added to the DOM yet. Future terminal rows 
-   * will appear below the old last row in the window.
+   * The rows on the terminal screen are moved into the scrollback area but
+   * the new terminal rows are not rendered. Visually this does nothing as 
+   * the result looks the same. If the last row contains the cursor and is
+   * empty, then it is not moved.
+   * 
+   * Future terminal rows will appear below the old last row in the window
+   * once something is printed there.
    */
   moveRowsToScrollback(): void {
-    
+    let children = this.children;
+    let newChildren = [];
+    let lines = this.lines;
+    let newLines = [];
+  
     if (this.x === 0 && this.lines.length-1 === this.y) {
       if (this.getLineText(this.y).trim() === '') {
-        this.lines.splice(this.lines.length-1, 1);
+        lines = this.lines.slice(0, -1);
+        newLines = [this.lines[this.lines.length-1]];
+        children = this.children.slice(0, -1);
+        newChildren = [this.children[this.children.length-1]];
       }
     }
     
-    this.lines.forEach(function(line) {
+    // Fill up the scroll back "TODO" (=to be rendered) buffer.
+    lines.forEach(function(line) {
       this._scrollbackBuffer.push(line);
     }, this);
     
-    this.lines = [];
+    this.lines = newLines;
     
-    this.children.forEach(function(div) {
+    // Delete the DIV objects for the current terminal screen.
+    children.forEach(function(div) {
       div.remove();
     });
-    this.children = [];
+    this.children = newChildren;
     
+    // Force the scrollback buffer to render.
     this._refreshScrollback();
-    
     this.refreshStart = REFRESH_START_NULL;
     this.refreshEnd = REFRESH_END_NULL;
     this.x = 0;
@@ -742,7 +755,11 @@ export class Terminal {
    */
   appendElement(element: HTMLElement): void {
     this.moveRowsToScrollback();
-    this.element.appendChild(element);
+    if (this.children.length !== 0) {
+      this.element.insertBefore(element, this.children[0]);
+    } else {
+      this.element.appendChild(element);
+    }
   }
 
   _getLine(row: number): LineCell[] {
