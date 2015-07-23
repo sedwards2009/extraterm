@@ -548,7 +548,7 @@ class EtTerminal extends HTMLElement {
         return;
 
       } else if (ev.keyCode === 38) {
-        // 38 = update arrow.
+        // 38 = up arrow.
 
         // Note ugly convert-to-array code. ES6 Array.from() help us!
         frames = Array.prototype.slice.call(this._term.element.querySelectorAll("et-commandframe"));
@@ -560,7 +560,7 @@ class EtTerminal extends HTMLElement {
         return;
 
       } else if (ev.keyCode === 40) {
-        // 40 = down arros.
+        // 40 = down arrow.
 
         frames = Array.prototype.slice.call(this._term.element.querySelectorAll("et-commandframe"));
         index = frames.indexOf(<commandframe>ev.target);
@@ -574,9 +574,9 @@ class EtTerminal extends HTMLElement {
     } else if (ev.target === this._term.element) {
       // In normal typing mode.
 
-      if (ev.keyCode === 32 && ev.ctrlKey) {
-        // Enter cursor mode.
-        // 32 = space.
+      // Enter cursor mode.
+      if (ev.keyCode === 38 && ev.shiftKey) {
+        // Shift + Up arrow.
         const lastFrame = <commandframe>this._term.element.querySelector("et-commandframe:last-of-type");
         if (lastFrame !== null) {
           lastFrame.focusLast();

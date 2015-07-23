@@ -18,6 +18,8 @@ const RETURN_CODE_ATTR = "return-code";
 const EXPAND_ATTR = "expand";
 const LINE_NUMBERS_ATTR = "line-numbers";
 const TAG_ATTR = "tag";
+const ID_CONTAINER = "container";
+const ID_HEADER = "header";
 
 let registered = false;
 const REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
@@ -46,6 +48,7 @@ class EtCommandFrame extends HTMLElement {
       const RUNNING_COLOR = new util.Color("#ffffff");
       const SUCCESS_COLOR = new util.Color("#54ff54");  // Linux green
       const FAIL_COLOR = new util.Color("#ff5454"); // Linux red
+      const FOCUS_COLOR = new util.Color("#43ace8");
       
       template.innerHTML = `<style>
         @import '${resourceLoader.toUrl('css/font-awesome.css')}';
@@ -55,7 +58,7 @@ class EtCommandFrame extends HTMLElement {
           display: block;
         }
       
-        #container {
+        #${ID_CONTAINER} {
           display: flex;
         }
 
@@ -63,21 +66,24 @@ class EtCommandFrame extends HTMLElement {
           flex: 1 1 auto;
         }
 
-        #header {
+        #${ID_HEADER} {
           display: flex;
         }
-
+        
         @-webkit-keyframes PULSE_ANIMATION {
-          0%   { background-color: rgba(255, 165, 0, 1.0); }
-          25%   { background-color: rgba(255, 165, 0, 1.0); }
-          50% { background-color: rgba(255, 165, 0, 0.5); }
-          75% { background-color: rgba(255, 165, 0, 1.0); }
-          100%   { background-color: rgba(255, 165, 0, 1.0); }
+          0%   { outline-color: ${FOCUS_COLOR.toString()}; }
+          50% { outline-color: ${FOCUS_COLOR.opacity(0.5).toString()}; }
+          100%   { outline-color: ${FOCUS_COLOR.toString()}; }
         }
-
-        #header:focus {
+  
+        #${ID_CONTAINER}:focus {
           -webkit-animation: PULSE_ANIMATION 2s infinite;
-          animation: PULSE_ANIMATION 2s infinite;
+          animation: PULSE_ANIMATION 2s infinite;          
+          
+          outline-width: 4px;
+          outline-offset: -2px;
+          outline-color: ${FOCUS_COLOR.toString()};
+          outline-style: solid;
         }
 
         #output.closed {
@@ -117,15 +123,15 @@ class EtCommandFrame extends HTMLElement {
           padding-bottom: 1px;
         }
         
-        #header.running > .right_block {
+        #${ID_HEADER}.running > .right_block {
           border: 1px solid ${RUNNING_COLOR.toString()};
         }
 
-        #header.success > .right_block {
+        #${ID_HEADER}.success > .right_block {
           border: 1px solid ${SUCCESS_COLOR.toString()};          
         }
 
-        #header.fail > .right_block {
+        #${ID_HEADER}.fail > .right_block {
           border: 1px solid ${FAIL_COLOR.toString()};
         }
 
@@ -138,16 +144,16 @@ class EtCommandFrame extends HTMLElement {
           padding-bottom: 1px;
         }
         
-        #header.running > #commandline {
+        #${ID_HEADER}.running > #commandline {
           border: 1px solid ${RUNNING_COLOR.toString()};
         }
         
-        #header.success > #commandline {
+        #${ID_HEADER}.success > #commandline {
           border: 1px solid ${SUCCESS_COLOR.toString()};
           border-left: 0px;
         }
 
-        #header.fail > #commandline {
+        #${ID_HEADER}.fail > #commandline {
           border: 1px solid ${FAIL_COLOR.toString()};
           border-left: 0px;
         }
@@ -163,15 +169,15 @@ class EtCommandFrame extends HTMLElement {
           color: red;
         }
         
-        #header.running > .header_spacer {
+        #${ID_HEADER}.running > .header_spacer {
           border-top: 1px solid ${RUNNING_COLOR.opacity(0.5).toString()};
         }
         
-        #header.success > .header_spacer {
+        #${ID_HEADER}.success > .header_spacer {
           border-top: 1px solid ${SUCCESS_COLOR.opacity(0.5).toString()};            
         }
         
-        #header.fail > .header_spacer {
+        #${ID_HEADER}.fail > .header_spacer {
           border-top: 1px solid ${FAIL_COLOR.opacity(0.5).toString()};
         }
         
@@ -220,13 +226,13 @@ class EtCommandFrame extends HTMLElement {
           font-size: 0.7rem;
           }
         </style>
-        <div id='container' style='display: none;'>
+        <div id='${ID_CONTAINER}' style='display: none;' tabindex='-1'>
           <div id='gutter' class='running'>` +
             `<div id='icon_div'><i id='icon'></i></div>` +
             `<button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>` +
           `</div>
           <div id='main'>
-            <div id='header' tabindex='-1'>
+            <div id='${ID_HEADER}'>
               <div id='commandline'></div>
               <div class='header_spacer'></div>
               <div class='right_block'>
@@ -273,7 +279,7 @@ class EtCommandFrame extends HTMLElement {
     if (attrName === RETURN_CODE_ATTR) {
       const gutter = <HTMLDivElement>this._getById('gutter');
       const icon = <HTMLDivElement>this._getById("icon");
-      const header= <HTMLDivElement>this._getById('header');
+      const header= <HTMLDivElement>this._getById(ID_HEADER);
 
       if (newValue === null || newValue === undefined || newValue === "") {
         icon.className = "fa fa-cog";
@@ -407,11 +413,11 @@ class EtCommandFrame extends HTMLElement {
         default:
           break;
       }
-      (<HTMLDivElement>this._getById('header')).focus();
+      (<HTMLDivElement>this._getById(ID_HEADER)).focus();
     });
 
     cm.addEventListener('before-close', (function(ev: Event) {
-      const header = this._getById('header');
+      const header = this._getById(ID_HEADER);
       header.focus();
     }).bind(this));
     
@@ -432,7 +438,7 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   focusLast(): void {
-    const header = <HTMLDivElement>this._getById('header');
+    const header = <HTMLDivElement>this._getById(ID_CONTAINER);
     header.focus();
     this.scrollIntoView(true);
     this._emitManualScroll();
@@ -442,7 +448,7 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   focusFirst(): void {
-    const header = <HTMLDivElement>this._getById('header');
+    const header = <HTMLDivElement>this._getById(ID_CONTAINER);
     header.focus();
     this.scrollIntoView(true);
     this._emitManualScroll();
@@ -467,7 +473,7 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   openMenu(): void {
-    const header = <HTMLDivElement>this._getById('header');
+    const header = <HTMLDivElement>this._getById(ID_HEADER);
     const cm = <contextmenu>this._getById('contextmenu');
     const rect = header.getBoundingClientRect();
     cm.openAround(header); //(rect.left, rect.top );
