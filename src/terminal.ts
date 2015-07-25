@@ -110,8 +110,10 @@ class EtTerminal extends HTMLElement {
   private _mainStyleLoaded: boolean;
   private _themeStyleLoaded: boolean;
   private _resizePollHandle: util.LaterHandle;
+  private _elementAttached: boolean;
   
   private _initProperties(): void {
+    this._elementAttached = false;
     this._scrollSyncID = -1;
     this._autoscroll = true;
     this._term = null;
@@ -158,8 +160,6 @@ class EtTerminal extends HTMLElement {
     process.env[EXTRATERM_COOKIE_ENV] = cookie;
 
     this._term = new termjs.Terminal({
-      cols: 80,
-      rows: 30,
       colors: this._colors(),
       scrollback: 1000,
       cursorBlink: this._blinkingCursor,
@@ -189,6 +189,11 @@ class EtTerminal extends HTMLElement {
   }
   
   attachedCallback(): void {
+    if (this._elementAttached) {
+      return;
+    }
+    this._elementAttached = true;
+    
     // Window DOM event handlers
     this._handleWindowClick = this._handleWindowClick.bind(this);
     this._getWindow().document.body.addEventListener('click', this._handleWindowClick);
@@ -210,10 +215,6 @@ class EtTerminal extends HTMLElement {
     this._syncScrolling();
   }
   
-  detachedCallback(): void {
-    this.destroy();
-  }
-
   /**
    * Blinking cursor
    * 

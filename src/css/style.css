@@ -4,8 +4,7 @@
 
 DIV.tab_bar_rest {
   display: flex;
-  margin: 1px;
-  margin-right: 2px;
+  width: 100%;
 }
 
 DIV.tab_bar_rest > DIV.space {

@@ -4,7 +4,6 @@ src/commandframe.js
 src/config.js
 src/configuredialog.js
 src/domutils.js
-src/framewindow.js
 src/gui/checkboxmenuitem.js
 src/gui/contextmenu.js
 src/gui/dropdown.js

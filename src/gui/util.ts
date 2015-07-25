@@ -32,6 +32,22 @@ export function getShadowId(el: HTMLElement, id: string): HTMLElement {
   return <HTMLElement> getShadowRoot(el).querySelector('#' + id);
 }
 
+/**
+ * Converts a node list to a real array.
+ * 
+ * @param  nodeList the node list to convert.
+ * @return          a new array holding the same contents as the node list.
+ */
+export function nodeListToArray(nodeList: NodeList): Node[] {
+  let i = 0;
+  const result: Node[] = [];
+  const len = nodeList.length;
+  for (i=0; i<len; i++) {
+    result.push(nodeList[i]);
+  }
+  return result;
+}
+
 //-------------------------------------------------------------------------
 export interface LaterHandle {
   cancel(): void;

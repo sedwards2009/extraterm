@@ -16,18 +16,32 @@ type SessionProfile = config.SessionProfile;
 
 const ID = "ExtratermMainWebUITemplate";
 
-const ID_CONTAINER = "container";
-const ID_REST_DIV = "rest";
+const ID_TOP = "top";
+const ID_PANE_LEFT = "pane_left";
+const ID_PANE_RIGHT = "pane_right";
+const ID_TAB_CONTAINER_LEFT = "container_left";
+const ID_TAB_CONTAINER_RIGHT = "container_right";
+const ID_REST_DIV_PRIMARY = "rest_primary";
+const ID_REST_DIV_SECONDARY = "rest_secondary";
+const ID_NEW_TAB_BUTTON_PRIMARY = "new_tab_primary";
+const ID_NEW_TAB_BUTTON_SECONDARY = "new_tab_secondary";
+const CLASS_SPLIT = "split";
 
 let registered = false;
 
+const enum TabPosition {
+  LEFT,
+  RIGHT
+}
+
 interface TerminalTab {
   id: number;
+  position: TabPosition;
   terminalDiv: HTMLDivElement;
   cbTab: CbTab;
   terminal: EtTerminal;
   ptyId: number;
-};
+}
 
 let terminalIdCounter = 1;
 
@@ -58,15 +72,25 @@ class ExtratermMainWebUI extends HTMLElement {
   
   static EVENT_TITLE = 'title';
   
+  static POSITION_LEFT = TabPosition.LEFT;
+  
+  static POSITION_RIGHT = TabPosition.RIGHT;
+  
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _terminalTabs: TerminalTab[];
   
   private _config: Config;
+
+  private _defaultSessionProfile: SessionProfile;
+  
+  private _split: boolean;
   
   private _initProperties(): void {
     this._terminalTabs = [];
     this._config = null;
+    this._defaultSessionProfile = null;
+    this._split = false;
   }
   
   //-----------------------------------------------------------------------
@@ -77,13 +101,14 @@ class ExtratermMainWebUI extends HTMLElement {
   createdCallback(): void {
     this._initProperties(); // Initialise our properties. The constructor was not called.
     
-    var shadow = util.createShadowRoot(this);
-    var clone = this._createClone();
+    const shadow = util.createShadowRoot(this);
+    const clone = this._createClone();
     shadow.appendChild(clone);
     
-    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
     
     // Update the window title when the selected tab changes and resize the terminal.
+    // FIXME
+    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     tabWidget.addEventListener(TabWidget.EVENT_TAB_SWITCH, (e) => {
       if (tabWidget.currentIndex >= 0 && tabWidget.currentIndex < this._terminalTabs.length) {
         const tup = this._terminalTabs[tabWidget.currentIndex];
@@ -91,6 +116,16 @@ class ExtratermMainWebUI extends HTMLElement {
         tup.terminal.resizeToContainer();
         tup.terminal.focus();
       }
+    });
+    
+    const newTabPrimaryButton = this._getById(ID_NEW_TAB_BUTTON_PRIMARY);
+    newTabPrimaryButton.addEventListener('click', () => {
+      this.focusTerminalTab(this.newTerminalTab(this._split ? TabPosition.RIGHT : TabPosition.LEFT));
+    });
+    
+    const newTabSecondaryButton = this._getById(ID_NEW_TAB_BUTTON_SECONDARY);
+    newTabSecondaryButton.addEventListener('click', () => {
+      this.focusTerminalTab(this.newTerminalTab(this._split ? TabPosition.LEFT : TabPosition.RIGHT));
     });
     
     this._setupIpc();
@@ -110,12 +145,59 @@ class ExtratermMainWebUI extends HTMLElement {
     return this._terminalTabs.length;
   }
   
+  set split(split: boolean) {
+    if (split === this._split) {
+      return;
+    }
+    
+    const top = this._getById(ID_TOP);
+    const tabContainerLeft = this._getById(ID_TAB_CONTAINER_LEFT);
+    const tabContainerRight = this._getById(ID_TAB_CONTAINER_RIGHT);
+    const restDivPrimary = this._getById(ID_REST_DIV_PRIMARY);
+    const restDivSecondary = this._getById(ID_REST_DIV_SECONDARY);
+    if (split) {
+      // Split it in two.
+      top.classList.add(CLASS_SPLIT);
+      // The primary controls have the burger menu. When it is split, the controls are moved to the right side.
+      tabContainerRight.appendChild(restDivPrimary);
+      tabContainerLeft.appendChild(restDivSecondary);
+      
+    } else {
+      // Go from a spliit with two panes to just one pane.
+      top.classList.remove(CLASS_SPLIT);
+      tabContainerLeft.appendChild(restDivPrimary);
+      tabContainerRight.appendChild(restDivSecondary);
+      
+      // Move the terminal tabs from the right tab container to the left one.
+      const nodesToMove = util.nodeListToArray(tabContainerRight.childNodes)
+        .filter( node => ! (node.nodeName === "DIV" && ( (<HTMLDivElement>node).id === ID_REST_DIV_PRIMARY ||
+          (<HTMLDivElement>node).id === ID_REST_DIV_SECONDARY)));
+      nodesToMove.forEach( node => {
+        tabContainerLeft.insertBefore(node, restDivPrimary);
+        });
+
+      // Fix up the list of terminal info objects.
+      this._terminalTabs = [...this._terminalTabs.filter( info => info.position == TabPosition.LEFT ),
+        ...this._terminalTabs.filter( info => info.position == TabPosition.RIGHT).map( info => {info.position = TabPosition.LEFT; return info; })];
+    }
+    
+    this._split = split;
+  }
+  
+  get split(): boolean {
+    return this._split;
+  }
+  
+  set defaultSessionProfile(sessionProfile: SessionProfile) {
+    this._defaultSessionProfile = sessionProfile;
+  }
+  
   /**
    * Create a new terminal tab
    *
    * @return ID of the new terminal.
    */
-  newTerminalTab(sessionProfile: SessionProfile): number {
+  newTerminalTab(position: TabPosition): number {
     const newId = terminalIdCounter;
     terminalIdCounter++;
     const newCbTab = <CbTab> document.createElement(CbTab.TAG_NAME);
@@ -127,24 +209,26 @@ class ExtratermMainWebUI extends HTMLElement {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     
     newDiv.appendChild(newTerminal);
-    const terminalEntry = { id: newId, terminalDiv: newDiv, cbTab: newCbTab, terminal: newTerminal,
+    const tabInfo = { id: newId, position: position, terminalDiv: newDiv, cbTab: newCbTab, terminal: newTerminal,
       ptyId: null };
-    this._terminalTabs.push(terminalEntry);
+    this._terminalTabs.push(tabInfo);
     
-    const restDiv = this._getById(ID_REST_DIV);
-    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+    const tabWidget = <TabWidget> this._getById(position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
+    // The way the split view changes the position of the 'rest' controls in the tab widgets causes this expression below.
+    const restDiv = this._getById(this._split === (position === TabPosition.LEFT) ? ID_REST_DIV_SECONDARY : ID_REST_DIV_PRIMARY);
+    
     tabWidget.insertBefore(newCbTab, restDiv);
     tabWidget.insertBefore(newDiv, restDiv);
     
     newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (e) => {
-      if (terminalEntry.ptyId !== null) {
-        webipc.ptyInput(terminalEntry.ptyId, (<any> e).detail.data);
+      if (tabInfo.ptyId !== null) {
+        webipc.ptyInput(tabInfo.ptyId, (<any> e).detail.data);
       }
     });
     
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_RESIZE, (e) => {
-      if (terminalEntry.ptyId !== null) {
-        webipc.ptyResize(terminalEntry.ptyId, (<any> e).detail.columns, (<any> e).detail.rows);
+      if (tabInfo.ptyId !== null) {
+        webipc.ptyResize(tabInfo.ptyId, (<any> e).detail.columns, (<any> e).detail.rows);
       }      
     });
 
@@ -157,19 +241,19 @@ class ExtratermMainWebUI extends HTMLElement {
       const ev = <KeyboardEvent> e.detail;
       if (ev.keyCode === 37 && ev.shiftKey) {
         // left-arrow
-        this._shiftTab(-1);
+        this._shiftTab(tabInfo.position, -1);
     
       } else if (ev.keyCode === 39 && ev.shiftKey) {
         // right-arrow
-        this._shiftTab(1);
+        this._shiftTab(tabInfo.position, 1);
     
       } else if (ev.keyCode === 84 && ev.shiftKey) {
         // Ctrl+Shift+T - New tab.
-        this.focusTerminalTab(this.newTerminalTab(sessionProfile));
+        this.focusTerminalTab(this.newTerminalTab(tabInfo.position));
         
       } else if (ev.keyCode === 87 && ev.shiftKey) {
         // Ctrl+Shift+W - Close tab.
-        const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+        const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
         this.closeTerminalTab(this._terminalTabs[tabWidget.currentIndex].id);
 
       } else {
@@ -182,16 +266,17 @@ class ExtratermMainWebUI extends HTMLElement {
     }
     
     const newEnv = _.cloneDeep(process.env);
-    const expandedExtra = config.expandEnvVariables(sessionProfile, config.envContext(this._config.systemConfig)).extraEnv;
+    const expandedExtra = config.expandEnvVariables(this._defaultSessionProfile,
+      config.envContext(this._config.systemConfig)).extraEnv;
 
     let prop: string;
     for (prop in expandedExtra) {
       newEnv[prop] = expandedExtra[prop];
     }
 
-    webipc.requestPtyCreate(sessionProfile.command, sessionProfile.arguments, 80, 24, newEnv).then(
+    webipc.requestPtyCreate(this._defaultSessionProfile.command, this._defaultSessionProfile.arguments, 80, 24, newEnv).then(
       (msg: Messages.CreatedPtyMessage) => {
-        terminalEntry.ptyId = msg.id;
+        tabInfo.ptyId = msg.id;
       }
     );
     
@@ -207,17 +292,19 @@ class ExtratermMainWebUI extends HTMLElement {
     if (matches.length === 0) {
       return;
     }
-    const tup = matches[0];
+    const tabInfo = matches[0];
     
-    let index = this._terminalTabs.indexOf(tup);
+    let index = this._terminalTabs.indexOf(tabInfo);
     
     // Remove the tab from the list.
     this._terminalTabs = this._terminalTabs.filter( (p) => p.id !== terminalId );
     
-    tup.terminalDiv.parentNode.removeChild(tup.terminalDiv);
-    tup.cbTab.parentNode.removeChild(tup.cbTab);
-    if (tup.ptyId !== null) {
-      webipc.ptyClose(tup.ptyId);
+    tabInfo.terminalDiv.parentNode.removeChild(tabInfo.terminalDiv);
+    tabInfo.cbTab.parentNode.removeChild(tabInfo.cbTab);
+    tabInfo.terminal.destroy();
+    
+    if (tabInfo.ptyId !== null) {
+      webipc.ptyClose(tabInfo.ptyId);
     }
     
     this._sendTabClosedEvent();
@@ -231,22 +318,32 @@ class ExtratermMainWebUI extends HTMLElement {
   }
   
   focusTerminalTab(terminalId: number): void {
+    let leftIndex = 0;
+    let rightIndex = 0;
     for (let i=0; i<this._terminalTabs.length; i++) {
-      if (this._terminalTabs[i].id === terminalId) {
-        const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
-        tabWidget.currentIndex = i;
-        this._terminalTabs[i].terminal.focus();
+      const tabInfo = this._terminalTabs[i];
+      if (tabInfo.id === terminalId) {
+        const tabWidget = <TabWidget> this._getById(
+          tabInfo.position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
+        tabWidget.currentIndex = tabInfo.position === TabPosition.LEFT ? leftIndex : rightIndex;
+        tabInfo.terminal.focus();
+      }
+      
+      if (tabInfo.position === TabPosition.LEFT) {
+        leftIndex++;
+      } else {
+        rightIndex++;
       }
     }
   }
   
   copyToClipboard(): void {
-    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     this._terminalTabs[tabWidget.currentIndex].terminal.copyToClipboard();
   }
   
   pasteText(text: string): void {
-    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     this._terminalTabs[tabWidget.currentIndex].terminal.pasteText(text);
   }
   
@@ -276,13 +373,46 @@ class ExtratermMainWebUI extends HTMLElement {
     return `
     @import '${resourceLoader.toUrl('css/font-awesome.css')}';
     @import '${resourceLoader.toUrl('css/topcoat-desktop-light.css')}';
-    #${ID_CONTAINER} {
+    #${ID_TOP} {
       position: absolute;
       top: 2px;
       bottom: 0;
       left: 0;
       right: 0;
-    }    
+      
+      display: flex;
+    }
+    
+    #${ID_PANE_LEFT} {
+      flex: auto 1 1;  
+    }
+    
+    #${ID_PANE_LEFT}, #${ID_PANE_RIGHT} {
+      position: relative;
+    }
+    
+    #${ID_TAB_CONTAINER_LEFT}, #${ID_TAB_CONTAINER_RIGHT} {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+    
+    #${ID_PANE_RIGHT} {
+      display: none;
+    }
+    
+    #${ID_TOP}.${CLASS_SPLIT} > #${ID_PANE_RIGHT} {
+      flex: auto 1 1;
+      display: block;
+    }
+    
+    #${ID_REST_DIV_PRIMARY} {
+      display: flex;
+    }
+
+    #${ID_REST_DIV_PRIMARY} > DIV.space {
+      flex-grow: 1;
+    }
     
     DIV.terminal_holder {
       height: 100%;
@@ -296,9 +426,19 @@ class ExtratermMainWebUI extends HTMLElement {
   }
 
   private _html(): string {
-    return `<cb-tabwidget id="${ID_CONTAINER}" show-frame="false">
-        <div id="${ID_REST_DIV}"><content></content></div>
-      </cb-tabwidget>`;
+    return `<div id="${ID_TOP}">` +
+        `<div id="${ID_PANE_LEFT}">` +
+          `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
+            `<div id="${ID_REST_DIV_PRIMARY}"><button class="topcoat-icon-button--large--quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
+            `<content></content></div>` +
+          `</cb-tabwidget>` +
+        `</div>` +
+        `<div id="${ID_PANE_RIGHT}">` +
+          `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
+            `<div id="${ID_REST_DIV_SECONDARY}"><button class="topcoat-icon-button--large--quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
+          `</cb-tabwidget>` +
+        `</div>` +
+      `</div>`;
   }
   
   //-----------------------------------------------------------------------
@@ -328,13 +468,14 @@ class ExtratermMainWebUI extends HTMLElement {
   
   //-----------------------------------------------------------------------
   
-  private _shiftTab(direction: number): void {
-    const len = this._terminalTabs.length;
+  private _shiftTab(position: TabPosition, direction: number): void {
+    const shortTabList = this._terminalTabs.filter( tabInfo => tabInfo.position === position);
+    const len = shortTabList.length;
     if (len === 0) {
       return;
     }
   
-    const tabWidget = <TabWidget> this._getById(ID_CONTAINER);
+    const tabWidget = <TabWidget> this._getById(position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
     let i = tabWidget.currentIndex;
     i = i + direction;
     if (i < 0) {
@@ -343,7 +484,7 @@ class ExtratermMainWebUI extends HTMLElement {
       i = 0;
     }
     tabWidget.currentIndex = i;
-    this._terminalTabs[i].terminal.focus();
+    shortTabList[i].terminal.focus();
   }
   
   private _createClone(): Node {

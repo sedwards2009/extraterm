@@ -68,13 +68,11 @@ export function startUp(): void {
 
     mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
-      <button class="topcoat-icon-button--quiet" id="new_tab_button">
-        <i class="fa fa-plus"></i>
-      </button>
       <div class="space"></div>
       <cb-dropdown>
           <button class="topcoat-icon-button--large--quiet"><i class="fa fa-bars"></i></button>
           <cb-contextmenu id="main_menu">
+              <cb-checkboxmenuitem icon="arrows-h" id="split" name="split">Split</cb-checkboxmenuitem>
               <cb-menuitem icon="wrench" name="settings">Settings</cb-menuitem>
               <cb-checkboxmenuitem icon="cogs" id="developer_tools" name="developer_tools">Developer Tools</cb-checkboxmenuitem>
               <cb-menuitem icon="lightbulb-o" name="about">About</cb-menuitem>
@@ -103,6 +101,11 @@ export function startUp(): void {
     const mainMenu = doc.getElementById('main_menu');
     mainMenu.addEventListener('selected', (ev: CustomEvent) => {
       switch(ev.detail.name) {
+        case 'split':
+          const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
+          mainWebUi.split = util.toBoolean(splitMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+          break;
+          
         case 'settings':
           
           break;
@@ -127,11 +130,6 @@ export function startUp(): void {
       }
     });
     
-    const newTabButton = <HTMLButtonElement> document.getElementById('new_tab_button');
-    newTabButton.addEventListener('click', () => {
-      mainWebUi.focusTerminalTab(mainWebUi.newTerminalTab(config.defaultSessionProfile(configuration.sessionProfiles)));
-    });
-    
     doc.addEventListener('selectionchange', () => {
       mainWebUi.copyToClipboard();
     });
@@ -140,7 +138,8 @@ export function startUp(): void {
         webipc.clipboardReadRequest();
       }
     });
-    mainWebUi.newTerminalTab(config.defaultSessionProfile(configuration.sessionProfiles));
+    mainWebUi.defaultSessionProfile = config.defaultSessionProfile(configuration.sessionProfiles);
+    mainWebUi.newTerminalTab(MainWebUi.POSITION_LEFT);
   });
   
   // Configure dialog.
