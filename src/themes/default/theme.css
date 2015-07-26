@@ -11,7 +11,12 @@
     background: #000;
 }
 
-.terminal-cursor {
-    color: #000000;
-    background: #ffffff;
+DIV:focus > DIV > SPAN.terminal-cursor {
+  color: #000000;
+  background: #ffffff;
+  outline: 0px;
+}
+
+SPAN.terminal-cursor {
+  outline: 1px solid #808080;
 }

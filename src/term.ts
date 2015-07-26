@@ -133,7 +133,7 @@ export class Terminal {
   
   private oldy = 0;
 
-  private cursorState = 0;       // Cursor blink state.
+  private cursorState = false;       // Cursor blink state.
   
   private cursorHidden = false;
   private _hasFocus = false;
@@ -292,7 +292,7 @@ export class Terminal {
     this.y = 0;
     this.oldy = 0;
 
-    this.cursorState = 0;       // Cursor blink state.
+    this.cursorState = false;       // Cursor blink state.
     
     this.cursorHidden = false;
     this._hasFocus = false;
@@ -497,7 +497,6 @@ export class Terminal {
       return;
     }
 
-    this.cursorState = 0;
     this.refresh(this.y, this.y);
     if (this.sendFocus) {
       this.send('\x1b[O');
@@ -1555,13 +1554,13 @@ export class Terminal {
     if ( ! this._hasFocus) {
       return;
     }
-    this.cursorState ^= 1;
+    this.cursorState = !this.cursorState;
     this.refresh(this.y, this.y);
   }
 
   showCursor(): void {
     if (!this.cursorState) {
-      this.cursorState = 1;
+      this.cursorState = true;
       this.refresh(this.y, this.y);
     } else {
       // Temporarily disabled:
