@@ -2835,6 +2835,10 @@ export class Terminal {
         break;
       // tab
       case 9:
+        if (ev.ctrlKey) {
+          // Don't handle Ctrl+Tab
+          break;
+        }
         if (ev.shiftKey) {
           key = '\x1b[Z';
           break;

@@ -256,6 +256,9 @@ class ExtratermMainWebUI extends HTMLElement {
         const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
         this.closeTerminalTab(this._terminalTabs[tabWidget.currentIndex].id);
 
+      } else if (ev.keyCode === 9 && ev.ctrlKey) {
+        this.focusOtherPane();
+
       } else {
         console.log("Unknown key:",ev);
       }      
@@ -337,6 +340,33 @@ class ExtratermMainWebUI extends HTMLElement {
     }
   }
   
+  /**
+   * Gives the input focus to the other (non-focussed) pane.
+   */
+  focusOtherPane(): void {
+    if ( ! this._split) {
+      return;
+    }
+    
+    const focussedTabInfos = this._terminalTabs.filter( tabInfo => tabInfo.terminal.hasFocus() );
+    if (focussedTabInfos.length === 0) {
+      return;
+    }
+    
+    // Get the other tab container, the one we want to focus to.
+    const focussedTabInfo = focussedTabInfos[0];
+    const tabContainer = <TabWidget> this._getById(focussedTabInfo.position === TabPosition.LEFT
+      ? ID_TAB_CONTAINER_RIGHT : ID_TAB_CONTAINER_LEFT);
+    if (tabContainer.currentIndex < 0) {
+      return;
+    }
+    
+    // Figure out the terminal object associated with the currently shown tab inside the tab container.
+    const otherPosition = focussedTabInfo.position === TabPosition.LEFT ? TabPosition.RIGHT : TabPosition.LEFT;
+    const otherTabsInfos = this._terminalTabs.filter( tabInfo => tabInfo.position === otherPosition);
+    otherTabsInfos[tabContainer.currentIndex].terminal.focus(); // Give it the focus.
+  }
+
   /**
    * Copys the selection in the focussed terminal to the clipboard.
    */
