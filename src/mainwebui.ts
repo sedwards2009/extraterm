@@ -337,9 +337,15 @@ class ExtratermMainWebUI extends HTMLElement {
     }
   }
   
+  /**
+   * Copys the selection in the focussed terminal to the clipboard.
+   */
   copyToClipboard(): void {
-    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    this._terminalTabs[tabWidget.currentIndex].terminal.copyToClipboard();
+    const termsWithFocus = this._terminalTabs.filter( tabInfo => tabInfo.terminal.hasFocus() );
+    if (termsWithFocus.length === 0) {
+      return;
+    }
+    termsWithFocus[0].terminal.copyToClipboard();    
   }
   /**
    * Pastes text into the terminal which has the input focus.
