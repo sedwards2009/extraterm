@@ -341,10 +341,17 @@ class ExtratermMainWebUI extends HTMLElement {
     const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     this._terminalTabs[tabWidget.currentIndex].terminal.copyToClipboard();
   }
-  
+  /**
+   * Pastes text into the terminal which has the input focus.
+   *
+   * @param text the text to paste.
+   */
   pasteText(text: string): void {
-    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    this._terminalTabs[tabWidget.currentIndex].terminal.pasteText(text);
+    const termsWithFocus = this._terminalTabs.filter( tabInfo => tabInfo.terminal.hasFocus() );
+    if (termsWithFocus.length === 0) {
+      return;
+    }
+    termsWithFocus[0].terminal.pasteText(text);
   }
   
   //-----------------------------------------------------------------------

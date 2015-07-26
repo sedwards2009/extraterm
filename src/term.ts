@@ -136,7 +136,7 @@ export class Terminal {
   private cursorState = 0;       // Cursor blink state.
   
   private cursorHidden = false;
-  private hasFocus = false;
+  private _hasFocus = false;
     
   private queue = '';
   private scrollTop = 0;
@@ -295,7 +295,7 @@ export class Terminal {
     this.cursorState = 0;       // Cursor blink state.
     
     this.cursorHidden = false;
-    this.hasFocus = false;
+    this._hasFocus = false;
     
   //  this.convertEol;
     
@@ -480,11 +480,20 @@ export class Terminal {
     }
     this.showCursor();
     this.element.focus();
-    this.hasFocus = true;
+    this._hasFocus = true;
   }
-
+  
+  /**
+   * Returns true if this terminal has the input focus.
+   *
+   * @return true if the terminal has the focus.
+   */
+  hasFocus(): boolean {
+    return this._hasFocus;
+  }
+  
   blur(): void {
-    if (!this.hasFocus) {
+    if (!this._hasFocus) {
       return;
     }
 
@@ -495,7 +504,7 @@ export class Terminal {
     }
 
     this.element.blur();
-    this.hasFocus = false;
+    this._hasFocus = false;
   }
 
   /**
@@ -860,6 +869,10 @@ export class Terminal {
     // to focus and paste behavior.
     on(this.element, 'focus', () => {
       this.focus();
+    });
+
+    on(this.element, 'blur', () => {
+      this.blur();
     });
 
     // This causes slightly funky behavior.
@@ -1538,15 +1551,15 @@ export class Terminal {
     }
   }
 
-  _cursorBlink() {
-    if ( ! this.hasFocus) {
+  _cursorBlink(): void {
+    if ( ! this._hasFocus) {
       return;
     }
     this.cursorState ^= 1;
     this.refresh(this.y, this.y);
   }
 
-  showCursor() {
+  showCursor(): void {
     if (!this.cursorState) {
       this.cursorState = 1;
       this.refresh(this.y, this.y);
@@ -1561,7 +1574,7 @@ export class Terminal {
    * 
    * @param {boolean} blink True if the cursor should blink.
    */
-  setCursorBlink(blink) {
+  setCursorBlink(blink: boolean): void {
     if (this._blink !== null) {
       clearInterval(this._blink);
       this._blink = null;
@@ -1574,7 +1587,7 @@ export class Terminal {
     }
   }
 
-  startBlink() {
+  startBlink(): void {
     if (!this.cursorBlink) return;
     var self = this;
     this._blinker = function() {
@@ -1583,13 +1596,13 @@ export class Terminal {
     this._blink = setInterval(this._blinker, 500);
   }
 
-  refreshBlink() {
+  refreshBlink(): void {
     if (!this.cursorBlink) return;
     clearInterval(this._blink);
     this._blink = setInterval(this._blinker, 500);
   }
 
-  scroll() {
+  scroll(): void {
     var row;
     var lastline;
     var oldline;

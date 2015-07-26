@@ -271,7 +271,16 @@ class EtTerminal extends HTMLElement {
       this._term.focus();
     }
   }
-
+  
+  /**
+   * Returns true if this terminal has the input focus.
+   *
+   * @return true if the terminal has the focus.
+   */
+  hasFocus(): boolean {
+    return this._term === null ? false : this._term.hasFocus();
+  }
+  
   /**
    * Write data to the terminal screen.
    * 
