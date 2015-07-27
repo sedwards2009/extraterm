@@ -107,15 +107,14 @@ class ExtratermMainWebUI extends HTMLElement {
     
     
     // Update the window title when the selected tab changes and resize the terminal.
-    // FIXME
-    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    tabWidget.addEventListener(TabWidget.EVENT_TAB_SWITCH, (e) => {
-      if (tabWidget.currentIndex >= 0 && tabWidget.currentIndex < this._terminalTabs.length) {
-        const tup = this._terminalTabs[tabWidget.currentIndex];
-        this._sendTitleEvent(tup.terminal.terminalTitle);
-        tup.terminal.resizeToContainer();
-        tup.terminal.focus();
-      }
+    const tabWidgetLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    tabWidgetLeft.addEventListener(TabWidget.EVENT_TAB_SWITCH, (e) => {
+      this._handleTabSwitch(tabWidgetLeft, TabPosition.LEFT);
+    });
+
+    const tabWidgetRight = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
+    tabWidgetRight.addEventListener(TabWidget.EVENT_TAB_SWITCH, (e) => {
+      this._handleTabSwitch(tabWidgetRight, TabPosition.RIGHT);
     });
     
     const newTabPrimaryButton = this._getById(ID_NEW_TAB_BUTTON_PRIMARY);
@@ -133,7 +132,17 @@ class ExtratermMainWebUI extends HTMLElement {
 
   destroy(): void {
   }
-
+  
+  _handleTabSwitch(tabWidget: TabWidget, position: TabPosition): void {
+    const tabInfos = this._terminalTabs.filter( tabInfo => tabInfo.position === position );
+    if (tabWidget.currentIndex >= 0 && tabWidget.currentIndex < tabInfos.length) {
+      const tup = tabInfos[tabWidget.currentIndex];
+      this._sendTitleEvent(tup.terminal.terminalTitle);
+      tup.terminal.resizeToContainer();
+      tup.terminal.focus();
+    }
+  }
+  
   set config(config: Config) {
     this._config = config;
     this._terminalTabs.forEach( (tab) => {
@@ -253,8 +262,7 @@ class ExtratermMainWebUI extends HTMLElement {
         
       } else if (ev.keyCode === 87 && ev.shiftKey) {
         // Ctrl+Shift+W - Close tab.
-        const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-        this.closeTerminalTab(this._terminalTabs[tabWidget.currentIndex].id);
+        this.closeTerminalTab(tabInfo.id);
 
       } else if (ev.keyCode === 9 && ev.ctrlKey) {
         this.focusOtherPane();
@@ -296,11 +304,15 @@ class ExtratermMainWebUI extends HTMLElement {
       return;
     }
     const tabInfo = matches[0];
+    const position = tabInfo.position;
     
-    let index = this._terminalTabs.indexOf(tabInfo);
+    let paneTabInfos = this._terminalTabs.filter( tabInfo2 => tabInfo2.position === position );
+    
+    let index = paneTabInfos.indexOf(tabInfo);
     
     // Remove the tab from the list.
     this._terminalTabs = this._terminalTabs.filter( (p) => p.id !== terminalId );
+    paneTabInfos = paneTabInfos.filter( tabInfo2 => tabInfo2.id !== terminalId );
     
     tabInfo.terminalDiv.parentNode.removeChild(tabInfo.terminalDiv);
     tabInfo.cbTab.parentNode.removeChild(tabInfo.cbTab);
@@ -312,11 +324,14 @@ class ExtratermMainWebUI extends HTMLElement {
     
     this._sendTabClosedEvent();
     
-    if (index >= this._terminalTabs.length) {
+    paneTabInfos = this._terminalTabs.filter( tabInfo2 => tabInfo2.position === position );
+    if (index >= paneTabInfos.length) {
       index--;
     }
-    if (this._terminalTabs.length !== 0) {
-      this.focusTerminalTab(this._terminalTabs[index].id);
+    if (paneTabInfos.length !== 0) {
+      this.focusTerminalTab(paneTabInfos[index].id);
+    } else {
+      this.focusPane(tabInfo.position === TabPosition.LEFT ? TabPosition.RIGHT : TabPosition.LEFT);
     }
   }
   
@@ -355,16 +370,20 @@ class ExtratermMainWebUI extends HTMLElement {
     
     // Get the other tab container, the one we want to focus to.
     const focussedTabInfo = focussedTabInfos[0];
-    const tabContainer = <TabWidget> this._getById(focussedTabInfo.position === TabPosition.LEFT
-      ? ID_TAB_CONTAINER_RIGHT : ID_TAB_CONTAINER_LEFT);
+    const position = focussedTabInfo.position;
+    this.focusPane(position === TabPosition.LEFT ? TabPosition.RIGHT : TabPosition.LEFT);    
+  }
+
+  focusPane(position: TabPosition): void {
+    const tabContainer = <TabWidget> this._getById(position === TabPosition.LEFT
+      ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
     if (tabContainer.currentIndex < 0) {
       return;
     }
     
     // Figure out the terminal object associated with the currently shown tab inside the tab container.
-    const otherPosition = focussedTabInfo.position === TabPosition.LEFT ? TabPosition.RIGHT : TabPosition.LEFT;
-    const otherTabsInfos = this._terminalTabs.filter( tabInfo => tabInfo.position === otherPosition);
-    otherTabsInfos[tabContainer.currentIndex].terminal.focus(); // Give it the focus.
+    const tabsInfos = this._terminalTabs.filter( tabInfo => tabInfo.position === position);
+    tabsInfos[tabContainer.currentIndex].terminal.focus(); // Give it the focus.
   }
 
   /**
