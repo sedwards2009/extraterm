@@ -72,7 +72,7 @@ export function startUp(): void {
       <cb-dropdown>
           <button class="topcoat-icon-button--large--quiet"><i class="fa fa-bars"></i></button>
           <cb-contextmenu id="main_menu">
-              <cb-checkboxmenuitem icon="arrows-h" id="split" name="split">Split</cb-checkboxmenuitem>
+              <cb-checkboxmenuitem icon="columns" id="split" name="split">Split</cb-checkboxmenuitem>
               <cb-menuitem icon="wrench" name="settings">Settings</cb-menuitem>
               <cb-checkboxmenuitem icon="cogs" id="developer_tools" name="developer_tools">Developer Tools</cb-checkboxmenuitem>
               <cb-menuitem icon="lightbulb-o" name="about">About</cb-menuitem>
