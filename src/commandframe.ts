@@ -26,12 +26,24 @@ const REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
 
 class EtCommandFrame extends HTMLElement {
   
+  static TAG_NAME = "et-commandframe";
+  
+  static EVENT_COPY_CLIPBOARD_REQUST = 'copy-clipboard-request';
+  
+  static EVENT_TYPE = 'type';
+  
+  static EVENT_CLOSE_REQUEST = 'close-request';
+  
+  static EVENT_FRAME_POP_OUT = 'frame-pop-out';
+  
+  static EVENT_SCROLL_MOVE = 'scroll-move';
+
   /**
    * 
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement('et-commandframe', {prototype: EtCommandFrame.prototype});
+      window.document.registerElement(EtCommandFrame.TAG_NAME, {prototype: EtCommandFrame.prototype});
       registered = true;
     }
   }
@@ -248,11 +260,12 @@ class EtCommandFrame extends HTMLElement {
           </div>
         </div>
         <cb-contextmenu id='contextmenu' style='display: none;'>
-        <cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>
-        <cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>
-        <cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>
-        <cb-checkboxmenuitem icon='list-ol' id='linesnumbersmenuitem' checked='false' name='showlines'>Line numbers</cb-checkboxmenuitem>
-        <cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>
+          <cb-menuitem icon='external-link' name='popout'>Open in Tab</cb-menuitem>
+          <cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>
+          <cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>
+          <cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>
+          <cb-checkboxmenuitem icon='list-ol' id='linesnumbersmenuitem' checked='false' name='showlines'>Line numbers</cb-checkboxmenuitem>
+          <cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>
         </cb-contextmenu>`;
       window.document.body.appendChild(template);
     }
@@ -355,17 +368,8 @@ class EtCommandFrame extends HTMLElement {
     this._setAttr(LINE_NUMBERS_ATTR, this.getAttribute(LINE_NUMBERS_ATTR));
     this._setAttr(TAG_ATTR, this.getAttribute(TAG_ATTR));
 
-    const popOutButton = this._getById('pop_out_button');
-    popOutButton.addEventListener('click', (): void => {
-        var event = new CustomEvent('frame-pop-out', { detail: this });
-        this.dispatchEvent(event);
-    });
-    
-    const closebutton = this._getById('close_button');
-    closebutton.addEventListener('click', (): void => {
-        var event = new CustomEvent('close-request', { detail: null });
-        this.dispatchEvent(event);
-    });
+    this._getById('pop_out_button').addEventListener('click', this._emitFramePopOut.bind(this));
+    this._getById('close_button').addEventListener('click', this._emitCloseRequest.bind(this));
 
     const expandbutton = this._getById('expand_button');
     expandbutton.addEventListener('click', (): void => {
@@ -384,15 +388,20 @@ class EtCommandFrame extends HTMLElement {
     cm.addEventListener('selected', (ev: CustomEvent): void => {
       let event: CustomEvent;
       switch (ev.detail.name) {
+        case 'popout':
+          this._emitFramePopOut();
+          break;
+        
         case "copycommand":
-          event = new CustomEvent('copy-clipboard-request');
-          event.initCustomEvent('copy-clipboard-request', true, true, this.getAttribute(COMMANDLINE_ATTR));
+          event = new CustomEvent(EtCommandFrame.EVENT_COPY_CLIPBOARD_REQUST);
+          event.initCustomEvent(EtCommandFrame.EVENT_COPY_CLIPBOARD_REQUST, true, true,
+            this.getAttribute(COMMANDLINE_ATTR));
           this.dispatchEvent(event);
           break;
 
         case "typecommand":
-          event = new CustomEvent('type', { detail: this.getAttribute(COMMANDLINE_ATTR) });
-          event.initCustomEvent('type', true, true, this.getAttribute(COMMANDLINE_ATTR));
+          event = new CustomEvent(EtCommandFrame.EVENT_TYPE, { detail: this.getAttribute(COMMANDLINE_ATTR) });
+          event.initCustomEvent(EtCommandFrame.EVENT_TYPE, true, true, this.getAttribute(COMMANDLINE_ATTR));
           this.dispatchEvent(event);
           break;
 
@@ -405,9 +414,7 @@ class EtCommandFrame extends HTMLElement {
           break;
 
         case 'close':
-          event = new CustomEvent('close-request');
-          event.initCustomEvent('close-request', true, true, null);
-          this.dispatchEvent(event);
+          this._emitCloseRequest();
           break;
 
         default:
@@ -458,14 +465,20 @@ class EtCommandFrame extends HTMLElement {
    * 
    */
   private _emitManualScroll(): void {
-    const event = new CustomEvent('scroll-move');
-    event.initCustomEvent('scroll-move', true, true, null);
+    const event = new CustomEvent(EtCommandFrame.EVENT_SCROLL_MOVE);
+    event.initCustomEvent(EtCommandFrame.EVENT_SCROLL_MOVE, true, true, null);
     this.dispatchEvent(event);
   }
   
-  private _emitFramePopOut(frame: EtCommandFrame): void {
-    const event = new CustomEvent('frame-pop-out');
-    event.initCustomEvent('frame-pop-out', true, true, frame);
+  private _emitFramePopOut(): void {
+    const event = new CustomEvent(EtCommandFrame.EVENT_FRAME_POP_OUT);
+    event.initCustomEvent(EtCommandFrame.EVENT_FRAME_POP_OUT, true, true, this);
+    this.dispatchEvent(event);
+  }
+
+  private _emitCloseRequest(): void {
+    const event = new CustomEvent(EtCommandFrame.EVENT_CLOSE_REQUEST);
+    event.initCustomEvent(EtCommandFrame.EVENT_CLOSE_REQUEST, true, true, null);
     this.dispatchEvent(event);
   }
   

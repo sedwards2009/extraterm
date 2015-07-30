@@ -292,23 +292,27 @@ class ExtratermMainWebUI extends HTMLElement {
     tabWidget.insertBefore(newCbTab, restDiv);
     tabWidget.insertBefore(newDiv, restDiv);
     
+    // User input event
     newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (e) => {
       if (tabInfo.ptyId !== null) {
         webipc.ptyInput(tabInfo.ptyId, (<any> e).detail.data);
       }
     });
     
+    // Terminal resize event
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_RESIZE, (e) => {
       if (tabInfo.ptyId !== null) {
         webipc.ptyResize(tabInfo.ptyId, (<any> e).detail.columns, (<any> e).detail.rows);
       }      
     });
 
+    // Terminal title event
     newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (e: CustomEvent) => {
       newCbTab.innerText = e.detail.title;
       this._sendTitleEvent(e.detail.title);
     });
     
+    // Unknown key down event
     newTerminal.addEventListener(EtTerminal.EVENT_UNKNOWN_KEY_DOWN, (e: CustomEvent) => {
       const ev = <KeyboardEvent> e.detail;
       if (ev.keyCode === 37 && ev.shiftKey) {
