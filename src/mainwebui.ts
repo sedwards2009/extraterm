@@ -34,13 +34,75 @@ const enum TabPosition {
   RIGHT
 }
 
-interface TerminalTab {
-  id: number;
-  position: TabPosition;
-  terminalDiv: HTMLDivElement;
-  cbTab: CbTab;
-  terminal: EtTerminal;
-  ptyId: number;
+enum TabType {
+  TERMINAL,
+  VIEWER
+}
+
+/**
+ * Class for holding info about the contents of our tabs.
+ */
+class TabInfo {
+  constructor(public id: number, public position: TabPosition, public contentDiv: HTMLDivElement, public cbTab: CbTab) {
+  }
+
+  title(): string {
+    return "";
+  }
+  
+  focus(): void { }
+  
+  hasFocus(): boolean {
+    return false;
+  }
+  
+  destroy(): void { }
+  
+  copyToClipboard(): void { }
+  
+  pasteText(text: string ): void { }
+}
+
+/**
+ * A tab which contains a terminal.
+ */
+class TerminalTabInfo extends TabInfo {
+  
+  constructor(public id: number, public position: TabPosition, public contentDiv: HTMLDivElement, public cbTab: CbTab,
+    public terminal: EtTerminal, public ptyId: number) {
+      
+    super(id, position, contentDiv, cbTab);
+  }
+  
+  title(): string {
+    return this.terminal.terminalTitle;
+  }
+  
+  focus(): void {
+    this.terminal.resizeToContainer();
+    this.terminal.focus();
+  }
+  
+  hasFocus(): boolean {
+    return this.terminal.hasFocus();
+  }
+  
+  destroy(): void {
+    this.terminal.destroy();
+    
+    if (this.ptyId !== null) {
+      webipc.ptyClose(this.ptyId);
+    }
+  }
+  
+  copyToClipboard(): void {
+    this.terminal.copyToClipboard();
+  }
+  
+  pasteText(text: string ): void {
+    this.terminal.pasteText(text);
+  }
+  
 }
 
 let terminalIdCounter = 1;
@@ -78,7 +140,7 @@ class ExtratermMainWebUI extends HTMLElement {
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
-  private _terminalTabs: TerminalTab[];
+  private _terminalTabs: TabInfo[];
   
   private _config: Config;
 
@@ -136,17 +198,19 @@ class ExtratermMainWebUI extends HTMLElement {
   _handleTabSwitch(tabWidget: TabWidget, position: TabPosition): void {
     const tabInfos = this._terminalTabs.filter( tabInfo => tabInfo.position === position );
     if (tabWidget.currentIndex >= 0 && tabWidget.currentIndex < tabInfos.length) {
-      const tup = tabInfos[tabWidget.currentIndex];
-      this._sendTitleEvent(tup.terminal.terminalTitle);
-      tup.terminal.resizeToContainer();
-      tup.terminal.focus();
+      const tabInfo = tabInfos[tabWidget.currentIndex];
+      
+      this._sendTitleEvent(tabInfo.title());
+      tabInfo.focus();
     }
   }
   
   set config(config: Config) {
     this._config = config;
-    this._terminalTabs.forEach( (tab) => {
-      this._setConfigOnTerminal(tab.terminal, config);
+    this._terminalTabs.forEach( (tabInfo) => {
+      if (tabInfo instanceof TerminalTabInfo) {
+        this._setConfigOnTerminal( (<TerminalTabInfo> tabInfo).terminal, config);
+      }
     });    
   }
   
@@ -218,8 +282,7 @@ class ExtratermMainWebUI extends HTMLElement {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     
     newDiv.appendChild(newTerminal);
-    const tabInfo = { id: newId, position: position, terminalDiv: newDiv, cbTab: newCbTab, terminal: newTerminal,
-      ptyId: null };
+    const tabInfo = new TerminalTabInfo(newId, position, newDiv, newCbTab, newTerminal, null);
     this._terminalTabs.push(tabInfo);
     
     const tabWidget = <TabWidget> this._getById(position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
@@ -314,13 +377,9 @@ class ExtratermMainWebUI extends HTMLElement {
     this._terminalTabs = this._terminalTabs.filter( (p) => p.id !== terminalId );
     paneTabInfos = paneTabInfos.filter( tabInfo2 => tabInfo2.id !== terminalId );
     
-    tabInfo.terminalDiv.parentNode.removeChild(tabInfo.terminalDiv);
+    tabInfo.contentDiv.parentNode.removeChild(tabInfo.contentDiv);
     tabInfo.cbTab.parentNode.removeChild(tabInfo.cbTab);
-    tabInfo.terminal.destroy();
-    
-    if (tabInfo.ptyId !== null) {
-      webipc.ptyClose(tabInfo.ptyId);
-    }
+    tabInfo.destroy();
     
     this._sendTabClosedEvent();
     
@@ -344,7 +403,7 @@ class ExtratermMainWebUI extends HTMLElement {
         const tabWidget = <TabWidget> this._getById(
           tabInfo.position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
         tabWidget.currentIndex = tabInfo.position === TabPosition.LEFT ? leftIndex : rightIndex;
-        tabInfo.terminal.focus();
+        tabInfo.focus();
       }
       
       if (tabInfo.position === TabPosition.LEFT) {
@@ -363,7 +422,7 @@ class ExtratermMainWebUI extends HTMLElement {
       return;
     }
     
-    const focussedTabInfos = this._terminalTabs.filter( tabInfo => tabInfo.terminal.hasFocus() );
+    const focussedTabInfos = this._terminalTabs.filter( tabInfo => tabInfo.hasFocus() );
     if (focussedTabInfos.length === 0) {
       return;
     }
@@ -383,30 +442,31 @@ class ExtratermMainWebUI extends HTMLElement {
     
     // Figure out the terminal object associated with the currently shown tab inside the tab container.
     const tabsInfos = this._terminalTabs.filter( tabInfo => tabInfo.position === position);
-    tabsInfos[tabContainer.currentIndex].terminal.focus(); // Give it the focus.
+    tabsInfos[tabContainer.currentIndex].focus(); // Give it the focus.
   }
 
   /**
    * Copys the selection in the focussed terminal to the clipboard.
    */
   copyToClipboard(): void {
-    const termsWithFocus = this._terminalTabs.filter( tabInfo => tabInfo.terminal.hasFocus() );
+    const termsWithFocus = this._terminalTabs.filter( tabInfo => tabInfo.hasFocus() );
     if (termsWithFocus.length === 0) {
       return;
     }
-    termsWithFocus[0].terminal.copyToClipboard();    
+    termsWithFocus[0].copyToClipboard();
   }
+  
   /**
    * Pastes text into the terminal which has the input focus.
    *
    * @param text the text to paste.
    */
   pasteText(text: string): void {
-    const termsWithFocus = this._terminalTabs.filter( tabInfo => tabInfo.terminal.hasFocus() );
+    const termsWithFocus = this._terminalTabs.filter( tabInfo => tabInfo.hasFocus() );
     if (termsWithFocus.length === 0) {
       return;
     }
-    termsWithFocus[0].terminal.pasteText(text);
+    termsWithFocus[0].pasteText(text);
   }
   
   //-----------------------------------------------------------------------
@@ -512,20 +572,20 @@ class ExtratermMainWebUI extends HTMLElement {
   }
   
   private _handlePtyOutput(msg: Messages.PtyOutput): void {
-    this._terminalTabs.forEach( (t) => {
-      if (t.ptyId === msg.id) {
-        t.terminal.write(msg.data);
+    this._terminalTabs.forEach( (tabInfo) => {
+      if (tabInfo instanceof TerminalTabInfo && (<TerminalTabInfo>tabInfo).ptyId === msg.id) {
+        tabInfo.terminal.write(msg.data);
       }
     });
   }
   
   private _handlePtyClose(msg: Messages.PtyClose): void {
-    const matches = this._terminalTabs.filter( (t) => t.ptyId === msg.id );
-    if (matches.length === 0) {
-      return;
-    }
-    matches[0].ptyId = null;
-    this.closeTerminalTab(matches[0].id);
+    this._terminalTabs.forEach( (tabInfo) => {
+      if (tabInfo instanceof TerminalTabInfo && (<TerminalTabInfo>tabInfo).ptyId === msg.id) {
+        (<TerminalTabInfo>tabInfo).ptyId = null;
+        this.closeTerminalTab(tabInfo.id);
+      }
+    });
   }
   
   //-----------------------------------------------------------------------
@@ -546,7 +606,7 @@ class ExtratermMainWebUI extends HTMLElement {
       i = 0;
     }
     tabWidget.currentIndex = i;
-    shortTabList[i].terminal.focus();
+    shortTabList[i].focus();
   }
   
   private _createClone(): Node {
