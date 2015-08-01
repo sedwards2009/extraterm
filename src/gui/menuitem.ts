@@ -1,19 +1,25 @@
+/**
+ * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
+ */
 import util = require('./util');
 import resourceLoader = require('../resourceloader');
 
 const ID = "CbMenuItemTemplate";
 
-const SELECTED_ATTR = "selected";
 let registered = false;
 
 class CbMenuItem extends HTMLElement {
+  
+  static TAG_NAME = 'cb-menuitem';
+  
+  static ATTR_SELECTED = 'selected';
   
   //-----------------------------------------------------------------------
   // Statics
 
   static init(): void {
     if (registered === false) {
-      window.document.registerElement('cb-menuitem', {prototype: CbMenuItem.prototype});
+      window.document.registerElement(CbMenuItem.TAG_NAME, {prototype: CbMenuItem.prototype});
       registered = true;
     }
   }
@@ -32,55 +38,52 @@ class CbMenuItem extends HTMLElement {
       iconhtml += "<i class='fa fa-fw'></i>";
     }
     (<HTMLElement>shadow.querySelector("#icon2")).innerHTML = iconhtml; 
-
-    this.updateKeyboardSelected(this.getAttribute(SELECTED_ATTR));
+    
+    this.updateKeyboardSelected(this.getAttribute(CbMenuItem.ATTR_SELECTED));
   }
   
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
-    if (attrName === SELECTED_ATTR ) {
+    if (attrName === CbMenuItem.ATTR_SELECTED) {
       this.updateKeyboardSelected(newValue);
     }
   }
   
   //-----------------------------------------------------------------------
   private _css(): string {
-    return "@import url('" + resourceLoader.toUrl("css/font-awesome.css") + "');\n" +
-      ":host {\n" +
-      "    display: block;\n" +
-      "    color: #000;\n" +
-      "    font: 16px 'Source Sans', helvetica, arial, sans-serif;\n" +
-      "    font-weight: 400;\n" +
-      "}\n" +
-
-      "#container {\n" +
-      "    cursor: default;\n" +
-      "    padding: 1px;\n" +
-      "    display: flex;\n" +
-      "}\n" +
-
-      ".selected {\n" +
-      "    background-color: #288edf;\n" +
-      "    color: #ffffff;\n" +
-      "}\n" +
-
-      "#icon1, #icon2 {\n" +
-      "    flex: auto 0 0;\n" +
-      "    white-space: pre;\n" +
-      "}\n" +
-
-      "#label {\n" +
-      "    flex: auto 1 1;\n" +
-      "    padding-left: 0.5rem;\n" +
-      "    white-space: pre;\n" +
-      "}\n";
+    return `@import url('${resourceLoader.toUrl("css/font-awesome.css")}');
+      :host {
+          display: block;
+          color: #000;
+          font: 16px 'Source Sans', helvetica, arial, sans-serif;
+          font-weight: 400;
+      }
+      #container {
+          cursor: default;
+          padding: 1px;
+          display: flex;
+      }
+      .selected {
+          background-color: #288edf;
+          color: #ffffff;
+      }
+      #icon1, #icon2 {
+          flex: auto 0 0;
+          white-space: pre;
+      }
+      #label {
+          flex: auto 1 1;
+          padding-left: 0.5rem;
+          white-space: pre;
+      }
+`;
   }
 
   private _html(): string {
-    return "<div id='container'>" +
-      "<div id='icon1'><i class='fa fa-fw'></i></div>" +
-      "<div id='icon2'></div>" +
-      "<div id='label'><content></content></div>" +
-      "</div>";
+    return `<div id='container'>
+      <div id='icon1'><i class='fa fa-fw'></i></div>
+      <div id='icon2'></div>
+      <div id='label'><content></content></div>
+      </div>`;
   }
 
   private _createClone(): Node {
