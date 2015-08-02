@@ -486,22 +486,23 @@ class ExtratermMainWebUI extends HTMLElement {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_TAB_CLOSED, { detail: null });
     this.dispatchEvent(event);    
   }
-  
+
   private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_TITLE, { detail: {title: title} });
     this.dispatchEvent(event);        
   }
-   
+
   //-----------------------------------------------------------------------
   private _setConfigOnTerminal(terminal: EtTerminal, config: Config): void {
     terminal.blinkingCursor = config.blinkingCursor;
     terminal.themeCss = "file://" + path.join(config.themePath, "theme.css").replace(/\\/g, "/");
   }
     
-  private _css() {
+  private _html(): string {
     return `
-    ${globalcss.fontAwesomeCSS()}
+    <style>
     ${globalcss.topcoatCSS()}
+    ${globalcss.fontAwesomeCSS()}
     
     #${ID_TOP} {
       position: absolute;
@@ -552,11 +553,8 @@ class ExtratermMainWebUI extends HTMLElement {
       height: 100%;
       width: 100%;
     }
-    `;
-  }
-
-  private _html(): string {
-    return `<div id="${ID_TOP}">` +
+    </style>
+    <div id="${ID_TOP}">` +
         `<div id="${ID_PANE_LEFT}">` +
           `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
             `<div id="${ID_REST_DIV_PRIMARY}"><button class="topcoat-icon-button--large--quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
@@ -622,7 +620,7 @@ class ExtratermMainWebUI extends HTMLElement {
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = "<style>" + this._css() + "</style>\n" + this._html();
+      template.innerHTML = this._html();
       window.document.body.appendChild(template);
     }
     return window.document.importNode(template.content, true);

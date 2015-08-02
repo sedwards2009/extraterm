@@ -64,10 +64,10 @@ class EtCommandFrame extends HTMLElement {
       const FAIL_COLOR = new util.Color("#ff5454"); // Linux red
       const FOCUS_COLOR = new util.Color("#43ace8");
       
-      template.innerHTML = `<style>
+      template.innerHTML = `
+        <style>
         ${globalcss.fontAwesomeCSS()}
         ${globalcss.topcoatCSS()}
-
         :host {
           display: block;
         }

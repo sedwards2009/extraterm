@@ -51,9 +51,11 @@ class CbMenuItem extends HTMLElement {
   }
   
   //-----------------------------------------------------------------------
-  private _css(): string {
-    // This import below triggers a crash bug in chrome when the tab is closed.
-    return `${globalcss.fontAwesomeCSS()}
+  private _html(): string {
+    return `
+      <style>
+      ${globalcss.fontAwesomeCSS()}
+      
       :host {
           display: block;
           color: #000;
@@ -78,13 +80,10 @@ class CbMenuItem extends HTMLElement {
           padding-left: 0.5rem;
           white-space: pre;
       }
-`;
-  }
-
-  private _html(): string {
-    return `<div id='container'>
-      <div id='icon1'><i class='fa fa-fw'></i></div>
-      <div id='icon2'></div>
+      </style>
+      <div id='container'>
+        <div id='icon1'><i class='fa fa-fw'></i></div>
+        <div id='icon2'></div>
       <div id='label'><content></content></div>
       </div>`;
   }
@@ -94,7 +93,7 @@ class CbMenuItem extends HTMLElement {
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = "<style>" + this._css() + "</style>\n" + this._html();
+      template.innerHTML = this._html();
       window.document.body.appendChild(template);
     }
     return window.document.importNode(template.content, true);
