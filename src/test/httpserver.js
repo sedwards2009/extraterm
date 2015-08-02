@@ -17,5 +17,5 @@ var server = http.createServer(function(req, res){
 // Listen 
 var PORT = 3000;
 console.log("Listening for requests on port "+PORT);
-console.log("Try http://localhost:3000/test/guitest.html");
+console.log("Try http://localhost:3000/guitest.html");
 server.listen(PORT);
