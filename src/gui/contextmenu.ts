@@ -97,19 +97,19 @@ class CbContextMenu extends HTMLElement {
         this.close();
       }
     });
-
+    
     cover.addEventListener('contextmenu', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
       this.close();
     }, true);
-
+    
     const container = <HTMLDivElement>this.__getById('container');
     container.addEventListener('mousedown', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
     });
-
+    
     container.addEventListener('mousemove', (ev: MouseEvent) => {
       if (ev.srcElement.nodeName === 'CB-MENUITEM' || ev.srcElement.nodeName === 'CB-CHECKBOXMENUITEM') {
         this.selectMenuItem(this.childNodes, ev.srcElement);
@@ -117,18 +117,18 @@ class CbContextMenu extends HTMLElement {
         this.selectMenuItem(this.childNodes, null);
       }
     });
-
+    
     container.addEventListener('mouseleave', (ev: MouseEvent) => {
       this.selectMenuItem(this.childNodes, null);
     });
-
+    
     container.addEventListener('click', (ev: MouseEvent) => {
       if (ev.srcElement instanceof menuitem) {
         const item = <menuitem>ev.srcElement;
         this.activateItem(item);
       }
     });
-
+    
     container.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
     container.addEventListener('keypress', (ev: KeyboardEvent) => { this.handleKeyPress(ev); });
   }

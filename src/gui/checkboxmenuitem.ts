@@ -1,3 +1,6 @@
+/**
+ * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
+ */
 import menuitem = require("./menuitem");
 import util = require("./util");
 
@@ -6,6 +9,10 @@ const ID = "CbCheckBoxMenuItemTemplate";
 let registered = false;
 
 class CbCheckBoxMenuItem extends menuitem {
+  
+  static TAG_NAME = 'cb-checkboxmenuitem';
+  
+  static ATTR_CHECKED = "checked";
   
   //-----------------------------------------------------------------------
   // Statics
@@ -17,10 +24,6 @@ class CbCheckBoxMenuItem extends menuitem {
     }
   }
 
-  static TAG_NAME = 'cb-checkboxmenuitem';
-  
-  static ATTR_CHECKED = "checked";
-  
   //-----------------------------------------------------------------------
   
   createdCallback() {

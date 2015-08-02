@@ -32,3 +32,4 @@ src/ptydirect.js
 src/ptyfactory.js
 src/ptyproxy.js
 src/defaultsessionprofiles.js
+src/globalcss.js

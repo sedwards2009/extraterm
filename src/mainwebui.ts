@@ -11,6 +11,8 @@ import Messages = require('./windowmessages');
 import path = require('path');
 import _ = require('lodash');
 import config = require('./config');
+import globalcss = require('./gui/globalcss');
+
 type Config = config.Config;
 type SessionProfile = config.SessionProfile;
 
@@ -121,6 +123,7 @@ class ExtratermMainWebUI extends HTMLElement {
     EtTerminal.init();
     
     if (registered === false) {
+      globalcss.init();
       window.document.registerElement(ExtratermMainWebUI.TAG_NAME, {prototype: ExtratermMainWebUI.prototype});
       registered = true;
     }
@@ -497,8 +500,9 @@ class ExtratermMainWebUI extends HTMLElement {
     
   private _css() {
     return `
-    @import '${resourceLoader.toUrl('css/font-awesome.css')}';
-    @import '${resourceLoader.toUrl('css/topcoat-desktop-light.css')}';
+    ${globalcss.fontAwesomeCSS()}
+    ${globalcss.topcoatCSS()}
+    
     #${ID_TOP} {
       position: absolute;
       top: 2px;

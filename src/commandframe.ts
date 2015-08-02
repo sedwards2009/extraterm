@@ -6,6 +6,7 @@ import resourceLoader = require('./resourceloader');
 import contextmenu = require('./gui/contextmenu');
 import menuitem = require('./gui/menuitem');
 import checkboxmenuitem = require('./gui/checkboxmenuitem');
+import globalcss = require('./gui/globalcss');
 import util = require('./gui/util');
 
 contextmenu.init();
@@ -43,6 +44,7 @@ class EtCommandFrame extends HTMLElement {
    */
   static init(): void {
     if (registered === false) {
+      globalcss.init();
       window.document.registerElement(EtCommandFrame.TAG_NAME, {prototype: EtCommandFrame.prototype});
       registered = true;
     }
@@ -63,8 +65,8 @@ class EtCommandFrame extends HTMLElement {
       const FOCUS_COLOR = new util.Color("#43ace8");
       
       template.innerHTML = `<style>
-        @import '${resourceLoader.toUrl('css/font-awesome.css')}';
-        @import '${resourceLoader.toUrl('css/topcoat-desktop-light.css')}';
+        ${globalcss.fontAwesomeCSS()}
+        ${globalcss.topcoatCSS()}
 
         :host {
           display: block;
@@ -427,7 +429,7 @@ class EtCommandFrame extends HTMLElement {
       const header = this._getById(ID_HEADER);
       header.focus();
     }).bind(this));
-    
+
     // Remove the anti-flicker style.
     window.requestAnimationFrame( () => {
       this._getById('container').setAttribute('style', '');

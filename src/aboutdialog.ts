@@ -4,6 +4,7 @@
 import im = require('immutable');
 import util = require('./gui/util');
 import resourceLoader = require('./resourceloader');
+import globalcss = require('./gui/globalcss');
 
 const ID = "EtAboutDialog";
 const ID_DIALOG = "dialog";
@@ -16,6 +17,7 @@ class EtAboutDialog extends HTMLElement {
   
   static init(): void {
     if (registered === false) {
+      globalcss.init();
       window.document.registerElement(this.TAG_NAME, {prototype: EtAboutDialog.prototype});
       registered = true;
     }
@@ -24,7 +26,8 @@ class EtAboutDialog extends HTMLElement {
   // WARNING: Fields like this will not be initialised automatically.
   
   private _css() {
-    return `@import url('${resourceLoader.toUrl("css/topcoat-desktop-light.css")}');
+    return `${globalcss.topcoatCSS()}
+
       @import url('${resourceLoader.toUrl("css/flexlayout.css")}');
       #dialog {
           position: fixed;

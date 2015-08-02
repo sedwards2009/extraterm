@@ -69,7 +69,7 @@ class CbMarkdownViewer extends HTMLElement {
     
     const markdownText = markdown.toHTML(text);
     container.innerHTML = markdownText;
-  }  
+  }
 }
 
 export = CbMarkdownViewer;

@@ -3,6 +3,7 @@
  */
 import util = require('./util');
 import resourceLoader = require('../resourceloader');
+import globalcss = require('./globalcss');
 
 const ID = "CbMenuItemTemplate";
 
@@ -19,6 +20,7 @@ class CbMenuItem extends HTMLElement {
 
   static init(): void {
     if (registered === false) {
+      globalcss.init();
       window.document.registerElement(CbMenuItem.TAG_NAME, {prototype: CbMenuItem.prototype});
       registered = true;
     }
@@ -50,7 +52,8 @@ class CbMenuItem extends HTMLElement {
   
   //-----------------------------------------------------------------------
   private _css(): string {
-    return `@import url('${resourceLoader.toUrl("css/font-awesome.css")}');
+    // This import below triggers a crash bug in chrome when the tab is closed.
+    return `${globalcss.fontAwesomeCSS()}
       :host {
           display: block;
           color: #000;
