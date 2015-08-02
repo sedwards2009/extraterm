@@ -50,7 +50,6 @@
         "./src/gui/dropdown.ts",
         "./src/gui/markdownviewer.ts",
         "./src/gui/menuitem.ts",
-        "./src/gui/popup.ts",
         "./src/gui/scrollbar.ts",
         "./src/gui/stackedwidget.ts",
         "./src/gui/tab.ts",
