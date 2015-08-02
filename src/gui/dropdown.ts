@@ -1,3 +1,6 @@
+/**
+ * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
+ */
 import contextmenu = require('./contextmenu');
 import util = require('./util');
 

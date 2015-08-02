@@ -1,3 +1,6 @@
+/**
+ * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
+ */
 
 "use strict";
 import util = require("./util");
