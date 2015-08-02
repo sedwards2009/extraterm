@@ -27,6 +27,7 @@
         "./src/configuredialog.ts",
         "./src/defaultsessionprofiles.ts",
         "./src/domutils.ts",
+        "./src/embeddedviewer.ts",
         "./src/extra_dom.d.ts",
         "./src/main.ts",
         "./src/mainweb.ts",

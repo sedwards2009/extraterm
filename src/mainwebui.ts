@@ -5,6 +5,7 @@ import util = require('./gui/util');
 import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
+import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
@@ -383,7 +384,7 @@ class ExtratermMainWebUI extends HTMLElement {
     // Remove the tab from the list.
     this._terminalTabs = this._terminalTabs.filter( (p) => p.id !== terminalId );
     paneTabInfos = paneTabInfos.filter( tabInfo2 => tabInfo2.id !== terminalId );
-    
+
     tabInfo.contentDiv.parentNode.removeChild(tabInfo.contentDiv);
     tabInfo.cbTab.parentNode.removeChild(tabInfo.cbTab);
     tabInfo.destroy();

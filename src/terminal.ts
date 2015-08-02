@@ -3,7 +3,7 @@
  */
 
 import * as _ from 'lodash';
-import commandframe = require('./commandframe');
+import EtEmbeddedViewer = require('./embeddedviewer');
 import markdownviewer = require('./gui/markdownviewer');
 import * as domutils from './domutils';
 import * as termjs from './term';
@@ -75,7 +75,7 @@ class EtTerminal extends HTMLElement {
   static init(): void {
     if (registered === false) {
       scrollbar.init();
-      commandframe.init();
+      EtEmbeddedViewer.init();
       markdownviewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
       registered = true;
@@ -356,11 +356,11 @@ class EtTerminal extends HTMLElement {
         }
         
         .terminal > DIV.terminal-active {
-            margin-left: calc(2rem + 3px);
+            margin-left: calc(1rem + 3px);
         }
 
         .terminal > DIV.terminal-scrollback {
-            margin-left: calc(2rem + 3px);
+            margin-left: calc(1rem + 3px);
         }
         
         
@@ -539,11 +539,11 @@ class EtTerminal extends HTMLElement {
   }
 
   private _handleKeyDownTerminal(ev: KeyboardEvent): void {
-    let frames: commandframe[];
+    let frames: EtEmbeddedViewer[];
     let index: number;
 
     // Key down on a command frame.
-    if ((<HTMLElement>ev.target).tagName === "ET-COMMANDFRAME") {
+    if ((<HTMLElement>ev.target).tagName === EtEmbeddedViewer.TAG_NAME) {
       if (ev.keyCode === 27) {
         // 27 = esc.
         this._term.element.focus();
@@ -553,7 +553,7 @@ class EtTerminal extends HTMLElement {
 
       } else if (ev.keyCode === 32 && ev.ctrlKey) {
         // 32 = space
-        (<commandframe>ev.target).openMenu();
+        (<EtEmbeddedViewer>ev.target).openMenu();
         ev.preventDefault();
         return;
 
@@ -561,8 +561,8 @@ class EtTerminal extends HTMLElement {
         // 38 = up arrow.
 
         // Note ugly convert-to-array code. ES6 Array.from() help us!
-        frames = Array.prototype.slice.call(this._term.element.querySelectorAll("et-commandframe"));
-        index = frames.indexOf(<commandframe>ev.target);
+        frames = Array.prototype.slice.call(this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME));
+        index = frames.indexOf(<EtEmbeddedViewer>ev.target);
         if (index > 0) {
           frames[index-1].focusLast();
         }
@@ -572,8 +572,8 @@ class EtTerminal extends HTMLElement {
       } else if (ev.keyCode === 40) {
         // 40 = down arrow.
 
-        frames = Array.prototype.slice.call(this._term.element.querySelectorAll("et-commandframe"));
-        index = frames.indexOf(<commandframe>ev.target);
+        frames = Array.prototype.slice.call(this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME));
+        index = frames.indexOf(<EtEmbeddedViewer>ev.target);
         if (index < frames.length -1) {
           frames[index+1].focusFirst();
         }
@@ -587,7 +587,7 @@ class EtTerminal extends HTMLElement {
       // Enter cursor mode.
       if (ev.keyCode === 38 && ev.shiftKey) {
         // Shift + Up arrow.
-        const lastFrame = <commandframe>this._term.element.querySelector("et-commandframe:last-of-type");
+        const lastFrame = <EtEmbeddedViewer>this._term.element.querySelector(EtEmbeddedViewer.TAG_NAME + ":last-of-type");
         if (lastFrame !== null) {
           lastFrame.focusLast();
         }
@@ -684,14 +684,14 @@ class EtTerminal extends HTMLElement {
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-        startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
+        startdivs = this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME + ":not([return-code])");
         log("startdivs:", startdivs);
         if (startdivs.length !== 0) {
           break;  // Don't open a new frame.
         }
         
         // Create and set up a new command-frame.
-        el = this._getWindow().document.createElement("et-commandframe");
+        el = this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
 
         el.addEventListener('close-request', (function() {
           el.remove();
@@ -723,7 +723,7 @@ class EtTerminal extends HTMLElement {
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-        startdivs = this._term.element.querySelectorAll("et-commandframe:not([return-code])");
+        startdivs = this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME + ":not([return-code])");
         log("startdivs:", startdivs);
         if (startdivs.length !== 0) {
 
@@ -732,7 +732,7 @@ class EtTerminal extends HTMLElement {
             const outputdiv = <HTMLDivElement>startdivs[startdivs.length-1];
             let node = outputdiv.nextSibling;
 
-            // Collect the DIVs in the scrollback from the et-commandframe up to the end of the scrollback.
+            // Collect the DIVs in the scrollback from the EtEmbeddedViewer up to the end of the scrollback.
             const nodelist: Node[] = [];
             while (node !== null) {
               if (node.nodeName !== "DIV" || ! (<HTMLElement> node).classList.contains("terminal-active")) {
@@ -929,7 +929,7 @@ class EtTerminal extends HTMLElement {
   }
   
   handleRequestFrame(frameId: string): void {
-    const sourceFrame: commandframe = this._findFrame(frameId);
+    const sourceFrame: EtEmbeddedViewer = this._findFrame(frameId);
     const data = sourceFrame !== null ? sourceFrame.text : "";
     const lines = data.split("\n");
     let encodedData: string = "";
@@ -960,12 +960,12 @@ class EtTerminal extends HTMLElement {
   /**
    * Find a command frame by ID.
    */
-  private _findFrame(frameId: string): commandframe {
+  private _findFrame(frameId: string): EtEmbeddedViewer {
     if (/[^0-9]/.test(frameId)) {
       return null;
     }
-    const matches = this._term.element.querySelectorAll("et-commandframe[tag='" + frameId + "']");
-    return matches.length === 0 ? null : <commandframe>matches[0];
+    const matches = this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
+    return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
   }
   
   /**

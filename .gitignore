@@ -33,3 +33,4 @@ src/ptyfactory.js
 src/ptyproxy.js
 src/defaultsessionprofiles.js
 src/gui/globalcss.js
+src/embeddedviewer.js
