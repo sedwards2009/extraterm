@@ -355,15 +355,10 @@ class EtTerminal extends HTMLElement {
             overflow-y: hidden;
         }
         
-        .terminal > DIV.terminal-active {
-            margin-left: calc(1rem + 3px);
+        .terminal > DIV.terminal-active, .terminal > DIV.terminal-scrollback {
+            margin-left: 2px;
+            margin-right: 2px;
         }
-
-        .terminal > DIV.terminal-scrollback {
-            margin-left: calc(1rem + 3px);
-        }
-        
-        
         </style>
         <style id="${ID_THEME_STYLE}"></style>
         <div class='terminal_container' id='${ID_CONTAINER}'>

@@ -21,6 +21,10 @@ const EXPAND_ATTR = "expand";
 const TAG_ATTR = "tag";
 const ID_CONTAINER = "container";
 const ID_HEADER = "header";
+const ID_OUTPUT = "output";
+const ID_ICON = "icon";
+const ID_ICON_DIV = "icondiv";
+const ID_COMMANDLINE = "commandline";
 
 let registered = false;
 const REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
@@ -63,7 +67,8 @@ class EtEmbeddedViewer extends HTMLElement {
       const SUCCESS_COLOR = new util.Color("#54ff54");  // Linux green
       const FAIL_COLOR = new util.Color("#ff5454"); // Linux red
       const FOCUS_COLOR = new util.Color("#43ace8");
-      
+      const FADE_DURATION = "0.5s";
+
       template.innerHTML = `
         <style>
         ${globalcss.fontAwesomeCSS()}
@@ -73,15 +78,11 @@ class EtEmbeddedViewer extends HTMLElement {
         }
       
         #${ID_CONTAINER} {
-          display: flex;
-        }
-
-        #main {
-          flex: 1 1 auto;
         }
 
         #${ID_HEADER} {
           display: flex;
+          width: 100%;
         }
         
         @-webkit-keyframes PULSE_ANIMATION {
@@ -100,98 +101,168 @@ class EtEmbeddedViewer extends HTMLElement {
           outline-style: solid;
         }
 
-        #output.closed {
+        #${ID_OUTPUT}.closed {
           display: none;
           height: 1px;
           overflow: hidden;
         }
 
-        #gutter {
-          flex: 1rem 0 0;
-          width: 1rem;
-          padding: 1px
-        }
-
-        #gutter.running {
-        }
-
-        #gutter.success {
-          color: ${SUCCESS_COLOR.toString()};
-          border-right: 1px solid ${SUCCESS_COLOR.toString()};
-        }
-
-        #gutter.fail {
-          color: ${FAIL_COLOR.toString()};
-          border-right: 1px solid ${FAIL_COLOR.toString()};
-        }
-        
-        /* Block of controls top right */
-        .right_block {
+        /* Block of controls top left/right */
+        .left_block, .right_block {
           flex: 0 0 auto;
           display: flex;
-          border-top-right-radius: 0.5em;
-          border-bottom-left-radius: 0.5em;
           padding-top: 1px;
           padding-left: 0.5em;
           padding-right: 0.5em;
           padding-bottom: 1px;
+          
+          transition-property: border-color;
+          transition-duration: ${FADE_DURATION};
         }
         
-        #${ID_HEADER}.running > .right_block {
+        .left_block {          
+          border-top-left-radius: 0.5em;
+          border-bottom-right-radius: 0.5em;
+          border-left-width: 2px;
+        }
+        
+        .right_block {          
+          border-top-right-radius: 0.5em;
+          border-bottom-left-radius: 0.5em;
+          border-right-width: 2px;
+        }
+
+        #${ID_CONTAINER}.running > #${ID_HEADER} > .left_block {
           border: 1px solid ${RUNNING_COLOR.toString()};
+          border-left-width: 2px;
         }
 
-        #${ID_HEADER}.success > .right_block {
+        #${ID_CONTAINER}.running > #${ID_HEADER} > .right_block {
+          border: 1px solid ${RUNNING_COLOR.toString()};
+          border-right-width: 2px;
+        }
+        
+        #${ID_CONTAINER}.success > #${ID_HEADER} > .left_block {
           border: 1px solid ${SUCCESS_COLOR.toString()};          
+          border-left-width: 2px;
+        }
+      
+        #${ID_CONTAINER}.success > #${ID_HEADER} > .right_block {
+          border: 1px solid ${SUCCESS_COLOR.toString()};          
+          border-right-width: 2px;
         }
 
-        #${ID_HEADER}.fail > .right_block {
+        #${ID_CONTAINER}.fail > #${ID_HEADER} > .left_block {
           border: 1px solid ${FAIL_COLOR.toString()};
+          border-left-width: 2px;
+        }
+        
+        #${ID_CONTAINER}.fail > #${ID_HEADER} > .right_block {
+          border: 1px solid ${FAIL_COLOR.toString()};
+          border-right-width: 2px;
+        }
+        
+        /* *** Icon Div *** */
+        #${ID_ICON_DIV} {
+          display: inline-block;
+          width: 1em;
+          height: 1em;
         }
 
-        #commandline {
+        #${ID_CONTAINER}.running > #${ID_HEADER} > DIV.left_block > #${ID_ICON_DIV} {
+          color: ${RUNNING_COLOR.toString()};
+        }
+
+        #${ID_CONTAINER}.success > #${ID_HEADER} > DIV.left_block > #${ID_ICON_DIV} {
+          color: ${SUCCESS_COLOR.toString()};          
+        }
+
+        #${ID_CONTAINER}.fail > #${ID_HEADER} > DIV.left_block > #${ID_ICON_DIV} {
+          color: ${FAIL_COLOR.toString()};
+        }
+        
+        /* *** Comand line DIV *** */
+        #${ID_COMMANDLINE} {
           flex: auto 0 1;
           border-bottom-right-radius: 0.5em;
           padding-top: 1px;
           padding-left: 0.5em;
           padding-right: 0.5em;
           padding-bottom: 1px;
+
+          transition-property: border-color;
+          transition-duration: ${FADE_DURATION};
         }
-        
-        #${ID_HEADER}.running > #commandline {
+
+        #${ID_CONTAINER}.running > #${ID_HEADER} > #${ID_COMMANDLINE} {
           border: 1px solid ${RUNNING_COLOR.toString()};
         }
         
-        #${ID_HEADER}.success > #commandline {
+        #${ID_CONTAINER}.success > #${ID_HEADER} > #${ID_COMMANDLINE} {
           border: 1px solid ${SUCCESS_COLOR.toString()};
-          border-left: 0px;
         }
 
-        #${ID_HEADER}.fail > #commandline {
+        #${ID_CONTAINER}.fail > #${ID_HEADER} > #${ID_COMMANDLINE} {
           border: 1px solid ${FAIL_COLOR.toString()};
-          border-left: 0px;
         }
 
-        #close_button, #pop_out_button {
+        #expand_button, #close_button, #pop_out_button {
           flex: 0 0 auto;
           padding: 0px;
           background-color: transparent;
           border: 0px;
           color: white;
         }
+
         #close_button:hover {
           color: red;
         }
+
+        #${ID_HEADER} > .header_spacer {
+          transition-property: border-top-color;
+          transition-duration: ${FADE_DURATION};
+        }
         
-        #${ID_HEADER}.running > .header_spacer {
+        #${ID_CONTAINER}.running > #${ID_HEADER} > .header_spacer {
           border-top: 1px solid ${RUNNING_COLOR.opacity(0.5).toString()};
         }
         
-        #${ID_HEADER}.success > .header_spacer {
+        #${ID_CONTAINER}.success > #${ID_HEADER} > .header_spacer {
           border-top: 1px solid ${SUCCESS_COLOR.opacity(0.5).toString()};            
         }
         
-        #${ID_HEADER}.fail > .header_spacer {
+        #${ID_CONTAINER}.fail > #${ID_HEADER} > .header_spacer {
+          border-top: 1px solid ${FAIL_COLOR.opacity(0.5).toString()};
+        }
+        
+        /* *** Output DIV *** */
+        #${ID_OUTPUT} {
+          border-left: 2px solid rgba(0,0,0,0);
+          border-right: 2px solid rgba(0,0,0,0);
+          transition-property: border-left-color, border-right-color;
+          transition-duration: ${FADE_DURATION}, ${FADE_DURATION};
+        }
+
+        #${ID_CONTAINER}.success > #${ID_OUTPUT} {
+          border-left-color: ${SUCCESS_COLOR};
+          border-right-color: ${SUCCESS_COLOR};
+        }
+        
+        #${ID_CONTAINER}.fail > #${ID_OUTPUT} {
+          border-left-color: ${FAIL_COLOR.toString()};
+          border-right-color: ${FAIL_COLOR.toString()};
+        }
+        
+        
+        #${ID_CONTAINER}.running > #${ID_OUTPUT} > .header_spacer {
+          border-left-color ${RUNNING_COLOR.toString()};
+        }
+        
+        #${ID_CONTAINER}.success > #${ID_OUTPUT} > .header_spacer {
+          border-left-color: ${SUCCESS_COLOR.toString()};
+        }
+        
+        #${ID_CONTAINER}.fail > #${ID_OUTPUT} > .header_spacer {
           border-top: 1px solid ${FAIL_COLOR.opacity(0.5).toString()};
         }
         
@@ -206,45 +277,27 @@ class EtEmbeddedViewer extends HTMLElement {
                 
         #tag_name {
           flex: 0 1 auto;
-        }
-      
-        #icon_div {
-          display: inline-block;
-          width: 1em;
-          height: 1em;
-        }
-
-        #expand_button {
-          display: inline-block;
-          padding: 0px;
-          background-color: transparent;
-          color: white;
-          border: 0px;
-          width: 1em;
-          height: 1em;
-        }
+        }      
         </style>
-        <div id='${ID_CONTAINER}' style='display: none;' tabindex='-1'>
-          <div id='gutter' class='running'>` +
-            `<div id='icon_div'><i id='icon'></i></div>` +
+        <div id='${ID_CONTAINER}' style='display: none;' tabindex='-1' class='running'>
+          <div id='${ID_HEADER}'>
+            <div class='left_block'>
+              <div id='${ID_ICON_DIV}'><i id='${ID_ICON}'></i></div>
+              <div id='${ID_COMMANDLINE}'></div>
+            </div>
+            <div class='header_spacer'></div>
+            <div class='right_block'>
+              <div id='tag_icon'><i class='fa fa-tag'></i></div>
+              <div id='tag_name'></div>
+              <div class='spacer'></div>
+              <button id='expand_button' title='Expand/Collapse'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>
+              <div class='spacer'></div>
+              <button id='pop_out_button'><i class='fa fa-external-link'></i></button>
+              <div class='spacer'></div>
+              <button id='close_button' title='Close'><i class='fa fa-times-circle'></i></button>` +
+            `</div>` +
           `</div>
-          <div id='main'>
-            <div id='${ID_HEADER}'>
-              <div id='commandline'></div>
-              <div class='header_spacer'></div>
-              <div class='right_block'>
-                <div id='tag_icon'><i class='fa fa-tag'></i></div>
-                <div id='tag_name'></div>
-                <div class='spacer'></div>
-                <button id='expand_button'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>
-                <div class='spacer'></div>
-                <button id='pop_out_button'><i class='fa fa-external-link'></i></button>
-                <div class='spacer'></div>
-                <button id='close_button'><i class='fa fa-times-circle'></i></button>` +
-              `</div>` +
-            `</div>
-            <div id='output'><content id='lines_content'></content></div>
-          </div>
+          <div id='${ID_OUTPUT}'><content id='lines_content'></content></div>
         </div>
         <cb-contextmenu id='contextmenu' style='display: none;'>
           <cb-menuitem icon='external-link' name='popout'>Open in Tab</cb-menuitem>
@@ -271,33 +324,32 @@ class EtEmbeddedViewer extends HTMLElement {
    */
   private _setAttr(attrName: string, newValue: string): void {
     if (attrName === COMMANDLINE_ATTR) {
-      (<HTMLDivElement>this._getById('commandline')).innerText = newValue;
+      (<HTMLDivElement>this._getById(ID_COMMANDLINE)).innerText = newValue;
       return;
     }
 
     if (attrName === RETURN_CODE_ATTR) {
-      const gutter = <HTMLDivElement>this._getById('gutter');
-      const icon = <HTMLDivElement>this._getById("icon");
-      const header= <HTMLDivElement>this._getById(ID_HEADER);
+      const container = <HTMLDivElement>this._getById(ID_CONTAINER);
+      const icon = <HTMLDivElement>this._getById(ID_ICON);
+      const iconDiv = <HTMLDivElement>this._getById(ID_ICON_DIV);
 
       if (newValue === null || newValue === undefined || newValue === "") {
         icon.className = "fa fa-cog";
-        gutter.classList.add('running');
-        header.classList.add('running');
+        container.classList.add('running');
+        container.classList.remove('success');
+        container.classList.remove('fail');
       } else {
 
         const rc = parseInt(newValue, 10);
-        gutter.classList.remove('running');
-        header.classList.remove('running');
-        gutter.setAttribute('title', 'Return code: ' + rc);
+        container.classList.remove('running');
+        container.classList.remove('running');
+        iconDiv.setAttribute('title', 'Return code: ' + rc);
         if (rc === 0) {
           icon.className = "fa fa-check";
-          gutter.classList.add('success');
-          header.classList.add('success');
+          container.classList.add('success');
         } else {
           icon.className = "fa fa-times";
-          gutter.classList.add('fail');
-          header.classList.add('fail');
+          container.classList.add('fail');
         }
       }
 
