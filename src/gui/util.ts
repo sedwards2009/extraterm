@@ -13,6 +13,16 @@ export function htmlValueToBool(value: any, defaultValue?: boolean): boolean {
   return ! (value === false || value === "false");
 }
 
+/**
+ * Converts a boolean to a string.
+ * 
+ * @param  {boolean} value the boolean to convert.
+ * @return {string}        "true" or "false".
+ */
+export function booleanToString(value: boolean): string {
+  return value ? "true" : "false";
+}
+
 export function createShadowRoot(self: HTMLElement): ShadowRoot {
     return self.webkitCreateShadowRoot ? self.webkitCreateShadowRoot() : self.createShadowRoot();
 }

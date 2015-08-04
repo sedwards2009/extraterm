@@ -510,12 +510,12 @@ class EtTerminal extends HTMLElement {
    */
   private _handleUnknownKeyDown(ev: KeyboardEvent): boolean {
     // this.events.emit('unknown-keydown', this, ev);
-    if (ev.keyCode === 67 && ev.shiftKey) {
+    if (ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey) {
       // Ctrl+Shift+C
       this.copyToClipboard();
       return false;
       
-    } else if (ev.keyCode === 86 && ev.shiftKey) {
+    } else if (ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {
       // Ctrl+Shift+V
       this._pasteFromClipboard();
       return false;  

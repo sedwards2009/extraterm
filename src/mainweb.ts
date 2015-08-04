@@ -13,6 +13,7 @@ import CbMenuItem = require('./gui/menuitem');
 import CbDropDown = require('./gui/dropdown');
 import CbCheckBoxMenuItem = require('./gui/checkboxmenuitem');
 import MainWebUi = require('./mainwebui');
+import EtTerminal = require('./terminal');
 import AboutDialog = require('./aboutdialog');
 import util = require('./gui/util');
 
@@ -97,7 +98,18 @@ export function startUp(): void {
     mainWebUi.addEventListener(MainWebUi.EVENT_TITLE, (ev: CustomEvent) => {
       window.document.title = "Extraterm - " + ev.detail.title;
     });
-    
+
+    mainWebUi.addEventListener(EtTerminal.EVENT_UNKNOWN_KEY_DOWN, (e: CustomEvent) => {
+      const ev = <KeyboardEvent> e.detail;
+      if (ev.keyCode === 83 && ev.ctrlKey && ev.shiftKey) {
+        // Ctrl+Shift+S - Split/unsplit
+        const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
+        const checked = ! splitMenu.checked;
+        splitMenu.checked = checked;
+        mainWebUi.split = checked;
+      }
+    });
+        
     const mainMenu = doc.getElementById('main_menu');
     mainMenu.addEventListener('selected', (ev: CustomEvent) => {
       switch(ev.detail.name) {

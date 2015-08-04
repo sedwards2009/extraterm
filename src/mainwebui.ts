@@ -55,6 +55,8 @@ class TabInfo {
   
   focus(): void { }
   
+  resize(): void { }
+  
   hasFocus(): boolean {
     return false;
   }
@@ -84,6 +86,10 @@ class TerminalTabInfo extends TabInfo {
   focus(): void {
     this.terminal.resizeToContainer();
     this.terminal.focus();
+  }
+  
+  resize(): void {
+    this.terminal.resizeToContainer();
   }
   
   hasFocus(): boolean {
@@ -137,7 +143,9 @@ class ExtratermMainWebUI extends HTMLElement {
   static EVENT_TAB_CLOSED = 'tab-closed';
   
   static EVENT_TITLE = 'title';
-  
+
+  static EVENT_UNKNOWN_KEY_DOWN = "unknown-key-down";
+
   static POSITION_LEFT = TabPosition.LEFT;
   
   static POSITION_RIGHT = TabPosition.RIGHT;
@@ -259,6 +267,7 @@ class ExtratermMainWebUI extends HTMLElement {
     }
     
     this._split = split;
+    this._resize();
   }
   
   get split(): boolean {
@@ -327,19 +336,17 @@ class ExtratermMainWebUI extends HTMLElement {
         // right-arrow
         this._shiftTab(tabInfo.position, 1);
     
-      } else if (ev.keyCode === 84 && ev.shiftKey) {
+      } else if (ev.keyCode === 84 && ev.ctrlKey && ev.shiftKey) {
         // Ctrl+Shift+T - New tab.
         this.focusTerminalTab(this.newTerminalTab(tabInfo.position));
         
-      } else if (ev.keyCode === 87 && ev.shiftKey) {
+      } else if (ev.keyCode === 87 && ev.ctrlKey && ev.shiftKey) {
         // Ctrl+Shift+W - Close tab.
         this.closeTerminalTab(tabInfo.id);
 
       } else if (ev.keyCode === 9 && ev.ctrlKey) {
+        // Ctrl+Tab
         this.focusOtherPane();
-
-      } else {
-        console.log("Unknown key:",ev);
       }      
     });
 
@@ -450,7 +457,9 @@ class ExtratermMainWebUI extends HTMLElement {
     
     // Figure out the terminal object associated with the currently shown tab inside the tab container.
     const tabsInfos = this._terminalTabs.filter( tabInfo => tabInfo.position === position);
-    tabsInfos[tabContainer.currentIndex].focus(); // Give it the focus.
+    if (tabsInfos.length !== 0) {
+      tabsInfos[tabContainer.currentIndex].focus(); // Give it the focus.
+    }
   }
 
   /**
@@ -478,6 +487,12 @@ class ExtratermMainWebUI extends HTMLElement {
   }
   
   //-----------------------------------------------------------------------
+  private _resize(): void {
+    this._terminalTabs.forEach( tabInfo => {
+      tabInfo.resize();
+    });
+  }
+
   private _sendTabOpenedEvent(): void {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_TAB_OPENED, { detail: null });
     this.dispatchEvent(event);
@@ -490,7 +505,12 @@ class ExtratermMainWebUI extends HTMLElement {
 
   private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_TITLE, { detail: {title: title} });
-    this.dispatchEvent(event);        
+    this.dispatchEvent(event);
+  }
+
+  private _sendUnknownKeyDown(ev: KeyboardEvent): void {
+    const event = new CustomEvent(ExtratermMainWebUI.EVENT_UNKNOWN_KEY_DOWN, { detail: ev });
+    this.dispatchEvent(event);
   }
 
   //-----------------------------------------------------------------------

@@ -129,3 +129,7 @@ TODO: Test the embedded viewer with really long command lines
 Add a way to process command output based on the command line
 =============================================================
 It would be nice if we could intergrate output formatting for certain commands in a flexible and configurable way.
+
+
+TODO: Refactor the keyboard event handling
+==========================================

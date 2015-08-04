@@ -39,6 +39,14 @@ class CbCheckBoxMenuItem extends menuitem {
     }
   }
 
+  set checked(checked: boolean) {
+    this.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, util.booleanToString(checked));
+  }
+
+  get checked(): boolean {
+    return util.htmlValueToBool(this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+  }
+
   //-----------------------------------------------------------------------
   _clicked(): void {
     const checked = this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED);
