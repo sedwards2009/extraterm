@@ -47,7 +47,7 @@ export function fontAwesomeCSS(): string {
   if (fontFaceFreeAwesomeCSS === null) {
     // Read the Font Awesome CSS file and removethe font-face part.
     const fontAwesomeCSS: string = fs.readFileSync(FONT_AWESOME_CSS_PATH, {encoding: 'utf8'});
-    fontFaceFreeAwesomeCSS = StripFontFaces(fontAwesomeCSS);
+    fontFaceFreeAwesomeCSS = stripFontFaces(fontAwesomeCSS);
   }
   return fontFaceFreeAwesomeCSS;
 }
@@ -58,12 +58,12 @@ export function topcoatCSS(): string {
   if (fontFaceFreeTopcoatCSS === null) {
     // Read the Topcoat CSS file and removethe font-face part.
     const topcoatCSS: string = fs.readFileSync(TOPCOAT_CSS_PATH, {encoding: 'utf8'});
-    fontFaceFreeTopcoatCSS = StripFontFaces(topcoatCSS);
+    fontFaceFreeTopcoatCSS = stripFontFaces(topcoatCSS);
   }
   return fontFaceFreeTopcoatCSS;
 }
 
-function StripFontFaces(cssText: string): string {  
+export function stripFontFaces(cssText: string): string {
   const lines = cssText.split(/\n/g);  
   const fontFaceFreeLines: string[] = [];
   let insideFontFaceFlag = false;

@@ -2,15 +2,18 @@
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
 
-import * as _ from 'lodash';
+import _  = require('lodash');
+import fs  = require('fs');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import markdownviewer = require('./gui/markdownviewer');
-import * as domutils from './domutils';
-import * as termjs from './term';
+
+import domutils = require('./domutils');
+import termjs = require('./term');
 import scrollbar = require('./gui/scrollbar');
-import * as util from './gui/util';
-import * as clipboard from 'clipboard';
-import * as webipc from './webipc';
+import util = require('./gui/util');
+import clipboard = require('clipboard');
+import webipc = require('./webipc');
+import globalcss = require('./gui/globalcss');
 
 const debug = true;
 let startTime: number = window.performance.now();
@@ -227,9 +230,10 @@ class EtTerminal extends HTMLElement {
     }
   }
   
-  set themeCss(path: string) {
+  set themeCssPath(path: string) {
+    const themeCss = fs.readFileSync(path, {encoding: 'utf8'});
     const themeTag = <HTMLStyleElement> util.getShadowId(this, ID_THEME_STYLE);
-    themeTag.innerHTML = "@import '" + path + "';";
+    themeTag.innerHTML = globalcss.stripFontFaces(themeCss);
   }
   
   /**
@@ -490,13 +494,6 @@ class EtTerminal extends HTMLElement {
   
   _handleStyleLoad(): void {
     if (this._mainStyleLoaded && this._themeStyleLoaded) {
-      // Force load all of the fonts.
-      document.fonts.forEach( (f) => {
-        if (f.status === 'unloaded') {
-          f.load();
-        }
-      });
-      
       // Start polling the term for application of the font.
       this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
     }
