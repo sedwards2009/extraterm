@@ -11,6 +11,7 @@ import codecs
 import array
 import threading
 import json
+import subprocess
 
 LOG_FINE = False
 LOG_FINER = False
@@ -178,6 +179,14 @@ def process_command(json_command):
         rows = cmd["rows"]
         columns = cmd["columns"]
         env = cmd["env"]
+        
+        # Fix up the PATH variable on cygwin.
+        if sys.platform == "cygwin":
+            if "Path" in env and "PATH" not in env:
+                env["PATH"] = env["Path"]
+                del env["Path"]
+            env["PATH"] = cygwin_convert_path_variable(env["PATH"])
+                
         pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns), env=env) #cwd=, )
         pty_reader = NonblockingFileReader(read=pty.read)
         pty_id = pty_counter
@@ -223,6 +232,9 @@ def find_pty_by_id(pty_id):
         if pty_tup["id"] == pty_id:
             return pty_tup["pty"]
     return None
+
+def cygwin_convert_path_variable(path_var):
+    return subprocess.check_output(["cygpath", "-p", path_var])
 
 def main():
     global pty_list
