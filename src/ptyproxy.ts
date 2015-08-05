@@ -1,5 +1,13 @@
-import * as child_process from 'child_process';
-import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions} from './ptyconnector';
+/**
+ * Copyright 2015 Simon Edwards <simon@simonzone.com>
+ */
+import child_process = require('child_process');
+import ptyconnector = require('./ptyconnector');
+import _ = require("lodash");
+
+type PtyConnector = ptyconnector.PtyConnector;
+type Pty =  ptyconnector.Pty;
+type PtyOptions = ptyconnector.PtyOptions;
 
 const DEBUG_FINE = false;
 
@@ -138,8 +146,9 @@ class ProxyPty implements Pty {
 export function factory(config: any): PtyConnector {
   const ptys: ProxyPty[] = [];
   const pythonExe = process.platform === 'win32' ? 'C:\\Users\\sbe\\.babun\\cygwin\\bin\\python3.4m.exe' : 'python3';
-  const proxy = child_process.spawn(pythonExe, ['python/ptyserver2.py']);
-
+  const serverEnv = _.clone(process.env);
+  serverEnv["PYTHONIOENCODING"] = "utf-8:ignore";
+  const proxy = child_process.spawn(pythonExe, ['python/ptyserver2.py'], {env: serverEnv});
   let messageBuffer = "";
 
   proxy.stdout.on('data', function(data: Buffer) {
@@ -223,7 +232,7 @@ export function factory(config: any): PtyConnector {
   
   function sendMessage(id: number, msg: ProxyMessage): void {
     const msgText = JSON.stringify(msg);
-    proxy.stdin.write(msgText + "\n");
+    proxy.stdin.write(msgText + "\n", 'utf8');
   }
   
   function spawn(file: string, args: string[], opt: PtyOptions): Pty {
