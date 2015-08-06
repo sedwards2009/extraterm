@@ -4,6 +4,7 @@
 
 import _  = require('lodash');
 import fs  = require('fs');
+import crypto = require('crypto');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import markdownviewer = require('./gui/markdownviewer');
 
@@ -159,7 +160,8 @@ class EtTerminal extends HTMLElement {
     this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
     this._termContainer = <HTMLDivElement>this._container.firstElementChild;
     
-    const cookie = "DEADBEEF";  // FIXME
+    const cookie = crypto.randomBytes(10).toString('hex');
+    
     process.env[EXTRATERM_COOKIE_ENV] = cookie;
 
     this._term = new termjs.Terminal({
