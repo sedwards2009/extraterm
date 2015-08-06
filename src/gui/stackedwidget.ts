@@ -27,7 +27,7 @@ class CbStackedWidget extends HTMLElement {
   private _currentIndex: number;
   
   private _initProperties(): void {
-    this._currentIndex = 0;  
+    this._currentIndex = -1;
   }
   
   //-----------------------------------------------------------------------
@@ -103,6 +103,9 @@ class CbStackedWidget extends HTMLElement {
   appendChild(newNode: Node): Node {
     const result = super.appendChild(newNode);
     this.createPageHolders();
+    if (this._currentIndex === -1) {
+      this._currentIndex = 0;
+    }
     this.showIndex(this._currentIndex);
     return result;
   }
@@ -119,6 +122,10 @@ class CbStackedWidget extends HTMLElement {
   }
   
   set currentIndex(index: number) {
+    if (index < 0 || index >= this.childElementCount) {
+      return;
+    }
+
     this._currentIndex = index;
     this.showIndex(index);
   }

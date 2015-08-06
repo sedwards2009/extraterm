@@ -2,8 +2,10 @@
  * Copyright 2015 Simon Edwards <simon@simonzone.com>
  */
 import CbStackedWidget = require("./stackedwidget");
+import CbTab = require("./tab");
 import util = require("./util");
-"use strict";
+import domutils = require("../domutils");
+import _ = require('lodash');
 
 CbStackedWidget.init();
 
@@ -20,7 +22,7 @@ class CbTabWidget extends HTMLElement {
   
   //-----------------------------------------------------------------------
   // Statics
-  static TAG_NAME = "cb-tabwidget";
+  static TAG_NAME = "CB-TABWIDGET";
   
   static init(): void {
     if (registered === false) {
@@ -58,6 +60,10 @@ class CbTabWidget extends HTMLElement {
     });
     this._mutationObserver.observe(this, { childList: true });
   }
+  
+  update(): void {
+    this.createTabHolders();
+  }  
   
   /**
    * 
@@ -229,7 +235,7 @@ DIV.show_frame > #tabbar {
     // Tag the source content as tabs or content so that we can distribute it over our shadow DOM.
     for (let i=0; i<this.children.length; i++) {
       const kid = <HTMLElement>this.children.item(i);
-      if (kid.nodeName === "CB-TAB") {
+      if (kid.nodeName === CbTab.TAG_NAME) {
         tabCount++;
         kid.setAttribute(ATTR_TAG, 'tab_' + (tabCount-1));
         stateInTab = true;
@@ -298,9 +304,10 @@ DIV.show_frame > #tabbar {
     this._showTab(selectTab);
   }
   
-  _createTabClickHandler(index: number) {
+  private _createTabClickHandler(index: number) {
     return () => {
       this.currentIndex = index;
+      util.doLater(this._sendSwitchEvent.bind(this));
     };
   }
   
@@ -311,11 +318,31 @@ DIV.show_frame > #tabbar {
     
     this._getContentsStack().currentIndex = index;
     this._showTab(index);
-    util.doLater(this._sendSwitchEvent.bind(this));
   }
   
   get currentIndex(): number {
     return this._getContentsStack().currentIndex;
+  }
+  
+  private _getCbTabs(): CbTab[] {
+    return <CbTab[]> domutils.toArray<Element>(this.children).filter( element => element.nodeName === CbTab.TAG_NAME );
+  }
+  
+  set currentTab(selectTab: CbTab) {
+    const index = _.findIndex(this._getCbTabs(), tab => tab === selectTab );
+    if (index === -1) {
+      return;
+    }
+    this.currentIndex = index;
+  }
+  
+  get currentTab(): CbTab {
+    const currentIndex = this.currentIndex;
+    if (currentIndex === -1) {
+      return null;
+    }
+    const currentTab = this._getCbTabs()[currentIndex];
+    return currentTab;
   }
   
   set showFrame(value: boolean) {
@@ -330,7 +357,7 @@ DIV.show_frame > #tabbar {
     }
   }
   
-  _showFrame(value: boolean): void {
+  private _showFrame(value: boolean): void {
     if (value) {
       this._getTop().classList.add('show_frame');
     } else {
@@ -354,7 +381,7 @@ DIV.show_frame > #tabbar {
     }
   }
   
-  _sendSwitchEvent(): void {
+  private _sendSwitchEvent(): void {
     const event = new CustomEvent(CbTabWidget.EVENT_TAB_SWITCH, { detail: null });
     this.dispatchEvent(event);
   }

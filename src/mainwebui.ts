@@ -46,9 +46,12 @@ enum TabType {
  * Class for holding info about the contents of our tabs.
  */
 class TabInfo {
+  
   constructor(public id: number, public position: TabPosition, public contentDiv: HTMLDivElement, public cbTab: CbTab) {
   }
-
+  
+  wasShown: boolean = false;
+  
   title(): string {
     return "";
   }
@@ -207,7 +210,7 @@ class ExtratermMainWebUI extends HTMLElement {
   destroy(): void {
   }
   
-  _handleTabSwitch(tabWidget: TabWidget, position: TabPosition): void {
+  private _handleTabSwitch(tabWidget: TabWidget, position: TabPosition): void {
     const tabInfos = this._terminalTabs.filter( tabInfo => tabInfo.position === position );
     if (tabWidget.currentIndex >= 0 && tabWidget.currentIndex < tabInfos.length) {
       const tabInfo = tabInfos[tabWidget.currentIndex];
@@ -234,21 +237,68 @@ class ExtratermMainWebUI extends HTMLElement {
     if (split === this._split) {
       return;
     }
-    
+
     const top = this._getById(ID_TOP);
-    const tabContainerLeft = this._getById(ID_TAB_CONTAINER_LEFT);
-    const tabContainerRight = this._getById(ID_TAB_CONTAINER_RIGHT);
+    const tabContainerLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    const tabContainerRight = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
     const restDivPrimary = this._getById(ID_REST_DIV_PRIMARY);
     const restDivSecondary = this._getById(ID_REST_DIV_SECONDARY);
+    
     if (split) {
       // Split it in two.
+
+      const currentTab = tabContainerLeft.currentTab;
+      const selectedTabInfo = _.first(this._terminalTabs.filter( tabInfo => tabInfo.cbTab === currentTab ));
+
       top.classList.add(CLASS_SPLIT);
       // The primary controls have the burger menu. When it is split, the controls are moved to the right side.
+      
+      this._terminalTabs.filter( tabInfo => tabInfo.position === TabPosition.RIGHT )
+        .forEach( tabInfo => {
+          tabContainerRight.appendChild(tabInfo.cbTab);
+          tabContainerRight.appendChild(tabInfo.contentDiv);
+        });
+      
       tabContainerRight.appendChild(restDivPrimary);
       tabContainerLeft.appendChild(restDivSecondary);
       
+      tabContainerLeft.update();
+      tabContainerRight.update();
+      
+      // Select the right tabs and set focus.
+      const tabContainer = selectedTabInfo.position === TabPosition.LEFT ? tabContainerLeft : tabContainerRight
+      const otherTabContainer = selectedTabInfo.position !== TabPosition.LEFT ? tabContainerLeft : tabContainerRight;
+        
+      tabContainer.currentTab = selectedTabInfo.cbTab;
+      selectedTabInfo.focus();
+        
+      const otherShownList = this._terminalTabs.filter(
+                                tabInfo => tabInfo.position !== selectedTabInfo.position && tabInfo.wasShown);
+      if (otherShownList.length !== 0) {
+        otherTabContainer.currentTab = otherShownList[0].cbTab;
+      } else {
+        otherTabContainer.currentIndex = 0;
+      }
+      
     } else {
-      // Go from a spliit with two panes to just one pane.
+      // Go from a split with two panes to just one pane.
+
+      // Keep track of which tabs were being shown so that we can make split reversable.
+      const leftList = this._terminalTabs.filter( tabInfo => tabInfo.position === TabPosition.LEFT );
+      const leftSelectedTab = tabContainerLeft.currentTab;
+      leftList.forEach( (tabInfo, i) => {
+        tabInfo.wasShown = tabInfo.cbTab === leftSelectedTab;
+      });
+      
+      const rightList = this._terminalTabs.filter( tabInfo => tabInfo.position === TabPosition.RIGHT );
+      const rightSelectedTab = tabContainerRight.currentTab;
+      rightList.forEach( (tabInfo, i) => {
+        tabInfo.wasShown = tabInfo.cbTab === rightSelectedTab;
+      });
+      
+      const focusedList = this._terminalTabs.filter( tabInfo => tabInfo.hasFocus() );
+
+      // Move the 'rest' DIV from the right to the left.
       top.classList.remove(CLASS_SPLIT);
       tabContainerLeft.appendChild(restDivPrimary);
       tabContainerRight.appendChild(restDivSecondary);
@@ -260,10 +310,17 @@ class ExtratermMainWebUI extends HTMLElement {
       nodesToMove.forEach( node => {
         tabContainerLeft.insertBefore(node, restDivPrimary);
         });
-
-      // Fix up the list of terminal info objects.
+      
+      // Fix up the list of terminal info objects
       this._terminalTabs = [...this._terminalTabs.filter( info => info.position == TabPosition.LEFT ),
-        ...this._terminalTabs.filter( info => info.position == TabPosition.RIGHT).map( info => {info.position = TabPosition.LEFT; return info; })];
+                            ...this._terminalTabs.filter( info => info.position == TabPosition.RIGHT)];
+         
+      tabContainerLeft.update();
+      // Try to focus and show the same tab.
+      if (focusedList.length !== 0) {
+        tabContainerLeft.currentTab = focusedList[0].cbTab;
+        focusedList[0].focus();
+      }
     }
     
     this._split = split;
@@ -287,6 +344,7 @@ class ExtratermMainWebUI extends HTMLElement {
     const newId = terminalIdCounter;
     terminalIdCounter++;
     const newCbTab = <CbTab> document.createElement(CbTab.TAG_NAME);
+    newCbTab.setAttribute('id', "tab_id_"+newId);
     newCbTab.innerHTML = "" + newId;
     
     const newDiv = document.createElement('div');
@@ -298,12 +356,17 @@ class ExtratermMainWebUI extends HTMLElement {
     const tabInfo = new TerminalTabInfo(newId, position, newDiv, newCbTab, newTerminal, null);
     this._terminalTabs.push(tabInfo);
     
-    const tabWidget = <TabWidget> this._getById(position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
-    // The way the split view changes the position of the 'rest' controls in the tab widgets causes this expression below.
-    const restDiv = this._getById(this._split === (position === TabPosition.LEFT) ? ID_REST_DIV_SECONDARY : ID_REST_DIV_PRIMARY);
+    const tabWidget = <TabWidget> this._getById(
+                        position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
+                        
+    // The way the split view changes the position of the 'rest' controls
+    // in the tab widgets causes this expression below.
+    const restDiv = this._getById(
+                        this._split === (position === TabPosition.LEFT) ? ID_REST_DIV_SECONDARY : ID_REST_DIV_PRIMARY);
     
     tabWidget.insertBefore(newCbTab, restDiv);
     tabWidget.insertBefore(newDiv, restDiv);
+    tabWidget.update();
     
     // User input event
     newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (e) => {
@@ -363,11 +426,10 @@ class ExtratermMainWebUI extends HTMLElement {
       newEnv[prop] = expandedExtra[prop];
     }
 
-    webipc.requestPtyCreate(this._defaultSessionProfile.command, this._defaultSessionProfile.arguments, 80, 24, newEnv).then(
-      (msg: Messages.CreatedPtyMessage) => {
+    webipc.requestPtyCreate(this._defaultSessionProfile.command, this._defaultSessionProfile.arguments, 80, 24, newEnv)
+      .then( (msg: Messages.CreatedPtyMessage) => {
         tabInfo.ptyId = msg.id;
-      }
-    );
+      });
     
     this._sendTabOpenedEvent();
     return newId;
@@ -398,7 +460,9 @@ class ExtratermMainWebUI extends HTMLElement {
     
     this._sendTabClosedEvent();
     
-    paneTabInfos = this._terminalTabs.filter( tabInfo2 => tabInfo2.position === position );
+    paneTabInfos = this._split ? this._terminalTabs.filter( tabInfo2 => tabInfo2.position === position )
+                      : this._terminalTabs;
+    
     if (index >= paneTabInfos.length) {
       index--;
     }
@@ -618,13 +682,17 @@ class ExtratermMainWebUI extends HTMLElement {
   //-----------------------------------------------------------------------
   
   private _shiftTab(position: TabPosition, direction: number): void {
-    const shortTabList = this._terminalTabs.filter( tabInfo => tabInfo.position === position);
+    const shortTabList = this._split
+                            ? this._terminalTabs.filter( tabInfo => tabInfo.position === position)
+                            : this._terminalTabs;
     const len = shortTabList.length;
     if (len === 0) {
       return;
     }
-  
-    const tabWidget = <TabWidget> this._getById(position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
+    
+    const tabWidgetId = (this._split===false || position === TabPosition.LEFT)
+                          ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT;
+    const tabWidget = <TabWidget> this._getById(tabWidgetId);
     let i = tabWidget.currentIndex;
     i = i + direction;
     if (i < 0) {

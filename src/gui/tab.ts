@@ -7,7 +7,7 @@ let registered = false;
 
 class CbTab extends HTMLElement {
   
-  static TAG_NAME = "cb-tab";
+  static TAG_NAME = "CB-TAB";
 
   static init(): void {
     if (registered === false) {
