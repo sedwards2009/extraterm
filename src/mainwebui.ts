@@ -52,6 +52,8 @@ class TabInfo {
   
   wasShown: boolean = false;
   
+  lastFocus: boolean = false; // True if this tab had the focus last.
+  
   title(): string {
     return "";
   }
@@ -208,6 +210,14 @@ class ExtratermMainWebUI extends HTMLElement {
   }
 
   destroy(): void {
+  }
+  
+  focus(): void {
+    // Put the focus onto the last terminal that had the focus.
+    const lastFocus = this._terminalTabs.filter( tabInfo => tabInfo.lastFocus );
+    if (lastFocus.length !== 0) {
+      lastFocus[0].focus();
+    }
   }
   
   private _handleTabSwitch(tabWidget: TabWidget, position: TabPosition): void {
@@ -367,6 +377,12 @@ class ExtratermMainWebUI extends HTMLElement {
     tabWidget.insertBefore(newCbTab, restDiv);
     tabWidget.insertBefore(newDiv, restDiv);
     tabWidget.update();
+    
+    newTerminal.addEventListener('focus', (ev: FocusEvent) => {
+      this._terminalTabs.forEach( tabInfo2 => {
+        tabInfo2.lastFocus = tabInfo2 === tabInfo;
+      });
+    });
     
     // User input event
     newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (e) => {

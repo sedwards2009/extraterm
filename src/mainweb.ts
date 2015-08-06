@@ -87,6 +87,11 @@ export function startUp(): void {
     
     doc.body.appendChild(mainWebUi);
     
+    // Make sure something sensible is focussed if the window gets the focus.
+    window.addEventListener('focus', () => {
+      mainWebUi.focus();
+    });
+    
     // Detect when the last tab has closed.
     mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
       if (mainWebUi.tabCount === 0) {
