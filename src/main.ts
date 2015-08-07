@@ -41,7 +41,7 @@ const LOG_FINE = false;
 // be closed automatically when the javascript object is GCed.
 let mainWindow: GitHubElectron.BrowserWindow = null;
 
-const CONFIG_FILENAME = "config";
+const MAIN_CONFIG = "extraterm.json";
 const THEME_CONFIG = "theme.json";
 const THEMES_DIRECTORY = "themes";
 
@@ -142,7 +142,7 @@ function systemConfiguration(): SystemConfig {
  * @returns The configuration object.
  */
 function readConfigurationFile(): Config {
-  const filename = path.join(app.getPath('appData'), CONFIG_FILENAME);
+  const filename = path.join(app.getPath('appData'), MAIN_CONFIG);
   let config: Config = { systemConfig: null };
 
   if (fs.existsSync(filename)) {
@@ -161,7 +161,7 @@ function writeConfiguration(config: Config): void {
   const cleanConfig = <Config> _.cloneDeep(config);
   cleanConfig.systemConfig = null;
   
-  const filename = path.join(app.getPath('appData'), CONFIG_FILENAME);
+  const filename = path.join(app.getPath('appData'), MAIN_CONFIG);
   fs.writeFileSync(filename, JSON.stringify(config));
 }
 

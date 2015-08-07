@@ -6,6 +6,7 @@ import _  = require('lodash');
 import fs  = require('fs');
 import crypto = require('crypto');
 import EtEmbeddedViewer = require('./embeddedviewer');
+import EtCommandPlaceHolder = require('./commandplaceholder');
 import markdownviewer = require('./gui/markdownviewer');
 
 import domutils = require('./domutils');
@@ -80,6 +81,7 @@ class EtTerminal extends HTMLElement {
     if (registered === false) {
       scrollbar.init();
       EtEmbeddedViewer.init();
+      EtCommandPlaceHolder.init();
       markdownviewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
       registered = true;
@@ -107,6 +109,7 @@ class EtTerminal extends HTMLElement {
   
   private _blinkingCursor: boolean;
   private _title: string;
+  private _noFrameCommands: RegExp[];
   private _super_lineToHTML: (line: any[]) => string;
   
   private _tagCounter: number;
@@ -128,6 +131,7 @@ class EtTerminal extends HTMLElement {
     this._bracketStyle = null;
     this._lastBashBracket = null;
     this._blinkingCursor = false;
+    this._noFrameCommands = [];
     this._title = "New Tab";
     this._tagCounter = 0;    
     this._mainStyleLoaded = false;
@@ -236,6 +240,20 @@ class EtTerminal extends HTMLElement {
     const themeCss = fs.readFileSync(path, {encoding: 'utf8'});
     const themeTag = <HTMLStyleElement> util.getShadowId(this, ID_THEME_STYLE);
     themeTag.innerHTML = globalcss.stripFontFaces(themeCss);
+  }
+  
+  set noFrameCommands(commandList: string[]) {
+    if (commandList === null) {
+      this._noFrameCommands = [];
+      return;
+    }
+    
+    this._noFrameCommands = commandList.map( exp => new RegExp(exp) );
+  }
+  
+  private _isNoFrameCommand(commandLine: string): boolean {
+    const cmd = commandLine.trim();
+    return this._noFrameCommands.some( exp => exp.test(cmd) );
   }
   
   /**
@@ -678,70 +696,11 @@ class EtTerminal extends HTMLElement {
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-        startdivs = this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME + ":not([return-code])");
-        log("startdivs:", startdivs);
-        if (startdivs.length !== 0) {
-          break;  // Don't open a new frame.
-        }
-        
-        // Create and set up a new command-frame.
-        el = this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
-
-        el.addEventListener('close-request', (function() {
-          el.remove();
-          this.focus();
-        }).bind(this));
-
-        el.addEventListener('type', (function(ev: CustomEvent) {
-          this._sendDataToPty(ev.detail);
-        }).bind(this));
-
-        // el.addEventListener('copy-clipboard-request', (function(ev: CustomEvent) {
-        //   var clipboard = gui.Clipboard.get();
-        //   clipboard.set(ev.detail, 'text');
-        // }).bind(this));
-// FIXME
-        // el.addEventListener('frame-pop-out', (ev: CustomEvent): void => {
-        //   this.events.emit('frame-pop-out', this, ev.detail);
-        // });
-        
-        var cleancommand = this._htmlData;
-        if (this._bracketStyle === "bash") {
-          // Bash includes the history number. Remove it.
-          var trimmed = this._htmlData.trim();
-          cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
-        }
-        el.setAttribute('command-line', cleancommand);
-        el.setAttribute('tag', "" + this._getNextTag());
-        this._term.appendElement(el);
+        this._handleApplicationModeBracketStart();
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-        startdivs = this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME + ":not([return-code])");
-        log("startdivs:", startdivs);
-        if (startdivs.length !== 0) {
-
-          this.preserveScroll(function() {
-            this._term.moveRowsToScrollback();
-            const outputdiv = <HTMLDivElement>startdivs[startdivs.length-1];
-            let node = outputdiv.nextSibling;
-
-            // Collect the DIVs in the scrollback from the EtEmbeddedViewer up to the end of the scrollback.
-            const nodelist: Node[] = [];
-            while (node !== null) {
-              if (node.nodeName !== "DIV" || ! (<HTMLElement> node).classList.contains("terminal-active")) {
-                nodelist.push(node);
-              }
-              node = node.nextSibling;
-            }
-            nodelist.forEach(function(node) {
-              outputdiv.appendChild(node);
-            });
-            outputdiv.setAttribute('return-code', this._htmlData);
-            outputdiv.className = "extraterm_output";
-          });
-        }
-
+        this._handleApplicationModeBracketEnd();
         break;
 
       case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
@@ -761,6 +720,107 @@ class EtTerminal extends HTMLElement {
 
     log("html-mode end!",this._htmlData);
     this._htmlData = null;
+  }
+
+  private _handleApplicationModeBracketStart(): void {
+    const startdivs = this._term.element.querySelectorAll(
+                        EtEmbeddedViewer.TAG_NAME + ":not([return-code]), "+EtCommandPlaceHolder.TAG_NAME);
+
+    if (startdivs.length !== 0) {
+      return;  // Don't open a new frame.
+    }
+    
+    // Fetch the command line.
+    let cleancommand = this._htmlData;
+    if (this._bracketStyle === "bash") {
+      // Bash includes the history number. Remove it.
+      const trimmed = this._htmlData.trim();
+      cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
+    }
+    
+    if ( ! this._isNoFrameCommand(cleancommand)) {
+      // Create and set up a new command-frame.
+      const el = this._createEmbeddedViewerElement(cleancommand);
+      this._term.appendElement(el);
+    } else {
+            
+      // Don't place an embedded viewer, but use an invisible place holder instead.
+      const el = this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
+      el.setAttribute('command-line', cleancommand);
+      this._term.appendElement(el);
+    }
+  }
+  
+  private _createEmbeddedViewerElement(commandLine: string): EtEmbeddedViewer {
+    // Create and set up a new command-frame.
+    const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
+
+    el.addEventListener('close-request', (function() {
+      el.remove();
+      this.focus();
+    }).bind(this));
+
+    el.addEventListener('type', (function(ev: CustomEvent) {
+      this._sendDataToPty(ev.detail);
+    }).bind(this));
+
+    // el.addEventListener('copy-clipboard-request', (function(ev: CustomEvent) {
+    //   var clipboard = gui.Clipboard.get();
+    //   clipboard.set(ev.detail, 'text');
+    // }).bind(this));
+// FIXME
+    // el.addEventListener('frame-pop-out', (ev: CustomEvent): void => {
+    //   this.events.emit('frame-pop-out', this, ev.detail);
+    // });
+    
+    el.setAttribute('command-line', commandLine);  // FIXME attr name
+    el.setAttribute('tag', "" + this._getNextTag());
+    return el;
+  }
+  
+  private _handleApplicationModeBracketEnd(): void {
+    const startElement = this._term.element.querySelectorAll(
+                          EtEmbeddedViewer.TAG_NAME + ":not([return-code]), " + EtCommandPlaceHolder.TAG_NAME);
+
+    if (startElement.length !== 0) {
+
+      this.preserveScroll(function() {
+        
+        const returnCode = this._htmlData;
+        let viewerElement = <HTMLElement>startElement[startElement.length-1];
+        if (viewerElement instanceof EtCommandPlaceHolder) {
+          // There is a place holder and not an embedded viewer.
+          if (returnCode === "0") {
+            // The command returned successful, just remove the place holder and that is it.
+            viewerElement.parentNode.removeChild(viewerElement);
+            return;
+          } else {
+            // The command went wrong. Replace the place holder with a real viewer
+            // element and pretend that we had done this when the command started running.
+            const newViewerElement = this._createEmbeddedViewerElement(viewerElement.getAttribute("command-line"));
+            viewerElement.parentNode.replaceChild(newViewerElement, viewerElement);
+            viewerElement = newViewerElement;
+          }
+        }
+        
+        this._term.moveRowsToScrollback();        
+        let node = viewerElement.nextSibling;
+
+        // Collect the DIVs in the scrollback from the EtEmbeddedViewer up to the end of the scrollback.
+        const nodelist: Node[] = [];
+        while (node !== null) {
+          if (node.nodeName !== "DIV" || ! (<HTMLElement> node).classList.contains("terminal-active")) {
+            nodelist.push(node);
+          }
+          node = node.nextSibling;
+        }
+        nodelist.forEach(function(node) {
+          viewerElement.appendChild(node);
+        });
+        viewerElement.setAttribute('return-code', returnCode);
+        viewerElement.className = "extraterm_output";
+      });
+    }
   }
 
   /**

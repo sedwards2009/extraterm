@@ -10,6 +10,11 @@ export interface Config {
   blinkingCursor?: boolean;
   theme?: string;
   themePath?: string;
+  
+  // List of regexp patterns which are used to identify command 
+  // lines which should not get a command frame around their output.
+  noFrameCommands?: string[]; 
+  
   sessionProfiles?: SessionProfile[];
   systemConfig: SystemConfig;
 }

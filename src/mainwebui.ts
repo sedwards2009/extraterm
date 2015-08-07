@@ -597,6 +597,7 @@ class ExtratermMainWebUI extends HTMLElement {
   private _setConfigOnTerminal(terminal: EtTerminal, config: Config): void {
     terminal.blinkingCursor = config.blinkingCursor;
     terminal.themeCssPath = path.join(config.themePath, "theme.css").replace(/\\/g, "/");
+    terminal.noFrameCommands = config.noFrameCommands !== undefined ? config.noFrameCommands : null;
   }
     
   private _html(): string {
