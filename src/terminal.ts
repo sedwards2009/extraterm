@@ -837,7 +837,7 @@ class EtTerminal extends HTMLElement {
     }
     
     const text = this._extractTextFromRange(range);
-    webipc.clipboardWrite(text.replace(/\u00a0/g,' '));
+    webipc.clipboardWrite(text);
   }
   
   /**
@@ -847,6 +847,8 @@ class EtTerminal extends HTMLElement {
    * @return the formatted plain text representation.
    */
   private _extractTextFromRange(range: Range): string {
+    const nbspRegexp = /\u00a0/g;
+    
     const startContainer = range.startContainer;
     const endContainer = range.endContainer;
     let result = "";
@@ -855,13 +857,13 @@ class EtTerminal extends HTMLElement {
     if (startContainer === range.endContainer) {
       if (startContainer.nodeType === Node.TEXT_NODE) {
         const textNode = <Text> startContainer;
-        return textNode.data.slice(range.startOffset, range.endOffset);
+        return textNode.data.slice(range.startOffset, range.endOffset).replace(nbspRegexp, " ");
       }
     }
     
     let currentNode: Node;
     if (startContainer.nodeType === Node.TEXT_NODE) {
-      result += (<Text> startContainer).data.slice(range.startOffset);
+      result += (<Text> startContainer).data.slice(range.startOffset).replace(nbspRegexp, " ");
       currentNode = nextDocumentOrderNode(startContainer);
     } else {
       currentNode = startContainer.childNodes[range.startOffset];
@@ -871,13 +873,20 @@ class EtTerminal extends HTMLElement {
     
     while (currentNode !== endNode && currentNode !== null) {
       if (currentNode.nodeType === Node.TEXT_NODE) {
-        result += (<Text> currentNode).data;
+        result += (<Text> currentNode).data.replace(nbspRegexp, " ");
+        
+      } else if (currentNode.nodeName === "DIV") {
+        const divElement = <HTMLDivElement> currentNode;
+        if (divElement.classList.contains('terminal-active') || divElement.classList.contains('terminal-scrollback')) {
+          result = util.trimRight(result) + "\n";
+        }
       }
+      
       currentNode = nextDocumentOrderNode(currentNode);
     }
     
     if (endContainer.nodeType === Node.TEXT_NODE) {
-      result += (<Text> endContainer).data.slice(0, range.endOffset);
+      result += (<Text> endContainer).data.slice(0, range.endOffset).replace(nbspRegexp, " ");
     }
     
     return result;
