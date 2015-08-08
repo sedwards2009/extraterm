@@ -252,6 +252,12 @@ export class Color {
   }
 }
 
+/**
+ * Converts an 8bit number to a 2 digit hexadecimal string.
+ * 
+ * @param  {number} value An integer in the range 0-255 inclusive.
+ * @return {string}       the converted number.
+ */
 function to2DigitHex(value: number): string {
   const h = value.toString(16);
   return h.length === 1 ? "0" + h : h;

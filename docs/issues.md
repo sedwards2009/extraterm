@@ -52,11 +52,6 @@ Bug: Minimise flicker with command frames by delaying the initial rendering
 ===========================================================================
 
 
-Feature: Add configuration options to not frame certain commands
-================================================================
-The 'cd' command doesn't need a command frame ever. It should be possible to specify a list of regexp of command lines which should not be framed.
-
-
 Feature: Add an Insert Symbol feature (unicode)
 ===============================================
 Just like insert symbol in a word processor.
@@ -68,11 +63,6 @@ Bug: Frame tags should be unique for the whole application, not just in the same
 
 Bug: Selecting text doesn't automatically scroll the tab contents when the edge is reached
 ==========================================================================================
-
-
-Bug: Select and copy multiple lines of text results in one line
-===============================================================
-Multiple lines of text are pasted into Atom (etc) as one long single line.
 
 
 Feature: Add option to show command to display an image directly inline
@@ -109,7 +99,7 @@ TODO: Test the embedded viewer with really long command lines
 
 Feature: Add a way to process command output based on the command line
 ======================================================================
-It would be nice if we could intergrate output formatting for certain commands in a flexible and configurable way.
+It would be nice if we could integrate output formatting for certain commands in a flexible and configurable way.
 
 
 TODO: Refactor the keyboard event handling
