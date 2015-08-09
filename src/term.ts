@@ -78,6 +78,7 @@ const STATE_DCS = 5;
 const STATE_IGNORE = 6;
 const STATE_APPLICATION_START = 7;
 const STATE_APPLICATION_END = 8;
+const STATE_DEC_HASH = 9;
 
 const TERMINAL_ACTIVE_CLASS = "terminal-active";
 const MAX_PROCESS_WRITE_SIZE = 4096;
@@ -1900,7 +1901,11 @@ export class Terminal {
           break;
 
         case STATE_APPLICATION_END:
-          i = this._processApplicationEnd(ch, data, i);          
+          i = this._processDataApplicationEnd(ch, data, i);          
+          break;
+          
+        case STATE_DEC_HASH:
+          this._processDataDecHash(ch);
           break;
       }
       
@@ -2534,8 +2539,7 @@ export class Terminal {
 
       // ESC # 3 DEC line height/width
       case '#':
-        this.state = STATE_NORMAL;
-        i++;
+        this.state = STATE_DEC_HASH;
         break;
 
       // ESC H Tab Set (HTS is 0x88).
@@ -2837,7 +2841,7 @@ export class Terminal {
     }
   }
   
-  private _processApplicationEnd(ch: string, data: string, i: number): number {
+  private _processDataApplicationEnd(ch: string, data: string, i: number): number {
     // Efficiently look for an end-mode character.
     const nextzero = data.indexOf('\x00', i);
     if (nextzero === -1) {
@@ -2857,7 +2861,26 @@ export class Terminal {
     }
     return i;
   }
+  
+  // ESC # variations
+  private _processDataDecHash(ch: string): void {
+    switch(ch) {
+      // ESC # 8
+      // Screen Alignment Display (DECALN)
+      case '8':
+        let j = this.rows;
+        while (j--) {
+          this.fillRight(0, j, 'E');
+        }
+        break;
 
+      default:
+        break;
+    }
+    
+    this.state = STATE_NORMAL;
+  }
+  
   writeln(data: string): void {
     this.write(data + '\r\n');
   };
@@ -3379,11 +3402,15 @@ export class Terminal {
   }
 
   eraseRight(x: number, y: number): void {
+    this.fillRight(x, y);
+  }
+
+  fillRight(x: number, y: number, ch: string = ' '): void {
     const line = this._getRow(this.ybase + y);
-    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
+    const cell: LineCell = [this.eraseAttr(), ch]; // xterm
 
     for (; x < this.cols; x++) {
-      line[x] = ch;
+      line[x] = cell;
     }
 
     this.updateRange(y);
