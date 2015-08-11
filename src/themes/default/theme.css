@@ -1,12 +1,12 @@
 
 @font-face {
-  font-family: "Inconsolata-Regular";
-  src: url("Inconsolata-Regular.ttf");
+  font-family: "DejaVu Sans Mono";
+  src: url("DejaVuSansMono.ttf");
 }
 
 .terminal {
-    font-family: "Inconsolata-Regular";
-    font-size: 16px;
+    font-family: "DejaVu Sans Mono";
+    font-size: 13px;
     color: #f0f0f0;
     background: #000;
 }
