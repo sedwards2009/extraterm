@@ -3326,22 +3326,19 @@ export class Terminal {
     range.setEnd(lineEl, lineEl.childNodes.length);
     
     const rect = range.getBoundingClientRect();
+    this.log("resizeToContainer() rect: ",rect);
     if (rect.width === 0 || rect.height === 0) {
       // The containing element has an invalid size.
       return {cols: this.cols, rows: this.rows};
     }
     
     const charWidth = rect.width / this.cols;
-    const charHeight = rect.height;
-      
-    this.charHeight = charHeight;
+    this.log("resizeToContainer() charWidth: ",charWidth);
     
-    function px(value) {
-      if (value === null || value === undefined || value === "") {
-        return 0;
-      }
-      return parseInt(value.slice(0,-2),10);
-    }  
+    const charHeight = rect.height;
+    this.charHeight = charHeight;
+    this.log("resizeToContainer() charHeight: ",charHeight);
+    
     const computedStyle = window.getComputedStyle(lineEl);
     const width = this.element.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
     
@@ -5400,3 +5397,10 @@ function getDOMRoot(startElement: Node): Document | ShadowRoot {
   } while (el !== null);
   return null;
 }
+
+function px(value) {
+  if (value === null || value === undefined || value === "") {
+    return 0;
+  }
+  return parseInt(value.slice(0,-2),10);
+}  
