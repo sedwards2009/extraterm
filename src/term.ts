@@ -2868,10 +2868,7 @@ export class Terminal {
       // ESC # 8
       // Screen Alignment Display (DECALN)
       case '8':
-        let j = this.rows;
-        while (j--) {
-          this.fillRight(0, j, 'E');
-        }
+        this.fillScreen('E');
         break;
 
       default:
@@ -3416,6 +3413,13 @@ export class Terminal {
     this.updateRange(y);
   }
 
+  fillScreen(fillChar: string = ' '): void {
+    let j = this.rows;
+    while (j--) {
+      this.fillRight(0, j, fillChar);
+    }
+  }
+  
   eraseLeft(x: number, y: number): void {
     const line = this._getRow(this.ybase + y);
     const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
@@ -4466,7 +4470,13 @@ export class Terminal {
         case 1:
           this.applicationCursor = false;
           break;
+          
+        // 80 Column Mode (DECCOLM).
         case 3:
+          this.fillScreen();
+          this.x = 0;
+          this.y = 0;
+        
           if (this.cols === 132 && this.savedCols) {
             this.resize(this.savedCols, this.rows);
           }
