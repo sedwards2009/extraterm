@@ -258,7 +258,7 @@ export class Color {
  * @param  {number} value An integer in the range 0-255 inclusive.
  * @return {string}       the converted number.
  */
-function to2DigitHex(value: number): string {
+export function to2DigitHex(value: number): string {
   const h = value.toString(16);
   return h.length === 1 ? "0" + h : h;
 }

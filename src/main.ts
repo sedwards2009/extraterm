@@ -20,6 +20,7 @@ import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions, Envi
 import * as resourceLoader from './resourceloader';
 import * as Messages from './windowmessages';
 import * as clipboard from 'clipboard';
+import util = require('./gui/util');
 
 // Our special 'fake' module which selects the correct pty connector factory implementation.
 var PtyConnectorFactory = require("./ptyconnectorfactory");
@@ -117,7 +118,11 @@ function mapBadChar(m: string): string {
     case 11:
       return "\\v";
     default:
-      return "\\x" + (c < 16 ? "0" : "") + c.toString(16);
+      if (c <= 255) {
+        return "\\x" + util.to2DigitHex(c);
+      } else {
+        return "\\u" + util.to2DigitHex( c >> 8) + util.to2DigitHex(c & 0xff);
+      }
   }
 }
 
@@ -127,6 +132,27 @@ function substituteBadChars(data: string): string {
 
 function logData(data: string): void {
   log(substituteBadChars(data));
+}
+// Format a string as a series of JavaScript string literals.
+function formatJSData(data: string, maxLen: number = 60): string {
+  let buf = "";
+  let result = "";
+  for (let i=0; i<data.length; i++) {
+    buf += substituteBadChars(data[i]);
+    if (buf.length+6 >= maxLen) {
+      result += "\"" + buf + "\"\n";
+      buf = "";
+    }
+  }
+  
+  if (buf !== "") {
+    result += "\"" + buf + "\"\n";
+  }
+  return result;
+}
+
+function logJSData(data: string): void {
+  log(formatJSData(data));
 }
 
 /**
@@ -326,7 +352,7 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
   term.onData( (data) => {
     if (LOG_FINE) {
       log("pty process got data for ptyID="+ptyId);
-      logData(data);
+      logJSData(data);
     }
     const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: ptyId, data: data };
     sender.send(Messages.CHANNEL_NAME, msg);    
