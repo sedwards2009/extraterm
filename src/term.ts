@@ -122,6 +122,11 @@ interface SavedState {
   tabs: { [i: number]: boolean;  };
 }
 
+interface TerminalCoord {
+  x: number;
+  y: number;
+}
+
 /**
  * Terminal
  */
@@ -231,6 +236,7 @@ export class Terminal {
   private normalMouse = false;
   private x10Mouse = false;
   private mouseEvents = false;
+  private _pressed = 32;
 
   private _events: { [type: string]: EventListener[]; } = {};
   private _blinker: Function = null;
@@ -950,302 +956,59 @@ export class Terminal {
   //   BtnCode, EmitButtonCode, EditorButton, SendMousePosition
   bindMouse(): void {
     const el = this.element;
-    const self = this;
-    let pressed = 32;
 
-    const wheelEvent = 'onmousewheel' in this.context ? 'mousewheel' : 'DOMMouseScroll';
-
-    // mouseup, mousedown, mousewheel
-    // left click: ^[[M 3<^[[M#3<
-    // mousewheel up: ^[[M`3>
-    function sendButton(ev: MouseEvent): void {
-      // get the xterm-style button
-      const button = getButton(ev);
-
-      // get mouse coordinates
-      const pos = getCoords(ev);
-      if (!pos) return;
-
-      sendEvent(button, pos);
-
-      switch (ev.type) {
-        case 'mousedown':
-          pressed = button;
-          break;
-        case 'mouseup':
-          // keep it at the left
-          // button, just in case.
-          pressed = 32;
-          break;
-        case wheelEvent:
-          // nothing. don't
-          // interfere with
-          // `pressed`.
-          break;
-      }
-    }
-
-    // motion example of a left click:
-    // ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
-    function sendMove(ev: MouseEvent): void {
-      let button = pressed;
-      const pos = getCoords(ev);
-      if (!pos) {
+    on(el, 'mousedown', (ev: MouseEvent) => {
+      if ( ! this.mouseEvents) {
         return;
       }
-
-      // buttons marked as motions
-      // are incremented by 32
-      button += 32;
-
-      sendEvent(button, pos);
-    }
-
-    // encode button and
-    // position to characters
-    function encode(data, ch) {
-      if (!self.utfMouse) {
-        if (ch === 255) return data.push(0);
-        if (ch > 127) ch = 127;
-        data.push(ch);
-      } else {
-        if (ch === 2047) return data.push(0);
-        if (ch < 127) {
-          data.push(ch);
-        } else {
-          if (ch > 2047) ch = 2047;
-          data.push(0xC0 | (ch >> 6));
-          data.push(0x80 | (ch & 0x3F));
-        }
-      }
-    }
-
-    // send a mouse event:
-    // regular/utf8: ^[[M Cb Cx Cy
-    // urxvt: ^[[ Cb ; Cx ; Cy M
-    // sgr: ^[[ Cb ; Cx ; Cy M/m
-    // vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
-    // locator: CSI P e ; P b ; P r ; P c ; P p & w
-    function sendEvent(button, pos) {
-      // self.emit('mouse', {
-      //   x: pos.x - 32,
-      //   y: pos.x - 32,
-      //   button: button
-      // });
-      var data;
-      
-      if (self.vt300Mouse) {
-        // NOTE: Unstable.
-        // http://www.vt100.net/docs/vt3xx-gp/chapter15.html
-        button &= 3;
-        pos.x -= 32;
-        pos.y -= 32;
-        data = '\x1b[24';
-        if (button === 0) data += '1';
-        else if (button === 1) data += '3';
-        else if (button === 2) data += '5';
-        else if (button === 3) return;
-        else data += '0';
-        data += '~[' + pos.x + ',' + pos.y + ']\r';
-        self.send(data);
-        return;
-      }
-
-      if (self.decLocator) {
-        // NOTE: Unstable.
-        button &= 3;
-        pos.x -= 32;
-        pos.y -= 32;
-        if (button === 0) button = 2;
-        else if (button === 1) button = 4;
-        else if (button === 2) button = 6;
-        else if (button === 3) button = 3;
-        self.send('\x1b[' +
-                  button +
-                  ';' +
-                  (button === 3 ? 4 : 0) +
-                  ';' +
-                  pos.y +
-                  ';' +
-                  pos.x +
-                  ';' +
-                  (pos.page || 0) +
-                  '&w');
-        return;
-      }
-
-      if (self.urxvtMouse) {
-        pos.x -= 32;
-        pos.y -= 32;
-        pos.x++;
-        pos.y++;
-        self.send('\x1b[' + button + ';' + pos.x + ';' + pos.y + 'M');
-        return;
-      }
-
-      if (self.sgrMouse) {
-        pos.x -= 32;
-        pos.y -= 32;
-        self.send('\x1b[<' +
-                  ((button & 3) === 3 ? button & ~3 : button) +
-                  ';' +
-                  pos.x +
-                  ';' +
-                  pos.y +
-                  ((button & 3) === 3 ? 'm' : 'M'));
-        return;
-      }
-
-      data = [];
-
-      encode(data, button);
-      encode(data, pos.x);
-      encode(data, pos.y);
-
-      self.send('\x1b[M' + String.fromCharCode.apply(String, data));
-    }
-
-    function getButton(ev: MouseEvent): number {
-
-      // two low bits:
-      // 0 = left
-      // 1 = middle
-      // 2 = right
-      // 3 = release
-      // wheel up/down:
-      // 1, and 2 - with 64 added
-      let button: number;
-      switch (ev.type) {
-        case 'mousedown':
-          button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
-
-          if (self.isMSIE) {
-            button = button === 1 ? 0 : button === 4 ? 1 : button;
-          }
-          break;
-        case 'mouseup':
-          button = 3;
-          break;
-        case 'DOMMouseScroll':
-          button = ev.detail < 0 ? 64 : 65;
-          break;
-        case 'mousewheel':
-          button = (<any>ev).wheelDeltaY > 0 ? 64 : 65;
-          break;
-      }
-
-      // next three bits are the modifiers:
-      // 4 = shift, 8 = meta, 16 = control
-      const shift = ev.shiftKey ? 4 : 0;
-      const meta = ev.metaKey ? 8 : 0;
-      const ctrl = ev.ctrlKey ? 16 : 0;
-      let mod = shift | meta | ctrl;
-
-      // no mods
-      if (self.vt200Mouse) {
-        // ctrl only
-        mod &= ctrl;
-      } else if (!self.normalMouse) {
-        mod = 0;
-      }
-
-      // increment to SP
-      button = (32 + (mod << 2)) + button;
-
-      return button;
-    }
-
-    // mouse coordinates measured in cols/rows
-    function getCoords(ev: MouseEvent): {x: number; y: number; type: string; } {
-      // ignore browsers without pageX for now
-      if (ev.pageX === null) {
-        return null;
-      }
-
-      // Identify the row DIV that was clicked.
-      let rowElement = null;
-      if (getDOMRoot(self.element).nodeName === "#document") {
-        let target: HTMLElement = <HTMLElement> ev.target;
-        while (target !== self.element) {
-          if (target.className === TERMINAL_ACTIVE_CLASS) {
-            rowElement = target;
-            break;
-          }
-          target = <HTMLElement> target.parentNode;
-        }
-      } else {
-        // Inside a Shadow DOM.
-        const matches = ev.path.filter(
-          (pathEl) => (<HTMLElement> pathEl).className === TERMINAL_ACTIVE_CLASS );
-        if (matches.length === 0) {
-          return null;
-        }
-        rowElement = matches[0];
-      }
-      
-      if (rowElement === null) {
-        return null;
-      }
-      
-      let row = self.children.indexOf(rowElement) + 1;
-      
-      let x = ev.pageX;
-      let el = rowElement;
-      while (el && el !== self.document.documentElement) {
-        x -= el.offsetLeft;
-        el = 'offsetParent' in el ? el.offsetParent : el.parentNode;
-      }
-
-      // convert to cols
-      const w = rowElement.clientWidth;
-      let col = Math.floor((x / w) * self.cols) + 1;
-
-      // be sure to avoid sending
-      // bad positions to the program
-      if (col < 0) col = 0;
-      if (col > self.cols) col = self.cols;
-      if (row < 0) row = 0;
-      if (row > self.rows) row = self.rows;
-
-      // xterm sends raw bytes and
-      // starts at 32 (SP) for each.
-      col += 32;  // FIXME don't do xterm's 32 offset here.
-      row += 32;
-
-      return {
-        x: col,
-        y: row,
-        type: ev.type === wheelEvent ? 'mousewheel' : ev.type
-      };
-    }
-
-    on(el, 'mousedown', function(ev: MouseEvent) {
-      if (!self.mouseEvents) return;
 
       // send the button
-      sendButton(ev);
-
-      // ensure focus
-      self.focus();
-
-      // fix for odd bug
-      //if (self.vt200Mouse && !self.normalMouse) {
-      if (self.vt200Mouse) {
-        sendButton(Object.create(ev, { type: 'mouseup' }));
-        return cancel(ev);
+      
+      // get the xterm-style button
+      const button = this.getMouseButtonFromEvent(ev);
+      
+      // get mouse coordinates
+      const pos = this.getTerminalCoordsFromEvent(ev);
+      if (pos !== null) {
+        this.sendMouseButtonSequence(pos, button);
       }
 
+      // ensure focus
+      this.focus();
+
+      if (this.vt200Mouse) {
+        if (pos !== null) {
+          this.sendMouseButtonSequence(pos, 3); // release button
+        }
+        return cancel(ev);
+      }
+      
+      const sendMoveFunc = this.sendMove.bind(this);
       // bind events
-      if (self.normalMouse) on(self.document, 'mousemove', sendMove);
+      if (this.normalMouse) {
+        on(self.document, 'mousemove', sendMoveFunc);
+      }
 
       // x10 compatibility mode can't send button releases
-      if (!self.x10Mouse) {
-        on(self.document, 'mouseup', function up(ev: MouseEvent) {
-          sendButton(ev);
-          if (self.normalMouse) off(self.document, 'mousemove', sendMove);
-          off(self.document, 'mouseup', up);
+      if ( ! this.x10Mouse) {
+        const up = (ev: MouseEvent) => {
+          // get the xterm-style button
+          const button = this.getMouseButtonFromEvent(ev);
+          
+          // get mouse coordinates
+          const pos = this.getTerminalCoordsFromEvent(ev);
+          if (pos !== null) {
+            this.sendMouseButtonSequence(pos, button);
+          }
+          
+          if (this.normalMouse) {
+            off(this.document, 'mousemove', sendMoveFunc);
+          }
+          off(this.document, 'mouseup', up);
           return cancel(ev);
-        });
+        }
+        
+        on(this.document, 'mouseup', up);
       }
 
       return cancel(ev);
@@ -1254,43 +1017,290 @@ export class Terminal {
     //if (self.normalMouse) {
     //  on(self.document, 'mousemove', sendMove);
     //}
+    const wheelEvent = 'onmousewheel' in this.context ? 'mousewheel' : 'DOMMouseScroll';
 
-    on(el, wheelEvent, function(ev: MouseEvent) {
-      if (!self.mouseEvents) return;
-      if (self.x10Mouse || self.vt300Mouse || self.decLocator) return;
-      sendButton(ev);
+    on(el, wheelEvent, (ev: MouseEvent) => {
+      if (!this.mouseEvents) {
+        return;
+      }
+      if (this.x10Mouse || this.vt300Mouse || this.decLocator) {
+        return;
+      }
+      
+      // get the xterm-style button
+      const button = this.getMouseButtonFromEvent(ev);
+      
+      // get mouse coordinates
+      const pos = this.getTerminalCoordsFromEvent(ev);
+      if (pos !== null) {
+        this.sendMouseButtonSequence(pos, button);
+      }
       return cancel(ev);
     });
 
     // allow mousewheel scrolling in
     // the shell for example
-    on(el, wheelEvent, function(ev: MouseEvent) {
-      if (self.mouseEvents) return;
-      if (self.applicationKeypad) return;
+    on(el, wheelEvent, (ev: MouseEvent) => {
+      if (this.mouseEvents) {
+        return;
+      }
+      if (this.applicationKeypad) {
+        return;
+      }
       
-      if (self.physicalScroll) {
+      if (this.physicalScroll) {
         // Let the mouse whell scroll the DIV.
-        var newScrollPosition;
+        let newScrollPosition;
         if ((<any>ev).wheelDelta > 0) {
-            newScrollPosition = Math.max(0, self.element.scrollTop - self.charHeight * WHEELSCROLL_CHARS);
-            self.element.scrollTop = newScrollPosition;
-            self.emit('manual-scroll', { position: newScrollPosition, isBottom: self.isScrollAtBottom() });
+            newScrollPosition = Math.max(0, this.element.scrollTop - this.charHeight * WHEELSCROLL_CHARS);
+            this.element.scrollTop = newScrollPosition;
+            this.emit('manual-scroll', { position: newScrollPosition, isBottom: this.isScrollAtBottom() });
         } else {
-            newScrollPosition = Math.min(self.element.scrollHeight - self.element.clientHeight,
-                                              self.element.scrollTop + self.charHeight * WHEELSCROLL_CHARS);
-            self.element.scrollTop = newScrollPosition;
-            self.emit('manual-scroll', { position: newScrollPosition, isBottom: self.isScrollAtBottom() });
+            newScrollPosition = Math.min(this.element.scrollHeight - this.element.clientHeight,
+                                              this.element.scrollTop + this.charHeight * WHEELSCROLL_CHARS);
+            this.element.scrollTop = newScrollPosition;
+            this.emit('manual-scroll', { position: newScrollPosition, isBottom: this.isScrollAtBottom() });
         }
         return;
       }
       
       if (ev.type === 'DOMMouseScroll') {
-        self.scrollDisp(ev.detail < 0 ? -5 : 5);
+        this.scrollDisp(ev.detail < 0 ? -5 : 5);
       } else {
-        self.scrollDisp((<any>ev).wheelDeltaY > 0 ? -5 : 5);
+        this.scrollDisp((<any>ev).wheelDeltaY > 0 ? -5 : 5);
       }
       return cancel(ev);
     });
+  }
+  // motion example of a left click:
+  // ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
+  private sendMove(ev: MouseEvent): void {
+    let button = this._pressed;
+    const pos = this.getTerminalCoordsFromEvent(ev);
+    if (!pos) {
+      return;
+    }
+
+    // buttons marked as motions
+    // are incremented by 32
+    button += 32;
+
+    this.sendMouseSequence(button, pos);
+  }
+
+  // encode button and
+  // position to characters
+  private encodeMouseData(buffer: number[], ch: number): void {
+    if ( ! this.utfMouse) {
+      if (ch === 255) {
+        buffer.push(0);
+        return;
+      }
+      if (ch > 127) {
+        ch = 127;
+      }
+      buffer.push(ch);
+    } else {
+      if (ch === 2047) {
+        buffer.push(0);
+      }
+      if (ch < 127) {
+        buffer.push(ch);
+      } else {
+        if (ch > 2047) {
+          ch = 2047;
+        }
+        buffer.push(0xC0 | (ch >> 6));
+        buffer.push(0x80 | (ch & 0x3F));
+      }
+    }
+  }
+
+  // send a mouse event:
+  // regular/utf8: ^[[M Cb Cx Cy
+  // urxvt: ^[[ Cb ; Cx ; Cy M
+  // sgr: ^[[ Cb ; Cx ; Cy M/m
+  // vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
+  // locator: CSI P e ; P b ; P r ; P c ; P p & w
+  private sendMouseSequence(button: number, pos: TerminalCoord): void {
+    let data: string;
+    
+    if (this.vt300Mouse) {
+      this.log("sendEvent(): vt300Mouse");
+      // NOTE: Unstable.
+      // http://www.vt100.net/docs/vt3xx-gp/chapter15.html
+      button &= 3;
+      const x = pos.x - 32;
+      const y = pos.y - 32;
+      let data = '\x1b[24';
+      if (button === 0) {
+        data += '1';
+      } else if (button === 1) {
+        data += '3';
+      } else if (button === 2) {
+        data += '5';
+      } else if (button === 3) {
+        return;
+      } else {
+        data += '0';
+      }
+      data += '~[' + x + ',' + y + ']\r';
+      this.send(data);
+      return;
+    }
+
+    if (this.decLocator) {
+      // NOTE: Unstable.
+      this.log("sendEvent with decLocator is not implemented!");
+      
+      // const x = pos.x - 32;
+      // const y = pos.y - 32;
+      // const translatedButton = {0:2, 1:4, 2:6, 3:3}[button & 3];
+      // self.send('\x1b[' + translatedButton + ';' + (translatedButton === 3 ? 4 : 0) + ';' + y + ';' + x + ';' +
+      //   (pos.page || 0) + '&w');
+      return;
+    }
+
+    if (this.urxvtMouse) {
+      this.log("sendEvent(): urxvtMouse");
+      const x = pos.x - 31;
+      const y = pos.y - 31;
+      this.send('\x1b[' + button + ';' + x + ';' + y + 'M');
+      return;
+    }
+
+    if (this.sgrMouse) {
+      this.log("sendEvent(): sgrMouse");
+      const x = pos.x - 32;
+      const y = pos.y - 32;
+      this.send('\x1b[<' + ((button & 3) === 3 ? button & ~3 : button) + ';' + x +
+        ';' + y + ((button & 3) === 3 ? 'm' : 'M'));
+      return;
+    }
+    this.log("sendEvent(): default");
+
+    const encodedData = [];
+    this.encodeMouseData(encodedData, button);
+    this.encodeMouseData(encodedData, pos.x);
+    this.encodeMouseData(encodedData, pos.y);
+
+    this.send('\x1b[M' + String.fromCharCode.apply(String, encodedData));
+  }
+
+  // mouse coordinates measured in cols/rows
+  private getTerminalCoordsFromEvent(ev: MouseEvent): TerminalCoord {
+    // Identify the row DIV that was clicked.
+    let rowElement = null;
+    if (getDOMRoot(this.element).nodeName === "#document") {
+      let target: HTMLElement = <HTMLElement> ev.target;
+      while (target !== this.element) {
+        if (target.className === TERMINAL_ACTIVE_CLASS) {
+          rowElement = target;
+          break;
+        }
+        target = <HTMLElement> target.parentNode;
+      }
+    } else {
+      // Inside a Shadow DOM.
+      const matches = ev.path.filter(
+        (pathEl) => (<HTMLElement> pathEl).className === TERMINAL_ACTIVE_CLASS );
+      if (matches.length === 0) {
+        return null;
+      }
+      rowElement = matches[0];
+    }
+    
+    if (rowElement === null) {
+      return null;
+    }
+    
+    let row = this.children.indexOf(rowElement) + 1;
+    
+    let x = ev.pageX;
+    let el = rowElement;
+    while (el && el !== self.document.documentElement) {
+      x -= el.offsetLeft;
+      el = 'offsetParent' in el ? el.offsetParent : el.parentNode;
+    }
+
+    // convert to cols
+    const w = rowElement.clientWidth;
+    let col = Math.floor((x / w) * this.cols) + 1;
+
+    // be sure to avoid sending
+    // bad positions to the program
+    if (col < 0) {
+      col = 0;
+    }
+    if (col > this.cols) {
+      col = this.cols;
+    }
+    if (row < 0) {
+      row = 0;
+    }
+    if (row > this.rows) {
+      row = this.rows;
+    }
+
+    // xterm sends raw bytes and
+    // starts at 32 (SP) for each.
+    col += 32;  // FIXME don't do xterm's 32 offset here.
+    row += 32;
+
+    return { x: col, y: row };
+  }
+  
+  // mouseup, mousedown, mousewheel
+  // left click: ^[[M 3<^[[M#3<
+  // mousewheel up: ^[[M`3>
+  private sendMouseButtonSequence(pos: TerminalCoord, button: number): void {
+    this.sendMouseSequence(button, pos);
+    this._pressed = (button === 3) ? 32 : button;  
+  }
+  
+  private getMouseButtonFromEvent(ev: MouseEvent): number {
+    // two low bits:
+    // 0 = left
+    // 1 = middle
+    // 2 = right
+    // 3 = release
+    // wheel up/down:
+    // 1, and 2 - with 64 added
+    let button: number;
+    switch (ev.type) {
+      case 'mousedown':
+        button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
+        break;
+      case 'mouseup':
+        button = 3;
+        break;
+      case 'DOMMouseScroll':
+        button = ev.detail < 0 ? 64 : 65;
+        break;
+      case 'mousewheel':
+        button = (<any>ev).wheelDeltaY > 0 ? 64 : 65;
+        break;
+    }
+
+    // next three bits are the modifiers:
+    // 4 = shift, 8 = meta, 16 = control
+    const shift = ev.shiftKey ? 4 : 0;
+    const meta = ev.metaKey ? 8 : 0;
+    const ctrl = ev.ctrlKey ? 16 : 0;
+    let mod = shift | meta | ctrl;
+
+    // no mods
+    if (this.vt200Mouse) {
+      // ctrl only
+      mod &= ctrl;
+    } else if ( ! this.normalMouse) {
+      mod = 0;
+    }
+
+    // increment to SP
+    button = (32 + (mod << 2)) + button;
+
+    return button;
   }
 
   /**
@@ -3234,9 +3244,15 @@ export class Terminal {
   }
 
   log(...args: any[]): void {
-    if (!this.debug) return;
-    if (!this.context.console || !this.context.console.log) return;
+    if (!this.debug) {
+      return;
+    }
+    if (!this.context.console || !this.context.console.log) {
+      return;
+    }
+    
     this.context.console.log.apply(this.context.console, ["[TERM=",this._termId,"] ", ...args]);
+    this.context.console.log.apply(this.context.console, ["[TERM="+this._termId+"] "+ args]);
   }
 
   error(...args: string[]): void {
