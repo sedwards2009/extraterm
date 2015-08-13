@@ -117,6 +117,8 @@ function mapBadChar(m: string): string {
       return "\\r";
     case 11:
       return "\\v";
+    case 0x22:
+      return '\\"';
     default:
       if (c <= 255) {
         return "\\x" + util.to2DigitHex(c);
