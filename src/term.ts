@@ -105,6 +105,23 @@ interface Options {
 
 type LineCell = [number, string];
 
+interface CharSet {
+  [key: string]: string;
+}
+
+interface SavedState {
+  lines: LineCell[][];
+  cols: number;
+  rows: number;
+  ybase: number;
+  ydisp: number;
+  x: number;
+  y: number;
+  scrollTop: number;
+  scrollBottom: number;
+  tabs: { [i: number]: boolean;  };
+}
+
 /**
  * Terminal
  */
@@ -149,16 +166,16 @@ export class Terminal {
   private originMode = false;
   private insertMode = false;
   private wraparoundMode = false;
-  private normal = null;
+  private normal: SavedState = null;
 
   private entry = '';
   private entryPrefix = 'Search: ';
 
   // charset
-  private charset = null;
+  private charset: CharSet = null;
   private gcharset: number = null;
   private glevel = 0;
-  private charsets = [null];
+  private charsets: CharSet[] = [null];
 
   // stream
   private readable = true;
@@ -4333,7 +4350,7 @@ export class Terminal {
         case 47: // alt screen buffer
         case 1047: // alt screen buffer
           if (!this.normal) {
-            var normal = {
+            const normal: SavedState = {
               cols: this.cols,
               rows: this.rows,
               lines: this.lines,
@@ -4343,13 +4360,20 @@ export class Terminal {
               y: this.y,
               scrollTop: this.scrollTop,
               scrollBottom: this.scrollBottom,
-              tabs: this.tabs
-              // XXX save charset(s) here?
-              // charset: this.charset,
-              // glevel: this.glevel,
-              // charsets: this.charsets
+              tabs: this.tabs,
             };
+            
+            // Preserve these variables during the reset().
+            const previousCharset = this.charset;
+            const previousGlevel = this.glevel;
+            const previousCharsets = this.charsets;
+            
             this.reset();
+            
+            this.charset = previousCharset;
+            this.glevel = previousGlevel;
+            this.charsets = previousCharsets;
+            
             this.normal = normal;
             this.showCursor();
           }
@@ -4534,6 +4558,7 @@ export class Terminal {
             this.scrollTop = this.normal.scrollTop;
             this.scrollBottom = this.normal.scrollBottom;
             this.tabs = this.normal.tabs;
+            
             this.normal = null;
             // if (params === 1049) {
             //   this.x = this.savedX;
@@ -4562,14 +4587,14 @@ export class Terminal {
 
   // CSI s
   //   Save cursor (ANSI.SYS).
-  saveCursor() {
+  saveCursor(): void {
     this.savedX = this.x;
     this.savedY = this.y;
   };
 
   // CSI u
   //   Restore cursor (ANSI.SYS).
-  restoreCursor() {
+  restoreCursor(): void {
     this.x = this.savedX || 0;
     this.y = this.savedY || 0;
   };
