@@ -338,10 +338,10 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
     cols: number, rows: number): number {
     
   const ptyEnv = _.clone(env);
-  ptyEnv["TERM"] = 'xterm-color';
+  ptyEnv["TERM"] = 'xterm';
 
   const term = ptyConnector.spawn(file, args, {
-      name: 'xterm-color',
+      name: 'xterm',
       cols: cols,
       rows: rows,
   //    cwd: process.env.HOME,
