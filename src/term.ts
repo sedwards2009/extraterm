@@ -237,7 +237,8 @@ export class Terminal {
   private x10Mouse = false;
   private mouseEvents = false;
   private _pressed = 32;
-
+  private _lastMovePos: TerminalCoord = null;
+  
   private _events: { [type: string]: EventListener[]; } = {};
   private _blinker: Function = null;
   private savedCols: number;
@@ -957,6 +958,7 @@ export class Terminal {
   bindMouse(): void {
     const el = this.element;
 
+    // Attach mouse down event handler.
     on(el, 'mousedown', (ev: MouseEvent) => {
       if ( ! this.mouseEvents) {
         return;
@@ -982,33 +984,68 @@ export class Terminal {
         }
         return cancel(ev);
       }
+
+      // motion example of a left click:
+      // ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
+      const handleMouseMove = (ev: MouseEvent): void => {
+        let button = this._pressed;
+        const pos = this.getTerminalCoordsFromEvent(ev);
+        if (!pos) {
+          return;
+        }
+
+        if (this._lastMovePos !== null && this._lastMovePos.x === pos.x && this._lastMovePos.y === pos.y) {
+          return;
+        }
+        this._lastMovePos = pos;
+        
+        // buttons marked as motions
+        // are incremented by 32
+        button += 32;
+
+        this.sendMouseSequence(button, pos);
+      };
+
+      let removeEventHandlers;
       
-      const sendMoveFunc = this.sendMove.bind(this);
+      const handleMouseLeave = (ev: MouseEvent) => {
+        removeEventHandlers();
+        return cancel(ev);
+      };
+      
+      const handleMouseUp = (ev: MouseEvent) => {
+        // get the xterm-style button
+        const button = this.getMouseButtonFromEvent(ev);
+        
+        // get mouse coordinates
+        const pos = this.getTerminalCoordsFromEvent(ev);
+        if (pos !== null) {
+          this.sendMouseButtonSequence(pos, button);
+        }
+        
+        removeEventHandlers();
+        return cancel(ev);
+      };
+      
+      removeEventHandlers = () => {
+        // Remove the event handlers.
+        if (this.normalMouse) {
+          off(el, 'mousemove', handleMouseMove);
+          off(el, 'mouseleave', handleMouseLeave);
+        }
+        off(el, 'mouseup', handleMouseUp);
+      };
+      
       // bind events
       if (this.normalMouse) {
-        on(self.document, 'mousemove', sendMoveFunc);
+        this._lastMovePos = null;
+        on(el, 'mousemove', handleMouseMove);
+        on(el, 'mouseleave', handleMouseLeave);
       }
 
       // x10 compatibility mode can't send button releases
       if ( ! this.x10Mouse) {
-        const up = (ev: MouseEvent) => {
-          // get the xterm-style button
-          const button = this.getMouseButtonFromEvent(ev);
-          
-          // get mouse coordinates
-          const pos = this.getTerminalCoordsFromEvent(ev);
-          if (pos !== null) {
-            this.sendMouseButtonSequence(pos, button);
-          }
-          
-          if (this.normalMouse) {
-            off(this.document, 'mousemove', sendMoveFunc);
-          }
-          off(this.document, 'mouseup', up);
-          return cancel(ev);
-        }
-        
-        on(this.document, 'mouseup', up);
+        on(el, 'mouseup', handleMouseUp);
       }
 
       return cancel(ev);
@@ -1071,21 +1108,6 @@ export class Terminal {
       }
       return cancel(ev);
     });
-  }
-  // motion example of a left click:
-  // ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
-  private sendMove(ev: MouseEvent): void {
-    let button = this._pressed;
-    const pos = this.getTerminalCoordsFromEvent(ev);
-    if (!pos) {
-      return;
-    }
-
-    // buttons marked as motions
-    // are incremented by 32
-    button += 32;
-
-    this.sendMouseSequence(button, pos);
   }
 
   // encode button and
@@ -1165,7 +1187,7 @@ export class Terminal {
       this.log("sendEvent(): urxvtMouse");
       const x = pos.x - 31;
       const y = pos.y - 31;
-      this.send('\x1b[' + button + ';' + x + ';' + y + 'M');
+      this.send('\x1b[' + (button+32) + ';' + x + ';' + y + 'M');
       return;
     }
 
@@ -1180,7 +1202,7 @@ export class Terminal {
     this.log("sendEvent(): default");
 
     const encodedData = [];
-    this.encodeMouseData(encodedData, button);
+    this.encodeMouseData(encodedData, button+32);
     this.encodeMouseData(encodedData, pos.x);
     this.encodeMouseData(encodedData, pos.y);
 
@@ -1297,9 +1319,7 @@ export class Terminal {
       mod = 0;
     }
 
-    // increment to SP
-    button = (32 + (mod << 2)) + button;
-
+    button = (mod << 2) + button;
     return button;
   }
 
@@ -2143,16 +2163,22 @@ export class Terminal {
         this.setScrollRegion(this.params);
         break;
 
-      // CSI s
-      //   Save cursor (ANSI.SYS).
+      // CSI s     Save cursor (ANSI.SYS).
+      // CSI ? Pm s
       case 's':
-        this.saveCursor();
+        if (this.prefix === '?') {
+          this.savePrivateValues(this.params);
+        } else if (this.prefix === '') {
+          this.saveCursor();
+        }
         break;
 
       // CSI u
       //   Restore cursor (ANSI.SYS).
       case 'u':
-        this.restoreCursor();
+        if (this.prefix === '') {
+          this.restoreCursor();
+        }
         break;
 
       /**
@@ -2286,16 +2312,6 @@ export class Terminal {
       //     this.setAttrInRectangle(this.params);
       //   } else {
       //     this.setScrollRegion(this.params);
-      //   }
-      //   break;
-
-      // CSI s     Save cursor (ANSI.SYS).
-      // CSI ? Pm s
-      // case 's': // duplicate
-      //   if (this.prefix === '?') {
-      //     this.savePrivateValues(this.params);
-      //   } else {
-      //     this.saveCursor(this.params);
       //   }
       //   break;
 
@@ -4279,7 +4295,7 @@ export class Terminal {
       return;
     }
 
-    if (!this.prefix) {
+    if (this.prefix === '') {
       switch (params) {
         case 4:
           this.insertMode = true;
