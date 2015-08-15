@@ -33,6 +33,8 @@
  * converted over to TypeScript.
  */
   
+const DEBUG_RESIZE = false;
+  
 const REFRESH_START_NULL = 100000000;
 const REFRESH_END_NULL = -100000000;
 const MAX_BATCH_TIME = 16;  // 16 ms = 60Hz
@@ -3364,8 +3366,15 @@ export class Terminal {
    * @returns Object with the new colums (cols field) and rows (rows field) information.
    */
   resizeToContainer(): {cols: number; rows: number; } {
+    if (DEBUG_RESIZE) {
+      this.log("resizeToContainer() this.effectiveFontFamily(): " + this.effectiveFontFamily());
+    }
+    
     if (this.effectiveFontFamily().indexOf(Terminal.NO_STYLE_HACK) !== -1) {
       // Styles have not been applied yet.
+      if (DEBUG_RESIZE) {
+        this.log("resizeToContainer() styles have not been applied yet.");
+      }
       return {cols: this.cols, rows: this.rows};
     }
     
@@ -3375,29 +3384,37 @@ export class Terminal {
     range.setEnd(lineEl, lineEl.childNodes.length);
     
     const rect = range.getBoundingClientRect();
-    this.log("resizeToContainer() rect: ",rect);
     if (rect.width === 0 || rect.height === 0) {
       // The containing element has an invalid size.
       return {cols: this.cols, rows: this.rows};
     }
     
-    const charWidth = rect.width / this.cols;
-    this.log("resizeToContainer() charWidth: ",charWidth);
-    
+    const charWidth = rect.width / this.cols;    
     const charHeight = rect.height;
     this.charHeight = charHeight;
-    this.log("resizeToContainer() charHeight: ",charHeight);
     
     const computedStyle = window.getComputedStyle(lineEl);
     const width = this.element.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
-    
     const newCols = Math.floor(width / charWidth);
     const newRows = Math.max(2, Math.floor(this.element.clientHeight / charHeight));
     
     if (newCols !== this.cols || newRows !== this.rows) {
       this.resize(newCols, newRows);
       this._setLastLinePadding(Math.floor(this.element.clientHeight % charHeight));
-    }    
+    }
+    
+    if (DEBUG_RESIZE) {
+      this.log("resizeToContainer() char line rect width: ",rect.width);
+      this.log("resizeToContainer() char line rect height: ",rect.height);
+      this.log("resizeToContainer() char line rect height: ",rect.height);
+      this.log("resizeToContainer() old cols: ",this.cols);
+      this.log("resizeToContainer() calculated charWidth: ",charWidth);    
+      this.log("resizeToContainer() calculated charHeight: ",charHeight);
+      this.log("resizeToContainer() element width: ",width);
+      this.log("resizeToContainer() element height: ",this.element.clientHeight);
+      this.log("resizeToContainer() new cols: ",this.cols);
+      this.log("resizeToContainer() new rows: ",this.rows);
+    }
     return {cols: newCols, rows: newRows};
   }
 
