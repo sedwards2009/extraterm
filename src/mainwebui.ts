@@ -391,10 +391,15 @@ class ExtratermMainWebUI extends HTMLElement {
       }
     });
     
+    let currentColumns = 80;
+    let currentRows = 24;
+    
     // Terminal resize event
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_RESIZE, (e) => {
+      currentColumns = (<any> e).detail.columns;
+      currentRows = (<any> e).detail.rows;
       if (tabInfo.ptyId !== null) {
-        webipc.ptyResize(tabInfo.ptyId, (<any> e).detail.columns, (<any> e).detail.rows);
+        webipc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
       }      
     });
 
@@ -442,9 +447,11 @@ class ExtratermMainWebUI extends HTMLElement {
       newEnv[prop] = expandedExtra[prop];
     }
 
-    webipc.requestPtyCreate(this._defaultSessionProfile.command, this._defaultSessionProfile.arguments, 80, 24, newEnv)
+    webipc.requestPtyCreate(this._defaultSessionProfile.command, this._defaultSessionProfile.arguments,
+        currentColumns, currentRows, newEnv)
       .then( (msg: Messages.CreatedPtyMessage) => {
         tabInfo.ptyId = msg.id;
+        webipc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
       });
     
     this._sendTabOpenedEvent();
