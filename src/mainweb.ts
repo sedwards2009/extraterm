@@ -60,7 +60,17 @@ export function startUp(): void {
   // Get the config and theme info in and then continue starting up.
   const allPromise = Promise.all<void>( [webipc.requestConfig().then(handleConfigMessage),
                       webipc.requestThemes().then(handleThemesMessage)] );
-  allPromise.then( () => {
+  allPromise.then( (): Promise<FontFace[]> => {
+    // Next phase is wait for the fonts to load.
+    const fontPromises: Promise<FontFace>[] = [];
+    window.document.fonts.forEach( (font: FontFace) => {
+      if (font.status !== 'loaded' && font.status !== 'loading') {
+        fontPromises.push(font.load());
+      }
+    });
+    return Promise.all<FontFace>( fontPromises );
+  }).then( () => {
+    // Fonts are loaded, continue.
     CbContextMenu.init();
     CbMenuItem.init();
     CbDropDown.init();
