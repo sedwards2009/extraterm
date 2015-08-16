@@ -182,6 +182,7 @@ export class Terminal {
 
   // charset
   private charset: CharSet = null;
+  private savedCharset: CharSet = null;
   private gcharset: number = null;
   private glevel = 0;
   private charsets: CharSet[] = [null];
@@ -192,7 +193,8 @@ export class Terminal {
 
   private defAttr = (0 << 18) | (257 << 9) | (256 << 0); // Default character style
   private curAttr = 0;  // Current character style.
-
+  private savedCurAttr = (0 << 18) | (257 << 9) | (256 << 0); // Default character style;
+  
   private params = [];
   private currentParam: string | number = 0;
   private prefix = '';
@@ -3787,15 +3789,13 @@ export class Terminal {
       return;
     }
 
-    var l = params.length;
-    var i = 0;
-    var flags = this.curAttr >> 18;
-    var fg = (this.curAttr >> 9) & 0x1ff;
-    var bg = this.curAttr & 0x1ff;
-    var p;
+    const len = params.length;
+    let flags = this.curAttr >> 18;
+    let fg = (this.curAttr >> 9) & 0x1ff;
+    let bg = this.curAttr & 0x1ff;
 
-    for (; i < l; i++) {
-      p = params[i];
+    for (let i = 0; i < len; i++) {
+      let p = params[i];
       if (p >= 30 && p <= 37) {
         // fg color 8
         fg = p - 30;
@@ -3859,11 +3859,10 @@ export class Terminal {
         // fg color 256
         if (params[i + 1] === 2) {
           i += 2;
-          fg = matchColor(
-            params[i] & 0xff,
-            params[i + 1] & 0xff,
-            params[i + 2] & 0xff);
-          if (fg === -1) fg = 0x1ff;
+          fg = matchColor(params[i] & 0xff, params[i + 1] & 0xff, params[i + 2] & 0xff);
+          if (fg === -1) {
+            fg = 0x1ff;
+          }
           i += 2;
         } else if (params[i + 1] === 5) {
           i += 2;
@@ -3874,11 +3873,10 @@ export class Terminal {
         // bg color 256
         if (params[i + 1] === 2) {
           i += 2;
-          bg = matchColor(
-            params[i] & 0xff,
-            params[i + 1] & 0xff,
-            params[i + 2] & 0xff);
-          if (bg === -1) bg = 0x1ff;
+          bg = matchColor(params[i] & 0xff, params[i + 1] & 0xff, params[i + 2] & 0xff);
+          if (bg === -1) {
+            bg = 0x1ff;
+          }
           i += 2;
         } else if (params[i + 1] === 5) {
           i += 2;
@@ -4655,14 +4653,18 @@ export class Terminal {
   saveCursor(): void {
     this.savedX = this.x;
     this.savedY = this.y;
-  };
+    this.savedCharset = this.charset;
+    this.savedCurAttr = this.curAttr;
+  }
 
   // CSI u
   //   Restore cursor (ANSI.SYS).
   restoreCursor(): void {
-    this.x = this.savedX || 0;
-    this.y = this.savedY || 0;
-  };
+    this.x = this.savedX;
+    this.y = this.savedY;
+    this.charset = this.savedCharset;
+    this.curAttr = this.savedCurAttr;
+  }
 
   /**
    * Lesser Used
