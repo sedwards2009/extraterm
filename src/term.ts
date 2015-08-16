@@ -149,10 +149,12 @@ export class Terminal {
   private refreshStart = REFRESH_START_NULL;
   private refreshEnd = REFRESH_END_NULL;
 
-  private ybase = 0;
-  private ydisp = 0;
-  private x = 0;
-  private y = 0;
+  private ybase = 0;  // Index of row 1 in our (logn) list of lines+scroll back.
+  private ydisp = 0;  // Index of the row 1 which is displayed on the screen at the moment.
+                      // (only applies when physical scrolling is not used)
+
+  private x = 0;      // Cursor x position
+  private y = 0;      // Cursoe y position
   private savedX = 0;
   private savedY = 0;
   
@@ -1652,10 +1654,6 @@ export class Terminal {
   }
 
   scroll(): void {
-    var row;
-    var lastline;
-    var oldline;
-
     if ( ! this.physicalScroll) {
       // Normal, virtual scrolling.
       ++this.ybase;
@@ -1666,32 +1664,34 @@ export class Terminal {
         this.lines = this.lines.slice(-(this.ybase + this.rows) + 1);
       }
     } else {
-      // Drop the oldest line out of the scrollback buffer.
-      oldline = this.lines[0];
-      this.lines = this.lines.slice(-(this.ybase + this.rows) + 1);
-      this._scrollbackBuffer.push(oldline);
+      // Using physical scrolling
+      
+      // Drop the oldest line into the scrollback buffer.
+      if (this.scrollTop === 0) {
+        const oldline = this.lines[0];
+        this._scrollbackBuffer.push(oldline);
+      }
     }
 
     this.ydisp = this.ybase;
 
     // last line
-    lastline = this.ybase + this.rows - 1;
+    const lastline = this.ybase + this.rows - 1;
 
     // subtract the bottom scroll region
-    row = lastline - (this.rows - 1 - this.scrollBottom);
-
-    // add our new line
-    this.lines.splice(row, 0, this.blankLine());
+    const insertRow = lastline - this.rows + 1 + this.scrollBottom;
 
     if (this.scrollTop !== 0) {
       if (this.ybase !== 0) {
         this.ybase--;
         this.ydisp = this.ybase;
       }
-      this.lines.splice(this.ybase + this.scrollTop, 1);
     }
+    this.lines.splice(this.ybase + this.scrollTop, 1);
+    
+    // add our new line
+    this.lines.splice(insertRow, 0, this.blankLine());
 
-    // this.maxRange();
     this.updateRange(this.scrollTop);
     this.updateRange(this.scrollBottom);
   }
@@ -3544,8 +3544,7 @@ export class Terminal {
   }
 
   // ESC M Reverse Index (RI is 0x8d).
-  reverseIndex() {
-    var j;
+  reverseIndex(): void {
     this.y--;
     if (this.y < this.scrollTop) {
       this.y++;
@@ -3553,14 +3552,14 @@ export class Terminal {
       // test: echo -ne '\e[1;1H\e[44m\eM\e[0m'
       // blankLine(true) is xterm/linux behavior
       this.lines.splice(this.y + this.ybase, 0, this.blankLine(true));
-      j = this.rows - 1 - this.scrollBottom;
+      const j = this.rows - 1 - this.scrollBottom;
       this.lines.splice(this.rows - 1 + this.ybase - j + 1, 1);
-      // this.maxRange();
+
       this.updateRange(this.scrollTop);
       this.updateRange(this.scrollBottom);
     }
     this.state = STATE_NORMAL;
-  };
+  }
 
   // ESC c Full Reset (RIS).
   reset() {
@@ -3580,23 +3579,33 @@ export class Terminal {
 
   // CSI Ps A
   // Cursor Up Ps Times (default = 1) (CUU).
-  cursorUp(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
+  cursorUp(params): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
     this.y -= param;
-    if (this.y < 0) this.y = 0;
-  };
+    
+    if (this.y < this.scrollTop) {
+      this.y = this.scrollTop;
+    }
+  }
 
   // CSI Ps B
   // Cursor Down Ps Times (default = 1) (CUD).
-  cursorDown(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
-    this.y += param;
-    if (this.y >= this.rows) {
-      this.y = this.rows - 1;
+  cursorDown(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
     }
-  };
+    this.y += param;
+    
+    const bottom = this.scrollBottom !== 0  ? this.scrollBottom : this.rows;
+    
+    if (this.y >= bottom) {
+      this.y = bottom - 1;
+    }
+  }
 
   // CSI Ps C
   // Cursor Forward Ps Times (default = 1) (CUF).
@@ -4626,13 +4635,20 @@ export class Terminal {
   //   Set Scrolling Region [top;bottom] (default = full size of win-
   //   dow) (DECSTBM).
   // CSI ? Pm r
-  setScrollRegion(params) {
-    if (this.prefix) return;
-    this.scrollTop = (params[0] || 1) - 1;
-    this.scrollBottom = (params[1] || this.rows) - 1;
-    this.x = 0;
-    this.y = 0;
-  };
+  setScrollRegion(params): void {
+    if (this.prefix === '') {
+      const top = (params[0] || 1) - 1;
+      const bottom = (params[1] || this.rows) - 1;
+      if ( ! (top >= 0 && bottom < this.rows && top < bottom)) {
+        return;
+      }
+      this.scrollTop = top;
+      this.scrollBottom = bottom;
+      console.log(`setScrollRegion(${this.scrollTop},${this.scrollBottom})`);
+      this.x = 0;
+      this.y = 0;
+    }
+  }
 
   // CSI s
   //   Save cursor (ANSI.SYS).
