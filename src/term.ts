@@ -3631,32 +3631,25 @@ export class Terminal {
 
   // CSI Ps ; Ps H
   // Cursor Position [row;column] (default = [1,1]) (CUP).
-  cursorPos(params) {
-    var row, col;
-
-    row = params[0] - 1;
-
-    if (params.length >= 2) {
-      col = params[1] - 1;
-    } else {
-      col = 0;
+  cursorPos(params: number[]): void {
+    let y = params[0] - 1 + (this.originMode ? this.scrollTop : 0);
+    let x = (params.length >= 2) ? params[1] - 1 : 0;
+    
+    if (y < 0) {
+      y = 0;
+    } else if (y >= this.rows) {
+      y = this.rows - 1;
     }
 
-    if (row < 0) {
-      row = 0;
-    } else if (row >= this.rows) {
-      row = this.rows - 1;
+    if (x < 0) {
+      x = 0;
+    } else if (x >= this.cols) {
+      x = this.cols - 1;
     }
 
-    if (col < 0) {
-      col = 0;
-    } else if (col >= this.cols) {
-      col = this.cols - 1;
-    }
-
-    this.x = col;
-    this.y = row;
-  };
+    this.x = x;
+    this.y = y;
+  }
 
   // CSI Ps J  Erase in Display (ED).
   //     Ps = 0  -> Erase Below (default).
@@ -4181,18 +4174,21 @@ export class Terminal {
         this.send('\x1b[>83;40003;0c');
       }
     }
-  };
+  }
 
   // CSI Pm d
   // Line Position Absolute  [row] (default = [1,column]) (VPA).
-  linePosAbsolute(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
-    this.y = param - 1;
-    if (this.y >= this.rows) {
-      this.y = this.rows - 1;
+  linePosAbsolute(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
     }
-  };
+    let y = param - 1 + (this.originMode ? this.scrollTop : 0);
+    if (y >= this.rows) {
+      y = this.rows - 1;
+    }
+    this.y = y;
+  }
 
   // 145 65 e * VPR - Vertical Position Relative
   // reuse CSI Ps B ?
@@ -4208,19 +4204,8 @@ export class Terminal {
   // CSI Ps ; Ps f
   //   Horizontal and Vertical Position [row;column] (default =
   //   [1,1]) (HVP).
-  HVPosition(params) {
-    if (params[0] < 1) params[0] = 1;
-    if (params[1] < 1) params[1] = 1;
-
-    this.y = params[0] - 1;
-    if (this.y >= this.rows) {
-      this.y = this.rows - 1;
-    }
-
-    this.x = params[1] - 1;
-    if (this.x >= this.cols) {
-      this.x = this.cols - 1;
-    }
+  HVPosition(params: number[]): void {
+    this.cursorPos(params);
   }
 
   // CSI Pm h  Set Mode (SM).
@@ -4346,6 +4331,8 @@ export class Terminal {
           break;
         case 6:
           this.originMode = true;
+          this.x = 0;
+          this.y = this.scrollTop;
           break;
         case 7:
           this.wraparoundMode = true;
@@ -4560,6 +4547,8 @@ export class Terminal {
           break;
         case 6:
           this.originMode = false;
+          this.x = 0;
+          this.y = 0;
           break;
         case 7:
           this.wraparoundMode = false;
