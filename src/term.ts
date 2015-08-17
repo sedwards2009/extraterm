@@ -4631,9 +4631,8 @@ export class Terminal {
       }
       this.scrollTop = top;
       this.scrollBottom = bottom;
-      console.log(`setScrollRegion(${this.scrollTop},${this.scrollBottom})`);
       this.x = 0;
-      this.y = 0;
+      this.y = this.originMode ? this.scrollTop : 0;
     }
   }
 
