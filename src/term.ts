@@ -105,7 +105,8 @@ interface Options {
   applicationModeCookie?: string;
 };
 
-type LineCell = [number, string];
+type CharAttr = number;
+type LineCell = [CharAttr, string];
 
 interface CharSet {
   [key: string]: string;
@@ -127,6 +128,29 @@ interface SavedState {
 interface TerminalCoord {
   x: number;
   y: number;
+}
+
+// Character rendering attributes packed inside a CharAttr.
+const BOLD_ATTR_FLAG = 1;
+const UNDERLINE_ATTR_FLAG = 2;
+const BLINK_ATTR_FLAG = 4;
+const INVERSE_ATTR_FLAG = 8;
+const INVISIBLE_ATTR_FLAG = 16;
+
+function flagsFromCharAttr(attr: CharAttr): number {
+  return attr >> 18;
+}
+
+function foregroundFromCharAttr(attr: CharAttr): number {
+  return (attr >> 9) & 0x1ff;
+}
+
+function backgroundFromCharAttr(attr: CharAttr): number {
+  return attr & 0x1ff;
+}
+
+function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
+  return (flags << 18) | (fg << 9) | bg;
 }
 
 /**
@@ -191,9 +215,9 @@ export class Terminal {
   private readable = true;
   private writable = true;
 
-  private defAttr = (0 << 18) | (257 << 9) | (256 << 0); // Default character style
+  private defAttr = packCharAttr(0, 257, 256); // Default character style
   private curAttr = 0;  // Current character style.
-  private savedCurAttr = (0 << 18) | (257 << 9) | (256 << 0); // Default character style;
+  private savedCurAttr = packCharAttr(0, 257, 256); // Default character style;
   
   private params = [];
   private currentParam: string | number = 0;
@@ -1449,27 +1473,29 @@ export class Terminal {
           } else {
             out += '<span style="';
 
-            let bg = data & 0x1ff;
-            let fg = (data >> 9) & 0x1ff;
-            const flags = data >> 18;
+            let bg = backgroundFromCharAttr(data);
+            let fg = foregroundFromCharAttr(data);
+            const flags = flagsFromCharAttr(data);
 
             // bold
-            if (flags & 1) {
+            if (flags & BOLD_ATTR_FLAG) {
               if (!Terminal.brokenBold) {
                 out += 'font-weight:bold;';
               }
               // See: XTerm*boldColors
-              if (fg < 8) fg += 8;
+              if (fg < 8) {
+                fg += 8;
+              }
             }
 
             // underline
-            if (flags & 2) {
+            if (flags & UNDERLINE_ATTR_FLAG) {
               out += 'text-decoration:underline;';
             }
 
             // blink
-            if (flags & 4) {
-              if (flags & 2) {
+            if (flags & BLINK_ATTR_FLAG) {
+              if (flags & UNDERLINE_ATTR_FLAG) {
                 out = out.slice(0, -1);
                 out += ' blink;';
               } else {
@@ -1478,16 +1504,20 @@ export class Terminal {
             }
 
             // inverse
-            if (flags & 8) {
-              bg = (data >> 9) & 0x1ff;
-              fg = data & 0x1ff;
+            if (flags & INVERSE_ATTR_FLAG) {
+              let tmp = fg;
+              fg = bg;
+              bg = tmp;
+              
               // Should inverse just be before the
               // above boldColors effect instead?
-              if ((flags & 1) && fg < 8) fg += 8;
+              if ((flags & BOLD_ATTR_FLAG) && fg < 8) {
+                fg += 8;
+              }
             }
 
             // invisible
-            if (flags & 16) {
+            if (flags & INVISIBLE_ATTR_FLAG) {
               out += 'visibility:hidden;';
             }
 
@@ -3775,9 +3805,9 @@ export class Terminal {
     }
 
     const len = params.length;
-    let flags = this.curAttr >> 18;
-    let fg = (this.curAttr >> 9) & 0x1ff;
-    let bg = this.curAttr & 0x1ff;
+    let flags = flagsFromCharAttr(this.curAttr);
+    let fg = foregroundFromCharAttr(this.curAttr);
+    let bg = backgroundFromCharAttr(this.curAttr);
 
     for (let i = 0; i < len; i++) {
       let p = params[i];
@@ -3797,49 +3827,49 @@ export class Terminal {
         bg = p - 100;
       } else if (p === 0) {
         // default
-        flags = this.defAttr >> 18;
-        fg = (this.defAttr >> 9) & 0x1ff;
-        bg = this.defAttr & 0x1ff;
+        flags = flagsFromCharAttr(this.defAttr);
+        fg = foregroundFromCharAttr(this.defAttr);
+        bg = backgroundFromCharAttr(this.defAttr);
         // flags = 0;
         // fg = 0x1ff;
         // bg = 0x1ff;
       } else if (p === 1) {
         // bold text
-        flags |= 1;
+        flags |= BOLD_ATTR_FLAG;
       } else if (p === 4) {
         // underlined text
-        flags |= 2;
+        flags |= UNDERLINE_ATTR_FLAG;
       } else if (p === 5) {
         // blink
-        flags |= 4;
+        flags |= BLINK_ATTR_FLAG;
       } else if (p === 7) {
         // inverse and positive
         // test with: echo -e '\e[31m\e[42mhello\e[7mworld\e[27mhi\e[m'
-        flags |= 8;
+        flags |= INVERSE_ATTR_FLAG;
       } else if (p === 8) {
         // invisible
-        flags |= 16;
+        flags |= INVISIBLE_ATTR_FLAG;
       } else if (p === 22) {
         // not bold
-        flags &= ~1;
+        flags &= ~BOLD_ATTR_FLAG;
       } else if (p === 24) {
         // not underlined
-        flags &= ~2;
+        flags &= ~UNDERLINE_ATTR_FLAG;
       } else if (p === 25) {
         // not blink
-        flags &= ~4;
+        flags &= ~BLINK_ATTR_FLAG;
       } else if (p === 27) {
         // not inverse
-        flags &= ~8;
+        flags &= ~INVERSE_ATTR_FLAG;
       } else if (p === 28) {
         // not invisible
-        flags &= ~16;
+        flags &= ~INVISIBLE_ATTR_FLAG;
       } else if (p === 39) {
         // reset fg
-        fg = (this.defAttr >> 9) & 0x1ff;
+        fg = foregroundFromCharAttr(this.defAttr);
       } else if (p === 49) {
         // reset bg
-        bg = this.defAttr & 0x1ff;
+        bg = backgroundFromCharAttr(this.defAttr);
       } else if (p === 38) {
         // fg color 256
         if (params[i + 1] === 2) {
@@ -3870,14 +3900,14 @@ export class Terminal {
         }
       } else if (p === 100) {
         // reset fg/bg
-        fg = (this.defAttr >> 9) & 0x1ff;
-        bg = this.defAttr & 0x1ff;
+        fg = foregroundFromCharAttr(this.defAttr);
+        bg = backgroundFromCharAttr(this.defAttr);
       } else {
         this.error('Unknown SGR attribute: %d.', "" + p);
       }
     }
 
-    this.curAttr = (flags << 18) | (fg << 9) | bg;
+    this.curAttr = packCharAttr(flags, fg, bg);
   }
 
   // CSI Ps n  Device Status Report (DSR).
