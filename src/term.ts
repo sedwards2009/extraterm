@@ -136,6 +136,7 @@ const UNDERLINE_ATTR_FLAG = 2;
 const BLINK_ATTR_FLAG = 4;
 const INVERSE_ATTR_FLAG = 8;
 const INVISIBLE_ATTR_FLAG = 16;
+const ITALIC_ATTR_FLAG = 32;
 
 function flagsFromCharAttr(attr: CharAttr): number {
   return attr >> 18;
@@ -1488,21 +1489,27 @@ export class Terminal {
               }
             }
 
+            // italic
+            if (flags & ITALIC_ATTR_FLAG) {
+              out += 'font-style: italic;';
+            }
+            
+            let textDecoration = "";
+            
             // underline
             if (flags & UNDERLINE_ATTR_FLAG) {
-              out += 'text-decoration:underline;';
+              textDecoration += ' underline';
             }
 
             // blink
             if (flags & BLINK_ATTR_FLAG) {
-              if (flags & UNDERLINE_ATTR_FLAG) {
-                out = out.slice(0, -1);
-                out += ' blink;';
-              } else {
-                out += 'text-decoration:blink;';
-              }
+              textDecoration += ' blink';
             }
 
+            if (textDecoration !== "") {
+               out += "text-decoration: " + textDecoration + ";";
+            }
+            
             // inverse
             if (flags & INVERSE_ATTR_FLAG) {
               let tmp = fg;
@@ -3738,10 +3745,13 @@ export class Terminal {
   // CSI Pm m  Character Attributes (SGR).
   //     Ps = 0  -> Normal (default).
   //     Ps = 1  -> Bold.
+  //     Ps = 2  -> Faint, decreased intensity (ISO 6429).
+  //     Ps = 3  -> Italicized (ISO 6429).
   //     Ps = 4  -> Underlined.
   //     Ps = 5  -> Blink (appears as Bold).
   //     Ps = 7  -> Inverse.
   //     Ps = 8  -> Invisible, i.e., hidden (VT300).
+  //     Ps = 9  -> Crossed-out characters (ISO 6429).
   //     Ps = 2 2  -> Normal (neither bold nor faint).
   //     Ps = 2 4  -> Not underlined.
   //     Ps = 2 5  -> Steady (not blinking).
@@ -3833,43 +3843,72 @@ export class Terminal {
         // flags = 0;
         // fg = 0x1ff;
         // bg = 0x1ff;
+
       } else if (p === 1) {
         // bold text
         flags |= BOLD_ATTR_FLAG;
+
+      } else if (p === 2) {
+        // Faint, decreased intensity (ISO 6429).
+        // FIXME
+
+      } else if (p === 3) {
+        // Italic
+        flags |= ITALIC_ATTR_FLAG;
+
       } else if (p === 4) {
         // underlined text
         flags |= UNDERLINE_ATTR_FLAG;
+
       } else if (p === 5) {
         // blink
         flags |= BLINK_ATTR_FLAG;
+
       } else if (p === 7) {
         // inverse and positive
         // test with: echo -e '\e[31m\e[42mhello\e[7mworld\e[27mhi\e[m'
         flags |= INVERSE_ATTR_FLAG;
+
       } else if (p === 8) {
         // invisible
         flags |= INVISIBLE_ATTR_FLAG;
+
+      } else if (p === 9) {
+        // Crossed-out characters (ISO 6429).
+        // FIXME
+
       } else if (p === 22) {
         // not bold
         flags &= ~BOLD_ATTR_FLAG;
+        
+      } else if (p === 23) {
+        // not italic
+        flags &= ~ITALIC_ATTR_FLAG;
+  
       } else if (p === 24) {
         // not underlined
         flags &= ~UNDERLINE_ATTR_FLAG;
+
       } else if (p === 25) {
         // not blink
         flags &= ~BLINK_ATTR_FLAG;
+
       } else if (p === 27) {
         // not inverse
         flags &= ~INVERSE_ATTR_FLAG;
+
       } else if (p === 28) {
         // not invisible
         flags &= ~INVISIBLE_ATTR_FLAG;
+
       } else if (p === 39) {
         // reset fg
         fg = foregroundFromCharAttr(this.defAttr);
+
       } else if (p === 49) {
         // reset bg
         bg = backgroundFromCharAttr(this.defAttr);
+
       } else if (p === 38) {
         // fg color 256
         if (params[i + 1] === 2) {
@@ -3884,6 +3923,7 @@ export class Terminal {
           p = params[i] & 0xff;
           fg = p;
         }
+
       } else if (p === 48) {
         // bg color 256
         if (params[i + 1] === 2) {
@@ -3898,10 +3938,12 @@ export class Terminal {
           p = params[i] & 0xff;
           bg = p;
         }
+
       } else if (p === 100) {
         // reset fg/bg
         fg = foregroundFromCharAttr(this.defAttr);
         bg = backgroundFromCharAttr(this.defAttr);
+
       } else {
         this.error('Unknown SGR attribute: %d.', "" + p);
       }
