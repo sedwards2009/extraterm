@@ -1431,23 +1431,13 @@ export class Terminal {
    * @returns {string} A HTML rendering of the line as a HTML string.
    */
   _lineToHTML(line: LineCell[]): string {
-    var attr;
-    var data;
-    var ch;
-    var i;
-    var width;
-    var out;
-    var bg;
-    var fg;
-    var flags;
+    let attr = this.defAttr;
+    const width = line.length;
+    let out = '';
     
-    attr = this.defAttr;
-    width = line.length;
-    out = '';
-    
-    for (i = 0; i < width; i++) {
-      data = line[i][0];
-      ch = line[i][1];
+    for (let i = 0; i < width; i++) {
+      const data = line[i][0];
+      const ch = line[i][1];
 
       if (data !== attr) {
         if (attr !== this.defAttr) {
@@ -1459,9 +1449,9 @@ export class Terminal {
           } else {
             out += '<span style="';
 
-            bg = data & 0x1ff;
-            fg = (data >> 9) & 0x1ff;
-            flags = data >> 18;
+            let bg = data & 0x1ff;
+            let fg = (data >> 9) & 0x1ff;
+            const flags = data >> 18;
 
             // bold
             if (flags & 1) {
@@ -3527,7 +3517,7 @@ export class Terminal {
     this.emit('data', data);
   }
 
-  handleTitle(title) {
+  handleTitle(title: string): void {
     this.emit('title', title);
   }
 
@@ -3536,7 +3526,7 @@ export class Terminal {
    */
 
   // ESC D Index (IND is 0x84).
-  index() {
+  index(): void {
     this.y++;
     if (this.y > this.scrollBottom) {
       this.y--;
@@ -3564,16 +3554,16 @@ export class Terminal {
   }
 
   // ESC c Full Reset (RIS).
-  reset() {
+  reset(): void {
     this._resetVariables();
     this.refresh(0, this.rows - 1);
-  };
+  }
 
   // ESC H Tab Set (HTS is 0x88).
-  tabSet() {
+  tabSet(): void {
     this.tabs[this.x] = true;
     this.state = STATE_NORMAL;
-  };
+  }
 
   /**
    * CSI
@@ -3581,7 +3571,7 @@ export class Terminal {
 
   // CSI Ps A
   // Cursor Up Ps Times (default = 1) (CUU).
-  cursorUp(params): void {
+  cursorUp(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -3611,14 +3601,16 @@ export class Terminal {
 
   // CSI Ps C
   // Cursor Forward Ps Times (default = 1) (CUF).
-  cursorForward(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
+  cursorForward(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
     this.x += param;
     if (this.x >= this.cols) {
       this.x = this.cols - 1;
     }
-  };
+  }
 
   // CSI Ps D
   // Cursor Backward Ps Times (default = 1) (CUB).
@@ -3661,7 +3653,7 @@ export class Terminal {
   //     Ps = 0  -> Selective Erase Below (default).
   //     Ps = 1  -> Selective Erase Above.
   //     Ps = 2  -> Selective Erase All.
-  eraseInDisplay(params): void {
+  eraseInDisplay(params: number[]): void {
     let j: number;
     switch (params[0]) {
       case 0:
@@ -3688,7 +3680,7 @@ export class Terminal {
         // no saved lines
         break;
     }
-  };
+  }
 
   // CSI Ps K  Erase in Line (EL).
   //     Ps = 0  -> Erase to Right (default).
@@ -3699,7 +3691,7 @@ export class Terminal {
   //     Ps = 0  -> Selective Erase to Right (default).
   //     Ps = 1  -> Selective Erase to Left.
   //     Ps = 2  -> Selective Erase All.
-  eraseInLine(params) {
+  eraseInLine(params: number[]): void {
     switch (params[0]) {
       case 0:
         this.eraseRight(this.x, this.y);
@@ -3711,7 +3703,7 @@ export class Terminal {
         this.eraseLine(this.y);
         break;
     }
-  };
+  }
 
   // CSI Pm m  Character Attributes (SGR).
   //     Ps = 0  -> Normal (default).
@@ -3775,7 +3767,7 @@ export class Terminal {
   //     Ps.
   //     Ps = 4 8  ; 5  ; Ps -> Set background color to the second
   //     Ps.
-  charAttributes(params) {
+  charAttributes(params: number[]): void {
     // Optimize a single SGR0.
     if (params.length === 1 && params[0] === 0) {
       this.curAttr = this.defAttr;
@@ -3881,12 +3873,12 @@ export class Terminal {
         fg = (this.defAttr >> 9) & 0x1ff;
         bg = this.defAttr & 0x1ff;
       } else {
-        this.error('Unknown SGR attribute: %d.', p);
+        this.error('Unknown SGR attribute: %d.', "" + p);
       }
     }
 
     this.curAttr = (flags << 18) | (fg << 9) | bg;
-  };
+  }
 
   // CSI Ps n  Device Status Report (DSR).
   //     Ps = 5  -> Status Report.  Result (``OK'') is
@@ -3909,8 +3901,8 @@ export class Terminal {
   //     Ps = 5 3  -> Report Locator status as
   //   CSI ? 5 3  n  Locator available, if compiled-in, or
   //   CSI ? 5 0  n  No Locator, if not.
-  deviceStatus(params) {
-    if (!this.prefix) {
+  deviceStatus(params: number[]): void {
+    if ( ! this.prefix) {
       switch (params[0]) {
         case 5:
           // status report
@@ -3947,7 +3939,7 @@ export class Terminal {
           break;
       }
     }
-  };
+  }
 
   /**
    * Additions
@@ -3955,67 +3947,71 @@ export class Terminal {
 
   // CSI Ps @
   // Insert Ps (Blank) Character(s) (default = 1) (ICH).
-  insertChars(params) {
-    var param, row, j, ch, line;
+  insertChars(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;}
 
-    param = params[0];
-    if (param < 1) param = 1;
-
-    row = this.y + this.ybase;
-    j = this.x;
-    ch = [this.eraseAttr(), ' ']; // xterm
+    const row = this.y + this.ybase;
+    let j = this.x;
+    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
 
     while (param-- && j < this.cols) {
-      line = this._getRow(row);
+      const line = this._getRow(row);
       line.splice(j++, 0, ch);
       line.pop();
     }
-  };
+  }
 
   // CSI Ps E
   // Cursor Next Line Ps Times (default = 1) (CNL).
   // same as CSI Ps B ?
-  cursorNextLine(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
+  cursorNextLine(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
     this.y += param;
     if (this.y >= this.rows) {
       this.y = this.rows - 1;
     }
     this.x = 0;
-  };
+  }
 
   // CSI Ps F
   // Cursor Preceding Line Ps Times (default = 1) (CNL).
   // reuse CSI Ps A ?
-  cursorPrecedingLine(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
+  cursorPrecedingLine(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
     this.y -= param;
-    if (this.y < 0) this.y = 0;
+    if (this.y < 0) {
+      this.y = 0;
+    }
     this.x = 0;
-  };
+  }
 
   // CSI Ps G
   // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
-  cursorCharAbsolute(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
+  cursorCharAbsolute(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
     this.x = param - 1;
-  };
+  }
 
   // CSI Ps L
   // Insert Ps Line(s) (default = 1) (IL).
-  insertLines(params) {
-    var param, row, j;
-
-    param = params[0];
-    if (param < 1) param = 1;
-    row = this.y + this.ybase;
-
-    j = this.rows - 1 - this.scrollBottom;
-    j = this.rows - 1 + this.ybase - j + 1;
-
+  insertLines(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    const row = this.y + this.ybase;
+    const j = this.ybase + this.scrollBottom + 1;
     while (param--) {
       // test: echo -e '\e[44m\e[1L\e[0m'
       // blankLine(true) - xterm/linux behavior
@@ -4027,19 +4023,17 @@ export class Terminal {
     // this.maxRange();
     this.updateRange(this.y);
     this.updateRange(this.scrollBottom);
-  };
+  }
 
   // CSI Ps M
   // Delete Ps Line(s) (default = 1) (DL).
-  deleteLines(params) {
-    var param, row, j;
-
-    param = params[0];
-    if (param < 1) param = 1;
-    row = this.y + this.ybase;
-
-    j = this.rows - 1 - this.scrollBottom;
-    j = this.rows - 1 + this.ybase - j;
+  deleteLines(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    const row = this.y + this.ybase;
+    const j = this.ybase + this.scrollBottom;
 
     while (param--) {
       // test: echo -e '\e[44m\e[1M\e[0m'
@@ -4052,67 +4046,71 @@ export class Terminal {
     // this.maxRange();
     this.updateRange(this.y);
     this.updateRange(this.scrollBottom);
-  };
+  }
 
   // CSI Ps P
   // Delete Ps Character(s) (default = 1) (DCH).
-  deleteChars(params) {
-    var param, row, ch, line;
+  deleteChars(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
 
-    param = params[0];
-    if (param < 1) param = 1;
-
-    row = this.y + this.ybase;
-    ch = [this.eraseAttr(), ' ']; // xterm
+    const row = this.y + this.ybase;
+    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
 
     while (param--) {
-      line = this.lines[row];
+      const line = this.lines[row];
       line.splice(this.x, 1);
       line.push(ch);
     }
-  };
+  }
 
   // CSI Ps X
   // Erase Ps Character(s) (default = 1) (ECH).
-  eraseChars(params) {
-    var param, row, j, ch, line;
+  eraseChars(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
 
-    param = params[0];
-    if (param < 1) param = 1;
-
-    row = this.y + this.ybase;
-    j = this.x;
-    ch = [this.eraseAttr(), ' ']; // xterm
-    line = this._getRow(row);
+    const row = this.y + this.ybase;
+    let j = this.x;
+    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
+    const line = this._getRow(row);
     
     while (param-- && j < this.cols) {
       line[j] = ch;
       j++;
     }
-  };
+  }
 
   // CSI Pm `  Character Position Absolute
   //   [column] (default = [row,1]) (HPA).
-  charPosAbsolute(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
+  charPosAbsolute(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
     this.x = param - 1;
     if (this.x >= this.cols) {
       this.x = this.cols - 1;
     }
-  };
-
+  }
+  
   // 141 61 a * HPR -
   // Horizontal Position Relative
   // reuse CSI Ps C ?
-  HPositionRelative(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
+  HPositionRelative(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
     this.x += param;
     if (this.x >= this.cols) {
       this.x = this.cols - 1;
     }
-  };
+  }
 
   // CSI Ps c  Send Device Attributes (Primary DA).
   //     Ps = 0  or omitted -> request attributes from terminal.  The
@@ -4149,10 +4147,12 @@ export class Terminal {
   // More information:
   //   xterm/charproc.c - line 2012, for more information.
   //   vim responds with ^[[?0c or ^[[?1c after the terminal's response (?)
-  sendDeviceAttributes(params) {
-    if (params[0] > 0) return;
+  sendDeviceAttributes(params: number[]): void {
+    if (params[0] > 0) {
+      return;
+    }
 
-    if (!this.prefix) {
+    if ( ! this.prefix) {
       if (this.is('xterm') || this.is('rxvt-unicode') || this.is('screen')) {
         this.send('\x1b[?1;2c');
       } else if (this.is('linux')) {
@@ -4192,9 +4192,11 @@ export class Terminal {
 
   // 145 65 e * VPR - Vertical Position Relative
   // reuse CSI Ps B ?
-  VPositionRelative(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
+  VPositionRelative(params: number[]): void {
+    let param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
     this.y += param;
     if (this.y >= this.rows) {
       this.y = this.rows - 1;
@@ -4292,10 +4294,10 @@ export class Terminal {
   //     Ps = 2 0 0 4  -> Set bracketed paste mode.
   // Modes:
   //   http://vt100.net/docs/vt220-rm/chapter4.html
-  setMode(params) {
+  setMode(params: number|number[]): void {
     if (typeof params === 'object') {
-      var l = params.length;
-      var i = 0;
+      const l = params.length;
+      let i = 0;
 
       for (; i < l; i++) {
         this.setMode(params[i]);
@@ -4392,7 +4394,7 @@ export class Terminal {
           // FALL-THROUGH
         case 47: // alt screen buffer
         case 1047: // alt screen buffer
-          if (!this.normal) {
+          if ( ! this.normal) {
             const normal: SavedState = {
               cols: this.cols,
               rows: this.rows,
@@ -4505,15 +4507,10 @@ export class Terminal {
   //     Ps = 1 0 6 0  -> Reset legacy keyboard emulation (X11R6).
   //     Ps = 1 0 6 1  -> Reset keyboard emulation to Sun/PC style.
   //     Ps = 2 0 0 4  -> Reset bracketed paste mode.
-  resetMode(params) {
-    var currentcols;
-    var currentrows;
-    
+  resetMode(params: number|number[]) {
     if (typeof params === 'object') {
-      var l = params.length;
-      var i = 0;
-
-      for (; i < l; i++) {
+      const l = params.length;
+      for (let i=0; i < l; i++) {
         this.resetMode(params[i]);
       }
 
@@ -4590,8 +4587,8 @@ export class Terminal {
         case 47: // normal screen buffer
         case 1047: // normal screen buffer - clearing it first
           if (this.normal) {
-            currentcols = this.cols;
-            currentrows = this.rows;
+            const currentcols = this.cols;
+            const currentrows = this.rows;
             
             this.lines = this.normal.lines;
             this.cols = this.normal.cols;
@@ -4622,7 +4619,7 @@ export class Terminal {
   //   Set Scrolling Region [top;bottom] (default = full size of win-
   //   dow) (DECSTBM).
   // CSI ? Pm r
-  setScrollRegion(params): void {
+  setScrollRegion(params: number[]): void {
     if (this.prefix === '') {
       const top = (params[0] || 1) - 1;
       const bottom = (params[1] || this.rows) - 1;
@@ -4660,16 +4657,16 @@ export class Terminal {
 
   // CSI Ps I
   //   Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
-  cursorForwardTab(params) {
-    var param = params[0] || 1;
+  cursorForwardTab(params: number[]): void {
+    let param = params[0] || 1;
     while (param--) {
       this.x = this.nextStop();
     }
-  };
+  }
 
   // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
-  scrollUp(params) {
-    var param = params[0] || 1;
+  scrollUp(params: number[]): void {
+    let param = params[0] || 1;
     while (param--) {
       this.lines.splice(this.ybase + this.scrollTop, 1);
       this.lines.splice(this.ybase + this.scrollBottom, 0, this.blankLine());
@@ -4680,8 +4677,8 @@ export class Terminal {
   }
 
   // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
-  scrollDown(params) {
-    var param = params[0] || 1;
+  scrollDown(params: number[]): void {
+    let param = params[0] || 1;
     while (param--) {
       this.lines.splice(this.ybase + this.scrollBottom, 1);
       this.lines.splice(this.ybase + this.scrollTop, 0, this.blankLine());
@@ -4695,7 +4692,7 @@ export class Terminal {
   //   Initiate highlight mouse tracking.  Parameters are
   //   [func;startx;starty;firstrow;lastrow].  See the section Mouse
   //   Tracking.
-  initMouseTracking(params) {
+  initMouseTracking(params: number[]): void {
     // Relevant: DECSET 1001
   }
 
@@ -4710,22 +4707,22 @@ export class Terminal {
   //     Ps = 2  -> Do not set window/icon labels using UTF-8.
   //     Ps = 3  -> Do not query window/icon labels using UTF-8.
   //   (See discussion of "Title Modes").
-  resetTitleModes(params) {
+  resetTitleModes(params: number[]): void {
   }
 
   // CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
-  cursorBackwardTab(params) {
-    var param = params[0] || 1;
+  cursorBackwardTab(params: number[]): void {
+    let param = params[0] || 1;
     while (param--) {
       this.x = this.prevStop();
     }
   }
 
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
-  repeatPrecedingCharacter(params) {
-    var param = params[0] || 1;
-    var line = this._getRow(this.ybase + this.y);
-    var ch = line[this.x - 1] || [this.defAttr, ' '];
+  repeatPrecedingCharacter(params: number[]): void {
+    let param = params[0] || 1;
+    const line = this._getRow(this.ybase + this.y);
+    const ch: LineCell = line[this.x - 1] || [this.defAttr, ' '];
 
     while (param--) {
       line[this.x] = ch;
@@ -4739,8 +4736,8 @@ export class Terminal {
   // Potentially:
   //   Ps = 2  -> Clear Stops on Line.
   //   http://vt100.net/annarbor/aaa-ug/section6.html
-  tabClear(params) {
-    var param = params[0];
+  tabClear(params: number[]): void {
+    let param = params[0];
     if (param <= 0) {
       delete this.tabs[this.x];
     } else if (param === 3) {
@@ -4759,7 +4756,7 @@ export class Terminal {
   //     Ps = 5  -> Turn on autoprint mode.
   //     Ps = 1  0  -> Print composed display, ignores DECPEX.
   //     Ps = 1  1  -> Print all pages.
-  mediaCopy(params) {
+  mediaCopy(params: number[]): void {
   }
 
   // CSI > Ps; Ps m
@@ -4774,7 +4771,7 @@ export class Terminal {
   //     Ps = 4  -> modifyOtherKeys.
   //   If no parameters are given, all resources are reset to their
   //   initial values.
-  setResources(params) {
+  setResources(params: number[]): void {
   }
 
   // CSI > Ps n
@@ -4790,7 +4787,7 @@ export class Terminal {
   //   keys to make an extended sequence of functions rather than
   //   adding a parameter to each function key to denote the modi-
   //   fiers.
-  disableModifiers(params) {
+  disableModifiers(params: number[]): void {
   }
 
   // CSI > Ps p
@@ -4801,12 +4798,12 @@ export class Terminal {
   //     Ps = 1  -> hide if the mouse tracking mode is not enabled.
   //     Ps = 2  -> always hide the pointer.  If no parameter is
   //     given, xterm uses the default, which is 1 .
-  setPointerMode(params) {
+  setPointerMode(params: number[]): void {
   }
 
   // CSI ! p   Soft terminal reset (DECSTR).
   // http://vt100.net/docs/vt220-rm/table4-10.html
-  softReset(params) {
+  softReset(params: number[]): void {
     this.cursorHidden = false;
     this.insertMode = false;
     this.originMode = false;
@@ -4832,7 +4829,7 @@ export class Terminal {
   //     2 - reset
   //     3 - permanently set
   //     4 - permanently reset
-  requestAnsiMode(params) {
+  requestAnsiMode(params: number[]): void {
   }
 
   // CSI ? Ps$ p
@@ -4840,7 +4837,7 @@ export class Terminal {
   //     CSI ? Ps; Pm$ p
   //   where Ps is the mode number as in DECSET, Pm is the mode value
   //   as in the ANSI DECRQM.
-  requestPrivateMode(params) {
+  requestPrivateMode(params: number[]): void {
   }
 
   // CSI Ps ; Ps " p
@@ -4853,7 +4850,7 @@ export class Terminal {
   //     Ps = 0  -> 8-bit controls.
   //     Ps = 1  -> 7-bit controls (always set for VT100).
   //     Ps = 2  -> 8-bit controls.
-  setConformanceLevel(params) {
+  setConformanceLevel(params: number[]): void {
   }
 
   // CSI Ps q  Load LEDs (DECLL).
@@ -4864,7 +4861,7 @@ export class Terminal {
   //     Ps = 2  1  -> Extinguish Num Lock.
   //     Ps = 2  2  -> Extinguish Caps Lock.
   //     Ps = 2  3  -> Extinguish Scroll Lock.
-  loadLEDs(params) {
+  loadLEDs(params: number[]): void {
   }
 
   // CSI Ps SP q
@@ -4874,7 +4871,7 @@ export class Terminal {
   //     Ps = 2  -> steady block.
   //     Ps = 3  -> blinking underline.
   //     Ps = 4  -> steady underline.
-  setCursorStyle(params) {
+  setCursorStyle(params: number[]): void {
   }
 
   // CSI Ps " q
@@ -4883,13 +4880,13 @@ export class Terminal {
   //     Ps = 0  -> DECSED and DECSEL can erase (default).
   //     Ps = 1  -> DECSED and DECSEL cannot erase.
   //     Ps = 2  -> DECSED and DECSEL can erase.
-  setCharProtectionAttr(params) {
+  setCharProtectionAttr(params: number[]): void {
   }
 
   // CSI ? Pm r
   //   Restore DEC Private Mode Values.  The value of Ps previously
   //   saved is restored.  Ps values are the same as for DECSET.
-  restorePrivateValues(params) {
+  restorePrivateValues(params: number[]): void {
   }
 
   // CSI Pt; Pl; Pb; Pr; Ps$ r
@@ -4897,19 +4894,16 @@ export class Terminal {
   //     Pt; Pl; Pb; Pr denotes the rectangle.
   //     Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
   // NOTE: xterm doesn't enable this code by default.
-  setAttrInRectangle(params) {
-    var t = params[0];
-    var l = params[1];
-    var b = params[2];
-    var r = params[3];
-    var attr = params[4];
-
-    var line;
-    var i;
+  setAttrInRectangle(params: number[]): void {
+    let t = params[0];
+    const l = params[1];
+    const b = params[2];
+    const r = params[3];
+    const attr = params[4];
 
     for (; t < b + 1; t++) {
-      line = this._getRow(this.ybase + t);
-      for (i = l; i < r; i++) {
+      const line = this._getRow(this.ybase + t);
+      for (let i = l; i < r; i++) {
         line[i] = [attr, line[i][1]];
       }
     }
@@ -4922,7 +4916,7 @@ export class Terminal {
   // CSI ? Pm s
   //   Save DEC Private Mode Values.  Ps values are the same as for
   //   DECSET.
-  savePrivateValues(params) {
+  savePrivateValues(params: number[]): void {
   }
 
   // CSI Ps ; Ps ; Ps t
@@ -4971,7 +4965,7 @@ export class Terminal {
   //     Ps = 2 3  ;  1  -> Restore xterm icon title from stack.
   //     Ps = 2 3  ;  2  -> Restore xterm window title from stack.
   //     Ps >= 2 4  -> Resize to Ps lines (DECSLPP).
-  manipulateWindow(params) {
+  manipulateWindow(params: number[]): void {
   }
 
   // CSI Pt; Pl; Pb; Pr; Ps$ t
@@ -4980,7 +4974,7 @@ export class Terminal {
   //     Pt; Pl; Pb; Pr denotes the rectangle.
   //     Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
   // NOTE: xterm doesn't enable this code by default.
-  reverseAttrInRectangle(params) {
+  reverseAttrInRectangle(params: number[]): void {
   }
 
   // CSI > Ps; Ps t
@@ -4991,7 +4985,7 @@ export class Terminal {
   //     Ps = 2  -> Set window/icon labels using UTF-8.
   //     Ps = 3  -> Query window/icon labels using UTF-8.  (See dis-
   //     cussion of "Title Modes")
-  setTitleModeFeature(params) {
+  setTitleModeFeature(params: number[]): void {
   }
 
   // CSI Ps SP t
@@ -4999,7 +4993,7 @@ export class Terminal {
   //     Ps = 0  or 1  -> off.
   //     Ps = 2 , 3  or 4  -> low.
   //     Ps = 5 , 6 , 7 , or 8  -> high.
-  setWarningBellVolume(params) {
+  setWarningBellVolume(params: number[]): void {
   }
 
   // CSI Ps SP u
@@ -5007,7 +5001,7 @@ export class Terminal {
   //     Ps = 1  -> off.
   //     Ps = 2 , 3  or 4  -> low.
   //     Ps = 0 , 5 , 6 , 7 , or 8  -> high.
-  setMarginBellVolume(params) {
+  setMarginBellVolume(params: number[]): void {
   }
 
   // CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
@@ -5017,7 +5011,7 @@ export class Terminal {
   //     Pt; Pl denotes the target location.
   //     Pp denotes the target page.
   // NOTE: xterm doesn't enable this code by default.
-  copyRectangle(params) {
+  copyRectangle(params: number[]): void {
   }
 
   // CSI Pt ; Pl ; Pb ; Pr ' w
@@ -5031,7 +5025,7 @@ export class Terminal {
   //   to the current locator position.  If all parameters are omit-
   //   ted, any locator motion will be reported.  DECELR always can-
   //   cels any prevous rectangle definition.
-  enableFilterRectangle(params) {
+  enableFilterRectangle(params: number[]): void {
   }
 
   // CSI Ps x  Request Terminal Parameters (DECREQTPARM).
@@ -5045,14 +5039,14 @@ export class Terminal {
   //     Pn = 1  <- 2  8  receive 38.4k baud.
   //     Pn = 1  <- clock multiplier.
   //     Pn = 0  <- STP flags.
-  requestParameters(params) {
+  requestParameters(params: number[]): void {
   }
 
   // CSI Ps x  Select Attribute Change Extent (DECSACE).
   //     Ps = 0  -> from start to end position, wrapped.
   //     Ps = 1  -> from start to end position, wrapped.
   //     Ps = 2  -> rectangle (exact).
-  selectChangeExtent(params) {
+  selectChangeExtent(params: number[]): void {
   }
 
   // CSI Pc; Pt; Pl; Pb; Pr$ x
@@ -5060,7 +5054,7 @@ export class Terminal {
   //     Pc is the character to use.
   //     Pt; Pl; Pb; Pr denotes the rectangle.
   // NOTE: xterm doesn't enable this code by default.
-  fillRectangle(params) {
+  fillRectangle(params: number[]): void {
     var ch = params[0];
     var t = params[1];
     var l = params[2];
@@ -5094,7 +5088,7 @@ export class Terminal {
   //     Pu = 0  <- or omitted -> default to character cells.
   //     Pu = 1  <- device physical pixels.
   //     Pu = 2  <- character cells.
-  enableLocatorReporting(params) {
+  enableLocatorReporting(params: number[]): void {
   //  var val = params[0] > 0;
     //this.mouseEvents = val;
     //this.decLocator = val;
@@ -5104,21 +5098,17 @@ export class Terminal {
   //   Erase Rectangular Area (DECERA), VT400 and up.
   //     Pt; Pl; Pb; Pr denotes the rectangle.
   // NOTE: xterm doesn't enable this code by default.
-  eraseRectangle(params) {
-    var t = params[0];
-    var l = params[1];
-    var b = params[2];
-    var r = params[3];
+  eraseRectangle(params: number[]): void {
+    let t = params[0];
+    const l = params[1];
+    const b = params[2];
+    const r = params[3];
 
-    var line;
-    var i;
-    var ch;
-
-    ch = [this.eraseAttr(), ' ']; // xterm?
+    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm?
 
     for (; t < b + 1; t++) {
-      line = this._getRow(this.ybase + t);
-      for (i = l; i < r; i++) {
+      const line = this._getRow(this.ybase + t);
+      for (let i = l; i < r; i++) {
         line[i] = ch;
       }
     }
@@ -5139,13 +5129,13 @@ export class Terminal {
   //     Ps = 2  -> do not report button down transitions.
   //     Ps = 3  -> report button up transitions.
   //     Ps = 4  -> do not report button up transitions.
-  setLocatorEvents(params) {
+  setLocatorEvents(params: number[]): void {
   }
 
   // CSI Pt; Pl; Pb; Pr$ {
   //   Selective Erase Rectangular Area (DECSERA), VT400 and up.
   //     Pt; Pl; Pb; Pr denotes the rectangle.
-  selectiveEraseRectangle(params) {
+  selectiveEraseRectangle(params: number[]): void {
   }
 
   // CSI Ps ' |
@@ -5188,22 +5178,20 @@ export class Terminal {
   //     mal.
   //   The ``page'' parameter is not used by xterm, and will be omit-
   //   ted.
-  requestLocatorPosition(params) {
+  requestLocatorPosition(params: number[]): void {
   }
 
   // CSI P m SP }
   // Insert P s Column(s) (default = 1) (DECIC), VT420 and up.
   // NOTE: xterm doesn't enable this code by default.
-  insertColumns(params) {
-    var param = params[0];
-    var l = this.ybase + this.rows;
-    var ch = [this.eraseAttr(), ' ']; // xterm?
-    var i;
-    var line;
+  insertColumns(params: number[]): void {
+    let param = params[0];
+    const l = this.ybase + this.rows;
+    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm?
 
     while (param--) {
-      for (i = this.ybase; i < l; i++) {
-        line = this._getRow(i);
+      for (let i = this.ybase; i < l; i++) {
+        const line = this._getRow(i);
         line.splice(this.x + 1, 0, ch);
         line.pop();
       }
@@ -5215,16 +5203,14 @@ export class Terminal {
   // CSI P m SP ~
   // Delete P s Column(s) (default = 1) (DECDC), VT420 and up
   // NOTE: xterm doesn't enable this code by default.
-  deleteColumns(params) {
-    var param = params[0];
-    var l = this.ybase + this.rows;
-    var ch = [this.eraseAttr(), ' ']; // xterm?
-    var i;
-    var line;
+  deleteColumns(params: number[]): void {
+    let param = params[0];
+    const l = this.ybase + this.rows;
+    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm?
 
     while (param--) {
-      for (i = this.ybase; i < l; i++) {
-        line = this._getRow(i);
+      for (let i = this.ybase; i < l; i++) {
+        const line = this._getRow(i);
         line.splice(this.x, 1);
         line.push(ch);
       }
@@ -5385,10 +5371,6 @@ function isBoldBroken(document) {
   return w1 !== w2;
 }
 
-// var String = this.String;
-// var setTimeout = this.setTimeout;
-// var setInterval = this.setInterval;
-
 function indexOf(obj, el) {
   var i = obj.length;
   while (i--) {
@@ -5397,7 +5379,7 @@ function indexOf(obj, el) {
   return -1;
 }
 
-function isWide(ch) {
+function isWide(ch: string): boolean {
   if (ch <= '\uff00') return false;
   return (ch >= '\uff01' && ch <= '\uffbe') ||
       (ch >= '\uffc2' && ch <= '\uffc7') ||
