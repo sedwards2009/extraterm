@@ -1,0 +1,8 @@
+*.sh text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.txt text eol=lf
