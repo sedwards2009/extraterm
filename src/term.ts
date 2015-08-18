@@ -137,6 +137,7 @@ const BLINK_ATTR_FLAG = 4;
 const INVERSE_ATTR_FLAG = 8;
 const INVISIBLE_ATTR_FLAG = 16;
 const ITALIC_ATTR_FLAG = 32;
+const STRIKE_THROUGH_ATTR_FLAG = 64;
 
 function flagsFromCharAttr(attr: CharAttr): number {
   return attr >> 18;
@@ -1505,7 +1506,12 @@ export class Terminal {
             if (flags & BLINK_ATTR_FLAG) {
               textDecoration += ' blink';
             }
-
+            
+            // strike through
+            if (flags & STRIKE_THROUGH_ATTR_FLAG) { 
+              textDecoration += ' line-through';
+            }
+              
             if (textDecoration !== "") {
                out += "text-decoration: " + textDecoration + ";";
             }
@@ -3875,7 +3881,7 @@ export class Terminal {
 
       } else if (p === 9) {
         // Crossed-out characters (ISO 6429).
-        // FIXME
+        flags |= STRIKE_THROUGH_ATTR_FLAG;
 
       } else if (p === 22) {
         // not bold
@@ -3900,7 +3906,11 @@ export class Terminal {
       } else if (p === 28) {
         // not invisible
         flags &= ~INVISIBLE_ATTR_FLAG;
-
+        
+      } else if (p === 29) {
+        // not strike through
+        flags &= ~STRIKE_THROUGH_ATTR_FLAG;
+        
       } else if (p === 39) {
         // reset fg
         fg = foregroundFromCharAttr(this.defAttr);
