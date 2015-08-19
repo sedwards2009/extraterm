@@ -138,6 +138,7 @@ const INVERSE_ATTR_FLAG = 8;
 const INVISIBLE_ATTR_FLAG = 16;
 const ITALIC_ATTR_FLAG = 32;
 const STRIKE_THROUGH_ATTR_FLAG = 64;
+const FAINT_ATTR_FLAG = 128;
 
 function flagsFromCharAttr(attr: CharAttr): number {
   return attr >> 18;
@@ -232,6 +233,7 @@ export class Terminal {
   private _termId: number;
   
   private colors: string[];
+  private faintColors: string[];
   private convertEol: boolean;
   private termName: string;
   private geometry: [number, number];
@@ -311,6 +313,7 @@ export class Terminal {
     }
 
     this.colors = options.colors === undefined ? Terminal.colors : options.colors;
+    this.faintColors = faintColors(this.colors);
     this.convertEol = options.convertEol === undefined ? false : options.convertEol;
     this.termName = options.termName === undefined ? 'xterm' : options.termName;
     this.geometry = options.geometry === undefined ? [80, 24] : options.geometry;
@@ -370,9 +373,6 @@ export class Terminal {
 
     this.entry = '';
     this.entryPrefix = 'Search: ';
-  //  this._real;
-  //  this._selected;
-  //  this._textarea;
 
     // charset
     this.charset = null;
@@ -403,7 +403,7 @@ export class Terminal {
     this.readable = true;
     this.writable = true;
 
-    this.defAttr = (0 << 18) | (257 << 9) | (256 << 0); // Default character style
+    this.defAttr = packCharAttr(0, 257, 256); // Default character style
     this.curAttr = this.defAttr;  // Current character style.
 
     this.params = [];
@@ -1486,7 +1486,7 @@ export class Terminal {
               }
               // See: XTerm*boldColors
               if (fg < 8) {
-                fg += 8;
+                fg += 8;  // Use the bright version of the color.
               }
             }
 
@@ -1525,7 +1525,7 @@ export class Terminal {
               // Should inverse just be before the
               // above boldColors effect instead?
               if ((flags & BOLD_ATTR_FLAG) && fg < 8) {
-                fg += 8;
+                fg += 8;  // Use the bright version of the color.
               }
             }
 
@@ -1538,10 +1538,13 @@ export class Terminal {
               out += 'background-color:' + this.colors[bg] + ';';
             }
 
-            if (fg !== 257) {
-              out += 'color:' + this.colors[fg] + ';';
+            if (flags & FAINT_ATTR_FLAG) {
+              out += 'color:' + this.faintColors[fg] + ';';
+            } else {
+              if (fg !== 257) {
+                out += 'color:' + this.colors[fg] + ';';
+              }
             }
-
             out += '">';
           }
         }
@@ -3856,7 +3859,7 @@ export class Terminal {
 
       } else if (p === 2) {
         // Faint, decreased intensity (ISO 6429).
-        // FIXME
+        flags |= FAINT_ATTR_FLAG;
 
       } else if (p === 3) {
         // Italic
@@ -3884,8 +3887,9 @@ export class Terminal {
         flags |= STRIKE_THROUGH_ATTR_FLAG;
 
       } else if (p === 22) {
-        // not bold
+        // not bold and not faint.
         flags &= ~BOLD_ATTR_FLAG;
+        flags &= ~FAINT_ATTR_FLAG;
         
       } else if (p === 23) {
         // not italic
@@ -5548,3 +5552,12 @@ function px(value) {
   }
   return parseInt(value.slice(0,-2),10);
 }  
+
+function faintColors(colors: string[]): string[] {
+  return colors.map<string>( (col) => {
+    const red = parseInt(col.slice(1,3), 16);
+    const green = parseInt(col.slice(3,5), 16);
+    const blue = parseInt(col.slice(5,7),16);
+    return `rgba(${red}, ${green}, ${blue}, 0.6)`;
+  });
+}
