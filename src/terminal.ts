@@ -383,6 +383,17 @@ class EtTerminal extends HTMLElement {
             margin-left: 2px;
             margin-right: 2px;
         }
+
+        @-webkit-keyframes BLINK_ANIMATION {
+          0%   { opacity: 0; }
+          50% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+
+        .terminal .blink {
+            -webkit-animation: BLINK_ANIMATION 2s infinite;
+            animation: BLINK_ANIMATION 2s infinite;
+        }
         </style>
         <style id="${ID_THEME_STYLE}"></style>
         <div class='terminal_container' id='${ID_CONTAINER}'>

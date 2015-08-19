@@ -1502,11 +1502,6 @@ export class Terminal {
               textDecoration += ' underline';
             }
 
-            // blink
-            if (flags & BLINK_ATTR_FLAG) {
-              textDecoration += ' blink';
-            }
-            
             // strike through
             if (flags & STRIKE_THROUGH_ATTR_FLAG) { 
               textDecoration += ' line-through';
@@ -1545,7 +1540,12 @@ export class Terminal {
                 out += 'color:' + this.colors[fg] + ';';
               }
             }
-            out += '">';
+            out += '"';
+            
+            if (flags & BLINK_ATTR_FLAG) {
+              out += "class='blink'";
+            }
+            out += '>';
           }
         }
       }
