@@ -129,3 +129,8 @@ Bug: Middle click on Windows shows that annoying scroll ball thing
 Feature: Mouse free selection mechanism
 =======================================
 A keyboard focussed way of quickly selecting text is needed.
+
+
+Feature: Ability to snapshot the current active screen and put it in a new tab
+==============================================================================
+Some times it would be useful to take a 'photo' of the contents of the current terminal screen and put it into a tab for later reference.
