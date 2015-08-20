@@ -3638,10 +3638,9 @@ export class Terminal {
     }
     this.y += param;
     
-    const bottom = this.scrollBottom !== 0  ? this.scrollBottom : this.rows;
-    
-    if (this.y >= bottom) {
-      this.y = bottom - 1;
+    const bottom = this.scrollBottom !== 0  ? this.scrollBottom : this.rows -1;
+    if (this.y > bottom) {
+      this.y = bottom ;
     }
   }
 
