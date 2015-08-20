@@ -120,3 +120,12 @@ Feature: Move tab to the left/right pane function
 
 Bug: Frame tags need to be unique across terminals/tabs
 =======================================================
+
+
+Bug: Middle click on Windows shows that annoying scroll ball thing
+==================================================================
+
+
+Feature: Mouse free selection mechanism
+=======================================
+A keyboard focussed way of quickly selecting text is needed.
