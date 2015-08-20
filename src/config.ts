@@ -29,6 +29,7 @@ export interface SessionProfile {
   arguments?: string[];
   extraEnv?: Object;
   platform?: string | string[]; // "win32", "linux" etc.
+  systemDirectory?: string; // The directory holding the 'system'. Used by babun and cygwin.
 }
 
 export function defaultSessionProfile(configSessionProfiles: SessionProfile[]): SessionProfile {
