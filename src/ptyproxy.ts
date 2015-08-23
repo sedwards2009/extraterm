@@ -4,9 +4,14 @@
 import child_process = require('child_process');
 import ptyconnector = require('./ptyconnector');
 import _ = require("lodash");
+import configInterfaces = require('./config');
+import fs = require('fs');
+import path = require('path');
+
+type Config = configInterfaces.Config;
 
 type PtyConnector = ptyconnector.PtyConnector;
-type Pty =  ptyconnector.Pty;
+type Pty = ptyconnector.Pty;
 type PtyOptions = ptyconnector.PtyOptions;
 
 const DEBUG_FINE = false;
@@ -143,9 +148,28 @@ class ProxyPty implements Pty {
   }
 }
 
-export function factory(config: any): PtyConnector {
+function findCygwinPython(cygwinDir: string): string {
+  const binDir = path.join(cygwinDir, 'bin');
+  log("binDir:" + binDir);
+  const pythonRegexp = /^python3.*m\.exe$/;
+  if (fs.existsSync(binDir)) {
+    const pythons = fs.readdirSync(binDir).filter( name => pythonRegexp.test(name) );
+    return pythons.length !== 0 ? path.join(binDir,pythons[0]) : null;
+  }
+  return null;
+}
+
+export function factory(config: Config): PtyConnector {
   const ptys: ProxyPty[] = [];
-  const pythonExe = process.platform === 'win32' ? 'C:\\Users\\sbe\\.babun\\cygwin\\bin\\python3.4m.exe' : 'python3';
+  const sessionProfile = config.expandedProfiles[0];
+  const pythonExe = findCygwinPython(sessionProfile.cygwinDir);
+  log("Found python exe: " + pythonExe);
+
+  // pythonExe = "python3";
+  if (pythonExe === null) {
+    return null;
+  }
+
   const serverEnv = _.clone(process.env);
   serverEnv["PYTHONIOENCODING"] = "utf-8:ignore";
   const proxy = child_process.spawn(pythonExe, ['python/ptyserver2.py'], {env: serverEnv});
@@ -238,7 +262,7 @@ export function factory(config: any): PtyConnector {
   function spawn(file: string, args: string[], opt: PtyOptions): Pty {
     let rows = 24;
     let columns = 80;
-    
+    log("ptyproxy spawn file: "+file);
     if (opt !== undefined) {
       rows = opt.rows !== undefined ? opt.rows : rows;
       columns = opt.cols !== undefined ? opt.cols : columns;

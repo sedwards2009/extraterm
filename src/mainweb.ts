@@ -165,7 +165,6 @@ export function startUp(): void {
         webipc.clipboardReadRequest();
       }
     });
-    mainWebUi.defaultSessionProfile = config.defaultSessionProfile(configuration.sessionProfiles);
     mainWebUi.newTerminalTab(MainWebUi.POSITION_LEFT);
   });
   

@@ -161,14 +161,11 @@ class ExtratermMainWebUI extends HTMLElement {
   
   private _config: Config;
 
-  private _defaultSessionProfile: SessionProfile;
-  
   private _split: boolean;
   
   private _initProperties(): void {
     this._terminalTabs = [];
     this._config = null;
-    this._defaultSessionProfile = null;
     this._split = false;
   }
   
@@ -340,11 +337,7 @@ class ExtratermMainWebUI extends HTMLElement {
   get split(): boolean {
     return this._split;
   }
-  
-  set defaultSessionProfile(sessionProfile: SessionProfile) {
-    this._defaultSessionProfile = sessionProfile;
-  }
-  
+    
   /**
    * Create a new terminal tab
    *
@@ -438,16 +431,16 @@ class ExtratermMainWebUI extends HTMLElement {
       this._setConfigOnTerminal(newTerminal, this._config);
     }
     
+    const sessionProfile = this._config.expandedProfiles[0];
     const newEnv = _.cloneDeep(process.env);
-    const expandedExtra = config.expandEnvVariables(this._defaultSessionProfile,
-      config.envContext(this._config.systemConfig)).extraEnv;
+    const expandedExtra = sessionProfile.extraEnv;
 
     let prop: string;
     for (prop in expandedExtra) {
       newEnv[prop] = expandedExtra[prop];
     }
-
-    webipc.requestPtyCreate(this._defaultSessionProfile.command, this._defaultSessionProfile.arguments,
+    
+    webipc.requestPtyCreate(sessionProfile.command, sessionProfile.arguments,
         currentColumns, currentRows, newEnv)
       .then( (msg: Messages.CreatedPtyMessage) => {
         tabInfo.ptyId = msg.id;

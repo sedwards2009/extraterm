@@ -234,7 +234,7 @@ def find_pty_by_id(pty_id):
     return None
 
 def cygwin_convert_path_variable(path_var):
-    return subprocess.check_output(["cygpath", "-p", path_var])
+    return subprocess.check_output(["/usr/bin/cygpath", "-p", path_var])
 
 def main():
     global pty_list

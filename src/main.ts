@@ -20,6 +20,7 @@ import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions, Envi
 import * as resourceLoader from './resourceloader';
 import * as Messages from './windowmessages';
 import * as clipboard from 'clipboard';
+import child_process = require('child_process');
 import util = require('./gui/util');
 
 // Our special 'fake' module which selects the correct pty connector factory implementation.
@@ -52,18 +53,19 @@ let ptyConnector: PtyConnector;
 
 function main(): void {
   config = readConfigurationFile();
-  config.systemConfig = systemConfiguration();
+  config.systemConfig = systemConfiguration(config.sessionProfiles);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
+  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles);
 
-  ptyConnector = PtyConnectorFactory.factory();
-  
+  ptyConnector = PtyConnectorFactory.factory(config);
+
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
   themes = scanThemes(themesdir);
   if (themes.get(config.theme) === undefined) {
     config.theme = "default";
   }
-  
+
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
     ptyConnector.destroy();
@@ -158,10 +160,168 @@ function logJSData(data: string): void {
 }
 
 /**
+ * Expands a list of partial profiles.
+ *
+ * @param profiles List of user configurable partially filled in profiles.
+ * @return List where the profiles are completed and a default is added.
+ */
+function expandSessionProfiles(profiles: SessionProfile[]): SessionProfile[] {
+  if (process.platform === "win32") {
+    // Find a default cygwin installation.
+    const cygwinDir = findCygwinInstallation();
+    let canonicalCygwinProfile = cygwinDir !== null ? defaultCygwinProfile(cygwinDir) : null;
+    const expandedProfiles: SessionProfile[] = [];
+    if (profiles !== undefined && profiles !== null) {
+      profiles.forEach( profile => {
+        switch (profile.type) {
+          case configInterfaces.SESSION_TYPE_CYGWIN:
+            let templateProfile = canonicalCygwinProfile;
+            
+            if (profile.cygwinDir !== undefined && profile.cygwinDir !== null) {
+              // This profile specifies the location of a cygwin installation.
+              templateProfile = defaultCygwinProfile(profile.cygwinDir);
+            }
+          
+            if (templateProfile !== null) {
+              const expandedProfile: SessionProfile = {
+                name: profile.name,
+                type: configInterfaces.SESSION_TYPE_CYGWIN,
+                command: profile.command !== undefined ? profile.command : templateProfile.command,
+                arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
+                extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv,
+                cygwinDir: profile.cygwinDir !== undefined ? profile.cygwinDir : templateProfile.cygwinDir              
+              };
+              expandedProfiles.push(expandedProfile);
+            } else {
+              log(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
+                `The cygwin installation couldn't be found.`);
+            }
+          
+            break;
+            
+          case configInterfaces.SESSION_TYPE_BABUN:
+            break;
+            
+          default:
+            log(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
+              `It is neither ${configInterfaces.SESSION_TYPE_CYGWIN} nor ${configInterfaces.SESSION_TYPE_BABUN}.`);
+            break;
+        }
+
+      });
+    }
+    expandedProfiles.push(canonicalCygwinProfile);
+    return expandedProfiles;
+    
+  } else {
+    // A 'nix style system.
+    const expandedProfiles: SessionProfile[] = [];
+    let canonicalProfile = defaultProfile();
+    if (profiles !== undefined && profiles !== null) {
+      profiles.forEach( profile => {
+        switch (profile.type) {
+          case undefined:
+          case null:
+          case configInterfaces.SESSION_TYPE_UNIX:
+            let templateProfile = canonicalProfile;
+            const expandedProfile: SessionProfile = {
+              name: profile.name,
+              type: configInterfaces.SESSION_TYPE_UNIX,
+              command: profile.command !== undefined ? profile.command : templateProfile.command,
+              arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
+              extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv
+            };
+            expandedProfiles.push(expandedProfile);
+            break;
+            
+          default:
+            log(`Ignoring session profile '${profile.name}' with type '${profile.type}'.`);
+            break;
+        }
+      });
+    }
+    
+    expandedProfiles.push(canonicalProfile);
+    return expandedProfiles;
+  }
+}
+
+function defaultProfile(): SessionProfile {
+  let shell = "/bin/bash";
+  const passwdDb = readPasswd("/etc/passwd");  
+  const userRecords = passwdDb.filter( row => row.username === process.env.USER);
+  if (userRecords.length !== 0) {
+    shell = userRecords[0].shell;
+  }
+
+  return {
+    name: "Default",
+    type: configInterfaces.SESSION_TYPE_UNIX,
+    command: shell,
+    arguments: [],
+    extraEnv: { }
+  };
+}
+
+function defaultCygwinProfile(cygwinDir: string): SessionProfile {
+  const passwdDb = readPasswd(path.join(cygwinDir, "etc", "passwd"));
+  const username = process.env["USERNAME"];
+  const userRecords = passwdDb.filter( row => row.username === username);
+  if (userRecords.length !== 0) {
+    const defaultShell = userRecords[0].shell;
+    const homeDir = userRecords[0].homeDir;
+
+    return {
+      name: "Cygwin",
+      type: configInterfaces.SESSION_TYPE_CYGWIN,
+      command: defaultShell,
+      arguments: [],
+      extraEnv: { HOME: homeDir, PATH: path.join(cygwinDir, "bin") + ";" + process.env.PATH},
+      cygwinDir: cygwinDir
+    };
+  } else {
+    return null;
+  }
+}
+  
+function findCygwinInstallation(): string {
+  try {
+    const regResult: string = <any> child_process.execFileSync("REG",
+      ["query","HKLM\\SOFTWARE\\Cygwin\\setup","/v","rootdir"],
+      {encoding: "utf8"});
+    const parts = regResult.split(/\r/g);
+    const regsz = parts[2].indexOf("REG_SZ");
+    const cygwinDir = parts[2].slice(regsz+6).trim();
+    log("Found cygwin installation: " + cygwinDir);
+    return cygwinDir;
+
+  } catch(e) {
+    log("Couldn't find a cygwin installation.");
+    return null;
+  }
+}
+
+interface PasswdLine {
+  username: string;
+  homeDir: string;
+  shell: string;
+}
+
+function readPasswd(filename: string): PasswdLine[] {
+  const fileText = fs.readFileSync(filename, {encoding: 'utf8'});
+  const lines = fileText.split(/\n/g);
+  return lines.map<PasswdLine>( line => {
+    const fields = line.split(/:/g);
+    return { username: fields[0], homeDir: fields[5], shell: fields[6] };
+  });
+}
+
+/**
  * Extra information about the system configuration and platform.
  */
-function systemConfiguration(): SystemConfig {
-  return { homeDir: app.getPath('home') };
+function systemConfiguration(profiles: SessionProfile[]): SystemConfig {
+  let homeDir = app.getPath('home');
+  return { homeDir: homeDir };
 }
 
 /**
@@ -171,11 +331,14 @@ function systemConfiguration(): SystemConfig {
  */
 function readConfigurationFile(): Config {
   const filename = path.join(app.getPath('appData'), MAIN_CONFIG);
-  let config: Config = { systemConfig: null };
+  let config: Config = { systemConfig: null, expandedProfiles: null };
 
   if (fs.existsSync(filename)) {
+    log("Reading user configuration from " + filename);
     const configJson = fs.readFileSync(filename, {encoding: "utf8"});
     config = <Config>JSON.parse(configJson);
+  } else {
+    log("Couldn't find user configuration file at " + filename);    
   }
   return config;
 }

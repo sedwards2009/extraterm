@@ -1,6 +1,8 @@
 
 import * as pty from 'pty.js';
 import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions} from './ptyconnector';
+import configInterfaces = require('./config');
+type Config = configInterfaces.Config;
 
 class DirectPty implements Pty {
   
@@ -35,7 +37,7 @@ function spawn(file: string, args: string[], opt: PtyOptions): Pty {
   return new DirectPty(file, args, opt);
 }
 
-export function factory(config: any): PtyConnector {
+export function factory(config: Config): PtyConnector {
   return {
     spawn: spawn,
     destroy() {}

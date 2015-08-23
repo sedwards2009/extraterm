@@ -1,7 +1,6 @@
 /**
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
-import DEFAULT_SESSION_PROFILES = require('./defaultsessionprofiles');
 import util = require('./gui/util');
 import os = require('os');
 import _ = require('lodash');
@@ -10,12 +9,13 @@ export interface Config {
   blinkingCursor?: boolean;
   theme?: string;
   themePath?: string;
-  
-  // List of regexp patterns which are used to identify command 
+
+  // List of regexp patterns which are used to identify command
   // lines which should not get a command frame around their output.
-  noFrameCommands?: string[]; 
-  
-  sessionProfiles?: SessionProfile[];
+  noFrameCommands?: string[];
+
+  sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
+  expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.
   systemConfig: SystemConfig;
 }
 
@@ -23,67 +23,17 @@ export interface SystemConfig {
   homeDir: string;
 }
 
+export const SESSION_TYPE_UNIX = "unix";
+export const SESSION_TYPE_CYGWIN = "cygwin";
+export const SESSION_TYPE_BABUN = "babun";
+
 export interface SessionProfile {
-  name: string;
-  command?: string;
-  arguments?: string[];
-  extraEnv?: Object;
-  platform?: string | string[]; // "win32", "linux" etc.
-  systemDirectory?: string; // The directory holding the 'system'. Used by babun and cygwin.
-}
-
-export function defaultSessionProfile(configSessionProfiles: SessionProfile[]): SessionProfile {
-  const merged = mergeSessionProfiles(DEFAULT_SESSION_PROFILES, configSessionProfiles);
-  const candidates = merged.filter( (sp) => {
-    if (sp.platform === null || sp.platform === undefined) {
-      return true;
-    }
-    return Array.isArray(sp.platform) ? sp.platform.indexOf(process.platform) !== -1 : sp.platform === process.platform;
-  });
-    
-  return candidates.length !== 0 ? candidates[0] : null;
-}
-
-export function mergeSessionProfiles(primaryList: SessionProfile[], secondaryList: SessionProfile[]): SessionProfile[] {
-  const resultList = <SessionProfile[]> _.cloneDeep(primaryList);
-  if (secondaryList === null || secondaryList === undefined) {
-    return resultList;
-  }
-  
-  const nameMap = new Map<string, SessionProfile>();
-  // FIXME there is probably a simpler way of doing this once ES6 support improves.
-  secondaryList.forEach( (sp) => {
-    nameMap.set(sp.name, sp);
-  });
-  
-  resultList.forEach( (sp) => {
-    if (nameMap.has(sp.name)) {
-      // If the secondary list has a replacement or override for a a session profile, then process it now.
-      const secondary = nameMap.get(sp.name);
-      
-      sp.command = util.override(sp.command, secondary.command);
-      sp.platform = util.override(sp.platform, secondary.platform);
-      
-      if (secondary.extraEnv !== null && secondary.extraEnv !== undefined) {
-        if (sp.extraEnv === null || sp.extraEnv === undefined) {
-          sp.extraEnv = {};
-        }
-        
-        let prop: string;
-        for (prop in secondary.extraEnv) {
-          sp.extraEnv[prop] = secondary.extraEnv[prop];          
-        }
-      }
-    }
-    nameMap.delete(sp.name);
-  });
-
-  // Append any sessions in the secondary list which didn't appear in the primary.
-  nameMap.forEach( (sp) => {
-    resultList.splice(0,0, sp);
-  });
-
-  return resultList;
+  name: string;             // Human readable name for the profile.
+  type?: string;            // type - "cygwin", "babun" or "native" ("" means "native")
+  command?: string;         // the command to execute in the terminal
+  arguments?: string[];     // the arguments for said command
+  extraEnv?: Object;        // extra entries to add to the environment before running the command.
+  cygwinDir?: string;       // The directory holding the 'system'. Used by babun and cygwin.
 }
 
 export function envContext(systemConfig: SystemConfig): Map<string, string> {
@@ -92,16 +42,16 @@ export function envContext(systemConfig: SystemConfig): Map<string, string> {
   return context;
 }
 
-export function expandEnvVariables(sessionProfile: SessionProfile, context: Map<string, string>): SessionProfile {
-  const result = <SessionProfile> _.cloneDeep(sessionProfile);
-  if (result.extraEnv !== null && result.extraEnv !== undefined) {
+export function expandEnvVariables(extraEnv: Object, context: Map<string, string>): Object {
+  const expandedEnv = {};
+  if (extraEnv !== null && extraEnv !== undefined) {
     let prop: string;
-    for (prop in result.extraEnv) {
-      result.extraEnv[prop] = expandEnvVariable(result.extraEnv[prop], context);
+    for (prop in extraEnv) {
+      expandedEnv[prop] = expandEnvVariable(extraEnv[prop], context);
     }
   }
-  
-  return result;
+
+  return expandedEnv;
 }
 
 export function expandEnvVariable(value: string, context: Map<string, string>): string {
