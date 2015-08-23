@@ -1,9 +1,9 @@
+/**
+ * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
+ */
 import util = require('./util');
 
 const ID = "CbScrollbarTemplate";
-
-const ATTR_SIZE = "size";
-const ATTR_POSITION = "position";
 const ID_AREA = "area";
 const ID_CONTAINER = "container";
 
@@ -11,9 +11,15 @@ let registered = false;
 
 class CbScrollbar extends HTMLElement {
   
+  static TAG_NAME = 'cb-scrollbar';
+  
+  static ATTR_SIZE = "size";
+  
+  static ATTR_POSITION = "position";
+  
   static init(): void {
     if (registered === false) {
-      window.document.registerElement('cb-scrollbar', {prototype: CbScrollbar.prototype});
+      window.document.registerElement(CbScrollbar.TAG_NAME, {prototype: CbScrollbar.prototype});
       registered = true;
     }
   }
@@ -24,29 +30,26 @@ class CbScrollbar extends HTMLElement {
   private _size: number;
   
   private _css() {
-    return ":host {\n" +
-      "    display: block;\n" +
-      "    color: transparent;\n" +
-      "}\n" +
-
-      "#container {\n" +
-      "  width: 15px;\n" +
-      "  height: 100%;\n"+
-      "  overflow-x: hidden;" +
-      "  overflow-y: scroll;" +
-      "}\n" +
-      
-      "#area {\n" +
-      "  width: 1px;" +
-      "  background-color: red;" +
-      "  height: 1px;" +
-      "}\n";
+    return `
+      :host {
+          display: block;
+          color: transparent;
+      }
+      #container {
+        width: 17px;
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: scroll;
+      }
+      #area {
+        width: 1px;
+        background-color: red;
+        height: 1px;
+      }`;
   }
 
   private _html(): string {
-    return "<div id='" + ID_CONTAINER + "'>" +
-      "<div id='" + ID_AREA + "'></div>" +
-      "</div>";
+    return `<div id='${ID_CONTAINER}'><div id='${ID_AREA}'></div></div>`;
   }
   
   private _initProperties(): void {
@@ -72,8 +75,8 @@ class CbScrollbar extends HTMLElement {
       this.dispatchEvent(event);
     });
     
-    this._updateSize(this.getAttribute(ATTR_SIZE));
-    this._updatePosition(this.getAttribute(ATTR_POSITION));
+    this._updateSize(this.getAttribute(CbScrollbar.ATTR_SIZE));
+    this._updatePosition(this.getAttribute(CbScrollbar.ATTR_POSITION));
   }
   
   private _createClone(): Node {
@@ -94,11 +97,11 @@ class CbScrollbar extends HTMLElement {
 
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     switch (attrName) {
-      case ATTR_SIZE:
+      case CbScrollbar.ATTR_SIZE:
         this._updateSize(newValue);
         break;
 
-      case ATTR_POSITION:
+      case CbScrollbar.ATTR_POSITION:
         this._updatePosition(newValue);
         break;
         
@@ -125,7 +128,7 @@ class CbScrollbar extends HTMLElement {
     }
     var numberValue = parseInt(value, 10);
     if (isNaN(numberValue)) {
-      console.warn("Value '" + value + "'to scrollbar attribute '" + ATTR_SIZE + "' was NaN.");
+      console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_SIZE + "' was NaN.");
       return;
     }
     this.size = numberValue;
@@ -156,7 +159,7 @@ class CbScrollbar extends HTMLElement {
     }
     var numberValue = parseInt(value, 10);
     if (isNaN(numberValue)) {
-      console.warn("Value '" + value + "'to scrollbar attribute '" + ATTR_SIZE + "' was NaN.");
+      console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_SIZE + "' was NaN.");
       return;
     }
     this.position = numberValue;
