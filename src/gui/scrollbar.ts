@@ -43,7 +43,6 @@ class CbScrollbar extends HTMLElement {
       }
       #area {
         width: 1px;
-        background-color: red;
         height: 1px;
       }`;
   }
