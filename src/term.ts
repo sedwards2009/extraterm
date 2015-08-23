@@ -995,7 +995,13 @@ export class Terminal {
       if ( ! this.mouseEvents) {
         return;
       }
-
+      
+      // Ctrl click prevents the mouse being taken over by
+      // the application and allows the user to select stuff.
+      if (ev.ctrlKey) { 
+        return;
+      }
+      
       // send the button
       
       // get the xterm-style button

@@ -23,6 +23,13 @@ Short cuts:
 Tip: Turning off split view is a fast way of giving a terminal tab more space. When you split the view again, Extraterm will remember and restore the previous configuration.
 
 
+Selections and the Clipboard
+----------------------------
+Text can be selected using the mouse. Selections are immediately copied to the clipboard as is common on unix-like desktops. Also middle mouse button to paste is supported. Control+Shift+C and Control+Shift+V keyboard shortcuts do clipboard copy and paste respectively.
+
+Some applications use the mouse input themselves and prevent normal mouse selection from working. In these cases it is possible to hold the Control key and then make a selection with the mouse.
+
+
 Frames & Viewers
 ----------------
 Frames group data and text. They come in different various kinds depending on
