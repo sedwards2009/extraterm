@@ -275,8 +275,8 @@ function defaultCygwinProfile(cygwinDir: string): SessionProfile {
       name: "Cygwin",
       type: configInterfaces.SESSION_TYPE_CYGWIN,
       command: defaultShell,
-      arguments: [],
-      extraEnv: { HOME: homeDir, PATH: path.join(cygwinDir, "bin") + ";" + process.env.PATH},
+      arguments: ["-l"],
+      extraEnv: { HOME: homeDir },
       cygwinDir: cygwinDir
     };
   } else {
