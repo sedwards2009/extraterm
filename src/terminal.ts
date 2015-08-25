@@ -253,6 +253,9 @@ class EtTerminal extends HTMLElement {
   
   private _isNoFrameCommand(commandLine: string): boolean {
     const cmd = commandLine.trim();
+    if (cmd === "") {
+      return true;
+    }
     return this._noFrameCommands.some( exp => exp.test(cmd) );
   }
   
