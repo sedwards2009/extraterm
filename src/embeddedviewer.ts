@@ -277,7 +277,12 @@ class EtEmbeddedViewer extends HTMLElement {
                 
         #tag_name {
           flex: 0 1 auto;
-        }      
+          color: white;
+        }
+        
+        #tag_icon {
+          color: white;
+        }
         </style>
         <div id='${ID_CONTAINER}' style='display: none;' tabindex='-1' class='running'>
           <div id='${ID_HEADER}'>
