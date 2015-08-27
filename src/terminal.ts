@@ -74,6 +74,8 @@ class EtTerminal extends HTMLElement {
   
   static EVENT_UNKNOWN_KEY_DOWN = "unknown-key-down";
   
+  static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
+  
   /**
    * 
    */
@@ -765,27 +767,33 @@ class EtTerminal extends HTMLElement {
     }
   }
   
+  deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
+    viewer.remove();
+  }
+  
   private _createEmbeddedViewerElement(commandLine: string): EtEmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
 
-    el.addEventListener('close-request', (function() {
-      el.remove();
+    el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
+      this.deleteEmbeddedViewer(el);
       this.focus();
-    }).bind(this));
+    });
 
-    el.addEventListener('type', (function(ev: CustomEvent) {
-      this._sendDataToPty(ev.detail);
-    }).bind(this));
+    el.addEventListener('type', (ev: CustomEvent) => {
+      this._sendDataToPtyEvent(ev.detail);
+    });
+
+    el.addEventListener(EtEmbeddedViewer.EVENT_FRAME_POP_OUT, (ev: CustomEvent) => {
+      this._embeddedViewerPopOutEvent(<EtEmbeddedViewer>ev.srcElement);
+      ev.stopPropagation();
+    });
 
     // el.addEventListener('copy-clipboard-request', (function(ev: CustomEvent) {
     //   var clipboard = gui.Clipboard.get();
     //   clipboard.set(ev.detail, 'text');
     // }).bind(this));
 // FIXME
-    // el.addEventListener('frame-pop-out', (ev: CustomEvent): void => {
-    //   this.events.emit('frame-pop-out', this, ev.detail);
-    // });
     
     el.setAttribute('command-line', commandLine);  // FIXME attr name
     el.setAttribute('tag', "" + this._getNextTag());
@@ -1002,6 +1010,13 @@ class EtTerminal extends HTMLElement {
     const event = new CustomEvent(EtTerminal.EVENT_UNKNOWN_KEY_DOWN, { detail: ev });
     this.dispatchEvent(event);
   }
+  
+  private _embeddedViewerPopOutEvent(viewerElement: EtEmbeddedViewer): void {
+    const event = new CustomEvent(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT,
+      { detail: { terminal: this, embeddedViewer: viewerElement} });
+    this.dispatchEvent(event);
+  }
+
   
   // git diff scroll speed test
   // --------------------------
