@@ -163,6 +163,10 @@ export function startUp(): void {
     doc.addEventListener('mousedown', (ev: MouseEvent) => {
       if (ev.which === 2) {
         webipc.clipboardReadRequest();
+        
+        // This is needed to stop the autoscroll blob from appearing on Windows.
+        ev.preventDefault();
+        ev.stopPropagation();
       }
     });
     mainWebUi.newTerminalTab(MainWebUi.POSITION_LEFT);
