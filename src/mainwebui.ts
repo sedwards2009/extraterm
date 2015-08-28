@@ -13,6 +13,7 @@ import path = require('path');
 import _ = require('lodash');
 import config = require('./config');
 import globalcss = require('./gui/globalcss');
+import he = require('he');
 
 type Config = config.Config;
 type SessionProfile = config.SessionProfile;
@@ -29,6 +30,12 @@ const ID_REST_DIV_SECONDARY = "rest_secondary";
 const ID_NEW_TAB_BUTTON_PRIMARY = "new_tab_primary";
 const ID_NEW_TAB_BUTTON_SECONDARY = "new_tab_secondary";
 const CLASS_SPLIT = "split";
+
+const TAB_HEADER_CONTAINER_CLASS = "tab_header_container";
+const TAB_HEADER_ICON_CLASS = "tab_header_icon";
+const TAB_HEADER_MIDDLE_CLASS = "tab_header_middle";
+const TAB_HEADER_CLOSE_CLASS = "tab_header_close";
+
 
 let registered = false;
 
@@ -66,6 +73,24 @@ class TabInfo {
     return "";
   }
   
+  htmlTitle(): string {
+    return he.escape(this.title());
+  }
+  
+  tabIcon(): string {
+    return null;
+  }
+  
+  updateTabTitle(): void {
+    const iconDiv = <HTMLDivElement> this.cbTab.querySelector(`DIV.${TAB_HEADER_ICON_CLASS}`);
+    const icon = this.tabIcon();
+    iconDiv.innerHTML = icon !== null ? '<i class="fa fa-' + icon + '"></i>' : "";
+    
+    const middleDiv = <HTMLDivElement> this.cbTab.querySelector(`DIV.${TAB_HEADER_MIDDLE_CLASS}`);
+    middleDiv.title = this.title();
+    middleDiv.innerHTML = this.htmlTitle();
+  }
+  
   focus(): void { }
   
   resize(): void { }
@@ -93,6 +118,10 @@ class TerminalTabInfo extends TabInfo {
   title(): string {
     return this.terminal.terminalTitle;
   }
+  
+  tabIcon(): string {
+    return "keyboard-o";
+  }  
   
   focus(): void {
     this.terminal.resizeToContainer();
@@ -366,15 +395,22 @@ class ExtratermMainWebUI extends HTMLElement {
     this._tabIdCounter++;
     const newCbTab = <CbTab> document.createElement(CbTab.TAG_NAME);
     newCbTab.setAttribute('id', "tab_id_"+newId);
-    newCbTab.innerHTML = "" + newId;
+    newCbTab.innerHTML =
+      `<div class="${TAB_HEADER_CONTAINER_CLASS}">` +
+        `<div class="${TAB_HEADER_ICON_CLASS}"></div>` +
+        `<div class="${TAB_HEADER_MIDDLE_CLASS}">${newId}</div>` +
+        `<div class="${TAB_HEADER_CLOSE_CLASS}">` +
+          `<button id="close_tag_id_${newId}"><i class="fa fa-times"></i></button>` +
+        `</div>` +
+      `</div>`;
     
-    const newDiv = document.createElement('div');
-    newDiv.classList.add('tab_content');
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('tab_content');
     
     tabInfo.id = newId;
     tabInfo.position = position;
     tabInfo.cbTab = newCbTab;
-    tabInfo.contentDiv = newDiv;
+    tabInfo.contentDiv = contentDiv;
     this._tabInfo.push(tabInfo);
     
     const tabWidget = <TabWidget> this._getById(
@@ -386,8 +422,13 @@ class ExtratermMainWebUI extends HTMLElement {
                         this._split === (position === TabPosition.LEFT) ? ID_REST_DIV_SECONDARY : ID_REST_DIV_PRIMARY);
     
     tabWidget.insertBefore(newCbTab, restDiv);
-    tabWidget.insertBefore(newDiv, restDiv);
+    tabWidget.insertBefore(contentDiv, restDiv);
     tabWidget.update();
+    
+    const closeTabButton = util.getShadowRoot(this).getElementById("close_tag_id_" + newId);
+    closeTabButton.addEventListener('click', (ev: MouseEvent): void => {
+      this.closeTab(tabInfo.id);
+    });
   }
   
   /**
@@ -430,7 +471,7 @@ class ExtratermMainWebUI extends HTMLElement {
 
     // Terminal title event
     newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (ev: CustomEvent): void => {
-      tabInfo.cbTab.innerText = ev.detail.title;
+      tabInfo.updateTabTitle();
       this._sendTitleEvent(ev.detail.title);
     });
     
@@ -701,6 +742,49 @@ class ExtratermMainWebUI extends HTMLElement {
       height: 100%;
       width: 100%;
     }
+    
+    DIV.${TAB_HEADER_CONTAINER_CLASS} {
+      display: flex;
+      width: 100%;
+    }
+    
+    DIV.${TAB_HEADER_ICON_CLASS} {
+      flex: 0 0 auto;
+    }
+    
+    DIV.${TAB_HEADER_MIDDLE_CLASS} {
+      flex: 1 1 auto;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    DIV.${TAB_HEADER_CLOSE_CLASS} {
+      flex: 0 0 auto;
+      align-self: center;
+    }
+    
+    DIV.${TAB_HEADER_CLOSE_CLASS} > BUTTON {
+      border: 0px;
+      padding: 0px;
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      margin: 2px;
+      background-color: transparent;
+      border-radius: 2px;
+      margin-top: 3px;
+    }
+    
+    DIV.${TAB_HEADER_CLOSE_CLASS} > BUTTON > I {
+      position: relative;
+      top: -1px;
+    }    
+    
+    DIV.${TAB_HEADER_CLOSE_CLASS}:hover > BUTTON {
+      background-color: #ff5454;
+      color: #ffffff;
+    }
+    
     </style>
     <div id="${ID_TOP}">` +
         `<div id="${ID_PANE_LEFT}">` +
