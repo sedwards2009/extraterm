@@ -8,6 +8,7 @@ import menuitem = require('./gui/menuitem');
 import checkboxmenuitem = require('./gui/checkboxmenuitem');
 import globalcss = require('./gui/globalcss');
 import util = require('./gui/util');
+import ViewerElement = require('./viewerelement');
 
 contextmenu.init();
 menuitem.init();
@@ -51,6 +52,22 @@ class EtEmbeddedViewer extends HTMLElement {
       globalcss.init();
       window.document.registerElement(EtEmbeddedViewer.TAG_NAME, {prototype: EtEmbeddedViewer.prototype});
       registered = true;
+    }
+  }
+  
+  set viewerElement(element: ViewerElement) {
+    this.innerHTML = "";
+    
+    if (element !== null) {
+      this.appendChild(element);
+    }
+  }
+  
+  get viewerElement(): ViewerElement {
+    if (this.firstElementChild !== null && this.firstElementChild instanceof ViewerElement) {
+      return <ViewerElement> this.firstElementChild;
+    } else {
+      return null;
     }
   }
   

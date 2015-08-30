@@ -7,6 +7,7 @@ import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
+import ViewerElement = require('./viewerelement');
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import path = require('path');
@@ -158,10 +159,17 @@ class TerminalTabInfo extends TabInfo {
  * A tab which contains a viewer.
  */
 class ViewerTabInfo extends TabInfo {
-  constructor() {
+  constructor(public viewerElement: ViewerElement) {
     super();
   }
   
+  tabIcon(): string {
+    return this.viewerElement.awesomeIcon;
+  }
+  
+  title(): string {
+    return this.viewerElement.title;
+  }
 }
 
 /**
@@ -530,13 +538,10 @@ class ExtratermMainWebUI extends HTMLElement {
   }
   
   openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer): void {
-    // const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
-    const tabInfo = new ViewerTabInfo();
+    const tabInfo = new ViewerTabInfo(embeddedViewer.viewerElement);
     this._addTab(position, tabInfo);
-    
-    util.nodeListToArray(embeddedViewer.childNodes).forEach( (node: Node): void => {
-      tabInfo.contentDiv.appendChild(node);
-    });
+    tabInfo.contentDiv.appendChild(embeddedViewer.viewerElement);
+    tabInfo.updateTabTitle();
   }
   
   /**

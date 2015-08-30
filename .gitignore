@@ -35,3 +35,6 @@ src/defaultsessionprofiles.js
 src/gui/globalcss.js
 src/embeddedviewer.js
 src/commandplaceholder.js
+src/viewerelement.js
+src/viewers/markdownviewer.js
+src/viewers/terminalviewer.js

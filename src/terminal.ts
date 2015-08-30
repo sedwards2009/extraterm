@@ -5,9 +5,11 @@
 import _  = require('lodash');
 import fs  = require('fs');
 import crypto = require('crypto');
+import ViewerElement = require("./viewerelement");
 import EtEmbeddedViewer = require('./embeddedviewer');
 import EtCommandPlaceHolder = require('./commandplaceholder');
-import markdownviewer = require('./gui/markdownviewer');
+import EtTerminalViewer = require('./viewers/terminalviewer');
+import EtMarkdownViewer = require('./viewers/markdownviewer');
 
 import domutils = require('./domutils');
 import termjs = require('./term');
@@ -84,7 +86,8 @@ class EtTerminal extends HTMLElement {
       scrollbar.init();
       EtEmbeddedViewer.init();
       EtCommandPlaceHolder.init();
-      markdownviewer.init();
+      EtTerminalViewer.init();
+      EtMarkdownViewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
       registered = true;
     }
@@ -115,7 +118,7 @@ class EtTerminal extends HTMLElement {
   private _super_lineToHTML: (line: any[]) => string;
   
   private _tagCounter: number;
-  
+  private _themeCssPath: string;
   private _mainStyleLoaded: boolean;
   private _themeStyleLoaded: boolean;
   private _resizePollHandle: util.LaterHandle;
@@ -136,6 +139,7 @@ class EtTerminal extends HTMLElement {
     this._noFrameCommands = [];
     this._title = "New Tab";
     this._tagCounter = 0;    
+    this._themeCssPath = null;
     this._mainStyleLoaded = false;
     this._themeStyleLoaded = false;
     this._resizePollHandle = null;
@@ -239,6 +243,7 @@ class EtTerminal extends HTMLElement {
   }
   
   set themeCssPath(path: string) {
+    this._themeCssPath = path;
     const themeCss = fs.readFileSync(path, {encoding: 'utf8'});
     const themeTag = <HTMLStyleElement> util.getShadowId(this, ID_THEME_STYLE);
     themeTag.innerHTML = globalcss.stripFontFaces(themeCss);
@@ -801,47 +806,60 @@ class EtTerminal extends HTMLElement {
   }
   
   private _handleApplicationModeBracketEnd(): void {
+    this._closeLastEmbeddedViewer(this._htmlData);    
+  }
+ 
+  private _closeLastEmbeddedViewer(returnCode: string): void {
     const startElement = this._term.element.querySelectorAll(
                           EtEmbeddedViewer.TAG_NAME + ":not([return-code]), " + EtCommandPlaceHolder.TAG_NAME);
 
     if (startElement.length !== 0) {
-
-      this.preserveScroll(function() {
-        
-        const returnCode = this._htmlData;
-        let viewerElement = <HTMLElement>startElement[startElement.length-1];
-        if (viewerElement instanceof EtCommandPlaceHolder) {
-          // There is a place holder and not an embedded viewer.
-          if (returnCode === "0") {
-            // The command returned successful, just remove the place holder and that is it.
-            viewerElement.parentNode.removeChild(viewerElement);
-            return;
-          } else {
-            // The command went wrong. Replace the place holder with a real viewer
-            // element and pretend that we had done this when the command started running.
-            const newViewerElement = this._createEmbeddedViewerElement(viewerElement.getAttribute("command-line"));
-            viewerElement.parentNode.replaceChild(newViewerElement, viewerElement);
-            viewerElement = newViewerElement;
-          }
+      let embeddedSomethingElement = <HTMLElement>startElement[startElement.length-1];
+      let embeddedViewerElement: EtEmbeddedViewer = null;
+      if (embeddedSomethingElement instanceof EtCommandPlaceHolder) {
+        // There is a place holder and not an embedded viewer.
+        if (returnCode === "0") {
+          // The command returned successful, just remove the place holder and that is it.
+          embeddedSomethingElement.parentNode.removeChild(embeddedSomethingElement);
+          return;
+        } else {
+          // The command went wrong. Replace the place holder with a real viewer
+          // element and pretend that we had done this when the command started running.
+          const newViewerElement = this._createEmbeddedViewerElement(embeddedSomethingElement.getAttribute("command-line"));
+          embeddedSomethingElement.parentNode.replaceChild(newViewerElement, embeddedSomethingElement);
+          embeddedViewerElement = newViewerElement;
         }
-        
-        this._term.moveRowsToScrollback();        
-        let node = viewerElement.nextSibling;
+      } else {
+        embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
+      }
+      
+      this._term.moveRowsToScrollback();        
+      let node = embeddedViewerElement.nextSibling;
 
-        // Collect the DIVs in the scrollback from the EtEmbeddedViewer up to the end of the scrollback.
-        const nodelist: Node[] = [];
-        while (node !== null) {
-          if (node.nodeName !== "DIV" || ! (<HTMLElement> node).classList.contains("terminal-active")) {
-            nodelist.push(node);
-          }
-          node = node.nextSibling;
+      // Collect the DIVs in the scrollback from the EtEmbeddedViewer up to the end of the scrollback.
+      const nodelist: Node[] = [];
+      while (node !== null) {
+        if (node.nodeName !== "DIV" || ! (<HTMLElement> node).classList.contains("terminal-active")) {
+          nodelist.push(node);
         }
-        nodelist.forEach(function(node) {
-          viewerElement.appendChild(node);
-        });
-        viewerElement.setAttribute('return-code', returnCode);
-        viewerElement.className = "extraterm_output";
+        node = node.nextSibling;
+      }
+      
+      // Create a terminal viewer and fill it with the row DIVs.
+      const terminalViewerElement = <EtTerminalViewer> this._getWindow().document.createElement(EtTerminalViewer.TAG_NAME);
+      terminalViewerElement.themeCssPath = this._themeCssPath;
+      terminalViewerElement.returnCode = returnCode;
+      terminalViewerElement.commandLine = embeddedViewerElement.getAttribute("command-line");
+      
+      // Move the row DIVs into their new home.
+      nodelist.forEach(function(node) {
+        terminalViewerElement.appendChild(node);
       });
+      // Hang the terminal viewer under the Embedded viewer.
+      embeddedViewerElement.appendChild(terminalViewerElement);
+      
+      embeddedViewerElement.setAttribute('return-code', returnCode);
+      embeddedViewerElement.className = "extraterm_output";
     }
   }
 
@@ -928,16 +946,6 @@ class EtTerminal extends HTMLElement {
     webipc.clipboardReadRequest();
   }
   
-// FIXME delete this.
-  preserveScroll(task:()=>void): void {
-    const scrollatbottom = this._term.isScrollAtBottom();
-    task.call(this);
-    if (scrollatbottom) {
-      // Scroll the terminal down to the bottom.
-      this._term.scrollToBottom();
-    }
-  }
-
   /**
    * Handle a click inside the terminal.
    * 
@@ -1081,16 +1089,27 @@ class EtTerminal extends HTMLElement {
     }
   }
 
-  _handleShowMimeType(mimeType: string, mimeData: string): void {
+  private _handleShowMimeType(mimeType: string, mimeData: string): void {
+    const mimeViewerElement = this._createMimeViewer(mimeType, mimeData);
+    if (mimeViewerElement !== null) {
+      this._closeLastEmbeddedViewer("0");
+      const viewerElement = this._createEmbeddedViewerElement("viewer");
+      viewerElement.viewerElement = mimeViewerElement;
+      this._term.appendElement(viewerElement);
+    }
+  }
+
+  private _createMimeViewer(mimeType: string, mimeData: string): ViewerElement {
     if (mimeType === "text/markdown") {
       const win = this._getWindow();
-      const el = win.document.createElement(markdownviewer.TAG_NAME);
+      const markdownViewerElement = <EtMarkdownViewer> win.document.createElement(EtMarkdownViewer.TAG_NAME);
       const decodedMimeData = window.atob(mimeData);
-      el.appendChild(win.document.createTextNode(decodedMimeData));
-      this._term.appendElement(el);
+      markdownViewerElement.appendChild(win.document.createTextNode(decodedMimeData));
+      return markdownViewerElement;
     } else {
       log("Unknown mime type: " + mimeType);
-    }    
+      return null;
+    }
   }
 
   /**

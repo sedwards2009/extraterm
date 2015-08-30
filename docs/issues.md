@@ -134,3 +134,18 @@ A keyboard focussed way of quickly selecting text is needed.
 Feature: Ability to snapshot the current active screen and put it in a new tab
 ==============================================================================
 Some times it would be useful to take a 'photo' of the contents of the current terminal screen and put it into a tab for later reference.
+
+
+TODO: Make attribute vs JS property situation consistent in elements
+====================================================================
+
+
+TODO: Make the Java style setters/getters vs properties situation consistent
+============================================================================
+There is now a mix of setTitle() and getTitle() or title() vs properties with field style access. Device a policy and enforce it.
+
+
+Feature: Integrate the user's pager/viewer (i.e. 'less') with Extraterm
+=================================================================
+It would be nice if the functions of viewer and pager could be done by Extraterm, unlike 'less' the whole file could be available and searchable etc after the pager program has exited control has returned to the shell.
+

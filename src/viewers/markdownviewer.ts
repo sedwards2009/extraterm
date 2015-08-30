@@ -3,7 +3,8 @@
  */
 
 "use strict";
-import util = require("./util");
+import ViewerElement = require("../viewerelement");
+import util = require("../gui/util");
 import markdownMod = require('markdown');
 const markdown = markdownMod.markdown;
 
@@ -17,15 +18,19 @@ const ENCODING_BASE64 = "base64";
 
 let registered = false;
 
-class CbMarkdownViewer extends HTMLElement {
+class EtMarkdownViewer extends ViewerElement {
   
   static TAG_NAME = "cb-markdown-viewer";
 
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(CbMarkdownViewer.TAG_NAME, {prototype: CbMarkdownViewer.prototype});
+      window.document.registerElement(EtMarkdownViewer.TAG_NAME, {prototype: EtMarkdownViewer.prototype});
       registered = true;
     }
+  }
+
+  get awesomeIcon(): string {
+    return "file-text-o";
   }
 
   /**
@@ -75,4 +80,4 @@ class CbMarkdownViewer extends HTMLElement {
   }
 }
 
-export = CbMarkdownViewer;
+export = EtMarkdownViewer;
