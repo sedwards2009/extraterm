@@ -7,7 +7,7 @@
 .terminal {
     font-family: "DejaVu Sans Mono";
     font-size: 13px;
-    color: #f0f0f0;
+    color: rgb(178, 178, 178);
     background: #000;
 }
 
