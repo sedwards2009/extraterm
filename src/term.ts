@@ -1020,7 +1020,7 @@ export class Terminal {
         if (pos !== null) {
           this.sendMouseButtonSequence(pos, 3); // release button
         }
-        return cancel(ev);
+        return cancelEvent(ev);
       }
 
       // motion example of a left click:
@@ -1048,7 +1048,7 @@ export class Terminal {
       
       const handleMouseLeave = (ev: MouseEvent) => {
         removeEventHandlers();
-        return cancel(ev);
+        return cancelEvent(ev);
       };
       
       const handleMouseUp = (ev: MouseEvent) => {
@@ -1062,7 +1062,7 @@ export class Terminal {
         }
         
         removeEventHandlers();
-        return cancel(ev);
+        return cancelEvent(ev);
       };
       
       removeEventHandlers = () => {
@@ -1086,7 +1086,7 @@ export class Terminal {
         on(el, 'mouseup', handleMouseUp);
       }
 
-      return cancel(ev);
+      return cancelEvent(ev);
     });
 
     //if (self.normalMouse) {
@@ -1110,7 +1110,7 @@ export class Terminal {
       if (pos !== null) {
         this.sendMouseButtonSequence(pos, button);
       }
-      return cancel(ev);
+      return cancelEvent(ev);
     });
 
     // allow mousewheel scrolling in
@@ -1144,7 +1144,7 @@ export class Terminal {
       } else {
         this.scrollDisp((<any>ev).wheelDeltaY > 0 ? -5 : 5);
       }
-      return cancel(ev);
+      return cancelEvent(ev);
     });
   }
 
@@ -2973,7 +2973,7 @@ export class Terminal {
 
   // Key Resources:
   // https://developer.mozilla.org/en-US/docs/DOM/KeyboardEvent
-  keyDown(ev: KeyboardEvent): boolean {
+  keyDown(ev: KeyboardEvent): void {
     let key: string = null;
     let newScrollPosition: number;
     
@@ -3046,7 +3046,8 @@ export class Terminal {
         if (ev.ctrlKey) {
           if (ev.shiftKey) {
             this.scrollDisp(-1);
-            return cancel(ev);
+            cancelEvent(ev);
+            return;
           } else {
             key = "\x1b[1;5A";
           }
@@ -3063,7 +3064,8 @@ export class Terminal {
         if (ev.ctrlKey) {
           if (ev.shiftKey) {
             this.scrollDisp(1);
-            return cancel(ev);
+            cancelEvent(ev);
+            return;
           } else {
             key = "\x1b[1;5B";
           }
@@ -3107,7 +3109,8 @@ export class Terminal {
             this.element.scrollTop = newScrollPosition;
             this.emit('manual-scroll', { position: newScrollPosition, isBottom: this.isScrollAtBottom() });
           }
-          return cancel(ev);
+          cancelEvent(ev);
+          return;
         } else {
           key = '\x1b[5~';
         }
@@ -3125,7 +3128,8 @@ export class Terminal {
             this.element.scrollTop = newScrollPosition;
             this.emit('manual-scroll', { position: newScrollPosition, isBottom: this.isScrollAtBottom() });
           }
-          return cancel(ev);
+          cancelEvent(ev);
+          return;
         } else {
           key = '\x1b[6~';
         }
@@ -3222,23 +3226,22 @@ export class Terminal {
             key = '\x1b' + (ev.keyCode - 48);
           }
         } else {
-          return true;
+          return;
         }
         break;
     }
 
     if (key === null) {
-      this.emit('unknown-keydown', ev);
-      return cancel(ev);
+      return;
     }
 
-    this.emit('keydown', ev);
-    this.emit('key', key, ev);
-
+    this.scrollToBottom();
+    
     this.showCursor();
     this.handler(key);
 
-    return cancel(ev);
+    cancelEvent(ev);
+    return;
   }
 
   setgLevel(g: number): void {
@@ -3253,11 +3256,8 @@ export class Terminal {
     }
   }
 
-  keyPress(ev: KeyboardEvent): boolean {
+  keyPress(ev: KeyboardEvent): void {
     let key;
-
-    cancel(ev);
-
     if (ev.charCode) {
       key = ev.charCode;
     } else if (ev.which === undefined) {
@@ -3265,22 +3265,20 @@ export class Terminal {
     } else if (ev.which !== 0 && ev.charCode !== 0) {
       key = ev.which;
     } else {
-      return false;
+      return;
     }
 
     if (!key || ev.ctrlKey || ev.altKey || ev.metaKey) {
-      return false;
+      return;
     }
 
     key = String.fromCharCode(key);
 
-    this.emit('keypress', key, ev);
-    this.emit('key', key, ev);
-
     this.showCursor();
     this.handler(key);
-
-    return false;
+    
+    cancelEvent(ev);
+    return;
   }
 
   send(data): void {
@@ -5440,7 +5438,7 @@ function off(el: EventTarget, type: string, handler: EventListener, capture = fa
   el.removeEventListener(type, handler, capture || false);
 }
 
-function cancel(ev) {
+function cancelEvent(ev) {
   if (ev.preventDefault) ev.preventDefault();
   ev.returnValue = false;
   if (ev.stopPropagation) ev.stopPropagation();

@@ -74,8 +74,6 @@ class EtTerminal extends HTMLElement {
   
   static EVENT_TITLE = "title";
   
-  static EVENT_UNKNOWN_KEY_DOWN = "unknown-key-down";
-  
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
   
   /**
@@ -193,8 +191,7 @@ class EtTerminal extends HTMLElement {
     
     this._getWindow().addEventListener('resize', this._handleResize);
     
-    this._term.on('key', this._handleKeyDown.bind(this));
-    this._term.on('unknown-keydown', this._handleUnknownKeyDown.bind(this));
+    this._termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
     this._term.on('manual-scroll', this._handleManualScroll.bind(this));
     
     // Application mode handlers    
@@ -497,8 +494,7 @@ class EtTerminal extends HTMLElement {
     this._autoscroll = el.scrollTop === el.scrollHeight - el.clientHeight;
     this._scrollbar.position = el.scrollTop;
   }
-  
-  
+
   /**
    * Handler for window title change events from the pty.
    * 
@@ -539,33 +535,23 @@ class EtTerminal extends HTMLElement {
       this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
     }
   }
-  
-  _handleKeyDown(key: string, ev: KeyboardEvent): void {
-    if (key !== null) {
-      this._term.scrollToBottom();
-    }
-  }
-  
+    
   /**
    * Handle an unknown key down event from the term.
    */
-  private _handleUnknownKeyDown(ev: KeyboardEvent): boolean {
-    // this.events.emit('unknown-keydown', this, ev);
+  private _handleKeyDown(ev: KeyboardEvent): void {
     if (ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey) {
       // Ctrl+Shift+C
       this.copyToClipboard();
-      return false;
+      ev.stopPropagation();
       
     } else if (ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {
       // Ctrl+Shift+V
       this._pasteFromClipboard();
-      return false;  
+      ev.stopPropagation();
     }
-    
-    this._sendUnknownKeyDown(ev);
-    return false;
   }
-
+  
   _handleKeyPressTerminal(ev: KeyboardEvent): void {
 //    console.log("._handleKeyPressTerminal: ", ev.keyCode);
     this._term.keyPress(ev);
@@ -628,7 +614,6 @@ class EtTerminal extends HTMLElement {
         return;
       }
     }
-
 
     this._term.keyDown(ev);
   }
@@ -1012,11 +997,6 @@ class EtTerminal extends HTMLElement {
   private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
     this.dispatchEvent(event);    
-  }
-  
-  private _sendUnknownKeyDown(ev: KeyboardEvent): void {
-    const event = new CustomEvent(EtTerminal.EVENT_UNKNOWN_KEY_DOWN, { detail: ev });
-    this.dispatchEvent(event);
   }
   
   private _embeddedViewerPopOutEvent(viewerElement: EtEmbeddedViewer): void {

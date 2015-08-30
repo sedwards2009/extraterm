@@ -488,29 +488,31 @@ class ExtratermMainWebUI extends HTMLElement {
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
     
-    // Unknown key down event
-    newTerminal.addEventListener(EtTerminal.EVENT_UNKNOWN_KEY_DOWN, (ev: CustomEvent): void => {
-      const keyboardEvent = <KeyboardEvent> ev.detail;
-      if (keyboardEvent.keyCode === 37 && keyboardEvent.shiftKey) {
+    // Key press event
+    newTerminal.addEventListener('keydown', (ev: KeyboardEvent): void => {
+      if (ev.keyCode === 37 && ev.shiftKey) {
         // left-arrow
         this._shiftTab(tabInfo.position, -1);
     
-      } else if (keyboardEvent.keyCode === 39 && keyboardEvent.shiftKey) {
+      } else if (ev.keyCode === 39 && ev.shiftKey) {
         // right-arrow
         this._shiftTab(tabInfo.position, 1);
     
-      } else if (keyboardEvent.keyCode === 84 && keyboardEvent.ctrlKey && keyboardEvent.shiftKey) {
+      } else if (ev.keyCode === 84 && ev.ctrlKey && ev.shiftKey) {
         // Ctrl+Shift+T - New tab.
         this.focusTab(this.newTerminalTab(tabInfo.position));
         
-      } else if (keyboardEvent.keyCode === 87 && keyboardEvent.ctrlKey && keyboardEvent.shiftKey) {
+      } else if (ev.keyCode === 87 && ev.ctrlKey && ev.shiftKey) {
         // Ctrl+Shift+W - Close tab.
         this.closeTab(tabInfo.id);
 
-      } else if (keyboardEvent.keyCode === 9 && keyboardEvent.ctrlKey) {
+      } else if (ev.keyCode === 9 && ev.ctrlKey) {
         // Ctrl+Tab
         this.focusOtherPane();
-      }      
+      } else {
+        return;
+      }
+      ev.stopPropagation();
     });
 
     if (this._config !== null) {
@@ -677,11 +679,6 @@ class ExtratermMainWebUI extends HTMLElement {
 
   private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_TITLE, { detail: {title: title} });
-    this.dispatchEvent(event);
-  }
-
-  private _sendUnknownKeyDown(ev: KeyboardEvent): void {
-    const event = new CustomEvent(ExtratermMainWebUI.EVENT_UNKNOWN_KEY_DOWN, { detail: ev });
     this.dispatchEvent(event);
   }
 

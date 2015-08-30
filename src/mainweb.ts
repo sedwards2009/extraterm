@@ -114,14 +114,14 @@ export function startUp(): void {
       window.document.title = "Extraterm - " + ev.detail.title;
     });
 
-    mainWebUi.addEventListener(EtTerminal.EVENT_UNKNOWN_KEY_DOWN, (e: CustomEvent) => {
-      const ev = <KeyboardEvent> e.detail;
+    mainWebUi.addEventListener('keydown', (ev: KeyboardEvent) => {
       if (ev.keyCode === 83 && ev.ctrlKey && ev.shiftKey) {
         // Ctrl+Shift+S - Split/unsplit
         const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
         const checked = ! splitMenu.checked;
         splitMenu.checked = checked;
         mainWebUi.split = checked;
+        ev.stopPropagation();
       }
     });
         
