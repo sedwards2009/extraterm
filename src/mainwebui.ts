@@ -534,7 +534,8 @@ class ExtratermMainWebUI extends HTMLElement {
         tabInfo.ptyId = msg.id;
         webipc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
       });
-    
+
+    tabInfo.updateTabTitle();
     this._sendTabOpenedEvent();
     return tabInfo.id;
   }
@@ -544,6 +545,7 @@ class ExtratermMainWebUI extends HTMLElement {
     this._addTab(position, tabInfo);
     tabInfo.contentDiv.appendChild(embeddedViewer.viewerElement);
     tabInfo.updateTabTitle();
+    this._sendTabOpenedEvent();
   }
   
   /**
