@@ -38,6 +38,10 @@ class ViewerElement extends HTMLElement {
   get awesomeIcon(): string {
     return "desktop";
   }
+  
+  getSelectionText(): string {
+    return null;
+  }
 }
 
 export = ViewerElement;

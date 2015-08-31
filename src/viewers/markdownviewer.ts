@@ -32,6 +32,17 @@ class EtMarkdownViewer extends ViewerElement {
   get awesomeIcon(): string {
     return "file-text-o";
   }
+  
+  getSelectionText(): string {
+    const root = util.getShadowRoot(this);
+    const selection = root.getSelection();
+    if (selection !== undefined && selection !== null && selection.rangeCount !== 0 &&
+        ! selection.getRangeAt(0).collapsed) {
+      return selection.toString();
+    } else {
+      return null;
+    }
+  }
 
   /**
    * 

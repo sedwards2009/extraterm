@@ -1,3 +1,6 @@
+
+import util = require('./gui/util');
+
 /**
  * Convert an array-like object to a real array.
  * 
@@ -102,4 +105,75 @@ export function insertNodeAt(rootNode: Node, offset: number, newNode: Node): voi
   } else {
     rootNode.insertBefore(newNode, rootNode.childNodes[offset]);
   }
+}
+
+/**
+ * Extracts formatted plain text from a document range.
+ *
+ * @param range the range to scan and extract the text from.
+ * @return the formatted plain text representation.
+ */
+export function extractTextFromRange(range: Range): string {
+  const nbspRegexp = /\u00a0/g;
+  
+  const startContainer = range.startContainer;
+  const endContainer = range.endContainer;
+  let result = "";
+  
+  // Use case where the start and end of the range are inside the same text node.
+  if (startContainer === range.endContainer) {
+    if (startContainer.nodeType === Node.TEXT_NODE) {
+      const textNode = <Text> startContainer;
+      return textNode.data.slice(range.startOffset, range.endOffset).replace(nbspRegexp, " ");
+    }
+  }
+  
+  let currentNode: Node;
+  if (startContainer.nodeType === Node.TEXT_NODE) {
+    result += (<Text> startContainer).data.slice(range.startOffset).replace(nbspRegexp, " ");
+    currentNode = nextDocumentOrderNode(startContainer);
+  } else {
+    currentNode = startContainer.childNodes[range.startOffset];
+  }
+
+  const endNode = endContainer.nodeType === Node.TEXT_NODE ? endContainer : endContainer.childNodes[range.endOffset];
+  
+  while (currentNode !== endNode && currentNode !== null) {
+    if (currentNode.nodeType === Node.TEXT_NODE) {
+      result += (<Text> currentNode).data.replace(nbspRegexp, " ");
+      
+    } else if (currentNode.nodeName === "DIV") {
+      const divElement = <HTMLDivElement> currentNode;
+      if (divElement.classList.contains('terminal-active') || divElement.classList.contains('terminal-scrollback')) {
+        result = util.trimRight(result) + "\n";
+      }
+    }
+    
+    currentNode = nextDocumentOrderNode(currentNode);
+  }
+  
+  if (endContainer.nodeType === Node.TEXT_NODE) {
+    result += (<Text> endContainer).data.slice(0, range.endOffset).replace(nbspRegexp, " ");
+  }
+  
+  return result;
+}
+
+function nextDocumentOrderNode(currentNode: Node): Node {
+  if (currentNode.childNodes.length !== 0) {
+    return currentNode.childNodes[0];
+  }
+  
+  if (currentNode.nextSibling !== null) {
+    return currentNode.nextSibling;
+  }
+  
+  return nextDocumentOrderNodeUp(currentNode.parentNode);
+}
+
+function nextDocumentOrderNodeUp(currentNode: Node): Node {
+  if (currentNode.nextSibling !== null) {
+    return currentNode.nextSibling;
+  }
+  return nextDocumentOrderNodeUp(currentNode.parentNode);
 }

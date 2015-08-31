@@ -506,6 +506,11 @@ class EtEmbeddedViewer extends HTMLElement {
     this._emitManualScroll();
   }
   
+  getSelectionText(): string {
+    const viewerElement = this.viewerElement;
+    return viewerElement === null ? null : viewerElement.getSelectionText();
+  }
+
   /**
    * 
    */

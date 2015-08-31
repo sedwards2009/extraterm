@@ -5,6 +5,7 @@
 "use strict";
 import ViewerElement = require("../viewerelement");
 import util = require("../gui/util");
+import domutils = require("../domutils");
 
 const ID = "CbTerminalViewerTemplate";
 const ID_CONTAINER = "container";
@@ -54,6 +55,15 @@ class EtTerminalViewer extends ViewerElement {
   
   get awesomeIcon(): string {
     return "terminal";
+  }
+  
+  getSelectionText(): string {
+    const selection = util.getShadowRoot(this).getSelection();
+    if (selection.rangeCount !== 0 && ! selection.getRangeAt(0).collapsed) {
+      return domutils.extractTextFromRange(selection.getRangeAt(0));
+    } else {
+      return null;
+    }
   }
 
   createdCallback(): void {
