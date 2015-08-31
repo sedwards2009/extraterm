@@ -834,6 +834,11 @@ export class Terminal {
     return this.lines[row];
   }
 
+  // Fetch the LineCell at row 'row' if it exists, else return null.
+  private _tryGetRow(row: number): LineCell[] {
+    return row >= this.lines.length ? null : this.lines[row];
+  }
+
   getDimensions() {
     return {
       rows: this.rows,
@@ -3508,7 +3513,10 @@ export class Terminal {
   }
 
   fillRight(x: number, y: number, ch: string = ' '): void {
-    const line = this._getRow(this.ybase + y);
+    const line = this._tryGetRow(this.ybase + y);
+    if (line === null) {
+      return;
+    }
     const cell: LineCell = [this.eraseAttr(), ch]; // xterm
 
     for (; x < this.cols; x++) {
