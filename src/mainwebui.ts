@@ -170,6 +170,10 @@ class ViewerTabInfo extends TabInfo {
   title(): string {
     return this.viewerElement.title;
   }
+  
+  focus(): void {
+    this.viewerElement.focus();
+  }
 }
 
 /**
@@ -437,6 +441,34 @@ class ExtratermMainWebUI extends HTMLElement {
     closeTabButton.addEventListener('click', (ev: MouseEvent): void => {
       this.closeTab(tabInfo.id);
     });
+    
+    // Key press event
+    tabInfo.contentDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
+      if (ev.keyCode === 37 && ev.shiftKey) {
+        // left-arrow
+        this._shiftTab(tabInfo.position, -1);
+    
+      } else if (ev.keyCode === 39 && ev.shiftKey) {
+        // right-arrow
+        this._shiftTab(tabInfo.position, 1);
+    
+      } else if (ev.keyCode === 84 && ev.ctrlKey && ev.shiftKey) {
+        // Ctrl+Shift+T - New tab.
+        this.focusTab(this.newTerminalTab(tabInfo.position));
+        
+      } else if (ev.keyCode === 87 && ev.ctrlKey && ev.shiftKey) {
+        // Ctrl+Shift+W - Close tab.
+        this.closeTab(tabInfo.id);
+
+      } else if (ev.keyCode === 9 && ev.ctrlKey) {
+        // Ctrl+Tab
+        this.focusOtherPane();
+      } else {
+        return;
+      }
+      ev.stopPropagation();
+    });
+    
   }
   
   /**
@@ -487,33 +519,6 @@ class ExtratermMainWebUI extends HTMLElement {
       this.openViewerTab(tabInfo.position, ev.detail.embeddedViewer);
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
-    
-    // Key press event
-    newTerminal.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      if (ev.keyCode === 37 && ev.shiftKey) {
-        // left-arrow
-        this._shiftTab(tabInfo.position, -1);
-    
-      } else if (ev.keyCode === 39 && ev.shiftKey) {
-        // right-arrow
-        this._shiftTab(tabInfo.position, 1);
-    
-      } else if (ev.keyCode === 84 && ev.ctrlKey && ev.shiftKey) {
-        // Ctrl+Shift+T - New tab.
-        this.focusTab(this.newTerminalTab(tabInfo.position));
-        
-      } else if (ev.keyCode === 87 && ev.ctrlKey && ev.shiftKey) {
-        // Ctrl+Shift+W - Close tab.
-        this.closeTab(tabInfo.id);
-
-      } else if (ev.keyCode === 9 && ev.ctrlKey) {
-        // Ctrl+Tab
-        this.focusOtherPane();
-      } else {
-        return;
-      }
-      ev.stopPropagation();
-    });
 
     if (this._config !== null) {
       this._setConfigOnTerminal(newTerminal, this._config);
@@ -544,6 +549,13 @@ class ExtratermMainWebUI extends HTMLElement {
     const tabInfo = new ViewerTabInfo(embeddedViewer.viewerElement);
     this._addTab(position, tabInfo);
     tabInfo.contentDiv.appendChild(embeddedViewer.viewerElement);
+
+    embeddedViewer.viewerElement.addEventListener('focus', (ev: FocusEvent) => {
+      this._tabInfo.forEach( tabInfo2 => {
+        tabInfo2.lastFocus = tabInfo2 === tabInfo;
+      });
+    });
+
     tabInfo.updateTabTitle();
     this._sendTabOpenedEvent();
   }
@@ -742,6 +754,12 @@ class ExtratermMainWebUI extends HTMLElement {
       height: 100%;
       width: 100%;
     }
+    
+    DIV.tab_content > * {
+      width: 100%;
+      height: 100%;
+    }
+    
     et-terminal {
       height: 100%;
       width: 100%;

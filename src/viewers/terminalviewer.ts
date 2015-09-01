@@ -66,6 +66,10 @@ class EtTerminalViewer extends ViewerElement {
     }
   }
 
+  focus(): void {
+    util.getShadowId(this, ID_CONTAINER).focus();
+  }
+
   createdCallback(): void {
     this._initProperties();
     
@@ -100,9 +104,14 @@ class EtTerminalViewer extends ViewerElement {
           width: 100%;
           overflow: auto;
         }
+        
+        #${ID_CONTAINER}:focus {
+          outline: 0px;
+        }
+        
         </style>
         <style id="${ID_THEME_STYLE}"></style>
-        <div id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>`;
+        <div tabindex='-1' id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>`;
 
       window.document.body.appendChild(template);
     }

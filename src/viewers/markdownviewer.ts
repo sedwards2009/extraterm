@@ -44,33 +44,22 @@ class EtMarkdownViewer extends ViewerElement {
     }
   }
 
-  /**
-   * 
-   */
-  private createClone(): Node {
-    let template = <HTMLTemplate>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<style id="${ID_MAIN_STYLE}">
-        :host {
-          display: block;
-          width: 100%;
-          white-space: normal;
-        }
-        </style>
-        <div id="${ID_CONTAINER}" class="markdown_viewer"></div>`;
-
-      window.document.body.appendChild(template);
-    }
-    
-    return window.document.importNode(template.content, true);
+  focus(): void {
+    util.getShadowId(this, ID_CONTAINER).focus();
   }
-
+  
   createdCallback(): void {
     const shadow = util.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
+    
+    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
+      console.log("markdown viewer keydown: ", ev);
+      if (ev.keyCode === 9 && ev.ctrlKey) {
+        ev.preventDefault();
+      }
+    });
   }
 
   attachedCallback(): void {
@@ -89,6 +78,38 @@ class EtMarkdownViewer extends ViewerElement {
     const markdownText = markdown.toHTML(text);
     container.innerHTML = markdownText;
   }
+  
+  /**
+   * 
+   */
+  private createClone(): Node {
+    let template = <HTMLTemplate>window.document.getElementById(ID);
+    if (template === null) {
+      template = <HTMLTemplate>window.document.createElement('template');
+      template.id = ID;
+      template.innerHTML = `<style id="${ID_MAIN_STYLE}">
+        :host {
+          display: block;
+          width: 100%;
+          white-space: normal;
+        }
+        
+        #${ID_CONTAINER} {
+          overflow: auto;
+          height: 100%;
+        }
+        #${ID_CONTAINER}:focus {
+          outline: 0px;
+        }
+        </style>
+        <div tabindex='-1' id="${ID_CONTAINER}" class="markdown_viewer"></div>`;
+
+      window.document.body.appendChild(template);
+    }
+    
+    return window.document.importNode(template.content, true);
+  }
+  
 }
 
 export = EtMarkdownViewer;
