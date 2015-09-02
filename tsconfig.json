@@ -23,7 +23,6 @@
     "files": [
         "./src/aboutdialog.ts",
         "./src/chrome_lib.es6.d.ts",
-        "./src/commandframe.ts",
         "./src/commandplaceholder.ts",
         "./src/config.ts",
         "./src/configuredialog.ts",
