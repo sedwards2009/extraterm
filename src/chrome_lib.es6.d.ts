@@ -1,4 +1,4 @@
-// Generated at Tue Jul 14 2015 22:18:38 GMT+0200 (CEST)
+// Generated at Wed Sep 02 2015 22:17:35 GMT+0200 (CEST)
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved. 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -10017,16 +10017,6 @@ interface KeyboardEvent extends UIEvent {
 
 }
 
-declare  var KeyboardEvent: {
-        prototype: KeyboardEvent;
-        new(): KeyboardEvent;
-        DOM_KEY_LOCATION_RIGHT: number;
-        DOM_KEY_LOCATION_STANDARD: number;
-        DOM_KEY_LOCATION_LEFT: number;
-        DOM_KEY_LOCATION_NUMPAD: number;
-        DOM_KEY_LOCATION_JOYSTICK: number;
-        DOM_KEY_LOCATION_MOBILE: number;
-};
 interface MessageEvent extends Event {
 
         source: Window;
@@ -19270,6 +19260,18 @@ declare var CustomEvent: {
   prototype: CustomEvent;
   new(type?: string, options?:CustomEventOptions): CustomEvent;
 };
+
+declare var KeyboardEvent: {
+   prototype: KeyboardEvent;
+   new(typeArg?: string, init?: KeyboardEvent): KeyboardEvent;
+   DOM_KEY_LOCATION_RIGHT: number;
+   DOM_KEY_LOCATION_STANDARD: number;
+   DOM_KEY_LOCATION_LEFT: number;
+   DOM_KEY_LOCATION_NUMPAD: number;
+   DOM_KEY_LOCATION_JOYSTICK: number;
+   DOM_KEY_LOCATION_MOBILE: number;
+};
+
 interface Console {
   timeStamp(label: string): void;
 }

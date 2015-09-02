@@ -56,6 +56,11 @@ class EtMarkdownViewer extends ViewerElement {
     util.getShadowId(this, ID_CONTAINER).focus();
   }
   
+  hasFocus(): boolean {
+    const root = util.getShadowRoot(this);
+    return root.activeElement !== null;
+  }
+  
   get focusable(): boolean {
     return this._focusable;
   }
@@ -75,8 +80,7 @@ class EtMarkdownViewer extends ViewerElement {
     
     const containerDiv = util.getShadowId(this, ID_CONTAINER);
     containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      console.log("markdown viewer keydown: ", ev);
-      if (ev.keyCode === 9 && ev.ctrlKey) {
+      if (ev.keyCode === 9 && ! ev.ctrlKey) {
         ev.preventDefault();
       }
     });

@@ -71,7 +71,12 @@ class EtTerminalViewer extends ViewerElement {
   focus(): void {
     util.getShadowId(this, ID_CONTAINER).focus();
   }
-  
+
+  hasFocus(): boolean {
+    const root = util.getShadowRoot(this);
+    return root.activeElement !== null;
+  }
+
   get focusable(): boolean {
     return this._focusable;
   }
@@ -89,6 +94,13 @@ class EtTerminalViewer extends ViewerElement {
     shadow.appendChild(clone);
 
     this._updateFocusable(this._focusable);
+
+    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
+      if (ev.keyCode === 9 && ! ev.ctrlKey) {
+        ev.preventDefault();
+      }
+    });
 
     this._mutationObserver = new MutationObserver( (mutations) => {
       this.pullInContents();

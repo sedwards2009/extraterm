@@ -32,6 +32,10 @@ class ViewerElement extends HTMLElement {
     return "ViewerElement";
   }
   
+  hasFocus(): boolean {
+    return false;
+  }
+  
   /**
    * Name of a Font Awesome icon to represent this viewer.
    */

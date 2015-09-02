@@ -174,6 +174,10 @@ class ViewerTabInfo extends TabInfo {
   focus(): void {
     this.viewerElement.focus();
   }
+  
+  hasFocus(): boolean {
+    return this.viewerElement.hasFocus();
+  }
 }
 
 /**
