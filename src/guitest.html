@@ -84,10 +84,10 @@
     HTMLElement_obj = HTMLElement;
       
     require(['immutable', 'markdown', 'gui/menuitem', 'gui/contextmenu', 'gui/dropdown', 'gui/checkboxmenuitem', 'gui/scrollbar',
-            'gui/stackedwidget', 'gui/tabwidget', 'gui/tab', 'gui/markdownviewer', 'commandframe', 'configuredialog',
+            'gui/stackedwidget', 'gui/tabwidget', 'gui/tab', 'gui/markdownviewer', 'configuredialog',
             'domReady'],
             function(im, markdown, menuitem, contextmenu, dropdown, checkboxmenuitem, scrollbar, stackedwidget, tabwidget, tab,
-              markdownviewer, commandframe, configuredialog) {
+              markdownviewer, configuredialog) {
 
         menuitem.init();
         contextmenu.init();
@@ -98,7 +98,6 @@
         tabwidget.init();
         tab.init();
         markdownviewer.init();
-        commandframe.init();
         configuredialog.init();
 
         document.getElementById("openmenu").addEventListener('click', function() {
@@ -242,37 +241,6 @@
         </cb-contextmenu>
     </cb-dropdown>
         
-</fieldset>
-    
-<fieldset><legend>Command frames</legend>
-<div class="fake_terminal">
-<div class="terminal">
-<et-commandframe command-line="python3 some_big_script.py" tag="3">
-    Some lines of output of a running process.
-</et-commandframe>
-</div>
-</div>
-
-<div class="fake_terminal">
-<div class="terminal">
-<et-commandframe command-line="python3 some_big_script.py" return-code="0" expand="true" tag="1">
-    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
-    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
-    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
-    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
-    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
-    <div>Some&nbsp;lines&nbsp;of&nbsp;successful&nbsp;output.</div>
-</et-commandframe>
-</div>
-</div>
-
-<div class="fake_terminal">
-<div class="terminal">
-<et-commandframe command-line="python3 some_big_script.py" return-code="1" tag="2">
-    Some lines of output which went wrong.
-</et-commandframe>
-</div>
-</div>
 </fieldset>
 
 <fieldset id="contextmenufieldset"><legend>Context Menu</legend>

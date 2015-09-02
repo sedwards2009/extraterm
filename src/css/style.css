@@ -259,7 +259,6 @@ span[data-extraterm-type='directory']:hover {
   outline-offset: -2px;
 }
 
-/*et-commandframe*/
 *:unresolved {
   background-color: red;
   border: 1px dashed red;

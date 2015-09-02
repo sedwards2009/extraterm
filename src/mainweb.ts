@@ -4,8 +4,6 @@
 import sourceMapSupport = require('source-map-support');
 import im = require('immutable');
 import _ = require('lodash');
-// import configuredialog = require('./configuredialog');
-// import commandframe = require('commandframe');
 import Messages = require('./windowmessages');
 import webipc = require('./webipc');
 import CbContextMenu = require('./gui/contextmenu');
@@ -31,9 +29,7 @@ sourceMapSupport.install();
  */
 
 let terminalIdCounter = 0;
-// let configureDialog: configuredialog = null;
 let configuration: Config = null;
-// let frameMapping: im.Map<string, commandframe> = im.Map<string, commandframe>();
 
 let themes: im.Map<string, Theme>;
 let mainWebUi: MainWebUi = null;
@@ -212,17 +208,6 @@ function handleClipboardRead(msg: Messages.Message): void {
 }
 
 //-------------------------------------------------------------------------
-
-/**
- * 
- */
-
-//function handleFramePopOut(term: terminal.Terminal, frameElement: HTMLElement): void {
-//  console.log("Got frame pop out message.");
-//  var frame = <commandframe>frameElement;
-//  frameMapping = frameMapping.set(frame.tag, frame);
-//  gui.Window.open("frame.html?frametag="+ frame.tag, { position: "mouse", width: 512, height: 512 });
-//}
 
 /**
  * 
