@@ -3280,6 +3280,7 @@ export class Terminal {
     key = String.fromCharCode(key);
 
     this.showCursor();
+    this.scrollToBottom();
     this.handler(key);
     
     cancelEvent(ev);
