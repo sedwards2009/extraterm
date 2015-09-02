@@ -516,7 +516,7 @@ class ExtratermMainWebUI extends HTMLElement {
     });
     
     newTerminal.addEventListener(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT, (ev: CustomEvent): void => {
-      this.openViewerTab(tabInfo.position, ev.detail.embeddedViewer);
+      this.focusTab(this.openViewerTab(tabInfo.position, ev.detail.embeddedViewer));
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
 
@@ -545,12 +545,14 @@ class ExtratermMainWebUI extends HTMLElement {
     return tabInfo.id;
   }
   
-  openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer): void {
-    const tabInfo = new ViewerTabInfo(embeddedViewer.viewerElement);
+  openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer): number {
+    const viewerElement = embeddedViewer.viewerElement;
+    const tabInfo = new ViewerTabInfo(viewerElement);
     this._addTab(position, tabInfo);
-    tabInfo.contentDiv.appendChild(embeddedViewer.viewerElement);
+    viewerElement.focusable = true;
+    tabInfo.contentDiv.appendChild(viewerElement);
 
-    embeddedViewer.viewerElement.addEventListener('focus', (ev: FocusEvent) => {
+    viewerElement.addEventListener('focus', (ev: FocusEvent) => {
       this._tabInfo.forEach( tabInfo2 => {
         tabInfo2.lastFocus = tabInfo2 === tabInfo;
       });
@@ -558,6 +560,7 @@ class ExtratermMainWebUI extends HTMLElement {
 
     tabInfo.updateTabTitle();
     this._sendTabOpenedEvent();
+    return tabInfo.id;
   }
   
   /**

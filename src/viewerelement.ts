@@ -42,6 +42,13 @@ class ViewerElement extends HTMLElement {
   getSelectionText(): string {
     return null;
   }
+  
+  get focusable(): boolean {
+    return false;
+  }
+  
+  set focusable(value: boolean) {
+  }
 }
 
 export = ViewerElement;

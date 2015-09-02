@@ -21,12 +21,20 @@ let registered = false;
 class EtMarkdownViewer extends ViewerElement {
   
   static TAG_NAME = "cb-markdown-viewer";
-
+  
   static init(): void {
     if (registered === false) {
       window.document.registerElement(EtMarkdownViewer.TAG_NAME, {prototype: EtMarkdownViewer.prototype});
       registered = true;
     }
+  }
+
+  //-----------------------------------------------------------------------
+  // WARNING: Fields like this will not be initialised automatically.
+  private _focusable: boolean;
+  
+  private _initProperties(): void {
+    this._focusable = false;
   }
 
   get awesomeIcon(): string {
@@ -48,10 +56,22 @@ class EtMarkdownViewer extends ViewerElement {
     util.getShadowId(this, ID_CONTAINER).focus();
   }
   
+  get focusable(): boolean {
+    return this._focusable;
+  }
+  
+  set focusable(value: boolean) {
+    this._focusable = value;
+    this._updateFocusable(value);
+  }
+  
   createdCallback(): void {
+    this._initProperties();
     const shadow = util.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
+    
+    this._updateFocusable(this._focusable);
     
     const containerDiv = util.getShadowId(this, ID_CONTAINER);
     containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
@@ -102,7 +122,7 @@ class EtMarkdownViewer extends ViewerElement {
           outline: 0px;
         }
         </style>
-        <div tabindex='-1' id="${ID_CONTAINER}" class="markdown_viewer"></div>`;
+        <div id="${ID_CONTAINER}" class="markdown_viewer"></div>`;
 
       window.document.body.appendChild(template);
     }
@@ -110,6 +130,10 @@ class EtMarkdownViewer extends ViewerElement {
     return window.document.importNode(template.content, true);
   }
   
+  private _updateFocusable(focusable: boolean): void {
+    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");
+  }
 }
 
 export = EtMarkdownViewer;

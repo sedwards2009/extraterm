@@ -30,11 +30,13 @@ class EtTerminalViewer extends ViewerElement {
   private _mutationObserver: MutationObserver;
   private _commandLine: string;
   private _returnCode: string;
+  private _focusable: boolean;
   
   private _initProperties(): void {
     this._mutationObserver = null;  
     this._commandLine = null;
     this._returnCode  =null;
+    this._focusable = false;
   }
   
   set commandLine(commandLine: string) {
@@ -69,6 +71,15 @@ class EtTerminalViewer extends ViewerElement {
   focus(): void {
     util.getShadowId(this, ID_CONTAINER).focus();
   }
+  
+  get focusable(): boolean {
+    return this._focusable;
+  }
+  
+  set focusable(value: boolean) {
+    this._focusable = value;
+    this._updateFocusable(value);
+  }
 
   createdCallback(): void {
     this._initProperties();
@@ -76,6 +87,9 @@ class EtTerminalViewer extends ViewerElement {
     const shadow = util.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
+
+    this._updateFocusable(this._focusable);
+
     this._mutationObserver = new MutationObserver( (mutations) => {
       this.pullInContents();
     });
@@ -111,7 +125,7 @@ class EtTerminalViewer extends ViewerElement {
         
         </style>
         <style id="${ID_THEME_STYLE}"></style>
-        <div tabindex='-1' id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>`;
+        <div id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>`;
 
       window.document.body.appendChild(template);
     }
@@ -131,6 +145,11 @@ class EtTerminalViewer extends ViewerElement {
      util.nodeListToArray(this.childNodes).forEach( (node) => {
        container.appendChild(node);
      });
+  }
+  
+  private _updateFocusable(focusable: boolean): void {
+    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");
   }
   
   // attachedCallback(): void {
