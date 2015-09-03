@@ -744,6 +744,16 @@ class ExtratermMainWebUI extends HTMLElement {
       display: none;
     }
     
+    #${ID_TOP} > #gap {
+      visibility: collapse;
+      flex: 0px 0 0;
+    }
+    
+    #${ID_TOP}.${CLASS_SPLIT} > #gap {
+      visibility: visible;
+      flex: 2px 0 0;
+    }
+    
     #${ID_TOP}.${CLASS_SPLIT} > #${ID_PANE_RIGHT} {
       flex: auto 1 1;
       display: block;
@@ -822,6 +832,7 @@ class ExtratermMainWebUI extends HTMLElement {
             `<content></content></div>` +
           `</cb-tabwidget>` +
         `</div>` +
+        `<div id="gap"></div>` +
         `<div id="${ID_PANE_RIGHT}">` +
           `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
             `<div id="${ID_REST_DIV_SECONDARY}"><button class="topcoat-icon-button--large--quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
