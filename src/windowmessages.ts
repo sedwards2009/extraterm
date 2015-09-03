@@ -3,7 +3,7 @@
  */
 
 import config = require('./config');
-import Theme = require('theme');
+import Theme = require('./theme');
 
 export const CHANNEL_NAME = "async-message";
 

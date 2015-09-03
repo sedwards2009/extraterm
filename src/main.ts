@@ -32,7 +32,7 @@ type Config = configInterfaces.Config;
 type SessionProfile = configInterfaces.SessionProfile;
 type SystemConfig = configInterfaces.SystemConfig;
 
-import Theme = require('theme');
+import Theme = require('./theme');
 
 sourceMapSupport.install();
 crashReporter.start(); // Report crashes
