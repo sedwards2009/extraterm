@@ -13,6 +13,7 @@ export interface Config {
   // List of regexp patterns which are used to identify command
   // lines which should not get a command frame around their output.
   noFrameCommands?: string[];
+  scrollbackLines?: number;
 
   sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
   expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.

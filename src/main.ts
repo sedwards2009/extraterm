@@ -79,7 +79,8 @@ function main(): void {
     startIpc();
     
     // Create the browser window.
-    mainWindow = new BrowserWindow({width: 1200, height: 600});
+    const options = {width: 1200, height: 600, "web-preferences": { "experimental-features": true }};
+    mainWindow = new BrowserWindow(options);
     mainWindow.setMenu(null);
 
     // Emitted when the window is closed.
@@ -338,9 +339,18 @@ function readConfigurationFile(): Config {
     const configJson = fs.readFileSync(filename, {encoding: "utf8"});
     config = <Config>JSON.parse(configJson);
   } else {
-    log("Couldn't find user configuration file at " + filename);    
+    log("Couldn't find user configuration file at " + filename);
   }
+  setConfigDefaults(config);
   return config;
+}
+
+function setConfigDefaults(config: Config): void {
+  config.systemConfig = config.systemConfig === undefined ? null : config.systemConfig;
+  config.expandedProfiles = config.expandedProfiles === undefined ? null : config.expandedProfiles;
+  config.blinkingCursor = config.blinkingCursor === undefined ? false : config.blinkingCursor;
+  config.noFrameCommands = config.noFrameCommands === undefined ? [] : config.noFrameCommands;
+  config.scrollbackLines = config.scrollbackLines === undefined ? 1000 : config.scrollbackLines;
 }
 
 /**

@@ -130,7 +130,7 @@ export function startUp(): void {
           break;
           
         case 'settings':
-          
+          mainWebUi.openSettingsTab();
           break;
           
         case 'developer_tools':

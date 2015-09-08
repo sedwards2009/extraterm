@@ -5,6 +5,7 @@ import util = require('./gui/util');
 import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
+import EtSettingsTab = require('./settingstab');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
@@ -100,6 +101,10 @@ class TabInfo {
     return false;
   }
   
+  setConfig(config: Config): void {
+    
+  }
+  
   destroy(): void { }
   
   copyToClipboard(): void { }
@@ -135,6 +140,12 @@ class TerminalTabInfo extends TabInfo {
   
   hasFocus(): boolean {
     return this.terminal.hasFocus();
+  }
+  
+  setConfig(config: Config): void {
+    this.terminal.blinkingCursor = config.blinkingCursor;
+    this.terminal.themeCssPath = path.join(config.themePath, "theme.css").replace(/\\/g, "/");
+    this.terminal.noFrameCommands = config.noFrameCommands !== undefined ? config.noFrameCommands : null;
   }
   
   destroy(): void {
@@ -180,6 +191,16 @@ class ViewerTabInfo extends TabInfo {
   }
 }
 
+class SettingsTabInfo extends ViewerTabInfo {
+  constructor(public viewerElement: EtSettingsTab) {
+    super(viewerElement);
+  }
+
+  setConfig(config: Config): void {
+    this.viewerElement.config = config;
+  }
+}
+
 /**
  * Top level UI component for a normal terminal window
  *
@@ -192,6 +213,7 @@ class ExtratermMainWebUI extends HTMLElement {
   static init(): void {
     TabWidget.init();
     EtTerminal.init();
+    EtSettingsTab.init();
     
     if (registered === false) {
       globalcss.init();
@@ -291,11 +313,7 @@ class ExtratermMainWebUI extends HTMLElement {
   
   set config(config: Config) {
     this._config = config;
-    this._tabInfo.forEach( (tabInfo) => {
-      if (tabInfo instanceof TerminalTabInfo) {
-        this._setConfigOnTerminal( (<TerminalTabInfo> tabInfo).terminal, config);
-      }
-    });    
+    this._tabInfo.forEach( (tabInfo) => tabInfo.setConfig(config));
   }
   
   get tabCount(): number {
@@ -524,9 +542,7 @@ class ExtratermMainWebUI extends HTMLElement {
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
 
-    if (this._config !== null) {
-      this._setConfigOnTerminal(newTerminal, this._config);
-    }
+    tabInfo.setConfig(this._config);
     
     const sessionProfile = this._config.expandedProfiles[0];
     const newEnv = _.cloneDeep(process.env);
@@ -552,8 +568,13 @@ class ExtratermMainWebUI extends HTMLElement {
   openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer): number {
     const viewerElement = embeddedViewer.viewerElement;
     const tabInfo = new ViewerTabInfo(viewerElement);
-    this._addTab(position, tabInfo);
+    return this._openViewerTabInfo(position, tabInfo, viewerElement);
+  }
+  
+  _openViewerTabInfo(position: TabPosition, tabInfo: ViewerTabInfo, viewerElement: ViewerElement): number {
     viewerElement.focusable = true;
+    tabInfo.setConfig(this._config);
+    this._addTab(position, tabInfo);
     tabInfo.contentDiv.appendChild(viewerElement);
 
     viewerElement.addEventListener('focus', (ev: FocusEvent) => {
@@ -565,6 +586,17 @@ class ExtratermMainWebUI extends HTMLElement {
     tabInfo.updateTabTitle();
     this._sendTabOpenedEvent();
     return tabInfo.id;
+  }
+  
+  openSettingsTab(): void {
+    const settingsTabs = this._tabInfo.filter( (tabInfo) => tabInfo instanceof SettingsTabInfo );
+    if (settingsTabs.length !== 0) {
+      this.focusTab(settingsTabs[0].id);
+    } else {
+      const viewerElement = <EtSettingsTab> document.createElement(EtSettingsTab.TAG_NAME);
+      const tabInfo = new SettingsTabInfo(viewerElement);
+      this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
+    }
   }
   
   /**
@@ -704,11 +736,11 @@ class ExtratermMainWebUI extends HTMLElement {
   }
 
   //-----------------------------------------------------------------------
-  private _setConfigOnTerminal(terminal: EtTerminal, config: Config): void {
-    terminal.blinkingCursor = config.blinkingCursor;
-    terminal.themeCssPath = path.join(config.themePath, "theme.css").replace(/\\/g, "/");
-    terminal.noFrameCommands = config.noFrameCommands !== undefined ? config.noFrameCommands : null;
-  }
+  // private _setConfigOnTerminal(terminal: EtTerminal, config: Config): void {
+  //   terminal.blinkingCursor = config.blinkingCursor;
+  //   terminal.themeCssPath = path.join(config.themePath, "theme.css").replace(/\\/g, "/");
+  //   terminal.noFrameCommands = config.noFrameCommands !== undefined ? config.noFrameCommands : null;
+  // }
     
   private _html(): string {
     return `

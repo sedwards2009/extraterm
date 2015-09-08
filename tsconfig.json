@@ -11,6 +11,7 @@
     },
     "filesGlob": [
         "./src/*.ts",
+        "./src/*.tsx",
         "./src/gui/*.ts",
         "./src/viewers/*.ts",
         "./src/typings/**/*.ts",
@@ -39,6 +40,7 @@
         "./src/qs.d.ts",
         "./src/requirejs.d.ts",
         "./src/resourceloader.ts",
+        "./src/settingstab.ts",
         "./src/source-map-support.d.ts",
         "./src/term.ts",
         "./src/terminal.ts",
@@ -47,6 +49,7 @@
         "./src/webipc.ts",
         "./src/webresourceloader.ts",
         "./src/windowmessages.ts",
+        "./src/settingspane.tsx",
         "./src/gui/checkboxmenuitem.ts",
         "./src/gui/contextmenu.ts",
         "./src/gui/dropdown.ts",
@@ -64,6 +67,7 @@
         "./src/typings/lodash/lodash.d.ts",
         "./src/typings/node/node.d.ts",
         "./src/typings/pty.js/pty.js.d.ts",
+        "./src/typings/react/react.d.ts",
         "./src/node_modules/immutable/dist/immutable.d.ts"
     ]
 }

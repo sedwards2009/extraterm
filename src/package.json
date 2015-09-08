@@ -18,6 +18,7 @@
     "lodash": "^3.9.1",
     "markdown": "^0.5.0",
     "qs": "^3.1.0",
+    "react": "^0.13.3",
     "source-map-support": "^0.3.2"
   },
   "optionalDependencies": {
