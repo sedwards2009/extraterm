@@ -167,19 +167,6 @@ export function startUp(): void {
     });
     mainWebUi.newTerminalTab(MainWebUi.POSITION_LEFT);
   });
-  
-  // Configure dialog.
-//   configureDialog = <configuredialog>doc.createElement(configuredialog.tagName);
-//   doc.body.appendChild(configureDialog);
-//   
-//   configureDialog.addEventListener('ok', (newConfig: Config) => {
-//     config = newConfig;
-// //    writeConfiguration(newConfig); // FIXME
-//     setupConfiguration(newConfig);
-//   });
-//   doc.getElementById("configure_button").addEventListener('click', function() {
-//     configureDialog.open(config, themes);
-//   });
 }
 
 function handleConfigMessage(msg: Messages.Message): void {

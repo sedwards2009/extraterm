@@ -93,7 +93,7 @@ export class SettingsPane extends React.Component<Props, State> {
     const previousConfig = this.state.previousConfig;
     this.setState({config: newConfig});
     if (broadcast && ! Object.is(this.state.previousConfig, newConfig)) {
-      this.props.onConfigChange(this.state.config);
+      this.props.onConfigChange(newConfig);
       this.setState({ previousConfig: newConfig});
     }
   }

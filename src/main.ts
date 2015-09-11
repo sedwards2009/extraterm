@@ -7,21 +7,26 @@
  *
  * This file is the main entry point for the node process and the whole application.
  */
-import * as sourceMapSupport from 'source-map-support';
-import * as app from 'app';
-import * as BrowserWindow from 'browser-window';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as im from 'immutable';
-import * as _ from 'lodash';
-import * as crashReporter from 'crash-reporter';
-import * as ipc from 'ipc';
-import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions, EnvironmentMap as EnvironmentMap} from './ptyconnector';
-import * as resourceLoader from './resourceloader';
-import * as Messages from './windowmessages';
-import * as clipboard from 'clipboard';
+import sourceMapSupport = require('source-map-support');
+import app = require('app');
+import BrowserWindow = require('browser-window');
+import path = require('path');
+import fs = require('fs');
+import im = require('immutable');
+import _ = require('lodash');
+import crashReporter = require('crash-reporter');
+import ipc = require('ipc');
+import ptyconnector = require('./ptyconnector');
+import resourceLoader = require('./resourceloader');
+import Messages = require('./windowmessages');
+import clipboard = require('clipboard');
 import child_process = require('child_process');
 import util = require('./gui/util');
+
+type PtyConnector  = ptyconnector.PtyConnector;
+type Pty = ptyconnector.Pty;
+type PtyOptions = ptyconnector.PtyOptions;
+type EnvironmentMap = ptyconnector.EnvironmentMap;
 
 // Our special 'fake' module which selects the correct pty connector factory implementation.
 var PtyConnectorFactory = require("./ptyconnectorfactory");
@@ -342,6 +347,7 @@ function readConfigurationFile(): Config {
     log("Couldn't find user configuration file at " + filename);
   }
   setConfigDefaults(config);
+  // FIXME freeze this.
   return config;
 }
 
@@ -478,6 +484,10 @@ function handleAsyncIpc(event: any, arg: any): void {
       mainWindow.close();
       break;
       
+    case Messages.MessageType.CONFIG:
+      handleConfig(<Messages.ConfigMessage> msg);
+      break;
+      
     default:
       break;
   }
@@ -490,6 +500,33 @@ function handleAsyncIpc(event: any, arg: any): void {
 function handleConfigRequest(msg: Messages.ConfigRequestMessage): Messages.ConfigMessage {
   const reply: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, config: getFullConfig() };
   return reply;
+}
+
+function handleConfig(msg: Messages.ConfigMessage): void {
+  if (LOG_FINE) {
+    log("Incoming new config: ",msg);
+  }
+  
+  // Copy in the updated fields.
+  const incomingConfig = msg.config;
+  config.blinkingCursor = incomingConfig.blinkingCursor;
+  config.noFrameCommands = incomingConfig.noFrameCommands;
+  config.scrollbackLines = incomingConfig.scrollbackLines;
+
+  // Write it to disk.
+  writeConfiguration(config);
+
+  const newConfigMsg: Messages.ConfigMessage = {
+    type: Messages.MessageType.CONFIG,
+    config: getFullConfig()
+  };
+  
+  BrowserWindow.getAllWindows().forEach( (window) => {
+    if (LOG_FINE) {
+      log("Transmitting new config to window ", window.id);
+    }
+    window.webContents.send(Messages.CHANNEL_NAME, newConfigMsg);
+  });
 }
 
 function handleThemesRequest(msg: Messages.ThemesRequestMessage): Messages.ThemesMessage {
