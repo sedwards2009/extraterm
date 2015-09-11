@@ -6,7 +6,7 @@ var http = require('http');
 var serveStatic = require('serve-static');
  
 // Serve up public/ftp folder 
-var serve = serveStatic('./', { dotfiles: "allow"});
+var serve = serveStatic('../', { dotfiles: "allow"});
 
 // Create server 
 var server = http.createServer(function(req, res){

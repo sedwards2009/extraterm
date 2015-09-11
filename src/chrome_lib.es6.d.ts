@@ -1,4 +1,4 @@
-// Generated at Wed Sep 02 2015 22:17:35 GMT+0200 (CEST)
+// Generated at Tue Sep 08 2015 22:38:31 GMT+0200 (CEST)
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved. 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -19314,4 +19314,8 @@ interface FontFaceSet extends Set<FontFace> {
 
 interface Document {
   fonts: FontFaceSet;
+}
+
+interface HTMLIFrameElement {
+  srcdoc: string;
 }

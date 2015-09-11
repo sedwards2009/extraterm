@@ -13,6 +13,7 @@
   "dependencies": {
     "electron-prebuilt": "^0.30.2",
     "he": "^0.5.0",
+    "icepick": "^0.5.0",
     "immutable": "^3.7.3",
     "js-base64": "^2.1.8",
     "lodash": "^3.9.1",

@@ -38,3 +38,6 @@ src/commandplaceholder.js
 src/viewerelement.js
 src/viewers/markdownviewer.js
 src/viewers/terminalviewer.js
+src/settingspane.js
+src/settingstab.js
+src/settingswebview.js

@@ -1,14 +1,17 @@
+/**
+ * Copyright 2015 Simon Edwards <simon@simonzone.com>
+ */
 
 import React = require('react');
+import icepick = require('icepick');
 import config = require('./config');
-import _ = require('lodash');
 
 type Config = config.Config;
-
 
 interface CommandFramingPaneProps {
   patterns: string[];
   onChange: (newPatterns: string[]) => void;
+  onIntermediateChange: (newPatterns: string[]) => void;
 }
 
 class CommandFramingPane extends React.Component<CommandFramingPaneProps, any> {
@@ -17,28 +20,27 @@ class CommandFramingPane extends React.Component<CommandFramingPaneProps, any> {
   }
   
   addClick(ev): void {
-    const newList = [...this.props.patterns];
-    newList.push("");
-    this.props.onChange(newList);
+    this.props.onChange(icepick.push(this.props.patterns, ""));
   }
   
   itemChange(index: number, ev): void {
-    const newList = [...this.props.patterns];
-    newList[index] = ev.target.value;
-    this.props.onChange(newList);    
+    this.props.onIntermediateChange(icepick.assoc(this.props.patterns, index, ev.target.value));
   }
   
   deleteClick(index: number, ev): void {
-    const newList = [...this.props.patterns];
-    newList.splice(index, 1);
-    this.props.onChange(newList);
+    this.props.onChange(icepick.splice(this.props.patterns, index, 1));
+  }
+  
+  onBlur(ev: FocusEvent): void {
+    this.props.onChange(this.props.patterns);
   }
   
   render() {
-    console.log("patterns:"+this.props.patterns);
     const patternList = this.props.patterns.map<JSX.Element>( (expr, index) =>   
-      <div key={"item"+index}><input type='text' spellCheck={false} className='topcoat-text-input noframepattern' value={expr}
-          onChange={ this.itemChange.bind(this, index) } />
+      <div className="patternline" key={"item"+index}><input type='text' spellCheck={false}
+          className='topcoat-text-input' value={expr}
+          onChange={ this.itemChange.bind(this, index) }
+          onBlur={ this.onBlur.bind(this) } />
           <button onClick={ this.deleteClick.bind(this, index) } title="Delete"><i className="fa fa-trash-o"></i></button></div>
     );
     
@@ -57,12 +59,15 @@ class CommandFramingPane extends React.Component<CommandFramingPaneProps, any> {
 interface Props {
   config: Config;
   onConfigChange: (newConfig: Config) => void;
-};
+}
 
 interface State {
-  config: Config;
-  currentScrollbackLines: number;
+  config?: Config;
+  previousConfig?: Config;
+  currentScrollbackLines?: number;
 }
+// These here above are semi-optional because setState() takes a partial State object even
+// though we generally want every property in a full State object to be set to something.
 
 export class SettingsPane extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -72,56 +77,65 @@ export class SettingsPane extends React.Component<Props, State> {
     const scrollbackLines = config === null ? 1000 : config.scrollbackLines;
     this.state = {
       config: config,
+      previousConfig: config,
       currentScrollbackLines: scrollbackLines
     };
   }
-  
-  changeState( updateFunc: (newState: State) => void): void {
-    const newState = _.cloneDeep(this.state);
-    updateFunc(newState);
-    this.setState(newState);
+
+  private assocConfig(dottedName: string, value: any, broadcast: boolean = true): void {
+    let newConfig: Config;
+    if (dottedName.indexOf('.') !== -1) {
+      newConfig = icepick.assocIn(this.state.config, dottedName.split(/\./g), value);
+      
+    } else {
+      newConfig = icepick.assoc(this.state.config, dottedName, value);
+    }
+    const previousConfig = this.state.previousConfig;
+    this.setState({config: newConfig});
+    if (broadcast && ! Object.is(this.state.previousConfig, newConfig)) {
+      this.props.onConfigChange(this.state.config);
+      this.setState({ previousConfig: newConfig});
+    }
   }
   
+  private broadcastConfig(): void {
+    if (Object.is(this.state.config, this.state.previousConfig)) {
+      return;
+    }
+
+    this.props.onConfigChange(this.state.config);
+    this.setState({ previousConfig: this.state.config});
+  }
+    
   set config(config: Config) {
-    this.changeState( (newState) => {
-      newState.config = config;
-    });
+    this.setState( { config: config } );
   }
   
-  scrollbackLinesChange(ev): void {
-    this.changeState( (newState) => {
-      newState.currentScrollbackLines = parseInt(ev.target.value, 10);
-    });
+  private scrollbackLinesChange(ev): void {
+    this.setState( { currentScrollbackLines: parseInt(ev.target.value, 10) } );
   }
 
-  scrollbackLinesBlur(ev): void {
+  private scrollbackLinesBlur(ev): void {
     const newScrollbackLines = parseInt(ev.target.value, 10);
 
     if (newScrollbackLines < this.state.config.scrollbackLines) {
       if ( ! window.confirm("Making the scrollback smaller will delete existing lines.")) {
-        this.changeState( (newState) => {
-          newState.currentScrollbackLines =
-            newState.config.scrollbackLines===undefined ? 1000 : newState.config.scrollbackLines;
-        });
+        this.setState( { currentScrollbackLines:
+          this.state.config.scrollbackLines===undefined ? 1000 : this.state.config.scrollbackLines } );
         return;
       }
     }
-    const newState = _.cloneDeep(this.state);
-    newState.config.scrollbackLines = newScrollbackLines;
-    this.setState(newState);
+    
+    this.assocConfig("scrollbackLines", newScrollbackLines);
   }
   
-  blinkingCursorChange(ev): void {
-    this.changeState( (newState) => {
-      newState.config.blinkingCursor = ev.target.checked;
-    });
+  private blinkingCursorChange(ev): void {
+    this.assocConfig("blinkingCursor", ev.target.checked);
   }
   
-  noFrameCommandsChange(patterns: string[]): void {
-    this.changeState( (newState) => {
-      newState.config.noFrameCommands = patterns;
-    });
-  }  
+  private noFrameCommandsChange(intermediate: boolean, patterns: string[]): void {
+    this.assocConfig("noFrameCommands", patterns, !intermediate);
+  }
   
   render() {
     if (this.state.config === null) {
@@ -144,12 +158,15 @@ export class SettingsPane extends React.Component<Props, State> {
           
             <div>Scrollback:</div>
             <div><input type='number' value={""+this.state.currentScrollbackLines} min='1' max='10000'
-              onChange={this.scrollbackLinesChange.bind(this)}  onBlur={this.scrollbackLinesBlur.bind(this)} />lines</div>
-            
+              onChange={this.scrollbackLinesChange.bind(this)}
+              onBlur={this.scrollbackLinesBlur.bind(this)} />lines</div>
+
             <div>Theme:</div>
             <div>X</div>
           </div>
-          <CommandFramingPane patterns={this.state.config.noFrameCommands} onChange={this.noFrameCommandsChange.bind(this)} />
+          <CommandFramingPane patterns={this.state.config.noFrameCommands}
+            onChange={this.noFrameCommandsChange.bind(this, false)}
+            onIntermediateChange={this.noFrameCommandsChange.bind(this, true)}/>
         </div>
       );
     }

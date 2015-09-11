@@ -6,6 +6,7 @@
 
 import rendererIpc = require('ipc');
 import Messages = require('./windowmessages');
+import config = require('./config');
 
 // There are two related 'ipc' modules in Electron. A main process one and a renderer process one.
 // 'ipc' tends to get the main process defs when it should be the renderer process defs.
@@ -123,5 +124,10 @@ export function clipboardReadRequest(): void {
 
 export function windowCloseRequest(): void {
   const msg: Messages.WindowCloseRequestMessage = { type: Messages.MessageType.WINDOW_CLOSE_REQUEST };
+  ipc.send(Messages.CHANNEL_NAME, msg);  
+}
+
+export function sendConfig(config: config.Config): void {
+  const msg: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, config: config };
   ipc.send(Messages.CHANNEL_NAME, msg);  
 }

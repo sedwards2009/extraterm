@@ -1,0 +1,32 @@
+html, body {
+height: 100%;
+}
+
+DIV.settingspane {
+  max-width: 800px;
+}
+
+DIV.settingsform {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  grid-auto-rows: 1.5em;
+}
+
+/*
+DIV.noframepatterns {
+  display: grid;
+  width: 100%;
+  max-width: 320px;
+  grid-template-columns: 1fr auto;
+  grid-auto-rows: auto;
+}
+*/
+
+DIV.noframepatterns > * {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;      
+}
+
+DIV.patternline > * {
+  display: inline-block;
+}
