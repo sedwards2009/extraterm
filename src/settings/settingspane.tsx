@@ -4,7 +4,7 @@
 
 import React = require('react');
 import icepick = require('icepick');
-import config = require('./config');
+import config = require('../config');
 
 type Config = config.Config;
 

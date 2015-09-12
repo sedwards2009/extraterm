@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Settings Pane Test</title>
+  <link rel="stylesheet" type="text/css" href="../css/style.css" />
+  <link rel="stylesheet" type="text/css" href="../css/topcoat-desktop-light.css" />
+  <link rel="stylesheet" type="text/css" href="../css/font-awesome.css" />
+  <link rel="stylesheet" type="text/css" href="settings.css" />  
+  
+  <script>
+  function start() {
+    var settingswebview = require('./settingswebview');
+    settingswebview.startUp();
+  }
+  </script>
+</head>
+<body class="light" onLoad="start();">
+  <div id="settingspanenode"></div>
+</body>
+</html>

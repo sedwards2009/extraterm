@@ -4,8 +4,8 @@
 
 "use strict";
 
-import ViewerElement  = require("./viewerelement");
-import util = require("./gui/util");
+import ViewerElement  = require("../viewerelement");
+import util = require("../gui/util");
 
 let registered = false;
 
@@ -49,7 +49,7 @@ class EtSettingsTab extends ViewerElement {
     `;
     const divContainer = document.createElement('div');
     divContainer.innerHTML = "<webview class='settingswebview' nodeintegration disablewebsecurity " +
-      " experimental-features src='settingsbootstrap.html'></webview>";
+      " experimental-features src='settings/settingsbootstrap.html'></webview>";
     const webView = <any> divContainer.childNodes[0]; // Should be BrowserWindow
 
     shadow.appendChild(style);
