@@ -149,3 +149,21 @@ Feature: Integrate the user's pager/viewer (i.e. 'less') with Extraterm
 =================================================================
 It would be nice if the functions of viewer and pager could be done by Extraterm, unlike 'less' the whole file could be available and searchable etc after the pager program has exited control has returned to the shell.
 
+
+Feature: Allow regexp and plain string "no frame" patterns
+=================================================================
+
+
+Bug: Resizing terminals preserves the top left regardless of where the cursor is
+================================================================================
+If for example the terminal window is made small and the cursor is at the bottom row, then the terminal should be resized by pushing lines into the scrollback and then removing rows from the term screen.
+
+
+Bug: Opening the settings tab is way too slow
+==============================================
+Opening the settings tab is very slow  because the contents of the settings tab are being rendered in a different process. This extra process is needed because it is not possible to use React inside a shadow DOM (i.e. you can't use React inside the main application window except if it is under the window.docuement). This is a limitation of React. Once React has accepted patches to fix this, then the settings tab can be turned into a normal in-process tab.
+
+
+Bug: CSS Grid doesn't work inside the settings tab
+==================================================
+The settings tab is rendered inside an Electron webview tag. This is effectively a new window. CSS Grid is an experimental feature which needs to be turned on with flags. webview doesn't support the flags we need yet. See https://github.com/atom/electron/issues/2749
