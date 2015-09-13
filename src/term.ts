@@ -91,7 +91,6 @@ const MAX_PROCESS_WRITE_SIZE = 4096;
  * Options
  */
 interface Options {
-  colors?: string[];
   convertEol?: boolean;
   termName?: string;
   geometry?: [number, number];
@@ -232,8 +231,6 @@ export class Terminal {
   private lines: LineCell[][] = [];
   private _termId: number;
   
-  private colors: string[];
-  private faintColors: string[];
   private convertEol: boolean;
   private termName: string;
   private geometry: [number, number];
@@ -286,7 +283,6 @@ export class Terminal {
     idCounter++;
 
     const defaults = {
-      colors: Terminal.colors,
       convertEol: false,
       termName: 'xterm',
       geometry: [80, 24],
@@ -299,21 +295,7 @@ export class Terminal {
       physicalScroll: false,
       applicationModeCookie: null
     };
-
-    if (options.colors.length === 8) {
-      options.colors = options.colors.concat(Terminal._colors.slice(8));
-    } else if (options.colors.length === 16) {
-      options.colors = options.colors.concat(Terminal._colors.slice(16));
-    } else if (options.colors.length === 10) {
-      options.colors = options.colors.slice(0, -2).concat(
-        Terminal._colors.slice(8, -2), options.colors.slice(-2));
-    } else if (options.colors.length === 18) {
-      options.colors = options.colors.slice(0, -2).concat(
-        Terminal._colors.slice(16, -2), options.colors.slice(-2));
-    }
-
-    this.colors = options.colors === undefined ? Terminal.colors : options.colors;
-    this.faintColors = faintColors(this.colors);
+    
     this.convertEol = options.convertEol === undefined ? false : options.convertEol;
     this.termName = options.termName === undefined ? 'xterm' : options.termName;
     this.geometry = options.geometry === undefined ? [80, 24] : options.geometry;
@@ -325,8 +307,6 @@ export class Terminal {
     this.useStyle = options.useStyle === undefined ? false : options.useStyle;
     this.physicalScroll = options.physicalScroll === undefined ? false : options.physicalScroll;
     this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
-
-    this.colors = options.colors;
 
     // this.options = options;
 
@@ -431,30 +411,12 @@ export class Terminal {
 
   /**
    * Colors
+   *
+   * This palette is only used when matching 24bit colours to the user's CSS based colours.
+   * (We assume that this default palette is close enough to the actual one being used.)
    */
 
   // Colors 0-15
-  static tangoColors = [
-    // dark:
-    '#2e3436',
-    '#cc0000',
-    '#4e9a06',
-    '#c4a000',
-    '#3465a4',
-    '#75507b',
-    '#06989a',
-    '#d3d7cf',
-    // bright:
-    '#555753',
-    '#ef2929',
-    '#8ae234',
-    '#fce94f',
-    '#729fcf',
-    '#ad7fa8',
-    '#34e2e2',
-    '#eeeeec'
-  ];
-
   static xtermColors = [
     // dark:
     '#000000', // black
@@ -479,7 +441,7 @@ export class Terminal {
   // Colors 0-15 + 16-255
   // Much thanks to TooTallNate for writing this.
   static colors = (function() {
-    var colors = Terminal.tangoColors.slice();
+    var colors = Terminal.xtermColors.slice();
     var r = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff];
     var i;
 
@@ -510,8 +472,6 @@ export class Terminal {
     colors[257] = '#f0f0f0';
     return colors;
   })();
-
-  static _colors = Terminal.colors.slice();
 
   static vcolors = (function() {
     var out = [];
@@ -568,9 +528,6 @@ export class Terminal {
    */
   initGlobal(): void {
     const document = this.document;
-    if (this.useStyle) {
-      Terminal.insertStyle(document, this.colors[256], this.colors[257]);
-    }
   }
 
   /**
@@ -893,10 +850,7 @@ export class Terminal {
     // Create our main terminal element.
     this.element = this.document.createElement('div');
     this.element.className = 'terminal';
-    this.element.style.outline = 'none';
     this.element.setAttribute('tabindex', "0");
-    this.element.style.backgroundColor = this.colors[256];
-    this.element.style.color = this.colors[257];
 
     // Create the lines for our terminal.
     this.children = [];
@@ -1484,16 +1438,18 @@ export class Terminal {
           if (data === -1) {
             out += '<span class="reverse-video terminal-cursor">';
           } else {
-            out += '<span style="';
+            out += '<span ';
 
             let bg = backgroundFromCharAttr(data);
             let fg = foregroundFromCharAttr(data);
             const flags = flagsFromCharAttr(data);
-
+            
+            let clazz: string = "";
+            
             // bold
             if (flags & BOLD_ATTR_FLAG) {
               if (!Terminal.brokenBold) {
-                out += 'font-weight:bold;';
+                clazz += ' terminal-bold';
               }
               // See: XTerm*boldColors
               if (fg < 8) {
@@ -1503,23 +1459,17 @@ export class Terminal {
 
             // italic
             if (flags & ITALIC_ATTR_FLAG) {
-              out += 'font-style: italic;';
+              clazz += ' terminal-italic';
             }
-            
-            let textDecoration = "";
             
             // underline
             if (flags & UNDERLINE_ATTR_FLAG) {
-              textDecoration += ' underline';
+              clazz += ' terminal-underline';
             }
 
             // strike through
             if (flags & STRIKE_THROUGH_ATTR_FLAG) { 
-              textDecoration += ' line-through';
-            }
-              
-            if (textDecoration !== "") {
-               out += "text-decoration: " + textDecoration + ";";
+              clazz += ' terminal-strikethrough';
             }
             
             // inverse
@@ -1537,25 +1487,29 @@ export class Terminal {
 
             // invisible
             if (flags & INVISIBLE_ATTR_FLAG) {
-              out += 'visibility:hidden;';
+              clazz += ' terminal-invisible';
             }
 
             if (bg !== 256) {
-              out += 'background-color:' + this.colors[bg] + ';';
+              clazz += ' terminal-background-' + bg;
             }
 
             if (flags & FAINT_ATTR_FLAG) {
-              out += 'color:' + this.faintColors[fg] + ';';
+              clazz += ' terminal-faint-' + fg;
             } else {
               if (fg !== 257) {
-                out += 'color:' + this.colors[fg] + ';';
+                clazz += ' terminal-foreground-' + fg;
               }
             }
-            out += '"';
             
             if (flags & BLINK_ATTR_FLAG) {
-              out += "class='blink'";
+              clazz += " terminal-blink";
             }
+            
+            if (clazz !== "") {
+              out += " class='" + clazz + "'";
+            }
+            
             out += '>';
           }
         }

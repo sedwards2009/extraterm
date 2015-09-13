@@ -173,7 +173,6 @@ class EtTerminal extends HTMLElement {
     process.env[EXTRATERM_COOKIE_ENV] = cookie;
 
     this._term = new termjs.Terminal({
-      colors: this._colors(),
       scrollback: 1000,
       cursorBlink: this._blinkingCursor,
       physicalScroll: true,
@@ -391,16 +390,6 @@ class EtTerminal extends HTMLElement {
             margin-right: 2px;
         }
 
-        @-webkit-keyframes BLINK_ANIMATION {
-          0%   { opacity: 0; }
-          50% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-
-        .terminal .blink {
-            -webkit-animation: BLINK_ANIMATION 2s infinite;
-            animation: BLINK_ANIMATION 2s infinite;
-        }
         </style>
         <style id="${ID_THEME_STYLE}"></style>
         <div class='terminal_container' id='${ID_CONTAINER}'>
@@ -424,37 +413,6 @@ class EtTerminal extends HTMLElement {
   
   private _getDocument(): Document {
     return this.ownerDocument;
-  }
-  
-  private _colors(): string[] {
-    const colorList = termjs.Terminal.colors.slice();
-
-    const linuxColors = [
-      "#000000",
-      "#b21818",
-      "#18b218",
-      "#b26818",
-      "#3535ff",
-      "#b218b2",
-      "#18b2b2",
-      "#b2b2b2",
-      "#686868",
-      "#ff5454",
-      "#54ff54",
-      "#ffff54",
-      "#7373ff",
-      "#ff54ff",
-      "#54ffff",
-      "#ffffff"];
-
-    for (let i=0; i < linuxColors.length; i++) {
-      colorList[i] = linuxColors[i];
-    }
-
-    colorList[256] = "#000000";
-    colorList[257] = "#b2b2b2";
-
-    return colorList;
   }
 
   /**
