@@ -124,7 +124,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
     }, {viewportMargin: Infinity, value: ""});
-    this._importLineCounter = 1;
+    this._importLineCounter = 0;
     
     this._mutationObserver = new MutationObserver( (mutations) => {
      this.pullInContents();
@@ -195,6 +195,7 @@ class EtCodeMirrorViewer extends ViewerElement {
          const len = childNodes.length;
          
          let rowText = "";
+         const styleList: { from: number; to: number; span: HTMLSpanElement; }[] = [];
          for (let i=0; i<len; i++) {
            const charNode = childNodes[i];
            if (charNode.nodeType === Node.TEXT_NODE) {
@@ -202,13 +203,32 @@ class EtCodeMirrorViewer extends ViewerElement {
              rowText += textNode.data;
            } else if (charNode.nodeType === Node.ELEMENT_NODE && charNode.nodeName === 'SPAN') {
              const spanNode = <HTMLSpanElement> charNode;
-             rowText += charNode.textContent;
+             const textContent = charNode.textContent;
+             
+             // Record this range 
+             styleList.push( { from: rowText.length, to: rowText.length + textContent.length, span: spanNode} );
+
+             rowText += textContent;
            }
          }
 
-         const lastLine = new CodeMirror.Pos(this._importLineCounter, 0);
-console.log("rowText:" + rowText);         
+         const lastLine = { line: this._importLineCounter, ch: 0 };
          doc.replaceRange(util.trimRight(util.replaceNbsp(rowText)) + "\n", lastLine, lastLine);
+         
+         if (styleList.length !== 0) {
+           // Apply the styles to the text.
+           const len = styleList.length;
+           for (let i=0; i<len; i++) {
+             const style = styleList[i];
+             const from = { line: this._importLineCounter, ch: style.from };
+             const to = { line: this._importLineCounter, ch: style.to };
+             const classList = style.span.classList;
+             for (let j=0; j<classList.length; j++) {
+               doc.markText( from, to, { className: classList.item(j) } );
+             }
+           }
+         }
+         
          this._importLineCounter++;
        }
        
