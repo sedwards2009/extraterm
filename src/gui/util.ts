@@ -58,6 +58,17 @@ export function nodeListToArray(nodeList: NodeList): Node[] {
   return result;
 }
 
+const nbspRegexp = /\u00a0/g;
+/**
+ * Replace non-breaking space characters with normal spaces.
+ * 
+ * @param  {string} text [description]
+ * @return {string}      [description]
+ */
+export function replaceNbsp(text: string): string {
+  return text.replace(nbspRegexp, " ");
+}
+
 //-------------------------------------------------------------------------
 export interface LaterHandle {
   cancel(): void;

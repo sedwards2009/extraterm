@@ -11,6 +11,7 @@
     "serve-test": "node test/httpserver.js"
   },
   "dependencies": {
+    "codemirror": "^5.6.0",
     "electron-prebuilt": "^0.30.2",
     "he": "^0.5.0",
     "icepick": "^0.5.0",

@@ -8,7 +8,7 @@ import crypto = require('crypto');
 import ViewerElement = require("./viewerelement");
 import EtEmbeddedViewer = require('./embeddedviewer');
 import EtCommandPlaceHolder = require('./commandplaceholder');
-import EtTerminalViewer = require('./viewers/terminalviewer');
+import EtCodeMirrorViewer = require('./viewers/codemirrorviewer');
 import EtMarkdownViewer = require('./viewers/markdownviewer');
 
 import domutils = require('./domutils');
@@ -84,7 +84,8 @@ class EtTerminal extends HTMLElement {
       scrollbar.init();
       EtEmbeddedViewer.init();
       EtCommandPlaceHolder.init();
-      EtTerminalViewer.init();
+      // EtTerminalViewer.init();
+      EtCodeMirrorViewer.init();
       EtMarkdownViewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
       registered = true;
@@ -789,7 +790,8 @@ class EtTerminal extends HTMLElement {
       }
       
       // Create a terminal viewer and fill it with the row DIVs.
-      const terminalViewerElement = <EtTerminalViewer> this._getWindow().document.createElement(EtTerminalViewer.TAG_NAME);
+      // const terminalViewerElement = <EtTerminalViewer> this._getWindow().document.createElement(EtTerminalViewer.TAG_NAME);
+      const terminalViewerElement = <EtCodeMirrorViewer> this._getWindow().document.createElement(EtCodeMirrorViewer.TAG_NAME);
       terminalViewerElement.themeCssPath = this._themeCssPath;
       terminalViewerElement.returnCode = returnCode;
       terminalViewerElement.commandLine = embeddedViewerElement.getAttribute("command-line");

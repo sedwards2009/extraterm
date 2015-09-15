@@ -41,3 +41,4 @@ src/viewers/terminalviewer.js
 src/settings/settingspane.js
 src/settings/settingstab.js
 src/settings/settingswebview.js
+src/viewers/codemirrorviewer.js
