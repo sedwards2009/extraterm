@@ -45,6 +45,14 @@ SPAN.terminal-cursor {
   padding: 0 0; /* Horizontal padding of content */
 }
 
+.CodeMirror-selected {
+  background: #404040;
+}
+
+.CodeMirror-focused .CodeMirror-selected {
+  background: #005CCC;
+}
+
 /* Character styles */
 
 SPAN.terminal-bold {
