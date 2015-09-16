@@ -183,58 +183,73 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   private pullInContents(): void {
-     const container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
-     
-     const doc = this._codeMirror.getDoc();
+    const container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
 
-     util.nodeListToArray(this.childNodes).forEach( (node) => {
-       if (node.nodeType === Node.ELEMENT_NODE && node.nodeName === 'DIV') {
-         const divElement = <HTMLDivElement> node;
-         
-         const childNodes = util.nodeListToArray(divElement.childNodes);
-         const len = childNodes.length;
-         
-         let rowText = "";
-         const styleList: { from: number; to: number; span: HTMLSpanElement; }[] = [];
-         for (let i=0; i<len; i++) {
-           const charNode = childNodes[i];
-           if (charNode.nodeType === Node.TEXT_NODE) {
-             const textNode = <Text> charNode;
-             rowText += textNode.data;
-           } else if (charNode.nodeType === Node.ELEMENT_NODE && charNode.nodeName === 'SPAN') {
-             const spanNode = <HTMLSpanElement> charNode;
-             const textContent = charNode.textContent;
-             
-             // Record this range 
-             styleList.push( { from: rowText.length, to: rowText.length + textContent.length, span: spanNode} );
+    const doc = this._codeMirror.getDoc();
+    const kidNodes = util.nodeListToArray(this.childNodes);
+    
+    if (kidNodes.length !== 0) {
+      
+      this._codeMirror.operation( () => {
+        
+        const textParts: string[] = [];
+        const styleList: { line: number, from: number; to: number; span: HTMLSpanElement; }[] = [];
+        
+        // Assemble the whole text from the DIVs and SPANs
+        kidNodes.forEach( (node) => {
+          if (node.nodeType === Node.ELEMENT_NODE && node.nodeName === 'DIV') {
+            const divElement = <HTMLDivElement> node;
+            if (divElement.classList.contains('terminal-scrollback')) {
+              const childNodes = util.nodeListToArray(divElement.childNodes);
+              const len = childNodes.length;
 
-             rowText += textContent;
-           }
-         }
+              let rowText = "";
+              for (let i=0; i<len; i++) {
+                const charNode = childNodes[i];
+                if (charNode.nodeType === Node.TEXT_NODE) {
+                  const textNode = <Text> charNode;
+                  rowText += textNode.data;
+                } else if (charNode.nodeType === Node.ELEMENT_NODE && charNode.nodeName === 'SPAN') {
+                  const spanNode = <HTMLSpanElement> charNode;
+                  const textContent = charNode.textContent;
 
-         const lastLine = { line: this._importLineCounter, ch: 0 };
-         doc.replaceRange(util.trimRight(util.replaceNbsp(rowText)) + "\n", lastLine, lastLine);
-         
-         if (styleList.length !== 0) {
-           // Apply the styles to the text.
-           const len = styleList.length;
-           for (let i=0; i<len; i++) {
-             const style = styleList[i];
-             const from = { line: this._importLineCounter, ch: style.from };
-             const to = { line: this._importLineCounter, ch: style.to };
-             const classList = style.span.classList;
-             for (let j=0; j<classList.length; j++) {
-               doc.markText( from, to, { className: classList.item(j) } );
-             }
-           }
-         }
-         
-         this._importLineCounter++;
-       }
-       
-       this.removeChild(node);
-       
-     });
+                  // Record this range 
+                  styleList.push( { line: this._importLineCounter, from: rowText.length, to: rowText.length + textContent.length, span: spanNode} );
+
+                  rowText += textContent;
+                }
+              }
+              const lastLine = { line: this._importLineCounter, ch: 0 };
+              textParts.push(util.trimRight(util.replaceNbsp(rowText)));
+
+              this._importLineCounter++;
+            }
+          }
+          this.removeChild(node);
+        });
+        
+        // Update the text document
+        doc.setValue(textParts.join('\n'));
+        
+        if (styleList.length !== 0) {
+          // Apply the styles to the text.
+          const len = styleList.length;
+          for (let i=0; i<len; i++) {
+            const style = styleList[i];
+            const from = { line: style.line, ch: style.from };
+            const to = { line: style.line, ch: style.to };
+            const classList = style.span.classList;
+            for (let j=0; j<classList.length; j++) {
+              doc.markText( from, to, { className: classList.item(j) } );
+            }
+          }
+        }
+        
+      });
+    }
+    
+    this._codeMirror.refresh();
+    util.doLater( () => { this._codeMirror.refresh(); });
   }
   
   private _updateFocusable(focusable: boolean): void {
