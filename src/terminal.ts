@@ -36,9 +36,14 @@ const ID = "EtTerminalTemplate";
 const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 const SEMANTIC_TYPE = "data-extraterm-type";
 const SEMANTIC_VALUE = "data-extraterm-value";
+const ID_TERM_CONTAINER = "term_container";
+const ID_SCROLLER = "scroller";
+const ID_SCROLLBACK = "scrollback_container";
 const ID_CONTAINER = "terminal_container";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
+
+const SCROLL_STEP = 1;
 
 const enum ApplicationMode {
   APPLICATION_MODE_NONE = 0,
@@ -167,7 +172,9 @@ class EtTerminal extends HTMLElement {
 
     this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
-    this._termContainer = <HTMLDivElement>this._container.firstElementChild;
+    this._termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
+    const scroller = util.getShadowId(this, ID_SCROLLER);
+    const scrollback = util.getShadowId(this, ID_SCROLLBACK);
     
     const cookie = crypto.randomBytes(10).toString('hex');
     
@@ -181,10 +188,6 @@ class EtTerminal extends HTMLElement {
       debug: true
     });
 
-    // const defaultLineToHTML = this._term._lineToHTML;
-    // this._super_lineToHTML = this._term._lineToHTML;
-    // this._term._lineToHTML=  this._lineToHTML.bind(this);
-
     this._term.debug = true;
     this._term.on('title', this._handleTitle.bind(this));
     this._term.on('data', this._handleTermData.bind(this));
@@ -192,7 +195,10 @@ class EtTerminal extends HTMLElement {
     this._getWindow().addEventListener('resize', this._handleResize);
     
     this._termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
-    this._term.on('manual-scroll', this._handleManualScroll.bind(this));
+    scroller.addEventListener('wheel', this._handleTermWheel.bind(this));
+    
+    this._term.on(termjs.Terminal.EVENT_MANUAL_SCROLL, this._handleManualScroll.bind(this));
+    this._term.on(termjs.Terminal.EVENT_SCROLLBACK_AVAILABLE, this._handleScrollbackReady.bind(this));
     
     // Application mode handlers    
     this._term.on('application-mode-start', this._handleApplicationModeStart.bind(this));
@@ -214,7 +220,9 @@ class EtTerminal extends HTMLElement {
 
     this._term.element.addEventListener('keypress', this._handleKeyPressTerminal.bind(this));
     this._term.element.addEventListener('keydown', this._handleKeyDownTerminal.bind(this));
-    this._container.addEventListener('scroll-move', (ev: CustomEvent) => {
+    this._term.on(termjs.Terminal.EVENT_WHEEL, this._handleTermWheel.bind(this));
+    
+    this._container.addEventListener(EtEmbeddedViewer.EVENT_SCROLL_MOVE, (ev: CustomEvent) => {
       this._syncManualScroll();  
     });
 
@@ -365,27 +373,39 @@ class EtTerminal extends HTMLElement {
             height: 100%;
         }
 
+        .terminal-scrollback {
+          width: 100%;
+        }
+        
         .terminal_scrollbar {
             flex: 0;
             min-width: 15px;
             height: 100%;
         }
-
-        .term_container {
-            flex: 1;
-            height: 100%;
-        }
-
-        .terminal {
+        
+        DIV.term_container > .terminal {
             width: 100%;
             height: 100%;
-
-            white-space: nowrap;
-            font-family: sans-serif, ${termjs.Terminal.NO_STYLE_HACK};
-            overflow-x: scroll;
-            overflow-y: hidden;
         }
         
+        .terminal {
+            white-space: nowrap;
+            font-family: sans-serif, ${termjs.Terminal.NO_STYLE_HACK};
+            overflow: hidden;
+        }
+        
+        .term_container         {
+          height: 100%;
+          width: 100%;
+        }
+        
+        .scroller {
+          flex: 1;
+          height: 100%;
+          overflow-x: scroll;
+          overflow-y: hidden;
+        }
+      
         .terminal > DIV.terminal-active, .terminal > DIV.terminal-scrollback {
             margin-left: 2px;
             margin-right: 2px;
@@ -393,8 +413,11 @@ class EtTerminal extends HTMLElement {
 
         </style>
         <style id="${ID_THEME_STYLE}"></style>
-        <div class='terminal_container' id='${ID_CONTAINER}'>
-          <div class='term_container'></div>
+        <div id='${ID_CONTAINER}' class='terminal_container'>
+          <div id='${ID_SCROLLER}' class='scroller'>
+            <div id='${ID_SCROLLBACK}' class='terminal-scrollback terminal'></div>
+            <div id='${ID_TERM_CONTAINER}' class='term_container'></div>
+          </div>
           <cb-scrollbar class='terminal_scrollbar'></cb-scrollbar>
         </div>`;
       window.document.body.appendChild(template);
@@ -415,18 +438,33 @@ class EtTerminal extends HTMLElement {
   private _getDocument(): Document {
     return this.ownerDocument;
   }
-
+  
+  private _handleTermWheel(ev: WheelEvent): void {
+    const el = util.getShadowId(this, ID_SCROLLER);
+    
+    const scrollbarSize = el.scrollHeight;
+    const delta = ev.deltaY * SCROLL_STEP;
+    let pos = el.scrollTop + delta;
+    pos = Math.max(0, pos);
+    pos = Math.min(el.scrollHeight - el.clientHeight, pos);
+    
+    el.scrollTop = pos;    
+    this._syncManualScroll();
+  }
+  
   /**
    * Synchronize the scrollbar with the term.
    */
   private _syncScrolling(): void {
-    this._scrollbar.size = this._term.element.scrollHeight;
+    const el = util.getShadowId(this, ID_SCROLLER);
+    
+    this._scrollbar.size = el.scrollHeight;
     if (this._autoscroll) {
       // Scroll to the bottom.
       this._scrollbar.position = Number.MAX_VALUE;
-      this._term.element.scrollTop = this._term.element.scrollHeight - this._term.element.clientHeight;
+      el.scrollTop = el.scrollHeight - el.clientHeight;
     } else {
-       this._term.element.scrollTop = this._scrollbar.position;
+       el.scrollTop = this._scrollbar.position;
     }
     
     this._scrollSyncID = this._getWindow().requestAnimationFrame( (id: number): void => {
@@ -442,14 +480,15 @@ class EtTerminal extends HTMLElement {
    */
   private _handleManualScroll(scrollDetail: termjs.ScrollDetail): void {
     this._autoscroll = scrollDetail.isBottom;
-    if (scrollDetail.isBottom === false) {
-      this._scrollbar.size = this._term.element.scrollHeight;
-      this._scrollbar.position = scrollDetail.position;
+    if (scrollDetail.isBottom) {
+      const el = util.getShadowId(this, ID_SCROLLER);
+      el.scrollTop = el.scrollHeight - el.clientHeight;
+      this._syncScrolling();
     }
   }
 
   private _syncManualScroll(): void {
-    const el = this._term.element;
+    const el = util.getShadowId(this, ID_SCROLLER);
     this._autoscroll = el.scrollTop === el.scrollHeight - el.clientHeight;
     this._scrollbar.position = el.scrollTop;
   }
@@ -494,7 +533,29 @@ class EtTerminal extends HTMLElement {
       this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
     }
   }
+  
+  private _handleScrollbackReady(): void {
+    const lines = this._term.fetchScrollbackLines();
+    if (lines.length === 0) {
+      return;
+    }
     
+    const lineToHTML = termjs.Terminal.lineToHTML;
+    
+    const div = document.createElement('div');
+    const text = lines.map<string>( (line) => "<div class=\"terminal-scrollback\">" + lineToHTML(line) + "</div>")
+      .join("");    
+    div.innerHTML = text;
+    
+    const frag = document.createDocumentFragment();
+    
+    util.nodeListToArray(div.childNodes).forEach( (node) => {
+      frag.appendChild(node);
+    });
+    
+    util.getShadowId(this, ID_SCROLLBACK).appendChild(frag);    
+  }
+  
   /**
    * Handle an unknown key down event from the term.
    */

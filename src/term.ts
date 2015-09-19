@@ -106,13 +106,14 @@ interface Options {
 
 type CharAttr = number;
 type LineCell = [CharAttr, string];
+type Line = LineCell[];
 
 interface CharSet {
   [key: string]: string;
 }
 
 interface SavedState {
-  lines: LineCell[][];
+  lines: Line[];
   cols: number;
   rows: number;
   ybase: number;
@@ -130,24 +131,24 @@ interface TerminalCoord {
 }
 
 // Character rendering attributes packed inside a CharAttr.
-const BOLD_ATTR_FLAG = 1;
-const UNDERLINE_ATTR_FLAG = 2;
-const BLINK_ATTR_FLAG = 4;
-const INVERSE_ATTR_FLAG = 8;
-const INVISIBLE_ATTR_FLAG = 16;
-const ITALIC_ATTR_FLAG = 32;
-const STRIKE_THROUGH_ATTR_FLAG = 64;
-const FAINT_ATTR_FLAG = 128;
+export const BOLD_ATTR_FLAG = 1;
+export const UNDERLINE_ATTR_FLAG = 2;
+export const BLINK_ATTR_FLAG = 4;
+export const INVERSE_ATTR_FLAG = 8;
+export const INVISIBLE_ATTR_FLAG = 16;
+export const ITALIC_ATTR_FLAG = 32;
+export const STRIKE_THROUGH_ATTR_FLAG = 64;
+export const FAINT_ATTR_FLAG = 128;
 
-function flagsFromCharAttr(attr: CharAttr): number {
+export function flagsFromCharAttr(attr: CharAttr): number {
   return attr >> 18;
 }
 
-function foregroundFromCharAttr(attr: CharAttr): number {
+export function foregroundFromCharAttr(attr: CharAttr): number {
   return (attr >> 9) & 0x1ff;
 }
 
-function backgroundFromCharAttr(attr: CharAttr): number {
+export function backgroundFromCharAttr(attr: CharAttr): number {
   return attr & 0x1ff;
 }
 
@@ -163,6 +164,12 @@ export class Terminal {
   static brokenBold: boolean;
   
   static NO_STYLE_HACK = "NO_STYLE_HACK";
+  
+  static EVENT_SCROLLBACK_AVAILABLE = "scrollback-available";
+  
+  static EVENT_MANUAL_SCROLL = "manual-scroll";
+  
+  static EVENT_WHEEL = "wheel";
   
   private parent: HTMLElement = null;
   public element: HTMLElement = null;
@@ -217,7 +224,7 @@ export class Terminal {
   private readable = true;
   private writable = true;
 
-  private defAttr = packCharAttr(0, 257, 256); // Default character style
+  static defAttr = packCharAttr(0, 257, 256); // Default character style
   private curAttr = 0;  // Current character style.
   private savedCurAttr = packCharAttr(0, 257, 256); // Default character style;
   
@@ -246,7 +253,7 @@ export class Terminal {
   private _writeBuffers: string[] = [];  // Buffer for incoming data waiting to be processed.
   private _processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.  
   private _refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
-  private _scrollbackBuffer = [];  // Array of lines which have not been rendered to the browser.
+  private _scrollbackBuffer: Line[] = [];  // Array of lines which have not been rendered to the browser.
   private tabs: { [key: number]: boolean };
   private sendFocus = false;
 
@@ -383,8 +390,7 @@ export class Terminal {
     this.readable = true;
     this.writable = true;
 
-    this.defAttr = packCharAttr(0, 257, 256); // Default character style
-    this.curAttr = this.defAttr;  // Current character style.
+    this.curAttr = Terminal.defAttr;  // Current character style.
 
     this.params = [];
     this.currentParam = 0;
@@ -406,7 +412,7 @@ export class Terminal {
   // back_color_erase feature for xterm.
   eraseAttr(): number {
     // if (this.is('screen')) return this.defAttr;
-    return (this.defAttr & ~0x1ff) | (this.curAttr & 0x1ff);
+    return (Terminal.defAttr & ~0x1ff) | (this.curAttr & 0x1ff);
   }
 
   /**
@@ -746,9 +752,9 @@ export class Terminal {
     }
     
     // Fill up the scroll back "TODO" (=to be rendered) buffer.
-    lines.forEach(function(line) {
+    lines.forEach( (line) => {
       this._scrollbackBuffer.push(line);
-    }, this);
+    });
     
     this.lines = newLines;
     
@@ -759,12 +765,13 @@ export class Terminal {
     this.children = newChildren;
     
     // Force the scrollback buffer to render.
-    this._refreshScrollback();
     this.refreshStart = REFRESH_START_NULL;
     this.refreshEnd = REFRESH_END_NULL;
     this.x = 0;
     this.y = 0;
     this.oldy = 0;
+    
+    this.emit(Terminal.EVENT_SCROLLBACK_AVAILABLE);
   }
 
   /**
@@ -1051,9 +1058,8 @@ export class Terminal {
     //if (self.normalMouse) {
     //  on(self.document, 'mousemove', sendMove);
     //}
-    const wheelEvent = 'onmousewheel' in this.context ? 'mousewheel' : 'DOMMouseScroll';
-
-    on(el, wheelEvent, (ev: MouseEvent) => {
+    
+    on(el, 'wheel', (ev: WheelEvent): void => {
       if (!this.mouseEvents) {
         return;
       }
@@ -1069,12 +1075,12 @@ export class Terminal {
       if (pos !== null) {
         this.sendMouseButtonSequence(pos, button);
       }
-      return cancelEvent(ev);
+      cancelEvent(ev);
     });
 
-    // allow mousewheel scrolling in
+    // allow mouse wheel scrolling in
     // the shell for example
-    on(el, wheelEvent, (ev: MouseEvent) => {
+    on(el, 'wheel', (ev: WheelEvent): void => {
       if (this.mouseEvents) {
         return;
       }
@@ -1083,27 +1089,13 @@ export class Terminal {
       }
       
       if (this.physicalScroll) {
-        // Let the mouse whell scroll the DIV.
-        let newScrollPosition;
-        if ((<any>ev).wheelDelta > 0) {
-            newScrollPosition = Math.max(0, this.element.scrollTop - this.charHeight * WHEELSCROLL_CHARS);
-            this.element.scrollTop = newScrollPosition;
-            this.emit('manual-scroll', { position: newScrollPosition, isBottom: this.isScrollAtBottom() });
-        } else {
-            newScrollPosition = Math.min(this.element.scrollHeight - this.element.clientHeight,
-                                              this.element.scrollTop + this.charHeight * WHEELSCROLL_CHARS);
-            this.element.scrollTop = newScrollPosition;
-            this.emit('manual-scroll', { position: newScrollPosition, isBottom: this.isScrollAtBottom() });
-        }
+        this.emit(Terminal.EVENT_WHEEL, ev);
         return;
       }
       
-      if (ev.type === 'DOMMouseScroll') {
-        this.scrollDisp(ev.detail < 0 ? -5 : 5);
-      } else {
-        this.scrollDisp((<any>ev).wheelDeltaY > 0 ? -5 : 5);
-      }
-      return cancelEvent(ev);
+      this.scrollDisp(ev.deltaY > 0 ? -5 : 5);
+
+      cancelEvent(ev);
     });
   }
 
@@ -1296,8 +1288,8 @@ export class Terminal {
       case 'DOMMouseScroll':
         button = ev.detail < 0 ? 64 : 65;
         break;
-      case 'mousewheel':
-        button = (<any>ev).wheelDeltaY > 0 ? 64 : 65;
+      case 'wheel':
+        button = (<any>ev).deltaY > 0 ? 64 : 65;
         break;
     }
 
@@ -1374,7 +1366,6 @@ export class Terminal {
    */
   private _refreshFrame(): void {
     this.refresh(this.refreshStart, this.refreshEnd);
-    this._refreshScrollback();
     this.refreshStart = REFRESH_START_NULL;
     this.refreshEnd = REFRESH_END_NULL;
   }
@@ -1411,17 +1402,37 @@ export class Terminal {
         line[x] = [-1, line[x][1]];
       }
 
-      this._getChildDiv(y).innerHTML = this._lineToHTML(line);
+      this._getChildDiv(y).innerHTML = Terminal.lineToHTML(line);
     }
   }
-    
+  
+  /**
+   * Return true if there are lines waiting in the scrollback buffer.
+   *
+   * @return true if there are lines waiting to be rendered in the scrollback buffer.
+   */
+  isScrollbackAvailable(): boolean {
+    return this._scrollbackBuffer.length !== 0;
+  }
+  
+  /**
+   * Fetch all of the bending scrollback lines from the buffer.
+   * 
+   * @return all of the scrollback lines which need to rendered.
+   */
+  fetchScrollbackLines(): Line[] {
+    const lines = this._scrollbackBuffer;
+    this._scrollbackBuffer = [];
+    return lines;
+  }
+  
   /**
    * Render a line to a HTML string.
    * 
    * @param {Array} line Array describing a line of characters and attributes.
    * @returns {string} A HTML rendering of the line as a HTML string.
    */
-  _lineToHTML(line: LineCell[]): string {
+  static lineToHTML(line: LineCell[]): string {
     let attr = this.defAttr;
     const width = line.length;
     let out = '';
@@ -1544,67 +1555,6 @@ export class Terminal {
     return out;
   }
 
-  /**
-   * Render any pending scrollback lines.
-   */
-  _refreshScrollback() {
-    var frag;
-    var i;
-    var onScreenScrollback;
-    var pendingScrollbackLength;
-    var onScreenDelete;
-    var div;
-    var text;
-
-    pendingScrollbackLength = this._scrollbackBuffer.length;
-    if (pendingScrollbackLength !== 0) {
-
-      onScreenScrollback = this.element.childNodes.length - this.children.length;
-      
-      if (pendingScrollbackLength > this.scrollback) {
-        onScreenDelete = onScreenScrollback;  // Delete every scrollback row on screen.
-        this._scrollbackBuffer.splice(0, pendingScrollbackLength - this.scrollback); // Truncate the TODO rows.
-      } else {
-        // Delete part of the on screen scrollback rows.
-        onScreenDelete = Math.max(0, pendingScrollbackLength + onScreenScrollback - this.scrollback);
-      }
-      
-      // Delete parts of the existing on screen scrollback.
-      while (onScreenDelete !==0) {
-        this.element.removeChild(this.element.childNodes[0]);
-        onScreenDelete--;
-      }
-      
-      pendingScrollbackLength = this._scrollbackBuffer.length;
-    
-      frag = this.document.createDocumentFragment();
-      div = this.document.createElement('div');
-      frag.appendChild(div);
-      text = "";
-      for (i = 0; i < pendingScrollbackLength; i++) {
-        text += "<div class=\"terminal-scrollback\">";
-        text += this._lineToHTML(this._scrollbackBuffer[i]);
-        text += "</div>";
-      }
-      div.innerHTML = text;
-      
-      for (i = 0; i < pendingScrollbackLength; i++) {
-        frag.appendChild(div.childNodes[0]);
-      }
-      div.remove();
-      
-      frag.appendChild(div);
-      
-      if (this.children.length === 0) {
-        this.element.appendChild(frag);
-      } else {
-        this.element.insertBefore(frag, this.children[0]);
-      }
-      
-      this._scrollbackBuffer = [];
-    }
-  }
-
   _cursorBlink(): void {
     if ( ! this._hasFocus) {
       return;
@@ -1673,6 +1623,7 @@ export class Terminal {
       if (this.scrollTop === 0) {
         const oldline = this.lines[0];
         this._scrollbackBuffer.push(oldline);
+        this.emit(Terminal.EVENT_SCROLLBACK_AVAILABLE);
       }
     }
 
@@ -3288,7 +3239,7 @@ export class Terminal {
     // resize cols
     if (this.cols < newcols) {
       // Add chars to the lines to match the new (bigger) cols value.
-      const ch: LineCell = [this.defAttr, ' ']; // does xterm use the default attr?
+      const ch: LineCell = [Terminal.defAttr, ' ']; // does xterm use the default attr?
       for (let i = this.lines.length-1; i >= 0; i--) {
         const line = this.lines[i];
         while (line.length < newcols) {
@@ -3506,7 +3457,7 @@ export class Terminal {
   }
 
   blankLine(cur?: boolean): LineCell[] {
-    const attr = cur ? this.eraseAttr() : this.defAttr;
+    const attr = cur ? this.eraseAttr() : Terminal.defAttr;
     const ch: LineCell = [attr, ' '];
     
     const line: LineCell[] = [];
@@ -3518,7 +3469,7 @@ export class Terminal {
   }
 
   ch(cur: boolean): LineCell {
-    return cur ? [this.eraseAttr(), ' '] : [this.defAttr, ' '];
+    return cur ? [this.eraseAttr(), ' '] : [Terminal.defAttr, ' '];
   }
 
   is(term: string): boolean {
@@ -3785,7 +3736,7 @@ export class Terminal {
   charAttributes(params: number[]): void {
     // Optimize a single SGR0.
     if (params.length === 1 && params[0] === 0) {
-      this.curAttr = this.defAttr;
+      this.curAttr = Terminal.defAttr;
       return;
     }
 
@@ -3812,9 +3763,9 @@ export class Terminal {
         bg = p - 100;
       } else if (p === 0) {
         // default
-        flags = flagsFromCharAttr(this.defAttr);
-        fg = foregroundFromCharAttr(this.defAttr);
-        bg = backgroundFromCharAttr(this.defAttr);
+        flags = flagsFromCharAttr(Terminal.defAttr);
+        fg = foregroundFromCharAttr(Terminal.defAttr);
+        bg = backgroundFromCharAttr(Terminal.defAttr);
         // flags = 0;
         // fg = 0x1ff;
         // bg = 0x1ff;
@@ -3883,11 +3834,11 @@ export class Terminal {
         
       } else if (p === 39) {
         // reset fg
-        fg = foregroundFromCharAttr(this.defAttr);
+        fg = foregroundFromCharAttr(Terminal.defAttr);
 
       } else if (p === 49) {
         // reset bg
-        bg = backgroundFromCharAttr(this.defAttr);
+        bg = backgroundFromCharAttr(Terminal.defAttr);
 
       } else if (p === 38) {
         // fg color 256
@@ -3921,8 +3872,8 @@ export class Terminal {
 
       } else if (p === 100) {
         // reset fg/bg
-        fg = foregroundFromCharAttr(this.defAttr);
-        bg = backgroundFromCharAttr(this.defAttr);
+        fg = foregroundFromCharAttr(Terminal.defAttr);
+        bg = backgroundFromCharAttr(Terminal.defAttr);
 
       } else {
         this.error('Unknown SGR attribute: %d.', "" + p);
@@ -4774,7 +4725,7 @@ export class Terminal {
   repeatPrecedingCharacter(params: number[]): void {
     let param = params[0] || 1;
     const line = this._getRow(this.ybase + this.y);
-    const ch: LineCell = line[this.x - 1] || [this.defAttr, ' '];
+    const ch: LineCell = line[this.x - 1] || [Terminal.defAttr, ' '];
 
     while (param--) {
       line[this.x] = ch;
@@ -4864,7 +4815,7 @@ export class Terminal {
     this.applicationCursor = false;
     this.scrollTop = 0;
     this.scrollBottom = this.rows - 1;
-    this.curAttr = this.defAttr;
+    this.curAttr = Terminal.defAttr;
     this.x = this.y = 0; // ?
     this.charset = null;
     this.glevel = 0; // ??

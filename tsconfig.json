@@ -22,16 +22,18 @@
         "!./src/typings/github-electron/github-electron-main.d.ts",
         "!./src/typings/github-electron/github-electron-renderer.d.ts",
         "!./src/node_modules/**/*.ts",
+        "./src/node_modules/typescript/lib/lib.es6.d.ts",
         "./src/node_modules/immutable/dist/*.ts"
     ],
     "files": [
         "./src/aboutdialog.ts",
-        "./src/chrome_lib.es6.d.ts",
+        "./src/codemirror_extra.d.ts",
         "./src/commandplaceholder.ts",
         "./src/config.ts",
         "./src/domutils.ts",
         "./src/embeddedviewer.ts",
         "./src/extra_dom.d.ts",
+        "./src/extra_lib.d.ts",
         "./src/icepick.d.ts",
         "./src/main.ts",
         "./src/mainweb.ts",
@@ -74,6 +76,7 @@
         "./src/typings/node/node.d.ts",
         "./src/typings/pty.js/pty.js.d.ts",
         "./src/typings/react/react.d.ts",
+        "./src/node_modules/typescript/lib/lib.es6.d.ts",
         "./src/node_modules/immutable/dist/immutable.d.ts"
     ]
 }
