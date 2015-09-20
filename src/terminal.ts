@@ -9,6 +9,7 @@ import ViewerElement = require("./viewerelement");
 import EtEmbeddedViewer = require('./embeddedviewer');
 import EtCommandPlaceHolder = require('./commandplaceholder');
 import EtCodeMirrorViewer = require('./viewers/codemirrorviewer');
+import EtCodeMirrorViewerTypes = require('./viewers/codemirrorviewertypes');
 import EtMarkdownViewer = require('./viewers/markdownviewer');
 
 import domutils = require('./domutils');
@@ -18,6 +19,8 @@ import util = require('./gui/util');
 import clipboard = require('clipboard');
 import webipc = require('./webipc');
 import globalcss = require('./gui/globalcss');
+
+type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
 
 const debug = true;
 let startTime: number = window.performance.now();
@@ -105,7 +108,8 @@ class EtTerminal extends HTMLElement {
   private _autoscroll: boolean;
   
   private _termContainer: HTMLDivElement;
-
+  private _scrollbackCodeMirror: EtCodeMirrorViewer;
+  private _scrollbackLaterHandle: util.LaterHandle;
   private _term: termjs.Terminal;
   private _htmlData: string;
   
@@ -119,7 +123,6 @@ class EtTerminal extends HTMLElement {
   private _blinkingCursor: boolean;
   private _title: string;
   private _noFrameCommands: RegExp[];
-  private _super_lineToHTML: (line: any[]) => string;
   
   private _tagCounter: number;
   private _themeCssPath: string;
@@ -127,12 +130,15 @@ class EtTerminal extends HTMLElement {
   private _themeStyleLoaded: boolean;
   private _resizePollHandle: util.LaterHandle;
   private _elementAttached: boolean;
+  private _terminalSize: ClientRect;
   
   private _initProperties(): void {
     this._elementAttached = false;
     this._scrollSyncID = -1;
     this._autoscroll = true;
     this._term = null;
+    this._scrollbackCodeMirror = null;
+    this._scrollbackLaterHandle = null;
     this._htmlData = null;
     this._mimeType = null;
     this._mimeData = null;
@@ -147,6 +153,7 @@ class EtTerminal extends HTMLElement {
     this._mainStyleLoaded = false;
     this._themeStyleLoaded = false;
     this._resizePollHandle = null;
+    this._terminalSize = null;
   }
   
   //-----------------------------------------------------------------------
@@ -233,6 +240,8 @@ class EtTerminal extends HTMLElement {
     });
   
     this._syncScrolling();
+
+    util.doLater(this._handleResize);
   }
   
   /**
@@ -513,6 +522,23 @@ class EtTerminal extends HTMLElement {
         this._sendResizeEvent(size.cols, size.rows);
       }
     }
+    
+    const newTerminalSize = this.getBoundingClientRect();
+    if (this._terminalSize !== null &&
+        newTerminalSize.width === this._terminalSize.width &&
+        newTerminalSize.height === this._terminalSize.height) {
+      return;
+    }
+    
+    this._terminalSize = newTerminalSize;
+    const scrollback = util.getShadowId(this, ID_SCROLLBACK);
+    const height = this._terminalSize.height;
+    util.nodeListToArray(scrollback.childNodes).forEach( (node: Node): void => {
+      if (EtCodeMirrorViewer.is(node)) {
+        node.setMaxHeight(height);
+      }
+    });
+    
   }
   
   private _resizePoll(): void {
@@ -535,26 +561,148 @@ class EtTerminal extends HTMLElement {
   }
   
   private _handleScrollbackReady(): void {
+    if (this._scrollbackLaterHandle === null) {
+      this._scrollbackLaterHandle = util.doLaterFrame( () => {
+        this._scrollbackLaterHandle = null;
+        this._importScrollback();
+      });
+    }
+  }
+  
+  private _importScrollback(): void {
+    if (this._term === null) {
+      return;
+    }
     const lines = this._term.fetchScrollbackLines();
     if (lines.length === 0) {
       return;
     }
     
-    const lineToHTML = termjs.Terminal.lineToHTML;
+    if (this._scrollbackCodeMirror === null) {
+      this._scrollbackCodeMirror = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
+      if (this._terminalSize.height !== null) {
+        this._scrollbackCodeMirror.setMaxHeight(this._terminalSize.height);
+      }
+      util.getShadowId(this, ID_SCROLLBACK).appendChild(this._scrollbackCodeMirror);
+    }
     
-    const div = document.createElement('div');
-    const text = lines.map<string>( (line) => "<div class=\"terminal-scrollback\">" + lineToHTML(line) + "</div>")
-      .join("");    
-    div.innerHTML = text;
+    const allDecorations: TextDecoration[] = [];
+    let allText = "";
+    let cr = "";
+    for (let i = 0; i < lines.length; i++) {
+      const {text, decorations} = this._lineToStyleList(lines[i], i);
+      allText += cr;
+      allText += util.trimRight(text);
+      cr = "\n";
+      
+      allDecorations.push(...decorations);
+    }
     
-    const frag = document.createDocumentFragment();
-    
-    util.nodeListToArray(div.childNodes).forEach( (node) => {
-      frag.appendChild(node);
-    });
-    
-    util.getShadowId(this, ID_SCROLLBACK).appendChild(frag);    
+    this._scrollbackCodeMirror.appendText(allText, allDecorations);
   }
+  
+  private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
+    const defAttr = termjs.Terminal.defAttr;
+    let attr = defAttr;
+    const width = line.length;
+    let text = '';
+    const decorations: TextDecoration[] = [];
+    
+    let currentDecoration: TextDecoration  = null;
+    
+    for (let i = 0; i < width; i++) {
+      const data = line[i][0];
+      const ch = line[i][1];
+      text += ch;
+      
+      if (data !== attr) {
+        if (attr !== defAttr) {
+          currentDecoration.toCh = i;
+          decorations.push(currentDecoration);
+          currentDecoration = null;
+        }
+        if (data !== defAttr) {
+          let bg = termjs.backgroundFromCharAttr(data);
+          let fg = termjs.foregroundFromCharAttr(data);
+          const flags = termjs.flagsFromCharAttr(data);
+          
+          const classList: string[] = [];
+          
+          // bold
+          if (flags & termjs.BOLD_ATTR_FLAG) {
+            classList.push('terminal-bold');
+
+            // See: XTerm*boldColors
+            if (fg < 8) {
+              fg += 8;  // Use the bright version of the color.
+            }
+          }
+
+          // italic
+          if (flags & termjs.ITALIC_ATTR_FLAG) {
+            classList.push('terminal-italic');
+          }
+          
+          // underline
+          if (flags & termjs.UNDERLINE_ATTR_FLAG) {
+            classList.push('terminal-underline');
+          }
+
+          // strike through
+          if (flags & termjs.STRIKE_THROUGH_ATTR_FLAG) { 
+            classList.push('terminal-strikethrough');
+          }
+          
+          // inverse
+          if (flags & termjs.INVERSE_ATTR_FLAG) {
+            let tmp = fg;
+            fg = bg;
+            bg = tmp;
+            
+            // Should inverse just be before the
+            // above boldColors effect instead?
+            if ((flags & termjs.BOLD_ATTR_FLAG) && fg < 8) {
+              fg += 8;  // Use the bright version of the color.
+            }
+          }
+
+          // invisible
+          if (flags & termjs.INVISIBLE_ATTR_FLAG) {
+            classList.push('terminal-invisible');
+          }
+
+          if (bg !== 256) {
+            classList.push('terminal-background-' + bg);
+          }
+
+          if (flags & termjs.FAINT_ATTR_FLAG) {
+            classList.push('terminal-faint-' + fg);
+          } else {
+            if (fg !== 257) {
+              classList.push('terminal-foreground-' + fg);
+            }
+          }
+          
+          if (flags & termjs.BLINK_ATTR_FLAG) {
+            classList.push("terminal-blink");
+          }
+          
+          if (classList.length !== 0) {
+            currentDecoration = { line: lineNumber, fromCh: i, toCh: null, classList: classList };
+          }
+        }
+      }
+
+      attr = data;
+    }
+
+    if (attr !== defAttr) {
+      currentDecoration.toCh = width;
+      decorations.push(currentDecoration);
+    }
+    
+    return {text, decorations};
+  }  
   
   /**
    * Handle an unknown key down event from the term.
@@ -979,53 +1127,6 @@ class EtTerminal extends HTMLElement {
     const event = new CustomEvent(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT,
       { detail: { terminal: this, embeddedViewer: viewerElement} });
     this.dispatchEvent(event);
-  }
-
-  
-  // git diff scroll speed test
-  // --------------------------
-  // Original with innerHTML: 11-14ms per line scroll update.
-  // DOM work, no decorate:   10-15ms per line scroll update.
-  // decorate SPAN:           20-25ms per line scroll update.
-  // decorate et-word:        28-34ms per line scroll update.
-  // SPAN with innerHTML:     12-19ms per line scroll update.
-  // et-word with innerHTML:  20-24ms per line scroll update.
-
-  private _lineToHTML(line: any[]): string {
-    const len = line.length;
-    let whiteState = true;
-    let tempLine: any[];
-    let tuple: any;
-    let output = "";
-    const WORD_SPAN = "<span class='et-word' tabindex='-1'>";
-
-    tempLine = [];
-    for (let i=0; i<len; i++) {
-      tuple = line[i];
-      const isWhite = tuple[1] === ' ';
-      if (whiteState !== isWhite) {
-        if (tempLine.length !== 0) {
-          if (whiteState) {
-            output = output + this._super_lineToHTML.call(this._term, tempLine);
-          } else {
-            output = output + WORD_SPAN + this._super_lineToHTML.call(this._term, tempLine) + "</span>";
-          }
-          tempLine = [];
-        }
-        whiteState = isWhite;
-      }
-      tempLine.push(tuple);
-    }
-
-    if (tempLine.length !== 0) {
-      if (whiteState) {
-        output = output + this._super_lineToHTML.call(this._term, tempLine);
-      } else {
-        output = output + WORD_SPAN + this._super_lineToHTML.call(this._term, tempLine) + "</span>";
-      }
-    }
-
-    return output;
   }
   
   private handleRequestFrame(frameId: string): void {

@@ -64,6 +64,7 @@
         "./src/gui/tabwidget.ts",
         "./src/gui/util.ts",
         "./src/viewers/codemirrorviewer.ts",
+        "./src/viewers/codemirrorviewertypes.ts",
         "./src/viewers/markdownviewer.ts",
         "./src/viewers/terminalviewer.ts",
         "./src/settings/settingstab.ts",

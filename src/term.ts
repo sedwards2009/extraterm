@@ -104,9 +104,9 @@ interface Options {
   applicationModeCookie?: string;
 };
 
-type CharAttr = number;
-type LineCell = [CharAttr, string];
-type Line = LineCell[];
+export type CharAttr = number;
+export type LineCell = [CharAttr, string];
+export type Line = LineCell[];
 
 interface CharSet {
   [key: string]: string;
