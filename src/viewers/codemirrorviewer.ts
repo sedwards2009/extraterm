@@ -121,6 +121,19 @@ class EtCodeMirrorViewer extends ViewerElement {
     }
   }
   
+  getHeight(): number {
+    return this._maxHeight;
+  }
+  
+  getVirtualHeight(): number {
+    const info = this._codeMirror.getScrollInfo();
+    return info.height;
+  }
+  
+  scrollTo(x: number, y: number): void {
+    this._codeMirror.scrollTo(x, y);
+  }
+  
   createdCallback(): void {
     this._initProperties();
     
@@ -152,7 +165,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
-    }, {value: "", readOnly: true,  scrollbarStyle: "overlay"});
+    }, {value: "", readOnly: true,  scrollbarStyle: "null"});
     this._importLineCounter = 0;
     
     // this._mutationObserver = new MutationObserver( (mutations) => {

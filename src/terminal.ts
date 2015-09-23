@@ -14,7 +14,7 @@ import EtMarkdownViewer = require('./viewers/markdownviewer');
 
 import domutils = require('./domutils');
 import termjs = require('./term');
-import scrollbar = require('./gui/scrollbar');
+import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
 import clipboard = require('clipboard');
 import webipc = require('./webipc');
@@ -89,7 +89,7 @@ class EtTerminal extends HTMLElement {
    */
   static init(): void {
     if (registered === false) {
-      scrollbar.init();
+      CbScrollbar.init();
       EtEmbeddedViewer.init();
       EtCommandPlaceHolder.init();
       // EtTerminalViewer.init();
@@ -103,13 +103,17 @@ class EtTerminal extends HTMLElement {
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
   private _container: HTMLDivElement;
-  private _scrollbar: scrollbar;
-  private _scrollSyncID: number;
+  private _scrollbar: CbScrollbar;
+  private _scrollSyncLaterHandle: util.LaterHandle;
   private _autoscroll: boolean;
   
   private _termContainer: HTMLDivElement;
   private _scrollbackCodeMirror: EtCodeMirrorViewer;
   private _scrollbackLaterHandle: util.LaterHandle;
+  private _terminalSize: ClientRect;
+  private _scrollYOffset: number; // The Y scroll offset into the virtual height.
+  private _virtualHeight: number; // The virtual height of the terminal contents in px.
+  
   private _term: termjs.Terminal;
   private _htmlData: string;
   
@@ -130,11 +134,11 @@ class EtTerminal extends HTMLElement {
   private _themeStyleLoaded: boolean;
   private _resizePollHandle: util.LaterHandle;
   private _elementAttached: boolean;
-  private _terminalSize: ClientRect;
+  
   
   private _initProperties(): void {
     this._elementAttached = false;
-    this._scrollSyncID = -1;
+    this._scrollSyncLaterHandle = null;
     this._autoscroll = true;
     this._term = null;
     this._scrollbackCodeMirror = null;
@@ -154,6 +158,8 @@ class EtTerminal extends HTMLElement {
     this._themeStyleLoaded = false;
     this._resizePollHandle = null;
     this._terminalSize = null;
+    this._scrollYOffset = 0;
+    this._virtualHeight = 0;
   }
   
   //-----------------------------------------------------------------------
@@ -178,7 +184,7 @@ class EtTerminal extends HTMLElement {
       });
 
     this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
-    this._scrollbar = <scrollbar>this._container.querySelector('cb-scrollbar');
+    this._scrollbar = <CbScrollbar>this._container.querySelector(CbScrollbar.TAG_NAME);
     this._termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
     const scroller = util.getShadowId(this, ID_SCROLLER);
     const scrollback = util.getShadowId(this, ID_SCROLLBACK);
@@ -219,24 +225,16 @@ class EtTerminal extends HTMLElement {
     }
     this._elementAttached = true;
     
-    // Window DOM event handlers
-    this._handleWindowClick = this._handleWindowClick.bind(this);
-    this._getWindow().document.body.addEventListener('click', this._handleWindowClick);
-    
     this._term.open(this._termContainer);
-
     this._term.element.addEventListener('keypress', this._handleKeyPressTerminal.bind(this));
     this._term.element.addEventListener('keydown', this._handleKeyDownTerminal.bind(this));
     this._term.on(termjs.Terminal.EVENT_WHEEL, this._handleTermWheel.bind(this));
     
-    this._container.addEventListener(EtEmbeddedViewer.EVENT_SCROLL_MOVE, (ev: CustomEvent) => {
-      this._syncManualScroll();  
-    });
-
     this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
 
     this._scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
       this._autoscroll = ev.detail.isBottom;
+      this._scrollTo(this._scrollbar.position);
     });
   
     this._syncScrolling();
@@ -294,8 +292,8 @@ class EtTerminal extends HTMLElement {
    * Destroy the terminal.
    */
   destroy(): void {
-    if (this._scrollSyncID !== -1) {
-      cancelAnimationFrame(this._scrollSyncID);
+    if (this._scrollSyncLaterHandle !== null) {
+      this._scrollSyncLaterHandle.cancel();
     }
 
     if (this._resizePollHandle !== null) {
@@ -337,6 +335,7 @@ class EtTerminal extends HTMLElement {
   write(text: string): void {
     if (this._term !== null) {
       this._term.write(text);
+      this._syncScrolling();
     }
   }
   
@@ -349,14 +348,7 @@ class EtTerminal extends HTMLElement {
       this._sendDataToPtyEvent(text);
     }
   }
-  
-  /**
-   * Scroll the terminal down as far as possible.
-   */
-  scrollToBottom(): void {
-    this._term.scrollToBottom();
-  }
-  
+    
   resizeToContainer(): void {
     this._handleResize();
   }
@@ -411,7 +403,7 @@ class EtTerminal extends HTMLElement {
         .scroller {
           flex: 1;
           height: 100%;
-          overflow-x: scroll;
+          overflow-x: hidden;
           overflow-y: hidden;
         }
       
@@ -448,37 +440,23 @@ class EtTerminal extends HTMLElement {
     return this.ownerDocument;
   }
   
-  private _handleTermWheel(ev: WheelEvent): void {
-    const el = util.getShadowId(this, ID_SCROLLER);
-    
-    const scrollbarSize = el.scrollHeight;
-    const delta = ev.deltaY * SCROLL_STEP;
-    let pos = el.scrollTop + delta;
-    pos = Math.max(0, pos);
-    pos = Math.min(el.scrollHeight - el.clientHeight, pos);
-    
-    el.scrollTop = pos;    
-    this._syncManualScroll();
+  /**
+   * Handler for window title change events from the pty.
+   * 
+   * @param title The new window title for this terminal.
+   */
+  private _handleTitle(title: string): void {
+    this._title = title;
+    this._sendTitleEvent(title);
   }
   
-  /**
-   * Synchronize the scrollbar with the term.
-   */
-  private _syncScrolling(): void {
-    const el = util.getShadowId(this, ID_SCROLLER);
-    
-    this._scrollbar.size = el.scrollHeight;
-    if (this._autoscroll) {
-      // Scroll to the bottom.
-      this._scrollbar.position = Number.MAX_VALUE;
-      el.scrollTop = el.scrollHeight - el.clientHeight;
-    } else {
-       el.scrollTop = this._scrollbar.position;
-    }
-    
-    this._scrollSyncID = this._getWindow().requestAnimationFrame( (id: number): void => {
-      this._syncScrolling();
-    });
+  /* ******************************************************************* */
+  /* Scrolling and sizing related stuff */
+  /* ******************************************************************* */
+  
+  private _handleTermWheel(ev: WheelEvent): void {
+    const delta = ev.deltaY * SCROLL_STEP;
+    this._scrollTo(this._scrollYOffset + delta);
   }
   
   /**
@@ -490,28 +468,134 @@ class EtTerminal extends HTMLElement {
   private _handleManualScroll(scrollDetail: termjs.ScrollDetail): void {
     this._autoscroll = scrollDetail.isBottom;
     if (scrollDetail.isBottom) {
-      const el = util.getShadowId(this, ID_SCROLLER);
-      el.scrollTop = el.scrollHeight - el.clientHeight;
-      this._syncScrolling();
+      this._scrollTo(Number.MAX_SAFE_INTEGER);
+    }
+  }
+  
+  private _scrollTo(requestedY: number): void {
+    if (this._terminalSize === null) {
+      return;
+    }
+log("*************************************** _scrollTo( ", requestedY);
+    const viewPortHeight = this._terminalSize.height;
+
+    // Compute the virtual height of the terminal contents.
+    
+    // Assemble the interest boxes.
+    const heights: {realHeight: number; virtualHeight: number; element: EtCodeMirrorViewer; }[] = [];
+    if (this._scrollbackCodeMirror !== null) {
+      heights.push( { realHeight: this._scrollbackCodeMirror.getHeight(),
+        virtualHeight: this._scrollbackCodeMirror.getVirtualHeight(),
+        element: this._scrollbackCodeMirror } );
+    }
+    
+    const termRect = this._term.element.getBoundingClientRect();
+    heights.push( { realHeight: termRect.height, virtualHeight: termRect.height, element: null } );
+log("heights:",heights    );
+    // Add up the virtual heights.
+    const virtualHeight = heights.reduce<number>( (accu, info) => accu + info.virtualHeight, 0);
+    this._virtualHeight = virtualHeight;
+log(`virtualHeight=${virtualHeight}`);
+    // Clamp the requested position.
+    const pos = Math.min(Math.max(0, requestedY), virtualHeight-viewPortHeight);
+    this._scrollYOffset = pos;
+log(`pos=${pos}`);
+
+    // We pretend that the scrollback is one very tall continous column of text etc. But this is fake.
+    // Each code mirror viewer is only as tall as the terminal viewport. We scroll the contents of the
+    // code mirrors to make it look like the user is scrolling through a big long list.
+    //
+    // The terminal contents can best be thought of as a stack of rectangles which contain a sliding 'view' box.
+    // +-------+
+    // |       | <- First code mirror viewer.
+    // |       |
+    // |       |
+    // |       |
+    // |+-----+|
+    // ||     || <- This little box is the part which shown inside the code mirror view port.
+    // |+-----+|    This is is 'pulled' to bottom in the direction of the scroll Y point
+    // +-------+
+    // +-------+
+    // |       | <- second code mirror viewer.
+    // |       |
+    // |       |
+    // |+-----+| --- virtual scroll Y point
+    // ||     ||     The viewport is positioned aligned with the scroll Y point.
+    // |+-----+|     The scroller viewport is positioned at the top of the second code mirrro viewer.
+    // |       |
+    // +-------+
+    //
+    // The view ports are 'attracted' to the virtual Y position that we want to show.
+
+    let realYBase = 0;
+    let virtualYBase = 0;
+    const el = util.getShadowId(this, ID_SCROLLER);
+    for (let i=0; i<heights.length; i++) {
+      const heightInfo = heights[i];
+
+      const currentVirtualHeight = heightInfo.virtualHeight;
+      const currentScrollHeight = currentVirtualHeight - heightInfo.realHeight;
+
+      if (pos < currentScrollHeight + virtualYBase) {
+        const scrollOffset = Math.max(0, pos - virtualYBase);
+log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
+        if (heightInfo.element !== null) {
+          heightInfo.element.scrollTo(0, scrollOffset);
+        }
+        
+        if (pos >= virtualYBase) {
+          el.scrollTop = realYBase;
+        }
+        
+      } else if (pos < virtualHeight + virtualYBase) {
+        if (heightInfo.element !== null) {
+          heightInfo.element.scrollTo(0, currentScrollHeight);
+        }
+log(`2. heightInfo ${i}, element scrollTo=${currentScrollHeight}, el.scrollTop=${realYBase + pos - virtualYBase - currentScrollHeight}`);
+        if (pos >= virtualYBase) {
+          el.scrollTop = realYBase + pos - virtualYBase - currentScrollHeight;
+        }
+      } else {
+        if (heightInfo.element !== null) {
+log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
+          heightInfo.element.scrollTo(0, currentScrollHeight);
+        }
+      }
+
+      realYBase += heightInfo.realHeight;
+      virtualYBase += currentVirtualHeight;
+    }
+
+    // Update the scrollbar
+    this._scrollbar.size = this._virtualHeight;
+    this._scrollbar.position = pos;
+  }
+  
+  private _syncScrolling(): void {
+    if (this._scrollSyncLaterHandle === null) {
+      this._scrollSyncLaterHandle = util.doLaterFrame( this._syncScrollingExec.bind(this) );
     }
   }
 
-  private _syncManualScroll(): void {
-    const el = util.getShadowId(this, ID_SCROLLER);
-    this._autoscroll = el.scrollTop === el.scrollHeight - el.clientHeight;
-    this._scrollbar.position = el.scrollTop;
+  /**
+   * Synchronize the scrollbar with the term.
+   */
+  private _syncScrollingExec(): void {
+log("_syncScrollingExec");
+log("this._virtualHeight:", this._virtualHeight);
+    this._scrollSyncLaterHandle = null;
+
+    this._scrollbar.size = this._virtualHeight;
+    
+    if (this._autoscroll) {
+      // Scroll to the bottom.
+      this._scrollbar.position = Number.MAX_SAFE_INTEGER;
+      this._scrollTo(Number.MAX_SAFE_INTEGER);
+    // } else {
+    //   this._scrollTo(this._scrollbar.position);
+    }
   }
 
-  /**
-   * Handler for window title change events from the pty.
-   * 
-   * @param title The new window title for this terminal.
-   */
-  private _handleTitle(title: string): void {
-    this._title = title;
-    this._sendTitleEvent(title);
-  }
-  
   /**
    * Handle a resize event from the window.
    */
@@ -523,13 +607,17 @@ class EtTerminal extends HTMLElement {
       }
     }
     
+    // Get the new size of the terminal.
     const newTerminalSize = this.getBoundingClientRect();
     if (this._terminalSize !== null &&
         newTerminalSize.width === this._terminalSize.width &&
         newTerminalSize.height === this._terminalSize.height) {
       return;
     }
-    
+log("this.clientHeight=",this.clientHeight);
+log("bound height=",newTerminalSize.height);
+
+    // Propagate the new terminal height to the different components in inside the terminal scrollback DIV.
     this._terminalSize = newTerminalSize;
     const scrollback = util.getShadowId(this, ID_SCROLLBACK);
     const height = this._terminalSize.height;
@@ -539,6 +627,7 @@ class EtTerminal extends HTMLElement {
       }
     });
     
+    this._syncScrolling();
   }
   
   private _resizePoll(): void {
@@ -552,6 +641,7 @@ class EtTerminal extends HTMLElement {
       }
     }
   }
+  /* ******************************************************************* */
   
   private _handleStyleLoad(): void {
     if (this._mainStyleLoaded && this._themeStyleLoaded) {
@@ -570,6 +660,9 @@ class EtTerminal extends HTMLElement {
   }
   
   private _importScrollback(): void {
+log("_importScrollback");
+    this._syncScrolling();
+    
     if (this._term === null) {
       return;
     }
@@ -1076,6 +1169,7 @@ class EtTerminal extends HTMLElement {
   private _handlePtyStdoutData (data: string): void {
     log("incoming data:",""+data);
     this._term.write("" + data);
+    this._syncScrolling();
   }
 
   /**
@@ -1085,6 +1179,7 @@ class EtTerminal extends HTMLElement {
    */
   private _handlePtyStderrData(data: string): void {
     this._term.write(data);
+    this._syncScrolling();
   }
 
   /**

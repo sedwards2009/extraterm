@@ -1654,7 +1654,7 @@ export class Terminal {
   scrollToBottom() {
     var newScrollPosition = this.element.scrollHeight - this.element.clientHeight;
     this.element.scrollTop = newScrollPosition;
-    this.emit('manual-scroll', { position: newScrollPosition, isBottom: true });
+    this.emit(Terminal.EVENT_MANUAL_SCROLL, { position: newScrollPosition, isBottom: true });
   }
 
   isScrollAtBottom() {
