@@ -687,7 +687,7 @@ log("_importScrollback");
     for (let i = 0; i < lines.length; i++) {
       const {text, decorations} = this._lineToStyleList(lines[i], i);
       allText += cr;
-      allText += util.trimRight(text);
+      allText += text;
       cr = "\n";
       
       allDecorations.push(...decorations);
@@ -699,13 +699,18 @@ log("_importScrollback");
   private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
     const defAttr = termjs.Terminal.defAttr;
     let attr = defAttr;
-    const width = line.length;
+    let lineLength = line.length;
     let text = '';
     const decorations: TextDecoration[] = [];
     
+    // Trim off any unstyled whitespace to the right of the line.
+    while (lineLength !==0 && line[lineLength-1][0] === defAttr && line[lineLength-1][1] === ' ') {
+      lineLength--;
+    }
+
     let currentDecoration: TextDecoration  = null;
     
-    for (let i = 0; i < width; i++) {
+    for (let i = 0; i < lineLength; i++) {
       const data = line[i][0];
       const ch = line[i][1];
       text += ch;
@@ -792,7 +797,7 @@ log("_importScrollback");
     }
 
     if (attr !== defAttr) {
-      currentDecoration.toCh = width;
+      currentDecoration.toCh = lineLength;
       decorations.push(currentDecoration);
     }
     
