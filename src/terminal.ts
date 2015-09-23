@@ -407,7 +407,9 @@ class EtTerminal extends HTMLElement {
           overflow-y: hidden;
         }
       
-        .terminal > DIV.terminal-active, .terminal > DIV.terminal-scrollback {
+        ${EtCodeMirrorViewer.TAG_NAME},
+        .terminal > DIV.terminal-active,
+        .terminal > DIV.terminal-scrollback {
             margin-left: 2px;
             margin-right: 2px;
         }
