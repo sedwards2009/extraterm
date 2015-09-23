@@ -804,13 +804,22 @@ log("_importScrollback");
     if (ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey) {
       // Ctrl+Shift+C
       this.copyToClipboard();
-      ev.stopPropagation();
       
     } else if (ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {
       // Ctrl+Shift+V
       this._pasteFromClipboard();
-      ev.stopPropagation();
+      
+    } else if (ev.keyCode === 33 && ev.shiftKey) {
+      // page up
+      this._scrollTo(this._scrollYOffset - this._terminalSize.height / 2);
+      
+    } else if (ev.keyCode === 34 && ev.shiftKey) {
+      // page down
+      this._scrollTo(this._scrollYOffset + this._terminalSize.height / 2);
+    } else {
+      return;
     }
+    ev.stopPropagation();
   }
   
   private _handleKeyPressTerminal(ev: KeyboardEvent): void {

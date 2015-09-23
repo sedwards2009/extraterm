@@ -3013,13 +3013,9 @@ export class Terminal {
           if ( !this.physicalScroll) {
             // Virtual scroll up.
             this.scrollDisp(-(this.rows - 1));
-          } else {
-            // Scroll using the DOM.
-            newScrollPosition = Math.max(0, this.element.scrollTop - (this.element.clientHeight / 2));
-            this.element.scrollTop = newScrollPosition;
-            this.emit('manual-scroll', { position: newScrollPosition, isBottom: this.isScrollAtBottom() });
+            cancelEvent(ev);
           }
-          cancelEvent(ev);
+          // Let this one bubble up when using physical scrolling.
           return;
         } else {
           key = '\x1b[5~';
@@ -3031,14 +3027,9 @@ export class Terminal {
           if ( !this.physicalScroll) {
             // Virtual scroll down.
             this.scrollDisp(this.rows - 1);
-          } else {
-            // Scroll using the DOM.
-            newScrollPosition = Math.min(this.element.scrollHeight - this.element.clientHeight,
-                                              this.element.scrollTop + (this.element.clientHeight / 2));
-            this.element.scrollTop = newScrollPosition;
-            this.emit('manual-scroll', { position: newScrollPosition, isBottom: this.isScrollAtBottom() });
+            cancelEvent(ev);  
           }
-          cancelEvent(ev);
+          // Let this one bubble up when using physical scrolling.
           return;
         } else {
           key = '\x1b[6~';
