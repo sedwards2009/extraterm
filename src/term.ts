@@ -803,7 +803,7 @@ export class Terminal {
     return row >= this.lines.length ? null : this.lines[row];
   }
 
-  getDimensions() {
+  getDimensions(): { rows: number; cols: number; materializedRows: number; cursorX: number; cursorY: number; } {
     return {
       rows: this.rows,
       cols: this.cols,
@@ -1424,6 +1424,15 @@ export class Terminal {
     const lines = this._scrollbackBuffer;
     this._scrollbackBuffer = [];
     return lines;
+  }
+  
+  /**
+   * Get a shallow copy of the lines currently being shown on the terminal screen.
+   * 
+   * @return {Line[]} the lines information. Do not change this data!
+   */
+  getScreenLines(): Line[] {
+    return [...this.lines];
   }
   
   /**
@@ -3100,8 +3109,9 @@ export class Terminal {
             if (ev.keyCode >= 65 && ev.keyCode <= 90) {
               key = String.fromCharCode(ev.keyCode - 64);
             } else if (ev.keyCode === 32) {
-              // NUL
-              key = String.fromCharCode(0);
+              // Ctrl+Space
+              // // NUL
+              // key = String.fromCharCode(0);
             } else if (ev.keyCode >= 51 && ev.keyCode <= 55) {
               // escape, file sep, group sep, record sep, unit sep
               key = String.fromCharCode(ev.keyCode - 51 + 27);

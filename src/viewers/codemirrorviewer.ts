@@ -95,13 +95,11 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   focus(): void {
-    // util.getShadowId(this, ID_CONTAINER).focus();
+    this._codeMirror.focus();
   }
 
   hasFocus(): boolean {
-    // const root = util.getShadowRoot(this);
-    // return root.activeElement !== null;
-    return false;
+    return this._codeMirror.hasFocus();
   }
 
   get focusable(): boolean {
@@ -134,6 +132,16 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror.scrollTo(x, y);
   }
   
+  lineCount(): number {
+    const doc = this._codeMirror.getDoc();
+    return doc.lineCount();
+  }
+  
+  setCursor(line: number, ch: number): void {
+    const doc = this._codeMirror.getDoc();
+    doc.setCursor( { line, ch } );
+  }
+  
   createdCallback(): void {
     this._initProperties();
     
@@ -142,18 +150,19 @@ class EtCodeMirrorViewer extends ViewerElement {
     shadow.appendChild(clone);
 
     const containerDiv = util.getShadowId(this, ID_CONTAINER);
-    containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      ev.stopPropagation();
-      ev.preventDefault();
-    });
-    containerDiv.addEventListener('keypress', (ev: KeyboardEvent): void => {
-      ev.stopPropagation();
-      ev.preventDefault();
-    });
-    containerDiv.addEventListener('keyup', (ev: KeyboardEvent): void => {
-      ev.stopPropagation();
-      ev.preventDefault();
-    });
+    // containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
+    //   console.log("codemirrorviewer keydown: ",ev);
+    //   ev.stopPropagation();
+    //   ev.preventDefault();
+    // });
+    // containerDiv.addEventListener('keypress', (ev: KeyboardEvent): void => {
+    //   ev.stopPropagation();
+    //   ev.preventDefault();
+    // });
+    // containerDiv.addEventListener('keyup', (ev: KeyboardEvent): void => {
+    //   ev.stopPropagation();
+    //   ev.preventDefault();
+    // });
     
     this._updateFocusable(this._focusable);
     log("exit createdCallback");
@@ -163,17 +172,14 @@ class EtCodeMirrorViewer extends ViewerElement {
   attachedCallback(): void {
     log("attachedCallback");
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
+    
+    // Create the CodeMirror instance
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
     }, {value: "", readOnly: true,  scrollbarStyle: "null"});
+    
     this._importLineCounter = 0;
     
-    // this._mutationObserver = new MutationObserver( (mutations) => {
-    //   log("_mutationObserver");
-    //  this.pullInContents();
-    // });
-    // this._mutationObserver.observe(this, { childList: true });
-    // this.pullInContents();
     if (this._maxHeight > 0) {
       this._codeMirror.setSize("100%", this._maxHeight);
     }
@@ -214,8 +220,7 @@ class EtCodeMirrorViewer extends ViewerElement {
         @import url('node_modules/codemirror/addon/scroll/simplescrollbars.css');
         @import url('themes/default/theme.css');
         </style>
-        <div id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>
-        <div class="terminal_viewer terminal"><content></content></div>`;
+        <div id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>`
 
       window.document.body.appendChild(template);
     }
@@ -229,76 +234,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     //   themeTag.innerHTML = this.getThemeCss();
     // }
   }
-  
-  // private pullInContents(): void {
-  //   const container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
-  // 
-  //   const doc = this._codeMirror.getDoc();
-  //   const kidNodes = util.nodeListToArray(this.childNodes);
-  //   
-  //   if (kidNodes.length !== 0) {
-  //     
-  //     this._codeMirror.operation( () => {
-  //       
-  //       const textParts: string[] = [];
-  //       const styleList: { line: number, from: number; to: number; span: HTMLSpanElement; }[] = [];
-  //       
-  //       // Assemble the whole text from the DIVs and SPANs
-  //       kidNodes.forEach( (node) => {
-  //         if (node.nodeType === Node.ELEMENT_NODE && node.nodeName === 'DIV') {
-  //           const divElement = <HTMLDivElement> node;
-  //           if (divElement.classList.contains('terminal-scrollback')) {
-  //             const childNodes = util.nodeListToArray(divElement.childNodes);
-  //             const len = childNodes.length;
-  // 
-  //             let rowText = "";
-  //             for (let i=0; i<len; i++) {
-  //               const charNode = childNodes[i];
-  //               if (charNode.nodeType === Node.TEXT_NODE) {
-  //                 const textNode = <Text> charNode;
-  //                 rowText += textNode.data;
-  //               } else if (charNode.nodeType === Node.ELEMENT_NODE && charNode.nodeName === 'SPAN') {
-  //                 const spanNode = <HTMLSpanElement> charNode;
-  //                 const textContent = charNode.textContent;
-  // 
-  //                 // Record this range 
-  //                 styleList.push( { line: this._importLineCounter, from: rowText.length, to: rowText.length + textContent.length, span: spanNode} );
-  // 
-  //                 rowText += textContent;
-  //               }
-  //             }
-  //             const lastLine = { line: this._importLineCounter, ch: 0 };
-  //             textParts.push(util.trimRight(util.replaceNbsp(rowText)));
-  // 
-  //             this._importLineCounter++;
-  //           }
-  //         }
-  //         this.removeChild(node);
-  //       });
-  //       
-  //       // Update the text document
-  //       doc.setValue(textParts.join('\n'));
-  //       
-  //       if (styleList.length !== 0) {
-  //         // Apply the styles to the text.
-  //         const len = styleList.length;
-  //         for (let i=0; i<len; i++) {
-  //           const style = styleList[i];
-  //           const from = { line: style.line, ch: style.from };
-  //           const to = { line: style.line, ch: style.to };
-  //           const classList = style.span.classList;
-  //           for (let j=0; j<classList.length; j++) {
-  //             doc.markText( from, to, { className: classList.item(j) } );
-  //           }
-  //         }
-  //       }
-  //       
-  //     });
-  //   }
-  //   
-  //   this._codeMirror.refresh();
-  //   util.doLater( () => { this._codeMirror.refresh(); });
-  // }
   
   appendText(text: string, decorations?: TextDecoration[]): void {
     const doc = this._codeMirror.getDoc();
@@ -326,6 +261,25 @@ class EtCodeMirrorViewer extends ViewerElement {
     util.doLater( () => { this._codeMirror.refresh(); });
   }
   
+  deleteLinesFrom(line: number): void {
+    const doc = this._codeMirror.getDoc();
+    
+    
+    const lastPos = { line: doc.lineCount(), ch: 0 };
+    
+    let startPos: { line: number; ch: number; };
+    if (line > 0) {
+      const previousLineString = doc.getLine(line-1);
+      startPos = { line: line-1, ch: previousLineString.length };
+    } else {
+      startPos = { line: line, ch: 0 };
+    }
+    doc.replaceRange("", startPos, lastPos);
+    
+    this._codeMirror.refresh();
+    util.doLater( () => { this._codeMirror.refresh(); });
+  }
+
   private _updateFocusable(focusable: boolean): void {
     // const containerDiv = util.getShadowId(this, ID_CONTAINER);
     // containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");

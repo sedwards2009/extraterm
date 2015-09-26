@@ -42,9 +42,12 @@ const SEMANTIC_VALUE = "data-extraterm-value";
 const ID_TERM_CONTAINER = "term_container";
 const ID_SCROLLER = "scroller";
 const ID_SCROLLBACK = "scrollback_container";
+const ID_SCROLLBAR = "scrollbar";
 const ID_CONTAINER = "terminal_container";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
+
+const CLASS_SELECTION_MODE = "selection-mode";
 
 const SCROLL_STEP = 1;
 
@@ -102,12 +105,9 @@ class EtTerminal extends HTMLElement {
 
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
-  private _container: HTMLDivElement;
-  private _scrollbar: CbScrollbar;
   private _scrollSyncLaterHandle: util.LaterHandle;
   private _autoscroll: boolean;
   
-  private _termContainer: HTMLDivElement;
   private _scrollbackCodeMirror: EtCodeMirrorViewer;
   private _scrollbackLaterHandle: util.LaterHandle;
   private _terminalSize: ClientRect;
@@ -123,6 +123,9 @@ class EtTerminal extends HTMLElement {
   private _applicationMode: ApplicationMode;
   private _bracketStyle: string;
   private _lastBashBracket: string;
+  
+  private _selectionModeFlag: boolean;
+  private _selectionPreviousLineCount: number;
   
   private _blinkingCursor: boolean;
   private _title: string;
@@ -149,6 +152,9 @@ class EtTerminal extends HTMLElement {
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
     this._bracketStyle = null;
     this._lastBashBracket = null;
+    
+    this._selectionModeFlag = false;
+    
     this._blinkingCursor = false;
     this._noFrameCommands = [];
     this._title = "New Tab";
@@ -183,9 +189,9 @@ class EtTerminal extends HTMLElement {
       this._handleStyleLoad();
       });
 
-    this._container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
-    this._scrollbar = <CbScrollbar>this._container.querySelector(CbScrollbar.TAG_NAME);
-    this._termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
+    const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
+    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
+    const termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
     const scroller = util.getShadowId(this, ID_SCROLLER);
     const scrollback = util.getShadowId(this, ID_SCROLLBACK);
     
@@ -207,8 +213,9 @@ class EtTerminal extends HTMLElement {
     
     this._getWindow().addEventListener('resize', this._handleResize);
     
-    this._termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
+    termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
     scroller.addEventListener('wheel', this._handleTermWheel.bind(this));
+    scroller.addEventListener('keydown', this._handleScrollerKeyDown.bind(this));
     
     this._term.on(termjs.Terminal.EVENT_MANUAL_SCROLL, this._handleManualScroll.bind(this));
     this._term.on(termjs.Terminal.EVENT_SCROLLBACK_AVAILABLE, this._handleScrollbackReady.bind(this));
@@ -225,16 +232,18 @@ class EtTerminal extends HTMLElement {
     }
     this._elementAttached = true;
     
-    this._term.open(this._termContainer);
+    const termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
+    this._term.open(termContainer);
     this._term.element.addEventListener('keypress', this._handleKeyPressTerminal.bind(this));
     this._term.element.addEventListener('keydown', this._handleKeyDownTerminal.bind(this));
     this._term.on(termjs.Terminal.EVENT_WHEEL, this._handleTermWheel.bind(this));
     
     this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
-
-    this._scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
+    
+    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
+    scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
       this._autoscroll = ev.detail.isBottom;
-      this._scrollTo(this._scrollbar.position);
+      this._scrollTo(scrollbar.position);
     });
   
     this._syncScrolling();
@@ -413,6 +422,14 @@ class EtTerminal extends HTMLElement {
             margin-left: 2px;
             margin-right: 2px;
         }
+        
+        #${ID_SCROLLER}.${CLASS_SELECTION_MODE} > #${ID_SCROLLBACK} {
+          
+        }
+        
+        #${ID_SCROLLER}.${CLASS_SELECTION_MODE} > #${ID_TERM_CONTAINER} {
+          visibility: collapse;
+        }
 
         </style>
         <style id="${ID_THEME_STYLE}"></style>
@@ -421,7 +438,7 @@ class EtTerminal extends HTMLElement {
             <div id='${ID_SCROLLBACK}' class='terminal-scrollback terminal'></div>
             <div id='${ID_TERM_CONTAINER}' class='term_container'></div>
           </div>
-          <cb-scrollbar class='terminal_scrollbar'></cb-scrollbar>
+          <cb-scrollbar id='${ID_SCROLLBAR}' class='terminal_scrollbar'></cb-scrollbar>
         </div>`;
       window.document.body.appendChild(template);
     }
@@ -474,6 +491,10 @@ class EtTerminal extends HTMLElement {
     }
   }
   
+  private _refreshScroll(): void {
+    this._scrollTo(this._scrollYOffset);
+  }
+  
   private _scrollTo(requestedY: number): void {
     if (this._terminalSize === null) {
       return;
@@ -483,7 +504,7 @@ log("*************************************** _scrollTo( ", requestedY);
 
     // Compute the virtual height of the terminal contents.
     
-    // Assemble the interest boxes.
+    // Assemble the interesting boxes.
     const heights: {realHeight: number; virtualHeight: number; element: EtCodeMirrorViewer; }[] = [];
     if (this._scrollbackCodeMirror !== null) {
       heights.push( { realHeight: this._scrollbackCodeMirror.getHeight(),
@@ -491,9 +512,12 @@ log("*************************************** _scrollTo( ", requestedY);
         element: this._scrollbackCodeMirror } );
     }
     
-    const termRect = this._term.element.getBoundingClientRect();
-    heights.push( { realHeight: termRect.height, virtualHeight: termRect.height, element: null } );
-log("heights:",heights    );
+    if ( ! this._selectionModeFlag) {
+      const termRect = this._term.element.getBoundingClientRect();
+      heights.push( { realHeight: termRect.height, virtualHeight: termRect.height, element: null } );
+    }
+log("heights:",heights);
+
     // Add up the virtual heights.
     const virtualHeight = heights.reduce<number>( (accu, info) => accu + info.virtualHeight, 0);
     this._virtualHeight = virtualHeight;
@@ -569,8 +593,9 @@ log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
     }
 
     // Update the scrollbar
-    this._scrollbar.size = this._virtualHeight;
-    this._scrollbar.position = pos;
+    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
+    scrollbar.size = this._virtualHeight;
+    scrollbar.position = pos;
   }
   
   private _syncScrolling(): void {
@@ -586,12 +611,13 @@ log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
 log("_syncScrollingExec");
 log("this._virtualHeight:", this._virtualHeight);
     this._scrollSyncLaterHandle = null;
-
-    this._scrollbar.size = this._virtualHeight;
+    
+    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
+    scrollbar.size = this._virtualHeight;
     
     if (this._autoscroll) {
       // Scroll to the bottom.
-      this._scrollbar.position = Number.MAX_SAFE_INTEGER;
+      scrollbar.position = Number.MAX_SAFE_INTEGER;
       this._scrollTo(Number.MAX_SAFE_INTEGER);
     // } else {
     //   this._scrollTo(this._scrollbar.position);
@@ -653,7 +679,7 @@ log("bound height=",newTerminalSize.height);
   }
   
   private _handleScrollbackReady(): void {
-    if (this._scrollbackLaterHandle === null) {
+    if ( ! this._selectionModeFlag && this._scrollbackLaterHandle === null) {
       this._scrollbackLaterHandle = util.doLaterFrame( () => {
         this._scrollbackLaterHandle = null;
         this._importScrollback();
@@ -661,18 +687,7 @@ log("bound height=",newTerminalSize.height);
     }
   }
   
-  private _importScrollback(): void {
-log("_importScrollback");
-    this._syncScrolling();
-    
-    if (this._term === null) {
-      return;
-    }
-    const lines = this._term.fetchScrollbackLines();
-    if (lines.length === 0) {
-      return;
-    }
-    
+  private _getScrollBackCodeMirror(): EtCodeMirrorViewer {
     if (this._scrollbackCodeMirror === null) {
       this._scrollbackCodeMirror = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
       if (this._terminalSize.height !== null) {
@@ -680,7 +695,27 @@ log("_importScrollback");
       }
       util.getShadowId(this, ID_SCROLLBACK).appendChild(this._scrollbackCodeMirror);
     }
+    return this._scrollbackCodeMirror;
+  }
+  
+  private _importScrollback(): void {
+log("_importScrollback");
+    this._syncScrolling();
     
+    if (this._term === null || this._selectionModeFlag) {
+      return;
+    }
+    const lines = this._term.fetchScrollbackLines();
+    if (lines.length === 0) {
+      return;
+    }
+
+    const {text: allText, decorations: allDecorations} = this._linesToTextStyles(lines);
+    const scrollbackCodeMirror = this._getScrollBackCodeMirror();
+    scrollbackCodeMirror.appendText(allText, allDecorations);
+  }
+
+  private _linesToTextStyles(lines: termjs.Line[]): { text: string; decorations: TextDecoration[]; } {
     const allDecorations: TextDecoration[] = [];
     let allText = "";
     let cr = "";
@@ -692,10 +727,9 @@ log("_importScrollback");
       
       allDecorations.push(...decorations);
     }
-    
-    this._scrollbackCodeMirror.appendText(allText, allDecorations);
+    return {text: allText, decorations: allDecorations};
   }
-  
+
   private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
     const defAttr = termjs.Terminal.defAttr;
     let attr = defAttr;
@@ -804,6 +838,17 @@ log("_importScrollback");
     return {text, decorations};
   }  
   
+  private _handleScrollerKeyDown(ev: KeyboardEvent): void {
+    log("scroller keydown:", ev);
+    
+    if (this._selectionModeFlag) {
+      if (ev.keyCode === 27) {
+log("_exitSelectionMode");        
+        this._exitSelectionMode();
+      }
+    }
+  }
+
   /**
    * Handle an unknown key down event from the term.
    */
@@ -823,6 +868,11 @@ log("_importScrollback");
     } else if (ev.keyCode === 34 && ev.shiftKey) {
       // page down
       this._scrollTo(this._scrollYOffset + this._terminalSize.height / 2);
+      
+    } else if (ev.keyCode === 32 && ev.ctrlKey) {
+      // Ctrl + Space
+      this._enterSelectionMode();
+      
     } else {
       return;
     }
@@ -830,7 +880,6 @@ log("_importScrollback");
   }
   
   private _handleKeyPressTerminal(ev: KeyboardEvent): void {
-//    console.log("._handleKeyPressTerminal: ", ev.keyCode);
     this._term.keyPress(ev);
   }
 
@@ -894,7 +943,47 @@ log("_importScrollback");
 
     this._term.keyDown(ev);
   }
+  
+  /* ******************************************************************** */
+  /* Selection mode                                                       */
+  /* ******************************************************************** */
+  
+  private _enterSelectionMode(): void {
+    this._selectionModeFlag = true;
+    
+    const scroller = util.getShadowId(this, ID_SCROLLER);
+    scroller.classList.add(CLASS_SELECTION_MODE);
+    
+    // Copy the current screen lines into the scrollback code mirror.
+    const {text: allText, decorations: allDecorations} = this._linesToTextStyles(this._term.getScreenLines());
+    const scrollbackCodeMirror = this._getScrollBackCodeMirror();
+    
+    this._selectionPreviousLineCount = scrollbackCodeMirror.lineCount();
+    
+    scrollbackCodeMirror.appendText(allText, allDecorations);
+    
+    const cursorInfo = this._term.getDimensions();
+    scrollbackCodeMirror.setCursor(this._selectionPreviousLineCount + cursorInfo.cursorY, cursorInfo.cursorX);
+    scrollbackCodeMirror.focus();
+    this._refreshScroll();
+  }
+  
+  private _exitSelectionMode(): void {
+    this._selectionModeFlag = false;
+    
+    const scrollbackCodeMirror = this._getScrollBackCodeMirror();
+    scrollbackCodeMirror.deleteLinesFrom(this._selectionPreviousLineCount);
+    
+    const scroller = util.getShadowId(this, ID_SCROLLER);
+    scroller.classList.remove(CLASS_SELECTION_MODE);
+    
+    this._term.focus();
+    this._refreshScroll();
+    this._handleScrollbackReady();
+  }
 
+  /* ******************************************************************** */
+  
   /**
    * Handle when the embedded term.js enters start of application mode.
    * 
