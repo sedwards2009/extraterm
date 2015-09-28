@@ -46,6 +46,7 @@ const ID_SCROLLBAR = "scrollbar";
 const ID_CONTAINER = "terminal_container";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
+const ID_VPAD = "vpad";
 
 const CLASS_SELECTION_MODE = "selection-mode";
 
@@ -113,6 +114,7 @@ class EtTerminal extends HTMLElement {
   private _terminalSize: ClientRect;
   private _scrollYOffset: number; // The Y scroll offset into the virtual height.
   private _virtualHeight: number; // The virtual height of the terminal contents in px.
+  private _vpad: number;
   
   private _term: termjs.Terminal;
   private _htmlData: string;
@@ -166,6 +168,7 @@ class EtTerminal extends HTMLElement {
     this._terminalSize = null;
     this._scrollYOffset = 0;
     this._virtualHeight = 0;
+    this._vpad = 0;
   }
   
   //-----------------------------------------------------------------------
@@ -428,7 +431,17 @@ class EtTerminal extends HTMLElement {
         }
         
         #${ID_SCROLLER}.${CLASS_SELECTION_MODE} > #${ID_TERM_CONTAINER} {
-          visibility: collapse;
+          display: none;
+        }
+
+        #${ID_VPAD} {
+          width: 100%;
+          height: 0px;
+          display: none;
+        }
+        
+        #${ID_SCROLLER}.${CLASS_SELECTION_MODE} > #${ID_VPAD} {
+          display: block;
         }
 
         </style>
@@ -437,6 +450,7 @@ class EtTerminal extends HTMLElement {
           <div id='${ID_SCROLLER}' class='scroller'>
             <div id='${ID_SCROLLBACK}' class='terminal-scrollback terminal'></div>
             <div id='${ID_TERM_CONTAINER}' class='term_container'></div>
+            <div id='${ID_VPAD}' class='terminal'></div>
           </div>
           <cb-scrollbar id='${ID_SCROLLBAR}' class='terminal_scrollbar'></cb-scrollbar>
         </div>`;
@@ -512,9 +526,12 @@ log("*************************************** _scrollTo( ", requestedY);
         element: this._scrollbackCodeMirror } );
     }
     
+    // Include the term part only if we are not in selection mode.
     if ( ! this._selectionModeFlag) {
       const termRect = this._term.element.getBoundingClientRect();
       heights.push( { realHeight: termRect.height, virtualHeight: termRect.height, element: null } );
+    } else {
+      heights.push( { realHeight: this._vpad, virtualHeight: this._vpad, element: null } );
     }
 log("heights:",heights);
 
@@ -523,7 +540,7 @@ log("heights:",heights);
     this._virtualHeight = virtualHeight;
 log(`virtualHeight=${virtualHeight}`);
     // Clamp the requested position.
-    const pos = Math.min(Math.max(0, requestedY), virtualHeight-viewPortHeight);
+    const pos = Math.min(Math.max(0, requestedY), Math.max(0, virtualHeight-viewPortHeight));
     this._scrollYOffset = pos;
 log(`pos=${pos}`);
 
@@ -562,7 +579,7 @@ log(`pos=${pos}`);
       const currentVirtualHeight = heightInfo.virtualHeight;
       const currentScrollHeight = currentVirtualHeight - heightInfo.realHeight;
 
-      if (pos < currentScrollHeight + virtualYBase) {
+      if (pos <= currentScrollHeight + virtualYBase) {
         const scrollOffset = Math.max(0, pos - virtualYBase);
 log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
         if (heightInfo.element !== null) {
@@ -631,6 +648,9 @@ log("this._virtualHeight:", this._virtualHeight);
     if (this._term !== null) {
       if (this._mainStyleLoaded && this._themeStyleLoaded) {
         const size = this._term.resizeToContainer();
+        const vpadElement = util.getShadowId(this, ID_VPAD);
+        this._vpad = size.vpad;
+        vpadElement.style.height = "" + size.vpad + "px";
         this._sendResizeEvent(size.cols, size.rows);
       }
     }

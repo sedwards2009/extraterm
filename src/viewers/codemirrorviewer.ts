@@ -53,9 +53,9 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _returnCode: string;
   private _focusable: boolean;
   private _codeMirror: CodeMirror.Editor;
-  private _importLineCounter: number;
   private _maxHeight: number;
-  
+  private _isEmpty: boolean;
+
   private _initProperties(): void {
     this._mutationObserver = null;  
     this._commandLine = null;
@@ -63,6 +63,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._focusable = false;
     this._codeMirror = null;
     this._maxHeight = -1;
+    this._isEmpty = true;
   }
 
   set commandLine(commandLine: string) {
@@ -112,20 +113,25 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   setMaxHeight(height: number): void {
-    log("codemirrorviewer setMaxHeight: "+height);
     this._maxHeight = height;
     if (this.parentNode !== null) {
-      this._codeMirror.setSize("100%", height);
+      this._adjustHeight();
     }
   }
   
   getHeight(): number {
-    return this._maxHeight;
+    return Math.min(this.getVirtualHeight(), this._maxHeight);
   }
   
   getVirtualHeight(): number {
-    const info = this._codeMirror.getScrollInfo();
-    return info.height;
+    return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
+  }
+
+  private _adjustHeight(): void {
+    const virtualHeight = this.getVirtualHeight();
+    const elementHeight = this.getHeight();
+    this.style.height = "" + elementHeight + "px";
+    this._codeMirror.setSize("100%", "" +elementHeight + "px"); 
   }
   
   scrollTo(x: number, y: number): void {
@@ -134,7 +140,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   lineCount(): number {
     const doc = this._codeMirror.getDoc();
-    return doc.lineCount();
+    return this._isEmpty ? 0 : doc.lineCount();
   }
   
   setCursor(line: number, ch: number): void {
@@ -163,27 +169,22 @@ class EtCodeMirrorViewer extends ViewerElement {
     //   ev.stopPropagation();
     //   ev.preventDefault();
     // });
-    
-    this._updateFocusable(this._focusable);
-    log("exit createdCallback");
 
+    this.style.height = "0px";
+    this._updateFocusable(this._focusable);
   }
   
   attachedCallback(): void {
-    log("attachedCallback");
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     
     // Create the CodeMirror instance
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
-    }, {value: "", readOnly: true,  scrollbarStyle: "null"});
-    
-    this._importLineCounter = 0;
+    }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0});
     
     if (this._maxHeight > 0) {
       this._codeMirror.setSize("100%", this._maxHeight);
     }
-    log("exit attachedCallback");
   }
 
   /**
@@ -198,15 +199,13 @@ class EtCodeMirrorViewer extends ViewerElement {
         :host {
           display: block;
           width: 100%;
-          height: 100%;
-          min-height: 50px;
           white-space: normal;
         }
         
         #${ID_CONTAINER} {
           height: 100%;
           width: 100%;
-          overflow: auto;
+          overflow: hidden;
         }
         
         #${ID_CONTAINER}:focus {
@@ -237,11 +236,11 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   appendText(text: string, decorations?: TextDecoration[]): void {
     const doc = this._codeMirror.getDoc();
-    const lineOffset = this._importLineCounter === 0 ? 0 : doc.lineCount();
+    const lineOffset = this._isEmpty ? 0 : doc.lineCount();
     
-    const pos = { line: doc.lineCount(), ch: 0 };
-    doc.replaceRange((this._importLineCounter === 0 ? "" : "\n") + text, pos, pos);
-    this._importLineCounter++;
+    const pos = { line: this._isEmpty ? 0 : doc.lineCount(), ch: 0 };
+    doc.replaceRange((this._isEmpty ? "" : "\n") + text, pos, pos);
+    this._isEmpty = false;
     
     if (decorations !== undefined && decorations.length !== 0) {
       // Apply the styles to the text.
@@ -256,14 +255,19 @@ class EtCodeMirrorViewer extends ViewerElement {
         }
       }
     }
-    
     this._codeMirror.refresh();
-    util.doLater( () => { this._codeMirror.refresh(); });
+    this._adjustHeight();
+
+    util.doLater( () => {
+      this._codeMirror.refresh();
+      this._adjustHeight();
+    });
   }
   
   deleteLinesFrom(line: number): void {
     const doc = this._codeMirror.getDoc();
     
+    this._isEmpty = line === 0;
     
     const lastPos = { line: doc.lineCount(), ch: 0 };
     
@@ -277,7 +281,12 @@ class EtCodeMirrorViewer extends ViewerElement {
     doc.replaceRange("", startPos, lastPos);
     
     this._codeMirror.refresh();
-    util.doLater( () => { this._codeMirror.refresh(); });
+    this._adjustHeight();
+
+    util.doLater( () => {
+      this._codeMirror.refresh();
+      this._adjustHeight();
+    });
   }
 
   private _updateFocusable(focusable: boolean): void {

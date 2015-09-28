@@ -176,6 +176,7 @@ export class Terminal {
 
   private cols = 80;
   private rows = 24
+  private vpad = 0;
   private charHeight = 12; // resizeToContainer() will fix this for us.
   
   private state = 0; // Escape code parsing state.
@@ -3319,7 +3320,7 @@ export class Terminal {
    * 
    * @returns Object with the new colums (cols field) and rows (rows field) information.
    */
-  resizeToContainer(): {cols: number; rows: number; } {
+  resizeToContainer(): {cols: number; rows: number; vpad: number; } {
     if (DEBUG_RESIZE) {
       this.log("resizeToContainer() this.effectiveFontFamily(): " + this.effectiveFontFamily());
     }
@@ -3329,7 +3330,7 @@ export class Terminal {
       if (DEBUG_RESIZE) {
         this.log("resizeToContainer() styles have not been applied yet.");
       }
-      return {cols: this.cols, rows: this.rows};
+      return {cols: this.cols, rows: this.rows, vpad: this.vpad };
     }
     
     const lineEl = this.children[0];
@@ -3340,7 +3341,7 @@ export class Terminal {
     const rect = range.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
       // The containing element has an invalid size.
-      return {cols: this.cols, rows: this.rows};
+      return {cols: this.cols, rows: this.rows, vpad: this.vpad};
     }
     
     const charWidth = rect.width / this.cols;    
@@ -3354,7 +3355,12 @@ export class Terminal {
     
     if (newCols !== this.cols || newRows !== this.rows) {
       this.resize(newCols, newRows);
-      this._setLastLinePadding(Math.floor(this.element.clientHeight % charHeight));
+    }
+    
+    const newVpad =  Math.floor(this.element.clientHeight % charHeight);
+    if (newVpad !== this.vpad) {
+      this.vpad = newVpad;
+      this._setLastLinePadding(this.vpad);
     }
     
     if (DEBUG_RESIZE) {
@@ -3369,7 +3375,7 @@ export class Terminal {
       this.log("resizeToContainer() new cols: ",this.cols);
       this.log("resizeToContainer() new rows: ",this.rows);
     }
-    return {cols: newCols, rows: newRows};
+    return {cols: newCols, rows: newRows, vpad: this.vpad};
   }
 
   updateRange(y: number): void {

@@ -42,3 +42,4 @@ src/settings/settingspane.js
 src/settings/settingstab.js
 src/settings/settingswebview.js
 src/viewers/codemirrorviewer.js
+src/viewers/codemirrorviewertypes.js
