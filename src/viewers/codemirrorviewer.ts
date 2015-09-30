@@ -11,8 +11,6 @@ import EtCodeMirrorViewerTypes = require('./codemirrorviewertypes');
 
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
 
-var simpleScrollBars = require('codemirror/addon/scroll/simplescrollbars');
-
 const ID = "CbCodeMirrorViewerTemplate";
 const ID_CONTAINER = "container";
 
@@ -181,6 +179,18 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
     }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0});
+    
+    this._codeMirror.on("cursorActivity", () => {
+      // This is a hack to work around a strange problem in CodeMirror where it will
+      // scroll the lines up 1 even when it doesn't need and really shouldn't.
+      const viewportInfo = this._codeMirror.getViewport();
+      const scroller = util.getShadowRoot(this).querySelector(".CodeMirror-scroll");
+      if (viewportInfo.from === 0) {
+        util.doLater( () => {
+          scroller.scrollTop = 0;
+        });
+      }      
+    });
     
     if (this._maxHeight > 0) {
       this._codeMirror.setSize("100%", this._maxHeight);
