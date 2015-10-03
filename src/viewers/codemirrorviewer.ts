@@ -64,6 +64,18 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._isEmpty = true;
   }
 
+  //-----------------------------------------------------------------------
+  //
+  // ######                                
+  // #     # #    # #####  #      #  ####  
+  // #     # #    # #    # #      # #    # 
+  // ######  #    # #####  #      # #      
+  // #       #    # #    # #      # #      
+  // #       #    # #    # #      # #    # 
+  // #        ####  #####  ###### #  ####  
+  //
+  //-----------------------------------------------------------------------
+
   set commandLine(commandLine: string) {
     this._commandLine = commandLine;
   }
@@ -116,22 +128,24 @@ class EtCodeMirrorViewer extends ViewerElement {
       this._adjustHeight();
     }
   }
-  
+  /**
+   * Gets the height of this element.
+   * 
+   * @return {number} [description]
+   */
   getHeight(): number {
     return Math.min(this.getVirtualHeight(), this._maxHeight);
   }
   
+  /**
+   * Gets the height of the scrollable contents on this element.
+   *
+   * @return {number} [description]
+   */
   getVirtualHeight(): number {
     return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
   }
 
-  private _adjustHeight(): void {
-    const virtualHeight = this.getVirtualHeight();
-    const elementHeight = this.getHeight();
-    this.style.height = "" + elementHeight + "px";
-    this._codeMirror.setSize("100%", "" +elementHeight + "px"); 
-  }
-  
   scrollTo(x: number, y: number): void {
     this._codeMirror.scrollTo(x, y);
   }
@@ -144,6 +158,11 @@ class EtCodeMirrorViewer extends ViewerElement {
   setCursor(line: number, ch: number): void {
     const doc = this._codeMirror.getDoc();
     doc.setCursor( { line, ch } );
+  }
+  
+  refresh(): void {
+    this._codeMirror.refresh();
+    this._scrollBugFix();
   }
   
   createdCallback(): void {
@@ -181,69 +200,29 @@ class EtCodeMirrorViewer extends ViewerElement {
     }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0});
     
     this._codeMirror.on("cursorActivity", () => {
-      // This is a hack to work around a strange problem in CodeMirror where it will
-      // scroll the lines up 1 even when it doesn't need and really shouldn't.
-      const viewportInfo = this._codeMirror.getViewport();
-      const scroller = util.getShadowRoot(this).querySelector(".CodeMirror-scroll");
-      if (viewportInfo.from === 0) {
-        util.doLater( () => {
-          scroller.scrollTop = 0;
-        });
-      }      
+console.log("codemirror event cursorActivity");
+      const cursorPos = this._codeMirror.cursorCoords(true, "local");
+      const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { detail: cursorPos, bubbles: true });
+      
+      this.dispatchEvent(event);
+      
+      // util.doLater( this._scrollBugFix.bind(this));
     });
     
-    if (this._maxHeight > 0) {
-      this._codeMirror.setSize("100%", this._maxHeight);
-    }
-  }
-
-  /**
-   * 
-   */
-  private createClone(): Node {
-    let template = <HTMLTemplate>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<style id="${ID_MAIN_STYLE}">
-        :host {
-          display: block;
-          width: 100%;
-          white-space: normal;
-        }
-        
-        #${ID_CONTAINER} {
-          height: 100%;
-          width: 100%;
-          overflow: hidden;
-        }
-        
-        #${ID_CONTAINER}:focus {
-          outline: 0px;
-        }
-        
-        </style>
-        <style id="${ID_THEME_STYLE}"></style>
-        <style>
-        @import url('node_modules/codemirror/lib/codemirror.css');
-        @import url('node_modules/codemirror/addon/scroll/simplescrollbars.css');
-        @import url('themes/default/theme.css');
-        </style>
-        <div id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>`
-
-      window.document.body.appendChild(template);
-    }
+    this._codeMirror.on("scroll", () => {
+      // Over-scroll bug/feature fix
+      const scrollInfo = this._codeMirror.getScrollInfo();
+      // console.log("codemirror event scroll:", scrollInfo);
+      
+      const clientYScrollRange = Math.max(0, this.getVirtualHeight() - this.getHeight());
+      if (scrollInfo.top > clientYScrollRange) {
+        this._codeMirror.scrollTo(0, clientYScrollRange);
+      }
+      util.doLater( this._scrollBugFix.bind(this));
+    });
     
-    return window.document.importNode(template.content, true);
   }
-  
-  _themeCssSet(): void {  
-    // const themeTag = <HTMLStyleElement> util.getShadowId(this, ID_THEME_STYLE);
-    // if (themeTag !== null) {
-    //   themeTag.innerHTML = this.getThemeCss();
-    // }
-  }
-  
+
   appendText(text: string, decorations?: TextDecoration[]): void {
     const doc = this._codeMirror.getDoc();
     const lineOffset = this._isEmpty ? 0 : doc.lineCount();
@@ -298,10 +277,84 @@ class EtCodeMirrorViewer extends ViewerElement {
       this._adjustHeight();
     });
   }
+  
+  //-----------------------------------------------------------------------
+  //
+  // ######                                      
+  // #     # #####  # #    #   ##   ##### ###### 
+  // #     # #    # # #    #  #  #    #   #      
+  // ######  #    # # #    # #    #   #   #####  
+  // #       #####  # #    # ######   #   #      
+  // #       #   #  #  #  #  #    #   #   #      
+  // #       #    # #   ##   #    #   #   ###### 
+  //
+  //-----------------------------------------------------------------------
+  /**
+   * 
+   */
+  private createClone(): Node {
+    let template = <HTMLTemplate>window.document.getElementById(ID);
+    if (template === null) {
+      template = <HTMLTemplate>window.document.createElement('template');
+      template.id = ID;
+      template.innerHTML = `<style id="${ID_MAIN_STYLE}">
+        :host {
+          display: block;
+          width: 100%;
+          white-space: normal;
+        }
+        
+        #${ID_CONTAINER} {
+/*          height: 100%; */
+          width: 100%;
+          overflow: hidden;
+        }
+        
+        #${ID_CONTAINER}:focus {
+          outline: 0px;
+        }
+        
+        </style>
+        <style id="${ID_THEME_STYLE}"></style>
+        <style>
+        @import url('node_modules/codemirror/lib/codemirror.css');
+        @import url('node_modules/codemirror/addon/scroll/simplescrollbars.css');
+        @import url('themes/default/theme.css');
+        </style>
+        <div id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>`
+
+      window.document.body.appendChild(template);
+    }
+    
+    return window.document.importNode(template.content, true);
+  }
 
   private _updateFocusable(focusable: boolean): void {
     // const containerDiv = util.getShadowId(this, ID_CONTAINER);
     // containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");
+  }
+
+  private _scrollBugFix(): void {
+    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    containerDiv.scrollTop = 0;
+  }
+
+  private _adjustHeight(): void {
+    const virtualHeight = this.getVirtualHeight();
+    const elementHeight = this.getHeight();
+    this.style.height = "" + elementHeight + "px";
+    
+    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    containerDiv.style.height = "" + elementHeight + "px";
+    this._codeMirror.refresh();
+    this._codeMirror.setSize("100%", "" +elementHeight + "px"); 
+  }
+    
+  _themeCssSet(): void {  
+    // const themeTag = <HTMLStyleElement> util.getShadowId(this, ID_THEME_STYLE);
+    // if (themeTag !== null) {
+    //   themeTag.innerHTML = this.getThemeCss();
+    // }
   }
   
 }

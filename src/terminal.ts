@@ -61,6 +61,12 @@ const enum ApplicationMode {
   APPLICATION_MODE_SHOW_MIME = 5,
 }
 
+interface VirtualHeight {
+  realHeight: number;
+  virtualHeight: number;
+  element: EtCodeMirrorViewer;
+}
+
 /**
  * Create a new terminal.
  * 
@@ -172,7 +178,17 @@ class EtTerminal extends HTMLElement {
   }
   
   //-----------------------------------------------------------------------
-  // Public members.
+  //
+  // ######                                
+  // #     # #    # #####  #      #  ####  
+  // #     # #    # #    # #      # #    # 
+  // ######  #    # #####  #      # #      
+  // #       #    # #    # #      # #      
+  // #       #    # #    # #      # #    # 
+  // #        ####  #####  ###### #  ####  
+  //
+  //-----------------------------------------------------------------------
+
   createdCallback(): void {
     this._initProperties();
     const shadow = util.createShadowRoot(this);
@@ -315,7 +331,6 @@ class EtTerminal extends HTMLElement {
 
     if (this._term !== null) {
       this._getWindow().removeEventListener('resize', this._handleResize);
-      this._getWindow().document.body.removeEventListener('click', this._handleWindowClick);
       this._term.destroy();
     }
     this._term = null;
@@ -366,6 +381,17 @@ class EtTerminal extends HTMLElement {
   }
   
   //-----------------------------------------------------------------------
+  //
+  // ######                                      
+  // #     # #####  # #    #   ##   ##### ###### 
+  // #     # #    # # #    #  #  #    #   #      
+  // ######  #    # # #    # #    #   #   #####  
+  // #       #####  # #    # ######   #   #      
+  // #       #   #  #  #  #  #    #   #   #      
+  // #       #    # #   ##   #    #   #   ###### 
+  //
+  //-----------------------------------------------------------------------
+  
   private _createClone(): Node {
     let template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
@@ -483,9 +509,17 @@ class EtTerminal extends HTMLElement {
     this._sendTitleEvent(title);
   }
   
-  /* ******************************************************************* */
-  /* Scrolling and sizing related stuff */
-  /* ******************************************************************* */
+  // ----------------------------------------------------------------------
+  //
+  //  #####                                                          ##        #####                           
+  // #     #  ####  #####   ####  #      #      # #    #  ####      #  #      #     # # ###### # #    #  ####  
+  // #       #    # #    # #    # #      #      # ##   # #    #      ##       #       #     #  # ##   # #    # 
+  //  #####  #      #    # #    # #      #      # # #  # #          ###        #####  #    #   # # #  # #      
+  //       # #      #####  #    # #      #      # #  # # #  ###    #   # #          # #   #    # #  # # #  ### 
+  // #     # #    # #   #  #    # #      #      # #   ## #    #    #    #     #     # #  #     # #   ## #    # 
+  //  #####   ####  #    #  ####  ###### ###### # #    #  ####      ###  #     #####  # ###### # #    #  ####  
+  //
+  // ----------------------------------------------------------------------
   
   private _handleTermWheel(ev: WheelEvent): void {
     const delta = ev.deltaY * SCROLL_STEP;
@@ -505,10 +539,18 @@ class EtTerminal extends HTMLElement {
     }
   }
   
+  /**
+   * [_refreshScroll description]
+   */
   private _refreshScroll(): void {
     this._scrollTo(this._scrollYOffset);
   }
   
+  /**
+   * Scroll the contents of the terminal to the given position.
+   * 
+   * @param {number} requestedY new position visible at the top of the viewport.
+   */
   private _scrollTo(requestedY: number): void {
     if (this._terminalSize === null) {
       return;
@@ -518,31 +560,17 @@ log("*************************************** _scrollTo( ", requestedY);
 
     // Compute the virtual height of the terminal contents.
     
-    // Assemble the interesting boxes.
-    const heights: {realHeight: number; virtualHeight: number; element: EtCodeMirrorViewer; }[] = [];
-    if (this._scrollbackCodeMirror !== null) {
-      heights.push( { realHeight: this._scrollbackCodeMirror.getHeight(),
-        virtualHeight: this._scrollbackCodeMirror.getVirtualHeight(),
-        element: this._scrollbackCodeMirror } );
-    }
-    
-    // Include the term part only if we are not in selection mode.
-    if ( ! this._selectionModeFlag) {
-      const termRect = this._term.element.getBoundingClientRect();
-      heights.push( { realHeight: termRect.height, virtualHeight: termRect.height, element: null } );
-    } else {
-      heights.push( { realHeight: this._vpad, virtualHeight: this._vpad, element: null } );
-    }
-log("heights:",heights);
+    const heights = this._getVirtualHeights();
+// log("heights:",heights);
 
     // Add up the virtual heights.
-    const virtualHeight = heights.reduce<number>( (accu, info) => accu + info.virtualHeight, 0);
+    const virtualHeight = this._totalVirtualHeight(heights);
     this._virtualHeight = virtualHeight;
-log(`virtualHeight=${virtualHeight}`);
+// log(`virtualHeight=${virtualHeight}`);
     // Clamp the requested position.
     const pos = Math.min(Math.max(0, requestedY), Math.max(0, virtualHeight-viewPortHeight));
     this._scrollYOffset = pos;
-log(`pos=${pos}`);
+// log(`pos=${pos}`);
 
     // We pretend that the scrollback is one very tall continous column of text etc. But this is fake.
     // Each code mirror viewer is only as tall as the terminal viewport. We scroll the contents of the
@@ -613,6 +641,49 @@ log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
     const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
     scrollbar.size = this._virtualHeight;
     scrollbar.position = pos;
+  }
+  
+  /**
+   * [_getVirtualHeights description]
+   * @return {VirtualHeight[]} [description]
+   */
+  private _getVirtualHeights(): VirtualHeight[] {
+    // Assemble the interesting boxes.
+    const heights: VirtualHeight[] = [];
+    if (this._scrollbackCodeMirror !== null) {
+      heights.push( { realHeight: this._scrollbackCodeMirror.getHeight(),
+        virtualHeight: this._scrollbackCodeMirror.getVirtualHeight(),
+        element: this._scrollbackCodeMirror } );
+    }
+    
+    // Include the term part only if we are not in selection mode.
+    if ( ! this._selectionModeFlag) {
+      const termRect = this._term.element.getBoundingClientRect();
+      heights.push( { realHeight: termRect.height, virtualHeight: termRect.height, element: null } );
+    } else {
+      heights.push( { realHeight: this._vpad, virtualHeight: this._vpad, element: null } );
+    }
+    return heights;
+  }
+  
+  /**
+   * [_totalVirtualHeight description]
+   * @param  {VirtualHeight[]} heights [description]
+   * @return {number}                  [description]
+   */
+  private _totalVirtualHeight(heights: VirtualHeight[]): number {
+    return heights.reduce<number>( (accu, info) => accu + info.virtualHeight, 0);
+  }
+  
+  private _virtualYOffset(heights: VirtualHeight[], element: HTMLElement, relativeYOffset: number): number {
+    let ycounter = 0;
+    for (let i=0; i<heights.length; i++) {
+      if (heights[i].element === element) {
+        return ycounter + relativeYOffset;
+      }
+      ycounter += heights[i].virtualHeight;
+    }
+    return -1;
   }
   
   private _syncScrolling(): void {
@@ -858,6 +929,10 @@ log("_importScrollback");
     return {text, decorations};
   }  
   
+  // ----------------------------------------------------------------------
+  // ----------------------------------------------------------------------
+  // ----------------------------------------------------------------------
+  
   private _handleScrollerKeyDown(ev: KeyboardEvent): void {
     log("scroller keydown:", ev);
     
@@ -866,6 +941,13 @@ log("_importScrollback");
 log("_exitSelectionMode");        
         this._exitSelectionMode();
       }
+    }
+  }
+
+  private _handleStyleLoad(): void {
+    if (this._mainStyleLoaded && this._themeStyleLoaded) {
+      // Start polling the term for application of the font.
+      this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
     }
   }
 
@@ -964,9 +1046,17 @@ log("_exitSelectionMode");
     this._term.keyDown(ev);
   }
   
-  /* ******************************************************************** */
-  /* Selection mode                                                       */
-  /* ******************************************************************** */
+  // ********************************************************************
+  //
+  //  #####                                                                                   
+  // #     # ###### #      ######  ####  ##### #  ####  #    #    #    #  ####  #####  ###### 
+  // #       #      #      #      #    #   #   # #    # ##   #    ##  ## #    # #    # #      
+  //  #####  #####  #      #####  #        #   # #    # # #  #    # ## # #    # #    # #####  
+  //       # #      #      #      #        #   # #    # #  # #    #    # #    # #    # #      
+  // #     # #      #      #      #    #   #   # #    # #   ##    #    # #    # #    # #      
+  //  #####  ###### ###### ######  ####    #   #  ####  #    #    #    #  ####  #####  ###### 
+  //
+  // ********************************************************************
   
   private _enterSelectionMode(): void {
     this._selectionModeFlag = true;
@@ -982,9 +1072,18 @@ log("_exitSelectionMode");
     
     scrollbackCodeMirror.appendText(allText, allDecorations);
     
+    
     const cursorInfo = this._term.getDimensions();
+    scrollbackCodeMirror.refresh();
     scrollbackCodeMirror.setCursor(this._selectionPreviousLineCount + cursorInfo.cursorY, cursorInfo.cursorX);
     scrollbackCodeMirror.focus();
+    
+    util.doLater( () => {
+      // This is absoletely needed to fix the annoying problem when one of the DIVs in the codemirror
+      // viewer is scrolled down and exposes empty space even though it should never scroll.
+      scrollbackCodeMirror.refresh();
+    });
+    
     this._refreshScroll();
   }
   
@@ -1272,19 +1371,6 @@ log("_exitSelectionMode");
   private _pasteFromClipboard(): void {
     webipc.clipboardReadRequest();
   }
-  
-  /**
-   * Handle a click inside the terminal.
-   * 
-   * @param {event} event
-   */
-// FIXME this is an obsolete way of working.
-  private _handleWindowClick(event: Event) {
-  //      log("body on click!",event);
-    const type = event.srcElement.getAttribute(SEMANTIC_TYPE);
-    const value = event.srcElement.getAttribute(SEMANTIC_VALUE);
-    this._handleMineTypeClick(type, value);
-  }
 
   /**
    * Handle new stdout data from the pty.
@@ -1398,18 +1484,6 @@ log("_exitSelectionMode");
     }
     const matches = this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
     return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
-  }
-  
-  /**
-   * Process a click on a item of the given mimetype and value.
-   * 
-   * @param {string} type
-   * @param {string} value
-   */
-  private _handleMineTypeClick(type: string, value: string): void {
-    if (type === "directory") {
-      this._sendDataToPtyEvent("cd " + value + "\n"); // FIXME escaping
-    }
   }
   
   private _getNextTag(): number {
