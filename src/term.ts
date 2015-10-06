@@ -125,7 +125,7 @@ interface SavedState {
   tabs: { [i: number]: boolean;  };
 }
 
-interface TerminalCoord {
+export interface TerminalCoord {
   x: number;
   y: number;
 }
@@ -1142,8 +1142,8 @@ export class Terminal {
       // NOTE: Unstable.
       // http://www.vt100.net/docs/vt3xx-gp/chapter15.html
       button &= 3;
-      const x = pos.x - 32;
-      const y = pos.y - 32;
+      const x = pos.x;
+      const y = pos.y;
       let data = '\x1b[24';
       if (button === 0) {
         data += '1';
@@ -1165,8 +1165,8 @@ export class Terminal {
       // NOTE: Unstable.
       this.log("sendEvent with decLocator is not implemented!");
       
-      // const x = pos.x - 32;
-      // const y = pos.y - 32;
+      // const x = pos.x;
+      // const y = pos.y;
       // const translatedButton = {0:2, 1:4, 2:6, 3:3}[button & 3];
       // self.send('\x1b[' + translatedButton + ';' + (translatedButton === 3 ? 4 : 0) + ';' + y + ';' + x + ';' +
       //   (pos.page || 0) + '&w');
@@ -1175,16 +1175,16 @@ export class Terminal {
 
     if (this.urxvtMouse) {
       this.log("sendEvent(): urxvtMouse");
-      const x = pos.x - 31;
-      const y = pos.y - 31;
+      const x = pos.x + 1;
+      const y = pos.y + 1;
       this.send('\x1b[' + (button+32) + ';' + x + ';' + y + 'M');
       return;
     }
 
     if (this.sgrMouse) {
       this.log("sendEvent(): sgrMouse");
-      const x = pos.x - 32;
-      const y = pos.y - 32;
+      const x = pos.x;
+      const y = pos.y;
       this.send('\x1b[<' + ((button & 3) === 3 ? button & ~3 : button) + ';' + x +
         ';' + y + ((button & 3) === 3 ? 'm' : 'M'));
       return;
@@ -1193,14 +1193,17 @@ export class Terminal {
 
     const encodedData = [];
     this.encodeMouseData(encodedData, button+32);
-    this.encodeMouseData(encodedData, pos.x);
-    this.encodeMouseData(encodedData, pos.y);
+    
+    // xterm sends raw bytes and
+    // starts at 32 (SP) for each.    
+    this.encodeMouseData(encodedData, pos.x + 32);
+    this.encodeMouseData(encodedData, pos.y + 32);
 
     this.send('\x1b[M' + String.fromCharCode.apply(String, encodedData));
   }
 
   // mouse coordinates measured in cols/rows
-  private getTerminalCoordsFromEvent(ev: MouseEvent): TerminalCoord {
+  getTerminalCoordsFromEvent(ev: MouseEvent): TerminalCoord {
     // Identify the row DIV that was clicked.
     let rowElement = null;
     if (getDOMRoot(this.element).nodeName === "#document") {
@@ -1253,11 +1256,6 @@ export class Terminal {
     if (row > this.rows) {
       row = this.rows;
     }
-
-    // xterm sends raw bytes and
-    // starts at 32 (SP) for each.
-    col += 32;  // FIXME don't do xterm's 32 offset here.
-    row += 32;
 
     return { x: col, y: row };
   }
