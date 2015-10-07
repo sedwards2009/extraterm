@@ -278,6 +278,30 @@ console.log("codemirror event cursorActivity");
     });
   }
   
+  fakeMouseDown(ev: MouseEvent): void {
+    const root = util.getShadowRoot(this);
+    const newTarget = root.elementFromPoint(ev.clientX, ev.clientY);
+    
+    const newEvent = document.createEvent('MouseEvents');
+    newEvent.initMouseEvent(
+      'mousedown',                    // typeArg: string,
+      true,                           // canBubbleArg: boolean,
+      true,                           // cancelableArg: boolean,
+      document.defaultView,           // viewArg: Window,
+      0,                              // detailArg: number,
+      ev.screenX,                     // screenXArg: number,
+      ev.screenY,                     // screenYArg: number,
+      ev.clientX,                     // clientXArg: number,
+      ev.clientY,                     // clientYArg: number,
+      ev.ctrlKey,                     // ctrlKeyArg: boolean,
+      ev.altKey,                      // altKeyArg: boolean,
+      ev.shiftKey,                    // shiftKeyArg: boolean,
+      ev.metaKey,                     // metaKeyArg: boolean,
+      ev.button,                      // buttonArg: number,
+      null);                          // relatedTargetArg: EventTarget
+    newTarget.dispatchEvent(newEvent);
+  }
+  
   //-----------------------------------------------------------------------
   //
   // ######                                      

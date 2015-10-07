@@ -257,6 +257,9 @@ class EtTerminal extends HTMLElement {
     this._term.element.addEventListener('keydown', this._handleKeyDownTerminal.bind(this));
     this._term.on(termjs.Terminal.EVENT_WHEEL, this._handleTermWheel.bind(this));
     
+    termContainer.addEventListener('mousedown', this._handleMouseDownTermOnCapture.bind(this), true);
+    termContainer.addEventListener('mousedown', this._handleMouseDownTerm.bind(this));
+    
     this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     
     const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
@@ -1045,6 +1048,25 @@ log("_exitSelectionMode");
 
     this._term.keyDown(ev);
   }
+
+  private _handleMouseDownTermOnCapture(ev: MouseEvent): void {
+    if ( ! this.hasFocus() && ! this._selectionModeFlag) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      this.focus();
+    }
+  }
+  
+  private _handleMouseDownTerm(ev: MouseEvent): void {  
+    if ( ! this._selectionModeFlag) {
+      const pos = this._term.getTerminalCoordsFromEvent(ev);
+      if (pos !== null) {
+        this._enterSelectionModeMouse(ev);
+        ev.stopPropagation();
+        ev.preventDefault();
+      }
+    }
+  }
   
   // ********************************************************************
   //
@@ -1085,6 +1107,17 @@ log("_exitSelectionMode");
     });
     
     this._refreshScroll();
+  }
+  
+  private _enterSelectionModeMouse(ev: MouseEvent): void {
+    const pos = this._term.getTerminalCoordsFromEvent(ev);
+    if (pos === null) {
+      return;
+    }
+    this._enterSelectionMode();
+
+    const scrollbackCodeMirror = this._getScrollBackCodeMirror();
+    scrollbackCodeMirror.fakeMouseDown(ev);
   }
   
   private _exitSelectionMode(): void {
