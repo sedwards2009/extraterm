@@ -10,6 +10,7 @@ import CodeMirror = require('codemirror');
 import EtCodeMirrorViewerTypes = require('./codemirrorviewertypes');
 
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
+type CursorMoveDetail = EtCodeMirrorViewerTypes.CursorMoveDetail;
 
 const ID = "CbCodeMirrorViewerTemplate";
 const ID_CONTAINER = "container";
@@ -24,8 +25,10 @@ function log(msg: any, ...opts: any[]): void {
 }
 
 class EtCodeMirrorViewer extends ViewerElement {
-  
+
   static TAG_NAME = "et-codemirror-viewer";
+  
+  static EVENT_CURSOR_MOVE = "cursor-move";
 
   static init(): void {
     if (registered === false) {
@@ -200,13 +203,8 @@ class EtCodeMirrorViewer extends ViewerElement {
     }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0});
     
     this._codeMirror.on("cursorActivity", () => {
-console.log("codemirror event cursorActivity");
-      const cursorPos = this._codeMirror.cursorCoords(true, "local");
-      const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { detail: cursorPos, bubbles: true });
-      
+      const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { bubbles: true });
       this.dispatchEvent(event);
-      
-      // util.doLater( this._scrollBugFix.bind(this));
     });
     
     this._codeMirror.on("scroll", () => {
@@ -276,6 +274,18 @@ console.log("codemirror event cursorActivity");
       this._codeMirror.refresh();
       this._adjustHeight();
     });
+  }
+  
+  getCursorInfo(): CursorMoveDetail {
+    const cursorPos = this._codeMirror.cursorCoords(true, "local");
+    const scrollInfo = this._codeMirror.getScrollInfo();
+    const detail: CursorMoveDetail = {
+      left: cursorPos.left,
+      top: cursorPos.top,
+      bottom: cursorPos.bottom,
+      viewPortTop: scrollInfo.top
+    };
+    return detail;
   }
   
   fakeMouseDown(ev: MouseEvent): void {

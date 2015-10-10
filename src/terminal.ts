@@ -21,6 +21,7 @@ import webipc = require('./webipc');
 import globalcss = require('./gui/globalcss');
 
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
+type CursorMoveDetail = EtCodeMirrorViewerTypes.CursorMoveDetail;
 
 const debug = true;
 let startTime: number = window.performance.now();
@@ -116,11 +117,11 @@ class EtTerminal extends HTMLElement {
   private _autoscroll: boolean;
   
   private _scrollbackCodeMirror: EtCodeMirrorViewer;
-  private _scrollbackLaterHandle: util.LaterHandle;
   private _terminalSize: ClientRect;
   private _scrollYOffset: number; // The Y scroll offset into the virtual height.
   private _virtualHeight: number; // The virtual height of the terminal contents in px.
   private _vpad: number;
+  private _lastViewPortTop: WeakMap<EtCodeMirrorViewer, number>;
   
   private _term: termjs.Terminal;
   private _htmlData: string;
@@ -146,14 +147,17 @@ class EtTerminal extends HTMLElement {
   private _resizePollHandle: util.LaterHandle;
   private _elementAttached: boolean;
   
-  
+  private _scheduleLaterHandle: util.LaterHandle;
+  private _scheduledCursorUpdates: EtCodeMirrorViewer[];
+  private _scheduledScrollbackImport: boolean;
+  private _scheduledResize: boolean;
+
   private _initProperties(): void {
     this._elementAttached = false;
     this._scrollSyncLaterHandle = null;
     this._autoscroll = true;
     this._term = null;
     this._scrollbackCodeMirror = null;
-    this._scrollbackLaterHandle = null;
     this._htmlData = null;
     this._mimeType = null;
     this._mimeData = null;
@@ -175,6 +179,12 @@ class EtTerminal extends HTMLElement {
     this._scrollYOffset = 0;
     this._virtualHeight = 0;
     this._vpad = 0;
+    this._lastViewPortTop = new WeakMap();
+
+    this._scheduleLaterHandle = null;
+    this._scheduledCursorUpdates = [];
+    this._scheduledResize = false;
+    this._scheduledScrollbackImport = false;
   }
   
   //-----------------------------------------------------------------------
@@ -195,8 +205,6 @@ class EtTerminal extends HTMLElement {
 
     const clone = this._createClone();
     shadow.appendChild(clone);
-    
-    this._handleResize = this._handleResize.bind(this);
 
     util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
       this._mainStyleLoaded = true;
@@ -230,11 +238,12 @@ class EtTerminal extends HTMLElement {
     this._term.on('title', this._handleTitle.bind(this));
     this._term.on('data', this._handleTermData.bind(this));
     
-    this._getWindow().addEventListener('resize', this._handleResize);
+    this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
     termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
     scroller.addEventListener('wheel', this._handleTermWheel.bind(this));
     scroller.addEventListener('keydown', this._handleScrollerKeyDown.bind(this));
+    scroller.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, this._handleCursorMove.bind(this));
     
     this._term.on(termjs.Terminal.EVENT_MANUAL_SCROLL, this._handleManualScroll.bind(this));
     this._term.on(termjs.Terminal.EVENT_SCROLLBACK_AVAILABLE, this._handleScrollbackReady.bind(this));
@@ -270,7 +279,7 @@ class EtTerminal extends HTMLElement {
   
     this._syncScrolling();
 
-    util.doLater(this._handleResize);
+    this._scheduleResize();
   }
   
   /**
@@ -333,7 +342,7 @@ class EtTerminal extends HTMLElement {
     }
 
     if (this._term !== null) {
-      this._getWindow().removeEventListener('resize', this._handleResize);
+      this._getWindow().removeEventListener('resize', this._scheduleResize.bind(this));
       this._term.destroy();
     }
     this._term = null;
@@ -380,7 +389,7 @@ class EtTerminal extends HTMLElement {
   }
     
   resizeToContainer(): void {
-    this._handleResize();
+    this._scheduleResize.bind(this);
   }
   
   //-----------------------------------------------------------------------
@@ -718,7 +727,7 @@ log("this._virtualHeight:", this._virtualHeight);
   /**
    * Handle a resize event from the window.
    */
-  private _handleResize(): void {
+  private _processResize(): void {
     if (this._term !== null) {
       if (this._mainStyleLoaded && this._themeStyleLoaded) {
         const size = this._term.resizeToContainer();
@@ -758,26 +767,70 @@ log("bound height=",newTerminalSize.height);
         // Font has not been correctly applied yet.
         this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
       } else {
-        // Yay! the font is correct. Resize the term now.
-        this._handleResize();
+        // Yay! the font is correct. Resize the term soon.
+        this._scheduleResize.bind(this);
       }
     }
   }
-  /* ******************************************************************* */
+
+  private _handleCursorMove(ev: CustomEvent): void {
+    this._scheduleCursorMoveUpdate(<EtCodeMirrorViewer> ev.target);
+  }
   
-  private _handleStyleLoad(): void {
-    if (this._mainStyleLoaded && this._themeStyleLoaded) {
-      // Start polling the term for application of the font.
-      this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
+  private _updateCursorAction(cmv: EtCodeMirrorViewer): void {
+    console.log("_handleCursorMove (start)");
+    if ( ! this._selectionModeFlag) {
+      console.log("_handleCursorMove not in selection mode (exit)");
+      return;
     }
+    
+    const detail: CursorMoveDetail = cmv.getCursorInfo();
+    
+    console.log("_handleCursorMove detail.top: ", detail.top);
+    console.log("_handleCursorMove detail.bottom: ", detail.bottom);
+    console.log("_handleCursorMove detail.viewPortTop: ", detail.viewPortTop);
+
+    const heightsList = this._getVirtualHeights();
+    const totalHeight = this._totalVirtualHeight(heightsList);
+    
+console.log("_handleCursorMove this._scrollYOffset:",  this._scrollYOffset);
+    
+    const topYOffset = this._virtualYOffset(heightsList, cmv, detail.top);
+console.log("_handleCursorMove topYOffset:", topYOffset);
+    if (topYOffset < this._scrollYOffset) {
+console.log("_handleCursorMove topYOffset is smaller, scrolling");
+      this._scrollTo(topYOffset);
+    } else {
+      const bottomYOffset = topYOffset + detail.bottom - detail.top;
+      const scrollBottomYOffset = this._scrollYOffset + this._terminalSize.height;
+      if (bottomYOffset > scrollBottomYOffset) {
+console.log("_handleCursorMove bottomYOffset too small, scrolling");
+      
+console.log("_handleCursorMove topYOffset + bottomYOffset - scrollBottomYOffset:",
+  topYOffset + bottomYOffset - scrollBottomYOffset);
+        
+        this._scrollTo(bottomYOffset - this._terminalSize.height);
+      } else {
+console.log("_handleCursorMove (do nothing)");
+        if (this._lastViewPortTop.has(cmv)) {
+          const oldViewPortTop = this._lastViewPortTop.get(cmv);
+console.log("_handleCursorMove oldViewPortTop: ",oldViewPortTop);
+          
+          if (oldViewPortTop !== detail.viewPortTop) {
+console.log("_handleCursorMove scroll to new viewPortTop: ",detail.viewPortTop);
+            this._scrollTo(detail.viewPortTop);
+          }
+        }
+console.log("_handleCursorMove setting new viewPortTop: ",detail.viewPortTop);
+        this._lastViewPortTop.set(cmv, detail.viewPortTop);
+      }
+    }
+console.log("_handleCursorMove (exit)");
   }
   
   private _handleScrollbackReady(): void {
-    if ( ! this._selectionModeFlag && this._scrollbackLaterHandle === null) {
-      this._scrollbackLaterHandle = util.doLaterFrame( () => {
-        this._scrollbackLaterHandle = null;
-        this._importScrollback();
-      });
+    if ( ! this._selectionModeFlag) {
+      this._scheduleScrollbackImport();
     }
   }
   
@@ -991,62 +1044,63 @@ log("_exitSelectionMode");
   private _handleKeyDownTerminal(ev: KeyboardEvent): void {
     let frames: EtEmbeddedViewer[];
     let index: number;
-
+    
     // Key down on a command frame.
-    if ((<HTMLElement>ev.target).tagName === EtEmbeddedViewer.TAG_NAME) {
-      if (ev.keyCode === 27) {
-        // 27 = esc.
-        this._term.element.focus();
-        this._term.scrollToBottom();
-        ev.preventDefault();
-        return;
-
-      } else if (ev.keyCode === 32 && ev.ctrlKey) {
-        // 32 = space
-        (<EtEmbeddedViewer>ev.target).openMenu();
-        ev.preventDefault();
-        return;
-
-      } else if (ev.keyCode === 38) {
-        // 38 = up arrow.
-
-        // Note ugly convert-to-array code. ES6 Array.from() help us!
-        frames = Array.prototype.slice.call(this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME));
-        index = frames.indexOf(<EtEmbeddedViewer>ev.target);
-        if (index > 0) {
-          frames[index-1].focusLast();
-        }
-        ev.preventDefault();
-        return;
-
-      } else if (ev.keyCode === 40) {
-        // 40 = down arrow.
-
-        frames = Array.prototype.slice.call(this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME));
-        index = frames.indexOf(<EtEmbeddedViewer>ev.target);
-        if (index < frames.length -1) {
-          frames[index+1].focusFirst();
-        }
-        ev.preventDefault();
-        return;
-      }
-
-    } else if (ev.target === this._term.element) {
-      // In normal typing mode.
-
-      // Enter cursor mode.
-      if (ev.keyCode === 38 && ev.shiftKey) {
-        // Shift + Up arrow.
-        const lastFrame = <EtEmbeddedViewer>this._term.element.querySelector(EtEmbeddedViewer.TAG_NAME + ":last-of-type");
-        if (lastFrame !== null) {
-          lastFrame.focusLast();
-        }
-        ev.preventDefault();
-        return;
-      }
-    }
-
+    // if ((<HTMLElement>ev.target).tagName === EtEmbeddedViewer.TAG_NAME) {
+    //   if (ev.keyCode === 27) {
+    //     // 27 = esc.
+    //     this._term.element.focus();
+    //     this._term.scrollToBottom();
+    //     ev.preventDefault();
+    //     return;
+    // 
+    //   } else if (ev.keyCode === 32 && ev.ctrlKey) {
+    //     // 32 = space
+    //     (<EtEmbeddedViewer>ev.target).openMenu();
+    //     ev.preventDefault();
+    //     return;
+    // 
+    //   } else if (ev.keyCode === 38) {
+    //     // 38 = up arrow.
+    // 
+    //     // Note ugly convert-to-array code. ES6 Array.from() help us!
+    //     frames = Array.prototype.slice.call(this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME));
+    //     index = frames.indexOf(<EtEmbeddedViewer>ev.target);
+    //     if (index > 0) {
+    //       frames[index-1].focusLast();
+    //     }
+    //     ev.preventDefault();
+    //     return;
+    // 
+    //   } else if (ev.keyCode === 40) {
+    //     // 40 = down arrow.
+    // 
+    //     frames = Array.prototype.slice.call(this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME));
+    //     index = frames.indexOf(<EtEmbeddedViewer>ev.target);
+    //     if (index < frames.length -1) {
+    //       frames[index+1].focusFirst();
+    //     }
+    //     ev.preventDefault();
+    //     return;
+    //   }
+    // 
+    // } else if (ev.target === this._term.element) {
+    //   // In normal typing mode.
+    // 
+    //   // Enter cursor mode.
+    //   if (ev.keyCode === 38 && ev.shiftKey) {
+    //     // Shift + Up arrow.
+    //     const lastFrame = <EtEmbeddedViewer>this._term.element.querySelector(EtEmbeddedViewer.TAG_NAME + ":last-of-type");
+    //     if (lastFrame !== null) {
+    //       lastFrame.focusLast();
+    //     }
+    //     ev.preventDefault();
+    //     return;
+    //   }
+    // }
+if ( ! this._selectionModeFlag) {
     this._term.keyDown(ev);
+  }
   }
 
   private _handleMouseDownTermOnCapture(ev: MouseEvent): void {
@@ -1066,6 +1120,76 @@ log("_exitSelectionMode");
         ev.preventDefault();
       }
     }
+  }
+  
+  // ********************************************************************
+  //
+  //  #####                                                            
+  // #     #  ####  #    # ###### #####  #    # #      # #    #  ####  
+  // #       #    # #    # #      #    # #    # #      # ##   # #    # 
+  //  #####  #      ###### #####  #    # #    # #      # # #  # #      
+  //       # #      #    # #      #    # #    # #      # #  # # #  ### 
+  // #     # #    # #    # #      #    # #    # #      # #   ## #    # 
+  //  #####   ####  #    # ###### #####   ####  ###### # #    #  ####  
+  //
+  // ********************************************************************
+  
+  /**
+   * Schedule a cursor update to done later.
+   * 
+   * @param {EtCodeMirrorViewer} updateTarget [description]
+   */
+  private _scheduleCursorMoveUpdate(updateTarget: EtCodeMirrorViewer): void {
+    this._scheduleProcessing();
+    
+    if (this._scheduledCursorUpdates.some( (cmv) => cmv === updateTarget)) {
+      return;
+    }
+    this._scheduledCursorUpdates.push(updateTarget);
+  }
+  
+  private _scheduleResize(): void {
+    this._scheduleProcessing();
+    this._scheduledResize = true;
+  }
+  
+  private _scheduleScrollbackImport(): void {
+    this._scheduleProcessing();
+    this._scheduledScrollbackImport = true;
+  }
+  
+  private _scheduleProcessing(): void {
+    if (this._scheduleLaterHandle === null) {
+      this._scheduleLaterHandle = util.doLater(this._processScheduled.bind(this));
+    }
+  }
+  
+  private _processScheduled(): void {
+    this._scheduleLaterHandle = null;
+    
+    // Make copies of all of the control variables.
+    const scheduledResize = this._scheduledResize;
+    this._scheduledResize = false;
+    const scheduledCursorUpdates = this._scheduledCursorUpdates;
+    this._scheduledCursorUpdates = [];
+    const scheduledScrollbackImport = this._scheduledScrollbackImport;
+    this._scheduledScrollbackImport = false;
+    
+    if (scheduledResize) {
+console.log("_processScheduled resize");
+      this._processResize();
+    }
+    
+    if (scheduledScrollbackImport) {
+      console.log("_processScheduled scrollback import");
+      this._importScrollback();
+    }
+
+    scheduledCursorUpdates.forEach( (cmv) => {
+console.log("_processScheduled update cursor");
+      this._updateCursorAction(cmv);
+    });
+    
   }
   
   // ********************************************************************
