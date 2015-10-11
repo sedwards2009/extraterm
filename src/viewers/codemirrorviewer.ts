@@ -56,6 +56,8 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _codeMirror: CodeMirror.Editor;
   private _maxHeight: number;
   private _isEmpty: boolean;
+  private _processKeyboard: boolean;
+
 
   private _initProperties(): void {
     this._mutationObserver = null;  
@@ -65,6 +67,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror = null;
     this._maxHeight = -1;
     this._isEmpty = true;
+    this._processKeyboard = true;
   }
 
   //-----------------------------------------------------------------------
@@ -100,12 +103,8 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   getSelectionText(): string {
-    // const selection = util.getShadowRoot(this).getSelection();
-    // if (selection.rangeCount !== 0 && ! selection.getRangeAt(0).collapsed) {
-    //   return domutils.extractTextFromRange(selection.getRangeAt(0));
-    // } else {
-      return null;
-    // }
+    console.log("codemirror getSelectionText called");
+    return this._codeMirror.getDoc().getSelection("\n");
   }
 
   focus(): void {
@@ -116,14 +115,22 @@ class EtCodeMirrorViewer extends ViewerElement {
     return this._codeMirror.hasFocus();
   }
 
-  get focusable(): boolean {
-    return this._focusable;
+  get processKeyboard(): boolean {
+    return this._processKeyboard;
+  }
+
+  set processKeyboard(on: boolean) {
+    this._processKeyboard = on;
   }
   
-  set focusable(value: boolean) {
-    this._focusable = value;
-    this._updateFocusable(value);
-  }
+  // get focusable(): boolean {
+  //   return this._focusable;
+  // }
+  // 
+  // set focusable(value: boolean) {
+  //   this._focusable = value;
+  //   this._updateFocusable(value);
+  // }
   
   setMaxHeight(height: number): void {
     this._maxHeight = height;
@@ -217,6 +224,24 @@ class EtCodeMirrorViewer extends ViewerElement {
         this._codeMirror.scrollTo(0, clientYScrollRange);
       }
       util.doLater( this._scrollBugFix.bind(this));
+    });
+    
+    this._codeMirror.on("keydown", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
+      if ( ! this._processKeyboard) {
+        (<any> ev).codemirrorIgnore = true;
+      }
+    });
+    
+    this._codeMirror.on("keypress", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
+      if ( ! this._processKeyboard) {
+        (<any> ev).codemirrorIgnore = true;
+      }
+    });
+    
+    this._codeMirror.on("keyup", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
+      if ( ! this._processKeyboard) {
+        (<any> ev).codemirrorIgnore = true;
+      }
     });
     
   }

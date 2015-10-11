@@ -68,6 +68,12 @@ interface VirtualHeight {
   element: EtCodeMirrorViewer;
 }
 
+const enum Mode {
+  TERM,
+  MOUSE_SELECTION,
+  KEYBOARD_SELECTION
+}
+
 /**
  * Create a new terminal.
  * 
@@ -133,7 +139,7 @@ class EtTerminal extends HTMLElement {
   private _bracketStyle: string;
   private _lastBashBracket: string;
   
-  private _selectionModeFlag: boolean;
+  private _mode: Mode;
   private _selectionPreviousLineCount: number;
   
   private _blinkingCursor: boolean;
@@ -165,7 +171,7 @@ class EtTerminal extends HTMLElement {
     this._bracketStyle = null;
     this._lastBashBracket = null;
     
-    this._selectionModeFlag = false;
+    this._mode = Mode.TERM;
     
     this._blinkingCursor = false;
     this._noFrameCommands = [];
@@ -669,7 +675,7 @@ log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
     }
     
     // Include the term part only if we are not in selection mode.
-    if ( ! this._selectionModeFlag) {
+    if ( this._mode === Mode.TERM) {
       const termRect = this._term.element.getBoundingClientRect();
       heights.push( { realHeight: termRect.height, virtualHeight: termRect.height, element: null } );
     } else {
@@ -779,9 +785,14 @@ log("bound height=",newTerminalSize.height);
   
   private _updateCursorAction(cmv: EtCodeMirrorViewer): void {
     console.log("_handleCursorMove (start)");
-    if ( ! this._selectionModeFlag) {
+    if (this._mode === Mode.TERM) {
       console.log("_handleCursorMove not in selection mode (exit)");
       return;
+    }
+    
+    // Autocopy to clipboard when in Mode.MOUSE_SELECTION
+    if (this._mode === Mode.MOUSE_SELECTION) {
+      this.copyToClipboard();
     }
     
     const detail: CursorMoveDetail = cmv.getCursorInfo();
@@ -829,7 +840,7 @@ console.log("_handleCursorMove (exit)");
   }
   
   private _handleScrollbackReady(): void {
-    if ( ! this._selectionModeFlag) {
+    if (this._mode === Mode.TERM) {
       this._scheduleScrollbackImport();
     }
   }
@@ -837,6 +848,7 @@ console.log("_handleCursorMove (exit)");
   private _getScrollBackCodeMirror(): EtCodeMirrorViewer {
     if (this._scrollbackCodeMirror === null) {
       this._scrollbackCodeMirror = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
+      this._scrollbackCodeMirror.processKeyboard = false;
       if (this._terminalSize.height !== null) {
         this._scrollbackCodeMirror.setMaxHeight(this._terminalSize.height);
       }
@@ -849,7 +861,7 @@ console.log("_handleCursorMove (exit)");
 log("_importScrollback");
     this._syncScrolling();
     
-    if (this._term === null || this._selectionModeFlag) {
+    if (this._term === null || this._mode !== Mode.TERM) {
       return;
     }
     const lines = this._term.fetchScrollbackLines();
@@ -983,20 +995,28 @@ log("_importScrollback");
     }
     
     return {text, decorations};
-  }  
+  }
   
   // ----------------------------------------------------------------------
   // ----------------------------------------------------------------------
   // ----------------------------------------------------------------------
   
   private _handleScrollerKeyDown(ev: KeyboardEvent): void {
-    log("scroller keydown:", ev);
+    // log("scroller keydown:", ev);
     
-    if (this._selectionModeFlag) {
-      if (ev.keyCode === 27) {
-log("_exitSelectionMode");        
+    switch (this._mode) {
+      case Mode.KEYBOARD_SELECTION:
+        if (ev.keyCode === 27) {
+          this._exitSelectionMode();
+        }
+        break;
+        
+      case Mode.MOUSE_SELECTION:
         this._exitSelectionMode();
-      }
+        break;
+
+      case Mode.TERM:
+        break;
     }
   }
 
@@ -1029,7 +1049,7 @@ log("_exitSelectionMode");
       
     } else if (ev.keyCode === 32 && ev.ctrlKey) {
       // Ctrl + Space
-      this._enterSelectionMode();
+      this._enterSelectionMode(Mode.KEYBOARD_SELECTION);
       
     } else {
       return;
@@ -1098,13 +1118,13 @@ log("_exitSelectionMode");
     //     return;
     //   }
     // }
-if ( ! this._selectionModeFlag) {
-    this._term.keyDown(ev);
-  }
+    if (this._mode === Mode.TERM) {
+      this._term.keyDown(ev);
+    }
   }
 
   private _handleMouseDownTermOnCapture(ev: MouseEvent): void {
-    if ( ! this.hasFocus() && ! this._selectionModeFlag) {
+    if ( ! this.hasFocus() && this._mode === Mode.TERM) {
       ev.stopPropagation();
       ev.preventDefault();
       this.focus();
@@ -1112,7 +1132,7 @@ if ( ! this._selectionModeFlag) {
   }
   
   private _handleMouseDownTerm(ev: MouseEvent): void {  
-    if ( ! this._selectionModeFlag) {
+    if (this._mode === Mode.TERM) {
       const pos = this._term.getTerminalCoordsFromEvent(ev);
       if (pos !== null) {
         this._enterSelectionModeMouse(ev);
@@ -1204,8 +1224,9 @@ console.log("_processScheduled update cursor");
   //
   // ********************************************************************
   
-  private _enterSelectionMode(): void {
-    this._selectionModeFlag = true;
+  private _enterSelectionMode(newMode: Mode): void {
+console.log("_enterSelectionMode (enter)");
+    this._mode = newMode;
     
     const scroller = util.getShadowId(this, ID_SCROLLER);
     scroller.classList.add(CLASS_SELECTION_MODE);
@@ -1213,16 +1234,19 @@ console.log("_processScheduled update cursor");
     // Copy the current screen lines into the scrollback code mirror.
     const {text: allText, decorations: allDecorations} = this._linesToTextStyles(this._term.getScreenLines());
     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
+    scrollbackCodeMirror.processKeyboard = newMode === Mode.KEYBOARD_SELECTION;
     
     this._selectionPreviousLineCount = scrollbackCodeMirror.lineCount();
     
     scrollbackCodeMirror.appendText(allText, allDecorations);
-    
-    
+
     const cursorInfo = this._term.getDimensions();
     scrollbackCodeMirror.refresh();
-    scrollbackCodeMirror.setCursor(this._selectionPreviousLineCount + cursorInfo.cursorY, cursorInfo.cursorX);
-    scrollbackCodeMirror.focus();
+    
+    if (newMode === Mode.KEYBOARD_SELECTION) {
+      scrollbackCodeMirror.setCursor(this._selectionPreviousLineCount + cursorInfo.cursorY, cursorInfo.cursorX);
+      scrollbackCodeMirror.focus();
+    }
     
     util.doLater( () => {
       // This is absoletely needed to fix the annoying problem when one of the DIVs in the codemirror
@@ -1238,14 +1262,16 @@ console.log("_processScheduled update cursor");
     if (pos === null) {
       return;
     }
-    this._enterSelectionMode();
+    this._enterSelectionMode(Mode.MOUSE_SELECTION);
 
     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
     scrollbackCodeMirror.fakeMouseDown(ev);
   }
   
   private _exitSelectionMode(): void {
-    this._selectionModeFlag = false;
+console.log("_exitSelectionMode (enter)");
+    
+    this._mode = Mode.TERM;
     
     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
     scrollbackCodeMirror.deleteLinesFrom(this._selectionPreviousLineCount);
@@ -1495,12 +1521,10 @@ console.log("_processScheduled update cursor");
    * Copy the selection to the clipboard.
    */
   copyToClipboard(): void {
-    const selection = this.shadowRoot.getSelection();
     let text: string = "";
-    if (selection.rangeCount !== 0 && ! selection.getRangeAt(0).collapsed) {
-      const range = selection.getRangeAt(0);
-      text = domutils.extractTextFromRange(range);
-      
+    if (this._mode !== Mode.TERM) {
+      const cmv = this._getScrollBackCodeMirror();
+      text = cmv.getSelectionText();
     } else {
       const candidates = this.shadowRoot.querySelectorAll(EtEmbeddedViewer.TAG_NAME);
       text = _.first<string>(util.nodeListToArray(candidates)
