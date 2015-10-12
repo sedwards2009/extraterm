@@ -1430,8 +1430,22 @@ export class Terminal {
    * 
    * @return {Line[]} the lines information. Do not change this data!
    */
-  getScreenLines(): Line[] {
-    return [...this.lines];
+  getScreenLines(renderCursor:boolean=false): Line[] {
+    const linesCopy = [...this.lines];
+    
+    if (renderCursor) {
+      if (this.cursorState &&
+          (this.ydisp === this.ybase) &&
+          !this.cursorHidden &&
+          this.x < this.cols &&
+          this.y < linesCopy.length) {
+
+        const cursorLine = [...linesCopy[this.y]];
+        cursorLine[this.x] = [-1, cursorLine[this.x][1]];
+        linesCopy[this.y] = cursorLine;
+      }
+    }
+    return linesCopy;
   }
   
   /**

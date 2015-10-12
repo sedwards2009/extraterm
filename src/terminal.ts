@@ -456,7 +456,7 @@ class EtTerminal extends HTMLElement {
           width: 100%;
         }
         
-        .scroller {
+        #${ID_SCROLLER} {
           flex: 1;
           height: 100%;
           overflow-x: hidden;
@@ -491,7 +491,7 @@ class EtTerminal extends HTMLElement {
         </style>
         <style id="${ID_THEME_STYLE}"></style>
         <div id='${ID_CONTAINER}' class='terminal_container'>
-          <div id='${ID_SCROLLER}' class='scroller'>
+          <div id='${ID_SCROLLER}'>
             <div id='${ID_SCROLLBACK}' class='terminal-scrollback terminal'></div>
             <div id='${ID_TERM_CONTAINER}' class='term_container'></div>
             <div id='${ID_VPAD}' class='terminal'></div>
@@ -915,69 +915,75 @@ log("_importScrollback");
           currentDecoration = null;
         }
         if (data !== defAttr) {
-          let bg = termjs.backgroundFromCharAttr(data);
-          let fg = termjs.foregroundFromCharAttr(data);
-          const flags = termjs.flagsFromCharAttr(data);
-          
           const classList: string[] = [];
-          
-          // bold
-          if (flags & termjs.BOLD_ATTR_FLAG) {
-            classList.push('terminal-bold');
-
-            // See: XTerm*boldColors
-            if (fg < 8) {
-              fg += 8;  // Use the bright version of the color.
-            }
-          }
-
-          // italic
-          if (flags & termjs.ITALIC_ATTR_FLAG) {
-            classList.push('terminal-italic');
-          }
-          
-          // underline
-          if (flags & termjs.UNDERLINE_ATTR_FLAG) {
-            classList.push('terminal-underline');
-          }
-
-          // strike through
-          if (flags & termjs.STRIKE_THROUGH_ATTR_FLAG) { 
-            classList.push('terminal-strikethrough');
-          }
-          
-          // inverse
-          if (flags & termjs.INVERSE_ATTR_FLAG) {
-            let tmp = fg;
-            fg = bg;
-            bg = tmp;
-            
-            // Should inverse just be before the
-            // above boldColors effect instead?
-            if ((flags & termjs.BOLD_ATTR_FLAG) && fg < 8) {
-              fg += 8;  // Use the bright version of the color.
-            }
-          }
-
-          // invisible
-          if (flags & termjs.INVISIBLE_ATTR_FLAG) {
-            classList.push('terminal-invisible');
-          }
-
-          if (bg !== 256) {
-            classList.push('terminal-background-' + bg);
-          }
-
-          if (flags & termjs.FAINT_ATTR_FLAG) {
-            classList.push('terminal-faint-' + fg);
+          if (data === -1) {
+            // Cursor itself
+            classList.push("reverse-video");
+            classList.push("terminal-cursor");
           } else {
-            if (fg !== 257) {
-              classList.push('terminal-foreground-' + fg);
-            }
-          }
           
-          if (flags & termjs.BLINK_ATTR_FLAG) {
-            classList.push("terminal-blink");
+            let bg = termjs.backgroundFromCharAttr(data);
+            let fg = termjs.foregroundFromCharAttr(data);
+            const flags = termjs.flagsFromCharAttr(data);
+            
+            // bold
+            if (flags & termjs.BOLD_ATTR_FLAG) {
+              classList.push('terminal-bold');
+
+              // See: XTerm*boldColors
+              if (fg < 8) {
+                fg += 8;  // Use the bright version of the color.
+              }
+            }
+
+            // italic
+            if (flags & termjs.ITALIC_ATTR_FLAG) {
+              classList.push('terminal-italic');
+            }
+            
+            // underline
+            if (flags & termjs.UNDERLINE_ATTR_FLAG) {
+              classList.push('terminal-underline');
+            }
+
+            // strike through
+            if (flags & termjs.STRIKE_THROUGH_ATTR_FLAG) { 
+              classList.push('terminal-strikethrough');
+            }
+            
+            // inverse
+            if (flags & termjs.INVERSE_ATTR_FLAG) {
+              let tmp = fg;
+              fg = bg;
+              bg = tmp;
+              
+              // Should inverse just be before the
+              // above boldColors effect instead?
+              if ((flags & termjs.BOLD_ATTR_FLAG) && fg < 8) {
+                fg += 8;  // Use the bright version of the color.
+              }
+            }
+
+            // invisible
+            if (flags & termjs.INVISIBLE_ATTR_FLAG) {
+              classList.push('terminal-invisible');
+            }
+
+            if (bg !== 256) {
+              classList.push('terminal-background-' + bg);
+            }
+
+            if (flags & termjs.FAINT_ATTR_FLAG) {
+              classList.push('terminal-faint-' + fg);
+            } else {
+              if (fg !== 257) {
+                classList.push('terminal-foreground-' + fg);
+              }
+            }
+            
+            if (flags & termjs.BLINK_ATTR_FLAG) {
+              classList.push("terminal-blink");
+            }
           }
           
           if (classList.length !== 0) {
@@ -1232,7 +1238,7 @@ console.log("_enterSelectionMode (enter)");
     scroller.classList.add(CLASS_SELECTION_MODE);
     
     // Copy the current screen lines into the scrollback code mirror.
-    const {text: allText, decorations: allDecorations} = this._linesToTextStyles(this._term.getScreenLines());
+    const {text: allText, decorations: allDecorations} = this._linesToTextStyles(this._term.getScreenLines(true));
     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
     scrollbackCodeMirror.processKeyboard = newMode === Mode.KEYBOARD_SELECTION;
     

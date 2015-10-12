@@ -18,6 +18,8 @@ const ID_CONTAINER = "container";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
 
+const CLASS_HIDE_CURSOR = "hide_cursor";
+
 let registered = false;
 
 function log(msg: any, ...opts: any[]): void {
@@ -121,6 +123,15 @@ class EtCodeMirrorViewer extends ViewerElement {
 
   set processKeyboard(on: boolean) {
     this._processKeyboard = on;
+    
+    // When keyboard processing is off, we really only want the user to be able
+    // to select stuff using the mouse and we don't need to show a cursor.
+    const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
+    if (on) {
+      containerDiv.classList.remove(CLASS_HIDE_CURSOR);
+    } else {
+      containerDiv.classList.add(CLASS_HIDE_CURSOR);
+    }
   }
   
   // get focusable(): boolean {
@@ -371,6 +382,10 @@ class EtCodeMirrorViewer extends ViewerElement {
         
         #${ID_CONTAINER}:focus {
           outline: 0px;
+        }
+        
+        #${ID_CONTAINER}.${CLASS_HIDE_CURSOR} .CodeMirror-cursors {
+            display: none !important;
         }
         
         </style>

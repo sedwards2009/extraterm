@@ -4,7 +4,7 @@
   src: url("DejaVuSansMono.ttf");
 }
 
-.terminal, .CodeMirror {
+.terminal_container, .terminal, .CodeMirror {
     font-family: "DejaVu Sans Mono";
     font-size: 13px;
     color: #b2b2b2;
@@ -12,7 +12,7 @@
     outline: none;
 }
 
-DIV:focus > DIV > SPAN.terminal-cursor {
+DIV:focus > DIV > SPAN.terminal-cursor, DIV.terminal_viewer SPAN.terminal-cursor {
   color: #000000;
   background: #ffffff;
   outline: 0px;

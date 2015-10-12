@@ -43,6 +43,11 @@ class ViewerElement extends HTMLElement {
     return "desktop";
   }
   
+  /**
+   * Gets the selected text.
+   *
+   * @return the selected text or null if there is no selection.
+   */
   getSelectionText(): string {
     return null;
   }
