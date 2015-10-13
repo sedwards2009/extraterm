@@ -263,7 +263,6 @@ export class Terminal {
   private body: HTMLElement = null;
 
   private isMac = false;
-  private isMSIE = false;
   private children: HTMLDivElement[] = [];
 
   private utfMouse = false;
@@ -761,7 +760,6 @@ export class Terminal {
     // Parse user-agent strings.
     if (this.context.navigator && this.context.navigator.userAgent) {
       this.isMac = !!~this.context.navigator.userAgent.indexOf('Mac');
-      this.isMSIE = !!~this.context.navigator.userAgent.indexOf('MSIE');
     }
 
     // Create our main terminal element.
@@ -822,11 +820,6 @@ export class Terminal {
     // event seems to only work for textareas?
     on(this.element, 'mousedown', (ev: MouseEvent) => {
       var button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
-
-      // Does IE9 do this?
-      if (this.isMSIE) {
-        button = button === 1 ? 0 : button === 4 ? 1 : button;
-      }
 
       if (button !== 2) return;
 
@@ -1617,7 +1610,6 @@ export class Terminal {
     return linesCopy;
   }
   
-
   _cursorBlink(): void {
     if ( ! this._hasFocus) {
       return;
@@ -5508,12 +5500,3 @@ function px(value) {
   }
   return parseInt(value.slice(0,-2),10);
 }  
-
-function faintColors(colors: string[]): string[] {
-  return colors.map<string>( (col) => {
-    const red = parseInt(col.slice(1,3), 16);
-    const green = parseInt(col.slice(3,5), 16);
-    const blue = parseInt(col.slice(5,7),16);
-    return `rgba(${red}, ${green}, ${blue}, 0.6)`;
-  });
-}
