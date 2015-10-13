@@ -498,6 +498,18 @@ export class Terminal {
     return out;
   })();
 
+  // ------------------------------------------------------------------------
+  //
+  // ######  ####### #     # 
+  // #     # #     # ##   ## 
+  // #     # #     # # # # # 
+  // #     # #     # #  #  # 
+  // #     # #     # #     # 
+  // #     # #     # #     # 
+  // ######  ####### #     # 
+  //                       
+  // ------------------------------------------------------------------------
+
   focus(): void {
     if (this.sendFocus) {
       this.send('\x1b[I');
@@ -578,27 +590,6 @@ export class Terminal {
     }
     cssStyleSheet.insertRule(`DIV.${TERMINAL_ACTIVE_CLASS}:last-child{padding-bottom:${padh}px}`, 0);
   }
-
-  /**
-   * Bind to paste event
-   */
-  // bindPaste = function(document) {
-  //   // This seems to work well for ctrl-V and middle-click,
-  //   // even without the contentEditable workaround.
-  //   var window = document.defaultView;
-  //   on(window, 'paste', function(ev) {
-  //     var term = Terminal.focus;
-  //     if (!term) return;
-  //     if (ev.clipboardData) {
-  //       term.send(ev.clipboardData.getData('text/plain'));
-  //     } else if (term.context.clipboardData) {
-  //       term.send(term.context.clipboardData.getData('Text'));
-  //     }
-  //     // Not necessary. Do it anyway for good measure.
-  //     term.element.contentEditable = 'inherit';
-  //     return cancel(ev);
-  //   });
-  // };
 
   /**
    * Global Events for key handling
@@ -725,56 +716,7 @@ export class Terminal {
 
     head.insertBefore(style, head.firstChild);
   }
-
-  /**
-   * Moves all of the rendered rows into the physical scrollback area.
-   * 
-   * The rows on the terminal screen are moved into the scrollback area but
-   * the new terminal rows are not rendered. Visually this does nothing as 
-   * the result looks the same. If the last row contains the cursor and is
-   * empty, then it is not moved.
-   * 
-   * Future terminal rows will appear below the old last row in the window
-   * once something is printed there.
-   */
-  moveRowsToScrollback(): void {
-    let children = this.children;
-    let newChildren = [];
-    let lines = this.lines;
-    let newLines = [];
   
-    if (this.x === 0 && this.lines.length-1 === this.y) {
-      if (this.getLineText(this.y).trim() === '') {
-        lines = this.lines.slice(0, -1);
-        newLines = [this.lines[this.lines.length-1]];
-        children = this.children.slice(0, -1);
-        newChildren = [this.children[this.children.length-1]];
-      }
-    }
-    
-    // Fill up the scroll back "TODO" (=to be rendered) buffer.
-    lines.forEach( (line) => {
-      this._scrollbackBuffer.push(line);
-    });
-    
-    this.lines = newLines;
-    
-    // Delete the DIV objects for the current terminal screen.
-    children.forEach(function(div) {
-      div.remove();
-    });
-    this.children = newChildren;
-    
-    // Force the scrollback buffer to render.
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
-    this.x = 0;
-    this.y = 0;
-    this.oldy = 0;
-    
-    this.emit(Terminal.EVENT_SCROLLBACK_AVAILABLE);
-  }
-
   /**
    * Append a DOM element to the bottom of the terminal.
    * 
@@ -783,45 +725,13 @@ export class Terminal {
    * 
    * @param {Element} element The DOM element to append.
    */
-  appendElement(element: HTMLElement): void {
+  private appendElement(element: HTMLElement): void {
     this.moveRowsToScrollback();
     if (this.children.length !== 0) {
       this.element.insertBefore(element, this.children[0]);
     } else {
       this.element.appendChild(element);
     }
-  }
-
-  private _getRow(row: number): LineCell[] {
-    while (row >= this.lines.length) {
-      this.lines.push(this.blankLine());
-    }
-    return this.lines[row];
-  }
-
-  // Fetch the LineCell at row 'row' if it exists, else return null.
-  private _tryGetRow(row: number): LineCell[] {
-    return row >= this.lines.length ? null : this.lines[row];
-  }
-
-  getDimensions(): { rows: number; cols: number; materializedRows: number; cursorX: number; cursorY: number; } {
-    return {
-      rows: this.rows,
-      cols: this.cols,
-      materializedRows: this.lines.length,
-      cursorX: this.x,
-      cursorY: this.y
-      };  
-  }
-
-  getLineText(y: number): string {
-    if (y <0 || y >= this.lines.length) {
-      return null;
-    }
-    const row = this.lines[y];
-    return row.map(function(tup) {
-      return tup[1];
-    }).join("");
   }
 
   private _getChildDiv(y: number): HTMLDivElement {
@@ -833,7 +743,6 @@ export class Terminal {
     }
     return this.children[y];
   }
-
   /**
    * Open Terminal
    */
@@ -1100,108 +1009,6 @@ export class Terminal {
     });
   }
 
-  // encode button and
-  // position to characters
-  private encodeMouseData(buffer: number[], ch: number): void {
-    if ( ! this.utfMouse) {
-      if (ch === 255) {
-        buffer.push(0);
-        return;
-      }
-      if (ch > 127) {
-        ch = 127;
-      }
-      buffer.push(ch);
-    } else {
-      if (ch === 2047) {
-        buffer.push(0);
-      }
-      if (ch < 127) {
-        buffer.push(ch);
-      } else {
-        if (ch > 2047) {
-          ch = 2047;
-        }
-        buffer.push(0xC0 | (ch >> 6));
-        buffer.push(0x80 | (ch & 0x3F));
-      }
-    }
-  }
-
-  // send a mouse event:
-  // regular/utf8: ^[[M Cb Cx Cy
-  // urxvt: ^[[ Cb ; Cx ; Cy M
-  // sgr: ^[[ Cb ; Cx ; Cy M/m
-  // vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
-  // locator: CSI P e ; P b ; P r ; P c ; P p & w
-  private sendMouseSequence(button: number, pos: TerminalCoord): void {
-    let data: string;
-    
-    if (this.vt300Mouse) {
-      this.log("sendEvent(): vt300Mouse");
-      // NOTE: Unstable.
-      // http://www.vt100.net/docs/vt3xx-gp/chapter15.html
-      button &= 3;
-      const x = pos.x;
-      const y = pos.y;
-      let data = '\x1b[24';
-      if (button === 0) {
-        data += '1';
-      } else if (button === 1) {
-        data += '3';
-      } else if (button === 2) {
-        data += '5';
-      } else if (button === 3) {
-        return;
-      } else {
-        data += '0';
-      }
-      data += '~[' + x + ',' + y + ']\r';
-      this.send(data);
-      return;
-    }
-
-    if (this.decLocator) {
-      // NOTE: Unstable.
-      this.log("sendEvent with decLocator is not implemented!");
-      
-      // const x = pos.x;
-      // const y = pos.y;
-      // const translatedButton = {0:2, 1:4, 2:6, 3:3}[button & 3];
-      // self.send('\x1b[' + translatedButton + ';' + (translatedButton === 3 ? 4 : 0) + ';' + y + ';' + x + ';' +
-      //   (pos.page || 0) + '&w');
-      return;
-    }
-
-    if (this.urxvtMouse) {
-      this.log("sendEvent(): urxvtMouse");
-      const x = pos.x + 1;
-      const y = pos.y + 1;
-      this.send('\x1b[' + (button+32) + ';' + x + ';' + y + 'M');
-      return;
-    }
-
-    if (this.sgrMouse) {
-      this.log("sendEvent(): sgrMouse");
-      const x = pos.x;
-      const y = pos.y;
-      this.send('\x1b[<' + ((button & 3) === 3 ? button & ~3 : button) + ';' + x +
-        ';' + y + ((button & 3) === 3 ? 'm' : 'M'));
-      return;
-    }
-    this.log("sendEvent(): default");
-
-    const encodedData = [];
-    this.encodeMouseData(encodedData, button+32);
-    
-    // xterm sends raw bytes and
-    // starts at 32 (SP) for each.    
-    this.encodeMouseData(encodedData, pos.x + 32);
-    this.encodeMouseData(encodedData, pos.y + 32);
-
-    this.send('\x1b[M' + String.fromCharCode.apply(String, encodedData));
-  }
-
   // mouse coordinates measured in cols/rows
   getTerminalCoordsFromEvent(ev: MouseEvent): TerminalCoord {
     // Identify the row DIV that was clicked.
@@ -1259,15 +1066,7 @@ export class Terminal {
 
     return { x: col, y: row };
   }
-  
-  // mouseup, mousedown, mousewheel
-  // left click: ^[[M 3<^[[M#3<
-  // mousewheel up: ^[[M`3>
-  private sendMouseButtonSequence(pos: TerminalCoord, button: number): void {
-    this.sendMouseSequence(button, pos);
-    this._pressed = (button === 3) ? 32 : button;  
-  }
-  
+
   private getMouseButtonFromEvent(ev: MouseEvent): number {
     // two low bits:
     // 0 = left
@@ -1339,115 +1138,6 @@ export class Terminal {
     }
   }
 
-  /**
-   * Rendering Engine
-   */
-
-  /**
-   * Schedule a screen refresh and update.
-   * 
-   * @param {boolean} immediate True if the refresh should occur as soon as possible. False if a slight delay is permitted.
-   */
-  private _scheduleRefresh(immediate: boolean): void {
-    const window = this.document.defaultView;
-    if (this._refreshTimer === -1) {
-      this._refreshTimer = window.setTimeout(() => {
-        this._refreshTimer = -1;
-        this._refreshFrame();
-      }, immediate ? 0 : REFRESH_DELAY);
-    }
-  }
-
-  /**
-   * Refresh and update the screen.
-   * 
-   * Usually call via a timer.
-   */
-  private _refreshFrame(): void {
-    this.refresh(this.refreshStart, this.refreshEnd);
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
-  }
-
-  // In the screen buffer, each character
-  // is stored as a an array with a character
-  // and a 32-bit integer.
-  // First value: a utf-16 character.
-  // Second value:
-  // Next 9 bits: background color (0-511).
-  // Next 9 bits: foreground color (0-511).
-  // Next 14 bits: a mask for misc. flags:
-  //   1=bold, 2=underline, 4=blink, 8=inverse, 16=invisible
-
-  refresh(start: number, end: number): void {
-    if ( !this.physicalScroll && end >= this.lines.length) {
-      this.log('`end` is too large. Most likely a bad CSR.');
-      end = this.lines.length - 1;
-    }
-    
-    for (let y = start; y <= end; y++) {
-      const row = y + this.ydisp;
-      let line = this._getRow(row);
-
-      // Place the cursor in the row.
-      if (y === this.y &&
-          this.cursorState &&
-          (this.ydisp === this.ybase) &&
-          !this.cursorHidden &&
-          this.x < this.cols) {
-
-        const x = this.x;
-        line = line.slice();
-        line[x] = [-1, line[x][1]];
-      }
-
-      this._getChildDiv(y).innerHTML = Terminal.lineToHTML(line);
-    }
-  }
-  
-  /**
-   * Return true if there are lines waiting in the scrollback buffer.
-   *
-   * @return true if there are lines waiting to be rendered in the scrollback buffer.
-   */
-  isScrollbackAvailable(): boolean {
-    return this._scrollbackBuffer.length !== 0;
-  }
-  
-  /**
-   * Fetch all of the bending scrollback lines from the buffer.
-   * 
-   * @return all of the scrollback lines which need to rendered.
-   */
-  fetchScrollbackLines(): Line[] {
-    const lines = this._scrollbackBuffer;
-    this._scrollbackBuffer = [];
-    return lines;
-  }
-  
-  /**
-   * Get a shallow copy of the lines currently being shown on the terminal screen.
-   * 
-   * @return {Line[]} the lines information. Do not change this data!
-   */
-  getScreenLines(renderCursor:boolean=false): Line[] {
-    const linesCopy = [...this.lines];
-    
-    if (renderCursor) {
-      if (this.cursorState &&
-          (this.ydisp === this.ybase) &&
-          !this.cursorHidden &&
-          this.x < this.cols &&
-          this.y < linesCopy.length) {
-
-        const cursorLine = [...linesCopy[this.y]];
-        cursorLine[this.x] = [-1, cursorLine[this.x][1]];
-        linesCopy[this.y] = cursorLine;
-      }
-    }
-    return linesCopy;
-  }
-  
   /**
    * Render a line to a HTML string.
    * 
@@ -1577,6 +1267,357 @@ export class Terminal {
     return out;
   }
 
+  // Physical scroll to the bottom.
+  scrollToBottom() {
+    var newScrollPosition = this.element.scrollHeight - this.element.clientHeight;
+    this.element.scrollTop = newScrollPosition;
+    this.emit(Terminal.EVENT_MANUAL_SCROLL, { position: newScrollPosition, isBottom: true });
+  }
+
+  isScrollAtBottom() {
+    return this.element.scrollTop === this.element.scrollHeight - this.element.clientHeight;
+  }
+  
+  _domBell(): void {
+    if (!this.visualBell) return;
+    var self = this;
+    this.element.style.borderColor = 'white';
+    setTimeout(function() {
+      self.element.style.borderColor = '';
+    }, 10);
+    if (this.popOnBell) this.focus();
+  }
+  
+  effectiveFontFamily(): string {
+    const lineEl = this.children[0];    
+    const cs = window.getComputedStyle(lineEl,null);
+    return cs.getPropertyValue("font-family");
+  }
+
+
+  // ------------------------------------------------------------------------
+  //
+  // #######                                                   
+  // #       #    # #    # #        ##   ##### #  ####  #    # 
+  // #       ##  ## #    # #       #  #    #   # #    # ##   # 
+  // #####   # ## # #    # #      #    #   #   # #    # # #  # 
+  // #       #    # #    # #      ######   #   # #    # #  # # 
+  // #       #    # #    # #      #    #   #   # #    # #   ## 
+  // ####### #    #  ####  ###### #    #   #   #  ####  #    # 
+  // 
+  // ------------------------------------------------------------------------
+
+  /**
+   * Moves all of the rendered rows into the physical scrollback area.
+   * 
+   * The rows on the terminal screen are moved into the scrollback area but
+   * the new terminal rows are not rendered. Visually this does nothing as 
+   * the result looks the same. If the last row contains the cursor and is
+   * empty, then it is not moved.
+   * 
+   * Future terminal rows will appear below the old last row in the window
+   * once something is printed there.
+   */
+  moveRowsToScrollback(): void {
+    let children = this.children;
+    let newChildren = [];
+    let lines = this.lines;
+    let newLines = [];
+    
+  const origChildrenLen = this.children.length;
+  
+    if (this.x === 0 && this.lines.length-1 === this.y) {
+      if (this.getLineText(this.y).trim() === '') {
+        lines = this.lines.slice(0, -1);
+        newLines = [this.lines[this.lines.length-1]];
+        children = this.children.slice(0, -1);
+        newChildren = [this.children[this.children.length-1]];
+      }
+    }
+    
+    // Fill up the scroll back "TODO" (=to be rendered) buffer.
+    lines.forEach( (line) => {
+      this._scrollbackBuffer.push(line);
+    });
+    
+    this.lines = newLines;
+
+// FIXME DOM code
+    // Delete the DIV objects for the current terminal screen.
+    children.forEach(function(div) {
+      if (div === undefined) {
+  (<any> console).trace("div is undefined, origChildrenLen: "+origChildrenLen);
+  
+      }
+      div.remove();
+    });
+    this.children = newChildren;
+    
+    // Force the scrollback buffer to render.
+    this.refreshStart = REFRESH_START_NULL;
+    this.refreshEnd = REFRESH_END_NULL;
+    this.x = 0;
+    this.y = 0;
+    this.oldy = 0;
+    
+    this.emit(Terminal.EVENT_SCROLLBACK_AVAILABLE);
+  }
+
+  private _getRow(row: number): LineCell[] {
+    while (row >= this.lines.length) {
+      this.lines.push(this.blankLine());
+    }
+    return this.lines[row];
+  }
+
+  // Fetch the LineCell at row 'row' if it exists, else return null.
+  private _tryGetRow(row: number): LineCell[] {
+    return row >= this.lines.length ? null : this.lines[row];
+  }
+
+  getDimensions(): { rows: number; cols: number; materializedRows: number; cursorX: number; cursorY: number; } {
+    return {
+      rows: this.rows,
+      cols: this.cols,
+      materializedRows: this.lines.length,
+      cursorX: this.x,
+      cursorY: this.y
+      };  
+  }
+
+  getLineText(y: number): string {
+    if (y <0 || y >= this.lines.length) {
+      return null;
+    }
+    const row = this.lines[y];
+    return row.map(function(tup) {
+      return tup[1];
+    }).join("");
+  }
+
+
+  // encode button and
+  // position to characters
+  private encodeMouseData(buffer: number[], ch: number): void {
+    if ( ! this.utfMouse) {
+      if (ch === 255) {
+        buffer.push(0);
+        return;
+      }
+      if (ch > 127) {
+        ch = 127;
+      }
+      buffer.push(ch);
+    } else {
+      if (ch === 2047) {
+        buffer.push(0);
+      }
+      if (ch < 127) {
+        buffer.push(ch);
+      } else {
+        if (ch > 2047) {
+          ch = 2047;
+        }
+        buffer.push(0xC0 | (ch >> 6));
+        buffer.push(0x80 | (ch & 0x3F));
+      }
+    }
+  }
+
+  // send a mouse event:
+  // regular/utf8: ^[[M Cb Cx Cy
+  // urxvt: ^[[ Cb ; Cx ; Cy M
+  // sgr: ^[[ Cb ; Cx ; Cy M/m
+  // vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
+  // locator: CSI P e ; P b ; P r ; P c ; P p & w
+  private sendMouseSequence(button: number, pos: TerminalCoord): void {
+    let data: string;
+    
+    if (this.vt300Mouse) {
+      this.log("sendEvent(): vt300Mouse");
+      // NOTE: Unstable.
+      // http://www.vt100.net/docs/vt3xx-gp/chapter15.html
+      button &= 3;
+      const x = pos.x;
+      const y = pos.y;
+      let data = '\x1b[24';
+      if (button === 0) {
+        data += '1';
+      } else if (button === 1) {
+        data += '3';
+      } else if (button === 2) {
+        data += '5';
+      } else if (button === 3) {
+        return;
+      } else {
+        data += '0';
+      }
+      data += '~[' + x + ',' + y + ']\r';
+      this.send(data);
+      return;
+    }
+
+    if (this.decLocator) {
+      // NOTE: Unstable.
+      this.log("sendEvent with decLocator is not implemented!");
+      
+      // const x = pos.x;
+      // const y = pos.y;
+      // const translatedButton = {0:2, 1:4, 2:6, 3:3}[button & 3];
+      // self.send('\x1b[' + translatedButton + ';' + (translatedButton === 3 ? 4 : 0) + ';' + y + ';' + x + ';' +
+      //   (pos.page || 0) + '&w');
+      return;
+    }
+
+    if (this.urxvtMouse) {
+      this.log("sendEvent(): urxvtMouse");
+      const x = pos.x + 1;
+      const y = pos.y + 1;
+      this.send('\x1b[' + (button+32) + ';' + x + ';' + y + 'M');
+      return;
+    }
+
+    if (this.sgrMouse) {
+      this.log("sendEvent(): sgrMouse");
+      const x = pos.x;
+      const y = pos.y;
+      this.send('\x1b[<' + ((button & 3) === 3 ? button & ~3 : button) + ';' + x +
+        ';' + y + ((button & 3) === 3 ? 'm' : 'M'));
+      return;
+    }
+    this.log("sendEvent(): default");
+
+    const encodedData = [];
+    this.encodeMouseData(encodedData, button+32);
+    
+    // xterm sends raw bytes and
+    // starts at 32 (SP) for each.    
+    this.encodeMouseData(encodedData, pos.x + 32);
+    this.encodeMouseData(encodedData, pos.y + 32);
+
+    this.send('\x1b[M' + String.fromCharCode.apply(String, encodedData));
+  }
+
+  
+  // mouseup, mousedown, mousewheel
+  // left click: ^[[M 3<^[[M#3<
+  // mousewheel up: ^[[M`3>
+  private sendMouseButtonSequence(pos: TerminalCoord, button: number): void {
+    this.sendMouseSequence(button, pos);
+    this._pressed = (button === 3) ? 32 : button;  
+  }
+
+
+  /**
+   * Rendering Engine
+   */
+
+  /**
+   * Schedule a screen refresh and update.
+   * 
+   * @param {boolean} immediate True if the refresh should occur as soon as possible. False if a slight delay is permitted.
+   */
+  private _scheduleRefresh(immediate: boolean): void {
+    const window = this.document.defaultView;
+    if (this._refreshTimer === -1) {
+      this._refreshTimer = window.setTimeout(() => {
+        this._refreshTimer = -1;
+        this._refreshFrame();
+      }, immediate ? 0 : REFRESH_DELAY);
+    }
+  }
+
+  /**
+   * Refresh and update the screen.
+   * 
+   * Usually call via a timer.
+   */
+  private _refreshFrame(): void {
+    this.refresh(this.refreshStart, this.refreshEnd);
+    this.refreshStart = REFRESH_START_NULL;
+    this.refreshEnd = REFRESH_END_NULL;
+  }
+
+  // In the screen buffer, each character
+  // is stored as a an array with a character
+  // and a 32-bit integer.
+  // First value: a utf-16 character.
+  // Second value:
+  // Next 9 bits: background color (0-511).
+  // Next 9 bits: foreground color (0-511).
+  // Next 14 bits: a mask for misc. flags:
+  //   1=bold, 2=underline, 4=blink, 8=inverse, 16=invisible
+
+  refresh(start: number, end: number): void {
+    if ( !this.physicalScroll && end >= this.lines.length) {
+      this.log('`end` is too large. Most likely a bad CSR.');
+      end = this.lines.length - 1;
+    }
+    
+    for (let y = start; y <= end; y++) {
+      const row = y + this.ydisp;
+      let line = this._getRow(row);
+
+      // Place the cursor in the row.
+      if (y === this.y &&
+          this.cursorState &&
+          (this.ydisp === this.ybase) &&
+          !this.cursorHidden &&
+          this.x < this.cols) {
+
+        const x = this.x;
+        line = line.slice();
+        line[x] = [-1, line[x][1]];
+      }
+
+      this._getChildDiv(y).innerHTML = Terminal.lineToHTML(line);
+    }
+  }
+  
+  /**
+   * Return true if there are lines waiting in the scrollback buffer.
+   *
+   * @return true if there are lines waiting to be rendered in the scrollback buffer.
+   */
+  isScrollbackAvailable(): boolean {
+    return this._scrollbackBuffer.length !== 0;
+  }
+  
+  /**
+   * Fetch all of the bending scrollback lines from the buffer.
+   * 
+   * @return all of the scrollback lines which need to rendered.
+   */
+  fetchScrollbackLines(): Line[] {
+    const lines = this._scrollbackBuffer;
+    this._scrollbackBuffer = [];
+    return lines;
+  }
+  
+  /**
+   * Get a shallow copy of the lines currently being shown on the terminal screen.
+   * 
+   * @return {Line[]} the lines information. Do not change this data!
+   */
+  getScreenLines(renderCursor:boolean=false): Line[] {
+    const linesCopy = [...this.lines];
+    
+    if (renderCursor) {
+      if (this.cursorState &&
+          (this.ydisp === this.ybase) &&
+          !this.cursorHidden &&
+          this.x < this.cols &&
+          this.y < linesCopy.length) {
+
+        const cursorLine = [...linesCopy[this.y]];
+        cursorLine[this.x] = [-1, cursorLine[this.x][1]];
+        linesCopy[this.y] = cursorLine;
+      }
+    }
+    return linesCopy;
+  }
+  
+
   _cursorBlink(): void {
     if ( ! this._hasFocus) {
       return;
@@ -1672,16 +1713,6 @@ export class Terminal {
     this.updateRange(this.scrollBottom);
   }
 
-  // Physical scroll to the bottom.
-  scrollToBottom() {
-    var newScrollPosition = this.element.scrollHeight - this.element.clientHeight;
-    this.element.scrollTop = newScrollPosition;
-    this.emit(Terminal.EVENT_MANUAL_SCROLL, { position: newScrollPosition, isBottom: true });
-  }
-
-  isScrollAtBottom() {
-    return this.element.scrollTop === this.element.scrollHeight - this.element.clientHeight;
-  }
 
   scrollDisp(disp) {
     this.ydisp += disp;
@@ -3216,17 +3247,12 @@ export class Terminal {
 
     this.queue += data;
   }
-
+  
   bell(): void {
     this.emit('bell');
-    if (!this.visualBell) return;
-    var self = this;
-    this.element.style.borderColor = 'white';
-    setTimeout(function() {
-      self.element.style.borderColor = '';
-    }, 10);
-    if (this.popOnBell) this.focus();
+    this._domBell();
   }
+
 
   log(...args: any[]): void {
     if (!this.debug) {
@@ -3319,12 +3345,6 @@ export class Terminal {
     // screen buffer. just set it
     // to null for now.
     this.normal = null;
-  }
-
-  effectiveFontFamily(): string {
-    const lineEl = this.children[0];    
-    const cs = window.getComputedStyle(lineEl,null);
-    return cs.getPropertyValue("font-family");
   }
 
   /**
