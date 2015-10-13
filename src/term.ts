@@ -160,8 +160,6 @@ function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
  * Terminal
  */
 export class Terminal {
-
-  static brokenBold: boolean;
   
   static NO_STYLE_HACK = "NO_STYLE_HACK";
   
@@ -631,47 +629,6 @@ export class Terminal {
   }
 
   /**
-   * Copy Selection w/ Ctrl-C (Select Mode)
-   */
-  bindCopy(document) {
-    
-    // if (!('onbeforecopy' in document)) {
-    //   // Copies to *only* the clipboard.
-    //   on(window, 'copy', function fn(ev) {
-    //     var term = Terminal.focus;
-    //     if (!term) return;
-    //     if (!term._selected) return;
-    //     var text = term.grabText(
-    //       term._selected.x1, term._selected.x2,
-    //       term._selected.y1, term._selected.y2);
-    //     term.emit('copy', text);
-    //     ev.clipboardData.setData('text/plain', text);
-    //   });
-    //   return;
-    // }
-
-    // Copies to primary selection *and* clipboard.
-    // NOTE: This may work better on capture phase,
-    // or using the `beforecopy` event.
-    on(this.element, 'copy', (function(ev) {
-      if (!this._selected) return;
-      var textarea = this.getCopyTextarea();
-      var text = this.grabText(
-        this._selected.x1, this._selected.x2,
-        this._selected.y1, this._selected.y2);
-      this.emit('copy', text);
-      textarea.focus();
-      textarea.textContent = text;
-      textarea.value = text;
-      textarea.setSelectionRange(0, text.length);
-      setTimeout(function() {
-        this.element.focus();
-        this.focus();
-      }, 1);
-    }).bind(this));
-  }
-
-  /**
    * Insert a default style
    */
   static insertStyle(document, bg, fg) {
@@ -700,19 +657,6 @@ export class Terminal {
       '  background: ' + fg + ';\n' +
       '}\n';
 
-    // var out = '';
-    // each(Terminal.colors, function(color, i) {
-    //   if (i === 256) {
-    //     out += '\n.term-bg-color-default { background-color: ' + color + '; }';
-    //   }
-    //   if (i === 257) {
-    //     out += '\n.term-fg-color-default { color: ' + color + '; }';
-    //   }
-    //   out += '\n.term-bg-color-' + i + ' { background-color: ' + color + '; }';
-    //   out += '\n.term-fg-color-' + i + ' { color: ' + color + '; }';
-    // });
-    // style.innerHTML += out + '\n';
-
     head.insertBefore(style, head.firstChild);
   }
   
@@ -724,7 +668,7 @@ export class Terminal {
    * 
    * @param {Element} element The DOM element to append.
    */
-  private appendElement(element: HTMLElement): void {
+  appendElement(element: HTMLElement): void {
     this.moveRowsToScrollback();
     if (this.children.length !== 0) {
       this.element.insertBefore(element, this.children[0]);
@@ -742,6 +686,7 @@ export class Terminal {
     }
     return this.children[y];
   }
+  
   /**
    * Open Terminal
    */
@@ -832,12 +777,6 @@ export class Terminal {
     // Listen for mouse events and translate
     // them into terminal mouse protocols.
     this.bindMouse();
-
-    // Figure out whether boldness affects
-    // the character width of monospace fonts.
-    if (Terminal.brokenBold === undefined) {
-      Terminal.brokenBold = isBoldBroken(this.document);
-    }
 
     // this.emit('open');
 
@@ -1164,9 +1103,8 @@ export class Terminal {
             
             // bold
             if (flags & BOLD_ATTR_FLAG) {
-              if (!Terminal.brokenBold) {
-                clazz += ' terminal-bold';
-              }
+              clazz += ' terminal-bold';
+
               // See: XTerm*boldColors
               if (fg < 8) {
                 fg += 8;  // Use the bright version of the color.
@@ -1287,6 +1225,68 @@ export class Terminal {
     return cs.getPropertyValue("font-family");
   }
 
+  /**
+   * Resize the terminal to fill its containing element.
+   * 
+   * @returns Object with the new colums (cols field) and rows (rows field) information.
+   */
+  resizeToContainer(): {cols: number; rows: number; vpad: number; } {
+    if (DEBUG_RESIZE) {
+      this.log("resizeToContainer() this.effectiveFontFamily(): " + this.effectiveFontFamily());
+    }
+    
+    if (this.effectiveFontFamily().indexOf(Terminal.NO_STYLE_HACK) !== -1) {
+      // Styles have not been applied yet.
+      if (DEBUG_RESIZE) {
+        this.log("resizeToContainer() styles have not been applied yet.");
+      }
+      return {cols: this.cols, rows: this.rows, vpad: this.vpad };
+    }
+    
+    const lineEl = this.children[0];
+    const range = this.document.createRange();
+    range.setStart(lineEl, 0);
+    range.setEnd(lineEl, lineEl.childNodes.length);
+    
+    const rect = range.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      // The containing element has an invalid size.
+      return {cols: this.cols, rows: this.rows, vpad: this.vpad};
+    }
+    
+    const charWidth = rect.width / this.cols;    
+    const charHeight = rect.height;
+    this.charHeight = charHeight;
+    
+    const computedStyle = window.getComputedStyle(lineEl);
+    const width = this.element.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
+    const newCols = Math.floor(width / charWidth);
+    const newRows = Math.max(2, Math.floor(this.element.clientHeight / charHeight));
+    
+    if (newCols !== this.cols || newRows !== this.rows) {
+      this.resize(newCols, newRows);
+    }
+    
+    const newVpad =  Math.floor(this.element.clientHeight % charHeight);
+    if (newVpad !== this.vpad) {
+      this.vpad = newVpad;
+      this._setLastLinePadding(this.vpad);
+    }
+    
+    if (DEBUG_RESIZE) {
+      this.log("resizeToContainer() char line rect width: ",rect.width);
+      this.log("resizeToContainer() char line rect height: ",rect.height);
+      this.log("resizeToContainer() char line rect height: ",rect.height);
+      this.log("resizeToContainer() old cols: ",this.cols);
+      this.log("resizeToContainer() calculated charWidth: ",charWidth);    
+      this.log("resizeToContainer() calculated charHeight: ",charHeight);
+      this.log("resizeToContainer() element width: ",width);
+      this.log("resizeToContainer() element height: ",this.element.clientHeight);
+      this.log("resizeToContainer() new cols: ",this.cols);
+      this.log("resizeToContainer() new rows: ",this.rows);
+    }
+    return {cols: newCols, rows: newRows, vpad: this.vpad};
+  }
 
   // ------------------------------------------------------------------------
   //
@@ -3339,69 +3339,6 @@ export class Terminal {
     this.normal = null;
   }
 
-  /**
-   * Resize the terminal to fill its containing element.
-   * 
-   * @returns Object with the new colums (cols field) and rows (rows field) information.
-   */
-  resizeToContainer(): {cols: number; rows: number; vpad: number; } {
-    if (DEBUG_RESIZE) {
-      this.log("resizeToContainer() this.effectiveFontFamily(): " + this.effectiveFontFamily());
-    }
-    
-    if (this.effectiveFontFamily().indexOf(Terminal.NO_STYLE_HACK) !== -1) {
-      // Styles have not been applied yet.
-      if (DEBUG_RESIZE) {
-        this.log("resizeToContainer() styles have not been applied yet.");
-      }
-      return {cols: this.cols, rows: this.rows, vpad: this.vpad };
-    }
-    
-    const lineEl = this.children[0];
-    const range = this.document.createRange();
-    range.setStart(lineEl, 0);
-    range.setEnd(lineEl, lineEl.childNodes.length);
-    
-    const rect = range.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
-      // The containing element has an invalid size.
-      return {cols: this.cols, rows: this.rows, vpad: this.vpad};
-    }
-    
-    const charWidth = rect.width / this.cols;    
-    const charHeight = rect.height;
-    this.charHeight = charHeight;
-    
-    const computedStyle = window.getComputedStyle(lineEl);
-    const width = this.element.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
-    const newCols = Math.floor(width / charWidth);
-    const newRows = Math.max(2, Math.floor(this.element.clientHeight / charHeight));
-    
-    if (newCols !== this.cols || newRows !== this.rows) {
-      this.resize(newCols, newRows);
-    }
-    
-    const newVpad =  Math.floor(this.element.clientHeight % charHeight);
-    if (newVpad !== this.vpad) {
-      this.vpad = newVpad;
-      this._setLastLinePadding(this.vpad);
-    }
-    
-    if (DEBUG_RESIZE) {
-      this.log("resizeToContainer() char line rect width: ",rect.width);
-      this.log("resizeToContainer() char line rect height: ",rect.height);
-      this.log("resizeToContainer() char line rect height: ",rect.height);
-      this.log("resizeToContainer() old cols: ",this.cols);
-      this.log("resizeToContainer() calculated charWidth: ",charWidth);    
-      this.log("resizeToContainer() calculated charHeight: ",charHeight);
-      this.log("resizeToContainer() element width: ",width);
-      this.log("resizeToContainer() element height: ",this.element.clientHeight);
-      this.log("resizeToContainer() new cols: ",this.cols);
-      this.log("resizeToContainer() new rows: ",this.rows);
-    }
-    return {cols: newCols, rows: newRows, vpad: this.vpad};
-  }
-
   updateRange(y: number): void {
     if (y < this.refreshStart) this.refreshStart = y;
     if (y > this.refreshEnd) this.refreshEnd = y;
@@ -4393,8 +4330,6 @@ export class Terminal {
           this.vt200Mouse = params === 1000;
           this.normalMouse = params > 1000;
           this.mouseEvents = true;
-          this.element.style.cursor = 'default';
-          this.log('Binding to mouse events.');
           break;
         case 1004: // send focusin/focusout events
           // focusin: ^[[I
@@ -4599,7 +4534,6 @@ export class Terminal {
           this.vt200Mouse = false;
           this.normalMouse = false;
           this.mouseEvents = false;
-          this.element.style.cursor = '';
           break;
         case 1004: // send focusin/focusout events
           this.sendFocus = false;
@@ -5389,20 +5323,6 @@ function cancelEvent(ev) {
   if (ev.stopPropagation) ev.stopPropagation();
   ev.cancelBubble = true;
   return false;
-}
-
-// if bold is broken, we can't
-// use it in the terminal.
-function isBoldBroken(document) {
-  var body = document.getElementsByTagName('body')[0];
-  var el = document.createElement('span');
-  el.innerHTML = 'hello world';
-  body.appendChild(el);
-  var w1 = el.scrollWidth;
-  el.style.fontWeight = 'bold';
-  var w2 = el.scrollWidth;
-  body.removeChild(el);
-  return w1 !== w2;
 }
 
 function indexOf(obj, el) {
