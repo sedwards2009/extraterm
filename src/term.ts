@@ -85,6 +85,8 @@ const STATE_DEC_HASH = 9;
 const TERMINAL_ACTIVE_CLASS = "terminal-active";
 const MAX_PROCESS_WRITE_SIZE = 4096;
 
+
+
 /*************************************************************************/
 
 /**
@@ -130,6 +132,71 @@ export interface TerminalCoord {
   y: number;
 }
 
+const RENDER_EVENT = "RENDER_EVENT";
+const SCROLLBACKLINE_EVENT = "SCROLLBACKLINE_EVENT";
+const VIEWPORTSIZE_EVENT = "VIEWPORTSIZE_EVENT";
+const BELL_EVENT = "BELL_EVENT";
+const DATA_EVENT = "DATA_EVENT";
+const TITLE_EVENT = "TITLE_EVENT";
+const APPLICATIONMODESTART_EVENT = "APPLICATIONMODESTART_EVENT";
+const APPLICATIONMODEDATA_EVENT = "APPLICATIONMODEDATA_EVENT";
+const APPLICATIONMODEEND_EVENT = "APPLICATIONMODEEND_EVENT";
+
+export interface RenderEventHandler {
+  
+}
+
+export interface ViewPortSizeEventHandler {
+  (instance: Emulator, height: number): void;
+}
+
+export interface BellEventListener {
+  (instance: Emulator): void;
+}
+
+export interface DataEventListener {
+  (instance: Emulator, data: string): void;
+}
+
+export interface TitleChangeEventListener {
+  (instance: Emulator, title: string): void;
+}
+
+export interface ScrollbackEventHandler {
+  (instance: Emulator, scrollbackLines: Line[]): void;
+}
+
+export interface ApplicationModeEventListener {
+  (instance: Emulator): void;
+}
+
+export interface ApplicationModeDataEventListener {
+    (instance: Emulator, data: string): void;
+}
+
+export interface Emulator {
+  resize(newcols: number, newrows: number): void;
+
+  // Sending input events into the emulator
+  keyDown(ev: KeyboardEvent): void;
+  // mouseButtonDown(): boolean;
+  // mouseButtonUp(): boolean;
+  // mouseMove(): boolean;
+  write(data: string): void;
+  
+  // Events
+  addRenderEventListener(eventHandler: RenderEventHandler): void;
+  addScrollbackLineEventListener(eventHandler: ScrollbackEventHandler): void;
+  addViewPortSizeEventListener(eventHandler: ViewPortSizeEventHandler): void;
+  addBellEventListener(eventHandler: BellEventListener): void;
+  addDataEventListener(eventHandler: DataEventListener): void;
+  addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void;
+  
+  addApplicationModeStartEventListener(eventHandler: ApplicationModeEventListener): void;
+  addApplicationModeDataEventListener(eventHandler: ApplicationModeDataEventListener): void;
+  addApplicationModeEndEventListener(eventHandler: ApplicationModeEventListener): void;  
+}
+
 // Character rendering attributes packed inside a CharAttr.
 export const BOLD_ATTR_FLAG = 1;
 export const UNDERLINE_ATTR_FLAG = 2;
@@ -159,7 +226,7 @@ function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
 /**
  * Terminal
  */
-export class Terminal {
+export class Terminal implements Emulator {
   
   static NO_STYLE_HACK = "NO_STYLE_HACK";
   
@@ -777,7 +844,9 @@ export class Terminal {
     // Listen for mouse events and translate
     // them into terminal mouse protocols.
     this.bindMouse();
-
+    
+    this.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
+    
     // this.emit('open');
 
     // This can be useful for pasting,
@@ -922,23 +991,23 @@ export class Terminal {
 
     // allow mouse wheel scrolling in
     // the shell for example
-    on(el, 'wheel', (ev: WheelEvent): void => {
-      if (this.mouseEvents) {
-        return;
-      }
-      if (this.applicationKeypad) {
-        return;
-      }
-      
-      if (this.physicalScroll) {
-        this.emit(Terminal.EVENT_WHEEL, ev);
-        return;
-      }
-      
-      this.scrollDisp(ev.deltaY > 0 ? -5 : 5);
-
-      cancelEvent(ev);
-    });
+    // on(el, 'wheel', (ev: WheelEvent): void => {
+    //   if (this.mouseEvents) {
+    //     return;
+    //   }
+    //   if (this.applicationKeypad) {
+    //     return;
+    //   }
+    //   
+    //   if (this.physicalScroll) {
+    //     this.emit(Terminal.EVENT_WHEEL, ev);
+    //     return;
+    //   }
+    //   
+    //   this.scrollDisp(ev.deltaY > 0 ? -5 : 5);
+    // 
+    //   cancelEvent(ev);
+    // });
   }
 
   // mouse coordinates measured in cols/rows
@@ -1202,7 +1271,7 @@ export class Terminal {
   scrollToBottom() {
     var newScrollPosition = this.element.scrollHeight - this.element.clientHeight;
     this.element.scrollTop = newScrollPosition;
-    this.emit(Terminal.EVENT_MANUAL_SCROLL, { position: newScrollPosition, isBottom: true });
+    this._emit(Terminal.EVENT_MANUAL_SCROLL, { position: newScrollPosition, isBottom: true });
   }
 
   isScrollAtBottom() {
@@ -1287,6 +1356,14 @@ export class Terminal {
     }
     return {cols: newCols, rows: newRows, vpad: this.vpad};
   }
+  
+  _handleScrollbackEvent(emulator: Emulator, newScrollbackLines: Line[]): void {
+    // Fill up the scroll back "TODO" (=to be rendered) buffer.
+    newScrollbackLines.forEach( (line) => {
+      this._scrollbackBuffer.push(line);
+    });
+    this._emit(Terminal.EVENT_SCROLLBACK_AVAILABLE, this);
+  }
 
   // ------------------------------------------------------------------------
   //
@@ -1323,15 +1400,14 @@ export class Terminal {
       if (this.getLineText(this.y).trim() === '') {
         lines = this.lines.slice(0, -1);
         newLines = [this.lines[this.lines.length-1]];
+        
         children = this.children.slice(0, -1);
         newChildren = [this.children[this.children.length-1]];
+        
       }
     }
-    
-    // Fill up the scroll back "TODO" (=to be rendered) buffer.
-    lines.forEach( (line) => {
-      this._scrollbackBuffer.push(line);
-    });
+
+    const scrollbackLines = [...lines];
     
     this.lines = newLines;
 
@@ -1353,7 +1429,7 @@ export class Terminal {
     this.y = 0;
     this.oldy = 0;
     
-    this.emit(Terminal.EVENT_SCROLLBACK_AVAILABLE);
+    this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
   }
 
   private _getRow(row: number): LineCell[] {
@@ -1678,7 +1754,7 @@ export class Terminal {
       if (this.scrollTop === 0) {
         const oldline = this.lines[0];
         this._scrollbackBuffer.push(oldline);
-        this.emit(Terminal.EVENT_SCROLLBACK_AVAILABLE);
+        this._emit(Terminal.EVENT_SCROLLBACK_AVAILABLE, this);
       }
     }
 
@@ -2873,7 +2949,7 @@ export class Terminal {
       if (this.params[0] === this.applicationModeCookie) {
         this.state = STATE_APPLICATION_END;
         console.log("term.ts start app mode!" + this.params);
-        this.emit('application-mode-start', this.params);
+        this._emit(APPLICATIONMODESTART_EVENT, this, this.params);
       } else {
         this.log("Invalid application mode cookie.");
         this.state = STATE_NORMAL;
@@ -2890,17 +2966,17 @@ export class Terminal {
     const nextzero = data.indexOf('\x00', i);
     if (nextzero === -1) {
       // Send all of the data on right now.
-      this.emit('application-mode-data', data.slice(i));
+      this._emit(APPLICATIONMODEDATA_EVENT, data.slice(i));
       i = data.length - 1;
       
     } else if (nextzero === i) {
       // We are already at the end-mode character.
-      this.emit('application-mode-end');
+      this._emit(APPLICATIONMODEEND_EVENT, this);
       this.state = STATE_NORMAL;
       
     } else {
       // Incoming end-mode character. Send the last piece of data.
-      this.emit('application-mode-data', data.slice(i, nextzero));
+      this._emit(APPLICATIONMODEDATA_EVENT, this, data.slice(i, nextzero));
       i = nextzero - 1;
     }
     return i;
@@ -3229,7 +3305,7 @@ export class Terminal {
     return;
   }
 
-  send(data): void {
+  send(data: string): void {
     if (!this.queue) {
       setTimeout(() => {
         this.handler(this.queue);
@@ -3241,7 +3317,7 @@ export class Terminal {
   }
   
   bell(): void {
-    this.emit('bell');
+    this._emit(BELL_EVENT, this);
     this._domBell();
   }
 
@@ -3446,11 +3522,11 @@ export class Terminal {
   }
 
   handler(data) {
-    this.emit('data', data);
+    this._emit(DATA_EVENT, this, data);
   }
 
   handleTitle(title: string): void {
-    this.emit('title', title);
+    this._emit(TITLE_EVENT, this, title);
   }
 
   /**
@@ -5253,8 +5329,44 @@ export class Terminal {
   /**
    * EventEmitter
    */
+  // Events
+  addRenderEventListener(eventHandler: RenderEventHandler): void {
+    this.addListener(RENDER_EVENT, eventHandler);
+  }
 
-  addListener(type: string, listener: EventListener): void {
+  addScrollbackLineEventListener(eventHandler: ScrollbackEventHandler): void {
+    this.addListener(SCROLLBACKLINE_EVENT, eventHandler);
+  }
+
+  addViewPortSizeEventListener(eventHandler: ViewPortSizeEventHandler): void {
+    this.addListener(VIEWPORTSIZE_EVENT, eventHandler);
+  }
+
+  addBellEventListener(eventHandler: BellEventListener): void {
+    this.addListener(BELL_EVENT, eventHandler);
+  }
+
+  addDataEventListener(eventHandler: DataEventListener): void {
+    this.addListener(DATA_EVENT, eventHandler);
+  }
+
+  addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void {
+    this.addListener(TITLE_EVENT, eventHandler);
+  }
+
+  addApplicationModeStartEventListener(eventHandler: ApplicationModeEventListener): void {
+    this.addListener(APPLICATIONMODESTART_EVENT, eventHandler);
+  }
+
+  addApplicationModeDataEventListener(eventHandler: ApplicationModeEventListener): void {
+    this.addListener(APPLICATIONMODEDATA_EVENT, eventHandler);
+  }
+
+  addApplicationModeEndEventListener(eventHandler: ApplicationModeEventListener): void {
+    this.addListener(APPLICATIONMODEEND_EVENT, eventHandler);
+  }
+
+  private addListener(type: string, listener: any): void {
     this._events[type] = this._events[type] || [];
     this._events[type].push(listener);
   }
@@ -5263,7 +5375,7 @@ export class Terminal {
     this.addListener(type, listener);
   }
 
-  removeListener(type, listener) {
+  private removeListener(type: string, listener): void {
     if (!this._events[type]) return;
 
     var obj = this._events[type];
@@ -5277,11 +5389,13 @@ export class Terminal {
     }
   }
 
-  removeAllListeners(type) {
-    if (this._events[type]) delete this._events[type];
-  }
+  // private removeAllListeners(type): void {
+  //   if (this._events[type]) {
+  //     delete this._events[type];
+  //   }
+  // }
 
-  emit(type, ...args: any[]) {
+  private _emit(type, ...args: any[]): void {
     if (!this._events[type]) return;
 
     var obj = this._events[type];
@@ -5293,9 +5407,9 @@ export class Terminal {
     }
   }
 
-  listeners(type) {
-    return this._events[type] !== undefined ? this._events[type] : [];
-  }
+  // listeners(type) {
+  //   return this._events[type] !== undefined ? this._events[type] : [];
+  // }
   
   dumpLines(): void {
     for (let y=0; y<this.lines.length; y++) {
