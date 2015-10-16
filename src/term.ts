@@ -174,15 +174,45 @@ export interface ApplicationModeDataEventListener {
     (instance: Emulator, data: string): void;
 }
 
+export interface MouseEventOptions {
+  row: number;
+  column: number;
+  leftButton: boolean;
+  middleButton: boolean;
+  rightButton: boolean;
+  shiftKey: boolean;
+  metaKey: boolean;
+  ctrlKey : boolean;
+}
+
 export interface Emulator {
   resize(newcols: number, newrows: number): void;
 
   // Sending input events into the emulator
   keyDown(ev: KeyboardEvent): void;
-  // mouseButtonDown(): boolean;
-  // mouseButtonUp(): boolean;
-  // mouseMove(): boolean;
+  
+  /**
+   *
+   * @return true if the event has been fully handled.
+   */
+  mouseDown(ev: MouseEventOptions): boolean;
+  
+  /**
+   *
+   * @return true if the event has been fully handled.
+   */
+  mouseUp(ev: MouseEventOptions): boolean;
+  
+  /**
+   *
+   * @return true if the event has been fully handled.
+   */
+  mouseMove(ev: MouseEventOptions): boolean;
+  
   write(data: string): void;
+  
+  _focus(): void;
+  _blur(): void;
   
   // Events
   addRenderEventListener(eventHandler: RenderEventHandler): void;
@@ -330,6 +360,7 @@ export class Terminal implements Emulator {
   private isMac = false;
   private children: HTMLDivElement[] = [];
 
+  private _mouseButtonDown = false;
   private utfMouse = false;
   private decLocator = false;
   private urxvtMouse = false;
@@ -575,37 +606,15 @@ export class Terminal implements Emulator {
   // ------------------------------------------------------------------------
 
   focus(): void {
-    if (this.sendFocus) {
-      this.send('\x1b[I');
-    }
-    this.showCursor();
+    this._focus();
     this.element.focus();
-    this._hasFocus = true;
-  }
-  
-  /**
-   * Returns true if this terminal has the input focus.
-   *
-   * @return true if the terminal has the focus.
-   */
-  hasFocus(): boolean {
-    return this._hasFocus;
   }
   
   blur(): void {
-    if (!this._hasFocus) {
-      return;
-    }
-
-    this.refresh(this.y, this.y);
-    if (this.sendFocus) {
-      this.send('\x1b[O');
-    }
-
+    this._blur();
     this.element.blur();
-    this._hasFocus = false;
   }
-
+  
   /**
    * Initialize global behavior
    */
@@ -807,6 +816,11 @@ export class Terminal implements Emulator {
     // Start blinking the cursor.
     this.startBlink();
 
+    this.element.addEventListener('mousedown', this._handleMouseDown.bind(this));
+    this.element.addEventListener('mousemove', this._handleMouseMove.bind(this));
+    this.element.addEventListener('mouseup', this._handleMouseUp.bind(this));
+    this.element.addEventListener('mouseleave', this._handleMouseLeave.bind(this));
+
     // Bind to DOM events related
     // to focus and paste behavior.
     on(this.element, 'focus', () => {
@@ -841,10 +855,6 @@ export class Terminal implements Emulator {
       }, 1);
     }, true);
     
-    // Listen for mouse events and translate
-    // them into terminal mouse protocols.
-    this.bindMouse();
-    
     this.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
     
     // this.emit('open');
@@ -856,158 +866,112 @@ export class Terminal implements Emulator {
     }, 100);
   }
 
-  // XTerm mouse events
-  // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
-  // To better understand these
-  // the xterm code is very helpful:
-  // Relevant files:
-  //   button.c, charproc.c, misc.c
-  // Relevant functions in xterm/button.c:
-  //   BtnCode, EmitButtonCode, EditorButton, SendMousePosition
-  bindMouse(): void {
-    const el = this.element;
-
-    // Attach mouse down event handler.
-    on(el, 'mousedown', (ev: MouseEvent) => {
-      if ( ! this.mouseEvents) {
-        return;
-      }
-      
-      // Ctrl click prevents the mouse being taken over by
-      // the application and allows the user to select stuff.
-      if (ev.ctrlKey) { 
-        return;
-      }
-      
-      // send the button
-      
-      // get the xterm-style button
-      const button = this.getMouseButtonFromEvent(ev);
-      
-      // get mouse coordinates
-      const pos = this.getTerminalCoordsFromEvent(ev);
-      if (pos !== null) {
-        this.sendMouseButtonSequence(pos, button);
-      }
-
-      // ensure focus
-      this.focus();
-
-      if (this.vt200Mouse) {
-        if (pos !== null) {
-          this.sendMouseButtonSequence(pos, 3); // release button
-        }
-        return cancelEvent(ev);
-      }
-
-      // motion example of a left click:
-      // ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
-      const handleMouseMove = (ev: MouseEvent): void => {
-        let button = this._pressed;
-        const pos = this.getTerminalCoordsFromEvent(ev);
-        if (!pos) {
-          return;
-        }
-
-        if (this._lastMovePos !== null && this._lastMovePos.x === pos.x && this._lastMovePos.y === pos.y) {
-          return;
-        }
-        this._lastMovePos = pos;
-        
-        // buttons marked as motions
-        // are incremented by 32
-        button += 32;
-
-        this.sendMouseSequence(button, pos);
-      };
-
-      let removeEventHandlers;
-      
-      const handleMouseLeave = (ev: MouseEvent) => {
-        removeEventHandlers();
-        return cancelEvent(ev);
-      };
-      
-      const handleMouseUp = (ev: MouseEvent) => {
-        // get the xterm-style button
-        const button = this.getMouseButtonFromEvent(ev);
-        
-        // get mouse coordinates
-        const pos = this.getTerminalCoordsFromEvent(ev);
-        if (pos !== null) {
-          this.sendMouseButtonSequence(pos, button);
-        }
-        
-        removeEventHandlers();
-        return cancelEvent(ev);
-      };
-      
-      removeEventHandlers = () => {
-        // Remove the event handlers.
-        if (this.normalMouse) {
-          off(el, 'mousemove', handleMouseMove);
-          off(el, 'mouseleave', handleMouseLeave);
-        }
-        off(el, 'mouseup', handleMouseUp);
-      };
-      
-      // bind events
-      if (this.normalMouse) {
-        this._lastMovePos = null;
-        on(el, 'mousemove', handleMouseMove);
-        on(el, 'mouseleave', handleMouseLeave);
-      }
-
-      // x10 compatibility mode can't send button releases
-      if ( ! this.x10Mouse) {
-        on(el, 'mouseup', handleMouseUp);
-      }
-
-      return cancelEvent(ev);
-    });
-
-    //if (self.normalMouse) {
-    //  on(self.document, 'mousemove', sendMove);
-    //}
+  private _handleMouseDown(ev: MouseEvent): void {
+    if ( ! this.mouseEvents) {
+      return;
+    }
     
-    on(el, 'wheel', (ev: WheelEvent): void => {
-      if (!this.mouseEvents) {
-        return;
-      }
-      if (this.x10Mouse || this.vt300Mouse || this.decLocator) {
-        return;
-      }
-      
-      // get the xterm-style button
-      const button = this.getMouseButtonFromEvent(ev);
-      
-      // get mouse coordinates
-      const pos = this.getTerminalCoordsFromEvent(ev);
-      if (pos !== null) {
-        this.sendMouseButtonSequence(pos, button);
-      }
-      cancelEvent(ev);
-    });
+    // Ctrl click prevents the mouse being taken over by
+    // the application and allows the user to select stuff.
+    if (ev.ctrlKey) { 
+      return;
+    }
+    
+    const pos = this.getTerminalCoordsFromEvent(ev);
+    if (pos === null) {
+      this.focus();
+      return;
+    }
+    
+    const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
 
-    // allow mouse wheel scrolling in
-    // the shell for example
-    // on(el, 'wheel', (ev: WheelEvent): void => {
-    //   if (this.mouseEvents) {
-    //     return;
-    //   }
-    //   if (this.applicationKeypad) {
-    //     return;
-    //   }
-    //   
-    //   if (this.physicalScroll) {
-    //     this.emit(Terminal.EVENT_WHEEL, ev);
-    //     return;
-    //   }
-    //   
-    //   this.scrollDisp(ev.deltaY > 0 ? -5 : 5);
-    // 
-    //   cancelEvent(ev);
-    // });
+    // send the button
+    const options: MouseEventOptions = {
+      leftButton: button === 0,
+      middleButton: button === 1,
+      rightButton: button === 2,
+      ctrlKey: ev.ctrlKey,
+      shiftKey: ev.shiftKey,
+      metaKey: ev.metaKey,
+      row: pos.y,
+      column: pos.x
+    };
+    
+    if (this.mouseDown(options)) {
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
+  }
+  
+  private _handleMouseMove(ev: MouseEvent): void {
+    if ( ! this.mouseEvents) {
+      return;
+    }
+    
+    const pos = this.getTerminalCoordsFromEvent(ev);
+    if (pos === null) {
+      return;
+    }
+    
+    const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
+    
+    // send the button
+    const options: MouseEventOptions = {
+      leftButton: button === 0,
+      middleButton: button === 1,
+      rightButton: button === 2,
+      ctrlKey: ev.ctrlKey,
+      shiftKey: ev.shiftKey,
+      metaKey: ev.metaKey,
+      row: pos.y,
+      column: pos.x
+    };
+    
+    if (this.mouseMove(options)) {
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
+  }
+  
+  private _handleMouseUp(ev: MouseEvent): void {
+    if ( ! this.mouseEvents) {
+      return;
+    }
+    
+    const pos = this.getTerminalCoordsFromEvent(ev);
+    if (pos === null) {
+      return;
+    }
+    
+    const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
+
+    // send the button
+    const options: MouseEventOptions = {
+      leftButton: button === 0,
+      middleButton: button === 1,
+      rightButton: button === 2,
+      ctrlKey: ev.ctrlKey,
+      shiftKey: ev.shiftKey,
+      metaKey: ev.metaKey,
+      row: pos.y,
+      column: pos.x
+    };
+    
+    if (this.mouseUp(options)) {
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
+  }
+  
+  private _handleMouseLeave(ev: MouseEvent): void {
+    if ( ! this.mouseEvents) {
+      return;
+    }
+    
+    if (this.mouseUp(null)) {
+      ev.stopPropagation();
+      ev.preventDefault();
+    }    
   }
 
   // mouse coordinates measured in cols/rows
@@ -1066,49 +1030,6 @@ export class Terminal implements Emulator {
     }
 
     return { x: col, y: row };
-  }
-
-  private getMouseButtonFromEvent(ev: MouseEvent): number {
-    // two low bits:
-    // 0 = left
-    // 1 = middle
-    // 2 = right
-    // 3 = release
-    // wheel up/down:
-    // 1, and 2 - with 64 added
-    let button: number;
-    switch (ev.type) {
-      case 'mousedown':
-        button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
-        break;
-      case 'mouseup':
-        button = 3;
-        break;
-      case 'DOMMouseScroll':
-        button = ev.detail < 0 ? 64 : 65;
-        break;
-      case 'wheel':
-        button = (<any>ev).deltaY > 0 ? 64 : 65;
-        break;
-    }
-
-    // next three bits are the modifiers:
-    // 4 = shift, 8 = meta, 16 = control
-    const shift = ev.shiftKey ? 4 : 0;
-    const meta = ev.metaKey ? 8 : 0;
-    const ctrl = ev.ctrlKey ? 16 : 0;
-    let mod = shift | meta | ctrl;
-
-    // no mods
-    if (this.vt200Mouse) {
-      // ctrl only
-      mod &= ctrl;
-    } else if ( ! this.normalMouse) {
-      mod = 0;
-    }
-
-    button = (mod << 2) + button;
-    return button;
   }
 
   /**
@@ -1376,6 +1297,155 @@ export class Terminal implements Emulator {
   // ####### #    #  ####  ###### #    #   #   #  ####  #    # 
   // 
   // ------------------------------------------------------------------------
+  
+  _focus(): void {
+    if (this.sendFocus) {
+      this.send('\x1b[I');
+    }
+    this._hasFocus = true;    
+    this.showCursor();
+  }
+  
+  /**
+   * Returns true if this terminal has the input focus.
+   *
+   * @return true if the terminal has the focus.
+   */
+  hasFocus(): boolean {
+    return this._hasFocus;
+  }
+  
+  _blur(): void {
+    if (!this._hasFocus) {
+      return;
+    }
+
+    this.refresh(this.y, this.y);
+    if (this.sendFocus) {
+      this.send('\x1b[O');
+    }
+    this._hasFocus = false;
+  }
+
+  // XTerm mouse events
+  // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
+  // To better understand these
+  // the xterm code is very helpful:
+  // Relevant files:
+  //   button.c, charproc.c, misc.c
+  // Relevant functions in xterm/button.c:
+  //   BtnCode, EmitButtonCode, EditorButton, SendMousePosition
+  mouseDown(ev: MouseEventOptions): boolean {
+    let button = this.mouseEventOptionsToButtons(ev);
+    
+    // no mods
+    if (this.vt200Mouse) {
+      button = button & ~0xc;   // ctrl only
+    } else if ( ! this.normalMouse) {
+      button = button & ~0x1c;  // no mods
+    }
+    
+    this.sendMouseButtonSequence( {x: ev.column, y: ev.row}, button);
+    
+    // ensure focus
+    this.focus();
+    
+    if (this.vt200Mouse) {
+      this.sendMouseButtonSequence({x: ev.column, y: ev.row}, 3); // release button
+      return true;
+    }
+    // bind events
+    if (this.normalMouse) {
+      this._lastMovePos = null;
+      this._mouseButtonDown = true;
+    }  
+    return true;
+  }
+  
+  mouseMove(ev: MouseEventOptions): boolean {
+    if ( ! this._mouseButtonDown) {
+      return false;
+    }
+    if (this._lastMovePos !== null && this._lastMovePos.x === ev.column && this._lastMovePos.y === ev.row) {
+      return true;
+    }
+    
+    const pos = {x: ev.column, y: ev.row};
+    let button = this.mouseEventOptionsToButtons(ev);
+    
+    // no mods
+    if (this.vt200Mouse) {
+      button = button & ~0xc;   // ctrl only
+    } else if ( ! this.normalMouse) {
+      button = button & ~0x1c;  // no mods
+    }
+    
+    // buttons marked as motions
+    // are incremented by 32
+    button |= 32;
+
+    this.sendMouseSequence(button, pos);
+    
+    this._lastMovePos = pos;
+    return true;
+  }
+
+  mouseUp(ev: MouseEventOptions): boolean {
+    if ( ! this._mouseButtonDown) {
+      return false;
+    }
+    
+    if (this.x10Mouse) {
+      this._mouseButtonDown = false;
+      return false; // No mouse ups for x10.
+    }
+    
+    if (ev === null) {
+      this._mouseButtonDown = false;
+      return true;
+    }
+
+    let button = this.mouseEventOptionsToButtons(ev, true);
+    
+    // no mods
+    if (this.vt200Mouse) {
+      button = button & ~0xc;   // ctrl only
+    } else if ( ! this.normalMouse) {
+      button = button & ~0x1c;  // no mods
+    }
+    
+    this.sendMouseButtonSequence( {x: ev.column, y: ev.row}, button);
+    this._mouseButtonDown = false;
+    return true;
+  }
+
+  private mouseEventOptionsToButtons(ev, release=false): number {
+    // two low bits:
+    // 0 = left
+    // 1 = middle
+    // 2 = right
+    // 3 = release
+    // wheel up/down:
+    // 1, and 2 - with 64 added
+    
+    let button = 0;
+    if (release) {
+      button = 3;
+    } else if (ev.leftButton) {
+      button = 0;
+    } else if (ev.middleButton) {
+      button = 1;
+    } else if (ev.rightButton) {
+      button = 2;
+    }
+    
+    const shift = ev.shiftKey ? 4 : 0;
+    const meta = ev.metaKey ? 8 : 0;
+    const ctrl = ev.ctrlKey ? 16 : 0;
+    const mod = shift | meta | ctrl;
+    
+    return (mod << 2) | button;
+  }
 
   /**
    * Moves all of the rendered rows into the physical scrollback area.
