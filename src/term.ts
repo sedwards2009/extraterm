@@ -85,8 +85,6 @@ const STATE_DEC_HASH = 9;
 const TERMINAL_ACTIVE_CLASS = "terminal-active";
 const MAX_PROCESS_WRITE_SIZE = 4096;
 
-
-
 /*************************************************************************/
 
 /**
@@ -106,10 +104,6 @@ interface Options {
   applicationModeCookie?: string;
 };
 
-export type CharAttr = number;
-export type LineCell = [CharAttr, string];
-export type Line = LineCell[];
-
 interface CharSet {
   [key: string]: string;
 }
@@ -127,9 +121,33 @@ interface SavedState {
   tabs: { [i: number]: boolean;  };
 }
 
+// ------------------------------------------------------------------------
+//
+//        #    ######  ### 
+//       # #   #     #  #  
+//      #   #  #     #  #  
+//     #     # ######   #  
+//     ####### #        #  
+//     #     # #        #  
+//     #     # #       ### 
+//                     
+// ------------------------------------------------------------------------
+
+export type CharAttr = number;
+export type LineCell = [CharAttr, string];
+export const LINECELL_ATTR = 0;
+export const LINECELL_CHAR = 1;
+
+export type Line = LineCell[];
+
 export interface TerminalCoord {
   x: number;
   y: number;
+}
+
+export interface TerminalSize {
+  rows: number;
+  columns: number;
 }
 
 const RENDER_EVENT = "RENDER_EVENT";
@@ -186,7 +204,12 @@ export interface MouseEventOptions {
 }
 
 export interface Emulator {
-  resize(newcols: number, newrows: number): void;
+  
+  size(): TerminalSize;
+  
+  lineAtRow(row: number, showCursor?: boolean): Line;
+  
+  resize(newSize: TerminalSize): void;
 
   // Sending input events into the emulator
   keyDown(ev: KeyboardEvent): void;
@@ -253,9 +276,22 @@ function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
   return (flags << 18) | (fg << 9) | bg;
 }
 
-/**
- * Terminal
- */
+function isCharAttrCursor(attr: CharAttr): boolean {
+  return attr === -1;
+}
+
+// ------------------------------------------------------------------------
+//
+//   #######                                             
+//      #    ###### #####  #    # # #    #   ##   #      
+//      #    #      #    # ##  ## # ##   #  #  #  #      
+//      #    #####  #    # # ## # # # #  # #    # #      
+//      #    #      #####  #    # # #  # # ###### #      
+//      #    #      #   #  #    # # #   ## #    # #      
+//      #    ###### #    # #    # # #    # #    # ###### 
+//                     
+// ------------------------------------------------------------------------
+
 export class Terminal implements Emulator {
   
   static NO_STYLE_HACK = "NO_STYLE_HACK";
@@ -1072,8 +1108,8 @@ export class Terminal implements Emulator {
     let out = '';
     
     for (let i = 0; i < width; i++) {
-      const data = line[i][0];
-      const ch = line[i][1];
+      const data: number = <number> line[i][LINECELL_ATTR];
+      const ch: string = <string> line[i][LINECELL_CHAR];
 
       if (data !== attr) {
         if (attr !== this.defAttr) {
@@ -1254,7 +1290,7 @@ export class Terminal implements Emulator {
     const newRows = Math.max(2, Math.floor(this.element.clientHeight / charHeight));
     
     if (newCols !== this.cols || newRows !== this.rows) {
-      this.resize(newCols, newRows);
+      this.resize( { rows: newRows, columns: newCols } );
     }
     
     const newVpad =  Math.floor(this.element.clientHeight % charHeight);
@@ -1530,7 +1566,7 @@ export class Terminal implements Emulator {
     }
     const row = this.lines[y];
     return row.map(function(tup) {
-      return tup[1];
+      return tup[LINECELL_CHAR];
     }).join("");
   }
 
@@ -1706,11 +1742,32 @@ export class Terminal implements Emulator {
 
         const x = this.x;
         line = line.slice();
-        line[x] = [-1, line[x][1]];
+        line[x] = [-1, <string> line[x][LINECELL_CHAR]];
       }
 
       this._getChildDiv(y).innerHTML = Terminal.lineToHTML(line);
     }
+  }
+  
+  lineAtRow(row: number, showCursor?: boolean): Line {
+    if (row < 0 || row >= this.rows) {
+      return null;
+    }
+    
+    let line = this._getRow(row + this.ydisp);
+
+    // Place the cursor in the row.
+    if (row === this.y &&
+        this.cursorState &&
+        (this.ydisp === this.ybase) &&
+        !this.cursorHidden &&
+        this.x < this.cols) {
+
+      const x = this.x;
+      line = line.slice();
+      line[x] = [-1, <string> line[x][LINECELL_CHAR]];
+    }
+    return line;
   }
   
   /**
@@ -1749,7 +1806,7 @@ export class Terminal implements Emulator {
           this.y < linesCopy.length) {
 
         const cursorLine = [...linesCopy[this.y]];
-        cursorLine[this.x] = [-1, cursorLine[this.x][1]];
+        cursorLine[this.x] = [-1, <string> cursorLine[this.x][LINECELL_CHAR]];
         linesCopy[this.y] = cursorLine;
       }
     }
@@ -3410,9 +3467,13 @@ export class Terminal implements Emulator {
     this.context.console.error.apply(this.context.console, args);
   }
 
-  resize(newcols: number, newrows: number): void {
-    newcols = Math.max(newcols, 1);
-    newrows = Math.max(newrows, 1);
+  size(): TerminalSize {
+    return { rows: this.rows, columns: this.cols };
+  }
+
+  resize(newSize: TerminalSize): void {
+    const newcols = Math.max(newSize.columns, 1);
+    const newrows = Math.max(newSize.rows, 1);
 
     // resize cols
     if (this.cols < newcols) {
@@ -4446,7 +4507,7 @@ export class Terminal implements Emulator {
           break;
         case 3: // 132 col mode
           this.savedCols = this.cols;
-          this.resize(132, this.rows);
+          this.resize( { rows:this.rows, columns: 132 } );
           break;
         case 6:
           this.originMode = true;
@@ -4654,7 +4715,7 @@ export class Terminal implements Emulator {
           this.y = 0;
         
           if (this.cols === 132 && this.savedCols) {
-            this.resize(this.savedCols, this.rows);
+            this.resize( { rows: this.rows, columns: this.savedCols } );
           }
           break;
         case 6:
@@ -4720,7 +4781,7 @@ export class Terminal implements Emulator {
             //   this.x = this.savedX;
             //   this.y = this.savedY;
             // }
-            this.resize(currentcols, currentrows);
+            this.resize( { rows: currentrows, columns: currentcols } );
             this.refresh(0, this.rows - 1);
             this.showCursor();
           }
@@ -5018,7 +5079,7 @@ export class Terminal implements Emulator {
     for (; t < b + 1; t++) {
       const line = this._getRow(this.ybase + t);
       for (let i = l; i < r; i++) {
-        line[i] = [attr, line[i][1]];
+        line[i] = [attr, <string> line[i][LINECELL_CHAR]];
       }
     }
 
@@ -5181,7 +5242,7 @@ export class Terminal implements Emulator {
     for (; t < b + 1; t++) {
       line = this._getRow(this.ybase + t);
       for (i = l; i < r; i++) {
-        line[i] = [line[i][0], String.fromCharCode(ch)];
+        line[i] = [line[i][LINECELL_ATTR], String.fromCharCode(ch)];
       }
     }
 
