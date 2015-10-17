@@ -161,7 +161,8 @@ const APPLICATIONMODEDATA_EVENT = "APPLICATIONMODEDATA_EVENT";
 const APPLICATIONMODEEND_EVENT = "APPLICATIONMODEEND_EVENT";
 
 export interface RenderEventHandler {
-  
+  // Range of row to render from startRow to endRow exclusive.
+  (instance: Emulator, startRow: number, endRow: number): void;
 }
 
 export interface ViewPortSizeEventHandler {
@@ -804,6 +805,9 @@ export class Terminal implements Emulator {
    */
   open(parent: HTMLDivElement): void {
     this.parent = parent;
+    
+    this.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
+    this.addRenderEventListener(this._handleRenderLine.bind(this));
 
     if (!this.parent) {
       throw new Error('Terminal requires a parent element.');
@@ -1093,6 +1097,13 @@ export class Terminal implements Emulator {
     this.write = function() {};
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
+    }
+  }
+  
+  private _handleRenderLine(instance: Emulator, startRow: number, endRow: number): void {
+    for (let row=startRow; row < endRow; row++) {
+      const line = this.lineAtRow(row);
+      this._getChildDiv(row).innerHTML = Terminal.lineToHTML(line);
     }
   }
 
@@ -1729,24 +1740,7 @@ export class Terminal implements Emulator {
       end = this.lines.length - 1;
     }
     
-    for (let y = start; y <= end; y++) {
-      const row = y + this.ydisp;
-      let line = this._getRow(row);
-
-      // Place the cursor in the row.
-      if (y === this.y &&
-          this.cursorState &&
-          (this.ydisp === this.ybase) &&
-          !this.cursorHidden &&
-          this.x < this.cols) {
-
-        const x = this.x;
-        line = line.slice();
-        line[x] = [-1, <string> line[x][LINECELL_CHAR]];
-      }
-
-      this._getChildDiv(y).innerHTML = Terminal.lineToHTML(line);
-    }
+    this._emit(RENDER_EVENT, this, start, end + 1);
   }
   
   lineAtRow(row: number, showCursor?: boolean): Line {
