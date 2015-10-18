@@ -152,7 +152,7 @@ export interface TerminalSize {
 
 const RENDER_EVENT = "RENDER_EVENT";
 const SCROLLBACKLINE_EVENT = "SCROLLBACKLINE_EVENT";
-const VIEWPORTSIZE_EVENT = "VIEWPORTSIZE_EVENT";
+const SIZE_EVENT = "SIZE_EVENT";
 const BELL_EVENT = "BELL_EVENT";
 const DATA_EVENT = "DATA_EVENT";
 const TITLE_EVENT = "TITLE_EVENT";
@@ -165,8 +165,8 @@ export interface RenderEventHandler {
   (instance: Emulator, startRow: number, endRow: number): void;
 }
 
-export interface ViewPortSizeEventHandler {
-  (instance: Emulator, height: number): void;
+export interface SizeEventHandler {
+  (instance: Emulator, newRows: number, newColumns: number, realizedRows: number): void;
 }
 
 export interface BellEventListener {
@@ -241,7 +241,7 @@ export interface Emulator {
   // Events
   addRenderEventListener(eventHandler: RenderEventHandler): void;
   addScrollbackLineEventListener(eventHandler: ScrollbackEventHandler): void;
-  addViewPortSizeEventListener(eventHandler: ViewPortSizeEventHandler): void;
+  addSizeEventListener(eventHandler: SizeEventHandler): void;
   addBellEventListener(eventHandler: BellEventListener): void;
   addDataEventListener(eventHandler: DataEventListener): void;
   addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void;
@@ -310,6 +310,7 @@ export class Terminal implements Emulator {
   private rows = 24
   private vpad = 0;
   private charHeight = 12; // resizeToContainer() will fix this for us.
+  private lastReportedPhysicalHeight = 0;
   
   private state = 0; // Escape code parsing state.
   private refreshStart = REFRESH_START_NULL;
@@ -808,6 +809,7 @@ export class Terminal implements Emulator {
     
     this.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
     this.addRenderEventListener(this._handleRenderLine.bind(this));
+    this.addSizeEventListener(this._handleSizeEvent.bind(this));
 
     if (!this.parent) {
       throw new Error('Terminal requires a parent element.');
@@ -894,9 +896,7 @@ export class Terminal implements Emulator {
         this.element.contentEditable = 'inherit'; // 'false';
       }, 1);
     }, true);
-    
-    this.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
-    
+        
     // this.emit('open');
 
     // This can be useful for pasting,
@@ -1738,6 +1738,11 @@ export class Terminal implements Emulator {
     if ( !this.physicalScroll && end >= this.lines.length) {
       this.log('`end` is too large. Most likely a bad CSR.');
       end = this.lines.length - 1;
+    }
+
+    if (this.lines.length !== this.lastReportedPhysicalHeight) {
+      this.lastReportedPhysicalHeight = this.lines.length;
+      this._emit(SIZE_EVENT, this, this.rows, this.cols, this.lines.length);
     }
     
     this._emit(RENDER_EVENT, this, start, end + 1);
@@ -3500,22 +3505,18 @@ export class Terminal implements Emulator {
           if (this.lines.length < newrows + this.ybase) {
             this.lines.push(this.blankLine());
           }
-          if (this.children.length < newrows) {
-            const line = this.document.createElement('div');
-            el.appendChild(line);
-            this.children.push(line);
-          }
+// FIXME DOM code and it only applies when physicalScroll is false.
+          // if (this.children.length < newrows) {
+          //   const line = this.document.createElement('div');
+          //   el.appendChild(line);
+          //   this.children.push(line);
+          // }
         }
       }
     } else if (this.rows > newrows) {
       // Remove rows to match the new smaller rows value.
       while (this.lines.length > newrows + this.ybase) {
         this.lines.pop();
-      }
-      
-      while (this.children.length > newrows) {
-        const el = this.children.pop();
-        el.parentNode.removeChild(el);
       }
     }
     this.rows = newrows;
@@ -3531,13 +3532,22 @@ export class Terminal implements Emulator {
     this.scrollTop = 0;
     this.scrollBottom = newrows - 1;
     
-    this.refresh(0, this.physicalScroll ? this.lines.length-1 : this.rows - 1);
-
     // it's a real nightmare trying
     // to resize the original
     // screen buffer. just set it
     // to null for now.
     this.normal = null;
+    
+    this.lastReportedPhysicalHeight = this.lines.length;
+    this._emit(SIZE_EVENT, this, newrows, newcols, this.lines.length);
+    this.refresh(0, this.physicalScroll ? this.lines.length-1 : this.rows - 1);
+  }
+
+  private _handleSizeEvent(instance: Emulator, newRows: number, newColumns: number, realizedRows: number): void {
+    while (this.children.length > newRows) {
+      const el = this.children.pop();
+      el.parentNode.removeChild(el);
+    }
   }
 
   updateRange(y: number): void {
@@ -5463,8 +5473,8 @@ export class Terminal implements Emulator {
     this.addListener(SCROLLBACKLINE_EVENT, eventHandler);
   }
 
-  addViewPortSizeEventListener(eventHandler: ViewPortSizeEventHandler): void {
-    this.addListener(VIEWPORTSIZE_EVENT, eventHandler);
+  addSizeEventListener(eventHandler: SizeEventHandler): void {
+    this.addListener(SIZE_EVENT, eventHandler);
   }
 
   addBellEventListener(eventHandler: BellEventListener): void {
