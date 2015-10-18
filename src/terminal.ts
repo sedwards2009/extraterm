@@ -241,8 +241,8 @@ class EtTerminal extends HTMLElement {
     });
 
     this._term.debug = true;
-    this._term.on('title', this._handleTitle.bind(this));
-    this._term.on('data', this._handleTermData.bind(this));
+    this._term.addTitleChangeEventListener(this._handleTitle.bind(this));
+    this._term.addDataEventListener(this._handleTermData.bind(this));
     
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
@@ -255,9 +255,9 @@ class EtTerminal extends HTMLElement {
     this._term.on(termjs.Terminal.EVENT_SCROLLBACK_AVAILABLE, this._handleScrollbackReady.bind(this));
     
     // Application mode handlers    
-    this._term.on('application-mode-start', this._handleApplicationModeStart.bind(this));
-    this._term.on('application-mode-data', this._handleApplicationModeData.bind(this));
-    this._term.on('application-mode-end', this._handleApplicationModeEnd.bind(this));
+    this._term.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
+    this._term.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
+    this._term.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
   }
   
   attachedCallback(): void {
@@ -522,7 +522,7 @@ class EtTerminal extends HTMLElement {
    * 
    * @param title The new window title for this terminal.
    */
-  private _handleTitle(title: string): void {
+  private _handleTitle(emulator: termjs.Emulator, title: string): void {
     this._title = title;
     this._sendTitleEvent(title);
   }
@@ -1298,7 +1298,7 @@ console.log("_exitSelectionMode (enter)");
    * @param {array} params The list of parameter which were specified in the
    *     escape sequence.
    */
-  private _handleApplicationModeStart(params: string[]): void {
+  private _handleApplicationModeStart(emulator: termjs.Emulator, params: string[]): void {
     log("application-mode started! ",params);
     
     // FIXME check cookie!
@@ -1586,7 +1586,7 @@ console.log("_exitSelectionMode (enter)");
    * This just pushes the keys from the user through to the pty.
    * @param {string} data The data to process.
    */
-  private _handleTermData(data: string): void {
+  private _handleTermData(emulator: termjs.Emulator, data: string): void {
     this._sendDataToPtyEvent(data);
   }
 
