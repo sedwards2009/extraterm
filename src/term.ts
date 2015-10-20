@@ -204,7 +204,7 @@ export interface MouseEventOptions {
   ctrlKey : boolean;
 }
 
-export interface Emulator {
+export interface EmulatorAPI {
   
   size(): TerminalSize;
   
@@ -214,6 +214,8 @@ export interface Emulator {
 
   // Sending input events into the emulator
   keyDown(ev: KeyboardEvent): void;
+  keyPress(ev: KeyboardEvent): void;
+  destroy();
   
   /**
    *
@@ -237,6 +239,10 @@ export interface Emulator {
   
   _focus(): void;
   _blur(): void;
+  hasFocus(): boolean;
+
+  startBlink(); // FIXME remove
+  setCursorBlink(blink: boolean): void;
   
   // Events
   addRenderEventListener(eventHandler: RenderEventHandler): void;
@@ -251,34 +257,8 @@ export interface Emulator {
   addApplicationModeEndEventListener(eventHandler: ApplicationModeEventListener): void;  
 }
 
-// Character rendering attributes packed inside a CharAttr.
-export const BOLD_ATTR_FLAG = 1;
-export const UNDERLINE_ATTR_FLAG = 2;
-export const BLINK_ATTR_FLAG = 4;
-export const INVERSE_ATTR_FLAG = 8;
-export const INVISIBLE_ATTR_FLAG = 16;
-export const ITALIC_ATTR_FLAG = 32;
-export const STRIKE_THROUGH_ATTR_FLAG = 64;
-export const FAINT_ATTR_FLAG = 128;
-
-export function flagsFromCharAttr(attr: CharAttr): number {
-  return attr >> 18;
-}
-
-export function foregroundFromCharAttr(attr: CharAttr): number {
-  return (attr >> 9) & 0x1ff;
-}
-
-export function backgroundFromCharAttr(attr: CharAttr): number {
-  return attr & 0x1ff;
-}
-
-function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
-  return (flags << 18) | (fg << 9) | bg;
-}
-
-function isCharAttrCursor(attr: CharAttr): boolean {
-  return attr === -1;
+export interface TerminalDataEventListener {
+  (instance: Terminal, data: string): void;
 }
 
 // ------------------------------------------------------------------------
@@ -293,7 +273,7 @@ function isCharAttrCursor(attr: CharAttr): boolean {
 //                     
 // ------------------------------------------------------------------------
 
-export class Terminal implements Emulator {
+export class Terminal {
   
   static NO_STYLE_HACK = "NO_STYLE_HACK";
   
@@ -305,351 +285,49 @@ export class Terminal implements Emulator {
   
   private parent: HTMLElement = null;
   public element: HTMLElement = null;
-
-  private cols = 80;
-  private rows = 24
-  private vpad = 0;
-  private charHeight = 12; // resizeToContainer() will fix this for us.
-  private lastReportedPhysicalHeight = 0;
-  
-  private state = 0; // Escape code parsing state.
-  private refreshStart = REFRESH_START_NULL;
-  private refreshEnd = REFRESH_END_NULL;
-
-  private ybase = 0;  // Index of row 1 in our (logn) list of lines+scroll back.
-  private ydisp = 0;  // Index of the row 1 which is displayed on the screen at the moment.
-                      // (only applies when physical scrolling is not used)
-
-  private x = 0;      // Cursor x position
-  private y = 0;      // Cursoe y position
-  private savedX = 0;
-  private savedY = 0;
-  
-  private oldy = 0;
-
-  private cursorState = false;       // Cursor blink state.
-  
-  private cursorHidden = false;
-  private _hasFocus = false;
-    
-  private queue = '';
-  private scrollTop = 0;
-  private scrollBottom = 23;
-
-  // modes
-  private applicationKeypad = false;
-  private applicationCursor = false;
-  private originMode = false;
-  private insertMode = false;
-  private wraparoundMode = false;
-  private normal: SavedState = null;
-
-  private entry = '';
-  private entryPrefix = 'Search: ';
-
-  // charset
-  private charset: CharSet = null;
-  private savedCharset: CharSet = null;
-  private gcharset: number = null;
-  private glevel = 0;
-  private charsets: CharSet[] = [null];
-
-  // stream
-  private readable = true;
-  private writable = true;
-
-  static defAttr = packCharAttr(0, 257, 256); // Default character style
-  private curAttr = 0;  // Current character style.
-  private savedCurAttr = packCharAttr(0, 257, 256); // Default character style;
-  
-  private params = [];
-  private currentParam: string | number = 0;
-  private prefix = '';
-  private postfix = '';
-  
-  private _blink = null;
-    
-  private lines: LineCell[][] = [];
-  private _termId: number;
-  
-  private convertEol: boolean;
-  private termName: string;
-  private geometry: [number, number];
-  private cursorBlink: boolean;
-  private visualBell: boolean;
-  private popOnBell: boolean;
-  private scrollback: number;
-  public debug: boolean;
-  private useStyle: boolean;
-  private physicalScroll: boolean;
-  private applicationModeCookie: string;
-  
-  private _writeBuffers: string[] = [];  // Buffer for incoming data waiting to be processed.
-  private _processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.  
-  private _refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
-  private _scrollbackBuffer: Line[] = [];  // Array of lines which have not been rendered to the browser.
-  private tabs: { [key: number]: boolean };
-  private sendFocus = false;
-
   private context: Window = null;
   private document: Document = null;
   private body: HTMLElement = null;
-
-  private isMac = false;
+  private _scrollbackBuffer: Line[] = [];  // Array of lines which have not been rendered to the browser.
   private children: HTMLDivElement[] = [];
-
-  private _mouseButtonDown = false;
-  private utfMouse = false;
-  private decLocator = false;
-  private urxvtMouse = false;
-  private sgrMouse = false;
-  private vt300Mouse = false;
-  private vt200Mouse = false;
-  private normalMouse = false;
-  private x10Mouse = false;
-  private mouseEvents = false;
-  private _pressed = 32;
-  private _lastMovePos: TerminalCoord = null;
+  private emulator: EmulatorAPI = null;
   
   private _events: { [type: string]: EventListener[]; } = {};
-  private _blinker: Function = null;
-  private savedCols: number;
-  private title: string = "";
-  
+  private _termId: number;
+  private isMac = false;
+  private vpad = 0;
+  private charHeight = 12; // resizeToContainer() will fix this for us.
+  private visualBell: boolean;
+  private popOnBell: boolean;
+  debug: boolean = false;
+
+  private dataEventListeners: TerminalDataEventListener[] = [];
+
   constructor(options: Options) {
-    var self = this;
-    
     // Every term gets a unique ID.
     this._termId = idCounter;
     idCounter++;
 
-    const defaults = {
-      convertEol: false,
-      termName: 'xterm',
-      geometry: [80, 24],
-      cursorBlink: true,
-      visualBell: false,
-      popOnBell: false,
-      scrollback: 1000,
-      debug: false,
-      useStyle: false,
-      physicalScroll: false,
-      applicationModeCookie: null
-    };
+    this.emulator = new Emulator(options);
+    this._scrollbackBuffer = [];  // Array of lines which have not been rendered to the browser.
     
-    this.convertEol = options.convertEol === undefined ? false : options.convertEol;
-    this.termName = options.termName === undefined ? 'xterm' : options.termName;
-    this.geometry = options.geometry === undefined ? [80, 24] : options.geometry;
-    this.cursorBlink = options.cursorBlink === undefined ? true : options.cursorBlink;
+    this.charHeight = 12; // resizeToContainer() will fix this for us.
     this.visualBell = options.visualBell === undefined ? false : options.visualBell;
     this.popOnBell = options.popOnBell === undefined ? false : options.popOnBell;
-    this.scrollback = options.scrollback === undefined ? 1000 : options.scrollback;
     this.debug = options.debug === undefined ? false : options.debug;
-    this.useStyle = options.useStyle === undefined ? false : options.useStyle;
-    this.physicalScroll = options.physicalScroll === undefined ? false : options.physicalScroll;
-    this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
-
-    // this.options = options;
-
-    this.charHeight = 12; // resizeToContainer() will fix this for us.
-    
-    this.state = 0; // Escape code parsing state.
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
-
-    this._resetVariables();
-
-    this._writeBuffers = [];  // Buffer for incoming data waiting to be processed.
-    this._processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.
-    
-    this._refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
-    this._scrollbackBuffer = [];  // Array of lines which have not been rendered to the browser.
   }
-
-  private _resetVariables(): void {
-    this.ybase = 0;
-    this.ydisp = 0;
-    this.x = 0;
-    this.y = 0;
-    this.oldy = 0;
-
-    this.cursorState = false;       // Cursor blink state.
-    
-    this.cursorHidden = false;
-    this._hasFocus = false;
-    
-  //  this.convertEol;
-    
-    this.queue = '';
-    this.scrollTop = 0;
-    this.scrollBottom = this.rows - 1;
-
-    // modes
-    this.applicationKeypad = false;
-    this.applicationCursor = false;
-    this.originMode = false;
-    this.insertMode = false;
-    this.wraparoundMode = false;
-    this.normal = null;
-
-    this.entry = '';
-    this.entryPrefix = 'Search: ';
-
-    // charset
-    this.charset = null;
-    this.gcharset = null;
-    this.glevel = 0;
-    this.charsets = [null];
-
-    // mouse properties
-  //  this.decLocator;
-  //  this.x10Mouse;
-  //  this.vt200Mouse;
-  //  this.vt300Mouse;
-  //  this.normalMouse;
-  //  this.mouseEvents;
-  //  this.sendFocus;
-  //  this.utfMouse;
-  //  this.sgrMouse;
-  //  this.urxvtMouse;
-
-    // misc
-  //  this.element;
-  //  this.children;
-  //  this.savedX;
-  //  this.savedY;
-  //  this.savedCols;
-
-    // stream
-    this.readable = true;
-    this.writable = true;
-
-    this.curAttr = Terminal.defAttr;  // Current character style.
-
-    this.params = [];
-    this.currentParam = 0;
-    this.prefix = '';
-    this.postfix = '';
-    
-    this._blink = null;
-    
-    this.lines = [];
-    if ( !this.physicalScroll) {
-      for (let i = 0; i< this.rows; i++) {
-        this.lines.push(this.blankLine());
-      }
-    }
-  //  this.tabs;
-    this.setupStops();
-  }
-
-  // back_color_erase feature for xterm.
-  eraseAttr(): number {
-    // if (this.is('screen')) return this.defAttr;
-    return (Terminal.defAttr & ~0x1ff) | (this.curAttr & 0x1ff);
-  }
-
-  /**
-   * Colors
-   *
-   * This palette is only used when matching 24bit colours to the user's CSS based colours.
-   * (We assume that this default palette is close enough to the actual one being used.)
-   */
-
-  // Colors 0-15
-  static xtermColors = [
-    // dark:
-    '#000000', // black
-    '#cd0000', // red3
-    '#00cd00', // green3
-    '#cdcd00', // yellow3
-    '#0000ee', // blue2
-    '#cd00cd', // magenta3
-    '#00cdcd', // cyan3
-    '#e5e5e5', // gray90
-    // bright:
-    '#7f7f7f', // gray50
-    '#ff0000', // red
-    '#00ff00', // green
-    '#ffff00', // yellow
-    '#5c5cff', // rgb:5c/5c/ff
-    '#ff00ff', // magenta
-    '#00ffff', // cyan
-    '#ffffff'  // white
-  ];
-
-  // Colors 0-15 + 16-255
-  // Much thanks to TooTallNate for writing this.
-  static colors = (function() {
-    var colors = Terminal.xtermColors.slice();
-    var r = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff];
-    var i;
-
-    // 16-231
-    i = 0;
-    for (; i < 216; i++) {
-      out(r[(i / 36) % 6 | 0], r[(i / 6) % 6 | 0], r[i % 6]);
-    }
-
-    // 232-255 (grey)
-    i = 0;
-    for (; i < 24; i++) {
-      const v = 8 + i * 10;
-      out(v, v, v);
-    }
-
-    function out(r, g, b) {
-      colors.push('#' + hex(r) + hex(g) + hex(b));
-    }
-
-    function hex(c) {
-      c = c.toString(16);
-      return c.length < 2 ? '0' + c : c;
-    }
-
-    // Default BG/FG
-    colors[256] = '#000000';
-    colors[257] = '#f0f0f0';
-    return colors;
-  })();
-
-  static vcolors = (function() {
-    var out = [];
-    var colors = Terminal.colors;
-    var i = 0;
-    var color;
-
-    for (; i < 256; i++) {
-      color = parseInt(colors[i].substring(1), 16);
-      out.push([
-        (color >> 16) & 0xff,
-        (color >> 8) & 0xff,
-        color & 0xff
-      ]);
-    }
-
-    return out;
-  })();
-
-  // ------------------------------------------------------------------------
-  //
-  // ######  ####### #     # 
-  // #     # #     # ##   ## 
-  // #     # #     # # # # # 
-  // #     # #     # #  #  # 
-  // #     # #     # #     # 
-  // #     # #     # #     # 
-  // ######  ####### #     # 
-  //                       
-  // ------------------------------------------------------------------------
 
   focus(): void {
-    this._focus();
+    this.emulator._focus();
     this.element.focus();
   }
   
+  hasFocus(): boolean {
+    return this.emulator.hasFocus();
+  }
+  
   blur(): void {
-    this._blur();
+    this.emulator._blur();
     this.element.blur();
   }
   
@@ -701,7 +379,7 @@ export class Terminal implements Emulator {
     }
     cssStyleSheet.insertRule(`DIV.${TERMINAL_ACTIVE_CLASS}:last-child{padding-bottom:${padh}px}`, 0);
   }
-
+ 
   /**
    * Global Events for key handling
    */
@@ -711,7 +389,7 @@ export class Terminal implements Emulator {
   bindKeys(): void {
     // We should only need to check `target === body` below,
     // but we can check everything for good measure.
-    on(this.element, 'keydown', (ev: KeyboardEvent) => {
+    this.element.addEventListener('keydown', (ev: KeyboardEvent) => {
       const target = ev.target || ev.srcElement;
       if (!target) {
         return;
@@ -722,11 +400,11 @@ export class Terminal implements Emulator {
           target === this.body ||
           // target === self._textarea ||
           target === this.parent) {
-        return this.keyDown(ev);
+        return this.emulator.keyDown(ev);
       }
     }, true);
 
-    on(this.element, 'keypress', (ev: KeyboardEvent) => {
+    this.element.addEventListener('keypress', (ev: KeyboardEvent) => {
       const target = ev.target || ev.srcElement;
       if (!target) {
         return;
@@ -737,7 +415,7 @@ export class Terminal implements Emulator {
           target === this.body ||
           // target === self._textarea ||
           target === this.parent) {
-        return this.keyPress(ev);
+        return this.emulator.keyPress(ev);
       }
     }, true);
   }
@@ -782,14 +460,14 @@ export class Terminal implements Emulator {
    * 
    * @param {Element} element The DOM element to append.
    */
-  appendElement(element: HTMLElement): void {
-    this.moveRowsToScrollback();
-    if (this.children.length !== 0) {
-      this.element.insertBefore(element, this.children[0]);
-    } else {
-      this.element.appendChild(element);
-    }
-  }
+  // appendElement(element: HTMLElement): void {
+  //   this.moveRowsToScrollback();
+  //   if (this.children.length !== 0) {
+  //     this.element.insertBefore(element, this.children[0]);
+  //   } else {
+  //     this.element.appendChild(element);
+  //   }
+  // }
 
   private _getChildDiv(y: number): HTMLDivElement {
     while (y >= this.children.length) {
@@ -806,10 +484,14 @@ export class Terminal implements Emulator {
    */
   open(parent: HTMLDivElement): void {
     this.parent = parent;
-    
-    this.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
-    this.addRenderEventListener(this._handleRenderLine.bind(this));
-    this.addSizeEventListener(this._handleSizeEvent.bind(this));
+
+    this.emulator.addDataEventListener( (instance, data) => {
+      this.emitDataEvent(data);
+    });
+    this.emulator.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
+    this.emulator.addRenderEventListener(this._handleRenderLine.bind(this));
+    this.emulator.addSizeEventListener(this._handleSizeEvent.bind(this));
+    this.emulator.addBellEventListener(this._handleBellEvent.bind(this));
 
     if (!this.parent) {
       throw new Error('Terminal requires a parent element.');
@@ -832,36 +514,30 @@ export class Terminal implements Emulator {
 
     // Create the lines for our terminal.
     this.children = [];
-    if ( !this.physicalScroll) {
-      for (let i=0; i < this.rows; i++) {
-        this._getChildDiv(i);
-      }
-    }
+    // if ( !this.physicalScroll) {
+    //   for (let i=0; i < this.rows; i++) {
+    //     this._getChildDiv(i);
+    //   }
+    // }
     this.parent.appendChild(this.element);
-
-    // Draw the screen.
-    if ( !this.physicalScroll) {
-      this.refresh(0, this.rows - 1);
-    }
 
     // Initialize global actions that
     // need to be taken on the document.
     this.initGlobal();
 
-    if (this.physicalScroll) {
-      this._initLastLinePadding();
-    }
+    this._initLastLinePadding();
 
     // Ensure there is a Terminal.focus.
     this.focus();
 
     // Start blinking the cursor.
-    this.startBlink();
+    this.emulator.startBlink();
 
     this.element.addEventListener('mousedown', this._handleMouseDown.bind(this));
     this.element.addEventListener('mousemove', this._handleMouseMove.bind(this));
     this.element.addEventListener('mouseup', this._handleMouseUp.bind(this));
     this.element.addEventListener('mouseleave', this._handleMouseLeave.bind(this));
+    this.bindKeys();
 
     // Bind to DOM events related
     // to focus and paste behavior.
@@ -873,31 +549,9 @@ export class Terminal implements Emulator {
       this.blur();
     });
 
-    // This causes slightly funky behavior.
-    // on(this.element, 'blur', function() {
-    //   self.blur();
-    // });
-
     on(this.element, 'mousedown', (ev: MouseEvent) => {
       this.focus();
     });
-
-    // Clickable paste workaround, using contentEditable.
-    // This probably shouldn't work,
-    // ... but it does. Firefox's paste
-    // event seems to only work for textareas?
-    on(this.element, 'mousedown', (ev: MouseEvent) => {
-      var button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
-
-      if (button !== 2) return;
-
-      this.element.contentEditable = 'true';
-      setTimeout(() => {
-        this.element.contentEditable = 'inherit'; // 'false';
-      }, 1);
-    }, true);
-        
-    // this.emit('open');
 
     // This can be useful for pasting,
     // as well as the iPad fix.
@@ -905,12 +559,24 @@ export class Terminal implements Emulator {
       this.element.focus();
     }, 100);
   }
+  
+  write(data: string): void {
+    this.emulator.write(data);
+  }
+  
+  addDataEventListener(eventHandler: TerminalDataEventListener): void {
+    this.dataEventListeners.push(eventHandler);
+  }
+
+  private emitDataEvent(data: string): void {
+    this.dataEventListeners.forEach( (listener) => {
+      listener(this, data);
+    });
+  }
+  
 
   private _handleMouseDown(ev: MouseEvent): void {
-    if ( ! this.mouseEvents) {
-      return;
-    }
-    
+console.log("Terminal._handleMouseDown");
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
     if (ev.ctrlKey) { 
@@ -937,17 +603,13 @@ export class Terminal implements Emulator {
       column: pos.x
     };
     
-    if (this.mouseDown(options)) {
+    if (this.emulator.mouseDown(options)) {
       ev.stopPropagation();
       ev.preventDefault();
     }
   }
   
   private _handleMouseMove(ev: MouseEvent): void {
-    if ( ! this.mouseEvents) {
-      return;
-    }
-    
     const pos = this.getTerminalCoordsFromEvent(ev);
     if (pos === null) {
       return;
@@ -967,17 +629,13 @@ export class Terminal implements Emulator {
       column: pos.x
     };
     
-    if (this.mouseMove(options)) {
+    if (this.emulator.mouseMove(options)) {
       ev.stopPropagation();
       ev.preventDefault();
     }
   }
   
   private _handleMouseUp(ev: MouseEvent): void {
-    if ( ! this.mouseEvents) {
-      return;
-    }
-    
     const pos = this.getTerminalCoordsFromEvent(ev);
     if (pos === null) {
       return;
@@ -997,18 +655,14 @@ export class Terminal implements Emulator {
       column: pos.x
     };
     
-    if (this.mouseUp(options)) {
+    if (this.emulator.mouseUp(options)) {
       ev.stopPropagation();
       ev.preventDefault();
     }
   }
   
   private _handleMouseLeave(ev: MouseEvent): void {
-    if ( ! this.mouseEvents) {
-      return;
-    }
-    
-    if (this.mouseUp(null)) {
+    if (this.emulator.mouseUp(null)) {
       ev.stopPropagation();
       ev.preventDefault();
     }    
@@ -1050,23 +704,25 @@ export class Terminal implements Emulator {
       el = 'offsetParent' in el ? el.offsetParent : el.parentNode;
     }
 
+    const emulatorSize = this.emulator.size();
+
     // convert to cols
     const w = rowElement.clientWidth;
-    let col = Math.floor((x / w) * this.cols) + 1;
+    let col = Math.floor((x / w) * emulatorSize.columns) + 1;
 
     // be sure to avoid sending
     // bad positions to the program
     if (col < 0) {
       col = 0;
     }
-    if (col > this.cols) {
-      col = this.cols;
+    if (col > emulatorSize.columns) {
+      col = emulatorSize.columns;
     }
     if (row < 0) {
       row = 0;
     }
-    if (row > this.rows) {
-      row = this.rows;
+    if (row > emulatorSize.rows) {
+      row = emulatorSize.rows;
     }
 
     return { x: col, y: row };
@@ -1076,33 +732,36 @@ export class Terminal implements Emulator {
    * Destroy Terminal
    */
   destroy(): void {
-    if (this._processWriteChunkTimer !== -1) {
-      window.clearTimeout(this._processWriteChunkTimer);
-      this._processWriteChunkTimer = -1;
-    }
-    
-    if (this._refreshTimer !== -1) {
-      window.clearTimeout(this._refreshTimer);
-    }
-    
-    if (this.physicalScroll) {
+    // if (this.physicalScroll) {
       const domRoot = getDOMRoot(this.element);
       const style = domRoot.getElementById('term-padding-style' + this._termId);
       style.parentNode.removeChild(style);
-    }
-    this.readable = false;
-    this.writable = false;
+    // }
     this._events = {};
-    this.handler = function() {};
-    this.write = function() {};
+    
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
     }
   }
+
+  setCursorBlink(blink: boolean): void {
+    this.emulator.setCursorBlink(blink);
+  }
   
+  private _handleSizeEvent(instance: Emulator, newRows: number, newColumns: number, realizedRows: number): void {
+    while (this.children.length > newRows) {
+      const el = this.children.pop();
+      el.parentNode.removeChild(el);
+    }
+  }
+  
+  private _handleBellEvent(instance: Emulator): void {
+    this._domBell();
+  }
+ 
   private _handleRenderLine(instance: Emulator, startRow: number, endRow: number): void {
     for (let row=startRow; row < endRow; row++) {
-      const line = this.lineAtRow(row);
+      const line = this.emulator.lineAtRow(row);
       this._getChildDiv(row).innerHTML = Terminal.lineToHTML(line);
     }
   }
@@ -1114,7 +773,7 @@ export class Terminal implements Emulator {
    * @returns {string} A HTML rendering of the line as a HTML string.
    */
   static lineToHTML(line: LineCell[]): string {
-    let attr = this.defAttr;
+    let attr = Emulator.defAttr;
     const width = line.length;
     let out = '';
     
@@ -1123,10 +782,10 @@ export class Terminal implements Emulator {
       const ch: string = <string> line[i][LINECELL_CHAR];
 
       if (data !== attr) {
-        if (attr !== this.defAttr) {
+        if (attr !== Emulator.defAttr) {
           out += '</span>';
         }
-        if (data !== this.defAttr) {
+        if (data !== Emulator.defAttr) {
           if (data === -1) {
             out += '<span class="reverse-video terminal-cursor">';
           } else {
@@ -1229,7 +888,7 @@ export class Terminal implements Emulator {
       attr = data;
     }
 
-    if (attr !== this.defAttr) {
+    if (attr !== Emulator.defAttr) {
       out += '</span>';
     }
     return out;
@@ -1268,6 +927,8 @@ export class Terminal implements Emulator {
    * @returns Object with the new colums (cols field) and rows (rows field) information.
    */
   resizeToContainer(): {cols: number; rows: number; vpad: number; } {
+    const {columns: cols, rows: rows} = this.emulator.size();
+    
     if (DEBUG_RESIZE) {
       this.log("resizeToContainer() this.effectiveFontFamily(): " + this.effectiveFontFamily());
     }
@@ -1277,7 +938,7 @@ export class Terminal implements Emulator {
       if (DEBUG_RESIZE) {
         this.log("resizeToContainer() styles have not been applied yet.");
       }
-      return {cols: this.cols, rows: this.rows, vpad: this.vpad };
+      return {cols: cols, rows: rows, vpad: this.vpad };
     }
     
     const lineEl = this.children[0];
@@ -1288,10 +949,10 @@ export class Terminal implements Emulator {
     const rect = range.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
       // The containing element has an invalid size.
-      return {cols: this.cols, rows: this.rows, vpad: this.vpad};
+      return {cols: cols, rows: rows, vpad: this.vpad};
     }
     
-    const charWidth = rect.width / this.cols;    
+    const charWidth = rect.width / cols;    
     const charHeight = rect.height;
     this.charHeight = charHeight;
     
@@ -1300,8 +961,8 @@ export class Terminal implements Emulator {
     const newCols = Math.floor(width / charWidth);
     const newRows = Math.max(2, Math.floor(this.element.clientHeight / charHeight));
     
-    if (newCols !== this.cols || newRows !== this.rows) {
-      this.resize( { rows: newRows, columns: newCols } );
+    if (newCols !== cols || newRows !== rows) {
+      this.emulator.resize( { rows: newRows, columns: newCols } );
     }
     
     const newVpad =  Math.floor(this.element.clientHeight % charHeight);
@@ -1314,13 +975,13 @@ export class Terminal implements Emulator {
       this.log("resizeToContainer() char line rect width: ",rect.width);
       this.log("resizeToContainer() char line rect height: ",rect.height);
       this.log("resizeToContainer() char line rect height: ",rect.height);
-      this.log("resizeToContainer() old cols: ",this.cols);
+      this.log("resizeToContainer() old cols: ",cols);
       this.log("resizeToContainer() calculated charWidth: ",charWidth);    
       this.log("resizeToContainer() calculated charHeight: ",charHeight);
       this.log("resizeToContainer() element width: ",width);
       this.log("resizeToContainer() element height: ",this.element.clientHeight);
-      this.log("resizeToContainer() new cols: ",this.cols);
-      this.log("resizeToContainer() new rows: ",this.rows);
+      this.log("resizeToContainer() new cols: ",newCols);
+      this.log("resizeToContainer() new rows: ",newRows);
     }
     return {cols: newCols, rows: newRows, vpad: this.vpad};
   }
@@ -1332,18 +993,413 @@ export class Terminal implements Emulator {
     });
     this._emit(Terminal.EVENT_SCROLLBACK_AVAILABLE, this);
   }
+  
+  /**
+   * Return true if there are lines waiting in the scrollback buffer.
+   *
+   * @return true if there are lines waiting to be rendered in the scrollback buffer.
+   */
+  isScrollbackAvailable(): boolean {
+    return this._scrollbackBuffer.length !== 0;
+  }
+  
+  /**
+   * Fetch all of the bending scrollback lines from the buffer.
+   * 
+   * @return all of the scrollback lines which need to rendered.
+   */
+  fetchScrollbackLines(): Line[] {
+    const lines = this._scrollbackBuffer;
+    this._scrollbackBuffer = [];
+    return lines;
+  }
 
-  // ------------------------------------------------------------------------
-  //
-  // #######                                                   
-  // #       #    # #    # #        ##   ##### #  ####  #    # 
-  // #       ##  ## #    # #       #  #    #   # #    # ##   # 
-  // #####   # ## # #    # #      #    #   #   # #    # # #  # 
-  // #       #    # #    # #      ######   #   # #    # #  # # 
-  // #       #    # #    # #      #    #   #   # #    # #   ## 
-  // ####### #    #  ####  ###### #    #   #   #  ####  #    # 
-  // 
-  // ------------------------------------------------------------------------
+  private _emit(type, ...args: any[]): void {
+    if (!this._events[type]) return;
+
+    var obj = this._events[type];
+    var l = obj.length;
+    var i = 0;
+
+    for (; i < l; i++) {
+      obj[i].apply(this, args);
+    }
+  }
+  
+  private log(...args: any[]): void {
+    if (!this.debug) {
+      return;
+    }
+    if (!this.context.console || !this.context.console.log) {
+      return;
+    }
+    
+    this.context.console.log.apply(this.context.console, ["[TERM=",this._termId,"] ", ...args]);
+    this.context.console.log.apply(this.context.console, ["[TERM="+this._termId+"] "+ args]);
+  }
+
+}
+
+// ------------------------------------------------------------------------
+//
+// #######                                                 
+// #       #    # #    # #        ##   #####  ####  #####  
+// #       ##  ## #    # #       #  #    #   #    # #    # 
+// #####   # ## # #    # #      #    #   #   #    # #    # 
+// #       #    # #    # #      ######   #   #    # #####  
+// #       #    # #    # #      #    #   #   #    # #   #  
+// ####### #    #  ####  ###### #    #   #    ####  #    # 
+//                                                         
+// ------------------------------------------------------------------------
+
+// Character rendering attributes packed inside a CharAttr.
+export const BOLD_ATTR_FLAG = 1;
+export const UNDERLINE_ATTR_FLAG = 2;
+export const BLINK_ATTR_FLAG = 4;
+export const INVERSE_ATTR_FLAG = 8;
+export const INVISIBLE_ATTR_FLAG = 16;
+export const ITALIC_ATTR_FLAG = 32;
+export const STRIKE_THROUGH_ATTR_FLAG = 64;
+export const FAINT_ATTR_FLAG = 128;
+
+export function flagsFromCharAttr(attr: CharAttr): number {
+  return attr >> 18;
+}
+
+export function foregroundFromCharAttr(attr: CharAttr): number {
+  return (attr >> 9) & 0x1ff;
+}
+
+export function backgroundFromCharAttr(attr: CharAttr): number {
+  return attr & 0x1ff;
+}
+
+function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
+  return (flags << 18) | (fg << 9) | bg;
+}
+
+function isCharAttrCursor(attr: CharAttr): boolean {
+  return attr === -1;
+}
+
+export class Emulator implements Emulator {
+  private cols = 80;
+  private rows = 24
+  private lastReportedPhysicalHeight = 0;
+  
+  private state = 0; // Escape code parsing state.
+  private refreshStart = REFRESH_START_NULL;
+  private refreshEnd = REFRESH_END_NULL;
+
+  private ybase = 0;  // Index of row 1 in our (logn) list of lines+scroll back.
+  private ydisp = 0;  // Index of the row 1 which is displayed on the screen at the moment.
+                      // (only applies when physical scrolling is not used)
+
+  private mouseEvents = false;
+
+  private x = 0;      // Cursor x position
+  private y = 0;      // Cursoe y position
+  private savedX = 0;
+  private savedY = 0;
+  
+  private oldy = 0;
+
+  private cursorState = false;       // Cursor blink state.
+  
+  private cursorHidden = false;
+  private _hasFocus = false;
+    
+  private queue = '';
+  private scrollTop = 0;
+  private scrollBottom = 23;
+
+  // modes
+  private applicationKeypad = false;
+  private applicationCursor = false;
+  private originMode = false;
+  private insertMode = false;
+  private wraparoundMode = false;
+  private normal: SavedState = null;
+
+  private entry = '';
+  private entryPrefix = 'Search: ';
+
+  // charset
+  private charset: CharSet = null;
+  private savedCharset: CharSet = null;
+  private gcharset: number = null;
+  private glevel = 0;
+  private charsets: CharSet[] = [null];
+
+  public static defAttr = packCharAttr(0, 257, 256); // Default character style
+  private curAttr = 0;  // Current character style.
+  private savedCurAttr = packCharAttr(0, 257, 256); // Default character style;
+  
+  private params = [];
+  private currentParam: string | number = 0;
+  private prefix = '';
+  private postfix = '';
+  
+  private _blink = null;
+    
+  private lines: LineCell[][] = [];
+  
+  private convertEol: boolean;
+  private termName: string;
+  private geometry: [number, number];
+  private cursorBlink: boolean;
+  private scrollback: number;
+  public debug: boolean;
+  private useStyle: boolean;
+  private physicalScroll: boolean;
+  private applicationModeCookie: string;
+  private isMac = false;
+  
+  private _writeBuffers: string[] = [];  // Buffer for incoming data waiting to be processed.
+  private _processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.  
+  private _refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
+
+  private tabs: { [key: number]: boolean };
+  private sendFocus = false;
+
+  private _mouseButtonDown = false;
+  private utfMouse = false;
+  private decLocator = false;
+  private urxvtMouse = false;
+  private sgrMouse = false;
+  private vt300Mouse = false;
+  private vt200Mouse = false;
+  private normalMouse = false;
+  private x10Mouse = false;
+  private _pressed = 32;
+  private _lastMovePos: TerminalCoord = null;
+  
+  private _events: { [type: string]: EventListener[]; } = {};
+  private _blinker: Function = null;
+  private savedCols: number;
+  private title: string = "";
+  
+  constructor(options: Options) {
+    var self = this;
+
+    const defaults = {
+      convertEol: false,
+      termName: 'xterm',
+      geometry: [80, 24],
+      cursorBlink: true,
+      visualBell: false,
+      popOnBell: false,
+      scrollback: 1000,
+      debug: false,
+      useStyle: false,
+      physicalScroll: false,
+      applicationModeCookie: null
+    };
+    
+    this.convertEol = options.convertEol === undefined ? false : options.convertEol;
+    this.termName = options.termName === undefined ? 'xterm' : options.termName;
+    this.geometry = options.geometry === undefined ? [80, 24] : options.geometry;
+    this.cursorBlink = options.cursorBlink === undefined ? true : options.cursorBlink;
+    this.scrollback = options.scrollback === undefined ? 1000 : options.scrollback;
+    this.debug = options.debug === undefined ? false : options.debug;
+    this.useStyle = options.useStyle === undefined ? false : options.useStyle;
+    this.physicalScroll = options.physicalScroll === undefined ? false : options.physicalScroll;
+    this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
+
+
+    if (window.navigator && window.navigator.userAgent) {
+      this.isMac = !!~window.navigator.userAgent.indexOf('Mac');
+    }
+
+    // this.options = options;
+
+    this.state = 0; // Escape code parsing state.
+    this.refreshStart = REFRESH_START_NULL;
+    this.refreshEnd = REFRESH_END_NULL;
+
+    this._resetVariables();
+
+    this._writeBuffers = [];  // Buffer for incoming data waiting to be processed.
+    this._processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.
+    
+    this._refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
+  }
+  
+  destroy(): void {
+    if (this._processWriteChunkTimer !== -1) {
+      window.clearTimeout(this._processWriteChunkTimer);
+      this._processWriteChunkTimer = -1;
+    }
+    
+    if (this._refreshTimer !== -1) {
+      window.clearTimeout(this._refreshTimer);
+    }
+    
+    this._events = {};
+    this.handler = function() {};
+    this.write = function() {};
+  }
+
+  private _resetVariables(): void {
+    this.ybase = 0;
+    this.ydisp = 0;
+    this.x = 0;
+    this.y = 0;
+    this.oldy = 0;
+
+    this.cursorState = false;       // Cursor blink state.
+    
+    this.cursorHidden = false;
+    this._hasFocus = false;
+    
+  //  this.convertEol;
+    
+    this.queue = '';
+    this.scrollTop = 0;
+    this.scrollBottom = this.rows - 1;
+
+    // modes
+    this.applicationKeypad = false;
+    this.applicationCursor = false;
+    this.originMode = false;
+    this.insertMode = false;
+    this.wraparoundMode = false;
+    this.normal = null;
+
+    this.entry = '';
+    this.entryPrefix = 'Search: ';
+
+    // charset
+    this.charset = null;
+    this.gcharset = null;
+    this.glevel = 0;
+    this.charsets = [null];
+
+    // mouse properties
+  //  this.decLocator;
+  //  this.x10Mouse;
+  //  this.vt200Mouse;
+  //  this.vt300Mouse;
+  //  this.normalMouse;
+  //  this.mouseEvents;
+  //  this.sendFocus;
+  //  this.utfMouse;
+  //  this.sgrMouse;
+  //  this.urxvtMouse;
+
+    // misc
+  //  this.element;
+  //  this.children;
+  //  this.savedX;
+  //  this.savedY;
+  //  this.savedCols;
+
+    this.curAttr = Emulator.defAttr;  // Current character style.
+
+    this.params = [];
+    this.currentParam = 0;
+    this.prefix = '';
+    this.postfix = '';
+    
+    this._blink = null;
+    
+    this.lines = [];
+    if ( !this.physicalScroll) {
+      for (let i = 0; i< this.rows; i++) {
+        this.lines.push(this.blankLine());
+      }
+    }
+  //  this.tabs;
+    this.setupStops();
+  }
+
+  // back_color_erase feature for xterm.
+  eraseAttr(): number {
+    // if (this.is('screen')) return this.defAttr;
+    return (Emulator.defAttr & ~0x1ff) | (this.curAttr & 0x1ff);
+  }
+
+  /**
+   * Colors
+   *
+   * This palette is only used when matching 24bit colours to the user's CSS based colours.
+   * (We assume that this default palette is close enough to the actual one being used.)
+   */
+
+  // Colors 0-15
+  static xtermColors = [
+    // dark:
+    '#000000', // black
+    '#cd0000', // red3
+    '#00cd00', // green3
+    '#cdcd00', // yellow3
+    '#0000ee', // blue2
+    '#cd00cd', // magenta3
+    '#00cdcd', // cyan3
+    '#e5e5e5', // gray90
+    // bright:
+    '#7f7f7f', // gray50
+    '#ff0000', // red
+    '#00ff00', // green
+    '#ffff00', // yellow
+    '#5c5cff', // rgb:5c/5c/ff
+    '#ff00ff', // magenta
+    '#00ffff', // cyan
+    '#ffffff'  // white
+  ];
+
+  // Colors 0-15 + 16-255
+  // Much thanks to TooTallNate for writing this.
+  static colors = (function() {
+    var colors = Emulator.xtermColors.slice();
+    var r = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff];
+    var i;
+
+    // 16-231
+    i = 0;
+    for (; i < 216; i++) {
+      out(r[(i / 36) % 6 | 0], r[(i / 6) % 6 | 0], r[i % 6]);
+    }
+
+    // 232-255 (grey)
+    i = 0;
+    for (; i < 24; i++) {
+      const v = 8 + i * 10;
+      out(v, v, v);
+    }
+
+    function out(r, g, b) {
+      colors.push('#' + hex(r) + hex(g) + hex(b));
+    }
+
+    function hex(c) {
+      c = c.toString(16);
+      return c.length < 2 ? '0' + c : c;
+    }
+
+    // Default BG/FG
+    colors[256] = '#000000';
+    colors[257] = '#f0f0f0';
+    return colors;
+  })();
+
+  static vcolors = (function() {
+    var out = [];
+    var colors = Emulator.colors;
+    var i = 0;
+    var color;
+
+    for (; i < 256; i++) {
+      color = parseInt(colors[i].substring(1), 16);
+      out.push([
+        (color >> 16) & 0xff,
+        (color >> 8) & 0xff,
+        color & 0xff
+      ]);
+    }
+
+    return out;
+  })();
   
   _focus(): void {
     if (this.sendFocus) {
@@ -1383,6 +1439,10 @@ export class Terminal implements Emulator {
   // Relevant functions in xterm/button.c:
   //   BtnCode, EmitButtonCode, EditorButton, SendMousePosition
   mouseDown(ev: MouseEventOptions): boolean {
+    if ( ! this.mouseEvents) {
+      return;
+    }
+
     let button = this.mouseEventOptionsToButtons(ev);
     
     // no mods
@@ -1393,9 +1453,6 @@ export class Terminal implements Emulator {
     }
     
     this.sendMouseButtonSequence( {x: ev.column, y: ev.row}, button);
-    
-    // ensure focus
-    this.focus();
     
     if (this.vt200Mouse) {
       this.sendMouseButtonSequence({x: ev.column, y: ev.row}, 3); // release button
@@ -1410,6 +1467,10 @@ export class Terminal implements Emulator {
   }
   
   mouseMove(ev: MouseEventOptions): boolean {
+    if ( ! this.mouseEvents) {
+      return;
+    }
+
     if ( ! this._mouseButtonDown) {
       return false;
     }
@@ -1438,6 +1499,10 @@ export class Terminal implements Emulator {
   }
 
   mouseUp(ev: MouseEventOptions): boolean {
+    if ( ! this.mouseEvents) {
+      return;
+    }
+
     if ( ! this._mouseButtonDown) {
       return false;
     }
@@ -1506,47 +1571,47 @@ export class Terminal implements Emulator {
    * once something is printed there.
    */
   moveRowsToScrollback(): void {
-    let children = this.children;
-    let newChildren = [];
-    let lines = this.lines;
-    let newLines = [];
-    
-  const origChildrenLen = this.children.length;
-  
-    if (this.x === 0 && this.lines.length-1 === this.y) {
-      if (this.getLineText(this.y).trim() === '') {
-        lines = this.lines.slice(0, -1);
-        newLines = [this.lines[this.lines.length-1]];
-        
-        children = this.children.slice(0, -1);
-        newChildren = [this.children[this.children.length-1]];
-        
-      }
-    }
-
-    const scrollbackLines = [...lines];
-    
-    this.lines = newLines;
-
-// FIXME DOM code
-    // Delete the DIV objects for the current terminal screen.
-    children.forEach(function(div) {
-      if (div === undefined) {
-  (<any> console).trace("div is undefined, origChildrenLen: "+origChildrenLen);
-  
-      }
-      div.remove();
-    });
-    this.children = newChildren;
-    
-    // Force the scrollback buffer to render.
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
-    this.x = 0;
-    this.y = 0;
-    this.oldy = 0;
-    
-    this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
+//     let children = this.children;
+//     let newChildren = [];
+//     let lines = this.lines;
+//     let newLines = [];
+//     
+//   const origChildrenLen = this.children.length;
+//   
+//     if (this.x === 0 && this.lines.length-1 === this.y) {
+//       if (this.getLineText(this.y).trim() === '') {
+//         lines = this.lines.slice(0, -1);
+//         newLines = [this.lines[this.lines.length-1]];
+//         
+//         children = this.children.slice(0, -1);
+//         newChildren = [this.children[this.children.length-1]];
+//         
+//       }
+//     }
+// 
+//     const scrollbackLines = [...lines];
+//     
+//     this.lines = newLines;
+// 
+// // FIXME DOM code
+//     // Delete the DIV objects for the current terminal screen.
+//     children.forEach(function(div) {
+//       if (div === undefined) {
+//   (<any> console).trace("div is undefined, origChildrenLen: "+origChildrenLen);
+//   
+//       }
+//       div.remove();
+//     });
+//     this.children = newChildren;
+//     
+//     // Force the scrollback buffer to render.
+//     this.refreshStart = REFRESH_START_NULL;
+//     this.refreshEnd = REFRESH_END_NULL;
+//     this.x = 0;
+//     this.y = 0;
+//     this.oldy = 0;
+//     
+//     this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
   }
 
   private _getRow(row: number): LineCell[] {
@@ -1704,7 +1769,6 @@ export class Terminal implements Emulator {
    * @param {boolean} immediate True if the refresh should occur as soon as possible. False if a slight delay is permitted.
    */
   private _scheduleRefresh(immediate: boolean): void {
-    const window = this.document.defaultView;
     if (this._refreshTimer === -1) {
       this._refreshTimer = window.setTimeout(() => {
         this._refreshTimer = -1;
@@ -1770,26 +1834,6 @@ export class Terminal implements Emulator {
   }
   
   /**
-   * Return true if there are lines waiting in the scrollback buffer.
-   *
-   * @return true if there are lines waiting to be rendered in the scrollback buffer.
-   */
-  isScrollbackAvailable(): boolean {
-    return this._scrollbackBuffer.length !== 0;
-  }
-  
-  /**
-   * Fetch all of the bending scrollback lines from the buffer.
-   * 
-   * @return all of the scrollback lines which need to rendered.
-   */
-  fetchScrollbackLines(): Line[] {
-    const lines = this._scrollbackBuffer;
-    this._scrollbackBuffer = [];
-    return lines;
-  }
-  
-  /**
    * Get a shallow copy of the lines currently being shown on the terminal screen.
    * 
    * @return {Line[]} the lines information. Do not change this data!
@@ -1842,10 +1886,8 @@ export class Terminal implements Emulator {
     }
     this.cursorBlink = blink;
     
-    if (this.element != null) {
-      this.showCursor();
-      this.startBlink();
-    }
+    this.showCursor();
+    this.startBlink();
   }
 
   startBlink(): void {
@@ -1878,9 +1920,8 @@ export class Terminal implements Emulator {
       
       // Drop the oldest line into the scrollback buffer.
       if (this.scrollTop === 0) {
-        const oldline = this.lines[0];
-        this._scrollbackBuffer.push(oldline);
-        this._emit(Terminal.EVENT_SCROLLBACK_AVAILABLE, this);
+        const scrollbackLines = [ this.lines[0] ];
+        this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
       }
     }
 
@@ -1907,7 +1948,6 @@ export class Terminal implements Emulator {
     this.updateRange(this.scrollBottom);
   }
 
-
   scrollDisp(disp) {
     this.ydisp += disp;
 
@@ -1925,11 +1965,15 @@ export class Terminal implements Emulator {
     this._scheduleProcessWriteChunk();
   }
 
+
+  scrollToBottom() {
+    // FIXME send an event.
+  }
+
   /**
    * Schedule the write chunk process to run the next time the event loop is entered.
    */
   private _scheduleProcessWriteChunk(): void {
-    const window = this.document.defaultView;
     if (this._processWriteChunkTimer === -1) {
       this._processWriteChunkTimer = window.setTimeout(() => {
         this._processWriteChunkTimer = -1;
@@ -2691,7 +2735,7 @@ export class Terminal implements Emulator {
       case '%':
         //this.charset = null;
         this.setgLevel(0);
-        this.setgCharset(0, Terminal.charsets.US);
+        this.setgCharset(0, Emulator.charsets.US);
         this.state = STATE_NORMAL;
         i++;
         break;
@@ -2819,53 +2863,53 @@ export class Terminal implements Emulator {
     let cs;
     switch (ch) {
       case '0': // DEC Special Character and Line Drawing Set.
-        cs = Terminal.charsets.SCLD;
+        cs = Emulator.charsets.SCLD;
         break;
       case 'A': // UK
-        cs = Terminal.charsets.UK;
+        cs = Emulator.charsets.UK;
         break;
       case 'B': // United States (USASCII).
-        cs = Terminal.charsets.US;
+        cs = Emulator.charsets.US;
         break;
       case '4': // Dutch
-        cs = Terminal.charsets.Dutch;
+        cs = Emulator.charsets.Dutch;
         break;
       case 'C': // Finnish
       case '5':
-        cs = Terminal.charsets.Finnish;
+        cs = Emulator.charsets.Finnish;
         break;
       case 'R': // French
-        cs = Terminal.charsets.French;
+        cs = Emulator.charsets.French;
         break;
       case 'Q': // FrenchCanadian
-        cs = Terminal.charsets.FrenchCanadian;
+        cs = Emulator.charsets.FrenchCanadian;
         break;
       case 'K': // German
-        cs = Terminal.charsets.German;
+        cs = Emulator.charsets.German;
         break;
       case 'Y': // Italian
-        cs = Terminal.charsets.Italian;
+        cs = Emulator.charsets.Italian;
         break;
       case 'E': // NorwegianDanish
       case '6':
-        cs = Terminal.charsets.NorwegianDanish;
+        cs = Emulator.charsets.NorwegianDanish;
         break;
       case 'Z': // Spanish
-        cs = Terminal.charsets.Spanish;
+        cs = Emulator.charsets.Spanish;
         break;
       case 'H': // Swedish
       case '7':
-        cs = Terminal.charsets.Swedish;
+        cs = Emulator.charsets.Swedish;
         break;
       case '=': // Swiss
-        cs = Terminal.charsets.Swiss;
+        cs = Emulator.charsets.Swiss;
         break;
       case '/': // ISOLatin (actually /A)
-        cs = Terminal.charsets.ISOLatin;
+        cs = Emulator.charsets.ISOLatin;
         i++;
         break;
       default: // Default
-        cs = Terminal.charsets.US;
+        cs = Emulator.charsets.US;
         break;
     }
     this.setgCharset(this.gcharset, cs);
@@ -3133,7 +3177,7 @@ export class Terminal implements Emulator {
   keyDown(ev: KeyboardEvent): void {
     let key: string = null;
     let newScrollPosition: number;
-    
+console.log("term:" + ev.keyCode);    
     switch (ev.keyCode) {
       // backspace
       case 8:
@@ -3444,7 +3488,6 @@ export class Terminal implements Emulator {
   
   bell(): void {
     this._emit(BELL_EVENT, this);
-    this._domBell();
   }
 
 
@@ -3452,18 +3495,14 @@ export class Terminal implements Emulator {
     if (!this.debug) {
       return;
     }
-    if (!this.context.console || !this.context.console.log) {
-      return;
-    }
     
-    this.context.console.log.apply(this.context.console, ["[TERM=",this._termId,"] ", ...args]);
-    this.context.console.log.apply(this.context.console, ["[TERM="+this._termId+"] "+ args]);
+    console.log.apply(console, ["[TERM] ", ...args]);
+    console.log.apply(console, ["[TERM] "+ args]);
   }
 
   error(...args: string[]): void {
     if (!this.debug) return;
-    if (!this.context.console || !this.context.console.error) return;
-    this.context.console.error.apply(this.context.console, args);
+    console.error.apply(console, args);
   }
 
   size(): TerminalSize {
@@ -3477,7 +3516,7 @@ export class Terminal implements Emulator {
     // resize cols
     if (this.cols < newcols) {
       // Add chars to the lines to match the new (bigger) cols value.
-      const ch: LineCell = [Terminal.defAttr, ' ']; // does xterm use the default attr?
+      const ch: LineCell = [Emulator.defAttr, ' ']; // does xterm use the default attr?
       for (let i = this.lines.length-1; i >= 0; i--) {
         const line = this.lines[i];
         while (line.length < newcols) {
@@ -3500,7 +3539,7 @@ export class Terminal implements Emulator {
     if (this.rows < newrows) {
       // Add new rows to match the new bigger rows value.
       if ( !this.physicalScroll) {
-        const el = this.element;
+        // const el = this.element;
         for (let j = this.rows; j < newrows; j++) {
           if (this.lines.length < newrows + this.ybase) {
             this.lines.push(this.blankLine());
@@ -3541,13 +3580,6 @@ export class Terminal implements Emulator {
     this.lastReportedPhysicalHeight = this.lines.length;
     this._emit(SIZE_EVENT, this, newrows, newcols, this.lines.length);
     this.refresh(0, this.physicalScroll ? this.lines.length-1 : this.rows - 1);
-  }
-
-  private _handleSizeEvent(instance: Emulator, newRows: number, newColumns: number, realizedRows: number): void {
-    while (this.children.length > newRows) {
-      const el = this.children.pop();
-      el.parentNode.removeChild(el);
-    }
   }
 
   updateRange(y: number): void {
@@ -3636,7 +3668,7 @@ export class Terminal implements Emulator {
   }
 
   blankLine(cur?: boolean): LineCell[] {
-    const attr = cur ? this.eraseAttr() : Terminal.defAttr;
+    const attr = cur ? this.eraseAttr() : Emulator.defAttr;
     const ch: LineCell = [attr, ' '];
     
     const line: LineCell[] = [];
@@ -3648,7 +3680,7 @@ export class Terminal implements Emulator {
   }
 
   ch(cur: boolean): LineCell {
-    return cur ? [this.eraseAttr(), ' '] : [Terminal.defAttr, ' '];
+    return cur ? [this.eraseAttr(), ' '] : [Emulator.defAttr, ' '];
   }
 
   is(term: string): boolean {
@@ -3915,7 +3947,7 @@ export class Terminal implements Emulator {
   charAttributes(params: number[]): void {
     // Optimize a single SGR0.
     if (params.length === 1 && params[0] === 0) {
-      this.curAttr = Terminal.defAttr;
+      this.curAttr = Emulator.defAttr;
       return;
     }
 
@@ -3942,9 +3974,9 @@ export class Terminal implements Emulator {
         bg = p - 100;
       } else if (p === 0) {
         // default
-        flags = flagsFromCharAttr(Terminal.defAttr);
-        fg = foregroundFromCharAttr(Terminal.defAttr);
-        bg = backgroundFromCharAttr(Terminal.defAttr);
+        flags = flagsFromCharAttr(Emulator.defAttr);
+        fg = foregroundFromCharAttr(Emulator.defAttr);
+        bg = backgroundFromCharAttr(Emulator.defAttr);
         // flags = 0;
         // fg = 0x1ff;
         // bg = 0x1ff;
@@ -4013,11 +4045,11 @@ export class Terminal implements Emulator {
         
       } else if (p === 39) {
         // reset fg
-        fg = foregroundFromCharAttr(Terminal.defAttr);
+        fg = foregroundFromCharAttr(Emulator.defAttr);
 
       } else if (p === 49) {
         // reset bg
-        bg = backgroundFromCharAttr(Terminal.defAttr);
+        bg = backgroundFromCharAttr(Emulator.defAttr);
 
       } else if (p === 38) {
         // fg color 256
@@ -4051,8 +4083,8 @@ export class Terminal implements Emulator {
 
       } else if (p === 100) {
         // reset fg/bg
-        fg = foregroundFromCharAttr(Terminal.defAttr);
-        bg = backgroundFromCharAttr(Terminal.defAttr);
+        fg = foregroundFromCharAttr(Emulator.defAttr);
+        bg = backgroundFromCharAttr(Emulator.defAttr);
 
       } else {
         this.error('Unknown SGR attribute: %d.', "" + p);
@@ -4503,10 +4535,10 @@ export class Terminal implements Emulator {
           this.applicationCursor = true;
           break;
         case 2:
-          this.setgCharset(0, Terminal.charsets.US);
-          this.setgCharset(1, Terminal.charsets.US);
-          this.setgCharset(2, Terminal.charsets.US);
-          this.setgCharset(3, Terminal.charsets.US);
+          this.setgCharset(0, Emulator.charsets.US);
+          this.setgCharset(1, Emulator.charsets.US);
+          this.setgCharset(2, Emulator.charsets.US);
+          this.setgCharset(3, Emulator.charsets.US);
           // set VT100 mode here
           break;
         case 3: // 132 col mode
@@ -4901,7 +4933,7 @@ export class Terminal implements Emulator {
   repeatPrecedingCharacter(params: number[]): void {
     let param = params[0] || 1;
     const line = this._getRow(this.ybase + this.y);
-    const ch: LineCell = line[this.x - 1] || [Terminal.defAttr, ' '];
+    const ch: LineCell = line[this.x - 1] || [Emulator.defAttr, ' '];
 
     while (param--) {
       line[this.x] = ch;
@@ -4991,7 +5023,7 @@ export class Terminal implements Emulator {
     this.applicationCursor = false;
     this.scrollTop = 0;
     this.scrollBottom = this.rows - 1;
-    this.curAttr = Terminal.defAttr;
+    this.curAttr = Emulator.defAttr;
     this.x = this.y = 0; // ?
     this.charset = null;
     this.glevel = 0; // ??
@@ -5611,8 +5643,8 @@ function matchColor(r1, g1, b1) {
   var b2;
   var diff;
 
-  for (; i < Terminal.vcolors.length; i++) {
-    c = Terminal.vcolors[i];
+  for (; i < Emulator.vcolors.length; i++) {
+    c = Emulator.vcolors[i];
     r2 = c[0];
     g2 = c[1];
     b2 = c[2];

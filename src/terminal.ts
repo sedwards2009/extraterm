@@ -27,12 +27,13 @@ const debug = true;
 let startTime: number = window.performance.now();
 let registered = false;
 
-function log(...msgs: any[]): void {
+function log(message: any, ...msgOpts: any[]): void {
   if (debug) {
-    const offset = window.performance.now() - startTime;
-    const msg: string = msgs.reduce( (accu: string, value: string) => accu + value, "");
-    console.timeStamp(msg);
-    console.log(""+offset + ": " + msg);
+    // const offset = window.performance.now() - startTime;
+    // const msg: string = message + msgOpts.reduce( (accu: string, value: string) => accu + value, "");
+    console.log(message, ...msgOpts);
+    // console.timeStamp(msg);
+    // console.log(""+offset + ": " + msg);
   }
 }
 
@@ -241,7 +242,7 @@ class EtTerminal extends HTMLElement {
     });
 
     this._term.debug = true;
-    this._term.addTitleChangeEventListener(this._handleTitle.bind(this));
+    // this._term.addTitleChangeEventListener(this._handleTitle.bind(this));
     this._term.addDataEventListener(this._handleTermData.bind(this));
     
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
@@ -251,13 +252,13 @@ class EtTerminal extends HTMLElement {
     scroller.addEventListener('keydown', this._handleScrollerKeyDown.bind(this));
     scroller.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, this._handleCursorMove.bind(this));
     
-    this._term.on(termjs.Terminal.EVENT_MANUAL_SCROLL, this._handleManualScroll.bind(this));
-    this._term.on(termjs.Terminal.EVENT_SCROLLBACK_AVAILABLE, this._handleScrollbackReady.bind(this));
+    // this._term.on(termjs.Terminal.EVENT_MANUAL_SCROLL, this._handleManualScroll.bind(this));
+    // this._term.on(termjs.Terminal.EVENT_SCROLLBACK_AVAILABLE, this._handleScrollbackReady.bind(this));
     
     // Application mode handlers    
-    this._term.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
-    this._term.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
-    this._term.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
+    // this._term.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
+    // this._term.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
+    // this._term.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
   }
   
   attachedCallback(): void {
@@ -270,10 +271,10 @@ class EtTerminal extends HTMLElement {
     this._term.open(termContainer);
     this._term.element.addEventListener('keypress', this._handleKeyPressTerminal.bind(this));
     this._term.element.addEventListener('keydown', this._handleKeyDownTerminal.bind(this));
-    this._term.on(termjs.Terminal.EVENT_WHEEL, this._handleTermWheel.bind(this));
+    // this._term.on(termjs.Terminal.EVENT_WHEEL, this._handleTermWheel.bind(this));
     
-    termContainer.addEventListener('mousedown', this._handleMouseDownTermOnCapture.bind(this), true);
-    termContainer.addEventListener('mousedown', this._handleMouseDownTerm.bind(this));
+    // termContainer.addEventListener('mousedown', this._handleMouseDownTermOnCapture.bind(this), true);
+    // termContainer.addEventListener('mousedown', this._handleMouseDownTerm.bind(this));
     
     this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     
@@ -561,6 +562,7 @@ class EtTerminal extends HTMLElement {
    * [_refreshScroll description]
    */
   private _refreshScroll(): void {
+    console.log("*** _refreshScroll()");
     this._scrollTo(this._scrollYOffset);
   }
   
@@ -573,7 +575,7 @@ class EtTerminal extends HTMLElement {
     if (this._terminalSize === null) {
       return;
     }
-log("*************************************** _scrollTo( ", requestedY);
+log("*************************************** _scrollTo: ", requestedY);
     const viewPortHeight = this._terminalSize.height;
 
     // Compute the virtual height of the terminal contents.
@@ -627,7 +629,7 @@ log("*************************************** _scrollTo( ", requestedY);
 
       if (pos <= currentScrollHeight + virtualYBase) {
         const scrollOffset = Math.max(0, pos - virtualYBase);
-log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
+// log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
         if (heightInfo.element !== null) {
           heightInfo.element.scrollTo(0, scrollOffset);
         }
@@ -640,13 +642,13 @@ log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYB
         if (heightInfo.element !== null) {
           heightInfo.element.scrollTo(0, currentScrollHeight);
         }
-log(`2. heightInfo ${i}, element scrollTo=${currentScrollHeight}, el.scrollTop=${realYBase + pos - virtualYBase - currentScrollHeight}`);
+// log(`2. heightInfo ${i}, element scrollTo=${currentScrollHeight}, el.scrollTop=${realYBase + pos - virtualYBase - currentScrollHeight}`);
         if (pos >= virtualYBase) {
           el.scrollTop = realYBase + pos - virtualYBase - currentScrollHeight;
         }
       } else {
         if (heightInfo.element !== null) {
-log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
+// log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
           heightInfo.element.scrollTo(0, currentScrollHeight);
         }
       }
@@ -714,8 +716,8 @@ log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
    * Synchronize the scrollbar with the term.
    */
   private _syncScrollingExec(): void {
-log("_syncScrollingExec");
-log("this._virtualHeight:", this._virtualHeight);
+// log("_syncScrollingExec");
+// log("this._virtualHeight:", this._virtualHeight);
     this._scrollSyncLaterHandle = null;
     
     const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
@@ -890,7 +892,7 @@ log("_importScrollback");
   }
 
   private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
-    const defAttr = termjs.Terminal.defAttr;
+    const defAttr = termjs.Emulator.defAttr;
     let attr = defAttr;
     let lineLength = line.length;
     let text = '';
@@ -1010,20 +1012,20 @@ log("_importScrollback");
   private _handleScrollerKeyDown(ev: KeyboardEvent): void {
     // log("scroller keydown:", ev);
     
-    switch (this._mode) {
-      case Mode.KEYBOARD_SELECTION:
-        if (ev.keyCode === 27) {
-          this._exitSelectionMode();
-        }
-        break;
-        
-      case Mode.MOUSE_SELECTION:
-        this._exitSelectionMode();
-        break;
-
-      case Mode.TERM:
-        break;
-    }
+    // switch (this._mode) {
+    //   case Mode.KEYBOARD_SELECTION:
+    //     if (ev.keyCode === 27) {
+    //       this._exitSelectionMode();
+    //     }
+    //     break;
+    //     
+    //   case Mode.MOUSE_SELECTION:
+    //     this._exitSelectionMode();
+    //     break;
+    // 
+    //   case Mode.TERM:
+    //     break;
+    // }
   }
 
   private _handleStyleLoad(): void {
@@ -1053,18 +1055,20 @@ log("_importScrollback");
       // page down
       this._scrollTo(this._scrollYOffset + this._terminalSize.height / 2);
       
-    } else if (ev.keyCode === 32 && ev.ctrlKey) {
-      // Ctrl + Space
-      this._enterSelectionMode(Mode.KEYBOARD_SELECTION);
+    // } else if (ev.keyCode === 32 && ev.ctrlKey) {
+    //   // Ctrl + Space
+    //   this._enterSelectionMode(Mode.KEYBOARD_SELECTION);
       
     } else {
+      // log("keyDown: ", ev);
+      
       return;
     }
     ev.stopPropagation();
   }
   
   private _handleKeyPressTerminal(ev: KeyboardEvent): void {
-    this._term.keyPress(ev);
+    // this._term.keyPress(ev);
   }
 
   private _handleKeyDownTerminal(ev: KeyboardEvent): void {
@@ -1124,9 +1128,9 @@ log("_importScrollback");
     //     return;
     //   }
     // }
-    if (this._mode === Mode.TERM) {
-      this._term.keyDown(ev);
-    }
+    // if (this._mode === Mode.TERM) {
+    //   this._term.keyDown(ev);
+    // }
   }
 
   private _handleMouseDownTermOnCapture(ev: MouseEvent): void {
@@ -1137,16 +1141,16 @@ log("_importScrollback");
     }
   }
   
-  private _handleMouseDownTerm(ev: MouseEvent): void {  
-    if (this._mode === Mode.TERM) {
-      const pos = this._term.getTerminalCoordsFromEvent(ev);
-      if (pos !== null) {
-        this._enterSelectionModeMouse(ev);
-        ev.stopPropagation();
-        ev.preventDefault();
-      }
-    }
-  }
+  // private _handleMouseDownTerm(ev: MouseEvent): void {  
+  //   if (this._mode === Mode.TERM) {
+  //     const pos = this._term.getTerminalCoordsFromEvent(ev);
+  //     if (pos !== null) {
+  //       this._enterSelectionModeMouse(ev);
+  //       ev.stopPropagation();
+  //       ev.preventDefault();
+  //     }
+  //   }
+  // }
   
   // ********************************************************************
   //
@@ -1230,65 +1234,67 @@ console.log("_processScheduled update cursor");
   //
   // ********************************************************************
   
-  private _enterSelectionMode(newMode: Mode): void {
-console.log("_enterSelectionMode (enter)");
-    this._mode = newMode;
-    
-    const scroller = util.getShadowId(this, ID_SCROLLER);
-    scroller.classList.add(CLASS_SELECTION_MODE);
-    
-    // Copy the current screen lines into the scrollback code mirror.
-    const {text: allText, decorations: allDecorations} = this._linesToTextStyles(this._term.getScreenLines(true));
-    const scrollbackCodeMirror = this._getScrollBackCodeMirror();
-    scrollbackCodeMirror.processKeyboard = newMode === Mode.KEYBOARD_SELECTION;
-    
-    this._selectionPreviousLineCount = scrollbackCodeMirror.lineCount();
-    
-    scrollbackCodeMirror.appendText(allText, allDecorations);
-
-    const cursorInfo = this._term.getDimensions();
-    scrollbackCodeMirror.refresh();
-    
-    if (newMode === Mode.KEYBOARD_SELECTION) {
-      scrollbackCodeMirror.setCursor(this._selectionPreviousLineCount + cursorInfo.cursorY, cursorInfo.cursorX);
-      scrollbackCodeMirror.focus();
-    }
-    
-    util.doLater( () => {
-      // This is absoletely needed to fix the annoying problem when one of the DIVs in the codemirror
-      // viewer is scrolled down and exposes empty space even though it should never scroll.
-      scrollbackCodeMirror.refresh();
-    });
-    
-    this._refreshScroll();
-  }
+//   private _enterSelectionMode(newMode: Mode): void {
+// console.log("_enterSelectionMode (enter)");
+//     this._mode = newMode;
+//     
+//     const scroller = util.getShadowId(this, ID_SCROLLER);
+//     scroller.classList.add(CLASS_SELECTION_MODE);
+//     
+//     // Copy the current screen lines into the scrollback code mirror.
+//     const {text: allText, decorations: allDecorations} = this._linesToTextStyles(this._term.getScreenLines(true));
+//     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
+//     scrollbackCodeMirror.processKeyboard = newMode === Mode.KEYBOARD_SELECTION;
+//     
+//     this._selectionPreviousLineCount = scrollbackCodeMirror.lineCount();
+//     
+//     scrollbackCodeMirror.appendText(allText, allDecorations);
+// 
+//     const cursorInfo = this._term.getDimensions();
+//     scrollbackCodeMirror.refresh();
+//     
+//     if (newMode === Mode.KEYBOARD_SELECTION) {
+//       scrollbackCodeMirror.setCursor(this._selectionPreviousLineCount + cursorInfo.cursorY, cursorInfo.cursorX);
+//       scrollbackCodeMirror.focus();
+//     }
+//     
+//     util.doLater( () => {
+//       // This is absoletely needed to fix the annoying problem when one of the DIVs in the codemirror
+//       // viewer is scrolled down and exposes empty space even though it should never scroll.
+//       scrollbackCodeMirror.refresh();
+//     });
+//     
+//     this._refreshScroll();
+// console.log("_enterSelectionMode (exit)");
+//   }
   
-  private _enterSelectionModeMouse(ev: MouseEvent): void {
-    const pos = this._term.getTerminalCoordsFromEvent(ev);
-    if (pos === null) {
-      return;
-    }
-    this._enterSelectionMode(Mode.MOUSE_SELECTION);
-
-    const scrollbackCodeMirror = this._getScrollBackCodeMirror();
-    scrollbackCodeMirror.fakeMouseDown(ev);
-  }
+  // private _enterSelectionModeMouse(ev: MouseEvent): void {
+  //   const pos = this._term.getTerminalCoordsFromEvent(ev);
+  //   if (pos === null) {
+  //     return;
+  //   }
+  //   this._enterSelectionMode(Mode.MOUSE_SELECTION);
+  // 
+  //   const scrollbackCodeMirror = this._getScrollBackCodeMirror();
+  //   scrollbackCodeMirror.fakeMouseDown(ev);
+  // }
   
-  private _exitSelectionMode(): void {
-console.log("_exitSelectionMode (enter)");
-    
-    this._mode = Mode.TERM;
-    
-    const scrollbackCodeMirror = this._getScrollBackCodeMirror();
-    scrollbackCodeMirror.deleteLinesFrom(this._selectionPreviousLineCount);
-    
-    const scroller = util.getShadowId(this, ID_SCROLLER);
-    scroller.classList.remove(CLASS_SELECTION_MODE);
-    
-    this._term.focus();
-    this._refreshScroll();
-    this._handleScrollbackReady();
-  }
+//   private _exitSelectionMode(): void {
+// console.log("_exitSelectionMode (enter)");
+//     
+//     this._mode = Mode.TERM;
+//     
+//     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
+//     scrollbackCodeMirror.deleteLinesFrom(this._selectionPreviousLineCount);
+//     
+//     const scroller = util.getShadowId(this, ID_SCROLLER);
+//     scroller.classList.remove(CLASS_SELECTION_MODE);
+//     
+//     this._term.focus();
+//     this._refreshScroll();
+//     this._handleScrollbackReady();
+// console.log("_exitSelectionMode (enter)");
+//   }
 
   /* ******************************************************************** */
   
@@ -1298,138 +1304,138 @@ console.log("_exitSelectionMode (enter)");
    * @param {array} params The list of parameter which were specified in the
    *     escape sequence.
    */
-  private _handleApplicationModeStart(emulator: termjs.Emulator, params: string[]): void {
-    log("application-mode started! ",params);
-    
-    // FIXME check cookie!
-
-    if (params.length === 1) {
-      // Normal HTML mode.
-      this._applicationMode = ApplicationMode.APPLICATION_MODE_HTML;
-
-    } else if(params.length >= 2) {
-      switch ("" + params[1]) {
-        case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
-          this._bracketStyle = params[2];
-          break;
-
-        case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
-          log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
-          break;
-          
-        case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
-          this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
-          log("Starting APPLICATION_MODE_REQUEST_FRAME");
-          break;
-          
-        case "" + ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-          log("Starting APPLICATION_MODE_SHOW_MIME");
-          this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_MIME;
-          this._mimeData = "";
-          this._mimeType = params[2];
-          break;
-        
-        default:
-          log("Unrecognized application escape parameters.");
-          break;
-      }
-    }
-    this._htmlData = "";
-  }
+  // private _handleApplicationModeStart(emulator: termjs.Emulator, params: string[]): void {
+  //   log("application-mode started! ",params);
+  //   
+  //   // FIXME check cookie!
+  // 
+  //   if (params.length === 1) {
+  //     // Normal HTML mode.
+  //     this._applicationMode = ApplicationMode.APPLICATION_MODE_HTML;
+  // 
+  //   } else if(params.length >= 2) {
+  //     switch ("" + params[1]) {
+  //       case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+  //         this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
+  //         this._bracketStyle = params[2];
+  //         break;
+  // 
+  //       case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+  //         this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
+  //         log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
+  //         break;
+  //         
+  //       case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
+  //         this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
+  //         log("Starting APPLICATION_MODE_REQUEST_FRAME");
+  //         break;
+  //         
+  //       case "" + ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+  //         log("Starting APPLICATION_MODE_SHOW_MIME");
+  //         this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_MIME;
+  //         this._mimeData = "";
+  //         this._mimeType = params[2];
+  //         break;
+  //       
+  //       default:
+  //         log("Unrecognized application escape parameters.");
+  //         break;
+  //     }
+  //   }
+  //   this._htmlData = "";
+  // }
 
   /**
    * Handle incoming data while in application mode.
    * 
    * @param {string} data The new data.
    */
-  private _handleApplicationModeData(data: string): void {
-    log("html-mode data!", data);    
-    switch (this._applicationMode) {
-      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-        this._htmlData = this._htmlData + data;
-        break;
-        
-      case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-        this._mimeData = this._mimeData + data;
-        break;
-        
-      default:
-        break;
-    }
-  }
+  // private _handleApplicationModeData(data: string): void {
+  //   log("html-mode data!", data);
+  //   switch (this._applicationMode) {
+  //     case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+  //     case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+  //       this._htmlData = this._htmlData + data;
+  //       break;
+  //       
+  //     case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+  //       this._mimeData = this._mimeData + data;
+  //       break;
+  //       
+  //     default:
+  //       break;
+  //   }
+  // }
   
   /**
    * Handle the exit from application mode.
    */
-  private _handleApplicationModeEnd(): void {
-    let el: HTMLElement;
-    let startdivs: NodeList;
-    
-    switch (this._applicationMode) {
-      case ApplicationMode.APPLICATION_MODE_HTML:
-        el = this._getWindow().document.createElement("div");
-        el.innerHTML = this._htmlData;
-        this._term.appendElement(el);
-        break;
+  // private _handleApplicationModeEnd(): void {
+  //   let el: HTMLElement;
+  //   let startdivs: NodeList;
+  //   
+  //   switch (this._applicationMode) {
+  //     case ApplicationMode.APPLICATION_MODE_HTML:
+  //       el = this._getWindow().document.createElement("div");
+  //       el.innerHTML = this._htmlData;
+  //       this._term.appendElement(el);
+  //       break;
+  // 
+  //     case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+  //       this._handleApplicationModeBracketStart();
+  //       break;
+  // 
+  //     case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+  //       this._handleApplicationModeBracketEnd();
+  //       break;
+  // 
+  //     case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
+  //       this.handleRequestFrame(this._htmlData);
+  //       break;
+  //       
+  //     case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+  //       this._handleShowMimeType(this._mimeType, this._mimeData);
+  //       this._mimeType = "";
+  //       this._mimeData = "";
+  //       break;
+  //       
+  //     default:
+  //       break;
+  //   }
+  //   this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
+  // 
+  //   log("html-mode end!",this._htmlData);
+  //   this._htmlData = null;
+  // }
 
-      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-        this._handleApplicationModeBracketStart();
-        break;
-
-      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-        this._handleApplicationModeBracketEnd();
-        break;
-
-      case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
-        this.handleRequestFrame(this._htmlData);
-        break;
-        
-      case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-        this._handleShowMimeType(this._mimeType, this._mimeData);
-        this._mimeType = "";
-        this._mimeData = "";
-        break;
-        
-      default:
-        break;
-    }
-    this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
-
-    log("html-mode end!",this._htmlData);
-    this._htmlData = null;
-  }
-
-  private _handleApplicationModeBracketStart(): void {
-    const startdivs = this._term.element.querySelectorAll(
-                        EtEmbeddedViewer.TAG_NAME + ":not([return-code]), "+EtCommandPlaceHolder.TAG_NAME);
-
-    if (startdivs.length !== 0) {
-      return;  // Don't open a new frame.
-    }
-    
-    // Fetch the command line.
-    let cleancommand = this._htmlData;
-    if (this._bracketStyle === "bash") {
-      // Bash includes the history number. Remove it.
-      const trimmed = this._htmlData.trim();
-      cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
-    }
-    
-    if ( ! this._isNoFrameCommand(cleancommand)) {
-      // Create and set up a new command-frame.
-      const el = this._createEmbeddedViewerElement(cleancommand);
-      this._term.appendElement(el);
-    } else {
-            
-      // Don't place an embedded viewer, but use an invisible place holder instead.
-      const el = this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
-      el.setAttribute('command-line', cleancommand);
-      this._term.appendElement(el);
-    }
-  }
+  // private _handleApplicationModeBracketStart(): void {
+  //   const startdivs = this._term.element.querySelectorAll(
+  //                       EtEmbeddedViewer.TAG_NAME + ":not([return-code]), "+EtCommandPlaceHolder.TAG_NAME);
+  // 
+  //   if (startdivs.length !== 0) {
+  //     return;  // Don't open a new frame.
+  //   }
+  //   
+  //   // Fetch the command line.
+  //   let cleancommand = this._htmlData;
+  //   if (this._bracketStyle === "bash") {
+  //     // Bash includes the history number. Remove it.
+  //     const trimmed = this._htmlData.trim();
+  //     cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
+  //   }
+  //   
+  //   if ( ! this._isNoFrameCommand(cleancommand)) {
+  //     // Create and set up a new command-frame.
+  //     const el = this._createEmbeddedViewerElement(cleancommand);
+  //     this._term.appendElement(el);
+  //   } else {
+  //           
+  //     // Don't place an embedded viewer, but use an invisible place holder instead.
+  //     const el = this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
+  //     el.setAttribute('command-line', cleancommand);
+  //     this._term.appendElement(el);
+  //   }
+  // }
   
   private deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
     viewer.remove();
@@ -1464,64 +1470,64 @@ console.log("_exitSelectionMode (enter)");
     return el;
   }
   
-  private _handleApplicationModeBracketEnd(): void {
-    this._closeLastEmbeddedViewer(this._htmlData);    
-  }
- 
-  private _closeLastEmbeddedViewer(returnCode: string): void {
-    const startElement = this._term.element.querySelectorAll(
-                          EtEmbeddedViewer.TAG_NAME + ":not([return-code]), " + EtCommandPlaceHolder.TAG_NAME);
-
-    if (startElement.length !== 0) {
-      let embeddedSomethingElement = <HTMLElement>startElement[startElement.length-1];
-      let embeddedViewerElement: EtEmbeddedViewer = null;
-      if (embeddedSomethingElement instanceof EtCommandPlaceHolder) {
-        // There is a place holder and not an embedded viewer.
-        if (returnCode === "0") {
-          // The command returned successful, just remove the place holder and that is it.
-          embeddedSomethingElement.parentNode.removeChild(embeddedSomethingElement);
-          return;
-        } else {
-          // The command went wrong. Replace the place holder with a real viewer
-          // element and pretend that we had done this when the command started running.
-          const newViewerElement = this._createEmbeddedViewerElement(embeddedSomethingElement.getAttribute("command-line"));
-          embeddedSomethingElement.parentNode.replaceChild(newViewerElement, embeddedSomethingElement);
-          embeddedViewerElement = newViewerElement;
-        }
-      } else {
-        embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
-      }
-      
-      this._term.moveRowsToScrollback();        
-      let node = embeddedViewerElement.nextSibling;
-
-      // Collect the DIVs in the scrollback from the EtEmbeddedViewer up to the end of the scrollback.
-      const nodelist: Node[] = [];
-      while (node !== null) {
-        if (node.nodeName !== "DIV" || ! (<HTMLElement> node).classList.contains("terminal-active")) {
-          nodelist.push(node);
-        }
-        node = node.nextSibling;
-      }
-      
-      // Create a terminal viewer and fill it with the row DIVs.
-      // const terminalViewerElement = <EtTerminalViewer> this._getWindow().document.createElement(EtTerminalViewer.TAG_NAME);
-      const terminalViewerElement = <EtCodeMirrorViewer> this._getWindow().document.createElement(EtCodeMirrorViewer.TAG_NAME);
-      terminalViewerElement.themeCssPath = this._themeCssPath;
-      terminalViewerElement.returnCode = returnCode;
-      terminalViewerElement.commandLine = embeddedViewerElement.getAttribute("command-line");
-      
-      // Move the row DIVs into their new home.
-      nodelist.forEach(function(node) {
-        terminalViewerElement.appendChild(node);
-      });
-      // Hang the terminal viewer under the Embedded viewer.
-      embeddedViewerElement.appendChild(terminalViewerElement);
-      
-      embeddedViewerElement.setAttribute('return-code', returnCode);
-      embeddedViewerElement.className = "extraterm_output";
-    }
-  }
+  // private _handleApplicationModeBracketEnd(): void {
+  //   this._closeLastEmbeddedViewer(this._htmlData);    
+  // }
+  // 
+  // private _closeLastEmbeddedViewer(returnCode: string): void {
+  //   const startElement = this._term.element.querySelectorAll(
+  //                         EtEmbeddedViewer.TAG_NAME + ":not([return-code]), " + EtCommandPlaceHolder.TAG_NAME);
+  // 
+  //   if (startElement.length !== 0) {
+  //     let embeddedSomethingElement = <HTMLElement>startElement[startElement.length-1];
+  //     let embeddedViewerElement: EtEmbeddedViewer = null;
+  //     if (embeddedSomethingElement instanceof EtCommandPlaceHolder) {
+  //       // There is a place holder and not an embedded viewer.
+  //       if (returnCode === "0") {
+  //         // The command returned successful, just remove the place holder and that is it.
+  //         embeddedSomethingElement.parentNode.removeChild(embeddedSomethingElement);
+  //         return;
+  //       } else {
+  //         // The command went wrong. Replace the place holder with a real viewer
+  //         // element and pretend that we had done this when the command started running.
+  //         const newViewerElement = this._createEmbeddedViewerElement(embeddedSomethingElement.getAttribute("command-line"));
+  //         embeddedSomethingElement.parentNode.replaceChild(newViewerElement, embeddedSomethingElement);
+  //         embeddedViewerElement = newViewerElement;
+  //       }
+  //     } else {
+  //       embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
+  //     }
+  //     
+  //     this._term.moveRowsToScrollback();        
+  //     let node = embeddedViewerElement.nextSibling;
+  // 
+  //     // Collect the DIVs in the scrollback from the EtEmbeddedViewer up to the end of the scrollback.
+  //     const nodelist: Node[] = [];
+  //     while (node !== null) {
+  //       if (node.nodeName !== "DIV" || ! (<HTMLElement> node).classList.contains("terminal-active")) {
+  //         nodelist.push(node);
+  //       }
+  //       node = node.nextSibling;
+  //     }
+  //     
+  //     // Create a terminal viewer and fill it with the row DIVs.
+  //     // const terminalViewerElement = <EtTerminalViewer> this._getWindow().document.createElement(EtTerminalViewer.TAG_NAME);
+  //     const terminalViewerElement = <EtCodeMirrorViewer> this._getWindow().document.createElement(EtCodeMirrorViewer.TAG_NAME);
+  //     terminalViewerElement.themeCssPath = this._themeCssPath;
+  //     terminalViewerElement.returnCode = returnCode;
+  //     terminalViewerElement.commandLine = embeddedViewerElement.getAttribute("command-line");
+  //     
+  //     // Move the row DIVs into their new home.
+  //     nodelist.forEach(function(node) {
+  //       terminalViewerElement.appendChild(node);
+  //     });
+  //     // Hang the terminal viewer under the Embedded viewer.
+  //     embeddedViewerElement.appendChild(terminalViewerElement);
+  //     
+  //     embeddedViewerElement.setAttribute('return-code', returnCode);
+  //     embeddedViewerElement.className = "extraterm_output";
+  //   }
+  // }
 
   /**
    * Copy the selection to the clipboard.
@@ -1587,6 +1593,7 @@ console.log("_exitSelectionMode (enter)");
    * @param {string} data The data to process.
    */
   private _handleTermData(emulator: termjs.Emulator, data: string): void {
+console.log("_handleTermData !!");
     this._sendDataToPtyEvent(data);
   }
 
@@ -1639,15 +1646,15 @@ console.log("_exitSelectionMode (enter)");
     }
   }
 
-  private _handleShowMimeType(mimeType: string, mimeData: string): void {
-    const mimeViewerElement = this._createMimeViewer(mimeType, mimeData);
-    if (mimeViewerElement !== null) {
-      this._closeLastEmbeddedViewer("0");
-      const viewerElement = this._createEmbeddedViewerElement("viewer");
-      viewerElement.viewerElement = mimeViewerElement;
-      this._term.appendElement(viewerElement);
-    }
-  }
+  // private _handleShowMimeType(mimeType: string, mimeData: string): void {
+  //   const mimeViewerElement = this._createMimeViewer(mimeType, mimeData);
+  //   if (mimeViewerElement !== null) {
+  //     this._closeLastEmbeddedViewer("0");
+  //     const viewerElement = this._createEmbeddedViewerElement("viewer");
+  //     viewerElement.viewerElement = mimeViewerElement;
+  //     this._term.appendElement(viewerElement);
+  //   }
+  // }
 
   private _createMimeViewer(mimeType: string, mimeData: string): ViewerElement {
     if (mimeType === "text/markdown") {
