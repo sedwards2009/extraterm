@@ -43,7 +43,6 @@ const SEMANTIC_TYPE = "data-extraterm-type";
 const SEMANTIC_VALUE = "data-extraterm-value";
 const ID_TERM_CONTAINER = "term_container";
 const ID_SCROLLER = "scroller";
-const ID_SCROLLBACK = "scrollback_container";
 const ID_SCROLLBAR = "scrollbar";
 const ID_CONTAINER = "terminal_container";
 const ID_MAIN_STYLE = "main_style";
@@ -110,7 +109,6 @@ class EtTerminal extends HTMLElement {
       CbScrollbar.init();
       EtEmbeddedViewer.init();
       EtCommandPlaceHolder.init();
-      // EtTerminalViewer.init();
       EtCodeMirrorViewer.init();
       EtMarkdownViewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
@@ -123,14 +121,14 @@ class EtTerminal extends HTMLElement {
   private _scrollSyncLaterHandle: util.LaterHandle;
   private _autoscroll: boolean;
   
-  private _scrollbackCodeMirror: EtCodeMirrorViewer;
+  private _codeMirrorTerminal: EtCodeMirrorViewer;
   private _terminalSize: ClientRect;
   private _scrollYOffset: number; // The Y scroll offset into the virtual height.
   private _virtualHeight: number; // The virtual height of the terminal contents in px.
   private _vpad: number;
   private _lastViewPortTop: WeakMap<EtCodeMirrorViewer, number>;
   
-  private _term: termjs.Terminal;
+  private _emulator: termjs.Emulator;
   private _htmlData: string;
   
   private _mimeType: string;
@@ -163,8 +161,8 @@ class EtTerminal extends HTMLElement {
     this._elementAttached = false;
     this._scrollSyncLaterHandle = null;
     this._autoscroll = true;
-    this._term = null;
-    this._scrollbackCodeMirror = null;
+    this._emulator = null;
+    this._codeMirrorTerminal = null;
     this._htmlData = null;
     this._mimeType = null;
     this._mimeData = null;
@@ -213,27 +211,26 @@ class EtTerminal extends HTMLElement {
     const clone = this._createClone();
     shadow.appendChild(clone);
 
-    util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
-      this._mainStyleLoaded = true;
-      this._handleStyleLoad();
-    });
-
-    util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', () => {
-      this._themeStyleLoaded = true;
-      this._handleStyleLoad();
-      });
+    // util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
+    //   this._mainStyleLoaded = true;
+    //   this._handleStyleLoad();
+    // });
+    // 
+    // util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', () => {
+    //   this._themeStyleLoaded = true;
+    //   this._handleStyleLoad();
+    //   });
 
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
     const termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
     const scroller = util.getShadowId(this, ID_SCROLLER);
-    const scrollback = util.getShadowId(this, ID_SCROLLBACK);
     
     const cookie = crypto.randomBytes(10).toString('hex');
     
     process.env[EXTRATERM_COOKIE_ENV] = cookie;
 
-    this._term = new termjs.Terminal({
+    this._emulator = new termjs.Emulator({
       scrollback: 1000,
       cursorBlink: this._blinkingCursor,
       physicalScroll: true,
@@ -241,16 +238,25 @@ class EtTerminal extends HTMLElement {
       debug: true
     });
 
-    this._term.debug = true;
-    // this._term.addTitleChangeEventListener(this._handleTitle.bind(this));
-    this._term.addDataEventListener(this._handleTermData.bind(this));
+    this._emulator.debug = true;
+    this._emulator.addTitleChangeEventListener(this._handleTitle.bind(this));
+    this._emulator.addDataEventListener(this._handleTermData.bind(this));
+    this._emulator.addSizeEventListener(this._handleTermSize.bind(this));
     
+    // Create the CodeMirrorTerminal
+    this._codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
+    if (this._terminalSize !== null && this._terminalSize.height !== null) {
+      this._codeMirrorTerminal.setMaxHeight(this._terminalSize.height);
+    }
+    util.getShadowId(this, ID_TERM_CONTAINER).appendChild(this._codeMirrorTerminal);
+    this._codeMirrorTerminal.emulator = this._emulator;
+
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
-    termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
-    scroller.addEventListener('wheel', this._handleTermWheel.bind(this));
-    scroller.addEventListener('keydown', this._handleScrollerKeyDown.bind(this));
-    scroller.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, this._handleCursorMove.bind(this));
+    // termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
+    // scroller.addEventListener('wheel', this._handleTermWheel.bind(this));
+    // scroller.addEventListener('keydown', this._handleScrollerKeyDown.bind(this));
+    // scroller.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, this._handleCursorMove.bind(this));
     
     // this._term.on(termjs.Terminal.EVENT_MANUAL_SCROLL, this._handleManualScroll.bind(this));
     // this._term.on(termjs.Terminal.EVENT_SCROLLBACK_AVAILABLE, this._handleScrollbackReady.bind(this));
@@ -268,15 +274,10 @@ class EtTerminal extends HTMLElement {
     this._elementAttached = true;
     
     const termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
-    this._term.open(termContainer);
-    this._term.element.addEventListener('keypress', this._handleKeyPressTerminal.bind(this));
-    this._term.element.addEventListener('keydown', this._handleKeyDownTerminal.bind(this));
-    // this._term.on(termjs.Terminal.EVENT_WHEEL, this._handleTermWheel.bind(this));
-    
     // termContainer.addEventListener('mousedown', this._handleMouseDownTermOnCapture.bind(this), true);
     // termContainer.addEventListener('mousedown', this._handleMouseDownTerm.bind(this));
     
-    this._term.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
+    this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     
     const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
     scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
@@ -295,10 +296,10 @@ class EtTerminal extends HTMLElement {
    * True means the cursor should blink, otherwise it doesn't.
    */
   set blinkingCursor(blink: boolean) {
-    this._blinkingCursor = blink;
-    if (this._term !== null) {
-      this._term.setCursorBlink(blink);
-    }
+    // this._blinkingCursor = blink;
+    // if (this._term !== null) {
+    //   this._term.setCursorBlink(blink);
+    // }
   }
   
   set themeCssPath(path: string) {
@@ -348,20 +349,18 @@ class EtTerminal extends HTMLElement {
       this._resizePollHandle = null;
     }
 
-    if (this._term !== null) {
-      this._getWindow().removeEventListener('resize', this._scheduleResize.bind(this));
-      this._term.destroy();
+    this._getWindow().removeEventListener('resize', this._scheduleResize.bind(this));
+    if (this._emulator !== null) {
+      this._emulator.destroy();
     }
-    this._term = null;
+    this._emulator = null;
   }
 
   /**
    * Focus on this terminal.
    */
   focus(): void {
-    if (this._term !== null) {
-      this._term.focus();
-    }
+    this._codeMirrorTerminal.focus();
   }
   
   /**
@@ -370,7 +369,7 @@ class EtTerminal extends HTMLElement {
    * @return true if the terminal has the focus.
    */
   hasFocus(): boolean {
-    return this._term === null ? false : this._term.hasFocus();
+    return this._codeMirrorTerminal.hasFocus();
   }
   
   /**
@@ -379,10 +378,8 @@ class EtTerminal extends HTMLElement {
    * @param text the stream of data to write.
    */
   write(text: string): void {
-    if (this._term !== null) {
-      this._term.write(text);
-      this._syncScrolling();
-    }
+    this._emulator.write(text);
+    this._syncScrolling();
   }
   
   /**
@@ -390,9 +387,7 @@ class EtTerminal extends HTMLElement {
    * @param text the data to send.
    */
   send(text: string): void {
-    if (this._term !== null) {
-      this._sendDataToPtyEvent(text);
-    }
+    this._sendDataToPtyEvent(text);
   }
     
   resizeToContainer(): void {
@@ -471,10 +466,6 @@ class EtTerminal extends HTMLElement {
             margin-right: 2px;
         }
         
-        #${ID_SCROLLER}.${CLASS_SELECTION_MODE} > #${ID_SCROLLBACK} {
-          
-        }
-        
         #${ID_SCROLLER}.${CLASS_SELECTION_MODE} > #${ID_TERM_CONTAINER} {
           display: none;
         }
@@ -493,7 +484,6 @@ class EtTerminal extends HTMLElement {
         <style id="${ID_THEME_STYLE}"></style>
         <div id='${ID_CONTAINER}' class='terminal_container'>
           <div id='${ID_SCROLLER}'>
-            <div id='${ID_SCROLLBACK}' class='terminal-scrollback terminal'></div>
             <div id='${ID_TERM_CONTAINER}' class='term_container'></div>
             <div id='${ID_VPAD}' class='terminal'></div>
           </div>
@@ -670,18 +660,10 @@ log("*************************************** _scrollTo: ", requestedY);
   private _getVirtualHeights(): VirtualHeight[] {
     // Assemble the interesting boxes.
     const heights: VirtualHeight[] = [];
-    if (this._scrollbackCodeMirror !== null) {
-      heights.push( { realHeight: this._scrollbackCodeMirror.getHeight(),
-        virtualHeight: this._scrollbackCodeMirror.getVirtualHeight(),
-        element: this._scrollbackCodeMirror } );
-    }
-    
-    // Include the term part only if we are not in selection mode.
-    if ( this._mode === Mode.TERM) {
-      const termRect = this._term.element.getBoundingClientRect();
-      heights.push( { realHeight: termRect.height, virtualHeight: termRect.height, element: null } );
-    } else {
-      heights.push( { realHeight: this._vpad, virtualHeight: this._vpad, element: null } );
+    if (this._codeMirrorTerminal !== null) {
+      heights.push( { realHeight: this._codeMirrorTerminal.getHeight(),
+        virtualHeight: this._codeMirrorTerminal.getVirtualHeight(),
+        element: this._codeMirrorTerminal } );
     }
     return heights;
   }
@@ -736,16 +718,6 @@ log("*************************************** _scrollTo: ", requestedY);
    * Handle a resize event from the window.
    */
   private _processResize(): void {
-    if (this._term !== null) {
-      if (this._mainStyleLoaded && this._themeStyleLoaded) {
-        const size = this._term.resizeToContainer();
-        const vpadElement = util.getShadowId(this, ID_VPAD);
-        this._vpad = size.vpad;
-        vpadElement.style.height = "" + size.vpad + "px";
-        this._sendResizeEvent(size.cols, size.rows);
-      }
-    }
-    
     // Get the new size of the terminal.
     const newTerminalSize = this.getBoundingClientRect();
     if (this._terminalSize !== null &&
@@ -758,252 +730,133 @@ log("bound height=",newTerminalSize.height);
 
     // Propagate the new terminal height to the different components in inside the terminal scrollback DIV.
     this._terminalSize = newTerminalSize;
-    const scrollback = util.getShadowId(this, ID_SCROLLBACK);
+    const scrollback = util.getShadowId(this, ID_TERM_CONTAINER);
     const height = this._terminalSize.height;
     util.nodeListToArray(scrollback.childNodes).forEach( (node: Node): void => {
       if (EtCodeMirrorViewer.is(node)) {
         node.setMaxHeight(height);
       }
     });
+
+    if (this._codeMirrorTerminal !== null) {
+      if (this._mainStyleLoaded && this._themeStyleLoaded) {
+        const size = this._codeMirrorTerminal.resizeToContainer();
+        const vpadElement = util.getShadowId(this, ID_VPAD);
+        this._vpad = size.vpad;
+        vpadElement.style.height = "" + size.vpad + "px";
+      }
+    }
     
     this._syncScrolling();
   }
   
-  private _resizePoll(): void {
-    if (this._term !== null && this._mainStyleLoaded && this._themeStyleLoaded) {
-      if (this._term.effectiveFontFamily().indexOf(termjs.Terminal.NO_STYLE_HACK) !== -1) {
-        // Font has not been correctly applied yet.
-        this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
-      } else {
-        // Yay! the font is correct. Resize the term soon.
-        this._scheduleResize.bind(this);
-      }
-    }
-  }
+  // private _resizePoll(): void {
+  //   if (this._codeMirrorTerminal !== null && this._mainStyleLoaded && this._themeStyleLoaded) {
+  //     if ( ! this._codeMirrorTerminal.isFontLoaded()) {
+  //       // Font has not been correctly applied yet.
+  //       this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
+  //     } else {
+  //       // Yay! the font is correct. Resize the term soon.
+  //       this._scheduleResize.bind(this);
+  //     }
+  //   }
+  // }
 
   private _handleCursorMove(ev: CustomEvent): void {
     this._scheduleCursorMoveUpdate(<EtCodeMirrorViewer> ev.target);
   }
   
-  private _updateCursorAction(cmv: EtCodeMirrorViewer): void {
-    console.log("_handleCursorMove (start)");
-    if (this._mode === Mode.TERM) {
-      console.log("_handleCursorMove not in selection mode (exit)");
-      return;
-    }
-    
-    // Autocopy to clipboard when in Mode.MOUSE_SELECTION
-    if (this._mode === Mode.MOUSE_SELECTION) {
-      this.copyToClipboard();
-    }
-    
-    const detail: CursorMoveDetail = cmv.getCursorInfo();
-    
-    console.log("_handleCursorMove detail.top: ", detail.top);
-    console.log("_handleCursorMove detail.bottom: ", detail.bottom);
-    console.log("_handleCursorMove detail.viewPortTop: ", detail.viewPortTop);
-
-    const heightsList = this._getVirtualHeights();
-    const totalHeight = this._totalVirtualHeight(heightsList);
-    
-console.log("_handleCursorMove this._scrollYOffset:",  this._scrollYOffset);
-    
-    const topYOffset = this._virtualYOffset(heightsList, cmv, detail.top);
-console.log("_handleCursorMove topYOffset:", topYOffset);
-    if (topYOffset < this._scrollYOffset) {
-console.log("_handleCursorMove topYOffset is smaller, scrolling");
-      this._scrollTo(topYOffset);
-    } else {
-      const bottomYOffset = topYOffset + detail.bottom - detail.top;
-      const scrollBottomYOffset = this._scrollYOffset + this._terminalSize.height;
-      if (bottomYOffset > scrollBottomYOffset) {
-console.log("_handleCursorMove bottomYOffset too small, scrolling");
-      
-console.log("_handleCursorMove topYOffset + bottomYOffset - scrollBottomYOffset:",
-  topYOffset + bottomYOffset - scrollBottomYOffset);
-        
-        this._scrollTo(bottomYOffset - this._terminalSize.height);
-      } else {
-console.log("_handleCursorMove (do nothing)");
-        if (this._lastViewPortTop.has(cmv)) {
-          const oldViewPortTop = this._lastViewPortTop.get(cmv);
-console.log("_handleCursorMove oldViewPortTop: ",oldViewPortTop);
-          
-          if (oldViewPortTop !== detail.viewPortTop) {
-console.log("_handleCursorMove scroll to new viewPortTop: ",detail.viewPortTop);
-            this._scrollTo(detail.viewPortTop);
-          }
-        }
-console.log("_handleCursorMove setting new viewPortTop: ",detail.viewPortTop);
-        this._lastViewPortTop.set(cmv, detail.viewPortTop);
-      }
-    }
-console.log("_handleCursorMove (exit)");
-  }
+//   private _updateCursorAction(cmv: EtCodeMirrorViewer): void {
+//     console.log("_handleCursorMove (start)");
+//     if (this._mode === Mode.TERM) {
+//       console.log("_handleCursorMove not in selection mode (exit)");
+//       return;
+//     }
+//     
+//     // Autocopy to clipboard when in Mode.MOUSE_SELECTION
+//     if (this._mode === Mode.MOUSE_SELECTION) {
+//       this.copyToClipboard();
+//     }
+//     
+//     const detail: CursorMoveDetail = cmv.getCursorInfo();
+//     
+//     console.log("_handleCursorMove detail.top: ", detail.top);
+//     console.log("_handleCursorMove detail.bottom: ", detail.bottom);
+//     console.log("_handleCursorMove detail.viewPortTop: ", detail.viewPortTop);
+// 
+//     const heightsList = this._getVirtualHeights();
+//     const totalHeight = this._totalVirtualHeight(heightsList);
+//     
+// console.log("_handleCursorMove this._scrollYOffset:",  this._scrollYOffset);
+//     
+//     const topYOffset = this._virtualYOffset(heightsList, cmv, detail.top);
+// console.log("_handleCursorMove topYOffset:", topYOffset);
+//     if (topYOffset < this._scrollYOffset) {
+// console.log("_handleCursorMove topYOffset is smaller, scrolling");
+//       this._scrollTo(topYOffset);
+//     } else {
+//       const bottomYOffset = topYOffset + detail.bottom - detail.top;
+//       const scrollBottomYOffset = this._scrollYOffset + this._terminalSize.height;
+//       if (bottomYOffset > scrollBottomYOffset) {
+// console.log("_handleCursorMove bottomYOffset too small, scrolling");
+//       
+// console.log("_handleCursorMove topYOffset + bottomYOffset - scrollBottomYOffset:",
+//   topYOffset + bottomYOffset - scrollBottomYOffset);
+//         
+//         this._scrollTo(bottomYOffset - this._terminalSize.height);
+//       } else {
+// console.log("_handleCursorMove (do nothing)");
+//         if (this._lastViewPortTop.has(cmv)) {
+//           const oldViewPortTop = this._lastViewPortTop.get(cmv);
+// console.log("_handleCursorMove oldViewPortTop: ",oldViewPortTop);
+//           
+//           if (oldViewPortTop !== detail.viewPortTop) {
+// console.log("_handleCursorMove scroll to new viewPortTop: ",detail.viewPortTop);
+//             this._scrollTo(detail.viewPortTop);
+//           }
+//         }
+// console.log("_handleCursorMove setting new viewPortTop: ",detail.viewPortTop);
+//         this._lastViewPortTop.set(cmv, detail.viewPortTop);
+//       }
+//     }
+// console.log("_handleCursorMove (exit)");
+//   }
   
-  private _handleScrollbackReady(): void {
-    if (this._mode === Mode.TERM) {
-      this._scheduleScrollbackImport();
-    }
-  }
+  // private _handleScrollbackReady(): void {
+  //   if (this._mode === Mode.TERM) {
+  //     this._scheduleScrollbackImport();
+  //   }
+  // }
   
-  private _getScrollBackCodeMirror(): EtCodeMirrorViewer {
-    if (this._scrollbackCodeMirror === null) {
-      this._scrollbackCodeMirror = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
-      this._scrollbackCodeMirror.processKeyboard = false;
-      if (this._terminalSize.height !== null) {
-        this._scrollbackCodeMirror.setMaxHeight(this._terminalSize.height);
-      }
-      util.getShadowId(this, ID_SCROLLBACK).appendChild(this._scrollbackCodeMirror);
-    }
-    return this._scrollbackCodeMirror;
-  }
+  // private _getScrollBackCodeMirror(): EtCodeMirrorViewer {
+  //   if (this._scrollbackCodeMirror === null) {
+  //     this._scrollbackCodeMirror = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
+  //     this._scrollbackCodeMirror.processKeyboard = false;
+  //     if (this._terminalSize.height !== null) {
+  //       this._scrollbackCodeMirror.setMaxHeight(this._terminalSize.height);
+  //     }
+  //     util.getShadowId(this, ID_SCROLLBACK).appendChild(this._scrollbackCodeMirror);
+  //   }
+  //   return this._scrollbackCodeMirror;
+  // }
   
-  private _importScrollback(): void {
-log("_importScrollback");
-    this._syncScrolling();
-    
-    if (this._term === null || this._mode !== Mode.TERM) {
-      return;
-    }
-    const lines = this._term.fetchScrollbackLines();
-    if (lines.length === 0) {
-      return;
-    }
-
-    const {text: allText, decorations: allDecorations} = this._linesToTextStyles(lines);
-    const scrollbackCodeMirror = this._getScrollBackCodeMirror();
-    scrollbackCodeMirror.appendText(allText, allDecorations);
-  }
-
-  private _linesToTextStyles(lines: termjs.Line[]): { text: string; decorations: TextDecoration[]; } {
-    const allDecorations: TextDecoration[] = [];
-    let allText = "";
-    let cr = "";
-    for (let i = 0; i < lines.length; i++) {
-      const {text, decorations} = this._lineToStyleList(lines[i], i);
-      allText += cr;
-      allText += text;
-      cr = "\n";
-      
-      allDecorations.push(...decorations);
-    }
-    return {text: allText, decorations: allDecorations};
-  }
-
-  private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
-    const defAttr = termjs.Emulator.defAttr;
-    let attr = defAttr;
-    let lineLength = line.length;
-    let text = '';
-    const decorations: TextDecoration[] = [];
-    
-    // Trim off any unstyled whitespace to the right of the line.
-    while (lineLength !==0 && line[lineLength-1][0] === defAttr && line[lineLength-1][1] === ' ') {
-      lineLength--;
-    }
-
-    let currentDecoration: TextDecoration  = null;
-    
-    for (let i = 0; i < lineLength; i++) {
-      const data = line[i][0];
-      const ch = line[i][1];
-      text += ch;
-      
-      if (data !== attr) {
-        if (attr !== defAttr) {
-          currentDecoration.toCh = i;
-          decorations.push(currentDecoration);
-          currentDecoration = null;
-        }
-        if (data !== defAttr) {
-          const classList: string[] = [];
-          if (data === -1) {
-            // Cursor itself
-            classList.push("reverse-video");
-            classList.push("terminal-cursor");
-          } else {
-          
-            let bg = termjs.backgroundFromCharAttr(data);
-            let fg = termjs.foregroundFromCharAttr(data);
-            const flags = termjs.flagsFromCharAttr(data);
-            
-            // bold
-            if (flags & termjs.BOLD_ATTR_FLAG) {
-              classList.push('terminal-bold');
-
-              // See: XTerm*boldColors
-              if (fg < 8) {
-                fg += 8;  // Use the bright version of the color.
-              }
-            }
-
-            // italic
-            if (flags & termjs.ITALIC_ATTR_FLAG) {
-              classList.push('terminal-italic');
-            }
-            
-            // underline
-            if (flags & termjs.UNDERLINE_ATTR_FLAG) {
-              classList.push('terminal-underline');
-            }
-
-            // strike through
-            if (flags & termjs.STRIKE_THROUGH_ATTR_FLAG) { 
-              classList.push('terminal-strikethrough');
-            }
-            
-            // inverse
-            if (flags & termjs.INVERSE_ATTR_FLAG) {
-              let tmp = fg;
-              fg = bg;
-              bg = tmp;
-              
-              // Should inverse just be before the
-              // above boldColors effect instead?
-              if ((flags & termjs.BOLD_ATTR_FLAG) && fg < 8) {
-                fg += 8;  // Use the bright version of the color.
-              }
-            }
-
-            // invisible
-            if (flags & termjs.INVISIBLE_ATTR_FLAG) {
-              classList.push('terminal-invisible');
-            }
-
-            if (bg !== 256) {
-              classList.push('terminal-background-' + bg);
-            }
-
-            if (flags & termjs.FAINT_ATTR_FLAG) {
-              classList.push('terminal-faint-' + fg);
-            } else {
-              if (fg !== 257) {
-                classList.push('terminal-foreground-' + fg);
-              }
-            }
-            
-            if (flags & termjs.BLINK_ATTR_FLAG) {
-              classList.push("terminal-blink");
-            }
-          }
-          
-          if (classList.length !== 0) {
-            currentDecoration = { line: lineNumber, fromCh: i, toCh: null, classList: classList };
-          }
-        }
-      }
-
-      attr = data;
-    }
-
-    if (attr !== defAttr) {
-      currentDecoration.toCh = lineLength;
-      decorations.push(currentDecoration);
-    }
-    
-    return {text, decorations};
-  }
+//   private _importScrollback(): void {
+// log("_importScrollback");
+//     this._syncScrolling();
+//     
+//     if (this._term === null || this._mode !== Mode.TERM) {
+//       return;
+//     }
+//     const lines = this._term.fetchScrollbackLines();
+//     if (lines.length === 0) {
+//       return;
+//     }
+// 
+//     const {text: allText, decorations: allDecorations} = this._linesToTextStyles(lines);
+//     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
+//     scrollbackCodeMirror.appendText(allText, allDecorations);
+//   }
+// 
   
   // ----------------------------------------------------------------------
   // ----------------------------------------------------------------------
@@ -1028,44 +881,44 @@ log("_importScrollback");
     // }
   }
 
-  private _handleStyleLoad(): void {
-    if (this._mainStyleLoaded && this._themeStyleLoaded) {
-      // Start polling the term for application of the font.
-      this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
-    }
-  }
+  // private _handleStyleLoad(): void {
+  //   if (this._mainStyleLoaded && this._themeStyleLoaded) {
+  //     // Start polling the term for application of the font.
+  //     this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
+  //   }
+  // }
 
   /**
    * Handle an unknown key down event from the term.
    */
-  private _handleKeyDown(ev: KeyboardEvent): void {
-    if (ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey) {
-      // Ctrl+Shift+C
-      this.copyToClipboard();
-      
-    } else if (ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {
-      // Ctrl+Shift+V
-      this._pasteFromClipboard();
-      
-    } else if (ev.keyCode === 33 && ev.shiftKey) {
-      // page up
-      this._scrollTo(this._scrollYOffset - this._terminalSize.height / 2);
-      
-    } else if (ev.keyCode === 34 && ev.shiftKey) {
-      // page down
-      this._scrollTo(this._scrollYOffset + this._terminalSize.height / 2);
-      
-    // } else if (ev.keyCode === 32 && ev.ctrlKey) {
-    //   // Ctrl + Space
-    //   this._enterSelectionMode(Mode.KEYBOARD_SELECTION);
-      
-    } else {
-      // log("keyDown: ", ev);
-      
-      return;
-    }
-    ev.stopPropagation();
-  }
+  // private _handleKeyDown(ev: KeyboardEvent): void {
+  //   if (ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey) {
+  //     // Ctrl+Shift+C
+  //     this.copyToClipboard();
+  //     
+  //   } else if (ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {
+  //     // Ctrl+Shift+V
+  //     this._pasteFromClipboard();
+  //     
+  //   } else if (ev.keyCode === 33 && ev.shiftKey) {
+  //     // page up
+  //     this._scrollTo(this._scrollYOffset - this._terminalSize.height / 2);
+  //     
+  //   } else if (ev.keyCode === 34 && ev.shiftKey) {
+  //     // page down
+  //     this._scrollTo(this._scrollYOffset + this._terminalSize.height / 2);
+  //     
+  //   // } else if (ev.keyCode === 32 && ev.ctrlKey) {
+  //   //   // Ctrl + Space
+  //   //   this._enterSelectionMode(Mode.KEYBOARD_SELECTION);
+  //     
+  //   } else {
+  //     // log("keyDown: ", ev);
+  //     
+  //     return;
+  //   }
+  //   ev.stopPropagation();
+  // }
   
   private _handleKeyPressTerminal(ev: KeyboardEvent): void {
     // this._term.keyPress(ev);
@@ -1210,15 +1063,15 @@ console.log("_processScheduled resize");
       this._processResize();
     }
     
-    if (scheduledScrollbackImport) {
-      console.log("_processScheduled scrollback import");
-      this._importScrollback();
-    }
-
-    scheduledCursorUpdates.forEach( (cmv) => {
-console.log("_processScheduled update cursor");
-      this._updateCursorAction(cmv);
-    });
+//     if (scheduledScrollbackImport) {
+//       console.log("_processScheduled scrollback import");
+//       this._importScrollback();
+//     }
+// 
+//     scheduledCursorUpdates.forEach( (cmv) => {
+// console.log("_processScheduled update cursor");
+//       this._updateCursorAction(cmv);
+//     });
     
   }
   
@@ -1533,27 +1386,27 @@ console.log("_processScheduled update cursor");
    * Copy the selection to the clipboard.
    */
   copyToClipboard(): void {
-    let text: string = "";
-    if (this._mode !== Mode.TERM) {
-      const cmv = this._getScrollBackCodeMirror();
-      text = cmv.getSelectionText();
-    } else {
-      const candidates = this.shadowRoot.querySelectorAll(EtEmbeddedViewer.TAG_NAME);
-      text = _.first<string>(util.nodeListToArray(candidates)
-        .map<string>( (node: Node) => (<EtEmbeddedViewer> node).getSelectionText())
-        .filter( (text) => text !== null)
-      );
-      text = text === undefined ? null : text;
-    }
-    
-    if (text !== null) {
-      webipc.clipboardWrite(text);
-    }
+    // let text: string = "";
+    // if (this._mode !== Mode.TERM) {
+    //   const cmv = this._getScrollBackCodeMirror();
+    //   text = cmv.getSelectionText();
+    // } else {
+    //   const candidates = this.shadowRoot.querySelectorAll(EtEmbeddedViewer.TAG_NAME);
+    //   text = _.first<string>(util.nodeListToArray(candidates)
+    //     .map<string>( (node: Node) => (<EtEmbeddedViewer> node).getSelectionText())
+    //     .filter( (text) => text !== null)
+    //   );
+    //   text = text === undefined ? null : text;
+    // }
+    // 
+    // if (text !== null) {
+    //   webipc.clipboardWrite(text);
+    // }
   }
   
   pasteText(text: string): void {
     this.send(text);
-    this._term.scrollToBottom();
+    // this._term.scrollToBottom();
   }
 
   /**
@@ -1571,8 +1424,8 @@ console.log("_processScheduled update cursor");
    * @param {string} data New data.
    */
   private _handlePtyStdoutData (data: string): void {
-    log("incoming data:",""+data);
-    this._term.write("" + data);
+log("incoming data:",""+data);
+    this._emulator.write("" + data);
     this._syncScrolling();
   }
 
@@ -1582,7 +1435,7 @@ console.log("_processScheduled update cursor");
    * @param {type} data New data.
    */
   private _handlePtyStderrData(data: string): void {
-    this._term.write(data);
+    this._emulator.write(data);
     this._syncScrolling();
   }
 
@@ -1596,7 +1449,12 @@ console.log("_processScheduled update cursor");
 console.log("_handleTermData !!");
     this._sendDataToPtyEvent(data);
   }
-
+  
+  private _handleTermSize(emulator: termjs.Emulator, newRows: number, newColumns: number, realizedRows: number): void {
+console.log("_handleTermSize !!");
+    this._sendResizeEvent(newColumns, newRows);
+  }
+  
   /**
    * Send data to the pseudoterminal.
    * 
@@ -1629,22 +1487,22 @@ console.log("_handleTermData !!");
     this.dispatchEvent(event);
   }
   
-  private handleRequestFrame(frameId: string): void {
-    const sourceFrame: EtEmbeddedViewer = this._findFrame(frameId);
-    const data = sourceFrame !== null ? sourceFrame.text : "";
-    const lines = data.split("\n");
-    let encodedData: string = "";
-    lines.forEach( (line: string) => {
-      encodedData = window.btoa(line +"\n");
-      this._sendDataToPtyEvent(encodedData+"\n");
-    });
-      
-    this._sendDataToPtyEvent("\x04");
-    
-    if (encodedData.length !== 0) {
-      this._sendDataToPtyEvent("\x04");
-    }
-  }
+  // private handleRequestFrame(frameId: string): void {
+  //   const sourceFrame: EtEmbeddedViewer = this._findFrame(frameId);
+  //   const data = sourceFrame !== null ? sourceFrame.text : "";
+  //   const lines = data.split("\n");
+  //   let encodedData: string = "";
+  //   lines.forEach( (line: string) => {
+  //     encodedData = window.btoa(line +"\n");
+  //     this._sendDataToPtyEvent(encodedData+"\n");
+  //   });
+  //     
+  //   this._sendDataToPtyEvent("\x04");
+  //   
+  //   if (encodedData.length !== 0) {
+  //     this._sendDataToPtyEvent("\x04");
+  //   }
+  // }
 
   // private _handleShowMimeType(mimeType: string, mimeData: string): void {
   //   const mimeViewerElement = this._createMimeViewer(mimeType, mimeData);
@@ -1672,13 +1530,13 @@ console.log("_handleTermData !!");
   /**
    * Find a command frame by ID.
    */
-  private _findFrame(frameId: string): EtEmbeddedViewer {
-    if (/[^0-9]/.test(frameId)) {
-      return null;
-    }
-    const matches = this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
-    return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
-  }
+  // private _findFrame(frameId: string): EtEmbeddedViewer {
+  //   if (/[^0-9]/.test(frameId)) {
+  //     return null;
+  //   }
+  //   const matches = this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
+  //   return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
+  // }
   
   private _getNextTag(): number {
     this._tagCounter++;

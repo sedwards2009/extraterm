@@ -8,17 +8,27 @@ import util = require("../gui/util");
 import domutils = require("../domutils");
 import CodeMirror = require('codemirror');
 import EtCodeMirrorViewerTypes = require('./codemirrorviewertypes');
+import termjs = require('../term');
 
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
 type CursorMoveDetail = EtCodeMirrorViewerTypes.CursorMoveDetail;
 
 const ID = "CbCodeMirrorViewerTemplate";
 const ID_CONTAINER = "container";
-
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
+const ID_IMPORT_STYLE = "import_style";
+
+const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const CLASS_HIDE_CURSOR = "hide_cursor";
+
+const DEBUG_RESIZE = true;
+
+enum Mode {
+  TERMINAL,
+  SELECTION
+}
 
 let registered = false;
 
@@ -51,6 +61,8 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
+  private _emulator: termjs.Emulator;
+  private _terminalFirstRow: number;
   private _mutationObserver: MutationObserver;
   private _commandLine: string;
   private _returnCode: string;
@@ -58,10 +70,17 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _codeMirror: CodeMirror.Editor;
   private _maxHeight: number;
   private _isEmpty: boolean;
-  private _processKeyboard: boolean;
+  private _mode: Mode;
+  private document: Document;
+  private vpad: number;
 
-
+  private _mainStyleLoaded: boolean;
+  private _importStyleLoaded: boolean;
+  private _resizePollHandle: util.LaterHandle;
+  
   private _initProperties(): void {
+    this._emulator = null;
+    this._terminalFirstRow = 0;
     this._mutationObserver = null;  
     this._commandLine = null;
     this._returnCode  =null;
@@ -69,7 +88,13 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror = null;
     this._maxHeight = -1;
     this._isEmpty = true;
-    this._processKeyboard = true;
+    this._mode = Mode.TERMINAL;
+    this.document = document;
+    this.vpad = 0;
+    
+    this._mainStyleLoaded = false;
+    this._importStyleLoaded = false;
+    this._resizePollHandle = null;
   }
 
   //-----------------------------------------------------------------------
@@ -117,21 +142,22 @@ class EtCodeMirrorViewer extends ViewerElement {
     return this._codeMirror.hasFocus();
   }
 
-  get processKeyboard(): boolean {
-    return this._processKeyboard;
+  set emulator(emulator: termjs.Emulator) {
+    if (this._emulator !== null) {
+      // Disconnect the last emulator.
+      // FIXME
+    }
+    
+    if (emulator !== null) {
+      emulator.addRenderEventListener(this._handleRenderEvent.bind(this));
+      emulator.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
+    }
+    
+    this._emulator = emulator;
   }
 
-  set processKeyboard(on: boolean) {
-    this._processKeyboard = on;
-    
-    // When keyboard processing is off, we really only want the user to be able
-    // to select stuff using the mouse and we don't need to show a cursor.
-    const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
-    if (on) {
-      containerDiv.classList.remove(CLASS_HIDE_CURSOR);
-    } else {
-      containerDiv.classList.add(CLASS_HIDE_CURSOR);
-    }
+  get emulator(): termjs.Emulator {
+    return this._emulator;
   }
   
   // get focusable(): boolean {
@@ -149,6 +175,7 @@ class EtCodeMirrorViewer extends ViewerElement {
       this._adjustHeight();
     }
   }
+
   /**
    * Gets the height of this element.
    * 
@@ -165,6 +192,60 @@ class EtCodeMirrorViewer extends ViewerElement {
    */
   getVirtualHeight(): number {
     return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
+  }
+
+  /**
+   * Resize the terminal to fill its containing element.
+   * 
+   * @returns Object with the new colums (cols field) and rows (rows field) information.
+   */
+  resizeToContainer(): {cols: number; rows: number; vpad: number; } {
+    const {columns: cols, rows: rows} = this.emulator.size();
+    
+    if (DEBUG_RESIZE) {
+      console.log("resizeToContainer() this.effectiveFontFamily(): " + this._effectiveFontFamily());
+    }
+    
+    if ( ! this.isFontLoaded()) {
+     // Styles have not been applied yet.
+     if (DEBUG_RESIZE) {
+       console.log("resizeToContainer() styles have not been applied yet.");
+     }
+     return {cols: cols, rows: rows, vpad: this.vpad };
+    }
+    
+    const charHeight = this._codeMirror.defaultTextHeight();
+    const charWidth = this._codeMirror.defaultCharWidth();
+
+    const computedStyle = window.getComputedStyle(this);
+    const width = this.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
+    const newCols = Math.floor(width / charWidth);
+    const newRows = Math.max(2, Math.floor(this._maxHeight / charHeight));
+    
+    if (newCols !== cols || newRows !== rows) {
+      this.emulator.resize( { rows: newRows, columns: newCols } );
+    }
+    
+    // const newVpad =  Math.floor(this.element.clientHeight % charHeight);
+    // if (newVpad !== this.vpad) {
+    //   this.vpad = newVpad;
+    //   this._setLastLinePadding(this.vpad);
+    // }
+    
+    if (DEBUG_RESIZE) {
+      console.log("resizeToContainer() old cols: ",cols);
+      console.log("resizeToContainer() calculated charWidth: ",charWidth);    
+      console.log("resizeToContainer() calculated charHeight: ",charHeight);
+      console.log("resizeToContainer() element width: ",width);
+      // console.log("resizeToContainer() element height: ",this.element.clientHeight);
+      console.log("resizeToContainer() new cols: ",newCols);
+      console.log("resizeToContainer() new rows: ",newRows);
+    }
+    return {cols: newCols, rows: newRows, vpad: this.vpad};
+  }
+  
+  isFontLoaded(): boolean {
+     return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   }
 
   scrollTo(x: number, y: number): void {
@@ -192,7 +273,9 @@ class EtCodeMirrorViewer extends ViewerElement {
     const shadow = util.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
-
+    
+    this._initFontLoading();
+    
     const containerDiv = util.getShadowId(this, ID_CONTAINER);
     // containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
     //   console.log("codemirrorviewer keydown: ",ev);
@@ -210,6 +293,7 @@ class EtCodeMirrorViewer extends ViewerElement {
 
     this.style.height = "0px";
     this._updateFocusable(this._focusable);
+    this._setMode(Mode.TERMINAL);
   }
   
   attachedCallback(): void {
@@ -237,116 +321,94 @@ class EtCodeMirrorViewer extends ViewerElement {
       util.doLater( this._scrollBugFix.bind(this));
     });
     
+    this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
+      this._emulator.focus();
+    });
+
+    this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
+      this._emulator.blur();
+    });
+    
     this._codeMirror.on("keydown", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
-      if ( ! this._processKeyboard) {
-        (<any> ev).codemirrorIgnore = true;
-      }
+      this._emulator.keyDown(ev);
+      (<any> ev).codemirrorIgnore = true;
     });
     
     this._codeMirror.on("keypress", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
-      if ( ! this._processKeyboard) {
-        (<any> ev).codemirrorIgnore = true;
-      }
+      this._emulator.keyPress(ev);
+      (<any> ev).codemirrorIgnore = true;
     });
     
     this._codeMirror.on("keyup", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
-      if ( ! this._processKeyboard) {
-        (<any> ev).codemirrorIgnore = true;
-      }
+      // this._emulator.keyUp(ev);
+      (<any> ev).codemirrorIgnore = true;
     });
     
-  }
-
-  appendText(text: string, decorations?: TextDecoration[]): void {
-    const doc = this._codeMirror.getDoc();
-    const lineOffset = this._isEmpty ? 0 : doc.lineCount();
-    
-    const pos = { line: this._isEmpty ? 0 : doc.lineCount(), ch: 0 };
-    doc.replaceRange((this._isEmpty ? "" : "\n") + text, pos, pos);
-    this._isEmpty = false;
-    
-    if (decorations !== undefined && decorations.length !== 0) {
-      // Apply the styles to the text.
-      const len = decorations.length;
-      for (let i=0; i<len; i++) {
-        const style = decorations[i];
-        const from = { line: style.line + lineOffset, ch: style.fromCh };
-        const to = { line: style.line + lineOffset, ch: style.toCh };
-        const classList = style.classList;
-        for (let j=0; j<classList.length; j++) {
-          doc.markText( from, to, { className: classList[j] } );
-        }
-      }
-    }
-    this._codeMirror.refresh();
-    this._adjustHeight();
-
-    util.doLater( () => {
-      this._codeMirror.refresh();
-      this._adjustHeight();
+    this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
+      ev.preventDefault();
     });
   }
   
-  deleteLinesFrom(line: number): void {
-    const doc = this._codeMirror.getDoc();
-    
-    this._isEmpty = line === 0;
-    
-    const lastPos = { line: doc.lineCount(), ch: 0 };
-    
-    let startPos: { line: number; ch: number; };
-    if (line > 0) {
-      const previousLineString = doc.getLine(line-1);
-      startPos = { line: line-1, ch: previousLineString.length };
-    } else {
-      startPos = { line: line, ch: 0 };
-    }
-    doc.replaceRange("", startPos, lastPos);
-    
-    this._codeMirror.refresh();
-    this._adjustHeight();
-
-    util.doLater( () => {
-      this._codeMirror.refresh();
-      this._adjustHeight();
-    });
-  }
+  // deleteLinesFrom(line: number): void {
+  //   const doc = this._codeMirror.getDoc();
+  //   
+  //   this._isEmpty = line === 0;
+  //   
+  //   const lastPos = { line: doc.lineCount(), ch: 0 };
+  //   
+  //   let startPos: { line: number; ch: number; };
+  //   if (line > 0) {
+  //     const previousLineString = doc.getLine(line-1);
+  //     startPos = { line: line-1, ch: previousLineString.length };
+  //   } else {
+  //     startPos = { line: line, ch: 0 };
+  //   }
+  //   doc.replaceRange("", startPos, lastPos);
+  //   
+  //   this._codeMirror.refresh();
+  //   this._adjustHeight();
+  // 
+  //   util.doLater( () => {
+  //     this._codeMirror.refresh();
+  //     this._adjustHeight();
+  //   });
+  // }
+  // 
+  // getCursorInfo(): CursorMoveDetail {
+  //   const cursorPos = this._codeMirror.cursorCoords(true, "local");
+  //   const scrollInfo = this._codeMirror.getScrollInfo();
+  //   const detail: CursorMoveDetail = {
+  //     left: cursorPos.left,
+  //     top: cursorPos.top,
+  //     bottom: cursorPos.bottom,
+  //     viewPortTop: scrollInfo.top
+  //   };
+  //   return detail;
+  // }
   
-  getCursorInfo(): CursorMoveDetail {
-    const cursorPos = this._codeMirror.cursorCoords(true, "local");
-    const scrollInfo = this._codeMirror.getScrollInfo();
-    const detail: CursorMoveDetail = {
-      left: cursorPos.left,
-      top: cursorPos.top,
-      bottom: cursorPos.bottom,
-      viewPortTop: scrollInfo.top
-    };
-    return detail;
-  }
-  
-  fakeMouseDown(ev: MouseEvent): void {
-    const root = util.getShadowRoot(this);
-    const newTarget = root.elementFromPoint(ev.clientX, ev.clientY);
-    
-    const newEvent = document.createEvent('MouseEvents');
-    newEvent.initMouseEvent(
-      'mousedown',                    // typeArg: string,
-      true,                           // canBubbleArg: boolean,
-      true,                           // cancelableArg: boolean,
-      document.defaultView,           // viewArg: Window,
-      0,                              // detailArg: number,
-      ev.screenX,                     // screenXArg: number,
-      ev.screenY,                     // screenYArg: number,
-      ev.clientX,                     // clientXArg: number,
-      ev.clientY,                     // clientYArg: number,
-      ev.ctrlKey,                     // ctrlKeyArg: boolean,
-      ev.altKey,                      // altKeyArg: boolean,
-      ev.shiftKey,                    // shiftKeyArg: boolean,
-      ev.metaKey,                     // metaKeyArg: boolean,
-      ev.button,                      // buttonArg: number,
-      null);                          // relatedTargetArg: EventTarget
-    newTarget.dispatchEvent(newEvent);
-  }
+  // fakeMouseDown(ev: MouseEvent): void {
+  //   const root = util.getShadowRoot(this);
+  //   const newTarget = root.elementFromPoint(ev.clientX, ev.clientY);
+  //   
+  //   const newEvent = document.createEvent('MouseEvents');
+  //   newEvent.initMouseEvent(
+  //     'mousedown',                    // typeArg: string,
+  //     true,                           // canBubbleArg: boolean,
+  //     true,                           // cancelableArg: boolean,
+  //     document.defaultView,           // viewArg: Window,
+  //     0,                              // detailArg: number,
+  //     ev.screenX,                     // screenXArg: number,
+  //     ev.screenY,                     // screenYArg: number,
+  //     ev.clientX,                     // clientXArg: number,
+  //     ev.clientY,                     // clientYArg: number,
+  //     ev.ctrlKey,                     // ctrlKeyArg: boolean,
+  //     ev.altKey,                      // altKeyArg: boolean,
+  //     ev.shiftKey,                    // shiftKeyArg: boolean,
+  //     ev.metaKey,                     // metaKeyArg: boolean,
+  //     ev.button,                      // buttonArg: number,
+  //     null);                          // relatedTargetArg: EventTarget
+  //   newTarget.dispatchEvent(newEvent);
+  // }
   
   //-----------------------------------------------------------------------
   //
@@ -380,6 +442,13 @@ class EtCodeMirrorViewer extends ViewerElement {
           overflow: hidden;
         }
         
+        /* The idea is that this rule will be quickly applied. We can then monitor
+           the computed style to see when the proper theme font is applied and
+           NO_STYLE_HACK disappears from the reported computed style. */
+        .terminal {
+          font-family: sans-serif, ${NO_STYLE_HACK};
+        }
+        
         #${ID_CONTAINER}:focus {
           outline: 0px;
         }
@@ -390,7 +459,7 @@ class EtCodeMirrorViewer extends ViewerElement {
         
         </style>
         <style id="${ID_THEME_STYLE}"></style>
-        <style>
+        <style id="${ID_IMPORT_STYLE}">
         @import url('node_modules/codemirror/lib/codemirror.css');
         @import url('node_modules/codemirror/addon/scroll/simplescrollbars.css');
         @import url('themes/default/theme.css');
@@ -401,6 +470,155 @@ class EtCodeMirrorViewer extends ViewerElement {
     }
     
     return window.document.importNode(template.content, true);
+  }
+
+  private _setMode(newMode: Mode): void {
+    this._mode = newMode;
+
+    // When keyboard processing is off, we really only want the user to be able
+    // to select stuff using the mouse and we don't need to show a cursor.
+    const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
+    if (newMode === Mode.SELECTION) {
+      containerDiv.classList.remove(CLASS_HIDE_CURSOR);
+    } else {
+      containerDiv.classList.add(CLASS_HIDE_CURSOR);
+    }
+  }
+  
+  //-----------------------------------------------------------------------
+  //
+  // #######                        #                                            
+  // #        ####  #    # #####    #        ####    ##   #####  # #    #  ####  
+  // #       #    # ##   #   #      #       #    #  #  #  #    # # ##   # #    # 
+  // #####   #    # # #  #   #      #       #    # #    # #    # # # #  # #      
+  // #       #    # #  # #   #      #       #    # ###### #    # # #  # # #  ### 
+  // #       #    # #   ##   #      #       #    # #    # #    # # #   ## #    # 
+  // #        ####  #    #   #      #######  ####  #    # #####  # #    #  ####  
+  //
+  //-----------------------------------------------------------------------
+
+  private _initFontLoading(): void {
+    this._mainStyleLoaded = false;
+    this._importStyleLoaded = false;
+    
+    util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
+      this._mainStyleLoaded = true;
+      this._handleStyleLoad();
+    });
+
+    util.getShadowId(this, ID_IMPORT_STYLE).addEventListener('load', () => {
+      this._importStyleLoaded = true;
+      this._handleStyleLoad();
+      });
+  }
+  
+  private _cleanUpFontLoading(): void {
+    if (this._resizePollHandle !== null) {
+      this._resizePollHandle.cancel();
+      this._resizePollHandle = null;
+    }
+  }
+
+  private _handleStyleLoad(): void {
+    if (this._mainStyleLoaded && this._importStyleLoaded) {
+      // Start polling the term for application of the font.
+      this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
+    }
+  }
+  
+  private _effectiveFontFamily(): string {
+    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    const cs = window.getComputedStyle(containerDiv, null);
+    return cs.getPropertyValue("font-family");
+  }
+
+  private _resizePoll(): void {
+    if (this._mainStyleLoaded && this._importStyleLoaded) {
+      if ( ! this.isFontLoaded()) {
+        // Font has not been correctly applied yet.
+        this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
+      } else {
+        // Yay! the font is correct. Resize the term soon.
+        this.resizeToContainer();
+      }
+    }
+  }
+  
+  //-----------------------------------------------------------------------
+  //-----------------------------------------------------------------------
+  //-----------------------------------------------------------------------
+
+  private _handleRenderEvent(instance: termjs.Emulator, startRow: number, endRow: number): void {
+    const lines: termjs.Line[] = [];
+    for (let row = startRow; row < endRow; row++) {
+      lines.push(this._emulator.lineAtRow(row));
+    }
+    this._insertLinesOnScreen(startRow, endRow, lines);
+  }
+
+  private _insertLinesOnScreen(startRow: number, endRow: number,lines: termjs.Line[]): void {
+    const doc = this._codeMirror.getDoc();
+    const lineCount = doc.lineCount();
+    
+    // Mark sure there are enough rows inside CodeMirror.
+    if (lineCount < endRow + this._terminalFirstRow) {
+      const pos = { line: this._terminalFirstRow + lineCount, ch: 0 };
+      
+      let emptyText = "";
+      const extraCrCount = endRow - 1 + this._terminalFirstRow - lineCount;
+      for (let j = 0; j < extraCrCount; j++) {
+        emptyText += "\n";
+      }
+      doc.replaceRange((this._isEmpty ? "" : "\n") + emptyText, pos, pos);
+      this._isEmpty = false;
+    }
+    const {text: text, decorations: decorations} = this._linesToTextStyles(lines);
+    this._insertLinesAtPos({ line: this._terminalFirstRow + startRow, ch: 0 },
+      { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length },
+      text, decorations);
+  }
+  
+  private _insertLinesAtPos(startPos: CodeMirror.Position, endPos: CodeMirror.Position, text: string,
+      decorations: TextDecoration[]): void {
+
+    const doc = this._codeMirror.getDoc();
+    doc.replaceRange(text, startPos, endPos);
+
+    if (decorations !== undefined && decorations.length !== 0) {
+      // Apply the styles to the text.
+      const len = decorations.length;
+      const startRow = startPos.line;
+      
+      for (let i=0; i<len; i++) {
+        const style = decorations[i];
+        const from = { line: style.line + startRow, ch: style.fromCh };
+        const to = { line: style.line + startRow, ch: style.toCh };
+        const classList = style.classList;
+        for (let j=0; j<classList.length; j++) {
+          doc.markText( from, to, { className: classList[j] } );
+        }
+      }
+    }
+    
+    console.log("lineCount: " + doc.lineCount());
+    console.log("______________________________________");
+    console.log(doc.getValue());
+    console.log("______________________________________");
+    
+    this._codeMirror.refresh();
+    this._adjustHeight();
+    
+    util.doLater( () => {
+      this._codeMirror.refresh();
+      this._adjustHeight();
+    });
+  }
+  
+  private _handleScrollbackEvent(instance: termjs.Emulator, scrollbackLines: termjs.Line[]): void {
+    const pos: CodeMirror.Position = { line: this._terminalFirstRow, ch: 0 };
+    const {text: text, decorations: decorations} = this._linesToTextStyles(scrollbackLines);
+    this._insertLinesAtPos(pos ,pos, text + "\n", decorations);
+    this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
   }
 
   private _updateFocusable(focusable: boolean): void {
@@ -431,6 +649,142 @@ class EtCodeMirrorViewer extends ViewerElement {
     // }
   }
   
+  private _linesToTextStyles(lines: termjs.Line[]): { text: string; decorations: TextDecoration[]; } {
+    const allDecorations: TextDecoration[] = [];
+    let allText = "";
+    let cr = "";
+    for (let i = 0; i < lines.length; i++) {
+      const {text, decorations} = this._lineToStyleList(lines[i], i);
+      allText += cr;
+      allText += text;
+      cr = "\n";
+      
+      allDecorations.push(...decorations);
+    }
+    return {text: allText, decorations: allDecorations};
+  }
+
+  private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
+    const defAttr = termjs.Emulator.defAttr;
+    let attr = defAttr;
+    let lineLength = line.length;
+    let text = '';
+    const decorations: TextDecoration[] = [];
+    
+    // Trim off any unstyled whitespace to the right of the line.
+    while (lineLength !==0 && line[lineLength-1][0] === defAttr && line[lineLength-1][1] === ' ') {
+      lineLength--;
+    }
+
+    let currentDecoration: TextDecoration  = null;
+    
+    for (let i = 0; i < lineLength; i++) {
+      const data = line[i][0];
+      const ch = line[i][1];
+      text += ch;
+      
+      if (data !== attr) {
+        if (attr !== defAttr) {
+          currentDecoration.toCh = i;
+          decorations.push(currentDecoration);
+          currentDecoration = null;
+        }
+        if (data !== defAttr) {
+          const classList: string[] = [];
+          if (data === -1) {
+            // Cursor itself
+            classList.push("reverse-video");
+            classList.push("terminal-cursor");
+          } else {
+          
+            let bg = termjs.backgroundFromCharAttr(data);
+            let fg = termjs.foregroundFromCharAttr(data);
+            const flags = termjs.flagsFromCharAttr(data);
+            
+            // bold
+            if (flags & termjs.BOLD_ATTR_FLAG) {
+              classList.push('terminal-bold');
+
+              // See: XTerm*boldColors
+              if (fg < 8) {
+                fg += 8;  // Use the bright version of the color.
+              }
+            }
+
+            // italic
+            if (flags & termjs.ITALIC_ATTR_FLAG) {
+              classList.push('terminal-italic');
+            }
+            
+            // underline
+            if (flags & termjs.UNDERLINE_ATTR_FLAG) {
+              classList.push('terminal-underline');
+            }
+
+            // strike through
+            if (flags & termjs.STRIKE_THROUGH_ATTR_FLAG) { 
+              classList.push('terminal-strikethrough');
+            }
+            
+            // inverse
+            if (flags & termjs.INVERSE_ATTR_FLAG) {
+              let tmp = fg;
+              fg = bg;
+              bg = tmp;
+              
+              // Should inverse just be before the
+              // above boldColors effect instead?
+              if ((flags & termjs.BOLD_ATTR_FLAG) && fg < 8) {
+                fg += 8;  // Use the bright version of the color.
+              }
+            }
+
+            // invisible
+            if (flags & termjs.INVISIBLE_ATTR_FLAG) {
+              classList.push('terminal-invisible');
+            }
+
+            if (bg !== 256) {
+              classList.push('terminal-background-' + bg);
+            }
+
+            if (flags & termjs.FAINT_ATTR_FLAG) {
+              classList.push('terminal-faint-' + fg);
+            } else {
+              if (fg !== 257) {
+                classList.push('terminal-foreground-' + fg);
+              }
+            }
+            
+            if (flags & termjs.BLINK_ATTR_FLAG) {
+              classList.push("terminal-blink");
+            }
+          }
+          
+          if (classList.length !== 0) {
+            currentDecoration = { line: lineNumber, fromCh: i, toCh: null, classList: classList };
+          }
+        }
+      }
+
+      attr = data;
+    }
+
+    if (attr !== defAttr) {
+      currentDecoration.toCh = lineLength;
+      decorations.push(currentDecoration);
+    }
+    
+    return {text, decorations};
+  }
+  
 }
+
+function px(value) {
+  if (value === null || value === undefined || value === "") {
+    return 0;
+  }
+  return parseInt(value.slice(0,-2),10);
+}  
 
 export = EtCodeMirrorViewer;

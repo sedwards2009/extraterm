@@ -237,8 +237,8 @@ export interface EmulatorAPI {
   
   write(data: string): void;
   
-  _focus(): void;
-  _blur(): void;
+  focus(): void;
+  blur(): void;
   hasFocus(): boolean;
 
   startBlink(); // FIXME remove
@@ -318,7 +318,7 @@ export class Terminal {
   }
 
   focus(): void {
-    this.emulator._focus();
+    this.emulator.focus();
     this.element.focus();
   }
   
@@ -327,7 +327,7 @@ export class Terminal {
   }
   
   blur(): void {
-    this.emulator._blur();
+    this.emulator.blur();
     this.element.blur();
   }
   
@@ -1401,7 +1401,7 @@ export class Emulator implements Emulator {
     return out;
   })();
   
-  _focus(): void {
+  focus(): void {
     if (this.sendFocus) {
       this.send('\x1b[I');
     }
@@ -1418,7 +1418,7 @@ export class Emulator implements Emulator {
     return this._hasFocus;
   }
   
-  _blur(): void {
+  blur(): void {
     if (!this._hasFocus) {
       return;
     }
