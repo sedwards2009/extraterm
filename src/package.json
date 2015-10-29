@@ -8,6 +8,7 @@
   "scripts": {
     "run": "electron main.js",
     "build": "tsc",
+    "test": "npm run build ; nodeunit virtualscrollareatest.js",
     "serve-test": "node test/httpserver.js"
   },
   "dependencies": {
