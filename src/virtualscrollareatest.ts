@@ -109,3 +109,47 @@ export function testLong(test: nodeunit.Test): void {
 
   test.done();
 }
+
+export function testVirtualHeightUpdate(test: nodeunit.Test): void {
+  const vsa = new VirtualScrollArea();
+  const scrollbar = SetupScrollbar(vsa);
+  const container = SetUpScrollContainer(vsa, 500);
+  const scrollable = SetupScrollable(vsa, 500, 1500);
+  
+  vsa.resize();
+  
+  vsa.scrollTo(750);
+  test.equal(scrollbar.position, 750);
+  test.equal(container.scrollTop, 0);
+  test.equal(scrollable.getScrollOffset(), 750);
+  
+  vsa.updateVirtualHeight(scrollable, 2000);
+  
+  test.equal(scrollbar.position, 750);
+  test.equal(container.scrollTop, 0);
+  test.equal(scrollable.getScrollOffset(), 750);
+  
+  test.done();
+}
+
+export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
+  const vsa = new VirtualScrollArea();
+  const scrollbar = SetupScrollbar(vsa);
+  const container = SetUpScrollContainer(vsa, 500);
+  const scrollable = SetupScrollable(vsa, 500, 1500);
+  
+  vsa.resize();
+  
+  vsa.scrollTo(1000);
+  test.equal(scrollbar.position, 1000);
+  test.equal(container.scrollTop, 0);
+  test.equal(scrollable.getScrollOffset(), 1000);
+  
+  vsa.updateVirtualHeight(scrollable, 2000);
+  
+  test.equal(scrollbar.position, 1500);
+  test.equal(container.scrollTop, 0);
+  test.equal(scrollable.getScrollOffset(), 1500);
+  
+  test.done();
+}

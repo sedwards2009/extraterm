@@ -133,6 +133,30 @@ export class VirtualScrollArea {
     });    
     return cleanOffset;
   }
+
+  /**
+   * Update the virtual height for a scrollable and relayout.
+   *
+   * @param scrollable the scrollable to update
+   * @param newVirtualHeight the new virtual height
+   */
+  updateVirtualHeight(scrollable: VirtualScrollable, newVirtualHeight: number): void {
+    const virtualHeight = TotalVirtualHeight(this._currentState);
+    const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
+    
+    const updateFunc = (newState: VirtualAreaState): void => {
+      newState.scrollableStates.filter( (ss) => ss.scrollable === scrollable )
+        .forEach( (ss) => { ss.virtualHeight = newVirtualHeight; });
+    };
+    
+    if (isAtBottom) {
+      this._update(updateFunc, (newState: VirtualAreaState): void => {
+        newState.virtualScrollYOffset = TotalVirtualHeight(newState) - newState.containerHeight;
+      });
+    } else {
+      this._update(updateFunc);
+    }
+  }
   
   //-----------------------------------------------------------------------
   //
@@ -152,13 +176,16 @@ export class VirtualScrollArea {
    * @param  {VirtualAreaState} mutator [description]
    * @return {[type]}                   [description]
    */
-  private _update( mutator: (newState: VirtualAreaState) => void): void {
+  private _update( ...mutator: ((newState: VirtualAreaState) => void)[]): void {
     // Carefully clone our state without jumping into any references to external objects.
     const newState = _.clone(this._currentState);
     newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
     
-    mutator(newState);
-    Compute(newState);
+    mutator.forEach( (m) => {
+      m(newState);
+      Compute(newState);
+    });
+    
     ApplyState(this._currentState, newState);
     this._currentState = newState;
   }
