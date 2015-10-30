@@ -12,6 +12,7 @@ import termjs = require('../term');
 
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
 type CursorMoveDetail = EtCodeMirrorViewerTypes.CursorMoveDetail;
+type ResizeDetail = EtCodeMirrorViewerTypes.ResizeDetail;
 
 const ID = "CbCodeMirrorViewerTemplate";
 const ID_CONTAINER = "container";
@@ -42,6 +43,8 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   static EVENT_CURSOR_MOVE = "cursor-move";
 
+  static EVENT_RESIZE = "resize";
+
   static init(): void {
     if (registered === false) {
       window.document.registerElement(EtCodeMirrorViewer.TAG_NAME, {prototype: EtCodeMirrorViewer.prototype});
@@ -68,7 +71,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _returnCode: string;
   private _focusable: boolean;
   private _codeMirror: CodeMirror.Editor;
-  private _maxHeight: number;
+  private _height: number;
   private _isEmpty: boolean;
   private _mode: Mode;
   private document: Document;
@@ -86,7 +89,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._returnCode  =null;
     this._focusable = false;
     this._codeMirror = null;
-    this._maxHeight = -1;
+    this._height = 0;
     this._isEmpty = true;
     this._mode = Mode.TERMINAL;
     this.document = document;
@@ -182,9 +185,19 @@ class EtCodeMirrorViewer extends ViewerElement {
    * @return {number} [description]
    */
   getHeight(): number {
-    return Math.min(this.getVirtualHeight(), this._maxHeight);
+    return this._height;
   }
-  
+
+
+  setHeight(newHeight: number): void {
+    this._height = newHeight;
+    this._adjustHeight();
+  }
+
+  getMinHeight(): number {
+    return 0;
+  }
+
   /**
    * Gets the height of the scrollable contents on this element.
    *
@@ -193,13 +206,17 @@ class EtCodeMirrorViewer extends ViewerElement {
   getVirtualHeight(): number {
     return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
   }
+  
+  resizeEmulatorToParentContainer(): void {
+    this.resizeEmulatorToBox(this.parentElement.clientWidth, this.parentElement.clientHeight);
+  }
 
   /**
-   * Resize the terminal to fill its containing element.
+   * Resize the terminal to fill a given pixel box size.
    * 
    * @returns Object with the new colums (cols field) and rows (rows field) information.
    */
-  resizeToContainer(): {cols: number; rows: number; vpad: number; } {
+  resizeEmulatorToBox(widthPixels: number, heightPixels: number): {cols: number; rows: number; vpad: number; } {
     const {columns: cols, rows: rows} = this.emulator.size();
     
     if (DEBUG_RESIZE) {
@@ -218,9 +235,9 @@ class EtCodeMirrorViewer extends ViewerElement {
     const charWidth = this._codeMirror.defaultCharWidth();
 
     const computedStyle = window.getComputedStyle(this);
-    const width = this.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
+    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
     const newCols = Math.floor(width / charWidth);
-    const newRows = Math.max(2, Math.floor(this._maxHeight / charHeight));
+    const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
     
     if (newCols !== cols || newRows !== rows) {
       this.emulator.resize( { rows: newRows, columns: newCols } );
@@ -248,8 +265,12 @@ class EtCodeMirrorViewer extends ViewerElement {
      return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   }
 
-  scrollTo(x: number, y: number): void {
+  private scrollTo(x: number, y: number): void {
     this._codeMirror.scrollTo(x, y);
+  }
+  
+  setScrollOffset(y: number): void {
+    this.scrollTo(0, y);
   }
   
   lineCount(): number {
@@ -294,10 +315,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     this.style.height = "0px";
     this._updateFocusable(this._focusable);
     this._setMode(Mode.TERMINAL);
-  }
-  
-  attachedCallback(): void {
-    const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     
     // Create the CodeMirror instance
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
@@ -349,31 +366,9 @@ class EtCodeMirrorViewer extends ViewerElement {
     });
   }
   
-  // deleteLinesFrom(line: number): void {
-  //   const doc = this._codeMirror.getDoc();
-  //   
-  //   this._isEmpty = line === 0;
-  //   
-  //   const lastPos = { line: doc.lineCount(), ch: 0 };
-  //   
-  //   let startPos: { line: number; ch: number; };
-  //   if (line > 0) {
-  //     const previousLineString = doc.getLine(line-1);
-  //     startPos = { line: line-1, ch: previousLineString.length };
-  //   } else {
-  //     startPos = { line: line, ch: 0 };
-  //   }
-  //   doc.replaceRange("", startPos, lastPos);
-  //   
-  //   this._codeMirror.refresh();
-  //   this._adjustHeight();
-  // 
-  //   util.doLater( () => {
-  //     this._codeMirror.refresh();
-  //     this._adjustHeight();
-  //   });
-  // }
-  // 
+  attachedCallback(): void {
+  }
+  
   // getCursorInfo(): CursorMoveDetail {
   //   const cursorPos = this._codeMirror.cursorCoords(true, "local");
   //   const scrollInfo = this._codeMirror.getScrollInfo();
@@ -384,30 +379,6 @@ class EtCodeMirrorViewer extends ViewerElement {
   //     viewPortTop: scrollInfo.top
   //   };
   //   return detail;
-  // }
-  
-  // fakeMouseDown(ev: MouseEvent): void {
-  //   const root = util.getShadowRoot(this);
-  //   const newTarget = root.elementFromPoint(ev.clientX, ev.clientY);
-  //   
-  //   const newEvent = document.createEvent('MouseEvents');
-  //   newEvent.initMouseEvent(
-  //     'mousedown',                    // typeArg: string,
-  //     true,                           // canBubbleArg: boolean,
-  //     true,                           // cancelableArg: boolean,
-  //     document.defaultView,           // viewArg: Window,
-  //     0,                              // detailArg: number,
-  //     ev.screenX,                     // screenXArg: number,
-  //     ev.screenY,                     // screenYArg: number,
-  //     ev.clientX,                     // clientXArg: number,
-  //     ev.clientY,                     // clientYArg: number,
-  //     ev.ctrlKey,                     // ctrlKeyArg: boolean,
-  //     ev.altKey,                      // altKeyArg: boolean,
-  //     ev.shiftKey,                    // shiftKeyArg: boolean,
-  //     ev.metaKey,                     // metaKeyArg: boolean,
-  //     ev.button,                      // buttonArg: number,
-  //     null);                          // relatedTargetArg: EventTarget
-  //   newTarget.dispatchEvent(newEvent);
   // }
   
   //-----------------------------------------------------------------------
@@ -485,6 +456,13 @@ class EtCodeMirrorViewer extends ViewerElement {
     }
   }
   
+  private _emitVirtualResizeEvent(): void {
+    const scrollInfo = this._codeMirror.getScrollInfo();    
+    const detail: ResizeDetail = { height: scrollInfo.height };
+    const event = new CustomEvent(EtCodeMirrorViewer.EVENT_RESIZE, { detail: detail });
+    this.dispatchEvent(event);
+  }
+  
   //-----------------------------------------------------------------------
   //
   // #######                        #                                            
@@ -539,13 +517,21 @@ class EtCodeMirrorViewer extends ViewerElement {
         this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
       } else {
         // Yay! the font is correct. Resize the term soon.
-        this.resizeToContainer();
+        this.resizeEmulatorToParentContainer();
       }
     }
   }
   
   //-----------------------------------------------------------------------
-  //-----------------------------------------------------------------------
+  //
+  // ######                                     
+  // #     # ###### #    # #####  ###### #####  
+  // #     # #      ##   # #    # #      #    # 
+  // ######  #####  # #  # #    # #####  #    # 
+  // #   #   #      #  # # #    # #      #####  
+  // #    #  #      #   ## #    # #      #   #  
+  // #     # ###### #    # #####  ###### #    # 
+  //                                            
   //-----------------------------------------------------------------------
 
   private _handleRenderEvent(instance: termjs.Emulator, startRow: number, endRow: number): void {
@@ -565,17 +551,21 @@ class EtCodeMirrorViewer extends ViewerElement {
       const pos = { line: this._terminalFirstRow + lineCount, ch: 0 };
       
       let emptyText = "";
-      const extraCrCount = endRow - 1 + this._terminalFirstRow - lineCount;
+      const extraCrCount = endRow + this._terminalFirstRow - lineCount;
       for (let j = 0; j < extraCrCount; j++) {
         emptyText += "\n";
       }
-      doc.replaceRange((this._isEmpty ? "" : "\n") + emptyText, pos, pos);
+      doc.replaceRange(emptyText, pos, pos);
       this._isEmpty = false;
     }
     const {text: text, decorations: decorations} = this._linesToTextStyles(lines);
     this._insertLinesAtPos({ line: this._terminalFirstRow + startRow, ch: 0 },
       { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length },
       text, decorations);
+    
+    if (lineCount !== doc.lineCount()) {
+      this._emitVirtualResizeEvent();
+    }
   }
   
   private _insertLinesAtPos(startPos: CodeMirror.Position, endPos: CodeMirror.Position, text: string,
@@ -600,10 +590,10 @@ class EtCodeMirrorViewer extends ViewerElement {
       }
     }
     
-    console.log("lineCount: " + doc.lineCount());
-    console.log("______________________________________");
-    console.log(doc.getValue());
-    console.log("______________________________________");
+    // console.log("lineCount: " + doc.lineCount());
+    // console.log("______________________________________");
+    // console.log(doc.getValue());
+    // console.log("______________________________________");
     
     this._codeMirror.refresh();
     this._adjustHeight();
@@ -619,6 +609,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     const {text: text, decorations: decorations} = this._linesToTextStyles(scrollbackLines);
     this._insertLinesAtPos(pos ,pos, text + "\n", decorations);
     this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
+    this._emitVirtualResizeEvent();
   }
 
   private _updateFocusable(focusable: boolean): void {
@@ -632,14 +623,14 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   private _adjustHeight(): void {
-    const virtualHeight = this.getVirtualHeight();
     const elementHeight = this.getHeight();
     this.style.height = "" + elementHeight + "px";
-    
-    const containerDiv = util.getShadowId(this, ID_CONTAINER);
-    containerDiv.style.height = "" + elementHeight + "px";
-    this._codeMirror.refresh();
-    this._codeMirror.setSize("100%", "" +elementHeight + "px"); 
+    if (this.parentNode !== null) {
+      const containerDiv = util.getShadowId(this, ID_CONTAINER);
+      containerDiv.style.height = "" + elementHeight + "px";
+      this._codeMirror.refresh();
+      this._codeMirror.setSize("100%", "" +elementHeight + "px"); 
+    }
   }
     
   _themeCssSet(): void {  

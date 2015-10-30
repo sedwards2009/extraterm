@@ -12,3 +12,8 @@ export interface CursorMoveDetail {
   bottom: number;
   viewPortTop: number;
 }
+
+export interface ResizeDetail {
+  height: number; // height in pixels.
+  
+}

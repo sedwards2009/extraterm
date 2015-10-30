@@ -13,9 +13,11 @@ class CbScrollbar extends HTMLElement {
   
   static TAG_NAME = 'cb-scrollbar';
   
-  static ATTR_SIZE = "size";
+  static ATTR_LENGTH = "length";
   
   static ATTR_POSITION = "position";
+  
+  static ATTR_THUMBSIZE = "thumbsize";
   
   static init(): void {
     if (registered === false) {
@@ -27,7 +29,7 @@ class CbScrollbar extends HTMLElement {
   // WARNING: Fields like this will not be initialised automatically.
   private _position: number;
   
-  private _size: number;
+  private _length: number;
   
   private _css() {
     return `
@@ -53,7 +55,7 @@ class CbScrollbar extends HTMLElement {
   
   private _initProperties(): void {
     this._position = 0;
-    this._size = 1;
+    this._length = 1;
   }
   
   createdCallback(): void {
@@ -74,7 +76,7 @@ class CbScrollbar extends HTMLElement {
       this.dispatchEvent(event);
     });
     
-    this._updateSize(this.getAttribute(CbScrollbar.ATTR_SIZE));
+    this._updateLength(this.getAttribute(CbScrollbar.ATTR_LENGTH));
     this._updatePosition(this.getAttribute(CbScrollbar.ATTR_POSITION));
   }
   
@@ -96,8 +98,8 @@ class CbScrollbar extends HTMLElement {
 
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     switch (attrName) {
-      case CbScrollbar.ATTR_SIZE:
-        this._updateSize(newValue);
+      case CbScrollbar.ATTR_LENGTH:
+        this._updateLength(newValue);
         break;
 
       case CbScrollbar.ATTR_POSITION:
@@ -109,31 +111,31 @@ class CbScrollbar extends HTMLElement {
     }
   }
   
-  // --- Size attribute ---
-  set size(value: number) {
-    if (value !== this._size) {
-      this._size = Math.max(0, value);
-      this._updateSizeNumber(this._size);
+  // --- Length attribute ---
+  set length(value: number) {
+    if (value !== this._length) {
+      this._length = Math.max(0, value);
+      this._updateLengthNumber(this._length);
     }
   }
   
-  get size(): number {
-    return this._size;
+  get length(): number {
+    return this._length;
   }
   
-  private _updateSize(value: string): void {
+  private _updateLength(value: string): void {
     if (value === null || value === undefined) {
       return;
     }
     var numberValue = parseInt(value, 10);
     if (isNaN(numberValue)) {
-      console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_SIZE + "' was NaN.");
+      console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_LENGTH + "' was NaN.");
       return;
     }
-    this.size = numberValue;
+    this.length = numberValue;
   }
   
-  private _updateSizeNumber(value: number): void {
+  private _updateLengthNumber(value: number): void {
     var areaElement = this._getById(ID_AREA);
     areaElement.style.height = value + "px";
   }
@@ -158,7 +160,7 @@ class CbScrollbar extends HTMLElement {
     }
     var numberValue = parseInt(value, 10);
     if (isNaN(numberValue)) {
-      console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_SIZE + "' was NaN.");
+      console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_LENGTH + "' was NaN.");
       return;
     }
     this.position = numberValue;
@@ -167,6 +169,15 @@ class CbScrollbar extends HTMLElement {
   private _updatePositionNumber(value: number): void {
     var containerElement = this._getById(ID_CONTAINER);
     containerElement.scrollTop = value;
+  }
+  
+  // --- Thumbsize attribute ---
+  set thumbSize(size: number) {
+    
+  }
+  
+  get thumbSize(): number {
+    return 7734;  // FIXME bogus.
   }
 }
 

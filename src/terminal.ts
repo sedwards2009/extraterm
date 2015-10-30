@@ -19,6 +19,7 @@ import util = require('./gui/util');
 import clipboard = require('clipboard');
 import webipc = require('./webipc');
 import globalcss = require('./gui/globalcss');
+import virtualscrollarea = require('./virtualscrollarea');
 
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
 type CursorMoveDetail = EtCodeMirrorViewerTypes.CursorMoveDetail;
@@ -118,6 +119,9 @@ class EtTerminal extends HTMLElement {
 
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
+
+  private _virtualScrollArea: virtualscrollarea.VirtualScrollArea;
+  
   private _scrollSyncLaterHandle: util.LaterHandle;
   private _autoscroll: boolean;
   
@@ -158,6 +162,7 @@ class EtTerminal extends HTMLElement {
   private _scheduledResize: boolean;
 
   private _initProperties(): void {
+    this._virtualScrollArea = null;
     this._elementAttached = false;
     this._scrollSyncLaterHandle = null;
     this._autoscroll = true;
@@ -210,6 +215,7 @@ class EtTerminal extends HTMLElement {
 
     const clone = this._createClone();
     shadow.appendChild(clone);
+    this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
 
     // util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
     //   this._mainStyleLoaded = true;
@@ -226,8 +232,11 @@ class EtTerminal extends HTMLElement {
     const termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
     const scroller = util.getShadowId(this, ID_SCROLLER);
     
-    const cookie = crypto.randomBytes(10).toString('hex');
+    this._virtualScrollArea.setScrollContainer(this);
+    this._virtualScrollArea.setScrollbar(scrollbar);
     
+    // Set up the emulator
+    const cookie = crypto.randomBytes(10).toString('hex');
     process.env[EXTRATERM_COOKIE_ENV] = cookie;
 
     this._emulator = new termjs.Emulator({
@@ -242,13 +251,14 @@ class EtTerminal extends HTMLElement {
     this._emulator.addTitleChangeEventListener(this._handleTitle.bind(this));
     this._emulator.addDataEventListener(this._handleTermData.bind(this));
     this._emulator.addSizeEventListener(this._handleTermSize.bind(this));
-    
+
     // Create the CodeMirrorTerminal
     this._codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
-    if (this._terminalSize !== null && this._terminalSize.height !== null) {
-      this._codeMirrorTerminal.setMaxHeight(this._terminalSize.height);
-    }
+    this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_RESIZE, this._handleCodeMirrorResize.bind(this));
     util.getShadowId(this, ID_TERM_CONTAINER).appendChild(this._codeMirrorTerminal);
+    this._virtualScrollArea.appendScrollable(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
+      this._codeMirrorTerminal.getVirtualHeight());
+
     this._codeMirrorTerminal.emulator = this._emulator;
 
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
@@ -266,7 +276,7 @@ class EtTerminal extends HTMLElement {
     // this._term.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
     // this._term.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
   }
-  
+   
   attachedCallback(): void {
     if (this._elementAttached) {
       return;
@@ -281,8 +291,7 @@ class EtTerminal extends HTMLElement {
     
     const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
     scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-      this._autoscroll = ev.detail.isBottom;
-      this._scrollTo(scrollbar.position);
+      this._virtualScrollArea.scrollTo(scrollbar.position);
     });
   
     this._syncScrolling();
@@ -379,7 +388,6 @@ class EtTerminal extends HTMLElement {
    */
   write(text: string): void {
     this._emulator.write(text);
-    this._syncScrolling();
   }
   
   /**
@@ -541,213 +549,31 @@ class EtTerminal extends HTMLElement {
    * These happen when the user does something in the terminal which
    * intentionally scrolls the contents.
    */
-  private _handleManualScroll(scrollDetail: termjs.ScrollDetail): void {
-    this._autoscroll = scrollDetail.isBottom;
-    if (scrollDetail.isBottom) {
-      this._scrollTo(Number.MAX_SAFE_INTEGER);
-    }
-  }
-  
-  /**
-   * [_refreshScroll description]
-   */
-  private _refreshScroll(): void {
-    console.log("*** _refreshScroll()");
-    this._scrollTo(this._scrollYOffset);
-  }
-  
-  /**
-   * Scroll the contents of the terminal to the given position.
-   * 
-   * @param {number} requestedY new position visible at the top of the viewport.
-   */
-  private _scrollTo(requestedY: number): void {
-    if (this._terminalSize === null) {
-      return;
-    }
-log("*************************************** _scrollTo: ", requestedY);
-    const viewPortHeight = this._terminalSize.height;
+//   private _handleManualScroll(scrollDetail: termjs.ScrollDetail): void {
+// console.log("*** _handleManualScroll()");
+//     
+//     this._autoscroll = scrollDetail.isBottom;
+//     if (scrollDetail.isBottom) {
+//       this._scrollTo(Number.MAX_SAFE_INTEGER);
+//     }
+//   }
 
-    // Compute the virtual height of the terminal contents.
-    
-    const heights = this._getVirtualHeights();
-// log("heights:",heights);
-
-    // Add up the virtual heights.
-    const virtualHeight = this._totalVirtualHeight(heights);
-    this._virtualHeight = virtualHeight;
-// log(`virtualHeight=${virtualHeight}`);
-    // Clamp the requested position.
-    const pos = Math.min(Math.max(0, requestedY), Math.max(0, virtualHeight-viewPortHeight));
-    this._scrollYOffset = pos;
-// log(`pos=${pos}`);
-
-    // We pretend that the scrollback is one very tall continous column of text etc. But this is fake.
-    // Each code mirror viewer is only as tall as the terminal viewport. We scroll the contents of the
-    // code mirrors to make it look like the user is scrolling through a big long list.
-    //
-    // The terminal contents can best be thought of as a stack of rectangles which contain a sliding 'view' box.
-    // +-------+
-    // |       | <- First code mirror viewer.
-    // |       |
-    // |       |
-    // |       |
-    // |+-----+|
-    // ||     || <- This little box is the part which shown inside the code mirror view port.
-    // |+-----+|    This is is 'pulled' to bottom in the direction of the scroll Y point
-    // +-------+
-    // +-------+
-    // |       | <- second code mirror viewer.
-    // |       |
-    // |       |
-    // |+-----+| --- virtual scroll Y point
-    // ||     ||     The viewport is positioned aligned with the scroll Y point.
-    // |+-----+|     The scroller viewport is positioned at the top of the second code mirrro viewer.
-    // |       |
-    // +-------+
-    //
-    // The view ports are 'attracted' to the virtual Y position that we want to show.
-
-    let realYBase = 0;
-    let virtualYBase = 0;
-    const el = util.getShadowId(this, ID_SCROLLER);
-    for (let i=0; i<heights.length; i++) {
-      const heightInfo = heights[i];
-
-      const currentVirtualHeight = heightInfo.virtualHeight;
-      const currentScrollHeight = currentVirtualHeight - heightInfo.realHeight;
-
-      if (pos <= currentScrollHeight + virtualYBase) {
-        const scrollOffset = Math.max(0, pos - virtualYBase);
-// log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
-        if (heightInfo.element !== null) {
-          heightInfo.element.scrollTo(0, scrollOffset);
-        }
-        
-        if (pos >= virtualYBase) {
-          el.scrollTop = realYBase;
-        }
-        
-      } else if (pos < virtualHeight + virtualYBase) {
-        if (heightInfo.element !== null) {
-          heightInfo.element.scrollTo(0, currentScrollHeight);
-        }
-// log(`2. heightInfo ${i}, element scrollTo=${currentScrollHeight}, el.scrollTop=${realYBase + pos - virtualYBase - currentScrollHeight}`);
-        if (pos >= virtualYBase) {
-          el.scrollTop = realYBase + pos - virtualYBase - currentScrollHeight;
-        }
-      } else {
-        if (heightInfo.element !== null) {
-// log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
-          heightInfo.element.scrollTo(0, currentScrollHeight);
-        }
-      }
-
-      realYBase += heightInfo.realHeight;
-      virtualYBase += currentVirtualHeight;
-    }
-
-    // Update the scrollbar
-    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
-    scrollbar.size = this._virtualHeight;
-    scrollbar.position = pos;
-  }
-  
-  /**
-   * [_getVirtualHeights description]
-   * @return {VirtualHeight[]} [description]
-   */
-  private _getVirtualHeights(): VirtualHeight[] {
-    // Assemble the interesting boxes.
-    const heights: VirtualHeight[] = [];
-    if (this._codeMirrorTerminal !== null) {
-      heights.push( { realHeight: this._codeMirrorTerminal.getHeight(),
-        virtualHeight: this._codeMirrorTerminal.getVirtualHeight(),
-        element: this._codeMirrorTerminal } );
-    }
-    return heights;
-  }
-  
-  /**
-   * [_totalVirtualHeight description]
-   * @param  {VirtualHeight[]} heights [description]
-   * @return {number}                  [description]
-   */
-  private _totalVirtualHeight(heights: VirtualHeight[]): number {
-    return heights.reduce<number>( (accu, info) => accu + info.virtualHeight, 0);
-  }
-  
-  private _virtualYOffset(heights: VirtualHeight[], element: HTMLElement, relativeYOffset: number): number {
-    let ycounter = 0;
-    for (let i=0; i<heights.length; i++) {
-      if (heights[i].element === element) {
-        return ycounter + relativeYOffset;
-      }
-      ycounter += heights[i].virtualHeight;
-    }
-    return -1;
+  private _handleCodeMirrorResize(ev: CustomEvent): void {
+    this._virtualScrollArea.updateScrollableHeights(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
+      this._codeMirrorTerminal.getVirtualHeight())
   }
   
   private _syncScrolling(): void {
-    if (this._scrollSyncLaterHandle === null) {
-      this._scrollSyncLaterHandle = util.doLaterFrame( this._syncScrollingExec.bind(this) );
-    }
-  }
-
-  /**
-   * Synchronize the scrollbar with the term.
-   */
-  private _syncScrollingExec(): void {
-// log("_syncScrollingExec");
-// log("this._virtualHeight:", this._virtualHeight);
-    this._scrollSyncLaterHandle = null;
-    
-    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
-    scrollbar.size = this._virtualHeight;
-    
-    if (this._autoscroll) {
-      // Scroll to the bottom.
-      scrollbar.position = Number.MAX_SAFE_INTEGER;
-      this._scrollTo(Number.MAX_SAFE_INTEGER);
-    // } else {
-    //   this._scrollTo(this._scrollbar.position);
-    }
+    // if (this._scrollSyncLaterHandle === null) {
+    //   this._scrollSyncLaterHandle = util.doLaterFrame( this._syncScrollingExec.bind(this) );
+    // }
   }
 
   /**
    * Handle a resize event from the window.
    */
   private _processResize(): void {
-    // Get the new size of the terminal.
-    const newTerminalSize = this.getBoundingClientRect();
-    if (this._terminalSize !== null &&
-        newTerminalSize.width === this._terminalSize.width &&
-        newTerminalSize.height === this._terminalSize.height) {
-      return;
-    }
-log("this.clientHeight=",this.clientHeight);
-log("bound height=",newTerminalSize.height);
-
-    // Propagate the new terminal height to the different components in inside the terminal scrollback DIV.
-    this._terminalSize = newTerminalSize;
-    const scrollback = util.getShadowId(this, ID_TERM_CONTAINER);
-    const height = this._terminalSize.height;
-    util.nodeListToArray(scrollback.childNodes).forEach( (node: Node): void => {
-      if (EtCodeMirrorViewer.is(node)) {
-        node.setMaxHeight(height);
-      }
-    });
-
-    if (this._codeMirrorTerminal !== null) {
-      if (this._mainStyleLoaded && this._themeStyleLoaded) {
-        const size = this._codeMirrorTerminal.resizeToContainer();
-        const vpadElement = util.getShadowId(this, ID_VPAD);
-        this._vpad = size.vpad;
-        vpadElement.style.height = "" + size.vpad + "px";
-      }
-    }
-    
-    this._syncScrolling();
+    this._virtualScrollArea.resize();    
   }
   
   // private _resizePoll(): void {
@@ -766,127 +592,9 @@ log("bound height=",newTerminalSize.height);
     this._scheduleCursorMoveUpdate(<EtCodeMirrorViewer> ev.target);
   }
   
-//   private _updateCursorAction(cmv: EtCodeMirrorViewer): void {
-//     console.log("_handleCursorMove (start)");
-//     if (this._mode === Mode.TERM) {
-//       console.log("_handleCursorMove not in selection mode (exit)");
-//       return;
-//     }
-//     
-//     // Autocopy to clipboard when in Mode.MOUSE_SELECTION
-//     if (this._mode === Mode.MOUSE_SELECTION) {
-//       this.copyToClipboard();
-//     }
-//     
-//     const detail: CursorMoveDetail = cmv.getCursorInfo();
-//     
-//     console.log("_handleCursorMove detail.top: ", detail.top);
-//     console.log("_handleCursorMove detail.bottom: ", detail.bottom);
-//     console.log("_handleCursorMove detail.viewPortTop: ", detail.viewPortTop);
-// 
-//     const heightsList = this._getVirtualHeights();
-//     const totalHeight = this._totalVirtualHeight(heightsList);
-//     
-// console.log("_handleCursorMove this._scrollYOffset:",  this._scrollYOffset);
-//     
-//     const topYOffset = this._virtualYOffset(heightsList, cmv, detail.top);
-// console.log("_handleCursorMove topYOffset:", topYOffset);
-//     if (topYOffset < this._scrollYOffset) {
-// console.log("_handleCursorMove topYOffset is smaller, scrolling");
-//       this._scrollTo(topYOffset);
-//     } else {
-//       const bottomYOffset = topYOffset + detail.bottom - detail.top;
-//       const scrollBottomYOffset = this._scrollYOffset + this._terminalSize.height;
-//       if (bottomYOffset > scrollBottomYOffset) {
-// console.log("_handleCursorMove bottomYOffset too small, scrolling");
-//       
-// console.log("_handleCursorMove topYOffset + bottomYOffset - scrollBottomYOffset:",
-//   topYOffset + bottomYOffset - scrollBottomYOffset);
-//         
-//         this._scrollTo(bottomYOffset - this._terminalSize.height);
-//       } else {
-// console.log("_handleCursorMove (do nothing)");
-//         if (this._lastViewPortTop.has(cmv)) {
-//           const oldViewPortTop = this._lastViewPortTop.get(cmv);
-// console.log("_handleCursorMove oldViewPortTop: ",oldViewPortTop);
-//           
-//           if (oldViewPortTop !== detail.viewPortTop) {
-// console.log("_handleCursorMove scroll to new viewPortTop: ",detail.viewPortTop);
-//             this._scrollTo(detail.viewPortTop);
-//           }
-//         }
-// console.log("_handleCursorMove setting new viewPortTop: ",detail.viewPortTop);
-//         this._lastViewPortTop.set(cmv, detail.viewPortTop);
-//       }
-//     }
-// console.log("_handleCursorMove (exit)");
-//   }
-  
-  // private _handleScrollbackReady(): void {
-  //   if (this._mode === Mode.TERM) {
-  //     this._scheduleScrollbackImport();
-  //   }
-  // }
-  
-  // private _getScrollBackCodeMirror(): EtCodeMirrorViewer {
-  //   if (this._scrollbackCodeMirror === null) {
-  //     this._scrollbackCodeMirror = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
-  //     this._scrollbackCodeMirror.processKeyboard = false;
-  //     if (this._terminalSize.height !== null) {
-  //       this._scrollbackCodeMirror.setMaxHeight(this._terminalSize.height);
-  //     }
-  //     util.getShadowId(this, ID_SCROLLBACK).appendChild(this._scrollbackCodeMirror);
-  //   }
-  //   return this._scrollbackCodeMirror;
-  // }
-  
-//   private _importScrollback(): void {
-// log("_importScrollback");
-//     this._syncScrolling();
-//     
-//     if (this._term === null || this._mode !== Mode.TERM) {
-//       return;
-//     }
-//     const lines = this._term.fetchScrollbackLines();
-//     if (lines.length === 0) {
-//       return;
-//     }
-// 
-//     const {text: allText, decorations: allDecorations} = this._linesToTextStyles(lines);
-//     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
-//     scrollbackCodeMirror.appendText(allText, allDecorations);
-//   }
-// 
-  
   // ----------------------------------------------------------------------
   // ----------------------------------------------------------------------
   // ----------------------------------------------------------------------
-  
-  private _handleScrollerKeyDown(ev: KeyboardEvent): void {
-    // log("scroller keydown:", ev);
-    
-    // switch (this._mode) {
-    //   case Mode.KEYBOARD_SELECTION:
-    //     if (ev.keyCode === 27) {
-    //       this._exitSelectionMode();
-    //     }
-    //     break;
-    //     
-    //   case Mode.MOUSE_SELECTION:
-    //     this._exitSelectionMode();
-    //     break;
-    // 
-    //   case Mode.TERM:
-    //     break;
-    // }
-  }
-
-  // private _handleStyleLoad(): void {
-  //   if (this._mainStyleLoaded && this._themeStyleLoaded) {
-  //     // Start polling the term for application of the font.
-  //     this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
-  //   }
-  // }
 
   /**
    * Handle an unknown key down event from the term.
@@ -994,17 +702,6 @@ log("bound height=",newTerminalSize.height);
     }
   }
   
-  // private _handleMouseDownTerm(ev: MouseEvent): void {  
-  //   if (this._mode === Mode.TERM) {
-  //     const pos = this._term.getTerminalCoordsFromEvent(ev);
-  //     if (pos !== null) {
-  //       this._enterSelectionModeMouse(ev);
-  //       ev.stopPropagation();
-  //       ev.preventDefault();
-  //     }
-  //   }
-  // }
-  
   // ********************************************************************
   //
   //  #####                                                            
@@ -1036,11 +733,6 @@ log("bound height=",newTerminalSize.height);
     this._scheduledResize = true;
   }
   
-  private _scheduleScrollbackImport(): void {
-    this._scheduleProcessing();
-    this._scheduledScrollbackImport = true;
-  }
-  
   private _scheduleProcessing(): void {
     if (this._scheduleLaterHandle === null) {
       this._scheduleLaterHandle = util.doLater(this._processScheduled.bind(this));
@@ -1061,18 +753,7 @@ log("bound height=",newTerminalSize.height);
     if (scheduledResize) {
 console.log("_processScheduled resize");
       this._processResize();
-    }
-    
-//     if (scheduledScrollbackImport) {
-//       console.log("_processScheduled scrollback import");
-//       this._importScrollback();
-//     }
-// 
-//     scheduledCursorUpdates.forEach( (cmv) => {
-// console.log("_processScheduled update cursor");
-//       this._updateCursorAction(cmv);
-//     });
-    
+    }    
   }
   
   // ********************************************************************
