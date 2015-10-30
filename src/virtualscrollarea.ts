@@ -5,8 +5,9 @@ import util = require('./gui/util');
 import _  = require('lodash');
 
 export interface VirtualScrollable {
-  getHeight(): number;
+  getMinHeight(): number;
   getVirtualHeight(): number;
+  setHeight(height: number): void;
   setScrollOffset(y: number): void;
 }
 
@@ -14,6 +15,7 @@ export interface VirtualScrollable {
 interface VirtualScrollableState {
   scrollable: VirtualScrollable;
   virtualHeight: number;
+  minHeight: number;
 
   // Output - These values are set by the calculate() method.
   realHeight: number;
@@ -35,6 +37,10 @@ export interface Scrollbar {
   length: number;     // The size of the complete range.
   position: number;   // The position of the thumb inside the range.
   thumbSize: number;  // The size of the thumb.
+}
+
+interface Mutator { 
+  (newState: VirtualAreaState): void;
 }
 
 export class VirtualScrollArea {
@@ -74,6 +80,7 @@ export class VirtualScrollArea {
       newState.scrollableStates.push( {
         scrollable: scrollable,
         virtualHeight: scrollable.getVirtualHeight(),
+        minHeight: scrollable.getMinHeight(),
         
         realHeight: 0,
         virtualScrollYOffset: 0
@@ -81,9 +88,9 @@ export class VirtualScrollArea {
     });
   }
   
-  removeScrollable(scrollable: VirtualScrollable): void {
-    console.log("virtualscrollarea removeScrollable() Not implemented!!!"); // FIXME
-  }
+  // removeScrollable(scrollable: VirtualScrollable): void {
+  //   console.log("virtualscrollarea removeScrollable() Not implemented!!!"); // FIXME
+  // }
   
   setScrollContainer(container: HTMLElement): void {
     this._update( (newState) => {
@@ -176,7 +183,7 @@ export class VirtualScrollArea {
    * @param  {VirtualAreaState} mutator [description]
    * @return {[type]}                   [description]
    */
-  private _update( ...mutator: ((newState: VirtualAreaState) => void)[]): void {
+  private _update(...mutator: Mutator[]): void {
     // Carefully clone our state without jumping into any references to external objects.
     const newState = _.clone(this._currentState);
     newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
@@ -202,6 +209,12 @@ function Compute(state: VirtualAreaState): boolean {
   }
 
   const viewPortHeight = state.containerHeight;
+
+  // First update all of the scrollable heights based on their virtual heights and height of the container.
+  for (let i=0; i<state.scrollableStates.length; i++) {
+    const scrollable = state.scrollableStates[i];
+    scrollable.realHeight = Math.max(scrollable.minHeight, Math.min(viewPortHeight, scrollable.virtualHeight));
+  }
 
   // Compute the virtual height of the terminal contents.
   const virtualHeight = TotalVirtualHeight(state);
@@ -317,6 +330,10 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): voi
   // Update each Scrollable if needed.
   newState.scrollableStates.forEach( (newScrollableState: VirtualScrollableState): void => {
     const oldScrollableState = oldMap.get(newScrollableState.scrollable);
+    if (oldScrollableState === undefined ||
+        oldScrollableState.realHeight !== newScrollableState.realHeight) {
+      newScrollableState.scrollable.setHeight(newScrollableState.realHeight);
+    }
     if (oldScrollableState === undefined ||
         oldScrollableState.virtualScrollYOffset !== newScrollableState.virtualScrollYOffset) {
       newScrollableState.scrollable.setScrollOffset(newScrollableState.virtualScrollYOffset);

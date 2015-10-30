@@ -33,8 +33,9 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, height: numbe
 
   const scrollable = {
     _offset: null,
+    _height: 10,
     
-    getHeight(): number {
+    getMinHeight(): number {
       return height;
     },
     
@@ -48,6 +49,14 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, height: numbe
     
     getScrollOffset(): number {
       return this._offset;
+    },
+    
+    setHeight(height: number): void {
+      this._height = height;
+    },
+    
+    getHeight(): number {
+      return this._height;
     }
   };
   
