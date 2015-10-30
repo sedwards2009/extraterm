@@ -5,8 +5,6 @@ import util = require('./gui/util');
 import _  = require('lodash');
 
 export interface VirtualScrollable {
-  getMinHeight(): number;
-  getVirtualHeight(): number;
   setHeight(height: number): void;
   setScrollOffset(y: number): void;
 }
@@ -75,12 +73,12 @@ export class VirtualScrollArea {
   //
   //-----------------------------------------------------------------------
 
-  appendScrollable(scrollable: VirtualScrollable): void {
+  appendScrollable(scrollable: VirtualScrollable, minHeight: number, virtualHeight: number): void {
     this._update( (newState) => {
       newState.scrollableStates.push( {
         scrollable: scrollable,
-        virtualHeight: scrollable.getVirtualHeight(),
-        minHeight: scrollable.getMinHeight(),
+        virtualHeight: virtualHeight,
+        minHeight: minHeight,
         
         realHeight: 0,
         virtualScrollYOffset: 0
@@ -142,18 +140,22 @@ export class VirtualScrollArea {
   }
 
   /**
-   * Update the virtual height for a scrollable and relayout.
+   * Update the virtual height and minimum height for a scrollable and relayout.
    *
    * @param scrollable the scrollable to update
+   * @param newMinHeight the new minimum height
    * @param newVirtualHeight the new virtual height
    */
-  updateVirtualHeight(scrollable: VirtualScrollable, newVirtualHeight: number): void {
+  updateScrollableHeights(scrollable: VirtualScrollable, newMinHeight: number, newVirtualHeight: number): void {
     const virtualHeight = TotalVirtualHeight(this._currentState);
     const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
     
     const updateFunc = (newState: VirtualAreaState): void => {
       newState.scrollableStates.filter( (ss) => ss.scrollable === scrollable )
-        .forEach( (ss) => { ss.virtualHeight = newVirtualHeight; });
+        .forEach( (ss) => {
+          ss.virtualHeight = newVirtualHeight;
+          ss.minHeight = newMinHeight;
+        });
     };
     
     if (isAtBottom) {

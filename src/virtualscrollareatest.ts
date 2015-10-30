@@ -28,20 +28,12 @@ function SetUpScrollContainer(vsa: virtualscrollarea.VirtualScrollArea, height: 
   return scrollContainer;
 }
 
-function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, height: number,
+function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: number,
     virtualHeight: number): VirtualScrollableWithOffset {
 
   const scrollable = {
     _offset: null,
     _height: 10,
-    
-    getMinHeight(): number {
-      return height;
-    },
-    
-    getVirtualHeight(): number {
-      return virtualHeight;
-    },
     
     setScrollOffset(offset: number): void {
       this._offset = offset;
@@ -60,7 +52,7 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, height: numbe
     }
   };
   
-  vsa.appendScrollable(scrollable);
+  vsa.appendScrollable(scrollable, minHeight, virtualHeight);
   return scrollable;
 }
 
@@ -132,7 +124,7 @@ export function testVirtualHeightUpdate(test: nodeunit.Test): void {
   test.equal(container.scrollTop, 0);
   test.equal(scrollable.getScrollOffset(), 750);
   
-  vsa.updateVirtualHeight(scrollable, 2000);
+  vsa.updateScrollableHeights(scrollable, 10, 2000);
   
   test.equal(scrollbar.position, 750);
   test.equal(container.scrollTop, 0);
@@ -154,7 +146,7 @@ export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
   test.equal(container.scrollTop, 0);
   test.equal(scrollable.getScrollOffset(), 1000);
   
-  vsa.updateVirtualHeight(scrollable, 2000);
+  vsa.updateScrollableHeights(scrollable, 10, 2000);
   
   test.equal(scrollbar.position, 1500);
   test.equal(container.scrollTop, 0);
