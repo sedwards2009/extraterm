@@ -171,13 +171,6 @@ class EtCodeMirrorViewer extends ViewerElement {
   //   this._focusable = value;
   //   this._updateFocusable(value);
   // }
-  
-  setMaxHeight(height: number): void {
-    this._maxHeight = height;
-    if (this.parentNode !== null) {
-      this._adjustHeight();
-    }
-  }
 
   /**
    * Gets the height of this element.
@@ -593,15 +586,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     // console.log("lineCount: " + doc.lineCount());
     // console.log("______________________________________");
     // console.log(doc.getValue());
-    // console.log("______________________________________");
-    
-    this._codeMirror.refresh();
-    this._adjustHeight();
-    
-    util.doLater( () => {
-      this._codeMirror.refresh();
-      this._adjustHeight();
-    });
+    // console.log("______________________________________");    
   }
   
   private _handleScrollbackEvent(instance: termjs.Emulator, scrollbackLines: termjs.Line[]): void {
