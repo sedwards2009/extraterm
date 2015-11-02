@@ -264,6 +264,7 @@ class EtTerminal extends HTMLElement {
 
     this._codeMirrorTerminal.emulator = this._emulator;
 
+    // FIXME there might be resizes for things other than changs in window size.
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
     // termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
@@ -576,6 +577,7 @@ class EtTerminal extends HTMLElement {
    * Handle a resize event from the window.
    */
   private _processResize(): void {
+    this._codeMirrorTerminal.resizeEmulatorToParentContainer();
     this._virtualScrollArea.resize();    
   }
   

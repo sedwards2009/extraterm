@@ -138,7 +138,11 @@ export class VirtualScrollArea {
     });    
     return cleanOffset;
   }
-
+  
+  scrollToBottom(): number {
+    return this.scrollTo(TotalVirtualHeight(this._currentState) - this._currentState.containerHeight);
+  }
+  
   /**
    * Update the virtual height and minimum height for a scrollable and relayout.
    *
