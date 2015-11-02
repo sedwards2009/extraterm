@@ -255,6 +255,9 @@ class EtTerminal extends HTMLElement {
     // Create the CodeMirrorTerminal
     this._codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
     this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_RESIZE, this._handleCodeMirrorResize.bind(this));
+    this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
+      this._virtualScrollArea.scrollToBottom();
+    });
     util.getShadowId(this, ID_TERM_CONTAINER).appendChild(this._codeMirrorTerminal);
     this._virtualScrollArea.appendScrollable(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
       this._codeMirrorTerminal.getVirtualHeight());

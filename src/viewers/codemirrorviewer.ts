@@ -45,6 +45,8 @@ class EtCodeMirrorViewer extends ViewerElement {
 
   static EVENT_RESIZE = "resize";
 
+  static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
+
   static init(): void {
     if (registered === false) {
       window.document.registerElement(EtCodeMirrorViewer.TAG_NAME, {prototype: EtCodeMirrorViewer.prototype});
@@ -342,11 +344,13 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror.on("keydown", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
       this._emulator.keyDown(ev);
       (<any> ev).codemirrorIgnore = true;
+      this._emitKeyboardActivityEvent();
     });
     
     this._codeMirror.on("keypress", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
       this._emulator.keyPress(ev);
       (<any> ev).codemirrorIgnore = true;
+      this._emitKeyboardActivityEvent();
     });
     
     this._codeMirror.on("keyup", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
@@ -453,6 +457,12 @@ class EtCodeMirrorViewer extends ViewerElement {
     const scrollInfo = this._codeMirror.getScrollInfo();    
     const detail: ResizeDetail = { height: scrollInfo.height };
     const event = new CustomEvent(EtCodeMirrorViewer.EVENT_RESIZE, { detail: detail });
+    this.dispatchEvent(event);
+  }
+  
+  private _emitKeyboardActivityEvent(): void {
+    const scrollInfo = this._codeMirror.getScrollInfo();    
+    const event = new CustomEvent(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, { });
     this.dispatchEvent(event);
   }
   
