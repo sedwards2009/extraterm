@@ -130,7 +130,6 @@ class EtTerminal extends HTMLElement {
   private _scrollYOffset: number; // The Y scroll offset into the virtual height.
   private _virtualHeight: number; // The virtual height of the terminal contents in px.
   private _vpad: number;
-  private _lastViewPortTop: WeakMap<EtCodeMirrorViewer, number>;
   
   private _emulator: termjs.Emulator;
   private _htmlData: string;
@@ -189,7 +188,6 @@ class EtTerminal extends HTMLElement {
     this._scrollYOffset = 0;
     this._virtualHeight = 0;
     this._vpad = 0;
-    this._lastViewPortTop = new WeakMap();
 
     this._scheduleLaterHandle = null;
     this._scheduledCursorUpdates = [];
@@ -267,6 +265,16 @@ class EtTerminal extends HTMLElement {
     // FIXME there might be resizes for things other than changs in window size.
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
+    termContainer.addEventListener('mousedown', (ev: MouseEvent): void => {
+      this._codeMirrorTerminal.focus();
+      ev.preventDefault();
+      ev.stopPropagation();
+    });
+    
+    scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
+      this._virtualScrollArea.scrollTo(scrollbar.position);
+    });
+    
     // termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
     // scroller.addEventListener('wheel', this._handleTermWheel.bind(this));
     // scroller.addEventListener('keydown', this._handleScrollerKeyDown.bind(this));
@@ -279,6 +287,7 @@ class EtTerminal extends HTMLElement {
     // this._term.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
     // this._term.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
     // this._term.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
+
   }
    
   attachedCallback(): void {
@@ -286,20 +295,9 @@ class EtTerminal extends HTMLElement {
       return;
     }
     this._elementAttached = true;
-    
-    const termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
-    // termContainer.addEventListener('mousedown', this._handleMouseDownTermOnCapture.bind(this), true);
-    // termContainer.addEventListener('mousedown', this._handleMouseDownTerm.bind(this));
-    
-    this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
-    
-    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
-    scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-      this._virtualScrollArea.scrollTo(scrollbar.position);
-    });
-  
-    this._syncScrolling();
 
+    this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
+    this._syncScrolling();
     this._scheduleResize();
   }
   
