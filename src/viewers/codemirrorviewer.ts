@@ -83,6 +83,9 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _importStyleLoaded: boolean;
   private _resizePollHandle: util.LaterHandle;
   
+  // The current element height. This is a cached value used to prevent touching the DOM.  
+  private _currentElementHeight: number;
+  
   private _initProperties(): void {
     this._emulator = null;
     this._terminalFirstRow = 0;
@@ -96,6 +99,8 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._mode = Mode.TERMINAL;
     this.document = document;
     this.vpad = 0;
+    
+    this._currentElementHeight = -1;
     
     this._mainStyleLoaded = false;
     this._importStyleLoaded = false;
@@ -618,9 +623,13 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   private _adjustHeight(): void {
+    if (this.parentNode === null) {
+      return;
+    }
     const elementHeight = this.getHeight();
-    this.style.height = "" + elementHeight + "px";
-    if (this.parentNode !== null) {
+    if (elementHeight !== this._currentElementHeight) {
+      this._currentElementHeight = elementHeight;
+      this.style.height = "" + elementHeight + "px";
       const containerDiv = util.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + elementHeight + "px";
       this._codeMirror.refresh();
