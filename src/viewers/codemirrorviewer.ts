@@ -554,22 +554,26 @@ class EtCodeMirrorViewer extends ViewerElement {
     const doc = this._codeMirror.getDoc();
     const lineCount = doc.lineCount();
     
-    // Mark sure there are enough rows inside CodeMirror.
-    if (lineCount < endRow + this._terminalFirstRow) {
-      const pos = { line: this._terminalFirstRow + lineCount, ch: 0 };
-      
-      let emptyText = "";
-      const extraCrCount = endRow + this._terminalFirstRow - lineCount;
-      for (let j = 0; j < extraCrCount; j++) {
-        emptyText += "\n";
+    this._codeMirror.operation( () => {
+    
+      // Mark sure there are enough rows inside CodeMirror.
+      if (lineCount < endRow + this._terminalFirstRow) {
+        const pos = { line: this._terminalFirstRow + lineCount, ch: 0 };
+        
+        let emptyText = "";
+        const extraCrCount = endRow + this._terminalFirstRow - lineCount;
+        for (let j = 0; j < extraCrCount; j++) {
+          emptyText += "\n";
+        }
+        doc.replaceRange(emptyText, pos, pos);
+        this._isEmpty = false;
       }
-      doc.replaceRange(emptyText, pos, pos);
-      this._isEmpty = false;
-    }
-    const {text: text, decorations: decorations} = this._linesToTextStyles(lines);
-    this._insertLinesAtPos({ line: this._terminalFirstRow + startRow, ch: 0 },
-      { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length },
-      text, decorations);
+
+      const {text: text, decorations: decorations} = this._linesToTextStyles(lines);
+      this._insertLinesAtPos({ line: this._terminalFirstRow + startRow, ch: 0 },
+        { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length },
+        text, decorations);
+    });
     
     if (lineCount !== doc.lineCount()) {
       this._emitVirtualResizeEvent();
@@ -607,7 +611,9 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _handleScrollbackEvent(instance: termjs.Emulator, scrollbackLines: termjs.Line[]): void {
     const pos: CodeMirror.Position = { line: this._terminalFirstRow, ch: 0 };
     const {text: text, decorations: decorations} = this._linesToTextStyles(scrollbackLines);
-    this._insertLinesAtPos(pos ,pos, text + "\n", decorations);
+    this._codeMirror.operation( () => {
+      this._insertLinesAtPos(pos ,pos, text + "\n", decorations);
+    });
     this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
     this._emitVirtualResizeEvent();
   }
