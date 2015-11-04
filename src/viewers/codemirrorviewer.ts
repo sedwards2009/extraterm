@@ -67,7 +67,10 @@ class EtCodeMirrorViewer extends ViewerElement {
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _emulator: termjs.Emulator;
+
+  // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
   private _terminalFirstRow: number;
+  
   private _mutationObserver: MutationObserver;
   private _commandLine: string;
   private _returnCode: string;
@@ -298,19 +301,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._initFontLoading();
     
     const containerDiv = util.getShadowId(this, ID_CONTAINER);
-    // containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-    //   console.log("codemirrorviewer keydown: ",ev);
-    //   ev.stopPropagation();
-    //   ev.preventDefault();
-    // });
-    // containerDiv.addEventListener('keypress', (ev: KeyboardEvent): void => {
-    //   ev.stopPropagation();
-    //   ev.preventDefault();
-    // });
-    // containerDiv.addEventListener('keyup', (ev: KeyboardEvent): void => {
-    //   ev.stopPropagation();
-    //   ev.preventDefault();
-    // });
 
     this.style.height = "0px";
     this._updateFocusable(this._focusable);
@@ -362,6 +352,11 @@ class EtCodeMirrorViewer extends ViewerElement {
       // this._emulator.keyUp(ev);
       (<any> ev).codemirrorIgnore = true;
     });
+    
+    const codeMirrorElement = this._codeMirror.getWrapperElement();
+    codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
+    codeMirrorElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
+    codeMirrorElement.addEventListener("mousemove", this._handleMouseMoveEvent.bind(this), true);
     
     this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
       ev.preventDefault();
@@ -430,6 +425,10 @@ class EtCodeMirrorViewer extends ViewerElement {
             display: none !important;
         }
         
+        #${ID_CONTAINER}.${CLASS_HIDE_CURSOR} .CodeMirror-lines {
+          cursor: default;
+        }
+        
         </style>
         <style id="${ID_THEME_STYLE}"></style>
         <style id="${ID_IMPORT_STYLE}">
@@ -469,6 +468,49 @@ class EtCodeMirrorViewer extends ViewerElement {
     const scrollInfo = this._codeMirror.getScrollInfo();    
     const event = new CustomEvent(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, { });
     this.dispatchEvent(event);
+  }
+  
+  private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
+    // Ctrl click prevents the mouse being taken over by
+    // the application and allows the user to select stuff.
+    if (ev.ctrlKey) { 
+      return;
+    }
+    const pos = this._codeMirror.coordsChar( { left: ev.clientX, top: ev.clientY } );
+    if (pos === null) {
+      return;
+    }
+
+    const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
+
+    // send the button
+    const options: termjs.MouseEventOptions = {
+      leftButton: button === 0,
+      middleButton: button === 1,
+      rightButton: button === 2,
+      ctrlKey: ev.ctrlKey,
+      shiftKey: ev.shiftKey,
+      metaKey: ev.metaKey,
+      row: pos.line - this._terminalFirstRow,
+      column: pos.ch
+    };
+    
+    if (emulatorHandler(options)) {
+      // The emulator consumed the event. Stop CodeMirror from processing it too.
+      ev.stopPropagation();
+    }
+  }
+  
+  private _handleMouseDownEvent(ev: MouseEvent): void {
+    this._handleEmulatorMouseEvent(ev, this._emulator.mouseDown.bind(this._emulator));
+  }
+  
+  private _handleMouseUpEvent(ev: MouseEvent): void {
+    this._handleEmulatorMouseEvent(ev, this._emulator.mouseUp.bind(this._emulator));
+  }
+  
+  private _handleMouseMoveEvent(ev: MouseEvent): void {
+    this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
   }
   
   //-----------------------------------------------------------------------

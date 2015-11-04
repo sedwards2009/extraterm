@@ -194,8 +194,8 @@ export interface ApplicationModeDataEventListener {
 }
 
 export interface MouseEventOptions {
-  row: number;
-  column: number;
+  row: number;    // 0 based.
+  column: number; // 0 based.
   leftButton: boolean;
   middleButton: boolean;
   rightButton: boolean;
@@ -695,7 +695,7 @@ console.log("Terminal._handleMouseDown");
       return null;
     }
     
-    let row = this.children.indexOf(rowElement) + 1;
+    let row = this.children.indexOf(rowElement);
     
     let x = ev.pageX;
     let el = rowElement;
@@ -708,7 +708,7 @@ console.log("Terminal._handleMouseDown");
 
     // convert to cols
     const w = rowElement.clientWidth;
-    let col = Math.floor((x / w) * emulatorSize.columns) + 1;
+    let col = Math.floor((x / w) * emulatorSize.columns);
 
     // be sure to avoid sending
     // bad positions to the program
@@ -1082,7 +1082,7 @@ function isCharAttrCursor(attr: CharAttr): boolean {
   return attr === -1;
 }
 
-export class Emulator implements Emulator {
+export class Emulator implements EmulatorAPI {
   private cols = 80;
   private rows = 24
   private lastReportedPhysicalHeight = 0;
@@ -1438,9 +1438,10 @@ export class Emulator implements Emulator {
   //   button.c, charproc.c, misc.c
   // Relevant functions in xterm/button.c:
   //   BtnCode, EmitButtonCode, EditorButton, SendMousePosition
+  
   mouseDown(ev: MouseEventOptions): boolean {
     if ( ! this.mouseEvents) {
-      return;
+      return false;
     }
 
     let button = this.mouseEventOptionsToButtons(ev);
@@ -1500,7 +1501,7 @@ export class Emulator implements Emulator {
 
   mouseUp(ev: MouseEventOptions): boolean {
     if ( ! this.mouseEvents) {
-      return;
+      return false;
     }
 
     if ( ! this._mouseButtonDown) {
@@ -1681,8 +1682,9 @@ export class Emulator implements Emulator {
   // sgr: ^[[ Cb ; Cx ; Cy M/m
   // vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
   // locator: CSI P e ; P b ; P r ; P c ; P p & w
-  private sendMouseSequence(button: number, pos: TerminalCoord): void {
+  private sendMouseSequence(button: number, pos0based: TerminalCoord): void {
     let data: string;
+    const pos: TerminalCoord = { x: pos0based.x + 1, y: pos0based.y + 1 };
     
     if (this.vt300Mouse) {
       this.log("sendEvent(): vt300Mouse");
@@ -3585,12 +3587,6 @@ console.log("term:" + ev.keyCode);
   updateRange(y: number): void {
     if (y < this.refreshStart) this.refreshStart = y;
     if (y > this.refreshEnd) this.refreshEnd = y;
-    // if (y > this.refreshEnd) {
-    //   this.refreshEnd = y;
-    //   if (y > this.rows - 1) {
-    //     this.refreshEnd = this.rows - 1;
-    //   }
-    // }
   }
 
   maxRange(): void {
