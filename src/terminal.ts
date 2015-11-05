@@ -291,7 +291,6 @@ class EtTerminal extends HTMLElement {
     this._elementAttached = true;
 
     this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
-    this._syncScrolling();
     this._scheduleResize();
   }
   
@@ -541,12 +540,6 @@ class EtTerminal extends HTMLElement {
   private _handleCodeMirrorResize(ev: CustomEvent): void {
     this._virtualScrollArea.updateScrollableHeights(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
       this._codeMirrorTerminal.getVirtualHeight())
-  }
-  
-  private _syncScrolling(): void {
-    // if (this._scrollSyncLaterHandle === null) {
-    //   this._scrollSyncLaterHandle = util.doLaterFrame( this._syncScrollingExec.bind(this) );
-    // }
   }
 
   /**
@@ -1086,9 +1079,8 @@ console.log("_processScheduled resize");
    * @param {string} data New data.
    */
   private _handlePtyStdoutData (data: string): void {
-log("incoming data:",""+data);
+// log("incoming data:",""+data);
     this._emulator.write("" + data);
-    this._syncScrolling();
   }
 
   /**
@@ -1098,7 +1090,6 @@ log("incoming data:",""+data);
    */
   private _handlePtyStderrData(data: string): void {
     this._emulator.write(data);
-    this._syncScrolling();
   }
 
   /**
