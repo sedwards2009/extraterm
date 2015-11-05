@@ -275,13 +275,7 @@ class EtTerminal extends HTMLElement {
       this._virtualScrollArea.scrollTo(scrollbar.position);
     });
     
-    // termContainer.addEventListener('keydown', this._handleKeyDown.bind(this));
-    // scroller.addEventListener('wheel', this._handleTermWheel.bind(this));
-    // scroller.addEventListener('keydown', this._handleScrollerKeyDown.bind(this));
-    // scroller.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, this._handleCursorMove.bind(this));
-    
-    // this._term.on(termjs.Terminal.EVENT_MANUAL_SCROLL, this._handleManualScroll.bind(this));
-    // this._term.on(termjs.Terminal.EVENT_SCROLLBACK_AVAILABLE, this._handleScrollbackReady.bind(this));
+    scroller.addEventListener('wheel', this._handleTermWheel.bind(this), true);
     
     // Application mode handlers    
     // this._term.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
@@ -539,26 +533,10 @@ class EtTerminal extends HTMLElement {
   //  #####   ####  #    #  ####  ###### ###### # #    #  ####      ###  #     #####  # ###### # #    #  ####  
   //
   // ----------------------------------------------------------------------
-  
   private _handleTermWheel(ev: WheelEvent): void {
     const delta = ev.deltaY * SCROLL_STEP;
-    this._scrollTo(this._scrollYOffset + delta);
+    this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset() + delta);
   }
-  
-  /**
-   * Handle manual-scroll events from the term.
-   * 
-   * These happen when the user does something in the terminal which
-   * intentionally scrolls the contents.
-   */
-//   private _handleManualScroll(scrollDetail: termjs.ScrollDetail): void {
-// console.log("*** _handleManualScroll()");
-//     
-//     this._autoscroll = scrollDetail.isBottom;
-//     if (scrollDetail.isBottom) {
-//       this._scrollTo(Number.MAX_SAFE_INTEGER);
-//     }
-//   }
 
   private _handleCodeMirrorResize(ev: CustomEvent): void {
     this._virtualScrollArea.updateScrollableHeights(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
