@@ -3179,7 +3179,7 @@ export class Emulator implements EmulatorAPI {
   keyDown(ev: KeyboardEvent): void {
     let key: string = null;
     let newScrollPosition: number;
-console.log("term:" + ev.keyCode);    
+
     switch (ev.keyCode) {
       // backspace
       case 8:

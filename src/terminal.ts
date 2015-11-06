@@ -276,6 +276,7 @@ class EtTerminal extends HTMLElement {
     });
     
     scroller.addEventListener('wheel', this._handleTermWheel.bind(this), true);
+    scroller.addEventListener('keydown', this._handleKeyDown.bind(this));
     
     // Application mode handlers    
     // this._term.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
@@ -573,34 +574,24 @@ class EtTerminal extends HTMLElement {
   /**
    * Handle an unknown key down event from the term.
    */
-  // private _handleKeyDown(ev: KeyboardEvent): void {
-  //   if (ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey) {
-  //     // Ctrl+Shift+C
-  //     this.copyToClipboard();
-  //     
-  //   } else if (ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {
-  //     // Ctrl+Shift+V
-  //     this._pasteFromClipboard();
-  //     
-  //   } else if (ev.keyCode === 33 && ev.shiftKey) {
-  //     // page up
-  //     this._scrollTo(this._scrollYOffset - this._terminalSize.height / 2);
-  //     
-  //   } else if (ev.keyCode === 34 && ev.shiftKey) {
-  //     // page down
-  //     this._scrollTo(this._scrollYOffset + this._terminalSize.height / 2);
-  //     
-  //   // } else if (ev.keyCode === 32 && ev.ctrlKey) {
-  //   //   // Ctrl + Space
-  //   //   this._enterSelectionMode(Mode.KEYBOARD_SELECTION);
-  //     
-  //   } else {
-  //     // log("keyDown: ", ev);
-  //     
-  //     return;
-  //   }
-  //   ev.stopPropagation();
-  // }
+  private _handleKeyDown(ev: KeyboardEvent): void {
+    if (ev.keyCode === 33 && ev.shiftKey) {
+      // page up
+      this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+        - this._virtualScrollArea.getScrollContainerHeight() / 2);
+      
+    } else if (ev.keyCode === 34 && ev.shiftKey) {
+      // page down
+      this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+        + this._virtualScrollArea.getScrollContainerHeight() / 2);
+      
+    } else {
+      // log("keyDown: ", ev);
+      
+      return;
+    }
+    ev.stopPropagation();
+  }
   
   private _handleKeyPressTerminal(ev: KeyboardEvent): void {
     // this._term.keyPress(ev);

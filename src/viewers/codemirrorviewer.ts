@@ -337,9 +337,11 @@ class EtCodeMirrorViewer extends ViewerElement {
     });
     
     this._codeMirror.on("keydown", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
-      this._emulator.keyDown(ev);
+      if (this._isKeyDownForEmulator(ev)) {
+        this._emulator.keyDown(ev);
+        this._emitKeyboardActivityEvent();
+      }  
       (<any> ev).codemirrorIgnore = true;
-      this._emitKeyboardActivityEvent();
     });
     
     this._codeMirror.on("keypress", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
@@ -470,6 +472,17 @@ class EtCodeMirrorViewer extends ViewerElement {
     this.dispatchEvent(event);
   }
   
+  private _isKeyDownForEmulator(ev: KeyboardEvent): boolean {
+    if (ev.keyCode === 16                   // Shift key
+        || ev.keyCode === 17                // Ctrl key
+        || ev.keyCode === 33 && ev.shiftKey // Page up
+        || ev.keyCode === 34 && ev.shiftKey // Page down
+      ) {
+      return false;
+    }
+    return true;
+  }
+
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.

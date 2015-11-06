@@ -61,6 +61,10 @@ export class VirtualScrollArea {
     return this._currentState.virtualScrollYOffset;
   }
   
+  getScrollContainerHeight(): number {
+    return this._currentState.containerHeight;
+  }
+  
   //-----------------------------------------------------------------------
   //
   //  #####                                
