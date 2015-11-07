@@ -275,7 +275,8 @@ class EtTerminal extends HTMLElement {
       this._virtualScrollArea.scrollTo(scrollbar.position);
     });
     
-    scroller.addEventListener('wheel', this._handleTermWheel.bind(this), true);
+    scroller.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
+    scroller.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
     scroller.addEventListener('keydown', this._handleKeyDown.bind(this));
     
     // Application mode handlers    
@@ -533,7 +534,7 @@ class EtTerminal extends HTMLElement {
   //  #####   ####  #    #  ####  ###### ###### # #    #  ####      ###  #     #####  # ###### # #    #  ####  
   //
   // ----------------------------------------------------------------------
-  private _handleTermWheel(ev: WheelEvent): void {
+  private _handleMouseWheel(ev: WheelEvent): void {
     const delta = ev.deltaY * SCROLL_STEP;
     this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset() + delta);
   }
@@ -584,13 +585,29 @@ class EtTerminal extends HTMLElement {
       // page down
       this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
         + this._virtualScrollArea.getScrollContainerHeight() / 2);
+
+    } else if (ev.keyCode === 67 && ev.ctrlKey){
+      // Shift+Ctrl+C
+      this.copyToClipboard();
       
+    } else if (ev.keyCode === 86 && ev.ctrlKey) {
+      // Shift+Ctrl+V
+      this._pasteFromClipboard();
+
     } else {
       // log("keyDown: ", ev);
       
       return;
     }
     ev.stopPropagation();
+  }
+
+  private _handleMouseDown(ev: MouseEvent): void {
+    if (ev.buttons === 4) { // Middle mouse button
+      ev.stopPropagation();
+      ev.preventDefault();
+      this._pasteFromClipboard();
+    }
   }
   
   private _handleKeyPressTerminal(ev: KeyboardEvent): void {
@@ -659,14 +676,6 @@ class EtTerminal extends HTMLElement {
     // }
   }
 
-  private _handleMouseDownTermOnCapture(ev: MouseEvent): void {
-    if ( ! this.hasFocus() && this._mode === Mode.TERM) {
-      ev.stopPropagation();
-      ev.preventDefault();
-      this.focus();
-    }
-  }
-  
   // ********************************************************************
   //
   //  #####                                                            
@@ -1032,27 +1041,14 @@ console.log("_processScheduled resize");
    * Copy the selection to the clipboard.
    */
   copyToClipboard(): void {
-    // let text: string = "";
-    // if (this._mode !== Mode.TERM) {
-    //   const cmv = this._getScrollBackCodeMirror();
-    //   text = cmv.getSelectionText();
-    // } else {
-    //   const candidates = this.shadowRoot.querySelectorAll(EtEmbeddedViewer.TAG_NAME);
-    //   text = _.first<string>(util.nodeListToArray(candidates)
-    //     .map<string>( (node: Node) => (<EtEmbeddedViewer> node).getSelectionText())
-    //     .filter( (text) => text !== null)
-    //   );
-    //   text = text === undefined ? null : text;
-    // }
-    // 
-    // if (text !== null) {
-    //   webipc.clipboardWrite(text);
-    // }
+    const text = this._codeMirrorTerminal.getSelectionText();
+    if (text !== null) {
+      webipc.clipboardWrite(text);
+    }
   }
   
   pasteText(text: string): void {
     this.send(text);
-    // this._term.scrollToBottom();
   }
 
   /**

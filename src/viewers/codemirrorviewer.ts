@@ -143,7 +143,6 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   getSelectionText(): string {
-    console.log("codemirror getSelectionText called");
     return this._codeMirror.getDoc().getSelection("\n");
   }
 
@@ -152,7 +151,8 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   hasFocus(): boolean {
-    return this._codeMirror.hasFocus();
+    const hasFocus = this._codeMirror.getInputField() === util.getShadowRoot(this).activeElement;
+    return hasFocus;
   }
 
   set emulator(emulator: termjs.Emulator) {
@@ -473,11 +473,12 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   private _isKeyDownForEmulator(ev: KeyboardEvent): boolean {
-    if (ev.keyCode === 16                   // Shift key
-        || ev.keyCode === 17                // Ctrl key
-        || ev.keyCode === 33 && ev.shiftKey // Page up
-        || ev.keyCode === 34 && ev.shiftKey // Page down
-      ) {
+    if (ev.keyCode === 16                                   // Shift key
+        || ev.keyCode === 17                                // Ctrl key
+        || ev.keyCode === 33 && ev.shiftKey                 // Page up
+        || ev.keyCode === 34 && ev.shiftKey                 // Page down
+        || ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey   // Shift+Ctrl+C
+        || ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {// Shift+Ctrl+V
       return false;
     }
     return true;
