@@ -41,6 +41,9 @@ interface Mutator {
   (newState: VirtualAreaState): void;
 }
 
+/**
+ * 
+ */
 export class VirtualScrollArea {
   
   private _currentState: VirtualAreaState = null;
@@ -143,6 +146,11 @@ export class VirtualScrollArea {
     return cleanOffset;
   }
   
+  /**
+   * Scroll down to the extreme bottom.
+   *
+   * @return the actual offset used after clamping it into the valid range of offsets
+   */  
   scrollToBottom(): number {
     return this.scrollTo(TotalVirtualHeight(this._currentState) - this._currentState.containerHeight);
   }
@@ -173,6 +181,24 @@ export class VirtualScrollArea {
     } else {
       this._update(updateFunc);
     }
+  }
+  
+  /**
+   * Scroll the view such that a range is visible.
+   * 
+   * @param topY the Y offset of the top of the range
+   * @param bottomY the Y offset of the bottom of the range
+   * @return the actual offset used after clamping it into the valid range of offsets
+   */  
+  scrollIntoView(topY: number, bottomY: number): number {
+    let yOffset = this._currentState.virtualScrollYOffset;
+    if (topY < yOffset) {
+      yOffset = topY;
+    }
+    if (bottomY > yOffset + this._currentState.containerHeight) {
+      yOffset = bottomY - this._currentState.containerHeight;
+    }
+    return this.scrollTo(yOffset);
   }
   
   //-----------------------------------------------------------------------

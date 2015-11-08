@@ -281,11 +281,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     return this._isEmpty ? 0 : doc.lineCount();
   }
   
-  setCursor(line: number, ch: number): void {
-    const doc = this._codeMirror.getDoc();
-    doc.setCursor( { line, ch } );
-  }
-  
   refresh(): void {
     this._codeMirror.refresh();
     this._scrollBugFix();
@@ -304,12 +299,12 @@ class EtCodeMirrorViewer extends ViewerElement {
 
     this.style.height = "0px";
     this._updateFocusable(this._focusable);
-    this._setMode(Mode.TERMINAL);
+    this._exitSelectionMode();
     
     // Create the CodeMirror instance
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
-    }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0});
+    }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0, showCursorWhenSelecting: true});
     
     this._codeMirror.on("cursorActivity", () => {
       const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { bubbles: true });
@@ -337,22 +332,42 @@ class EtCodeMirrorViewer extends ViewerElement {
     });
     
     this._codeMirror.on("keydown", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
-      if (this._isKeyDownForEmulator(ev)) {
-        this._emulator.keyDown(ev);
-        this._emitKeyboardActivityEvent();
-      }  
-      (<any> ev).codemirrorIgnore = true;
+      if (this._mode === Mode.TERMINAL) {
+        if (ev.keyCode === 32 && ev.ctrlKey) {
+          // Enter selection mode.
+          this._enterSelectionMode();
+          (<any> ev).codemirrorIgnore = true;
+          return;
+        }
+        
+        if (this._isKeyDownForEmulator(ev)) {
+          this._emulator.keyDown(ev);
+          this._emitKeyboardActivityEvent();
+        }  
+        
+        (<any> ev).codemirrorIgnore = true;
+      } else {
+        // Selection mode.
+        if (ev.keyCode === 27) {
+          this._exitSelectionMode();
+          (<any> ev).codemirrorIgnore = true;
+        }
+      }
     });
     
     this._codeMirror.on("keypress", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
-      this._emulator.keyPress(ev);
-      (<any> ev).codemirrorIgnore = true;
-      this._emitKeyboardActivityEvent();
+      if (this._mode === Mode.TERMINAL) {
+        this._emulator.keyPress(ev);
+        (<any> ev).codemirrorIgnore = true;
+        this._emitKeyboardActivityEvent();
+      }
     });
     
     this._codeMirror.on("keyup", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
-      // this._emulator.keyUp(ev);
-      (<any> ev).codemirrorIgnore = true;
+      if (this._mode === Mode.TERMINAL) {
+        // this._emulator.keyUp(ev);
+        (<any> ev).codemirrorIgnore = true;
+      }
     });
     
     const codeMirrorElement = this._codeMirror.getWrapperElement();
@@ -368,17 +383,17 @@ class EtCodeMirrorViewer extends ViewerElement {
   attachedCallback(): void {
   }
   
-  // getCursorInfo(): CursorMoveDetail {
-  //   const cursorPos = this._codeMirror.cursorCoords(true, "local");
-  //   const scrollInfo = this._codeMirror.getScrollInfo();
-  //   const detail: CursorMoveDetail = {
-  //     left: cursorPos.left,
-  //     top: cursorPos.top,
-  //     bottom: cursorPos.bottom,
-  //     viewPortTop: scrollInfo.top
-  //   };
-  //   return detail;
-  // }
+  getCursorPosition(): CursorMoveDetail {
+    const cursorPos = this._codeMirror.cursorCoords(true, "local");
+    const scrollInfo = this._codeMirror.getScrollInfo();
+    const detail: CursorMoveDetail = {
+      left: cursorPos.left,
+      top: cursorPos.top,
+      bottom: cursorPos.bottom,
+      viewPortTop: scrollInfo.top
+    };
+    return detail;
+  }
   
   //-----------------------------------------------------------------------
   //
@@ -446,17 +461,21 @@ class EtCodeMirrorViewer extends ViewerElement {
     return window.document.importNode(template.content, true);
   }
 
-  private _setMode(newMode: Mode): void {
-    this._mode = newMode;
-
-    // When keyboard processing is off, we really only want the user to be able
-    // to select stuff using the mouse and we don't need to show a cursor.
+  private _enterSelectionMode(): void {
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
-    if (newMode === Mode.SELECTION) {
-      containerDiv.classList.remove(CLASS_HIDE_CURSOR);
-    } else {
-      containerDiv.classList.add(CLASS_HIDE_CURSOR);
-    }
+    containerDiv.classList.remove(CLASS_HIDE_CURSOR);
+    
+    const dimensions = this._emulator.getDimensions();
+    const doc = this._codeMirror.getDoc();
+    doc.setCursor( { line: dimensions.cursorY + this._terminalFirstRow, ch: dimensions.cursorX } );
+
+    this._mode = Mode.SELECTION;
+  }
+
+  private _exitSelectionMode(): void {
+    const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
+    containerDiv.classList.add(CLASS_HIDE_CURSOR);
+    this._mode = Mode.TERMINAL;
   }
   
   private _emitVirtualResizeEvent(): void {
@@ -495,6 +514,7 @@ class EtCodeMirrorViewer extends ViewerElement {
       return;
     }
 
+    // FIXME use the 'buttons' API.
     const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
 
     // send the button

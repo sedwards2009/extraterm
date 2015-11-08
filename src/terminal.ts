@@ -256,6 +256,9 @@ class EtTerminal extends HTMLElement {
     this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
       this._virtualScrollArea.scrollToBottom();
     });
+    this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE,
+      this._handleCodeMirrorCursor.bind(this));
+    
     util.getShadowId(this, ID_TERM_CONTAINER).appendChild(this._codeMirrorTerminal);
     this._virtualScrollArea.appendScrollable(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
       this._codeMirrorTerminal.getVirtualHeight());
@@ -564,8 +567,9 @@ class EtTerminal extends HTMLElement {
   //   }
   // }
 
-  private _handleCursorMove(ev: CustomEvent): void {
-    this._scheduleCursorMoveUpdate(<EtCodeMirrorViewer> ev.target);
+  private _handleCodeMirrorCursor(ev: CustomEvent): void {
+    const pos = this._codeMirrorTerminal. getCursorPosition();
+    this._virtualScrollArea.scrollIntoView(pos.top, pos.bottom);
   }
   
   // ----------------------------------------------------------------------
@@ -693,14 +697,14 @@ class EtTerminal extends HTMLElement {
    * 
    * @param {EtCodeMirrorViewer} updateTarget [description]
    */
-  private _scheduleCursorMoveUpdate(updateTarget: EtCodeMirrorViewer): void {
-    this._scheduleProcessing();
-    
-    if (this._scheduledCursorUpdates.some( (cmv) => cmv === updateTarget)) {
-      return;
-    }
-    this._scheduledCursorUpdates.push(updateTarget);
-  }
+  // private _scheduleCursorMoveUpdate(updateTarget: EtCodeMirrorViewer): void {
+  //   this._scheduleProcessing();
+  //   
+  //   if (this._scheduledCursorUpdates.some( (cmv) => cmv === updateTarget)) {
+  //     return;
+  //   }
+  //   this._scheduledCursorUpdates.push(updateTarget);
+  // }
   
   private _scheduleResize(): void {
     this._scheduleProcessing();
@@ -729,80 +733,6 @@ console.log("_processScheduled resize");
       this._processResize();
     }    
   }
-  
-  // ********************************************************************
-  //
-  //  #####                                                                                   
-  // #     # ###### #      ######  ####  ##### #  ####  #    #    #    #  ####  #####  ###### 
-  // #       #      #      #      #    #   #   # #    # ##   #    ##  ## #    # #    # #      
-  //  #####  #####  #      #####  #        #   # #    # # #  #    # ## # #    # #    # #####  
-  //       # #      #      #      #        #   # #    # #  # #    #    # #    # #    # #      
-  // #     # #      #      #      #    #   #   # #    # #   ##    #    # #    # #    # #      
-  //  #####  ###### ###### ######  ####    #   #  ####  #    #    #    #  ####  #####  ###### 
-  //
-  // ********************************************************************
-  
-//   private _enterSelectionMode(newMode: Mode): void {
-// console.log("_enterSelectionMode (enter)");
-//     this._mode = newMode;
-//     
-//     const scroller = util.getShadowId(this, ID_SCROLLER);
-//     scroller.classList.add(CLASS_SELECTION_MODE);
-//     
-//     // Copy the current screen lines into the scrollback code mirror.
-//     const {text: allText, decorations: allDecorations} = this._linesToTextStyles(this._term.getScreenLines(true));
-//     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
-//     scrollbackCodeMirror.processKeyboard = newMode === Mode.KEYBOARD_SELECTION;
-//     
-//     this._selectionPreviousLineCount = scrollbackCodeMirror.lineCount();
-//     
-//     scrollbackCodeMirror.appendText(allText, allDecorations);
-// 
-//     const cursorInfo = this._term.getDimensions();
-//     scrollbackCodeMirror.refresh();
-//     
-//     if (newMode === Mode.KEYBOARD_SELECTION) {
-//       scrollbackCodeMirror.setCursor(this._selectionPreviousLineCount + cursorInfo.cursorY, cursorInfo.cursorX);
-//       scrollbackCodeMirror.focus();
-//     }
-//     
-//     util.doLater( () => {
-//       // This is absoletely needed to fix the annoying problem when one of the DIVs in the codemirror
-//       // viewer is scrolled down and exposes empty space even though it should never scroll.
-//       scrollbackCodeMirror.refresh();
-//     });
-//     
-//     this._refreshScroll();
-// console.log("_enterSelectionMode (exit)");
-//   }
-  
-  // private _enterSelectionModeMouse(ev: MouseEvent): void {
-  //   const pos = this._term.getTerminalCoordsFromEvent(ev);
-  //   if (pos === null) {
-  //     return;
-  //   }
-  //   this._enterSelectionMode(Mode.MOUSE_SELECTION);
-  // 
-  //   const scrollbackCodeMirror = this._getScrollBackCodeMirror();
-  //   scrollbackCodeMirror.fakeMouseDown(ev);
-  // }
-  
-//   private _exitSelectionMode(): void {
-// console.log("_exitSelectionMode (enter)");
-//     
-//     this._mode = Mode.TERM;
-//     
-//     const scrollbackCodeMirror = this._getScrollBackCodeMirror();
-//     scrollbackCodeMirror.deleteLinesFrom(this._selectionPreviousLineCount);
-//     
-//     const scroller = util.getShadowId(this, ID_SCROLLER);
-//     scroller.classList.remove(CLASS_SELECTION_MODE);
-//     
-//     this._term.focus();
-//     this._refreshScroll();
-//     this._handleScrollbackReady();
-// console.log("_exitSelectionMode (enter)");
-//   }
 
   /* ******************************************************************** */
   
