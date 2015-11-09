@@ -207,7 +207,7 @@ class EtCodeMirrorViewer extends ViewerElement {
    * @return {number} [description]
    */
   getVirtualHeight(): number {
-    return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
+    return this.vpad + (this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount());
   }
   
   resizeEmulatorToParentContainer(): void {
@@ -246,11 +246,11 @@ class EtCodeMirrorViewer extends ViewerElement {
       this.emulator.resize( { rows: newRows, columns: newCols } );
     }
     
-    // const newVpad =  Math.floor(this.element.clientHeight % charHeight);
-    // if (newVpad !== this.vpad) {
-    //   this.vpad = newVpad;
-    //   this._setLastLinePadding(this.vpad);
-    // }
+    const newVpad =  Math.floor(heightPixels % charHeight);
+    if (newVpad !== this.vpad) {
+      this.vpad = newVpad;
+      this._setLastLinePadding(this.vpad);
+    }
     
     if (DEBUG_RESIZE) {
       console.log("resizeToContainer() old cols: ",cols);
@@ -855,6 +855,10 @@ class EtCodeMirrorViewer extends ViewerElement {
     return {text, decorations};
   }
   
+  private _setLastLinePadding(vpad: number): void {
+    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    containerDiv.style.marginBottom = "" + vpad + "px";
+  }
 }
 
 function px(value) {
