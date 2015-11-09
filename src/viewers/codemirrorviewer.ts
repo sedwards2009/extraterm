@@ -504,6 +504,11 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
+    
+    if ( ! this.hasFocus()) {
+      this.focus();
+    }
+    
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
     if (ev.ctrlKey) { 
