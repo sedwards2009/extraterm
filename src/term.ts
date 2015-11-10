@@ -3536,6 +3536,8 @@ export class Emulator implements EmulatorAPI {
     }
     this.setupStops(this.cols);
     this.cols = newcols;
+    
+    let scrollbackLines: LineCell[][] = null;
 
     // resize rows
     if (this.rows < newrows) {
@@ -3555,10 +3557,13 @@ export class Emulator implements EmulatorAPI {
         }
       }
     } else if (this.rows > newrows) {
+      
       // Remove rows to match the new smaller rows value.
+      scrollbackLines = [];
       while (this.lines.length > newrows + this.ybase) {
-        this.lines.pop();
+        scrollbackLines.push(this.lines.shift());
       }
+      
     }
     this.rows = newrows;
 
@@ -3580,6 +3585,12 @@ export class Emulator implements EmulatorAPI {
     this.normal = null;
     
     this.lastReportedPhysicalHeight = this.lines.length;
+    
+    // Send out the scroll back lines.
+    if (scrollbackLines !== null) {
+      this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
+    }
+    
     this._emit(SIZE_EVENT, this, newrows, newcols, this.lines.length);
     this.refresh(0, this.physicalScroll ? this.lines.length-1 : this.rows - 1);
   }

@@ -164,6 +164,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     if (emulator !== null) {
       emulator.addRenderEventListener(this._handleRenderEvent.bind(this));
       emulator.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
+      emulator.addSizeEventListener(this._handleSizeEvent.bind(this));
     }
     
     this._emulator = emulator;
@@ -629,6 +630,19 @@ class EtCodeMirrorViewer extends ViewerElement {
       lines.push(this._emulator.lineAtRow(row));
     }
     this._insertLinesOnScreen(startRow, endRow, lines);
+  }
+  
+  private _handleSizeEvent(instance: termjs.Emulator, newRows: number, newColumns: number, realizedRows: number): void {
+    const doc = this._codeMirror.getDoc();
+    const lineCount = doc.lineCount();
+    
+    if (lineCount - this._terminalFirstRow > newRows) {
+      // Trim off the extra lines.
+      const startPos = this._terminalFirstRow === 0 ? { line: this._terminalFirstRow + newRows, ch: 0 }
+        : { line: this._terminalFirstRow + newRows -1, ch: doc.getLine(this._terminalFirstRow + newRows-1).length };
+      const endPos = { line: lineCount-1, ch: doc.getLine(lineCount-1).length };
+      doc.replaceRange("", startPos, endPos);
+    }
   }
 
   private _insertLinesOnScreen(startRow: number, endRow: number,lines: termjs.Line[]): void {
