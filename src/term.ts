@@ -3587,7 +3587,7 @@ export class Emulator implements EmulatorAPI {
     this.lastReportedPhysicalHeight = this.lines.length;
     
     // Send out the scroll back lines.
-    if (scrollbackLines !== null) {
+    if (scrollbackLines !== null && scrollbackLines.length !== 0) {
       this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
     }
     
