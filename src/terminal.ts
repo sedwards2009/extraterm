@@ -160,6 +160,10 @@ class EtTerminal extends HTMLElement {
   private _scheduledScrollbackImport: boolean;
   private _scheduledResize: boolean;
 
+  // The current size of the emulator. This is used to detect changes in size.
+  private _columns = -1;
+  private _rows = -1;
+
   private _initProperties(): void {
     this._virtualScrollArea = null;
     this._elementAttached = false;
@@ -248,7 +252,7 @@ class EtTerminal extends HTMLElement {
     this._emulator.debug = true;
     this._emulator.addTitleChangeEventListener(this._handleTitle.bind(this));
     this._emulator.addDataEventListener(this._handleTermData.bind(this));
-    this._emulator.addSizeEventListener(this._handleTermSize.bind(this));
+    this._emulator.addRenderEventListener(this._handleTermSize.bind(this));
 
     // Create the CodeMirrorTerminal
     this._codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
@@ -1016,12 +1020,18 @@ console.log("_processScheduled resize");
    * @param {string} data The data to process.
    */
   private _handleTermData(emulator: termjs.Emulator, data: string): void {
-console.log("_handleTermData !!");
     this._sendDataToPtyEvent(data);
   }
   
-  private _handleTermSize(emulator: termjs.Emulator, newRows: number, newColumns: number, realizedRows: number): void {
+  private _handleTermSize(emulator: termjs.Emulator, event: termjs.RenderEvent): void {
 console.log("_handleTermSize !!");
+    const newColumns = event.columns;
+    const newRows = event.rows;
+    if (this._columns === newColumns && this._rows === newRows) {
+      return;
+    }
+    this._columns = newColumns;
+    this._rows = newRows;
     this._sendResizeEvent(newColumns, newRows);
   }
   

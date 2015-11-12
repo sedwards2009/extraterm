@@ -151,8 +151,6 @@ export interface TerminalSize {
 }
 
 const RENDER_EVENT = "RENDER_EVENT";
-const SCROLLBACKLINE_EVENT = "SCROLLBACKLINE_EVENT";
-const SIZE_EVENT = "SIZE_EVENT";
 const BELL_EVENT = "BELL_EVENT";
 const DATA_EVENT = "DATA_EVENT";
 const TITLE_EVENT = "TITLE_EVENT";
@@ -160,13 +158,21 @@ const APPLICATIONMODESTART_EVENT = "APPLICATIONMODESTART_EVENT";
 const APPLICATIONMODEDATA_EVENT = "APPLICATIONMODEDATA_EVENT";
 const APPLICATIONMODEEND_EVENT = "APPLICATIONMODEEND_EVENT";
 
-export interface RenderEventHandler {
-  // Range of row to render from startRow to endRow exclusive.
-  (instance: Emulator, startRow: number, endRow: number): void;
+export interface RenderEvent {
+  rows: number;         // the current number of rows in the emulator screen.
+  columns: number;      // the current number of columns comprising the emulator screen.
+  realizedRows: number; // the current number of realised rows which have been touched.
+  
+  refreshStartRow: number;  // The start row of a range on the screen which needs to be refreshed.
+                            // -1 indicates no refresh needed.
+  refreshEndRow: number;    // The end row of a range on the screen which needds to be refreshed.
+  
+  scrollbackLines: Line[];  // List of lines which have reached the scrollback. Can be null.
 }
 
-export interface SizeEventHandler {
-  (instance: Emulator, newRows: number, newColumns: number, realizedRows: number): void;
+export interface RenderEventHandler {
+  // Range of row to render from startRow to endRow exclusive.
+  (instance: Emulator, event: RenderEvent): void;
 }
 
 export interface BellEventListener {
@@ -179,10 +185,6 @@ export interface DataEventListener {
 
 export interface TitleChangeEventListener {
   (instance: Emulator, title: string): void;
-}
-
-export interface ScrollbackEventHandler {
-  (instance: Emulator, scrollbackLines: Line[]): void;
 }
 
 export interface ApplicationModeEventListener {
@@ -246,8 +248,6 @@ export interface EmulatorAPI {
   
   // Events
   addRenderEventListener(eventHandler: RenderEventHandler): void;
-  addScrollbackLineEventListener(eventHandler: ScrollbackEventHandler): void;
-  addSizeEventListener(eventHandler: SizeEventHandler): void;
   addBellEventListener(eventHandler: BellEventListener): void;
   addDataEventListener(eventHandler: DataEventListener): void;
   addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void;
@@ -488,9 +488,8 @@ export class Terminal {
     this.emulator.addDataEventListener( (instance, data) => {
       this.emitDataEvent(data);
     });
-    this.emulator.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
+
     this.emulator.addRenderEventListener(this._handleRenderLine.bind(this));
-    this.emulator.addSizeEventListener(this._handleSizeEvent.bind(this));
     this.emulator.addBellEventListener(this._handleBellEvent.bind(this));
 
     if (!this.parent) {
@@ -747,20 +746,26 @@ console.log("Terminal._handleMouseDown");
   setCursorBlink(blink: boolean): void {
     this.emulator.setCursorBlink(blink);
   }
-  
-  private _handleSizeEvent(instance: Emulator, newRows: number, newColumns: number, realizedRows: number): void {
-    while (this.children.length > newRows) {
-      const el = this.children.pop();
-      el.parentNode.removeChild(el);
-    }
-  }
-  
+
   private _handleBellEvent(instance: Emulator): void {
     this._domBell();
   }
  
-  private _handleRenderLine(instance: Emulator, startRow: number, endRow: number): void {
-    for (let row=startRow; row < endRow; row++) {
+  private _handleRenderLine(instance: Emulator, event: RenderEvent): void {
+    while (this.children.length > event.rows) {
+      const el = this.children.pop();
+      el.parentNode.removeChild(el);
+    }
+    
+    // Fill up the scroll back "TODO" (=to be rendered) buffer.
+    if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
+      event.scrollbackLines.forEach( (line) => {
+        this._scrollbackBuffer.push(line);
+      });
+      this._emit(Terminal.EVENT_SCROLLBACK_AVAILABLE, this);
+    }
+
+    for (let row=event.refreshStartRow; row < event.refreshEndRow; row++) {
       const line = this.emulator.lineAtRow(row);
       this._getChildDiv(row).innerHTML = Terminal.lineToHTML(line);
     }
@@ -986,14 +991,6 @@ console.log("Terminal._handleMouseDown");
     return {cols: newCols, rows: newRows, vpad: this.vpad};
   }
   
-  _handleScrollbackEvent(emulator: Emulator, newScrollbackLines: Line[]): void {
-    // Fill up the scroll back "TODO" (=to be rendered) buffer.
-    newScrollbackLines.forEach( (line) => {
-      this._scrollbackBuffer.push(line);
-    });
-    this._emit(Terminal.EVENT_SCROLLBACK_AVAILABLE, this);
-  }
-  
   /**
    * Return true if there are lines waiting in the scrollback buffer.
    *
@@ -1108,7 +1105,7 @@ export class Emulator implements EmulatorAPI {
   
   private cursorHidden = false;
   private _hasFocus = false;
-    
+
   private queue = '';
   private scrollTop = 0;
   private scrollBottom = 23;
@@ -1158,6 +1155,10 @@ export class Emulator implements EmulatorAPI {
   private _writeBuffers: string[] = [];  // Buffer for incoming data waiting to be processed.
   private _processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.  
   private _refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
+
+  private _scrollbackLineQueue: Line[] = [];  // Queue of scrollback lines which need to sent via an event.
+  private _refreshStart = -1;
+  private _refreshEnd = -1;
 
   private tabs: { [key: number]: boolean };
   private sendFocus = false;
@@ -1786,6 +1787,7 @@ export class Emulator implements EmulatorAPI {
    */
   private _refreshFrame(): void {
     this.refresh(this.refreshStart, this.refreshEnd);
+    this._dispatchEvents();
     this.refreshStart = REFRESH_START_NULL;
     this.refreshEnd = REFRESH_END_NULL;
   }
@@ -1800,18 +1802,14 @@ export class Emulator implements EmulatorAPI {
   // Next 14 bits: a mask for misc. flags:
   //   1=bold, 2=underline, 4=blink, 8=inverse, 16=invisible
 
-  refresh(start: number, end: number): void {
+  private refresh(start: number, end: number): void {
     if ( !this.physicalScroll && end >= this.lines.length) {
       this.log('`end` is too large. Most likely a bad CSR.');
       end = this.lines.length - 1;
     }
 
-    if (this.lines.length !== this.lastReportedPhysicalHeight) {
-      this.lastReportedPhysicalHeight = this.lines.length;
-      this._emit(SIZE_EVENT, this, this.rows, this.cols, this.lines.length);
-    }
-    
-    this._emit(RENDER_EVENT, this, start, end + 1);
+    this._refreshStart = this._refreshStart < 0 ? start : Math.min(start, this._refreshStart);
+    this._refreshEnd = this._refreshEnd < -1 ? end+1 : Math.max(end+1, this._refreshEnd);
   }
   
   lineAtRow(row: number, showCursor?: boolean): Line {
@@ -1858,7 +1856,7 @@ export class Emulator implements EmulatorAPI {
     return linesCopy;
   }
   
-  _cursorBlink(): void {
+  private _cursorBlink(): void {
     if ( ! this._hasFocus) {
       return;
     }
@@ -1901,13 +1899,13 @@ export class Emulator implements EmulatorAPI {
     this._blink = setInterval(this._blinker, 500);
   }
 
-  refreshBlink(): void {
+  private refreshBlink(): void {
     if (!this.cursorBlink) return;
     clearInterval(this._blink);
     this._blink = setInterval(this._blinker, 500);
   }
 
-  scroll(): void {
+  private scroll(): void {
     if ( ! this.physicalScroll) {
       // Normal, virtual scrolling.
       ++this.ybase;
@@ -1922,8 +1920,9 @@ export class Emulator implements EmulatorAPI {
       
       // Drop the oldest line into the scrollback buffer.
       if (this.scrollTop === 0) {
-        const scrollbackLines = [ this.lines[0] ];
-        this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
+        // const scrollbackLines = [ this.lines[0] ];
+        this._scrollbackLineQueue.push(this.lines[0]);        
+        // this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
       }
     }
 
@@ -1950,7 +1949,7 @@ export class Emulator implements EmulatorAPI {
     this.updateRange(this.scrollBottom);
   }
 
-  scrollDisp(disp) {
+  private scrollDisp(disp) {
     this.ydisp += disp;
 
     if (this.ydisp > this.ybase) {
@@ -1965,11 +1964,6 @@ export class Emulator implements EmulatorAPI {
   write(data: string): void {
     this._writeBuffers.push(data);
     this._scheduleProcessWriteChunk();
-  }
-
-
-  scrollToBottom() {
-    // FIXME send an event.
   }
 
   /**
@@ -2045,7 +2039,7 @@ export class Emulator implements EmulatorAPI {
    *
    * @param data the string of characters and control sequences to process.
    */
-  _processWriteData(data: string): void {
+  private _processWriteData(data: string): void {
   //console.log("write() data.length: " + data.length);
   //var starttime = window.performance.now();
   //var endtime;
@@ -3429,8 +3423,6 @@ export class Emulator implements EmulatorAPI {
     if (key === null) {
       return;
     }
-
-    this.scrollToBottom();
     
     this.showCursor();
     this.handler(key);
@@ -3439,12 +3431,12 @@ export class Emulator implements EmulatorAPI {
     return;
   }
 
-  setgLevel(g: number): void {
+  private setgLevel(g: number): void {
     this.glevel = g;
     this.charset = this.charsets[g];
   }
 
-  setgCharset(g: number, charset): void {
+  private setgCharset(g: number, charset): void {
     this.charsets[g] = charset;
     if (this.glevel === g) {
       this.charset = charset;
@@ -3470,14 +3462,13 @@ export class Emulator implements EmulatorAPI {
     key = String.fromCharCode(key);
 
     this.showCursor();
-    this.scrollToBottom();
     this.handler(key);
     
     cancelEvent(ev);
     return;
   }
 
-  send(data: string): void {
+  private send(data: string): void {
     if (!this.queue) {
       setTimeout(() => {
         this.handler(this.queue);
@@ -3488,7 +3479,7 @@ export class Emulator implements EmulatorAPI {
     this.queue += data;
   }
   
-  bell(): void {
+  private bell(): void {
     this._emit(BELL_EVENT, this);
   }
 
@@ -3502,7 +3493,7 @@ export class Emulator implements EmulatorAPI {
     console.log.apply(console, ["[TERM] "+ args]);
   }
 
-  error(...args: string[]): void {
+  private error(...args: string[]): void {
     if (!this.debug) return;
     console.error.apply(console, args);
   }
@@ -3536,8 +3527,6 @@ export class Emulator implements EmulatorAPI {
     }
     this.setupStops(this.cols);
     this.cols = newcols;
-    
-    let scrollbackLines: LineCell[][] = null;
 
     // resize rows
     if (this.rows < newrows) {
@@ -3559,11 +3548,9 @@ export class Emulator implements EmulatorAPI {
     } else if (this.rows > newrows) {
       
       // Remove rows to match the new smaller rows value.
-      scrollbackLines = [];
       while (this.lines.length > newrows + this.ybase) {
-        scrollbackLines.push(this.lines.shift());
-      }
-      
+        this._scrollbackLineQueue.push(this.lines.shift());
+      }      
     }
     this.rows = newrows;
 
@@ -3585,27 +3572,40 @@ export class Emulator implements EmulatorAPI {
     this.normal = null;
     
     this.lastReportedPhysicalHeight = this.lines.length;
-    
-    // Send out the scroll back lines.
-    if (scrollbackLines !== null && scrollbackLines.length !== 0) {
-      this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
-    }
-    
-    this._emit(SIZE_EVENT, this, newrows, newcols, this.lines.length);
     this.refresh(0, this.physicalScroll ? this.lines.length-1 : this.rows - 1);
+    
+    this._dispatchEvents();
   }
-
-  updateRange(y: number): void {
+  
+  private _dispatchEvents(): void {
+    const event: RenderEvent = {
+      rows: this.rows,
+      columns: this.cols,
+      realizedRows: this.lines.length,
+      
+      refreshStartRow: this._refreshStart,
+      refreshEndRow: this._refreshEnd,
+      scrollbackLines: this._scrollbackLineQueue
+    };
+    
+    this._refreshStart = -1;
+    this._refreshEnd = -1;
+    this._scrollbackLineQueue = [];
+    
+    this._emit(RENDER_EVENT, this, event);    
+  }
+  
+  private updateRange(y: number): void {
     if (y < this.refreshStart) this.refreshStart = y;
     if (y > this.refreshEnd) this.refreshEnd = y;
   }
 
-  maxRange(): void {
+  private maxRange(): void {
     this.refreshStart = 0;
     this.refreshEnd = this.rows - 1;
   }
 
-  setupStops(i?: number): void {
+  private setupStops(i?: number): void {
     if (i !== undefined && i !== null) {
       if (!this.tabs[i]) {
         i = this.prevStop(i);
@@ -3620,23 +3620,23 @@ export class Emulator implements EmulatorAPI {
     }
   }
 
-  prevStop(x?: number): number {
+  private prevStop(x?: number): number {
     if (x === undefined) x = this.x;
     while (!this.tabs[--x] && x > 0);
     return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
   }
 
-  nextStop(x?: number): number {
+  private nextStop(x?: number): number {
     if (x === undefined) x = this.x;
     while (!this.tabs[++x] && x < this.cols);
     return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
   }
 
-  eraseRight(x: number, y: number): void {
+  private eraseRight(x: number, y: number): void {
     this.fillRight(x, y);
   }
 
-  fillRight(x: number, y: number, ch: string = ' '): void {
+  private fillRight(x: number, y: number, ch: string = ' '): void {
     const line = this._tryGetRow(this.ybase + y);
     if (line === null) {
       return;
@@ -3650,14 +3650,14 @@ export class Emulator implements EmulatorAPI {
     this.updateRange(y);
   }
 
-  fillScreen(fillChar: string = ' '): void {
+  private fillScreen(fillChar: string = ' '): void {
     let j = this.rows;
     while (j--) {
       this.fillRight(0, j, fillChar);
     }
   }
   
-  eraseLeft(x: number, y: number): void {
+  private eraseLeft(x: number, y: number): void {
     const line = this._getRow(this.ybase + y);
     const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
 
@@ -3670,11 +3670,11 @@ export class Emulator implements EmulatorAPI {
     this.updateRange(y);
   }
 
-  eraseLine(y: number): void {
+  private eraseLine(y: number): void {
     this.eraseRight(0, y);
   }
 
-  blankLine(cur?: boolean): LineCell[] {
+  private blankLine(cur?: boolean): LineCell[] {
     const attr = cur ? this.eraseAttr() : Emulator.defAttr;
     const ch: LineCell = [attr, ' '];
     
@@ -3686,20 +3686,20 @@ export class Emulator implements EmulatorAPI {
     return line;
   }
 
-  ch(cur: boolean): LineCell {
+  private ch(cur: boolean): LineCell {
     return cur ? [this.eraseAttr(), ' '] : [Emulator.defAttr, ' '];
   }
 
-  is(term: string): boolean {
+  private is(term: string): boolean {
     const name = this.termName;
     return (name + '').indexOf(term) === 0;
   }
 
-  handler(data) {
+  private handler(data) {
     this._emit(DATA_EVENT, this, data);
   }
 
-  handleTitle(title: string): void {
+  private handleTitle(title: string): void {
     this._emit(TITLE_EVENT, this, title);
   }
 
@@ -3708,7 +3708,7 @@ export class Emulator implements EmulatorAPI {
    */
 
   // ESC D Index (IND is 0x84).
-  index(): void {
+  private index(): void {
     this.y++;
     if (this.y > this.scrollBottom) {
       this.y--;
@@ -3718,7 +3718,7 @@ export class Emulator implements EmulatorAPI {
   }
 
   // ESC M Reverse Index (RI is 0x8d).
-  reverseIndex(): void {
+  private reverseIndex(): void {
     this.y--;
     if (this.y < this.scrollTop) {
       this.y++;
@@ -3736,13 +3736,13 @@ export class Emulator implements EmulatorAPI {
   }
 
   // ESC c Full Reset (RIS).
-  reset(): void {
+  private reset(): void {
     this._resetVariables();
     this.refresh(0, this.rows - 1);
   }
 
   // ESC H Tab Set (HTS is 0x88).
-  tabSet(): void {
+  private tabSet(): void {
     this.tabs[this.x] = true;
     this.state = STATE_NORMAL;
   }
@@ -3753,7 +3753,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps A
   // Cursor Up Ps Times (default = 1) (CUU).
-  cursorUp(params: number[]): void {
+  private cursorUp(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -3767,7 +3767,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps B
   // Cursor Down Ps Times (default = 1) (CUD).
-  cursorDown(params: number[]): void {
+  private cursorDown(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -3782,7 +3782,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps C
   // Cursor Forward Ps Times (default = 1) (CUF).
-  cursorForward(params: number[]): void {
+  private cursorForward(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -3795,7 +3795,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps D
   // Cursor Backward Ps Times (default = 1) (CUB).
-  cursorBackward(params) {
+  private cursorBackward(params) {
     var param = params[0];
     if (param < 1) param = 1;
     this.x -= param;
@@ -3804,7 +3804,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps ; Ps H
   // Cursor Position [row;column] (default = [1,1]) (CUP).
-  cursorPos(params: number[]): void {
+  private cursorPos(params: number[]): void {
     let y = params[0] - 1 + (this.originMode ? this.scrollTop : 0);
     let x = (params.length >= 2) ? params[1] - 1 : 0;
     
@@ -3834,7 +3834,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 0  -> Selective Erase Below (default).
   //     Ps = 1  -> Selective Erase Above.
   //     Ps = 2  -> Selective Erase All.
-  eraseInDisplay(params: number[]): void {
+  private eraseInDisplay(params: number[]): void {
     let j: number;
     switch (params[0]) {
       case 0:
@@ -3872,7 +3872,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 0  -> Selective Erase to Right (default).
   //     Ps = 1  -> Selective Erase to Left.
   //     Ps = 2  -> Selective Erase All.
-  eraseInLine(params: number[]): void {
+  private eraseInLine(params: number[]): void {
     switch (params[0]) {
       case 0:
         this.eraseRight(this.x, this.y);
@@ -3951,7 +3951,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps.
   //     Ps = 4 8  ; 5  ; Ps -> Set background color to the second
   //     Ps.
-  charAttributes(params: number[]): void {
+  private charAttributes(params: number[]): void {
     // Optimize a single SGR0.
     if (params.length === 1 && params[0] === 0) {
       this.curAttr = Emulator.defAttr;
@@ -4122,7 +4122,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 5 3  -> Report Locator status as
   //   CSI ? 5 3  n  Locator available, if compiled-in, or
   //   CSI ? 5 0  n  No Locator, if not.
-  deviceStatus(params: number[]): void {
+  private deviceStatus(params: number[]): void {
     if ( ! this.prefix) {
       switch (params[0]) {
         case 5:
@@ -4168,7 +4168,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps @
   // Insert Ps (Blank) Character(s) (default = 1) (ICH).
-  insertChars(params: number[]): void {
+  private insertChars(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;}
@@ -4187,7 +4187,7 @@ export class Emulator implements EmulatorAPI {
   // CSI Ps E
   // Cursor Next Line Ps Times (default = 1) (CNL).
   // same as CSI Ps B ?
-  cursorNextLine(params: number[]): void {
+  private cursorNextLine(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4202,7 +4202,7 @@ export class Emulator implements EmulatorAPI {
   // CSI Ps F
   // Cursor Preceding Line Ps Times (default = 1) (CNL).
   // reuse CSI Ps A ?
-  cursorPrecedingLine(params: number[]): void {
+  private cursorPrecedingLine(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4216,7 +4216,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps G
   // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
-  cursorCharAbsolute(params: number[]): void {
+  private cursorCharAbsolute(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4226,7 +4226,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps L
   // Insert Ps Line(s) (default = 1) (IL).
-  insertLines(params: number[]): void {
+  private insertLines(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4248,7 +4248,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps M
   // Delete Ps Line(s) (default = 1) (DL).
-  deleteLines(params: number[]): void {
+  private deleteLines(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4271,7 +4271,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps P
   // Delete Ps Character(s) (default = 1) (DCH).
-  deleteChars(params: number[]): void {
+  private deleteChars(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4289,7 +4289,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps X
   // Erase Ps Character(s) (default = 1) (ECH).
-  eraseChars(params: number[]): void {
+  private eraseChars(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4308,7 +4308,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Pm `  Character Position Absolute
   //   [column] (default = [row,1]) (HPA).
-  charPosAbsolute(params: number[]): void {
+  private charPosAbsolute(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4322,7 +4322,7 @@ export class Emulator implements EmulatorAPI {
   // 141 61 a * HPR -
   // Horizontal Position Relative
   // reuse CSI Ps C ?
-  HPositionRelative(params: number[]): void {
+  private HPositionRelative(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4368,7 +4368,7 @@ export class Emulator implements EmulatorAPI {
   // More information:
   //   xterm/charproc.c - line 2012, for more information.
   //   vim responds with ^[[?0c or ^[[?1c after the terminal's response (?)
-  sendDeviceAttributes(params: number[]): void {
+  private sendDeviceAttributes(params: number[]): void {
     if (params[0] > 0) {
       return;
     }
@@ -4399,7 +4399,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Pm d
   // Line Position Absolute  [row] (default = [1,column]) (VPA).
-  linePosAbsolute(params: number[]): void {
+  private linePosAbsolute(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4413,7 +4413,7 @@ export class Emulator implements EmulatorAPI {
 
   // 145 65 e * VPR - Vertical Position Relative
   // reuse CSI Ps B ?
-  VPositionRelative(params: number[]): void {
+  private VPositionRelative(params: number[]): void {
     let param = params[0];
     if (param < 1) {
       param = 1;
@@ -4427,7 +4427,7 @@ export class Emulator implements EmulatorAPI {
   // CSI Ps ; Ps f
   //   Horizontal and Vertical Position [row;column] (default =
   //   [1,1]) (HVP).
-  HVPosition(params: number[]): void {
+  private HVPosition(params: number[]): void {
     this.cursorPos(params);
   }
 
@@ -4515,7 +4515,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 2 0 0 4  -> Set bracketed paste mode.
   // Modes:
   //   http://vt100.net/docs/vt220-rm/chapter4.html
-  setMode(params: number|number[]): void {
+  private setMode(params: number|number[]): void {
     if (typeof params === 'object') {
       const l = params.length;
       let i = 0;
@@ -4726,7 +4726,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 1 0 6 0  -> Reset legacy keyboard emulation (X11R6).
   //     Ps = 1 0 6 1  -> Reset keyboard emulation to Sun/PC style.
   //     Ps = 2 0 0 4  -> Reset bracketed paste mode.
-  resetMode(params: number|number[]) {
+  private resetMode(params: number|number[]) {
     if (typeof params === 'object') {
       const l = params.length;
       for (let i=0; i < l; i++) {
@@ -4837,7 +4837,7 @@ export class Emulator implements EmulatorAPI {
   //   Set Scrolling Region [top;bottom] (default = full size of win-
   //   dow) (DECSTBM).
   // CSI ? Pm r
-  setScrollRegion(params: number[]): void {
+  private setScrollRegion(params: number[]): void {
     if (this.prefix === '') {
       const top = (params[0] || 1) - 1;
       const bottom = (params[1] || this.rows) - 1;
@@ -4853,7 +4853,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI s
   //   Save cursor (ANSI.SYS).
-  saveCursor(): void {
+  private saveCursor(): void {
     this.savedX = this.x;
     this.savedY = this.y;
     this.savedCharset = this.charset;
@@ -4862,7 +4862,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI u
   //   Restore cursor (ANSI.SYS).
-  restoreCursor(): void {
+  private restoreCursor(): void {
     this.x = this.savedX;
     this.y = this.savedY;
     this.charset = this.savedCharset;
@@ -4875,7 +4875,7 @@ export class Emulator implements EmulatorAPI {
 
   // CSI Ps I
   //   Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
-  cursorForwardTab(params: number[]): void {
+  private cursorForwardTab(params: number[]): void {
     let param = params[0] || 1;
     while (param--) {
       this.x = this.nextStop();
@@ -4883,7 +4883,7 @@ export class Emulator implements EmulatorAPI {
   }
 
   // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
-  scrollUp(params: number[]): void {
+  private scrollUp(params: number[]): void {
     let param = params[0] || 1;
     while (param--) {
       this.lines.splice(this.ybase + this.scrollTop, 1);
@@ -4895,7 +4895,7 @@ export class Emulator implements EmulatorAPI {
   }
 
   // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
-  scrollDown(params: number[]): void {
+  private scrollDown(params: number[]): void {
     let param = params[0] || 1;
     while (param--) {
       this.lines.splice(this.ybase + this.scrollBottom, 1);
@@ -4910,7 +4910,7 @@ export class Emulator implements EmulatorAPI {
   //   Initiate highlight mouse tracking.  Parameters are
   //   [func;startx;starty;firstrow;lastrow].  See the section Mouse
   //   Tracking.
-  initMouseTracking(params: number[]): void {
+  private initMouseTracking(params: number[]): void {
     // Relevant: DECSET 1001
   }
 
@@ -4925,11 +4925,11 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 2  -> Do not set window/icon labels using UTF-8.
   //     Ps = 3  -> Do not query window/icon labels using UTF-8.
   //   (See discussion of "Title Modes").
-  resetTitleModes(params: number[]): void {
+  private esetTitleModes(params: number[]): void {
   }
 
   // CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
-  cursorBackwardTab(params: number[]): void {
+  private cursorBackwardTab(params: number[]): void {
     let param = params[0] || 1;
     while (param--) {
       this.x = this.prevStop();
@@ -4937,7 +4937,7 @@ export class Emulator implements EmulatorAPI {
   }
 
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
-  repeatPrecedingCharacter(params: number[]): void {
+  private repeatPrecedingCharacter(params: number[]): void {
     let param = params[0] || 1;
     const line = this._getRow(this.ybase + this.y);
     const ch: LineCell = line[this.x - 1] || [Emulator.defAttr, ' '];
@@ -4954,7 +4954,7 @@ export class Emulator implements EmulatorAPI {
   // Potentially:
   //   Ps = 2  -> Clear Stops on Line.
   //   http://vt100.net/annarbor/aaa-ug/section6.html
-  tabClear(params: number[]): void {
+  private tabClear(params: number[]): void {
     let param = params[0];
     if (param <= 0) {
       delete this.tabs[this.x];
@@ -4974,7 +4974,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 5  -> Turn on autoprint mode.
   //     Ps = 1  0  -> Print composed display, ignores DECPEX.
   //     Ps = 1  1  -> Print all pages.
-  mediaCopy(params: number[]): void {
+  private mediaCopy(params: number[]): void {
   }
 
   // CSI > Ps; Ps m
@@ -4989,7 +4989,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 4  -> modifyOtherKeys.
   //   If no parameters are given, all resources are reset to their
   //   initial values.
-  setResources(params: number[]): void {
+  private setResources(params: number[]): void {
   }
 
   // CSI > Ps n
@@ -5005,7 +5005,7 @@ export class Emulator implements EmulatorAPI {
   //   keys to make an extended sequence of functions rather than
   //   adding a parameter to each function key to denote the modi-
   //   fiers.
-  disableModifiers(params: number[]): void {
+  private disableModifiers(params: number[]): void {
   }
 
   // CSI > Ps p
@@ -5016,12 +5016,12 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 1  -> hide if the mouse tracking mode is not enabled.
   //     Ps = 2  -> always hide the pointer.  If no parameter is
   //     given, xterm uses the default, which is 1 .
-  setPointerMode(params: number[]): void {
+  private setPointerMode(params: number[]): void {
   }
 
   // CSI ! p   Soft terminal reset (DECSTR).
   // http://vt100.net/docs/vt220-rm/table4-10.html
-  softReset(params: number[]): void {
+  private softReset(params: number[]): void {
     this.cursorHidden = false;
     this.insertMode = false;
     this.originMode = false;
@@ -5047,7 +5047,7 @@ export class Emulator implements EmulatorAPI {
   //     2 - reset
   //     3 - permanently set
   //     4 - permanently reset
-  requestAnsiMode(params: number[]): void {
+  private requestAnsiMode(params: number[]): void {
   }
 
   // CSI ? Ps$ p
@@ -5055,7 +5055,7 @@ export class Emulator implements EmulatorAPI {
   //     CSI ? Ps; Pm$ p
   //   where Ps is the mode number as in DECSET, Pm is the mode value
   //   as in the ANSI DECRQM.
-  requestPrivateMode(params: number[]): void {
+  private requestPrivateMode(params: number[]): void {
   }
 
   // CSI Ps ; Ps " p
@@ -5068,7 +5068,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 0  -> 8-bit controls.
   //     Ps = 1  -> 7-bit controls (always set for VT100).
   //     Ps = 2  -> 8-bit controls.
-  setConformanceLevel(params: number[]): void {
+  private setConformanceLevel(params: number[]): void {
   }
 
   // CSI Ps q  Load LEDs (DECLL).
@@ -5079,7 +5079,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 2  1  -> Extinguish Num Lock.
   //     Ps = 2  2  -> Extinguish Caps Lock.
   //     Ps = 2  3  -> Extinguish Scroll Lock.
-  loadLEDs(params: number[]): void {
+  private loadLEDs(params: number[]): void {
   }
 
   // CSI Ps SP q
@@ -5089,7 +5089,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 2  -> steady block.
   //     Ps = 3  -> blinking underline.
   //     Ps = 4  -> steady underline.
-  setCursorStyle(params: number[]): void {
+  private setCursorStyle(params: number[]): void {
   }
 
   // CSI Ps " q
@@ -5098,13 +5098,13 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 0  -> DECSED and DECSEL can erase (default).
   //     Ps = 1  -> DECSED and DECSEL cannot erase.
   //     Ps = 2  -> DECSED and DECSEL can erase.
-  setCharProtectionAttr(params: number[]): void {
+  private setCharProtectionAttr(params: number[]): void {
   }
 
   // CSI ? Pm r
   //   Restore DEC Private Mode Values.  The value of Ps previously
   //   saved is restored.  Ps values are the same as for DECSET.
-  restorePrivateValues(params: number[]): void {
+  private restorePrivateValues(params: number[]): void {
   }
 
   // CSI Pt; Pl; Pb; Pr; Ps$ r
@@ -5112,7 +5112,7 @@ export class Emulator implements EmulatorAPI {
   //     Pt; Pl; Pb; Pr denotes the rectangle.
   //     Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
   // NOTE: xterm doesn't enable this code by default.
-  setAttrInRectangle(params: number[]): void {
+  private setAttrInRectangle(params: number[]): void {
     let t = params[0];
     const l = params[1];
     const b = params[2];
@@ -5134,7 +5134,7 @@ export class Emulator implements EmulatorAPI {
   // CSI ? Pm s
   //   Save DEC Private Mode Values.  Ps values are the same as for
   //   DECSET.
-  savePrivateValues(params: number[]): void {
+  private savePrivateValues(params: number[]): void {
   }
 
   // CSI Ps ; Ps ; Ps t
@@ -5183,7 +5183,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 2 3  ;  1  -> Restore xterm icon title from stack.
   //     Ps = 2 3  ;  2  -> Restore xterm window title from stack.
   //     Ps >= 2 4  -> Resize to Ps lines (DECSLPP).
-  manipulateWindow(params: number[]): void {
+  private manipulateWindow(params: number[]): void {
   }
 
   // CSI Pt; Pl; Pb; Pr; Ps$ t
@@ -5192,7 +5192,7 @@ export class Emulator implements EmulatorAPI {
   //     Pt; Pl; Pb; Pr denotes the rectangle.
   //     Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
   // NOTE: xterm doesn't enable this code by default.
-  reverseAttrInRectangle(params: number[]): void {
+  private reverseAttrInRectangle(params: number[]): void {
   }
 
   // CSI > Ps; Ps t
@@ -5203,7 +5203,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 2  -> Set window/icon labels using UTF-8.
   //     Ps = 3  -> Query window/icon labels using UTF-8.  (See dis-
   //     cussion of "Title Modes")
-  setTitleModeFeature(params: number[]): void {
+  private setTitleModeFeature(params: number[]): void {
   }
 
   // CSI Ps SP t
@@ -5211,7 +5211,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 0  or 1  -> off.
   //     Ps = 2 , 3  or 4  -> low.
   //     Ps = 5 , 6 , 7 , or 8  -> high.
-  setWarningBellVolume(params: number[]): void {
+  private setWarningBellVolume(params: number[]): void {
   }
 
   // CSI Ps SP u
@@ -5219,7 +5219,7 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 1  -> off.
   //     Ps = 2 , 3  or 4  -> low.
   //     Ps = 0 , 5 , 6 , 7 , or 8  -> high.
-  setMarginBellVolume(params: number[]): void {
+  private setMarginBellVolume(params: number[]): void {
   }
 
   // CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
@@ -5229,7 +5229,7 @@ export class Emulator implements EmulatorAPI {
   //     Pt; Pl denotes the target location.
   //     Pp denotes the target page.
   // NOTE: xterm doesn't enable this code by default.
-  copyRectangle(params: number[]): void {
+  private copyRectangle(params: number[]): void {
   }
 
   // CSI Pt ; Pl ; Pb ; Pr ' w
@@ -5243,7 +5243,7 @@ export class Emulator implements EmulatorAPI {
   //   to the current locator position.  If all parameters are omit-
   //   ted, any locator motion will be reported.  DECELR always can-
   //   cels any prevous rectangle definition.
-  enableFilterRectangle(params: number[]): void {
+  private enableFilterRectangle(params: number[]): void {
   }
 
   // CSI Ps x  Request Terminal Parameters (DECREQTPARM).
@@ -5257,14 +5257,14 @@ export class Emulator implements EmulatorAPI {
   //     Pn = 1  <- 2  8  receive 38.4k baud.
   //     Pn = 1  <- clock multiplier.
   //     Pn = 0  <- STP flags.
-  requestParameters(params: number[]): void {
+  private requestParameters(params: number[]): void {
   }
 
   // CSI Ps x  Select Attribute Change Extent (DECSACE).
   //     Ps = 0  -> from start to end position, wrapped.
   //     Ps = 1  -> from start to end position, wrapped.
   //     Ps = 2  -> rectangle (exact).
-  selectChangeExtent(params: number[]): void {
+  private selectChangeExtent(params: number[]): void {
   }
 
   // CSI Pc; Pt; Pl; Pb; Pr$ x
@@ -5272,7 +5272,7 @@ export class Emulator implements EmulatorAPI {
   //     Pc is the character to use.
   //     Pt; Pl; Pb; Pr denotes the rectangle.
   // NOTE: xterm doesn't enable this code by default.
-  fillRectangle(params: number[]): void {
+  private fillRectangle(params: number[]): void {
     var ch = params[0];
     var t = params[1];
     var l = params[2];
@@ -5306,7 +5306,7 @@ export class Emulator implements EmulatorAPI {
   //     Pu = 0  <- or omitted -> default to character cells.
   //     Pu = 1  <- device physical pixels.
   //     Pu = 2  <- character cells.
-  enableLocatorReporting(params: number[]): void {
+  private enableLocatorReporting(params: number[]): void {
   //  var val = params[0] > 0;
     //this.mouseEvents = val;
     //this.decLocator = val;
@@ -5316,7 +5316,7 @@ export class Emulator implements EmulatorAPI {
   //   Erase Rectangular Area (DECERA), VT400 and up.
   //     Pt; Pl; Pb; Pr denotes the rectangle.
   // NOTE: xterm doesn't enable this code by default.
-  eraseRectangle(params: number[]): void {
+  private eraseRectangle(params: number[]): void {
     let t = params[0];
     const l = params[1];
     const b = params[2];
@@ -5347,13 +5347,13 @@ export class Emulator implements EmulatorAPI {
   //     Ps = 2  -> do not report button down transitions.
   //     Ps = 3  -> report button up transitions.
   //     Ps = 4  -> do not report button up transitions.
-  setLocatorEvents(params: number[]): void {
+  private setLocatorEvents(params: number[]): void {
   }
 
   // CSI Pt; Pl; Pb; Pr$ {
   //   Selective Erase Rectangular Area (DECSERA), VT400 and up.
   //     Pt; Pl; Pb; Pr denotes the rectangle.
-  selectiveEraseRectangle(params: number[]): void {
+  private selectiveEraseRectangle(params: number[]): void {
   }
 
   // CSI Ps ' |
@@ -5396,13 +5396,13 @@ export class Emulator implements EmulatorAPI {
   //     mal.
   //   The ``page'' parameter is not used by xterm, and will be omit-
   //   ted.
-  requestLocatorPosition(params: number[]): void {
+  private requestLocatorPosition(params: number[]): void {
   }
 
   // CSI P m SP }
   // Insert P s Column(s) (default = 1) (DECIC), VT420 and up.
   // NOTE: xterm doesn't enable this code by default.
-  insertColumns(params: number[]): void {
+  private insertColumns(params: number[]): void {
     let param = params[0];
     const l = this.ybase + this.rows;
     const ch: LineCell = [this.eraseAttr(), ' ']; // xterm?
@@ -5421,7 +5421,7 @@ export class Emulator implements EmulatorAPI {
   // CSI P m SP ~
   // Delete P s Column(s) (default = 1) (DECDC), VT420 and up
   // NOTE: xterm doesn't enable this code by default.
-  deleteColumns(params: number[]): void {
+  private deleteColumns(params: number[]): void {
     let param = params[0];
     const l = this.ybase + this.rows;
     const ch: LineCell = [this.eraseAttr(), ' ']; // xterm?
@@ -5508,14 +5508,6 @@ export class Emulator implements EmulatorAPI {
     this.addListener(RENDER_EVENT, eventHandler);
   }
 
-  addScrollbackLineEventListener(eventHandler: ScrollbackEventHandler): void {
-    this.addListener(SCROLLBACKLINE_EVENT, eventHandler);
-  }
-
-  addSizeEventListener(eventHandler: SizeEventHandler): void {
-    this.addListener(SIZE_EVENT, eventHandler);
-  }
-
   addBellEventListener(eventHandler: BellEventListener): void {
     this.addListener(BELL_EVENT, eventHandler);
   }
@@ -5545,7 +5537,7 @@ export class Emulator implements EmulatorAPI {
     this._events[type].push(listener);
   }
 
-  on(type: string, listener: EventListener): void {
+  private on(type: string, listener: EventListener): void {
     this.addListener(type, listener);
   }
 

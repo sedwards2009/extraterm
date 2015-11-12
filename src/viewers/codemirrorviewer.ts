@@ -86,6 +86,11 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _importStyleLoaded: boolean;
   private _resizePollHandle: util.LaterHandle;
   
+  // Emulator dimensions
+  private _rows = -1;
+  private _columns = -1;
+  private _realizedRows = -1;
+  
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
   
@@ -163,8 +168,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     
     if (emulator !== null) {
       emulator.addRenderEventListener(this._handleRenderEvent.bind(this));
-      emulator.addScrollbackLineEventListener(this._handleScrollbackEvent.bind(this));
-      emulator.addSizeEventListener(this._handleSizeEvent.bind(this));
     }
     
     this._emulator = emulator;
@@ -624,18 +627,38 @@ class EtCodeMirrorViewer extends ViewerElement {
   //                                            
   //-----------------------------------------------------------------------
 
-  private _handleRenderEvent(instance: termjs.Emulator, startRow: number, endRow: number): void {
-    const lines: termjs.Line[] = [];
-    for (let row = startRow; row < endRow; row++) {
-      lines.push(this._emulator.lineAtRow(row));
+  private _handleRenderEvent(instance: termjs.Emulator, event: termjs.RenderEvent): void {
+    let emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
+
+    // Refresh the active part of the screen.
+    const startRow = event.refreshStartRow;
+    if (startRow !== -1) {
+      const endRow = event.refreshEndRow;
+      const lines: termjs.Line[] = [];
+      for (let row = startRow; row < endRow; row++) {
+        lines.push(this._emulator.lineAtRow(row));
+      }
+      this._insertLinesOnScreen(startRow, endRow, lines);
     }
-    this._insertLinesOnScreen(startRow, endRow, lines);
+    
+    if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
+      this._handleScrollbackEvent(event.scrollbackLines);
+      emitVirtualResizeEventFlag = true;
+    }
+    
+    if (emitVirtualResizeEventFlag) {
+      this._emitVirtualResizeEvent();
+    }
   }
   
-  private _handleSizeEvent(instance: termjs.Emulator, newRows: number, newColumns: number, realizedRows: number): void {
+  private _handleSizeEvent(newRows: number, newColumns: number, realizedRows: number): boolean {
+    if (this._rows === newRows && this._columns === newColumns && this._realizedRows === realizedRows) {
+      return false; // Nothing to do.
+    }
+    
     const doc = this._codeMirror.getDoc();
     const lineCount = doc.lineCount();
-    
+
     if (lineCount - this._terminalFirstRow > newRows) {
       // Trim off the extra lines.
       const startPos = this._terminalFirstRow === 0 ? { line: this._terminalFirstRow + newRows, ch: 0 }
@@ -643,6 +666,22 @@ class EtCodeMirrorViewer extends ViewerElement {
       const endPos = { line: lineCount-1, ch: doc.getLine(lineCount-1).length };
       doc.replaceRange("", startPos, endPos);
     }
+    
+    this._rows = newRows;
+    this._columns = newColumns;
+    this._realizedRows = realizedRows;
+    
+    return true;
+  }
+
+  private _handleScrollbackEvent(scrollbackLines: termjs.Line[]): void {
+    const pos: CodeMirror.Position = { line: this._terminalFirstRow, ch: 0 };
+    const {text: text, decorations: decorations} = this._linesToTextStyles(scrollbackLines);
+    this._codeMirror.operation( () => {
+      this._insertLinesAtPos(pos ,pos, text + "\n", decorations);
+    });
+    this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
+    this._emitVirtualResizeEvent();
   }
 
   private _insertLinesOnScreen(startRow: number, endRow: number,lines: termjs.Line[]): void {
@@ -663,13 +702,14 @@ class EtCodeMirrorViewer extends ViewerElement {
         doc.replaceRange(emptyText, pos, pos);
         this._isEmpty = false;
       }
+      // console.log("Pre |"+doc.getValue('\n')+"|");
 
       const {text: text, decorations: decorations} = this._linesToTextStyles(lines);
-      this._insertLinesAtPos({ line: this._terminalFirstRow + startRow, ch: 0 },
-        { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length },
-        text, decorations);
+      const startPos = { line: this._terminalFirstRow + startRow, ch: 0 };
+      const endPos = { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length };
+      this._insertLinesAtPos(startPos, endPos, text, decorations);
     });
-    
+// console.log("Post|"+doc.getValue('\n')+"|");
     if (lineCount !== doc.lineCount()) {
       this._emitVirtualResizeEvent();
     }
@@ -677,6 +717,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   private _insertLinesAtPos(startPos: CodeMirror.Position, endPos: CodeMirror.Position, text: string,
       decorations: TextDecoration[]): void {
+// console.log("_insertLinesAtPos: startPos: ",startPos, " endPos: ", endPos, " text: |"+text+"|");
 
     const doc = this._codeMirror.getDoc();
     doc.replaceRange(text, startPos, endPos);
@@ -703,16 +744,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     // console.log("______________________________________");    
   }
   
-  private _handleScrollbackEvent(instance: termjs.Emulator, scrollbackLines: termjs.Line[]): void {
-    const pos: CodeMirror.Position = { line: this._terminalFirstRow, ch: 0 };
-    const {text: text, decorations: decorations} = this._linesToTextStyles(scrollbackLines);
-    this._codeMirror.operation( () => {
-      this._insertLinesAtPos(pos ,pos, text + "\n", decorations);
-    });
-    this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
-    this._emitVirtualResizeEvent();
-  }
-
   private _updateFocusable(focusable: boolean): void {
     // const containerDiv = util.getShadowId(this, ID_CONTAINER);
     // containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");
