@@ -628,23 +628,27 @@ class EtCodeMirrorViewer extends ViewerElement {
   //-----------------------------------------------------------------------
 
   private _handleRenderEvent(instance: termjs.Emulator, event: termjs.RenderEvent): void {
-    let emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
-
-    // Refresh the active part of the screen.
-    const startRow = event.refreshStartRow;
-    if (startRow !== -1) {
-      const endRow = event.refreshEndRow;
-      const lines: termjs.Line[] = [];
-      for (let row = startRow; row < endRow; row++) {
-        lines.push(this._emulator.lineAtRow(row));
-      }
-      this._insertLinesOnScreen(startRow, endRow, lines);
-    }
+    let emitVirtualResizeEventFlag = false;
     
-    if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
-      this._handleScrollbackEvent(event.scrollbackLines);
-      emitVirtualResizeEventFlag = true;
-    }
+    this._codeMirror.operation( () => {
+      emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
+
+      // Refresh the active part of the screen.
+      const startRow = event.refreshStartRow;
+      if (startRow !== -1) {
+        const endRow = event.refreshEndRow;
+        const lines: termjs.Line[] = [];
+        for (let row = startRow; row < endRow; row++) {
+          lines.push(this._emulator.lineAtRow(row));
+        }
+        this._insertLinesOnScreen(startRow, endRow, lines);
+      }
+      
+      if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
+        this._handleScrollbackEvent(event.scrollbackLines);
+        emitVirtualResizeEventFlag = true;
+      }
+    });
     
     if (emitVirtualResizeEventFlag) {
       this._emitVirtualResizeEvent();
@@ -681,38 +685,29 @@ class EtCodeMirrorViewer extends ViewerElement {
       this._insertLinesAtPos(pos ,pos, text + "\n", decorations);
     });
     this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
-    this._emitVirtualResizeEvent();
   }
 
   private _insertLinesOnScreen(startRow: number, endRow: number,lines: termjs.Line[]): void {
     const doc = this._codeMirror.getDoc();
     const lineCount = doc.lineCount();
     
-    this._codeMirror.operation( () => {
-    
-      // Mark sure there are enough rows inside CodeMirror.
-      if (lineCount < endRow + this._terminalFirstRow) {
-        const pos = { line: this._terminalFirstRow + lineCount, ch: 0 };
-        
-        let emptyText = "";
-        const extraCrCount = endRow + this._terminalFirstRow - lineCount;
-        for (let j = 0; j < extraCrCount; j++) {
-          emptyText += "\n";
-        }
-        doc.replaceRange(emptyText, pos, pos);
-        this._isEmpty = false;
+    // Mark sure there are enough rows inside CodeMirror.
+    if (lineCount < endRow + this._terminalFirstRow) {
+      const pos = { line: this._terminalFirstRow + lineCount, ch: 0 };
+      
+      let emptyText = "";
+      const extraCrCount = endRow + this._terminalFirstRow - lineCount;
+      for (let j = 0; j < extraCrCount; j++) {
+        emptyText += "\n";
       }
-      // console.log("Pre |"+doc.getValue('\n')+"|");
-
-      const {text: text, decorations: decorations} = this._linesToTextStyles(lines);
-      const startPos = { line: this._terminalFirstRow + startRow, ch: 0 };
-      const endPos = { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length };
-      this._insertLinesAtPos(startPos, endPos, text, decorations);
-    });
-// console.log("Post|"+doc.getValue('\n')+"|");
-    if (lineCount !== doc.lineCount()) {
-      this._emitVirtualResizeEvent();
+      doc.replaceRange(emptyText, pos, pos);
+      this._isEmpty = false;
     }
+
+    const {text: text, decorations: decorations} = this._linesToTextStyles(lines);
+    const startPos = { line: this._terminalFirstRow + startRow, ch: 0 };
+    const endPos = { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length };
+    this._insertLinesAtPos(startPos, endPos, text, decorations);
   }
   
   private _insertLinesAtPos(startPos: CodeMirror.Position, endPos: CodeMirror.Position, text: string,
