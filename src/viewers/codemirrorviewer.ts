@@ -292,7 +292,9 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   createdCallback(): void {
     this._initProperties();
-    
+  }
+  
+  attachedCallback(): void {
     const shadow = util.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
@@ -304,12 +306,12 @@ class EtCodeMirrorViewer extends ViewerElement {
     this.style.height = "0px";
     this._updateFocusable(this._focusable);
     this._exitSelectionMode();
-    
+
     // Create the CodeMirror instance
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
     }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0, showCursorWhenSelecting: true});
-    
+
     this._codeMirror.on("cursorActivity", () => {
       const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { bubbles: true });
       this.dispatchEvent(event);
@@ -382,9 +384,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
       ev.preventDefault();
     });
-  }
-  
-  attachedCallback(): void {
   }
   
   getCursorPosition(): CursorMoveDetail {

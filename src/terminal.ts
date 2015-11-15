@@ -213,6 +213,14 @@ class EtTerminal extends HTMLElement {
 
   createdCallback(): void {
     this._initProperties();
+  }
+   
+  attachedCallback(): void {
+    if (this._elementAttached) {
+      return;
+    }
+    this._elementAttached = true;
+    
     const shadow = util.createShadowRoot(this);
 
     const clone = this._createClone();
@@ -256,6 +264,7 @@ class EtTerminal extends HTMLElement {
 
     // Create the CodeMirrorTerminal
     this._codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
+    util.getShadowId(this, ID_TERM_CONTAINER).appendChild(this._codeMirrorTerminal);
     this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_RESIZE, this._handleCodeMirrorResize.bind(this));
     this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
       this._virtualScrollArea.scrollToBottom();
@@ -263,9 +272,8 @@ class EtTerminal extends HTMLElement {
     this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE,
       this._handleCodeMirrorCursor.bind(this));
     
-    util.getShadowId(this, ID_TERM_CONTAINER).appendChild(this._codeMirrorTerminal);
     this._virtualScrollArea.appendScrollable(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
-      this._codeMirrorTerminal.getVirtualHeight());
+      this._codeMirrorTerminal.getVirtualHeight(this._virtualScrollArea.getScrollContainerHeight()));
 
     this._codeMirrorTerminal.emulator = this._emulator;
 
@@ -291,13 +299,6 @@ class EtTerminal extends HTMLElement {
     // this._term.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
     // this._term.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
 
-  }
-   
-  attachedCallback(): void {
-    if (this._elementAttached) {
-      return;
-    }
-    this._elementAttached = true;
 
     this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     this._scheduleResize();
