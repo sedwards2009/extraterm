@@ -609,7 +609,8 @@ class EtCodeMirrorViewer extends ViewerElement {
         this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
       } else {
         // Yay! the font is correct. Resize the term soon.
-        this.resizeEmulatorToParentContainer();
+        this._codeMirror.defaultTextHeight(); // tickle the DOM to maybe force CSS recalc.
+        window.setTimeout(this.resizeEmulatorToParentContainer.bind(this), 100);  // 100ms
       }
     }
   }
