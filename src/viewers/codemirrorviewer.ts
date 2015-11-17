@@ -26,7 +26,7 @@ const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const CLASS_HIDE_CURSOR = "hide_cursor";
 
-const DEBUG_RESIZE = true;
+const DEBUG_RESIZE = false;
 
 enum Mode {
   TERMINAL,
@@ -107,7 +107,7 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     this._isEmpty = true;
     this._mode = Mode.TERMINAL;
     this.document = document;
-    this._useVPad = false;
+    this._useVPad = true;
     
     this._currentElementHeight = -1;
     
@@ -220,16 +220,10 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     }
     const defaultTextHeight = this._codeMirror.defaultTextHeight();
     const textHeight = defaultTextHeight * this.lineCount();
-// this.log("getVirtualHeight() textHeight = "+ textHeight + " , containerHeight = " + containerHeight);
-    
     if (this._useVPad && textHeight > containerHeight) {
       const vPad = containerHeight % defaultTextHeight;
-// this.log("getVirtualHeight() vPad = "+ vPad);
-// this.log("getVirtualHeight() = "+(vPad + textHeight));      
-// this.log("getVirtualHeight() max scroll: "+ (vPad + textHeight -containerHeight));
       return vPad + textHeight;
     } else {
-// this.log("getVirtualHeight() = "+(textHeight));
       return textHeight;
     }
   }
@@ -342,7 +336,7 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
       const scrollInfo = this._codeMirror.getScrollInfo();
       // console.log("codemirror event scroll:", scrollInfo);
       
-      const clientYScrollRange = Math.max(0, this.getVirtualTextHeight() - this.getHeight());
+      const clientYScrollRange = this._getClientYScrollRange();
       if (scrollInfo.top > clientYScrollRange) {
         this._codeMirror.scrollTo(0, clientYScrollRange);
       }
@@ -483,10 +477,6 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     return window.document.importNode(template.content, true);
   }
   
-  private getVirtualTextHeight(): number {
-    return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
-  }
-
   private _enterSelectionMode(): void {
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
@@ -769,16 +759,19 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
 
   private _scrollBugFix(): void {
     const containerDiv = util.getShadowId(this, ID_CONTAINER);
-    const value = containerDiv.scrollTop;
-    if (value !== 0) {
-      this.log("_scrollBugFix containerDiv.scrollTop: "+value);
-    }
     containerDiv.scrollTop = 0;
+  }
+
+  private getVirtualTextHeight(): number {
+    return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
+  }
+  
+  private _getClientYScrollRange(): number {
+    return Math.max(0, this.getVirtualHeight(this.getHeight()) - this.getHeight());
   }
 
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
-// this.log("_adjustHeight newHeight = "+newHeight);
     if (this.parentNode === null) {
       return;
     }
@@ -787,17 +780,15 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
       this._currentElementHeight = elementHeight;
       this.style.height = "" + elementHeight + "px";
       
-      const defaultTextLineHeight = this._codeMirror.defaultTextHeight();
-      const totalTextHeight = defaultTextLineHeight * this.lineCount();
+      const totalTextHeight = this.getVirtualTextHeight();
       let codeMirrorHeight;
       if (this._useVPad && totalTextHeight > elementHeight) {
         // Adjust the height of the code mirror such that a small gap is at the bottom to 'push'
         // the lines up and align them with the top of the viewport.
-        codeMirrorHeight = elementHeight - (elementHeight % defaultTextLineHeight);
+        codeMirrorHeight = elementHeight - (elementHeight % this._codeMirror.defaultTextHeight());
       } else {
         codeMirrorHeight = elementHeight;        
       }
-      // this.log("_adjustHeight codeMirrorHeight = "+codeMirrorHeight);
 
       const containerDiv = util.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + codeMirrorHeight + "px";
