@@ -1802,6 +1802,12 @@ export class Emulator implements EmulatorAPI {
   // Next 14 bits: a mask for misc. flags:
   //   1=bold, 2=underline, 4=blink, 8=inverse, 16=invisible
 
+  /**
+   * Marks a range of rows to be refreshed on the screen.
+   * 
+   * @param {number} start start row to refresh
+   * @param {number} end   end row (INCLUSIVE!) to refresh
+   */
   private refresh(start: number, end: number): void {
     if ( !this.physicalScroll && end >= this.lines.length) {
       this.log('`end` is too large. Most likely a bad CSR.');
@@ -3578,13 +3584,22 @@ export class Emulator implements EmulatorAPI {
   }
   
   private _dispatchEvents(): void {
+    let checkedRefreshEnd = Math.min(this._refreshEnd, this.lines.length);
+    let checkedRefreshStart = this._refreshStart;
+    
+    if (checkedRefreshEnd === checkedRefreshStart) {
+      // Don't signal to refresh anything. This can happen when there are no realized rows yet.
+      checkedRefreshEnd = -1;
+      checkedRefreshStart = -1;
+    }
+    
     const event: RenderEvent = {
       rows: this.rows,
       columns: this.cols,
       realizedRows: this.lines.length,
       
-      refreshStartRow: this._refreshStart,
-      refreshEndRow: Math.min(this._refreshEnd, this.lines.length),
+      refreshStartRow: checkedRefreshStart,
+      refreshEndRow: checkedRefreshEnd,
       scrollbackLines: this._scrollbackLineQueue
     };
     
