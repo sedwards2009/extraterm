@@ -48,7 +48,6 @@ const ID_SCROLLBAR = "scrollbar";
 const ID_CONTAINER = "terminal_container";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
-const ID_VPAD = "vpad";
 
 const CLASS_SELECTION_MODE = "selection-mode";
 
@@ -481,24 +480,12 @@ class EtTerminal extends HTMLElement {
         
         #${ID_SCROLLER}.${CLASS_SELECTION_MODE} > #${ID_TERM_CONTAINER} {
           display: none;
-        }
-
-        #${ID_VPAD} {
-          width: 100%;
-          height: 0px;
-          display: none;
-        }
-        
-        #${ID_SCROLLER}.${CLASS_SELECTION_MODE} > #${ID_VPAD} {
-          display: block;
-        }
-
+        }        
         </style>
         <style id="${ID_THEME_STYLE}"></style>
         <div id='${ID_CONTAINER}' class='terminal_container'>
           <div id='${ID_SCROLLER}'>
             <div id='${ID_TERM_CONTAINER}' class='term_container'></div>
-            <div id='${ID_VPAD}' class='terminal'></div>
           </div>
           <cb-scrollbar id='${ID_SCROLLBAR}' class='terminal_scrollbar'></cb-scrollbar>
         </div>`;
@@ -548,8 +535,12 @@ class EtTerminal extends HTMLElement {
   }
 
   private _handleCodeMirrorResize(ev: CustomEvent): void {
+    this._resizeCodeMirror();
+  }
+  
+  private _resizeCodeMirror(): void {
     this._virtualScrollArea.updateScrollableHeights(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
-      this._codeMirrorTerminal.getVirtualHeight())
+      this._codeMirrorTerminal.getVirtualHeight(this._virtualScrollArea.getScrollContainerHeight()));
   }
 
   /**
@@ -557,20 +548,9 @@ class EtTerminal extends HTMLElement {
    */
   private _processResize(): void {
     this._codeMirrorTerminal.resizeEmulatorToParentContainer();
-    this._virtualScrollArea.resize();    
+    this._virtualScrollArea.resize();
+    this._resizeCodeMirror();
   }
-  
-  // private _resizePoll(): void {
-  //   if (this._codeMirrorTerminal !== null && this._mainStyleLoaded && this._themeStyleLoaded) {
-  //     if ( ! this._codeMirrorTerminal.isFontLoaded()) {
-  //       // Font has not been correctly applied yet.
-  //       this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
-  //     } else {
-  //       // Yay! the font is correct. Resize the term soon.
-  //       this._scheduleResize.bind(this);
-  //     }
-  //   }
-  // }
 
   private _handleCodeMirrorCursor(ev: CustomEvent): void {
     const pos = this._codeMirrorTerminal. getCursorPosition();
