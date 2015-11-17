@@ -1809,7 +1809,7 @@ export class Emulator implements EmulatorAPI {
     }
 
     this._refreshStart = this._refreshStart < 0 ? start : Math.min(start, this._refreshStart);
-    this._refreshEnd = this._refreshEnd < -1 ? end+1 : Math.max(end+1, this._refreshEnd);
+    this._refreshEnd = this._refreshEnd < 0 ? end+1 : Math.max(end+1, this._refreshEnd);
   }
   
   lineAtRow(row: number, showCursor?: boolean): Line {
@@ -3584,7 +3584,7 @@ export class Emulator implements EmulatorAPI {
       realizedRows: this.lines.length,
       
       refreshStartRow: this._refreshStart,
-      refreshEndRow: this._refreshEnd,
+      refreshEndRow: Math.min(this._refreshEnd, this.lines.length),
       scrollbackLines: this._scrollbackLineQueue
     };
     
