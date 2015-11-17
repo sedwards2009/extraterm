@@ -156,7 +156,6 @@ class EtTerminal extends HTMLElement {
   
   private _scheduleLaterHandle: util.LaterHandle;
   private _scheduledCursorUpdates: EtCodeMirrorViewer[];
-  private _scheduledScrollbackImport: boolean;
   private _scheduledResize: boolean;
 
   // The current size of the emulator. This is used to detect changes in size.
@@ -195,7 +194,6 @@ class EtTerminal extends HTMLElement {
     this._scheduleLaterHandle = null;
     this._scheduledCursorUpdates = [];
     this._scheduledResize = false;
-    this._scheduledScrollbackImport = false;
   }
   
   //-----------------------------------------------------------------------
@@ -710,8 +708,6 @@ class EtTerminal extends HTMLElement {
     this._scheduledResize = false;
     const scheduledCursorUpdates = this._scheduledCursorUpdates;
     this._scheduledCursorUpdates = [];
-    const scheduledScrollbackImport = this._scheduledScrollbackImport;
-    this._scheduledScrollbackImport = false;
     
     if (scheduledResize) {
 console.log("_processScheduled resize");
@@ -1005,7 +1001,6 @@ console.log("_processScheduled resize");
   }
   
   private _handleTermSize(emulator: termjs.Emulator, event: termjs.RenderEvent): void {
-console.log("_handleTermSize !!");
     const newColumns = event.columns;
     const newRows = event.rows;
     if (this._columns === newColumns && this._rows === newRows) {
