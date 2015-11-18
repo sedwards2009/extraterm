@@ -270,7 +270,8 @@ class EtTerminal extends HTMLElement {
       this._handleCodeMirrorCursor.bind(this));
     
     this._virtualScrollArea.appendScrollable(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
-      this._codeMirrorTerminal.getVirtualHeight(this._virtualScrollArea.getScrollContainerHeight()));
+      this._codeMirrorTerminal.getVirtualHeight(this._virtualScrollArea.getScrollContainerHeight()),
+      this._codeMirrorTerminal.getReserveViewportHeight(this._virtualScrollArea.getScrollContainerHeight()));
 
     this._codeMirrorTerminal.emulator = this._emulator;
 
@@ -538,7 +539,8 @@ class EtTerminal extends HTMLElement {
   
   private _resizeCodeMirror(): void {
     this._virtualScrollArea.updateScrollableHeights(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
-      this._codeMirrorTerminal.getVirtualHeight(this._virtualScrollArea.getScrollContainerHeight()));
+      this._codeMirrorTerminal.getVirtualHeight(this._virtualScrollArea.getScrollContainerHeight()),
+      this._codeMirrorTerminal.getReserveViewportHeight(this._virtualScrollArea.getScrollContainerHeight()));
   }
 
   /**

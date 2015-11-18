@@ -215,16 +215,17 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
    * @return {number} [description]
    */
   getVirtualHeight(containerHeight: number): number {
-    if (this._isEmpty) {
-      return 0;
-    }
-    const defaultTextHeight = this._codeMirror.defaultTextHeight();
-    const textHeight = defaultTextHeight * this.lineCount();
+    return this.getVirtualTextHeight();
+  }
+  
+  getReserveViewportHeight(containerHeight: number): number {
+    const textHeight = this.getVirtualTextHeight();
     if (this._useVPad && textHeight > containerHeight) {
+      const defaultTextHeight = this._codeMirror.defaultTextHeight();
       const vPad = containerHeight % defaultTextHeight;
-      return vPad + textHeight;
+      return vPad;
     } else {
-      return textHeight;
+      return 0;
     }
   }
   
@@ -767,7 +768,7 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   }
   
   private _getClientYScrollRange(): number {
-    return Math.max(0, this.getVirtualHeight(this.getHeight()) - this.getHeight());
+    return Math.max(0, this.getVirtualHeight(this.getHeight()) - this.getHeight() + this.getReserveViewportHeight(this.getHeight()));
   }
 
   private _adjustHeight(newHeight: number): void {

@@ -14,7 +14,8 @@ interface VirtualScrollableState {
   scrollable: VirtualScrollable;
   virtualHeight: number;
   minHeight: number;
-
+  reserveViewportHeight: number;
+  
   // Output - These values are set by the calculate() method.
   realHeight: number;
   virtualScrollYOffset: number;
@@ -80,12 +81,15 @@ export class VirtualScrollArea {
   //
   //-----------------------------------------------------------------------
 
-  appendScrollable(scrollable: VirtualScrollable, minHeight: number, virtualHeight: number): void {
+  appendScrollable(scrollable: VirtualScrollable, minHeight: number, virtualHeight: number,
+      reserveViewportHeight: number): void {
+
     this._update( (newState) => {
       newState.scrollableStates.push( {
         scrollable: scrollable,
         virtualHeight: virtualHeight,
         minHeight: minHeight,
+        reserveViewportHeight: reserveViewportHeight,
         
         realHeight: 0,
         virtualScrollYOffset: 0
@@ -162,7 +166,9 @@ export class VirtualScrollArea {
    * @param newMinHeight the new minimum height
    * @param newVirtualHeight the new virtual height
    */
-  updateScrollableHeights(scrollable: VirtualScrollable, newMinHeight: number, newVirtualHeight: number): void {
+  updateScrollableHeights(scrollable: VirtualScrollable, newMinHeight: number, newVirtualHeight: number,
+      newReserveViewportHeight: number): void {
+
     const virtualHeight = TotalVirtualHeight(this._currentState);
     const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
     
@@ -171,6 +177,7 @@ export class VirtualScrollArea {
         .forEach( (ss) => {
           ss.virtualHeight = newVirtualHeight;
           ss.minHeight = newMinHeight;
+          ss.reserveViewportHeight = newReserveViewportHeight;
         });
     };
     
@@ -249,7 +256,8 @@ function Compute(state: VirtualAreaState): boolean {
   // First update all of the scrollable heights based on their virtual heights and height of the container.
   for (let i=0; i<state.scrollableStates.length; i++) {
     const scrollable = state.scrollableStates[i];
-    scrollable.realHeight = Math.max(scrollable.minHeight, Math.min(viewPortHeight, scrollable.virtualHeight));
+    scrollable.realHeight = Math.max(scrollable.minHeight,
+                            Math.min(viewPortHeight, scrollable.virtualHeight + scrollable.reserveViewportHeight));
   }
 
   // Compute the virtual height of the terminal contents.
@@ -295,7 +303,7 @@ function Compute(state: VirtualAreaState): boolean {
   for (let i=0; i<state.scrollableStates.length; i++) {
     const scrollable = state.scrollableStates[i];
     const scrollableVirtualHeight = scrollable.virtualHeight;
-    const currentScrollHeight = scrollableVirtualHeight - scrollable.realHeight;
+    const currentScrollHeight = scrollableVirtualHeight - scrollable.realHeight + scrollable.reserveViewportHeight;
 
     if (pos <= currentScrollHeight + virtualYBase) {
       const scrollOffset = Math.max(0, pos - virtualYBase);
@@ -333,7 +341,8 @@ function TotalVirtualHeight(state: VirtualAreaState): number {
   // console.log(state.scrollableStates);
 
   const result = state.scrollableStates.reduce<number>(
-    (accu: number, scrollable: VirtualScrollableState): number => accu + scrollable.virtualHeight, 0);
+    (accu: number, scrollable: VirtualScrollableState): number =>
+      accu + scrollable.virtualHeight + scrollable.reserveViewportHeight, 0);
   // console.log("= " + result);
   return result;
 }
