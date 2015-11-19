@@ -376,6 +376,14 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
       }
     });
     
+    containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
+      if (this._mode === Mode.TERMINAL) {
+        
+      } else {
+        ev.stopPropagation();
+      }      
+    });
+    
     this._codeMirror.on("keypress", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
       if (this._mode === Mode.TERMINAL) {
         this._emulator.keyPress(ev);
