@@ -364,7 +364,7 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
         if (this._isKeyDownForEmulator(ev)) {
           this._emulator.keyDown(ev);
           this._emitKeyboardActivityEvent();
-        }  
+        }
         
         (<any> ev).codemirrorIgnore = true;
       } else {
@@ -377,11 +377,9 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     });
     
     containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      if (this._mode === Mode.TERMINAL) {
-        
-      } else {
+      if ( ! this._isKeyDownForParent(ev)) {
         ev.stopPropagation();
-      }      
+      }
     });
     
     this._codeMirror.on("keypress", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
@@ -526,6 +524,16 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
       return false;
     }
     return true;
+  }
+  
+  private _isKeyDownForParent(ev: KeyboardEvent): boolean {
+    if (ev.keyCode === 33 && ev.shiftKey                    // Page up
+        || ev.keyCode === 34 && ev.shiftKey                 // Page down
+        || ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey   // Shift+Ctrl+C
+        || ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {// Shift+Ctrl+V
+      return true;
+    }
+    return false;
   }
 
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
