@@ -112,6 +112,52 @@ export function testLong(test: nodeunit.Test): void {
   test.done();
 }
 
+export function test3Scrollables(test: nodeunit.Test): void {
+  const vsa = new VirtualScrollArea();
+  
+  const scrollbar = SetupScrollbar(vsa);
+  const container = SetUpScrollContainer(vsa, 500);
+  const scrollable1 = SetupScrollable(vsa, 500, 1500, 0);
+  const scrollable2 = SetupScrollable(vsa, 500, 1500, 0);
+  const scrollable3 = SetupScrollable(vsa, 500, 1500, 0);
+  
+  vsa.resize();
+  
+  test.equal(scrollbar.position, 0);
+  test.equal(scrollbar.length, 4500);
+  test.equal(scrollable1.getScrollOffset(), 0);
+  
+  vsa.scrollTo(750);
+  test.equal(scrollbar.position, 750);
+  test.equal(container.scrollTop, 0);
+  test.equal(scrollable1.getScrollOffset(), 750);
+  test.equal(scrollable2.getScrollOffset(), 0);
+  test.equal(scrollable3.getScrollOffset(), 0);
+  
+  vsa.scrollTo(1500);
+  test.equal(scrollbar.position, 1500);
+  test.equal(container.scrollTop, 500);
+  test.equal(scrollable1.getScrollOffset(), 1000);
+  test.equal(scrollable2.getScrollOffset(), 0);
+  test.equal(scrollable3.getScrollOffset(), 0);
+  
+  vsa.scrollTo(2500);
+  test.equal(scrollbar.position, 2500);
+  test.equal(container.scrollTop, 500);
+  test.equal(scrollable1.getScrollOffset(), 1000);
+  test.equal(scrollable2.getScrollOffset(), 1000);
+  test.equal(scrollable3.getScrollOffset(), 0);
+  
+  vsa.scrollTo(3500);
+  test.equal(scrollbar.position, 3500);
+  test.equal(container.scrollTop, 1000);
+  test.equal(scrollable1.getScrollOffset(), 1000);
+  test.equal(scrollable2.getScrollOffset(), 1000);
+  test.equal(scrollable3.getScrollOffset(), 500);
+
+  test.done();
+}
+
 export function testVirtualHeightUpdate(test: nodeunit.Test): void {
   const vsa = new VirtualScrollArea();
   const scrollbar = SetupScrollbar(vsa);

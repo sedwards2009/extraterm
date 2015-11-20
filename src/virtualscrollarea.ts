@@ -291,43 +291,45 @@ function Compute(state: VirtualAreaState): boolean {
   // |       |
   // |+-----+| --- virtual scroll Y point
   // ||     ||     The viewport is positioned aligned with the scroll Y point.
-  // |+-----+|     The scroller viewport is positioned at the top of the second code mirrro viewer.
+  // |+-----+|     The scroller viewport is positioned at the top of the second code mirror viewer.
   // |       |
   // +-------+
   //
   // The view ports are 'attracted' to the virtual Y position that we want to show.
 
-  let realYBase = 0;
-  let virtualYBase = 0;
+  let realYBase = 0;    // As we loop below we keep track of where we are inside the 'real' container
+  let virtualYBase = 0; // As we loop below we keep track of where wa are inside the virtual space
   
+  // Loop through each scrollable and up its virtual scroll Y offset and also
+  // compute the 'real' scroll Y offset for the container.
   for (let i=0; i<state.scrollableStates.length; i++) {
     const scrollable = state.scrollableStates[i];
-    const scrollableVirtualHeight = scrollable.virtualHeight;
-    const currentScrollHeight = scrollableVirtualHeight - scrollable.realHeight + scrollable.reserveViewportHeight;
+    const currentScrollHeight = scrollable.virtualHeight - scrollable.realHeight + scrollable.reserveViewportHeight;
 
     if (pos <= currentScrollHeight + virtualYBase) {
+      // The end of the current scrollable is lower/after the point we want to scroll to.
+      
+      // The 0 here will kick in when pos is completely higher than the top of the scrollable.
       const scrollOffset = Math.max(0, pos - virtualYBase);
+      
 // log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
       scrollable.virtualScrollYOffset = scrollOffset;
       if (pos >= virtualYBase) {
+        // This means that the top of the viewport (in DOM space) in the container, is aligned with the top of the scrollable object.
         state.containerScrollYOffset = realYBase;
       }
       
-    } else if (pos < virtualHeight + virtualYBase) {
+    } else {
       scrollable.virtualScrollYOffset = currentScrollHeight;
 
 // log(`2. heightInfo ${i}, element scrollTo=${currentScrollHeight}, el.scrollTop=${realYBase + pos - virtualYBase - currentScrollHeight}`);
       if (pos >= virtualYBase) {
         state.containerScrollYOffset = realYBase + pos - virtualYBase - currentScrollHeight;
       }
-
-    } else {
-// log(`3. heightInfo ${i}, element scrollTo=${currentScrollHeight}`);
-      scrollable.virtualScrollYOffset = currentScrollHeight;
     }
 
     realYBase += scrollable.realHeight;
-    virtualYBase += scrollableVirtualHeight;
+    virtualYBase += scrollable.virtualHeight;
   }
 }
 
@@ -383,6 +385,7 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): voi
         oldScrollableState.virtualScrollYOffset !== newScrollableState.virtualScrollYOffset) {
       newScrollableState.scrollable.setScrollOffset(newScrollableState.virtualScrollYOffset);
     }
+    
   });
   
   // Update the Y offset for the container.
@@ -396,4 +399,8 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): voi
  */
 function DumpState(state: VirtualAreaState): void {
   console.log(JSON.stringify(state, null, "  "));
+}
+
+function log(message: any, ...msgOpts: any[]): void {
+  console.log(message, ...msgOpts);
 }
