@@ -346,10 +346,13 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     
     this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
       this._emulator.focus();
+      const containerDiv = util.getShadowId(this, ID_CONTAINER);
+      containerDiv.classList.add('has_focus');
     });
 
     this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
       this._emulator.blur();
+      containerDiv.classList.remove('has_focus');
     });
 
     this._codeMirror.on("keydown", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {

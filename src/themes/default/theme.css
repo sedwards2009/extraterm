@@ -12,14 +12,15 @@
     outline: none;
 }
 
-DIV:focus > DIV > SPAN.terminal-cursor, DIV.terminal_viewer SPAN.terminal-cursor {
+.terminal.has_focus SPAN.terminal-cursor {
   color: #000000;
   background: #ffffff;
   outline: 0px;
 }
 
-SPAN.terminal-cursor {
+.terminal SPAN.terminal-cursor {
   outline: 1px solid #808080;
+  outline-offset: -1px;
 }
 
 .CodeMirror {
