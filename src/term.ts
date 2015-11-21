@@ -1408,6 +1408,7 @@ export class Emulator implements EmulatorAPI {
     }
     this._hasFocus = true;    
     this.showCursor();
+    this._dispatchEvents();
   }
   
   /**
@@ -1429,6 +1430,7 @@ export class Emulator implements EmulatorAPI {
       this.send('\x1b[O');
     }
     this._hasFocus = false;
+    this._dispatchEvents();
   }
 
   // XTerm mouse events
@@ -1876,7 +1878,7 @@ export class Emulator implements EmulatorAPI {
       this.refresh(this.y, this.y);
     } else {
       // Temporarily disabled:
-      // this.refreshBlink();
+      this.refreshBlink();
     }
   }
 
