@@ -117,8 +117,8 @@ export function startUp(): void {
         const checked = ! splitMenu.checked;
         splitMenu.checked = checked;
         mainWebUi.split = checked;
-        ev.stopPropagation();
       }
+      ev.stopPropagation();
     });
         
     const mainMenu = doc.getElementById('main_menu');

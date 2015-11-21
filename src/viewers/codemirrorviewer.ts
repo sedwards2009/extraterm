@@ -367,6 +367,9 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
         }
         
         (<any> ev).codemirrorIgnore = true;
+        
+        this._scheduleSyntheticKeyDown(ev);
+        
       } else {
         // Selection mode.
         if (ev.keyCode === 27) {
@@ -377,7 +380,7 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     });
     
     containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      if ( ! this._isKeyDownForParent(ev)) {
+      if (this._mode !== Mode.TERMINAL) {
         ev.stopPropagation();
       }
     });
@@ -525,16 +528,6 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     }
     return true;
   }
-  
-  private _isKeyDownForParent(ev: KeyboardEvent): boolean {
-    if (ev.keyCode === 33 && ev.shiftKey                    // Page up
-        || ev.keyCode === 34 && ev.shiftKey                 // Page down
-        || ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey   // Shift+Ctrl+C
-        || ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {// Shift+Ctrl+V
-      return true;
-    }
-    return false;
-  }
 
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
     
@@ -583,6 +576,24 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   
   private _handleMouseMoveEvent(ev: MouseEvent): void {
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
+  }
+
+  private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
+    util.doLater( () => {
+      const fakeKeyDownEvent = new KeyboardEvent('keydown', {
+        key: ev.key,
+        // code: ev.code,
+        location: ev.location,
+        ctrlKey: ev.ctrlKey,
+        shiftKey: ev.shiftKey,
+        altKey: ev.altKey,
+        metaKey: ev.metaKey,
+        repeat: ev.repeat,
+        keyCode: ev.keyCode,
+        which: ev.which
+      });
+      this.dispatchEvent(fakeKeyDownEvent);
+    });
   }
   
   //-----------------------------------------------------------------------
