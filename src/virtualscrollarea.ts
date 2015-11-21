@@ -69,6 +69,30 @@ export class VirtualScrollArea {
     return this._currentState.containerHeight;
   }
   
+  /**
+   * Gets the scroll offset which corresponds to the bottom edge of the container viewport.
+   *
+   * @return the scroll offset
+   */
+  getBottomScrollYOffset(): number {
+    return ViewportBottomOffset(this._currentState);
+  }
+  
+  /**
+   * Adds a length in contianer coordinates to a scroll offset.
+   *
+   * @param offset the base offset to add to
+   * @param delta the length in terms of the container's coordinate space to add
+   * @return the resulting scroll offset
+   */
+  addOffset(offset: number, delta: number): number {
+    if (delta >= 0) {
+      return AddOffset(this._currentState, offset, delta);
+    } else {
+      return SubtractOffset(this._currentState, offset, -delta);
+    }
+  }
+  
   //-----------------------------------------------------------------------
   //
   //  #####                                
@@ -202,8 +226,10 @@ export class VirtualScrollArea {
     if (topY < yOffset) {
       yOffset = topY;
     }
-    if (bottomY > yOffset + this._currentState.containerHeight) {
-      yOffset = bottomY - this._currentState.containerHeight;
+    
+    const yBottomOffset = this.getBottomScrollYOffset();    
+    if (bottomY >= yBottomOffset) {
+      yOffset = SubtractOffset(this._currentState,  bottomY, this._currentState.containerHeight);
     }
     return this.scrollTo(yOffset);
   }
@@ -347,6 +373,38 @@ function TotalVirtualHeight(state: VirtualAreaState): number {
       accu + scrollable.virtualHeight + scrollable.reserveViewportHeight, 0);
   // console.log("= " + result);
   return result;
+}
+
+function ViewportBottomOffset(state: VirtualAreaState): number {
+  return AddOffset(state, state.virtualScrollYOffset, state.containerHeight);
+}
+
+function AddOffset(state: VirtualAreaState, offset: number, delta: number): number {
+  let realYBase = 0;
+  let virtualYBase = 0;
+  
+  for (let i=0; i<state.scrollableStates.length; i++) {
+    const scrollable = state.scrollableStates[i];
+    const currentScrollHeight = scrollable.virtualHeight - scrollable.realHeight + scrollable.reserveViewportHeight;
+    
+    if (offset < virtualYBase + scrollable.virtualHeight + scrollable.reserveViewportHeight) {
+      if (scrollable.realHeight >= delta) {
+        return offset + delta - scrollable.reserveViewportHeight;
+      }
+    }
+    
+    realYBase += scrollable.realHeight;
+    virtualYBase += scrollable.virtualHeight + scrollable.reserveViewportHeight;
+  }
+  return virtualYBase;
+}
+
+function SubtractOffset(state: VirtualAreaState, offset: number, delta: number): number {
+  const reverseState: VirtualAreaState  = { scrollbar: null, containerHeight: 0, container: null,
+    virtualScrollYOffset: 0, containerScrollYOffset: 0,
+    scrollableStates: [...state.scrollableStates].reverse() };
+  const totalVirtualHeight = TotalVirtualHeight(state);
+  return TotalVirtualHeight(state) - AddOffset(reverseState, totalVirtualHeight - offset, delta);
 }
 
 /**
