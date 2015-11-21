@@ -62,6 +62,11 @@ interface KeyboardEvent {
   keyIdentifier: string;
 }
 
+interface KeyboardEventInit {
+  keyCode: number;
+  which: number;
+}
+
 interface Event {
   path: Node[]; // <- obsolete. Removed from later the Shadow DOM spec.
   deepPath: Node[];
