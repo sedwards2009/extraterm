@@ -328,8 +328,10 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0, showCursorWhenSelecting: true});
 
     this._codeMirror.on("cursorActivity", () => {
-      const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { bubbles: true });
-      this.dispatchEvent(event);
+      if (this._mode !== Mode.TERMINAL) {
+        const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { bubbles: true });
+        this.dispatchEvent(event);
+      }
     });
     
     this._codeMirror.on("scroll", () => {
