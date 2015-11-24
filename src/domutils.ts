@@ -177,3 +177,51 @@ function nextDocumentOrderNodeUp(currentNode: Node): Node {
   }
   return nextDocumentOrderNodeUp(currentNode.parentNode);
 }
+
+/**
+ * Create a KeyboardEvent.
+ *
+ * This works around a bunch of bugs in Blink.
+ * 
+ * @param  eventName event name, one of 'keypress', 'keydown' and 'keyup'
+ * @param  initMap map of values to use to fill the event
+ * @return new keyboard event
+ */
+export function newKeyboardEvent(eventName: string, initMap: {
+      bubbles?: boolean;
+      key?: string;
+      code?: string;
+      location?: number;
+      repeat?: boolean;
+      keyCode?: number;
+      charCode?: number;
+      keyIdentifier?: string;
+      which?: number;
+      ctrlKey?: boolean;
+      shiftKey?: boolean;
+      altKey?: boolean;
+      metaKey?: boolean;
+    }): KeyboardEvent {
+  
+  const fakeKeyDownEvent = new KeyboardEvent('keydown', initMap);
+
+  // https://stackoverflow.com/questions/12937391/cannot-initialize-keycode-in-keyboard-event-init-method      
+  Object.defineProperty(fakeKeyDownEvent,  'keyCode', {
+    get: function() {
+      return initMap.keyCode;
+    }
+  });
+
+  Object.defineProperty(fakeKeyDownEvent,  'code', {
+    get: function() {
+      return initMap.code;
+    }
+  });
+
+  Object.defineProperty(fakeKeyDownEvent,  'which', {
+    get: function() {
+      return initMap.which;
+    }
+  });
+  return fakeKeyDownEvent;
+}

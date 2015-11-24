@@ -354,54 +354,47 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
       this._emulator.blur();
       containerDiv.classList.remove('has_focus');
     });
-
-    this._codeMirror.on("keydown", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
+    
+    // Filter the keyboard events before they reach CodeMirror.
+    containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
       if (this._mode === Mode.TERMINAL) {
+        ev.stopPropagation();
+        // ev.preventDefault();
         if (ev.keyCode === 32 && ev.ctrlKey) {
           // Enter selection mode.
           this._enterSelectionMode();
-          (<any> ev).codemirrorIgnore = true;
           return;
         }
         
-        if (this._isKeyDownForEmulator(ev)) {
-          this._emulator.keyDown(ev);
+        if (this._emulator.keyDown(ev)) {
           this._emitKeyboardActivityEvent();
+        } else {
+          this._scheduleSyntheticKeyDown(ev);
         }
-        
-        (<any> ev).codemirrorIgnore = true;
-        
-        this._scheduleSyntheticKeyDown(ev);
-        
       } else {
+
         // Selection mode.
         if (ev.keyCode === 27) {
           this._exitSelectionMode();
-          (<any> ev).codemirrorIgnore = true;
+          ev.stopPropagation();
         }
       }
-    });
-    
-    containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      if (this._mode !== Mode.TERMINAL) {
-        ev.stopPropagation();
-      }
-    });
-    
-    this._codeMirror.on("keypress", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
+    }, true);
+
+    containerDiv.addEventListener('keypress', (ev: KeyboardEvent): void => {
       if (this._mode === Mode.TERMINAL) {
+        ev.stopPropagation();
         this._emulator.keyPress(ev);
-        (<any> ev).codemirrorIgnore = true;
         this._emitKeyboardActivityEvent();
       }
-    });
+    }, true);
     
-    this._codeMirror.on("keyup", (instance: CodeMirror.Editor, ev: KeyboardEvent): void => {
+    containerDiv.addEventListener('keyup', (ev: KeyboardEvent): void => {
       if (this._mode === Mode.TERMINAL) {
-        // this._emulator.keyUp(ev);
-        (<any> ev).codemirrorIgnore = true;
-      }
-    });
+        ev.stopPropagation();
+        ev.preventDefault();
+      }      
+    }, true);
     
     const codeMirrorElement = this._codeMirror.getWrapperElement();
     codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
@@ -583,18 +576,22 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
 
   private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
     util.doLater( () => {
-      const fakeKeyDownEvent = new KeyboardEvent('keydown', {
-        key: ev.key,
-        // code: ev.code,
+      const fakeKeyDownEvent = domutils.newKeyboardEvent('keydown', {
+        bubbles: true,
+        key: ev.key,        
+        code: ev.code,
         location: ev.location,
+        repeat: ev.repeat,
+        keyCode: ev.keyCode,
+        charCode: ev.charCode,
+        keyIdentifier: ev.keyIdentifier,
+        which: ev.which,
         ctrlKey: ev.ctrlKey,
         shiftKey: ev.shiftKey,
         altKey: ev.altKey,
-        metaKey: ev.metaKey,
-        repeat: ev.repeat,
-        keyCode: ev.keyCode,
-        which: ev.which
+        metaKey: ev.metaKey
       });
+      
       this.dispatchEvent(fakeKeyDownEvent);
     });
   }

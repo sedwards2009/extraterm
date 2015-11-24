@@ -215,8 +215,8 @@ export interface EmulatorAPI {
   resize(newSize: TerminalSize): void;
 
   // Sending input events into the emulator
-  keyDown(ev: KeyboardEvent): void;
-  keyPress(ev: KeyboardEvent): void;
+  keyDown(ev: KeyboardEvent): boolean;
+  keyPress(ev: KeyboardEvent): boolean;
   destroy();
   
   /**
@@ -3178,7 +3178,7 @@ export class Emulator implements EmulatorAPI {
 
   // Key Resources:
   // https://developer.mozilla.org/en-US/docs/DOM/KeyboardEvent
-  keyDown(ev: KeyboardEvent): void {
+  keyDown(ev: KeyboardEvent): boolean {
     let key: string = null;
     let newScrollPosition: number;
 
@@ -3252,7 +3252,7 @@ export class Emulator implements EmulatorAPI {
           if (ev.shiftKey) {
             this.scrollDisp(-1);
             cancelEvent(ev);
-            return;
+            return true;
           } else {
             key = "\x1b[1;5A";
           }
@@ -3270,7 +3270,7 @@ export class Emulator implements EmulatorAPI {
           if (ev.shiftKey) {
             this.scrollDisp(1);
             cancelEvent(ev);
-            return;
+            return true;
           } else {
             key = "\x1b[1;5B";
           }
@@ -3309,9 +3309,10 @@ export class Emulator implements EmulatorAPI {
             // Virtual scroll up.
             this.scrollDisp(-(this.rows - 1));
             cancelEvent(ev);
+            return true;
           }
           // Let this one bubble up when using physical scrolling.
-          return;
+          return false;
         } else {
           key = '\x1b[5~';
         }
@@ -3322,10 +3323,11 @@ export class Emulator implements EmulatorAPI {
           if ( !this.physicalScroll) {
             // Virtual scroll down.
             this.scrollDisp(this.rows - 1);
-            cancelEvent(ev);  
+            cancelEvent(ev);
+            return true;
           }
           // Let this one bubble up when using physical scrolling.
-          return;
+          return false;
         } else {
           key = '\x1b[6~';
         }
@@ -3423,20 +3425,20 @@ export class Emulator implements EmulatorAPI {
             key = '\x1b' + (ev.keyCode - 48);
           }
         } else {
-          return;
+          return false;
         }
         break;
     }
 
     if (key === null) {
-      return;
+      return false;
     }
     
     this.showCursor();
     this.handler(key);
 
     cancelEvent(ev);
-    return;
+    return true;
   }
 
   private setgLevel(g: number): void {
@@ -3451,7 +3453,7 @@ export class Emulator implements EmulatorAPI {
     }
   }
 
-  keyPress(ev: KeyboardEvent): void {
+  keyPress(ev: KeyboardEvent): boolean {
     let key;
     if (ev.charCode) {
       key = ev.charCode;
@@ -3460,11 +3462,11 @@ export class Emulator implements EmulatorAPI {
     } else if (ev.which !== 0 && ev.charCode !== 0) {
       key = ev.which;
     } else {
-      return;
+      return false;
     }
 
     if (!key || ev.ctrlKey || ev.altKey || ev.metaKey) {
-      return;
+      return false;
     }
 
     key = String.fromCharCode(key);
@@ -3473,7 +3475,7 @@ export class Emulator implements EmulatorAPI {
     this.handler(key);
     
     cancelEvent(ev);
-    return;
+    return true;
   }
 
   private send(data: string): void {

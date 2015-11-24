@@ -60,11 +60,15 @@ interface Document {
 
 interface KeyboardEvent {
   keyIdentifier: string;
+  code: string;
 }
 
 interface KeyboardEventInit {
-  keyCode: number;
-  which: number;
+  code?: string;
+  keyIdentifier?: string;
+  charCode?: number;
+  keyCode?: number;
+  which?: number;
 }
 
 interface Event {
