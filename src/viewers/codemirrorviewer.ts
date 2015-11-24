@@ -373,8 +373,8 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
         }
       } else {
 
-        // Selection mode.
-        if (ev.keyCode === 27) {
+        // Exit Selection mode. Esc or Ctrl+Space toggle.
+        if (ev.keyCode === 27 || ev.keyCode === 32 && ev.ctrlKey) {
           this._exitSelectionMode();
           ev.stopPropagation();
         }
