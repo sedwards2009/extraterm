@@ -532,11 +532,6 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   }
 
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
-    
-    if ( ! this.hasFocus()) {
-      this.focus();
-    }
-    
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
     if (ev.ctrlKey) { 
@@ -565,10 +560,14 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     if (emulatorHandler(options)) {
       // The emulator consumed the event. Stop CodeMirror from processing it too.
       ev.stopPropagation();
+      ev.preventDefault();
     }
   }
   
   private _handleMouseDownEvent(ev: MouseEvent): void {
+    if ( ! this.hasFocus()) {
+      this.focus();
+    }
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseDown.bind(this._emulator));
   }
   
