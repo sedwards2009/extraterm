@@ -300,7 +300,6 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   
   refresh(): void {
     this._codeMirror.refresh();
-    this._scrollBugFix();
   }
   
   createdCallback(): void {
@@ -343,7 +342,6 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
       if (scrollInfo.top > clientYScrollRange) {
         this._codeMirror.scrollTo(0, clientYScrollRange);
       }
-      util.doLater( this._scrollBugFix.bind(this));
     });
     
     this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
@@ -791,11 +789,6 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   private _updateFocusable(focusable: boolean): void {
     // const containerDiv = util.getShadowId(this, ID_CONTAINER);
     // containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");
-  }
-
-  private _scrollBugFix(): void {
-    const containerDiv = util.getShadowId(this, ID_CONTAINER);
-    containerDiv.scrollTop = 0;
   }
 
   private getVirtualTextHeight(): number {
