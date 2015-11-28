@@ -6,7 +6,7 @@
   "license": "GPL v3",
   "main": "main.js",
   "scripts": {
-    "run": "electron main.js",
+    "run": "electron --force-device-scale-factor=1 main.js",
     "build": "tsc",
     "test": "npm run build ; nodeunit virtualscrollareatest.js",
     "serve-test": "node test/httpserver.js"
