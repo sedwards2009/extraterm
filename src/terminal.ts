@@ -402,7 +402,7 @@ class EtTerminal extends HTMLElement {
   }
     
   resizeToContainer(): void {
-    this._scheduleResize.bind(this);
+    this._scheduleResize();
   }
   
   //-----------------------------------------------------------------------
@@ -712,7 +712,6 @@ class EtTerminal extends HTMLElement {
     this._scheduledCursorUpdates = [];
     
     if (scheduledResize) {
-console.log("_processScheduled resize");
       this._processResize();
     }    
   }
