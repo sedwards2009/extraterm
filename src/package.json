@@ -22,7 +22,8 @@
     "markdown": "^0.5.0",
     "qs": "^3.1.0",
     "react": "^0.13.3",
-    "source-map-support": "^0.3.2"
+    "source-map-support": "^0.3.2",
+    "vue": "^1.0.10"
   },
   "optionalDependencies": {
     "pty.js": "^0.3.0"

@@ -70,6 +70,7 @@
         "./src/viewers/markdownviewer.ts",
         "./src/viewers/terminalviewer.ts",
         "./src/settings/settingstab.ts",
+        "./src/settings/settingstab2.ts",
         "./src/settings/settingswebview.ts",
         "./src/settings/settingspane.tsx",
         "./src/typings/codemirror/codemirror.d.ts",
@@ -80,8 +81,12 @@
         "./src/typings/nodeunit/nodeunit.d.ts",
         "./src/typings/pty.js/pty.js.d.ts",
         "./src/typings/react/react.d.ts",
+        "./src/typings/vuejs/vuejs.d.ts",
         "./src/node_modules/typescript/lib/lib.es6.d.ts",
         "./src/node_modules/immutable/dist/immutable.d.ts"
     ],
-    "exclude": []
+    "exclude": [],
+    "atom": {
+        "rewriteTsconfig": true
+    }
 }

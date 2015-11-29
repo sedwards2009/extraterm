@@ -5,7 +5,7 @@ import util = require('./gui/util');
 import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
-import EtSettingsTab = require('./settings/settingstab');
+import EtSettingsTab = require('./settings/settingstab2');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
@@ -192,8 +192,12 @@ class ViewerTabInfo extends TabInfo {
 }
 
 class SettingsTabInfo extends ViewerTabInfo {
-  constructor(public viewerElement: EtSettingsTab) {
-    super(viewerElement);
+  constructor(public settingsElement: EtSettingsTab) {
+    super(settingsElement);
+  }
+  
+  setConfig(config: Config): void {
+    this.settingsElement.config = config;
   }
 }
 
