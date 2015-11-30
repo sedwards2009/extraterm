@@ -1095,7 +1095,7 @@ export class Emulator implements EmulatorAPI {
   private mouseEvents = false;
 
   private x = 0;      // Cursor x position
-  private y = 0;      // Cursoe y position
+  private y = 0;      // Cursor y position
   private savedX = 0;
   private savedY = 0;
   
@@ -1245,7 +1245,7 @@ export class Emulator implements EmulatorAPI {
     this.ybase = 0;
     this.ydisp = 0;
     this.x = 0;
-    this.y = 0;
+    this._setCursorY(0);
     this.oldy = 0;
 
     this.cursorState = false;       // Cursor blink state.
@@ -1612,7 +1612,7 @@ export class Emulator implements EmulatorAPI {
 //     this.refreshStart = REFRESH_START_NULL;
 //     this.refreshEnd = REFRESH_END_NULL;
 //     this.x = 0;
-//     this.y = 0;
+//     this._setCursorY(0);
 //     this.oldy = 0;
 //     
 //     this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
@@ -1875,6 +1875,7 @@ export class Emulator implements EmulatorAPI {
   showCursor(): void {
     if (!this.cursorState) {
       this.cursorState = true;
+      this._getRow(this.y);
       this.refresh(this.y, this.y);
     } else {
       // Temporarily disabled:
@@ -2086,10 +2087,10 @@ export class Emulator implements EmulatorAPI {
               // TODO: Implement eat_newline_glitch.
               // if (this.realX >= this.cols) break;
               // this.realX = 0;
-              this.y++;
-              if (this.y > this.scrollBottom) {
-                this.y--;
+              if (this.y+1 > this.scrollBottom) {
                 this.scroll();
+              } else {
+                this._setCursorY(this.y+1);
               }
               break;
 
@@ -2134,11 +2135,11 @@ export class Emulator implements EmulatorAPI {
 
                 if (this.x >= this.cols) {
                   this.x = 0;
-                  this.updateRange(this.y);
-                  this.y++;
-                  if (this.y > this.scrollBottom) {
-                    this.y--;
+                  this.updateRange(this.y);                  
+                  if (this.y+1 > this.scrollBottom) {
                     this.scroll();
+                  } else {
+                    this._setCursorY(this.y+1);
                   }
                 }
 
@@ -3566,7 +3567,7 @@ export class Emulator implements EmulatorAPI {
 
     // make sure the cursor stays on screen
     if (this.y >= newrows) {
-      this.y = newrows - 1;
+      this._setCursorY(newrows - 1);
     }
     if (this.x >= newcols) {
       this.x = newcols - 1;
@@ -3618,7 +3619,13 @@ export class Emulator implements EmulatorAPI {
     if (y < this.refreshStart) this.refreshStart = y;
     if (y > this.refreshEnd) this.refreshEnd = y;
   }
-
+  
+  private _setCursorY(newY: number): void {
+    this._getRow(newY);
+    this.y = newY;
+    this.refresh(newY, newY);
+  }
+  
   private maxRange(): void {
     this.refreshStart = 0;
     this.refreshEnd = this.rows - 1;
@@ -3728,19 +3735,17 @@ export class Emulator implements EmulatorAPI {
 
   // ESC D Index (IND is 0x84).
   private index(): void {
-    this.y++;
-    if (this.y > this.scrollBottom) {
-      this.y--;
+    if (this.y+1 > this.scrollBottom) {
       this.scroll();
+    } else {
+      this._setCursorY(this.y+1);
     }
     this.state = STATE_NORMAL;
   }
 
   // ESC M Reverse Index (RI is 0x8d).
   private reverseIndex(): void {
-    this.y--;
-    if (this.y < this.scrollTop) {
-      this.y++;
+    if (this.y-1 < this.scrollTop) {
       // possibly move the code below to term.reverseScroll();
       // test: echo -ne '\e[1;1H\e[44m\eM\e[0m'
       // blankLine(true) is xterm/linux behavior
@@ -3750,6 +3755,8 @@ export class Emulator implements EmulatorAPI {
 
       this.updateRange(this.scrollTop);
       this.updateRange(this.scrollBottom);
+    } else {
+      this._setCursorY(this.y-1);
     }
     this.state = STATE_NORMAL;
   }
@@ -3777,10 +3784,11 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;
     }
-    this.y -= param;
     
-    if (this.y < this.scrollTop) {
-      this.y = this.scrollTop;
+    if (this.y-param < this.scrollTop) {
+      this._setCursorY(this.scrollTop);
+    } else {
+      this._setCursorY(this.y - param);
     }
   }
 
@@ -3791,11 +3799,12 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;
     }
-    this.y += param;
     
     const bottom = this.scrollBottom !== 0  ? this.scrollBottom : this.rows -1;
-    if (this.y > bottom) {
-      this.y = bottom ;
+    if (this.y+param > bottom) {
+      this._setCursorY(bottom);
+    } else {
+      this._setCursorY(this.y + param);
     }
   }
 
@@ -3840,7 +3849,7 @@ export class Emulator implements EmulatorAPI {
     }
 
     this.x = x;
-    this.y = y;
+    this._setCursorY(y);
   }
 
   // CSI Ps J  Erase in Display (ED).
@@ -4211,9 +4220,10 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;
     }
-    this.y += param;
-    if (this.y >= this.rows) {
-      this.y = this.rows - 1;
+    if (this.y+param >= this.rows) {
+      this._setCursorY(this.rows - 1);
+    } else {
+      this._setCursorY(this.y + param);
     }
     this.x = 0;
   }
@@ -4226,9 +4236,10 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;
     }
-    this.y -= param;
-    if (this.y < 0) {
-      this.y = 0;
+    if (this.y-param < 0) {
+      this._setCursorY(0);
+    } else {
+      this._setCursorY(this.y - param);
     }
     this.x = 0;
   }
@@ -4427,7 +4438,7 @@ export class Emulator implements EmulatorAPI {
     if (y >= this.rows) {
       y = this.rows - 1;
     }
-    this.y = y;
+    this._setCursorY(y);
   }
 
   // 145 65 e * VPR - Vertical Position Relative
@@ -4437,9 +4448,10 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;
     }
-    this.y += param;
-    if (this.y >= this.rows) {
-      this.y = this.rows - 1;
+    if (this.y+param >= this.rows) {
+      this._setCursorY(this.rows - 1);
+    } else {
+      this._setCursorY(this.y + param);
     }
   }
 
@@ -4574,7 +4586,7 @@ export class Emulator implements EmulatorAPI {
         case 6:
           this.originMode = true;
           this.x = 0;
-          this.y = this.scrollTop;
+          this._setCursorY(this.scrollTop);
           break;
         case 7:
           this.wraparoundMode = true;
@@ -4774,7 +4786,7 @@ export class Emulator implements EmulatorAPI {
         case 3:
           this.fillScreen();
           this.x = 0;
-          this.y = 0;
+          this._setCursorY(0);
         
           if (this.cols === 132 && this.savedCols) {
             this.resize( { rows: this.rows, columns: this.savedCols } );
@@ -4783,7 +4795,7 @@ export class Emulator implements EmulatorAPI {
         case 6:
           this.originMode = false;
           this.x = 0;
-          this.y = 0;
+          this._setCursorY(0);
           break;
         case 7:
           this.wraparoundMode = false;
@@ -4840,7 +4852,7 @@ export class Emulator implements EmulatorAPI {
             this.ybase = this.normal.ybase;
             this.ydisp = this.normal.ydisp;
             this.x = this.normal.x;
-            this.y = this.normal.y;
+            this._setCursorY(this.normal.y);
             this.scrollTop = this.normal.scrollTop;
             this.scrollBottom = this.normal.scrollBottom;
             this.tabs = this.normal.tabs;
@@ -4848,7 +4860,7 @@ export class Emulator implements EmulatorAPI {
             this.normal = null;
             // if (params === 1049) {
             //   this.x = this.savedX;
-            //   this.y = this.savedY;
+            //   this._setCursorY(this.savedY);
             // }
             this.resize( { rows: currentrows, columns: currentcols } );
             this.refresh(0, this.rows - 1);
@@ -4873,7 +4885,7 @@ export class Emulator implements EmulatorAPI {
       this.scrollTop = top;
       this.scrollBottom = bottom;
       this.x = 0;
-      this.y = this.originMode ? this.scrollTop : 0;
+      this._setCursorY(this.originMode ? this.scrollTop : 0);
     }
   }
 
@@ -4890,7 +4902,7 @@ export class Emulator implements EmulatorAPI {
   //   Restore cursor (ANSI.SYS).
   private restoreCursor(): void {
     this.x = this.savedX;
-    this.y = this.savedY;
+    this._setCursorY(this.savedY);
     this.charset = this.savedCharset;
     this.curAttr = this.savedCurAttr;
   }
@@ -5057,7 +5069,8 @@ export class Emulator implements EmulatorAPI {
     this.scrollTop = 0;
     this.scrollBottom = this.rows - 1;
     this.curAttr = Emulator.defAttr;
-    this.x = this.y = 0; // ?
+    this.x = 0;
+    this._setCursorY(0);
     this.charset = null;
     this.glevel = 0; // ??
     this.charsets = [null]; // ??
