@@ -42,8 +42,7 @@ const ID = "EtTerminalTemplate";
 const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 const SEMANTIC_TYPE = "data-extraterm-type";
 const SEMANTIC_VALUE = "data-extraterm-value";
-const ID_TERM_CONTAINER = "term_container";
-const ID_SCROLLER = "scroller";
+const ID_SCROLL_AREA = "scroll_area";
 const ID_SCROLLBAR = "scrollbar";
 const ID_CONTAINER = "terminal_container";
 const ID_MAIN_STYLE = "main_style";
@@ -234,12 +233,10 @@ class EtTerminal extends HTMLElement {
     //   this._handleStyleLoad();
     //   });
 
-    const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
-    const termContainer = <HTMLDivElement> util.getShadowId(this, ID_TERM_CONTAINER);
-    const scroller = util.getShadowId(this, ID_SCROLLER);
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
     
-    this._virtualScrollArea.setScrollContainer(this);
+    this._virtualScrollArea.setScrollContainer(scrollerArea);
     this._virtualScrollArea.setScrollbar(scrollbar);
     
     // Set up the emulator
@@ -261,7 +258,7 @@ class EtTerminal extends HTMLElement {
 
     // Create the CodeMirrorTerminal
     this._codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
-    util.getShadowId(this, ID_TERM_CONTAINER).appendChild(this._codeMirrorTerminal);
+    scrollerArea.appendChild(this._codeMirrorTerminal);
     this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_RESIZE, this._handleCodeMirrorResize.bind(this));
     this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
       this._virtualScrollArea.scrollToBottom();
@@ -278,7 +275,7 @@ class EtTerminal extends HTMLElement {
     // FIXME there might be resizes for things other than changs in window size.
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
-    termContainer.addEventListener('mousedown', (ev: MouseEvent): void => {
+    scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
       this._codeMirrorTerminal.focus();
       ev.preventDefault();
       ev.stopPropagation();
@@ -288,9 +285,9 @@ class EtTerminal extends HTMLElement {
       this._virtualScrollArea.scrollTo(scrollbar.position);
     });
     
-    scroller.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
-    scroller.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
-    scroller.addEventListener('keydown', this._handleKeyDown.bind(this));
+    scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
+    scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+    scrollerArea.addEventListener('keydown', this._handleKeyDown.bind(this));
     
     // Application mode handlers    
     // this._term.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
@@ -423,70 +420,43 @@ class EtTerminal extends HTMLElement {
       template = window.document.createElement('template');
       template.id = ID;
 
-      const success_color = "#00ff00";
-      const fail_color = "#ff0000";
+      const background_color = "#000000";
+
       template.innerHTML = `<style id="${ID_MAIN_STYLE}">
         :host {
           display: block;
         }
         
-        .terminal_container {
+        #${ID_CONTAINER} {
             display: flex;
             flex-direction: row;
             width: 100%;
             height: 100%;
         }
 
-        .terminal-scrollback {
-          width: 100%;
-        }
-        
-        .terminal_scrollbar {
+        #${ID_SCROLLBAR} {
             flex: 0;
             min-width: 15px;
             height: 100%;
         }
         
-        DIV.term_container > .terminal {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .terminal {
-            white-space: nowrap;
-            font-family: sans-serif, ${termjs.Terminal.NO_STYLE_HACK};
-            overflow: hidden;
-        }
-        
-        .term_container         {
-          height: 100%;
-          width: 100%;
-        }
-        
-        #${ID_SCROLLER} {
+        #${ID_SCROLL_AREA} {
           flex: 1;
           height: 100%;
           overflow-x: hidden;
           overflow-y: hidden;
+          background-color: ${background_color};
         }
       
-        ${EtCodeMirrorViewer.TAG_NAME},
-        .terminal > DIV.terminal-active,
-        .terminal > DIV.terminal-scrollback {
+        ${EtCodeMirrorViewer.TAG_NAME} {
             margin-left: 2px;
             margin-right: 2px;
         }
-        
-        #${ID_SCROLLER}.${CLASS_SELECTION_MODE} > #${ID_TERM_CONTAINER} {
-          display: none;
-        }        
         </style>
         <style id="${ID_THEME_STYLE}"></style>
-        <div id='${ID_CONTAINER}' class='terminal_container'>
-          <div id='${ID_SCROLLER}'>
-            <div id='${ID_TERM_CONTAINER}' class='term_container'></div>
-          </div>
-          <cb-scrollbar id='${ID_SCROLLBAR}' class='terminal_scrollbar'></cb-scrollbar>
+        <div id='${ID_CONTAINER}'>
+          <div id='${ID_SCROLL_AREA}'></div>
+          <cb-scrollbar id='${ID_SCROLLBAR}'></cb-scrollbar>
         </div>`;
       window.document.body.appendChild(template);
     }
