@@ -5546,6 +5546,10 @@ export class Emulator implements EmulatorAPI {
   addRenderEventListener(eventHandler: RenderEventHandler): void {
     this.addListener(RENDER_EVENT, eventHandler);
   }
+  
+  removeRenderEventListener(eventHandler: RenderEventHandler): void {
+    this.removeListener(RENDER_EVENT, eventHandler);
+  }
 
   addBellEventListener(eventHandler: BellEventListener): void {
     this.addListener(BELL_EVENT, eventHandler);

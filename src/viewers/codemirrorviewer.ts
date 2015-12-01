@@ -94,7 +94,8 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
-  
+  private _renderEventListener: termjs.RenderEventHandler = this._handleRenderEvent.bind(this);
+
   private _initProperties(): void {
     this._emulator = null;
     this._terminalFirstRow = 0;
@@ -114,6 +115,7 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     this._mainStyleLoaded = false;
     this._importStyleLoaded = false;
     this._resizePollHandle = null;
+    this._renderEventListener = null;
   }
 
   //-----------------------------------------------------------------------
@@ -164,11 +166,12 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   set emulator(emulator: termjs.Emulator) {
     if (this._emulator !== null) {
       // Disconnect the last emulator.
-      // FIXME
+      this._emulator.removeRenderEventListener(this._renderEventListener);
+      this._emulator = null;
     }
     
     if (emulator !== null) {
-      emulator.addRenderEventListener(this._handleRenderEvent.bind(this));
+      emulator.addRenderEventListener(this._renderEventListener);
     }
     
     this._emulator = emulator;
@@ -306,6 +309,7 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     this._initProperties();
     this._instanceId = instanceIdCounter;
     instanceIdCounter++;
+    this._renderEventListener = this._handleRenderEvent.bind(this);
   }
   
   attachedCallback(): void {
