@@ -5,9 +5,23 @@ import util = require('./gui/util');
 import _  = require('lodash');
 
 export interface VirtualScrollable {
+  
+  getMinHeight(): number;
+
+  /**
+   * Gets the height of the scrollable contents on this element.
+   *
+   * @return {number} [description]
+   */
+  getVirtualHeight(containerHeight: number): number;
+  getReserveViewportHeight(containerHeight: number): number;
+  
   setHeight(height: number): void;
   setScrollOffset(y: number): void;
 }
+
+// The name of a custom event that VirtualScrollables should emit when they need to be resized.
+export const EVENT_RESIZE = "scrollable-resize";
 
 // Describes the state of one Scrollable
 interface VirtualScrollableState {
@@ -105,8 +119,10 @@ export class VirtualScrollArea {
   //
   //-----------------------------------------------------------------------
 
-  appendScrollable(scrollable: VirtualScrollable, minHeight: number, virtualHeight: number,
-      reserveViewportHeight: number): void {
+  appendScrollable(scrollable: VirtualScrollable): void {
+    const minHeight = scrollable.getMinHeight();
+    const virtualHeight = scrollable.getVirtualHeight(this.getScrollContainerHeight());
+    const reserveViewportHeight = scrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
     this._update( (newState) => {
       newState.scrollableStates.push( {
@@ -121,9 +137,53 @@ export class VirtualScrollArea {
     });
   }
   
-  // removeScrollable(scrollable: VirtualScrollable): void {
-  //   console.log("virtualscrollarea removeScrollable() Not implemented!!!"); // FIXME
-  // }
+  removeScrollable(scrollable: VirtualScrollable): void {
+    this._update( (newState) => {
+      
+      let currentYOffset = newState.virtualScrollYOffset;
+      let accu = 0;
+      for (let i=0; i<newState.scrollableStates.length; i++) {
+        const currentScrollableState = newState.scrollableStates[i];
+        const currentHeight = currentScrollableState.virtualHeight + currentScrollableState.reserveViewportHeight;
+        
+        if (currentScrollableState.scrollable === scrollable) {
+          
+          if (currentYOffset >= accu) {
+            if (currentYOffset < accu + currentHeight) {
+              // currentYOffset is inside the scrollable we need to remove.
+              currentYOffset = accu;
+            } else {
+              // currentYOffset is after the scrollable we need to remove.
+              currentYOffset -= currentHeight;
+            }
+          }
+          break;
+        }
+          
+        accu += currentHeight;
+      }
+      
+      newState.scrollableStates = newState.scrollableStates.filter( (state) => state.scrollable !== scrollable);
+    });
+  }
+  
+  replaceScrollable(oldScrollable: VirtualScrollable, newScrollable: VirtualScrollable): void {
+    const minHeight = newScrollable.getMinHeight();
+    const virtualHeight = newScrollable.getVirtualHeight(this.getScrollContainerHeight());
+    const reserveViewportHeight = newScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
+
+    this._update( (newState) => {
+        newState.scrollableStates.filter( (state) => state.scrollable === oldScrollable )
+          .forEach( (state) => {
+            state.scrollable = newScrollable;
+            state.virtualHeight = virtualHeight;
+            state.minHeight = minHeight;
+            state.reserveViewportHeight = reserveViewportHeight;
+            state.realHeight = 0;
+            state.virtualScrollYOffset = 0;
+          });
+    });
+  }
   
   setScrollContainer(container: HTMLElement): void {
     this._update( (newState) => {
@@ -186,18 +246,18 @@ export class VirtualScrollArea {
   /**
    * Update the virtual height and minimum height for a scrollable and relayout.
    *
-   * @param scrollable the scrollable to update
-   * @param newMinHeight the new minimum height
-   * @param newVirtualHeight the new virtual height
+   * @param virtualScrollable the scrollable to update
    */
-  updateScrollableHeights(scrollable: VirtualScrollable, newMinHeight: number, newVirtualHeight: number,
-      newReserveViewportHeight: number): void {
+  updateScrollableSize(virtualScrollable: VirtualScrollable): void {
+    const newMinHeight = virtualScrollable.getMinHeight();
+    const newVirtualHeight = virtualScrollable.getVirtualHeight(this.getScrollContainerHeight());
+    const newReserveViewportHeight = virtualScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
     const virtualHeight = TotalVirtualHeight(this._currentState);
     const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
     
     const updateFunc = (newState: VirtualAreaState): void => {
-      newState.scrollableStates.filter( (ss) => ss.scrollable === scrollable )
+      newState.scrollableStates.filter( (ss) => ss.scrollable === virtualScrollable )
         .forEach( (ss) => {
           ss.virtualHeight = newVirtualHeight;
           ss.minHeight = newMinHeight;
@@ -455,8 +515,39 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): voi
 /**
  * 
  */
-function DumpState(state: VirtualAreaState): void {
-  console.log(JSON.stringify(state, null, "  "));
+function DumpState(state: VirtualAreaState): void {  
+  console.log(VirtualAreaStateToString(state));
+}
+
+function VirtualAreaStateToString(state: VirtualAreaState): string {
+  return `{
+    scrollbar: ${ElementToString(state.scrollbar)},
+    virtualScrollYOffset: ${state.virtualScrollYOffset},
+    containerHeight: ${state.containerHeight},
+    container: ${ElementToString(state.container)},
+    // Output
+    containerScrollYOffset: ${state.containerScrollYOffset},
+    scrollableStates: ${state.scrollableStates.map(VirtualScrollableStateToString).join(',\n')}
+  }`;
+}
+
+function VirtualScrollableStateToString(state: VirtualScrollableState): string {
+  return `    {
+      scrollable: ${ElementToString(state.scrollable)},
+      virtualHeight: ${state.virtualHeight},
+      minHeight: ${state.minHeight},
+      reserveViewportHeight: ${state.reserveViewportHeight},
+      // Output
+      realHeight: ${state.realHeight},
+      virtualScrollYOffset: ${state.virtualScrollYOffset}    
+    }`;
+}
+
+function ElementToString(element: any): string {
+  if (element === null || element === undefined) {
+    return "null";
+  }
+  return (<any> element).tagName;
 }
 
 function log(message: any, ...msgOpts: any[]): void {

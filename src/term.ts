@@ -213,7 +213,7 @@ export interface EmulatorAPI {
   lineAtRow(row: number, showCursor?: boolean): Line;
   
   resize(newSize: TerminalSize): void;
-
+  
   // Sending input events into the emulator
   keyDown(ev: KeyboardEvent): boolean;
   keyPress(ev: KeyboardEvent): boolean;
@@ -1575,47 +1575,28 @@ export class Emulator implements EmulatorAPI {
    * once something is printed there.
    */
   moveRowsToScrollback(): void {
-//     let children = this.children;
-//     let newChildren = [];
-//     let lines = this.lines;
-//     let newLines = [];
-//     
-//   const origChildrenLen = this.children.length;
-//   
-//     if (this.x === 0 && this.lines.length-1 === this.y) {
-//       if (this.getLineText(this.y).trim() === '') {
-//         lines = this.lines.slice(0, -1);
-//         newLines = [this.lines[this.lines.length-1]];
-//         
-//         children = this.children.slice(0, -1);
-//         newChildren = [this.children[this.children.length-1]];
-//         
-//       }
-//     }
-// 
-//     const scrollbackLines = [...lines];
-//     
-//     this.lines = newLines;
-// 
-// // FIXME DOM code
-//     // Delete the DIV objects for the current terminal screen.
-//     children.forEach(function(div) {
-//       if (div === undefined) {
-//   (<any> console).trace("div is undefined, origChildrenLen: "+origChildrenLen);
-//   
-//       }
-//       div.remove();
-//     });
-//     this.children = newChildren;
-//     
-//     // Force the scrollback buffer to render.
-//     this.refreshStart = REFRESH_START_NULL;
-//     this.refreshEnd = REFRESH_END_NULL;
-//     this.x = 0;
-//     this._setCursorY(0);
-//     this.oldy = 0;
-//     
-//     this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
+    let lines = this.lines;
+    let newLines = [];
+  
+    if (this.x === 0 && this.lines.length-1 === this.y) {
+      if (this.getLineText(this.y).trim() === '') {
+        lines = this.lines.slice(0, -1);
+        newLines = [this.lines[this.lines.length-1]];        
+      }
+    }
+
+    lines.forEach( (line) => this._scrollbackLineQueue.push(line) );
+
+    this.lines = newLines;
+
+    // Force the scrollback buffer to render.
+    this.refreshStart = REFRESH_START_NULL;
+    this.refreshEnd = REFRESH_END_NULL;
+    this.x = 0;
+    this._setCursorY(0);
+    this.oldy = 0;
+    
+    this._dispatchEvents();
   }
 
   private _getRow(row: number): LineCell[] {
@@ -1929,9 +1910,7 @@ export class Emulator implements EmulatorAPI {
       
       // Drop the oldest line into the scrollback buffer.
       if (this.scrollTop === 0) {
-        // const scrollbackLines = [ this.lines[0] ];
         this._scrollbackLineQueue.push(this.lines[0]);        
-        // this._emit(SCROLLBACKLINE_EVENT, this, scrollbackLines);
       }
     }
 
@@ -3124,6 +3103,7 @@ export class Emulator implements EmulatorAPI {
       if (this.params[0] === this.applicationModeCookie) {
         this.state = STATE_APPLICATION_END;
         console.log("term.ts start app mode!" + this.params);
+        this._dispatchEvents();
         this._emit(APPLICATIONMODESTART_EVENT, this, this.params);
       } else {
         this.log("Invalid application mode cookie.");
@@ -3146,12 +3126,14 @@ export class Emulator implements EmulatorAPI {
       
     } else if (nextzero === i) {
       // We are already at the end-mode character.
+      this._dispatchEvents();
       this._emit(APPLICATIONMODEEND_EVENT, this);
       this.state = STATE_NORMAL;
       
     } else {
       // Incoming end-mode character. Send the last piece of data.
-      this._emit(APPLICATIONMODEDATA_EVENT, this, data.slice(i, nextzero));
+      this._dispatchEvents();      
+      this._emit(APPLICATIONMODEDATA_EVENT, data.slice(i, nextzero));
       i = nextzero - 1;
     }
     return i;

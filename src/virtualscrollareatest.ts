@@ -36,6 +36,18 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: nu
     _offset: null,
     _height: 10,
     
+    getMinHeight: (): number => {
+      return minHeight;
+    },
+    
+    getVirtualHeight: (containerHeight: number): number => {
+      return virtualHeight;
+    },
+    
+    getReserveViewportHeight: (containerHeight: number): number => {
+      return reserveViewportHeight;
+    },
+
     setScrollOffset(offset: number): void {
       this._offset = offset;
     },
@@ -53,7 +65,7 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: nu
     }
   };
   
-  vsa.appendScrollable(scrollable, minHeight, virtualHeight, reserveViewportHeight);
+  vsa.appendScrollable(scrollable);
   return scrollable;
 }
 

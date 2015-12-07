@@ -5,8 +5,11 @@
 import fs  = require('fs');
 import globalcss = require('./gui/globalcss');
 import util = require('./gui/util');
+import virtualscrollarea = require('./virtualscrollarea');
 
-class ViewerElement extends HTMLElement {
+type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+
+class ViewerElement extends HTMLElement implements VirtualScrollable {
   
   private _themeCssPath: string;
   
@@ -58,6 +61,32 @@ class ViewerElement extends HTMLElement {
   
   set focusable(value: boolean) {
   }
+  
+  // VirtualScrollable
+  getMinHeight(): number {
+    return 0;
+  }
+
+  // VirtualScrollable
+  getVirtualHeight(containerHeight: number): number {
+    return 0;
+  }
+  
+  // VirtualScrollable
+  getReserveViewportHeight(containerHeight: number): number {
+    return 0;
+  }
+  
+  // VirtualScrollable
+  setHeight(height: number): void {
+    
+  }
+  
+  // VirtualScrollable
+  setScrollOffset(y: number): void {
+    
+  }
+  
 }
 
 export = ViewerElement;

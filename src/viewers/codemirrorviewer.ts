@@ -11,10 +11,9 @@ import EtCodeMirrorViewerTypes = require('./codemirrorviewertypes');
 import termjs = require('../term');
 import virtualscrollarea = require('../virtualscrollarea');
 
+type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
 type CursorMoveDetail = EtCodeMirrorViewerTypes.CursorMoveDetail;
-type ResizeDetail = EtCodeMirrorViewerTypes.ResizeDetail;
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 
 const ID = "CbCodeMirrorViewerTemplate";
 const ID_CONTAINER = "container";
@@ -37,13 +36,11 @@ let registered = false;
 
 let instanceIdCounter = 0;
 
-class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
+class EtCodeMirrorViewer extends ViewerElement {
 
   static TAG_NAME = "et-codemirror-viewer";
   
   static EVENT_CURSOR_MOVE = "cursor-move";
-
-  static EVENT_RESIZE = "resize";
 
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
 
@@ -201,6 +198,9 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
 
   // VirtualScrollable
   setHeight(newHeight: number): void {
+    if (DEBUG_RESIZE) {
+      this.log("setHeight: ",newHeight);
+    }
     this._adjustHeight(newHeight);
   }
 
@@ -218,7 +218,11 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
    * @return {number} [description]
    */
   getVirtualHeight(containerHeight: number): number {
-    return this.getVirtualTextHeight();
+    const result = this.getVirtualTextHeight();
+    if (DEBUG_RESIZE) {
+      this.log("getVirtualHeight: ",result);
+    }
+    return result;
   }
   
   getReserveViewportHeight(containerHeight: number): number {
@@ -226,14 +230,25 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     if (this._useVPad && textHeight > containerHeight) {
       const defaultTextHeight = this._codeMirror.defaultTextHeight();
       const vPad = containerHeight % defaultTextHeight;
+      if (DEBUG_RESIZE) {
+        this.log("getReserveViewportHeight: ", vPad);
+      }
       return vPad;
     } else {
+      if (DEBUG_RESIZE) {
+        this.log("getReserveViewportHeight: ", 0);
+      }
       return 0;
     }
   }
   
   resizeEmulatorToParentContainer(): void {
-    this.resizeEmulatorToBox(this.parentElement.clientWidth, this.parentElement.clientHeight);
+    if (DEBUG_RESIZE) {
+      this.log("resizeEmulatorToParentContainer: ", this._emulator === null ? "(no emulator)" : "(have emulator)");
+    }
+    if (this._emulator !== null) {
+      this.resizeEmulatorToBox(this.parentElement.clientWidth, this.parentElement.clientHeight);
+    }
   }
 
   /**
@@ -313,6 +328,10 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   }
   
   attachedCallback(): void {
+    if (util.getShadowRoot(this) !== null) {
+      return;
+    }
+    
     const shadow = util.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
@@ -349,13 +368,17 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     });
     
     this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
-      this._emulator.focus();
+      if (this._emulator !== null) {
+        this._emulator.focus();
+      }
       const containerDiv = util.getShadowId(this, ID_CONTAINER);
       containerDiv.classList.add('has_focus');
     });
 
     this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
-      this._emulator.blur();
+      if (this._emulator !== null) {
+        this._emulator.blur();
+      }
       containerDiv.classList.remove('has_focus');
     });
     
@@ -370,7 +393,7 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
           return;
         }
         
-        if (this._emulator.keyDown(ev)) {
+        if (this._emulator !== null && this._emulator.keyDown(ev)) {
           this._emitKeyboardActivityEvent();
         } else {
           this._scheduleSyntheticKeyDown(ev);
@@ -394,7 +417,9 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     containerDiv.addEventListener('keypress', (ev: KeyboardEvent): void => {
       if (this._mode === Mode.TERMINAL) {
         ev.stopPropagation();
-        this._emulator.keyPress(ev);
+        if (this._emulator !== null) {
+          this._emulator.keyPress(ev);
+        }
         this._emitKeyboardActivityEvent();
       }
     }, true);
@@ -511,9 +536,10 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   }
   
   private _emitVirtualResizeEvent(): void {
-    const scrollInfo = this._codeMirror.getScrollInfo();    
-    const detail: ResizeDetail = { height: scrollInfo.height };
-    const event = new CustomEvent(EtCodeMirrorViewer.EVENT_RESIZE, { detail: detail });
+    if (DEBUG_RESIZE) {
+      this.log("_emitVirtualResizeEvent");
+    }
+    const event = new CustomEvent(virtualscrollarea.EVENT_RESIZE, { bubbles: true });
     this.dispatchEvent(event);
   }
   
@@ -523,18 +549,6 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     this.dispatchEvent(event);
   }
   
-  private _isKeyDownForEmulator(ev: KeyboardEvent): boolean {
-    if (ev.keyCode === 16                                   // Shift key
-        || ev.keyCode === 17                                // Ctrl key
-        || ev.keyCode === 33 && ev.shiftKey                 // Page up
-        || ev.keyCode === 34 && ev.shiftKey                 // Page down
-        || ev.keyCode === 67 && ev.ctrlKey && ev.shiftKey   // Shift+Ctrl+C
-        || ev.keyCode === 86 && ev.ctrlKey && ev.shiftKey) {// Shift+Ctrl+V
-      return false;
-    }
-    return true;
-  }
-
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
@@ -569,6 +583,9 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   }
   
   private _handleMouseDownEvent(ev: MouseEvent): void {
+    if (this._emulator === null) {
+      return;
+    }
     if ( ! this.hasFocus()) {
       this.focus();
     }
@@ -576,10 +593,16 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
   }
   
   private _handleMouseUpEvent(ev: MouseEvent): void {
+    if (this._emulator === null) {
+      return;
+    }
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseUp.bind(this._emulator));
   }
   
   private _handleMouseMoveEvent(ev: MouseEvent): void {
+    if (this._emulator === null) {
+      return;
+    }
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
   }
 
@@ -713,10 +736,11 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
     const doc = this._codeMirror.getDoc();
     const lineCount = doc.lineCount();
 
-    if (lineCount - this._terminalFirstRow > newRows) {
+    if (lineCount - this._terminalFirstRow > realizedRows) {
       // Trim off the extra lines.
-      const startPos = this._terminalFirstRow === 0 ? { line: this._terminalFirstRow + newRows, ch: 0 }
-        : { line: this._terminalFirstRow + newRows -1, ch: doc.getLine(this._terminalFirstRow + newRows-1).length };
+      const startPos = this._terminalFirstRow === 0
+        ? { line: this._terminalFirstRow + realizedRows, ch: 0 }
+        : { line: this._terminalFirstRow + realizedRows -1, ch: doc.getLine(this._terminalFirstRow + realizedRows-1).length };
       const endPos = { line: lineCount-1, ch: doc.getLine(lineCount-1).length };
       doc.replaceRange("", startPos, endPos);
     }
@@ -751,13 +775,14 @@ class EtCodeMirrorViewer extends ViewerElement implements VirtualScrollable {
         emptyText += "\n";
       }
       doc.replaceRange(emptyText, pos, pos);
-      this._isEmpty = false;
     }
 
     const {text: text, decorations: decorations} = this._linesToTextStyles(lines);
     const startPos = { line: this._terminalFirstRow + startRow, ch: 0 };
     const endPos = { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length };
     this._insertLinesAtPos(startPos, endPos, text, decorations);
+
+    this._isEmpty = false;
   }
   
   private _insertLinesAtPos(startPos: CodeMirror.Position, endPos: CodeMirror.Position, text: string,

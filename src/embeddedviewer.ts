@@ -9,6 +9,9 @@ import checkboxmenuitem = require('./gui/checkboxmenuitem');
 import globalcss = require('./gui/globalcss');
 import util = require('./gui/util');
 import ViewerElement = require('./viewerelement');
+import virtualscrollarea = require('./virtualscrollarea');
+
+type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 
 contextmenu.init();
 menuitem.init();
@@ -30,7 +33,10 @@ const ID_COMMANDLINE = "commandline";
 let registered = false;
 const REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
 
-class EtEmbeddedViewer extends HTMLElement {
+/**
+ * A visual frame which contains another element and can be shown directly inside a terminal.
+ */
+class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
   
   static TAG_NAME = "et-embeddedviewer";
   
@@ -55,6 +61,16 @@ class EtEmbeddedViewer extends HTMLElement {
     }
   }
   
+  /**
+   * Type guard for detecting a EtEmbeddedViewer instance.
+   * 
+   * @param  node the node to test
+   * @return      True if the node is a EtEmbeddedViewer.
+   */
+  static is(node: Node): node is EtEmbeddedViewer {
+    return node !== null && node !== undefined && node instanceof EtEmbeddedViewer;
+  }
+  
   set viewerElement(element: ViewerElement) {
     this.innerHTML = "";
     
@@ -70,7 +86,55 @@ class EtEmbeddedViewer extends HTMLElement {
       return null;
     }
   }
+
+  getMinHeight(): number {
+    return this.getReserveViewportHeight(0);
+  }
+
+  getVirtualHeight(containerHeight: number): number {
+    const viewerElement = this.viewerElement;
+    if (viewerElement !== null) {
+      return viewerElement.getVirtualHeight(containerHeight);
+    } else {
+      return 0;
+    }
+  }
   
+  getReserveViewportHeight(containerHeight: number): number {
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    const rect = headerDiv.getBoundingClientRect();
+    return rect.height;
+  }
+  
+  setHeight(height: number): void {
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    const rect = headerDiv.getBoundingClientRect();
+    
+    const viewerElement = this.viewerElement;
+    if (viewerElement !== null) {
+      viewerElement.setHeight(height - rect.height);
+    }    
+  }
+  
+  setScrollOffset(y: number): void {
+    const viewerElement = this.viewerElement;
+    if (viewerElement !== null) {
+      viewerElement.setScrollOffset(y);
+    }
+  }
+
+  //-----------------------------------------------------------------------
+  //
+  // ######                                      
+  // #     # #####  # #    #   ##   ##### ###### 
+  // #     # #    # # #    #  #  #    #   #      
+  // ######  #    # # #    # #    #   #   #####  
+  // #       #####  # #    # ######   #   #      
+  // #       #   #  #  #  #  #    #   #   #      
+  // #       #    # #   ##   #    #   #   ###### 
+  //
+  //-----------------------------------------------------------------------
+
   /**
    * 
    */
@@ -545,7 +609,7 @@ class EtEmbeddedViewer extends HTMLElement {
   /**
    * 
    */
-  get text(): string {
+  get text(): string {  // FIXME
     const kids = this.childNodes;
     let result = "";
     for (var i=0; i<kids.length; i++) {

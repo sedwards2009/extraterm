@@ -22,7 +22,8 @@ import globalcss = require('./gui/globalcss');
 import virtualscrollarea = require('./virtualscrollarea');
 
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
-type CursorMoveDetail = EtCodeMirrorViewerTypes.CursorMoveDetail;
+type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type ScrollableElement = VirtualScrollable & HTMLElement;
 
 const debug = true;
 let startTime: number = window.performance.now();
@@ -242,35 +243,8 @@ class EtTerminal extends HTMLElement {
     // Set up the emulator
     const cookie = crypto.randomBytes(10).toString('hex');
     process.env[EXTRATERM_COOKIE_ENV] = cookie;
-
-    this._emulator = new termjs.Emulator({
-      scrollback: 1000,
-      cursorBlink: this._blinkingCursor,
-      physicalScroll: true,
-      applicationModeCookie: cookie,
-      debug: true
-    });
-
-    this._emulator.debug = true;
-    this._emulator.addTitleChangeEventListener(this._handleTitle.bind(this));
-    this._emulator.addDataEventListener(this._handleTermData.bind(this));
-    this._emulator.addRenderEventListener(this._handleTermSize.bind(this));
-
-    // Create the CodeMirrorTerminal
-    this._codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
-    scrollerArea.appendChild(this._codeMirrorTerminal);
-    this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_RESIZE, this._handleCodeMirrorResize.bind(this));
-    this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
-      this._virtualScrollArea.scrollToBottom();
-    });
-    this._codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE,
-      this._handleCodeMirrorCursor.bind(this));
-    
-    this._virtualScrollArea.appendScrollable(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
-      this._codeMirrorTerminal.getVirtualHeight(this._virtualScrollArea.getScrollContainerHeight()),
-      this._codeMirrorTerminal.getReserveViewportHeight(this._virtualScrollArea.getScrollContainerHeight()));
-
-    this._codeMirrorTerminal.emulator = this._emulator;
+    this._initEmulator(cookie);
+    this._appendNewCodeMirrorTerminal();
 
     // FIXME there might be resizes for things other than changs in window size.
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
@@ -288,12 +262,11 @@ class EtTerminal extends HTMLElement {
     scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
     scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
     scrollerArea.addEventListener('keydown', this._handleKeyDown.bind(this));
-    
-    // Application mode handlers    
-    // this._term.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
-    // this._term.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
-    // this._term.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
 
+    scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
+    scrollerArea.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
+      this._virtualScrollArea.scrollToBottom();
+    });
 
     this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     this._scheduleResize();
@@ -369,7 +342,9 @@ class EtTerminal extends HTMLElement {
    * Focus on this terminal.
    */
   focus(): void {
-    this._codeMirrorTerminal.focus();
+    if (this._codeMirrorTerminal !== null) {
+      this._codeMirrorTerminal.focus();
+    }
   }
   
   /**
@@ -378,7 +353,11 @@ class EtTerminal extends HTMLElement {
    * @return true if the terminal has the focus.
    */
   hasFocus(): boolean {
-    return this._codeMirrorTerminal.hasFocus();
+    if (this._codeMirrorTerminal !== null) {
+      return this._codeMirrorTerminal.hasFocus();
+    } else {
+      return false;
+    }
   }
   
   /**
@@ -477,6 +456,55 @@ class EtTerminal extends HTMLElement {
     return this.ownerDocument;
   }
   
+  // ----------------------------------------------------------------------
+  //
+  // #######                                                 
+  // #       #    # #    # #        ##   #####  ####  #####  
+  // #       ##  ## #    # #       #  #    #   #    # #    # 
+  // #####   # ## # #    # #      #    #   #   #    # #    # 
+  // #       #    # #    # #      ######   #   #    # #####  
+  // #       #    # #    # #      #    #   #   #    # #   #  
+  // ####### #    #  ####  ###### #    #   #    ####  #    # 
+  //                                                         
+  // ----------------------------------------------------------------------
+
+  private _initEmulator(cookie: string): void {
+    const emulator = new termjs.Emulator({
+      scrollback: 1000,
+      cursorBlink: this._blinkingCursor,
+      physicalScroll: true,
+      applicationModeCookie: cookie,
+      debug: true
+    });
+    
+    emulator.debug = true;
+    emulator.addTitleChangeEventListener(this._handleTitle.bind(this));
+    emulator.addDataEventListener(this._handleTermData.bind(this));
+    emulator.addRenderEventListener(this._handleTermSize.bind(this));
+    
+    // Application mode handlers    
+    emulator.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
+    emulator.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
+    emulator.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
+    
+    this._emulator = emulator;
+  }
+
+  private _appendNewCodeMirrorTerminal(): void {
+    // Create the CodeMirrorTerminal
+    const codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
+    
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    scrollerArea.appendChild(codeMirrorTerminal);
+    
+    codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, this._handleCodeMirrorCursor.bind(this));
+    
+    codeMirrorTerminal.emulator = this._emulator;
+    this._virtualScrollArea.appendScrollable(codeMirrorTerminal);
+
+    this._codeMirrorTerminal = codeMirrorTerminal;
+  }
+
   /**
    * Handler for window title change events from the pty.
    * 
@@ -485,6 +513,101 @@ class EtTerminal extends HTMLElement {
   private _handleTitle(emulator: termjs.Emulator, title: string): void {
     this._title = title;
     this._sendTitleEvent(title);
+  }
+  
+  private _disconnectActiveCodeMirrorTerminal(): void {
+    this._emulator.moveRowsToScrollback();
+    if (this._codeMirrorTerminal !== null) {
+      this._codeMirrorTerminal.emulator = null;
+      this._codeMirrorTerminal = null;
+    }
+  }
+  
+  private _appendScrollableElement(el: ScrollableElement): void {
+    this._disconnectActiveCodeMirrorTerminal();
+    
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    scrollerArea.appendChild(el);
+    this._virtualScrollArea.appendScrollable(el);
+  }
+  
+  private _removeScrollableElement(el: ScrollableElement): void {
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    scrollerArea.removeChild(el);
+    this._virtualScrollArea.removeScrollable(el);
+  }
+
+  private _replaceScrollableElement(oldEl: ScrollableElement, newEl: ScrollableElement): void {
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    scrollerArea.insertBefore(newEl, oldEl);
+    scrollerArea.removeChild(oldEl);
+    this._virtualScrollArea.replaceScrollable(oldEl, newEl);
+  }
+
+  /**
+   * Handle new stdout data from the pty.
+   * 
+   * @param {string} data New data.
+   */
+  private _handlePtyStdoutData (data: string): void {
+// log("incoming data:",""+data);
+    this._emulator.write("" + data);
+  }
+
+  /**
+   * Handle new stderr data from the pty.
+   * 
+   * @param {type} data New data.
+   */
+  private _handlePtyStderrData(data: string): void {
+    this._emulator.write(data);
+  }
+
+  /**
+   * Handle data coming from the user.
+   * 
+   * This just pushes the keys from the user through to the pty.
+   * @param {string} data The data to process.
+   */
+  private _handleTermData(emulator: termjs.Emulator, data: string): void {
+    this._sendDataToPtyEvent(data);
+  }
+  
+  private _handleTermSize(emulator: termjs.Emulator, event: termjs.RenderEvent): void {
+    const newColumns = event.columns;
+    const newRows = event.rows;
+    if (this._columns === newColumns && this._rows === newRows) {
+      return;
+    }
+    this._columns = newColumns;
+    this._rows = newRows;
+    this._sendResizeEvent(newColumns, newRows);
+  }
+  
+  /**
+   * Send data to the pseudoterminal.
+   * 
+   * @param {string} text
+   */
+  private _sendDataToPtyEvent(text: string): void {
+    const event = new CustomEvent(EtTerminal.EVENT_USER_INPUT, { detail: {data: text } });
+    this.dispatchEvent(event);
+  }
+
+  /**
+   * Send a resize message to the pty.
+   * 
+   * @param {number} cols The new number of columns in the terminal.
+   * @param {number} rows The new number of rows in the terminal.
+   */
+  private _sendResizeEvent(cols: number, rows: number, callback?: Function): void {
+    const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_RESIZE, { detail: {columns: cols, rows: rows } });
+    this.dispatchEvent(event);    
+  }
+
+  private _sendTitleEvent(title: string): void {
+    const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
+    this.dispatchEvent(event);    
   }
   
   // ----------------------------------------------------------------------
@@ -503,27 +626,28 @@ class EtTerminal extends HTMLElement {
     this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset() + delta);
   }
 
-  private _handleCodeMirrorResize(ev: CustomEvent): void {
-    this._resizeCodeMirror();
+  private _handleVirtualScrollableResize(ev: CustomEvent): void {
+    this._updateVirtualScrollableSize(<any> ev.target); 
+      // ^ We know this event only comes from VirtualScrollable elements.
   }
-  
-  private _resizeCodeMirror(): void {
-    this._virtualScrollArea.updateScrollableHeights(this._codeMirrorTerminal, this._codeMirrorTerminal.getMinHeight(),
-      this._codeMirrorTerminal.getVirtualHeight(this._virtualScrollArea.getScrollContainerHeight()),
-      this._codeMirrorTerminal.getReserveViewportHeight(this._virtualScrollArea.getScrollContainerHeight()));
+
+  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
+    this._virtualScrollArea.updateScrollableSize(virtualScrollable);
   }
 
   /**
    * Handle a resize event from the window.
    */
   private _processResize(): void {
-    this._codeMirrorTerminal.resizeEmulatorToParentContainer();
+    if (this._codeMirrorTerminal !== null) {
+      this._codeMirrorTerminal.resizeEmulatorToParentContainer();
+    }
     this._virtualScrollArea.resize();
-    this._resizeCodeMirror();
+    this._updateVirtualScrollableSize(this._codeMirrorTerminal);
   }
 
   private _handleCodeMirrorCursor(ev: CustomEvent): void {
-    const pos = this._codeMirrorTerminal. getCursorPosition();
+    const pos = this._codeMirrorTerminal.getCursorPosition();
     this._virtualScrollArea.scrollIntoView(pos.top, pos.bottom);
   }
   
@@ -686,146 +810,162 @@ class EtTerminal extends HTMLElement {
     }    
   }
 
-  /* ******************************************************************** */
-  
+  // ********************************************************************
+  //
+  //    #                                                                  #     #                      
+  //   # #   #####  #####  #      #  ####    ##   ##### #  ####  #    #    ##   ##  ####  #####  ###### 
+  //  #   #  #    # #    # #      # #    #  #  #    #   # #    # ##   #    # # # # #    # #    # #      
+  // #     # #    # #    # #      # #      #    #   #   # #    # # #  #    #  #  # #    # #    # #####  
+  // ####### #####  #####  #      # #      ######   #   # #    # #  # #    #     # #    # #    # #      
+  // #     # #      #      #      # #    # #    #   #   # #    # #   ##    #     # #    # #    # #      
+  // #     # #      #      ###### #  ####  #    #   #   #  ####  #    #    #     #  ####  #####  ###### 
+  //
+  // ********************************************************************
+
   /**
    * Handle when the embedded term.js enters start of application mode.
    * 
    * @param {array} params The list of parameter which were specified in the
    *     escape sequence.
    */
-  // private _handleApplicationModeStart(emulator: termjs.Emulator, params: string[]): void {
-  //   log("application-mode started! ",params);
-  //   
-  //   // FIXME check cookie!
-  // 
-  //   if (params.length === 1) {
-  //     // Normal HTML mode.
-  //     this._applicationMode = ApplicationMode.APPLICATION_MODE_HTML;
-  // 
-  //   } else if(params.length >= 2) {
-  //     switch ("" + params[1]) {
-  //       case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-  //         this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
-  //         this._bracketStyle = params[2];
-  //         break;
-  // 
-  //       case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-  //         this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
-  //         log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
-  //         break;
-  //         
-  //       case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
-  //         this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
-  //         log("Starting APPLICATION_MODE_REQUEST_FRAME");
-  //         break;
-  //         
-  //       case "" + ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-  //         log("Starting APPLICATION_MODE_SHOW_MIME");
-  //         this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_MIME;
-  //         this._mimeData = "";
-  //         this._mimeType = params[2];
-  //         break;
-  //       
-  //       default:
-  //         log("Unrecognized application escape parameters.");
-  //         break;
-  //     }
-  //   }
-  //   this._htmlData = "";
-  // }
+  private _handleApplicationModeStart(emulator: termjs.Emulator, params: string[]): void {
+    log("application-mode started! ",params);
+    
+    // FIXME check cookie!
+  
+    if (params.length === 1) {
+      // Normal HTML mode.
+      this._applicationMode = ApplicationMode.APPLICATION_MODE_HTML;
+  
+    } else if(params.length >= 2) {
+      switch ("" + params[1]) {
+        case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
+          this._bracketStyle = params[2];
+          break;
+  
+        case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
+          log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
+          break;
+          
+        case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
+          log("Starting APPLICATION_MODE_REQUEST_FRAME");
+          break;
+          
+        case "" + ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+          log("Starting APPLICATION_MODE_SHOW_MIME");
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_MIME;
+          this._mimeData = "";
+          this._mimeType = params[2];
+          break;
+        
+        default:
+          log("Unrecognized application escape parameters.");
+          break;
+      }
+    }
+    this._htmlData = "";
+  }
 
   /**
    * Handle incoming data while in application mode.
    * 
    * @param {string} data The new data.
    */
-  // private _handleApplicationModeData(data: string): void {
-  //   log("html-mode data!", data);
-  //   switch (this._applicationMode) {
-  //     case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-  //     case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-  //       this._htmlData = this._htmlData + data;
-  //       break;
-  //       
-  //     case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-  //       this._mimeData = this._mimeData + data;
-  //       break;
-  //       
-  //     default:
-  //       break;
-  //   }
-  // }
+  private _handleApplicationModeData(data: string): void {
+    log("html-mode data!", data);
+    switch (this._applicationMode) {
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+        this._htmlData = this._htmlData + data;
+        break;
+        
+      case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+        this._mimeData = this._mimeData + data;
+        break;
+        
+      default:
+        break;
+    }
+  }
   
   /**
    * Handle the exit from application mode.
    */
-  // private _handleApplicationModeEnd(): void {
-  //   let el: HTMLElement;
-  //   let startdivs: NodeList;
-  //   
-  //   switch (this._applicationMode) {
-  //     case ApplicationMode.APPLICATION_MODE_HTML:
-  //       el = this._getWindow().document.createElement("div");
-  //       el.innerHTML = this._htmlData;
-  //       this._term.appendElement(el);
-  //       break;
-  // 
-  //     case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-  //       this._handleApplicationModeBracketStart();
-  //       break;
-  // 
-  //     case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-  //       this._handleApplicationModeBracketEnd();
-  //       break;
-  // 
-  //     case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
-  //       this.handleRequestFrame(this._htmlData);
-  //       break;
-  //       
-  //     case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-  //       this._handleShowMimeType(this._mimeType, this._mimeData);
-  //       this._mimeType = "";
-  //       this._mimeData = "";
-  //       break;
-  //       
-  //     default:
-  //       break;
-  //   }
-  //   this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
-  // 
-  //   log("html-mode end!",this._htmlData);
-  //   this._htmlData = null;
-  // }
+  private _handleApplicationModeEnd(): void {
+    let el: HTMLElement;
+    let startdivs: NodeList;
+    
+    switch (this._applicationMode) {
+      case ApplicationMode.APPLICATION_MODE_HTML:
+        // el = this._getWindow().document.createElement("div");
+        // el.innerHTML = this._htmlData;
+        // this._appendElementToScrollArea(el);
+        break;
+  
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+        this._handleApplicationModeBracketStart();
+        break;
+  
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+        this._handleApplicationModeBracketEnd();
+        break;
+  
+      case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
+        this.handleRequestFrame(this._htmlData);
+        break;
+        
+      case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+        this._handleShowMimeType(this._mimeType, this._mimeData);
+        this._mimeType = "";
+        this._mimeData = "";
+        break;
+        
+      default:
+        break;
+    }
+    this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
+  
+    log("html-mode end!",this._htmlData);
+    this._htmlData = null;
+  }
 
-  // private _handleApplicationModeBracketStart(): void {
-  //   const startdivs = this._term.element.querySelectorAll(
-  //                       EtEmbeddedViewer.TAG_NAME + ":not([return-code]), "+EtCommandPlaceHolder.TAG_NAME);
-  // 
-  //   if (startdivs.length !== 0) {
-  //     return;  // Don't open a new frame.
-  //   }
-  //   
-  //   // Fetch the command line.
-  //   let cleancommand = this._htmlData;
-  //   if (this._bracketStyle === "bash") {
-  //     // Bash includes the history number. Remove it.
-  //     const trimmed = this._htmlData.trim();
-  //     cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
-  //   }
-  //   
-  //   if ( ! this._isNoFrameCommand(cleancommand)) {
-  //     // Create and set up a new command-frame.
-  //     const el = this._createEmbeddedViewerElement(cleancommand);
-  //     this._term.appendElement(el);
-  //   } else {
-  //           
-  //     // Don't place an embedded viewer, but use an invisible place holder instead.
-  //     const el = this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
-  //     el.setAttribute('command-line', cleancommand);
-  //     this._term.appendElement(el);
-  //   }
-  // }
+  private _handleApplicationModeBracketStart(): void {
+    const scrollArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const startdivs = scrollArea.querySelectorAll(
+                        EtEmbeddedViewer.TAG_NAME + ":not([return-code]), "+EtCommandPlaceHolder.TAG_NAME);
+  
+    if (startdivs.length !== 0) {
+      return;  // Don't open a new frame.
+    }
+    
+    // Fetch the command line.
+    let cleancommand = this._htmlData;
+    if (this._bracketStyle === "bash") {
+      // Bash includes the history number. Remove it.
+      const trimmed = this._htmlData.trim();
+      cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
+    }
+    
+    if ( ! this._isNoFrameCommand(cleancommand)) {
+      // Create and set up a new command-frame.
+      const el = this._createEmbeddedViewerElement(cleancommand);
+      this._emulator.moveRowsToScrollback();
+      this._appendScrollableElement(el);
+      this._appendNewCodeMirrorTerminal();
+    } else {
+            
+      // Don't place an embedded viewer, but use an invisible place holder instead.
+      const el = <EtCommandPlaceHolder> this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
+      el.setAttribute('command-line', cleancommand);
+      this._emulator.moveRowsToScrollback();
+      this._appendScrollableElement(el);
+      this._appendNewCodeMirrorTerminal();
+    }
+    this._virtualScrollArea.resize();
+  }
   
   private deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
     viewer.remove();
@@ -860,64 +1000,56 @@ class EtTerminal extends HTMLElement {
     return el;
   }
   
-  // private _handleApplicationModeBracketEnd(): void {
-  //   this._closeLastEmbeddedViewer(this._htmlData);    
-  // }
-  // 
-  // private _closeLastEmbeddedViewer(returnCode: string): void {
-  //   const startElement = this._term.element.querySelectorAll(
-  //                         EtEmbeddedViewer.TAG_NAME + ":not([return-code]), " + EtCommandPlaceHolder.TAG_NAME);
-  // 
-  //   if (startElement.length !== 0) {
-  //     let embeddedSomethingElement = <HTMLElement>startElement[startElement.length-1];
-  //     let embeddedViewerElement: EtEmbeddedViewer = null;
-  //     if (embeddedSomethingElement instanceof EtCommandPlaceHolder) {
-  //       // There is a place holder and not an embedded viewer.
-  //       if (returnCode === "0") {
-  //         // The command returned successful, just remove the place holder and that is it.
-  //         embeddedSomethingElement.parentNode.removeChild(embeddedSomethingElement);
-  //         return;
-  //       } else {
-  //         // The command went wrong. Replace the place holder with a real viewer
-  //         // element and pretend that we had done this when the command started running.
-  //         const newViewerElement = this._createEmbeddedViewerElement(embeddedSomethingElement.getAttribute("command-line"));
-  //         embeddedSomethingElement.parentNode.replaceChild(newViewerElement, embeddedSomethingElement);
-  //         embeddedViewerElement = newViewerElement;
-  //       }
-  //     } else {
-  //       embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
-  //     }
-  //     
-  //     this._term.moveRowsToScrollback();        
-  //     let node = embeddedViewerElement.nextSibling;
-  // 
-  //     // Collect the DIVs in the scrollback from the EtEmbeddedViewer up to the end of the scrollback.
-  //     const nodelist: Node[] = [];
-  //     while (node !== null) {
-  //       if (node.nodeName !== "DIV" || ! (<HTMLElement> node).classList.contains("terminal-active")) {
-  //         nodelist.push(node);
-  //       }
-  //       node = node.nextSibling;
-  //     }
-  //     
-  //     // Create a terminal viewer and fill it with the row DIVs.
-  //     // const terminalViewerElement = <EtTerminalViewer> this._getWindow().document.createElement(EtTerminalViewer.TAG_NAME);
-  //     const terminalViewerElement = <EtCodeMirrorViewer> this._getWindow().document.createElement(EtCodeMirrorViewer.TAG_NAME);
-  //     terminalViewerElement.themeCssPath = this._themeCssPath;
-  //     terminalViewerElement.returnCode = returnCode;
-  //     terminalViewerElement.commandLine = embeddedViewerElement.getAttribute("command-line");
-  //     
-  //     // Move the row DIVs into their new home.
-  //     nodelist.forEach(function(node) {
-  //       terminalViewerElement.appendChild(node);
-  //     });
-  //     // Hang the terminal viewer under the Embedded viewer.
-  //     embeddedViewerElement.appendChild(terminalViewerElement);
-  //     
-  //     embeddedViewerElement.setAttribute('return-code', returnCode);
-  //     embeddedViewerElement.className = "extraterm_output";
-  //   }
-  // }
+  private _handleApplicationModeBracketEnd(): void {
+    this._closeLastEmbeddedViewer(this._htmlData);    
+  }
+  
+  private _closeLastEmbeddedViewer(returnCode: string): void {
+    const scrollArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const startElement = scrollArea.querySelectorAll(
+                          EtEmbeddedViewer.TAG_NAME + ":not([return-code]), " + EtCommandPlaceHolder.TAG_NAME);
+    
+    if (startElement.length !== 0) {
+      let embeddedSomethingElement = <HTMLElement>startElement[startElement.length-1];
+      let embeddedViewerElement: EtEmbeddedViewer = null;
+      if (EtCommandPlaceHolder.is(embeddedSomethingElement)) {
+        // There is a place holder and not an embedded viewer.
+        if (returnCode === "0") {
+          // The command returned successful, just remove the place holder and that is it.
+          this._removeScrollableElement(embeddedSomethingElement);
+          return;
+        } else {
+          // The command went wrong. Replace the place holder with a real viewer
+          // element and pretend that we had done this when the command started running.
+// FIXME
+          // const newViewerElement = this._createEmbeddedViewerElement(embeddedSomethingElement.getAttribute("command-line"));
+          // embeddedSomethingElement.parentNode.replaceChild(newViewerElement, embeddedSomethingElement);
+          // embeddedViewerElement = newViewerElement;
+        }
+      } else {
+        embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
+      }
+      
+      this._emulator.moveRowsToScrollback();
+      const activeCodeMirrorTerminal = this._codeMirrorTerminal;
+      this._disconnectActiveCodeMirrorTerminal();
+      
+      activeCodeMirrorTerminal.returnCode = returnCode;
+      activeCodeMirrorTerminal.commandLine = embeddedViewerElement.getAttribute("command-line");
+      
+      // Hang the terminal viewer under the Embedded viewer.
+      embeddedViewerElement.setAttribute('return-code', returnCode);
+      embeddedViewerElement.className = "extraterm_output";
+      embeddedViewerElement.viewerElement = activeCodeMirrorTerminal;
+      this._virtualScrollArea.removeScrollable(activeCodeMirrorTerminal);
+      this._virtualScrollArea.updateScrollableSize(embeddedViewerElement);
+      this._appendNewCodeMirrorTerminal();
+    }
+  }
+
+  // ********************************************************************
+  // ********************************************************************
+  // ********************************************************************
 
   /**
    * Copy the selection to the clipboard.
@@ -942,71 +1074,6 @@ class EtTerminal extends HTMLElement {
     webipc.clipboardReadRequest();
   }
 
-  /**
-   * Handle new stdout data from the pty.
-   * 
-   * @param {string} data New data.
-   */
-  private _handlePtyStdoutData (data: string): void {
-// log("incoming data:",""+data);
-    this._emulator.write("" + data);
-  }
-
-  /**
-   * Handle new stderr data from the pty.
-   * 
-   * @param {type} data New data.
-   */
-  private _handlePtyStderrData(data: string): void {
-    this._emulator.write(data);
-  }
-
-  /**
-   * Handle data coming from the user.
-   * 
-   * This just pushes the keys from the user through to the pty.
-   * @param {string} data The data to process.
-   */
-  private _handleTermData(emulator: termjs.Emulator, data: string): void {
-    this._sendDataToPtyEvent(data);
-  }
-  
-  private _handleTermSize(emulator: termjs.Emulator, event: termjs.RenderEvent): void {
-    const newColumns = event.columns;
-    const newRows = event.rows;
-    if (this._columns === newColumns && this._rows === newRows) {
-      return;
-    }
-    this._columns = newColumns;
-    this._rows = newRows;
-    this._sendResizeEvent(newColumns, newRows);
-  }
-  
-  /**
-   * Send data to the pseudoterminal.
-   * 
-   * @param {string} text
-   */
-  private _sendDataToPtyEvent(text: string): void {
-    const event = new CustomEvent(EtTerminal.EVENT_USER_INPUT, { detail: {data: text } });
-    this.dispatchEvent(event);
-  }
-
-  /**
-   * Send a resize message to the pty.
-   * 
-   * @param {number} cols The new number of columns in the terminal.
-   * @param {number} rows The new number of rows in the terminal.
-   */
-  private _sendResizeEvent(cols: number, rows: number, callback?: Function): void {
-    const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_RESIZE, { detail: {columns: cols, rows: rows } });
-    this.dispatchEvent(event);    
-  }
-
-  private _sendTitleEvent(title: string): void {
-    const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
-    this.dispatchEvent(event);    
-  }
   
   private _embeddedViewerPopOutEvent(viewerElement: EtEmbeddedViewer): void {
     const event = new CustomEvent(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT,
@@ -1014,32 +1081,32 @@ class EtTerminal extends HTMLElement {
     this.dispatchEvent(event);
   }
   
-  // private handleRequestFrame(frameId: string): void {
-  //   const sourceFrame: EtEmbeddedViewer = this._findFrame(frameId);
-  //   const data = sourceFrame !== null ? sourceFrame.text : "";
-  //   const lines = data.split("\n");
-  //   let encodedData: string = "";
-  //   lines.forEach( (line: string) => {
-  //     encodedData = window.btoa(line +"\n");
-  //     this._sendDataToPtyEvent(encodedData+"\n");
-  //   });
-  //     
-  //   this._sendDataToPtyEvent("\x04");
-  //   
-  //   if (encodedData.length !== 0) {
-  //     this._sendDataToPtyEvent("\x04");
-  //   }
-  // }
+  private handleRequestFrame(frameId: string): void {
+    const sourceFrame: EtEmbeddedViewer = this._findFrame(frameId);
+    const data = sourceFrame !== null ? sourceFrame.text : "";
+    const lines = data.split("\n");
+    let encodedData: string = "";
+    lines.forEach( (line: string) => {
+      encodedData = window.btoa(line +"\n");
+      this._sendDataToPtyEvent(encodedData+"\n");
+    });
+      
+    this._sendDataToPtyEvent("\x04");
+    
+    if (encodedData.length !== 0) {
+      this._sendDataToPtyEvent("\x04");
+    }
+  }
 
-  // private _handleShowMimeType(mimeType: string, mimeData: string): void {
-  //   const mimeViewerElement = this._createMimeViewer(mimeType, mimeData);
-  //   if (mimeViewerElement !== null) {
-  //     this._closeLastEmbeddedViewer("0");
-  //     const viewerElement = this._createEmbeddedViewerElement("viewer");
-  //     viewerElement.viewerElement = mimeViewerElement;
-  //     this._term.appendElement(viewerElement);
-  //   }
-  // }
+  private _handleShowMimeType(mimeType: string, mimeData: string): void {
+    const mimeViewerElement = this._createMimeViewer(mimeType, mimeData);
+    if (mimeViewerElement !== null) {
+      this._closeLastEmbeddedViewer("0");
+      const viewerElement = this._createEmbeddedViewerElement("viewer");
+      viewerElement.viewerElement = mimeViewerElement;
+      this._appendScrollableElement(viewerElement);
+    }
+  }
 
   private _createMimeViewer(mimeType: string, mimeData: string): ViewerElement {
     if (mimeType === "text/markdown") {
@@ -1057,13 +1124,15 @@ class EtTerminal extends HTMLElement {
   /**
    * Find a command frame by ID.
    */
-  // private _findFrame(frameId: string): EtEmbeddedViewer {
-  //   if (/[^0-9]/.test(frameId)) {
-  //     return null;
-  //   }
-  //   const matches = this._term.element.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
-  //   return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
-  // }
+  private _findFrame(frameId: string): EtEmbeddedViewer {
+    if (/[^0-9]/.test(frameId)) {
+      return null;
+    }
+    
+    const scrollArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const matches = scrollArea.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
+    return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
+  }
   
   private _getNextTag(): number {
     this._tagCounter++;
