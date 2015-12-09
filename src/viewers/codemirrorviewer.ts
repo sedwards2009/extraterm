@@ -320,6 +320,30 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror.refresh();
   }
   
+  getCursorPosition(): CursorMoveDetail {
+    const cursorPos = this._codeMirror.cursorCoords(true, "local");
+    const scrollInfo = this._codeMirror.getScrollInfo();
+    const detail: CursorMoveDetail = {
+      left: cursorPos.left,
+      top: cursorPos.top,
+      bottom: cursorPos.bottom,
+      viewPortTop: scrollInfo.top
+    };
+    return detail;
+  }
+
+  //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+  
   createdCallback(): void {
     this._initProperties();
     this._instanceId = instanceIdCounter;
@@ -439,18 +463,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
       ev.preventDefault();
     });
-  }
-  
-  getCursorPosition(): CursorMoveDetail {
-    const cursorPos = this._codeMirror.cursorCoords(true, "local");
-    const scrollInfo = this._codeMirror.getScrollInfo();
-    const detail: CursorMoveDetail = {
-      left: cursorPos.left,
-      top: cursorPos.top,
-      bottom: cursorPos.bottom,
-      viewPortTop: scrollInfo.top
-    };
-    return detail;
   }
   
   //-----------------------------------------------------------------------
@@ -605,7 +617,18 @@ class EtCodeMirrorViewer extends ViewerElement {
     }
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
   }
-
+  
+  public dispatchEvent(ev: Event): boolean {
+    console.log("codemirrorviewer dispatchEvent: ",ev.type);
+    if (ev.type === 'keydown' || ev.type === 'keypress') {
+      const containerDiv = util.getShadowId(this, ID_CONTAINER);
+      return containerDiv.dispatchEvent(ev);
+      // return this._codeMirror.getInputField().dispatchEvent(ev);
+    } else {
+      return super.dispatchEvent(ev);
+    }
+  }
+  
   private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
     util.doLater( () => {
       const fakeKeyDownEvent = domutils.newKeyboardEvent('keydown', {
@@ -624,7 +647,7 @@ class EtCodeMirrorViewer extends ViewerElement {
         metaKey: ev.metaKey
       });
       
-      this.dispatchEvent(fakeKeyDownEvent);
+      super.dispatchEvent(fakeKeyDownEvent);
     });
   }
   

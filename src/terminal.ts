@@ -198,79 +198,15 @@ class EtTerminal extends HTMLElement {
   
   //-----------------------------------------------------------------------
   //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
+  //   ######                                
+  //   #     # #    # #####  #      #  ####  
+  //   #     # #    # #    # #      # #    # 
+  //   ######  #    # #####  #      # #      
+  //   #       #    # #    # #      # #      
+  //   #       #    # #    # #      # #    # 
+  //   #        ####  #####  ###### #  ####  
   //
   //-----------------------------------------------------------------------
-
-  createdCallback(): void {
-    this._initProperties();
-  }
-   
-  attachedCallback(): void {
-    if (this._elementAttached) {
-      return;
-    }
-    this._elementAttached = true;
-    
-    const shadow = util.createShadowRoot(this);
-
-    const clone = this._createClone();
-    shadow.appendChild(clone);
-    this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
-
-    // util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
-    //   this._mainStyleLoaded = true;
-    //   this._handleStyleLoad();
-    // });
-    // 
-    // util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', () => {
-    //   this._themeStyleLoaded = true;
-    //   this._handleStyleLoad();
-    //   });
-
-    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
-    
-    this._virtualScrollArea.setScrollContainer(scrollerArea);
-    this._virtualScrollArea.setScrollbar(scrollbar);
-    
-    // Set up the emulator
-    const cookie = crypto.randomBytes(10).toString('hex');
-    process.env[EXTRATERM_COOKIE_ENV] = cookie;
-    this._initEmulator(cookie);
-    this._appendNewCodeMirrorTerminal();
-
-    // FIXME there might be resizes for things other than changs in window size.
-    this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
-    
-    scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
-      this._codeMirrorTerminal.focus();
-      ev.preventDefault();
-      ev.stopPropagation();
-    });
-    
-    scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-      this._virtualScrollArea.scrollTo(scrollbar.position);
-    });
-    
-    scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
-    scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
-    scrollerArea.addEventListener('keydown', this._handleKeyDown.bind(this));
-
-    scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-    scrollerArea.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
-      this._virtualScrollArea.scrollToBottom();
-    });
-
-    this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
-    this._scheduleResize();
-  }
   
   /**
    * Blinking cursor
@@ -383,13 +319,91 @@ class EtTerminal extends HTMLElement {
   
   //-----------------------------------------------------------------------
   //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+
+  createdCallback(): void {
+    this._initProperties();
+  }
+   
+  attachedCallback(): void {
+    if (this._elementAttached) {
+      return;
+    }
+    this._elementAttached = true;
+    
+    const shadow = util.createShadowRoot(this);
+
+    const clone = this._createClone();
+    shadow.appendChild(clone);
+    this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
+
+    // util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
+    //   this._mainStyleLoaded = true;
+    //   this._handleStyleLoad();
+    // });
+    // 
+    // util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', () => {
+    //   this._themeStyleLoaded = true;
+    //   this._handleStyleLoad();
+    //   });
+
+    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    
+    this._virtualScrollArea.setScrollContainer(scrollerArea);
+    this._virtualScrollArea.setScrollbar(scrollbar);
+    
+    // Set up the emulator
+    const cookie = crypto.randomBytes(10).toString('hex');
+    process.env[EXTRATERM_COOKIE_ENV] = cookie;
+    this._initEmulator(cookie);
+    this._appendNewCodeMirrorTerminal();
+
+    // FIXME there might be resizes for things other than changs in window size.
+    this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
+    
+    scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
+      this._codeMirrorTerminal.focus();
+      ev.preventDefault();
+      ev.stopPropagation();
+    });
+    
+    scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
+      this._virtualScrollArea.scrollTo(scrollbar.position);
+    });
+
+    scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
+    scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+    scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
+    scrollerArea.addEventListener('keydown', this._handleKeyDown.bind(this));
+    scrollerArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
+
+    scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
+    scrollerArea.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
+      this._virtualScrollArea.scrollToBottom();
+    });
+
+    this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
+    this._scheduleResize();
+  }
+  
+  //-----------------------------------------------------------------------
+  //
+  //   ######                                      
+  //   #     # #####  # #    #   ##   ##### ###### 
+  //   #     # #    # # #    #  #  #    #   #      
+  //   ######  #    # # #    # #    #   #   #####  
+  //   #       #####  # #    # ######   #   #      
+  //   #       #   #  #  #  #  #    #   #   #      
+  //   #       #    # #   ##   #    #   #   ###### 
   //
   //-----------------------------------------------------------------------
   
@@ -543,7 +557,22 @@ class EtTerminal extends HTMLElement {
     scrollerArea.removeChild(oldEl);
     this._virtualScrollArea.replaceScrollable(oldEl, newEl);
   }
+  
+  private _handleFocus(ev: FocusEvent): void {
+    // console.log("terminal saw a focus event");
+    // if (ev.target !== this._codeMirrorTerminal) {
+    //   this._codeMirrorTerminal.focus();
+    // }
+  }
 
+  private _handleMouseDown(ev: MouseEvent): void {
+    if (ev.buttons === 4) { // Middle mouse button
+      ev.stopPropagation();
+      ev.preventDefault();
+      this._pasteFromClipboard();
+    }
+  }
+  
   /**
    * Handle new stdout data from the pty.
    * 
@@ -612,13 +641,13 @@ class EtTerminal extends HTMLElement {
   
   // ----------------------------------------------------------------------
   //
-  //  #####                                                          ##        #####                           
-  // #     #  ####  #####   ####  #      #      # #    #  ####      #  #      #     # # ###### # #    #  ####  
-  // #       #    # #    # #    # #      #      # ##   # #    #      ##       #       #     #  # ##   # #    # 
-  //  #####  #      #    # #    # #      #      # # #  # #          ###        #####  #    #   # # #  # #      
-  //       # #      #####  #    # #      #      # #  # # #  ###    #   # #          # #   #    # #  # # #  ### 
-  // #     # #    # #   #  #    # #      #      # #   ## #    #    #    #     #     # #  #     # #   ## #    # 
-  //  #####   ####  #    #  ####  ###### ###### # #    #  ####      ###  #     #####  # ###### # #    #  ####  
+  //    #####                                                          ##        #####                           
+  //   #     #  ####  #####   ####  #      #      # #    #  ####      #  #      #     # # ###### # #    #  ####  
+  //   #       #    # #    # #    # #      #      # ##   # #    #      ##       #       #     #  # ##   # #    # 
+  //    #####  #      #    # #    # #      #      # # #  # #          ###        #####  #    #   # # #  # #      
+  //         # #      #####  #    # #      #      # #  # # #  ###    #   # #          # #   #    # #  # # #  ### 
+  //   #     # #    # #   #  #    # #      #      # #   ## #    #    #    #     #     # #  #     # #   ## #    # 
+  //    #####   ####  #    #  ####  ###### ###### # #    #  ####      ###  #     #####  # ###### # #    #  ####  
   //
   // ----------------------------------------------------------------------
   private _handleMouseWheel(ev: WheelEvent): void {
@@ -650,13 +679,54 @@ class EtTerminal extends HTMLElement {
     const pos = this._codeMirrorTerminal.getCursorPosition();
     this._virtualScrollArea.scrollIntoView(pos.top, pos.bottom);
   }
-  
+
   // ----------------------------------------------------------------------
-  // ----------------------------------------------------------------------
+  //
+  //   #    #                                                 
+  //   #   #  ###### #   # #####   ####    ##   #####  #####  
+  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
+  //   ###    #####    #   #####  #    # #    # #    # #    # 
+  //   #  #   #        #   #    # #    # ###### #####  #    # 
+  //   #   #  #        #   #    # #    # #    # #   #  #    # 
+  //   #    # ######   #   #####   ####  #    # #    # #####  
+  //                                                        
   // ----------------------------------------------------------------------
 
+  private _handleKeyDownCapture(ev: KeyboardEvent): void {
+console.log("terminal _handleKeyDownCapture:",ev.target,
+  " is active codemirror: ", ev.target === this._codeMirrorTerminal);
+
+    if (this._codeMirrorTerminal === null) {
+      return;
+    }
+
+    if (ev.target !== this._codeMirrorTerminal) {
+      const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
+      // ev.preventDefault();
+      ev.stopPropagation();
+      this._codeMirrorTerminal.dispatchEvent(simulatedKeydown);
+    }
+console.log("terminal _handleKeyDownCapture: exit");
+  }
+
+  private _handleKeyPressCapture(ev: KeyboardEvent): void {
+console.log("terminal _handleKeyPressCapture:",ev,
+  " is active codemirror: ", ev.target === this._codeMirrorTerminal);
+    if (this._codeMirrorTerminal === null) {
+      return;
+    }
+
+    if (ev.target !== this._codeMirrorTerminal) {
+      const simulatedKeypress = domutils.newKeyboardEvent('keypress', ev);
+      ev.preventDefault();
+      ev.stopPropagation();
+      this._codeMirrorTerminal.dispatchEvent(simulatedKeypress);
+    }
+    console.log("terminal _handleKeyPressCapture: exit");
+  }
+  
   /**
-   * Handle an unknown key down event from the term.
+   * Handle an unknown key down event coming up from the term.
    */
   private _handleKeyDown(ev: KeyboardEvent): void {
     if (ev.keyCode === 33 && ev.shiftKey) {
@@ -685,21 +755,13 @@ class EtTerminal extends HTMLElement {
     ev.stopPropagation();
   }
 
-  private _handleMouseDown(ev: MouseEvent): void {
-    if (ev.buttons === 4) { // Middle mouse button
-      ev.stopPropagation();
-      ev.preventDefault();
-      this._pasteFromClipboard();
-    }
-  }
-  
-  private _handleKeyPressTerminal(ev: KeyboardEvent): void {
+  // private _handleKeyPressTerminal(ev: KeyboardEvent): void {
     // this._term.keyPress(ev);
-  }
+  // }
 
-  private _handleKeyDownTerminal(ev: KeyboardEvent): void {
-    let frames: EtEmbeddedViewer[];
-    let index: number;
+  // private _handleKeyDownTerminal(ev: KeyboardEvent): void {
+  //   let frames: EtEmbeddedViewer[];
+  //   let index: number;
     
     // Key down on a command frame.
     // if ((<HTMLElement>ev.target).tagName === EtEmbeddedViewer.TAG_NAME) {
@@ -757,17 +819,18 @@ class EtTerminal extends HTMLElement {
     // if (this._mode === Mode.TERM) {
     //   this._term.keyDown(ev);
     // }
-  }
+  // }
+
 
   // ********************************************************************
   //
-  //  #####                                                            
-  // #     #  ####  #    # ###### #####  #    # #      # #    #  ####  
-  // #       #    # #    # #      #    # #    # #      # ##   # #    # 
-  //  #####  #      ###### #####  #    # #    # #      # # #  # #      
-  //       # #      #    # #      #    # #    # #      # #  # # #  ### 
-  // #     # #    # #    # #      #    # #    # #      # #   ## #    # 
-  //  #####   ####  #    # ###### #####   ####  ###### # #    #  ####  
+  //    #####                                                            
+  //   #     #  ####  #    # ###### #####  #    # #      # #    #  ####  
+  //   #       #    # #    # #      #    # #    # #      # ##   # #    # 
+  //    #####  #      ###### #####  #    # #    # #      # # #  # #      
+  //         # #      #    # #      #    # #    # #      # #  # # #  ### 
+  //   #     # #    # #    # #      #    # #    # #      # #   ## #    # 
+  //    #####   ####  #    # ###### #####   ####  ###### # #    #  ####  
   //
   // ********************************************************************
   
@@ -812,13 +875,13 @@ class EtTerminal extends HTMLElement {
 
   // ********************************************************************
   //
-  //    #                                                                  #     #                      
-  //   # #   #####  #####  #      #  ####    ##   ##### #  ####  #    #    ##   ##  ####  #####  ###### 
-  //  #   #  #    # #    # #      # #    #  #  #    #   # #    # ##   #    # # # # #    # #    # #      
-  // #     # #    # #    # #      # #      #    #   #   # #    # # #  #    #  #  # #    # #    # #####  
-  // ####### #####  #####  #      # #      ######   #   # #    # #  # #    #     # #    # #    # #      
-  // #     # #      #      #      # #    # #    #   #   # #    # #   ##    #     # #    # #    # #      
-  // #     # #      #      ###### #  ####  #    #   #   #  ####  #    #    #     #  ####  #####  ###### 
+  //      #                                                                  #     #                      
+  //     # #   #####  #####  #      #  ####    ##   ##### #  ####  #    #    ##   ##  ####  #####  ###### 
+  //    #   #  #    # #    # #      # #    #  #  #    #   # #    # ##   #    # # # # #    # #    # #      
+  //   #     # #    # #    # #      # #      #    #   #   # #    # # #  #    #  #  # #    # #    # #####  
+  //   ####### #####  #####  #      # #      ######   #   # #    # #  # #    #     # #    # #    # #      
+  //   #     # #      #      #      # #    # #    #   #   # #    # #   ##    #     # #    # #    # #      
+  //   #     # #      #      ###### #  ####  #    #   #   #  ####  #    #    #     #  ####  #####  ###### 
   //
   // ********************************************************************
 
@@ -1048,7 +1111,15 @@ class EtTerminal extends HTMLElement {
   }
 
   // ********************************************************************
-  // ********************************************************************
+  //
+  //   #     #                 
+  //   ##   ## #  ####   ####  
+  //   # # # # # #      #    # 
+  //   #  #  # #  ####  #      
+  //   #     # #      # #      
+  //   #     # # #    # #    # 
+  //   #     # #  ####   ####  
+  //
   // ********************************************************************
 
   /**

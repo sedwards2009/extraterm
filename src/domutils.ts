@@ -203,22 +203,28 @@ export function newKeyboardEvent(eventName: string, initMap: {
       metaKey?: boolean;
     }): KeyboardEvent {
   
-  const fakeKeyDownEvent = new KeyboardEvent('keydown', initMap);
+  const fakeKeyDownEvent = new KeyboardEvent(eventName, initMap);
 
   // https://stackoverflow.com/questions/12937391/cannot-initialize-keycode-in-keyboard-event-init-method      
-  Object.defineProperty(fakeKeyDownEvent,  'keyCode', {
+  Object.defineProperty(fakeKeyDownEvent, 'keyCode', {
     get: function() {
       return initMap.keyCode;
     }
   });
+  
+  Object.defineProperty(fakeKeyDownEvent, 'charCode', {
+    get: function() {
+      return initMap.charCode;
+    }
+  });
 
-  Object.defineProperty(fakeKeyDownEvent,  'code', {
+  Object.defineProperty(fakeKeyDownEvent, 'code', {
     get: function() {
       return initMap.code;
     }
   });
 
-  Object.defineProperty(fakeKeyDownEvent,  'which', {
+  Object.defineProperty(fakeKeyDownEvent, 'which', {
     get: function() {
       return initMap.which;
     }
