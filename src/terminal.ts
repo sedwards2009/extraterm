@@ -69,9 +69,8 @@ interface VirtualHeight {
 }
 
 const enum Mode {
-  TERM,
-  MOUSE_SELECTION,
-  KEYBOARD_SELECTION
+  TERMINAL,
+  SELECTION
 }
 
 /**
@@ -176,7 +175,7 @@ class EtTerminal extends HTMLElement {
     this._bracketStyle = null;
     this._lastBashBracket = null;
     
-    this._mode = Mode.TERM;
+    this._mode = Mode.TERMINAL;
     
     this._blinkingCursor = false;
     this._noFrameCommands = [];
@@ -639,6 +638,26 @@ class EtTerminal extends HTMLElement {
     this.dispatchEvent(event);    
   }
   
+  private _enterSelectionMode(): void {
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    util.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
+      if (EtCodeMirrorViewer.is(node)) {
+        node.mode = EtCodeMirrorViewerTypes.Mode.SELECTION;
+      }
+    });
+    this._mode = Mode.SELECTION;
+  }
+  
+  private _exitSelectionMode(): void {
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    util.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
+      if (EtCodeMirrorViewer.is(node)) {
+        node.mode = EtCodeMirrorViewerTypes.Mode.TERMINAL;
+      }
+    });
+    this._mode = Mode.TERMINAL;
+  }
+  
   // ----------------------------------------------------------------------
   //
   //    #####                                                          ##        #####                           
@@ -693,25 +712,39 @@ class EtTerminal extends HTMLElement {
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-console.log("terminal _handleKeyDownCapture:",ev.target,
-  " is active codemirror: ", ev.target === this._codeMirrorTerminal);
-
     if (this._codeMirrorTerminal === null) {
       return;
     }
+    
+    switch (this._mode) {
+      case Mode.TERMINAL:
+        // Enter selection mode.
+        if (ev.keyCode === 32 && ev.ctrlKey) {
+          this._enterSelectionMode();
+          ev.stopPropagation();
+          return;
+        }
+        break;
 
+      case Mode.SELECTION:
+        // Exit Selection mode. Esc or Ctrl+Space toggle.
+        if (ev.keyCode === 32 && ev.ctrlKey) {
+          this._exitSelectionMode();
+          ev.stopPropagation();
+          return;
+        }      
+        break;
+    }
+    
     if (ev.target !== this._codeMirrorTerminal) {
+      // Route the key down to the current code mirror terminal which has the emulator attached.
       const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
-      // ev.preventDefault();
       ev.stopPropagation();
       this._codeMirrorTerminal.dispatchEvent(simulatedKeydown);
     }
-console.log("terminal _handleKeyDownCapture: exit");
   }
 
   private _handleKeyPressCapture(ev: KeyboardEvent): void {
-console.log("terminal _handleKeyPressCapture:",ev,
-  " is active codemirror: ", ev.target === this._codeMirrorTerminal);
     if (this._codeMirrorTerminal === null) {
       return;
     }
@@ -722,7 +755,6 @@ console.log("terminal _handleKeyPressCapture:",ev,
       ev.stopPropagation();
       this._codeMirrorTerminal.dispatchEvent(simulatedKeypress);
     }
-    console.log("terminal _handleKeyPressCapture: exit");
   }
   
   /**

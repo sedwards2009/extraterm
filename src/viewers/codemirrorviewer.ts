@@ -634,13 +634,10 @@ class EtCodeMirrorViewer extends ViewerElement {
 
   private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
     if (this._mode === EtCodeMirrorViewerTypes.Mode.TERMINAL) {
-console.log("containerDiv keypress : charCode:",ev.charCode);
       ev.stopPropagation();
       if (this._emulator !== null) {
-console.log("containerDiv keypress : ",ev);
         this._emulator.keyPress(ev);
       }
-console.log("containerDiv keypress : checkpoint 3");
       this._emitKeyboardActivityEvent();
     }
   }
@@ -652,30 +649,14 @@ console.log("containerDiv keypress : checkpoint 3");
   }
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
-console.log("containerDiv keydown capture: ",ev.keyIdentifier);      
     if (this._mode === EtCodeMirrorViewerTypes.Mode.TERMINAL) {
       ev.stopPropagation();
-      // ev.preventDefault();
-      if (ev.keyCode === 32 && ev.ctrlKey) {
-        // Enter selection mode.
-        this._enterSelectionMode();
-        return;
-      }
 
-console.log("containerDiv keydown capture: passing to emulator keyCode: ",ev.keyCode);
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
-console.log("containerDiv keydown capture: checkpoint 1");
        this._emitKeyboardActivityEvent();
       } else {
        // Emit a key down event which our parent elements can catch.
-console.log("containerDiv keydown capture: checkpoint 2");
        this._scheduleSyntheticKeyDown(ev);
-      }
-    } else {
-      // Exit Selection mode. Esc or Ctrl+Space toggle.
-      if (ev.keyCode === 27 || ev.keyCode === 32 && ev.ctrlKey) {
-        this._exitSelectionMode();
-        ev.stopPropagation();
       }
     }
   }
