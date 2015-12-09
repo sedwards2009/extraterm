@@ -27,11 +27,6 @@ const CLASS_HIDE_CURSOR = "hide_cursor";
 
 const DEBUG_RESIZE = false;
 
-enum Mode {
-  TERMINAL,
-  SELECTION
-}
-
 let registered = false;
 
 let instanceIdCounter = 0;
@@ -76,7 +71,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _codeMirror: CodeMirror.Editor;
   private _height: number;
   private _isEmpty: boolean;
-  private _mode: Mode;
+  private _mode: EtCodeMirrorViewerTypes.Mode;
   private document: Document;
   private _useVPad: boolean;
 
@@ -103,7 +98,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror = null;
     this._height = 0;
     this._isEmpty = true;
-    this._mode = Mode.TERMINAL;
+    this._mode = EtCodeMirrorViewerTypes.Mode.TERMINAL;
     this.document = document;
     this._useVPad = true;
     
@@ -176,6 +171,24 @@ class EtCodeMirrorViewer extends ViewerElement {
 
   get emulator(): termjs.Emulator {
     return this._emulator;
+  }
+  
+  set mode(newMode: EtCodeMirrorViewerTypes.Mode) {
+    switch (this._mode) {
+      case EtCodeMirrorViewerTypes.Mode.TERMINAL:
+        // Enter selection mode.
+        this._enterSelectionMode();
+        break;
+        
+      case EtCodeMirrorViewerTypes.Mode.SELECTION:
+        this._exitSelectionMode();
+        break;
+    }
+    this._mode = newMode;
+  }
+  
+  get mode(): EtCodeMirrorViewerTypes.Mode {
+    return this._mode;
   }
   
   // get focusable(): boolean {
@@ -374,7 +387,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0, showCursorWhenSelecting: true});
 
     this._codeMirror.on("cursorActivity", () => {
-      if (this._mode !== Mode.TERMINAL) {
+      if (this._mode !== EtCodeMirrorViewerTypes.Mode.TERMINAL) {
         const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { bubbles: true });
         this.dispatchEvent(event);
       }
@@ -407,53 +420,10 @@ class EtCodeMirrorViewer extends ViewerElement {
     });
     
     // Filter the keyboard events before they reach CodeMirror.
-    containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      if (this._mode === Mode.TERMINAL) {
-        ev.stopPropagation();
-        // ev.preventDefault();
-        if (ev.keyCode === 32 && ev.ctrlKey) {
-          // Enter selection mode.
-          this._enterSelectionMode();
-          return;
-        }
-        
-        if (this._emulator !== null && this._emulator.keyDown(ev)) {
-          this._emitKeyboardActivityEvent();
-        } else {
-          this._scheduleSyntheticKeyDown(ev);
-        }
-      } else {
-
-        // Exit Selection mode. Esc or Ctrl+Space toggle.
-        if (ev.keyCode === 27 || ev.keyCode === 32 && ev.ctrlKey) {
-          this._exitSelectionMode();
-          ev.stopPropagation();
-        }
-      }
-    }, true);
-
-    containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      if (this._mode !== Mode.TERMINAL) {
-        ev.stopPropagation();
-      }
-    });
-
-    containerDiv.addEventListener('keypress', (ev: KeyboardEvent): void => {
-      if (this._mode === Mode.TERMINAL) {
-        ev.stopPropagation();
-        if (this._emulator !== null) {
-          this._emulator.keyPress(ev);
-        }
-        this._emitKeyboardActivityEvent();
-      }
-    }, true);
-    
-    containerDiv.addEventListener('keyup', (ev: KeyboardEvent): void => {
-      if (this._mode === Mode.TERMINAL) {
-        ev.stopPropagation();
-        ev.preventDefault();
-      }      
-    }, true);
+    containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
+    containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
+    containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);
+    containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
     
     const codeMirrorElement = this._codeMirror.getWrapperElement();
     codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
@@ -538,13 +508,13 @@ class EtCodeMirrorViewer extends ViewerElement {
     const doc = this._codeMirror.getDoc();
     doc.setCursor( { line: dimensions.cursorY + this._terminalFirstRow, ch: dimensions.cursorX } );
 
-    this._mode = Mode.SELECTION;
+    this._mode = EtCodeMirrorViewerTypes.Mode.SELECTION;
   }
 
   private _exitSelectionMode(): void {
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
-    this._mode = Mode.TERMINAL;
+    this._mode = EtCodeMirrorViewerTypes.Mode.TERMINAL;
   }
   
   private _emitVirtualResizeEvent(): void {
@@ -618,12 +588,23 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
   }
   
+  // ----------------------------------------------------------------------
+  //
+  //   #    #                                                 
+  //   #   #  ###### #   # #####   ####    ##   #####  #####  
+  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
+  //   ###    #####    #   #####  #    # #    # #    # #    # 
+  //   #  #   #        #   #    # #    # ###### #####  #    # 
+  //   #   #  #        #   #    # #    # #    # #   #  #    # 
+  //   #    # ######   #   #####   ####  #    # #    # #####  
+  //                                                        
+  // ----------------------------------------------------------------------
+  
   public dispatchEvent(ev: Event): boolean {
     console.log("codemirrorviewer dispatchEvent: ",ev.type);
     if (ev.type === 'keydown' || ev.type === 'keypress') {
       const containerDiv = util.getShadowId(this, ID_CONTAINER);
       return containerDiv.dispatchEvent(ev);
-      // return this._codeMirror.getInputField().dispatchEvent(ev);
     } else {
       return super.dispatchEvent(ev);
     }
@@ -649,6 +630,61 @@ class EtCodeMirrorViewer extends ViewerElement {
       
       super.dispatchEvent(fakeKeyDownEvent);
     });
+  }
+
+  private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
+    if (this._mode === EtCodeMirrorViewerTypes.Mode.TERMINAL) {
+console.log("containerDiv keypress : charCode:",ev.charCode);
+      ev.stopPropagation();
+      if (this._emulator !== null) {
+console.log("containerDiv keypress : ",ev);
+        this._emulator.keyPress(ev);
+      }
+console.log("containerDiv keypress : checkpoint 3");
+      this._emitKeyboardActivityEvent();
+    }
+  }
+  
+  private _handleContainerKeyDown(ev: KeyboardEvent): void {
+    if (this._mode !== EtCodeMirrorViewerTypes.Mode.TERMINAL) {
+      ev.stopPropagation();
+    }
+  }
+
+  private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
+console.log("containerDiv keydown capture: ",ev.keyIdentifier);      
+    if (this._mode === EtCodeMirrorViewerTypes.Mode.TERMINAL) {
+      ev.stopPropagation();
+      // ev.preventDefault();
+      if (ev.keyCode === 32 && ev.ctrlKey) {
+        // Enter selection mode.
+        this._enterSelectionMode();
+        return;
+      }
+
+console.log("containerDiv keydown capture: passing to emulator keyCode: ",ev.keyCode);
+      if (this._emulator !== null && this._emulator.keyDown(ev)) {
+console.log("containerDiv keydown capture: checkpoint 1");
+       this._emitKeyboardActivityEvent();
+      } else {
+       // Emit a key down event which our parent elements can catch.
+console.log("containerDiv keydown capture: checkpoint 2");
+       this._scheduleSyntheticKeyDown(ev);
+      }
+    } else {
+      // Exit Selection mode. Esc or Ctrl+Space toggle.
+      if (ev.keyCode === 27 || ev.keyCode === 32 && ev.ctrlKey) {
+        this._exitSelectionMode();
+        ev.stopPropagation();
+      }
+    }
+  }
+
+  private _handleContainerKeyUpCapture(ev: KeyboardEvent): void {
+    if (this._mode === EtCodeMirrorViewerTypes.Mode.TERMINAL) {
+      ev.stopPropagation();
+      ev.preventDefault();
+    }      
   }
   
   //-----------------------------------------------------------------------
