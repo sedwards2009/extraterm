@@ -28,7 +28,13 @@ const ID_HEADER = "header";
 const ID_OUTPUT = "output";
 const ID_ICON = "icon";
 const ID_ICON_DIV = "icondiv";
-const ID_COMMANDLINE = "commandline";
+const ID_COMMANDLINE = "command_line";
+const ID_TAG_NAME = "tag_name";
+const ID_EXPAND_BUTTON = "expand_button";
+const ID_CLOSE_BUTTON = "close_button";
+const ID_POP_OUT_BUTTON = "pop_out_button";
+const ID_TAG_ICON = "tag_icon";
+const ID_EXPAND_ICON = "expand_icon";
 
 let registered = false;
 const REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
@@ -273,6 +279,7 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
 
           transition-property: border-color;
           transition-duration: ${FADE_DURATION};
+          color: white;
         }
 
         #${ID_CONTAINER}.running > #${ID_HEADER} > #${ID_COMMANDLINE} {
@@ -287,7 +294,7 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
           border: 1px solid ${FAIL_COLOR.toString()};
         }
 
-        #expand_button, #close_button, #pop_out_button {
+        #${ID_EXPAND_BUTTON}, #${ID_CLOSE_BUTTON}, #${ID_POP_OUT_BUTTON} {
           flex: 0 0 auto;
           padding: 0px;
           background-color: transparent;
@@ -295,7 +302,7 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
           color: white;
         }
 
-        #close_button:hover {
+        #${ID_CLOSE_BUTTON}:hover {
           color: red;
         }
 
@@ -356,12 +363,12 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
           min-width: 1em;
         }
                 
-        #tag_name {
+        #${ID_TAG_NAME} {
           flex: 0 1 auto;
           color: white;
         }
         
-        #tag_icon {
+        #${ID_TAG_ICON} {
           color: white;
         }
         </style>
@@ -373,17 +380,17 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
             </div>
             <div class='header_spacer'></div>
             <div class='right_block'>
-              <div id='tag_icon'><i class='fa fa-tag'></i></div>
-              <div id='tag_name'></div>
+              <div id='${ID_TAG_ICON}'><i class='fa fa-tag'></i></div>
+              <div id='${ID_TAG_NAME}'></div>
               <div class='spacer'></div>
-              <button id='expand_button' title='Expand/Collapse'><i id='expand_icon' class='fa fa-plus-square-o'></i></button>
+              <button id='${ID_EXPAND_BUTTON}' title='Expand/Collapse'><i id='${ID_EXPAND_ICON}' class='fa fa-plus-square-o'></i></button>
               <div class='spacer'></div>
-              <button id='pop_out_button'><i class='fa fa-external-link'></i></button>
+              <button id='${ID_POP_OUT_BUTTON}'><i class='fa fa-external-link'></i></button>
               <div class='spacer'></div>
-              <button id='close_button' title='Close'><i class='fa fa-times-circle'></i></button>` +
+              <button id='${ID_CLOSE_BUTTON}' title='Close'><i class='fa fa-times-circle'></i></button>` +
             `</div>` +
           `</div>
-          <div id='${ID_OUTPUT}'><content id='lines_content'></content></div>
+          <div id='${ID_OUTPUT}'><content></content></div>
         </div>
         <cb-contextmenu id='contextmenu' style='display: none;'>
           <cb-menuitem icon='external-link' name='popout'>Open in Tab</cb-menuitem>
