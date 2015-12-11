@@ -741,7 +741,10 @@ class EtTerminal extends HTMLElement {
       // Route the key down to the current code mirror terminal which has the emulator attached.
       const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
       ev.stopPropagation();
-      this._codeMirrorTerminal.dispatchEvent(simulatedKeydown);
+      if ( ! this._codeMirrorTerminal.dispatchEvent(simulatedKeydown)) {
+        // Cancelled.
+        ev.preventDefault();
+      }
     }
   }
 
@@ -754,7 +757,10 @@ class EtTerminal extends HTMLElement {
       const simulatedKeypress = domutils.newKeyboardEvent('keypress', ev);
       ev.preventDefault();
       ev.stopPropagation();
-      this._codeMirrorTerminal.dispatchEvent(simulatedKeypress);
+      if ( ! this._codeMirrorTerminal.dispatchEvent(simulatedKeypress)) {
+        // Cancelled.
+        ev.preventDefault();
+      }
     }
   }
   
