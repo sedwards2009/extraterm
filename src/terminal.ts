@@ -1138,6 +1138,7 @@ class EtTerminal extends HTMLElement {
       
       activeCodeMirrorTerminal.returnCode = returnCode;
       activeCodeMirrorTerminal.commandLine = embeddedViewerElement.getAttribute("command-line");
+      activeCodeMirrorTerminal.useVPad = false;
       
       // Hang the terminal viewer under the Embedded viewer.
       embeddedViewerElement.setAttribute('return-code', returnCode);

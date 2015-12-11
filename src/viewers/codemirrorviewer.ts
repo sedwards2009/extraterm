@@ -80,9 +80,9 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _resizePollHandle: util.LaterHandle;
   
   // Emulator dimensions
-  private _rows = -1;
-  private _columns = -1;
-  private _realizedRows = -1;
+  private _rows: number;
+  private _columns: number;
+  private _realizedRows: number;
   
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
@@ -107,6 +107,11 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._mainStyleLoaded = false;
     this._importStyleLoaded = false;
     this._resizePollHandle = null;
+    
+    this._rows = -1;
+    this._columns = -1;
+    this._realizedRows = -1;
+    
     this._renderEventListener = null;
   }
 
@@ -221,7 +226,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     return 0;
   }
 
-  setUseVPad(use: boolean): void {
+  set useVPad(use: boolean) {
     this._useVPad = use;
   }
 
@@ -278,11 +283,11 @@ class EtCodeMirrorViewer extends ViewerElement {
     }
     
     if ( ! this.isFontLoaded()) {
-     // Styles have not been applied yet.
-     if (DEBUG_RESIZE) {
-       this.log("resizeEmulatorToBox() styles have not been applied yet.");
-     }
-     return {cols: cols, rows: rows};
+      // Styles have not been applied yet.
+      if (DEBUG_RESIZE) {
+        this.log("resizeEmulatorToBox() styles have not been applied yet.");
+      }
+      return {cols: cols, rows: rows};
     }
     
     const charHeight = this._codeMirror.defaultTextHeight();
