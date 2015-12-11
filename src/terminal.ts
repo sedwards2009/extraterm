@@ -516,6 +516,7 @@ class EtTerminal extends HTMLElement {
     this._virtualScrollArea.appendScrollable(codeMirrorTerminal);
 
     this._codeMirrorTerminal = codeMirrorTerminal;
+    this._emulator.refreshScreen();
   }
 
   /**

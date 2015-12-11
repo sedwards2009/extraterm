@@ -212,6 +212,8 @@ export interface EmulatorAPI {
   
   lineAtRow(row: number, showCursor?: boolean): Line;
   
+  refreshScreen(): void;
+  
   resize(newSize: TerminalSize): void;
   
   // Sending input events into the emulator
@@ -1561,6 +1563,11 @@ export class Emulator implements EmulatorAPI {
     const mod = shift | meta | ctrl;
     
     return (mod << 2) | button;
+  }
+  
+  refreshScreen(): void {
+    this.refresh(0, this.lines.length);
+    this._dispatchEvents();
   }
 
   /**
