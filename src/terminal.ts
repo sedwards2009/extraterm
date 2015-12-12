@@ -533,6 +533,8 @@ class EtTerminal extends HTMLElement {
     this._emulator.moveRowsToScrollback();
     if (this._codeMirrorTerminal !== null) {
       this._codeMirrorTerminal.emulator = null;
+      this._codeMirrorTerminal.deleteScreen();
+      this._virtualScrollArea.updateScrollableSize(this._codeMirrorTerminal);
       this._codeMirrorTerminal = null;
     }
   }
@@ -1054,7 +1056,6 @@ class EtTerminal extends HTMLElement {
     if ( ! this._isNoFrameCommand(cleancommand)) {
       // Create and set up a new command-frame.
       const el = this._createEmbeddedViewerElement(cleancommand);
-      this._emulator.moveRowsToScrollback();
       this._appendScrollableElement(el);
       this._appendNewCodeMirrorTerminal();
     } else {
@@ -1062,7 +1063,6 @@ class EtTerminal extends HTMLElement {
       // Don't place an embedded viewer, but use an invisible place holder instead.
       const el = <EtCommandPlaceHolder> this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
       el.setAttribute('command-line', cleancommand);
-      this._emulator.moveRowsToScrollback();
       this._appendScrollableElement(el);
       this._appendNewCodeMirrorTerminal();
     }
@@ -1132,7 +1132,6 @@ class EtTerminal extends HTMLElement {
         embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
       }
       
-      this._emulator.moveRowsToScrollback();
       const activeCodeMirrorTerminal = this._codeMirrorTerminal;
       this._disconnectActiveCodeMirrorTerminal();
       

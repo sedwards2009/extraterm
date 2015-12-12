@@ -318,10 +318,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   }
 
-  private scrollTo(x: number, y: number): void {
-    this._codeMirror.scrollTo(x, y);
-  }
-  
   // VirtualScrollable
   setScrollOffset(y: number): void {
 // this.log("setScrollOffset(" + y + ")");
@@ -336,6 +332,10 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   refresh(): void {
     this._codeMirror.refresh();
+  }
+  
+  deleteScreen(): void {
+    this._deleteScreen();
   }
   
   getCursorPosition(): CursorMoveDetail {
@@ -534,6 +534,10 @@ class EtCodeMirrorViewer extends ViewerElement {
     const scrollInfo = this._codeMirror.getScrollInfo();    
     const event = new CustomEvent(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, { });
     this.dispatchEvent(event);
+  }
+
+  private scrollTo(x: number, y: number): void {
+    this._codeMirror.scrollTo(x, y);
   }
   
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
@@ -857,6 +861,25 @@ class EtCodeMirrorViewer extends ViewerElement {
     // console.log("______________________________________");
     // console.log(doc.getValue());
     // console.log("______________________________________");    
+  }
+  
+  private _deleteScreen(): void {
+    if (this._isEmpty) {
+      return;
+    }
+    
+    const doc = this._codeMirror.getDoc();
+    const lineCount = doc.lineCount();
+    const endPos = { line: lineCount-1, ch: doc.getLine(lineCount-1).length };
+    if (this._terminalFirstRow === 0) {
+      const startPos = { line: this._terminalFirstRow, ch: 0 };
+      doc.replaceRange("", startPos, endPos);  
+      this._isEmpty = true;
+    } else {
+      // Start deleting from the end of the row before the top of the terminal.
+      const startPos = { line: this._terminalFirstRow-1, ch: doc.getLine(this._terminalFirstRow-1).length };
+      doc.replaceRange("", startPos, endPos);
+    }
   }
   
   private _updateFocusable(focusable: boolean): void {
