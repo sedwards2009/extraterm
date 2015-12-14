@@ -3,6 +3,7 @@
  */
 
 "use strict";
+import fs = require('fs');
 import ViewerElement = require("../viewerelement");
 import util = require("../gui/util");
 import domutils = require("../domutils");
@@ -19,17 +20,18 @@ const ID = "CbCodeMirrorViewerTemplate";
 const ID_CONTAINER = "container";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
-const ID_IMPORT_STYLE = "import_style";
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
-
 const CLASS_HIDE_CURSOR = "hide_cursor";
-
 const DEBUG_RESIZE = false;
 
 let registered = false;
-
 let instanceIdCounter = 0;
+let cssText: string = null;
+
+function getCssText(): string {
+  return cssText;
+}
 
 class EtCodeMirrorViewer extends ViewerElement {
 
@@ -41,6 +43,12 @@ class EtCodeMirrorViewer extends ViewerElement {
 
   static init(): void {
     if (registered === false) {
+      
+      // Load the CSS resources now.
+      cssText = fs.readFileSync('node_modules/codemirror/lib/codemirror.css', { encoding: 'utf8' })
+        + fs.readFileSync('node_modules/codemirror/addon/scroll/simplescrollbars.css', { encoding: 'utf8' })
+        + fs.readFileSync('themes/default/theme.css', { encoding: 'utf8' });
+
       window.document.registerElement(EtCodeMirrorViewer.TAG_NAME, {prototype: EtCodeMirrorViewer.prototype});
       registered = true;
     }
@@ -76,7 +84,6 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _useVPad: boolean;
 
   private _mainStyleLoaded: boolean;
-  private _importStyleLoaded: boolean;
   private _resizePollHandle: util.LaterHandle;
   
   // Emulator dimensions
@@ -105,7 +112,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._currentElementHeight = -1;
     
     this._mainStyleLoaded = false;
-    this._importStyleLoaded = false;
     this._resizePollHandle = null;
     
     this._rows = -1;
@@ -490,13 +496,10 @@ class EtCodeMirrorViewer extends ViewerElement {
         #${ID_CONTAINER}.${CLASS_HIDE_CURSOR} .CodeMirror-lines {
           cursor: default;
         }
+        
+        ${getCssText()}
         </style>
         <style id="${ID_THEME_STYLE}"></style>
-        <style id="${ID_IMPORT_STYLE}">
-        @import url('node_modules/codemirror/lib/codemirror.css');
-        @import url('node_modules/codemirror/addon/scroll/simplescrollbars.css');
-        @import url('themes/default/theme.css');
-        </style>
         <div id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>`
 
       window.document.body.appendChild(template);
@@ -691,17 +694,11 @@ class EtCodeMirrorViewer extends ViewerElement {
 
   private _initFontLoading(): void {
     this._mainStyleLoaded = false;
-    this._importStyleLoaded = false;
     
     util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
       this._mainStyleLoaded = true;
       this._handleStyleLoad();
     });
-
-    util.getShadowId(this, ID_IMPORT_STYLE).addEventListener('load', () => {
-      this._importStyleLoaded = true;
-      this._handleStyleLoad();
-      });
   }
   
   private _cleanUpFontLoading(): void {
@@ -712,7 +709,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   private _handleStyleLoad(): void {
-    if (this._mainStyleLoaded && this._importStyleLoaded) {
+    if (this._mainStyleLoaded) {
       // Start polling the term for application of the font.
       this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
     }
@@ -725,7 +722,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   private _resizePoll(): void {
-    if (this._mainStyleLoaded && this._importStyleLoaded) {
+    if (this._mainStyleLoaded) {
       if ( ! this.isFontLoaded()) {
         // Font has not been correctly applied yet.
         this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
