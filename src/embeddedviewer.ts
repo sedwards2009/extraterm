@@ -77,8 +77,31 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
     return node !== null && node !== undefined && node instanceof EtEmbeddedViewer;
   }
   
+  //-----------------------------------------------------------------------
+  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
+
+  private _currentElementHeight: number;
+  
+  private _initProperties(): void {
+    this._currentElementHeight = -1;
+  }
+  
+  //-----------------------------------------------------------------------
+  //
+  // ######                                
+  // #     # #    # #####  #      #  ####  
+  // #     # #    # #    # #      # #    # 
+  // ######  #    # #####  #      # #      
+  // #       #    # #    # #      # #      
+  // #       #    # #    # #      # #    # 
+  // #        ####  #####  ###### #  ####  
+  //
+  //-----------------------------------------------------------------------
+  
   set viewerElement(element: ViewerElement) {
-    this.innerHTML = "";
+    if (this.childNodes.length !== 0) {
+      this.innerHTML = "";
+    }
     
     if (element !== null) {
       this.appendChild(element);
@@ -113,20 +136,185 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
   }
   
   setHeight(height: number): void {
+console.log("*** embeddeviewer setHeight(): ", height);
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const rect = headerDiv.getBoundingClientRect();
     
-    const viewerElement = this.viewerElement;
-    if (viewerElement !== null) {
-      viewerElement.setHeight(height - rect.height);
+    if (height !== this._currentElementHeight) {
+      this.style.height = "" + height + "px";
+      this._currentElementHeight = height;
+    }
+    
+    if (this.viewerElement !== null) {
+      this.viewerElement.setHeight(height - rect.height);
     }    
   }
   
   setScrollOffset(y: number): void {
+console.log("*** embeddeviewer setScrollOffset(): ", y);
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
       viewerElement.setScrollOffset(y);
     }
+  }
+  
+  /**
+   * 
+   */
+  focusLast(): void {
+    const header = <HTMLDivElement>this._getById(ID_CONTAINER);
+    header.focus();
+    this.scrollIntoView(true);
+    this._emitManualScroll();
+  }
+
+  /**
+   * 
+   */
+  focusFirst(): void {
+    const header = <HTMLDivElement>this._getById(ID_CONTAINER);
+    header.focus();
+    this.scrollIntoView(true);
+    this._emitManualScroll();
+  }
+  
+  getSelectionText(): string {
+    const viewerElement = this.viewerElement;
+    return viewerElement === null ? null : viewerElement.getSelectionText();
+  }
+  
+  /**
+   * 
+   */
+  openMenu(): void {
+    const header = <HTMLDivElement>this._getById(ID_HEADER);
+    const cm = <contextmenu>this._getById('contextmenu');
+    const rect = header.getBoundingClientRect();
+    cm.openAround(header); //(rect.left, rect.top );
+  }
+  
+  /**
+   * 
+   */
+  get text(): string {  // FIXME
+    const kids = this.childNodes;
+    let result = "";
+    for (var i=0; i<kids.length; i++) {
+      const kid = kids[i];
+      if (kid.nodeName === "DIV") {
+        var text = (<HTMLDivElement>kid).innerText;
+        text = text.replace(REPLACE_NBSP_REGEX," ");
+        result += util.trimRight(text) + "\n"
+      }
+    }
+    return result;
+  }
+  
+  set tag(tag: string) {
+    this.setAttribute(TAG_ATTR, tag);
+  }
+  
+  get tag(): string {
+    return this.getAttribute(TAG_ATTR);
+  }
+
+  //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+
+  /**
+   * Callback invoked by the browser after an instance of this element has been created.
+   */
+  createdCallback(): void {
+    this._initProperties();
+
+    const shadow = util.createShadowRoot(this);
+
+    const clone = this._createClone();
+    shadow.appendChild(clone);
+
+    this._setAttr(COMMANDLINE_ATTR, this.getAttribute(COMMANDLINE_ATTR));
+    this._setAttr(RETURN_CODE_ATTR, this.getAttribute(RETURN_CODE_ATTR));
+    this._setAttr(EXPAND_ATTR, this.getAttribute(EXPAND_ATTR));
+    this._setAttr(TAG_ATTR, this.getAttribute(TAG_ATTR));
+
+    this._getById('pop_out_button').addEventListener('click', this._emitFramePopOut.bind(this));
+    this._getById('close_button').addEventListener('click', this._emitCloseRequest.bind(this));
+
+    const expandbutton = this._getById('expand_button');
+    expandbutton.addEventListener('click', (): void => {
+      var expanded = util.htmlValueToBool(this.getAttribute(EXPAND_ATTR), true);
+      this.setAttribute(EXPAND_ATTR, "" + !expanded);
+    });
+
+    const cm = <contextmenu>this._getById('contextmenu');
+    this._getById('container').addEventListener('contextmenu', (ev: MouseEvent): void => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      const cm = <contextmenu>this._getById('contextmenu');
+      cm.open(ev.clientX, ev.clientY);
+    });
+
+    cm.addEventListener('selected', (ev: CustomEvent): void => {
+      let event: CustomEvent;
+      switch (ev.detail.name) {
+        case 'popout':
+          this._emitFramePopOut();
+          break;
+        
+        case "copycommand":
+          event = new CustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST);
+          event.initCustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST, true, true,
+            this.getAttribute(COMMANDLINE_ATTR));
+          this.dispatchEvent(event);
+          break;
+
+        case "typecommand":
+          event = new CustomEvent(EtEmbeddedViewer.EVENT_TYPE, { detail: this.getAttribute(COMMANDLINE_ATTR) });
+          event.initCustomEvent(EtEmbeddedViewer.EVENT_TYPE, true, true, this.getAttribute(COMMANDLINE_ATTR));
+          this.dispatchEvent(event);
+          break;
+
+        case "expand":
+          this.setAttribute(EXPAND_ATTR, ev.detail.checked);
+          break;
+
+        case 'close':
+          this._emitCloseRequest();
+          break;
+
+        default:
+          break;
+      }
+      (<HTMLDivElement>this._getById(ID_HEADER)).focus();
+    });
+
+    cm.addEventListener('before-close', (function(ev: Event) {
+      const header = this._getById(ID_HEADER);
+      header.focus();
+    }).bind(this));
+
+    this.setHeight(0);
+
+    // Remove the anti-flicker style.
+    window.requestAnimationFrame( () => {
+      this._getById('container').setAttribute('style', '');
+    });
+  }
+
+  /**
+   * 
+   */
+  attributeChangedCallback(attrName: string, oldValue: string, newValue: string) {
+    this._setAttr(attrName, newValue);
   }
 
   //-----------------------------------------------------------------------
@@ -475,114 +663,6 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
   }
 
   /**
-   * Callback invoked by the browser after an instance of this element has been created.
-   */
-  createdCallback(): void {
-    const shadow = util.createShadowRoot(this);
-
-    const clone = this._createClone();
-    shadow.appendChild(clone);
-
-    this._setAttr(COMMANDLINE_ATTR, this.getAttribute(COMMANDLINE_ATTR));
-    this._setAttr(RETURN_CODE_ATTR, this.getAttribute(RETURN_CODE_ATTR));
-    this._setAttr(EXPAND_ATTR, this.getAttribute(EXPAND_ATTR));
-    this._setAttr(TAG_ATTR, this.getAttribute(TAG_ATTR));
-
-    this._getById('pop_out_button').addEventListener('click', this._emitFramePopOut.bind(this));
-    this._getById('close_button').addEventListener('click', this._emitCloseRequest.bind(this));
-
-    const expandbutton = this._getById('expand_button');
-    expandbutton.addEventListener('click', (): void => {
-      var expanded = util.htmlValueToBool(this.getAttribute(EXPAND_ATTR), true);
-      this.setAttribute(EXPAND_ATTR, "" + !expanded);
-    });
-
-    const cm = <contextmenu>this._getById('contextmenu');
-    this._getById('container').addEventListener('contextmenu', (ev: MouseEvent): void => {
-      ev.stopPropagation();
-      ev.preventDefault();
-      const cm = <contextmenu>this._getById('contextmenu');
-      cm.open(ev.clientX, ev.clientY);
-    });
-
-    cm.addEventListener('selected', (ev: CustomEvent): void => {
-      let event: CustomEvent;
-      switch (ev.detail.name) {
-        case 'popout':
-          this._emitFramePopOut();
-          break;
-        
-        case "copycommand":
-          event = new CustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST);
-          event.initCustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST, true, true,
-            this.getAttribute(COMMANDLINE_ATTR));
-          this.dispatchEvent(event);
-          break;
-
-        case "typecommand":
-          event = new CustomEvent(EtEmbeddedViewer.EVENT_TYPE, { detail: this.getAttribute(COMMANDLINE_ATTR) });
-          event.initCustomEvent(EtEmbeddedViewer.EVENT_TYPE, true, true, this.getAttribute(COMMANDLINE_ATTR));
-          this.dispatchEvent(event);
-          break;
-
-        case "expand":
-          this.setAttribute(EXPAND_ATTR, ev.detail.checked);
-          break;
-
-        case 'close':
-          this._emitCloseRequest();
-          break;
-
-        default:
-          break;
-      }
-      (<HTMLDivElement>this._getById(ID_HEADER)).focus();
-    });
-
-    cm.addEventListener('before-close', (function(ev: Event) {
-      const header = this._getById(ID_HEADER);
-      header.focus();
-    }).bind(this));
-
-    // Remove the anti-flicker style.
-    window.requestAnimationFrame( () => {
-      this._getById('container').setAttribute('style', '');
-    });
-  }
-
-  /**
-   * 
-   */
-  attributeChangedCallback(attrName: string, oldValue: string, newValue: string) {
-    this._setAttr(attrName, newValue);
-  }
-
-  /**
-   * 
-   */
-  focusLast(): void {
-    const header = <HTMLDivElement>this._getById(ID_CONTAINER);
-    header.focus();
-    this.scrollIntoView(true);
-    this._emitManualScroll();
-  }
-
-  /**
-   * 
-   */
-  focusFirst(): void {
-    const header = <HTMLDivElement>this._getById(ID_CONTAINER);
-    header.focus();
-    this.scrollIntoView(true);
-    this._emitManualScroll();
-  }
-  
-  getSelectionText(): string {
-    const viewerElement = this.viewerElement;
-    return viewerElement === null ? null : viewerElement.getSelectionText();
-  }
-
-  /**
    * 
    */
   private _emitManualScroll(): void {
@@ -601,41 +681,6 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
     const event = new CustomEvent(EtEmbeddedViewer.EVENT_CLOSE_REQUEST);
     event.initCustomEvent(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, true, true, null);
     this.dispatchEvent(event);
-  }
-  
-  /**
-   * 
-   */
-  openMenu(): void {
-    const header = <HTMLDivElement>this._getById(ID_HEADER);
-    const cm = <contextmenu>this._getById('contextmenu');
-    const rect = header.getBoundingClientRect();
-    cm.openAround(header); //(rect.left, rect.top );
-  }
-  
-  /**
-   * 
-   */
-  get text(): string {  // FIXME
-    const kids = this.childNodes;
-    let result = "";
-    for (var i=0; i<kids.length; i++) {
-      const kid = kids[i];
-      if (kid.nodeName === "DIV") {
-        var text = (<HTMLDivElement>kid).innerText;
-        text = text.replace(REPLACE_NBSP_REGEX," ");
-        result += util.trimRight(text) + "\n"
-      }
-    }
-    return result;
-  }
-  
-  set tag(tag: string) {
-    this.setAttribute(TAG_ATTR, tag);
-  }
-  
-  get tag(): string {
-    return this.getAttribute(TAG_ATTR);
   }
 }
 
