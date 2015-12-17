@@ -15,6 +15,9 @@ type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 interface VirtualScrollableWithExtra extends VirtualScrollable {
   getScrollOffset(): number;
   getHeight(): number;
+  setMinHeight(newMinHeight: number): void;
+  setVirtualHeight(newVirtualHeight: number): void;
+  setReserveViewportHeight(newReserveViewportHeight: number): void;
 }
 
 function SetUpScrollContainer(vsa: virtualscrollarea.VirtualScrollArea, height: number) {
@@ -40,12 +43,24 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: nu
       return minHeight;
     },
     
-    getVirtualHeight: (containerHeight: number): number => {
+    setMinHeight(newMinHeight: number): void {
+      minHeight = newMinHeight;
+    },
+    
+    getVirtualHeight(containerHeight: number): number {
       return virtualHeight;
     },
     
-    getReserveViewportHeight: (containerHeight: number): number => {
+    setVirtualHeight(newVirtualHeight: number): void {
+      virtualHeight = newVirtualHeight;
+    },
+    
+    getReserveViewportHeight(containerHeight: number): number {
       return reserveViewportHeight;
+    },
+    
+    setReserveViewportHeight(newReserveViewportHeight: number): void {
+      reserveViewportHeight = newReserveViewportHeight;
     },
 
     setScrollOffset(offset: number): void {
@@ -183,7 +198,10 @@ export function testVirtualHeightUpdate(test: nodeunit.Test): void {
   test.equal(container.scrollTop, 0);
   test.equal(scrollable.getScrollOffset(), 750);
   
-  vsa.updateScrollableHeights(scrollable, 10, 2000, 0);
+  scrollable.setMinHeight(10);
+  scrollable.setVirtualHeight(2000);
+  scrollable.setReserveViewportHeight(0);
+  vsa.updateScrollableSize(scrollable);
   
   test.equal(scrollbar.position, 750);
   test.equal(container.scrollTop, 0);
@@ -205,7 +223,10 @@ export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
   test.equal(container.scrollTop, 0);
   test.equal(scrollable.getScrollOffset(), 1000);
   
-  vsa.updateScrollableHeights(scrollable, 10, 2000, 0);
+  scrollable.setMinHeight(10);
+  scrollable.setVirtualHeight(2000);
+  scrollable.setReserveViewportHeight(0);
+  vsa.updateScrollableSize(scrollable);
   
   test.equal(scrollbar.position, 1500);
   test.equal(container.scrollTop, 0);
