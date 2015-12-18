@@ -337,26 +337,6 @@ function Compute(state: VirtualAreaState): boolean {
     return false;
   }
 
-  const viewPortHeight = state.containerHeight;
-
-  // First update all of the scrollable heights based on their virtual heights and height of the container.
-  for (let i=0; i<state.scrollableStates.length; i++) {
-    const scrollable = state.scrollableStates[i];
-    scrollable.realHeight = Math.max(scrollable.minHeight,
-                            Math.min(viewPortHeight, scrollable.virtualHeight + scrollable.reserveViewportHeight));
-  }
-
-  // Compute the virtual height of the terminal contents.
-  const virtualHeight = TotalVirtualHeight(state);
-
-// log(`virtualHeight=${virtualHeight}`);
-
-  // Clamp the requested position.
-  // const pos = Math.min(Math.max(0, requestedY), Math.max(0, virtualHeight-viewPortHeight));
-  // this._scrollYOffset = pos;
-  const pos = state.virtualScrollYOffset;
-// log(`pos=${pos}`);
-
   // We pretend that the scrollback is one very tall continous column of text etc. But this is fake.
   // Each code mirror viewer is only as tall as the terminal viewport. We scroll the contents of the
   // code mirrors to make it look like the user is scrolling through a big long list.
@@ -383,39 +363,56 @@ function Compute(state: VirtualAreaState): boolean {
   //
   // The view ports are 'attracted' to the virtual Y position that we want to show.
 
-  let realYBase = 0;    // As we loop below we keep track of where we are inside the 'real' container
-  let virtualYBase = 0; // As we loop below we keep track of where wa are inside the virtual space
+  const viewPortHeight = state.containerHeight;
+  const pos = state.virtualScrollYOffset;
+  let realScrollableTop = 0;    // As we loop below we keep track of where we are inside the 'real' container
+  let virtualScrollableTop = 0; // As we loop below we keep track of where wa are inside the virtual space
   
   // Loop through each scrollable and up its virtual scroll Y offset and also
   // compute the 'real' scroll Y offset for the container.
   for (let i=0; i<state.scrollableStates.length; i++) {
     const scrollable = state.scrollableStates[i];
-    const currentScrollHeight = scrollable.virtualHeight - scrollable.realHeight + scrollable.reserveViewportHeight;
-
-    if (pos <= currentScrollHeight + virtualYBase) {
-      // The end of the current scrollable is lower/after the point we want to scroll to.
-      
-      // The 0 here will kick in when pos is completely higher than the top of the scrollable.
-      const scrollOffset = Math.max(0, pos - virtualYBase);
-      
-// log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
-      scrollable.virtualScrollYOffset = scrollOffset;
-      if (pos >= virtualYBase) {
-        // This means that the top of the viewport (in DOM space) in the container, is aligned with the top of the scrollable object.
-        state.containerScrollYOffset = realYBase;
+    
+    if (scrollable.virtualHeight + scrollable.reserveViewportHeight <= viewPortHeight) {
+      // This thing fits completely inside the viewport. It may actually be much smaller than the viewport.
+      const realHeight = Math.max(scrollable.minHeight, scrollable.virtualHeight + scrollable.reserveViewportHeight);
+      scrollable.realHeight = realHeight;
+      scrollable.virtualScrollYOffset = 0;
+      const virtualScrollableBottom = virtualScrollableTop + realHeight;
+      if (pos >= virtualScrollableTop && pos <  virtualScrollableBottom) {
+        state.containerScrollYOffset = realScrollableTop + pos - virtualScrollableTop;
       }
       
     } else {
-      scrollable.virtualScrollYOffset = currentScrollHeight;
+      // This thing is big enough to cover the viewport and needs to do virtual scrolling.
+      const virtualScrollableHeight = Math.max(scrollable.minHeight,
+        scrollable.virtualHeight + scrollable.reserveViewportHeight);
+      const virtualScrollableBottom = virtualScrollableHeight + virtualScrollableTop;
+      scrollable.realHeight = Math.max(scrollable.minHeight, viewPortHeight);
 
-// log(`2. heightInfo ${i}, element scrollTo=${currentScrollHeight}, el.scrollTop=${realYBase + pos - virtualYBase - currentScrollHeight}`);
-      if (pos >= virtualYBase) {
-        state.containerScrollYOffset = realYBase + pos - virtualYBase - currentScrollHeight;
+      if (pos < virtualScrollableBottom) {
+        // The end of the current scrollable is lower/after the point we want to scroll to.
+        
+  // log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
+        if (pos >= virtualScrollableTop) {
+          scrollable.virtualScrollYOffset = pos - virtualScrollableTop;
+          // This means that the top of the viewport (in DOM space) intersects this scrollable.
+          state.containerScrollYOffset = realScrollableTop;
+        } else {
+          scrollable.virtualScrollYOffset = 0;
+        }
+        
+      } else {
+        scrollable.virtualScrollYOffset = virtualScrollableHeight - (viewPortHeight - scrollable.reserveViewportHeight);
+
+  // log(`2. heightInfo ${i}, element scrollTo=${currentScrollHeight}, el.scrollTop=${realYBase + pos - virtualYBase - currentScrollHeight}`);
+        // if (pos >= virtualScrollableTop) {
+        //   state.containerScrollYOffset = realScrollableTop + pos - virtualScrollableTop - virtualScrollableHeight;
+        // }
       }
     }
-
-    realYBase += scrollable.realHeight;
-    virtualYBase += scrollable.virtualHeight;
+    realScrollableTop += scrollable.realHeight;
+    virtualScrollableTop += scrollable.virtualHeight + scrollable.reserveViewportHeight;
   }
 }
 
@@ -425,13 +422,9 @@ function Compute(state: VirtualAreaState): boolean {
  * @return {number}                 [description]
  */
 function TotalVirtualHeight(state: VirtualAreaState): number {
-  // console.log("TotalVirtualHeight");
-  // console.log(state.scrollableStates);
-
   const result = state.scrollableStates.reduce<number>(
     (accu: number, scrollable: VirtualScrollableState): number =>
-      accu + scrollable.virtualHeight + scrollable.reserveViewportHeight, 0);
-  // console.log("= " + result);
+      accu + Math.max(scrollable.minHeight, scrollable.virtualHeight + scrollable.reserveViewportHeight), 0);
   return result;
 }
 
@@ -440,23 +433,21 @@ function ViewportBottomOffset(state: VirtualAreaState): number {
 }
 
 function AddOffset(state: VirtualAreaState, offset: number, delta: number): number {
-  let realYBase = 0;
-  let virtualYBase = 0;
+  let realScrollableTop = 0;
+  let virtualScrollableTop = 0;
   
   for (let i=0; i<state.scrollableStates.length; i++) {
     const scrollable = state.scrollableStates[i];
-    const currentScrollHeight = scrollable.virtualHeight - scrollable.realHeight + scrollable.reserveViewportHeight;
-    
-    if (offset < virtualYBase + scrollable.virtualHeight + scrollable.reserveViewportHeight) {
+    if (offset < virtualScrollableTop + scrollable.virtualHeight + scrollable.reserveViewportHeight) {
       if (scrollable.realHeight >= delta) {
         return offset + delta - scrollable.reserveViewportHeight;
       }
     }
     
-    realYBase += scrollable.realHeight;
-    virtualYBase += scrollable.virtualHeight + scrollable.reserveViewportHeight;
+    realScrollableTop += scrollable.realHeight;
+    virtualScrollableTop += scrollable.virtualHeight + scrollable.reserveViewportHeight;
   }
-  return virtualYBase;
+  return virtualScrollableTop;
 }
 
 function SubtractOffset(state: VirtualAreaState, offset: number, delta: number): number {

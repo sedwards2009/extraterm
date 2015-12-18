@@ -20,7 +20,7 @@ interface VirtualScrollableWithExtra extends VirtualScrollable {
   setReserveViewportHeight(newReserveViewportHeight: number): void;
 }
 
-function SetUpScrollContainer(vsa: virtualscrollarea.VirtualScrollArea, height: number) {
+function SetUpScrollContainer(vsa: virtualscrollarea.VirtualScrollArea, height: number): HTMLElement {
   const scrollContainer = <HTMLElement> {
     scrollTop: 0,
     
@@ -356,3 +356,20 @@ export function testAddSubtractOffset3WithReserve(test: nodeunit.Test): void {
   
   test.done();
 }
+
+export function testBug(test: nodeunit.Test): void {
+  const vsa = new VirtualScrollArea();
+  
+  const scrollbar = SetupScrollbar(vsa);
+  const container = SetUpScrollContainer(vsa, 571);
+  const scrollable1 = SetupScrollable(vsa, 0, 90, 0);
+  const scrollable2 = SetupScrollable(vsa, 26, 0, 26);
+  const scrollable3 = SetupScrollable(vsa, 0, 570, 0);
+  vsa.resize();
+
+  vsa.scrollTo(90);
+  test.equal(scrollbar.position, 90);
+  test.equal(container.scrollTop, 90);
+  test.done();
+}
+
