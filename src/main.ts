@@ -22,6 +22,7 @@ import Messages = require('./windowmessages');
 import clipboard = require('clipboard');
 import child_process = require('child_process');
 import util = require('./gui/util');
+import Logger = require('./logger');
 
 type PtyConnector  = ptyconnector.PtyConnector;
 type Pty = ptyconnector.Pty;
@@ -108,10 +109,9 @@ function main(): void {
   });
 }
 
-
-
+const _log = new Logger("main");
 function log(msg: any, ...opts: any[]): void {
-  console.log(msg, ...opts);
+  _log.debug(msg, ...opts);
 }
 
 function mapBadChar(m: string): string {
@@ -393,7 +393,7 @@ function scanThemes(themesdir: string): im.Map<string, Theme> {
         }
 
       } catch(err) {
-        console.log("Warning: Unable to read file ",infopath);
+        _log.warn("Warning: Unable to read file ",infopath);
       }
     });
     return thememap;
@@ -415,7 +415,7 @@ function getFullConfig(): Config {
   const fullConfig = _.cloneDeep(config);
   const themesDir = path.join(__dirname, THEMES_DIRECTORY);
   fullConfig.themePath = path.join(themesDir, config.theme);
-  console.log("Full config: ",fullConfig);
+  _log.debug("Full config: ",fullConfig);
   return fullConfig;
 }
 

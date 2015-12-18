@@ -10,8 +10,12 @@ import globalcss = require('./gui/globalcss');
 import util = require('./gui/util');
 import ViewerElement = require('./viewerelement');
 import virtualscrollarea = require('./virtualscrollarea');
+import Logger = require('./logger');
+import LogDecorator = require('./logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+
+const log = LogDecorator;
 
 contextmenu.init();
 menuitem.init();
@@ -38,6 +42,8 @@ const ID_EXPAND_ICON = "expand_icon";
 
 let registered = false;
 const REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
+
+const DEBUG_SIZE = false;
 
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
@@ -79,10 +85,12 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
+  private _log: Logger;
 
   private _currentElementHeight: number;
   
   private _initProperties(): void {
+    this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
     this._currentElementHeight = -1;
   }
   
@@ -117,26 +125,40 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
   }
 
   getMinHeight(): number {
+    if (DEBUG_SIZE) {
+      this._log.debug("getMinHeight() => ", this.getReserveViewportHeight(0));
+    }
     return this.getReserveViewportHeight(0);
   }
-
+  
+  @log
   getVirtualHeight(containerHeight: number): number {
     const viewerElement = this.viewerElement;
+    let result = 0;
     if (viewerElement !== null) {
-      return viewerElement.getVirtualHeight(containerHeight);
-    } else {
-      return 0;
+      result = viewerElement.getVirtualHeight(containerHeight);
     }
+    if (DEBUG_SIZE) {
+      this._log.debug("getVirtualHeight() => ", result);
+    }
+    return result;
   }
   
+  @log
   getReserveViewportHeight(containerHeight: number): number {
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const rect = headerDiv.getBoundingClientRect();
+    if (DEBUG_SIZE) {
+      this._log.debug("getReserveViewportHeight() => ",rect.height);
+    }
     return rect.height;
   }
   
+  @log
   setHeight(height: number): void {
-console.log("*** embeddeviewer setHeight(): ", height);
+    if (DEBUG_SIZE) {
+      this._log.debug("setHeight(): ", height);
+    }
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const rect = headerDiv.getBoundingClientRect();
     
@@ -150,8 +172,11 @@ console.log("*** embeddeviewer setHeight(): ", height);
     }    
   }
   
+  @log
   setScrollOffset(y: number): void {
-console.log("*** embeddeviewer setScrollOffset(): ", y);
+    if (DEBUG_SIZE) {
+      this._log.debug("setScrollOffset(): ", y);
+    }
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
       viewerElement.setScrollOffset(y);

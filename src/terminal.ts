@@ -11,6 +11,7 @@ import EtCommandPlaceHolder = require('./commandplaceholder');
 import EtCodeMirrorViewer = require('./viewers/codemirrorviewer');
 import EtCodeMirrorViewerTypes = require('./viewers/codemirrorviewertypes');
 import EtMarkdownViewer = require('./viewers/markdownviewer');
+import Logger = require('./logger');
 
 import domutils = require('./domutils');
 import termjs = require('./term');
@@ -28,16 +29,6 @@ type ScrollableElement = VirtualScrollable & HTMLElement;
 const debug = true;
 let startTime: number = window.performance.now();
 let registered = false;
-
-function log(message: any, ...msgOpts: any[]): void {
-  if (debug) {
-    // const offset = window.performance.now() - startTime;
-    // const msg: string = message + msgOpts.reduce( (accu: string, value: string) => accu + value, "");
-    console.log(message, ...msgOpts);
-    // console.timeStamp(msg);
-    // console.log(""+offset + ": " + msg);
-  }
-}
 
 const ID = "EtTerminalTemplate";
 const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
@@ -117,6 +108,7 @@ class EtTerminal extends HTMLElement {
 
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
+  private _log: Logger;
 
   private _virtualScrollArea: virtualscrollarea.VirtualScrollArea;
   
@@ -162,6 +154,7 @@ class EtTerminal extends HTMLElement {
   private _rows = -1;
 
   private _initProperties(): void {
+    this._log = new Logger(EtTerminal.TAG_NAME);
     this._virtualScrollArea = null;
     this._elementAttached = false;
     this._scrollSyncLaterHandle = null;
@@ -933,7 +926,7 @@ class EtTerminal extends HTMLElement {
    *     escape sequence.
    */
   private _handleApplicationModeStart(emulator: termjs.Emulator, params: string[]): void {
-    log("application-mode started! ",params);
+    this._log.debug("application-mode started! ",params);
     
     // FIXME check cookie!
   
@@ -950,23 +943,23 @@ class EtTerminal extends HTMLElement {
   
         case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
           this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
-          log("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
+          this._log.debug("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
           break;
           
         case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
           this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
-          log("Starting APPLICATION_MODE_REQUEST_FRAME");
+          this._log.debug("Starting APPLICATION_MODE_REQUEST_FRAME");
           break;
           
         case "" + ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-          log("Starting APPLICATION_MODE_SHOW_MIME");
+          this._log.debug("Starting APPLICATION_MODE_SHOW_MIME");
           this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_MIME;
           this._mimeData = "";
           this._mimeType = params[2];
           break;
         
         default:
-          log("Unrecognized application escape parameters.");
+          this._log.debug("Unrecognized application escape parameters.");
           break;
       }
     }
@@ -979,7 +972,7 @@ class EtTerminal extends HTMLElement {
    * @param {string} data The new data.
    */
   private _handleApplicationModeData(data: string): void {
-    log("html-mode data!", data);
+    this._log.debug("html-mode data!", data);
     switch (this._applicationMode) {
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
@@ -1032,7 +1025,7 @@ class EtTerminal extends HTMLElement {
     }
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
   
-    log("html-mode end!",this._htmlData);
+    this._log.debug("html-mode end!",this._htmlData);
     this._htmlData = null;
   }
 
@@ -1226,7 +1219,7 @@ class EtTerminal extends HTMLElement {
       markdownViewerElement.appendChild(win.document.createTextNode(decodedMimeData));
       return markdownViewerElement;
     } else {
-      log("Unknown mime type: " + mimeType);
+      this._log.debug("Unknown mime type: " + mimeType);
       return null;
     }
   }
