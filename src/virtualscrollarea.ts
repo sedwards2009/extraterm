@@ -341,7 +341,7 @@ function Compute(state: VirtualAreaState): boolean {
   // Each code mirror viewer is only as tall as the terminal viewport. We scroll the contents of the
   // code mirrors to make it look like the user is scrolling through a big long list.
   //
-  // The terminal contents can best be thought of as a stack of rectangles which contain a sliding 'view' box.
+  // The terminal contents can best be thought of as a stack of rectangles which contain a sliding 'viewport' box.
   // +-------+
   // |       | <- First code mirror viewer.
   // |       |
@@ -355,9 +355,9 @@ function Compute(state: VirtualAreaState): boolean {
   // |       | <- second code mirror viewer.
   // |       |
   // |       |
-  // |+-----+| --- virtual scroll Y point
-  // ||     ||     The viewport is positioned aligned with the scroll Y point.
-  // |+-----+|     The scroller viewport is positioned at the top of the second code mirror viewer.
+  // |+-----+| ---+ virtual scroll Y point
+  // ||     ||    | <-- The viewport is positioned aligned with the scroll Y point.
+  // |+-----+| ---+    The scroller viewport is positioned at the top of the second code mirror viewer.
   // |       |
   // +-------+
   //
@@ -372,19 +372,26 @@ function Compute(state: VirtualAreaState): boolean {
   // compute the 'real' scroll Y offset for the container.
   for (let i=0; i<state.scrollableStates.length; i++) {
     const scrollable = state.scrollableStates[i];
-    
+
+    // Each scrollable can be in one of a number of relationships with the viewport.
+    // Our first task is to determine which relationship we have.
+
     if (scrollable.virtualHeight + scrollable.reserveViewportHeight <= viewPortHeight) {
-      // This thing fits completely inside the viewport. It may actually be much smaller than the viewport.
+      // This scrollable fits completely inside the viewport. It may actually be much smaller than the viewport.
       const realHeight = Math.max(scrollable.minHeight, scrollable.virtualHeight + scrollable.reserveViewportHeight);
       scrollable.realHeight = realHeight;
-      scrollable.virtualScrollYOffset = 0;
+      
+      // No virtual scrolling is ever needed if the scrollable fits entirely inside the viewport.
+      scrollable.virtualScrollYOffset = 0;  
+      
       const virtualScrollableBottom = virtualScrollableTop + realHeight;
       if (pos >= virtualScrollableTop && pos <  virtualScrollableBottom) {
+        // We can now compute the container scroll offset if the top of the viewport intersects the scrollable.
         state.containerScrollYOffset = realScrollableTop + pos - virtualScrollableTop;
       }
       
     } else {
-      // This thing is big enough to cover the viewport and needs to do virtual scrolling.
+      // This scrollable is big enough to cover the viewport and needs to do virtual scrolling.
       const virtualScrollableHeight = Math.max(scrollable.minHeight,
         scrollable.virtualHeight + scrollable.reserveViewportHeight);
       const virtualScrollableBottom = virtualScrollableHeight + virtualScrollableTop;
@@ -395,14 +402,48 @@ function Compute(state: VirtualAreaState): boolean {
         
   // log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
         if (pos >= virtualScrollableTop) {
-          scrollable.virtualScrollYOffset = pos - virtualScrollableTop;
-          // This means that the top of the viewport (in DOM space) intersects this scrollable.
-          state.containerScrollYOffset = realScrollableTop;
+          // +------------+
+          // |            | ---+  <-- Viewport
+          // | Scrollable |    |
+          // |            |    |
+          // +------------+    :
+          // const realScrollableBottom = realScrollableTop + scrollable.realHeight;
+          if (pos + viewPortHeight >= virtualScrollableBottom) {
+            // +------------+
+            // |            | ---+  <-- Viewport
+            // | Scrollable |    |
+            // |            |    |
+            // +------------+    |
+            //                ---+
+            scrollable.virtualScrollYOffset = virtualScrollableHeight - (viewPortHeight - scrollable.reserveViewportHeight);
+            state.containerScrollYOffset = realScrollableTop + (pos + viewPortHeight - virtualScrollableBottom);
+            
+          } else {
+            // +------------+
+            // |            | ---+  <-- Viewport
+            // | Scrollable |    |
+            // |            | ---+
+            // +------------+
+            scrollable.virtualScrollYOffset = pos - virtualScrollableTop;
+            // The top of the scrollable is aligned with the top of the viewport.
+            state.containerScrollYOffset = realScrollableTop; 
+          }
         } else {
+          //                ---+
+          // +------------+    |
+          // |            |    | <-- Viewport
+          // | Scrollable |    |
+          // |            | ---+
+          // +------------+    
           scrollable.virtualScrollYOffset = 0;
         }
         
       } else {
+          // +------------+
+          // | Scrollable |    
+          // +------------+    
+          //                ---+
+          //                   | <-- Viewport
         scrollable.virtualScrollYOffset = virtualScrollableHeight - (viewPortHeight - scrollable.reserveViewportHeight);
 
   // log(`2. heightInfo ${i}, element scrollTo=${currentScrollHeight}, el.scrollTop=${realYBase + pos - virtualYBase - currentScrollHeight}`);

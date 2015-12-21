@@ -373,3 +373,19 @@ export function testBug(test: nodeunit.Test): void {
   test.done();
 }
 
+export function testBug2(test: nodeunit.Test): void {
+  const vsa = new VirtualScrollArea();
+  
+  const scrollbar = SetupScrollbar(vsa);
+  const container = SetUpScrollContainer(vsa, 571);
+                                        // min, virtual, reserve
+  const scrollable1 = SetupScrollable(vsa,  0,  90,       0);
+  const scrollable2 = SetupScrollable(vsa, 26, 585,      26);
+  const scrollable3 = SetupScrollable(vsa,  0,  15,       0);
+  vsa.resize();
+
+  vsa.scrollTo(145);
+  test.equal(scrollbar.position, 145);
+  test.equal(container.scrollTop, 105);
+  test.done();
+}
