@@ -260,6 +260,12 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
    */
   createdCallback(): void {
     this._initProperties();
+  }
+  
+  attachedCallback(): void {
+    if (util.getShadowRoot(this) !== null) {
+      return;
+    }
 
     const shadow = util.createShadowRoot(this);
 
@@ -327,12 +333,10 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
       header.focus();
     }).bind(this));
 
-    this.setHeight(0);
+    this.setHeight(this.getMinHeight());
 
     // Remove the anti-flicker style.
-    window.requestAnimationFrame( () => {
-      this._getById('container').setAttribute('style', '');
-    });
+    this._getById('container').setAttribute('style', '');
   }
 
   /**
@@ -629,6 +633,10 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
    * Process an attribute value change.
    */
   private _setAttr(attrName: string, newValue: string): void {
+    if (util.getShadowRoot(this) === null) {
+      return;
+    }
+
     if (attrName === COMMANDLINE_ATTR) {
       (<HTMLDivElement>this._getById(ID_COMMANDLINE)).innerText = newValue;
       return;
