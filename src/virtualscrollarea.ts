@@ -240,6 +240,9 @@ export class VirtualScrollArea {
    * @return the actual offset used after clamping it into the valid range of offsets
    */  
   scrollToBottom(): number {
+    if (this._currentState.scrollableStates.length === 0) {
+      return;
+    }
     return this.scrollTo(TotalVirtualHeight(this._currentState) - this._currentState.containerHeight);
   }
   
@@ -415,7 +418,7 @@ function Compute(state: VirtualAreaState): boolean {
             // |            |    |
             // +------------+    |
             //                ---+
-            scrollable.virtualScrollYOffset = virtualScrollableHeight - (viewPortHeight - scrollable.reserveViewportHeight);
+            scrollable.virtualScrollYOffset = pos - virtualScrollableTop;
             state.containerScrollYOffset = realScrollableTop + (pos + viewPortHeight - virtualScrollableBottom);
             
           } else {
