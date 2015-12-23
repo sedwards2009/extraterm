@@ -124,7 +124,7 @@ export class VirtualScrollArea {
     const virtualHeight = scrollable.getVirtualHeight(this.getScrollContainerHeight());
     const reserveViewportHeight = scrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
-    this._update( (newState) => {
+    this._updateAutoscrollBottom( (newState) => {
       newState.scrollableStates.push( {
         scrollable: scrollable,
         virtualHeight: virtualHeight,
@@ -138,7 +138,7 @@ export class VirtualScrollArea {
   }
   
   removeScrollable(scrollable: VirtualScrollable): void {
-    this._update( (newState) => {
+    this._updateAutoscrollBottom( (newState) => {
       
       let currentYOffset = newState.virtualScrollYOffset;
       let accu = 0;
@@ -172,7 +172,7 @@ export class VirtualScrollArea {
     const virtualHeight = newScrollable.getVirtualHeight(this.getScrollContainerHeight());
     const reserveViewportHeight = newScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
-    this._update( (newState) => {
+    this._updateAutoscrollBottom( (newState) => {
         newState.scrollableStates.filter( (state) => state.scrollable === oldScrollable )
           .forEach( (state) => {
             state.scrollable = newScrollable;
@@ -213,7 +213,7 @@ export class VirtualScrollArea {
    * Signals to the VirtualScrollArea that the container has been resized.
    */
   resize(): void {
-    this._update( (newState) => {
+    this._updateAutoscrollBottom( (newState) => {
       newState.containerHeight = newState.container.getBoundingClientRect().height;
     });
   }
@@ -256,25 +256,14 @@ export class VirtualScrollArea {
     const newVirtualHeight = virtualScrollable.getVirtualHeight(this.getScrollContainerHeight());
     const newReserveViewportHeight = virtualScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
-    const virtualHeight = TotalVirtualHeight(this._currentState);
-    const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
-    
-    const updateFunc = (newState: VirtualAreaState): void => {
+    this._updateAutoscrollBottom( (newState: VirtualAreaState): void => {
       newState.scrollableStates.filter( (ss) => ss.scrollable === virtualScrollable )
         .forEach( (ss) => {
           ss.virtualHeight = newVirtualHeight;
           ss.minHeight = newMinHeight;
           ss.reserveViewportHeight = newReserveViewportHeight;
         });
-    };
-    
-    if (isAtBottom) {
-      this._update(updateFunc, (newState: VirtualAreaState): void => {
-        newState.virtualScrollYOffset = TotalVirtualHeight(newState) - newState.containerHeight;
-      });
-    } else {
-      this._update(updateFunc);
-    }
+    } );
   }
   
   /**
@@ -324,6 +313,28 @@ export class VirtualScrollArea {
       m(newState);
       Compute(newState);
     });
+    
+    ApplyState(this._currentState, newState);
+    this._currentState = newState;
+  }
+  
+  private _updateAutoscrollBottom(...mutator: Mutator[]): void {
+    // Carefully clone our state without jumping into any references to external objects.
+    const newState = _.clone(this._currentState);
+    newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
+
+    const virtualHeight = TotalVirtualHeight(this._currentState);
+    const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
+    
+    mutator.forEach( (m) => {
+      m(newState);
+      Compute(newState);
+    });
+    
+    if (isAtBottom) {
+        newState.virtualScrollYOffset = TotalVirtualHeight(newState) - newState.containerHeight;
+        Compute(newState);
+    }
     
     ApplyState(this._currentState, newState);
     this._currentState = newState;
