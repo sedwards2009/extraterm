@@ -433,7 +433,7 @@ class EtTerminal extends HTMLElement {
           background-color: ${background_color};
         }
       
-        ${EtCodeMirrorViewer.TAG_NAME} {
+        #${ID_SCROLL_AREA} > ${EtCodeMirrorViewer.TAG_NAME} {
             margin-left: 2px;
             margin-right: 2px;
         }
