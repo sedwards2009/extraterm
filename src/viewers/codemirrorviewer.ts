@@ -538,7 +538,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   private _emitKeyboardActivityEvent(): void {
     const scrollInfo = this._codeMirror.getScrollInfo();    
-    const event = new CustomEvent(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, { });
+    const event = new CustomEvent(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
     this.dispatchEvent(event);
   }
 
