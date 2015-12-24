@@ -363,9 +363,11 @@ class EtTerminal extends HTMLElement {
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
     scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
-      this._codeMirrorTerminal.focus();
-      ev.preventDefault();
-      ev.stopPropagation();
+      if (ev.target === scrollerArea) {
+        this._codeMirrorTerminal.focus();
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
     });
     
     scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
