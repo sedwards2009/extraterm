@@ -254,7 +254,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   getReserveViewportHeight(containerHeight: number): number {
     const textHeight = this.getVirtualTextHeight();
-    if (this._useVPad && textHeight > containerHeight) {
+    if (this._useVPad) {
       const defaultTextHeight = this._codeMirror.defaultTextHeight();
       const vPad = containerHeight % defaultTextHeight;
       if (DEBUG_RESIZE) {

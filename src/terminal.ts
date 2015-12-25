@@ -528,6 +528,7 @@ class EtTerminal extends HTMLElement {
     if (this._codeMirrorTerminal !== null) {
       this._codeMirrorTerminal.emulator = null;
       this._codeMirrorTerminal.deleteScreen();
+      this._codeMirrorTerminal.useVPad = false;
       this._virtualScrollArea.updateScrollableSize(this._codeMirrorTerminal);
       this._codeMirrorTerminal = null;
     }
