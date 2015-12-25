@@ -2,7 +2,6 @@
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
 
-import _  = require('lodash');
 import fs  = require('fs');
 import crypto = require('crypto');
 import ViewerElement = require("./viewerelement");
@@ -553,13 +552,6 @@ class EtTerminal extends HTMLElement {
     scrollerArea.insertBefore(newEl, oldEl);
     scrollerArea.removeChild(oldEl);
     this._virtualScrollArea.replaceScrollable(oldEl, newEl);
-  }
-  
-  private _handleFocus(ev: FocusEvent): void {
-    // console.log("terminal saw a focus event");
-    // if (ev.target !== this._codeMirrorTerminal) {
-    //   this._codeMirrorTerminal.focus();
-    // }
   }
 
   private _handleMouseDown(ev: MouseEvent): void {
@@ -1137,10 +1129,20 @@ class EtTerminal extends HTMLElement {
       // Hang the terminal viewer under the Embedded viewer.
       embeddedViewerElement.setAttribute('return-code', returnCode);
       embeddedViewerElement.className = "extraterm_output";
+      
+      // Some focus management to make sure that activeCodeMirrorTerminal still keeps
+      // the focus after we remove it from the DOM and place it else where.
+      const restoreFocus = util.getShadowRoot(this).activeElement === activeCodeMirrorTerminal;
+      const previousActiveTerminal = activeCodeMirrorTerminal;
+      
       embeddedViewerElement.viewerElement = activeCodeMirrorTerminal;
       this._virtualScrollArea.removeScrollable(activeCodeMirrorTerminal);
       this._virtualScrollArea.updateScrollableSize(embeddedViewerElement);
       this._appendNewCodeMirrorTerminal();
+      
+      if (restoreFocus) {
+        previousActiveTerminal.focus();
+      }
     }
   }
 
