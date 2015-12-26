@@ -1057,8 +1057,9 @@ class EtTerminal extends HTMLElement {
     this._virtualScrollArea.resize();
   }
   
-  private deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
+  private _deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
     viewer.remove();
+    this._virtualScrollArea.removeScrollable(viewer);
   }
   
   private _createEmbeddedViewerElement(commandLine: string): EtEmbeddedViewer {
@@ -1066,11 +1067,11 @@ class EtTerminal extends HTMLElement {
     const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
 
     el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
-      this.deleteEmbeddedViewer(el);
+      this._deleteEmbeddedViewer(el);
       this.focus();
     });
 
-    el.addEventListener('type', (ev: CustomEvent) => {
+    el.addEventListener(EtEmbeddedViewer.EVENT_TYPE, (ev: CustomEvent) => {
       this._sendDataToPtyEvent(ev.detail);
     });
 
@@ -1085,8 +1086,8 @@ class EtTerminal extends HTMLElement {
     // }).bind(this));
 // FIXME
     
-    el.setAttribute('command-line', commandLine);  // FIXME attr name
-    el.setAttribute('tag', "" + this._getNextTag());
+    el.setAttribute(EtEmbeddedViewer.ATTR_COMMAND, commandLine);
+    el.setAttribute(EtEmbeddedViewer.ATTR_TAG, "" + this._getNextTag());
     return el;
   }
   
@@ -1097,7 +1098,7 @@ class EtTerminal extends HTMLElement {
   private _closeLastEmbeddedViewer(returnCode: string): void {
     const scrollArea = util.getShadowId(this, ID_SCROLL_AREA);
     const startElement = scrollArea.querySelectorAll(
-                          EtEmbeddedViewer.TAG_NAME + ":not([return-code]), " + EtCommandPlaceHolder.TAG_NAME);
+      `${EtEmbeddedViewer.TAG_NAME}:not([${EtEmbeddedViewer.ATTR_RETURN_CODE}]), ${EtCommandPlaceHolder.TAG_NAME}`);
     
     if (startElement.length !== 0) {
       let embeddedSomethingElement = <HTMLElement>startElement[startElement.length-1];
@@ -1124,11 +1125,11 @@ class EtTerminal extends HTMLElement {
       this._disconnectActiveCodeMirrorTerminal();
       
       activeCodeMirrorTerminal.returnCode = returnCode;
-      activeCodeMirrorTerminal.commandLine = embeddedViewerElement.getAttribute("command-line");
+      activeCodeMirrorTerminal.commandLine = embeddedViewerElement.getAttribute(EtEmbeddedViewer.ATTR_COMMAND);
       activeCodeMirrorTerminal.useVPad = false;
       
       // Hang the terminal viewer under the Embedded viewer.
-      embeddedViewerElement.setAttribute('return-code', returnCode);
+      embeddedViewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, returnCode);
       embeddedViewerElement.className = "extraterm_output";
       
       // Some focus management to make sure that activeCodeMirrorTerminal still keeps

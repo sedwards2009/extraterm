@@ -23,10 +23,6 @@ checkboxmenuitem.init();
 
 const ID = "EtEmbeddedViewerTemplate";
 
-const COMMANDLINE_ATTR = "command-line";
-const RETURN_CODE_ATTR = "return-code";
-const EXPAND_ATTR = "expand";
-const TAG_ATTR = "tag";
 const ID_CONTAINER = "container";
 const ID_HEADER = "header";
 const ID_OUTPUT = "output";
@@ -61,6 +57,14 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';
   
   static EVENT_SCROLL_MOVE = 'scroll-move';
+  
+  static ATTR_COMMAND = "command";
+
+  static ATTR_RETURN_CODE = "return-code";
+
+  static ATTR_EXPAND = "expand";
+
+  static ATTR_TAG = "tag";
 
   /**
    * 
@@ -131,7 +135,6 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
     return this.getReserveViewportHeight(0);
   }
   
-  @log
   getVirtualHeight(containerHeight: number): number {
     const viewerElement = this.viewerElement;
     let result = 0;
@@ -144,7 +147,6 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
     return result;
   }
   
-  @log
   getReserveViewportHeight(containerHeight: number): number {
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const rect = headerDiv.getBoundingClientRect();
@@ -154,7 +156,6 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
     return rect.height;
   }
   
-  @log
   setHeight(height: number): void {
     if (DEBUG_SIZE) {
       this._log.debug("setHeight(): ", height);
@@ -172,7 +173,6 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
     }    
   }
   
-  @log
   setScrollOffset(y: number): void {
     if (DEBUG_SIZE) {
       this._log.debug("setScrollOffset(): ", y);
@@ -236,11 +236,11 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
   }
   
   set tag(tag: string) {
-    this.setAttribute(TAG_ATTR, tag);
+    this.setAttribute(EtEmbeddedViewer.ATTR_TAG, tag);
   }
   
   get tag(): string {
-    return this.getAttribute(TAG_ATTR);
+    return this.getAttribute(EtEmbeddedViewer.ATTR_TAG);
   }
 
   //-----------------------------------------------------------------------
@@ -272,18 +272,18 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
     const clone = this._createClone();
     shadow.appendChild(clone);
 
-    this._setAttr(COMMANDLINE_ATTR, this.getAttribute(COMMANDLINE_ATTR));
-    this._setAttr(RETURN_CODE_ATTR, this.getAttribute(RETURN_CODE_ATTR));
-    this._setAttr(EXPAND_ATTR, this.getAttribute(EXPAND_ATTR));
-    this._setAttr(TAG_ATTR, this.getAttribute(TAG_ATTR));
+    this._setAttr(EtEmbeddedViewer.ATTR_COMMAND, this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND));
+    this._setAttr(EtEmbeddedViewer.ATTR_RETURN_CODE, this.getAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE));
+    this._setAttr(EtEmbeddedViewer.ATTR_EXPAND, this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND));
+    this._setAttr(EtEmbeddedViewer.ATTR_TAG, this.getAttribute(EtEmbeddedViewer.ATTR_TAG));
 
-    this._getById('pop_out_button').addEventListener('click', this._emitFramePopOut.bind(this));
-    this._getById('close_button').addEventListener('click', this._emitCloseRequest.bind(this));
+    this._getById(ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
+    this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
 
-    const expandbutton = this._getById('expand_button');
+    const expandbutton = this._getById(ID_EXPAND_BUTTON);
     expandbutton.addEventListener('click', (): void => {
-      var expanded = util.htmlValueToBool(this.getAttribute(EXPAND_ATTR), true);
-      this.setAttribute(EXPAND_ATTR, "" + !expanded);
+      const expanded = util.htmlValueToBool(this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND), true);
+      this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, "" + !expanded);
     });
 
     const cm = <contextmenu>this._getById('contextmenu');
@@ -304,18 +304,20 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
         case "copycommand":
           event = new CustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST);
           event.initCustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST, true, true,
-            this.getAttribute(COMMANDLINE_ATTR));
+            this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND));
           this.dispatchEvent(event);
           break;
 
         case "typecommand":
-          event = new CustomEvent(EtEmbeddedViewer.EVENT_TYPE, { detail: this.getAttribute(COMMANDLINE_ATTR) });
-          event.initCustomEvent(EtEmbeddedViewer.EVENT_TYPE, true, true, this.getAttribute(COMMANDLINE_ATTR));
+          event = new CustomEvent(EtEmbeddedViewer.EVENT_TYPE,
+              { detail: this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND) });
+          event.initCustomEvent(EtEmbeddedViewer.EVENT_TYPE, true, true,
+              this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND));
           this.dispatchEvent(event);
           break;
 
         case "expand":
-          this.setAttribute(EXPAND_ATTR, ev.detail.checked);
+          this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, ev.detail.checked);
           break;
 
         case 'close':
@@ -637,12 +639,12 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
       return;
     }
 
-    if (attrName === COMMANDLINE_ATTR) {
+    if (attrName === EtEmbeddedViewer.ATTR_COMMAND) {
       (<HTMLDivElement>this._getById(ID_COMMANDLINE)).innerText = newValue;
       return;
     }
 
-    if (attrName === RETURN_CODE_ATTR) {
+    if (attrName === EtEmbeddedViewer.ATTR_RETURN_CODE) {
       const container = <HTMLDivElement>this._getById(ID_CONTAINER);
       const icon = <HTMLDivElement>this._getById(ID_ICON);
       const iconDiv = <HTMLDivElement>this._getById(ID_ICON_DIV);
@@ -670,7 +672,7 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
       return;
     }
 
-    if (attrName === EXPAND_ATTR) {
+    if (attrName === EtEmbeddedViewer.ATTR_EXPAND) {
       const output = <HTMLDivElement>this._getById('output');
       const expandicon = <HTMLDivElement>this._getById('expand_icon');
       if (util.htmlValueToBool(newValue, true)) {
@@ -689,7 +691,7 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
       return;
     }
 
-    if (attrName === TAG_ATTR) {
+    if (attrName === EtEmbeddedViewer.ATTR_TAG) {
       const tagName = <HTMLDivElement>this._getById('tag_name');
       tagName.innerText = newValue;
     }
