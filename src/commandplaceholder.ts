@@ -12,6 +12,8 @@ let registered = false;
 class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
   
   static TAG_NAME = "ET-COMMANDPLACEHOLDER";
+  
+  static ATTR_COMMAND_LINE = "command-line";
 
   /**
    * 

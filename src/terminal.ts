@@ -1050,7 +1050,7 @@ class EtTerminal extends HTMLElement {
             
       // Don't place an embedded viewer, but use an invisible place holder instead.
       const el = <EtCommandPlaceHolder> this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
-      el.setAttribute('command-line', cleancommand);
+      el.setAttribute(EtCommandPlaceHolder.ATTR_COMMAND_LINE, cleancommand);
       this._appendScrollableElement(el);
       this._appendNewCodeMirrorTerminal();
     }
@@ -1111,10 +1111,10 @@ class EtTerminal extends HTMLElement {
         } else {
           // The command went wrong. Replace the place holder with a real viewer
           // element and pretend that we had done this when the command started running.
-// FIXME
-          // const newViewerElement = this._createEmbeddedViewerElement(embeddedSomethingElement.getAttribute("command-line"));
-          // embeddedSomethingElement.parentNode.replaceChild(newViewerElement, embeddedSomethingElement);
-          // embeddedViewerElement = newViewerElement;
+          const newViewerElement = this._createEmbeddedViewerElement(
+                                      embeddedSomethingElement.getAttribute(EtCommandPlaceHolder.ATTR_COMMAND_LINE));
+          this._replaceScrollableElement(embeddedSomethingElement, newViewerElement);
+          embeddedViewerElement = newViewerElement;
         }
       } else {
         embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
