@@ -44,7 +44,7 @@ const DEBUG_SIZE = false;
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
-class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
+class EtEmbeddedViewer extends ViewerElement {
   
   static TAG_NAME = "et-embeddedviewer";
   
@@ -93,9 +93,12 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
 
   private _currentElementHeight: number;
   
+  private _visualState: number;
+  
   private _initProperties(): void {
     this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
     this._currentElementHeight = -1;
+    this._visualState = ViewerElement.VISUAL_STATE_AUTO;
   }
   
   //-----------------------------------------------------------------------
@@ -116,16 +119,25 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
     }
     
     if (element !== null) {
+      element.visualState = this._visualState;
       this.appendChild(element);
     }
   }
   
   get viewerElement(): ViewerElement {
-    if (this.firstElementChild !== null && this.firstElementChild instanceof ViewerElement) {
-      return <ViewerElement> this.firstElementChild;
-    } else {
-      return null;
+    return this._getViewerElement();
+  }
+  
+  set visualState(newVisualState: number) {
+    this._visualState = newVisualState;
+    const viewerElement = this.viewerElement;
+    if (viewerElement !== null) {
+      viewerElement.visualState = newVisualState;
     }
+  }
+  
+  get visualState(): number {
+    return this._visualState;
   }
 
   getMinHeight(): number {
@@ -694,6 +706,14 @@ class EtEmbeddedViewer extends HTMLElement implements VirtualScrollable {
     if (attrName === EtEmbeddedViewer.ATTR_TAG) {
       const tagName = <HTMLDivElement>this._getById('tag_name');
       tagName.innerText = newValue;
+    }
+  }
+
+  private _getViewerElement(): ViewerElement {
+    if (this.firstElementChild !== null && this.firstElementChild instanceof ViewerElement) {
+      return <ViewerElement> this.firstElementChild;
+    } else {
+      return null;
     }
   }
 

@@ -346,6 +346,9 @@ class EtTerminal extends HTMLElement {
     //   this._handleStyleLoad();
     //   });
 
+    this.addEventListener('focus', this._handleFocus.bind(this));
+    this.addEventListener('blur', this._handleBlur.bind(this));
+
     const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
     const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
     
@@ -463,6 +466,26 @@ class EtTerminal extends HTMLElement {
     return this.ownerDocument;
   }
   
+  private _handleFocus(event: FocusEvent): void {
+    // Forcefully set the visual state of each thing in the terminal to appear focused.
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    util.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+      if (ViewerElement.isViewerElement(node)) {
+        node.visualState = ViewerElement.VISUAL_STATE_FOCUSED;
+      }
+    });
+  }
+  
+  private _handleBlur(event: FocusEvent): void {
+    // Forcefully set the visual state of each thing in the terminal to appear unfocused.
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    util.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+      if (ViewerElement.isViewerElement(node)) {
+        node.visualState = ViewerElement.VISUAL_STATE_UNFOCUSED;
+      }
+    });
+  }
+  
   // ----------------------------------------------------------------------
   //
   // #######                                                 
@@ -505,7 +528,9 @@ class EtTerminal extends HTMLElement {
     scrollerArea.appendChild(codeMirrorTerminal);
     
     codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, this._handleCodeMirrorCursor.bind(this));
-    
+    codeMirrorTerminal.visualState = util.getShadowRoot(this).activeElement !== null
+                                      ? ViewerElement.VISUAL_STATE_FOCUSED
+                                      : ViewerElement.VISUAL_STATE_UNFOCUSED;
     codeMirrorTerminal.emulator = this._emulator;
     this._virtualScrollArea.appendScrollable(codeMirrorTerminal);
 
@@ -1086,6 +1111,9 @@ class EtTerminal extends HTMLElement {
     // }).bind(this));
 // FIXME
     
+    el.visualState = util.getShadowRoot(this).activeElement !== null
+                                      ? ViewerElement.VISUAL_STATE_FOCUSED
+                                      : ViewerElement.VISUAL_STATE_UNFOCUSED;
     el.setAttribute(EtEmbeddedViewer.ATTR_COMMAND, commandLine);
     el.setAttribute(EtEmbeddedViewer.ATTR_TAG, "" + this._getNextTag());
     return el;

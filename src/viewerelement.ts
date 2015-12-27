@@ -9,8 +9,22 @@ import virtualscrollarea = require('./virtualscrollarea');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 
-class ViewerElement extends HTMLElement implements VirtualScrollable {
+abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
   
+  static VISUAL_STATE_AUTO = 0;     // "Visual state should automatically follow the focus."
+  static VISUAL_STATE_UNFOCUSED = 1;// "Visual state should appear in the unfocused state."
+  static VISUAL_STATE_FOCUSED = 2;  // "Visual state should appear in the focused state."
+  
+  /**
+   * Type guard for detecting a ViewerElement instance.
+   * 
+   * @param  node the node to test
+   * @return      True if the node is a EtCodeMirrorViewer.
+   */
+  static isViewerElement(node: Node): node is ViewerElement {
+    return node !== null && node !== undefined && node instanceof ViewerElement;
+  }
+
   private _themeCssPath: string;
   
   set themeCssPath(path: string) {
@@ -61,6 +75,9 @@ class ViewerElement extends HTMLElement implements VirtualScrollable {
   
   set focusable(value: boolean) {
   }
+  
+  public visualState: number;
+  // One of the constants VISUAL_STATE_AUTO, VISUAL_STATE_UNFOCUSED, VISUAL_STATE_FOCUSED 
   
   // VirtualScrollable
   getMinHeight(): number {

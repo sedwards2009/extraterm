@@ -21,9 +21,12 @@ const ID = "CbCodeMirrorViewerTemplate";
 const ID_CONTAINER = "container";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
+const CLASS_HIDE_CURSOR = "hide_cursor";
+const CLASS_FOCUSED = "terminal-focused";
+const CLASS_UNFOCUSED = "terminal-unfocused";
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
-const CLASS_HIDE_CURSOR = "hide_cursor";
+
 const DEBUG_RESIZE = false;
 
 let registered = false;
@@ -84,6 +87,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _mode: EtCodeMirrorViewerTypes.Mode;
   private document: Document;
   private _useVPad: boolean;
+  private _visualState: number;
 
   private _mainStyleLoaded: boolean;
   private _resizePollHandle: util.LaterHandle;
@@ -111,6 +115,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._mode = EtCodeMirrorViewerTypes.Mode.TERMINAL;
     this.document = document;
     this._useVPad = true;
+    this._visualState = EtCodeMirrorViewer.VISUAL_STATE_AUTO;
     
     this._currentElementHeight = -1;
     
@@ -168,7 +173,15 @@ class EtCodeMirrorViewer extends ViewerElement {
     const hasFocus = this._codeMirror.getInputField() === util.getShadowRoot(this).activeElement;
     return hasFocus;
   }
-
+  
+  set visualState(newVisualState: number) {
+    this._setVisualState(newVisualState);
+  }
+  
+  get visualState(): number {
+    return this._visualState;
+  }
+  
   set emulator(emulator: termjs.Emulator) {
     if (this._emulator !== null) {
       // Disconnect the last emulator.
@@ -422,15 +435,23 @@ class EtCodeMirrorViewer extends ViewerElement {
       if (this._emulator !== null) {
         this._emulator.focus();
       }
-      const containerDiv = util.getShadowId(this, ID_CONTAINER);
-      containerDiv.classList.add('has_focus');
+      
+      if (this._visualState === ViewerElement.VISUAL_STATE_AUTO) {
+        const containerDiv = util.getShadowId(this, ID_CONTAINER);
+        containerDiv.classList.add(CLASS_FOCUSED);
+        containerDiv.classList.remove(CLASS_UNFOCUSED);
+      }
     });
 
     this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
       if (this._emulator !== null) {
         this._emulator.blur();
       }
-      containerDiv.classList.remove('has_focus');
+      
+      if (this._visualState === ViewerElement.VISUAL_STATE_AUTO) {
+        containerDiv.classList.add(CLASS_UNFOCUSED);
+        containerDiv.classList.remove(CLASS_FOCUSED);
+      }
     });
     
     // Filter the keyboard events before they reach CodeMirror.
@@ -503,12 +524,31 @@ class EtCodeMirrorViewer extends ViewerElement {
         ${getCssText()}
         </style>
         <style id="${ID_THEME_STYLE}"></style>
-        <div id="${ID_CONTAINER}" class="terminal_viewer terminal"></div>`
+        <div id="${ID_CONTAINER}" class="terminal_viewer terminal ${CLASS_UNFOCUSED}"></div>`
 
       window.document.body.appendChild(template);
     }
     
     return window.document.importNode(template.content, true);
+  }
+  
+  private _setVisualState(newVisualState: number): void {
+    if (newVisualState === this._visualState) {
+      return;
+    }
+    
+    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    if ((newVisualState === EtCodeMirrorViewer.VISUAL_STATE_AUTO && this.hasFocus()) ||
+        newVisualState === EtCodeMirrorViewer.VISUAL_STATE_FOCUSED) {
+
+      containerDiv.classList.add(CLASS_FOCUSED);
+      containerDiv.classList.remove(CLASS_UNFOCUSED);
+    } else {
+      containerDiv.classList.add(CLASS_UNFOCUSED);
+      containerDiv.classList.remove(CLASS_FOCUSED);
+    }
+    
+    this._visualState = newVisualState;
   }
   
   private _enterSelectionMode(): void {
