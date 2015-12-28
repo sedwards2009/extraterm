@@ -3,6 +3,7 @@
  */
 
 "use strict";
+import _  = require('lodash');
 import fs = require('fs');
 import ViewerElement = require("../viewerelement");
 import util = require("../gui/util");
@@ -372,6 +373,14 @@ class EtCodeMirrorViewer extends ViewerElement {
     return detail;
   }
 
+  clearSelection(): void {
+    const doc = this._codeMirror.getDoc();
+    if ( ! doc.somethingSelected()) {
+      return;
+    }
+    doc.setCursor(doc.getCursor());
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -452,6 +461,21 @@ class EtCodeMirrorViewer extends ViewerElement {
         containerDiv.classList.add(CLASS_UNFOCUSED);
         containerDiv.classList.remove(CLASS_FOCUSED);
       }
+    });
+    
+    this._codeMirror.on("beforeSelectionChange", (instance: CodeMirror.Editor, obj): void => {
+        // obj: { ranges: {anchor: CodeMirror.Position; head: CodeMirror.Position; }[]; }
+      if (obj.ranges.length === 0) {
+        return;
+      }
+      
+      if (obj.ranges.length === 1) {
+        const pair = obj.ranges[0];
+        if (_.isEqual(pair.anchor, pair.head)) {
+          return;
+        }
+      }
+      this._emitBeforeSelectionChangeEvent();
     });
     
     // Filter the keyboard events before they reach CodeMirror.
@@ -579,6 +603,11 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _emitKeyboardActivityEvent(): void {
     const scrollInfo = this._codeMirror.getScrollInfo();    
     const event = new CustomEvent(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
+    this.dispatchEvent(event);
+  }
+
+  private _emitBeforeSelectionChangeEvent(): void {
+    const event = new CustomEvent(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, { bubbles: true });
     this.dispatchEvent(event);
   }
 

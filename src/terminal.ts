@@ -386,6 +386,8 @@ class EtTerminal extends HTMLElement {
     scrollerArea.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
       this._virtualScrollArea.scrollToBottom();
     });
+    scrollerArea.addEventListener(EtCodeMirrorViewer.EVENT_BEFORE_SELECTION_CHANGE,
+      this._handleBeforeSelectionChange.bind(this));
 
     this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     this._scheduleResize();
@@ -482,6 +484,16 @@ class EtTerminal extends HTMLElement {
     util.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
         node.visualState = ViewerElement.VISUAL_STATE_UNFOCUSED;
+      }
+    });
+  }
+  
+  private _handleBeforeSelectionChange(ev: CustomEvent): void {
+    const target = ev.target;
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    util.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+      if (ViewerElement.isViewerElement(node) && node !== target) {
+        node.clearSelection();
       }
     });
   }

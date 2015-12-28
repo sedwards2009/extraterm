@@ -255,6 +255,14 @@ class EtEmbeddedViewer extends ViewerElement {
     return this.getAttribute(EtEmbeddedViewer.ATTR_TAG);
   }
 
+  clearSelection(): void {
+    const viewerElement = this.viewerElement;
+    if (viewerElement === null) {
+      return;
+    }
+    viewerElement.clearSelection();
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -296,6 +304,17 @@ class EtEmbeddedViewer extends ViewerElement {
     expandbutton.addEventListener('click', (): void => {
       const expanded = util.htmlValueToBool(this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND), true);
       this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, "" + !expanded);
+    });
+
+    this.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, (ev: CustomEvent) => {
+      if (ev.target === this) {
+        return;
+      }
+      ev.stopPropagation();
+      
+      // Send our own event. It will appear to have originated from the embedded viewer.
+      const event = new CustomEvent(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, { bubbles: true });
+      this.dispatchEvent(event);      
     });
 
     const cm = <contextmenu>this._getById('contextmenu');
