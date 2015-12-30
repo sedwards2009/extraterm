@@ -387,8 +387,9 @@ class EtTerminal extends HTMLElement {
     scrollerArea.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
       this._virtualScrollArea.scrollToBottom();
     });
-    scrollerArea.addEventListener(EtCodeMirrorViewer.EVENT_BEFORE_SELECTION_CHANGE,
+    scrollerArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
       this._handleBeforeSelectionChange.bind(this));
+    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleCodeMirrorCursor.bind(this));
 
     this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     this._scheduleResize();
@@ -540,7 +541,6 @@ class EtTerminal extends HTMLElement {
     const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(codeMirrorTerminal);
     
-    codeMirrorTerminal.addEventListener(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, this._handleCodeMirrorCursor.bind(this));
     codeMirrorTerminal.visualState = util.getShadowRoot(this).activeElement !== null
                                       ? ViewerElement.VISUAL_STATE_FOCUSED
                                       : ViewerElement.VISUAL_STATE_UNFOCUSED;
@@ -727,8 +727,14 @@ class EtTerminal extends HTMLElement {
   }
 
   private _handleCodeMirrorCursor(ev: CustomEvent): void {
-    const pos = this._codeMirrorTerminal.getCursorPosition();
-    this._virtualScrollArea.scrollIntoView(pos.top, pos.bottom);
+    const node = <Node> ev.target;
+    if (ViewerElement.isViewerElement(node)) {
+      const pos = node.getCursorPosition();
+      const nodeTop = this._virtualScrollArea.getScrollableTop(node);
+      const top = pos.top + nodeTop;
+      const bottom = pos.bottom;      
+      this._virtualScrollArea.scrollIntoView(top, bottom);
+    }
   }
 
   // ----------------------------------------------------------------------

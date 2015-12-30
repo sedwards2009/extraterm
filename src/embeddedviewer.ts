@@ -280,6 +280,13 @@ class EtEmbeddedViewer extends ViewerElement {
     return this._mode;
   }
 
+  getCursorPosition(): ViewerElementTypes.CursorMoveDetail {
+    const viewerElement = this.viewerElement;
+    if (viewerElement !== null) {
+      return viewerElement.getCursorPosition();
+    }    
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -331,6 +338,17 @@ class EtEmbeddedViewer extends ViewerElement {
       
       // Send our own event. It will appear to have originated from the embedded viewer.
       const event = new CustomEvent(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, { bubbles: true });
+      this.dispatchEvent(event);      
+    });
+
+    this.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, (ev: CustomEvent) => {
+      if (ev.target === this) {
+        return;
+      }
+      ev.stopPropagation();
+      
+      // Send our own event. It will appear to have originated from the embedded viewer.
+      const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
       this.dispatchEvent(event);      
     });
 

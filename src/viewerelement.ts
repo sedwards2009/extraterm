@@ -10,6 +10,7 @@ import ViewerElementTypes = require('./viewerelementtypes');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type Mode = ViewerElementTypes.Mode;
+type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
 abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
   
@@ -18,7 +19,9 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
   static VISUAL_STATE_FOCUSED = 2;  // "Visual state should appear in the focused state."
   
   static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
-  
+
+  static EVENT_CURSOR_MOVE = "cursor-move";
+
   /**
    * Type guard for detecting a ViewerElement instance.
    * 
@@ -113,6 +116,14 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
     
   }
   
+  getCursorPosition(): CursorMoveDetail {
+    return {
+      left: 0,
+      top: 0,
+      bottom: 0,
+      viewPortTop: 0
+    };
+  }  
 }
 
 export = ViewerElement;

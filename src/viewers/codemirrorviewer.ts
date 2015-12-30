@@ -17,7 +17,7 @@ import Logger = require('../logger');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
-type CursorMoveDetail = EtCodeMirrorViewerTypes.CursorMoveDetail;
+type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
 const ID = "CbCodeMirrorViewerTemplate";
 const ID_CONTAINER = "container";
@@ -43,8 +43,6 @@ class EtCodeMirrorViewer extends ViewerElement {
 
   static TAG_NAME = "et-codemirror-viewer";
   
-  static EVENT_CURSOR_MOVE = "cursor-move";
-
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
 
   static init(): void {
@@ -429,7 +427,7 @@ class EtCodeMirrorViewer extends ViewerElement {
 
     this._codeMirror.on("cursorActivity", () => {
       if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
-        const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { bubbles: true });
+        const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
         this.dispatchEvent(event);
       }
     });

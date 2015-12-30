@@ -33,6 +33,7 @@ interface VirtualScrollableState {
   // Output - These values are set by the calculate() method.
   realHeight: number;
   virtualScrollYOffset: number;
+  virtualTop: number;
 }
 
 interface VirtualAreaState {
@@ -107,6 +108,16 @@ export class VirtualScrollArea {
     }
   }
   
+  getScrollableTop(scrollable: VirtualScrollable): number {
+    let result: number = undefined;
+    this._currentState.scrollableStates.forEach( (s) => {
+      if (s.scrollable === scrollable) {
+        result = s.virtualTop;
+      }
+    });
+    return result;
+  }
+  
   //-----------------------------------------------------------------------
   //
   //  #####                                
@@ -132,7 +143,8 @@ export class VirtualScrollArea {
         reserveViewportHeight: reserveViewportHeight,
         
         realHeight: 0,
-        virtualScrollYOffset: 0
+        virtualScrollYOffset: 0,
+        virtualTop: 0
       } );
     });
   }
@@ -386,6 +398,7 @@ function Compute(state: VirtualAreaState): boolean {
   // compute the 'real' scroll Y offset for the container.
   for (let i=0; i<state.scrollableStates.length; i++) {
     const scrollable = state.scrollableStates[i];
+    scrollable.virtualTop = virtualScrollableTop;
 
     // Each scrollable can be in one of a number of relationships with the viewport.
     // Our first task is to determine which relationship we have.

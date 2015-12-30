@@ -6,3 +6,10 @@ export enum Mode {
   DEFAULT,  // The default mode when using Extraterm. Default terminal like behaviour.
   SELECTION // Mode for selecting parts of the output using the cursor.
 };
+
+export interface CursorMoveDetail {
+  left: number;
+  top: number;
+  bottom: number;
+  viewPortTop: number;
+};
