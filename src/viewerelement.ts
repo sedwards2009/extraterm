@@ -6,8 +6,10 @@ import fs  = require('fs');
 import globalcss = require('./gui/globalcss');
 import util = require('./gui/util');
 import virtualscrollarea = require('./virtualscrollarea');
+import ViewerElementTypes = require('./viewerelementtypes');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type Mode = ViewerElementTypes.Mode;
 
 abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
   
@@ -83,6 +85,8 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
   
   public visualState: number;
   // One of the constants VISUAL_STATE_AUTO, VISUAL_STATE_UNFOCUSED, VISUAL_STATE_FOCUSED 
+  
+  public mode: Mode;
   
   // VirtualScrollable
   getMinHeight(): number {

@@ -5,6 +5,7 @@
 import fs  = require('fs');
 import crypto = require('crypto');
 import ViewerElement = require("./viewerelement");
+import ViewerElementTypes = require("./viewerelementtypes");
 import EtEmbeddedViewer = require('./embeddedviewer');
 import EtCommandPlaceHolder = require('./commandplaceholder');
 import EtCodeMirrorViewer = require('./viewers/codemirrorviewer');
@@ -669,18 +670,21 @@ class EtTerminal extends HTMLElement {
   private _enterSelectionMode(): void {
     const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
     util.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
-      if (EtCodeMirrorViewer.is(node)) {
-        node.mode = EtCodeMirrorViewerTypes.Mode.SELECTION;
+      if (ViewerElement.isViewerElement(node)) {
+        node.mode = ViewerElementTypes.Mode.SELECTION;
       }
     });
     this._mode = Mode.SELECTION;
+    if (util.getShadowRoot(this).activeElement !== this._codeMirrorTerminal) {
+      this._codeMirrorTerminal.focus();
+    }
   }
   
   private _exitSelectionMode(): void {
     const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
     util.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
-      if (EtCodeMirrorViewer.is(node)) {
-        node.mode = EtCodeMirrorViewerTypes.Mode.TERMINAL;
+      if (ViewerElement.isViewerElement(node)) {
+        node.mode = ViewerElementTypes.Mode.DEFAULT;
       }
     });
     this._mode = Mode.TERMINAL;
@@ -764,7 +768,7 @@ class EtTerminal extends HTMLElement {
         break;
     }
     
-    if (ev.target !== this._codeMirrorTerminal) {
+    if (this._mode !== Mode.SELECTION && ev.target !== this._codeMirrorTerminal) {
       // Route the key down to the current code mirror terminal which has the emulator attached.
       const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
       ev.stopPropagation();
@@ -780,7 +784,8 @@ class EtTerminal extends HTMLElement {
       return;
     }
 
-    if (ev.target !== this._codeMirrorTerminal) {
+    if (this._mode !== Mode.SELECTION && ev.target !== this._codeMirrorTerminal) {
+      // Route the key down to the current code mirror terminal which has the emulator attached.
       const simulatedKeypress = domutils.newKeyboardEvent('keypress', ev);
       ev.preventDefault();
       ev.stopPropagation();

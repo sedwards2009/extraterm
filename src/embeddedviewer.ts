@@ -9,6 +9,7 @@ import checkboxmenuitem = require('./gui/checkboxmenuitem');
 import globalcss = require('./gui/globalcss');
 import util = require('./gui/util');
 import ViewerElement = require('./viewerelement');
+import ViewerElementTypes = require('./viewerelementtypes');
 import virtualscrollarea = require('./virtualscrollarea');
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
@@ -94,11 +95,14 @@ class EtEmbeddedViewer extends ViewerElement {
   private _currentElementHeight: number;
   
   private _visualState: number;
+
+  private _mode: ViewerElementTypes.Mode;
   
   private _initProperties(): void {
     this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
     this._currentElementHeight = -1;
     this._visualState = ViewerElement.VISUAL_STATE_AUTO;
+    this._mode = ViewerElementTypes.Mode.DEFAULT;
   }
   
   //-----------------------------------------------------------------------
@@ -120,6 +124,7 @@ class EtEmbeddedViewer extends ViewerElement {
     
     if (element !== null) {
       element.visualState = this._visualState;
+      element.mode = this._mode;
       this.appendChild(element);
     }
   }
@@ -261,6 +266,18 @@ class EtEmbeddedViewer extends ViewerElement {
       return;
     }
     viewerElement.clearSelection();
+  }
+
+  set mode(newMode: ViewerElementTypes.Mode) {
+    this._mode = newMode;
+    const viewerElement = this.viewerElement;
+    if (viewerElement !== null) {
+      viewerElement.mode = newMode;
+    }
+  }
+
+  get mode(): ViewerElementTypes.Mode {
+    return this._mode;
   }
 
   //-----------------------------------------------------------------------

@@ -9,6 +9,7 @@ import ViewerElement = require("../viewerelement");
 import util = require("../gui/util");
 import domutils = require("../domutils");
 import CodeMirror = require('codemirror');
+import ViewerElementTypes = require('../viewerelementtypes');
 import EtCodeMirrorViewerTypes = require('./codemirrorviewertypes');
 import termjs = require('../term');
 import virtualscrollarea = require('../virtualscrollarea');
@@ -85,7 +86,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _codeMirror: CodeMirror.Editor;
   private _height: number;
   private _isEmpty: boolean;
-  private _mode: EtCodeMirrorViewerTypes.Mode;
+  private _mode: ViewerElementTypes.Mode;
   private document: Document;
   private _useVPad: boolean;
   private _visualState: number;
@@ -113,7 +114,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._codeMirror = null;
     this._height = 0;
     this._isEmpty = true;
-    this._mode = EtCodeMirrorViewerTypes.Mode.TERMINAL;
+    this._mode = ViewerElementTypes.Mode.DEFAULT;
     this.document = document;
     this._useVPad = true;
     this._visualState = EtCodeMirrorViewer.VISUAL_STATE_AUTO;
@@ -201,21 +202,25 @@ class EtCodeMirrorViewer extends ViewerElement {
     return this._emulator;
   }
   
-  set mode(newMode: EtCodeMirrorViewerTypes.Mode) {
-    switch (this._mode) {
-      case EtCodeMirrorViewerTypes.Mode.TERMINAL:
+  set mode(newMode: ViewerElementTypes.Mode) {
+    if (newMode === this._mode) {
+      return;
+    }
+    
+    switch (newMode) {
+      case ViewerElementTypes.Mode.SELECTION:
         // Enter selection mode.
         this._enterSelectionMode();
         break;
         
-      case EtCodeMirrorViewerTypes.Mode.SELECTION:
+      case ViewerElementTypes.Mode.DEFAULT:
         this._exitSelectionMode();
         break;
     }
     this._mode = newMode;
   }
   
-  get mode(): EtCodeMirrorViewerTypes.Mode {
+  get mode(): ViewerElementTypes.Mode {
     return this._mode;
   }
   
@@ -423,7 +428,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0, showCursorWhenSelecting: true});
 
     this._codeMirror.on("cursorActivity", () => {
-      if (this._mode !== EtCodeMirrorViewerTypes.Mode.TERMINAL) {
+      if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
         const event = new CustomEvent(EtCodeMirrorViewer.EVENT_CURSOR_MOVE, { bubbles: true });
         this.dispatchEvent(event);
       }
@@ -579,17 +584,21 @@ class EtCodeMirrorViewer extends ViewerElement {
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
     
-    const dimensions = this._emulator.getDimensions();
     const doc = this._codeMirror.getDoc();
-    doc.setCursor( { line: dimensions.cursorY + this._terminalFirstRow, ch: dimensions.cursorX } );
+    if (this._emulator !== null) {
+      const dimensions = this._emulator.getDimensions();
+      doc.setCursor( { line: dimensions.cursorY + this._terminalFirstRow, ch: dimensions.cursorX } );
+    } else {
+      doc.setCursor( { line: doc.lineCount()-1, ch: 0 } );
+    }
 
-    this._mode = EtCodeMirrorViewerTypes.Mode.SELECTION;
+    this._mode = ViewerElementTypes.Mode.SELECTION;
   }
 
   private _exitSelectionMode(): void {
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
-    this._mode = EtCodeMirrorViewerTypes.Mode.TERMINAL;
+    this._mode = ViewerElementTypes.Mode.DEFAULT;
   }
   
   private _emitVirtualResizeEvent(): void {
@@ -717,7 +726,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
-    if (this._mode === EtCodeMirrorViewerTypes.Mode.TERMINAL) {
+    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
       ev.stopPropagation();
       if (this._emulator !== null) {
         this._emulator.keyPress(ev);
@@ -727,13 +736,13 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._mode !== EtCodeMirrorViewerTypes.Mode.TERMINAL) {
+    if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
       ev.stopPropagation();
     }
   }
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._mode === EtCodeMirrorViewerTypes.Mode.TERMINAL) {
+    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
       ev.stopPropagation();
 
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
@@ -746,7 +755,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   private _handleContainerKeyUpCapture(ev: KeyboardEvent): void {
-    if (this._mode === EtCodeMirrorViewerTypes.Mode.TERMINAL) {
+    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
       ev.stopPropagation();
       ev.preventDefault();
     }      

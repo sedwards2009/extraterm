@@ -52,6 +52,7 @@
         "./src/terminal.ts",
         "./src/theme.ts",
         "./src/viewerelement.ts",
+        "./src/viewerelementtypes.ts",
         "./src/virtualscrollarea.ts",
         "./src/virtualscrollareatest.ts",
         "./src/virtualscrollareatestdebugger.ts",

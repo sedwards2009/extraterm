@@ -12,8 +12,3 @@ export interface CursorMoveDetail {
   bottom: number;
   viewPortTop: number;
 }
-
-export enum Mode {
-  TERMINAL,
-  SELECTION
-}
