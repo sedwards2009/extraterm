@@ -390,7 +390,8 @@ class EtTerminal extends HTMLElement {
     scrollerArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
       this._handleBeforeSelectionChange.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleCodeMirrorCursor.bind(this));
-
+    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleCodeMirrorCursorEdge.bind(this));
+    
     this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     this._scheduleResize();
   }
@@ -736,7 +737,44 @@ class EtTerminal extends HTMLElement {
       this._virtualScrollArea.scrollIntoView(top, bottom);
     }
   }
+  
+  private _handleCodeMirrorCursorEdge(ev: CustomEvent): void {
+    const detail = <ViewerElementTypes.CursorEdgeDetail> ev.detail;
+    
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const kids = util.nodeListToArray(scrollerArea.childNodes);
+    const index = kids.indexOf(<Node> ev.target);
+    if (index === -1) {
+      this._log.warn("_handleCodeMirrorCursorEdge: Couldn't find the target.");
+      return;
+    }
 
+    if (detail.edge === ViewerElementTypes.Edge.TOP) {
+      // A top edge was hit. Move the cursor to the bottom of the ViewerElement above it.
+      for (let i=index-1; i>=0; i--) {
+        const node = kids[i];
+        if (ViewerElement.isViewerElement(node)) {
+          if (node.setCursorPositionBottom(detail.ch)) {
+            node.focus();
+            break;
+          }
+        }
+      }
+    
+    } else {
+      // Bottom edge. Move the cursor to the top of the next ViewerElement.
+      for (let i=index+1; i<kids.length; i++) {
+        const node = kids[i];
+        if (ViewerElement.isViewerElement(node)) {
+          if (node.setCursorPositionTop(detail.ch)) {
+            node.focus();
+            break;
+          }
+        }
+      }
+    }
+  }
+  
   // ----------------------------------------------------------------------
   //
   //   #    #                                                 

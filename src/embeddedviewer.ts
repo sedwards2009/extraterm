@@ -280,11 +280,36 @@ class EtEmbeddedViewer extends ViewerElement {
     return this._mode;
   }
 
+  focus(): void {
+    const viewerElement = this.viewerElement;
+    if (viewerElement !== null) {
+      return viewerElement.focus();
+    } else {
+      super.focus();
+    }
+  }
+
   getCursorPosition(): ViewerElementTypes.CursorMoveDetail {
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
       return viewerElement.getCursorPosition();
     }    
+  }
+  
+  setCursorPositionTop(x: number): boolean {
+    const viewerElement = this.viewerElement;
+    if (viewerElement !== null) {
+      return viewerElement.setCursorPositionTop(x);
+    }
+    return false;
+  }
+  
+  setCursorPositionBottom(x: number): boolean {
+    const viewerElement = this.viewerElement;
+    if (viewerElement !== null) {
+      return viewerElement.setCursorPositionBottom(x);
+    }
+    return false;
   }
 
   //-----------------------------------------------------------------------
@@ -349,6 +374,17 @@ class EtEmbeddedViewer extends ViewerElement {
       
       // Send our own event. It will appear to have originated from the embedded viewer.
       const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+      this.dispatchEvent(event);      
+    });
+
+    this.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, (ev: CustomEvent) => {
+      if (ev.target === this) {
+        return;
+      }
+      ev.stopPropagation();
+      
+      // Send our own event. It will appear to have originated from the embedded viewer.
+      const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: ev.detail });
       this.dispatchEvent(event);      
     });
 

@@ -22,6 +22,8 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
 
   static EVENT_CURSOR_MOVE = "cursor-move";
 
+  static EVENT_CURSOR_EDGE = "cursor-edge";
+
   /**
    * Type guard for detecting a ViewerElement instance.
    * 
@@ -123,7 +125,15 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
       bottom: 0,
       viewPortTop: 0
     };
-  }  
+  } 
+   
+  setCursorPositionBottom(x: number): boolean {
+    return false;
+  }
+  
+  setCursorPositionTop(x: number): boolean {
+    return false;
+  }
 }
 
 export = ViewerElement;

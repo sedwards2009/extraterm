@@ -96,6 +96,8 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _rows: number;
   private _columns: number;
   private _realizedRows: number;
+
+  private _lastCursorPosition: CodeMirror.Position;
   
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
@@ -125,6 +127,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._rows = -1;
     this._columns = -1;
     this._realizedRows = -1;
+    this._lastCursorPosition = null;
     
     this._renderEventListener = null;
   }
@@ -383,6 +386,18 @@ class EtCodeMirrorViewer extends ViewerElement {
     }
     doc.setCursor(doc.getCursor());
   }
+  
+  setCursorPositionTop(ch: number): boolean {
+    const doc = this._codeMirror.getDoc();
+    doc.setCursor( { line: 0, ch: ch } );
+    return true;
+  }
+  
+  setCursorPositionBottom(ch: number): boolean {
+    const doc = this._codeMirror.getDoc();
+    doc.setCursor( { line: doc.lineCount()-1 , ch: ch } );
+    return true;
+  }
 
   //-----------------------------------------------------------------------
   //
@@ -427,6 +442,8 @@ class EtCodeMirrorViewer extends ViewerElement {
 
     this._codeMirror.on("cursorActivity", () => {
       if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
+        const cursorPos = this._codeMirror.getDoc().getCursor();
+        this._lastCursorPosition = cursorPos;
         const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
         this.dispatchEvent(event);
       }
@@ -479,6 +496,26 @@ class EtCodeMirrorViewer extends ViewerElement {
         }
       }
       this._emitBeforeSelectionChangeEvent();
+    });
+
+    this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
+      const isUp = name === "PageUp" || name === "Up";
+      const isDown = name === "PageDown" || name === "Down";
+      if (isUp || isDown) {
+        const cursorPos = this._codeMirror.getDoc().getCursor();
+        if (this._lastCursorPosition !== null && this._lastCursorPosition.line === cursorPos.line) {
+          // The last action didn't move the cursor.
+          const ch = this._lastCursorPosition.ch; // _lastCursorPosition can change before the code below runs.
+          util.doLater( () => {
+            const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
+                                                                    ? ViewerElementTypes.Edge.TOP
+                                                                    : ViewerElementTypes.Edge.BOTTOM,
+                                                                  ch: ch };
+            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+            this.dispatchEvent(event);
+          });
+        }
+      }
     });
     
     // Filter the keyboard events before they reach CodeMirror.
@@ -589,6 +626,9 @@ class EtCodeMirrorViewer extends ViewerElement {
     } else {
       doc.setCursor( { line: doc.lineCount()-1, ch: 0 } );
     }
+    
+    const cursorPos = this._codeMirror.getDoc().getCursor();
+    this._lastCursorPosition = cursorPos;
 
     this._mode = ViewerElementTypes.Mode.SELECTION;
   }

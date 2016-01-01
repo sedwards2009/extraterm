@@ -13,3 +13,13 @@ export interface CursorMoveDetail {
   bottom: number;
   viewPortTop: number;
 };
+
+export enum Edge {
+  TOP,
+  BOTTOM
+};
+
+export interface CursorEdgeDetail {
+  edge: Edge;
+  ch: number;
+};

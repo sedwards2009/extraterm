@@ -1,8 +1,8 @@
 
 declare module CodeMirror {
   interface Editor {
-    on(eventName: 'keyHandled', handler: (instance: CodeMirror.Editor, name: number, event: KeyboardEvent) => void ): void;
-    off(eventName: 'keyHandled', handler: (instance: CodeMirror.Editor, name: number, event: KeyboardEvent) => void ): void;
+    on(eventName: 'keyHandled', handler: (instance: CodeMirror.Editor, name: string, event: KeyboardEvent) => void ): void;
+    off(eventName: 'keyHandled', handler: (instance: CodeMirror.Editor, name: string, event: KeyboardEvent) => void ): void;
     
     on(eventName: 'keydown', handler: (instance: CodeMirror.Editor, event: KeyboardEvent) => void ): void;
     on(eventName: 'keyup', handler: (instance: CodeMirror.Editor, event: KeyboardEvent) => void ): void;
