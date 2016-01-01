@@ -2,7 +2,7 @@
  * Copyright 2015 Simon Edwards <simon@simonzone.com>
  */
 
-// Settings tab usin Vue.js
+// Settings tab using Vue.js
 
 "use strict";
 

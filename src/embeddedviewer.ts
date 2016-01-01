@@ -200,26 +200,6 @@ class EtEmbeddedViewer extends ViewerElement {
     }
   }
   
-  /**
-   * 
-   */
-  focusLast(): void {
-    const header = <HTMLDivElement>this._getById(ID_CONTAINER);
-    header.focus();
-    this.scrollIntoView(true);
-    this._emitManualScroll();
-  }
-
-  /**
-   * 
-   */
-  focusFirst(): void {
-    const header = <HTMLDivElement>this._getById(ID_CONTAINER);
-    header.focus();
-    this.scrollIntoView(true);
-    this._emitManualScroll();
-  }
-  
   getSelectionText(): string {
     const viewerElement = this.viewerElement;
     return viewerElement === null ? null : viewerElement.getSelectionText();
