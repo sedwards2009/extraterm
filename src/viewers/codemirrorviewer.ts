@@ -97,7 +97,8 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _columns: number;
   private _realizedRows: number;
 
-  private _lastCursorPosition: CodeMirror.Position;
+  private _lastCursorAnchorPosition: CodeMirror.Position;
+  private _lastCursorHeadPosition: CodeMirror.Position;
   
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
@@ -127,7 +128,8 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._rows = -1;
     this._columns = -1;
     this._realizedRows = -1;
-    this._lastCursorPosition = null;
+    this._lastCursorAnchorPosition = null;
+    this._lastCursorHeadPosition = null;
     
     this._renderEventListener = null;
   }
@@ -442,8 +444,9 @@ class EtCodeMirrorViewer extends ViewerElement {
 
     this._codeMirror.on("cursorActivity", () => {
       if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
-        const cursorPos = this._codeMirror.getDoc().getCursor();
-        this._lastCursorPosition = cursorPos;
+        this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
+        this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
+        
         const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
         this.dispatchEvent(event);
       }
@@ -502,10 +505,16 @@ class EtCodeMirrorViewer extends ViewerElement {
       const isUp = name === "PageUp" || name === "Up";
       const isDown = name === "PageDown" || name === "Down";
       if (isUp || isDown) {
-        const cursorPos = this._codeMirror.getDoc().getCursor();
-        if (this._lastCursorPosition !== null && this._lastCursorPosition.line === cursorPos.line) {
+        const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
+        const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
+        
+        if (this._lastCursorHeadPosition !== null && this._lastCursorAnchorPosition !== null
+            && _.isEqual(this._lastCursorHeadPosition, this._lastCursorAnchorPosition)  // check for no selection
+            && _.isEqual(cursorHeadPos, cursorAnchorPos)  // check for no selection
+            && this._lastCursorHeadPosition.line === cursorHeadPos.line) {
+              
           // The last action didn't move the cursor.
-          const ch = this._lastCursorPosition.ch; // _lastCursorPosition can change before the code below runs.
+          const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
           util.doLater( () => {
             const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
                                                                     ? ViewerElementTypes.Edge.TOP
@@ -627,8 +636,8 @@ class EtCodeMirrorViewer extends ViewerElement {
       doc.setCursor( { line: doc.lineCount()-1, ch: 0 } );
     }
     
-    const cursorPos = this._codeMirror.getDoc().getCursor();
-    this._lastCursorPosition = cursorPos;
+    this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
+    this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
 
     this._mode = ViewerElementTypes.Mode.SELECTION;
   }
