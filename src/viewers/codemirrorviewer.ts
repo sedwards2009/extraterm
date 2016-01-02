@@ -166,7 +166,13 @@ class EtCodeMirrorViewer extends ViewerElement {
     return "terminal";
   }
   
-  getSelectionText(): string {
+  getSelectionText(): string {    
+    const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
+    const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
+    if (_.isEqual(cursorHeadPos, cursorAnchorPos)) {
+      return null;
+    }
+    
     return this._codeMirror.getDoc().getSelection("\n");
   }
 

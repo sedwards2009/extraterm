@@ -808,7 +808,14 @@ class EtTerminal extends HTMLElement {
           this._exitSelectionMode();
           ev.stopPropagation();
           return;
-        }      
+        }
+        
+        // Ctrl+C Copy
+        if (ev.keyCode === 67 && ev.ctrlKey) {
+          this.copyToClipboard();
+          ev.stopPropagation();
+          return;
+        }
         break;
     }
     
@@ -1186,7 +1193,25 @@ class EtTerminal extends HTMLElement {
    * Copy the selection to the clipboard.
    */
   copyToClipboard(): void {
-    const text = this._codeMirrorTerminal.getSelectionText();
+    let text: string = null;
+    switch (this._mode) {
+      case Mode.TERMINAL:
+        text = this._codeMirrorTerminal.getSelectionText();
+        break;
+
+      case Mode.SELECTION:
+        const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+        const kids = util.nodeListToArray(scrollerArea.childNodes);
+        for (let i=0; i<kids.length; i++) {
+          const node = kids[i];
+          if (ViewerElement.isViewerElement(node)) {
+            text = node.getSelectionText();
+            break;
+          }
+        }
+        break;
+    }
+    
     if (text !== null) {
       webipc.clipboardWrite(text);
     }
