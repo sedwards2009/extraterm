@@ -232,15 +232,6 @@ class EtCodeMirrorViewer extends ViewerElement {
   get mode(): ViewerElementTypes.Mode {
     return this._mode;
   }
-  
-  // get focusable(): boolean {
-  //   return this._focusable;
-  // }
-  // 
-  // set focusable(value: boolean) {
-  //   this._focusable = value;
-  //   this._updateFocusable(value);
-  // }
 
   /**
    * Gets the height of this element.
@@ -518,7 +509,7 @@ class EtCodeMirrorViewer extends ViewerElement {
             && _.isEqual(this._lastCursorHeadPosition, this._lastCursorAnchorPosition)  // check for no selection
             && _.isEqual(cursorHeadPos, cursorAnchorPos)  // check for no selection
             && this._lastCursorHeadPosition.line === cursorHeadPos.line) {
-              
+
           // The last action didn't move the cursor.
           const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
           util.doLater( () => {
@@ -747,7 +738,6 @@ class EtCodeMirrorViewer extends ViewerElement {
   // ----------------------------------------------------------------------
   
   public dispatchEvent(ev: Event): boolean {
-    this._log.debug("codemirrorviewer dispatchEvent: ",ev.type);
     if (ev.type === 'keydown' || ev.type === 'keypress') {
       const containerDiv = util.getShadowId(this, ID_CONTAINER);
       return containerDiv.dispatchEvent(ev);

@@ -16,6 +16,7 @@ import _ = require('lodash');
 import config = require('./config');
 import globalcss = require('./gui/globalcss');
 import he = require('he');
+import Logger = require('./logger');
 
 type Config = config.Config;
 type SessionProfile = config.SessionProfile;
@@ -238,6 +239,8 @@ class ExtratermMainWebUI extends HTMLElement {
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
+  private _log: Logger;
+  
   private _tabInfo: TabInfo[];
   
   private _tabIdCounter: number;
@@ -247,6 +250,7 @@ class ExtratermMainWebUI extends HTMLElement {
   private _split: boolean;
   
   private _initProperties(): void {
+    this._log = new Logger("ExtratermMainWebUI");
     this._tabInfo = [];
     this._tabIdCounter = 0;
     this._config = null;
@@ -708,6 +712,7 @@ class ExtratermMainWebUI extends HTMLElement {
   pasteText(text: string): void {
     const termsWithFocus = this._tabInfo.filter( tabInfo => tabInfo.hasFocus() );
     if (termsWithFocus.length === 0) {
+      this._log.warn("pasteText() couldn't find the target tab.");
       return;
     }
     termsWithFocus[0].pasteText(text);

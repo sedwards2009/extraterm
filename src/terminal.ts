@@ -281,11 +281,11 @@ class EtTerminal extends HTMLElement {
    * @return true if the terminal has the focus.
    */
   hasFocus(): boolean {
-    if (this._codeMirrorTerminal !== null) {
-      return this._codeMirrorTerminal.hasFocus();
-    } else {
+    const shadowRoot = util.getShadowRoot(this);
+    if (shadowRoot === null) {
       return false;
     }
+    return shadowRoot.activeElement !== null;
   }
   
   /**
@@ -818,7 +818,7 @@ class EtTerminal extends HTMLElement {
         }
         break;
     }
-    
+
     if (this._mode !== Mode.SELECTION && ev.target !== this._codeMirrorTerminal) {
       // Route the key down to the current code mirror terminal which has the emulator attached.
       const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
@@ -1229,7 +1229,6 @@ class EtTerminal extends HTMLElement {
   private _pasteFromClipboard(): void {
     webipc.clipboardReadRequest();
   }
-
   
   private _embeddedViewerPopOutEvent(viewerElement: EtEmbeddedViewer): void {
     const event = new CustomEvent(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT,
