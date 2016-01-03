@@ -35,6 +35,8 @@ src/defaultsessionprofiles.js
 src/gui/globalcss.js
 src/embeddedviewer.js
 src/commandplaceholder.js
+src/settings/settingstab2.js
+src/settings/settingstab2.js.map
 src/viewerelement.js
 src/viewers/markdownviewer.js
 src/viewers/terminalviewer.js
@@ -42,3 +44,7 @@ src/viewers/codemirrorviewer.js
 src/viewers/codemirrorviewertypes.js
 src/virtualscrollarea.js
 src/virtualscrollareatest.js
+src/viewerelementtypes.js
+src/virtualscrollareatestdebugger.js
+src/logger.js
+src/logdecorator.js
