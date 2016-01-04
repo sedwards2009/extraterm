@@ -193,6 +193,10 @@ class EtCodeMirrorViewer extends ViewerElement {
     return this._visualState;
   }
   
+  get text(): string {
+    return this._codeMirror.getDoc().getValue();
+  }
+  
   set emulator(emulator: termjs.Emulator) {
     if (this._emulator !== null) {
       // Disconnect the last emulator.
