@@ -93,6 +93,8 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
   
   public mode: Mode;
   
+  public text: string;
+  
   // VirtualScrollable
   getMinHeight(): number {
     return 0;

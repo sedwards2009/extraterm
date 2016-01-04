@@ -997,6 +997,7 @@ class EtTerminal extends HTMLElement {
     switch (this._applicationMode) {
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+      case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
         this._htmlData = this._htmlData + data;
         break;
         
@@ -1238,7 +1239,8 @@ class EtTerminal extends HTMLElement {
   
   private handleRequestFrame(frameId: string): void {
     const sourceFrame: EtEmbeddedViewer = this._findFrame(frameId);
-    const data = sourceFrame !== null ? sourceFrame.text : "";
+    let data = sourceFrame !== null ? sourceFrame.text : "";
+    data = data === undefined ? "" : data;
     const lines = data.split("\n");
     let encodedData: string = "";
     lines.forEach( (line: string) => {

@@ -218,18 +218,12 @@ class EtEmbeddedViewer extends ViewerElement {
   /**
    * 
    */
-  get text(): string {  // FIXME
-    const kids = this.childNodes;
-    let result = "";
-    for (var i=0; i<kids.length; i++) {
-      const kid = kids[i];
-      if (kid.nodeName === "DIV") {
-        var text = (<HTMLDivElement>kid).innerText;
-        text = text.replace(REPLACE_NBSP_REGEX," ");
-        result += util.trimRight(text) + "\n"
-      }
+  get text(): string {
+    const viewerElement = this.viewerElement;
+    if (viewerElement === null) {
+      return "";
     }
-    return result;
+    return viewerElement.text;
   }
   
   set tag(tag: string) {
