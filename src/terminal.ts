@@ -1168,6 +1168,7 @@ class EtTerminal extends HTMLElement {
       const previousActiveTerminal = activeCodeMirrorTerminal;
       
       embeddedViewerElement.viewerElement = activeCodeMirrorTerminal;
+      activeCodeMirrorTerminal.editable = true;
       this._virtualScrollArea.removeScrollable(activeCodeMirrorTerminal);
       this._virtualScrollArea.updateScrollableSize(embeddedViewerElement);
       this._appendNewCodeMirrorTerminal();

@@ -80,11 +80,11 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _mutationObserver: MutationObserver;
   private _commandLine: string;
   private _returnCode: string;
-  private _focusable: boolean;
   private _codeMirror: CodeMirror.Editor;
   private _height: number;
   private _isEmpty: boolean;
   private _mode: ViewerElementTypes.Mode;
+  private _editable: boolean;
   private document: Document;
   private _useVPad: boolean;
   private _visualState: number;
@@ -111,7 +111,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._mutationObserver = null;  
     this._commandLine = null;
     this._returnCode  =null;
-    this._focusable = false;
+    this._editable = false;
     this._codeMirror = null;
     this._height = 0;
     this._isEmpty = true;
@@ -183,6 +183,15 @@ class EtCodeMirrorViewer extends ViewerElement {
   hasFocus(): boolean {
     const hasFocus = this._codeMirror.getInputField() === util.getShadowRoot(this).activeElement;
     return hasFocus;
+  }
+  
+  set editable(editable: boolean) {
+    this._editable = editable;
+    this._codeMirror.setOption("readOnly", ! editable);
+  }
+  
+  get editable(): boolean {
+    return this._editable;
   }
   
   set visualState(newVisualState: number) {
@@ -435,7 +444,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     const containerDiv = util.getShadowId(this, ID_CONTAINER);
 
     this.style.height = "0px";
-    this._updateFocusable(this._focusable);
     this._exitSelectionMode();
 
     // Create the CodeMirror instance
@@ -1007,11 +1015,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     }
   }
   
-  private _updateFocusable(focusable: boolean): void {
-    // const containerDiv = util.getShadowId(this, ID_CONTAINER);
-    // containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");
-  }
-
   private getVirtualTextHeight(): number {
     return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
   }
