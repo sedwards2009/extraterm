@@ -328,7 +328,8 @@ class EtEmbeddedViewer extends ViewerElement {
 
     this._getById(ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
     this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
-
+    util.getShadowId(this, ID_HEADER).addEventListener('focus', this.focus.bind(this));
+    
     const expandbutton = this._getById(ID_EXPAND_BUTTON);
     expandbutton.addEventListener('click', (): void => {
       const expanded = util.htmlValueToBool(this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND), true);
@@ -409,12 +410,11 @@ class EtEmbeddedViewer extends ViewerElement {
         default:
           break;
       }
-      (<HTMLDivElement>this._getById(ID_HEADER)).focus();
+      this.focus();
     });
 
     cm.addEventListener('before-close', (function(ev: Event) {
-      const header = this._getById(ID_HEADER);
-      header.focus();
+      this.focus();
     }).bind(this));
 
     this.setHeight(this.getMinHeight());
@@ -471,22 +471,6 @@ class EtEmbeddedViewer extends ViewerElement {
         #${ID_HEADER} {
           display: flex;
           width: 100%;
-        }
-        
-        @-webkit-keyframes PULSE_ANIMATION {
-          0%   { outline-color: ${FOCUS_COLOR.toString()}; }
-          50% { outline-color: ${FOCUS_COLOR.opacity(0.5).toString()}; }
-          100%   { outline-color: ${FOCUS_COLOR.toString()}; }
-        }
-  
-        #${ID_CONTAINER}:focus {
-          -webkit-animation: PULSE_ANIMATION 2s infinite;
-          animation: PULSE_ANIMATION 2s infinite;          
-          
-          outline-width: 4px;
-          outline-offset: -2px;
-          outline-color: ${FOCUS_COLOR.toString()};
-          outline-style: solid;
         }
 
         #${ID_OUTPUT}.closed {
@@ -673,8 +657,8 @@ class EtEmbeddedViewer extends ViewerElement {
           color: white;
         }
         </style>
-        <div id='${ID_CONTAINER}' style='display: none;' tabindex='-1' class='running'>
-          <div id='${ID_HEADER}'>
+        <div id='${ID_CONTAINER}' style='display: none;' class='running'>
+          <div id='${ID_HEADER}' tabindex='-1'>
             <div class='left_block'>
               <div id='${ID_ICON_DIV}'><i id='${ID_ICON}'></i></div>
               <div id='${ID_COMMANDLINE}'></div>
