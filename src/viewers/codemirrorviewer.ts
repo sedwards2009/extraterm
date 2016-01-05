@@ -185,15 +185,6 @@ class EtCodeMirrorViewer extends ViewerElement {
     return hasFocus;
   }
   
-  set editable(editable: boolean) {
-    this._editable = editable;
-    this._codeMirror.setOption("readOnly", ! editable);
-  }
-  
-  get editable(): boolean {
-    return this._editable;
-  }
-  
   set visualState(newVisualState: number) {
     this._setVisualState(newVisualState);
   }
@@ -245,6 +236,17 @@ class EtCodeMirrorViewer extends ViewerElement {
   get mode(): ViewerElementTypes.Mode {
     return this._mode;
   }
+  
+  set editable(editable: boolean) {
+    this._editable = editable;
+    if (this._mode === ViewerElementTypes.Mode.SELECTION) {
+      this._codeMirror.setOption("readOnly", ! editable);
+    }
+  }
+  
+  get editable(): boolean {
+    return this._editable;
+  }  
 
   /**
    * Gets the height of this element.
@@ -647,11 +649,17 @@ class EtCodeMirrorViewer extends ViewerElement {
     
     this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
     this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
-
+    if (this._editable) {
+      this._codeMirror.setOption("readOnly", false);
+    }
     this._mode = ViewerElementTypes.Mode.SELECTION;
   }
 
   private _exitSelectionMode(): void {
+    if (this._codeMirror !== null) {
+      this._codeMirror.setOption("readOnly", true);
+    }
+
     const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
     this._mode = ViewerElementTypes.Mode.DEFAULT;
