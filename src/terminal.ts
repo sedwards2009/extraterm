@@ -273,7 +273,12 @@ class EtTerminal extends HTMLElement {
    */
   focus(): void {
     if (this._codeMirrorTerminal !== null) {
+      const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+      const top = scrollerArea.scrollTop;
+      const left = scrollerArea.scrollLeft;
       this._codeMirrorTerminal.focus();
+      scrollerArea.scrollTop = top;
+      scrollerArea.scrollLeft = left;
     }
   }
   
