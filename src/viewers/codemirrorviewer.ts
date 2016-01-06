@@ -14,6 +14,7 @@ import EtCodeMirrorViewerTypes = require('./codemirrorviewertypes');
 import termjs = require('../term');
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
+import LogDecorator = require('../logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
@@ -30,6 +31,8 @@ const CLASS_UNFOCUSED = "terminal-unfocused";
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const DEBUG_RESIZE = false;
+
+const log = LogDecorator;
 
 let registered = false;
 let instanceIdCounter = 0;
@@ -167,13 +170,14 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   getSelectionText(): string {    
-    const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
-    const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
+    const doc = this._codeMirror.getDoc();
+    const cursorAnchorPos = doc.getCursor("anchor");
+    const cursorHeadPos = doc.getCursor("head");
     if (_.isEqual(cursorHeadPos, cursorAnchorPos)) {
       return null;
     }
     
-    return this._codeMirror.getDoc().getSelection("\n");
+    return doc.getSelection("\n");
   }
 
   focus(): void {

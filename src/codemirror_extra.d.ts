@@ -21,6 +21,7 @@ declare module CodeMirror {
   }
   
   interface Doc {
-    getSelection(linesep: string): string;
+    getSelection(linesep?: string): string;
+    getSelections(linesep?: string): string[];
   }
 }

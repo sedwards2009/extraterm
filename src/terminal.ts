@@ -12,7 +12,7 @@ import EtCodeMirrorViewer = require('./viewers/codemirrorviewer');
 import EtCodeMirrorViewerTypes = require('./viewers/codemirrorviewertypes');
 import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger = require('./logger');
-
+import LogDecorator = require('./logdecorator');
 import domutils = require('./domutils');
 import termjs = require('./term');
 import CbScrollbar = require('./gui/scrollbar');
@@ -25,6 +25,8 @@ import virtualscrollarea = require('./virtualscrollarea');
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type ScrollableElement = VirtualScrollable & HTMLElement;
+
+const log = LogDecorator;
 
 const debug = true;
 let startTime: number = window.performance.now();
@@ -499,6 +501,8 @@ class EtTerminal extends HTMLElement {
         node.clearSelection();
       }
     });
+    
+    util.doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
   }
   
   // ----------------------------------------------------------------------
@@ -1198,26 +1202,17 @@ class EtTerminal extends HTMLElement {
    */
   copyToClipboard(): void {
     let text: string = null;
-    switch (this._mode) {
-      case Mode.TERMINAL:
-        text = this._codeMirrorTerminal.getSelectionText();
-        break;
-
-      case Mode.SELECTION:
-        const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
-        const kids = util.nodeListToArray(scrollerArea.childNodes);
-        for (let i=0; i<kids.length; i++) {
-          const node = kids[i];
-          if (ViewerElement.isViewerElement(node)) {
-            text = node.getSelectionText();
-            break;
-          }
+    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const kids = util.nodeListToArray(scrollerArea.childNodes);
+    for (let i=0; i<kids.length; i++) {
+      const node = kids[i];
+      if (ViewerElement.isViewerElement(node)) {
+        text = node.getSelectionText();
+        if (text !== null) {
+          webipc.clipboardWrite(text);
+          break;
         }
-        break;
-    }
-    
-    if (text !== null) {
-      webipc.clipboardWrite(text);
+      }
     }
   }
   
