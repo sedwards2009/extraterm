@@ -703,6 +703,8 @@ class EtTerminal extends HTMLElement {
   //
   // ----------------------------------------------------------------------
   private _handleMouseWheel(ev: WheelEvent): void {
+    ev.stopPropagation();
+    ev.preventDefault();
     const delta = ev.deltaY * SCROLL_STEP;
     this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset() + delta);
   }
