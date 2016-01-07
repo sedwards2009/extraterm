@@ -331,38 +331,9 @@ class EtEmbeddedViewer extends ViewerElement {
       this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, "" + !expanded);
     });
 
-    this.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, (ev: CustomEvent) => {
-      if (ev.target === this) {
-        return;
-      }
-      ev.stopPropagation();
-      
-      // Send our own event. It will appear to have originated from the embedded viewer.
-      const event = new CustomEvent(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, { bubbles: true });
-      this.dispatchEvent(event);      
-    });
-
-    this.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, (ev: CustomEvent) => {
-      if (ev.target === this) {
-        return;
-      }
-      ev.stopPropagation();
-      
-      // Send our own event. It will appear to have originated from the embedded viewer.
-      const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-      this.dispatchEvent(event);      
-    });
-
-    this.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, (ev: CustomEvent) => {
-      if (ev.target === this) {
-        return;
-      }
-      ev.stopPropagation();
-      
-      // Send our own event. It will appear to have originated from the embedded viewer.
-      const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: ev.detail });
-      this.dispatchEvent(event);      
-    });
+    domutils.addCustomEventResender(this, ViewerElement.EVENT_BEFORE_SELECTION_CHANGE);
+    domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
+    domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
 
     const cm = <contextmenu>this._getById('contextmenu');
     this._getById('container').addEventListener('contextmenu', (ev: MouseEvent): void => {
