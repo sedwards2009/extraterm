@@ -334,6 +334,7 @@ class EtEmbeddedViewer extends ViewerElement {
     domutils.addCustomEventResender(this, ViewerElement.EVENT_BEFORE_SELECTION_CHANGE);
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
+    domutils.addCustomEventResender(this, virtualscrollarea.EVENT_RESIZE);
 
     const cm = <contextmenu>this._getById('contextmenu');
     this._getById('container').addEventListener('contextmenu', (ev: MouseEvent): void => {

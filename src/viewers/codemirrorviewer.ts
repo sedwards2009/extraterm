@@ -102,6 +102,7 @@ class EtCodeMirrorViewer extends ViewerElement {
 
   private _lastCursorAnchorPosition: CodeMirror.Position;
   private _lastCursorHeadPosition: CodeMirror.Position;
+  private _viewportHeight: number;  // Used to detect changes in the viewport size when in SELECTION mode.
   
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
@@ -133,7 +134,8 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._realizedRows = -1;
     this._lastCursorAnchorPosition = null;
     this._lastCursorHeadPosition = null;
-    
+    this._viewportHeight = -1;
+
     this._renderEventListener = null;
   }
 
@@ -539,6 +541,18 @@ class EtCodeMirrorViewer extends ViewerElement {
             this.dispatchEvent(event);
           });
         }
+      }
+    });
+    
+    this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
+      if (this._mode !== ViewerElementTypes.Mode.SELECTION) {
+        return;
+      }
+      
+      const height = to - from;
+      if (height !== this._viewportHeight) {
+        this._viewportHeight = height;
+        domutils.doLater(this._emitVirtualResizeEvent.bind(this));
       }
     });
     
