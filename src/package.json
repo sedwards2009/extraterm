@@ -12,26 +12,26 @@
     "serve-test": "node test/httpserver.js"
   },
   "dependencies": {
-    "codemirror": "^5.6.0",
-    "electron-prebuilt": "^0.34.3",
-    "he": "^0.5.0",
-    "immutable": "^3.7.3",
-    "js-base64": "^2.1.8",
-    "lodash": "^3.9.1",
-    "markdown": "^0.5.0",
-    "qs": "^3.1.0",
-    "source-map-support": "^0.3.2",
-    "vue": "^1.0.10"
+    "codemirror": "5.6.0",
+    "electron-prebuilt": "0.34.3",
+    "he": "0.5.0",
+    "immutable": "3.7.3",
+    "js-base64": "2.1.8",
+    "lodash": "3.9.1",
+    "markdown": "0.5.0",
+    "qs": "3.1.0",
+    "source-map-support": "0.3.2",
+    "vue": "1.0.10"
   },
   "optionalDependencies": {
-    "pty.js": "^0.3.0"
+    "pty.js": "0.3.0"
   },
   "devDependencies": {
-    "cajon": "^0.2.10",
-    "finalhandler": "^0.4.0",
-    "nodeunit": "^0.9.1",
-    "serve-static": "^1.10.0",
-    "tsd": "^0.6.0-beta.5",
-    "typescript": "^1.7.5"
+    "cajon": "0.2.10",
+    "finalhandler": "0.4.0",
+    "nodeunit": "0.9.1",
+    "serve-static": "1.10.0",
+    "tsd": "0.6.0-beta.5",
+    "typescript": "1.7.5"
   }
 }
