@@ -178,6 +178,34 @@ function nextDocumentOrderNodeUp(currentNode: Node): Node {
   return nextDocumentOrderNodeUp(currentNode.parentNode);
 }
 
+export function createShadowRoot(self: HTMLElement): ShadowRoot {
+    return self.webkitCreateShadowRoot ? self.webkitCreateShadowRoot() : self.createShadowRoot();
+}
+  
+export function getShadowRoot(self: HTMLElement): ShadowRoot {
+    return self.webkitShadowRoot ? self.webkitShadowRoot : self.shadowRoot;
+}
+
+export function getShadowId(el: HTMLElement, id: string): HTMLElement {
+  return <HTMLElement> getShadowRoot(el).querySelector('#' + id);
+}
+
+/**
+ * Converts a node list to a real array.
+ * 
+ * @param  nodeList the node list to convert.
+ * @return          a new array holding the same contents as the node list.
+ */
+export function nodeListToArray(nodeList: NodeList): Node[] {
+  let i = 0;
+  const result: Node[] = [];
+  const len = nodeList.length;
+  for (i=0; i<len; i++) {
+    result.push(nodeList[i]);
+  }
+  return result;
+}
+
 /**
  * Create a KeyboardEvent.
  *
@@ -230,4 +258,62 @@ export function newKeyboardEvent(eventName: string, initMap: {
     }
   });
   return fakeKeyDownEvent;
+}
+
+//-------------------------------------------------------------------------
+
+export interface LaterHandle {
+  cancel(): void;
+}
+
+let doLaterId: number = -1;
+let laterList: Function[] = [];
+
+function doLaterTimeoutHandler(): void {
+  doLaterId = -1;
+  const workingList = [...laterList];
+  laterList = [];
+  workingList.forEach( f => f() );
+}
+
+/**
+ * Schedule a function to be executed later.
+ * 
+ * @param  {Function}    func [description]
+ * @return {LaterHandle} This object can be used to cancel the scheduled execution.
+ */
+export function doLater(func: Function): LaterHandle {
+  laterList.push(func);
+  if (doLaterId === -1) {
+    doLaterId = window.setTimeout(doLaterTimeoutHandler, 0);
+  }
+  return { cancel: () => {
+    laterList = laterList.filter( f => f!== func );
+  } };
+}
+
+let doLaterFrameId: number = -1;
+let laterFrameList: Function[] = [];
+
+/**
+ * Schedule a function to run at the next animation frame.
+ */
+function doLaterFrameHandler(): void {
+  const workingList = [...laterFrameList];
+  laterFrameList = [];
+  
+  window.cancelAnimationFrame(doLaterFrameId);
+  doLaterFrameId = -1;
+  
+  workingList.forEach( f => f() );
+}
+
+export function doLaterFrame(func: Function): LaterHandle {
+  laterFrameList.push(func);
+  if (doLaterFrameId === -1) {
+    doLaterFrameId = window.requestAnimationFrame(doLaterFrameHandler);
+  }
+  return { cancel: () => {
+    laterFrameList = laterFrameList.filter( f => f!== func );
+  } };
 }

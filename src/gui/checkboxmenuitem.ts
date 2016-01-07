@@ -1,8 +1,9 @@
 /**
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
-import menuitem = require("./menuitem");
-import util = require("./util");
+import menuitem = require('./menuitem');
+import domutils = require('../domutils');
+import util = require('./util');
 
 const ID = "CbCheckBoxMenuItemTemplate";
 
@@ -54,7 +55,7 @@ class CbCheckBoxMenuItem extends menuitem {
   }
 
   private _updateChecked(checked: string): void {
-    const shadow = util.getShadowRoot(this);
+    const shadow = domutils.getShadowRoot(this);
     const checkedhtml = "<i class='fa fa-fw fa-" + (util.htmlValueToBool(checked) ? "check-" : "") + "square-o'></i>";
     (<HTMLDivElement>shadow.querySelector("#icon1")).innerHTML = checkedhtml; 
   }

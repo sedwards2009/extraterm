@@ -2,7 +2,7 @@
  * Copyright 2015 Simon Edwards <simon@simonzone.com>
  */
 import im = require('immutable');
-import util = require('./gui/util');
+import domutils = require('./domutils');
 import resourceLoader = require('./resourceloader');
 import globalcss = require('./gui/globalcss');
 
@@ -66,7 +66,7 @@ class EtAboutDialog extends HTMLElement {
   }
   
   createdCallback(): void {
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const clone = this._createClone();
     shadow.appendChild(clone);
     
@@ -88,7 +88,7 @@ class EtAboutDialog extends HTMLElement {
   }
 
   private _getById(id: string): HTMLElement {
-    return <HTMLElement>util.getShadowRoot(this).querySelector('#'+id);
+    return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
   }
 
   /**

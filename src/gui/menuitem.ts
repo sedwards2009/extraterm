@@ -1,6 +1,7 @@
 /**
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
+import domutils = require('../domutils');
 import util = require('./util');
 import resourceLoader = require('../resourceloader');
 import globalcss = require('./globalcss');
@@ -28,7 +29,7 @@ class CbMenuItem extends HTMLElement {
   
   //-----------------------------------------------------------------------
   createdCallback(): void {
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const clone = this._createClone();
     shadow.appendChild(clone);
 
@@ -102,7 +103,7 @@ class CbMenuItem extends HTMLElement {
   _clicked(): void {}
   
   private updateKeyboardSelected(value: string): void {
-    const shadow = util.getShadowRoot(this);
+    const shadow = domutils.getShadowRoot(this);
     const container = <HTMLDivElement>shadow.querySelector("#container");
     const on = value === "true";
     if (on) {

@@ -2,6 +2,7 @@
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
 import contextmenu = require('./contextmenu');
+import domutils = require('../domutils');
 import util = require('./util');
 
 contextmenu.init();
@@ -45,7 +46,7 @@ class CbDropDown extends HTMLElement {
     var clickHandler: (ev: MouseEvent) => void;
     var clone: Node;
 
-    shadow = util.createShadowRoot(this);
+    shadow = domutils.createShadowRoot(this);
     clone = this.createClone();
     shadow.appendChild(clone);
 

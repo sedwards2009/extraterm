@@ -114,7 +114,7 @@ class EtTerminal extends HTMLElement {
 
   private _virtualScrollArea: virtualscrollarea.VirtualScrollArea;
   
-  private _scrollSyncLaterHandle: util.LaterHandle;
+  private _scrollSyncLaterHandle: domutils.LaterHandle;
   private _autoscroll: boolean;
   
   private _codeMirrorTerminal: EtCodeMirrorViewer;
@@ -144,10 +144,10 @@ class EtTerminal extends HTMLElement {
   private _themeCssPath: string;
   private _mainStyleLoaded: boolean;
   private _themeStyleLoaded: boolean;
-  private _resizePollHandle: util.LaterHandle;
+  private _resizePollHandle: domutils.LaterHandle;
   private _elementAttached: boolean;
   
-  private _scheduleLaterHandle: util.LaterHandle;
+  private _scheduleLaterHandle: domutils.LaterHandle;
   private _scheduledCursorUpdates: EtCodeMirrorViewer[];
   private _scheduledResize: boolean;
 
@@ -217,7 +217,7 @@ class EtTerminal extends HTMLElement {
   set themeCssPath(path: string) {
     this._themeCssPath = path;
     const themeCss = fs.readFileSync(path, {encoding: 'utf8'});
-    const themeTag = <HTMLStyleElement> util.getShadowId(this, ID_THEME_STYLE);
+    const themeTag = <HTMLStyleElement> domutils.getShadowId(this, ID_THEME_STYLE);
     themeTag.innerHTML = globalcss.stripFontFaces(themeCss);
   }
   
@@ -273,7 +273,7 @@ class EtTerminal extends HTMLElement {
    */
   focus(): void {
     if (this._codeMirrorTerminal !== null) {
-      const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+      const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
       const top = scrollerArea.scrollTop;
       const left = scrollerArea.scrollLeft;
       this._codeMirrorTerminal.focus();
@@ -288,7 +288,7 @@ class EtTerminal extends HTMLElement {
    * @return true if the terminal has the focus.
    */
   hasFocus(): boolean {
-    const shadowRoot = util.getShadowRoot(this);
+    const shadowRoot = domutils.getShadowRoot(this);
     if (shadowRoot === null) {
       return false;
     }
@@ -338,7 +338,7 @@ class EtTerminal extends HTMLElement {
     }
     this._elementAttached = true;
     
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
 
     const clone = this._createClone();
     shadow.appendChild(clone);
@@ -357,8 +357,8 @@ class EtTerminal extends HTMLElement {
     this.addEventListener('focus', this._handleFocus.bind(this));
     this.addEventListener('blur', this._handleBlur.bind(this));
 
-    const scrollbar = <CbScrollbar> util.getShadowId(this, ID_SCROLLBAR);
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     
     this._virtualScrollArea.setScrollContainer(scrollerArea);
     this._virtualScrollArea.setScrollbar(scrollbar);
@@ -480,8 +480,8 @@ class EtTerminal extends HTMLElement {
   
   private _handleFocus(event: FocusEvent): void {
     // Forcefully set the visual state of each thing in the terminal to appear focused.
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
-    util.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
         node.visualState = ViewerElement.VISUAL_STATE_FOCUSED;
       }
@@ -490,8 +490,8 @@ class EtTerminal extends HTMLElement {
   
   private _handleBlur(event: FocusEvent): void {
     // Forcefully set the visual state of each thing in the terminal to appear unfocused.
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
-    util.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
         node.visualState = ViewerElement.VISUAL_STATE_UNFOCUSED;
       }
@@ -500,14 +500,14 @@ class EtTerminal extends HTMLElement {
   
   private _handleBeforeSelectionChange(ev: CustomEvent): void {
     const target = ev.target;
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
-    util.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node) && node !== target) {
         node.clearSelection();
       }
     });
     
-    util.doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
+    domutils.doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
   }
   
   // ----------------------------------------------------------------------
@@ -548,10 +548,10 @@ class EtTerminal extends HTMLElement {
     // Create the CodeMirrorTerminal
     const codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
     
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(codeMirrorTerminal);
     
-    codeMirrorTerminal.visualState = util.getShadowRoot(this).activeElement !== null
+    codeMirrorTerminal.visualState = domutils.getShadowRoot(this).activeElement !== null
                                       ? ViewerElement.VISUAL_STATE_FOCUSED
                                       : ViewerElement.VISUAL_STATE_UNFOCUSED;
     codeMirrorTerminal.emulator = this._emulator;
@@ -585,19 +585,19 @@ class EtTerminal extends HTMLElement {
   private _appendScrollableElement(el: ScrollableElement): void {
     this._disconnectActiveCodeMirrorTerminal();
     
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(el);
     this._virtualScrollArea.appendScrollable(el);
   }
   
   private _removeScrollableElement(el: ScrollableElement): void {
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.removeChild(el);
     this._virtualScrollArea.removeScrollable(el);
   }
 
   private _replaceScrollableElement(oldEl: ScrollableElement, newEl: ScrollableElement): void {
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.insertBefore(newEl, oldEl);
     scrollerArea.removeChild(oldEl);
     this._virtualScrollArea.replaceScrollable(oldEl, newEl);
@@ -678,21 +678,21 @@ class EtTerminal extends HTMLElement {
   }
   
   private _enterSelectionMode(): void {
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
-    util.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
       if (ViewerElement.isViewerElement(node)) {
         node.mode = ViewerElementTypes.Mode.SELECTION;
       }
     });
     this._mode = Mode.SELECTION;
-    if (util.getShadowRoot(this).activeElement !== this._codeMirrorTerminal) {
+    if (domutils.getShadowRoot(this).activeElement !== this._codeMirrorTerminal) {
       this._codeMirrorTerminal.focus();
     }
   }
   
   private _exitSelectionMode(): void {
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
-    util.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
       if (ViewerElement.isViewerElement(node)) {
         node.mode = ViewerElementTypes.Mode.DEFAULT;
       }
@@ -752,8 +752,8 @@ class EtTerminal extends HTMLElement {
   private _handleCodeMirrorCursorEdge(ev: CustomEvent): void {
     const detail = <ViewerElementTypes.CursorEdgeDetail> ev.detail;
     
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
-    const kids = util.nodeListToArray(scrollerArea.childNodes);
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const kids = domutils.nodeListToArray(scrollerArea.childNodes);
     const index = kids.indexOf(<Node> ev.target);
     if (index === -1) {
       this._log.warn("_handleCodeMirrorCursorEdge: Couldn't find the target.");
@@ -921,7 +921,7 @@ class EtTerminal extends HTMLElement {
   
   private _scheduleProcessing(): void {
     if (this._scheduleLaterHandle === null) {
-      this._scheduleLaterHandle = util.doLater(this._processScheduled.bind(this));
+      this._scheduleLaterHandle = domutils.doLater(this._processScheduled.bind(this));
     }
   }
   
@@ -1063,7 +1063,7 @@ class EtTerminal extends HTMLElement {
   }
 
   private _handleApplicationModeBracketStart(): void {
-    const scrollArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     const startdivs = scrollArea.querySelectorAll(
                         EtEmbeddedViewer.TAG_NAME + ":not([return-code]), "+EtCommandPlaceHolder.TAG_NAME);
   
@@ -1124,7 +1124,7 @@ class EtTerminal extends HTMLElement {
     // }).bind(this));
 // FIXME
     
-    el.visualState = util.getShadowRoot(this).activeElement !== null
+    el.visualState = domutils.getShadowRoot(this).activeElement !== null
                                       ? ViewerElement.VISUAL_STATE_FOCUSED
                                       : ViewerElement.VISUAL_STATE_UNFOCUSED;
     el.setAttribute(EtEmbeddedViewer.ATTR_COMMAND, commandLine);
@@ -1137,7 +1137,7 @@ class EtTerminal extends HTMLElement {
   }
   
   private _closeLastEmbeddedViewer(returnCode: string): void {
-    const scrollArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     const startElement = scrollArea.querySelectorAll(
       `${EtEmbeddedViewer.TAG_NAME}:not([${EtEmbeddedViewer.ATTR_RETURN_CODE}]), ${EtCommandPlaceHolder.TAG_NAME}`);
     
@@ -1175,7 +1175,7 @@ class EtTerminal extends HTMLElement {
       
       // Some focus management to make sure that activeCodeMirrorTerminal still keeps
       // the focus after we remove it from the DOM and place it else where.
-      const restoreFocus = util.getShadowRoot(this).activeElement === activeCodeMirrorTerminal;
+      const restoreFocus = domutils.getShadowRoot(this).activeElement === activeCodeMirrorTerminal;
       const previousActiveTerminal = activeCodeMirrorTerminal;
       
       embeddedViewerElement.viewerElement = activeCodeMirrorTerminal;
@@ -1207,8 +1207,8 @@ class EtTerminal extends HTMLElement {
    */
   copyToClipboard(): void {
     let text: string = null;
-    const scrollerArea = util.getShadowId(this, ID_SCROLL_AREA);
-    const kids = util.nodeListToArray(scrollerArea.childNodes);
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const kids = domutils.nodeListToArray(scrollerArea.childNodes);
     for (let i=0; i<kids.length; i++) {
       const node = kids[i];
       if (ViewerElement.isViewerElement(node)) {
@@ -1289,7 +1289,7 @@ class EtTerminal extends HTMLElement {
       return null;
     }
     
-    const scrollArea = util.getShadowId(this, ID_SCROLL_AREA);
+    const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     const matches = scrollArea.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
     return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
   }

@@ -1,10 +1,10 @@
 /**
  * Copyright 2015 Simon Edwards <simon@simonzone.com>
  */
-import CbStackedWidget = require("./stackedwidget");
-import CbTab = require("./tab");
-import util = require("./util");
-import domutils = require("../domutils");
+import CbStackedWidget = require('./stackedwidget');
+import CbTab = require('./tab');
+import util = require('./util');
+import domutils = require('../domutils');
 import _ = require('lodash');
 
 CbStackedWidget.init();
@@ -47,7 +47,7 @@ class CbTabWidget extends HTMLElement {
    */
   createdCallback() {
     this._initProperties();
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
     
@@ -200,7 +200,7 @@ DIV.show_frame > #tabbar {
    * 
    */
   private __getById(id:string): Element {
-    return util.getShadowRoot(this).querySelector('#'+id);
+    return domutils.getShadowRoot(this).querySelector('#'+id);
   }
   
   private _getTop(): HTMLDivElement {
@@ -307,7 +307,7 @@ DIV.show_frame > #tabbar {
   private _createTabClickHandler(index: number) {
     return () => {
       this.currentIndex = index;
-      util.doLater(this._sendSwitchEvent.bind(this));
+      domutils.doLater(this._sendSwitchEvent.bind(this));
     };
   }
   

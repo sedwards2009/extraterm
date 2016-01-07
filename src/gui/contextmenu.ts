@@ -1,8 +1,9 @@
 /**
  * Copyright 2015 Simon Edwards <simon@simonzone.com>
  */
-import menuitem = require("./menuitem");
-import util = require("./util");
+import menuitem = require('./menuitem');
+import domutils = require('../domutils');
+import util = require('./util');
 
 menuitem.init();
 
@@ -78,14 +79,14 @@ class CbContextMenu extends HTMLElement {
    * 
    */
   private __getById(id:string): Element {
-    return util.getShadowRoot(this).querySelector('#'+id);
+    return domutils.getShadowRoot(this).querySelector('#'+id);
   }
   
   /**
    * 
    */
   createdCallback() {
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
 

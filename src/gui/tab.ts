@@ -1,5 +1,8 @@
+/**
+ * Copyright 2015 Simon Edwards <simon@simonzone.com>
+ */
+import domutils = require('../domutils');
 import util = require("./util");
-"use strict";
 
 const ID = "CbTabTemplate";
 
@@ -32,7 +35,7 @@ class CbTab extends HTMLElement {
   }
 
   createdCallback() {
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
   }

@@ -93,7 +93,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _visualState: number;
 
   private _mainStyleLoaded: boolean;
-  private _resizePollHandle: util.LaterHandle;
+  private _resizePollHandle: domutils.LaterHandle;
   
   // Emulator dimensions
   private _rows: number;
@@ -185,7 +185,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   hasFocus(): boolean {
-    const hasFocus = this._codeMirror.getInputField() === util.getShadowRoot(this).activeElement;
+    const hasFocus = this._codeMirror.getInputField() === domutils.getShadowRoot(this).activeElement;
     return hasFocus;
   }
   
@@ -437,17 +437,17 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   attachedCallback(): void {
-    if (util.getShadowRoot(this) !== null) {
+    if (domutils.getShadowRoot(this) !== null) {
       return;
     }
     
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
     
     this._initFontLoading();
     
-    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
 
     this.style.height = "0px";
     this._exitSelectionMode();
@@ -484,7 +484,7 @@ class EtCodeMirrorViewer extends ViewerElement {
       }
       
       if (this._visualState === ViewerElement.VISUAL_STATE_AUTO) {
-        const containerDiv = util.getShadowId(this, ID_CONTAINER);
+        const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
         containerDiv.classList.add(CLASS_FOCUSED);
         containerDiv.classList.remove(CLASS_UNFOCUSED);
       }
@@ -530,7 +530,7 @@ class EtCodeMirrorViewer extends ViewerElement {
 
           // The last action didn't move the cursor.
           const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
-          util.doLater( () => {
+          domutils.doLater( () => {
             const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
                                                                     ? ViewerElementTypes.Edge.TOP
                                                                     : ViewerElementTypes.Edge.BOTTOM,
@@ -625,7 +625,7 @@ class EtCodeMirrorViewer extends ViewerElement {
       return;
     }
     
-    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     if ((newVisualState === EtCodeMirrorViewer.VISUAL_STATE_AUTO && this.hasFocus()) ||
         newVisualState === EtCodeMirrorViewer.VISUAL_STATE_FOCUSED) {
 
@@ -640,7 +640,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   private _enterSelectionMode(): void {
-    const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
+    const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
     
     const doc = this._codeMirror.getDoc();
@@ -664,7 +664,7 @@ class EtCodeMirrorViewer extends ViewerElement {
       this._codeMirror.setOption("readOnly", true);
     }
 
-    const containerDiv = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
+    const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
     this._mode = ViewerElementTypes.Mode.DEFAULT;
   }
@@ -763,7 +763,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   public dispatchEvent(ev: Event): boolean {
     if (ev.type === 'keydown' || ev.type === 'keypress') {
-      const containerDiv = util.getShadowId(this, ID_CONTAINER);
+      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
       return containerDiv.dispatchEvent(ev);
     } else {
       return super.dispatchEvent(ev);
@@ -771,7 +771,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
   
   private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
-    util.doLater( () => {
+    domutils.doLater( () => {
       const fakeKeyDownEvent = domutils.newKeyboardEvent('keydown', {
         bubbles: true,
         key: ev.key,        
@@ -843,7 +843,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _initFontLoading(): void {
     this._mainStyleLoaded = false;
     
-    util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
+    domutils.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
       this._mainStyleLoaded = true;
       this._handleStyleLoad();
     });
@@ -859,12 +859,12 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _handleStyleLoad(): void {
     if (this._mainStyleLoaded) {
       // Start polling the term for application of the font.
-      this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
+      this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
     }
   }
   
   private _effectiveFontFamily(): string {
-    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     const cs = window.getComputedStyle(containerDiv, null);
     return cs.getPropertyValue("font-family");
   }
@@ -873,7 +873,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     if (this._mainStyleLoaded) {
       if ( ! this.isFontLoaded()) {
         // Font has not been correctly applied yet.
-        this._resizePollHandle = util.doLaterFrame(this._resizePoll.bind(this));
+        this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
       } else {
         // Yay! the font is correct. Resize the term soon.
         this._codeMirror.defaultTextHeight(); // tickle the DOM to maybe force CSS recalc.
@@ -1055,7 +1055,7 @@ class EtCodeMirrorViewer extends ViewerElement {
         codeMirrorHeight = elementHeight;        
       }
 
-      const containerDiv = util.getShadowId(this, ID_CONTAINER);
+      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + codeMirrorHeight + "px";
       this._codeMirror.setSize("100%", "" + codeMirrorHeight + "px");
       this._codeMirror.refresh();

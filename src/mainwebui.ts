@@ -1,6 +1,7 @@
 /**
  * Copyright 2015 Simon Edwards <simon@simonzone.com>
  */
+import domutils = require('./domutils');
 import util = require('./gui/util');
 import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
@@ -265,7 +266,7 @@ class ExtratermMainWebUI extends HTMLElement {
   createdCallback(): void {
     this._initProperties(); // Initialise our properties. The constructor was not called.
     
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const clone = this._createClone();
     shadow.appendChild(clone);
     
@@ -395,7 +396,7 @@ class ExtratermMainWebUI extends HTMLElement {
       tabContainerRight.appendChild(restDivSecondary);
       
       // Move the terminal tabs from the right tab container to the left one.
-      const nodesToMove = util.nodeListToArray(tabContainerRight.childNodes)
+      const nodesToMove = domutils.nodeListToArray(tabContainerRight.childNodes)
         .filter( node => ! (node.nodeName === "DIV" && ( (<HTMLDivElement>node).id === ID_REST_DIV_PRIMARY ||
           (<HTMLDivElement>node).id === ID_REST_DIV_SECONDARY)));
       nodesToMove.forEach( node => {
@@ -463,7 +464,7 @@ class ExtratermMainWebUI extends HTMLElement {
     tabWidget.insertBefore(contentDiv, restDiv);
     tabWidget.update();
     
-    const closeTabButton = util.getShadowRoot(this).getElementById("close_tag_id_" + newId);
+    const closeTabButton = domutils.getShadowRoot(this).getElementById("close_tag_id_" + newId);
     closeTabButton.addEventListener('click', (ev: MouseEvent): void => {
       this.closeTab(tabInfo.id);
     });
@@ -940,7 +941,7 @@ class ExtratermMainWebUI extends HTMLElement {
   }
 
   private _getById(id: string): HTMLElement {
-    return <HTMLElement>util.getShadowRoot(this).querySelector('#'+id);
+    return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
   }
 }
 

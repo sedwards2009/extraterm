@@ -1,6 +1,7 @@
 /**
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
+import domutils = require('../domutils');
 import util = require('./util');
 
 const ID = "CbScrollbarTemplate";
@@ -61,14 +62,17 @@ class CbScrollbar extends HTMLElement {
   createdCallback(): void {
     this._initProperties(); // Initialise our properties. The constructor was not called.
     
-    var shadow = util.createShadowRoot(this);
-    var clone = this._createClone();
+    const shadow = domutils.createShadowRoot(this);
+    const clone = this._createClone();
     shadow.appendChild(clone);
     this._getById(ID_CONTAINER).addEventListener('scroll', (ev: Event) => {
-      var container = this._getById(ID_CONTAINER);
-      var top = container.scrollTop;
+      const container = this._getById(ID_CONTAINER);
+      const top = container.scrollTop;
       this._position = top;
-      var event = new CustomEvent('scroll',
+      
+// FIXME this should fire standard scroll events, not custom events.
+      
+      const event = new CustomEvent('scroll',
           { detail: {
             position: top,
             isTop: top === 0,
@@ -81,7 +85,7 @@ class CbScrollbar extends HTMLElement {
   }
   
   private _createClone(): Node {
-    var template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
+    let template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
@@ -92,9 +96,8 @@ class CbScrollbar extends HTMLElement {
   }
 
   private _getById(id: string): HTMLElement {
-    return <HTMLElement>util.getShadowRoot(this).querySelector('#'+id);
+    return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
   }
-
 
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     switch (attrName) {

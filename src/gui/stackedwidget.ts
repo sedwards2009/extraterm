@@ -1,5 +1,9 @@
-import util = require("./util");
-"use strict";
+/**
+ * Copyright 2015 Simon Edwards <simon@simonzone.com>
+ */
+import domutils = require('../domutils');
+import util = require('./util');
+
 const ID = "CbStackedWidgetTemplate";
 const ID_CONTAINER = 'container';
 const ATTR_INDEX = 'data-cb-index';
@@ -82,7 +86,7 @@ class CbStackedWidget extends HTMLElement {
    * 
    */
   private __getById(id:string): Element {
-    return util.getShadowRoot(this).querySelector('#'+id);
+    return domutils.getShadowRoot(this).querySelector('#'+id);
   }
   
   /**
@@ -91,7 +95,7 @@ class CbStackedWidget extends HTMLElement {
   createdCallback() {
     this._initProperties();
     
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
     this.createPageHolders();

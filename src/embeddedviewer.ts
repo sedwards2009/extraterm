@@ -7,6 +7,7 @@ import contextmenu = require('./gui/contextmenu');
 import menuitem = require('./gui/menuitem');
 import checkboxmenuitem = require('./gui/checkboxmenuitem');
 import globalcss = require('./gui/globalcss');
+import domutils = require('./domutils');
 import util = require('./gui/util');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
@@ -306,11 +307,11 @@ class EtEmbeddedViewer extends ViewerElement {
   }
   
   attachedCallback(): void {
-    if (util.getShadowRoot(this) !== null) {
+    if (domutils.getShadowRoot(this) !== null) {
       return;
     }
 
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
 
     const clone = this._createClone();
     shadow.appendChild(clone);
@@ -322,7 +323,7 @@ class EtEmbeddedViewer extends ViewerElement {
 
     this._getById(ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
     this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
-    util.getShadowId(this, ID_HEADER).addEventListener('focus', this.focus.bind(this));
+    domutils.getShadowId(this, ID_HEADER).addEventListener('focus', this.focus.bind(this));
     
     const expandbutton = this._getById(ID_EXPAND_BUTTON);
     expandbutton.addEventListener('click', (): void => {
@@ -688,14 +689,14 @@ class EtEmbeddedViewer extends ViewerElement {
    * 
    */
   private _getById(id: string): Element {
-    return util.getShadowRoot(this).querySelector('#'+id);
+    return domutils.getShadowRoot(this).querySelector('#'+id);
   }
 
   /**
    * Process an attribute value change.
    */
   private _setAttr(attrName: string, newValue: string): void {
-    if (util.getShadowRoot(this) === null) {
+    if (domutils.getShadowRoot(this) === null) {
       return;
     }
 
