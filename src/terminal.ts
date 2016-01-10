@@ -1095,7 +1095,7 @@ class EtTerminal extends HTMLElement {
     this._virtualScrollArea.resize();
   }
   
-  private _deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
+  public deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
     viewer.remove();
     this._virtualScrollArea.removeScrollable(viewer);
   }
@@ -1105,7 +1105,7 @@ class EtTerminal extends HTMLElement {
     const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
 
     el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
-      this._deleteEmbeddedViewer(el);
+      this.deleteEmbeddedViewer(el);
       this.focus();
     });
 
