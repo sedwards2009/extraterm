@@ -10,6 +10,7 @@ import EtSettingsTab = require('./settings/settingstab2');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
+import ViewerElementTypes = require('./viewerelementtypes');
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import path = require('path');
@@ -573,6 +574,8 @@ class ExtratermMainWebUI extends HTMLElement {
   openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer): number {
     const viewerElement = embeddedViewer.viewerElement;
     const tabInfo = new ViewerTabInfo(viewerElement);
+    viewerElement.mode = ViewerElementTypes.Mode.SELECTION;
+    viewerElement.visualState = ViewerElement.VISUAL_STATE_AUTO;
     return this._openViewerTabInfo(position, tabInfo, viewerElement);
   }
   
