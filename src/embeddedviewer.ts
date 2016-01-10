@@ -26,17 +26,19 @@ checkboxmenuitem.init();
 const ID = "EtEmbeddedViewerTemplate";
 
 const ID_CONTAINER = "container";
+const ID_CONTEXT_MENU = "contextmenu";
 const ID_HEADER = "header";
 const ID_OUTPUT = "output";
 const ID_ICON = "icon";
 const ID_ICON_DIV = "icondiv";
 const ID_COMMANDLINE = "command_line";
 const ID_TAG_NAME = "tag_name";
-const ID_EXPAND_BUTTON = "expand_button";
+// const ID_EXPAND_BUTTON = "expand_button";
+// const ID_EXPAND_ICON = "expand_icon";
+// const ID_EXPAND_MENU_ITEM = "expandmenuitem";
 const ID_CLOSE_BUTTON = "close_button";
 const ID_POP_OUT_BUTTON = "pop_out_button";
 const ID_TAG_ICON = "tag_icon";
-const ID_EXPAND_ICON = "expand_icon";
 
 let registered = false;
 const REPLACE_NBSP_REGEX = new RegExp("\u00A0","g");
@@ -211,7 +213,7 @@ class EtEmbeddedViewer extends ViewerElement {
    */
   openMenu(): void {
     const header = <HTMLDivElement>this._getById(ID_HEADER);
-    const cm = <contextmenu>this._getById('contextmenu');
+    const cm = <contextmenu>this._getById(ID_CONTEXT_MENU);
     const rect = header.getBoundingClientRect();
     cm.openAround(header); //(rect.left, rect.top );
   }
@@ -325,22 +327,22 @@ class EtEmbeddedViewer extends ViewerElement {
     this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
     domutils.getShadowId(this, ID_HEADER).addEventListener('focus', this.focus.bind(this));
     
-    const expandbutton = this._getById(ID_EXPAND_BUTTON);
-    expandbutton.addEventListener('click', (): void => {
-      const expanded = util.htmlValueToBool(this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND), true);
-      this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, "" + !expanded);
-    });
+    // const expandbutton = this._getById(ID_EXPAND_BUTTON);
+    // expandbutton.addEventListener('click', (): void => {
+    //   const expanded = util.htmlValueToBool(this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND), true);
+    //   this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, "" + !expanded);
+    // });
 
     domutils.addCustomEventResender(this, ViewerElement.EVENT_BEFORE_SELECTION_CHANGE);
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
     domutils.addCustomEventResender(this, virtualscrollarea.EVENT_RESIZE);
 
-    const cm = <contextmenu>this._getById('contextmenu');
-    this._getById('container').addEventListener('contextmenu', (ev: MouseEvent): void => {
+    const cm = <contextmenu>this._getById(ID_CONTEXT_MENU);
+    this._getById(ID_CONTAINER).addEventListener('contextmenu', (ev: MouseEvent): void => {
       ev.stopPropagation();
       ev.preventDefault();
-      const cm = <contextmenu>this._getById('contextmenu');
+      const cm = <contextmenu>this._getById(ID_CONTEXT_MENU);
       cm.open(ev.clientX, ev.clientY);
     });
 
@@ -546,7 +548,8 @@ class EtEmbeddedViewer extends ViewerElement {
           border: 1px solid ${FAIL_COLOR.toString()};
         }
 
-        #${ID_EXPAND_BUTTON}, #${ID_CLOSE_BUTTON}, #${ID_POP_OUT_BUTTON} {
+`+//        #${ID_EXPAND_BUTTON}, 
+`        #${ID_CLOSE_BUTTON}, #${ID_POP_OUT_BUTTON} {
           flex: 0 0 auto;
           padding: 0px;
           background-color: transparent;
@@ -635,21 +638,21 @@ class EtEmbeddedViewer extends ViewerElement {
               <div id='${ID_TAG_ICON}'><i class='fa fa-tag'></i></div>
               <div id='${ID_TAG_NAME}'></div>
               <div class='spacer'></div>
-              <button id='${ID_EXPAND_BUTTON}' title='Expand/Collapse'><i id='${ID_EXPAND_ICON}' class='fa fa-plus-square-o'></i></button>
-              <div class='spacer'></div>
-              <button id='${ID_POP_OUT_BUTTON}'><i class='fa fa-external-link'></i></button>
+` +//              <button id='${ID_EXPAND_BUTTON}' title='Expand/Collapse'><i id='${ID_EXPAND_ICON}' class='fa fa-plus-square-o'></i></button>
+//              <div class='spacer'></div>
+`              <button id='${ID_POP_OUT_BUTTON}'><i class='fa fa-external-link'></i></button>
               <div class='spacer'></div>
               <button id='${ID_CLOSE_BUTTON}' title='Close'><i class='fa fa-times-circle'></i></button>` +
             `</div>` +
           `</div>
           <div id='${ID_OUTPUT}'><content></content></div>
         </div>
-        <cb-contextmenu id='contextmenu' style='display: none;'>
+        <cb-contextmenu id='${ID_CONTEXT_MENU}' style='display: none;'>
           <cb-menuitem icon='external-link' name='popout'>Open in Tab</cb-menuitem>
           <cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>
           <cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>
-          <cb-checkboxmenuitem icon='list-ol' id='expandmenuitem' checked='true' name='expand'>Expand</cb-checkboxmenuitem>
-          <cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>
+` + //          <cb-checkboxmenuitem icon='list-ol' id='${ID_EXPAND_MENU_ITEM}' checked='true' name='expand'>Expand</cb-checkboxmenuitem>
+`          <cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>
         </cb-contextmenu>`;
       window.document.body.appendChild(template);
     }
@@ -706,26 +709,26 @@ class EtEmbeddedViewer extends ViewerElement {
     }
 
     if (attrName === EtEmbeddedViewer.ATTR_EXPAND) {
-      const output = <HTMLDivElement>this._getById('output');
-      const expandicon = <HTMLDivElement>this._getById('expand_icon');
+      const output = <HTMLDivElement>this._getById(ID_OUTPUT);
+      // const expandicon = <HTMLDivElement>this._getById(ID_EXPAND_ICON);
       if (util.htmlValueToBool(newValue, true)) {
         // Expanded.
         output.classList.remove('closed');
-        expandicon.classList.remove('fa-plus-square-o');
-        expandicon.classList.add('fa-minus-square-o');
-        (<checkboxmenuitem>this._getById('expandmenuitem')).setAttribute('checked', "true");
+        // expandicon.classList.remove('fa-plus-square-o');
+        // expandicon.classList.add('fa-minus-square-o');
+        // (<checkboxmenuitem>this._getById(ID_EXPAND_MENU_ITEM)).setAttribute('checked', "true");
       } else {
         // Collapsed.
         output.classList.add('closed');
-        expandicon.classList.add('fa-plus-square-o');
-        expandicon.classList.remove('fa-minus-square-o');
-        (<checkboxmenuitem>this._getById('expandmenuitem')).setAttribute('checked', "false");
+        // expandicon.classList.add('fa-plus-square-o');
+        // expandicon.classList.remove('fa-minus-square-o');
+        // (<checkboxmenuitem>this._getById(ID_EXPAND_MENU_ITEM)).setAttribute('checked', "false");
       }
       return;
     }
 
     if (attrName === EtEmbeddedViewer.ATTR_TAG) {
-      const tagName = <HTMLDivElement>this._getById('tag_name');
+      const tagName = <HTMLDivElement>this._getById(ID_TAG_NAME);
       tagName.innerText = newValue;
     }
   }
