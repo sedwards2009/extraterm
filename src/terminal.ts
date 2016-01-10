@@ -28,7 +28,9 @@ type ScrollableElement = VirtualScrollable & HTMLElement;
 
 const log = LogDecorator;
 
-const debug = true;
+const DEBUG = true;
+const DEBUG_APPLICATION_MODE = false;
+
 let startTime: number = window.performance.now();
 let registered = false;
 
@@ -124,6 +126,7 @@ class EtTerminal extends HTMLElement {
   private _vpad: number;
   
   private _emulator: termjs.Emulator;
+  private _cookie: string;
   private _htmlData: string;
   
   private _mimeType: string;
@@ -162,6 +165,7 @@ class EtTerminal extends HTMLElement {
     this._scrollSyncLaterHandle = null;
     this._autoscroll = true;
     this._emulator = null;
+    this._cookie = null;
     this._codeMirrorTerminal = null;
     this._htmlData = null;
     this._mimeType = null;
@@ -364,9 +368,9 @@ class EtTerminal extends HTMLElement {
     this._virtualScrollArea.setScrollbar(scrollbar);
     
     // Set up the emulator
-    const cookie = crypto.randomBytes(10).toString('hex');
-    process.env[EXTRATERM_COOKIE_ENV] = cookie;
-    this._initEmulator(cookie);
+    this._cookie = crypto.randomBytes(10).toString('hex');
+    process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
+    this._initEmulator(this._cookie);
     this._appendNewCodeMirrorTerminal();
 
     // FIXME there might be resizes for things other than changs in window size.
@@ -958,9 +962,22 @@ class EtTerminal extends HTMLElement {
    *     escape sequence.
    */
   private _handleApplicationModeStart(emulator: termjs.Emulator, params: string[]): void {
-    this._log.debug("application-mode started! ",params);
+    if (DEBUG_APPLICATION_MODE) {
+      this._log.debug("application-mode started! ",params);
+    }
+
+    this._htmlData = "";
     
-    // FIXME check cookie!
+    // Check security cookie
+    if (params.length === 0) {
+      this._log.warn("Received an application mode sequence with no parameters.");
+      return;
+    }
+    
+    if (params[0] !== this._cookie) {
+      this._log.warn("Received the wrong cookie at the start of an application mode sequence.");
+      return;
+    }
   
     if (params.length === 1) {
       // Normal HTML mode.
@@ -975,27 +992,32 @@ class EtTerminal extends HTMLElement {
   
         case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
           this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
-          this._log.debug("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
+          if (DEBUG_APPLICATION_MODE) {
+            this._log.debug("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
+          }
           break;
           
         case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
           this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
-          this._log.debug("Starting APPLICATION_MODE_REQUEST_FRAME");
+          if (DEBUG_APPLICATION_MODE) {
+            this._log.debug("Starting APPLICATION_MODE_REQUEST_FRAME");
+          }
           break;
           
         case "" + ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-          this._log.debug("Starting APPLICATION_MODE_SHOW_MIME");
+          if (DEBUG_APPLICATION_MODE) {
+            this._log.debug("Starting APPLICATION_MODE_SHOW_MIME");
+          }
           this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_MIME;
           this._mimeData = "";
           this._mimeType = params[2];
           break;
         
         default:
-          this._log.debug("Unrecognized application escape parameters.");
+          this._log.warn("Unrecognized application escape parameters.");
           break;
       }
     }
-    this._htmlData = "";
   }
 
   /**
@@ -1004,7 +1026,9 @@ class EtTerminal extends HTMLElement {
    * @param {string} data The new data.
    */
   private _handleApplicationModeData(data: string): void {
-    this._log.debug("html-mode data!", data);
+    if (DEBUG_APPLICATION_MODE) {
+      this._log.debug("html-mode data!", data);
+    }
     switch (this._applicationMode) {
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
@@ -1058,7 +1082,9 @@ class EtTerminal extends HTMLElement {
     }
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
   
-    this._log.debug("html-mode end!",this._htmlData);
+    if (DEBUG_APPLICATION_MODE) {
+      this._log.debug("html-mode end!",this._htmlData);
+    }
     this._htmlData = null;
   }
 
