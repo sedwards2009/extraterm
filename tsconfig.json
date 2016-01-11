@@ -72,7 +72,6 @@
         "./src/viewers/codemirrorviewer.ts",
         "./src/viewers/codemirrorviewertypes.ts",
         "./src/viewers/markdownviewer.ts",
-        "./src/viewers/terminalviewer.ts",
         "./src/settings/settingstab2.ts",
         "./src/typings/codemirror/codemirror.d.ts",
         "./src/typings/github-electron/github-electron.d.ts",

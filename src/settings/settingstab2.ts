@@ -6,8 +6,8 @@
 
 "use strict";
 
-import ViewerElement  = require("../viewerelement");
-import util = require("../gui/util");
+import ViewerElement  = require('../viewerelement');
+import domutils = require('../domutils');
 import Vue = require('vue');
 import config = require('../config');
 
@@ -85,7 +85,7 @@ class EtSettingsTab extends ViewerElement {
   }
   
   attachedCallback(): void {
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const style = document.createElement('style');
     style.innerHTML = `
     `;

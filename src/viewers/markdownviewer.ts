@@ -3,8 +3,8 @@
  */
 
 "use strict";
-import ViewerElement = require("../viewerelement");
-import util = require("../gui/util");
+import ViewerElement = require('../viewerelement');
+import domutils = require('../domutils');
 import markdownMod = require('markdown');
 const markdown = markdownMod.markdown;
 
@@ -42,7 +42,7 @@ class EtMarkdownViewer extends ViewerElement {
   }
   
   getSelectionText(): string {
-    const root = util.getShadowRoot(this);
+    const root = domutils.getShadowRoot(this);
     const selection = root.getSelection();
     if (selection !== undefined && selection !== null && selection.rangeCount !== 0 &&
         ! selection.getRangeAt(0).collapsed) {
@@ -53,11 +53,11 @@ class EtMarkdownViewer extends ViewerElement {
   }
 
   focus(): void {
-    util.getShadowId(this, ID_CONTAINER).focus();
+    domutils.getShadowId(this, ID_CONTAINER).focus();
   }
   
   hasFocus(): boolean {
-    const root = util.getShadowRoot(this);
+    const root = domutils.getShadowRoot(this);
     return root.activeElement !== null;
   }
   
@@ -72,13 +72,13 @@ class EtMarkdownViewer extends ViewerElement {
   
   createdCallback(): void {
     this._initProperties();
-    const shadow = util.createShadowRoot(this);
+    const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
     
     this._updateFocusable(this._focusable);
     
-    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
       if (ev.keyCode === 9 && ! ev.ctrlKey) {
         ev.preventDefault();
@@ -87,7 +87,7 @@ class EtMarkdownViewer extends ViewerElement {
   }
 
   attachedCallback(): void {
-    const container = <HTMLDivElement> util.getShadowId(this, ID_CONTAINER);
+    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
     const kids = this.childNodes;
     
     // Collect the raw text content.
@@ -135,7 +135,7 @@ class EtMarkdownViewer extends ViewerElement {
   }
   
   private _updateFocusable(focusable: boolean): void {
-    const containerDiv = util.getShadowId(this, ID_CONTAINER);
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");
   }
 }
