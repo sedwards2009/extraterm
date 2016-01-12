@@ -335,6 +335,9 @@ class EtEmbeddedViewer extends ViewerElement {
     this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
     domutils.getShadowId(this, ID_HEADER).addEventListener('focus', this.focus.bind(this));
     
+    const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);    
+    outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
+    
     // const expandbutton = this._getById(ID_EXPAND_BUTTON);
     // expandbutton.addEventListener('click', (): void => {
     //   const expanded = util.htmlValueToBool(this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND), true);
@@ -746,6 +749,14 @@ class EtEmbeddedViewer extends ViewerElement {
       return <ViewerElement> this.firstElementChild;
     } else {
       return null;
+    }
+  }
+
+  private _handleKeyDown(ev: KeyboardEvent): void {
+    if (ev.keyCode === 79 && ev.ctrlKey && ev.shiftKey) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      this._emitFramePopOut();
     }
   }
 
