@@ -151,10 +151,13 @@ class EtViewerTab extends ViewerElement {
   }
 
   /**
-   * Focus on this terminal.
+   * Focus on this ViewerTab.
    */
   focus(): void {
-
+    const element = this.viewerElement;
+    if (element !== null) {
+      element.focus();
+    }
   }
   
   /**
@@ -351,8 +354,9 @@ class EtViewerTab extends ViewerElement {
   }
   
   private _getViewerElement(): ViewerElement {
-    if (this.firstElementChild !== null && this.firstElementChild instanceof ViewerElement) {
-      return <ViewerElement> this.firstElementChild;
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);    
+    if (scrollerArea.firstElementChild !== null && scrollerArea.firstElementChild instanceof ViewerElement) {
+      return <ViewerElement> scrollerArea.firstElementChild;
     } else {
       return null;
     }
