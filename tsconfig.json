@@ -53,6 +53,7 @@
         "./src/theme.ts",
         "./src/viewerelement.ts",
         "./src/viewerelementtypes.ts",
+        "./src/viewertab.ts",
         "./src/virtualscrollarea.ts",
         "./src/virtualscrollareatest.ts",
         "./src/virtualscrollareatestdebugger.ts",

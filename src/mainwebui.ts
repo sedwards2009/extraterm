@@ -7,6 +7,7 @@ import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
 import EtSettingsTab = require('./settings/settingstab2');
+import EtViewerTab = require('./viewertab');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
@@ -172,7 +173,7 @@ class TerminalTabInfo extends TabInfo {
 /**
  * A tab which contains a viewer.
  */
-class ViewerTabInfo extends TabInfo {
+class ViewerElementTabInfo extends TabInfo {
   constructor(public viewerElement: ViewerElement) {
     super();
   }
@@ -194,7 +195,13 @@ class ViewerTabInfo extends TabInfo {
   }
 }
 
-class SettingsTabInfo extends ViewerTabInfo {
+class ViewerTabInfo extends ViewerElementTabInfo {
+  constructor(public viewer: EtViewerTab) {
+    super(viewer);
+  }
+}
+
+class SettingsTabInfo extends ViewerElementTabInfo {
   constructor(public settingsElement: EtSettingsTab) {
     super(settingsElement);
   }
@@ -217,6 +224,7 @@ class ExtratermMainWebUI extends HTMLElement {
     TabWidget.init();
     EtTerminal.init();
     EtSettingsTab.init();
+    EtViewerTab.init();
     
     if (registered === false) {
       globalcss.init();
@@ -573,13 +581,20 @@ class ExtratermMainWebUI extends HTMLElement {
   
   openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer): number {
     const viewerElement = embeddedViewer.viewerElement;
-    const tabInfo = new ViewerTabInfo(viewerElement);
+    const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
+    
+    viewerTab.title = embeddedViewer.commandLine;
+    viewerTab.tag = embeddedViewer.tag;
+    
+    const tabInfo = new ViewerTabInfo(viewerTab);
     viewerElement.mode = ViewerElementTypes.Mode.SELECTION;
     viewerElement.visualState = ViewerElement.VISUAL_STATE_AUTO;
-    return this._openViewerTabInfo(position, tabInfo, viewerElement);
+    const result = this._openViewerTabInfo(position, tabInfo, viewerTab);
+    viewerTab.viewerElement = viewerElement;
+    return result;
   }
   
-  _openViewerTabInfo(position: TabPosition, tabInfo: ViewerTabInfo, viewerElement: ViewerElement): number {
+  _openViewerTabInfo(position: TabPosition, tabInfo: ViewerElementTabInfo, viewerElement: ViewerElement): number {
     viewerElement.focusable = true;
     tabInfo.setConfig(this._config);
     this._addTab(position, tabInfo);

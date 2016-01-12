@@ -237,6 +237,14 @@ class EtEmbeddedViewer extends ViewerElement {
     return this.getAttribute(EtEmbeddedViewer.ATTR_TAG);
   }
 
+  set commandLine(newCommandLine: string) {
+    this.setAttribute(EtEmbeddedViewer.ATTR_COMMAND, newCommandLine);
+  }
+
+  get commandLine(): string {
+    return this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND);
+  }
+
   clearSelection(): void {
     const viewerElement = this.viewerElement;
     if (viewerElement === null) {
