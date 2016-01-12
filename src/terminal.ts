@@ -36,8 +36,6 @@ let registered = false;
 
 const ID = "EtTerminalTemplate";
 const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
-const SEMANTIC_TYPE = "data-extraterm-type";
-const SEMANTIC_VALUE = "data-extraterm-value";
 const ID_SCROLL_AREA = "scroll_area";
 const ID_SCROLLBAR = "scrollbar";
 const ID_CONTAINER = "terminal_container";
@@ -55,12 +53,6 @@ const enum ApplicationMode {
   APPLICATION_MODE_OUTPUT_BRACKET_END = 3,
   APPLICATION_MODE_REQUEST_FRAME = 4,
   APPLICATION_MODE_SHOW_MIME = 5,
-}
-
-interface VirtualHeight {
-  realHeight: number;
-  virtualHeight: number;
-  element: EtCodeMirrorViewer;
 }
 
 const enum Mode {
@@ -116,14 +108,9 @@ class EtTerminal extends HTMLElement {
 
   private _virtualScrollArea: virtualscrollarea.VirtualScrollArea;
   
-  private _scrollSyncLaterHandle: domutils.LaterHandle;
   private _autoscroll: boolean;
   
   private _codeMirrorTerminal: EtCodeMirrorViewer;
-  private _terminalSize: ClientRect;
-  private _scrollYOffset: number; // The Y scroll offset into the virtual height.
-  private _virtualHeight: number; // The virtual height of the terminal contents in px.
-  private _vpad: number;
   
   private _emulator: termjs.Emulator;
   private _cookie: string;
@@ -162,7 +149,6 @@ class EtTerminal extends HTMLElement {
     this._log = new Logger(EtTerminal.TAG_NAME);
     this._virtualScrollArea = null;
     this._elementAttached = false;
-    this._scrollSyncLaterHandle = null;
     this._autoscroll = true;
     this._emulator = null;
     this._cookie = null;
@@ -184,10 +170,6 @@ class EtTerminal extends HTMLElement {
     this._mainStyleLoaded = false;
     this._themeStyleLoaded = false;
     this._resizePollHandle = null;
-    this._terminalSize = null;
-    this._scrollYOffset = 0;
-    this._virtualHeight = 0;
-    this._vpad = 0;
 
     this._scheduleLaterHandle = null;
     this._scheduledCursorUpdates = [];
@@ -256,10 +238,6 @@ class EtTerminal extends HTMLElement {
    * Destroy the terminal.
    */
   destroy(): void {
-    if (this._scrollSyncLaterHandle !== null) {
-      this._scrollSyncLaterHandle.cancel();
-    }
-
     if (this._resizePollHandle !== null) {
       this._resizePollHandle.cancel();
       this._resizePollHandle = null;
