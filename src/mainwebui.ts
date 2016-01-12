@@ -492,8 +492,8 @@ class ExtratermMainWebUI extends HTMLElement {
         // Ctrl+Shift+T - New tab.
         this.focusTab(this.newTerminalTab(tabInfo.position));
         
-      } else if (ev.keyCode === 87 && ev.ctrlKey && ev.shiftKey) {
-        // Ctrl+Shift+W - Close tab.
+      } else if (ev.keyCode === 81 && ev.ctrlKey && ev.shiftKey) {
+        // Ctrl+Shift+Q - Close tab.
         this.closeTab(tabInfo.id);
 
       } else if (ev.keyCode === 9 && ev.ctrlKey) {
