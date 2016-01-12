@@ -480,11 +480,11 @@ class ExtratermMainWebUI extends HTMLElement {
     
     // Key press event
     tabInfo.contentDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      if (ev.keyCode === 37 && ev.shiftKey) {
+      if (ev.keyCode === 37 && ev.altKey) {
         // left-arrow
         this._shiftTab(tabInfo.position, -1);
     
-      } else if (ev.keyCode === 39 && ev.shiftKey) {
+      } else if (ev.keyCode === 39 && ev.altKey) {
         // right-arrow
         this._shiftTab(tabInfo.position, 1);
     

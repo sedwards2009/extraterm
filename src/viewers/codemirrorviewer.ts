@@ -823,6 +823,13 @@ class EtCodeMirrorViewer extends ViewerElement {
   }
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
+    // Send all Alt+* and Ctrl+Shift+A-Z keys above
+    if (ev.altKey || (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90)) {
+      ev.stopPropagation();
+      this._scheduleSyntheticKeyDown(ev);
+      return;
+    }
+    
     if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
       ev.stopPropagation();
 
@@ -831,12 +838,6 @@ class EtCodeMirrorViewer extends ViewerElement {
       } else {
        // Emit a key down event which our parent elements can catch.
        this._scheduleSyntheticKeyDown(ev);
-      }
-    } else {
-      // Send above all Ctrl+Shift+A-Z keys
-      if (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90) {
-        ev.stopPropagation();
-        this._scheduleSyntheticKeyDown(ev);
       }
     }
   }
