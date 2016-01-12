@@ -753,10 +753,18 @@ class EtEmbeddedViewer extends ViewerElement {
   }
 
   private _handleKeyDown(ev: KeyboardEvent): void {
-    if (ev.keyCode === 79 && ev.ctrlKey && ev.shiftKey) {
+    if (ev.keyCode === 79 && ev.ctrlKey && ev.shiftKey) { // Ctrl+Shift+O
       ev.stopPropagation();
       ev.preventDefault();
       this._emitFramePopOut();
+      return;
+    }
+    
+    if (ev.keyCode === 87 && ev.ctrlKey && ev.shiftKey) { // Ctrl+Shift+W
+      ev.stopPropagation();
+      ev.preventDefault();
+      this._emitCloseRequest();
+      return;
     }
   }
 
