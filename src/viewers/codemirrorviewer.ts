@@ -832,6 +832,12 @@ class EtCodeMirrorViewer extends ViewerElement {
        // Emit a key down event which our parent elements can catch.
        this._scheduleSyntheticKeyDown(ev);
       }
+    } else {
+      // Send above all Ctrl+Shift+A-Z keys
+      if (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90) {
+        ev.stopPropagation();
+        this._scheduleSyntheticKeyDown(ev);
+      }
     }
   }
 
