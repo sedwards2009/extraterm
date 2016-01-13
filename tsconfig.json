@@ -19,8 +19,6 @@
         "./src/settings/*.tsx",
         "./src/typings/**/*.ts",
         "!./src/typings/tsd.d.ts",
-        "!./src/typings/github-electron/github-electron-main.d.ts",
-        "!./src/typings/github-electron/github-electron-renderer.d.ts",
         "!./src/node_modules/**/*.ts",
         "./src/node_modules/typescript/lib/lib.es6.d.ts",
         "./src/node_modules/immutable/dist/*.ts"

@@ -1,25 +1,27 @@
 /**
- * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
  */
-///<reference path="typings/github-electron/github-electron-main.d.ts" />
 /**
  * Main.
  *
  * This file is the main entry point for the node process and the whole application.
  */
 import sourceMapSupport = require('source-map-support');
-import app = require('app');
-import BrowserWindow = require('browser-window');
+
+import electron = require('electron');
+const app = electron.app;
+const BrowserWindow = electron.BrowserWindow;
+const crashReporter = electron.crashReporter;
+const ipc = electron.ipcMain;
+const clipboard = electron.clipboard;
+
 import path = require('path');
 import fs = require('fs');
 import im = require('immutable');
 import _ = require('lodash');
-import crashReporter = require('crash-reporter');
-import ipc = require('ipc');
 import ptyconnector = require('./ptyconnector');
 import resourceLoader = require('./resourceloader');
 import Messages = require('./windowmessages');
-import clipboard = require('clipboard');
 import child_process = require('child_process');
 import util = require('./gui/util');
 import Logger = require('./logger');
@@ -30,7 +32,7 @@ type PtyOptions = ptyconnector.PtyOptions;
 type EnvironmentMap = ptyconnector.EnvironmentMap;
 
 // Our special 'fake' module which selects the correct pty connector factory implementation.
-var PtyConnectorFactory = require("./ptyconnectorfactory");
+const PtyConnectorFactory = require("./ptyconnectorfactory");
 
 // Interfaces.
 import configInterfaces = require('./config');
@@ -40,10 +42,11 @@ type SystemConfig = configInterfaces.SystemConfig;
 
 import Theme = require('./theme');
 
-sourceMapSupport.install();
-crashReporter.start(); // Report crashes
-
 const LOG_FINE = false;
+
+sourceMapSupport.install();
+
+// crashReporter.start(); // Report crashes
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
@@ -96,7 +99,7 @@ function main(): void {
     });
     
     // and load the index.html of the app.
-    mainWindow.loadUrl(resourceLoader.toUrl('main.html'));
+    mainWindow.loadURL(resourceLoader.toUrl('main.html'));
 
     mainWindow.on('devtools-closed', function() {
       sendDevToolStatus(mainWindow, false);
@@ -493,6 +496,9 @@ function handleAsyncIpc(event: any, arg: any): void {
   }
   
   if (reply !== null) {
+    if (LOG_FINE) {
+      log("Replying: ", reply);
+    }
     event.sender.send(Messages.CHANNEL_NAME, reply);
   }
 }
@@ -620,11 +626,10 @@ function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
 }
 
 function handleDevToolsRequest(sender: GitHubElectron.WebContents, msg: Messages.DevToolsRequestMessage): void {
-  const senderWindow = BrowserWindow.fromWebContents(sender);
   if (msg.open) {
-    senderWindow.openDevTools();
+    sender.openDevTools();
   } else {
-    senderWindow.closeDevTools();
+    sender.closeDevTools();
   }
 }
 

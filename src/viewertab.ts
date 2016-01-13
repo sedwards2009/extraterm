@@ -12,7 +12,10 @@ import LogDecorator = require('./logdecorator');
 import domutils = require('./domutils');
 import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
-import clipboard = require('clipboard');
+
+import electron = require('electron');
+const clipboard = electron.clipboard;
+
 import webipc = require('./webipc');
 import globalcss = require('./gui/globalcss');
 import virtualscrollarea = require('./virtualscrollarea');

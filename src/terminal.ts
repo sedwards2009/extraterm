@@ -17,7 +17,10 @@ import domutils = require('./domutils');
 import termjs = require('./term');
 import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
-import clipboard = require('clipboard');
+
+import electron = require('electron');
+const clipboard = electron.clipboard;
+
 import webipc = require('./webipc');
 import globalcss = require('./gui/globalcss');
 import virtualscrollarea = require('./virtualscrollarea');

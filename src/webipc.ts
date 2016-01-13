@@ -1,16 +1,17 @@
 /**
- * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
  */
 
-///<reference path="typings/github-electron/github-electron-renderer.d.ts" />
+import electron = require('electron');
+const ipc = electron.ipcRenderer;
 
-import rendererIpc = require('ipc');
 import Messages = require('./windowmessages');
 import config = require('./config');
+import Logger = require('./logger');
 
-// There are two related 'ipc' modules in Electron. A main process one and a renderer process one.
-// 'ipc' tends to get the main process defs when it should be the renderer process defs.
-const ipc = <GitHubElectron.InProcess> rendererIpc;
+const _log = new Logger("WebIPC");
+
+const DEBUG = false;
 
 /**
  * Start IPC.
@@ -37,9 +38,11 @@ export function registerDefaultHandler(type: Messages.MessageType, handler: Hand
   defaultHandlers.push( { messageType: type, handler: handler} );
 }
 
-function handleAsyncIpc(event: any, arg: any): void {
-  const msg: Messages.Message = event;
- // console.log("IPC incoming: ", msg);
+function handleAsyncIpc(senderInfo: any, detail: any): void {
+  const msg: Messages.Message = detail;
+  if (DEBUG) {
+    _log.debug("incoming: ", msg);
+  }
 
   const matchingPromises = promiseQueue.filter( p => p.messageType === msg.type );
   const nonMatchingPromises = promiseQueue.filter( p => p.messageType !== msg.type );
@@ -58,6 +61,9 @@ function handleAsyncIpc(event: any, arg: any): void {
 }
 
 function request(msg: Messages.Message, replyType: Messages.MessageType): Promise<Messages.Message> {
+  if (DEBUG) {
+    _log.debug("request: ", msg);
+  }
   ipc.send(Messages.CHANNEL_NAME, msg);
   return new Promise<Messages.Message>( (resolve,cancel) => {
     promiseQueue.push( { promiseResolve: resolve, messageType: replyType } );
