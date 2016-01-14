@@ -25,6 +25,8 @@ import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import globalcss = require('./gui/globalcss');
 import virtualscrollarea = require('./virtualscrollarea');
+import FrameFinderType = require('./framefindertype');
+type FrameFinder = FrameFinderType.FrameFinder;
 
 type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
@@ -133,6 +135,7 @@ class EtTerminal extends HTMLElement {
   private _blinkingCursor: boolean;
   private _title: string;
   private _noFrameCommands: RegExp[];
+  private _frameFinder: FrameFinder;
   
   private _nextTag: string;
 
@@ -169,6 +172,7 @@ class EtTerminal extends HTMLElement {
     
     this._blinkingCursor = false;
     this._noFrameCommands = [];
+    this._frameFinder = null;
     this._title = "New Tab";
     this._nextTag = null;
     this._themeCssPath = null;
@@ -302,6 +306,20 @@ class EtTerminal extends HTMLElement {
   resizeToContainer(): void {
     this._scheduleResize();
   }
+  
+  set frameFinder(func: FrameFinder) {
+    this._frameFinder = func;
+  }
+  
+  getFrameContents(frameId: string): string {
+    const embeddedViewer = this._findFrame(frameId);
+    if (embeddedViewer === null) {
+      return null;
+    }
+    const text = embeddedViewer.text;
+    return text === undefined ? null : text;
+  }
+
   
   //-----------------------------------------------------------------------
   //
@@ -1251,9 +1269,13 @@ class EtTerminal extends HTMLElement {
   }
   
   private handleRequestFrame(frameId: string): void {
-    const sourceFrame: EtEmbeddedViewer = this._findFrame(frameId);
-    let data = sourceFrame !== null ? sourceFrame.text : "";
-    data = data === undefined ? "" : data;
+    let data = "";
+    if (this._frameFinder !== null) {
+      data = this._frameFinder(frameId);
+    } else {
+      data = this.getFrameContents(frameId);
+    }
+    
     const lines = data.split("\n");
     let encodedData: string = "";
     lines.forEach( (line: string) => {

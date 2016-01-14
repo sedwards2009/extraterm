@@ -19,6 +19,9 @@ import _ = require('lodash');
 import config = require('./config');
 import globalcss = require('./gui/globalcss');
 import he = require('he');
+import FrameFinderType = require('./framefindertype');
+type FrameFinder = FrameFinderType.FrameFinder;
+
 import Logger = require('./logger');
 
 type Config = config.Config;
@@ -114,6 +117,10 @@ class TabInfo {
   copyToClipboard(): void { }
   
   pasteText(text: string ): void { }
+  
+  getFrameContents(frameId: string): string {
+    return null;
+  }  
 }
 
 /**
@@ -168,6 +175,9 @@ class TerminalTabInfo extends TabInfo {
     this.terminal.pasteText(text);
   }
   
+  getFrameContents(frameId: string): string {
+    return this.terminal.getFrameContents(frameId);
+  }  
 }
 
 /**
@@ -514,6 +524,7 @@ class ExtratermMainWebUI extends HTMLElement {
    */
   newTerminalTab(position: TabPosition): number {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
+    newTerminal.frameFinder = this._frameFinder.bind(this);
     const tabInfo = new TerminalTabInfo(newTerminal, null);
     
     this._addTab(position, tabInfo);
@@ -757,6 +768,16 @@ class ExtratermMainWebUI extends HTMLElement {
   private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_TITLE, { detail: {title: title} });
     this.dispatchEvent(event);
+  }
+
+  private _frameFinder(frameId: string): string {
+    for (let i=0; i<this._tabInfo.length; i++) {
+      const text = this._tabInfo[i].getFrameContents(frameId);
+      if (text !== null) {
+        return text;
+      }
+    }
+    return null;
   }
 
   //-----------------------------------------------------------------------
