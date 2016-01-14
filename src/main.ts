@@ -59,6 +59,7 @@ const THEMES_DIRECTORY = "themes";
 let themes: im.Map<string, Theme>;
 let config: Config;
 let ptyConnector: PtyConnector;
+let tagCounter = 1;
 
 function main(): void {
   config = readConfigurationFile();
@@ -431,10 +432,10 @@ function getThemes(): Theme[] {
 //-------------------------------------------------------------------------
 
 function startIpc(): void {
-  ipc.on(Messages.CHANNEL_NAME, handleAsyncIpc);
+  ipc.on(Messages.CHANNEL_NAME, handleIpc);
 }
 
-function handleAsyncIpc(event: any, arg: any): void {
+function handleIpc(event: any, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
   
@@ -491,6 +492,15 @@ function handleAsyncIpc(event: any, arg: any): void {
       handleConfig(<Messages.ConfigMessage> msg);
       break;
       
+    case Messages.MessageType.NEW_TAG_REQUEST:
+      const ntrm = <Messages.NewTagRequestMessage> msg;
+      reply = handleNewTagRequest(ntrm);
+      if (ntrm.async === false) {
+        event.returnValue = reply;
+        return;
+      }
+      break;
+    
     default:
       break;
   }
@@ -657,6 +667,12 @@ function handleClipboardWrite(msg: Messages.ClipboardWriteMessage): void {
 function handleClipboardReadRequest(msg: Messages.ClipboardReadRequestMessage): Messages.ClipboardReadMessage {
   const text = clipboard.readText();
   const reply: Messages.ClipboardReadMessage = { type: Messages.MessageType.CLIPBOARD_READ, text: text };
+  return reply;
+}
+
+function handleNewTagRequest(msg: Messages.NewTagRequestMessage): Messages.NewTagMessage {
+  const reply: Messages.NewTagMessage = { type: Messages.MessageType.NEW_TAG, tag: "" + tagCounter };
+  tagCounter++;
   return reply;
 }
 

@@ -22,6 +22,7 @@ import electron = require('electron');
 const clipboard = electron.clipboard;
 
 import webipc = require('./webipc');
+import Messages = require('./windowmessages');
 import globalcss = require('./gui/globalcss');
 import virtualscrollarea = require('./virtualscrollarea');
 
@@ -133,7 +134,8 @@ class EtTerminal extends HTMLElement {
   private _title: string;
   private _noFrameCommands: RegExp[];
   
-  private _tagCounter: number;
+  private _nextTag: string;
+
   private _themeCssPath: string;
   private _mainStyleLoaded: boolean;
   private _themeStyleLoaded: boolean;
@@ -168,7 +170,7 @@ class EtTerminal extends HTMLElement {
     this._blinkingCursor = false;
     this._noFrameCommands = [];
     this._title = "New Tab";
-    this._tagCounter = 0;    
+    this._nextTag = null;
     this._themeCssPath = null;
     this._mainStyleLoaded = false;
     this._themeStyleLoaded = false;
@@ -315,6 +317,7 @@ class EtTerminal extends HTMLElement {
 
   createdCallback(): void {
     this._initProperties();
+    this._fetchNextTag();
   }
    
   attachedCallback(): void {
@@ -1301,9 +1304,21 @@ class EtTerminal extends HTMLElement {
     return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
   }
   
-  private _getNextTag(): number {
-    this._tagCounter++;
-    return this._tagCounter;
+  private _getNextTag(): string {
+    let tag  = this._nextTag;
+    if (tag === null) {
+      // Fetching new tags from the main process is async. If we get here it means
+      // that we were waiting for a new tag to arrive. Just fetch one sync.
+      tag = webipc.requestNewTagSync();
+    }
+    this._fetchNextTag();
+    return tag;
+  }
+  
+  private _fetchNextTag(): void {
+    webipc.requestNewTag().then( (msg: Messages.NewTagMessage) => {
+      this._nextTag = msg.tag;
+    });
   }
 }
 

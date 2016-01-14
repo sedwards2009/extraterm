@@ -26,7 +26,9 @@ export const enum MessageType {
   CLIPBOARD_WRITE,
   CLIPBOARD_READ_REQUEST,
   CLIPBOARD_READ,
-  WINDOW_CLOSE_REQUEST
+  WINDOW_CLOSE_REQUEST,
+  NEW_TAG_REQUEST,
+  NEW_TAG
 }
 
 export interface Message {
@@ -122,4 +124,12 @@ export interface ClipboardReadMessage extends Message {
 }
 
 export interface WindowCloseRequestMessage extends Message {  
+}
+
+export interface NewTagRequestMessage extends Message {
+  async: boolean;
+}
+
+export interface NewTagMessage extends Message {
+  tag: string;
 }

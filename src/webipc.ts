@@ -137,3 +137,15 @@ export function sendConfig(config: config.Config): void {
   const msg: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, config: config };
   ipc.send(Messages.CHANNEL_NAME, msg);  
 }
+
+export function requestNewTag(): Promise<Messages.NewTagMessage> {
+  const msg: Messages.NewTagRequestMessage = {type: Messages.MessageType.NEW_TAG_REQUEST, async: true};
+  return request(msg, Messages.MessageType.NEW_TAG);
+}
+
+export function requestNewTagSync(): string {
+  const msg: Messages.NewTagRequestMessage = {type: Messages.MessageType.NEW_TAG_REQUEST, async: false};
+  const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
+  const newTagMessage = <Messages.NewTagMessage> event;
+  return newTagMessage.tag;
+}
