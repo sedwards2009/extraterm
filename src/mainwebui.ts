@@ -202,12 +202,28 @@ class ViewerElementTabInfo extends TabInfo {
   
   hasFocus(): boolean {
     return this.viewerElement.hasFocus();
-  }
+  }  
 }
 
 class ViewerTabInfo extends ViewerElementTabInfo {
   constructor(public viewer: EtViewerTab) {
     super(viewer);
+  }
+
+  htmlTitle(): string {
+    if (this.viewer.tag !== null) {
+      return he.escape(this.title()) + " &nbsp;&nbsp;&nbsp;<i class='fa fa-tag'></i>" + this.viewer.tag;
+    } else {
+      return he.escape(this.title());
+    }
+  }
+  
+  getFrameContents(frameId: string): string {
+    if (this.viewer.tag === frameId) {
+      return this.viewer.getFrameContents(frameId);
+    } else {
+      return null;
+    }
   }
 }
 
@@ -602,6 +618,7 @@ class ExtratermMainWebUI extends HTMLElement {
     viewerElement.visualState = ViewerElement.VISUAL_STATE_AUTO;
     const result = this._openViewerTabInfo(position, tabInfo, viewerTab);
     viewerTab.viewerElement = viewerElement;
+    tabInfo.updateTabTitle();
     return result;
   }
   

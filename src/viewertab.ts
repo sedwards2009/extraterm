@@ -191,7 +191,24 @@ class EtViewerTab extends ViewerElement {
   get viewerElement(): ViewerElement {
     return this._getViewerElement();
   }
-
+  
+  get awesomeIcon(): string {
+    const viewerElement = this.viewerElement;
+    return viewerElement === null ? "desktop" : viewerElement.awesomeIcon;
+  }
+  
+  getFrameContents(frameId: string): string {
+    const viewerElement = this.viewerElement;
+    if (viewerElement === null) {
+      return null;
+    }
+    if (this.tag === frameId) {
+      return viewerElement.text;
+    } else {
+      return null;
+    }
+  }
+  
   //-----------------------------------------------------------------------
   //
   //   #                                                         
