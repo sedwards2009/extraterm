@@ -8,8 +8,8 @@ import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import EtEmbeddedViewer = require('./embeddedviewer');
 import EtCommandPlaceHolder = require('./commandplaceholder');
-import EtCodeMirrorViewer = require('./viewers/codemirrorviewer');
-import EtCodeMirrorViewerTypes = require('./viewers/codemirrorviewertypes');
+import EtTerminalViewer = require('./viewers/codemirrorviewer');
+import EtTerminalViewerTypes = require('./viewers/codemirrorviewertypes');
 import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
@@ -28,7 +28,7 @@ import virtualscrollarea = require('./virtualscrollarea');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 
-type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
+type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type ScrollableElement = VirtualScrollable & HTMLElement;
 
@@ -101,7 +101,7 @@ class EtTerminal extends HTMLElement {
       CbScrollbar.init();
       EtEmbeddedViewer.init();
       EtCommandPlaceHolder.init();
-      EtCodeMirrorViewer.init();
+      EtTerminalViewer.init();
       EtMarkdownViewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
       registered = true;
@@ -116,7 +116,7 @@ class EtTerminal extends HTMLElement {
   
   private _autoscroll: boolean;
   
-  private _codeMirrorTerminal: EtCodeMirrorViewer;
+  private _terminalViewer: EtTerminalViewer;
   
   private _emulator: termjs.Emulator;
   private _cookie: string;
@@ -146,7 +146,7 @@ class EtTerminal extends HTMLElement {
   private _elementAttached: boolean;
   
   private _scheduleLaterHandle: domutils.LaterHandle;
-  private _scheduledCursorUpdates: EtCodeMirrorViewer[];
+  private _scheduledCursorUpdates: EtTerminalViewer[];
   private _scheduledResize: boolean;
 
   // The current size of the emulator. This is used to detect changes in size.
@@ -160,7 +160,7 @@ class EtTerminal extends HTMLElement {
     this._autoscroll = true;
     this._emulator = null;
     this._cookie = null;
-    this._codeMirrorTerminal = null;
+    this._terminalViewer = null;
     this._htmlData = null;
     this._mimeType = null;
     this._mimeData = null;
@@ -263,11 +263,11 @@ class EtTerminal extends HTMLElement {
    * Focus on this terminal.
    */
   focus(): void {
-    if (this._codeMirrorTerminal !== null) {
+    if (this._terminalViewer !== null) {
       const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
       const top = scrollerArea.scrollTop;
       const left = scrollerArea.scrollLeft;
-      this._codeMirrorTerminal.focus();
+      this._terminalViewer.focus();
       scrollerArea.scrollTop = top;
       scrollerArea.scrollLeft = left;
     }
@@ -373,14 +373,14 @@ class EtTerminal extends HTMLElement {
     this._cookie = crypto.randomBytes(10).toString('hex');
     process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
     this._initEmulator(this._cookie);
-    this._appendNewCodeMirrorTerminal();
+    this._appendNewTerminalViewer();
 
     // FIXME there might be resizes for things other than changs in window size.
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
     scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
       if (ev.target === scrollerArea) {
-        this._codeMirrorTerminal.focus();
+        this._terminalViewer.focus();
         ev.preventDefault();
         ev.stopPropagation();
       }
@@ -397,13 +397,13 @@ class EtTerminal extends HTMLElement {
     scrollerArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
 
     scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-    scrollerArea.addEventListener(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, () => {
+    scrollerArea.addEventListener(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
       this._virtualScrollArea.scrollToBottom();
     });
     scrollerArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
       this._handleBeforeSelectionChange.bind(this));
-    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleCodeMirrorCursor.bind(this));
-    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleCodeMirrorCursorEdge.bind(this));
+    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
+    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
     
     this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     this._scheduleResize();
@@ -455,7 +455,7 @@ class EtTerminal extends HTMLElement {
           background-color: ${background_color};
         }
       
-        #${ID_SCROLL_AREA} > ${EtCodeMirrorViewer.TAG_NAME} {
+        #${ID_SCROLL_AREA} > ${EtTerminalViewer.TAG_NAME} {
             margin-left: 2px;
             margin-right: 2px;
         }
@@ -550,20 +550,20 @@ class EtTerminal extends HTMLElement {
     this._emulator = emulator;
   }
 
-  private _appendNewCodeMirrorTerminal(): void {
-    // Create the CodeMirrorTerminal
-    const codeMirrorTerminal = <EtCodeMirrorViewer> document.createElement(EtCodeMirrorViewer.TAG_NAME);
+  private _appendNewTerminalViewer(): void {
+    // Create the TerminalViewer
+    const terminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
     
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    scrollerArea.appendChild(codeMirrorTerminal);
+    scrollerArea.appendChild(terminalViewer);
     
-    codeMirrorTerminal.visualState = domutils.getShadowRoot(this).activeElement !== null
+    terminalViewer.visualState = domutils.getShadowRoot(this).activeElement !== null
                                       ? ViewerElement.VISUAL_STATE_FOCUSED
                                       : ViewerElement.VISUAL_STATE_UNFOCUSED;
-    codeMirrorTerminal.emulator = this._emulator;
-    this._virtualScrollArea.appendScrollable(codeMirrorTerminal);
+    terminalViewer.emulator = this._emulator;
+    this._virtualScrollArea.appendScrollable(terminalViewer);
 
-    this._codeMirrorTerminal = codeMirrorTerminal;
+    this._terminalViewer = terminalViewer;
     this._emulator.refreshScreen();
   }
 
@@ -577,19 +577,19 @@ class EtTerminal extends HTMLElement {
     this._sendTitleEvent(title);
   }
   
-  private _disconnectActiveCodeMirrorTerminal(): void {
+  private _disconnectActiveTerminalViewer(): void {
     this._emulator.moveRowsToScrollback();
-    if (this._codeMirrorTerminal !== null) {
-      this._codeMirrorTerminal.emulator = null;
-      this._codeMirrorTerminal.deleteScreen();
-      this._codeMirrorTerminal.useVPad = false;
-      this._virtualScrollArea.updateScrollableSize(this._codeMirrorTerminal);
-      this._codeMirrorTerminal = null;
+    if (this._terminalViewer !== null) {
+      this._terminalViewer.emulator = null;
+      this._terminalViewer.deleteScreen();
+      this._terminalViewer.useVPad = false;
+      this._virtualScrollArea.updateScrollableSize(this._terminalViewer);
+      this._terminalViewer = null;
     }
   }
   
   private _appendScrollableElement(el: ScrollableElement): void {
-    this._disconnectActiveCodeMirrorTerminal();
+    this._disconnectActiveTerminalViewer();
     
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(el);
@@ -691,8 +691,8 @@ class EtTerminal extends HTMLElement {
       }
     });
     this._mode = Mode.SELECTION;
-    if (domutils.getShadowRoot(this).activeElement !== this._codeMirrorTerminal) {
-      this._codeMirrorTerminal.focus();
+    if (domutils.getShadowRoot(this).activeElement !== this._terminalViewer) {
+      this._terminalViewer.focus();
     }
   }
   
@@ -737,14 +737,14 @@ class EtTerminal extends HTMLElement {
    * Handle a resize event from the window.
    */
   private _processResize(): void {
-    if (this._codeMirrorTerminal !== null) {
-      this._codeMirrorTerminal.resizeEmulatorToParentContainer();
+    if (this._terminalViewer !== null) {
+      this._terminalViewer.resizeEmulatorToParentContainer();
     }
     this._virtualScrollArea.resize();
-    this._updateVirtualScrollableSize(this._codeMirrorTerminal);
+    this._updateVirtualScrollableSize(this._terminalViewer);
   }
 
-  private _handleCodeMirrorCursor(ev: CustomEvent): void {
+  private _handleTerminalViewerCursor(ev: CustomEvent): void {
     const node = <Node> ev.target;
     if (ViewerElement.isViewerElement(node)) {
       const pos = node.getCursorPosition();
@@ -755,14 +755,14 @@ class EtTerminal extends HTMLElement {
     }
   }
   
-  private _handleCodeMirrorCursorEdge(ev: CustomEvent): void {
+  private _handleTerminalViewerCursorEdge(ev: CustomEvent): void {
     const detail = <ViewerElementTypes.CursorEdgeDetail> ev.detail;
     
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     const kids = domutils.nodeListToArray(scrollerArea.childNodes);
     const index = kids.indexOf(<Node> ev.target);
     if (index === -1) {
-      this._log.warn("_handleCodeMirrorCursorEdge: Couldn't find the target.");
+      this._log.warn("_handleTerminalViewerCursorEdge: Couldn't find the target.");
       return;
     }
 
@@ -805,7 +805,7 @@ class EtTerminal extends HTMLElement {
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._codeMirrorTerminal === null) {
+    if (this._terminalViewer === null) {
       return;
     }
     
@@ -836,11 +836,11 @@ class EtTerminal extends HTMLElement {
         break;
     }
 
-    if (this._mode !== Mode.SELECTION && ev.target !== this._codeMirrorTerminal) {
+    if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
       // Route the key down to the current code mirror terminal which has the emulator attached.
       const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
       ev.stopPropagation();
-      if ( ! this._codeMirrorTerminal.dispatchEvent(simulatedKeydown)) {
+      if ( ! this._terminalViewer.dispatchEvent(simulatedKeydown)) {
         // Cancelled.
         ev.preventDefault();
       }
@@ -848,16 +848,16 @@ class EtTerminal extends HTMLElement {
   }
 
   private _handleKeyPressCapture(ev: KeyboardEvent): void {
-    if (this._codeMirrorTerminal === null) {
+    if (this._terminalViewer === null) {
       return;
     }
 
-    if (this._mode !== Mode.SELECTION && ev.target !== this._codeMirrorTerminal) {
+    if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
       // Route the key down to the current code mirror terminal which has the emulator attached.
       const simulatedKeypress = domutils.newKeyboardEvent('keypress', ev);
       ev.preventDefault();
       ev.stopPropagation();
-      if ( ! this._codeMirrorTerminal.dispatchEvent(simulatedKeypress)) {
+      if ( ! this._terminalViewer.dispatchEvent(simulatedKeypress)) {
         // Cancelled.
         ev.preventDefault();
       }
@@ -909,9 +909,9 @@ class EtTerminal extends HTMLElement {
   /**
    * Schedule a cursor update to done later.
    * 
-   * @param {EtCodeMirrorViewer} updateTarget [description]
+   * @param {EtTerminalViewer} updateTarget [description]
    */
-  // private _scheduleCursorMoveUpdate(updateTarget: EtCodeMirrorViewer): void {
+  // private _scheduleCursorMoveUpdate(updateTarget: EtTerminalViewer): void {
   //   this._scheduleProcessing();
   //   
   //   if (this._scheduledCursorUpdates.some( (cmv) => cmv === updateTarget)) {
@@ -1111,14 +1111,14 @@ class EtTerminal extends HTMLElement {
       // Create and set up a new command-frame.
       const el = this._createEmbeddedViewerElement(cleancommand);
       this._appendScrollableElement(el);
-      this._appendNewCodeMirrorTerminal();
+      this._appendNewTerminalViewer();
     } else {
             
       // Don't place an embedded viewer, but use an invisible place holder instead.
       const el = <EtCommandPlaceHolder> this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
       el.setAttribute(EtCommandPlaceHolder.ATTR_COMMAND_LINE, cleancommand);
       this._appendScrollableElement(el);
-      this._appendNewCodeMirrorTerminal();
+      this._appendNewTerminalViewer();
     }
     this._virtualScrollArea.resize();
   }
@@ -1190,27 +1190,27 @@ class EtTerminal extends HTMLElement {
         embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
       }
       
-      const activeCodeMirrorTerminal = this._codeMirrorTerminal;
-      this._disconnectActiveCodeMirrorTerminal();
+      const activeTerminalViewer = this._terminalViewer;
+      this._disconnectActiveTerminalViewer();
       
-      activeCodeMirrorTerminal.returnCode = returnCode;
-      activeCodeMirrorTerminal.commandLine = embeddedViewerElement.getAttribute(EtEmbeddedViewer.ATTR_COMMAND);
-      activeCodeMirrorTerminal.useVPad = false;
+      activeTerminalViewer.returnCode = returnCode;
+      activeTerminalViewer.commandLine = embeddedViewerElement.getAttribute(EtEmbeddedViewer.ATTR_COMMAND);
+      activeTerminalViewer.useVPad = false;
       
       // Hang the terminal viewer under the Embedded viewer.
       embeddedViewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, returnCode);
       embeddedViewerElement.className = "extraterm_output";
       
-      // Some focus management to make sure that activeCodeMirrorTerminal still keeps
+      // Some focus management to make sure that activeTerminalViewer still keeps
       // the focus after we remove it from the DOM and place it else where.
-      const restoreFocus = domutils.getShadowRoot(this).activeElement === activeCodeMirrorTerminal;
-      const previousActiveTerminal = activeCodeMirrorTerminal;
+      const restoreFocus = domutils.getShadowRoot(this).activeElement === activeTerminalViewer;
+      const previousActiveTerminal = activeTerminalViewer;
       
-      embeddedViewerElement.viewerElement = activeCodeMirrorTerminal;
-      activeCodeMirrorTerminal.editable = true;
-      this._virtualScrollArea.removeScrollable(activeCodeMirrorTerminal);
+      embeddedViewerElement.viewerElement = activeTerminalViewer;
+      activeTerminalViewer.editable = true;
+      this._virtualScrollArea.removeScrollable(activeTerminalViewer);
       this._virtualScrollArea.updateScrollableSize(embeddedViewerElement);
-      this._appendNewCodeMirrorTerminal();
+      this._appendNewTerminalViewer();
       
       if (restoreFocus) {
         previousActiveTerminal.focus();

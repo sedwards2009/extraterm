@@ -278,7 +278,7 @@ class EtViewerTab extends ViewerElement {
     scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
 
     scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleCodeMirrorCursor.bind(this));
+    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
     
     domutils.doLater(this._processResize.bind(this));
   }
@@ -447,7 +447,7 @@ class EtViewerTab extends ViewerElement {
     }
   }
 
-  private _handleCodeMirrorCursor(ev: CustomEvent): void {
+  private _handleTerminalViewerCursor(ev: CustomEvent): void {
     const node = <Node> ev.target;
     if (ViewerElement.isViewerElement(node)) {
       const pos = node.getCursorPosition();
@@ -480,16 +480,16 @@ class EtViewerTab extends ViewerElement {
   }
 
   // private _handleKeyPressCapture(ev: KeyboardEvent): void {
-  //   if (this._codeMirrorTerminal === null) {
+  //   if (this._terminalViewer === null) {
   //     return;
   //   }
   // 
-  //   if (this._mode !== Mode.SELECTION && ev.target !== this._codeMirrorTerminal) {
+  //   if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
   //     // Route the key down to the current code mirror terminal which has the emulator attached.
   //     const simulatedKeypress = domutils.newKeyboardEvent('keypress', ev);
   //     ev.preventDefault();
   //     ev.stopPropagation();
-  //     if ( ! this._codeMirrorTerminal.dispatchEvent(simulatedKeypress)) {
+  //     if ( ! this._terminalViewer.dispatchEvent(simulatedKeypress)) {
   //       // Cancelled.
   //       ev.preventDefault();
   //     }

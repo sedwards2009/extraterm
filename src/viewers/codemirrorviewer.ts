@@ -10,17 +10,17 @@ import util = require("../gui/util");
 import domutils = require("../domutils");
 import CodeMirror = require('codemirror');
 import ViewerElementTypes = require('../viewerelementtypes');
-import EtCodeMirrorViewerTypes = require('./codemirrorviewertypes');
+import EtTerminalViewerTypes = require('./codemirrorviewertypes');
 import termjs = require('../term');
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type TextDecoration = EtCodeMirrorViewerTypes.TextDecoration;
+type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
-const ID = "CbCodeMirrorViewerTemplate";
+const ID = "CbTerminalViewerTemplate";
 const ID_CONTAINER = "container";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
@@ -42,9 +42,9 @@ function getCssText(): string {
   return cssText;
 }
 
-class EtCodeMirrorViewer extends ViewerElement {
+class EtTerminalViewer extends ViewerElement {
 
-  static TAG_NAME = "et-codemirror-viewer";
+  static TAG_NAME = "et-terminal-viewer";
   
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
 
@@ -56,19 +56,19 @@ class EtCodeMirrorViewer extends ViewerElement {
         + fs.readFileSync('node_modules/codemirror/addon/scroll/simplescrollbars.css', { encoding: 'utf8' })
         + fs.readFileSync('themes/default/theme.css', { encoding: 'utf8' });
 
-      window.document.registerElement(EtCodeMirrorViewer.TAG_NAME, {prototype: EtCodeMirrorViewer.prototype});
+      window.document.registerElement(EtTerminalViewer.TAG_NAME, {prototype: EtTerminalViewer.prototype});
       registered = true;
     }
   }
   
   /**
-   * Type guard for detecting a EtCodeMirrorViewer instance.
+   * Type guard for detecting a EtTerminalViewer instance.
    * 
    * @param  node the node to test
-   * @return      True if the node is a EtCodeMirrorViewer.
+   * @return      True if the node is a EtTerminalViewer.
    */
-  static is(node: Node): node is EtCodeMirrorViewer {
-    return node !== null && node !== undefined && node instanceof EtCodeMirrorViewer;
+  static is(node: Node): node is EtTerminalViewer {
+    return node !== null && node !== undefined && node instanceof EtTerminalViewer;
   }
   
   //-----------------------------------------------------------------------
@@ -109,7 +109,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   private _renderEventListener: termjs.RenderEventHandler = this._handleRenderEvent.bind(this);
 
   private _initProperties(): void {
-    this._log = new Logger(EtCodeMirrorViewer.TAG_NAME);
+    this._log = new Logger(EtTerminalViewer.TAG_NAME);
     this._emulator = null;
     this._terminalFirstRow = 0;
     this._mutationObserver = null;  
@@ -122,7 +122,7 @@ class EtCodeMirrorViewer extends ViewerElement {
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this.document = document;
     this._useVPad = true;
-    this._visualState = EtCodeMirrorViewer.VISUAL_STATE_AUTO;
+    this._visualState = EtTerminalViewer.VISUAL_STATE_AUTO;
     
     this._currentElementHeight = -1;
     
@@ -640,8 +640,8 @@ class EtCodeMirrorViewer extends ViewerElement {
     }
     
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    if ((newVisualState === EtCodeMirrorViewer.VISUAL_STATE_AUTO && this.hasFocus()) ||
-        newVisualState === EtCodeMirrorViewer.VISUAL_STATE_FOCUSED) {
+    if ((newVisualState === EtTerminalViewer.VISUAL_STATE_AUTO && this.hasFocus()) ||
+        newVisualState === EtTerminalViewer.VISUAL_STATE_FOCUSED) {
 
       containerDiv.classList.add(CLASS_FOCUSED);
       containerDiv.classList.remove(CLASS_UNFOCUSED);
@@ -693,7 +693,7 @@ class EtCodeMirrorViewer extends ViewerElement {
   
   private _emitKeyboardActivityEvent(): void {
     const scrollInfo = this._codeMirror.getScrollInfo();    
-    const event = new CustomEvent(EtCodeMirrorViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
+    const event = new CustomEvent(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
     this.dispatchEvent(event);
   }
 
@@ -1227,4 +1227,4 @@ function px(value) {
   return parseInt(value.slice(0,-2),10);
 }  
 
-export = EtCodeMirrorViewer;
+export = EtTerminalViewer;
