@@ -50,3 +50,4 @@ src/logger.js
 src/logdecorator.js
 src/viewertab.js
 src/framefindertype.js
+src/viewers/textviewer.js

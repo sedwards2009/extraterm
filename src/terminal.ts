@@ -10,7 +10,9 @@ import EtEmbeddedViewer = require('./embeddedviewer');
 import EtCommandPlaceHolder = require('./commandplaceholder');
 import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTerminalViewerTypes = require('./viewers/terminalviewertypes');
-import EtMarkdownViewer = require('./viewers/markdownviewer');
+import EtTextViewer = require('./viewers/textviewer');
+
+// import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 import domutils = require('./domutils');
@@ -102,7 +104,8 @@ class EtTerminal extends HTMLElement {
       EtEmbeddedViewer.init();
       EtCommandPlaceHolder.init();
       EtTerminalViewer.init();
-      EtMarkdownViewer.init();
+      EtTextViewer.init();
+      // EtMarkdownViewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
       registered = true;
     }
@@ -1296,17 +1299,26 @@ class EtTerminal extends HTMLElement {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
       viewerElement.viewerElement = mimeViewerElement;
+      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0");
       this._appendScrollableElement(viewerElement);
+      this._appendNewTerminalViewer();
     }
   }
 
   private _createMimeViewer(mimeType: string, mimeData: string): ViewerElement {
-    if (mimeType === "text/markdown") {
-      const win = this._getWindow();
-      const markdownViewerElement = <EtMarkdownViewer> win.document.createElement(EtMarkdownViewer.TAG_NAME);
-      const decodedMimeData = window.atob(mimeData);
-      markdownViewerElement.appendChild(win.document.createTextNode(decodedMimeData));
-      return markdownViewerElement;
+    if (mimeType.indexOf("text/") === 0 || mimeType === "application/typescript") {
+      const textViewer = <EtTextViewer> this._getWindow().document.createElement(EtTextViewer.TAG_NAME);
+      const decodedMime = window.atob(mimeData);
+      textViewer.text = decodedMime;
+      textViewer.mimeType = mimeType;
+      return textViewer;
+    // if (mimeType === "text/markdown") {
+    //   const win = this._getWindow();
+    //   const markdownViewerElement = <EtMarkdownViewer> win.document.createElement(EtMarkdownViewer.TAG_NAME);
+    //   const decodedMimeData = window.atob(mimeData);
+    //   markdownViewerElement.appendChild(win.document.createTextNode(decodedMimeData));
+    //   return markdownViewerElement;
+      
     } else {
       this._log.debug("Unknown mime type: " + mimeType);
       return null;
