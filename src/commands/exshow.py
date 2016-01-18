@@ -9,7 +9,9 @@ def SendMimeTypeData(filename, mimeType):
     extratermclient.startMimeType(mimeType)
     with open(filename,'rb') as fhandle:
         contents = fhandle.read(3*10240)    # This must be a multiple of 3 to keep concatinated base64 working.
-        print(base64.b64encode(contents).decode(),end='')
+        while len(contents) != 0:
+            print(base64.b64encode(contents).decode(),end='')
+            contents = fhandle.read(3*10240)
     extratermclient.endMimeType()
 
 mimeTypeMap = {
