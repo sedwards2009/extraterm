@@ -36,13 +36,25 @@ const log = LogDecorator;
 
 let registered = false;
 let instanceIdCounter = 0;
+
+const CODEMIRROR_THEME = "lesser-dark";
 let cssText: string = null;
 
 function getCssText(): string {
   return cssText;
 }
 
+// CodeMirror mode management.
 const meta = require('codemirror/mode/meta');
+const loadedCodeMirrorModes = new Set<string>();
+
+function LoadCodeMirrorMode(modeName: string): void {
+  if (loadedCodeMirrorModes.has(modeName)) {
+    return;
+  }
+  require('codemirror/mode/' + modeName + '/' + modeName);
+  loadedCodeMirrorModes.add(modeName);
+}
 
 class EtTextViewer extends ViewerElement {
 
@@ -54,7 +66,8 @@ class EtTextViewer extends ViewerElement {
       // Load the CSS resources now.
       cssText = fs.readFileSync('node_modules/codemirror/lib/codemirror.css', { encoding: 'utf8' })
         + fs.readFileSync('node_modules/codemirror/addon/scroll/simplescrollbars.css', { encoding: 'utf8' })
-        + fs.readFileSync('themes/default/theme.css', { encoding: 'utf8' });
+        + fs.readFileSync('themes/default/theme.css', { encoding: 'utf8' })
+        + fs.readFileSync('node_modules/codemirror/theme/' + CODEMIRROR_THEME + '.css', { encoding: 'utf8' });
 
       window.document.registerElement(EtTextViewer.TAG_NAME, {prototype: EtTextViewer.prototype});
       registered = true;
@@ -195,6 +208,10 @@ class EtTextViewer extends ViewerElement {
   
   set mimeType(mimeType: string) {
     this._mimeType = mimeType;
+    
+    const modeInfo = CodeMirror.findModeByMIME(mimeType);
+    LoadCodeMirrorMode(modeInfo.mode);
+    
     if (this._codeMirror !== null) {
       this._codeMirror.setOption("mode", mimeType);
     }
@@ -366,8 +383,14 @@ class EtTextViewer extends ViewerElement {
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
     }, {
-        value: "", readOnly: true, mode: "javascript", scrollbarStyle: "null", cursorScrollMargin: 0,
-        showCursorWhenSelecting: true});
+        value: "",
+        readOnly: true,
+        lineNumbers: true,
+        scrollbarStyle: "null",
+        cursorScrollMargin: 0,
+        showCursorWhenSelecting: true,
+        theme: CODEMIRROR_THEME
+      });
 
     this._codeMirror.on("cursorActivity", () => {
       if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
@@ -537,7 +560,7 @@ class EtTextViewer extends ViewerElement {
         ${getCssText()}
         </style>
         <style id="${ID_THEME_STYLE}"></style>
-        <div id="${ID_CONTAINER}" class="terminal_viewer terminal ${CLASS_UNFOCUSED}"></div>`
+        <div id="${ID_CONTAINER}" class="terminal_viewer ${CLASS_UNFOCUSED}"></div>`
 
       window.document.body.appendChild(template);
     }

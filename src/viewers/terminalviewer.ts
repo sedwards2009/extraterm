@@ -75,12 +75,10 @@ class EtTerminalViewer extends ViewerElement {
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
   private _emulator: termjs.Emulator;
-  private _instanceId: number;
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
   private _terminalFirstRow: number;
   
-  private _mutationObserver: MutationObserver;
   private _commandLine: string;
   private _returnCode: string;
   private _codeMirror: CodeMirror.Editor;
@@ -112,7 +110,6 @@ class EtTerminalViewer extends ViewerElement {
     this._log = new Logger(EtTerminalViewer.TAG_NAME);
     this._emulator = null;
     this._terminalFirstRow = 0;
-    this._mutationObserver = null;  
     this._commandLine = null;
     this._returnCode  =null;
     this._editable = false;
@@ -433,8 +430,6 @@ class EtTerminalViewer extends ViewerElement {
   
   createdCallback(): void {
     this._initProperties();
-    this._instanceId = instanceIdCounter;
-    instanceIdCounter++;
     this._renderEventListener = this._handleRenderEvent.bind(this);
   }
   
@@ -457,7 +452,14 @@ class EtTerminalViewer extends ViewerElement {
     // Create the CodeMirror instance
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
-    }, {value: "", readOnly: true,  scrollbarStyle: "null", cursorScrollMargin: 0, showCursorWhenSelecting: true});
+    }, {
+      value: "",
+      readOnly: true,
+      scrollbarStyle: "null",
+      cursorScrollMargin: 0,
+      showCursorWhenSelecting: true,
+      mode: null
+    });
 
     this._codeMirror.on("cursorActivity", () => {
       if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {

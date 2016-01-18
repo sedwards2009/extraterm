@@ -24,4 +24,18 @@ declare module CodeMirror {
     getSelection(linesep?: string): string;
     getSelections(linesep?: string): string[];
   }
+  
+  interface ModeInfo {
+    name: string;
+    mime?: string;
+    mimes?: string[];
+    mode?: string;
+    ext?: string[];
+    alias?: string[];
+  }
+  
+  function findModeByMIME(mime: string): ModeInfo;
+  function findModeByExtension(ext: string): ModeInfo;
+  function findModeByFileName(fileName: string): ModeInfo;
+  function findModeByName(name: string): ModeInfo;
 }
