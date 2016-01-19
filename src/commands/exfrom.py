@@ -33,12 +33,13 @@ def processRequest(frame_name):
     try:
         b64data = sys.stdin.readline()
         while len(b64data) != 0:
-            if '#' in b64data:  # Terminating char
-                sendData(b64data[:b64data.index('#')])
-                break
+            if b64data[0] != '#':
+                return 1    # Something is wrong with the transmission.
+            if '#;' in b64data:  # Terminating chars
+                return 0
             else:
                 # Send the input to stdout.
-                sendData(b64data)
+                sendData(b64data[1:])   # Strip the leading #
                 b64data = sys.stdin.readline()
     except OSError as ex:
         print(ex.strerror, file=sys.stderr)
@@ -65,6 +66,6 @@ def main():
     if not os.isatty(sys.stdin.fileno()):
         print("[Error] 'from' command must be connected to tty on stdin.", file=sys.stderr)
         sys.exit(1)
-    processRequest(sys.argv[1])
+    return processRequest(sys.argv[1])
 
 main()

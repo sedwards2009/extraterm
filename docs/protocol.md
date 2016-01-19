@@ -46,8 +46,13 @@ Data Request
 
     ESC "&" <cookie> ";4" 0x07 [frame_id] 0x00
 
-[frame_id] = ID this identifies the frame of data which the terminal should transmit.
+[frame_id] = ID this identifies the frame of data which the terminal should transmit. The terminal replies by transmitting the data as lines of base64 encoded data preceded by a '#' hash character per line:
 
+    '#' <base 64 data> '\n'
+
+To indicate the end of data this is sent:
+
+    '#;0\n'
 
 Show MIME data
 --------------

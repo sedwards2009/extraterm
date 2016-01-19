@@ -1283,10 +1283,10 @@ class EtTerminal extends HTMLElement {
     let encodedData: string = "";
     lines.forEach( (line: string) => {
       encodedData = window.btoa(line +"\n");
-      this._sendDataToPtyEvent(encodedData+"\n");
+      this._sendDataToPtyEvent("#" + encodedData + "\n");
     });
       
-    this._sendDataToPtyEvent("#\n");  // Terminating char
+    this._sendDataToPtyEvent("#;0\n");  // Terminating char
   }
 
   private _handleShowMimeType(mimeType: string, mimeData: string): void {
