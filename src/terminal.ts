@@ -1286,11 +1286,7 @@ class EtTerminal extends HTMLElement {
       this._sendDataToPtyEvent(encodedData+"\n");
     });
       
-    this._sendDataToPtyEvent("\x04");
-    
-    if (encodedData.length !== 0) {
-      this._sendDataToPtyEvent("\x04");
-    }
+    this._sendDataToPtyEvent("#\n");  // Terminating char
   }
 
   private _handleShowMimeType(mimeType: string, mimeData: string): void {

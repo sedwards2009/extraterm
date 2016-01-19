@@ -7,6 +7,7 @@ import _ = require("lodash");
 import configInterfaces = require('./config');
 import fs = require('fs');
 import path = require('path');
+import Logger = require('./logger');
 
 type Config = configInterfaces.Config;
 
@@ -16,9 +17,7 @@ type PtyOptions = ptyconnector.PtyOptions;
 
 const DEBUG_FINE = false;
 
-function log(msg: any, ...opts: any[]): void {
-  console.log("ptyproxy.ts: " + msg, ...opts);
-}
+const _log = new Logger("ptyproxy");
 
 const TYPE_CREATE = "create";
 const TYPE_CREATED = "created";
@@ -150,7 +149,7 @@ class ProxyPty implements Pty {
 
 function findCygwinPython(cygwinDir: string): string {
   const binDir = path.join(cygwinDir, 'bin');
-  log("binDir:" + binDir);
+  _log.info("binDir:", binDir);
   const pythonRegexp = /^python3.*m\.exe$/;
   if (fs.existsSync(binDir)) {
     const pythons = fs.readdirSync(binDir).filter( name => pythonRegexp.test(name) );
@@ -163,7 +162,7 @@ export function factory(config: Config): PtyConnector {
   const ptys: ProxyPty[] = [];
   const sessionProfile = config.expandedProfiles[0];
   const pythonExe = findCygwinPython(sessionProfile.cygwinDir);
-  log("Found python exe: " + pythonExe);
+  _log.info("Found python exe: ", pythonExe);
 
   // pythonExe = "python3";
   if (pythonExe === null) {
@@ -177,26 +176,30 @@ export function factory(config: Config): PtyConnector {
 
   proxy.stdout.on('data', function(data: Buffer) {
     if (DEBUG_FINE) {
-      log("main <<< server : ",data);
+      _log.debug("main <<< server : ", data);
     }
     messageBuffer = messageBuffer + data.toString('utf8');
     processMessageBuffer();
   });
 
   proxy.stderr.on('data', function (data: Buffer) {
-    log('ptyproxy process stderr: ' + data);
+    _log.warn('ptyproxy process stderr: ', data);
   });
 
   proxy.on('close', function (code) {
-    log('bridge process closed with code ' + code);
+    if (DEBUG_FINE) {
+      _log.debug('bridge process closed with code: ', code);
+    }
   });
   
   proxy.on('exit', function (code) {
-    log('bridge process exited with code ' + code);
+    if (DEBUG_FINE) {
+      _log.debug('bridge process exited with code: ', code);
+    }
   });
   
   proxy.on('error', (err) => {
-    log("Failed to start process " + pythonExe + ". "+err);
+    _log.severe("Failed to start process " + pythonExe + ". ", err);
   });
 
   function processMessageBuffer(): void {
@@ -262,7 +265,9 @@ export function factory(config: Config): PtyConnector {
   function spawn(file: string, args: string[], opt: PtyOptions): Pty {
     let rows = 24;
     let columns = 80;
-    log("ptyproxy spawn file: "+file);
+    if (DEBUG_FINE) {
+      _log.debug("ptyproxy spawn file: ", file);
+    }
     if (opt !== undefined) {
       rows = opt.rows !== undefined ? opt.rows : rows;
       columns = opt.cols !== undefined ? opt.cols : columns;

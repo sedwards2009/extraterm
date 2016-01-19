@@ -33,18 +33,25 @@ def processRequest(frame_name):
     try:
         b64data = sys.stdin.readline()
         while len(b64data) != 0:
-#            print(repr(b64data), file=sys.stderr)
-            # Send the input to stdout.
-            
-            data = base64.b64decode(b64data).decode('utf-8') # FIXME handle utf8 decode errors.
-            sys.stdout.write(data)
-            sys.stdout.flush()
-            b64data = sys.stdin.readline()
+            if '#' in b64data:  # Terminating char
+                sendData(b64data[:b64data.index('#')])
+                break
+            else:
+                # Send the input to stdout.
+                sendData(b64data)
+                b64data = sys.stdin.readline()
     except OSError as ex:
         print(ex.strerror, file=sys.stderr)
         
         #Ignore further SIG_PIPE signals and don't throw exceptions
         signal(SIGPIPE,SIG_DFL)
+
+def sendData(b64data):
+    if len(b64data) == 0:
+        return
+    data = base64.b64decode(b64data).decode('utf-8') # FIXME handle utf8 decode errors.
+    sys.stdout.write(data)
+    sys.stdout.flush()
         
 def main():
     if len(sys.argv) != 2:
