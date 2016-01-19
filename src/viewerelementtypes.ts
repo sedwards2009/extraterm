@@ -23,3 +23,9 @@ export interface CursorEdgeDetail {
   edge: Edge;
   ch: number;
 };
+
+// Class objects can implement this interface as a set of static properties/methods.
+export interface SupportsMimeTypes {
+  TAG_NAME: string;
+  supportsMimeType(mimeType): boolean;
+}

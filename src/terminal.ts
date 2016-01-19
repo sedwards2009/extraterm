@@ -68,6 +68,10 @@ const enum Mode {
   SELECTION
 }
 
+// List of viewer classes.
+const viewerClasses: ViewerElementTypes.SupportsMimeTypes[] = [];
+viewerClasses.push(EtTextViewer);
+
 /**
  * Create a new terminal.
  * 
@@ -1313,23 +1317,18 @@ class EtTerminal extends HTMLElement {
   }
 
   private _createMimeViewer(mimeType: string, mimeData: string): ViewerElement {
-    if (mimeType.indexOf("text/") === 0 || mimeType === "application/typescript") {
-      const textViewer = <EtTextViewer> this._getWindow().document.createElement(EtTextViewer.TAG_NAME);
-      const decodedMime = window.atob(mimeData);
-      textViewer.text = decodedMime;
-      textViewer.mimeType = mimeType;
-      return textViewer;
-    // if (mimeType === "text/markdown") {
-    //   const win = this._getWindow();
-    //   const markdownViewerElement = <EtMarkdownViewer> win.document.createElement(EtMarkdownViewer.TAG_NAME);
-    //   const decodedMimeData = window.atob(mimeData);
-    //   markdownViewerElement.appendChild(win.document.createTextNode(decodedMimeData));
-    //   return markdownViewerElement;
-      
-    } else {
+    const candidates = viewerClasses.filter( (viewerClass) => viewerClass.supportsMimeType(mimeType) );
+    
+    if (candidates.length === 0) {
       this._log.debug("Unknown mime type: " + mimeType);
       return null;
     }
+    
+    const textViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
+    const decodedMime = window.atob(mimeData);
+    textViewer.text = decodedMime;
+    textViewer.mimeType = mimeType;
+    return textViewer;
   }
 
   /**

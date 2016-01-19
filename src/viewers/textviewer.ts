@@ -346,7 +346,12 @@ class EtTextViewer extends ViewerElement {
     doc.setCursor( { line: doc.lineCount()-1 , ch: ch } );
     return true;
   }
-
+  
+  // From viewerelementtypes.SupportsMimeTypes
+  static supportsMimeType(mimeType): boolean {
+    return CodeMirror.findModeByMIME(mimeType) !== null;
+  }
+  
   //-----------------------------------------------------------------------
   //
   //   #                                                         
