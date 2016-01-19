@@ -1324,11 +1324,12 @@ class EtTerminal extends HTMLElement {
       return null;
     }
     
-    const textViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
+    const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
     const decodedMime = window.atob(mimeData);
-    textViewer.text = decodedMime;
-    textViewer.mimeType = mimeType;
-    return textViewer;
+    dataViewer.text = decodedMime;
+    dataViewer.mimeType = mimeType;
+    dataViewer.editable = true;
+    return dataViewer;
   }
 
   /**
