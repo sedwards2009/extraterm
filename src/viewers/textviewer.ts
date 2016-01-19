@@ -210,10 +210,11 @@ class EtTextViewer extends ViewerElement {
     this._mimeType = mimeType;
     
     const modeInfo = CodeMirror.findModeByMIME(mimeType);
-    LoadCodeMirrorMode(modeInfo.mode);
-    
-    if (this._codeMirror !== null) {
-      this._codeMirror.setOption("mode", mimeType);
+    if (modeInfo.mode !== undefined && modeInfo.mode !== null && modeInfo.mode !== "null") {
+      LoadCodeMirrorMode(modeInfo.mode);
+      if (this._codeMirror !== null) {
+        this._codeMirror.setOption("mode", mimeType);
+      }
     }
   }
   
