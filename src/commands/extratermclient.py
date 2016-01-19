@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 
 INTRO = "\x1b&"
 
@@ -29,10 +30,11 @@ def markEndCommand(rc=None):
         print(rc, end="")
     print("\x00", end="")
 
-def startMimeType(mimeType):
-    print(INTRO + cookie() + ";5;" + mimeType + "\x07", end="")
+def startFileTransfer(mimeType, filename):
+    payload = json.dumps({ "mimeType": mimeType, "filename": filename })
+    print(INTRO + cookie() + ";5;" + str(len(payload)) + "\x07" + payload, end="")
 
-def endMimeType():
+def endFileTransfer():
     print("\x00", end="")
     
 def requestFrame(frameName):

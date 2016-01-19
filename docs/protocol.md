@@ -54,11 +54,13 @@ To indicate the end of data this is sent:
 
     '#;0\n'
 
-Show MIME data
---------------
+Show file
+---------
 
-    ESC "&" <cookie> ";5;" [mime type] 0x07 ";" [size] 0x07 [base 64 data] 0x00
+    ESC "&" <cookie> ";5;" [metadata size] 0x07 [metadata] [base 64 data] 0x00
 
-[mime type] = 
-[size] = size of the data in bytes (not base 64 encoded size!)
+[metadata] = JSON string representing an object with the keys: mimeType and filename.
+[metadata size] = The length of the JSON metadata string.
 [base 64 data] = The stream of base64 encoded data.
+
+[size] = size of the data in bytes (not base 64 encoded size!)

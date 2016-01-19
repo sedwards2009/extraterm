@@ -60,7 +60,7 @@ const enum ApplicationMode {
   APPLICATION_MODE_OUTPUT_BRACKET_START = 2,
   APPLICATION_MODE_OUTPUT_BRACKET_END = 3,
   APPLICATION_MODE_REQUEST_FRAME = 4,
-  APPLICATION_MODE_SHOW_MIME = 5,
+  APPLICATION_MODE_SHOW_FILE = 5,
 }
 
 const enum Mode {
@@ -125,8 +125,8 @@ class EtTerminal extends HTMLElement {
   private _cookie: string;
   private _htmlData: string;
   
-  private _mimeType: string;
-  private _mimeData: string;
+  private _showPayloadSize: string;
+  private _showData: string;
   
   private _applicationMode: ApplicationMode;
   private _bracketStyle: string;
@@ -165,8 +165,8 @@ class EtTerminal extends HTMLElement {
     this._cookie = null;
     this._terminalViewer = null;
     this._htmlData = null;
-    this._mimeType = null;
-    this._mimeData = null;
+    this._showPayloadSize = null;
+    this._showData = null;
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
     this._bracketStyle = null;
     this._lastBashBracket = null;
@@ -1009,13 +1009,13 @@ class EtTerminal extends HTMLElement {
           }
           break;
           
-        case "" + ApplicationMode.APPLICATION_MODE_SHOW_MIME:
+        case "" + ApplicationMode.APPLICATION_MODE_SHOW_FILE:
           if (DEBUG_APPLICATION_MODE) {
-            this._log.debug("Starting APPLICATION_MODE_SHOW_MIME");
+            this._log.debug("Starting APPLICATION_MODE_SHOW_FILE");
           }
-          this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_MIME;
-          this._mimeData = "";
-          this._mimeType = params[2];
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_FILE;
+          this._showData = "";
+          this._showPayloadSize = params[2];
           break;
         
         default:
@@ -1041,8 +1041,8 @@ class EtTerminal extends HTMLElement {
         this._htmlData = this._htmlData + data;
         break;
         
-      case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-        this._mimeData = this._mimeData + data;
+      case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
+        this._showData = this._showData + data;
         break;
         
       default:
@@ -1076,10 +1076,10 @@ class EtTerminal extends HTMLElement {
         this.handleRequestFrame(this._htmlData);
         break;
         
-      case ApplicationMode.APPLICATION_MODE_SHOW_MIME:
-        this._handleShowMimeType(this._mimeType, this._mimeData);
-        this._mimeType = "";
-        this._mimeData = "";
+      case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
+        this._handleShowFile(this._showPayloadSize, this._showData);
+        this._showPayloadSize = "";
+        this._showData = "";
         break;
         
       default:
@@ -1289,12 +1289,23 @@ class EtTerminal extends HTMLElement {
     this._sendDataToPtyEvent("#;0\n");  // Terminating char
   }
 
-  private _handleShowMimeType(mimeType: string, mimeData: string): void {
-    const mimeViewerElement = this._createMimeViewer(mimeType, mimeData);
+  private _handleShowFile(metadataSizeStr: string, encodedData: string): void {
+    const metadataSize = parseInt(metadataSizeStr,10);
+    if (metadataSize > encodedData.length) {
+      this._log.warn("Received corrupt data for a 'show' control sequence.");
+      return;
+    }
+    
+    const metadata = JSON.parse(encodedData.substr(0, metadataSize));
+    const mimeType = metadata.mimeType;
+    const filename = metadata.filename;
+
+    const mimeViewerElement = this._createMimeViewer(mimeType, encodedData.slice(metadataSize));
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
       viewerElement.viewerElement = mimeViewerElement;
+      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_COMMAND, filename);
       viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0");
       this._appendScrollableElement(viewerElement);
       this._appendNewTerminalViewer();

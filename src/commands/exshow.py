@@ -6,13 +6,13 @@ import base64
 import extratermclient
 
 def SendMimeTypeData(filename, mimeType):
-    extratermclient.startMimeType(mimeType)
+    extratermclient.startFileTransfer(mimeType, filename)
     with open(filename,'rb') as fhandle:
         contents = fhandle.read(3*10240)    # This must be a multiple of 3 to keep concatinated base64 working.
         while len(contents) != 0:
             print(base64.b64encode(contents).decode(),end='')
             contents = fhandle.read(3*10240)
-    extratermclient.endMimeType()
+    extratermclient.endFileTransfer()
 
 mimeTypeMap = {
     "png": "image/png",
