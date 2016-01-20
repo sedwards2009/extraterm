@@ -1135,10 +1135,10 @@ class EtTerminal extends HTMLElement {
     this._virtualScrollArea.removeScrollable(viewer);
   }
   
-  private _createEmbeddedViewerElement(commandLine: string): EtEmbeddedViewer {
+  private _createEmbeddedViewerElement(title: string): EtEmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
-
+    el.awesomeIcon = 'fa-cog';
     el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
       this.focus();
@@ -1162,7 +1162,7 @@ class EtTerminal extends HTMLElement {
     el.visualState = domutils.getShadowRoot(this).activeElement !== null
                                       ? ViewerElement.VISUAL_STATE_FOCUSED
                                       : ViewerElement.VISUAL_STATE_UNFOCUSED;
-    el.setAttribute(EtEmbeddedViewer.ATTR_COMMAND, commandLine);
+    el.setAttribute(EtEmbeddedViewer.ATTR_TITLE, title);
     el.setAttribute(EtEmbeddedViewer.ATTR_TAG, "" + this._getNextTag());
     return el;
   }
@@ -1201,11 +1201,13 @@ class EtTerminal extends HTMLElement {
       this._disconnectActiveTerminalViewer();
       
       activeTerminalViewer.returnCode = returnCode;
-      activeTerminalViewer.commandLine = embeddedViewerElement.getAttribute(EtEmbeddedViewer.ATTR_COMMAND);
+      activeTerminalViewer.commandLine = embeddedViewerElement.getAttribute(EtEmbeddedViewer.ATTR_TITLE);
       activeTerminalViewer.useVPad = false;
       
       // Hang the terminal viewer under the Embedded viewer.
       embeddedViewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, returnCode);
+      embeddedViewerElement.awesomeIcon = returnCode === '0' ? 'fa-check' : 'fa-times';
+      embeddedViewerElement.setAttribute(EtEmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
       embeddedViewerElement.className = "extraterm_output";
       
       // Some focus management to make sure that activeTerminalViewer still keeps
@@ -1309,8 +1311,9 @@ class EtTerminal extends HTMLElement {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
       viewerElement.viewerElement = mimeViewerElement;
-      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_COMMAND, filename);
-      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0");
+      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_TITLE, filename);
+      viewerElement.awesomeIcon = "fa-file-text-o";
+      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
       this._appendScrollableElement(viewerElement);
       this._appendNewTerminalViewer();
     }

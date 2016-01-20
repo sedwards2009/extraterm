@@ -610,7 +610,7 @@ class ExtratermMainWebUI extends HTMLElement {
     const viewerElement = embeddedViewer.viewerElement;
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     
-    viewerTab.title = embeddedViewer.commandLine;
+    viewerTab.title = embeddedViewer.title;
     viewerTab.tag = embeddedViewer.tag;
     
     const tabInfo = new ViewerTabInfo(viewerTab);

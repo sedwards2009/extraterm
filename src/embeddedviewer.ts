@@ -50,7 +50,7 @@ const DEBUG_SIZE = false;
  */
 class EtEmbeddedViewer extends ViewerElement {
   
-  static TAG_NAME = "et-embeddedviewer";
+  static TAG_NAME = 'et-embeddedviewer';
   
   static EVENT_COPY_CLIPBOARD_REQUST = 'copy-clipboard-request';
   
@@ -62,13 +62,17 @@ class EtEmbeddedViewer extends ViewerElement {
   
   static EVENT_SCROLL_MOVE = 'scroll-move';
   
-  static ATTR_COMMAND = "command";
+  static ATTR_TITLE = 'title';
 
   static ATTR_RETURN_CODE = "return-code";
 
-  static ATTR_EXPAND = "expand";
+  static ATTR_EXPAND = 'expand';
 
-  static ATTR_TAG = "tag";
+  static ATTR_TAG = 'tag';
+  
+  static ATTR_TOOL_TIP = 'tool-tip';
+
+  static ATTR_AWESOME_ICON = 'awesome-icon';
 
   /**
    * 
@@ -237,12 +241,30 @@ class EtEmbeddedViewer extends ViewerElement {
     return this.getAttribute(EtEmbeddedViewer.ATTR_TAG);
   }
 
-  set commandLine(newCommandLine: string) {
-    this.setAttribute(EtEmbeddedViewer.ATTR_COMMAND, newCommandLine);
+  set title(newTitle: string) {
+    this.setAttribute(EtEmbeddedViewer.ATTR_TITLE, newTitle);
   }
 
-  get commandLine(): string {
-    return this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND);
+  get title(): string {
+    return this.getAttribute(EtEmbeddedViewer.ATTR_TITLE);
+  }
+
+  set returnCode(returnCode: number) {
+    this.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE,
+      returnCode === null || returnCode === undefined ? null : "" + returnCode);
+  }
+
+  get returnCode(): number {
+    const rcString = this.getAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE);
+    return rcString === null || rcString === undefined ? null : parseInt(rcString, 10);
+  }
+
+  set awesomeIcon(iconName: string) {
+    this.setAttribute(EtEmbeddedViewer.ATTR_AWESOME_ICON, iconName);
+  }
+
+  get awesomeIcon(): string {
+    return this.getAttribute(EtEmbeddedViewer.ATTR_AWESOME_ICON);
   }
 
   clearSelection(): void {
@@ -326,10 +348,12 @@ class EtEmbeddedViewer extends ViewerElement {
     const clone = this._createClone();
     shadow.appendChild(clone);
 
-    this._setAttr(EtEmbeddedViewer.ATTR_COMMAND, this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND));
+    this._setAttr(EtEmbeddedViewer.ATTR_TITLE, this.getAttribute(EtEmbeddedViewer.ATTR_TITLE));
     this._setAttr(EtEmbeddedViewer.ATTR_RETURN_CODE, this.getAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE));
     this._setAttr(EtEmbeddedViewer.ATTR_EXPAND, this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND));
     this._setAttr(EtEmbeddedViewer.ATTR_TAG, this.getAttribute(EtEmbeddedViewer.ATTR_TAG));
+    this._setAttr(EtEmbeddedViewer.ATTR_TOOL_TIP, this.getAttribute(EtEmbeddedViewer.ATTR_TOOL_TIP));
+    this._setAttr(EtEmbeddedViewer.ATTR_AWESOME_ICON, this.getAttribute(EtEmbeddedViewer.ATTR_AWESOME_ICON));
 
     this._getById(ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
     this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
@@ -367,15 +391,15 @@ class EtEmbeddedViewer extends ViewerElement {
         case "copycommand":
           event = new CustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST);
           event.initCustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST, true, true,
-            this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND));
+            this.getAttribute(EtEmbeddedViewer.ATTR_TITLE));
           this.dispatchEvent(event);
           break;
 
         case "typecommand":
           event = new CustomEvent(EtEmbeddedViewer.EVENT_TYPE,
-              { detail: this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND) });
+              { detail: this.getAttribute(EtEmbeddedViewer.ATTR_TITLE) });
           event.initCustomEvent(EtEmbeddedViewer.EVENT_TYPE, true, true,
-              this.getAttribute(EtEmbeddedViewer.ATTR_COMMAND));
+              this.getAttribute(EtEmbeddedViewer.ATTR_TITLE));
           this.dispatchEvent(event);
           break;
 
@@ -686,18 +710,15 @@ class EtEmbeddedViewer extends ViewerElement {
       return;
     }
 
-    if (attrName === EtEmbeddedViewer.ATTR_COMMAND) {
+    if (attrName === EtEmbeddedViewer.ATTR_TITLE) {
       (<HTMLDivElement>this._getById(ID_COMMANDLINE)).innerText = newValue;
       return;
     }
 
     if (attrName === EtEmbeddedViewer.ATTR_RETURN_CODE) {
       const container = <HTMLDivElement>this._getById(ID_CONTAINER);
-      const icon = <HTMLDivElement>this._getById(ID_ICON);
-      const iconDiv = <HTMLDivElement>this._getById(ID_ICON_DIV);
 
       if (newValue === null || newValue === undefined || newValue === "") {
-        icon.className = "fa fa-cog";
         container.classList.add('running');
         container.classList.remove('success');
         container.classList.remove('fail');
@@ -706,12 +727,9 @@ class EtEmbeddedViewer extends ViewerElement {
         const rc = parseInt(newValue, 10);
         container.classList.remove('running');
         container.classList.remove('running');
-        iconDiv.setAttribute('title', 'Return code: ' + rc);
         if (rc === 0) {
-          icon.className = "fa fa-check";
           container.classList.add('success');
         } else {
-          icon.className = "fa fa-times";
           container.classList.add('fail');
         }
       }
@@ -741,6 +759,18 @@ class EtEmbeddedViewer extends ViewerElement {
     if (attrName === EtEmbeddedViewer.ATTR_TAG) {
       const tagName = <HTMLDivElement>this._getById(ID_TAG_NAME);
       tagName.innerText = newValue;
+    }
+    
+    if (attrName === EtEmbeddedViewer.ATTR_TOOL_TIP) {
+      const iconDiv = <HTMLDivElement>this._getById(ID_ICON_DIV);
+      if (newValue !== null) {
+        iconDiv.setAttribute('title', newValue);
+      }
+    }
+    
+    if (attrName === EtEmbeddedViewer.ATTR_AWESOME_ICON) {
+      const icon = <HTMLDivElement>this._getById(ID_ICON);
+      icon.className = "fa " + newValue;
     }
   }
 
