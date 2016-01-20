@@ -185,8 +185,7 @@ def Show(filename):
     if os.path.exists(filename):
         mimeType = FilenameToMimetype(os.path.basename(filename))
         if mimeType is None:
-            print("Unrecognised file extension.")
-            return 2
+            mimeType = "text/plain"
         SendMimeTypeData(filename, mimeType)
         return 0
     else:
