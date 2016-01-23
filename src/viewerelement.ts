@@ -140,6 +140,10 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
   setCursorPositionTop(x: number): boolean {
     return false;
   }
+  
+  setBytes(buffer: Uint8Array, mimeType: string): void {
+    
+  }
 }
 
 export = ViewerElement;

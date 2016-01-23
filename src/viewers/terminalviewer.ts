@@ -35,7 +35,6 @@ const DEBUG_RESIZE = false;
 const log = LogDecorator;
 
 let registered = false;
-let instanceIdCounter = 0;
 let cssText: string = null;
 
 function getCssText(): string {

@@ -1,5 +1,6 @@
 
 import util = require('./gui/util');
+import base64arraybuffer = require('base64-arraybuffer');
 
 /**
  * Convert an array-like object to a real array.
@@ -338,4 +339,18 @@ export function doLaterFrame(func: Function): LaterHandle {
   return { cancel: () => {
     laterFrameList = laterFrameList.filter( f => f!== func );
   } };
+}
+
+//-------------------------------------------------------------------------
+
+/**
+ * Format a Uint8Array and mimetype as a data url.
+ * 
+ * @param  {Uint8Array} buffer   [description]
+ * @param  {string}     mimeType [description]
+ * @return {string}              [description]
+ */
+export function CreateDataUrl(buffer: Uint8Array, mimeType: string): string {
+  const base64Data = base64arraybuffer.encode(buffer.buffer);
+  return "data:" + mimeType + ";base64," + base64Data;
 }

@@ -770,7 +770,7 @@ class EtEmbeddedViewer extends ViewerElement {
     
     if (attrName === EtEmbeddedViewer.ATTR_AWESOME_ICON) {
       const icon = <HTMLDivElement>this._getById(ID_ICON);
-      icon.className = "fa " + newValue;
+      icon.className = "fa " + (newValue !== null && newValue !== undefined && newValue !== "" ? "fa-" : "") + newValue;
     }
   }
 

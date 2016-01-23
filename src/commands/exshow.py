@@ -5,8 +5,8 @@ import base64
 
 import extratermclient
 
-def SendMimeTypeData(filename, mimeType):
-    extratermclient.startFileTransfer(mimeType, filename)
+def SendMimeTypeData(filename, mimeType, charset):
+    extratermclient.startFileTransfer(mimeType, charset, filename)
     with open(filename,'rb') as fhandle:
         contents = fhandle.read(3*10240)    # This must be a multiple of 3 to keep concatinated base64 working.
         while len(contents) != 0:
@@ -167,7 +167,7 @@ modeInfo = [
     {"name": "msgenny", "mime": "text/x-msgenny", "mode": "mscgen", "ext": ["msgenny"]}
   ];
   
-def FilenameToMimetype(name):
+def FilenameToTextMimetype(name):
     lowerfilename = name.lower()
     if '.' in lowerfilename:
         extension = lowerfilename.split('.')[-1]
@@ -178,15 +178,29 @@ def FilenameToMimetype(name):
                 else:
                     if "mimes" in modeRecord:
                         return modeRecord["mimes"][0]
-    else:
-        return None
+    return None
+
+def FilenameToImageMimetype(name):
+    lowerfilename = name.lower()
+    if '.' in lowerfilename:
+        extension = lowerfilename.split('.')[-1]
+        if extension in mimeTypeMap:
+            return mimeTypeMap[extension]
+    return None
+    
 
 def Show(filename):
     if os.path.exists(filename):
-        mimeType = FilenameToMimetype(os.path.basename(filename))
-        if mimeType is None:
-            mimeType = "text/plain"
-        SendMimeTypeData(filename, mimeType)
+        charset = None
+        mimeType = FilenameToTextMimetype(os.path.basename(filename))
+        if mimeType is not None:
+            charset = "utf8"
+        else:
+            mimeType = FilenameToImageMimetype(os.path.basename(filename))
+            if mimeType is None:
+                mimeType = "text/plain"
+                charset = "utf8"
+        SendMimeTypeData(filename, mimeType, charset)
         return 0
     else:
         print("Unable to open file {0}.".format(filename))

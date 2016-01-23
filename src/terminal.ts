@@ -4,6 +4,8 @@
 
 import fs  = require('fs');
 import crypto = require('crypto');
+import base64arraybuffer = require('base64-arraybuffer');
+
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import EtEmbeddedViewer = require('./embeddedviewer');
@@ -11,6 +13,7 @@ import EtCommandPlaceHolder = require('./commandplaceholder');
 import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTerminalViewerTypes = require('./viewers/terminalviewertypes');
 import EtTextViewer = require('./viewers/textviewer');
+import EtImageViewer = require('./viewers/imageviewer');
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger = require('./logger');
@@ -70,6 +73,7 @@ const enum Mode {
 
 // List of viewer classes.
 const viewerClasses: ViewerElementTypes.SupportsMimeTypes[] = [];
+viewerClasses.push(EtImageViewer);
 viewerClasses.push(EtTextViewer);
 
 /**
@@ -109,6 +113,8 @@ class EtTerminal extends HTMLElement {
       EtCommandPlaceHolder.init();
       EtTerminalViewer.init();
       EtTextViewer.init();
+      EtImageViewer.init();
+
       // EtMarkdownViewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
       registered = true;
@@ -1138,7 +1144,7 @@ class EtTerminal extends HTMLElement {
   private _createEmbeddedViewerElement(title: string): EtEmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
-    el.awesomeIcon = 'fa-cog';
+    el.awesomeIcon = 'cog';
     el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
       this.focus();
@@ -1206,7 +1212,7 @@ class EtTerminal extends HTMLElement {
       
       // Hang the terminal viewer under the Embedded viewer.
       embeddedViewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, returnCode);
-      embeddedViewerElement.awesomeIcon = returnCode === '0' ? 'fa-check' : 'fa-times';
+      embeddedViewerElement.awesomeIcon = returnCode === '0' ? 'check' : 'times';
       embeddedViewerElement.setAttribute(EtEmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
       embeddedViewerElement.className = "extraterm_output";
       
@@ -1305,21 +1311,22 @@ class EtTerminal extends HTMLElement {
     const metadata = JSON.parse(encodedData.substr(0, metadataSize));
     const mimeType = metadata.mimeType;
     const filename = metadata.filename;
+    const charset = metadata.charset === undefined ? null : metadata.charset;
 
-    const mimeViewerElement = this._createMimeViewer(mimeType, encodedData.slice(metadataSize));
+    const mimeViewerElement = this._createMimeViewer(mimeType, charset, encodedData.slice(metadataSize));
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
       viewerElement.viewerElement = mimeViewerElement;
       viewerElement.setAttribute(EtEmbeddedViewer.ATTR_TITLE, filename);
-      viewerElement.awesomeIcon = "fa-file-text-o";
+      viewerElement.awesomeIcon = mimeViewerElement.awesomeIcon;
       viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
       this._appendScrollableElement(viewerElement);
       this._appendNewTerminalViewer();
     }
   }
 
-  private _createMimeViewer(mimeType: string, mimeData: string): ViewerElement {
+  private _createMimeViewer(mimeType: string, charset: string, mimeData: string): ViewerElement {
     const candidates = viewerClasses.filter( (viewerClass) => viewerClass.supportsMimeType(mimeType) );
     
     if (candidates.length === 0) {
@@ -1328,9 +1335,8 @@ class EtTerminal extends HTMLElement {
     }
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
-    const decodedMime = window.atob(mimeData);
-    dataViewer.text = decodedMime;
-    dataViewer.mimeType = mimeType;
+    const buffer = new Uint8Array(base64arraybuffer.decode(mimeData));
+    dataViewer.setBytes(buffer, charset !== null ? mimeType + ";" + charset : mimeType);
     dataViewer.editable = true;
     return dataViewer;
   }
