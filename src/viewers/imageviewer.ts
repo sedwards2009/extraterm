@@ -274,7 +274,7 @@ class EtImageViewer extends ViewerElement {
   
   // From viewerelementtypes.SupportsMimeTypes
   static supportsMimeType(mimeType): boolean {
-    return ["image/jpeg", "image/png"].indexOf(mimeType) !== -1;
+    return ["image/x-bmp", "image/bmp", "image/png", "image/gif", "image/jpeg",  "image/webp"].indexOf(mimeType) !== -1;
   }
   
   //-----------------------------------------------------------------------

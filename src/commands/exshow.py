@@ -15,11 +15,17 @@ def SendMimeTypeData(filename, mimeType, charset):
     extratermclient.endFileTransfer()
 
 mimeTypeMap = {
+    "bmp": "image/bmp",
+    "dib": "image/bmp",
     "png": "image/png",
-    "git": "image/git",
-    "jpg": "image/jpg",
-    "md": "text/markdown",
-    "js": "text/javascript"
+    "gif": "image/gif",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "jpe": "image/jpeg",
+    "jif": "image/jpeg",
+    "jfif": "image/jpeg",
+    "jfi": "image/jpeg",
+    "webp": "image/webp"
 }
 
 # This little database is from CodeMirros' meta.js file which summerizes the supported syntax highlighting modes.
