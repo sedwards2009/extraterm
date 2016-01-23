@@ -1168,7 +1168,7 @@ class EtTerminal extends HTMLElement {
     el.visualState = domutils.getShadowRoot(this).activeElement !== null
                                       ? ViewerElement.VISUAL_STATE_FOCUSED
                                       : ViewerElement.VISUAL_STATE_UNFOCUSED;
-    el.setAttribute(EtEmbeddedViewer.ATTR_TITLE, title);
+    el.setAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE, title);
     el.setAttribute(EtEmbeddedViewer.ATTR_TAG, "" + this._getNextTag());
     return el;
   }
@@ -1207,7 +1207,7 @@ class EtTerminal extends HTMLElement {
       this._disconnectActiveTerminalViewer();
       
       activeTerminalViewer.returnCode = returnCode;
-      activeTerminalViewer.commandLine = embeddedViewerElement.getAttribute(EtEmbeddedViewer.ATTR_TITLE);
+      activeTerminalViewer.commandLine = embeddedViewerElement.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE);
       activeTerminalViewer.useVPad = false;
       
       // Hang the terminal viewer under the Embedded viewer.
@@ -1318,7 +1318,7 @@ class EtTerminal extends HTMLElement {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
       viewerElement.viewerElement = mimeViewerElement;
-      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_TITLE, filename);
+      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE, filename);
       viewerElement.awesomeIcon = mimeViewerElement.awesomeIcon;
       viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
       this._appendScrollableElement(viewerElement);

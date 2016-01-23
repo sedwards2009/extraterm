@@ -62,7 +62,7 @@ class EtEmbeddedViewer extends ViewerElement {
   
   static EVENT_SCROLL_MOVE = 'scroll-move';
   
-  static ATTR_TITLE = 'title';
+  static ATTR_FRAME_TITLE = 'frame-title';
 
   static ATTR_RETURN_CODE = "return-code";
 
@@ -242,11 +242,11 @@ class EtEmbeddedViewer extends ViewerElement {
   }
 
   set title(newTitle: string) {
-    this.setAttribute(EtEmbeddedViewer.ATTR_TITLE, newTitle);
+    this.setAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE, newTitle);
   }
 
   get title(): string {
-    return this.getAttribute(EtEmbeddedViewer.ATTR_TITLE);
+    return this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE);
   }
 
   set returnCode(returnCode: number) {
@@ -348,7 +348,7 @@ class EtEmbeddedViewer extends ViewerElement {
     const clone = this._createClone();
     shadow.appendChild(clone);
 
-    this._setAttr(EtEmbeddedViewer.ATTR_TITLE, this.getAttribute(EtEmbeddedViewer.ATTR_TITLE));
+    this._setAttr(EtEmbeddedViewer.ATTR_FRAME_TITLE, this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE));
     this._setAttr(EtEmbeddedViewer.ATTR_RETURN_CODE, this.getAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE));
     this._setAttr(EtEmbeddedViewer.ATTR_EXPAND, this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND));
     this._setAttr(EtEmbeddedViewer.ATTR_TAG, this.getAttribute(EtEmbeddedViewer.ATTR_TAG));
@@ -391,15 +391,15 @@ class EtEmbeddedViewer extends ViewerElement {
         case "copycommand":
           event = new CustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST);
           event.initCustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST, true, true,
-            this.getAttribute(EtEmbeddedViewer.ATTR_TITLE));
+            this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE));
           this.dispatchEvent(event);
           break;
 
         case "typecommand":
           event = new CustomEvent(EtEmbeddedViewer.EVENT_TYPE,
-              { detail: this.getAttribute(EtEmbeddedViewer.ATTR_TITLE) });
+              { detail: this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE) });
           event.initCustomEvent(EtEmbeddedViewer.EVENT_TYPE, true, true,
-              this.getAttribute(EtEmbeddedViewer.ATTR_TITLE));
+              this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE));
           this.dispatchEvent(event);
           break;
 
@@ -710,7 +710,7 @@ class EtEmbeddedViewer extends ViewerElement {
       return;
     }
 
-    if (attrName === EtEmbeddedViewer.ATTR_TITLE) {
+    if (attrName === EtEmbeddedViewer.ATTR_FRAME_TITLE) {
       (<HTMLDivElement>this._getById(ID_COMMANDLINE)).innerText = newValue;
       return;
     }
