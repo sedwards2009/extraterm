@@ -7,6 +7,12 @@ export enum Mode {
   SELECTION // Mode for selecting parts of the output using the cursor.
 };
 
+export enum VisualState {
+  AUTO,      // "Visual state should automatically follow the focus."
+  UNFOCUSED, // "Visual state should appear in the unfocused state."
+  FOCUSED    // "Visual state should appear in the focused state."
+};
+
 export interface CursorMoveDetail {
   left: number;
   top: number;

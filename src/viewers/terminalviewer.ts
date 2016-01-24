@@ -19,6 +19,8 @@ import LogDecorator = require('../logdecorator');
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
+const VisualState = ViewerElementTypes.VisualState;
+type VisualState = ViewerElementTypes.VisualState;
 
 const ID = "CbTerminalViewerTemplate";
 const ID_CONTAINER = "container";
@@ -87,7 +89,7 @@ class EtTerminalViewer extends ViewerElement {
   private _editable: boolean;
   private document: Document;
   private _useVPad: boolean;
-  private _visualState: number;
+  private _visualState: VisualState;
 
   private _mainStyleLoaded: boolean;
   private _resizePollHandle: domutils.LaterHandle;
@@ -118,7 +120,7 @@ class EtTerminalViewer extends ViewerElement {
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this.document = document;
     this._useVPad = true;
-    this._visualState = EtTerminalViewer.VISUAL_STATE_AUTO;
+    this._visualState = VisualState.AUTO;
     
     this._currentElementHeight = -1;
     
@@ -486,7 +488,7 @@ class EtTerminalViewer extends ViewerElement {
         this._emulator.focus();
       }
       
-      if (this._visualState === ViewerElement.VISUAL_STATE_AUTO) {
+      if (this._visualState === VisualState.AUTO) {
         const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
         containerDiv.classList.add(CLASS_FOCUSED);
         containerDiv.classList.remove(CLASS_UNFOCUSED);
@@ -498,7 +500,7 @@ class EtTerminalViewer extends ViewerElement {
         this._emulator.blur();
       }
       
-      if (this._visualState === ViewerElement.VISUAL_STATE_AUTO) {
+      if (this._visualState === VisualState.AUTO) {
         containerDiv.classList.add(CLASS_UNFOCUSED);
         containerDiv.classList.remove(CLASS_FOCUSED);
       }
@@ -641,8 +643,8 @@ class EtTerminalViewer extends ViewerElement {
     }
     
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    if ((newVisualState === EtTerminalViewer.VISUAL_STATE_AUTO && this.hasFocus()) ||
-        newVisualState === EtTerminalViewer.VISUAL_STATE_FOCUSED) {
+    if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
+        newVisualState === VisualState.FOCUSED) {
 
       containerDiv.classList.add(CLASS_FOCUSED);
       containerDiv.classList.remove(CLASS_UNFOCUSED);

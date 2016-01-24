@@ -22,6 +22,8 @@ import virtualscrollarea = require('./virtualscrollarea');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type ScrollableElement = VirtualScrollable & HTMLElement;
+type VisualState = ViewerElementTypes.VisualState;
+const VisualState = ViewerElementTypes.VisualState;
 
 const log = LogDecorator;
 
@@ -358,7 +360,7 @@ class EtViewerTab extends ViewerElement {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = ViewerElement.VISUAL_STATE_FOCUSED;
+        node.visualState = VisualState.FOCUSED;
       }
     });
   }
@@ -368,7 +370,7 @@ class EtViewerTab extends ViewerElement {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = ViewerElement.VISUAL_STATE_UNFOCUSED;
+        node.visualState = VisualState.UNFOCUSED;
       }
     });
   }

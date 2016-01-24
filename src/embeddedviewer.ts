@@ -16,6 +16,7 @@ import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+const VisualState = ViewerElementTypes.VisualState;
 
 const log = LogDecorator;
 
@@ -108,7 +109,7 @@ class EtEmbeddedViewer extends ViewerElement {
   private _initProperties(): void {
     this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
     this._currentElementHeight = -1;
-    this._visualState = ViewerElement.VISUAL_STATE_AUTO;
+    this._visualState = VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
   }
   

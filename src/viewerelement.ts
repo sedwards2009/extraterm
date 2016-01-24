@@ -10,13 +10,10 @@ import ViewerElementTypes = require('./viewerelementtypes');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type Mode = ViewerElementTypes.Mode;
+type VisualState = ViewerElementTypes.VisualState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
 abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
-  
-  static VISUAL_STATE_AUTO = 0;     // "Visual state should automatically follow the focus."
-  static VISUAL_STATE_UNFOCUSED = 1;// "Visual state should appear in the unfocused state."
-  static VISUAL_STATE_FOCUSED = 2;  // "Visual state should appear in the focused state."
   
   static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
 
@@ -88,8 +85,7 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
   set focusable(value: boolean) {
   }
   
-  public visualState: number;
-  // One of the constants VISUAL_STATE_AUTO, VISUAL_STATE_UNFOCUSED, VISUAL_STATE_FOCUSED 
+  public visualState: VisualState;
   
   public mode: Mode;
   

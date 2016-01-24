@@ -18,6 +18,8 @@ import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+const VisualState = ViewerElementTypes.VisualState;
+type VisualState = ViewerElementTypes.VisualState;
 type TextDecoration = EtTextViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
@@ -98,7 +100,7 @@ class EtTextViewer extends ViewerElement {
   private _mode: ViewerElementTypes.Mode;
   private _editable: boolean;
   private document: Document;
-  private _visualState: number;
+  private _visualState: VisualState;
 
   private _mainStyleLoaded: boolean;
   private _resizePollHandle: domutils.LaterHandle;
@@ -122,7 +124,7 @@ class EtTextViewer extends ViewerElement {
     this._isEmpty = false;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this.document = document;
-    this._visualState = EtTextViewer.VISUAL_STATE_AUTO;
+    this._visualState = VisualState.AUTO;
     
     this._currentElementHeight = -1;
     
@@ -434,7 +436,7 @@ class EtTextViewer extends ViewerElement {
     });
     
     this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
-      if (this._visualState === ViewerElement.VISUAL_STATE_AUTO) {
+      if (this._visualState === VisualState.AUTO) {
         const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
         containerDiv.classList.add(CLASS_FOCUSED);
         containerDiv.classList.remove(CLASS_UNFOCUSED);
@@ -442,7 +444,7 @@ class EtTextViewer extends ViewerElement {
     });
 
     this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
-      if (this._visualState === ViewerElement.VISUAL_STATE_AUTO) {
+      if (this._visualState === VisualState.AUTO) {
         containerDiv.classList.add(CLASS_UNFOCUSED);
         containerDiv.classList.remove(CLASS_FOCUSED);
       }
@@ -601,8 +603,8 @@ class EtTextViewer extends ViewerElement {
   
   private _applyVisualState(visualState: number): void {
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    if ((visualState === EtTextViewer.VISUAL_STATE_AUTO && this.hasFocus()) ||
-        visualState === EtTextViewer.VISUAL_STATE_FOCUSED) {
+    if ((visualState === VisualState.AUTO && this.hasFocus()) ||
+        visualState === VisualState.FOCUSED) {
 
       containerDiv.classList.add(CLASS_FOCUSED);
       containerDiv.classList.remove(CLASS_UNFOCUSED);

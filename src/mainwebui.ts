@@ -26,6 +26,7 @@ import Logger = require('./logger');
 
 type Config = config.Config;
 type SessionProfile = config.SessionProfile;
+const VisualState = ViewerElementTypes.VisualState;
 
 const ID = "ExtratermMainWebUITemplate";
 
@@ -615,7 +616,7 @@ class ExtratermMainWebUI extends HTMLElement {
     
     const tabInfo = new ViewerTabInfo(viewerTab);
     viewerElement.mode = ViewerElementTypes.Mode.SELECTION;
-    viewerElement.visualState = ViewerElement.VISUAL_STATE_AUTO;
+    viewerElement.visualState = VisualState.AUTO;
     const result = this._openViewerTabInfo(position, tabInfo, viewerTab);
     viewerTab.viewerElement = viewerElement;
     tabInfo.updateTabTitle();

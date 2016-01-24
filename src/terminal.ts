@@ -35,6 +35,7 @@ type FrameFinder = FrameFinderType.FrameFinder;
 
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+const VisualState = ViewerElementTypes.VisualState;
 type ScrollableElement = VirtualScrollable & HTMLElement;
 
 const log = LogDecorator;
@@ -502,7 +503,7 @@ class EtTerminal extends HTMLElement {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = ViewerElement.VISUAL_STATE_FOCUSED;
+        node.visualState = VisualState.FOCUSED;
       }
     });
   }
@@ -512,7 +513,7 @@ class EtTerminal extends HTMLElement {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = ViewerElement.VISUAL_STATE_UNFOCUSED;
+        node.visualState = VisualState.UNFOCUSED;
       }
     });
   }
@@ -571,8 +572,8 @@ class EtTerminal extends HTMLElement {
     scrollerArea.appendChild(terminalViewer);
     
     terminalViewer.visualState = domutils.getShadowRoot(this).activeElement !== null
-                                      ? ViewerElement.VISUAL_STATE_FOCUSED
-                                      : ViewerElement.VISUAL_STATE_UNFOCUSED;
+                                      ? VisualState.FOCUSED
+                                      : VisualState.UNFOCUSED;
     terminalViewer.emulator = this._emulator;
     this._virtualScrollArea.appendScrollable(terminalViewer);
 
@@ -1166,8 +1167,8 @@ class EtTerminal extends HTMLElement {
 // FIXME
     
     el.visualState = domutils.getShadowRoot(this).activeElement !== null
-                                      ? ViewerElement.VISUAL_STATE_FOCUSED
-                                      : ViewerElement.VISUAL_STATE_UNFOCUSED;
+                                      ? VisualState.FOCUSED
+                                      : VisualState.UNFOCUSED;
     el.setAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE, title);
     el.setAttribute(EtEmbeddedViewer.ATTR_TAG, "" + this._getNextTag());
     return el;
