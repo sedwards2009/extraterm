@@ -17,14 +17,19 @@ import LogDecorator = require('../logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
+type VisualState = ViewerElementTypes.VisualState;
+const VisualState = ViewerElementTypes.VisualState;
 
 const ID = "CbImageViewerTemplate";
 const ID_CONTAINER = "container";
+const ID_CURSOR = "cursor";
 const ID_IMAGE = "image";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
-const CLASS_FOCUSED = "terminal-focused";
-const CLASS_UNFOCUSED = "terminal-unfocused";
+const CLASS_FORCE_FOCUSED = "force-focused";
+const CLASS_FORCE_UNFOCUSED = "force-unfocused";
+const CLASS_FOCUS_AUTO = "focus-auto";
+const SCROLL_STEP = 128;
 
 const DEBUG_RESIZE = false;
 
@@ -46,7 +51,7 @@ class EtImageViewer extends ViewerElement {
   static init(): void {
     if (registered === false) {
       // Load the CSS resources now.
-      cssText = fs.readFileSync('themes/default/theme.css', { encoding: 'utf8' });
+      cssText = ""; //fs.readFileSync('themes/default/theme.css', { encoding: 'utf8' });
       window.document.registerElement(EtImageViewer.TAG_NAME, {prototype: EtImageViewer.prototype});
       registered = true;
     }
@@ -71,10 +76,12 @@ class EtImageViewer extends ViewerElement {
   private _imageWidth: number;
   private _imageHeight: number;
   
+  private _cursorTop: number;
+  
   private _height: number;
   private _mode: ViewerElementTypes.Mode;
   private document: Document;
-  private _visualState: number;
+  private _visualState: VisualState;
 
   private _mainStyleLoaded: boolean;
   private _resizePollHandle: domutils.LaterHandle;
@@ -91,9 +98,12 @@ class EtImageViewer extends ViewerElement {
     this._mimeType = null;
     this._imageWidth = -1;
     this._imageHeight = -1;
+    this._cursorTop = 0;
+
     this._height = 0;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this.document = document;
+    this._visualState = VisualState.UNFOCUSED;
     
     this._currentElementHeight = -1;
     
@@ -128,6 +138,11 @@ class EtImageViewer extends ViewerElement {
   }
 
   focus(): void {
+    if (domutils.getShadowRoot(this) === null) {
+      return;
+    }
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    domutils.focusWithoutScroll(containerDiv);
   }
 
   hasFocus(): boolean {
@@ -176,17 +191,6 @@ class EtImageViewer extends ViewerElement {
     if (newMode === this._mode) {
       return;
     }
-    
-    // switch (newMode) {
-    //   case ViewerElementTypes.Mode.SELECTION:
-    //     // Enter selection mode.
-    //     this._enterSelectionMode();
-    //     break;
-    //     
-    //   case ViewerElementTypes.Mode.DEFAULT:
-    //     this._exitSelectionMode();
-    //     break;
-    // }
     this._mode = newMode;
   }
   
@@ -255,22 +259,31 @@ class EtImageViewer extends ViewerElement {
 
   // VirtualScrollable
   setScrollOffset(y: number): void {
-// this.log("setScrollOffset(" + y + ")");
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.scrollTop = y;
-// this.log("this._codeMirror.getScrollInfo(): " , this._codeMirror.getScrollInfo());
+  }
+
+  getCursorPosition(): CursorMoveDetail {
+    const detail: CursorMoveDetail = {
+      left: 0,
+      top: this._cursorTop,
+      bottom: this._cursorTop + this._height,
+      viewPortTop: this._cursorTop
+    };
+    return detail;
   }
   
-  // clearSelection(): void {
-  // }
+  setCursorPositionTop(ch: number): boolean {
+    this._cursorTop = 0;
+    this.focus();
+    return true;
+  }
   
-  // setCursorPositionTop(ch: number): boolean {
-  //   return true;
-  // }
-  
-  // setCursorPositionBottom(ch: number): boolean {
-  //   return true;
-  // }
+  setCursorPositionBottom(ch: number): boolean {
+    this._cursorTop = this._imageHeight - this._height;
+    this.focus();
+    return true;
+  }
   
   // From viewerelementtypes.SupportsMimeTypes
   static supportsMimeType(mimeType): boolean {
@@ -305,14 +318,13 @@ class EtImageViewer extends ViewerElement {
     this._initFontLoading();
     
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-
     this.style.height = "0px";
-    // this._exitSelectionMode();
     
-    // Filter the keyboard events before they reach CodeMirror.
-    containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
     containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
-    containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
+    containerDiv.addEventListener('focus', (ev) => {
+      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      this._cursorTop = containerDiv.scrollTop;
+    } );
     
     const imgElement = <HTMLImageElement> domutils.getShadowId(this, ID_IMAGE);
     imgElement.addEventListener('load', this._handleImageLoad.bind(this));
@@ -355,16 +367,38 @@ class EtImageViewer extends ViewerElement {
 /*          height: 100%; */
           width: 100%;
           overflow: hidden;
+          position: relative;
         }
-        
+
         #${ID_CONTAINER}:focus {
           outline: 0px;
+        }
+       
+        @-webkit-keyframes IMAGE_BLINK_ANIMATION {
+          0%   { opacity: 0; }
+          49%  { opacity: 0; }
+          50%  { opacity: 1; }
+          100% { opacity: 1; }
+        }
+
+        #${ID_CURSOR} {
+          position: absolute;
+          width: 2px;
+          border-left: 2px solid rgba(255,255,255,0);
+          top: 0px;
+          mix-blend-mode: difference;  
+        }
+
+        #${ID_CONTAINER}.${CLASS_FOCUS_AUTO}:focus > #${ID_CURSOR} {
+          border-left-color: white;
+          -webkit-animation: IMAGE_BLINK_ANIMATION 1060ms infinite;
+          animation: IMAGE_BLINK_ANIMATION 1060ms infinite;
         }
         
         ${getCssText()}
         </style>
-         <style id="${ID_THEME_STYLE}"></style>
-        <div id="${ID_CONTAINER}" class="${CLASS_UNFOCUSED}"><img id="${ID_IMAGE}" /></div>`
+        <style id="${ID_THEME_STYLE}"></style>
+        <div id="${ID_CONTAINER}" class="${CLASS_FORCE_UNFOCUSED}" tabindex="-1"><div id="${ID_CURSOR}"></div><img id="${ID_IMAGE}" /></div>`
 
       window.document.body.appendChild(template);
     }
@@ -383,17 +417,26 @@ class EtImageViewer extends ViewerElement {
     this._visualState = newVisualState;
   }
   
-  private _applyVisualState(visualState: number): void {
-    // const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    // if ((visualState === EtTextViewer.VISUAL_STATE_AUTO && this.hasFocus()) ||
-    //     visualState === EtTextViewer.VISUAL_STATE_FOCUSED) {
-    // 
-    //   containerDiv.classList.add(CLASS_FOCUSED);
-    //   containerDiv.classList.remove(CLASS_UNFOCUSED);
-    // } else {
-    //   containerDiv.classList.add(CLASS_UNFOCUSED);
-    //   containerDiv.classList.remove(CLASS_FOCUSED);
-    // }
+  private _applyVisualState(visualState: VisualState): void {
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+
+    containerDiv.classList.remove(CLASS_FORCE_FOCUSED);
+    containerDiv.classList.remove(CLASS_FORCE_UNFOCUSED);
+    containerDiv.classList.remove(CLASS_FOCUS_AUTO);
+    
+    switch (visualState) {
+      case VisualState.AUTO:
+        containerDiv.classList.add(CLASS_FOCUS_AUTO);
+        break;
+        
+      case VisualState.FOCUSED:
+        containerDiv.classList.add(CLASS_FORCE_FOCUSED);
+        break;
+        
+      case VisualState.UNFOCUSED:
+        containerDiv.classList.add(CLASS_FORCE_UNFOCUSED);
+        break;
+    }
   }
   
   private _emitVirtualResizeEvent(): void {
@@ -416,11 +459,12 @@ class EtImageViewer extends ViewerElement {
   }
   private _handleImageLoad(): void {
     const imgElement = <HTMLImageElement> domutils.getShadowId(this, ID_IMAGE);
-    this._log.debug("image loaded");
-    this._log.debug("imgElement.width: ", imgElement.width);
-    this._log.debug("imgElement.height: ", imgElement.height);
     this._imageWidth = imgElement.width;
     this._imageHeight = imgElement.height;
+    
+    const cursorDiv = domutils.getShadowId(this, ID_CURSOR);
+    cursorDiv.style.height = "" + imgElement.height + "px";
+    
     this._emitVirtualResizeEvent()
   }
     
@@ -445,54 +489,48 @@ class EtImageViewer extends ViewerElement {
     }
   }
   
-  private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
-    domutils.doLater( () => {
-      const fakeKeyDownEvent = domutils.newKeyboardEvent('keydown', {
-        bubbles: true,
-        key: ev.key,        
-        code: ev.code,
-        location: ev.location,
-        repeat: ev.repeat,
-        keyCode: ev.keyCode,
-        charCode: ev.charCode,
-        keyIdentifier: ev.keyIdentifier,
-        which: ev.which,
-        ctrlKey: ev.ctrlKey,
-        shiftKey: ev.shiftKey,
-        altKey: ev.altKey,
-        metaKey: ev.metaKey
-      });
-      
-      super.dispatchEvent(fakeKeyDownEvent);
-    });
-  }
-  
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-    }
-  }
+    if (this._mode === ViewerElementTypes.Mode.SELECTION) {
+      let isUp: boolean = null;
+      if (ev.keyCode === 38) {
+        isUp = true;
+      } else if (ev.keyCode === 40) {
+        isUp = false;
+      }
 
-  private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
-    // Send all Alt+* and Ctrl+Shift+A-Z keys above
-    if (ev.altKey || (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90)) {
-      ev.stopPropagation();
-      this._scheduleSyntheticKeyDown(ev);
-      return;
-    }
-    
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-     // Emit a key down event which our parent elements can catch.
-     this._scheduleSyntheticKeyDown(ev);
-    }
-  }
+      if (isUp !== null) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        
+        const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+        if (isUp) {
+          // Move the cursor up.
+          if (this._cursorTop !== 0) {
+            const newTop = Math.max(this._cursorTop - SCROLL_STEP, 0);
+            this._cursorTop = newTop;
+            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+            this.dispatchEvent(event);
 
-  private _handleContainerKeyUpCapture(ev: KeyboardEvent): void {
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }      
+          } else {
+            const detail: ViewerElementTypes.CursorEdgeDetail = { edge: ViewerElementTypes.Edge.TOP, ch: 0 };
+            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+            this.dispatchEvent(event);
+          }
+        } else {
+          if (this._cursorTop + this._height < this._imageHeight) {
+            const newTop = Math.min(this._imageHeight - this._height, this._cursorTop + SCROLL_STEP);
+            this._cursorTop = newTop;
+            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+            this.dispatchEvent(event);
+
+          } else {
+            const detail: ViewerElementTypes.CursorEdgeDetail = { edge: ViewerElementTypes.Edge.BOTTOM, ch: 0 };
+            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+            this.dispatchEvent(event);
+          }
+        }
+      }
+    }    
   }
   
   //-----------------------------------------------------------------------
@@ -561,15 +599,8 @@ class EtImageViewer extends ViewerElement {
     if (elementHeight !== this._currentElementHeight) {
       this._currentElementHeight = elementHeight;
       this.style.height = "" + elementHeight + "px";
-      
-    //   const totalTextHeight = this.getVirtualTextHeight();
-    //   let codeMirrorHeight;
-    //   codeMirrorHeight = elementHeight;        
-    // 
       const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + elementHeight + "px";
-    //   this._codeMirror.setSize("100%", "" + codeMirrorHeight + "px");
-    //   this._codeMirror.refresh();
     }
   }
     

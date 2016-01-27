@@ -503,7 +503,7 @@ class EtTerminal extends HTMLElement {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = VisualState.FOCUSED;
+        node.visualState = this._mode === Mode.SELECTION ? VisualState.AUTO : VisualState.FOCUSED;
       }
     });
   }
@@ -702,6 +702,7 @@ class EtTerminal extends HTMLElement {
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
       if (ViewerElement.isViewerElement(node)) {
         node.mode = ViewerElementTypes.Mode.SELECTION;
+        node.visualState = VisualState.AUTO;
       }
     });
     this._mode = Mode.SELECTION;
@@ -715,6 +716,7 @@ class EtTerminal extends HTMLElement {
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
       if (ViewerElement.isViewerElement(node)) {
         node.mode = ViewerElementTypes.Mode.DEFAULT;
+        node.visualState = VisualState.FOCUSED;
       }
     });
     this._mode = Mode.TERMINAL;

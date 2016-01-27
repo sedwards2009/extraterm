@@ -354,3 +354,40 @@ export function CreateDataUrl(buffer: Uint8Array, mimeType: string): string {
   const base64Data = base64arraybuffer.encode(buffer.buffer);
   return "data:" + mimeType + ";base64," + base64Data;
 }
+
+export function getEventDeepPath(ev: Event): Node[] {
+  return ev.deepPath !== undefined ? ev.deepPath : ev.path;
+}
+
+/**
+ * Set the input focus on an element and prevent any scrolling for occuring.
+ *
+ * @param el the element to focus
+ */
+export function focusWithoutScroll(el: HTMLElement): void {
+  let preScrollTops: {element: Element, top: number}[] = null;
+  
+  // Capture and record the scrollTop values of the elements on the event path.
+  const pathRecordHandler = (ev: Event) => {
+    const path = getEventDeepPath(ev);
+    preScrollTops = path.filter( (node) => node.nodeType === Node.ELEMENT_NODE ).map( (node) => {
+      const element = <Element> node;
+      return { element: element, top: element.scrollTop };
+    });
+  };
+  el.addEventListener('focus', pathRecordHandler, true);
+  
+  el.focus();
+  
+  el.removeEventListener('focus', pathRecordHandler, true);
+  
+  if (preScrollTops !== null) {
+    // Restore the previous scroll top values.
+    preScrollTops.forEach( (pair) => {
+      if (pair.element.scrollTop !== pair.top) {
+        pair.element.scrollTop = pair.top;
+      }
+    });
+  }
+}
+
