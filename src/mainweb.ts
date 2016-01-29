@@ -12,7 +12,6 @@ import CbDropDown = require('./gui/dropdown');
 import CbCheckBoxMenuItem = require('./gui/checkboxmenuitem');
 import MainWebUi = require('./mainwebui');
 import EtTerminal = require('./terminal');
-import AboutDialog = require('./aboutdialog');
 import util = require('./gui/util');
 
 import config = require('./config');
@@ -33,7 +32,6 @@ let configuration: Config = null;
 
 let themes: im.Map<string, Theme>;
 let mainWebUi: MainWebUi = null;
-let aboutDialog: AboutDialog = null;
 
 /**
  * 
@@ -120,7 +118,7 @@ export function startUp(): void {
       }
       ev.stopPropagation();
     });
-        
+
     const mainMenu = doc.getElementById('main_menu');
     mainMenu.addEventListener('selected', (ev: CustomEvent) => {
       switch(ev.detail.name) {
@@ -139,12 +137,7 @@ export function startUp(): void {
           break;
 
         case 'about':
-          if (aboutDialog == null) {
-            AboutDialog.init();
-            aboutDialog = <AboutDialog>doc.createElement(AboutDialog.TAG_NAME);
-            doc.body.appendChild(aboutDialog);
-          }
-          aboutDialog.open();
+          mainWebUi.openAboutTab();
           break;
           
         default:

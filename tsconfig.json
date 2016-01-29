@@ -24,7 +24,7 @@
         "./src/node_modules/immutable/dist/*.ts"
     ],
     "files": [
-        "./src/aboutdialog.ts",
+        "./src/abouttab.ts",
         "./src/codemirror_extra.d.ts",
         "./src/commandplaceholder.ts",
         "./src/config.ts",

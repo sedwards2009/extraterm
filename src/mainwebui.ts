@@ -7,6 +7,7 @@ import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
 import EtSettingsTab = require('./settings/settingstab2');
+import EtAboutTab = require('./abouttab');
 import EtViewerTab = require('./viewertab');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
@@ -238,6 +239,12 @@ class SettingsTabInfo extends ViewerElementTabInfo {
   }
 }
 
+class AboutTabInfo extends ViewerElementTabInfo {
+  constructor(public aboutElement: EtAboutTab) {
+    super(aboutElement);
+  }
+}
+
 /**
  * Top level UI component for a normal terminal window
  *
@@ -251,6 +258,7 @@ class ExtratermMainWebUI extends HTMLElement {
     TabWidget.init();
     EtTerminal.init();
     EtSettingsTab.init();
+    EtAboutTab.init();
     EtViewerTab.init();
     
     if (registered === false) {
@@ -647,6 +655,17 @@ class ExtratermMainWebUI extends HTMLElement {
     } else {
       const viewerElement = <EtSettingsTab> document.createElement(EtSettingsTab.TAG_NAME);
       const tabInfo = new SettingsTabInfo(viewerElement);
+      this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
+    }
+  }
+  
+  openAboutTab(): void {
+    const aboutTabs = this._tabInfo.filter( (tabInfo) => tabInfo instanceof AboutTabInfo );
+    if (aboutTabs.length !== 0) {
+      this.focusTab(aboutTabs[0].id);
+    } else {
+      const viewerElement = <EtAboutTab> document.createElement(EtAboutTab.TAG_NAME);
+      const tabInfo = new AboutTabInfo(viewerElement);
       this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
     }
   }
