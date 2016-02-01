@@ -603,11 +603,36 @@ class EtTerminal extends HTMLElement {
   }
   
   private _appendScrollableElement(el: ScrollableElement): void {
-    this._disconnectActiveTerminalViewer();
+    this._emulator.moveRowsToScrollback();
+    let currentTerminalViewer = this._terminalViewer;
     
+    if (currentTerminalViewer !== null) {
+      currentTerminalViewer.deleteScreen();
+      
+      if (currentTerminalViewer.isEmpty()) {
+        // Keep this terminal viewer and re-use it later in the new position.
+        this._virtualScrollArea.removeScrollable(currentTerminalViewer);
+      } else {
+        // This terminal viewer has stuff in it.
+        currentTerminalViewer.emulator = null;
+        currentTerminalViewer.useVPad = false;
+        this._virtualScrollArea.updateScrollableSize(currentTerminalViewer);
+        this._terminalViewer = null;
+        currentTerminalViewer = null;
+      }
+    }
+  
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(el);
     this._virtualScrollArea.appendScrollable(el);
+    if (currentTerminalViewer !== null) {
+      // Move it into the DOM.
+      const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+      scrollerArea.appendChild(currentTerminalViewer);
+      this._virtualScrollArea.appendScrollable(currentTerminalViewer);
+    } else {
+      this._appendNewTerminalViewer();
+    }
   }
   
   private _removeScrollableElement(el: ScrollableElement): void {
@@ -1127,14 +1152,12 @@ class EtTerminal extends HTMLElement {
       // Create and set up a new command-frame.
       const el = this._createEmbeddedViewerElement(cleancommand);
       this._appendScrollableElement(el);
-      this._appendNewTerminalViewer();
     } else {
             
       // Don't place an embedded viewer, but use an invisible place holder instead.
       const el = <EtCommandPlaceHolder> this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
       el.setAttribute(EtCommandPlaceHolder.ATTR_COMMAND_LINE, cleancommand);
       this._appendScrollableElement(el);
-      this._appendNewTerminalViewer();
     }
     this._virtualScrollArea.resize();
   }
@@ -1325,7 +1348,6 @@ class EtTerminal extends HTMLElement {
       viewerElement.awesomeIcon = mimeViewerElement.awesomeIcon;
       viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
       this._appendScrollableElement(viewerElement);
-      this._appendNewTerminalViewer();
     }
   }
 
