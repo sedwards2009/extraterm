@@ -198,9 +198,13 @@ class EtTerminalViewer extends ViewerElement {
   }
   
   get text(): string {
-    return this._codeMirror.getDoc().getValue();
+    return this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
   }
   
+  isEmpty(): boolean {
+    return this._isEmpty;
+  }
+    
   set emulator(emulator: termjs.Emulator) {
     if (this._emulator !== null) {
       // Disconnect the last emulator.
@@ -933,6 +937,15 @@ class EtTerminalViewer extends ViewerElement {
           lines.push(this._emulator.lineAtRow(row));
         }
         this._insertLinesOnScreen(startRow, endRow, lines);
+        
+        // Update our realised rows var if needed.
+        const doc = this._codeMirror.getDoc();
+        const lineCount = doc.lineCount();
+        const currentRealizedRows = lineCount - this._terminalFirstRow
+        if (currentRealizedRows !== this._realizedRows) {
+          this._realizedRows = currentRealizedRows;
+          emitVirtualResizeEventFlag = true;
+        }
       }
       
       if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
@@ -947,7 +960,7 @@ class EtTerminalViewer extends ViewerElement {
   }
   
   private _handleSizeEvent(newRows: number, newColumns: number, realizedRows: number): boolean {
-    if (this._rows === newRows && this._columns === newColumns && this._realizedRows === realizedRows) {
+    if (this._rows === newRows && this._columns === newColumns) {
       return false; // Nothing to do.
     }
     
@@ -961,12 +974,12 @@ class EtTerminalViewer extends ViewerElement {
         : { line: this._terminalFirstRow + realizedRows -1, ch: doc.getLine(this._terminalFirstRow + realizedRows-1).length };
       const endPos = { line: lineCount-1, ch: doc.getLine(lineCount-1).length };
       doc.replaceRange("", startPos, endPos);
+
+      this._realizedRows = realizedRows;
     }
     
     this._rows = newRows;
     this._columns = newColumns;
-    this._realizedRows = realizedRows;
-    
     return true;
   }
 
@@ -999,7 +1012,6 @@ class EtTerminalViewer extends ViewerElement {
     const startPos = { line: this._terminalFirstRow + startRow, ch: 0 };
     const endPos = { line: this._terminalFirstRow + endRow -1, ch: doc.getLine(this._terminalFirstRow + endRow -1).length };
     this._insertLinesAtPos(startPos, endPos, text, decorations);
-
     this._isEmpty = false;
   }
   
@@ -1033,6 +1045,7 @@ class EtTerminalViewer extends ViewerElement {
   }
   
   private _deleteScreen(): void {
+    this._realizedRows = -1;
     if (this._isEmpty) {
       return;
     }
