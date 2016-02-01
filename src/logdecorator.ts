@@ -41,13 +41,16 @@ function repr(obj: any): string {
   if (obj === null) {
     return "null";
   }
-  if (typeof obj === "number") {
-    return "" + obj;
+  switch (typeof obj) {
+    case "number":
+      return "" + obj;
+    case "string":
+      return '"' + obj  + '"';
+    case "boolean":
+      return "" + obj;
+    default:
+      return "object";
   }
-  if (typeof obj === "string") {
-    return '"' + obj  + '"';
-  }
-  return "object";
 }
 
 export = log;
