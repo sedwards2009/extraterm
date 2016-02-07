@@ -22,6 +22,11 @@ import _ = require('lodash');
 import ptyconnector = require('./ptyconnector');
 import resourceLoader = require('./resourceloader');
 import Messages = require('./windowmessages');
+
+import ThemeTypes = require('./theme');
+type ThemeInfo = ThemeTypes.ThemeInfo;
+import ThemeManager = require('./thememanager');
+
 import child_process = require('child_process');
 import util = require('./gui/util');
 import Logger = require('./logger');
@@ -40,7 +45,6 @@ type Config = configInterfaces.Config;
 type SessionProfile = configInterfaces.SessionProfile;
 type SystemConfig = configInterfaces.SystemConfig;
 
-import Theme = require('./theme');
 
 const LOG_FINE = false;
 
@@ -53,10 +57,9 @@ sourceMapSupport.install();
 let mainWindow: GitHubElectron.BrowserWindow = null;
 
 const MAIN_CONFIG = "extraterm.json";
-const THEME_CONFIG = "theme.json";
 const THEMES_DIRECTORY = "themes";
 
-let themes: im.Map<string, Theme>;
+let themeManager: ThemeManager.ThemeManager;
 let config: Config;
 let ptyConnector: PtyConnector;
 let tagCounter = 1;
@@ -71,8 +74,8 @@ function main(): void {
 
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
-  themes = scanThemes(themesdir);
-  if (themes.get(config.theme) === undefined) {
+  themeManager = ThemeManager.makeThemeManager(themesdir);
+  if (themeManager.getTheme(config.theme) === undefined) {
     config.theme = "default";
   }
 
@@ -376,41 +379,6 @@ function writeConfiguration(config: Config): void {
   fs.writeFileSync(filename, JSON.stringify(config));
 }
 
-/**
- * Scan for themes.
- * 
- * @param themesdir The directory to scan for themes.
- * @returns Map of found theme config objects.
- */
-function scanThemes(themesdir: string): im.Map<string, Theme> {
-  let thememap = im.Map<string, Theme>();
-  if (fs.existsSync(themesdir)) {
-    const contents = fs.readdirSync(themesdir);
-    contents.forEach(function(item) {
-      var infopath = path.join(themesdir, item, THEME_CONFIG);
-      try {
-        const infostr = fs.readFileSync(infopath, {encoding: "utf8"});
-        const themeinfo = <Theme>JSON.parse(infostr);
-
-        if (validateThemeInfo(themeinfo)) {
-          thememap = thememap.set(item, themeinfo);
-        }
-
-      } catch(err) {
-        _log.warn("Warning: Unable to read file ",infopath);
-      }
-    });
-    return thememap;
-  }
-}
-
-/**
- * 
- */
-function validateThemeInfo(themeinfo: Theme): boolean {
-  return _.isString(themeinfo.name) && themeinfo.name !== "";
-}
-
 function getConfig(): Config {
   return config;
 }
@@ -423,8 +391,8 @@ function getFullConfig(): Config {
   return fullConfig;
 }
 
-function getThemes(): Theme[] {
-  return themes.toArray();
+function getThemes(): ThemeInfo[] {
+  return themeManager.getAllThemes();
 }
 
 //-------------------------------------------------------------------------

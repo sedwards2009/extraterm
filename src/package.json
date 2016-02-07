@@ -20,6 +20,7 @@
     "js-base64": "2.1.8",
     "lodash": "3.9.1",
     "markdown": "0.5.0",
+    "node-sass": "3.4.2",
     "qs": "3.1.0",
     "source-map-support": "0.3.2",
     "text-encoding": "0.5.2",

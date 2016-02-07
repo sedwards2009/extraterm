@@ -3,7 +3,9 @@
  */
 
 import config = require('./config');
-import Theme = require('./theme');
+import ThemeTypes = require('./theme');
+
+type ThemeInfo = ThemeTypes.ThemeInfo;
 
 export const CHANNEL_NAME = "async-message";
 
@@ -57,7 +59,7 @@ export interface ThemesRequestMessage extends Message {
 }
 
 export interface ThemesMessage extends Message {
-  themes: Theme[];
+  themes: ThemeInfo[];
 
 }
 

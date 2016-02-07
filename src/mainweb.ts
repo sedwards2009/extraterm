@@ -18,7 +18,8 @@ import config = require('./config');
 type Config = config.Config;
 type SessionProfile = config.SessionProfile;
 
-import Theme = require('./theme');
+import ThemeTypes = require('./theme');
+type ThemeInfo = ThemeTypes.ThemeInfo;
 
 sourceMapSupport.install();
 
@@ -30,7 +31,7 @@ sourceMapSupport.install();
 let terminalIdCounter = 0;
 let configuration: Config = null;
 
-let themes: im.Map<string, Theme>;
+let themes: im.Map<string, ThemeInfo>;
 let mainWebUi: MainWebUi = null;
 
 /**
@@ -170,8 +171,8 @@ function handleConfigMessage(msg: Messages.Message): void {
 
 function handleThemesMessage(msg: Messages.Message): void {
   const themesMessage = <Messages.ThemesMessage> msg;
-  themes = im.Map<string, Theme>();
-  themesMessage.themes.forEach( (item: Theme) => {
+  themes = im.Map<string, ThemeInfo>();
+  themesMessage.themes.forEach( (item: ThemeInfo) => {
     themes = themes.set(item.name, item);
   });
 }

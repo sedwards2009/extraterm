@@ -1,5 +1,6 @@
 *~
 *.map
+src/abouttab.js
 src/commandframe.js
 src/config.js
 src/configuredialog.js
@@ -21,6 +22,8 @@ src/node_modules/
 src/resourceloader.js
 src/terminal.js
 src/theme.js
+src/thememanager.js
+src/thememanagerutility.js
 src/webipc.js
 src/webresourceloader.js
 src/windowmessages.js
