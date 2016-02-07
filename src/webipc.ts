@@ -75,9 +75,9 @@ export function requestConfig(): Promise<Messages.ConfigMessage> {
   return request(msg, Messages.MessageType.CONFIG);
 }
 
-export function requestThemes(): Promise<Messages.ThemesMessage> {
-  const msg: Messages.ThemesRequestMessage = {type: Messages.MessageType.THEMES_REQUEST};
-  return request(msg, Messages.MessageType.THEMES);
+export function requestThemeList(): Promise<Messages.ThemeListMessage> {
+  const msg: Messages.ThemeListRequestMessage = {type: Messages.MessageType.THEME_LIST_REQUEST};
+  return request(msg, Messages.MessageType.THEME_LIST);
 }
 
 export function requestPtyCreate(command: string, args: string[], columns: number, rows: number,

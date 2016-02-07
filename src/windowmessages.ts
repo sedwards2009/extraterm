@@ -14,8 +14,8 @@ export const enum MessageType {
   CONFIG,
   FRAME_DATA_REQUEST,
   FRAME_DATA,
-  THEMES_REQUEST,
-  THEMES,
+  THEME_LIST_REQUEST,
+  THEME_LIST,
   PTY_CREATE,
   PTY_CREATED,
   PTY_RESIZE,
@@ -54,13 +54,12 @@ export interface FrameDataMessage extends Message {
   frameHTML: string;
 }
 
-export interface ThemesRequestMessage extends Message {
+export interface ThemeListRequestMessage extends Message {
   
 }
 
-export interface ThemesMessage extends Message {
-  themes: ThemeInfo[];
-
+export interface ThemeListMessage extends Message {
+  themeInfo: ThemeInfo[];
 }
 
 // ********************************************************************

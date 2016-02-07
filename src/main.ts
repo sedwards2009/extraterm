@@ -420,8 +420,8 @@ function handleIpc(event: any, arg: any): void {
       log('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
       break;
       
-    case Messages.MessageType.THEMES_REQUEST:
-      reply = handleThemesRequest(<Messages.ThemesRequestMessage> msg);
+    case Messages.MessageType.THEME_LIST_REQUEST:
+      reply = handleThemeListRequest(<Messages.ThemeListRequestMessage> msg);
       break;
       
     case Messages.MessageType.PTY_CREATE:
@@ -513,8 +513,8 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   });
 }
 
-function handleThemesRequest(msg: Messages.ThemesRequestMessage): Messages.ThemesMessage {
-  const reply: Messages.ThemesMessage = { type: Messages.MessageType.THEMES, themes: getThemes() };
+function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages.ThemeListMessage {
+  const reply: Messages.ThemeListMessage = { type: Messages.MessageType.THEME_LIST, themeInfo: getThemes() };
   return reply;
 }
 

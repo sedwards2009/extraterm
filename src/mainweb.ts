@@ -46,7 +46,7 @@ export function startUp(): void {
   webipc.registerDefaultHandler(Messages.MessageType.CONFIG, handleConfigMessage);
   
   // Default handling for theme messages.
-  webipc.registerDefaultHandler(Messages.MessageType.THEMES, handleThemesMessage);
+  webipc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
 
   webipc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
   
@@ -54,7 +54,7 @@ export function startUp(): void {
   
   // Get the config and theme info in and then continue starting up.
   const allPromise = Promise.all<void>( [webipc.requestConfig().then(handleConfigMessage),
-                      webipc.requestThemes().then(handleThemesMessage)] );
+                      webipc.requestThemeList().then(handleThemeListMessage)] );
   allPromise.then( (): Promise<FontFace[]> => {
     // Next phase is wait for the fonts to load.
     const fontPromises: Promise<FontFace>[] = [];
@@ -169,10 +169,10 @@ function handleConfigMessage(msg: Messages.Message): void {
   setupConfiguration(configMessage.config);
 }
 
-function handleThemesMessage(msg: Messages.Message): void {
-  const themesMessage = <Messages.ThemesMessage> msg;
+function handleThemeListMessage(msg: Messages.Message): void {
+  const themesMessage = <Messages.ThemeListMessage> msg;
   themes = im.Map<string, ThemeInfo>();
-  themesMessage.themes.forEach( (item: ThemeInfo) => {
+  themesMessage.themeInfo.forEach( (item: ThemeInfo) => {
     themes = themes.set(item.name, item);
   });
 }
