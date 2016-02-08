@@ -80,6 +80,12 @@ export function requestThemeList(): Promise<Messages.ThemeListMessage> {
   return request(msg, Messages.MessageType.THEME_LIST);
 }
 
+export function requestThemeContents(themeId: string): Promise<Messages.ThemeContentsMessage> {
+  const msg: Messages.ThemeContentsRequestMessage = {type: Messages.MessageType.THEME_CONTENTS_REQUEST,
+    id: themeId};
+  return request(msg, Messages.MessageType.THEME_CONTENTS);
+}
+
 export function requestPtyCreate(command: string, args: string[], columns: number, rows: number,
     env: Messages.EnvironmentMap): Promise<Messages.CreatedPtyMessage> {
       

@@ -10,7 +10,7 @@ export interface ThemeInfo {
 }
 
 export interface ThemeContents {
-  cssFiles: Map<CssFile, string>;
+  cssFiles: { [index: string]: string; };
 }
 
 export enum CssFile {

@@ -19,9 +19,9 @@ function main(): void {
     const contents = tm.getThemeContents(themeInfo.id);
     ThemeTypes.cssFileEnumItems.forEach( (item) => {
       print("CSS " + ThemeTypes.cssFileNameBase(item) + "----");
-      print(contents.cssFiles.get(item));
+      print(contents.cssFiles[ThemeTypes.cssFileNameBase(item)]);
     });
   });
 }
-debugger;
+
 main();

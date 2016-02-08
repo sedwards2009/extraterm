@@ -4,6 +4,7 @@
 import sourceMapSupport = require('source-map-support');
 import im = require('immutable');
 import _ = require('lodash');
+import Logger = require('./logger');
 import Messages = require('./windowmessages');
 import webipc = require('./webipc');
 import CbContextMenu = require('./gui/contextmenu');
@@ -22,6 +23,8 @@ import ThemeTypes = require('./theme');
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
 sourceMapSupport.install();
+
+const _log = new Logger("mainweb");
 
 /**
  * This module is responsible has control of a window and is responsible for
@@ -47,14 +50,19 @@ export function startUp(): void {
   
   // Default handling for theme messages.
   webipc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
-
+  webipc.registerDefaultHandler(Messages.MessageType.THEME_CONTENTS, handleThemeContentsMessage);
+  
   webipc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
   
   webipc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
   
+  const themePromise = webipc.requestConfig().then( (msg: Messages.ConfigMessage) => {
+    handleConfigMessage(msg);
+    webipc.requestThemeContents(msg.config.theme).then(handleThemeContentsMessage);
+  });
+  
   // Get the config and theme info in and then continue starting up.
-  const allPromise = Promise.all<void>( [webipc.requestConfig().then(handleConfigMessage),
-                      webipc.requestThemeList().then(handleThemeListMessage)] );
+  const allPromise = Promise.all<void>( [themePromise, webipc.requestThemeList().then(handleThemeListMessage)] );
   allPromise.then( (): Promise<FontFace[]> => {
     // Next phase is wait for the fonts to load.
     const fontPromises: Promise<FontFace>[] = [];
@@ -175,6 +183,10 @@ function handleThemeListMessage(msg: Messages.Message): void {
   themesMessage.themeInfo.forEach( (item: ThemeInfo) => {
     themes = themes.set(item.name, item);
   });
+}
+
+function handleThemeContentsMessage(msg: Messages.Message): void {
+  _log.debug("handleThemeContentsMessage");
 }
 
 function handleDevToolsStatus(msg: Messages.Message): void {

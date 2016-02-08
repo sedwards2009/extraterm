@@ -6,6 +6,7 @@ import config = require('./config');
 import ThemeTypes = require('./theme');
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
+type ThemeContents = ThemeTypes.ThemeContents;
 
 export const CHANNEL_NAME = "async-message";
 
@@ -16,6 +17,8 @@ export const enum MessageType {
   FRAME_DATA,
   THEME_LIST_REQUEST,
   THEME_LIST,
+  THEME_CONTENTS_REQUEST,
+  THEME_CONTENTS,
   PTY_CREATE,
   PTY_CREATED,
   PTY_RESIZE,
@@ -60,6 +63,15 @@ export interface ThemeListRequestMessage extends Message {
 
 export interface ThemeListMessage extends Message {
   themeInfo: ThemeInfo[];
+}
+
+export interface ThemeContentsRequestMessage extends Message {
+  id: string;
+}
+
+export interface ThemeContentsMessage extends Message {
+  id: string;
+  themeContents: ThemeContents;
 }
 
 // ********************************************************************

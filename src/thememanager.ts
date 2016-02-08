@@ -108,8 +108,8 @@ class ThemeManagerImpl implements ThemeManager {
   }
   
   private _loadThemeContents(directory: string, theme: ThemeInfo): ThemeContents {
-    const themeContents = {
-      cssFiles: new Map<CssFile, string>()
+    const themeContents: ThemeContents = {
+      cssFiles: {}
     };
 
     ThemeTypes.cssFileEnumItems.map( (cssFile: CssFile) => {
@@ -118,7 +118,7 @@ class ThemeManagerImpl implements ThemeManager {
       if (theme.debug) {
         this._log.debug(`Sass output for ${theme.name}, ${ThemeTypes.cssFileNameBase(cssFile)}`, cssText);
       }
-      themeContents.cssFiles.set(cssFile, cssText);
+      themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)] = cssText;
     });
     
     return themeContents;

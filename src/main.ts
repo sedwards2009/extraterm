@@ -424,6 +424,10 @@ function handleIpc(event: any, arg: any): void {
       reply = handleThemeListRequest(<Messages.ThemeListRequestMessage> msg);
       break;
       
+    case Messages.MessageType.THEME_CONTENTS_REQUEST:
+      reply = handleThemeContentsRequest(<Messages.ThemeContentsRequestMessage> msg);
+      break;
+      
     case Messages.MessageType.PTY_CREATE:
       reply = handlePtyCreate(event.sender, <Messages.CreatePtyRequestMessage> msg);
       break;
@@ -515,6 +519,15 @@ function handleConfig(msg: Messages.ConfigMessage): void {
 
 function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages.ThemeListMessage {
   const reply: Messages.ThemeListMessage = { type: Messages.MessageType.THEME_LIST, themeInfo: getThemes() };
+  return reply;
+}
+
+function handleThemeContentsRequest(msg: Messages.ThemeContentsRequestMessage): Messages.ThemeContentsMessage {
+  const themeContents = themeManager.getThemeContents(msg.id);
+  const reply: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
+    id: msg.id,
+    themeContents: themeContents
+   };
   return reply;
 }
 
