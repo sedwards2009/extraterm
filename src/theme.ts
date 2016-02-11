@@ -34,3 +34,8 @@ const _CssFileNameMapping = {
 export function cssFileNameBase(cssFile: CssFile): string {
   return _CssFileNameMapping[cssFile] || null;
 }
+
+export interface Themeable {
+  getCssFile(): CssFile;
+  setThemeCss(cssText: string): void;
+}

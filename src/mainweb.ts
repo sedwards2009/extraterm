@@ -15,6 +15,8 @@ import MainWebUi = require('./mainwebui');
 import EtTerminal = require('./terminal');
 import util = require('./gui/util');
 
+import EtEmbeddedViewer = require('./embeddedviewer');
+
 import config = require('./config');
 type Config = config.Config;
 type SessionProfile = config.SessionProfile;
@@ -37,10 +39,15 @@ let configuration: Config = null;
 let themes: im.Map<string, ThemeInfo>;
 let mainWebUi: MainWebUi = null;
 
+const themeables: Map<ThemeTypes.CssFile, ThemeTypes.Themeable> = new Map();
+
 /**
  * 
  */
 export function startUp(): void {
+  // Map of CSS files to the classes which require them.
+  themeables.set(EtEmbeddedViewer.getCssFile(), EtEmbeddedViewer);
+  
   webipc.start();
   
   const doc = window.document;
@@ -186,7 +193,12 @@ function handleThemeListMessage(msg: Messages.Message): void {
 }
 
 function handleThemeContentsMessage(msg: Messages.Message): void {
-  _log.debug("handleThemeContentsMessage");
+  const themeContentsMessage = <Messages.ThemeContentsMessage> msg;
+
+  // Distribute the CSS files to the classes which want them.
+  themeables.forEach( (value) => {
+   value.setThemeCss(themeContentsMessage.themeContents.cssFiles[ThemeTypes.cssFileNameBase(value.getCssFile())]);
+  });
 }
 
 function handleDevToolsStatus(msg: Messages.Message): void {

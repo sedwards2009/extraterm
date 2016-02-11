@@ -8,6 +8,7 @@ import sass = require('node-sass');
 import _ = require('lodash');
 
 import Logger = require('./logger');
+import log = require('./logdecorator');
 import ThemeTypes = require('./theme');
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
@@ -15,12 +16,26 @@ type ThemeContents = ThemeTypes.ThemeContents;
 type CssFile = ThemeTypes.CssFile;
 const THEME_CONFIG = "theme.json";
 
+interface ListenerFunc {
+  (): void;
+}
+
 export interface ThemeManager {
   getTheme(themeName: string): ThemeInfo;
   
   getAllThemes(): ThemeInfo[];
   
   getThemeContents(themeName: string): ThemeContents;
+  
+  registerChangeListener(themeId: string, listener: ListenerFunc): void;
+  
+  unregisterChangeListener(themeId: string, listener: ListenerFunc): void;
+}
+
+interface ListenerItem {
+  themeId: string;
+  listenerFunc: ListenerFunc;
+  watcher: fs.FSWatcher;
 }
 
 class ThemeManagerImpl implements ThemeManager {
@@ -32,6 +47,8 @@ class ThemeManagerImpl implements ThemeManager {
   private _themes: Map<string, ThemeInfo> = null;
   
   private _themeContents: Map<string, ThemeContents> = new Map();
+  
+  private _listeners: ListenerItem[] = [];
   
   constructor(directory: string) {
     this._directory = directory;
@@ -51,18 +68,40 @@ class ThemeManagerImpl implements ThemeManager {
   }
 
   getThemeContents(themeId: string): ThemeContents {
-    const theme = this._themes.get(themeId);
-    
-    if (theme === undefined) {
-      this._log.warn("The requested theme name is unknown.");
+    const themeInfo = this.getTheme(themeId);
+    if (themeInfo === null) {
+      this._log.warn("The requested theme name '" + themeId + "' is unknown.");
       return null;
     }
     
     if ( ! this._themeContents.has(themeId)) {
-      const contents = this._loadThemeContents(this._directory, theme);
+      const contents = this._loadThemeContents(this._directory, themeInfo);
       this._themeContents.set(themeId, contents);
     }
     return this._themeContents.get(themeId);
+  }
+  
+  registerChangeListener(themeId: string, listenerFunc: () => void): void {
+    const themeInfo = this.getTheme(themeId);
+    const themePath = themeInfo.path;
+    const watcher = fs.watch(themePath, { persistent: false },
+      (event, filename) => {
+        const oldThemeContents = this.getThemeContents(themeId);
+        const newThemeContents = this._loadThemeContents(this._directory, themeInfo);
+        if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
+          this._themeContents.set(themeId, newThemeContents);          
+          listenerFunc();
+        } else {
+          this._log.info("" + filename + " changed, but the theme contents did not.");
+        }
+      });
+    
+    const listenerItem: ListenerItem = { themeId, listenerFunc, watcher };
+    this._listeners.push(listenerItem);
+  }
+  
+  unregisterChangeListener(themeId: string, listener: () => void): void {
+// FIXME
   }
   
   /**

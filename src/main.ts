@@ -75,9 +75,13 @@ function main(): void {
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
   themeManager = ThemeManager.makeThemeManager(themesdir);
-  if (themeManager.getTheme(config.theme) === undefined) {
+  if (themeManager.getTheme(config.theme) === null) {
     config.theme = "default";
   }
+
+  themeManager.registerChangeListener(config.theme, () => {
+    sendThemeContents(mainWindow, config.theme);
+  });
 
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
@@ -529,6 +533,15 @@ function handleThemeContentsRequest(msg: Messages.ThemeContentsRequestMessage): 
     themeContents: themeContents
    };
   return reply;
+}
+
+function sendThemeContents(targetWindow: GitHubElectron.BrowserWindow, themeId: string): void {
+  const themeContents = themeManager.getThemeContents(themeId);
+  const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
+    id: themeId,
+    themeContents: themeContents
+   };
+  targetWindow.webContents.send(Messages.CHANNEL_NAME, msg);
 }
 
 //-------------------------------------------------------------------------
