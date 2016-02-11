@@ -2,4 +2,172 @@
  * Copyright 2014 Simon Edwards <simon@simonzone.com>
  */
 
-/* embedded-frame */
+/* embedded-frame styles */
+
+$TERMINAL_MARGIN_LEFT: 4px;
+$TERMINAL_MARGIN_RIGHT: 4px;
+
+$BLOCK_BORDER_LEFT: 2px;
+$BLOCK_BORDER_RIGHT: 2px;
+$BLOCK_BORDER_BOTTOM: 2px;
+
+$CORNER_RADIUS: 3px;
+
+$LITE_BACKGROUND_COLOR: #5b82a7;
+$DARK_BACKGROUND_COLOR: #567089;
+
+$FOREGROUND_COLOR: #d6dfe9;
+
+$FAIL_BACKGROUND_COLOR: #a75b5b;
+
+$FADE_DURATION: 0.5s;
+
+$RUNNING_COLOR: #d6dfe9;
+$SUCCESS_COLOR: #54ff54;
+$FAIL_COLOR: #ff5454;
+
+#ID_CONTAINER {
+  margin-left: $TERMINAL_MARGIN_LEFT - $BLOCK_BORDER_LEFT;
+  margin-right: $TERMINAL_MARGIN_RIGHT - $BLOCK_BORDER_RIGHT;
+}
+
+#ID_HEADER {
+  display: flex;
+  width: 100%;
+}
+
+#ID_OUTPUT.closed {
+  display: none;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Block of controls top left/right */
+.left_block, .right_block {
+  flex: 0 0 auto;
+  display: flex;
+  padding-top: 1px;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-bottom: 1px;
+  
+  transition-property: border-color;
+  transition-duration: $FADE_DURATION;
+}
+
+/* *** Icon Div *** */
+#ID_ICON_DIV {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
+#ID_CONTAINER.success > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
+  color: $SUCCESS_COLOR;          
+}
+
+/* *** Comand line DIV *** */
+#ID_COMMAND_LINE {
+  flex: auto 0 1;
+  border-bottom-right-radius: 0.5em;
+  padding-top: 1px;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-bottom: 1px;
+
+  transition-property: border-color;
+  transition-duration: $FADE_DURATION;
+  color: $FOREGROUND_COLOR;
+
+  font-size: 80%;
+}
+
+#ID_CONTAINER.running > #ID_HEADER > #ID_COMMANDLINE {
+  border: 1px solid $RUNNING_COLOR;
+}
+
+#ID_CONTAINER.running > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
+  color: $RUNNING_COLOR;
+}
+
+.right_block, #ID_POP_OUT_BUTTON, #ID_CLOSE_BUTTON {
+  font-size: 80%;
+  color: $FOREGROUND_COLOR;
+}
+
+#ID_EXPAND_BUTTON, #ID_CLOSE_BUTTON, #ID_POP_OUT_BUTTON {
+  flex: 0 0 auto;
+  padding: 0px;
+  background-color: transparent;
+  border: 0px;
+}
+
+#ID_CLOSE_BUTTON:hover {
+  color: red;
+}
+
+#ID_HEADER {
+  background-color: $LITE_BACKGROUND_COLOR;
+  border-top-left-radius: $CORNER_RADIUS;
+  border-top-right-radius: $CORNER_RADIUS;
+}
+
+#ID_CONTAINER.running > #ID_HEADER {
+  border-bottom-left-radius: $CORNER_RADIUS;
+  border-bottom-right-radius: $CORNER_RADIUS;
+}
+
+#ID_HEADER > .header_spacer {
+  transition-property: border-top-color;
+  transition-duration: $FADE_DURATION;
+}
+
+#ID_CONTAINER.fail > #ID_HEADER > .header_spacer {
+  border-color: rgba($FAIL_COLOR, 0.5);
+}
+
+/* *** Output DIV *** */
+#ID_OUTPUT {
+  border-left: $BLOCK_BORDER_LEFT solid rgba(0,0,0,0);
+  border-right: $BLOCK_BORDER_RIGHT solid rgba(0,0,0,0);
+  
+  padding-bottom: -1*$BLOCK_BORDER_BOTTOM;
+  border-bottom: $BLOCK_BORDER_BOTTOM solid rgba(0,0,0,0);
+  
+  border-bottom-left-radius: $CORNER_RADIUS;
+  border-bottom-right-radius: $CORNER_RADIUS;
+  
+  transition-property: border-left-color, border-right-color;
+  transition-duration: $FADE_DURATION, $FADE_DURATION;
+}
+
+// Success mode
+#ID_CONTAINER.success > #ID_OUTPUT {
+  border-left-color: $LITE_BACKGROUND_COLOR;
+  border-right-color: $LITE_BACKGROUND_COLOR;
+  border-bottom-color: $LITE_BACKGROUND_COLOR;
+}
+
+// Fail mode
+#ID_CONTAINER.fail > #ID_HEADER {
+  background-color: $FAIL_BACKGROUND_COLOR;
+}
+
+#ID_CONTAINER.fail > #ID_OUTPUT {
+  border-left-color: $FAIL_BACKGROUND_COLOR;
+  border-right-color: $FAIL_BACKGROUND_COLOR;
+  border-bottom-color: $FAIL_BACKGROUND_COLOR;
+}
+
+.header_spacer {
+  flex: 0em 1 1;
+}
+
+.spacer {
+  flex: 1em 0 0;
+  min-width: 1em;
+}
+        
+#ID_TAG_NAME {
+  flex: 0 1 auto;
+}
