@@ -78,23 +78,17 @@ viewerClasses.push(EtImageViewer);
 viewerClasses.push(EtTextViewer);
 
 /**
- * Create a new terminal.
+ * An Extraterm terminal.
  * 
- * A terminal is full terminal emulator with GUI intergration. It handles the
+ * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
- * 
- * See startUp().
- * 
- * @param {type} parentElement The DOM element under which the terminal will
- *     be placed.
- * @returns {Terminal}
  */
 class EtTerminal extends HTMLElement {
   
-  //-----------------------------------------------------------------------
-  // Statics
-  
-  static TAG_NAME = "et-terminal";
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = "ET-TERMINAL";
   
   static EVENT_USER_INPUT = "user-input";
   
@@ -105,7 +99,11 @@ class EtTerminal extends HTMLElement {
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
   
   /**
-   * 
+   * Initialize the EtTerminal class and resources.
+   *
+   * When EtTerminal is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
    */
   static init(): void {
     if (registered === false) {
@@ -334,7 +332,6 @@ class EtTerminal extends HTMLElement {
     return text === undefined ? null : text;
   }
 
-  
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -347,11 +344,17 @@ class EtTerminal extends HTMLElement {
   //
   //-----------------------------------------------------------------------
 
+  /**
+   * Custom Element 'created' life cycle hook.
+   */
   createdCallback(): void {
     this._initProperties();
     this._fetchNextTag();
   }
    
+  /**
+   * Custom Element 'attached' life cycle hook.
+   */
   attachedCallback(): void {
     if (this._elementAttached) {
       return;

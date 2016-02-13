@@ -12,19 +12,35 @@ var ID = "CbDropDownTemplate";
 var registered = false;
 
 /**
- * A Drop Down.
+ * A Drop Down menu.
+ *
+ * The contents of a CbDropDown should be a CbContextMenu element and another
+ * element like a button which emits a click event. When the user activates
+ * the button, the CbContextMenu is displayed.
  */
 class CbDropDown extends HTMLElement {
   
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = 'CB-DROPDOWN';
+  
+  /**
+   * Initialize the CbDropDown class and resources.
+   *
+   * When CbDropDown is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
+   */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement('cb-dropdown', {prototype: CbDropDown.prototype});      
+      window.document.registerElement(CbDropDown.TAG_NAME, {prototype: CbDropDown.prototype});
       registered = true;
     }
   }
   
   private createClone() {
-    var template = <HTMLTemplate>window.document.getElementById(ID);
+    let template = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
@@ -37,6 +53,21 @@ class CbDropDown extends HTMLElement {
     return window.document.importNode(template.content, true);
   }
 
+  //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+
+  /**
+   * Custom Element 'created' life cycle hook.
+   */
   createdCallback() {
     var i: number;
     var len: number;

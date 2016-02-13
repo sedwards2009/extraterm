@@ -10,15 +10,25 @@ const ID = "CbMenuItemTemplate";
 
 let registered = false;
 
+/**
+ * A menu item suitable for use inside a CbContextMenu.
+ */
 class CbMenuItem extends HTMLElement {
   
-  static TAG_NAME = 'cb-menuitem';
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = 'CB-MENUITEM';
   
   static ATTR_SELECTED = 'selected';
-  
-  //-----------------------------------------------------------------------
-  // Statics
 
+  /**
+   * Initialize the CbMenuItem class and resources.
+   *
+   * When CbMenuItem is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
+   */
   static init(): void {
     if (registered === false) {
       globalcss.init();
@@ -28,6 +38,20 @@ class CbMenuItem extends HTMLElement {
   }
   
   //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+
+  /**
+   * Custom Element 'created' life cycle hook.
+   */
   createdCallback(): void {
     const shadow = domutils.createShadowRoot(this);
     const clone = this._createClone();
@@ -45,6 +69,9 @@ class CbMenuItem extends HTMLElement {
     this.updateKeyboardSelected(this.getAttribute(CbMenuItem.ATTR_SELECTED));
   }
   
+  /**
+   * Custom Element 'attribute changed' hook.
+   */
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     if (attrName === CbMenuItem.ATTR_SELECTED) {
       this.updateKeyboardSelected(newValue);

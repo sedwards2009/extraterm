@@ -10,9 +10,15 @@ const ID_CONTAINER = "container";
 
 let registered = false;
 
+/**
+ * A scrollbar.
+ */
 class CbScrollbar extends HTMLElement {
   
-  static TAG_NAME = 'cb-scrollbar';
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = 'CB-SCROLLBAR';
   
   static ATTR_LENGTH = "length";
   
@@ -20,6 +26,13 @@ class CbScrollbar extends HTMLElement {
   
   static ATTR_THUMBSIZE = "thumbsize";
   
+  /**
+   * Initialize the CbScrollbar class and resources.
+   *
+   * When CbScrollbar is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
+   */
   static init(): void {
     if (registered === false) {
       window.document.registerElement(CbScrollbar.TAG_NAME, {prototype: CbScrollbar.prototype});
@@ -58,7 +71,22 @@ class CbScrollbar extends HTMLElement {
     this._position = 0;
     this._length = 1;
   }
+
+  //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
   
+  /**
+   * Custom Element 'created' life cycle hook.
+   */
   createdCallback(): void {
     this._initProperties(); // Initialise our properties. The constructor was not called.
     
@@ -84,21 +112,9 @@ class CbScrollbar extends HTMLElement {
     this._updatePosition(this.getAttribute(CbScrollbar.ATTR_POSITION));
   }
   
-  private _createClone(): Node {
-    let template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = "<style>" + this._css() + "</style>\n" + this._html();
-      window.document.body.appendChild(template);
-    }
-    return window.document.importNode(template.content, true);
-  }
-
-  private _getById(id: string): HTMLElement {
-    return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
-  }
-
+  /**
+   * Custom Element 'attribute changed' hook.
+   */
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     switch (attrName) {
       case CbScrollbar.ATTR_LENGTH:
@@ -114,6 +130,22 @@ class CbScrollbar extends HTMLElement {
     }
   }
   
+  //-----------------------------------------------------------------------
+  private _createClone(): Node {
+    let template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
+    if (template === null) {
+      template = <HTMLTemplate>window.document.createElement('template');
+      template.id = ID;
+      template.innerHTML = "<style>" + this._css() + "</style>\n" + this._html();
+      window.document.body.appendChild(template);
+    }
+    return window.document.importNode(template.content, true);
+  }
+
+  private _getById(id: string): HTMLElement {
+    return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
+  }
+
   // --- Length attribute ---
   set length(value: number) {
     if (value !== this._length) {

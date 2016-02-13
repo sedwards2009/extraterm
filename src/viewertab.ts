@@ -42,16 +42,21 @@ const ID_THEME_STYLE = "theme_style";
 const SCROLL_STEP = 1;
 
 /**
+ * A viewer tab which can contain any ViewerElement.
  */
 class EtViewerTab extends ViewerElement {
-  
-  //-----------------------------------------------------------------------
-  // Statics
-  
-  static TAG_NAME = "et-viewer-tab";
+
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = "ET-VIEWER-TAB";
   
   /**
-   * 
+   * Initialize the EtViewerTab class and resources.
+   *
+   * When EtViewerTab is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
    */
   static init(): void {
     if (registered === false) {
@@ -223,10 +228,16 @@ class EtViewerTab extends ViewerElement {
   //
   //-----------------------------------------------------------------------
 
+  /**
+   * Custom Element 'created' life cycle hook.
+   */
   createdCallback(): void {
     this._initProperties();
   }
    
+  /**
+   * Custom Element 'attached' life cycle hook.
+   */
   attachedCallback(): void {
     if (this._elementAttached) {
       return;

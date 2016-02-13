@@ -9,14 +9,24 @@ const ID = "EtCommandPlaceHolderTemplate";
 
 let registered = false;
 
+/**
+ * An invisible element which can be placed in a terminal to mark the start of command output.
+ */
 class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
   
+  /**
+   * The HTML tag name of this element.
+   */
   static TAG_NAME = "ET-COMMANDPLACEHOLDER";
   
   static ATTR_COMMAND_LINE = "command-line";
 
   /**
-   * 
+   * Initialize the EtCommandPlaceHolder class and resources.
+   *
+   * When EtCommandPlaceHolder is imported into a render process, this static
+   * method must be called before an instances may be created. This is can be
+   * safely called multiple times.
    */
   static init(): void {
     if (registered === false) {
@@ -35,12 +45,26 @@ class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
     return node !== null && node !== undefined && node instanceof EtCommandPlaceHolder;
   }
   
+  //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+
   /**
-   * Callback invoked by the browser after an instance of this element has been created.
+   * Custom Element 'created' life cycle hook.
    */
   createdCallback(): void {
     
   }
+
+  //-----------------------------------------------------------------------
 
   getMinHeight(): number {
     return 0;

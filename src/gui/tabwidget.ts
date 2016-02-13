@@ -16,14 +16,24 @@ const ATTR_SHOW_FRAME = "show-frame";
 let registered = false;
 
 /**
- * A stack of tabs.
+ * A widget to display a stack of tabs.
+ *
+ * See CbTab.
  */
 class CbTabWidget extends HTMLElement {
   
-  //-----------------------------------------------------------------------
-  // Statics
+  /**
+   * The HTML tag name of this element.
+   */
   static TAG_NAME = "CB-TABWIDGET";
   
+  /**
+   * Initialize the CbTabWidget class and resources.
+   *
+   * When CbTabWidget is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
+   */
   static init(): void {
     if (registered === false) {
       window.document.registerElement(CbTabWidget.TAG_NAME, {prototype: CbTabWidget.prototype});
@@ -42,8 +52,19 @@ class CbTabWidget extends HTMLElement {
   }
   
   //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+
   /**
-   * 
+   * Custom Element 'created' life cycle hook.
    */
   createdCallback() {
     this._initProperties();
@@ -61,6 +82,22 @@ class CbTabWidget extends HTMLElement {
     this._mutationObserver.observe(this, { childList: true });
   }
   
+  /**
+   * Custom Element 'attribute changed' hook.
+   */
+  attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
+    switch (attrName) {
+      case ATTR_SHOW_FRAME:
+        this._showFrame(util.toBoolean(newValue));
+        break;
+        
+      default:
+        break;
+    }
+  }
+  
+  //-----------------------------------------------------------------------
+
   update(): void {
     this.createTabHolders();
   }  
@@ -213,17 +250,6 @@ DIV.show_frame > #tabbar {
   
   private _getContentsStack(): CbStackedWidget {
     return <CbStackedWidget> this.__getById('contentsstack');
-  }
-  
-  attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
-    switch (attrName) {
-      case ATTR_SHOW_FRAME:
-        this._showFrame(util.toBoolean(newValue));
-        break;
-        
-      default:
-        break;
-    }
   }
 
   private createTabHolders(): void {

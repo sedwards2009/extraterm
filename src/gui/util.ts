@@ -16,13 +16,19 @@ export function htmlValueToBool(value: any, defaultValue?: boolean): boolean {
 /**
  * Converts a boolean to a string.
  * 
- * @param  {boolean} value the boolean to convert.
- * @return {string}        "true" or "false".
+ * @param  value the boolean to convert
+ * @return the string "true" or "false"
  */
 export function booleanToString(value: boolean): string {
   return value ? "true" : "false";
 }
 
+/**
+ * Trim whitlespace on the right side of a string.
+ *
+ * @param source the string to trim
+ * @return the trimmed string
+ */
 export function trimRight(source: string): string {
   if (source === null) {
     return null;
@@ -34,8 +40,8 @@ const nbspRegexp = /\u00a0/g;
 /**
  * Replace non-breaking space characters with normal spaces.
  * 
- * @param  {string} text [description]
- * @return {string}      [description]
+ * @param  text the string to replace the characters in
+ * @return new string with new-breaking spaces removed
  */
 export function replaceNbsp(text: string): string {
   return text.replace(nbspRegexp, " ");
@@ -44,7 +50,7 @@ export function replaceNbsp(text: string): string {
 //-------------------------------------------------------------------------
 
 /**
- * Parse a string as a boolean value
+ * Parse a string as a boolean value.
  * 
  * @param  value string to parse
  * @return the boolean value or false if it could not be parsed
@@ -75,9 +81,10 @@ export function toBoolean(value: any): boolean {
 export function override(defaultValue: any, newValue: any): any {
   return newValue !== null && newValue !== undefined ? newValue : defaultValue;
 }
+
 //-------------------------------------------------------------------------
 /**
- * Small class for handling CSS colors.
+ * Utility class for handling CSS colors
  */
 export class Color {
   

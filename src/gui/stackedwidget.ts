@@ -15,10 +15,18 @@ let registered = false;
  */
 class CbStackedWidget extends HTMLElement {
   
-  //-----------------------------------------------------------------------
-  // Statics
-  static TAG_NAME = 'cb-stackedwidget';
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = 'CB-STACKEDWIDGET';
   
+  /**
+   * Initialize the CbStackedWidget class and resources.
+   *
+   * When CbStackedWidget is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
+   */
   static init(): void {
     if (registered === false) {
       window.document.registerElement(CbStackedWidget.TAG_NAME, {prototype: CbStackedWidget.prototype});
@@ -88,9 +96,21 @@ class CbStackedWidget extends HTMLElement {
   private __getById(id:string): Element {
     return domutils.getShadowRoot(this).querySelector('#'+id);
   }
+
+  //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
   
   /**
-   * 
+   * Custom Element 'created' life cycle hook.
    */
   createdCallback() {
     this._initProperties();
@@ -103,6 +123,8 @@ class CbStackedWidget extends HTMLElement {
     this.showIndex(0);
   }
   
+  //-----------------------------------------------------------------------
+
   // Override
   appendChild(newNode: Node): Node {
     const result = super.appendChild(newNode);

@@ -16,9 +16,21 @@ let registered = false;
  */
 class CbContextMenu extends HTMLElement {
   
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = "CB-CONTEXTMENU";
+
+  /**
+   * Initialize the CbContextMenu class and resources.
+   *
+   * When CbContextMenu is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
+   */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement('cb-contextmenu', {prototype: CbContextMenu.prototype});
+      window.document.registerElement(CbContextMenu.TAG_NAME, {prototype: CbContextMenu.prototype});
       registered = true;
     }
   }
@@ -82,8 +94,20 @@ class CbContextMenu extends HTMLElement {
     return domutils.getShadowRoot(this).querySelector('#'+id);
   }
   
+  //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+
   /**
-   * 
+   * Custom Element 'created' life cycle hook.
    */
   createdCallback() {
     const shadow = domutils.createShadowRoot(this);
@@ -133,6 +157,8 @@ class CbContextMenu extends HTMLElement {
     container.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
     container.addEventListener('keypress', (ev: KeyboardEvent) => { this.handleKeyPress(ev); });
   }
+
+  //-----------------------------------------------------------------------
 
   /**
    * 

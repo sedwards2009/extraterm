@@ -9,15 +9,25 @@ const ID = "CbCheckBoxMenuItemTemplate";
 
 let registered = false;
 
+/**
+ * A check box menu item for use inside a context menu.
+ */
 class CbCheckBoxMenuItem extends menuitem {
   
-  static TAG_NAME = 'cb-checkboxmenuitem';
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = 'CB-CHECKBOXMENUITEM';
   
   static ATTR_CHECKED = "checked";
   
-  //-----------------------------------------------------------------------
-  // Statics
-
+  /**
+   * Initialize the CbCheckBoxMenuItem class and resources.
+   *
+   * When CbCheckBoxMenuItem is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
+   */
   static init(): void {
     if (registered === false) {
       window.document.registerElement(CbCheckBoxMenuItem.TAG_NAME, {prototype: CbCheckBoxMenuItem.prototype});
@@ -26,12 +36,28 @@ class CbCheckBoxMenuItem extends menuitem {
   }
 
   //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
   
+  /**
+   * Custom Element 'created' life cycle hook.
+   */
   createdCallback() {
     super.createdCallback();
     this._updateChecked(this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
   }
 
+  /**
+   * Custom Element 'attribute changed' hook.
+   */
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     super.attributeChangedCallback(attrName, oldValue, newValue);
 
@@ -40,6 +66,7 @@ class CbCheckBoxMenuItem extends menuitem {
     }
   }
 
+  //-----------------------------------------------------------------------
   set checked(checked: boolean) {
     this.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, util.booleanToString(checked));
   }

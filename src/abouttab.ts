@@ -11,10 +11,23 @@ import domutils = require('./domutils');
 
 let registered = false;
 
+/**
+ * The Extraterm About tab.
+ */
 class EtAboutTab extends ViewerElement {
   
-  static TAG_NAME = "et-about-tab";
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = "ET-ABOUT-TAB";
 
+  /**
+   * Initialize the EtAboutTab class and resources.
+   *
+   * When EtAboutTab is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
+   */
   static init(): void {
     if (registered === false) {
       window.document.registerElement(EtAboutTab.TAG_NAME, {prototype: EtAboutTab.prototype});
@@ -56,10 +69,28 @@ class EtAboutTab extends ViewerElement {
     return false;
   }
   
+  //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+
+  /**
+   * Custom Element 'created' life cycle hook.
+   */
   createdCallback(): void {
     this._initProperties();
   }
   
+  /**
+   * Custom Element 'attached' life cycle hook.
+   */
   attachedCallback(): void {
     const shadow = domutils.createShadowRoot(this);
     const style = document.createElement('style');

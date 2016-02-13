@@ -58,7 +58,10 @@ let themeCss = "";
  */
 class EtEmbeddedViewer extends ViewerElement {
   
-  static TAG_NAME = 'et-embeddedviewer';
+  /**
+   * The HTML tag name of this element.
+   */
+  static TAG_NAME = 'ET-EMBEDDEDVIEWER';
   
   static EVENT_COPY_CLIPBOARD_REQUST = 'copy-clipboard-request';
   
@@ -83,7 +86,11 @@ class EtEmbeddedViewer extends ViewerElement {
   static ATTR_AWESOME_ICON = 'awesome-icon';
 
   /**
-   * 
+   * Initialize the EtEmbeddedViewer class and resources.
+   *
+   * When EtEmbeddedViewer is imported into a render process, this static method
+   * must be called before an instances may be created. This is can be safely
+   * called multiple times.
    */
   static init(): void {
     if (registered === false) {
@@ -352,12 +359,15 @@ class EtEmbeddedViewer extends ViewerElement {
   //-----------------------------------------------------------------------
 
   /**
-   * Callback invoked by the browser after an instance of this element has been created.
+   * Custom Element 'created' life cycle hook.
    */
   createdCallback(): void {
     this._initProperties();
   }
   
+  /**
+   * Custom Element 'attached' life cycle hook.
+   */
   attachedCallback(): void {
     activeInstances.add(this);
     
@@ -451,12 +461,15 @@ class EtEmbeddedViewer extends ViewerElement {
     this._getById(ID_CONTAINER).setAttribute('style', '');
   }
   
+  /**
+   * Custom Element 'detached' life cycle hook.
+   */
   detachedCallback(): void {
     activeInstances.delete(this);
   }
   
   /**
-   * 
+   * Custom Element 'attribute changed' hook.
    */
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string) {
     this._setAttr(attrName, newValue);
