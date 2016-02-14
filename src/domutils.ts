@@ -391,3 +391,17 @@ export function focusWithoutScroll(el: HTMLElement): void {
   }
 }
 
+/**
+ * Convert a length with 'px' suffix to a plain integer.
+ *
+ * @param length the length value as a string
+ * @return the length as a number
+ */
+export function pixelLengthToInt(length: string | number): number {
+  if (typeof length === "string") {
+    const lengthStr = length.indexOf("px") !== -1 ? length.substr(0, length.length-2) : length;    
+    return parseInt(lengthStr, 10);
+  } else {
+    return length;
+  }
+}

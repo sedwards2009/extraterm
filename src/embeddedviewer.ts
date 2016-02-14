@@ -200,11 +200,16 @@ class EtEmbeddedViewer extends ViewerElement {
   
   getReserveViewportHeight(containerHeight: number): number {
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    const outputDiv =  <HTMLDivElement>this._getById(ID_OUTPUT);
+    const outputStyle = window.getComputedStyle(outputDiv);
+
     const rect = headerDiv.getBoundingClientRect();
+    const result = rect.height + domutils.pixelLengthToInt(outputStyle.borderTopWidth) +
+      domutils.pixelLengthToInt(outputStyle.borderBottomWidth);
     if (DEBUG_SIZE) {
-      this._log.debug("getReserveViewportHeight() => ",rect.height);
+      this._log.debug("getReserveViewportHeight() => ", result);
     }
-    return rect.height;
+    return result;
   }
   
   setHeight(height: number): void {
@@ -220,7 +225,7 @@ class EtEmbeddedViewer extends ViewerElement {
     }
     
     if (this.viewerElement !== null) {
-      this.viewerElement.setHeight(height - rect.height);
+      this.viewerElement.setHeight(height - this.getReserveViewportHeight(0));
     }    
   }
   
