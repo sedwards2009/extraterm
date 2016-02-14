@@ -1,3 +1,8 @@
+/*
+ * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ *
+ * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
+ */
 
 import util = require('./gui/util');
 import base64arraybuffer = require('base64-arraybuffer');

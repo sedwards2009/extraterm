@@ -1,6 +1,9 @@
-/**
- * Copyright 2015 Simon Edwards <simon@simonzone.com>
+/*
+ * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ *
+ * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+
 import util = require('./gui/util');
 import _  = require('lodash');
 
