@@ -83,7 +83,7 @@ function main(): void {
   }
 
   themeManager.registerChangeListener(config.theme, () => {
-    sendThemeContents(mainWindow, config.theme);
+    sendThemeContents(mainWindow.webContents, config.theme);
   });
 
   // Quit when all windows are closed.
@@ -410,7 +410,7 @@ function startIpc(): void {
   ipc.on(Messages.CHANNEL_NAME, handleIpc);
 }
 
-function handleIpc(event: any, arg: any): void {
+function handleIpc(event: GitHubElectron.IPCMainEvent, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
   
@@ -432,7 +432,7 @@ function handleIpc(event: any, arg: any): void {
       break;
       
     case Messages.MessageType.THEME_CONTENTS_REQUEST:
-      reply = handleThemeContentsRequest(<Messages.ThemeContentsRequestMessage> msg);
+      sendThemeContents(event.sender, (<Messages.ThemeContentsRequestMessage> msg).id);
       break;
       
     case Messages.MessageType.PTY_CREATE:
@@ -529,22 +529,14 @@ function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages
   return reply;
 }
 
-function handleThemeContentsRequest(msg: Messages.ThemeContentsRequestMessage): Messages.ThemeContentsMessage {
-  const themeContents = themeManager.getThemeContents(msg.id);
-  const reply: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
-    id: msg.id,
-    themeContents: themeContents
-   };
-  return reply;
-}
-
-function sendThemeContents(targetWindow: GitHubElectron.BrowserWindow, themeId: string): void {
-  const themeContents = themeManager.getThemeContents(themeId);
-  const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
-    id: themeId,
-    themeContents: themeContents
-   };
-  targetWindow.webContents.send(Messages.CHANNEL_NAME, msg);
+function sendThemeContents(webContents: GitHubElectron.WebContents, themeId: string): void {
+  themeManager.getThemeContents(themeId).then( (themeContents) => {
+    const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
+      id: themeId,
+      themeContents: themeContents
+    };
+    webContents.send(Messages.CHANNEL_NAME, msg);
+  });
 }
 
 //-------------------------------------------------------------------------

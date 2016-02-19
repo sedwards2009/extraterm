@@ -14,15 +14,17 @@ const print = console.log.bind(console);
 function main(): void {
   const tm = ThemeManager.makeThemeManager('themes');
   tm.getAllThemes().forEach( (themeInfo) => {
-    print("----");
-    print("ID:   ", themeInfo.id);
-    print("Name: ", themeInfo.name);
-    print("Path: ", themeInfo.path);
-    
-    const contents = tm.getThemeContents(themeInfo.id);
-    ThemeTypes.cssFileEnumItems.forEach( (item) => {
-      print("CSS " + ThemeTypes.cssFileNameBase(item) + "----");
-      print(contents.cssFiles[ThemeTypes.cssFileNameBase(item)]);
+    tm.getThemeContents(themeInfo.id).then( (contents) => {
+      print("----");
+      print("ID:   ", themeInfo.id);
+      print("Name: ", themeInfo.name);
+      print("Path: ", themeInfo.path);
+      
+      
+      ThemeTypes.cssFileEnumItems.forEach( (item) => {
+        print("CSS " + ThemeTypes.cssFileNameBase(item) + "----");
+        print(contents.cssFiles[ThemeTypes.cssFileNameBase(item)]);
+      });
     });
   });
 }

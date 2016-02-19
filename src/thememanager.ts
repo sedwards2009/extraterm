@@ -6,7 +6,7 @@
 
 import fs = require('fs');
 import path = require('path');
-import sass = require('node-sass');
+import sass = require('sass.js');
 import _ = require('lodash');
 
 import Logger = require('./logger');
@@ -27,7 +27,7 @@ export interface ThemeManager {
   
   getAllThemes(): ThemeInfo[];
   
-  getThemeContents(themeName: string): ThemeContents;
+  getThemeContents(themeName: string): Promise<ThemeContents>;
   
   registerChangeListener(themeId: string, listener: ListenerFunc): void;
   
@@ -69,7 +69,7 @@ class ThemeManagerImpl implements ThemeManager {
     return result;
   }
 
-  getThemeContents(themeId: string): ThemeContents {
+  getThemeContents(themeId: string): Promise<ThemeContents> {
     const themeInfo = this.getTheme(themeId);
     if (themeInfo === null) {
       this._log.warn("The requested theme name '" + themeId + "' is unknown.");
@@ -77,24 +77,41 @@ class ThemeManagerImpl implements ThemeManager {
     }
     
     if ( ! this._themeContents.has(themeId)) {
-      const contents = this._loadThemeContents(this._directory, themeInfo);
-      this._themeContents.set(themeId, contents);
+      return this._loadThemeContents(this._directory, themeInfo)
+        .then( (contents) => {
+          this._themeContents.set(themeId, contents);
+          return contents;
+        });
+    } else {
+      return new Promise<ThemeContents>( (resolve, cancel) => {
+        resolve(this._themeContents.get(themeId));
+      });
     }
-    return this._themeContents.get(themeId);
   }
   
   registerChangeListener(themeId: string, listenerFunc: () => void): void {
     const themeInfo = this.getTheme(themeId);
     const themePath = themeInfo.path;
+    
     const watcher = fs.watch(themePath, { persistent: false },
       (event, filename) => {
-        const oldThemeContents = this.getThemeContents(themeId);
-        const newThemeContents = this._loadThemeContents(this._directory, themeInfo);
-        if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
-          this._themeContents.set(themeId, newThemeContents);          
-          listenerFunc();
+        
+        if (this._themeContents.has(themeId)) {
+          const oldThemeContents = this._themeContents.get(themeId)
+          
+          this._loadThemeContents(this._directory, themeInfo)
+            .then( (newThemeContents) => {
+              if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
+                this._themeContents.set(themeId, newThemeContents);
+                listenerFunc();
+              } else {
+                this._log.info("" + filename + " changed, but the theme contents did not.");
+              }
+            });
         } else {
-          this._log.info("" + filename + " changed, but the theme contents did not.");
+          this.getThemeContents(themeInfo.id).then( (result) => {
+            listenerFunc();
+          });
         }
       });
     
@@ -148,31 +165,52 @@ class ThemeManagerImpl implements ThemeManager {
     return _.isString(themeinfo.name) && themeinfo.name !== "";
   }
   
-  private _loadThemeContents(directory: string, theme: ThemeInfo): ThemeContents {
+  private _loadThemeContents(directory: string, theme: ThemeInfo): Promise<ThemeContents> {
     const themeContents: ThemeContents = {
       cssFiles: {}
     };
 
-    ThemeTypes.cssFileEnumItems.map( (cssFile: CssFile) => {
+    const filePromises = ThemeTypes.cssFileEnumItems.map(
+      (cssFile: CssFile): Promise<{ cssFile: CssFile; cssText: string;}> => {
       const sassFileName = path.join(directory, theme.id, ThemeTypes.cssFileNameBase(cssFile) + '.scss');
-      const cssText = this._loadSassFile(sassFileName);
-      if (theme.debug) {
-        this._log.debug(`Sass output for ${theme.name}, ${ThemeTypes.cssFileNameBase(cssFile)}`, cssText);
-      }
-      themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)] = cssText;
+      
+      return this._loadSassFile(sassFileName)
+        .then( (cssText: string): { cssFile: CssFile; cssText: string;} => {
+          if (theme.debug) {
+            this._log.debug(`Sass output for ${theme.name}, ${ThemeTypes.cssFileNameBase(cssFile)}`, cssText);
+          }
+          return { cssText, cssFile };
+        });
     });
-    
-    return themeContents;
+
+    return Promise.all(filePromises).then( (results) => {
+      results.forEach( (result) => {
+        themeContents.cssFiles[ThemeTypes.cssFileNameBase(result.cssFile)] = result.cssText;
+      });
+      return themeContents;
+    });
   }
-  
-  private _loadSassFile(sassFileName: string): string {
-    try {
-      const result = sass.renderSync({ file: sassFileName });
-      return result.css.toString();
-    } catch (err) {
-      this._log.warn("An error occurred while processing " + sassFileName, err);
-      return null;
-    }
+
+  private _loadSassFile(sassFileName: string): Promise<string> {
+    return new Promise<string>( (resolve, cancel) => {
+      try {
+        const scssText = fs.readFileSync(sassFileName, {encoding: 'utf-8'});
+        sass.compile(scssText, (result) => {
+          if (result.status === 0) {
+            const successResult = <sass.SuccessResult> result;
+            resolve(successResult.text);
+          } else {
+            const errorResult = <sass.ErrorResult> result;
+            this._log.warn("An error occurred while processing " + sassFileName, errorResult.formatted);
+            cancel();
+          }
+        });
+      } catch (err) {
+        this._log.warn("An error occurred while processing " + sassFileName, err);
+        cancel();
+        return;
+      }
+    });
   }
 }
 
