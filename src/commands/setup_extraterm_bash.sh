@@ -1,4 +1,9 @@
 # This file should be sourced from your .bashrc file.
+#
+# Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+#
+# This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
+# 
 
 if [ -n "$EXTRATERM_COOKIE" ]; then
     echo "Setting up Extraterm support."
