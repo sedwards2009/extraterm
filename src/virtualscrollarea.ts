@@ -8,18 +8,43 @@ import util = require('./gui/util');
 import _  = require('lodash');
 
 export interface VirtualScrollable {
-  
+  /**
+   * Gets the minimum height which this object can be set to.
+   * 
+   * @return the minimum height
+   */
   getMinHeight(): number;
 
   /**
    * Gets the height of the scrollable contents on this element.
-   *
-   * @return {number} [description]
+   * 
+   * @param containerHeight the current height of the container holding this
+   *                            VirtualScrollable object
+   * @return the virtual height
    */
   getVirtualHeight(containerHeight: number): number;
+  
+  /**
+   * Gets the height of reserved vertial space inside the object's viewport.
+   * 
+   * @param  containerHeight the current height of the container holding this
+   *                            VirtualScrollable object
+   * @return the reserved height
+   */
   getReserveViewportHeight(containerHeight: number): number;
   
+  /**
+   * Sets the physical height of this object.
+   * 
+   * @param height the physical height to use in the DOM
+   */
   setHeight(height: number): void;
+  
+  /**
+   * Scrolls the contents of the object to the given y value.
+   * 
+   * @param y the y value to scroll to
+   */
   setScrollOffset(y: number): void;
 }
 
