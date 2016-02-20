@@ -13,6 +13,8 @@ $BLOCK_BORDER_BOTTOM: 2px;
 
 $CORNER_RADIUS: 3px;
 
+$TEAR_BORDER_HEIGHT: 2px;
+
 $LITE_BACKGROUND_COLOR: #5b82a7;
 $DARK_BACKGROUND_COLOR: #567089;
 
@@ -25,6 +27,8 @@ $FADE_DURATION: 0.5s;
 $RUNNING_COLOR: #d6dfe9;
 $SUCCESS_COLOR: #54ff54;
 $FAIL_COLOR: #ff5454;
+
+$TERMINAL_BACKGROUND: #000000;
 
 #ID_CONTAINER {
   margin-left: $TERMINAL_MARGIN_LEFT - $BLOCK_BORDER_LEFT;
@@ -112,6 +116,14 @@ $FAIL_COLOR: #ff5454;
   border-top-right-radius: $CORNER_RADIUS;
 }
 
+#ID_CONTAINER.not-scrolling > #ID_HEADER {
+  border-bottom: $TEAR_BORDER_HEIGHT solid $LITE_BACKGROUND_COLOR;
+}
+
+#ID_CONTAINER.scrolling > #ID_HEADER {
+  border-bottom: $TEAR_BORDER_HEIGHT dashed $TERMINAL_BACKGROUND;
+}
+
 #ID_CONTAINER.running > #ID_HEADER {
   border-bottom-left-radius: $CORNER_RADIUS;
   border-bottom-right-radius: $CORNER_RADIUS;
@@ -170,4 +182,14 @@ $FAIL_COLOR: #ff5454;
         
 #ID_TAG_NAME {
   flex: 0 1 auto;
+}
+
+#ID_CONTAINER.not-scrolling #ID_SCROLL_NAME, #ID_CONTAINER.not-scrolling #ID_SCROLL_ICON {
+  display: none;
+}
+
+#ID_SCROLL_NAME {
+  text-align: right;
+  min-width: 2.5em;
+  padding-right: 1.5em;
 }

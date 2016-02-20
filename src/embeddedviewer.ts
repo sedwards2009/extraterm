@@ -39,6 +39,8 @@ const ID_ICON_DIV = "ID_ICON_DIV";
 const ID_COMMAND_LINE = "ID_COMMAND_LINE";
 const ID_TAG_NAME = "ID_TAG_NAME";
 const ID_THEME = "ID_THEME";
+const ID_SCROLL_ICON = "ID_SCROLL_ICON";
+const ID_SCROLL_NAME = "ID_SCROLL_NAME";
 
 // const ID_EXPAND_BUTTON = "expand_button";
 // const ID_EXPAND_ICON = "expand_icon";
@@ -180,7 +182,8 @@ class EtEmbeddedViewer extends ViewerElement {
   get visualState(): number {
     return this._visualState;
   }
-
+  
+  // See VirtualScrollable
   getMinHeight(): number {
     if (DEBUG_SIZE) {
       this._log.debug("getMinHeight() => ", this.getReserveViewportHeight(0));
@@ -188,6 +191,7 @@ class EtEmbeddedViewer extends ViewerElement {
     return this.getReserveViewportHeight(0);
   }
   
+  // See VirtualScrollable
   getVirtualHeight(containerHeight: number): number {
     const viewerElement = this.viewerElement;
     let result = 0;
@@ -200,6 +204,7 @@ class EtEmbeddedViewer extends ViewerElement {
     return result;
   }
   
+  // See VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const outputDiv =  <HTMLDivElement>this._getById(ID_OUTPUT);
@@ -214,6 +219,7 @@ class EtEmbeddedViewer extends ViewerElement {
     return result;
   }
   
+  // See VirtualScrollable
   setHeight(height: number): void {
     if (DEBUG_SIZE) {
       this._log.debug("setHeight(): ", height);
@@ -231,10 +237,25 @@ class EtEmbeddedViewer extends ViewerElement {
     }    
   }
   
+  // See VirtualScrollable
   setScrollOffset(y: number): void {
     if (DEBUG_SIZE) {
       this._log.debug("setScrollOffset(): ", y);
     }
+    
+    const containerDiv = <HTMLDivElement>this._getById(ID_CONTAINER);
+    if (y === 0) {
+      containerDiv.classList.remove("scrolling");
+      containerDiv.classList.add("not-scrolling");
+    } else {
+      containerDiv.classList.add("scrolling");
+      containerDiv.classList.remove("not-scrolling");
+    }
+    
+    const scrollNameDiv = <HTMLDivElement>this._getById(ID_SCROLL_NAME);
+    const percent = Math.floor(y / this.getVirtualHeight(0) * 100);
+    scrollNameDiv.innerHTML = "" + percent + "%";
+    
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
       viewerElement.setScrollOffset(y);
@@ -516,6 +537,8 @@ class EtEmbeddedViewer extends ViewerElement {
             </div>
             <div class='header_spacer'></div>
             <div class='right_block'>
+              <div id='${ID_SCROLL_ICON}'><i class='fa fa-arrows-v'></i></div>
+              <div id='${ID_SCROLL_NAME}'></div>
               <div id='${ID_TAG_ICON}'><i class='fa fa-tag'></i></div>
               <div id='${ID_TAG_NAME}'></div>
               <div class='spacer'></div>

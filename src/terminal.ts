@@ -475,8 +475,8 @@ class EtTerminal extends HTMLElement {
         }
       
         #${ID_SCROLL_AREA} > ${EtTerminalViewer.TAG_NAME} {
-            margin-left: 2px;
-            margin-right: 2px;
+            margin-left: 4px;
+            margin-right: 4px;
         }
         </style>
         <style id="${ID_THEME_STYLE}"></style>
