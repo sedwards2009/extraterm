@@ -6,6 +6,7 @@
 import _  = require('lodash');
 import fs = require('fs');
 import textencoding = require('text-encoding');
+import utf8encoding = require('../utf8encoding');
 
 import ViewerElement = require("../viewerelement");
 import util = require("../gui/util");
@@ -232,11 +233,19 @@ class EtTextViewer extends ViewerElement {
       charset = mimeType.slice(mimeType.indexOf(';') + 1);
       cleanMimeType = mimeType.slice(0, mimeType.indexOf(';'));
     }
-    const decoder = textencoding.TextDecoder(charset);
-    const decodedString = decoder.decode(buffer);
+    
+    let decodedString: string;
+    if (charset === 'utf8' || charset === 'utf-8') {
+      decodedString = utf8encoding.decodeUint8Array(buffer);
+    } else {
+      const decoder = textencoding.TextDecoder(charset);
+      decodedString = decoder.decode(buffer);
+    }
+    
     this.text = decodedString;
     this.mimeType = cleanMimeType;
   }
+  
   
   set mode(newMode: ViewerElementTypes.Mode) {
     if (newMode === this._mode) {
