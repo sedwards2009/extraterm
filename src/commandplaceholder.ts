@@ -6,6 +6,7 @@
 import virtualscrollarea = require('./virtualscrollarea');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type SetterState = virtualscrollarea.SetterState;
 
 const ID = "EtCommandPlaceHolderTemplate";
 
@@ -80,11 +81,9 @@ class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
     return 0;
   }
   
-  setHeight(height: number): void {
-  }
-  
-  setScrollOffset(y: number): void {
-  }
+  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
+    setterState: SetterState): void {
+    }  
 }
 
 export = EtCommandPlaceHolder;

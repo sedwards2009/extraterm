@@ -20,6 +20,7 @@ import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type SetterState = virtualscrollarea.SetterState;
 const VisualState = ViewerElementTypes.VisualState;
 
 const log = LogDecorator;
@@ -220,31 +221,20 @@ class EtEmbeddedViewer extends ViewerElement {
   }
   
   // See VirtualScrollable
-  setHeight(height: number): void {
+  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
+    setterState: SetterState): void {
+
     if (DEBUG_SIZE) {
-      this._log.debug("setHeight(): ", height);
+      this._log.debug("setDimensionsAndScroll(): ", height, heightChanged, yOffset, yOffsetChanged);
     }
-    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
-    const rect = headerDiv.getBoundingClientRect();
     
     if (height !== this._currentElementHeight) {
       this.style.height = "" + height + "px";
       this._currentElementHeight = height;
     }
-    
-    if (this.viewerElement !== null) {
-      this.viewerElement.setHeight(height - this.getReserveViewportHeight(0));
-    }    
-  }
-  
-  // See VirtualScrollable
-  setScrollOffset(y: number): void {
-    if (DEBUG_SIZE) {
-      this._log.debug("setScrollOffset(): ", y);
-    }
-    
+
     const containerDiv = <HTMLDivElement>this._getById(ID_CONTAINER);
-    if (y === 0) {
+    if (yOffset === 0) {
       containerDiv.classList.remove("scrolling");
       containerDiv.classList.add("not-scrolling");
     } else {
@@ -253,12 +243,13 @@ class EtEmbeddedViewer extends ViewerElement {
     }
     
     const scrollNameDiv = <HTMLDivElement>this._getById(ID_SCROLL_NAME);
-    const percent = Math.floor(y / this.getVirtualHeight(0) * 100);
+    const percent = Math.floor(yOffset / this.getVirtualHeight(0) * 100);
     scrollNameDiv.innerHTML = "" + percent + "%";
     
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
-      viewerElement.setScrollOffset(y);
+      viewerElement.setDimensionsAndScroll(height - this.getReserveViewportHeight(0), true,
+        yOffset, yOffsetChanged, setterState);
     }
   }
   
@@ -483,7 +474,7 @@ class EtEmbeddedViewer extends ViewerElement {
       this.focus();
     }).bind(this));
 
-    this.setHeight(this.getMinHeight());
+    this.setDimensionsAndScroll(this.getMinHeight(), true, 0, true, { containerHeight: this.getMinHeight() });
 
     // Remove the anti-flicker style.
     this._getById(ID_CONTAINER).setAttribute('style', '');

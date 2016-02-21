@@ -23,6 +23,7 @@ import globalcss = require('./gui/globalcss');
 import virtualscrollarea = require('./virtualscrollarea');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type SetterState = virtualscrollarea.SetterState;
 type ScrollableElement = VirtualScrollable & HTMLElement;
 type VisualState = ViewerElementTypes.VisualState;
 const VisualState = ViewerElementTypes.VisualState;

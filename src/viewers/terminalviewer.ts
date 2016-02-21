@@ -17,6 +17,7 @@ import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type SetterState = virtualscrollarea.SetterState;
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 const VisualState = ViewerElementTypes.VisualState;
@@ -266,13 +267,18 @@ class EtTerminalViewer extends ViewerElement {
   }
 
   // VirtualScrollable
-  setHeight(newHeight: number): void {
+  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
+    setterState: SetterState): void {
+    
     if (DEBUG_RESIZE) {
-      this._log.debug("setHeight: ",newHeight);
+      this._log.debug("setDimensionsAndScroll(): ", height, heightChanged, yOffset, yOffsetChanged);
     }
-    this._adjustHeight(newHeight);
+    
+    this._adjustHeight(height);
+    this.scrollTo(0, yOffset);
   }
-
+  
+  // VirtualScrollable
   getMinHeight(): number {
     return 0;
   }
@@ -281,11 +287,7 @@ class EtTerminalViewer extends ViewerElement {
     this._useVPad = use;
   }
 
-  /**
-   * Gets the height of the scrollable contents on this element.
-   *
-   * @return {number} [description]
-   */
+  // VirtualScrollable
   getVirtualHeight(containerHeight: number): number {
     const result = this.getVirtualTextHeight();
     if (DEBUG_RESIZE) {
@@ -294,6 +296,7 @@ class EtTerminalViewer extends ViewerElement {
     return result;
   }
   
+  // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     const textHeight = this.getVirtualTextHeight();
     if (this._useVPad) {
@@ -369,13 +372,6 @@ class EtTerminalViewer extends ViewerElement {
     return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   }
 
-  // VirtualScrollable
-  setScrollOffset(y: number): void {
-// this.log("setScrollOffset(" + y + ")");
-    this.scrollTo(0, y);
-// this.log("this._codeMirror.getScrollInfo(): " , this._codeMirror.getScrollInfo());
-  }
-  
   lineCount(): number {
     const doc = this._codeMirror.getDoc();
     return this._isEmpty ? 0 : doc.lineCount();

@@ -18,6 +18,7 @@ import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type SetterState = virtualscrollarea.SetterState;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 type TextDecoration = EtTextViewerTypes.TextDecoration;
@@ -280,22 +281,11 @@ class EtTextViewer extends ViewerElement {
   }
 
   // VirtualScrollable
-  setHeight(newHeight: number): void {
-    if (DEBUG_RESIZE) {
-      this._log.debug("setHeight: ",newHeight);
-    }
-    this._adjustHeight(newHeight);
-  }
-
   getMinHeight(): number {
     return 0;
   }
 
-  /**
-   * Gets the height of the scrollable contents on this element.
-   *
-   * @return {number} [description]
-   */
+  // VirtualScrollable
   getVirtualHeight(containerHeight: number): number {
     const result = this.getVirtualTextHeight();
     if (DEBUG_RESIZE) {
@@ -304,6 +294,7 @@ class EtTextViewer extends ViewerElement {
     return result;
   }
   
+  // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     if (DEBUG_RESIZE) {
       this._log.debug("getReserveViewportHeight: ", 0);
@@ -311,17 +302,22 @@ class EtTextViewer extends ViewerElement {
     return 0;
   }
   
+  // VirtualScrollable
+  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
+      setterState: SetterState): void {
+
+    if (DEBUG_RESIZE) {
+      this._log.debug("setDimensionsAndScroll(): ", height, heightChanged, yOffset, yOffsetChanged);
+    }
+      
+    this._adjustHeight(height);
+    this.scrollTo(0, yOffset);
+  }
+  
   isFontLoaded(): boolean {
     return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   }
 
-  // VirtualScrollable
-  setScrollOffset(y: number): void {
-// this.log("setScrollOffset(" + y + ")");
-    this.scrollTo(0, y);
-// this.log("this._codeMirror.getScrollInfo(): " , this._codeMirror.getScrollInfo());
-  }
-  
   lineCount(): number {
     const doc = this._codeMirror.getDoc();
     return this._isEmpty ? 0 : doc.lineCount();
@@ -380,7 +376,6 @@ class EtTextViewer extends ViewerElement {
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-  
   createdCallback(): void {
     this._initProperties();
   }
@@ -653,6 +648,9 @@ class EtTextViewer extends ViewerElement {
   }
 
   private scrollTo(x: number, y: number): void {
+    if (domutils.getShadowRoot(this) === null) {
+      return;
+    }
     this._codeMirror.scrollTo(x, y);
   }
     
@@ -779,8 +777,11 @@ class EtTextViewer extends ViewerElement {
       }
     }
   }
-
+  
   private getVirtualTextHeight(): number {
+    if (domutils.getShadowRoot(this) === null) {
+      return 8;
+    }
     return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
   }
   

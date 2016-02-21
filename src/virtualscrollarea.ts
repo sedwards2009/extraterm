@@ -32,20 +32,23 @@ export interface VirtualScrollable {
    * @return the reserved height
    */
   getReserveViewportHeight(containerHeight: number): number;
-  
+
   /**
-   * Sets the physical height of this object.
+   * Set the dimensions and scroll for this scrollable.
    * 
    * @param height the physical height to use in the DOM
+   * @param heightChanged true if the `height` value is different than the
+   *                           	last time this method was called
+   * @param yOffset the y value to scroll to
+   * @param setterState information about the context in which this
+   *                            scrollable is being displayed in
    */
-  setHeight(height: number): void;
-  
-  /**
-   * Scrolls the contents of the object to the given y value.
-   * 
-   * @param y the y value to scroll to
-   */
-  setScrollOffset(y: number): void;
+  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
+    setterState: SetterState): void;
+}
+
+export interface SetterState {
+  containerHeight: number;
 }
 
 // The name of a custom event that VirtualScrollables should emit when they need to be resized.
@@ -582,15 +585,15 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): voi
   // Update each Scrollable if needed.
   newState.scrollableStates.forEach( (newScrollableState: VirtualScrollableState): void => {
     const oldScrollableState = oldMap.get(newScrollableState.scrollable);
-    if (oldScrollableState === undefined ||
-        oldScrollableState.realHeight !== newScrollableState.realHeight) {
-      newScrollableState.scrollable.setHeight(newScrollableState.realHeight);
+    const heightChanged = oldScrollableState === undefined ||
+                            oldScrollableState.realHeight !== newScrollableState.realHeight;
+    const yOffsetChanged = oldScrollableState === undefined ||
+        oldScrollableState.virtualScrollYOffset !== newScrollableState.virtualScrollYOffset;
+    if (heightChanged || yOffsetChanged) {
+      const setterState: SetterState = { containerHeight: newState.containerHeight };
+      newScrollableState.scrollable.setDimensionsAndScroll(newScrollableState.realHeight, heightChanged,
+        newScrollableState.virtualScrollYOffset, yOffsetChanged, setterState);
     }
-    if (oldScrollableState === undefined ||
-        oldScrollableState.virtualScrollYOffset !== newScrollableState.virtualScrollYOffset) {
-      newScrollableState.scrollable.setScrollOffset(newScrollableState.virtualScrollYOffset);
-    }
-    
   });
   
   // Update the Y offset for the container.

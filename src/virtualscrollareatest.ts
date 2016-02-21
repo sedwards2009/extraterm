@@ -6,6 +6,7 @@
 import sourceMapSupport = require('source-map-support');
 import nodeunit = require('nodeunit');
 import virtualscrollarea = require('./virtualscrollarea');
+type SetterState = virtualscrollarea.SetterState;
 
 sourceMapSupport.install();
 
@@ -65,16 +66,15 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: nu
       reserveViewportHeight = newReserveViewportHeight;
     },
 
-    setScrollOffset(offset: number): void {
-      this._offset = offset;
+    setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
+        setterState: SetterState): void {
+
+      this._height = height;
+      this._offset = yOffset;
     },
     
     getScrollOffset(): number {
       return this._offset;
-    },
-    
-    setHeight(height: number): void {
-      this._height = height;
     },
     
     getHeight(): number {

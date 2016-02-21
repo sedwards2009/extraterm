@@ -16,6 +16,7 @@ import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type SetterState = virtualscrollarea.SetterState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 type VisualState = ViewerElementTypes.VisualState;
 const VisualState = ViewerElementTypes.VisualState;
@@ -31,7 +32,7 @@ const CLASS_FORCE_UNFOCUSED = "force-unfocused";
 const CLASS_FOCUS_AUTO = "focus-auto";
 const SCROLL_STEP = 128;
 
-const DEBUG_RESIZE = false;
+const DEBUG_SIZE = false;
 
 const log = LogDecorator;
 
@@ -207,32 +208,30 @@ class EtImageViewer extends ViewerElement {
     return false;
   }  
 
-  /**
-   * Gets the height of this element.
-   * 
-   * @return {number} [description]
-   */
+  // VirtualScrollable
   getHeight(): number {
     return this._height;
   }
-
+  
   // VirtualScrollable
-  setHeight(newHeight: number): void {
-    if (DEBUG_RESIZE) {
-      this._log.debug("setHeight: ",newHeight);
+  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
+    setterState: SetterState): void {
+
+    if (DEBUG_SIZE) {
+      this._log.debug("setDimensionsAndScroll(): ", height, heightChanged, yOffset, yOffsetChanged);
     }
-    this._adjustHeight(newHeight);
+    this._adjustHeight(height);
+    
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    containerDiv.scrollTop = yOffset;
   }
 
+  // VirtualScrollable
   getMinHeight(): number {
     return 0;
   }
 
-  /**
-   * Gets the height of the scrollable contents on this element.
-   *
-   * @return {number} [description]
-   */
+   // VirtualScrollable
   getVirtualHeight(containerHeight: number): number {
     // const result = this.getVirtualTextHeight();
     let result = 0;
@@ -240,14 +239,15 @@ class EtImageViewer extends ViewerElement {
       result = this._imageHeight;
     }
     
-    if (DEBUG_RESIZE) {
+    if (DEBUG_SIZE) {
       this._log.debug("getVirtualHeight: ",result);
     }
     return result;
   }
   
+  // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
-    if (DEBUG_RESIZE) {
+    if (DEBUG_SIZE) {
       this._log.debug("getReserveViewportHeight: ", 0);
     }
     return 0;
@@ -257,11 +257,6 @@ class EtImageViewer extends ViewerElement {
   //   return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   // }
 
-  // VirtualScrollable
-  setScrollOffset(y: number): void {
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    containerDiv.scrollTop = y;
-  }
 
   getCursorPosition(): CursorMoveDetail {
     const detail: CursorMoveDetail = {
@@ -440,7 +435,7 @@ class EtImageViewer extends ViewerElement {
   }
   
   private _emitVirtualResizeEvent(): void {
-    if (DEBUG_RESIZE) {
+    if (DEBUG_SIZE) {
       this._log.debug("_emitVirtualResizeEvent");
     }
     const event = new CustomEvent(virtualscrollarea.EVENT_RESIZE, { bubbles: true });
