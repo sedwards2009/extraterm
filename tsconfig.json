@@ -52,6 +52,8 @@
         "./src/theme.ts",
         "./src/thememanager.ts",
         "./src/thememanagerutility.ts",
+        "./src/utf8.d.ts",
+        "./src/utf8encoding.ts",
         "./src/viewerelement.ts",
         "./src/viewerelementtypes.ts",
         "./src/viewertab.ts",

@@ -24,6 +24,7 @@
     "sass.js": "0.9.7",
     "source-map-support": "0.3.2",
     "text-encoding": "0.5.2",
+    "utf8": "2.1.1",
     "vue": "1.0.10"
   },
   "optionalDependencies": {
