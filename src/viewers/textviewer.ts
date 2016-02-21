@@ -396,18 +396,25 @@ class EtTextViewer extends ViewerElement {
     this.style.height = "0px";
     this._exitSelectionMode();
 
+
+    const codeMirrorOptions: CodeMirror.EditorConfiguration = {
+      value: "",
+      readOnly: true,
+      lineNumbers: true,
+      scrollbarStyle: "null",
+      cursorScrollMargin: 0,
+      showCursorWhenSelecting: true,
+      theme: CODEMIRROR_THEME
+    };
+
+    if (this._mimeType !== null) {
+      codeMirrorOptions.mode = this._mimeType;
+    }
+
     // Create the CodeMirror instance
     this._codeMirror = CodeMirror( (el: HTMLElement): void => {
       containerDiv.appendChild(el);
-    }, {
-        value: "",
-        readOnly: true,
-        lineNumbers: true,
-        scrollbarStyle: "null",
-        cursorScrollMargin: 0,
-        showCursorWhenSelecting: true,
-        theme: CODEMIRROR_THEME
-      });
+    }, codeMirrorOptions);
 
     this._codeMirror.on("cursorActivity", () => {
       if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
@@ -517,9 +524,7 @@ class EtTextViewer extends ViewerElement {
       domutils.doLater(this._emitVirtualResizeEvent.bind(this));
       this._text = null;
     }
-    if (this._mimeType !== null) {
-      this._codeMirror.setOption("mode", this._mimeType);
-    }
+
     this._adjustHeight(this._height);
   }
   
