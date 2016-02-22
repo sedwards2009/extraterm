@@ -9,6 +9,7 @@
     "run": "electron --force-device-scale-factor=1 main.js",
     "build": "tsc",
     "test": "npm run build ; nodeunit virtualscrollareatest.js",
+    "typedoc": "node prepare_typedoc.js && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs typedoc_tmp",
     "serve-test": "node test/httpserver.js"
   },
   "dependencies": {
@@ -35,7 +36,9 @@
     "finalhandler": "0.4.0",
     "nodeunit": "0.9.1",
     "serve-static": "1.10.0",
+    "shelljs": "0.6.0",
     "tsd": "0.6.0-beta.5",
+    "typedoc": "0.3.12",
     "typescript": "1.7.5"
   }
 }
