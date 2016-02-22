@@ -59,6 +59,11 @@ $TERMINAL_BACKGROUND: #000000;
   transition-duration: $FADE_DURATION;
 }
 
+/* Eliminate any outline around the button when it is clicked. */
+.right_block BUTTON:focus {
+  outline: 0px;
+}
+
 /* *** Icon Div *** */
 #ID_ICON_DIV {
   display: inline-block;
@@ -118,6 +123,10 @@ $TERMINAL_BACKGROUND: #000000;
 
 #ID_CONTAINER.not-scrolling > #ID_HEADER {
   border-bottom: $TEAR_BORDER_HEIGHT solid $LITE_BACKGROUND_COLOR;
+}
+
+#ID_CONTAINER.not-scrolling.fail > #ID_HEADER {
+  border-bottom: $TEAR_BORDER_HEIGHT solid $FAIL_BACKGROUND_COLOR;
 }
 
 #ID_CONTAINER.scrolling > #ID_HEADER {
