@@ -50,6 +50,12 @@ const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
 const ID_POP_OUT_BUTTON = "ID_POP_OUT_BUTTON";
 const ID_TAG_ICON = "ID_TAG_ICON";
 
+const CLASS_SCROLLING = "scrolling";
+const CLASS_NOT_SCROLLING = "not-scrolling";
+const CLASS_BOTTOM_VISIBLE = "bottom-visible";
+const CLASS_BOTTOM_NOT_VISIBLE = "bottom-not-visible";
+
+
 let registered = false;
 
 const DEBUG_SIZE = false;
@@ -235,11 +241,24 @@ class EtEmbeddedViewer extends ViewerElement {
 
     const containerDiv = <HTMLDivElement>this._getById(ID_CONTAINER);
     if (yOffset === 0) {
-      containerDiv.classList.remove("scrolling");
-      containerDiv.classList.add("not-scrolling");
+      containerDiv.classList.remove(CLASS_SCROLLING);
+      containerDiv.classList.add(CLASS_NOT_SCROLLING);
     } else {
-      containerDiv.classList.add("scrolling");
-      containerDiv.classList.remove("not-scrolling");
+      containerDiv.classList.add(CLASS_SCROLLING);
+      containerDiv.classList.remove(CLASS_NOT_SCROLLING);
+    }
+    
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    const rect = headerDiv.getBoundingClientRect();
+    headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), height - rect.height) + 'px';
+    
+    if (setterState.physicalTop > 0 || height < setterState.containerHeight) {
+      // Bottom part is visible
+      containerDiv.classList.remove(CLASS_BOTTOM_NOT_VISIBLE);
+      containerDiv.classList.add(CLASS_BOTTOM_VISIBLE);
+    } else {
+      containerDiv.classList.add(CLASS_BOTTOM_NOT_VISIBLE);
+      containerDiv.classList.remove(CLASS_BOTTOM_VISIBLE);
     }
     
     const scrollNameDiv = <HTMLDivElement>this._getById(ID_SCROLL_NAME);
@@ -474,7 +493,8 @@ class EtEmbeddedViewer extends ViewerElement {
       this.focus();
     }).bind(this));
 
-    this.setDimensionsAndScroll(this.getMinHeight(), true, 0, true, { containerHeight: this.getMinHeight() });
+    this.setDimensionsAndScroll(this.getMinHeight(), true, 0, true,
+      { containerHeight: this.getMinHeight(), physicalTop: 0 });
 
     // Remove the anti-flicker style.
     this._getById(ID_CONTAINER).setAttribute('style', '');

@@ -36,8 +36,10 @@ $TERMINAL_BACKGROUND: #000000;
 }
 
 #ID_HEADER {
+  position: relative;
   display: flex;
   width: 100%;
+  z-index: 5;
 }
 
 #ID_OUTPUT.closed {
@@ -160,6 +162,12 @@ $TERMINAL_BACKGROUND: #000000;
   
   transition-property: border-left-color, border-right-color;
   transition-duration: $FADE_DURATION, $FADE_DURATION;
+}
+
+#ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT {
+  border-bottom-color: rgba(0, 0, 0, 0);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 // Success mode

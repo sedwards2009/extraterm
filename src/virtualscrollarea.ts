@@ -49,6 +49,7 @@ export interface VirtualScrollable {
 
 export interface SetterState {
   containerHeight: number;
+  physicalTop: number;
 }
 
 // The name of a custom event that VirtualScrollables should emit when they need to be resized.
@@ -63,6 +64,7 @@ interface VirtualScrollableState {
   
   // Output - These values are set by the calculate() method.
   realHeight: number;
+  realTop: number;
   virtualScrollYOffset: number;
   virtualTop: number;
 }
@@ -76,6 +78,9 @@ interface VirtualAreaState {
   // Output - 
   containerScrollYOffset: number;
   scrollableStates: VirtualScrollableState[];
+  
+  intersectIndex: number;
+  realScrollYOffset: number;
 }
 
 export interface Scrollbar {
@@ -103,7 +108,10 @@ export class VirtualScrollArea {
       container: null,
       
       containerScrollYOffset: 0,
-      scrollableStates: []
+      scrollableStates: [],
+      
+      intersectIndex: -1,
+      realScrollYOffset: 0
     };
   }
   
@@ -174,6 +182,7 @@ export class VirtualScrollArea {
         reserveViewportHeight: reserveViewportHeight,
         
         realHeight: 0,
+        realTop: 0,
         virtualScrollYOffset: 0,
         virtualTop: 0
       } );
@@ -329,6 +338,10 @@ export class VirtualScrollArea {
     return this.scrollTo(yOffset);
   }
   
+  dumpState(): void {
+    DumpState(this._currentState);
+  }
+  
   //-----------------------------------------------------------------------
   //
   // ######                                      
@@ -430,6 +443,7 @@ function Compute(state: VirtualAreaState): boolean {
   for (let i=0; i<state.scrollableStates.length; i++) {
     const scrollable = state.scrollableStates[i];
     scrollable.virtualTop = virtualScrollableTop;
+    scrollable.realTop = realScrollableTop;
 
     // Each scrollable can be in one of a number of relationships with the viewport.
     // Our first task is to determine which relationship we have.
@@ -446,6 +460,8 @@ function Compute(state: VirtualAreaState): boolean {
       if (pos >= virtualScrollableTop && pos <  virtualScrollableBottom) {
         // We can now compute the container scroll offset if the top of the viewport intersects the scrollable.
         state.containerScrollYOffset = realScrollableTop + pos - virtualScrollableTop;
+        state.intersectIndex = i;
+        state.realScrollYOffset = realScrollableTop;
       }
       
     } else {
@@ -465,7 +481,9 @@ function Compute(state: VirtualAreaState): boolean {
           // | Scrollable |    |
           // |            |    |
           // +------------+    :
-          // const realScrollableBottom = realScrollableTop + scrollable.realHeight;
+          state.intersectIndex = i;
+          state.realScrollYOffset = realScrollableTop;
+
           if (pos + viewPortHeight >= virtualScrollableBottom) {
             // +------------+
             // |            | ---+  <-- Viewport
@@ -552,9 +570,13 @@ function AddOffset(state: VirtualAreaState, offset: number, delta: number): numb
 function SubtractOffset(state: VirtualAreaState, offset: number, delta: number): number {
   const reverseState: VirtualAreaState  = { scrollbar: null, containerHeight: 0, container: null,
     virtualScrollYOffset: 0, containerScrollYOffset: 0,
-    scrollableStates: [...state.scrollableStates].reverse() };
+    scrollableStates: [...state.scrollableStates].reverse(),
+    intersectIndex: -1,
+    realScrollYOffset: 0
+   };
   const totalVirtualHeight = TotalVirtualHeight(state);
-  return TotalVirtualHeight(state) - AddOffset(reverseState, totalVirtualHeight - offset, delta);
+  const mirrorOffset = AddOffset(reverseState, totalVirtualHeight - offset, delta);
+  return totalVirtualHeight - mirrorOffset;
 }
 
 /**
@@ -585,12 +607,17 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): voi
   // Update each Scrollable if needed.
   newState.scrollableStates.forEach( (newScrollableState: VirtualScrollableState): void => {
     const oldScrollableState = oldMap.get(newScrollableState.scrollable);
+    
     const heightChanged = oldScrollableState === undefined ||
                             oldScrollableState.realHeight !== newScrollableState.realHeight;
+                            
     const yOffsetChanged = oldScrollableState === undefined ||
         oldScrollableState.virtualScrollYOffset !== newScrollableState.virtualScrollYOffset;
+
     if (heightChanged || yOffsetChanged) {
-      const setterState: SetterState = { containerHeight: newState.containerHeight };
+      const setterState: SetterState = { containerHeight: newState.containerHeight,
+        physicalTop: newState.containerScrollYOffset - newScrollableState.realTop };
+
       newScrollableState.scrollable.setDimensionsAndScroll(newScrollableState.realHeight, heightChanged,
         newScrollableState.virtualScrollYOffset, yOffsetChanged, setterState);
     }
@@ -617,7 +644,9 @@ function VirtualAreaStateToString(state: VirtualAreaState): string {
     container: ${ElementToString(state.container)},
     // Output
     containerScrollYOffset: ${state.containerScrollYOffset},
-    scrollableStates: ${state.scrollableStates.map(VirtualScrollableStateToString).join(',\n')}
+    scrollableStates: ${state.scrollableStates.map(VirtualScrollableStateToString).join(',\n')},
+    intersectIndex: ${state.intersectIndex},
+    realScrollYOffset: ${state.realScrollYOffset}
   }`;
 }
 
@@ -629,7 +658,9 @@ function VirtualScrollableStateToString(state: VirtualScrollableState): string {
       reserveViewportHeight: ${state.reserveViewportHeight},
       // Output
       realHeight: ${state.realHeight},
-      virtualScrollYOffset: ${state.virtualScrollYOffset}    
+      realTop: ${state.realTop},
+      virtualScrollYOffset: ${state.virtualScrollYOffset} ,
+      virtualTop: ${state.virtualTop}
     }`;
 }
 
@@ -638,8 +669,4 @@ function ElementToString(element: any): string {
     return "null";
   }
   return (<any> element).tagName;
-}
-
-function log(message: any, ...msgOpts: any[]): void {
-  console.log(message, ...msgOpts);
 }
