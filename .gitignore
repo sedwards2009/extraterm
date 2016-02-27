@@ -57,3 +57,5 @@ src/viewers/textviewer.js
 src/viewers/imageviewer.js
 src/viewers/terminalviewertypes.js
 src/utf8encoding.js
+src/typedoc_tmp/
+src/typedocs/
