@@ -248,14 +248,22 @@ class EtTerminal extends HTMLElement {
       return true;
     }
     
-    const parts = cleanCommandLine.split(/\s/);
-    const command = parts[0];
-    
+    const commandParts = cleanCommandLine.split(/\s+/);    
     return this._commandLineActions.some( cla => {
       if (cla.matchType === 'name') {
-        return cla.match === command;
+        const matcherParts = cla.match.split(/\s+/);
+        for (let i=0; i < matcherParts.length; i++) {
+          if (i >= commandParts.length) {
+            return false;
+          }
+          if (matcherParts[i] !== commandParts[i]) {
+            return false;
+          }
+        }
+        return true;        
       } else {
-        return (new RegExp(cla.match)).test(command);
+        // regexp
+        return (new RegExp(cla.match)).test(cleanCommandLine);
       }
     } );
   }
