@@ -45,6 +45,7 @@ const PtyConnectorFactory = require("./ptyconnectorfactory");
 // Interfaces.
 import configInterfaces = require('./config');
 type Config = configInterfaces.Config;
+type CommandLineAction = configInterfaces.CommandLineAction;
 type SessionProfile = configInterfaces.SessionProfile;
 type SystemConfig = configInterfaces.SystemConfig;
 
@@ -370,7 +371,19 @@ function setConfigDefaults(config: Config): void {
   config.expandedProfiles = config.expandedProfiles === undefined ? null : config.expandedProfiles;
   config.blinkingCursor = config.blinkingCursor === undefined ? false : config.blinkingCursor;
   config.scrollbackLines = config.scrollbackLines === undefined ? 1000 : config.scrollbackLines;
-  config.commandLineActions = config.commandLineActions === undefined ? [] : config.commandLineActions;
+
+  if (config.commandLineActions === undefined) {
+    const defaultCLA: CommandLineAction[] = [
+      { match: 'cd', matchType: 'name', frame: false },      
+      { match: 'rm', matchType: 'name', frame: false },
+      { match: 'mkdir', matchType: 'name', frame: false },
+      { match: 'rmdir', matchType: 'name', frame: false },
+      { match: 'mv', matchType: 'name', frame: false },
+      { match: 'cp', matchType: 'name', frame: false },
+      { match: 'chmod', matchType: 'name', frame: false }
+    ];
+    config.commandLineActions = defaultCLA;
+  }
 }
 
 /**
