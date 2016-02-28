@@ -1,0 +1,21 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* settings-tab styles */
+
+#ID_SETTINGS {
+  height: 100%;
+  over-flow: auto;
+}
+
+#ID_COMMAND_OUTPUT_HANDLING > table {
+}
+
+#ID_COMMAND_OUTPUT_HANDLING > table > thead {
+  font-weight: bold;
+}
+
+#ID_COMMAND_OUTPUT_HANDLING > table td.CLASS_FRAME {
+  min-width: 10em;
+}

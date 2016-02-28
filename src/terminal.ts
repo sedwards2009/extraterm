@@ -35,6 +35,9 @@ import virtualscrollarea = require('./virtualscrollarea');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 
+import config = require('./config');
+type CommandLineAction = config.CommandLineAction;
+
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 const VisualState = ViewerElementTypes.VisualState;
@@ -148,7 +151,7 @@ class EtTerminal extends HTMLElement {
   
   private _blinkingCursor: boolean;
   private _title: string;
-  private _noFrameCommands: RegExp[];
+  private _commandLineActions: CommandLineAction[];
   private _frameFinder: FrameFinder;
   
   private _nextTag: string;
@@ -185,7 +188,7 @@ class EtTerminal extends HTMLElement {
     this._mode = Mode.TERMINAL;
     
     this._blinkingCursor = false;
-    this._noFrameCommands = [];
+    this._commandLineActions = [];
     this._frameFinder = null;
     this._title = "New Tab";
     this._nextTag = null;
@@ -230,23 +233,33 @@ class EtTerminal extends HTMLElement {
     themeTag.innerHTML = globalcss.stripFontFaces(themeCss);
   }
   
-  set noFrameCommands(commandList: string[]) {
-    if (commandList === null) {
-      this._noFrameCommands = [];
+  set commandLineActions(commandLineActions: CommandLineAction[]) {
+    if (commandLineActions === null) {
+      this._commandLineActions = [];
       return;
     }
     
-    this._noFrameCommands = commandList.map( exp => new RegExp(exp) );
+    this._commandLineActions = commandLineActions;
   }
   
   private _isNoFrameCommand(commandLine: string): boolean {
-    const cmd = commandLine.trim();
-    if (cmd === "") {
+    const cleanCommandLine = commandLine.trim();
+    if (cleanCommandLine === "") {
       return true;
     }
-    return this._noFrameCommands.some( exp => exp.test(cmd) );
+    
+    const parts = cleanCommandLine.split(/\s/);
+    const command = parts[0];
+    
+    return this._commandLineActions.some( cla => {
+      if (cla.matchType === 'name') {
+        return cla.match === command;
+      } else {
+        return (new RegExp(cla.match)).test(command);
+      }
+    } );
   }
-  
+
   /**
    * Get this terminal's title.
    *

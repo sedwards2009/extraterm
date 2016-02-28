@@ -160,7 +160,7 @@ class TerminalTabInfo extends TabInfo {
   setConfig(config: Config): void {
     this.terminal.blinkingCursor = config.blinkingCursor;
     this.terminal.themeCssPath = path.join(config.themePath, "theme.css").replace(/\\/g, "/");
-    this.terminal.noFrameCommands = config.noFrameCommands !== undefined ? config.noFrameCommands : null;
+    this.terminal.commandLineActions = config.commandLineActions !== undefined ? config.commandLineActions : null;
   }
   
   destroy(): void {
@@ -643,6 +643,10 @@ class ExtratermMainWebUI extends HTMLElement {
       this._tabInfo.forEach( tabInfo2 => {
         tabInfo2.lastFocus = tabInfo2 === tabInfo;
       });
+    });
+
+    viewerElement.addEventListener(EtSettingsTab.EVENT_CONFIG_CHANGE, (ev: CustomEvent) => {
+      webipc.sendConfig(ev.detail.data);
     });
 
     tabInfo.updateTabTitle();

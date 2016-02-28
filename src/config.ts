@@ -12,14 +12,20 @@ export interface Config {
   theme?: string;
   themePath?: string;
 
-  // List of regexp patterns which are used to identify command
-  // lines which should not get a command frame around their output.
-  noFrameCommands?: string[];
+  commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;
 
   sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
   expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.
   systemConfig: SystemConfig;
+}
+
+export type CommandLineActionMatchType = 'name' | 'regexp';
+
+export interface CommandLineAction {
+  match: string;
+  matchType: CommandLineActionMatchType;
+  frame: boolean;
 }
 
 export interface SystemConfig {

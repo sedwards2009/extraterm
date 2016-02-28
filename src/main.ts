@@ -369,8 +369,8 @@ function setConfigDefaults(config: Config): void {
   config.systemConfig = config.systemConfig === undefined ? null : config.systemConfig;
   config.expandedProfiles = config.expandedProfiles === undefined ? null : config.expandedProfiles;
   config.blinkingCursor = config.blinkingCursor === undefined ? false : config.blinkingCursor;
-  config.noFrameCommands = config.noFrameCommands === undefined ? [] : config.noFrameCommands;
   config.scrollbackLines = config.scrollbackLines === undefined ? 1000 : config.scrollbackLines;
+  config.commandLineActions = config.commandLineActions === undefined ? [] : config.commandLineActions;
 }
 
 /**
@@ -505,8 +505,8 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   // Copy in the updated fields.
   const incomingConfig = msg.config;
   config.blinkingCursor = incomingConfig.blinkingCursor;
-  config.noFrameCommands = incomingConfig.noFrameCommands;
   config.scrollbackLines = incomingConfig.scrollbackLines;
+  config.commandLineActions = incomingConfig.commandLineActions;
 
   // Write it to disk.
   writeConfiguration(config);
