@@ -5,9 +5,12 @@
 "use strict";
 import _  = require('lodash');
 import fs = require('fs');
+import path = require('path');
+
 import textencoding = require('text-encoding');
 import utf8encoding = require('../utf8encoding');
 
+import sourceDir = require('../sourceDir');
 import ViewerElement = require("../viewerelement");
 import util = require("../gui/util");
 import domutils = require("../domutils");
@@ -68,10 +71,10 @@ class EtTextViewer extends ViewerElement {
     if (registered === false) {
       
       // Load the CSS resources now.
-      cssText = fs.readFileSync('node_modules/codemirror/lib/codemirror.css', { encoding: 'utf8' })
-        + fs.readFileSync('node_modules/codemirror/addon/scroll/simplescrollbars.css', { encoding: 'utf8' })
-        + fs.readFileSync('themes/default/theme.css', { encoding: 'utf8' })
-        + fs.readFileSync('node_modules/codemirror/theme/' + CODEMIRROR_THEME + '.css', { encoding: 'utf8' });
+      cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
+        + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' })
+        + fs.readFileSync(path.join(sourceDir.path, 'themes/default/theme.css'), { encoding: 'utf8' })
+        + fs.readFileSync(require.resolve('codemirror/theme/' + CODEMIRROR_THEME + '.css'), { encoding: 'utf8' });
 
       window.document.registerElement(EtTextViewer.TAG_NAME, {prototype: EtTextViewer.prototype});
       registered = true;

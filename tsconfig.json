@@ -47,6 +47,7 @@
         "./src/requirejs.d.ts",
         "./src/resourceloader.ts",
         "./src/source-map-support.d.ts",
+        "./src/sourceDir.ts",
         "./src/term.ts",
         "./src/terminal.ts",
         "./src/theme.ts",

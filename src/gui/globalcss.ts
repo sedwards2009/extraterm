@@ -5,6 +5,8 @@
  */
 import resourceLoader = require('../resourceloader');
 import fs = require('fs');
+import path = require('path');
+import sourceDir = require('../sourceDir');
 
 /*
  * This file mostly exists to work around Blink's poor handling for font-face in combination with the Shadow DOM.
@@ -48,7 +50,7 @@ let fontFaceFreeAwesomeCSS: string = null;
 export function fontAwesomeCSS(): string {
   if (fontFaceFreeAwesomeCSS === null) {
     // Read the Font Awesome CSS file and removethe font-face part.
-    const fontAwesomeCSS: string = fs.readFileSync(FONT_AWESOME_CSS_PATH, {encoding: 'utf8'});
+    const fontAwesomeCSS: string = fs.readFileSync(path.join(sourceDir.path, FONT_AWESOME_CSS_PATH), {encoding: 'utf8'});
     fontFaceFreeAwesomeCSS = stripFontFaces(fontAwesomeCSS);
   }
   return fontFaceFreeAwesomeCSS;
@@ -59,7 +61,7 @@ let fontFaceFreeTopcoatCSS: string = null;
 export function topcoatCSS(): string {
   if (fontFaceFreeTopcoatCSS === null) {
     // Read the Topcoat CSS file and removethe font-face part.
-    const topcoatCSS: string = fs.readFileSync(TOPCOAT_CSS_PATH, {encoding: 'utf8'});
+    const topcoatCSS: string = fs.readFileSync(path.join(sourceDir.path, TOPCOAT_CSS_PATH), {encoding: 'utf8'});
     fontFaceFreeTopcoatCSS = stripFontFaces(topcoatCSS);
   }
   return fontFaceFreeTopcoatCSS;

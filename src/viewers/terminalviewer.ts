@@ -5,6 +5,8 @@
 "use strict";
 import _  = require('lodash');
 import fs = require('fs');
+import path = require('path');
+
 import ViewerElement = require("../viewerelement");
 import util = require("../gui/util");
 import domutils = require("../domutils");
@@ -15,6 +17,7 @@ import termjs = require('../term');
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
+import sourceDir = require('../sourceDir');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -52,11 +55,10 @@ class EtTerminalViewer extends ViewerElement {
 
   static init(): void {
     if (registered === false) {
-      
       // Load the CSS resources now.
-      cssText = fs.readFileSync('node_modules/codemirror/lib/codemirror.css', { encoding: 'utf8' })
-        + fs.readFileSync('node_modules/codemirror/addon/scroll/simplescrollbars.css', { encoding: 'utf8' })
-        + fs.readFileSync('themes/default/theme.css', { encoding: 'utf8' });
+      cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
+        + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' })
+        + fs.readFileSync(path.join(sourceDir.path,'themes/default/theme.css'), { encoding: 'utf8' });
 
       window.document.registerElement(EtTerminalViewer.TAG_NAME, {prototype: EtTerminalViewer.prototype});
       registered = true;

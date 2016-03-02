@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 const log = console.log.bind(console);
-const TYPEDOC_TMP = 'typedoc_tmp';
+const TYPEDOC_TMP = 'build_tmp';
 
 function main() {
   if (test('-d', TYPEDOC_TMP)) {
