@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "A terminal",
   "author": "Simon Edwards",
-  "license": "GPL v3",
+  "license": "MIT",
   "main": "main.js",
   "scripts": {
     "run": "electron --force-device-scale-factor=1 main.js",
@@ -42,5 +42,8 @@
     "tsd": "0.6.0-beta.5",
     "typedoc": "0.3.12",
     "typescript": "1.8.2"
+  },
+  "jshintConfig": {
+    "esversion": 6
   }
 }
