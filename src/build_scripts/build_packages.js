@@ -31,13 +31,14 @@ function main() {
   
   const electronVersion = packageData.devDependencies['electron-prebuilt'];
   
-  delete packageData.devDependencies;
-  
-  fs.writeFileSync(path.join(BUILD_TMP, 'package.json'), JSON.stringify(packageData), { encoding: 'utf8'});
-  
+  // Create a small package.json with no dev deps and 'npm install' it to pull
+  // all of the runtime deps into a clean node_modules dir.
+  const buildPackageData = JSON.parse(packageJson);
+  delete buildPackageData.devDependencies;
+  fs.writeFileSync(path.join(BUILD_TMP, 'package.json'), JSON.stringify(buildPackageData), { encoding: 'utf8'});
   cd (BUILD_TMP);
   exec('npm install');
-  
+  // Just read the list of dirs to know exactly which dirs are needed at runtime.
   const neededModules = ls('node_modules');
   
   cd('..');
@@ -51,8 +52,6 @@ function main() {
     /^\/[^/]+\.js\.map/
   ];
 
-log(neededModules);
-
   const ignoreFunc = function ignoreFunc(filePath) {
     let result = true;
     
@@ -62,22 +61,62 @@ log(neededModules);
     } else {
       result = ignoreRegExp.some( (exp) => exp.test(filePath));
     }
-    if (result) {
-      log("ignoring: "+filePath);
-    }
+    // if (result) {
+    //   log("ignoring: "+filePath);
+    // }
     return result;
   };
   
-  packager({
-    arch: "x64",
-    dir: ".",
-    platform: "linux",
-    version: electronVersion,
-    ignore: ignoreFunc,
-    overwrite: true
-  }, function done(err, appPath) {
-    log(err);
-    log("App bundle written to " + appPath);
-  });
+  function makePackage(arch, platform) {
+    log("");
+    return new Promise(function(resolve, reject) {
+      
+      // Clean up the output dirs and files first.
+      const versionedOutputDir = packageData.name + "-" + packageData.version + "-" + platform + "-" + arch;
+      if (test('-d', versionedOutputDir)) {
+        rm('-rf', versionedOutputDir);
+      }
+      
+      const outputZip = versionedOutputDir + ".zip";
+      // if (test('-f', outputZip)) {
+      //   rm(outputZip);
+      // }
+
+      packager({
+        arch: arch,
+        dir: ".",
+        platform: platform,
+        version: electronVersion,
+        ignore: ignoreFunc,
+        overwrite: true,
+        out: BUILD_TMP
+      }, function done(err, appPath) {
+        if (err !== null) {
+          log(err);
+          reject();
+        } else {
+          // Rename the output dir to a one with a version number in it.
+          mv(appPath[0], path.join(BUILD_TMP, versionedOutputDir));
+          
+          // Zip it up.
+
+          log("Zipping up the package");
+          
+          const thisCD = pwd();
+          cd(BUILD_TMP);
+          exec(`zip -r ${outputZip} ${versionedOutputDir}`);
+          cd(thisCD);
+          
+          log("App bundle written to " + versionedOutputDir);
+          resolve();
+        }
+      });
+    });
+  }
+  
+  makePackage('x64', 'linux')
+    .then( () => { return makePackage('x64', 'win32'); })
+    .then( () => { return makePackage('x64', 'darwin'); })
+    .then( () => { log("Done"); } );
 }
 main();
