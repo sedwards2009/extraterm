@@ -20,8 +20,8 @@
         "./src/typings/**/*.ts",
         "!./src/typings/tsd.d.ts",
         "!./src/node_modules/**/*.ts",
-        "./src/node_modules/typescript/lib/lib.es6.d.ts",
-        "./src/node_modules/immutable/dist/*.ts"
+        "./node_modules/typescript/lib/lib.es6.d.ts",
+        "./node_modules/immutable/dist/*.ts"
     ],
     "files": [
         "./src/abouttab.ts",
@@ -91,8 +91,8 @@
         "./src/typings/sass.js/sass.js.d.ts",
         "./src/typings/text-encoding/text-encoding.d.ts",
         "./src/typings/vuejs/vuejs.d.ts",
-        "./src/node_modules/typescript/lib/lib.es6.d.ts",
-        "./src/node_modules/immutable/dist/immutable.d.ts"
+        "./node_modules/typescript/lib/lib.es6.d.ts",
+        "./node_modules/immutable/dist/immutable.d.ts"
     ],
     "exclude": [],
     "atom": {

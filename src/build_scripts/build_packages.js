@@ -15,12 +15,10 @@ function main() {
   "use strict";
   
   if ( ! test('-f', './package.json')) {
-    log("This script was called from the wrong directory.");
+    echo("This script was called from the wrong directory.");
     return;
   }
-  
-  log("Setting up the run time dependencies in " + BUILD_TMP);
-  
+
   if (test('-d', BUILD_TMP)) {
     rm('-rf', BUILD_TMP);
   }
@@ -29,19 +27,27 @@ function main() {
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
   
+  const gitUrl = packageData.repository.url.replace("git://github.com/", "git@github.com:");
+  
+  echo("Fetching a clean copy of the source code from " + gitUrl);
+  cd(BUILD_TMP);
+  const buildTmpPath = pwd();
+  
+  exec("git clone --depth 1 " + gitUrl);
+  
+  echo("Setting up the run time dependencies in " + BUILD_TMP);
+
+  cd("extraterm");
+  echo("Downloading dependencies.");
+  exec("npm install");
+  
+  echo("Building");
+  exec("npm run build");
+  
+  echo("Removing development dependencies");
+  exec("npm prune --production");
+
   const electronVersion = packageData.devDependencies['electron-prebuilt'];
-  
-  // Create a small package.json with no dev deps and 'npm install' it to pull
-  // all of the runtime deps into a clean node_modules dir.
-  const buildPackageData = JSON.parse(packageJson);
-  delete buildPackageData.devDependencies;
-  fs.writeFileSync(path.join(BUILD_TMP, 'package.json'), JSON.stringify(buildPackageData), { encoding: 'utf8'});
-  cd (BUILD_TMP);
-  exec('npm install');
-  // Just read the list of dirs to know exactly which dirs are needed at runtime.
-  const neededModules = ls('node_modules');
-  
-  cd('..');
 
   const ignoreRegExp = [
     /^\/build_scripts\//,
@@ -53,18 +59,7 @@ function main() {
   ];
 
   const ignoreFunc = function ignoreFunc(filePath) {
-    let result = true;
-    
-    if (/^\/node_modules\//.test(filePath)) { 
-      const parts = filePath.split(/\//g);
-      result = neededModules.indexOf(parts[2]) === -1;
-    } else {
-      result = ignoreRegExp.some( (exp) => exp.test(filePath));
-    }
-    // if (result) {
-    //   log("ignoring: "+filePath);
-    // }
-    return result;
+    return ignoreRegExp.some( (exp) => exp.test(filePath));
   };
   
   function makePackage(arch, platform) {
@@ -77,10 +72,7 @@ function main() {
         rm('-rf', versionedOutputDir);
       }
       
-      const outputZip = versionedOutputDir + ".zip";
-      // if (test('-f', outputZip)) {
-      //   rm(outputZip);
-      // }
+      const outputZip = path.join(buildTmpPath, versionedOutputDir + ".zip");
 
       packager({
         arch: arch,
@@ -99,7 +91,6 @@ function main() {
           mv(appPath[0], path.join(BUILD_TMP, versionedOutputDir));
           
           // Zip it up.
-
           log("Zipping up the package");
           
           const thisCD = pwd();
