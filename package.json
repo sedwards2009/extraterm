@@ -10,12 +10,12 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "run": "electron --force-device-scale-factor=1 main.js",
+    "run": "electron --force-device-scale-factor=1 src/main.js",
     "build": "tsc",
-    "test": "npm run build ; nodeunit virtualscrollareatest.js",
-    "typedoc": "node build_scripts/prepare_typedoc.js && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
-    "package": "node build_scripts/build_packages.js",
-    "serve-test": "node test/httpserver.js"
+    "test": "npm run build ; nodeunit src/virtualscrollareatest.js",
+    "typedoc": "node src/build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
+    "package": "node src/build_scripts/build_packages.js",
+    "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
     "base64-arraybuffer": "0.1.5",
