@@ -5,6 +5,10 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
   "scripts": {
     "run": "electron --force-device-scale-factor=1 main.js",
     "build": "tsc",
