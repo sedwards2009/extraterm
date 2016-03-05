@@ -6,6 +6,9 @@
 
 import util = require('./gui/util');
 import _  = require('lodash');
+import Logger = require('./logger');
+
+const log = new Logger("VirtualScrollable");
 
 export interface VirtualScrollable {
   /**
@@ -388,7 +391,7 @@ export class VirtualScrollArea {
     });
     
     if (isAtBottom) {
-        newState.virtualScrollYOffset = TotalVirtualHeight(newState) - newState.containerHeight;
+        newState.virtualScrollYOffset = Math.max(0, TotalVirtualHeight(newState) - newState.containerHeight);
         Compute(newState);
     }
     
