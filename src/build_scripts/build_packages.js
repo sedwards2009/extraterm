@@ -47,6 +47,15 @@ function main() {
   echo("Removing development dependencies");
   exec("npm prune --production");
 
+  // Create the commands zip
+  echo("Creating commands.zip");
+  const commandsDir = packageData.name + "-commands-" + packageData.version;
+  cp("-r", "src/commands", path.join(buildTmpPath, commandsDir));
+  const codeDir = pwd();
+  cd(buildTmpPath);
+  exec(`zip -r ${commandsDir}.zip ${commandsDir}`);
+  cd(codeDir);
+
   const electronVersion = packageData.devDependencies['electron-prebuilt'];
 
   const ignoreRegExp = [
