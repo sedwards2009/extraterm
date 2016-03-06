@@ -418,6 +418,23 @@ class EtTerminalViewer extends ViewerElement {
     doc.setCursor( { line: doc.lineCount()-1 , ch: ch } );
     return true;
   }
+  
+  /**
+   * Delete the top n pixels from the scrollback.
+   *
+   * @param topPixels the number of lines to removed measured in pixels.
+   */
+  deleteTopPixels(topPixels: number): void {
+    const defaultTextHeight = this._codeMirror.defaultTextHeight();
+    const linesToDelete = Math.min(Math.floor(topPixels / defaultTextHeight), this.lineCount());
+    const doc = this._codeMirror.getDoc();
+    
+    const pos = { line: 0, ch: 0 };
+    const endPos = { line: linesToDelete, ch: 0 };
+    doc.replaceRange("", pos, endPos);
+    
+    this._terminalFirstRow -= linesToDelete;
+  }
 
   //-----------------------------------------------------------------------
   //

@@ -160,6 +160,19 @@ export class VirtualScrollArea {
     return result;
   }
   
+  getScrollableVirtualHeight(scrollable: VirtualScrollable): number {
+    for (const state of this._currentState.scrollableStates) {
+      if (state.scrollable === scrollable) {
+        return state.virtualHeight;
+      }
+    }
+    return null;
+  }
+  
+  getVirtualHeight(): number {
+    return TotalVirtualHeight(this._currentState);
+  }
+  
   //-----------------------------------------------------------------------
   //
   //  #####                                

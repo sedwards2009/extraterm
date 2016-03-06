@@ -153,6 +153,7 @@ class EtTerminal extends HTMLElement {
   private _title: string;
   private _commandLineActions: CommandLineAction[];
   private _frameFinder: FrameFinder;
+  private _scrollbackSize: number;
   
   private _nextTag: string;
 
@@ -189,6 +190,7 @@ class EtTerminal extends HTMLElement {
     
     this._blinkingCursor = false;
     this._commandLineActions = [];
+    this._scrollbackSize = 10000;
     this._frameFinder = null;
     this._title = "New Tab";
     this._nextTag = null;
@@ -224,6 +226,14 @@ class EtTerminal extends HTMLElement {
     // if (this._term !== null) {
     //   this._term.setCursorBlink(blink);
     // }
+  }
+  
+  set scrollbackSize(scrollbackSize: number) {
+    this._scrollbackSize = scrollbackSize;
+  }
+  
+  get scrollbackSize(): number {
+    return this._scrollbackSize;
   }
   
   set themeCssPath(path: string) {
@@ -798,6 +808,7 @@ class EtTerminal extends HTMLElement {
 
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
     this._virtualScrollArea.updateScrollableSize(virtualScrollable);
+    this._enforceScrollbackLength();
   }
 
   /**
@@ -857,6 +868,42 @@ class EtTerminal extends HTMLElement {
         }
       }
     }
+  }
+  
+  private _enforceScrollbackLength(): void {
+    let virtualHeight = this._virtualScrollArea.getVirtualHeight();
+    const hardLimit = Math.floor(this._scrollbackSize * 1.1);
+    if (virtualHeight < hardLimit) {
+      return;
+    }
+    
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const kids = domutils.nodeListToArray(scrollerArea.childNodes);
+    for (const kidNode of kids) {
+      const scrollableKid: VirtualScrollable & HTMLElement = <any> kidNode;
+      const kidVirtualHeight = this._virtualScrollArea.getScrollableVirtualHeight(scrollableKid);
+      const newVirtualHeight = virtualHeight - kidVirtualHeight;
+      if (newVirtualHeight > this._scrollbackSize) {
+        // Just remove the thing.
+        this._removeScrollableElement(scrollableKid);
+        
+      } else {
+        // Try to cut part of it off.
+        if (EtTerminalViewer.is(kidNode)) {
+          kidNode.deleteTopPixels(virtualHeight - this._scrollbackSize);
+          this._updateVirtualScrollableSize(kidNode);
+        } else {
+          this._removeScrollableElement(scrollableKid);
+        }
+        break;
+      }
+      
+      virtualHeight = newVirtualHeight;
+      if (virtualHeight < hardLimit) {
+        break;
+      }
+    }
+  
   }
   
   // ----------------------------------------------------------------------
@@ -1374,6 +1421,7 @@ class EtTerminal extends HTMLElement {
       viewerElement.awesomeIcon = mimeViewerElement.awesomeIcon;
       viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
       this._appendScrollableElement(viewerElement);
+      this._enforceScrollbackLength();
     }
   }
 

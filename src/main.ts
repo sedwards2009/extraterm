@@ -370,7 +370,7 @@ function setConfigDefaults(config: Config): void {
   config.systemConfig = config.systemConfig === undefined ? null : config.systemConfig;
   config.expandedProfiles = config.expandedProfiles === undefined ? null : config.expandedProfiles;
   config.blinkingCursor = config.blinkingCursor === undefined ? false : config.blinkingCursor;
-  config.scrollbackLines = config.scrollbackLines === undefined ? 1000 : config.scrollbackLines;
+  config.scrollbackLines = config.scrollbackLines === undefined ? 160000 : config.scrollbackLines;
 
   if (config.commandLineActions === undefined) {
     const defaultCLA: CommandLineAction[] = [
