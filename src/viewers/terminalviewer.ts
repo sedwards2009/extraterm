@@ -1082,7 +1082,7 @@ class EtTerminalViewer extends ViewerElement {
       
       const totalTextHeight = this.getVirtualTextHeight();
       let codeMirrorHeight;
-      if (this._useVPad && totalTextHeight > elementHeight) {
+      if (this._useVPad) {
         // Adjust the height of the code mirror such that a small gap is at the bottom to 'push'
         // the lines up and align them with the top of the viewport.
         codeMirrorHeight = elementHeight - (elementHeight % this._codeMirror.defaultTextHeight());
