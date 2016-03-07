@@ -208,6 +208,9 @@ function handleThemeContentsMessage(msg: Messages.Message): void {
 function handleDevToolsStatus(msg: Messages.Message): void {
   const devToolsStatusMessage = <Messages.DevToolsStatusMessage> msg;
   const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
+  if (developerToolMenu === null) {
+    return;
+  }
   developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + devToolsStatusMessage.open);
 }
 
