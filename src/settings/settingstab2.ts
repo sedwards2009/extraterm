@@ -185,7 +185,7 @@ class EtSettingsTab extends ViewerElement {
         <h1 className='gui-heading'>Settings</h1>
         <div className='settingsform'>
           <div>Scrollback:</div>
-          <div><input type='number' number :value="scrollbackLines" min='1' max='10000' />lines</div>
+          <div><input type='number' number v-model="scrollbackLines" min='1' max='1000000' debounce="500" /> pixels</div>
 
           <div id='${ID_COMMAND_OUTPUT_HANDLING}'>
             <h2>Command Output Handling Rules</h2>
