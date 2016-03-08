@@ -427,13 +427,14 @@ class EtTerminalViewer extends ViewerElement {
   deleteTopPixels(topPixels: number): void {
     const defaultTextHeight = this._codeMirror.defaultTextHeight();
     const linesToDelete = Math.min(Math.floor(topPixels / defaultTextHeight), this.lineCount());
-    const doc = this._codeMirror.getDoc();
     
+    const doc = this._codeMirror.getDoc();
     const pos = { line: 0, ch: 0 };
     const endPos = { line: linesToDelete, ch: 0 };
     doc.replaceRange("", pos, endPos);
-    
+
     this._terminalFirstRow -= linesToDelete;
+    this._emitVirtualResizeEvent();
   }
 
   //-----------------------------------------------------------------------

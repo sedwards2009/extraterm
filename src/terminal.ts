@@ -162,6 +162,9 @@ class EtTerminal extends HTMLElement {
   private _themeStyleLoaded: boolean;
   private _resizePollHandle: domutils.LaterHandle;
   private _elementAttached: boolean;
+
+  // This flag is needed to prevent the _enforceScrollbackLength() method from being run recursively
+  private _enforceScrollbackLengthGuard: boolean;
   
   private _scheduleLaterHandle: domutils.LaterHandle;
   private _scheduledCursorUpdates: EtTerminalViewer[];
@@ -199,6 +202,7 @@ class EtTerminal extends HTMLElement {
     this._themeStyleLoaded = false;
     this._resizePollHandle = null;
 
+    this._enforceScrollbackLengthGuard = false;
     this._scheduleLaterHandle = null;
     this._scheduledCursorUpdates = [];
     this._scheduledResize = false;
@@ -869,10 +873,31 @@ class EtTerminal extends HTMLElement {
       }
     }
   }
+
+  // Run a function and only afterwards check the size of the scrollback.
+  private _enforceScrollbackLengthAfter(func: () => any): any {
+    const oldGuardFlag = this._enforceScrollbackLengthGuard;
+    this._enforceScrollbackLengthGuard = true;
+    const rc = func();
+    this._enforceScrollbackLengthGuard = oldGuardFlag;
+    this._enforceScrollbackLength();
+    return rc;
+  }
   
   private _enforceScrollbackLength(): void {
+    // Prevent the scrollback check from running multiple times.
+    if (this._enforceScrollbackLengthGuard) {
+      return;
+    }
+    this._enforceScrollbackLengthGuard = true;
+    this._enforceScrollbackLength2();
+    this._enforceScrollbackLengthGuard = false;
+  }
+  
+  private _enforceScrollbackLength2(): void {
     let virtualHeight = this._virtualScrollArea.getVirtualHeight();
-    const hardLimit = Math.floor(this._scrollbackSize * 1.1);
+    const scrollbackSize = window.screen.height + this._scrollbackSize;
+    const hardLimit = Math.floor(scrollbackSize * 1.1);
     if (virtualHeight < hardLimit) {
       return;
     }
@@ -883,18 +908,13 @@ class EtTerminal extends HTMLElement {
       const scrollableKid: VirtualScrollable & HTMLElement = <any> kidNode;
       const kidVirtualHeight = this._virtualScrollArea.getScrollableVirtualHeight(scrollableKid);
       const newVirtualHeight = virtualHeight - kidVirtualHeight;
-      if (newVirtualHeight > this._scrollbackSize) {
-        // Just remove the thing.
+      // We don't want to cut out too much at once.
+      if (newVirtualHeight > scrollbackSize) {
+        // Just remove the thing. There is plenty of scrollback left over.
         this._removeScrollableElement(scrollableKid);
         
       } else {
-        // Try to cut part of it off.
-        if (EtTerminalViewer.is(kidNode)) {
-          kidNode.deleteTopPixels(virtualHeight - this._scrollbackSize);
-          this._updateVirtualScrollableSize(kidNode);
-        } else {
-          this._removeScrollableElement(scrollableKid);
-        }
+        this._deleteTopPixels(scrollableKid, virtualHeight - scrollbackSize);
         break;
       }
       
@@ -903,7 +923,27 @@ class EtTerminal extends HTMLElement {
         break;
       }
     }
+  }
   
+  private _deleteTopPixels(kidNode: HTMLElement & VirtualScrollable, pixelCount: number): void {
+    // Try to cut part of it off.
+    if (EtTerminalViewer.is(kidNode)) {
+      (<EtTerminalViewer> kidNode).deleteTopPixels(pixelCount);
+      return;
+      
+    } else if (EtEmbeddedViewer.is(kidNode)) {
+      const terminalViewer = (<EtEmbeddedViewer> kidNode).viewerElement;
+
+      if (EtTerminalViewer.is(terminalViewer)) {
+        terminalViewer.deleteTopPixels(pixelCount);
+        return;  
+        
+      } else if (EtTextViewer.is(terminalViewer)) {
+        (<EtTextViewer> terminalViewer).deleteTopPixels(pixelCount);
+        return;
+      }
+    }
+    this._removeScrollableElement(kidNode);
   }
   
   // ----------------------------------------------------------------------
@@ -1273,7 +1313,9 @@ class EtTerminal extends HTMLElement {
   }
   
   private _handleApplicationModeBracketEnd(): void {
-    this._closeLastEmbeddedViewer(this._htmlData);    
+    this._enforceScrollbackLengthAfter( () => {
+      this._closeLastEmbeddedViewer(this._htmlData);
+    });
   }
   
   private _closeLastEmbeddedViewer(returnCode: string): void {
