@@ -21,10 +21,10 @@ function log(target: Object, key: string, descriptor: any) {
       var formatArgs = args.map(repr).join(", ");
 
       if ("_log" in this) {
-         const logger = <Logger>this._log;
-         logger.debug(`\u2b9e Entering ${key}(${formatArgs})`);
-         var result = originalMethod.apply(this, args);
-         logger.debug(`\u2b9c Exiting ${key}(${formatArgs}) => ${repr(result)}`);
+        const logger = <Logger>this._log;
+        logger.debug(`\u2b9e Entering ${key}(${formatArgs})`);
+        var result = originalMethod.apply(this, args);
+        logger.debug(`\u2b9c Exiting ${key}(${formatArgs}) => ${repr(result)}`);
          
       } else {
         console.log(`\u2b9e Entering ${key}(${formatArgs})`);
@@ -43,6 +43,13 @@ function repr(obj: any): string {
   if (obj === null) {
     return "null";
   }
+  
+  if (HTMLElement !== undefined) {
+    if (obj instanceof HTMLElement) {
+      return "<" + (<HTMLElement> obj).tagName + ">";
+    }
+  }
+
   switch (typeof obj) {
     case "number":
       return "" + obj;
