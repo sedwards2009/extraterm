@@ -144,7 +144,6 @@ class EtTerminal extends HTMLElement {
   
   private _applicationMode: ApplicationMode;
   private _bracketStyle: string;
-  private _lastBashBracket: string;
   
   private _mode: Mode;
   private _selectionPreviousLineCount: number;
@@ -187,7 +186,6 @@ class EtTerminal extends HTMLElement {
     this._showData = null;
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
     this._bracketStyle = null;
-    this._lastBashBracket = null;
     
     this._mode = Mode.TERMINAL;
     
