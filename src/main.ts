@@ -189,8 +189,12 @@ function logJSData(data: string): void {
 function expandSessionProfiles(profiles: SessionProfile[]): SessionProfile[] {
   if (process.platform === "win32") {
     // Find a default cygwin installation.
-    const cygwinDir = findCygwinInstallation();
+    let cygwinDir = findCygwinInstallation();
+    if (cygwinDir === null) {
+      cygwinDir = findBabunCygwinInstallation();
+    }
     let canonicalCygwinProfile = cygwinDir !== null ? defaultCygwinProfile(cygwinDir) : null;
+    
     const expandedProfiles: SessionProfile[] = [];
     if (profiles !== undefined && profiles !== null) {
       profiles.forEach( profile => {
@@ -318,6 +322,17 @@ function findCygwinInstallation(): string {
 
   } catch(e) {
     log("Couldn't find a cygwin installation.");
+    return null;
+  }
+}
+
+function findBabunCygwinInstallation(): string {
+  const cygwinDir = path.join(app.getPath('home'), ".babun/cygwin");
+  if (fs.existsSync(cygwinDir)) {
+    log("Found babun cygwin installation: " + cygwinDir);
+    return cygwinDir;
+  } else {
+    log("Couldn't find a Babun cygwin installation.");
     return null;
   }
 }
