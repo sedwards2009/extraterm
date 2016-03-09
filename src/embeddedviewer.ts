@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+import _ = require('lodash');
 import resourceLoader = require('./resourceloader');
 import contextmenu = require('./gui/contextmenu');
 import menuitem = require('./gui/menuitem');
@@ -227,20 +228,20 @@ class EtEmbeddedViewer extends ViewerElement {
   }
   
   // See VirtualScrollable
-  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
-    setterState: SetterState): void {
+  setDimensionsAndScroll(setterState: SetterState): void {
 
     if (DEBUG_SIZE) {
-      this._log.debug("setDimensionsAndScroll(): ", height, heightChanged, yOffset, yOffsetChanged);
+      this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+        setterState.yOffset, setterState.yOffsetChanged);
     }
     
-    if (height !== this._currentElementHeight) {
-      this.style.height = "" + height + "px";
-      this._currentElementHeight = height;
+    if (setterState.height !== this._currentElementHeight) {
+      this.style.height = "" + setterState.height + "px";
+      this._currentElementHeight = setterState.height;
     }
 
     const containerDiv = <HTMLDivElement>this._getById(ID_CONTAINER);
-    if (yOffset === 0) {
+    if (setterState.yOffset === 0) {
       containerDiv.classList.remove(CLASS_SCROLLING);
       containerDiv.classList.add(CLASS_NOT_SCROLLING);
     } else {
@@ -250,9 +251,9 @@ class EtEmbeddedViewer extends ViewerElement {
     
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const rect = headerDiv.getBoundingClientRect();
-    headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), height - rect.height) + 'px';
+    headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
     
-    if (setterState.physicalTop > 0 || height < setterState.containerHeight) {
+    if (setterState.physicalTop > 0 || setterState.height < setterState.containerHeight) {
       // Bottom part is visible
       containerDiv.classList.remove(CLASS_BOTTOM_NOT_VISIBLE);
       containerDiv.classList.add(CLASS_BOTTOM_VISIBLE);
@@ -262,13 +263,15 @@ class EtEmbeddedViewer extends ViewerElement {
     }
     
     const scrollNameDiv = <HTMLDivElement>this._getById(ID_SCROLL_NAME);
-    const percent = Math.floor(yOffset / this.getVirtualHeight(0) * 100);
+    const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
     scrollNameDiv.innerHTML = "" + percent + "%";
     
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
-      viewerElement.setDimensionsAndScroll(height - this.getReserveViewportHeight(0), true,
-        yOffset, yOffsetChanged, setterState);
+      const newSetterState = _.clone(setterState);
+      newSetterState.height = setterState.height - this.getReserveViewportHeight(0);
+      newSetterState.heightChanged = true;
+      viewerElement.setDimensionsAndScroll(newSetterState);
     }
   }
   
@@ -493,8 +496,18 @@ class EtEmbeddedViewer extends ViewerElement {
       this.focus();
     }).bind(this));
 
-    this.setDimensionsAndScroll(this.getMinHeight(), true, 0, true,
-      { containerHeight: this.getMinHeight(), physicalTop: 0 });
+    const setterState: virtualscrollarea.SetterState = {
+      height: this.getMinHeight(),
+      heightChanged: true,
+      yOffset: 0,
+      yOffsetChanged: true,
+      physicalTop: 0,
+      physicalTopChanged: true,
+      containerHeight: this.getMinHeight(),
+      containerHeightChanged: true
+    };
+
+    this.setDimensionsAndScroll(setterState);
 
     // Remove the anti-flicker style.
     this._getById(ID_CONTAINER).setAttribute('style', '');

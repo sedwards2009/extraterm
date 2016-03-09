@@ -214,16 +214,17 @@ class EtImageViewer extends ViewerElement {
   }
   
   // VirtualScrollable
-  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
-    setterState: SetterState): void {
-
-    if (DEBUG_SIZE) {
-      this._log.debug("setDimensionsAndScroll(): ", height, heightChanged, yOffset, yOffsetChanged);
+  setDimensionsAndScroll(setterState: SetterState): void {
+    if (setterState.heightChanged || setterState.yOffsetChanged) {
+      if (DEBUG_SIZE) {
+        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+          setterState.yOffset, setterState.yOffsetChanged);
+      }
+      this._adjustHeight(setterState.height);
+      
+      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      containerDiv.scrollTop = setterState.yOffset;
     }
-    this._adjustHeight(height);
-    
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    containerDiv.scrollTop = yOffset;
   }
 
   // VirtualScrollable

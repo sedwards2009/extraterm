@@ -66,11 +66,10 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: nu
       reserveViewportHeight = newReserveViewportHeight;
     },
 
-    setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
-        setterState: SetterState): void {
+    setDimensionsAndScroll(setterState: SetterState): void {
 
-      this._height = height;
-      this._offset = yOffset;
+      this._height = setterState.height;
+      this._offset = setterState.yOffset;
     },
     
     getScrollOffset(): number {

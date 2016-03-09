@@ -269,15 +269,14 @@ class EtTerminalViewer extends ViewerElement {
   }
 
   // VirtualScrollable
-  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
-    setterState: SetterState): void {
-    
-    if (DEBUG_RESIZE) {
-      this._log.debug("setDimensionsAndScroll(): ", height, heightChanged, yOffset, yOffsetChanged);
+  setDimensionsAndScroll(setterState: SetterState): void {
+    if (setterState.heightChanged || setterState.yOffsetChanged) {
+      if (DEBUG_RESIZE) {
+        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged, setterState.yOffset, setterState.yOffsetChanged);
+      }
+      this._adjustHeight(setterState.height);
+      this.scrollTo(0, setterState.yOffset);
     }
-    
-    this._adjustHeight(height);
-    this.scrollTo(0, yOffset);
   }
   
   // VirtualScrollable

@@ -81,8 +81,7 @@ class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
     return 0;
   }
   
-  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
-    setterState: SetterState): void {
+  setDimensionsAndScroll(setterState: SetterState): void {
     }  
 }
 
