@@ -892,7 +892,7 @@ class EtTerminal extends HTMLElement {
     this._enforceScrollbackLengthGuard = true;
     const hasFocus = this.hasFocus();
     this._enforceScrollbackLength2();
-    if (hasFocus) {
+    if (hasFocus && ! this.hasFocus()) {
       this.focus();
     }
     this._enforceScrollbackLengthGuard = false;
