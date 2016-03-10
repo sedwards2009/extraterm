@@ -193,7 +193,11 @@ export function getShadowRoot(self: HTMLElement): ShadowRoot {
 }
 
 export function getShadowId(el: HTMLElement, id: string): HTMLElement {
-  return <HTMLElement> getShadowRoot(el).querySelector('#' + id);
+  const shadowRoot = getShadowRoot(el);
+  if (shadowRoot === null) {
+    return null;
+  }
+  return <HTMLElement> shadowRoot.querySelector('#' + id);
 }
 
 /**

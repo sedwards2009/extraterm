@@ -223,7 +223,9 @@ class EtImageViewer extends ViewerElement {
       this._adjustHeight(setterState.height);
       
       const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-      containerDiv.scrollTop = setterState.yOffset;
+      if (containerDiv !== null) {
+        containerDiv.scrollTop = setterState.yOffset;
+      }
     }
   }
 
