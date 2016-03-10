@@ -114,8 +114,7 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
   }
   
   // VirtualScrollable
-  setDimensionsAndScroll(height: number, heightChanged: boolean, yOffset: number, yOffsetChanged: boolean,
-    setterState: SetterState): void {
+  setDimensionsAndScroll(setterState: SetterState): void {
   }
 
   getCursorPosition(): CursorMoveDetail {
