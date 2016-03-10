@@ -3525,7 +3525,7 @@ export class Emulator implements EmulatorAPI {
         }
       }
     }
-    this.setupStops(this.cols);
+    this.setupStops(newcols);
     this.cols = newcols;
 
     // resize rows
@@ -3620,17 +3620,10 @@ export class Emulator implements EmulatorAPI {
     this.refreshEnd = this.rows - 1;
   }
 
-  private setupStops(i?: number): void {
-    if (i !== undefined && i !== null) {
-      if (!this.tabs[i]) {
-        i = this.prevStop(i);
-      }
-    } else {
-      this.tabs = {};
-      i = 0;
-    }
-
-    for (; i < this.cols; i += 8) {
+  private setupStops(maxCols?: number): void {
+    const cols = maxCols === undefined ? this.cols : maxCols;
+    this.tabs = {};
+    for (let i = 0; i < cols; i += 8) {
       this.tabs[i] = true;
     }
   }
