@@ -42,11 +42,14 @@ A more detailed [guide is here](docs/guide.md)
 
 Download
 --------
-Releases can be found on the [Releases Page](https://github.com/sedwards2009/extraterm/releases)
+Release downloads can be found on the [Releases Page](https://github.com/sedwards2009/extraterm/releases). Installation and instructions are in the [guide is here](docs/guide.md).
 
 
-Development
------------
+Development & Contributing
+--------------------------
+
+
+
 ### Technology ###
 
 Extraterm is build on the following technologies:
