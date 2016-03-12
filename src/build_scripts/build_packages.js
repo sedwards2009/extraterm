@@ -115,6 +115,7 @@ function main() {
   }
   
   makePackage('x64', 'linux')
+    .then( () => { return makePackage('ia32', 'linux'); })
     .then( () => { return makePackage('x64', 'win32'); })
     .then( () => { return makePackage('x64', 'darwin'); })
     .then( () => { log("Done"); } );
