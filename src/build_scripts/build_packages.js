@@ -19,6 +19,7 @@ function main() {
     return;
   }
 
+  const srcRootDir = pwd();
   if (test('-d', BUILD_TMP)) {
     rm('-rf', BUILD_TMP);
   }
@@ -114,10 +115,33 @@ function main() {
     });
   }
   
-  makePackage('x64', 'linux')
-    .then( () => { return makePackage('ia32', 'linux'); })
-    .then( () => { return makePackage('x64', 'win32'); })
-    .then( () => { return makePackage('x64', 'darwin'); })
+  function replaceDirs(targetDir, replacementsDir) {
+    const prevDir = pwd();
+    cd(srcRootDir);
+    const replacements = ls(replacementsDir);
+    replacements.forEach( (rDir) => {
+      const targetSubDir = path.join(targetDir, rDir);
+      if (test('-d', targetSubDir)) {
+        rm('-r', targetSubDir);
+        cp('-r', path.join(replacementsDir, rDir), targetSubDir);
+      }
+    });  
+    cd(prevDir);
+  }
+  
+  makePackage('x64', 'win32')
+    .then( () => {
+      replaceDirs(path.join(BUILD_TMP, 'extraterm/node_modules'), 'src/build_scripts/node_modules-linux-x64');
+      return makePackage('x64', 'linux'); })
+    
+    .then( () => {
+      replaceDirs(path.join(BUILD_TMP, 'extraterm/node_modules'), 'src/build_scripts/node_modules-linux-ia32');
+      return makePackage('ia32', 'linux'); })
+      
+    .then( () => {
+      replaceDirs(path.join(BUILD_TMP, 'extraterm/node_modules'), 'src/build_scripts/node_modules-darwin-x86');
+      return makePackage('x64', 'darwin'); })
+      
     .then( () => { log("Done"); } );
 }
 main();
