@@ -16,6 +16,7 @@ import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import virtualscrollarea = require('./virtualscrollarea');
 import ThemeTypes = require('./theme');
+import generalevents = require('./generalevents');
 
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
@@ -76,8 +77,6 @@ class EtEmbeddedViewer extends ViewerElement {
   static TAG_NAME = 'ET-EMBEDDEDVIEWER';
   
   static EVENT_COPY_CLIPBOARD_REQUST = 'copy-clipboard-request';
-  
-  static EVENT_TYPE = 'type';
   
   static EVENT_CLOSE_REQUEST = 'close-request';
   
@@ -471,10 +470,9 @@ class EtEmbeddedViewer extends ViewerElement {
           break;
 
         case "typecommand":
-          event = new CustomEvent(EtEmbeddedViewer.EVENT_TYPE,
-              { detail: this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE) });
-          event.initCustomEvent(EtEmbeddedViewer.EVENT_TYPE, true, true,
-              this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE));
+          const detail: generalevents.TypeTextEventDetail = { text: this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE) };
+          event = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail });
+          event.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, detail);
           this.dispatchEvent(event);
           break;
 

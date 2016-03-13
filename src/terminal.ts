@@ -16,6 +16,7 @@ import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTerminalViewerTypes = require('./viewers/terminalviewertypes');
 import EtTextViewer = require('./viewers/textviewer');
 import EtImageViewer = require('./viewers/imageviewer');
+import generalevents = require('./generalevents');
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger = require('./logger');
@@ -41,6 +42,10 @@ type CommandLineAction = config.CommandLineAction;
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 const VisualState = ViewerElementTypes.VisualState;
+
+type Mode = ViewerElementTypes.Mode;  // This is the enum type.
+const Mode = ViewerElementTypes.Mode; // This gets us access to the object holding the enum values.
+
 type ScrollableElement = VirtualScrollable & HTMLElement;
 
 const log = LogDecorator;
@@ -70,11 +75,6 @@ const enum ApplicationMode {
   APPLICATION_MODE_OUTPUT_BRACKET_END = 3,
   APPLICATION_MODE_REQUEST_FRAME = 4,
   APPLICATION_MODE_SHOW_FILE = 5,
-}
-
-const enum Mode {
-  TERMINAL,
-  SELECTION
 }
 
 // List of viewer classes.
@@ -187,7 +187,7 @@ class EtTerminal extends HTMLElement {
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
     this._bracketStyle = null;
     
-    this._mode = Mode.TERMINAL;
+    this._mode = Mode.DEFAULT;
     
     this._blinkingCursor = false;
     this._commandLineActions = [];
@@ -782,7 +782,7 @@ class EtTerminal extends HTMLElement {
         node.visualState = VisualState.FOCUSED;
       }
     });
-    this._mode = Mode.TERMINAL;
+    this._mode = Mode.DEFAULT;
   }
   
   // ----------------------------------------------------------------------
@@ -966,7 +966,7 @@ class EtTerminal extends HTMLElement {
     }
     
     switch (this._mode) {
-      case Mode.TERMINAL:
+      case Mode.DEFAULT:
         // Enter selection mode.
         if (ev.keyCode === 32 && ev.ctrlKey) {
           this._enterSelectionMode();
@@ -1291,8 +1291,24 @@ class EtTerminal extends HTMLElement {
       this.focus();
     });
 
-    el.addEventListener(EtEmbeddedViewer.EVENT_TYPE, (ev: CustomEvent) => {
-      this._sendDataToPtyEvent(ev.detail);
+    el.addEventListener(generalevents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
+      const detail: generalevents.TypeTextEventDetail = ev.detail;
+      this._sendDataToPtyEvent(ev.detail.text);
+    });
+
+    el.addEventListener(generalevents.EVENT_SET_MODE, (ev: CustomEvent) => {
+      const detail: generalevents.SetModeEventDetail = ev.detail;
+      if (detail.mode !== this._mode) {
+        switch (this._mode) {
+          case Mode.DEFAULT:
+              this._enterSelectionMode();
+              break;
+
+          case Mode.SELECTION:
+              this._exitSelectionMode();
+              break;
+        }
+      }
     });
 
     el.addEventListener(EtEmbeddedViewer.EVENT_FRAME_POP_OUT, (ev: CustomEvent) => {

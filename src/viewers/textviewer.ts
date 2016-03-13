@@ -20,6 +20,7 @@ import EtTextViewerTypes = require('./terminalviewertypes');
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
+import generalevents = require('../generalevents');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -731,6 +732,28 @@ class EtTextViewer extends ViewerElement {
   }
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
+    // Intercept Ctrl+Enter and Ctrl+Shift+Enter
+    if (this._mode === ViewerElementTypes.Mode.SELECTION && ev.ctrlKey && ev.keyCode === 13) {
+      ev.stopPropagation();
+      
+      const text = this._codeMirror.getDoc().getSelection();
+      if (text !== "") {
+        if (ev.shiftKey) {
+          // Exit selection mode.
+          const setModeDetail: generalevents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
+          const setModeEvent = new CustomEvent(generalevents.EVENT_SET_MODE, { detail: setModeDetail });
+          setModeEvent.initCustomEvent(generalevents.EVENT_SET_MODE, true, true, setModeDetail);
+          this.dispatchEvent(setModeEvent);
+        }
+        
+        const typeTextDetail: generalevents.TypeTextEventDetail = { text: text + (ev.shiftKey ? "\n" : "") };
+        const typeTextEvent = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
+        typeTextEvent.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
+        this.dispatchEvent(typeTextEvent);
+      }      
+      return;
+    }
+    
     // Send all Alt+* and Ctrl+Shift+A-Z keys above
     if (ev.altKey || (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90)) {
       ev.stopPropagation();

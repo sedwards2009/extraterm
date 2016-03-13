@@ -34,6 +34,7 @@
         "./src/extra_dom.d.ts",
         "./src/extra_lib.d.ts",
         "./src/framefindertype.ts",
+        "./src/generalevents.ts",
         "./src/icepick.d.ts",
         "./src/logdecorator.ts",
         "./src/logger.ts",

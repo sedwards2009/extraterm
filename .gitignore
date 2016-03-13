@@ -57,6 +57,6 @@ src/viewers/textviewer.js
 src/viewers/imageviewer.js
 src/viewers/terminalviewertypes.js
 src/utf8encoding.js
-src/build_tmp/
 src/typedocs/
 src/sourceDir.js
+src/generalevents.js
