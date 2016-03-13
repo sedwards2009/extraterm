@@ -283,7 +283,7 @@ function defaultProfile(): SessionProfile {
     name: "Default",
     type: configInterfaces.SESSION_TYPE_UNIX,
     command: shell,
-    arguments: [],
+    arguments: ["-l"],
     extraEnv: { }
   };
 }
