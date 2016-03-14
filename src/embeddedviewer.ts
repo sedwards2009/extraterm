@@ -434,6 +434,8 @@ class EtEmbeddedViewer extends ViewerElement {
     domutils.getShadowId(this, ID_HEADER).addEventListener('focus', this.focus.bind(this));
     
     const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);    
+    outputDiv.addEventListener('mousedown', this.focus.bind(this));
+    outputDiv.addEventListener('click', this.focus.bind(this));
     outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
     
     // const expandbutton = this._getById(ID_EXPAND_BUTTON);
