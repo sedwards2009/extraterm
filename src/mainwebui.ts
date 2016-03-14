@@ -350,6 +350,10 @@ class ExtratermMainWebUI extends HTMLElement {
     const lastFocus = this._tabInfo.filter( tabInfo => tabInfo.lastFocus );
     if (lastFocus.length !== 0) {
       lastFocus[0].focus();
+    } else {
+      if (this._tabInfo.length !==0) {
+        this._tabInfo[0].focus();
+      }
     }
   }
   

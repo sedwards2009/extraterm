@@ -178,7 +178,10 @@ export function startUp(): void {
         ev.stopPropagation();
       }
     });
+    
     mainWebUi.newTerminalTab(MainWebUi.POSITION_LEFT);
+    mainWebUi.focus();
+    window.focus();
   });
 }
 
