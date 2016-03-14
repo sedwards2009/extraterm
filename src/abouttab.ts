@@ -100,7 +100,9 @@ class EtAboutTab extends ViewerElement {
     `;
     const divContainer = document.createElement('div');
     divContainer.innerHTML = `<h1>Extraterm</h1>
-<h2>Copyright &copy; 2015-2016 Simon Edwards &lt;simon@simonzone.com&gt;</h2>
+<p>Copyright &copy; 2015-2016 Simon Edwards &lt;simon@simonzone.com&gt;</p>
+<p>Published under the MIT license</p>
+<p>See https://github.com/sedwards2009/extraterm</p>
 `;
 
     shadow.appendChild(style);
