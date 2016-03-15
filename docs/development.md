@@ -75,13 +75,16 @@ These are the features which are with in the scope of this project. (Shown in no
   * [ ] Previous command selection from a pop up list
 * UI
   * [ ] Theming
-  * [ ] Shortcut customisation
+  * [ ] Keyboard shortcut customisation
+  * [ ] Multiple windows
+  * [ ] Full screen mode
 * Tab management
   * [x] Vertical split
   * [ ] Tab renaming
   * [ ] Reorder tabs
   * [ ] Move tabs between splits
   * [ ] Multiple vertical and horizontal splits
+  * [ ] Hide the tab bar
 * Scrollbar Mini-map
   * [ ] Displays different command output areas
   * [ ] Displays a representation of the textual contents
@@ -100,9 +103,10 @@ These are the features which are with in the scope of this project. (Shown in no
 * Data viewers / frames
   * [ ] Open content in external program
   * [ ] Save to file
+  * [ ] Show timestamp info
   * Text / terminal output viewer
     * [ ] Line numbers
-    * [ ] Select syntax highlighting
+    * [ ] Configurable syntax highlighting
     * [ ] Pull in content after editing it in an external editor
     * [ ] Sorting
     * [ ] Easier column selections and editing

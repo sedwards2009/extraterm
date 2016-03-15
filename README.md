@@ -7,6 +7,7 @@ Extraterm
 
 :loudspeaker: Follow development on [Twitter @ ExtratermDev](https://twitter.com/ExtratermDev)
 
+:wrench: Github: https://github.com/sedwards2009/extraterm
 
 About
 -----
