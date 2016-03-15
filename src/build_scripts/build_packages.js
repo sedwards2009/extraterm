@@ -60,16 +60,18 @@ function main() {
   const electronVersion = packageData.devDependencies['electron-prebuilt'];
 
   const ignoreRegExp = [
-    /^\/build_scripts\//,
+    /^\/src\/build_scripts\//,
     /^\/test\//,
     /^\/build_tmp\//,
-    /^\/typedocs\//,
-    /^\/[^/]+\.ts/,
-    /^\/[^/]+\.js\.map/
+    /^\/src\/typedocs\//,
+    /\.ts$/,
+    /\.js\.map$/,
+    /^\/\.git\//
   ];
 
   const ignoreFunc = function ignoreFunc(filePath) {
-    return ignoreRegExp.some( (exp) => exp.test(filePath));
+    const result = ignoreRegExp.some( (exp) => exp.test(filePath));
+    return result;
   };
   
   function makePackage(arch, platform) {
@@ -91,20 +93,24 @@ function main() {
         version: electronVersion,
         ignore: ignoreFunc,
         overwrite: true,
-        out: BUILD_TMP
+        out: buildTmpPath
       }, function done(err, appPath) {
         if (err !== null) {
           log(err);
           reject();
         } else {
           // Rename the output dir to a one with a version number in it.
-          mv(appPath[0], path.join(BUILD_TMP, versionedOutputDir));
+          mv(appPath[0], path.join(buildTmpPath, versionedOutputDir));
           
           // Zip it up.
           log("Zipping up the package");
           
           const thisCD = pwd();
-          cd(BUILD_TMP);
+          cd(buildTmpPath);
+          mv(path.join(versionedOutputDir, "LICENSE"), path.join(versionedOutputDir, "LICENSE_electron.txt"));
+          cp("extraterm/README.md", versionedOutputDir);
+          cp("extraterm/LICENSE.txt", versionedOutputDir);
+          
           exec(`zip -r ${outputZip} ${versionedOutputDir}`);
           cd(thisCD);
           
@@ -131,15 +137,15 @@ function main() {
   
   makePackage('x64', 'win32')
     .then( () => {
-      replaceDirs(path.join(BUILD_TMP, 'extraterm/node_modules'), 'src/build_scripts/node_modules-linux-x64');
+      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-linux-x64');
       return makePackage('x64', 'linux'); })
     
     .then( () => {
-      replaceDirs(path.join(BUILD_TMP, 'extraterm/node_modules'), 'src/build_scripts/node_modules-linux-ia32');
+      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-linux-ia32');
       return makePackage('ia32', 'linux'); })
       
     .then( () => {
-      replaceDirs(path.join(BUILD_TMP, 'extraterm/node_modules'), 'src/build_scripts/node_modules-darwin-x86');
+      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-darwin-x86');
       return makePackage('x64', 'darwin'); })
       
     .then( () => { log("Done"); } );
