@@ -46,8 +46,12 @@ Download
 Release downloads can be found on the [Releases Page](https://github.com/sedwards2009/extraterm/releases). Installation and instructions are in the [guide is here](docs/guide.md).
 
 
+FAQ
+---
+The [FAQ is here](docs/faq.md).
+
+
 Development & Contributing
 --------------------------
-
 Extraterm is an open source project and welcomes contributors. More information about [development is here](docs/development.md).
 
