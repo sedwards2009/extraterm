@@ -577,7 +577,6 @@ export class Terminal {
   
 
   private _handleMouseDown(ev: MouseEvent): void {
-console.log("Terminal._handleMouseDown");
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
     if (ev.ctrlKey) { 
@@ -1596,7 +1595,6 @@ export class Emulator implements EmulatorAPI {
 
     this.lines = newLines;
 
-    // Force the scrollback buffer to render.
     this.refreshStart = REFRESH_START_NULL;
     this.refreshEnd = REFRESH_END_NULL;
     this.x = 0;
@@ -3109,7 +3107,6 @@ export class Emulator implements EmulatorAPI {
       this.params.push(this.currentParam);
       if (this.params[0] === this.applicationModeCookie) {
         this.state = STATE_APPLICATION_END;
-        console.log("term.ts start app mode!" + this.params);
         this._dispatchEvents();
         this._emit(APPLICATIONMODESTART_EVENT, this, this.params);
       } else {
@@ -3496,6 +3493,7 @@ export class Emulator implements EmulatorAPI {
   private error(...args: string[]): void {
     if (!this.debug) return;
     console.error.apply(console, args);
+    console.trace();
   }
 
   size(): TerminalSize {
