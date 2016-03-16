@@ -1,9 +1,12 @@
-Development
-===========
+Development and Contributing
+============================
+
+Read the [Why document](why.md) to get an idea as to how I'm approaching this project.
+
 
 First: One Simple Rule
 ----------------------
-A simple ground rule: Extraterm is intended to be an open source *project*, and not just open source *code*. This means that all contributors need to be able get along together and cooperate on a basic level in a productive and civil way.
+A simple ground rule: Extraterm is intended to be an open source *project*, and not just open source *code*. This means that all contributors need to be able get along together and cooperate on a basic level in a productive and civil way. If you can stick to this rule then you are welcome to this project.
 
 
 Technology

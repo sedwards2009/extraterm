@@ -8,7 +8,7 @@ Installation
 ------------
 Extraterm support Linux, Mac OS X and Cygwin on Windows. Download the zip file for your operating system on the [github releases page](https://github.com/sedwards2009/extraterm/releases).
 
-Unzip the file somewhere convenient. Start Extraterm by running the `extraterm` or `extraterm.exe` file inside the unzip directory.
+Unzip the file somewhere convenient. Start Extraterm by running the `extraterm` or `extraterm.exe` file inside the unzip directory. OS X users can just start the application via the Finder.
 
 Extraterm doesn't need any other installation.
 
@@ -99,8 +99,34 @@ Now I can go into selection mode and cut away the parts of the text I don't need
 With a shell pipe and `xargs` I can give the list of documents to the `wc` (word count) command:
 
 
+Executing Commands from Selection Mode
+--------------------------------------
+Command output in a frame can be edited directly. Extraterm also has some shortcuts to make this capability even more useful.
+
+* `Ctrl+Enter` will type the currently selected text into the shell.
+* `Ctrl+Shift+Enter` will type the currently select text into the shell and press the enter key. Effectively it executes the selection in the shell. Use with care.
+
+
+
 Tips
 ====
+
+See the [FAQ](faq.md) too
+
+Keyboard Shortcuts
+------------------
+
+| Shortcut         | Action                                          |
+| --------         | ------                                          |
+| `Ctrl+Shift+T`   | Create a new tab                                |
+| `Alt+Left`       | Switch to the tab to the left                   |
+| `Alt+Right`      | Switch to the tab to the right                  |
+| `Ctrl+Shift+S`   | Split/unsplit the tabs vertically into 2 panes  |
+| `Ctrl+Shift+Q`   | Close the current tab                           |
+| `Ctrl+Tab`       | Switch between tab panes                        |
+| `Shift+PageUp`   | Scroll the terminal up                          |
+| `Shift+PageDown` | Scroll the terminal down                        |
+| `Ctrl+Shift+W`   | Delete the current frame when in selection mode |
 
 
 Terminal Tabs
