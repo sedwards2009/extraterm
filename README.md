@@ -8,6 +8,11 @@ Extraterm
 
 :octocat: Github: https://github.com/sedwards2009/extraterm
 
+### - [Getting Started Tutorial](docs/guide.md)
+### - [Downloads and Releases](https://github.com/sedwards2009/extraterm/releases)
+### - [FAQ](docs/faq.md)
+### - [Development and Contributing](docs/development.md)
+
 About
 -----
 Extraterm is an open source project to build a better and modern terminal emulator, and also to experiment with more radical features to enhance the command line. More background information is in the [Why document](why.md).
@@ -34,11 +39,3 @@ Current features:
 * Command output is editable in place
 * [MIT license](LICENSE.txt)
 * ...much more to come
-
-Pages
------
-
-* ### [Getting Started Tutorial](docs/guide.md)
-* ### [Downloads and Releases](https://github.com/sedwards2009/extraterm/releases)
-* ### [FAQ](docs/faq.md)
-* ### [Development and Contributing](docs/development.md)
