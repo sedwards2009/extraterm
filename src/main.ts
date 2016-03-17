@@ -22,6 +22,7 @@ import path = require('path');
 import fs = require('fs');
 import im = require('immutable');
 import _ = require('lodash');
+import commander = require('commander');
 import ptyconnector = require('./ptyconnector');
 import resourceLoader = require('./resourceloader');
 import Messages = require('./windowmessages');
@@ -69,10 +70,14 @@ let ptyConnector: PtyConnector;
 let tagCounter = 1;
 
 function main(): void {
+
+  // The extra fields which appear on the command object are declared in extra_commander.d.ts.
+  commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []').parse(process.argv);
+  
   config = readConfigurationFile();
   config.systemConfig = systemConfiguration(config.sessionProfiles);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
-  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles);
+  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, commander);
 
   ptyConnector = PtyConnectorFactory.factory(config);
 
@@ -186,12 +191,16 @@ function logJSData(data: string): void {
  * @param profiles List of user configurable partially filled in profiles.
  * @return List where the profiles are completed and a default is added.
  */
-function expandSessionProfiles(profiles: SessionProfile[]): SessionProfile[] {
+function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?: string }): SessionProfile[] {
   if (process.platform === "win32") {
-    // Find a default cygwin installation.
-    let cygwinDir = findCygwinInstallation();
+    // Check for the existance of the user specified cygwin installation.
+    let cygwinDir = findOptionCygwinInstallation(options.cygwinDir);
     if (cygwinDir === null) {
-      cygwinDir = findBabunCygwinInstallation();
+      // Find a default cygwin installation.
+      let cygwinDir = findCygwinInstallation();
+      if (cygwinDir === null) {
+        cygwinDir = findBabunCygwinInstallation();
+      }
     }
     let canonicalCygwinProfile = cygwinDir !== null ? defaultCygwinProfile(cygwinDir) : null;
     
@@ -308,6 +317,19 @@ function defaultCygwinProfile(cygwinDir: string): SessionProfile {
     return null;
   }
 }
+
+function findOptionCygwinInstallation(cygwinDir: string): string {
+  if (cygwinDir == null) {
+    return null;
+  }
+  if (fs.existsSync(cygwinDir)) {
+    log("Found user specified cygwin installation: " + cygwinDir);
+    return cygwinDir;
+  } else {
+    log("Couldn't find the user specified cygwin installation at " + cygwinDir);
+    return null;
+  }
+}
   
 function findCygwinInstallation(): string {
   try {
@@ -317,9 +339,15 @@ function findCygwinInstallation(): string {
     const parts = regResult.split(/\r/g);
     const regsz = parts[2].indexOf("REG_SZ");
     const cygwinDir = parts[2].slice(regsz+6).trim();
-    log("Found cygwin installation: " + cygwinDir);
-    return cygwinDir;
-
+    
+    if (fs.existsSync(cygwinDir)) {
+      log("Found cygwin installation: " + cygwinDir);
+      return cygwinDir;
+    } else {
+      log("The registry reported the cygwin installation directory at '" + cygwinDir +
+        "', but the directory does not exist.");
+      return null;
+    }
   } catch(e) {
     log("Couldn't find a cygwin installation.");
     return null;

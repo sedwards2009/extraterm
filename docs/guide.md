@@ -8,7 +8,7 @@ Installation
 ------------
 Extraterm support Linux, Mac OS X and Cygwin on Windows. Download the zip file for your operating system on the [github releases page](https://github.com/sedwards2009/extraterm/releases).
 
-Unzip the file somewhere convenient. Start Extraterm by running the `extraterm` or `extraterm.exe` file inside the unzip directory. OS X users can just start the application via the Finder.
+Unzip the file somewhere convenient. Start Extraterm by running the `extraterm` or `extraterm.exe` file inside the unzip directory. OS X users can just start the application via the Finder. If you have trouble starting Extraterm on cygwin see the [FAQ](faq.md).
 
 Extraterm doesn't need any other installation.
 
