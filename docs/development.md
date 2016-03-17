@@ -11,7 +11,7 @@ A simple ground rule: Extraterm is intended to be an open source *project*, and 
 
 Technology
 ----------
-Extraterm is build on the following technologies:
+Extraterm is built on the following technologies:
 
 * [Electron](http://electron.atom.io/) - A platform for running desktop applications made using web technologies.
 * [TypeScript](http://www.typescriptlang.org) - superset of JavaScript which adds static typing.
