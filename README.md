@@ -15,7 +15,7 @@ Extraterm
 
 About
 -----
-Extraterm is an open source project to build a better and modern terminal emulator, and also to experiment with more radical features to enhance the command line. More background information is in the [Why document](why.md).
+Extraterm is an open source project to build a better and modern terminal emulator, and also to experiment with more radical features to enhance the command line. More background information is in the [Why document](docs/why.md).
 
 The primary developer is [Simon Edwards](mailto:simon@simonzone.com).
 
