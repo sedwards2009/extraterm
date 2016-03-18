@@ -281,13 +281,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
 }
 
 function defaultProfile(): SessionProfile {
-  let shell = "/bin/bash";
-  const passwdDb = readPasswd("/etc/passwd");  
-  const userRecords = passwdDb.filter( row => row.username === process.env.USER);
-  if (userRecords.length !== 0) {
-    shell = userRecords[0].shell;
-  }
-
+  const shell = readDefaultUserShell(process.env.USER);
   return {
     name: "Default",
     type: configInterfaces.SESSION_TYPE_UNIX,
@@ -295,6 +289,39 @@ function defaultProfile(): SessionProfile {
     arguments: ["-l"],
     extraEnv: { }
   };
+}
+
+function readDefaultUserShell(userName: string): string {
+  if (process.platform === "darwin") {
+    return readDefaultUserShellFromOpenDirectory(userName);
+  } else {
+    return readDefaultUserShellFromEtcPasswd(userName);
+  }
+}
+  
+function readDefaultUserShellFromEtcPasswd(userName: string): string {
+  let shell = "/bin/bash";
+  const passwdDb = readPasswd("/etc/passwd");  
+  const userRecords = passwdDb.filter( row => row.username === userName);
+  if (userRecords.length !== 0) {
+    shell = userRecords[0].shell;
+  }
+  return shell;
+}
+
+function readDefaultUserShellFromOpenDirectory(userName: string): string {
+  try {
+    const regResult: string = <any> child_process.execFileSync("dscl",
+      [".", "-read", "/Users/" + userName, "UserShell"],
+      {encoding: "utf8"});
+    const parts = regResult.split(/ /g);
+    const shell = parts[1].trim();
+    _log.info("Found default user shell with Open Directory: " + shell);
+    return shell;
+  } catch(e) {
+    _log.warn("Couldn't run Open Directory dscl command to find the user's default shell. Defaulting to /bin/bash");
+    return "/bin/bash";
+  }
 }
 
 function defaultCygwinProfile(cygwinDir: string): SessionProfile {
