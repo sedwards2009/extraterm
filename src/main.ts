@@ -307,7 +307,7 @@ function defaultProfile(): SessionProfile {
     name: "Default",
     type: configInterfaces.SESSION_TYPE_UNIX,
     command: shell,
-    arguments: ["-l"],
+    arguments: process.platform === "darwin" ? ["-l"] : [], // OSX expects shells to be login shells. Linux etc doesn't
     extraEnv: { }
   };
 }
