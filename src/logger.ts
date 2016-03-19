@@ -13,9 +13,18 @@
 
 const instanceCounter = new Map<string, number>();
 
+interface LogMessage {
+  level: string;
+  msg: string;
+}
+
 class Logger {
   
   private _name: string;
+  
+  private _recording = false;
+
+  private _messageLog: LogMessage[] = [];
   
   /**
    * Contruct a logger.
@@ -70,8 +79,40 @@ class Logger {
     this._log("SEVERE", msg, opts);
   }
   
+  /**
+   * Turns on recording log messages to an internal buffer.
+   *
+   * Messages are still sent to the console when recording is on.
+   * See `stopRecording()` and `getLogMessages()`.
+   */
+  startRecording(): void {
+    this._recording = true;    
+  }
+  
+  /**
+   * Turns off recording log messages to the internal buffer.
+   *
+   * See `startRecording()` and `getLogMessages()`.
+   */
+  stopRecording(): void {
+    this._recording = false;
+  }
+  
+  /**
+   * Gets the recorded log messages as a string.
+   *
+   * @return the record messages as string holding multiple lines
+   */
+  getFormattedLogMessages(): string {
+    return this._messageLog.reduce( (accu, logMessage) => accu + "\n" + logMessage.msg, "");
+  }
+  
   private _log(level: string, msg: string, opts: any[]): void {
-    console.log(this._format(level, msg), ...opts);
+    const formatted = this._format(level, msg);
+    if (this._recording) {
+      this._messageLog.push( { level, msg: formatted + opts.reduce( (x, accu) => accu + x + ", ", "") } );
+    }
+    console.log(formatted, ...opts);
   }
   
   private _format(level: string, msg: string): string {

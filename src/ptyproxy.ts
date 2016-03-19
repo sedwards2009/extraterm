@@ -152,10 +152,11 @@ class ProxyPty implements Pty {
 
 function findCygwinPython(cygwinDir: string): string {
   const binDir = path.join(cygwinDir, 'bin');
-  _log.info("binDir:", binDir);
-  const pythonRegexp = /^python3.*m\.exe$/;
+  _log.info("Cygwin bin directory is ", binDir);
   if (fs.existsSync(binDir)) {
-    const pythons = fs.readdirSync(binDir).filter( name => pythonRegexp.test(name) );
+    const pythonRegexp = /^python3.*m\.exe$/;
+    const binContents = fs.readdirSync(binDir);
+    const pythons = binContents.filter( name => pythonRegexp.test(name) );
     return pythons.length !== 0 ? path.join(binDir,pythons[0]) : null;
   }
   return null;
@@ -165,11 +166,13 @@ export function factory(config: Config): PtyConnector {
   const ptys: ProxyPty[] = [];
   const sessionProfile = config.expandedProfiles[0];
   const pythonExe = findCygwinPython(sessionProfile.cygwinDir);
-  _log.info("Found python exe: ", pythonExe);
-
-  // pythonExe = "python3";
-  if (pythonExe === null) {
-    return null;
+  
+  if (pythonExe !== null) {
+    _log.info("Found Python 3 exe at ", pythonExe);
+  } else {
+    const msg = "Unable to find Python 3 exe.";
+    _log.severe("Unable to find Python 3 exe.");
+    throw new Error(msg);
   }
 
   const serverEnv = _.clone(process.env);

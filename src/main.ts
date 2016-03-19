@@ -17,6 +17,7 @@ const BrowserWindow = electron.BrowserWindow;
 const crashReporter = electron.crashReporter;
 const ipc = electron.ipcMain;
 const clipboard = electron.clipboard;
+const dialog = electron.dialog;
 
 import path = require('path');
 import fs = require('fs');
@@ -70,6 +71,8 @@ let ptyConnector: PtyConnector;
 let tagCounter = 1;
 
 function main(): void {
+  let failed = false;
+  _log.startRecording();
 
   // The extra fields which appear on the command object are declared in extra_commander.d.ts.
   commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []').parse(process.argv);
@@ -78,8 +81,26 @@ function main(): void {
   config.systemConfig = systemConfiguration(config.sessionProfiles);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
   config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, commander);
-
-  ptyConnector = PtyConnectorFactory.factory(config);
+  
+  if (config.expandedProfiles.length === 0) {
+    failed = true;
+  } else {
+    try {
+      ptyConnector = PtyConnectorFactory.factory(config);
+    } catch(err) {
+      _log.severe(err.message);
+      failed = true;
+    }
+  }
+  if (failed) {
+    dialog.showErrorBox("Sorry, something went wrong",
+      "Something went wrong while starting up Extraterm.\n" +
+      "Message log is:\n" + _log.getFormattedLogMessages());
+    process.exit(1);
+    return;
+  }
+  
+  _log.stopRecording();
 
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
@@ -197,7 +218,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
     let cygwinDir = findOptionCygwinInstallation(options.cygwinDir);
     if (cygwinDir === null) {
       // Find a default cygwin installation.
-      let cygwinDir = findCygwinInstallation();
+      cygwinDir = findCygwinInstallation();
       if (cygwinDir === null) {
         cygwinDir = findBabunCygwinInstallation();
       }
@@ -350,7 +371,7 @@ function findOptionCygwinInstallation(cygwinDir: string): string {
     return null;
   }
   if (fs.existsSync(cygwinDir)) {
-    log("Found user specified cygwin installation: " + cygwinDir);
+    log("Found user specified cygwin installation at " + cygwinDir);
     return cygwinDir;
   } else {
     log("Couldn't find the user specified cygwin installation at " + cygwinDir);
@@ -368,7 +389,7 @@ function findCygwinInstallation(): string {
     const cygwinDir = parts[2].slice(regsz+6).trim();
     
     if (fs.existsSync(cygwinDir)) {
-      log("Found cygwin installation: " + cygwinDir);
+      log("Found cygwin installation at " + cygwinDir);
       return cygwinDir;
     } else {
       log("The registry reported the cygwin installation directory at '" + cygwinDir +
@@ -384,7 +405,7 @@ function findCygwinInstallation(): string {
 function findBabunCygwinInstallation(): string {
   const cygwinDir = path.join(app.getPath('home'), ".babun/cygwin");
   if (fs.existsSync(cygwinDir)) {
-    log("Found babun cygwin installation: " + cygwinDir);
+    log("Found babun cygwin installation at " + cygwinDir);
     return cygwinDir;
   } else {
     log("Couldn't find a Babun cygwin installation.");
