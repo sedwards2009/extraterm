@@ -3269,9 +3269,11 @@ export class Emulator implements EmulatorAPI {
       case 46:
         key = '\x1b[3~';
         break;
-      // insert
+      // insert      
       case 45:
-        key = '\x1b[2~';
+        if ( ! ev.shiftKey) {
+          key = '\x1b[2~';
+        }        
         break;
       // home
       case 36:

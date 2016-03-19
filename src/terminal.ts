@@ -1038,8 +1038,8 @@ class EtTerminal extends HTMLElement {
       // Shift+Ctrl+C
       this.copyToClipboard();
       
-    } else if (ev.keyCode === 86 && ev.ctrlKey) {
-      // Shift+Ctrl+V
+    } else if ((ev.keyCode === 86 && ev.ctrlKey) || (ev.keyCode === 0x2D && ev.shiftKey)) {
+      // Shift+Ctrl+V or Shift+Insert
       this._pasteFromClipboard();
 
     } else {
