@@ -346,24 +346,35 @@ function readDefaultUserShellFromOpenDirectory(userName: string): string {
 }
 
 function defaultCygwinProfile(cygwinDir: string): SessionProfile {
-  const passwdDb = readPasswd(path.join(cygwinDir, "etc", "passwd"));
-  const username = process.env["USERNAME"];
-  const userRecords = passwdDb.filter( row => row.username === username);
-  if (userRecords.length !== 0) {
-    const defaultShell = userRecords[0].shell;
-    const homeDir = userRecords[0].homeDir;
-
-    return {
-      name: "Cygwin",
-      type: configInterfaces.SESSION_TYPE_CYGWIN,
-      command: defaultShell,
-      arguments: ["-l"],
-      extraEnv: { HOME: homeDir },
-      cygwinDir: cygwinDir
-    };
-  } else {
-    return null;
+  let defaultShell: string = null;
+  let homeDir: string = null;
+  
+  const passwdPath = path.join(cygwinDir, "etc", "passwd");
+  if (fs.existsSync(passwdPath)) {
+    // Get the info from /etc/passwd
+    const passwdDb = readPasswd(passwdPath);
+    const username = process.env["USERNAME"];
+    const userRecords = passwdDb.filter( row => row.username === username);
+    if (userRecords.length !== 0) {
+      defaultShell = userRecords[0].shell;
+      homeDir = userRecords[0].homeDir;
+    }
   }
+  
+  if (homeDir === null) {
+    // Couldn't get the info we needed from /etc/passwd. Cygwin doesn't make a /etc/passwd by default anymore.
+    defaultShell = "/bin/bash";
+    homeDir = "/home/" + process.env["USERNAME"];
+  }
+  
+  return {
+    name: "Cygwin",
+    type: configInterfaces.SESSION_TYPE_CYGWIN,
+    command: defaultShell,
+    arguments: ["-l"],
+    extraEnv: { HOME: homeDir },
+    cygwinDir: cygwinDir
+  };
 }
 
 function findOptionCygwinInstallation(cygwinDir: string): string {
