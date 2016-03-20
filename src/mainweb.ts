@@ -19,6 +19,7 @@ import util = require('./gui/util');
 
 import EtEmbeddedViewer = require('./embeddedviewer');
 import SettingsTab = require('./settings/settingstab2');
+import EtTerminalViewer = require('./viewers/terminalviewer');
 
 import config = require('./config');
 type Config = config.Config;
@@ -51,6 +52,7 @@ export function startUp(): void {
   // Map of CSS files to the classes which require them.
   themeables.set(EtEmbeddedViewer.getCssFile(), EtEmbeddedViewer);
   themeables.set(SettingsTab.getCssFile(), SettingsTab);
+  themeables.set(EtTerminalViewer.getCssFile(), EtTerminalViewer);
   
   webipc.start();
   
