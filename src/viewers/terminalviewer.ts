@@ -675,7 +675,7 @@ class EtTerminalViewer extends ViewerElement {
         
         ${getCssText()}
         </style>
-        <style id=${ID_THEME}></style>
+        <style id="${ID_THEME}"></style>
         <div id="${ID_CONTAINER}" class="terminal_viewer terminal ${CLASS_UNFOCUSED}"></div>`
 
       window.document.body.appendChild(template);

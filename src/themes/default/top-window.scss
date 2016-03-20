@@ -1,4 +1,19 @@
 /**
- * Copyright 2014 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
+
 /* top-window */
+
+DIV.tab_bar_rest {
+  display: flex;
+  width: 100%;
+}
+
+DIV.tab_bar_rest > DIV.space {
+  flex-grow: 1;
+}
+
+*:unresolved {
+  background-color: red;
+  border: 1px dashed red;
+}

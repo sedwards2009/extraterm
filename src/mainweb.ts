@@ -49,7 +49,19 @@ const themeables: Map<ThemeTypes.CssFile, ThemeTypes.Themeable> = new Map();
  * 
  */
 export function startUp(): void {
+
+  // Theme control for the window level.
+  const topThemeable: ThemeTypes.Themeable = {
+    getCssFile(): ThemeTypes.CssFile {
+      return ThemeTypes.CssFile.TOP_VIEW
+    },
+    setThemeCss(themeCss: string): void {
+      (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent = themeCss;
+    }
+  };
+  
   // Map of CSS files to the classes which require them.
+  themeables.set(topThemeable.getCssFile(), topThemeable);
   themeables.set(EtEmbeddedViewer.getCssFile(), EtEmbeddedViewer);
   themeables.set(SettingsTab.getCssFile(), SettingsTab);
   themeables.set(EtTerminalViewer.getCssFile(), EtTerminalViewer);
