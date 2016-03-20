@@ -1,8 +1,25 @@
 FAQ
 ===
 
+
 Extraterm won't start on my cygwin
 ----------------------------------
+
+### Make sure Python 3 is installed
+
+Extraterm requires Python 3 to be installed in cygwin or Babun to run.
+
+If you are using plain cygwin you can install `python3` via the installer.
+
+If you are Babun you can install Python 3 from a shell using:
+
+```
+pact install python3
+```
+
+
+### Problems finding the cygwin installation directory
+
 Extraterm tries to find the location of your cygwin installation directory by looking in the Windows registry. If it fails to find anything there then it will look in the default Babun installation directory. If that too fails then Extraterm will fail to start up with an error like: "TypeError: Cannot read property 'cygwinDir' of null".
 
 To explicitly specify where your cygwin installation directory is you can pass the `--cygwinDir` option to Extraterm when starting it up:
