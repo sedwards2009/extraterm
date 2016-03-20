@@ -11,24 +11,6 @@ DIV.tab_bar_rest > DIV.space {
   flex-grow: 1;
 }
 
-/* ************ GUI elements ************ */
-
-H1.gui-heading {
-    font-size: 28px;
-    margin-top: 0px;
-    margin-left: 0px;
-    margin-right: 0px;
-    margin-bottom: 1em;
-    font-weight: 200;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* ************ Theme ************ */
-
-DIV.extraterm_output {
-    border: 1px solid blue;
-}
-
 *:unresolved {
   background-color: red;
   border: 1px dashed red;

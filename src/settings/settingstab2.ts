@@ -182,7 +182,7 @@ class EtSettingsTab extends ViewerElement {
     this._vm = new Vue({
       data: this._data,
       template: `<div id='${ID_SETTINGS}'className='settingspane'>
-        <h1 className='gui-heading'>Settings</h1>
+        <h1>Settings</h1>
         <div className='settingsform'>
           <div>Scrollback:</div>
           <div><input type='number' number v-model="scrollbackLines" min='1' max='1000000' debounce="500" /> pixels</div>
