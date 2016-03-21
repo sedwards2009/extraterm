@@ -13,6 +13,22 @@ DIV.tab_bar_rest > DIV.space {
   flex-grow: 1;
 }
 
+BODY {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+EXTRATERM-MAINWEBUI {
+  position: absolute; // or relative
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+
 *:unresolved {
   background-color: red;
   border: 1px dashed red;

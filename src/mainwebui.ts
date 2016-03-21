@@ -841,6 +841,11 @@ class ExtratermMainWebUI extends HTMLElement {
     ${globalcss.topcoatCSS()}
     ${globalcss.fontAwesomeCSS()}
     
+    :host {
+      display: block;
+      position: relative;
+    }
+    
     #${ID_TOP} {
       position: absolute;
       top: 2px;
