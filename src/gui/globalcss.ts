@@ -18,7 +18,6 @@ import sourceDir = require('../sourceDir');
  */
 
 const FONT_AWESOME_CSS_PATH = "css/font-awesome.css";
-const TOPCOAT_CSS_PATH = "css/topcoat-desktop-light.css";
 
 let installed = false;
 
@@ -32,11 +31,6 @@ export function init(): void {
   awesomeLink.rel = 'stylesheet';
   document.head.appendChild(awesomeLink);
 
-  const topcoatLink = document.createElement('link');
-  topcoatLink.href = resourceLoader.toUrl("css/topcoat-desktop-light.css");
-  topcoatLink.rel = 'stylesheet';
-  document.head.appendChild(topcoatLink);
-  
   installed = true;
 }
 
@@ -54,17 +48,6 @@ export function fontAwesomeCSS(): string {
     fontFaceFreeAwesomeCSS = stripFontFaces(fontAwesomeCSS);
   }
   return fontFaceFreeAwesomeCSS;
-}
-
-let fontFaceFreeTopcoatCSS: string = null;
-
-export function topcoatCSS(): string {
-  if (fontFaceFreeTopcoatCSS === null) {
-    // Read the Topcoat CSS file and removethe font-face part.
-    const topcoatCSS: string = fs.readFileSync(path.join(sourceDir.path, TOPCOAT_CSS_PATH), {encoding: 'utf8'});
-    fontFaceFreeTopcoatCSS = stripFontFaces(topcoatCSS);
-  }
-  return fontFaceFreeTopcoatCSS;
 }
 
 export function stripFontFaces(cssText: string): string {
