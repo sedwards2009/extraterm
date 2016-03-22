@@ -53,7 +53,7 @@ export function startUp(): void {
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
     getCssFile(): ThemeTypes.CssFile {
-      return ThemeTypes.CssFile.TOP_VIEW
+      return ThemeTypes.CssFile.TOP_WINDOW
     },
     setThemeCss(themeCss: string): void {
       (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent = themeCss;
@@ -65,6 +65,7 @@ export function startUp(): void {
   themeables.set(EtEmbeddedViewer.getCssFile(), EtEmbeddedViewer);
   themeables.set(SettingsTab.getCssFile(), SettingsTab);
   themeables.set(EtTerminalViewer.getCssFile(), EtTerminalViewer);
+  themeables.set(MainWebUi.getCssFile(), MainWebUi);
   
   webipc.start();
   
@@ -83,7 +84,7 @@ export function startUp(): void {
   
   const themePromise = webipc.requestConfig().then( (msg: Messages.ConfigMessage) => {
     handleConfigMessage(msg);
-    webipc.requestThemeContents(msg.config.theme).then(handleThemeContentsMessage);
+    return webipc.requestThemeContents(msg.config.theme).then(handleThemeContentsMessage);
   });
   
   // Get the config and theme info in and then continue starting up.

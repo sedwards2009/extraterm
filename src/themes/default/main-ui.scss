@@ -1,0 +1,127 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* top UI */
+
+:host {
+  display: block;
+  position: relative;
+}
+
+#ID_TOP {
+  position: absolute;
+  top: 2px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  
+  display: flex;
+}
+
+#ID_PANE_LEFT {
+  flex: auto 1 1;  
+}
+
+#ID_PANE_LEFT, #ID_PANE_RIGHT {
+  position: relative;
+}
+
+#ID_TAB_CONTAINER_LEFT, #ID_TAB_CONTAINER_RIGHT {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+#ID_PANE_RIGHT {
+  display: none;
+}
+
+#ID_TOP > #gap {
+  visibility: collapse;
+  flex: 0px 0 0;
+}
+
+#ID_TOP.CLASS_SPLIT > #gap {
+  visibility: visible;
+  flex: 2px 0 0;
+}
+
+#ID_TOP.CLASS_SPLIT > #ID_PANE_RIGHT {
+  flex: auto 1 1;
+  display: block;
+}
+
+#ID_REST_DIV_PRIMARY {
+  display: flex;
+}
+
+#ID_REST_DIV_PRIMARY > DIV.space {
+  flex-grow: 1;
+}
+
+#ID_NEW_TAB_BUTTON_PRIMARY, #ID_NEW_TAB_BUTTON_SECONDARY {
+  border: 0px;
+}
+
+#ID_NEW_TAB_BUTTON_PRIMARY:hover, #ID_NEW_TAB_BUTTON_SECONDARY:hover {
+  border: 1px solid black;
+  border-radius: 2px;
+}
+
+DIV.tab_content {
+  height: 100%;
+  width: 100%;
+}
+
+DIV.tab_content > * {
+  width: 100%;
+  height: 100%;
+}
+
+et-terminal {
+  height: 100%;
+  width: 100%;
+}
+
+DIV.tab_header_container {
+  display: flex;
+  width: 100%;
+}
+
+DIV.tab_header_icon {
+  flex: 0 0 auto;
+}
+
+DIV.tab_header_middle {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+DIV.tab_header_close {
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+DIV.tab_header_close > BUTTON {
+  border: 0px;
+  padding: 0px;
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin: 2px;
+  background-color: transparent;
+  border-radius: 2px;
+  margin-top: 3px;
+}
+
+DIV.tab_header_close > BUTTON > I {
+  position: relative;
+  top: -1px;
+}    
+
+DIV.tab_header_close:hover > BUTTON {
+  background-color: #ff5454;
+  color: #ffffff;
+}

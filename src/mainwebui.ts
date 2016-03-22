@@ -15,6 +15,7 @@ import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
+import ThemeTypes = require('./theme');
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import path = require('path');
@@ -24,8 +25,11 @@ import globalcss = require('./gui/globalcss');
 import he = require('he');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
+import LogDecorator = require('./logdecorator');
 
 import Logger = require('./logger');
+
+const log = LogDecorator;
 
 type Config = config.Config;
 type SessionProfile = config.SessionProfile;
@@ -33,21 +37,22 @@ const VisualState = ViewerElementTypes.VisualState;
 
 const ID = "ExtratermMainWebUITemplate";
 
-const ID_TOP = "top";
-const ID_PANE_LEFT = "pane_left";
-const ID_PANE_RIGHT = "pane_right";
-const ID_TAB_CONTAINER_LEFT = "container_left";
-const ID_TAB_CONTAINER_RIGHT = "container_right";
-const ID_REST_DIV_PRIMARY = "rest_primary";
-const ID_REST_DIV_SECONDARY = "rest_secondary";
-const ID_NEW_TAB_BUTTON_PRIMARY = "new_tab_primary";
-const ID_NEW_TAB_BUTTON_SECONDARY = "new_tab_secondary";
+const ID_TOP = "ID_TOP";
+const ID_THEME = "ID_THEME";
+const ID_PANE_LEFT = "ID_PANE_LEFT";
+const ID_PANE_RIGHT = "ID_PANE_RIGHT";
+const ID_TAB_CONTAINER_LEFT = "ID_TAB_CONTAINER_LEFT";
+const ID_TAB_CONTAINER_RIGHT = "ID_TAB_CONTAINER_RIGHT";
+const ID_REST_DIV_PRIMARY = "ID_REST_DIV_PRIMARY";
+const ID_REST_DIV_SECONDARY = "ID_REST_DIV_SECONDARY";
+const ID_NEW_TAB_BUTTON_PRIMARY = "ID_NEW_TAB_BUTTON_PRIMARY";
+const ID_NEW_TAB_BUTTON_SECONDARY = "ID_NEW_TAB_BUTTON_SECONDARY";
 const CLASS_SPLIT = "split";
 
-const TAB_HEADER_CONTAINER_CLASS = "tab_header_container";
-const TAB_HEADER_ICON_CLASS = "tab_header_icon";
-const TAB_HEADER_MIDDLE_CLASS = "tab_header_middle";
-const TAB_HEADER_CLOSE_CLASS = "tab_header_close";
+const CLASS_TAB_HEADER_CONTAINER = "tab_header_container";
+const CLASS_TAB_HEADER_ICON = "tab_header_icon";
+const CLASS_TAB_HEADER_MIDDLE = "tab_header_middle";
+const CLASS_TAB_HEADER_CLOSE = "tab_header_close";
 
 
 let registered = false;
@@ -95,11 +100,11 @@ class TabInfo {
   }
   
   updateTabTitle(): void {
-    const iconDiv = <HTMLDivElement> this.cbTab.querySelector(`DIV.${TAB_HEADER_ICON_CLASS}`);
+    const iconDiv = <HTMLDivElement> this.cbTab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
     const icon = this.tabIcon();
     iconDiv.innerHTML = icon !== null ? '<i class="fa fa-' + icon + '"></i>' : "";
     
-    const middleDiv = <HTMLDivElement> this.cbTab.querySelector(`DIV.${TAB_HEADER_MIDDLE_CLASS}`);
+    const middleDiv = <HTMLDivElement> this.cbTab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
     middleDiv.title = this.title();
     middleDiv.innerHTML = this.htmlTitle();
   }
@@ -248,6 +253,12 @@ class AboutTabInfo extends ViewerElementTabInfo {
   }
 }
 
+const staticLog = new Logger("Static ExtratermMainWebUI");
+
+// Theme management
+const activeInstances: Set<ExtratermMainWebUI> = new Set();
+let themeCss = "";
+
 /**
  * Top level UI component for a normal terminal window
  *
@@ -285,6 +296,19 @@ class ExtratermMainWebUI extends HTMLElement {
   
   static POSITION_RIGHT = TabPosition.RIGHT;
   
+  // Static methods from the ThemeTypes.Themeable interface.
+  static getCssFile(): ThemeTypes.CssFile {
+    return ThemeTypes.CssFile.MAIN_UI;
+  }
+
+  static setThemeCss(cssText: string): void {
+    staticLog.debug("setThemeCss");
+    themeCss = cssText;
+    activeInstances.forEach( (instance) => {
+      instance._setThemeCss(themeCss);
+    });
+  }
+  
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
@@ -306,17 +330,30 @@ class ExtratermMainWebUI extends HTMLElement {
   }
   
   //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
   
   /**
    * Custom element API call back.
    */
   createdCallback(): void {
     this._initProperties(); // Initialise our properties. The constructor was not called.
+  }
+  
+  attachedCallback(): void {
+    activeInstances.add(this);
     
     const shadow = domutils.createShadowRoot(this);
     const clone = this._createClone();
     shadow.appendChild(clone);
-    
     
     // Update the window title when the selected tab changes and resize the terminal.
     const tabWidgetLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
@@ -486,10 +523,10 @@ class ExtratermMainWebUI extends HTMLElement {
     const newCbTab = <CbTab> document.createElement(CbTab.TAG_NAME);
     newCbTab.setAttribute('id', "tab_id_"+newId);
     newCbTab.innerHTML =
-      `<div class="${TAB_HEADER_CONTAINER_CLASS}">` +
-        `<div class="${TAB_HEADER_ICON_CLASS}"></div>` +
-        `<div class="${TAB_HEADER_MIDDLE_CLASS}">${newId}</div>` +
-        `<div class="${TAB_HEADER_CLOSE_CLASS}">` +
+      `<div class="${CLASS_TAB_HEADER_CONTAINER}">` +
+        `<div class="${CLASS_TAB_HEADER_ICON}"></div>` +
+        `<div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>` +
+        `<div class="${CLASS_TAB_HEADER_CLOSE}">` +
           `<button id="close_tag_id_${newId}"><i class="fa fa-times"></i></button>` +
         `</div>` +
       `</div>`;
@@ -834,126 +871,11 @@ class ExtratermMainWebUI extends HTMLElement {
   //   terminal.themeCssPath = path.join(config.themePath, "theme.css").replace(/\\/g, "/");
   //   terminal.noFrameCommands = config.noFrameCommands !== undefined ? config.noFrameCommands : null;
   // }
-    
   private _html(): string {
     return `
-    <style>
-    ${globalcss.topcoatCSS()}
+    <style id="${ID_THEME}">
     ${globalcss.fontAwesomeCSS()}
-    
-    :host {
-      display: block;
-      position: relative;
-    }
-    
-    #${ID_TOP} {
-      position: absolute;
-      top: 2px;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      
-      display: flex;
-    }
-    
-    #${ID_PANE_LEFT} {
-      flex: auto 1 1;  
-    }
-    
-    #${ID_PANE_LEFT}, #${ID_PANE_RIGHT} {
-      position: relative;
-    }
-    
-    #${ID_TAB_CONTAINER_LEFT}, #${ID_TAB_CONTAINER_RIGHT} {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-    }
-    
-    #${ID_PANE_RIGHT} {
-      display: none;
-    }
-    
-    #${ID_TOP} > #gap {
-      visibility: collapse;
-      flex: 0px 0 0;
-    }
-    
-    #${ID_TOP}.${CLASS_SPLIT} > #gap {
-      visibility: visible;
-      flex: 2px 0 0;
-    }
-    
-    #${ID_TOP}.${CLASS_SPLIT} > #${ID_PANE_RIGHT} {
-      flex: auto 1 1;
-      display: block;
-    }
-    
-    #${ID_REST_DIV_PRIMARY} {
-      display: flex;
-    }
-
-    #${ID_REST_DIV_PRIMARY} > DIV.space {
-      flex-grow: 1;
-    }
-    
-    DIV.tab_content {
-      height: 100%;
-      width: 100%;
-    }
-    
-    DIV.tab_content > * {
-      width: 100%;
-      height: 100%;
-    }
-    
-    et-terminal {
-      height: 100%;
-      width: 100%;
-    }
-    
-    DIV.${TAB_HEADER_CONTAINER_CLASS} {
-      display: flex;
-      width: 100%;
-    }
-    
-    DIV.${TAB_HEADER_ICON_CLASS} {
-      flex: 0 0 auto;
-    }
-    
-    DIV.${TAB_HEADER_MIDDLE_CLASS} {
-      flex: 1 1 auto;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    DIV.${TAB_HEADER_CLOSE_CLASS} {
-      flex: 0 0 auto;
-      align-self: center;
-    }
-    
-    DIV.${TAB_HEADER_CLOSE_CLASS} > BUTTON {
-      border: 0px;
-      padding: 0px;
-      display: inline-block;
-      width: 13px;
-      height: 13px;
-      margin: 2px;
-      background-color: transparent;
-      border-radius: 2px;
-      margin-top: 3px;
-    }
-    
-    DIV.${TAB_HEADER_CLOSE_CLASS} > BUTTON > I {
-      position: relative;
-      top: -1px;
-    }    
-    
-    DIV.${TAB_HEADER_CLOSE_CLASS}:hover > BUTTON {
-      background-color: #ff5454;
-      color: #ffffff;
-    }
-    
+    ${themeCss}
     </style>
     <div id="${ID_TOP}">` +
         `<div id="${ID_PANE_LEFT}">` +
@@ -971,6 +893,14 @@ class ExtratermMainWebUI extends HTMLElement {
       `</div>`;
   }
   
+  private _setThemeCss(cssText: string): void {
+    if (domutils.getShadowRoot(this) === null) {
+      return;
+    }
+
+    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = globalcss.fontAwesomeCSS() + "\n" + cssText;
+  }
+
   //-----------------------------------------------------------------------
   // PTY and IPC handling
   //-----------------------------------------------------------------------
@@ -1036,5 +966,8 @@ class ExtratermMainWebUI extends HTMLElement {
     return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
   }
 }
+
+// This line below acts an assertion on the constructor function.
+const themeable: ThemeTypes.Themeable = ExtratermMainWebUI;
 
 export = ExtratermMainWebUI;

@@ -16,21 +16,24 @@ export interface ThemeContents {
 }
 
 export enum CssFile {
-  TOP_VIEW,
+  TOP_WINDOW,
+  MAIN_UI,
   TERMINAL_VIEWER,
   EMBEDDED_FRAME,
   SETTINGS_TAB
 }
 
 export const cssFileEnumItems: CssFile[] = [
-  CssFile.TOP_VIEW,
+  CssFile.TOP_WINDOW,
+  CssFile.MAIN_UI,
   CssFile.TERMINAL_VIEWER,
   CssFile.EMBEDDED_FRAME,
   CssFile.SETTINGS_TAB
 ];
 
 const _CssFileNameMapping = {
-  [CssFile.TOP_VIEW]: "top-window",
+  [CssFile.TOP_WINDOW]: "top-window",
+  [CssFile.MAIN_UI]: "main-ui",
   [CssFile.TERMINAL_VIEWER]: "terminal-viewer",
   [CssFile.EMBEDDED_FRAME]: "embedded-frame",
   [CssFile.SETTINGS_TAB]: "settings-tab"
