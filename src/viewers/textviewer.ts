@@ -14,6 +14,7 @@ import sourceDir = require('../sourceDir');
 import ViewerElement = require("../viewerelement");
 import util = require("../gui/util");
 import domutils = require("../domutils");
+import ThemeTypes = require('../theme');
 import CodeMirror = require('codemirror');
 import ViewerElementTypes = require('../viewerelementtypes');
 import EtTextViewerTypes = require('./terminalviewertypes');
@@ -30,9 +31,9 @@ type TextDecoration = EtTextViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
 const ID = "CbTextViewerTemplate";
-const ID_CONTAINER = "container";
-const ID_MAIN_STYLE = "main_style";
-const ID_THEME_STYLE = "theme_style";
+const ID_CONTAINER = "ID_CONTAINER";
+const ID_MAIN_STYLE = "ID_MAIN_STYLE";
+const ID_THEME = "theme_style";
 const CLASS_HIDE_CURSOR = "hide_cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
@@ -45,7 +46,6 @@ const log = LogDecorator;
 
 let registered = false;
 
-const CODEMIRROR_THEME = "lesser-dark";
 let cssText: string = null;
 
 function getCssText(): string {
@@ -64,6 +64,10 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
+// Theme management
+const activeInstances: Set<EtTextViewer> = new Set();
+let themeCss = "";
+
 class EtTextViewer extends ViewerElement {
 
   static TAG_NAME = "et-text-viewer";
@@ -73,9 +77,7 @@ class EtTextViewer extends ViewerElement {
       
       // Load the CSS resources now.
       cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
-        + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' })
-        + fs.readFileSync(path.join(sourceDir.path, 'themes/default/theme.css'), { encoding: 'utf8' })
-        + fs.readFileSync(require.resolve('codemirror/theme/' + CODEMIRROR_THEME + '.css'), { encoding: 'utf8' });
+        + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
 
       window.document.registerElement(EtTextViewer.TAG_NAME, {prototype: EtTextViewer.prototype});
       registered = true;
@@ -90,6 +92,24 @@ class EtTextViewer extends ViewerElement {
    */
   static is(node: Node): node is EtTextViewer {
     return node !== null && node !== undefined && node instanceof EtTextViewer;
+  }
+  
+  // Static methods from the ThemeTypes.Themeable interface.
+  static getCssFile(): ThemeTypes.CssFile {
+    return ThemeTypes.CssFile.TEXT_VIEWER;
+  }
+
+  static setThemeCss(cssText: string): void {
+    themeCss = cssText;
+    activeInstances.forEach( (instance) => {
+      instance._setThemeCss(themeCss);
+    });
+
+    // Delete the template. It contains old CSS.
+    const template = <HTMLTemplate>window.document.getElementById(ID);
+    if (template !== null) {
+      template.parentNode.removeChild(template);
+    }
   }
   
   //-----------------------------------------------------------------------
@@ -404,6 +424,8 @@ class EtTextViewer extends ViewerElement {
   }
   
   attachedCallback(): void {
+    activeInstances.add(this);
+
     if (domutils.getShadowRoot(this) !== null) {
       return;
     }
@@ -427,7 +449,7 @@ class EtTextViewer extends ViewerElement {
       scrollbarStyle: "null",
       cursorScrollMargin: 0,
       showCursorWhenSelecting: true,
-      theme: CODEMIRROR_THEME
+      theme: "text"
     };
 
     if (this._mimeType !== null) {
@@ -550,7 +572,14 @@ class EtTextViewer extends ViewerElement {
 
     this._adjustHeight(this._height);
   }
-  
+
+  /**
+   * Custom Element 'detached' life cycle hook.
+   */
+  detachedCallback(): void {
+    activeInstances.delete(this);
+  }
+
   //-----------------------------------------------------------------------
   //
   // ######                                      
@@ -571,40 +600,17 @@ class EtTextViewer extends ViewerElement {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = `<style id="${ID_MAIN_STYLE}">
-        :host {
-          display: block;
-          width: 100%;
-          white-space: normal;
-        }
-        
-        #${ID_CONTAINER} {
-/*          height: 100%; */
-          width: 100%;
-          overflow: hidden;
-        }
-        
+
         /* The idea is that this rule will be quickly applied. We can then monitor
            the computed style to see when the proper theme font is applied and
            NO_STYLE_HACK disappears from the reported computed style. */
         .terminal {
           font-family: sans-serif, ${NO_STYLE_HACK};
         }
-        
-        #${ID_CONTAINER}:focus {
-          outline: 0px;
-        }
-        
-        #${ID_CONTAINER}.${CLASS_HIDE_CURSOR} .CodeMirror-cursors {
-            display: none !important;
-        }
-        
-        #${ID_CONTAINER}.${CLASS_HIDE_CURSOR} .CodeMirror-lines {
-          cursor: default;
-        }
-        
+
         ${getCssText()}
         </style>
-        <style id="${ID_THEME_STYLE}"></style>
+        <style id="${ID_THEME}">${themeCss}</style>
         <div id="${ID_CONTAINER}" class="terminal_viewer ${CLASS_UNFOCUSED}"></div>`
 
       window.document.body.appendChild(template);
@@ -612,6 +618,15 @@ class EtTextViewer extends ViewerElement {
     
     return window.document.importNode(template.content, true);
   }
+  
+  private _setThemeCss(cssText: string): void {
+    if (domutils.getShadowRoot(this) === null) {
+      return;
+    }
+    
+    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = cssText;
+  }
+
   
   private _setVisualState(newVisualState: number): void {
     if (newVisualState === this._visualState) {
@@ -875,5 +890,8 @@ function px(value) {
   }
   return parseInt(value.slice(0,-2),10);
 }  
+
+// This line below acts an assertion on the constructor function.
+const themeable: ThemeTypes.Themeable = EtTextViewer;
 
 export = EtTextViewer;

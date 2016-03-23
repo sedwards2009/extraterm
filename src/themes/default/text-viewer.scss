@@ -1,0 +1,77 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+/* text viewer styles */
+
+:host {
+  display: block;
+  width: 100%;
+  white-space: normal;
+}
+
+#ID_CONTAINER {
+/*          height: 100%; */
+  width: 100%;
+  overflow: hidden;
+}
+
+#ID_CONTAINER:focus {
+  outline: 0px;
+}
+
+#ID_CONTAINER.hide_cursor .CodeMirror-cursors {
+    display: none !important;
+}
+
+#ID_CONTAINER.hide_cursor .CodeMirror-lines {
+  cursor: default;
+}
+
+/*
+http://lesscss.org/ dark theme
+Ported to CodeMirror by Peter Kroon
+*/
+.cm-s-text {
+  line-height: 1.3em;
+}
+
+.cm-s-text.CodeMirror { background: #262626; color: #EBEFE7; text-shadow: 0 -1px 1px #262626; }
+.cm-s-text div.CodeMirror-selected { background: #45443B; } /* 33322B*/
+.cm-s-text .CodeMirror-line::selection, .cm-s-text .CodeMirror-line > span::selection, .cm-s-text .CodeMirror-line > span > span::selection { background: rgba(69, 68, 59, .99); }
+.cm-s-text .CodeMirror-line::-moz-selection, .cm-s-text .CodeMirror-line > span::-moz-selection, .cm-s-text .CodeMirror-line > span > span::-moz-selection { background: rgba(69, 68, 59, .99); }
+.cm-s-text .CodeMirror-cursor { border-left: 1px solid white; }
+.cm-s-text pre { padding: 0 8px; }/*editable code holder*/
+
+.cm-s-text.CodeMirror span.CodeMirror-matchingbracket { color: #7EFC7E; }/*65FC65*/
+
+.cm-s-text .CodeMirror-gutters { background: #262626; border-right:1px solid #aaa; }
+.cm-s-text .CodeMirror-guttermarker { color: #599eff; }
+.cm-s-text .CodeMirror-guttermarker-subtle { color: #777; }
+.cm-s-text .CodeMirror-linenumber { color: #777; }
+
+.cm-s-text span.cm-header { color: #a0a; }
+.cm-s-text span.cm-quote { color: #090; }
+.cm-s-text span.cm-keyword { color: #599eff; }
+.cm-s-text span.cm-atom { color: #C2B470; }
+.cm-s-text span.cm-number { color: #B35E4D; }
+.cm-s-text span.cm-def { color: white; }
+.cm-s-text span.cm-variable { color:#D9BF8C; }
+.cm-s-text span.cm-variable-2 { color: #669199; }
+.cm-s-text span.cm-variable-3 { color: white; }
+.cm-s-text span.cm-property { color: #92A75C; }
+.cm-s-text span.cm-operator { color: #92A75C; }
+.cm-s-text span.cm-comment { color: #666; }
+.cm-s-text span.cm-string { color: #BCD279; }
+.cm-s-text span.cm-string-2 { color: #f50; }
+.cm-s-text span.cm-meta { color: #738C73; }
+.cm-s-text span.cm-qualifier { color: #555; }
+.cm-s-text span.cm-builtin { color: #ff9e59; }
+.cm-s-text span.cm-bracket { color: #EBEFE7; }
+.cm-s-text span.cm-tag { color: #669199; }
+.cm-s-text span.cm-attribute { color: #00c; }
+.cm-s-text span.cm-hr { color: #999; }
+.cm-s-text span.cm-link { color: #00c; }
+.cm-s-text span.cm-error { color: #9d1e15; }
+
+.cm-s-text .CodeMirror-activeline-background { background: #3C3A3A; }
+.cm-s-text .CodeMirror-matchingbracket { outline:1px solid grey; color:white !important; }

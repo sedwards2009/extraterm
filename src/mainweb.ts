@@ -20,6 +20,7 @@ import util = require('./gui/util');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import SettingsTab = require('./settings/settingstab2');
 import EtTerminalViewer = require('./viewers/terminalviewer');
+import EtTextViewer = require('./viewers/textviewer');
 
 import config = require('./config');
 type Config = config.Config;
@@ -67,6 +68,7 @@ export function startUp(): void {
   themeables.set(EtTerminalViewer.getCssFile(), EtTerminalViewer);
   themeables.set(EtTerminal.getCssFile(), EtTerminal);
   themeables.set(MainWebUi.getCssFile(), MainWebUi);
+  themeables.set(EtTextViewer.getCssFile(), EtTextViewer);
   
   webipc.start();
   
