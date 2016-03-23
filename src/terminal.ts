@@ -10,6 +10,7 @@ import base64arraybuffer = require('base64-arraybuffer');
 
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
+import ThemeTypes = require('./theme');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import EtCommandPlaceHolder = require('./commandplaceholder');
 import EtTerminalViewer = require('./viewers/terminalviewer');
@@ -58,11 +59,10 @@ let registered = false;
 
 const ID = "EtTerminalTemplate";
 const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
-const ID_SCROLL_AREA = "scroll_area";
-const ID_SCROLLBAR = "scrollbar";
-const ID_CONTAINER = "terminal_container";
-const ID_MAIN_STYLE = "main_style";
-const ID_THEME_STYLE = "theme_style";
+const ID_SCROLL_AREA = "ID_SCROLL_AREA";
+const ID_SCROLLBAR = "ID_SCROLLBAR";
+const ID_CONTAINER = "ID_CONTAINER";
+const ID_THEME = "ID_THEME";
 
 const CLASS_SELECTION_MODE = "selection-mode";
 
@@ -81,6 +81,10 @@ const enum ApplicationMode {
 const viewerClasses: ViewerElementTypes.SupportsMimeTypes[] = [];
 viewerClasses.push(EtImageViewer);
 viewerClasses.push(EtTextViewer);
+
+// Theme management
+const activeInstances: Set<EtTerminal> = new Set();
+let themeCss = "";
 
 /**
  * An Extraterm terminal.
@@ -122,6 +126,24 @@ class EtTerminal extends HTMLElement {
       // EtMarkdownViewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
       registered = true;
+    }
+  }
+  
+  // Static methods from the ThemeTypes.Themeable interface.
+  static getCssFile(): ThemeTypes.CssFile {
+    return ThemeTypes.CssFile.TERMINAL;
+  }
+
+  static setThemeCss(cssText: string): void {
+    themeCss = cssText;
+    activeInstances.forEach( (instance) => {
+      instance._setThemeCss(themeCss);
+    });
+    
+    // Delete the template. It contains old CSS.
+    const template = <HTMLTemplate>window.document.getElementById(ID);
+    if (template !== null) {
+      template.parentNode.removeChild(template);
     }
   }
 
@@ -236,13 +258,6 @@ class EtTerminal extends HTMLElement {
   
   get scrollbackSize(): number {
     return this._scrollbackSize;
-  }
-  
-  set themeCssPath(path: string) {
-    this._themeCssPath = path;
-    const themeCss = fs.readFileSync(path, {encoding: 'utf8'});
-    const themeTag = <HTMLStyleElement> domutils.getShadowId(this, ID_THEME_STYLE);
-    themeTag.innerHTML = globalcss.stripFontFaces(themeCss);
   }
   
   set commandLineActions(commandLineActions: CommandLineAction[]) {
@@ -395,11 +410,13 @@ class EtTerminal extends HTMLElement {
       return;
     }
     this._elementAttached = true;
-    
+    activeInstances.add(this);
+
     const shadow = domutils.createShadowRoot(this);
 
     const clone = this._createClone();
     shadow.appendChild(clone);
+    
     this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
 
     // util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
@@ -461,6 +478,13 @@ class EtTerminal extends HTMLElement {
     this._scheduleResize();
   }
   
+  /**
+   * Custom Element 'detached' life cycle hook.
+   */
+  detachedCallback(): void {
+    activeInstances.delete(this);
+  }
+  
   //-----------------------------------------------------------------------
   //
   //   ######                                      
@@ -479,40 +503,7 @@ class EtTerminal extends HTMLElement {
       template = window.document.createElement('template');
       template.id = ID;
 
-      const background_color = "#000000";
-
-      template.innerHTML = `<style id="${ID_MAIN_STYLE}">
-        :host {
-          display: block;
-        }
-        
-        #${ID_CONTAINER} {
-            display: flex;
-            flex-direction: row;
-            width: 100%;
-            height: 100%;
-        }
-
-        #${ID_SCROLLBAR} {
-            flex: 0;
-            min-width: 15px;
-            height: 100%;
-        }
-        
-        #${ID_SCROLL_AREA} {
-          flex: 1;
-          height: 100%;
-          overflow-x: hidden;
-          overflow-y: hidden;
-          background-color: ${background_color};
-        }
-      
-        #${ID_SCROLL_AREA} > ${EtTerminalViewer.TAG_NAME} {
-            margin-left: 4px;
-            margin-right: 4px;
-        }
-        </style>
-        <style id="${ID_THEME_STYLE}"></style>
+      template.innerHTML = `<style id="${ID_THEME}">${themeCss}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
           <cb-scrollbar id='${ID_SCROLLBAR}'></cb-scrollbar>
@@ -521,6 +512,14 @@ class EtTerminal extends HTMLElement {
     }
 
     return window.document.importNode(template.content, true);
+  }
+
+  private _setThemeCss(cssText: string): void {
+    if (domutils.getShadowRoot(this) === null) {
+      return;
+    }
+    
+    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = cssText;
   }
 
   /**
@@ -1530,5 +1529,8 @@ class EtTerminal extends HTMLElement {
     });
   }
 }
+
+// This line below acts an assertion on the constructor function.
+const themeable: ThemeTypes.Themeable = EtTerminal;
 
 export = EtTerminal;

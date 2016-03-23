@@ -18,6 +18,7 @@ export interface ThemeContents {
 export enum CssFile {
   TOP_WINDOW,
   MAIN_UI,
+  TERMINAL,
   TERMINAL_VIEWER,
   EMBEDDED_FRAME,
   SETTINGS_TAB
@@ -26,6 +27,7 @@ export enum CssFile {
 export const cssFileEnumItems: CssFile[] = [
   CssFile.TOP_WINDOW,
   CssFile.MAIN_UI,
+  CssFile.TERMINAL,
   CssFile.TERMINAL_VIEWER,
   CssFile.EMBEDDED_FRAME,
   CssFile.SETTINGS_TAB
@@ -34,6 +36,7 @@ export const cssFileEnumItems: CssFile[] = [
 const _CssFileNameMapping = {
   [CssFile.TOP_WINDOW]: "top-window",
   [CssFile.MAIN_UI]: "main-ui",
+  [CssFile.TERMINAL]: "terminal",
   [CssFile.TERMINAL_VIEWER]: "terminal-viewer",
   [CssFile.EMBEDDED_FRAME]: "embedded-frame",
   [CssFile.SETTINGS_TAB]: "settings-tab"

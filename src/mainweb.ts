@@ -65,6 +65,7 @@ export function startUp(): void {
   themeables.set(EtEmbeddedViewer.getCssFile(), EtEmbeddedViewer);
   themeables.set(SettingsTab.getCssFile(), SettingsTab);
   themeables.set(EtTerminalViewer.getCssFile(), EtTerminalViewer);
+  themeables.set(EtTerminal.getCssFile(), EtTerminal);
   themeables.set(MainWebUi.getCssFile(), MainWebUi);
   
   webipc.start();

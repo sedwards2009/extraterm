@@ -164,7 +164,6 @@ class TerminalTabInfo extends TabInfo {
   
   setConfig(config: Config): void {
     this.terminal.blinkingCursor = config.blinkingCursor;
-    this.terminal.themeCssPath = path.join(config.themePath, "theme.css").replace(/\\/g, "/");
     this.terminal.commandLineActions = config.commandLineActions !== undefined ? config.commandLineActions : null;
     this.terminal.scrollbackSize = config.scrollbackLines;
   }

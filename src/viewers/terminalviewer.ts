@@ -91,6 +91,12 @@ class EtTerminalViewer extends ViewerElement {
     activeInstances.forEach( (instance) => {
       instance._setThemeCss(themeCss);
     });
+
+    // Delete the template. It contains old CSS.
+    const template = <HTMLTemplate>window.document.getElementById(ID);
+    if (template !== null) {
+      template.parentNode.removeChild(template);
+    }
   }
 
   //-----------------------------------------------------------------------
@@ -483,7 +489,7 @@ class EtTerminalViewer extends ViewerElement {
     shadow.appendChild(clone);
     
     this._initFontLoading();
-    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = themeCss;
+    this._setThemeCss(themeCss);
 
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
 
