@@ -9,9 +9,23 @@
 // This is for the synchronous node API.
 
 declare module "sass.js" {
-    // interface Importer {
-    //     (url: string, prev: string, done: (data: { file: string; contents: string; }) => void): void;
-    // }
+  
+    interface ImporterRequest {
+      current: string;
+      path: string;
+      previous: string;
+      resolved: string;
+    }
+  
+    interface ImporterDone {
+      content?: string;
+      path?: string;
+      error?: string;
+    }
+  
+    interface Importer {
+        (request: ImporterRequest, done: (data?: ImporterDone) => void): void;
+    }
 
     interface Options {
       // style: 
@@ -46,6 +60,8 @@ declare module "sass.js" {
     }
 
     export function compile(text: string, callback: (result: SuccessResult | ErrorResult) => void): void;
-
     export function compile(text: string, options: Options, callback: (result: SuccessResult | ErrorResult) => void): void;
+    export function compileFile(filename: string, callback: (result: SuccessResult | ErrorResult) => void): void;
+    export function compileFile(filename: string, options: Options, callback: (result: SuccessResult | ErrorResult) => void): void;
+    export function importer(importerFunc: Importer): void;
 }
