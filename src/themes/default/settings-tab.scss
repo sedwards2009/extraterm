@@ -4,17 +4,12 @@
 
 /* settings-tab styles */
 
+@import "_extraterm_bootstrap";
+
 #ID_SETTINGS {
   height: 100%;
-  over-flow: auto;
-  padding: 8px;
-}
-
-#ID_COMMAND_OUTPUT_HANDLING > table {
-}
-
-#ID_COMMAND_OUTPUT_HANDLING > table > thead {
-  font-weight: bold;
+  overflow: auto;
+  padding: $panel-body-padding;
 }
 
 #ID_COMMAND_OUTPUT_HANDLING > table td.CLASS_FRAME {

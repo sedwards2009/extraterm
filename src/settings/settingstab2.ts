@@ -25,6 +25,7 @@ const log = LogDecorator;
 
 const ID_SETTINGS = "ID_SETTINGS";
 const ID_THEME = "ID_THEME";
+const ID_SCROLLBACK = "ID_SCROLLBACK";
 const ID_COMMAND_OUTPUT_HANDLING = "ID_COMMAND_OUTPUT_HANDLING";
 const CLASS_MATCH_TYPE = "CLASS_MATCH_TYPE";
 const CLASS_MATCH = "CLASS_MATCH";
@@ -181,34 +182,56 @@ class EtSettingsTab extends ViewerElement {
     
     this._vm = new Vue({
       data: this._data,
-      template: `<div id='${ID_SETTINGS}'className='settingspane'>
-        <h1>Settings</h1>
-        <div className='settingsform'>
-          <div>Scrollback:</div>
-          <div><input type='number' number v-model="scrollbackLines" min='1' max='1000000' debounce="500" /> pixels</div>
-
-          <div id='${ID_COMMAND_OUTPUT_HANDLING}'>
-            <h2>Command Output Handling Rules</h2>
-            <table v-if="commandLineActions.length !== 0">
-              <thead>
-                <tr><td>Match</td><td>Command</td><td>Frame</td><td></td></tr>
-              </thead>
-              <tr v-for="commandLineAction in commandLineActions" track-by="id">
-                <td class='${CLASS_MATCH_TYPE}'><select v-model="matchType">
-                  <option value="name">Match command name</option>
-                  <option value="regexp">Match regular expression</option>
-                  </select></td>
-                <td class='${CLASS_MATCH}'><input type="text" v-model="commandLineAction.match" debounce="500" /></td>
-                <td class='${CLASS_FRAME}'><input type="checkbox" v-model="commandLineAction.frame" /> frame</td>
-                <td class='${CLASS_DELETE}'><button @click="deleteCommandLineAction(commandLineAction.id);">Delete</button></td>
-              </tr>
-            </table>
-            <button @click="addCommandLineAction">New Rule</button>
-            </div>
-          </div>
-
+      template: 
+`<div id='${ID_SETTINGS}'className='settingspane'>
+  <h2>Settings</h2>
+  <div className='settingsform'>
+  
+    <div class="form-inline">
+      <div class="form-group">
+        <label for="${ID_SCROLLBACK}">Scrollback:</label>
+        <div class="input-group">
+          <input id="${ID_SCROLLBACK}" type="number" class="form-control" number v-model="scrollbackLines" min='1'
+            max='1000000' debounce="500" />
+          <div class="input-group-addon">pixels</div>
         </div>
       </div>
+    </div>
+      
+    <div id='${ID_COMMAND_OUTPUT_HANDLING}'>
+      <h2>Command Output Handling Rules</h2>
+      <table class="table" v-if="commandLineActions.length !== 0">
+        <thead>
+          <tr><th>Match</th><th>Command</th><th>Frame</th><th></th></tr>
+        </thead>
+        <tr v-for="commandLineAction in commandLineActions" track-by="id">
+          <td class='${CLASS_MATCH_TYPE}'><select v-model="matchType" class="form-control">
+            <option value="name">Match command name</option>
+            <option value="regexp">Match regular expression</option>
+            </select></td>
+          <td class='${CLASS_MATCH}'><input type="text" class="form-control" v-model="commandLineAction.match" debounce="500" /></td>
+          <td class='${CLASS_FRAME}'>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" v-model="commandLineAction.frame" />
+                Show frame
+              </label>
+            </div>
+          </td>
+          <td class='${CLASS_DELETE}'><button @click="deleteCommandLineAction(commandLineAction.id);" class="btn btn-danger btn-sm">Delete</button></td>
+        </tr>
+        
+        <tr>
+          <td colspan="4">
+            <button @click="addCommandLineAction" class="btn btn-default">New Rule</button>
+          </td>
+        </tr>
+      </table>
+      </div>
+    </div>
+
+  </div>
+</div>
 `,
       methods: {
         addCommandLineAction: (): void => {
