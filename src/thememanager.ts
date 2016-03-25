@@ -18,6 +18,8 @@ type ThemeContents = ThemeTypes.ThemeContents;
 type CssFile = ThemeTypes.CssFile;
 const THEME_CONFIG = "theme.json";
 
+const DEBUG = false;
+
 interface ListenerFunc {
   (): void;
 }
@@ -172,9 +174,10 @@ class ThemeManagerImpl implements ThemeManager {
 
     const filePromises = ThemeTypes.cssFileEnumItems.map(
       (cssFile: CssFile): Promise<{ cssFile: CssFile; cssText: string;}> => {
-      const sassFileName = path.join(directory, theme.id, ThemeTypes.cssFileNameBase(cssFile) + '.scss');
+      const baseDir = path.join(directory, theme.id);
+      const sassFileName = ThemeTypes.cssFileNameBase(cssFile) + '.scss';
       
-      return this._loadSassFile(sassFileName)
+      return this._loadSassFile(baseDir, sassFileName)
         .then( (cssText: string): { cssFile: CssFile; cssText: string;} => {
           if (theme.debug) {
             this._log.debug(`Sass output for ${theme.name}, ${ThemeTypes.cssFileNameBase(cssFile)}`, cssText);
@@ -191,11 +194,56 @@ class ThemeManagerImpl implements ThemeManager {
     });
   }
 
-  private _loadSassFile(sassFileName: string): Promise<string> {
+  private _loadSassFile(baseDir: string, sassFileName: string): Promise<string> {
     return new Promise<string>( (resolve, cancel) => {
       try {
-        const scssText = fs.readFileSync(sassFileName, {encoding: 'utf-8'});
-        sass.compile(scssText, (result) => {
+        sass.importer(null);
+        
+        sass.importer( (request, done) => {
+          
+          const basePath = request.resolved.startsWith(path.sep) ? request.resolved.substr(1) : request.resolved;
+          const dirName = path.dirname(basePath);
+          const baseName = path.basename(basePath);
+          
+          if (DEBUG) {
+            this._log.debug("Importer:", request);
+            this._log.debug("dirName:", dirName);
+            this._log.debug("baseName:", baseName);
+          }
+          
+          const candidates = [basePath,
+            path.join(dirName, '_' + baseName + '.scss'),
+            path.join(dirName, '_' + baseName + '.sass'),
+            path.join(dirName, '_' + baseName + '.css'),
+            basePath + '.scss',
+            basePath + '.sass',
+            basePath + '.css'
+          ];
+          
+          for (let candidate of candidates) {
+            const candidateFileName = path.join(baseDir, candidate);
+            if (DEBUG) {
+              this._log.debug("Trying " + candidateFileName);
+            }
+            if (fs.existsSync(candidateFileName) && fs.statSync(candidateFileName).isFile()) {
+              if (DEBUG) {
+                this._log.debug("Importing SASS file " + candidateFileName);
+              }
+              try {
+                const content = fs.readFileSync(candidateFileName, {encoding: 'utf-8'});
+                done( { content: content } );
+              } catch(err) {
+                done( { error: "" + err } );
+              }
+              return;
+            }
+          }
+          
+          done( { error: "Unable to find " + basePath } );
+        });
+        
+        const scssText = fs.readFileSync(path.join(baseDir, sassFileName), {encoding: 'utf-8'});
+        sass.compile(scssText, { precision: 8, inputPath: sassFileName }, (result) => {
           if (result.status === 0) {
             const successResult = <sass.SuccessResult> result;
             resolve(successResult.text);
