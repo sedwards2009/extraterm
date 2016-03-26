@@ -54,11 +54,11 @@ export function startUp(): void {
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
     getThemeCssFiles(): ThemeTypes.CssFile[] {
-      return [ThemeTypes.CssFile.TOP_WINDOW];
+      return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.TOP_WINDOW];
     },
     setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
       (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent =
-        cssMap.get(ThemeTypes.CssFile.TOP_WINDOW);
+        cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + cssMap.get(ThemeTypes.CssFile.TOP_WINDOW);
     }
   };
   

@@ -16,6 +16,7 @@ export interface ThemeContents {
 }
 
 export enum CssFile {
+  GUI_CONTROLS,
   TOP_WINDOW,
   MAIN_UI,
   TERMINAL,
@@ -26,6 +27,7 @@ export enum CssFile {
 }
 
 export const cssFileEnumItems: CssFile[] = [
+  CssFile.GUI_CONTROLS,
   CssFile.TOP_WINDOW,
   CssFile.MAIN_UI,
   CssFile.TERMINAL,
@@ -36,6 +38,7 @@ export const cssFileEnumItems: CssFile[] = [
 ];
 
 const _CssFileNameMapping = {
+  [CssFile.GUI_CONTROLS]: "gui-controls",
   [CssFile.TOP_WINDOW]: "top-window",
   [CssFile.MAIN_UI]: "main-ui",
   [CssFile.TERMINAL]: "terminal",
