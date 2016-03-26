@@ -23,6 +23,7 @@ export enum CssFile {
   TERMINAL_VIEWER,
   TEXT_VIEWER,
   EMBEDDED_FRAME,
+  ABOUT_TAB,
   SETTINGS_TAB
 }
 
@@ -34,6 +35,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.TERMINAL_VIEWER,
   CssFile.TEXT_VIEWER,
   CssFile.EMBEDDED_FRAME,
+  CssFile.ABOUT_TAB,
   CssFile.SETTINGS_TAB
 ];
 
@@ -45,6 +47,7 @@ const _CssFileNameMapping = {
   [CssFile.TERMINAL_VIEWER]: "terminal-viewer",
   [CssFile.TEXT_VIEWER]: "text-viewer",
   [CssFile.EMBEDDED_FRAME]: "embedded-frame",
+  [CssFile.ABOUT_TAB]: "about-tab",
   [CssFile.SETTINGS_TAB]: "settings-tab"
 };
 

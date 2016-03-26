@@ -18,6 +18,7 @@ import EtTerminal = require('./terminal');
 import util = require('./gui/util');
 
 import EtEmbeddedViewer = require('./embeddedviewer');
+import AboutTab = require('./abouttab');
 import SettingsTab = require('./settings/settingstab2');
 import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTextViewer = require('./viewers/textviewer');
@@ -65,6 +66,7 @@ export function startUp(): void {
   // Map of CSS files to the classes which require them.
   themeables.push(topThemeable);
   themeables.push(EtEmbeddedViewer);
+  themeables.push(AboutTab);
   themeables.push(SettingsTab);
   themeables.push(EtTerminalViewer);
   themeables.push(EtTerminal);

@@ -183,7 +183,7 @@ class EtSettingsTab extends ViewerElement {
     this._vm = new Vue({
       data: this._data,
       template: 
-`<div id='${ID_SETTINGS}'className='settingspane'>
+`<div id='${ID_SETTINGS}' className='settingspane'>
   <h2>Settings</h2>
   <div className='settingsform'>
   

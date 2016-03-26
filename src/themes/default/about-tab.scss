@@ -1,0 +1,13 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* about-tab styles */
+
+@import "bootstrap/_variables";
+
+#ID_ABOUT {
+  height: 100%;
+  overflow: auto;
+  padding: $panel-body-padding;
+}

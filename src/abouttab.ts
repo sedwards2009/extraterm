@@ -8,10 +8,17 @@
 
 "use strict";
 
+import ThemeTypes = require('./theme');
 import ViewerElement  = require('./viewerelement');
 import domutils = require('./domutils');
 
+const ID_ABOUT = "ID_ABOUT";
+const ID_THEME = "ID_THEME";
+
 let registered = false;
+// Theme management
+const activeInstances: Set<EtAboutTab> = new Set();
+let themeCss = "";
 
 /**
  * The Extraterm About tab.
@@ -35,6 +42,19 @@ class EtAboutTab extends ViewerElement {
       window.document.registerElement(EtAboutTab.TAG_NAME, {prototype: EtAboutTab.prototype});
       registered = true;
     }
+  }
+  
+  // Static method from the ThemeTypes.Themeable interface.
+  static getThemeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.ABOUT_TAB];
+  }
+  
+  // Static method from the ThemeTypes.Themeable interface.
+  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
+    themeCss = cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + cssMap.get(ThemeTypes.CssFile.ABOUT_TAB);
+    activeInstances.forEach( (instance) => {
+      instance._setThemeCss(themeCss);
+    });
   }
   
   //-----------------------------------------------------------------------
@@ -94,18 +114,23 @@ class EtAboutTab extends ViewerElement {
    * Custom Element 'attached' life cycle hook.
    */
   attachedCallback(): void {
+    activeInstances.add(this);
+    
     const shadow = domutils.createShadowRoot(this);
-    const style = document.createElement('style');
-    style.innerHTML = `
-    `;
+    const themeStyle = document.createElement('style');
+    themeStyle.id = ID_THEME;
+    themeStyle.textContent = themeCss;
+    
     const divContainer = document.createElement('div');
-    divContainer.innerHTML = `<h1>Extraterm</h1>
-<p>Copyright &copy; 2015-2016 Simon Edwards &lt;simon@simonzone.com&gt;</p>
-<p>Published under the MIT license</p>
-<p>See https://github.com/sedwards2009/extraterm</p>
+    divContainer.innerHTML = `<div id='${ID_ABOUT}'>
+  <h1>Extraterm</h1>
+  <p>Copyright &copy; 2015-2016 Simon Edwards &lt;simon@simonzone.com&gt;</p>
+  <p>Published under the MIT license</p>
+  <p>See https://github.com/sedwards2009/extraterm</p>
+</div>
 `;
 
-    shadow.appendChild(style);
+    shadow.appendChild(themeStyle);
     shadow.appendChild(divContainer);    
   }
   
@@ -120,7 +145,16 @@ class EtAboutTab extends ViewerElement {
   // #       #    # #   ##   #    #   #   ###### 
   //
   //-----------------------------------------------------------------------
-  
+  private _setThemeCss(cssText: string): void {
+    if (domutils.getShadowRoot(this) === null) {
+      return;
+    }
+    
+    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = cssText;
+  }
 }
+
+// This line below acts an assertion on the constructor function.
+const themeable: ThemeTypes.Themeable = EtAboutTab;
 
 export = EtAboutTab;
