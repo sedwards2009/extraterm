@@ -37,17 +37,17 @@
   display: none;
 }
 
-#ID_TOP > #gap {
+#ID_TOP > #ID_GAP {
   visibility: collapse;
   flex: 0px 0 0;
 }
 
-#ID_TOP.CLASS_SPLIT > #gap {
+#ID_TOP.split > #ID_GAP {
   visibility: visible;
   flex: 2px 0 0;
 }
 
-#ID_TOP.CLASS_SPLIT > #ID_PANE_RIGHT {
+#ID_TOP.split > #ID_PANE_RIGHT {
   flex: auto 1 1;
   display: block;
 }

@@ -41,6 +41,7 @@ const ID_TOP = "ID_TOP";
 const ID_THEME = "ID_THEME";
 const ID_PANE_LEFT = "ID_PANE_LEFT";
 const ID_PANE_RIGHT = "ID_PANE_RIGHT";
+const ID_GAP = "ID_GAP";
 const ID_TAB_CONTAINER_LEFT = "ID_TAB_CONTAINER_LEFT";
 const ID_TAB_CONTAINER_RIGHT = "ID_TAB_CONTAINER_RIGHT";
 const ID_REST_DIV_PRIMARY = "ID_REST_DIV_PRIMARY";
@@ -883,7 +884,7 @@ class ExtratermMainWebUI extends HTMLElement {
             `<content></content></div>` +
           `</cb-tabwidget>` +
         `</div>` +
-        `<div id="gap"></div>` +
+        `<div id="${ID_GAP}"></div>` +
         `<div id="${ID_PANE_RIGHT}">` +
           `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
             `<div id="${ID_REST_DIV_SECONDARY}"><button class="topcoat-icon-button--large--quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
