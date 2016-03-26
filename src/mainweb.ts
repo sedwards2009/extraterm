@@ -44,7 +44,7 @@ let configuration: Config = null;
 let themes: im.Map<string, ThemeInfo>;
 let mainWebUi: MainWebUi = null;
 
-const themeables: Map<ThemeTypes.CssFile, ThemeTypes.Themeable> = new Map();
+const themeables: ThemeTypes.Themeable[] = [];
 
 /**
  * 
@@ -53,22 +53,23 @@ export function startUp(): void {
 
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
-    getCssFile(): ThemeTypes.CssFile {
-      return ThemeTypes.CssFile.TOP_WINDOW
+    getThemeCssFiles(): ThemeTypes.CssFile[] {
+      return [ThemeTypes.CssFile.TOP_WINDOW];
     },
-    setThemeCss(themeCss: string): void {
-      (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent = themeCss;
+    setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
+      (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent =
+        cssMap.get(ThemeTypes.CssFile.TOP_WINDOW);
     }
   };
   
   // Map of CSS files to the classes which require them.
-  themeables.set(topThemeable.getCssFile(), topThemeable);
-  themeables.set(EtEmbeddedViewer.getCssFile(), EtEmbeddedViewer);
-  themeables.set(SettingsTab.getCssFile(), SettingsTab);
-  themeables.set(EtTerminalViewer.getCssFile(), EtTerminalViewer);
-  themeables.set(EtTerminal.getCssFile(), EtTerminal);
-  themeables.set(MainWebUi.getCssFile(), MainWebUi);
-  themeables.set(EtTextViewer.getCssFile(), EtTextViewer);
+  themeables.push(topThemeable);
+  themeables.push(EtEmbeddedViewer);
+  themeables.push(SettingsTab);
+  themeables.push(EtTerminalViewer);
+  themeables.push(EtTerminal);
+  themeables.push(MainWebUi);
+  themeables.push(EtTextViewer);
   
   webipc.start();
   
@@ -220,9 +221,14 @@ function handleThemeListMessage(msg: Messages.Message): void {
 function handleThemeContentsMessage(msg: Messages.Message): void {
   const themeContentsMessage = <Messages.ThemeContentsMessage> msg;
 
+  const cssFileMap = new Map<ThemeTypes.CssFile, string>();
+  ThemeTypes.cssFileEnumItems.forEach( (cssFile) => {
+    cssFileMap.set(cssFile, themeContentsMessage.themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)]);
+  });
+
   // Distribute the CSS files to the classes which want them.
-  themeables.forEach( (value) => {
-   value.setThemeCss(themeContentsMessage.themeContents.cssFiles[ThemeTypes.cssFileNameBase(value.getCssFile())]);
+  themeables.forEach( (themeable) => {
+   themeable.setThemeCssMap(cssFileMap);
   });
 }
 

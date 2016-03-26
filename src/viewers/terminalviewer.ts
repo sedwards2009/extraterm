@@ -82,12 +82,12 @@ class EtTerminalViewer extends ViewerElement {
   }
   
   // Static methods from the ThemeTypes.Themeable interface.
-  static getCssFile(): ThemeTypes.CssFile {
-    return ThemeTypes.CssFile.TERMINAL_VIEWER;
+  static getThemeCssFiles(): ThemeTypes.CssFile[] {    
+    return [ThemeTypes.CssFile.TERMINAL_VIEWER];
   }
-
-  static setThemeCss(cssText: string): void {
-    themeCss = cssText;
+  
+  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
+    themeCss = cssMap.get(ThemeTypes.CssFile.TERMINAL_VIEWER);
     activeInstances.forEach( (instance) => {
       instance._setThemeCss(themeCss);
     });

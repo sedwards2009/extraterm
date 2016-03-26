@@ -122,12 +122,12 @@ class EtEmbeddedViewer extends ViewerElement {
   }
   
   // Static methods from the ThemeTypes.Themeable interface.
-  static getCssFile(): ThemeTypes.CssFile {
-    return ThemeTypes.CssFile.EMBEDDED_FRAME;
+  static getThemeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.EMBEDDED_FRAME];
   }
   
-  static setThemeCss(cssText: string): void {
-    themeCss = cssText;
+  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
+    themeCss = cssMap.get(ThemeTypes.CssFile.EMBEDDED_FRAME);
     activeInstances.forEach( (instance) => {
       instance._setThemeCss(themeCss);
     });

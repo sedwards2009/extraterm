@@ -84,13 +84,13 @@ class EtSettingsTab extends ViewerElement {
   }
   
   // Static method from the ThemeTypes.Themeable interface.
-  static getCssFile(): ThemeTypes.CssFile {
-    return ThemeTypes.CssFile.SETTINGS_TAB;
+  static getThemeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.SETTINGS_TAB];
   }
   
   // Static method from the ThemeTypes.Themeable interface.
-  static setThemeCss(cssText: string): void {
-    themeCss = cssText;
+  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
+    themeCss = cssMap.get(ThemeTypes.CssFile.SETTINGS_TAB);
     activeInstances.forEach( (instance) => {
       instance._setThemeCss(themeCss);
     });

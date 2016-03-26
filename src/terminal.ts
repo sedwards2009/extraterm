@@ -130,12 +130,12 @@ class EtTerminal extends HTMLElement {
   }
   
   // Static methods from the ThemeTypes.Themeable interface.
-  static getCssFile(): ThemeTypes.CssFile {
-    return ThemeTypes.CssFile.TERMINAL;
+  static getThemeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.TERMINAL];
   }
 
-  static setThemeCss(cssText: string): void {
-    themeCss = cssText;
+  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
+    themeCss = cssMap.get(ThemeTypes.CssFile.TERMINAL);
     activeInstances.forEach( (instance) => {
       instance._setThemeCss(themeCss);
     });

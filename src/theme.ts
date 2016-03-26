@@ -50,6 +50,6 @@ export function cssFileNameBase(cssFile: CssFile): string {
 }
 
 export interface Themeable {
-  getCssFile(): CssFile;
-  setThemeCss(cssText: string): void;
+  getThemeCssFiles(): CssFile[];
+  setThemeCssMap(cssMap: Map<CssFile, string>): void;
 }

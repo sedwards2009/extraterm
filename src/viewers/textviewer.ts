@@ -95,12 +95,12 @@ class EtTextViewer extends ViewerElement {
   }
   
   // Static methods from the ThemeTypes.Themeable interface.
-  static getCssFile(): ThemeTypes.CssFile {
-    return ThemeTypes.CssFile.TEXT_VIEWER;
+  static getThemeCssFiles(): ThemeTypes.CssFile[] {    
+    return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
 
-  static setThemeCss(cssText: string): void {
-    themeCss = cssText;
+  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
+    themeCss = cssMap.get(ThemeTypes.CssFile.TEXT_VIEWER);
     activeInstances.forEach( (instance) => {
       instance._setThemeCss(themeCss);
     });

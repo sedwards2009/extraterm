@@ -297,13 +297,13 @@ class ExtratermMainWebUI extends HTMLElement {
   static POSITION_RIGHT = TabPosition.RIGHT;
   
   // Static methods from the ThemeTypes.Themeable interface.
-  static getCssFile(): ThemeTypes.CssFile {
-    return ThemeTypes.CssFile.MAIN_UI;
+  static getThemeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.MAIN_UI];
   }
 
-  static setThemeCss(cssText: string): void {
+  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
     staticLog.debug("setThemeCss");
-    themeCss = cssText;
+    themeCss = cssMap.get(ThemeTypes.CssFile.MAIN_UI);
     activeInstances.forEach( (instance) => {
       instance._setThemeCss(themeCss);
     });
