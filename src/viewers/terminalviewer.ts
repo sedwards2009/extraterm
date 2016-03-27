@@ -472,11 +472,17 @@ class EtTerminalViewer extends ViewerElement {
   //
   //-----------------------------------------------------------------------
   
+  /**
+   * Custom Element 'created' life cycle hook.
+   */
   createdCallback(): void {
     this._initProperties();
     this._renderEventListener = this._handleRenderEvent.bind(this);
   }
   
+  /**
+   * Custom Element 'attached' life cycle hook.
+   */
   attachedCallback(): void {
     activeInstances.add(this);
     

@@ -72,6 +72,7 @@ export function startUp(): void {
   themeables.push(EtTerminal);
   themeables.push(MainWebUi);
   themeables.push(EtTextViewer);
+  themeables.push(CbMenuItem);
   
   webipc.start();
   

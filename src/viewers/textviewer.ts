@@ -435,7 +435,8 @@ class EtTextViewer extends ViewerElement {
     shadow.appendChild(clone);
     
     this._initFontLoading();
-    
+    this._setThemeCss(themeCss);
+
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
 
     this.style.height = "0px";
@@ -610,7 +611,7 @@ class EtTextViewer extends ViewerElement {
 
         ${getCssText()}
         </style>
-        <style id="${ID_THEME}">${themeCss}</style>
+        <style id="${ID_THEME}"></style>
         <div id="${ID_CONTAINER}" class="terminal_viewer ${CLASS_UNFOCUSED}"></div>`
 
       window.document.body.appendChild(template);

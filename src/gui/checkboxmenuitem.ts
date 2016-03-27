@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import menuitem = require('./menuitem');
+import CbMenuItem = require('./menuitem');
 import domutils = require('../domutils');
 import util = require('./util');
 
@@ -14,7 +14,7 @@ let registered = false;
 /**
  * A check box menu item for use inside a context menu.
  */
-class CbCheckBoxMenuItem extends menuitem {
+class CbCheckBoxMenuItem extends CbMenuItem {
   
   /**
    * The HTML tag name of this element.
@@ -54,6 +54,10 @@ class CbCheckBoxMenuItem extends menuitem {
    */
   createdCallback() {
     super.createdCallback();
+  }
+  
+  attachedCallback(): void {
+    super.attachedCallback();
     this._updateChecked(this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
   }
 
@@ -86,7 +90,7 @@ class CbCheckBoxMenuItem extends menuitem {
   private _updateChecked(checked: string): void {
     const shadow = domutils.getShadowRoot(this);
     const checkedhtml = "<i class='fa fa-fw fa-" + (util.htmlValueToBool(checked) ? "check-" : "") + "square-o'></i>";
-    (<HTMLDivElement>shadow.querySelector("#icon1")).innerHTML = checkedhtml; 
+    (<HTMLDivElement>shadow.querySelector("#" + CbMenuItem.ID_ICON1)).innerHTML = checkedhtml; 
   }
 }
 
