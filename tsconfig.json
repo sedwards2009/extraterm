@@ -72,7 +72,6 @@
         "./src/gui/checkboxmenuitem.ts",
         "./src/gui/contextmenu.ts",
         "./src/gui/dropdown.ts",
-        "./src/gui/globalcss.ts",
         "./src/gui/menuitem.ts",
         "./src/gui/scrollbar.ts",
         "./src/gui/stackedwidget.ts",

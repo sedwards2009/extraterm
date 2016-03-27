@@ -22,7 +22,6 @@ import Messages = require('./windowmessages');
 import path = require('path');
 import _ = require('lodash');
 import config = require('./config');
-import globalcss = require('./gui/globalcss');
 import he = require('he');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
@@ -276,7 +275,6 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     EtViewerTab.init();
     
     if (registered === false) {
-      globalcss.init();
       window.document.registerElement(ExtratermMainWebUI.TAG_NAME, {prototype: ExtratermMainWebUI.prototype});
       registered = true;
     }

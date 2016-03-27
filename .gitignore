@@ -35,7 +35,6 @@ src/ptydirect.js
 src/ptyfactory.js
 src/ptyproxy.js
 src/defaultsessionprofiles.js
-src/gui/globalcss.js
 src/embeddedviewer.js
 src/commandplaceholder.js
 src/settings/settingstab2.js

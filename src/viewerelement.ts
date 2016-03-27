@@ -5,7 +5,6 @@
  */
 
 import fs  = require('fs');
-import globalcss = require('./gui/globalcss');
 import util = require('./gui/util');
 import virtualscrollarea = require('./virtualscrollarea');
 import ViewerElementTypes = require('./viewerelementtypes');

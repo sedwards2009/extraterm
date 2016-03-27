@@ -7,7 +7,6 @@
 "use strict";
 
 import _ = require('lodash');
-import globalcss = require('../gui/globalcss');
 import ThemeableElementBase = require('../themeableelementbase');
 import ViewerElement  = require('../viewerelement');
 import domutils = require('../domutils');

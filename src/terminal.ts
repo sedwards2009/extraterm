@@ -33,7 +33,6 @@ const clipboard = electron.clipboard;
 
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
-import globalcss = require('./gui/globalcss');
 import virtualscrollarea = require('./virtualscrollarea');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;

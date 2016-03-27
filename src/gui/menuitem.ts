@@ -8,7 +8,6 @@ import domutils = require('../domutils');
 import util = require('./util');
 import resourceLoader = require('../resourceloader');
 import ThemeTypes = require('../theme');
-import globalcss = require('./globalcss');
 
 const ID = "CbMenuItemTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -41,7 +40,6 @@ class CbMenuItem extends ThemeableElementBase {
    */
   static init(): void {
     if (registered === false) {
-      globalcss.init();
       window.document.registerElement(CbMenuItem.TAG_NAME, {prototype: CbMenuItem.prototype});
       registered = true;
     }

@@ -9,7 +9,6 @@ import resourceLoader = require('./resourceloader');
 import contextmenu = require('./gui/contextmenu');
 import menuitem = require('./gui/menuitem');
 import checkboxmenuitem = require('./gui/checkboxmenuitem');
-import globalcss = require('./gui/globalcss');
 import domutils = require('./domutils');
 import util = require('./gui/util');
 import ViewerElement = require('./viewerelement');
@@ -100,7 +99,6 @@ class EtEmbeddedViewer extends ViewerElement {
    */
   static init(): void {
     if (registered === false) {
-      globalcss.init();
       window.document.registerElement(EtEmbeddedViewer.TAG_NAME, {prototype: EtEmbeddedViewer.prototype});
       registered = true;
     }

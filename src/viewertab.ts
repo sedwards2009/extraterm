@@ -19,7 +19,6 @@ import electron = require('electron');
 const clipboard = electron.clipboard;
 
 import webipc = require('./webipc');
-import globalcss = require('./gui/globalcss');
 import virtualscrollarea = require('./virtualscrollarea');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
@@ -83,7 +82,6 @@ class EtViewerTab extends ViewerElement {
   private _blinkingCursor: boolean;
   private _title: string;
 
-  // private _themeCssPath: string;
   private _mainStyleLoaded: boolean;
   private _themeStyleLoaded: boolean;
   private _resizePollHandle: domutils.LaterHandle;
@@ -100,7 +98,6 @@ class EtViewerTab extends ViewerElement {
     this._title = "New Tab";
     this.tag = null;
 
-    // this._themeCssPath = null;
     this._mainStyleLoaded = false;
     this._themeStyleLoaded = false;
     this._resizePollHandle = null;
@@ -123,13 +120,6 @@ class EtViewerTab extends ViewerElement {
   //   #        ####  #####  ###### #  ####  
   //
   //-----------------------------------------------------------------------
-  
-  // set themeCssPath(path: string) {
-  //   this._themeCssPath = path;
-  //   const themeCss = fs.readFileSync(path, {encoding: 'utf8'});
-  //   const themeTag = <HTMLStyleElement> domutils.getShadowId(this, ID_THEME_STYLE);
-  //   themeTag.innerHTML = globalcss.stripFontFaces(themeCss);
-  // }
   
   /**
    * Get this terminal's title.
