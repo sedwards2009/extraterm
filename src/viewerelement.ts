@@ -9,6 +9,7 @@ import globalcss = require('./gui/globalcss');
 import util = require('./gui/util');
 import virtualscrollarea = require('./virtualscrollarea');
 import ViewerElementTypes = require('./viewerelementtypes');
+import ThemeableElementBase = require('./themeableelementbase');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -16,7 +17,7 @@ type Mode = ViewerElementTypes.Mode;
 type VisualState = ViewerElementTypes.VisualState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
-abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
+abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable {
   
   static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
 
@@ -32,26 +33,6 @@ abstract class ViewerElement extends HTMLElement implements VirtualScrollable {
    */
   static isViewerElement(node: Node): node is ViewerElement {
     return node !== null && node !== undefined && node instanceof ViewerElement;
-  }
-
-  private _themeCssPath: string;
-  
-  set themeCssPath(path: string) {
-    this._themeCssPath = path;
-    this._themeCssSet();
-  }
-  
-  getThemeCss(): string {
-    if (this._themeCssPath !== undefined) {
-      const themeCss = fs.readFileSync(this._themeCssPath, {encoding: 'utf8'});
-      return globalcss.stripFontFaces(themeCss);
-    } else {
-      return null;
-    }
-  }
-  
-  _themeCssSet(): void {
-    
   }
   
   get title(): string {

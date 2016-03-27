@@ -18,7 +18,7 @@ src/gui/tabwidget.js
 src/gui/util.js
 src/main.js
 src/mainweb.js
-src/node_modules/
+node_modules/
 src/resourceloader.js
 src/terminal.js
 src/theme.js
@@ -60,3 +60,5 @@ src/utf8encoding.js
 src/typedocs/
 src/sourceDir.js
 src/generalevents.js
+src/themeableelementbase.js
+src/themeconsumer.js

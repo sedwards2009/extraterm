@@ -8,6 +8,7 @@ import fs = require('fs');
 import path = require('path');
 
 import ViewerElement = require("../viewerelement");
+import ThemeableElementBase = require('../themeableelementbase');
 import util = require("../gui/util");
 import domutils = require("../domutils");
 import CodeMirror = require('codemirror');
@@ -31,7 +32,6 @@ type VisualState = ViewerElementTypes.VisualState;
 const ID = "CbTerminalViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_MAIN_STYLE = "ID_MAIN_STYLE";
-const ID_THEME = "ID_THEME";
 const CLASS_HIDE_CURSOR = "hide_cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
@@ -48,10 +48,6 @@ let cssText: string = null;
 function getCssText(): string {
   return cssText;
 }
-
-// Theme management
-const activeInstances: Set<EtTerminalViewer> = new Set();
-let themeCss = "";
 
 class EtTerminalViewer extends ViewerElement {
 
@@ -79,24 +75,6 @@ class EtTerminalViewer extends ViewerElement {
    */
   static is(node: Node): node is EtTerminalViewer {
     return node !== null && node !== undefined && node instanceof EtTerminalViewer;
-  }
-  
-  // Static methods from the ThemeTypes.Themeable interface.
-  static getThemeCssFiles(): ThemeTypes.CssFile[] {    
-    return [ThemeTypes.CssFile.TERMINAL_VIEWER];
-  }
-  
-  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
-    themeCss = cssMap.get(ThemeTypes.CssFile.TERMINAL_VIEWER);
-    activeInstances.forEach( (instance) => {
-      instance._setThemeCss(themeCss);
-    });
-
-    // Delete the template. It contains old CSS.
-    const template = <HTMLTemplate>window.document.getElementById(ID);
-    if (template !== null) {
-      template.parentNode.removeChild(template);
-    }
   }
 
   //-----------------------------------------------------------------------
@@ -484,7 +462,7 @@ class EtTerminalViewer extends ViewerElement {
    * Custom Element 'attached' life cycle hook.
    */
   attachedCallback(): void {
-    activeInstances.add(this);
+    super.attachedCallback();
     
     if (domutils.getShadowRoot(this) !== null) {
       return;
@@ -495,7 +473,7 @@ class EtTerminalViewer extends ViewerElement {
     shadow.appendChild(clone);
     
     this._initFontLoading();
-    this._setThemeCss(themeCss);
+    this.updateThemeCss();
 
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
 
@@ -631,7 +609,11 @@ class EtTerminalViewer extends ViewerElement {
    * Custom Element 'detached' life cycle hook.
    */
   detachedCallback(): void {
-    activeInstances.delete(this);
+    super.detachedCallback();
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.TERMINAL_VIEWER];
   }
 
   //-----------------------------------------------------------------------
@@ -687,7 +669,7 @@ class EtTerminalViewer extends ViewerElement {
         
         ${getCssText()}
         </style>
-        <style id="${ID_THEME}"></style>
+        <style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id="${ID_CONTAINER}" class="terminal_viewer terminal ${CLASS_UNFOCUSED}"></div>`
 
       window.document.body.appendChild(template);
@@ -713,14 +695,6 @@ class EtTerminalViewer extends ViewerElement {
     }
     
     this._visualState = newVisualState;
-  }
-  
-  private _setThemeCss(cssText: string): void {
-    if (domutils.getShadowRoot(this) === null) {
-      return;
-    }
-    
-    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = cssText;
   }
 
   private _enterSelectionMode(): void {
@@ -1328,8 +1302,5 @@ function px(value) {
   }
   return parseInt(value.slice(0,-2),10);
 }  
-
-// This line below acts an assertion on the constructor function.
-const themeable: ThemeTypes.Themeable = EtTerminalViewer;
 
 export = EtTerminalViewer;

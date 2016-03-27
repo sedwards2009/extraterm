@@ -5,6 +5,7 @@
  */
 import domutils = require('./domutils');
 import util = require('./gui/util');
+import ThemeableElementBase = require('./themeableelementbase');
 import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
@@ -38,7 +39,6 @@ const VisualState = ViewerElementTypes.VisualState;
 const ID = "ExtratermMainWebUITemplate";
 
 const ID_TOP = "ID_TOP";
-const ID_THEME = "ID_THEME";
 const ID_PANE_LEFT = "ID_PANE_LEFT";
 const ID_PANE_RIGHT = "ID_PANE_RIGHT";
 const ID_GAP = "ID_GAP";
@@ -263,7 +263,7 @@ let themeCss = "";
  * Top level UI component for a normal terminal window
  *
  */
-class ExtratermMainWebUI extends HTMLElement {
+class ExtratermMainWebUI extends ThemeableElementBase {
   
   //-----------------------------------------------------------------------
   // Statics
@@ -295,19 +295,6 @@ class ExtratermMainWebUI extends HTMLElement {
   static POSITION_LEFT = TabPosition.LEFT;
   
   static POSITION_RIGHT = TabPosition.RIGHT;
-  
-  // Static methods from the ThemeTypes.Themeable interface.
-  static getThemeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.MAIN_UI];
-  }
-
-  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
-    staticLog.debug("setThemeCss");
-    themeCss = cssMap.get(ThemeTypes.CssFile.MAIN_UI);
-    activeInstances.forEach( (instance) => {
-      instance._setThemeCss(themeCss);
-    });
-  }
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
@@ -349,11 +336,12 @@ class ExtratermMainWebUI extends HTMLElement {
   }
   
   attachedCallback(): void {
-    activeInstances.add(this);
+    super.attachedCallback();
     
     const shadow = domutils.createShadowRoot(this);
     const clone = this._createClone();
     shadow.appendChild(clone);
+    this.updateThemeCss();
     
     // Update the window title when the selected tab changes and resize the terminal.
     const tabWidgetLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
@@ -377,6 +365,10 @@ class ExtratermMainWebUI extends HTMLElement {
     });
     
     this._setupIpc();
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.MAIN_UI];
   }
 
   destroy(): void {
@@ -873,10 +865,7 @@ class ExtratermMainWebUI extends HTMLElement {
   // }
   private _html(): string {
     return `
-    <style id="${ID_THEME}">
-    ${globalcss.fontAwesomeCSS()}
-    ${themeCss}
-    </style>
+    <style id="${ThemeableElementBase.ID_THEME}"></style>
     <div id="${ID_TOP}">` +
         `<div id="${ID_PANE_LEFT}">` +
           `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
@@ -891,14 +880,6 @@ class ExtratermMainWebUI extends HTMLElement {
           `</cb-tabwidget>` +
         `</div>` +
       `</div>`;
-  }
-  
-  private _setThemeCss(cssText: string): void {
-    if (domutils.getShadowRoot(this) === null) {
-      return;
-    }
-
-    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = globalcss.fontAwesomeCSS() + "\n" + cssText;
   }
 
   //-----------------------------------------------------------------------
@@ -966,8 +947,5 @@ class ExtratermMainWebUI extends HTMLElement {
     return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
   }
 }
-
-// This line below acts an assertion on the constructor function.
-const themeable: ThemeTypes.Themeable = ExtratermMainWebUI;
 
 export = ExtratermMainWebUI;

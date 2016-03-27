@@ -14,6 +14,7 @@ import domutils = require('./domutils');
 import util = require('./gui/util');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
+import ThemeableElementBase = require('./themeableelementbase');
 import virtualscrollarea = require('./virtualscrollarea');
 import ThemeTypes = require('./theme');
 import generalevents = require('./generalevents');
@@ -41,7 +42,6 @@ const ID_ICON = "ID_ICON";
 const ID_ICON_DIV = "ID_ICON_DIV";
 const ID_COMMAND_LINE = "ID_COMMAND_LINE";
 const ID_TAG_NAME = "ID_TAG_NAME";
-const ID_THEME = "ID_THEME";
 const ID_SCROLL_ICON = "ID_SCROLL_ICON";
 const ID_SCROLL_NAME = "ID_SCROLL_NAME";
 
@@ -57,14 +57,9 @@ const CLASS_NOT_SCROLLING = "not-scrolling";
 const CLASS_BOTTOM_VISIBLE = "bottom-visible";
 const CLASS_BOTTOM_NOT_VISIBLE = "bottom-not-visible";
 
-
 let registered = false;
 
 const DEBUG_SIZE = false;
-
-// Theme management
-const activeInstances: Set<EtEmbeddedViewer> = new Set();
-let themeCss = "";
 
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
@@ -119,18 +114,6 @@ class EtEmbeddedViewer extends ViewerElement {
    */
   static is(node: Node): node is EtEmbeddedViewer {
     return node !== null && node !== undefined && node instanceof EtEmbeddedViewer;
-  }
-  
-  // Static methods from the ThemeTypes.Themeable interface.
-  static getThemeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.EMBEDDED_FRAME];
-  }
-  
-  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
-    themeCss = cssMap.get(ThemeTypes.CssFile.EMBEDDED_FRAME);
-    activeInstances.forEach( (instance) => {
-      instance._setThemeCss(themeCss);
-    });
   }
   
   //-----------------------------------------------------------------------
@@ -409,7 +392,7 @@ class EtEmbeddedViewer extends ViewerElement {
    * Custom Element 'attached' life cycle hook.
    */
   attachedCallback(): void {
-    activeInstances.add(this);
+    super.attachedCallback();
     
     if (domutils.getShadowRoot(this) !== null) {
       return;
@@ -427,7 +410,7 @@ class EtEmbeddedViewer extends ViewerElement {
     this._setAttr(EtEmbeddedViewer.ATTR_TOOL_TIP, this.getAttribute(EtEmbeddedViewer.ATTR_TOOL_TIP));
     this._setAttr(EtEmbeddedViewer.ATTR_AWESOME_ICON, this.getAttribute(EtEmbeddedViewer.ATTR_AWESOME_ICON));
 
-    (<HTMLStyleElement> this._getById(ID_THEME)).textContent = themeCss;
+    this.updateThemeCss();
 
     this._getById(ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
     this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
@@ -517,7 +500,7 @@ class EtEmbeddedViewer extends ViewerElement {
    * Custom Element 'detached' life cycle hook.
    */
   detachedCallback(): void {
-    activeInstances.delete(this);
+    super.detachedCallback();
   }
   
   /**
@@ -525,6 +508,10 @@ class EtEmbeddedViewer extends ViewerElement {
    */
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string) {
     this._setAttr(attrName, newValue);
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.EMBEDDED_FRAME];
   }
 
   //-----------------------------------------------------------------------
@@ -552,7 +539,7 @@ class EtEmbeddedViewer extends ViewerElement {
         <style>
         ${globalcss.fontAwesomeCSS()}
         </style>
-        <style id=${ID_THEME}></style>
+        <style id=${ThemeableElementBase.ID_THEME}></style>
         <div id='${ID_CONTAINER}' style='display: none;' class='running'>
           <div id='${ID_HEADER}' tabindex='-1'>
             <div class='left_block'>
@@ -593,14 +580,6 @@ class EtEmbeddedViewer extends ViewerElement {
    */
   private _getById(id: string): Element {
     return domutils.getShadowRoot(this).querySelector('#'+id);
-  }
-  
-  private _setThemeCss(cssText: string): void {
-    if (domutils.getShadowRoot(this) === null) {
-      return;
-    }
-    
-    (<HTMLStyleElement> this._getById(ID_THEME)).textContent = cssText;
   }
 
   /**
@@ -720,8 +699,5 @@ class EtEmbeddedViewer extends ViewerElement {
     this.dispatchEvent(event);
   }
 }
-
-// This line below acts an assertion on the constructor function.
-const themeable: ThemeTypes.Themeable = EtEmbeddedViewer;
 
 export = EtEmbeddedViewer;

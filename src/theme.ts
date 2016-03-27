@@ -59,6 +59,5 @@ export function cssFileNameBase(cssFile: CssFile): string {
 }
 
 export interface Themeable {
-  getThemeCssFiles(): CssFile[];
   setThemeCssMap(cssMap: Map<CssFile, string>): void;
 }

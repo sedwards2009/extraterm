@@ -8,6 +8,7 @@
 
 import _ = require('lodash');
 import globalcss = require('../gui/globalcss');
+import ThemeableElementBase = require('../themeableelementbase');
 import ViewerElement  = require('../viewerelement');
 import domutils = require('../domutils');
 import Vue = require('vue');
@@ -24,7 +25,6 @@ let registered = false;
 const log = LogDecorator;
 
 const ID_SETTINGS = "ID_SETTINGS";
-const ID_THEME = "ID_THEME";
 const ID_SCROLLBACK = "ID_SCROLLBACK";
 const ID_COMMAND_OUTPUT_HANDLING = "ID_COMMAND_OUTPUT_HANDLING";
 const CLASS_MATCH_TYPE = "CLASS_MATCH_TYPE";
@@ -66,10 +66,6 @@ function stripIds(list: Identifiable[]): void {
   });  
 }
 
-// Theme management
-const activeInstances: Set<EtSettingsTab> = new Set();
-let themeCss = "";
-
 class EtSettingsTab extends ViewerElement {
   
   static TAG_NAME = "et-settings-tab";
@@ -81,19 +77,6 @@ class EtSettingsTab extends ViewerElement {
       window.document.registerElement(EtSettingsTab.TAG_NAME, {prototype: EtSettingsTab.prototype});
       registered = true;
     }
-  }
-  
-  // Static method from the ThemeTypes.Themeable interface.
-  static getThemeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB];
-  }
-  
-  // Static method from the ThemeTypes.Themeable interface.
-  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
-    themeCss = cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + cssMap.get(ThemeTypes.CssFile.SETTINGS_TAB);
-    activeInstances.forEach( (instance) => {
-      instance._setThemeCss(themeCss);
-    });
   }
   
   //-----------------------------------------------------------------------
@@ -159,26 +142,45 @@ class EtSettingsTab extends ViewerElement {
     }
   }
 
+  //-----------------------------------------------------------------------
+  //
+  //   #                                                         
+  //   #       # ###### ######  ####  #   #  ####  #      ###### 
+  //   #       # #      #      #    #  # #  #    # #      #      
+  //   #       # #####  #####  #        #   #      #      #####  
+  //   #       # #      #      #        #   #      #      #      
+  //   #       # #      #      #    #   #   #    # #      #      
+  //   ####### # #      ######  ####    #    ####  ###### ###### 
+  //
+  //-----------------------------------------------------------------------
+
+  /**
+   * Custom Element 'created' life cycle hook.
+   */
   createdCallback(): void {
     this._initProperties();
   }
   
+  /**
+   * Custom Element 'attached' life cycle hook.
+   */
   attachedCallback(): void {
-    activeInstances.add(this);
+    super.attachedCallback();
 
     const shadow = domutils.createShadowRoot(this);
     const style = document.createElement('style');
     style.innerHTML = globalcss.fontAwesomeCSS();
     
     const themeStyle = document.createElement('style');
-    themeStyle.id = ID_THEME;
-    themeStyle.textContent = themeCss;
+    themeStyle.id = ThemeableElementBase.ID_THEME;
 
     const divContainer = document.createElement('div');
 
     shadow.appendChild(style);
     shadow.appendChild(themeStyle);
     shadow.appendChild(divContainer);
+    
+    this.updateThemeCss();
     
     this._vm = new Vue({
       data: this._data,
@@ -250,8 +252,15 @@ class EtSettingsTab extends ViewerElement {
     this._vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false, sync: false } );
   }
   
+  /**
+   * Custom Element 'detached' life cycle hook.
+   */
   detachedCallback(): void {
-    activeInstances.delete(this);
+    super.detachedCallback();
+  }
+
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB];
   }
 
   //-----------------------------------------------------------------------
@@ -265,14 +274,6 @@ class EtSettingsTab extends ViewerElement {
   // #       #    # #   ##   #    #   #   ###### 
   //
   //-----------------------------------------------------------------------
-  private _setThemeCss(cssText: string): void {
-    if (domutils.getShadowRoot(this) === null) {
-      return;
-    }
-    
-    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = cssText;
-  }
-  
   private _dataChanged(newVal: ModelData): void {
     const cleanVersion = _.cloneDeep(newVal);
     stripIds(cleanVersion.commandLineActions);
@@ -280,8 +281,5 @@ class EtSettingsTab extends ViewerElement {
     this.dispatchEvent(event);
   }
 }
-
-// This line below acts an assertion on the constructor function.
-const themeable: ThemeTypes.Themeable = EtSettingsTab;
 
 export = EtSettingsTab;

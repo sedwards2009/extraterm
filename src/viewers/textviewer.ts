@@ -12,6 +12,7 @@ import utf8encoding = require('../utf8encoding');
 
 import sourceDir = require('../sourceDir');
 import ViewerElement = require("../viewerelement");
+import ThemeableElementBase = require('../themeableelementbase');
 import util = require("../gui/util");
 import domutils = require("../domutils");
 import ThemeTypes = require('../theme');
@@ -33,7 +34,6 @@ type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 const ID = "CbTextViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_MAIN_STYLE = "ID_MAIN_STYLE";
-const ID_THEME = "theme_style";
 const CLASS_HIDE_CURSOR = "hide_cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
@@ -64,10 +64,6 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-// Theme management
-const activeInstances: Set<EtTextViewer> = new Set();
-let themeCss = "";
-
 class EtTextViewer extends ViewerElement {
 
   static TAG_NAME = "et-text-viewer";
@@ -92,24 +88,6 @@ class EtTextViewer extends ViewerElement {
    */
   static is(node: Node): node is EtTextViewer {
     return node !== null && node !== undefined && node instanceof EtTextViewer;
-  }
-  
-  // Static methods from the ThemeTypes.Themeable interface.
-  static getThemeCssFiles(): ThemeTypes.CssFile[] {    
-    return [ThemeTypes.CssFile.TEXT_VIEWER];
-  }
-
-  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
-    themeCss = cssMap.get(ThemeTypes.CssFile.TEXT_VIEWER);
-    activeInstances.forEach( (instance) => {
-      instance._setThemeCss(themeCss);
-    });
-
-    // Delete the template. It contains old CSS.
-    const template = <HTMLTemplate>window.document.getElementById(ID);
-    if (template !== null) {
-      template.parentNode.removeChild(template);
-    }
   }
   
   //-----------------------------------------------------------------------
@@ -424,7 +402,7 @@ class EtTextViewer extends ViewerElement {
   }
   
   attachedCallback(): void {
-    activeInstances.add(this);
+    super.attachedCallback();
 
     if (domutils.getShadowRoot(this) !== null) {
       return;
@@ -435,7 +413,7 @@ class EtTextViewer extends ViewerElement {
     shadow.appendChild(clone);
     
     this._initFontLoading();
-    this._setThemeCss(themeCss);
+    this.updateThemeCss();
 
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
 
@@ -578,7 +556,11 @@ class EtTextViewer extends ViewerElement {
    * Custom Element 'detached' life cycle hook.
    */
   detachedCallback(): void {
-    activeInstances.delete(this);
+    super.detachedCallback();
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
 
   //-----------------------------------------------------------------------
@@ -611,7 +593,7 @@ class EtTextViewer extends ViewerElement {
 
         ${getCssText()}
         </style>
-        <style id="${ID_THEME}"></style>
+        <style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id="${ID_CONTAINER}" class="terminal_viewer ${CLASS_UNFOCUSED}"></div>`
 
       window.document.body.appendChild(template);
@@ -619,15 +601,6 @@ class EtTextViewer extends ViewerElement {
     
     return window.document.importNode(template.content, true);
   }
-  
-  private _setThemeCss(cssText: string): void {
-    if (domutils.getShadowRoot(this) === null) {
-      return;
-    }
-    
-    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = cssText;
-  }
-
   
   private _setVisualState(newVisualState: number): void {
     if (newVisualState === this._visualState) {
@@ -891,8 +864,5 @@ function px(value) {
   }
   return parseInt(value.slice(0,-2),10);
 }  
-
-// This line below acts an assertion on the constructor function.
-const themeable: ThemeTypes.Themeable = EtTextViewer;
 
 export = EtTextViewer;

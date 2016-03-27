@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import ThemeableElementBase = require('../themeableelementbase');
 import domutils = require('../domutils');
 import util = require('./util');
 import resourceLoader = require('../resourceloader');
@@ -11,21 +12,16 @@ import globalcss = require('./globalcss');
 
 const ID = "CbMenuItemTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
-const ID_THEME = "ID_THEME";
 const ID_ICON2 = "ID_ICON2";
 const ID_LABEL = "ID_LABEL";
 const CLASS_SELECTED = "selected";
 
 let registered = false;
 
-// Theme management
-const activeInstances: Set<CbMenuItem> = new Set();
-let themeCss = "";
-
 /**
  * A menu item suitable for use inside a CbContextMenu.
  */
-class CbMenuItem extends HTMLElement {
+class CbMenuItem extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -51,25 +47,6 @@ class CbMenuItem extends HTMLElement {
     }
   }
   
-  // Static methods from the ThemeTypes.Themeable interface.
-  static getThemeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_MENUITEM];
-  }
-
-  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
-    themeCss = globalcss.fontAwesomeCSS() + "\n" + cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" +
-      cssMap.get(ThemeTypes.CssFile.GUI_MENUITEM);
-    activeInstances.forEach( (instance) => {
-      instance._setThemeCss(themeCss);
-    });
-    
-    // Delete the template. It contains old CSS.
-    const template = <HTMLTemplate>window.document.getElementById(ID);
-    if (template !== null) {
-      template.parentNode.removeChild(template);
-    }
-  }
-  
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -92,15 +69,15 @@ class CbMenuItem extends HTMLElement {
    * Custom Element 'attached' life cycle hook.
    */
   attachedCallback(): void {
+    super.attachedCallback();
     if (domutils.getShadowRoot(this) !== null) {
       return;
     }
-    activeInstances.add(this);
     
     const shadow = domutils.createShadowRoot(this);
     const clone = this._createClone();
     shadow.appendChild(clone);
-    this._setThemeCss(themeCss);
+    this.updateThemeCss();
 
     let iconhtml = "";
     const icon = this.getAttribute('icon');
@@ -118,7 +95,7 @@ class CbMenuItem extends HTMLElement {
    * Custom Element 'detached' life cycle hook.
    */
   detachedCallback(): void {
-    activeInstances.delete(this);
+    super.detachedCallback();
   }
   
   /**
@@ -129,19 +106,15 @@ class CbMenuItem extends HTMLElement {
       this.updateKeyboardSelected(newValue);
     }
   }
-
-  private _setThemeCss(cssText: string): void {
-    if (domutils.getShadowRoot(this) === null) {
-      return;
-    }
-    
-    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = cssText;
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_MENUITEM];
   }
 
   //-----------------------------------------------------------------------
   private _html(): string {
     return `
-      <style id='${ID_THEME}'></style>
+      <style id='${ThemeableElementBase.ID_THEME}'></style>
       <div id='${ID_CONTAINER}'>
         <div id='${CbMenuItem.ID_ICON1}'><i class='fa fa-fw'></i></div>
         <div id='${ID_ICON2}'></div>

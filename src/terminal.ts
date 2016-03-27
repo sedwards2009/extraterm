@@ -10,6 +10,7 @@ import base64arraybuffer = require('base64-arraybuffer');
 
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
+import ThemeableElementBase = require('./themeableelementbase');
 import ThemeTypes = require('./theme');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import EtCommandPlaceHolder = require('./commandplaceholder');
@@ -62,7 +63,6 @@ const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_CONTAINER = "ID_CONTAINER";
-const ID_THEME = "ID_THEME";
 
 const CLASS_SELECTION_MODE = "selection-mode";
 
@@ -92,7 +92,7 @@ let themeCss = "";
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-class EtTerminal extends HTMLElement {
+class EtTerminal extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -129,24 +129,6 @@ class EtTerminal extends HTMLElement {
     }
   }
   
-  // Static methods from the ThemeTypes.Themeable interface.
-  static getThemeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.TERMINAL];
-  }
-
-  static setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
-    themeCss = cssMap.get(ThemeTypes.CssFile.TERMINAL);
-    activeInstances.forEach( (instance) => {
-      instance._setThemeCss(themeCss);
-    });
-    
-    // Delete the template. It contains old CSS.
-    const template = <HTMLTemplate>window.document.getElementById(ID);
-    if (template !== null) {
-      template.parentNode.removeChild(template);
-    }
-  }
-
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
   private _log: Logger;
@@ -406,6 +388,8 @@ class EtTerminal extends HTMLElement {
    * Custom Element 'attached' life cycle hook.
    */
   attachedCallback(): void {
+    super.attachedCallback();
+    
     if (this._elementAttached) {
       return;
     }
@@ -447,6 +431,8 @@ class EtTerminal extends HTMLElement {
     // FIXME there might be resizes for things other than changs in window size.
     this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
+    this.updateThemeCss();
+    
     scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
       if (ev.target === scrollerArea) {
         this._terminalViewer.focus();
@@ -482,9 +468,13 @@ class EtTerminal extends HTMLElement {
    * Custom Element 'detached' life cycle hook.
    */
   detachedCallback(): void {
-    activeInstances.delete(this);
+    super.detachedCallback();
   }
   
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.TERMINAL];
+  }
+
   //-----------------------------------------------------------------------
   //
   //   ######                                      
@@ -503,7 +493,7 @@ class EtTerminal extends HTMLElement {
       template = window.document.createElement('template');
       template.id = ID;
 
-      template.innerHTML = `<style id="${ID_THEME}">${themeCss}</style>
+      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}">${themeCss}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
           <cb-scrollbar id='${ID_SCROLLBAR}'></cb-scrollbar>
@@ -512,14 +502,6 @@ class EtTerminal extends HTMLElement {
     }
 
     return window.document.importNode(template.content, true);
-  }
-
-  private _setThemeCss(cssText: string): void {
-    if (domutils.getShadowRoot(this) === null) {
-      return;
-    }
-    
-    (<HTMLStyleElement> domutils.getShadowId(this, ID_THEME)).textContent = cssText;
   }
 
   /**
@@ -1529,8 +1511,5 @@ class EtTerminal extends HTMLElement {
     });
   }
 }
-
-// This line below acts an assertion on the constructor function.
-const themeable: ThemeTypes.Themeable = EtTerminal;
 
 export = EtTerminal;

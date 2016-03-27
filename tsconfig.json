@@ -54,6 +54,8 @@
         "./src/term.ts",
         "./src/terminal.ts",
         "./src/theme.ts",
+        "./src/themeableelementbase.ts",
+        "./src/themeconsumer.ts",
         "./src/thememanager.ts",
         "./src/thememanagerutility.ts",
         "./src/utf8.d.ts",

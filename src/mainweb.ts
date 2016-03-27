@@ -28,6 +28,7 @@ type Config = config.Config;
 type SessionProfile = config.SessionProfile;
 
 import ThemeTypes = require('./theme');
+import ThemeConsumer = require('./themeconsumer');
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
 sourceMapSupport.install();
@@ -45,8 +46,6 @@ let configuration: Config = null;
 let themes: im.Map<string, ThemeInfo>;
 let mainWebUi: MainWebUi = null;
 
-const themeables: ThemeTypes.Themeable[] = [];
-
 /**
  * 
  */
@@ -54,26 +53,13 @@ export function startUp(): void {
 
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
-    getThemeCssFiles(): ThemeTypes.CssFile[] {
-      return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.TOP_WINDOW];
-    },
     setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
       (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent =
         cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + cssMap.get(ThemeTypes.CssFile.TOP_WINDOW);
     }
   };
-  
-  // Map of CSS files to the classes which require them.
-  themeables.push(topThemeable);
-  themeables.push(EtEmbeddedViewer);
-  themeables.push(AboutTab);
-  themeables.push(SettingsTab);
-  themeables.push(EtTerminalViewer);
-  themeables.push(EtTerminal);
-  themeables.push(MainWebUi);
-  themeables.push(EtTextViewer);
-  themeables.push(CbMenuItem);
-  
+  ThemeConsumer.registerThemeable(topThemeable);
+
   webipc.start();
   
   const doc = window.document;
@@ -230,9 +216,7 @@ function handleThemeContentsMessage(msg: Messages.Message): void {
   });
 
   // Distribute the CSS files to the classes which want them.
-  themeables.forEach( (themeable) => {
-   themeable.setThemeCssMap(cssFileMap);
-  });
+  ThemeConsumer.updateCss(cssFileMap);
 }
 
 function handleDevToolsStatus(msg: Messages.Message): void {
