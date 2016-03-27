@@ -168,15 +168,11 @@ class EtSettingsTab extends ViewerElement {
     super.attachedCallback();
 
     const shadow = domutils.createShadowRoot(this);
-    const style = document.createElement('style');
-    style.innerHTML = globalcss.fontAwesomeCSS();
-    
     const themeStyle = document.createElement('style');
     themeStyle.id = ThemeableElementBase.ID_THEME;
 
     const divContainer = document.createElement('div');
 
-    shadow.appendChild(style);
     shadow.appendChild(themeStyle);
     shadow.appendChild(divContainer);
     

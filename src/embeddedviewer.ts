@@ -511,7 +511,7 @@ class EtEmbeddedViewer extends ViewerElement {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.EMBEDDED_FRAME];
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.EMBEDDED_FRAME];
   }
 
   //-----------------------------------------------------------------------
@@ -536,9 +536,6 @@ class EtEmbeddedViewer extends ViewerElement {
       template.id = ID;
       
       template.innerHTML = `
-        <style>
-        ${globalcss.fontAwesomeCSS()}
-        </style>
         <style id=${ThemeableElementBase.ID_THEME}></style>
         <div id='${ID_CONTAINER}' style='display: none;' class='running'>
           <div id='${ID_HEADER}' tabindex='-1'>

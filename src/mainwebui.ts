@@ -368,7 +368,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.MAIN_UI];
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.MAIN_UI];
   }
 
   destroy(): void {

@@ -1,0 +1,14 @@
+/*
+ * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ *
+ * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
+ */
+
+/* just the font-face tag for font-awesome */
+
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('themes/default/fontawesome-webfont.ttf?v=4.1.0') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
