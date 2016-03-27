@@ -52,7 +52,7 @@ class EtImageViewer extends ViewerElement {
   static init(): void {
     if (registered === false) {
       // Load the CSS resources now.
-      cssText = ""; //fs.readFileSync('themes/default/theme.css', { encoding: 'utf8' });
+      cssText = "";
       window.document.registerElement(EtImageViewer.TAG_NAME, {prototype: EtImageViewer.prototype});
       registered = true;
     }

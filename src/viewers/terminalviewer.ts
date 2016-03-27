@@ -59,8 +59,7 @@ class EtTerminalViewer extends ViewerElement {
     if (registered === false) {
       // Load the CSS resources now.
       cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
-        + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' })
-        + fs.readFileSync(path.join(sourceDir.path,'themes/default/theme.css'), { encoding: 'utf8' });
+        + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
 
       window.document.registerElement(EtTerminalViewer.TAG_NAME, {prototype: EtTerminalViewer.prototype});
       registered = true;

@@ -239,17 +239,7 @@ function handleClipboardRead(msg: Messages.Message): void {
  * 
  */
 function setupConfiguration(config: Config): void {
-  installTheme(config.theme);
   if (mainWebUi !== null) {
     mainWebUi.config = config;
   }
-}
-
-/**
- * 
- */
-function installTheme(themename: string): void {
-  var doc = window.document;
-  var themeLink = <HTMLLinkElement>doc.getElementById("theme_link");
-  // themeLink.href = CoreWeb.getThemesDirectory() + "/" + themename + "/theme.css";
 }
