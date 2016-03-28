@@ -1,0 +1,40 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* context menu */
+
+#ID_CONTAINER {
+    position: fixed;
+    background-color: #F4F4F4;
+    border-radius: 4px;
+    padding: 4px 0px 4px 0px;
+    box-shadow: 0px 0px 8px black;
+    z-index: 101;
+}
+
+#ID_CONTAINER:focus {
+    outline: none;
+}
+.container_closed {
+    display: none;
+}
+
+.container_open {
+
+}
+
+.cover_closed {
+    visibility: hidden;
+}
+
+.cover_open {
+    visibility: visible;
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    z-index: 100;
+/*    background-color: rgba(255, 0, 0, 0.5); */
+}

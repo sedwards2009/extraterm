@@ -25,7 +25,8 @@ export enum CssFile {
   EMBEDDED_FRAME,
   ABOUT_TAB,
   SETTINGS_TAB,
-  GUI_MENUITEM
+  GUI_MENUITEM,
+  GUI_CONTEXTMENU
 }
 
 export const cssFileEnumItems: CssFile[] = [
@@ -38,7 +39,8 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.EMBEDDED_FRAME,
   CssFile.ABOUT_TAB,
   CssFile.SETTINGS_TAB,
-  CssFile.GUI_MENUITEM
+  CssFile.GUI_MENUITEM,
+  CssFile.GUI_CONTEXTMENU
 ];
 
 const _CssFileNameMapping = {
@@ -51,7 +53,8 @@ const _CssFileNameMapping = {
   [CssFile.EMBEDDED_FRAME]: "embedded-frame",
   [CssFile.ABOUT_TAB]: "about-tab",
   [CssFile.SETTINGS_TAB]: "settings-tab",
-  [CssFile.GUI_MENUITEM]: "gui-menuitem"
+  [CssFile.GUI_MENUITEM]: "gui-menuitem",
+  [CssFile.GUI_CONTEXTMENU]: "gui-contextmenu"
 };
 
 export function cssFileNameBase(cssFile: CssFile): string {

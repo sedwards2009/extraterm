@@ -3,6 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+
+import ThemeableElementBase = require('../themeableelementbase');
+import ThemeTypes = require('../theme');
 import menuitem = require('./menuitem');
 import domutils = require('../domutils');
 import util = require('./util');
@@ -10,13 +13,15 @@ import util = require('./util');
 menuitem.init();
 
 const ID = "CbContextMenuTemplate";
+const ID_COVER = "ID_COVER";
+const ID_CONTAINER = "ID_CONTAINER";
 
 let registered = false;
 
 /**
  * A context menu.
  */
-class CbContextMenu extends HTMLElement {
+class CbContextMenu extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -45,44 +50,9 @@ class CbContextMenu extends HTMLElement {
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<style>
-        .container {
-            position: fixed;
-            background-color: #F4F4F4;
-            border-radius: 4px;
-            padding: 4px 0px 4px 0px;
-            box-shadow: 0px 0px 8px black;
-            z-index: 101;
-        }
-        
-        .container:focus {
-            outline: none;
-        }
-        .container_closed {
-            display: none;
-        }
-
-        .container_open {
-        
-        }
-
-        .cover_closed {
-            visibility: hidden;
-        }
-
-        .cover_open {
-            visibility: visible;
-            position: fixed;
-            left: 0px;
-            right: 0px;
-            top: 0px;
-            bottom: 0px;
-            z-index: 100;
-  /*    background-color: rgba(255, 0, 0, 0.5); */
-        }
-        </style>
-        <div id='cover' class='cover_closed'></div>
-        <div id='container' class='container container_closed' tabindex='0'><content></content></div>`;
+      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
+        <div id='${ID_COVER}' class='cover_closed'></div>
+        <div id='${ID_CONTAINER}' class='container_closed' tabindex='0'><content></content></div>`;
       window.document.body.appendChild(template);
     }
 
@@ -96,6 +66,10 @@ class CbContextMenu extends HTMLElement {
     return domutils.getShadowRoot(this).querySelector('#'+id);
   }
   
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_CONTEXTMENU];
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -115,8 +89,9 @@ class CbContextMenu extends HTMLElement {
     const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
+    this.updateThemeCss();
 
-    const cover = <HTMLDivElement>this.__getById('cover');
+    const cover = <HTMLDivElement>this.__getById(ID_COVER);
     cover.addEventListener('mousedown', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
@@ -131,7 +106,7 @@ class CbContextMenu extends HTMLElement {
       this.close();
     }, true);
     
-    const container = <HTMLDivElement>this.__getById('container');
+    const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
     container.addEventListener('mousedown', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
@@ -281,7 +256,7 @@ class CbContextMenu extends HTMLElement {
     // Nuke any style like 'display: none' which can be use to prevent flicker.
     this.setAttribute('style', '');
     
-    const container = <HTMLDivElement>this.__getById('container');
+    const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
     container.classList.remove('container_closed');
     container.classList.add('container_open');  
 
@@ -300,7 +275,7 @@ class CbContextMenu extends HTMLElement {
     container.style.left = "" + sx + "px";
     container.style.top = "" + sy + "px";
 
-    const cover = <HTMLDivElement>this.__getById('cover');
+    const cover = <HTMLDivElement>this.__getById(ID_COVER);
     cover.className = "cover_open";
 
     this.selectMenuItem(this.childNodes, null);
@@ -333,7 +308,7 @@ class CbContextMenu extends HTMLElement {
     
     const elrect = el.getBoundingClientRect();
 
-    const container = <HTMLDivElement>this.__getById('container');
+    const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
     container.classList.remove('container_closed');  
     container.classList.add('container_open');  
     const containerrect = container.getBoundingClientRect();
@@ -351,7 +326,7 @@ class CbContextMenu extends HTMLElement {
     container.style.left = "" + sx + "px";
     container.style.top = "" + sy + "px";
 
-    const cover = <HTMLDivElement>this.__getById('cover');
+    const cover = <HTMLDivElement>this.__getById(ID_COVER);
     cover.className = "cover_open";
 
     this.selectMenuItem(this.childNodes, null);
@@ -366,10 +341,10 @@ class CbContextMenu extends HTMLElement {
     let event = new CustomEvent('before-close', { detail: null });
     this.dispatchEvent(event);
 
-    const cover = <HTMLDivElement>this.__getById('cover');
+    const cover = <HTMLDivElement>this.__getById(ID_COVER);
     cover.className = "cover_closed";
 
-    const container = <HTMLDivElement>this.__getById('container');
+    const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
     container.classList.remove('container_open');  
     container.classList.add('container_closed');
 
