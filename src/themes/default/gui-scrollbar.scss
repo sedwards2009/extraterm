@@ -1,0 +1,21 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* gui-scrollbar styles */
+
+:host {
+    display: block;
+    color: transparent;
+}
+#ID_CONTAINER {
+  width: 17px;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+#ID_AREA {
+  width: 1px;
+  height: 1px;
+}

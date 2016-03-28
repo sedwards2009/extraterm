@@ -29,7 +29,8 @@ export enum CssFile {
   GUI_MENUITEM,
   GUI_CONTEXTMENU,
   GUI_TABWIDGET,
-  GUI_STACKEDWIDGET
+  GUI_STACKEDWIDGET,
+  GUI_SCROLLBAR
 }
 
 export const cssFileEnumItems: CssFile[] = [
@@ -46,7 +47,8 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.GUI_MENUITEM,
   CssFile.GUI_CONTEXTMENU,
   CssFile.GUI_TABWIDGET,
-  CssFile.GUI_STACKEDWIDGET
+  CssFile.GUI_STACKEDWIDGET,
+  CssFile.GUI_SCROLLBAR
 ];
 
 const _CssFileNameMapping = {
@@ -63,7 +65,8 @@ const _CssFileNameMapping = {
   [CssFile.GUI_MENUITEM]: "gui-menuitem",
   [CssFile.GUI_CONTEXTMENU]: "gui-contextmenu",
   [CssFile.GUI_TABWIDGET]: "gui-tabwidget",
-  [CssFile.GUI_STACKEDWIDGET]: "gui-stackedwidget"
+  [CssFile.GUI_STACKEDWIDGET]: "gui-stackedwidget",
+  [CssFile.GUI_SCROLLBAR]: "gui-scrollbar"
 };
 
 export function cssFileNameBase(cssFile: CssFile): string {

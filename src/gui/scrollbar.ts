@@ -3,19 +3,21 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import ThemeableElementBase = require('../themeableelementbase');
+import ThemeTypes = require('../theme');
 import domutils = require('../domutils');
 import util = require('./util');
 
 const ID = "CbScrollbarTemplate";
-const ID_AREA = "area";
-const ID_CONTAINER = "container";
+const ID_AREA = "ID_AREA";
+const ID_CONTAINER = "ID_CONTAINER";
 
 let registered = false;
 
 /**
  * A scrollbar.
  */
-class CbScrollbar extends HTMLElement {
+class CbScrollbar extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -47,28 +49,6 @@ class CbScrollbar extends HTMLElement {
   
   private _length: number;
   
-  private _css() {
-    return `
-      :host {
-          display: block;
-          color: transparent;
-      }
-      #container {
-        width: 17px;
-        height: 100%;
-        overflow-x: hidden;
-        overflow-y: scroll;
-      }
-      #area {
-        width: 1px;
-        height: 1px;
-      }`;
-  }
-
-  private _html(): string {
-    return `<div id='${ID_CONTAINER}'><div id='${ID_AREA}'></div></div>`;
-  }
-  
   private _initProperties(): void {
     this._position = 0;
     this._length = 1;
@@ -91,10 +71,23 @@ class CbScrollbar extends HTMLElement {
    */
   createdCallback(): void {
     this._initProperties(); // Initialise our properties. The constructor was not called.
-    
+  }
+  
+  /**
+   * Custom Element 'attached' life cycle hook.
+   */
+  attachedCallback(): void {
+    super.attachedCallback();
+
+    if (domutils.getShadowRoot(this) !== null) {
+      return;
+    }
+
     const shadow = domutils.createShadowRoot(this);
     const clone = this._createClone();
     shadow.appendChild(clone);
+    this.updateThemeCss();
+
     this._getById(ID_CONTAINER).addEventListener('scroll', (ev: Event) => {
       const container = this._getById(ID_CONTAINER);
       const top = container.scrollTop;
@@ -132,13 +125,18 @@ class CbScrollbar extends HTMLElement {
     }
   }
   
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_SCROLLBAR];
+  }
+  
   //-----------------------------------------------------------------------
   private _createClone(): Node {
     let template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = "<style>" + this._css() + "</style>\n" + this._html();
+      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
+<div id='${ID_CONTAINER}'><div id='${ID_AREA}'></div></div>`;
       window.document.body.appendChild(template);
     }
     return window.document.importNode(template.content, true);
@@ -164,7 +162,7 @@ class CbScrollbar extends HTMLElement {
     if (value === null || value === undefined) {
       return;
     }
-    var numberValue = parseInt(value, 10);
+    const numberValue = parseInt(value, 10);
     if (isNaN(numberValue)) {
       console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_LENGTH + "' was NaN.");
       return;
@@ -173,14 +171,14 @@ class CbScrollbar extends HTMLElement {
   }
   
   private _updateLengthNumber(value: number): void {
-    var areaElement = this._getById(ID_AREA);
+    const areaElement = this._getById(ID_AREA);
     areaElement.style.height = value + "px";
   }
   
   // --- Position attribute ---
   set position(value: number) {
-    var container = this._getById(ID_CONTAINER);
-    var cleanValue = Math.min(container.scrollHeight-container.clientHeight, Math.max(0, value));
+    const container = this._getById(ID_CONTAINER);
+    const cleanValue = Math.min(container.scrollHeight-container.clientHeight, Math.max(0, value));
     if (cleanValue !== this._position) {
       this._position = cleanValue;
       this._updatePositionNumber(this._position);
@@ -195,7 +193,7 @@ class CbScrollbar extends HTMLElement {
     if (value === null || value === undefined) {
       return;
     }
-    var numberValue = parseInt(value, 10);
+    const numberValue = parseInt(value, 10);
     if (isNaN(numberValue)) {
       console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_LENGTH + "' was NaN.");
       return;
@@ -204,7 +202,7 @@ class CbScrollbar extends HTMLElement {
   }
   
   private _updatePositionNumber(value: number): void {
-    var containerElement = this._getById(ID_CONTAINER);
+    const containerElement = this._getById(ID_CONTAINER);
     containerElement.scrollTop = value;
   }
   

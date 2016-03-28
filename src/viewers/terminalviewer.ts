@@ -32,7 +32,7 @@ type VisualState = ViewerElementTypes.VisualState;
 const ID = "CbTerminalViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_MAIN_STYLE = "ID_MAIN_STYLE";
-const CLASS_HIDE_CURSOR = "hide_cursor";
+const CLASS_HIDE_CURSOR = "hide-cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 
@@ -635,35 +635,12 @@ class EtTerminalViewer extends ViewerElement {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = `<style id="${ID_MAIN_STYLE}">
-        :host {
-          display: block;
-          width: 100%;
-          white-space: normal;
-        }
-        
-        #${ID_CONTAINER} {
-/*          height: 100%; */
-          width: 100%;
-          overflow: hidden;
-        }
         
         /* The idea is that this rule will be quickly applied. We can then monitor
            the computed style to see when the proper theme font is applied and
            NO_STYLE_HACK disappears from the reported computed style. */
         .terminal {
           font-family: sans-serif, ${NO_STYLE_HACK};
-        }
-        
-        #${ID_CONTAINER}:focus {
-          outline: 0px;
-        }
-        
-        #${ID_CONTAINER}.${CLASS_HIDE_CURSOR} .CodeMirror-cursors {
-            display: none !important;
-        }
-        
-        #${ID_CONTAINER}.${CLASS_HIDE_CURSOR} .CodeMirror-lines {
-          cursor: default;
         }
         
         ${getCssText()}

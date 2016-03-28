@@ -3,6 +3,30 @@
  */
 
 /* terminal-viewer styles */
+
+:host {
+  display: block;
+  width: 100%;
+  white-space: normal;
+}
+
+#ID_CONTAINER {
+  width: 100%;
+  overflow: hidden;
+}
+
+#ID_CONTAINER:focus {
+  outline: 0px;
+}
+
+#ID_CONTAINER.hide-cursor .CodeMirror-cursors {
+    display: none !important;
+}
+
+#ID_CONTAINER.hide-cursor .CodeMirror-lines {
+  cursor: default;
+}
+
 .terminal_container, .terminal, .CodeMirror {
     font-family: "DejaVu Sans Mono";
     font-size: 13px;
