@@ -3,11 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+
+import ThemeableElementBase = require('../themeableelementbase');
+import ThemeTypes = require('../theme');
 import domutils = require('../domutils');
 import util = require('./util');
 
 const ID = "CbStackedWidgetTemplate";
-const ID_CONTAINER = 'container';
+const ID_CONTAINER = 'ID_CONTAINER';
 const ATTR_INDEX = 'data-cb-index';
 
 let registered = false;
@@ -15,7 +18,7 @@ let registered = false;
 /**
  * A widget which displays one of its DIV contents at a time.
  */
-class CbStackedWidget extends HTMLElement {
+class CbStackedWidget extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -43,61 +46,6 @@ class CbStackedWidget extends HTMLElement {
   private _initProperties(): void {
     this._currentIndex = -1;
   }
-  
-  //-----------------------------------------------------------------------
-  
-  /**
-   * 
-   */
-  private createClone() {
-    let template = <HTMLTemplate>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `
-<style>
-.container {
-  overflow: hidden;
-  display: flex;
-  width: 100%;
-  height: 100%;
-}
-
-.container > DIV {
-  width: 100%;
-  height: 100%;
-  
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 100%;
-  
-  overflow: hidden;
-  display: inline-block;
-  vertical-align: top;
-}
-
-.visible {
-  order: 0;
-}
-
-.hidden {
-  order: 1;
-  visibility: hidden;
-}
-</style>
-<div id='${ID_CONTAINER}' class='container'></div>`;
-      window.document.body.appendChild(template);
-    }
-
-    return window.document.importNode(template.content, true);
-  }
-
-  /**
-   * 
-   */
-  private __getById(id:string): Element {
-    return domutils.getShadowRoot(this).querySelector('#'+id);
-  }
 
   //-----------------------------------------------------------------------
   //
@@ -116,15 +64,51 @@ class CbStackedWidget extends HTMLElement {
    */
   createdCallback() {
     this._initProperties();
-    
+  }
+  
+  attachedCallback(): void {
+    super.attachedCallback();
+
+    if (domutils.getShadowRoot(this) !== null) {
+      return;
+    }
+
     const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
+    this.updateThemeCss();
     this.createPageHolders();
     
     this.showIndex(0);
   }
   
+  /**
+   * 
+   */
+  private createClone() {
+    let template = <HTMLTemplate>window.document.getElementById(ID);
+    if (template === null) {
+      template = <HTMLTemplate>window.document.createElement('template');
+      template.id = ID;
+      template.innerHTML = `<style id='${ThemeableElementBase.ID_THEME}'></style>
+<div id='${ID_CONTAINER}'></div>`;
+      window.document.body.appendChild(template);
+    }
+
+    return window.document.importNode(template.content, true);
+  }
+
+  /**
+   * 
+   */
+  private __getById(id:string): Element {
+    return domutils.getShadowRoot(this).querySelector('#'+id);
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_STACKEDWIDGET];
+  }
+    
   //-----------------------------------------------------------------------
 
   // Override
@@ -163,7 +147,7 @@ class CbStackedWidget extends HTMLElement {
   }
   
   private showIndex(index: number): void {
-    const container = <HTMLDivElement>this.__getById('container');
+    const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
     for (let i=0; i<container.children.length; i++) {
       const kid = <HTMLElement>container.children.item(i);
       if (i === index) {
@@ -177,7 +161,7 @@ class CbStackedWidget extends HTMLElement {
   }
 
   private createPageHolders(): void {
-    const container = <HTMLDivElement>this.__getById('container');
+    const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
     
     for (let i=0; i<this.children.length; i++) {
       const kid = this.children.item(i);

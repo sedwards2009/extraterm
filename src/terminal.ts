@@ -81,10 +81,6 @@ const viewerClasses: ViewerElementTypes.SupportsMimeTypes[] = [];
 viewerClasses.push(EtImageViewer);
 viewerClasses.push(EtTextViewer);
 
-// Theme management
-const activeInstances: Set<EtTerminal> = new Set();
-let themeCss = "";
-
 /**
  * An Extraterm terminal.
  * 
@@ -393,7 +389,6 @@ class EtTerminal extends ThemeableElementBase {
       return;
     }
     this._elementAttached = true;
-    activeInstances.add(this);
 
     const shadow = domutils.createShadowRoot(this);
 
@@ -492,7 +487,7 @@ class EtTerminal extends ThemeableElementBase {
       template = window.document.createElement('template');
       template.id = ID;
 
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}">${themeCss}</style>
+      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
           <cb-scrollbar id='${ID_SCROLLBAR}'></cb-scrollbar>
