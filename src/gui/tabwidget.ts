@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import ThemeableElementBase = require('../themeableelementbase');
+import ThemeTypes = require('../theme');
 import CbStackedWidget = require('./stackedwidget');
 import CbTab = require('./tab');
 import util = require('./util');
@@ -17,12 +19,17 @@ const ATTR_SHOW_FRAME = "show-frame";
 
 let registered = false;
 
+const ID_TOP = "ID_TOP";
+const ID_TABBAR = "ID_TABBAR";
+const ID_CONTENTSTACK = "ID_CONTENTSTACK";
+const ID_CONTENTS = "ID_CONTENTS";
+
 /**
  * A widget to display a stack of tabs.
  *
  * See CbTab.
  */
-class CbTabWidget extends HTMLElement {
+class CbTabWidget extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -73,6 +80,7 @@ class CbTabWidget extends HTMLElement {
     const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
+    this.updateThemeCss();
     
     this.createTabHolders();
     this.currentIndex = 0;
@@ -98,6 +106,10 @@ class CbTabWidget extends HTMLElement {
     }
   }
   
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_TABWIDGET];
+  }
+  
   //-----------------------------------------------------------------------
 
   update(): void {
@@ -112,121 +124,10 @@ class CbTabWidget extends HTMLElement {
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `
-<style>
-#top {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-#tabbar {
-  display: flex;
-  flex: 0 auto;
-  flex-direction: row;
-  
-  cursor: default;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-}
-
-#tabbar > DIV.tab + DIV.tab,
-#tabbar > DIV.tab + DIV.catch_all {
-  margin-left: 2px;
-}
-
-DIV.tab {
-  text-align: center;
-  flex-basis: 15rem;
-  flex-grow: 1;
-  text-overflow: ellipsis;
-  white-space: pre;
-  overflow: hidden;
-}
-
-DIV.tab_active {
-  padding: 0 0.563rem;
-  font-size: 0.875rem;
-  line-height: 1.313rem;
-  letter-spacing: 0;
-  color: #454545;
-  text-shadow: 0 1px #fff;
-  vertical-align: top;
-    
-  background-color: #dfe2e2;
-
-  box-shadow: inset 0 1px #fff;
-  border: 1px solid #9daca9;
-  border-bottom: 0px;
-  border-radius: 4px;
-  border-bottom-left-radius: 0px;
-  border-bottom-right-radius: 0px;
-}
-
-DIV.tab_inactive {
-  padding: 0 0.563rem;
-  font-size: 0.875rem;
-  line-height: 1.313rem;
-  letter-spacing: 0;
-  color: #454545;
-  text-shadow: 0 1px #fff;
-  vertical-align: top;
-  background-color: #e5e9e8;
-  box-shadow: inset 0 1px #fff;
-  border: 1px solid #9daca9;
-  border-bottom: 0px;
-  border-radius: 4px;
-  border-bottom-left-radius: 0px;
-  border-bottom-right-radius: 0px;
-
-  background-color: #D2D6D6;
-
-  margin-top: 3px;
-}
-
-DIV.tab_inactive:hover {
-  background-color: #eff1f1;
-}
-
-
-#contents {
-  flex: 1 1 auto;
-  position: relative;
-}
-#contentsstack {
-  /* This and the pos:relative above are needed to get this at the correct height. */
-  /* See: https://stackoverflow.com/questions/15381172/css-flexbox-child-height-100 */
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  
-  display: block;
-}
-
-DIV.wrapper {
-  height: 100%;
-  width: 100%;  
-}
-
-DIV.catch_all {
-  flex-grow: 1;
-}
-
-DIV.show_frame > #tabbar > DIV.tab_inactive {
-  border-bottom: 1px solid #9daca9;
-}
-
-DIV.show_frame > #contentsstack {
-  border: 1px solid #9daca9;
-}
-DIV.show_frame > #tabbar {
-  position: relative;
-  top: 1px;
-}
-
-</style>
-<div id='top' class='top'>
-<div id='tabbar' class='tabbar'></div>
-<div id='contents'><cb-stackedwidget id='contentsstack' class='contentsstack'></cb-stackedwidget></div>
+      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
+<div id='${ID_TOP}'>
+<div id='${ID_TABBAR}'></div>
+<div id='${ID_CONTENTS}'><cb-stackedwidget id='${ID_CONTENTSTACK}'></cb-stackedwidget></div>
 </div>
 `;
       window.document.body.appendChild(template);
@@ -243,15 +144,15 @@ DIV.show_frame > #tabbar {
   }
   
   private _getTop(): HTMLDivElement {
-    return <HTMLDivElement> this.__getById('top');
+    return <HTMLDivElement> this.__getById(ID_TOP);
   }
   
   private _getTabbar(): HTMLDivElement {
-    return <HTMLDivElement> this.__getById('tabbar');
+    return <HTMLDivElement> this.__getById(ID_TABBAR);
   }
   
   private _getContentsStack(): CbStackedWidget {
-    return <CbStackedWidget> this.__getById('contentsstack');
+    return <CbStackedWidget> this.__getById(ID_CONTENTSTACK);
   }
 
   private createTabHolders(): void {
