@@ -202,7 +202,7 @@ class EtSettingsTab extends ViewerElement {
           <tr><th>Match</th><th>Command</th><th>Frame</th><th></th></tr>
         </thead>
         <tr v-for="commandLineAction in commandLineActions" track-by="id">
-          <td class='${CLASS_MATCH_TYPE}'><select v-model="matchType" class="form-control">
+          <td class='${CLASS_MATCH_TYPE}'><select v-model="commandLineAction.matchType" class="form-control">
             <option value="name">Match command name</option>
             <option value="regexp">Match regular expression</option>
             </select></td>
