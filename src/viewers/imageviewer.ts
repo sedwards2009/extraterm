@@ -6,11 +6,11 @@
 import _  = require('lodash');
 import fs = require('fs');
 import ViewerElement = require("../viewerelement");
+import ThemeableElementBase = require('../themeableelementbase');
+import ThemeTypes = require('../theme');
 import util = require("../gui/util");
 import domutils = require("../domutils");
-
 import ViewerElementTypes = require('../viewerelementtypes');
-
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
@@ -22,11 +22,9 @@ type VisualState = ViewerElementTypes.VisualState;
 const VisualState = ViewerElementTypes.VisualState;
 
 const ID = "CbImageViewerTemplate";
-const ID_CONTAINER = "container";
-const ID_CURSOR = "cursor";
-const ID_IMAGE = "image";
-const ID_MAIN_STYLE = "main_style";
-const ID_THEME_STYLE = "theme_style";
+const ID_CONTAINER = "ID_CONTAINER";
+const ID_CURSOR = "ID_CURSOR";
+const ID_IMAGE = "ID_IMAGE";
 const CLASS_FORCE_FOCUSED = "force-focused";
 const CLASS_FORCE_UNFOCUSED = "force-unfocused";
 const CLASS_FOCUS_AUTO = "focus-auto";
@@ -39,20 +37,12 @@ const log = LogDecorator;
 let registered = false;
 let instanceIdCounter = 0;
 
-let cssText: string = null;
-
-function getCssText(): string {
-  return cssText;
-}
-
 class EtImageViewer extends ViewerElement {
 
   static TAG_NAME = "et-image-viewer";
   
   static init(): void {
     if (registered === false) {
-      // Load the CSS resources now.
-      cssText = "";
       window.document.registerElement(EtImageViewer.TAG_NAME, {prototype: EtImageViewer.prototype});
       registered = true;
     }
@@ -305,6 +295,8 @@ class EtImageViewer extends ViewerElement {
   }
   
   attachedCallback(): void {
+    super.attachedCallback();
+    
     if (domutils.getShadowRoot(this) !== null) {
       return;
     }
@@ -312,8 +304,7 @@ class EtImageViewer extends ViewerElement {
     const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
-    
-    this._initFontLoading();
+    this.updateThemeCss();
     
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     this.style.height = "0px";
@@ -335,6 +326,10 @@ class EtImageViewer extends ViewerElement {
     this._adjustHeight(this._height);
   }
   
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.IMAGE_VIEWER];
+  }
+  
   //-----------------------------------------------------------------------
   //
   // ######                                      
@@ -354,48 +349,8 @@ class EtImageViewer extends ViewerElement {
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<style id="${ID_MAIN_STYLE}">
-        :host {
-          display: block;
-          width: 100%;
-          white-space: normal;
-        }
-        
-        #${ID_CONTAINER} {
-/*          height: 100%; */
-          width: 100%;
-          overflow: hidden;
-          position: relative;
-        }
-
-        #${ID_CONTAINER}:focus {
-          outline: 0px;
-        }
-       
-        @-webkit-keyframes IMAGE_BLINK_ANIMATION {
-          0%   { opacity: 0; }
-          49%  { opacity: 0; }
-          50%  { opacity: 1; }
-          100% { opacity: 1; }
-        }
-
-        #${ID_CURSOR} {
-          position: absolute;
-          width: 2px;
-          border-left: 2px solid rgba(255,255,255,0);
-          top: 0px;
-          mix-blend-mode: difference;  
-        }
-
-        #${ID_CONTAINER}.${CLASS_FOCUS_AUTO}:focus > #${ID_CURSOR} {
-          border-left-color: white;
-          -webkit-animation: IMAGE_BLINK_ANIMATION 1060ms infinite;
-          animation: IMAGE_BLINK_ANIMATION 1060ms infinite;
-        }
-        
-        ${getCssText()}
+      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}">
         </style>
-        <style id="${ID_THEME_STYLE}"></style>
         <div id="${ID_CONTAINER}" class="${CLASS_FORCE_UNFOCUSED}" tabindex="-1"><div id="${ID_CURSOR}"></div><img id="${ID_IMAGE}" /></div>`
 
       window.document.body.appendChild(template);

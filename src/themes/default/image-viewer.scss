@@ -1,0 +1,43 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* image-viewer */
+
+:host {
+  display: block;
+  width: 100%;
+  white-space: normal;
+}
+
+#ID_CONTAINER {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+#ID_CONTAINER:focus {
+  outline: 0px;
+}
+
+/* Note that Blink currently makes these definitions global and now limited to the Shadow DOM! */
+@-webkit-keyframes IMAGE_BLINK_ANIMATION {
+  0%   { opacity: 0; }
+  49%  { opacity: 0; }
+  50%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+#ID_CURSOR {
+  position: absolute;
+  width: 2px;
+  border-left: 2px solid rgba(255,255,255,0);
+  top: 0px;
+  mix-blend-mode: difference;  
+}
+
+#ID_CONTAINER.focus-auto:focus > #ID_CURSOR {
+  border-left-color: white;
+  -webkit-animation: IMAGE_BLINK_ANIMATION 1060ms infinite;
+  animation: IMAGE_BLINK_ANIMATION 1060ms infinite;
+}
