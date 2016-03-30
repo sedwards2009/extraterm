@@ -21,7 +21,6 @@ const dialog = electron.dialog;
 
 import path = require('path');
 import fs = require('fs');
-import im = require('immutable');
 import _ = require('lodash');
 import commander = require('commander');
 import ptyconnector = require('./ptyconnector');
@@ -76,11 +75,12 @@ function main(): void {
 
   // The extra fields which appear on the command object are declared in extra_commander.d.ts.
   commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []').parse(process.argv);
+
+  // Themes
+  const themesdir = path.join(__dirname, THEMES_DIRECTORY);
+  themeManager = ThemeManager.makeThemeManager([themesdir]);
   
-  config = readConfigurationFile();
-  config.systemConfig = systemConfiguration(config.sessionProfiles);
-  config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
-  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, commander);
+  initConfig();
   
   if (config.expandedProfiles.length === 0) {
     failed = true;
@@ -101,17 +101,6 @@ function main(): void {
   }
   
   _log.stopRecording();
-
-  // Themes
-  const themesdir = path.join(__dirname, THEMES_DIRECTORY);
-  themeManager = ThemeManager.makeThemeManager(themesdir);
-  if (themeManager.getTheme(config.theme) === null) {
-    config.theme = "default";
-  }
-
-  themeManager.registerChangeListener(config.theme, () => {
-    sendThemeContents(mainWindow.webContents, config.theme);
-  });
 
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
@@ -205,6 +194,18 @@ function formatJSData(data: string, maxLen: number = 60): string {
 function logJSData(data: string): void {
   log(formatJSData(data));
 }
+
+//-------------------------------------------------------------------------
+//
+//  #####                              
+// #     # #    # ###### #      #      
+// #       #    # #      #      #      
+//  #####  ###### #####  #      #      
+//       # #    # #      #      #      
+// #     # #    # #      #      #      
+//  #####  #    # ###### ###### ###### 
+//
+//-------------------------------------------------------------------------
 
 /**
  * Expands a list of partial profiles.
@@ -447,6 +448,37 @@ function systemConfiguration(profiles: SessionProfile[]): SystemConfig {
   return { homeDir: homeDir };
 }
 
+//-------------------------------------------------------------------------
+//
+//   #####                                
+//  #     #  ####  #    # ###### #  ####  
+//  #       #    # ##   # #      # #    # 
+//  #       #    # # #  # #####  # #      
+//  #       #    # #  # # #      # #  ### 
+//  #     # #    # #   ## #      # #    # 
+//   #####   ####  #    # #      #  ####  
+//
+//-------------------------------------------------------------------------
+
+function initConfig(): void {
+  config = readConfigurationFile();
+  config.systemConfig = systemConfiguration(config.sessionProfiles);
+  config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
+  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, commander);
+  
+  if (themeManager.getTheme(config.themeTerminal) === null) {
+    config.themeTerminal = ThemeTypes.DEFAULT_THEME;
+  }
+  if (themeManager.getTheme(config.themeSyntax) === null) {
+    config.themeSyntax = ThemeTypes.DEFAULT_THEME;
+  }
+  if (themeManager.getTheme(config.themeUI) === null) {
+    config.themeUI = ThemeTypes.DEFAULT_THEME;
+  }
+
+  registerThemeChangeListener(config);
+}
+
 /**
  * Read the configuration.
  * 
@@ -474,6 +506,10 @@ function setConfigDefaults(config: Config): void {
   config.blinkingCursor = config.blinkingCursor === undefined ? false : config.blinkingCursor;
   config.scrollbackLines = config.scrollbackLines === undefined ? 500000 : config.scrollbackLines;
 
+  config.themeTerminal = config.themeTerminal == null ? "default" : config.themeTerminal;
+  config.themeSyntax = config.themeSyntax == null ? "default" : config.themeSyntax;
+  config.themeUI = config.themeUI == null ? "default" : config.themeUI;
+
   if (config.commandLineActions === undefined) {
     const defaultCLA: CommandLineAction[] = [
       { match: 'cd', matchType: 'name', frame: false },      
@@ -494,12 +530,24 @@ function setConfigDefaults(config: Config): void {
  * 
  * @param {Object} config The configuration to write.
  */
-function writeConfiguration(config: Config): void {
+function writeConfigurationFile(config: Config): void {
   const cleanConfig = <Config> _.cloneDeep(config);
   cleanConfig.systemConfig = null;
   
   const filename = path.join(app.getPath('appData'), MAIN_CONFIG);
-  fs.writeFileSync(filename, JSON.stringify(config));
+  fs.writeFileSync(filename, JSON.stringify(config, null, "  "));
+}
+
+function setConfig(newConfig: Config): void {
+  // Write it to disk.
+  writeConfigurationFile(newConfig);
+
+  if (config !== null) {
+    unregisterThemeChangeListener(config);
+  }
+
+  registerThemeChangeListener(newConfig);
+  config = newConfig;
 }
 
 function getConfig(): Config {
@@ -508,8 +556,7 @@ function getConfig(): Config {
 
 function getFullConfig(): Config {
   const fullConfig = _.cloneDeep(config);
-  const themesDir = path.join(__dirname, THEMES_DIRECTORY);
-  fullConfig.themePath = path.join(themesDir, config.theme);
+  
   _log.debug("Full config: ",fullConfig);
   return fullConfig;
 }
@@ -518,8 +565,28 @@ function getThemes(): ThemeInfo[] {
   return themeManager.getAllThemes();
 }
 
+function registerThemeChangeListener(config: Config): void {
+  const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeUI, ThemeTypes.DEFAULT_THEME];
+  themeManager.registerChangeListener(themeIdList, (theme: ThemeInfo): void  => {
+    sendThemeContents(mainWindow.webContents, themeIdList);
+  });
+}
+
+function unregisterThemeChangeListener(config: Config): void {
+  const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeUI, ThemeTypes.DEFAULT_THEME];
+  themeManager.unregisterChangeListener(themeIdList);
+}
+
 //-------------------------------------------------------------------------
-// IPC
+// 
+//  ### ######   #####  
+//   #  #     # #     # 
+//   #  #     # #       
+//   #  ######  #       
+//   #  #       #       
+//   #  #       #     # 
+//  ### #        #####  
+//
 //-------------------------------------------------------------------------
 
 function startIpc(): void {
@@ -548,7 +615,7 @@ function handleIpc(event: GitHubElectron.IPCMainEvent, arg: any): void {
       break;
       
     case Messages.MessageType.THEME_CONTENTS_REQUEST:
-      sendThemeContents(event.sender, (<Messages.ThemeContentsRequestMessage> msg).id);
+      sendThemeContents(event.sender, (<Messages.ThemeContentsRequestMessage> msg).themeIdList);
       break;
       
     case Messages.MessageType.PTY_CREATE:
@@ -620,12 +687,15 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   
   // Copy in the updated fields.
   const incomingConfig = msg.config;
-  config.blinkingCursor = incomingConfig.blinkingCursor;
-  config.scrollbackLines = incomingConfig.scrollbackLines;
-  config.commandLineActions = incomingConfig.commandLineActions;
+  const newConfig = _.cloneDeep(config);
+  newConfig.blinkingCursor = incomingConfig.blinkingCursor;
+  newConfig.scrollbackLines = incomingConfig.scrollbackLines;
+  newConfig.commandLineActions = incomingConfig.commandLineActions;
+  newConfig.themeSyntax = incomingConfig.themeSyntax;
+  newConfig.themeTerminal = incomingConfig.themeTerminal;
+  newConfig.themeUI = incomingConfig.themeUI;
 
-  // Write it to disk.
-  writeConfiguration(config);
+  setConfig(newConfig);
 
   const newConfigMsg: Messages.ConfigMessage = {
     type: Messages.MessageType.CONFIG,
@@ -645,16 +715,26 @@ function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages
   return reply;
 }
 
-function sendThemeContents(webContents: GitHubElectron.WebContents, themeId: string): void {
-  themeManager.getThemeContents(themeId).then( (themeContents) => {
+function sendThemeContents(webContents: GitHubElectron.WebContents, themeIdList: string[]): void {
+  themeManager.renderThemes(themeIdList).then( (themeContents) => {
     const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
-      id: themeId,
+      themeIdList: themeIdList,
       themeContents: themeContents
     };
     webContents.send(Messages.CHANNEL_NAME, msg);
   });
 }
 
+//-------------------------------------------------------------------------
+//
+//  ######  ####### #     # 
+//  #     #    #     #   #  
+//  #     #    #      # #   
+//  ######     #       #    
+//  #          #       #    
+//  #          #       #    
+//  #          #       #    
+//
 //-------------------------------------------------------------------------
 
 let ptyCounter = 0;
@@ -740,14 +820,6 @@ function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
   ptyMap.delete(msg.id);
 }
 
-function handleDevToolsRequest(sender: GitHubElectron.WebContents, msg: Messages.DevToolsRequestMessage): void {
-  if (msg.open) {
-    sender.openDevTools();
-  } else {
-    sender.closeDevTools();
-  }
-}
-
 function cleanUpPtyWindow(window: GitHubElectron.BrowserWindow): void {
   mapKeys(ptyMap).forEach( k => {
     const tup = ptyMap.get(k);
@@ -757,6 +829,17 @@ function cleanUpPtyWindow(window: GitHubElectron.BrowserWindow): void {
     }
   });
 }
+
+//-------------------------------------------------------------------------
+
+function handleDevToolsRequest(sender: GitHubElectron.WebContents, msg: Messages.DevToolsRequestMessage): void {
+  if (msg.open) {
+    sender.openDevTools();
+  } else {
+    sender.closeDevTools();
+  }
+}
+
 
 function sendDevToolStatus(window: GitHubElectron.BrowserWindow, open: boolean): void {
   const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };

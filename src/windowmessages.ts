@@ -119,7 +119,7 @@ export interface ThemeListMessage extends Message {
  * See `ThemeContentsRequestMessage`.
  */
 export interface ThemeContentsRequestMessage extends Message {
-  id: string;
+  themeIdList: string[];
 }
 
 /**
@@ -128,7 +128,7 @@ export interface ThemeContentsRequestMessage extends Message {
  * This is a response to `ThemeContentsRequestMessage`.
  */
 export interface ThemeContentsMessage extends Message {
-  id: string;
+  themeIdList: string[];
   themeContents: ThemeContents;
 }
 

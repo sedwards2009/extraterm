@@ -4,11 +4,15 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+type ThemeType = 'terminal' | 'syntax' | 'gui';
+
 export interface ThemeInfo {
   name: string;
   id: string;
+  type: ThemeType[];  // Defines the type of theme this is.
   path: string;
   debug: boolean;
+  comment: string;
 }
 
 export interface ThemeContents {
@@ -76,3 +80,5 @@ export function cssFileNameBase(cssFile: CssFile): string {
 export interface Themeable {
   setThemeCssMap(cssMap: Map<CssFile, string>): void;
 }
+
+export const DEFAULT_THEME = "default";

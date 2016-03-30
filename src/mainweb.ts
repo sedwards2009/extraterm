@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import sourceMapSupport = require('source-map-support');
-import im = require('immutable');
 import _ = require('lodash');
 import Logger = require('./logger');
 import Messages = require('./windowmessages');
@@ -43,7 +42,7 @@ const _log = new Logger("mainweb");
 let terminalIdCounter = 0;
 let configuration: Config = null;
 
-let themes: im.Map<string, ThemeInfo>;
+let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 
 /**
@@ -77,7 +76,10 @@ export function startUp(): void {
   
   const themePromise = webipc.requestConfig().then( (msg: Messages.ConfigMessage) => {
     handleConfigMessage(msg);
-    return webipc.requestThemeContents(msg.config.theme).then(handleThemeContentsMessage);
+    
+    const themeIdList = [msg.config.themeTerminal, msg.config.themeSyntax, msg.config.themeUI,
+      ThemeTypes.DEFAULT_THEME];
+    return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
   });
   
   // Get the config and theme info in and then continue starting up.
@@ -113,9 +115,8 @@ export function startUp(): void {
       </cb-dropdown>
     </div>`;
 
-    if (config !== null) {
-      mainWebUi.config = configuration;
-    }
+    mainWebUi.config = configuration;
+    mainWebUi.themes = themes;
     
     doc.body.appendChild(mainWebUi);
     
@@ -201,10 +202,7 @@ function handleConfigMessage(msg: Messages.Message): void {
 
 function handleThemeListMessage(msg: Messages.Message): void {
   const themesMessage = <Messages.ThemeListMessage> msg;
-  themes = im.Map<string, ThemeInfo>();
-  themesMessage.themeInfo.forEach( (item: ThemeInfo) => {
-    themes = themes.set(item.name, item);
-  });
+  themes = themesMessage.themeInfo
 }
 
 function handleThemeContentsMessage(msg: Messages.Message): void {
@@ -238,8 +236,13 @@ function handleClipboardRead(msg: Messages.Message): void {
 /**
  * 
  */
-function setupConfiguration(config: Config): void {
+function setupConfiguration(newConfig: Config): void {
   if (mainWebUi !== null) {
-    mainWebUi.config = config;
+    mainWebUi.config = newConfig;
   }
+  configuration = newConfig;
+  
+  const themeIdList = [newConfig.themeTerminal, newConfig.themeSyntax, newConfig.themeUI,
+    ThemeTypes.DEFAULT_THEME];
+  webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
 }

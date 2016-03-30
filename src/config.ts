@@ -9,8 +9,9 @@ import _ = require('lodash');
 
 export interface Config {
   blinkingCursor?: boolean;
-  theme?: string;
-  themePath?: string;
+  themeTerminal?: string;
+  themeSyntax?: string;
+  themeUI?: string;
 
   commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;

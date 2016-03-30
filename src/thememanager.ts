@@ -18,10 +18,11 @@ type ThemeContents = ThemeTypes.ThemeContents;
 type CssFile = ThemeTypes.CssFile;
 const THEME_CONFIG = "theme.json";
 
-const DEBUG = false;
+const DEBUG_SASS = true;
+const DEBUG_SCAN = true;
 
 interface ListenerFunc {
-  (): void;
+  (theme: ThemeInfo): void;
 }
 
 export interface ThemeManager {
@@ -29,11 +30,17 @@ export interface ThemeManager {
   
   getAllThemes(): ThemeInfo[];
   
-  getThemeContents(themeName: string): Promise<ThemeContents>;
+  /**
+   * Render a stack of themes.
+   * 
+   * @param  themeIds the stack or themes to render
+   * @return the rendered CSS texts
+   */
+  renderThemes(themeIdList: string[]): Promise<ThemeContents>;
   
-  registerChangeListener(themeId: string, listener: ListenerFunc): void;
+  registerChangeListener(themeIdOrList: string | string[], listener: ListenerFunc): void;
   
-  unregisterChangeListener(themeId: string, listener: ListenerFunc): void;
+  unregisterChangeListener(themeIdOrList: string | string[]): void;
 }
 
 interface ListenerItem {
@@ -46,7 +53,7 @@ class ThemeManagerImpl implements ThemeManager {
   
   private _log = new Logger("ThemeManagerImpl");
   
-  private _directory: string = null;
+  private _directories: string[] = null;
   
   private _themes: Map<string, ThemeInfo> = null;
   
@@ -54,9 +61,18 @@ class ThemeManagerImpl implements ThemeManager {
   
   private _listeners: ListenerItem[] = [];
   
-  constructor(directory: string) {
-    this._directory = directory;
-    this._themes = this._scanThemeDirectory(directory);
+  constructor(directories: string[]) {
+    this._directories = directories;
+    
+    const allThemes = new Map<string, ThemeInfo>();
+    this._directories.forEach( (directory) => {
+      const themes = this._scanThemeDirectory(directory);
+      themes.forEach( (value, key) => {
+        allThemes.set(key, value);
+      });
+    });
+    
+    this._themes = allThemes;
   }
   
   getTheme(themeId: string): ThemeInfo {
@@ -71,58 +87,87 @@ class ThemeManagerImpl implements ThemeManager {
     return result;
   }
 
-  getThemeContents(themeId: string): Promise<ThemeContents> {
-    const themeInfo = this.getTheme(themeId);
-    if (themeInfo === null) {
-      this._log.warn("The requested theme name '" + themeId + "' is unknown.");
-      return null;
-    }
-    
-    if ( ! this._themeContents.has(themeId)) {
-      return this._loadThemeContents(this._directory, themeInfo)
+  renderThemes(themeIdList: string[]): Promise<ThemeContents> {
+    const themeInfoList = this._themeIdListToThemeInfoList(themeIdList);
+
+    // Look for this combo in the cache.
+    if ( ! this._themeStackCacheHas(themeIdList)) {
+      return this._renderThemeStackContents(themeInfoList)
         .then( (contents) => {
-          this._themeContents.set(themeId, contents);
+          this._themeContents.set(themeStackCacheKey(themeIdList), contents);
           return contents;
         });
     } else {
       return new Promise<ThemeContents>( (resolve, cancel) => {
-        resolve(this._themeContents.get(themeId));
+        resolve(this._themeContents.get(themeStackCacheKey(themeIdList)));
       });
     }
   }
   
-  registerChangeListener(themeId: string, listenerFunc: () => void): void {
-    const themeInfo = this.getTheme(themeId);
-    const themePath = themeInfo.path;
-    
-    const watcher = fs.watch(themePath, { persistent: false },
-      (event, filename) => {
-        
-        if (this._themeContents.has(themeId)) {
-          const oldThemeContents = this._themeContents.get(themeId)
-          
-          this._loadThemeContents(this._directory, themeInfo)
-            .then( (newThemeContents) => {
-              if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
-                this._themeContents.set(themeId, newThemeContents);
-                listenerFunc();
-              } else {
-                this._log.info("" + filename + " changed, but the theme contents did not.");
-              }
-            });
-        } else {
-          this.getThemeContents(themeInfo.id).then( (result) => {
-            listenerFunc();
-          });
-        }
-      });
-    
-    const listenerItem: ListenerItem = { themeId, listenerFunc, watcher };
-    this._listeners.push(listenerItem);
+  private _themeStackCacheHas(themeIds: string[]): boolean {
+    const key = themeStackCacheKey(themeIds);
+    return this._themeContents.has(key);
   }
   
-  unregisterChangeListener(themeId: string, listener: () => void): void {
-// FIXME
+  private _themeIdListToThemeInfoList(themeIdList: string[]): ThemeInfo[] {
+    // Convert the list of theme IDs to a list of ThemeInfos
+    const themeInfoList = themeIdList.map( (themeId) => {
+      const themeInfo = this.getTheme(themeId);
+      if (themeInfo === null) {
+        this._log.warn("The requested theme name '" + themeId + "' is unknown.");
+        return null;
+      } else {
+        return themeInfo;
+      }
+    }).filter( (themeInfo) => themeInfo !== null );
+    return themeInfoList;
+  }
+  
+  registerChangeListener(themeIdOrList: string | string[], listenerFunc: (theme: ThemeInfo) => void): void {
+    const themeIdList = _.uniq(Array.isArray(themeIdOrList) ? themeIdOrList : [themeIdOrList]);
+    const themeInfoList = this._themeIdListToThemeInfoList(themeIdList);
+    
+    themeIdList.forEach( (themeId) => {
+      const themeInfo = this.getTheme(themeId);
+      const themePath = themeInfo.path;
+      
+      const watcher = fs.watch(themePath, { persistent: false },
+        (event, filename) => {
+          
+          if (this._themeStackCacheHas(themeIdList)) {
+            const oldThemeContents = this._themeContents.get(themeId);
+            
+            this._renderThemeStackContents(themeInfoList)
+              .then( (newThemeContents) => {
+                if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
+                  this._themeContents.set(themeId, newThemeContents);
+                  listenerFunc(themeInfo);
+                } else {
+                  this._log.info("" + filename + " changed, but the theme contents did not.");
+                }
+              });
+          } else {
+            this.renderThemes(themeIdList).then( (result) => {
+              listenerFunc(themeInfo);
+            });
+          }
+        });
+      
+      const listenerItem: ListenerItem = { themeId, listenerFunc, watcher };
+      this._listeners.push(listenerItem);
+    });
+  }
+  
+  unregisterChangeListener(themeIdOrList: string | string[]): void {
+    const themeIdList = Array.isArray(themeIdOrList) ? themeIdOrList : [themeIdOrList];
+    themeIdList.forEach( (themeId) => {    
+      const matches = this._listeners.filter( (tup) => tup.themeId === themeId );
+      if (matches.length !== 0) {
+        matches[0].watcher.close();
+      }
+
+      this._listeners = this._listeners.filter( (tup) => tup.themeId !== themeId );
+    });
   }
   
   /**
@@ -136,7 +181,7 @@ class ThemeManagerImpl implements ThemeManager {
     if (fs.existsSync(themesDir)) {
       const contents = fs.readdirSync(themesDir);
       contents.forEach( (item) => {
-        var infoPath = path.join(themesDir, item, THEME_CONFIG);
+        const infoPath = path.join(themesDir, item, THEME_CONFIG);
         try {
           const infoStr = fs.readFileSync(infoPath, {encoding: "utf8"});
           const themeInfo = <ThemeInfo>JSON.parse(infoStr);
@@ -146,6 +191,10 @@ class ThemeManagerImpl implements ThemeManager {
           
           if (this._validateThemeInfo(themeInfo)) {
             themeMap.set(item, themeInfo);
+          }
+          
+          if (DEBUG_SCAN) {
+            this._log.debug(themeInfo);
           }
 
         } catch(err) {
@@ -157,6 +206,7 @@ class ThemeManagerImpl implements ThemeManager {
   }
 
   private _fillThemeInfoDefaults(themeInfo: ThemeInfo): void {
+    themeInfo.comment = themeInfo.comment === undefined ? "" : themeInfo.comment;
     themeInfo.debug = themeInfo.debug === undefined ? false : themeInfo.debug;
   }
 
@@ -167,21 +217,22 @@ class ThemeManagerImpl implements ThemeManager {
     return _.isString(themeinfo.name) && themeinfo.name !== "";
   }
   
-  private _loadThemeContents(directory: string, theme: ThemeInfo): Promise<ThemeContents> {
+  private _renderThemeStackContents(themeStack: ThemeInfo[]): Promise<ThemeContents> {
     const themeContents: ThemeContents = {
       cssFiles: {}
     };
 
     const filePromises = ThemeTypes.cssFileEnumItems.map(
       (cssFile: CssFile): Promise<{ cssFile: CssFile; cssText: string;}> => {
-      const baseDir = path.join(directory, theme.id);
+      
+      const dirStack = _.uniq(themeStack.map( (themeInfo) => themeInfo.path ));
       const sassFileName = ThemeTypes.cssFileNameBase(cssFile) + '.scss';
       
-      return this._loadSassFile(baseDir, sassFileName)
+      return this._loadSassFile(dirStack, sassFileName)
         .then( (cssText: string): { cssFile: CssFile; cssText: string;} => {
-          if (theme.debug) {
-            this._log.debug(`Sass output for ${theme.name}, ${ThemeTypes.cssFileNameBase(cssFile)}`, cssText);
-          }
+          // if (theme.debug) {
+          //   this._log.debug(`Sass output for ${theme.name}, ${ThemeTypes.cssFileNameBase(cssFile)}`, cssText);
+          // }
           return { cssText, cssFile };
         });
     });
@@ -194,7 +245,7 @@ class ThemeManagerImpl implements ThemeManager {
     });
   }
 
-  private _loadSassFile(baseDir: string, sassFileName: string): Promise<string> {
+  private _loadSassFile(dirStack: string[], sassFileName: string): Promise<string> {
     return new Promise<string>( (resolve, cancel) => {
       try {
         sass.importer(null);
@@ -205,7 +256,7 @@ class ThemeManagerImpl implements ThemeManager {
           const dirName = path.dirname(basePath);
           const baseName = path.basename(basePath);
           
-          if (DEBUG) {
+          if (DEBUG_SASS) {
             this._log.debug("Importer:", request);
             this._log.debug("dirName:", dirName);
             this._log.debug("baseName:", baseName);
@@ -221,12 +272,12 @@ class ThemeManagerImpl implements ThemeManager {
           ];
           
           for (let candidate of candidates) {
-            const candidateFileName = path.join(baseDir, candidate);
-            if (DEBUG) {
+            const candidateFileName = this._findFile(dirStack, candidate);
+            if (DEBUG_SASS) {
               this._log.debug("Trying " + candidateFileName);
             }
-            if (fs.existsSync(candidateFileName) && fs.statSync(candidateFileName).isFile()) {
-              if (DEBUG) {
+            if (candidateFileName) {
+              if (DEBUG_SASS) {
                 this._log.debug("Importing SASS file " + candidateFileName);
               }
               try {
@@ -241,8 +292,15 @@ class ThemeManagerImpl implements ThemeManager {
           
           done( { error: "Unable to find " + basePath } );
         });
+                
+        // Find the starting point file.
+        const sassFilePath = this._findFile(dirStack, sassFileName);
+        if (sassFilePath === null) {
+          throw new Error(`Unable to find file '${sassFileName}' in directories ${dirStack}`);
+        }
         
-        const scssText = fs.readFileSync(path.join(baseDir, sassFileName), {encoding: 'utf-8'});
+        // Start the compile
+        const scssText = fs.readFileSync(sassFilePath, {encoding: 'utf-8'});
         sass.compile(scssText, { precision: 8, inputPath: sassFileName }, (result) => {
           if (result.status === 0) {
             const successResult = <sass.SuccessResult> result;
@@ -260,8 +318,28 @@ class ThemeManagerImpl implements ThemeManager {
       }
     });
   }
+  
+  private _findFile(dirStack: string[], fileName: string): string {
+    if (DEBUG_SASS) {
+      this._log.debug(`findFile(): Looking for ${fileName} in dirs ${dirStack}`);
+    }    
+    for (const dir of dirStack) {
+      const candidateFileName = path.join(dir, fileName);
+      if (DEBUG_SASS) {
+        this._log.debug(`findFile(): Checking ${candidateFileName}`);
+      }    
+      if (fs.existsSync(candidateFileName) && fs.statSync(candidateFileName).isFile()) {
+        return candidateFileName;
+      }
+    }
+    return null;
+  }  
 }
 
-export function makeThemeManager(directory: string): ThemeManager {
-  return new ThemeManagerImpl(directory);
+function themeStackCacheKey(themeIds: string[]): string {
+  return themeIds.reduce( (accu, id) => accu + "/" + id, "");
+}
+
+export function makeThemeManager(directories: string[]): ThemeManager {
+  return new ThemeManagerImpl(directories);
 }

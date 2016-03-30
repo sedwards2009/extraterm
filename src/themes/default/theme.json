@@ -1,4 +1,6 @@
 {
 "name": "Default Extraterm theme",
+"comment": "The default Extraterm theme.",
+"type": ["terminal", "syntax", "gui"],
 "debug": false
 }

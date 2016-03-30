@@ -41,6 +41,9 @@ interface IdentifiableCommandLineAction extends CommandLineAction, Identifiable 
 interface ModelData {
   scrollbackLines: number;
   commandLineActions: IdentifiableCommandLineAction[];
+  
+  themeTerminal: string;
+  themeTerminalOptions: ThemeTypes.ThemeInfo[];
 }
 
 let idCounter = 0;
@@ -86,12 +89,20 @@ class EtSettingsTab extends ViewerElement {
   
   private _data: ModelData;
   
+  private _config: Config;
+  
+  private _themes: ThemeTypes.ThemeInfo[];
+  
   private _initProperties(): void {
     this._log = new Logger(EtSettingsTab.TAG_NAME);
     this._vm = null;
+    this._themes = [];
+    this._config = null;
     this._data = {
       scrollbackLines: 10000,
-      commandLineActions: []
+      commandLineActions: [],
+      themeTerminal: "",
+      themeTerminalOptions: []
     };
   }
   
@@ -125,6 +136,8 @@ class EtSettingsTab extends ViewerElement {
   }
   
   set config(config: Config) {
+    this._config = config;
+
     // We take care to only update things which have actually changed.
     
     if (this._data.scrollbackLines !== config.scrollbackLines) {
@@ -134,11 +147,23 @@ class EtSettingsTab extends ViewerElement {
     const cleanCommandLineAction = _.cloneDeep(this._data.commandLineActions);
     stripIds(cleanCommandLineAction);
     
+    this._data.themeTerminal = config.themeTerminal;
+    
     if ( ! _.isEqual(cleanCommandLineAction, config.commandLineActions)) {
       const updateCLA = _.cloneDeep(config.commandLineActions);
       setIds(updateCLA);
       this._data.commandLineActions = updateCLA;
     }
+  }
+
+  set themes(themes: ThemeTypes.ThemeInfo[]) {
+    this._themes = themes;
+
+    const themeTerminalOptions = this._themes
+      .filter( (themeInfo) => themeInfo.type.indexOf('terminal') !== -1 );
+    this._data.themeTerminalOptions = _.sortBy(themeTerminalOptions,
+      (themeInfo: ThemeTypes.ThemeInfo): string => themeInfo.name );
+
   }
 
   //-----------------------------------------------------------------------
@@ -194,7 +219,21 @@ class EtSettingsTab extends ViewerElement {
         </div>
       </div>
     </div>
-      
+
+    <div class="form-horizontal">
+      <h2>Theme</h2>
+      <div class="form-group">
+        <label for="theme-terminal" class="col-sm-2 control-label">Terminal Theme:</label>
+        <div class="col-sm-10">
+          <select class="form-control" id="theme-terminal" v-model="themeTerminal">
+            <option v-for="option in themeTerminalOptions" v-bind:value="option.id">
+              {{ option.name }}
+            </option>
+          </select> themeTerminal: {{themeTerminal}}
+        </div>
+      </div>
+    </div>
+
     <div id='${ID_COMMAND_OUTPUT_HANDLING}'>
       <h2>Command Output Handling Rules</h2>
       <table class="table" v-if="commandLineActions.length !== 0">
@@ -270,9 +309,15 @@ class EtSettingsTab extends ViewerElement {
   //
   //-----------------------------------------------------------------------
   private _dataChanged(newVal: ModelData): void {
-    const cleanVersion = _.cloneDeep(newVal);
-    stripIds(cleanVersion.commandLineActions);
-    const event = new CustomEvent(EtSettingsTab.EVENT_CONFIG_CHANGE, { detail: {data: cleanVersion } });
+    const newConfig = _.cloneDeep(this._config);
+    const model = _.cloneDeep(newVal);
+    stripIds(model.commandLineActions);
+    
+    newConfig.scrollbackLines = model.scrollbackLines;
+    newConfig.commandLineActions = model.commandLineActions;
+    newConfig.themeTerminal = model.themeTerminal;
+
+    const event = new CustomEvent(EtSettingsTab.EVENT_CONFIG_CHANGE, { detail: {data: newConfig} });
     this.dispatchEvent(event);
   }
 }

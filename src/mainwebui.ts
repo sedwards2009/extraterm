@@ -237,8 +237,9 @@ class ViewerTabInfo extends ViewerElementTabInfo {
 }
 
 class SettingsTabInfo extends ViewerElementTabInfo {
-  constructor(public settingsElement: EtSettingsTab) {
+  constructor(public settingsElement: EtSettingsTab, public themes: ThemeTypes.ThemeInfo[]) {
     super(settingsElement);
+    settingsElement.themes = themes;
   }
   
   setConfig(config: Config): void {
@@ -304,6 +305,8 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   
   private _config: Config;
 
+  private _themes: ThemeTypes.ThemeInfo[];
+
   private _split: boolean;
   
   private _initProperties(): void {
@@ -311,6 +314,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     this._tabInfo = [];
     this._tabIdCounter = 0;
     this._config = null;
+    this._themes = [];
     this._split = false;
   }
   
@@ -397,6 +401,10 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   set config(config: Config) {
     this._config = config;
     this._tabInfo.forEach( (tabInfo) => tabInfo.setConfig(config));
+  }
+  
+  set themes(themes: ThemeTypes.ThemeInfo[]) {
+    this._themes = themes;
   }
   
   get tabCount(): number {
@@ -692,7 +700,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
       this.focusTab(settingsTabs[0].id);
     } else {
       const viewerElement = <EtSettingsTab> document.createElement(EtSettingsTab.TAG_NAME);
-      const tabInfo = new SettingsTabInfo(viewerElement);
+      const tabInfo = new SettingsTabInfo(viewerElement, this._themes);
       this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
     }
   }

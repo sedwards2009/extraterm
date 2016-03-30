@@ -82,9 +82,9 @@ export function requestThemeList(): Promise<Messages.ThemeListMessage> {
   return request(msg, Messages.MessageType.THEME_LIST);
 }
 
-export function requestThemeContents(themeId: string): Promise<Messages.ThemeContentsMessage> {
+export function requestThemeContents(themeIdList: string[]): Promise<Messages.ThemeContentsMessage> {
   const msg: Messages.ThemeContentsRequestMessage = {type: Messages.MessageType.THEME_CONTENTS_REQUEST,
-    id: themeId};
+    themeIdList: themeIdList};
   return request(msg, Messages.MessageType.THEME_CONTENTS);
 }
 
