@@ -1,0 +1,6 @@
+{
+"name": "Solarized Dark",
+"comment": "Solarized Dark terminal theme. See http://ethanschoonover.com/solarized",
+"type": ["terminal"],
+"debug": false
+}
