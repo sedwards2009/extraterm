@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-type ThemeType = 'terminal' | 'syntax' | 'gui';
+export type ThemeType = 'terminal' | 'syntax' | 'gui';
 
 export interface ThemeInfo {
   name: string;

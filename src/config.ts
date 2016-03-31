@@ -11,7 +11,7 @@ export interface Config {
   blinkingCursor?: boolean;
   themeTerminal?: string;
   themeSyntax?: string;
-  themeUI?: string;
+  themeGUI?: string;
 
   commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;

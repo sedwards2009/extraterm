@@ -237,7 +237,7 @@ function setupConfiguration(newConfig: Config): Promise<void> {
   }
   configuration = newConfig;
   
-  const themeIdList = [newConfig.themeTerminal, newConfig.themeSyntax, newConfig.themeUI,
+  const themeIdList = [newConfig.themeTerminal, newConfig.themeSyntax, newConfig.themeGUI,
     ThemeTypes.DEFAULT_THEME];
   return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
 }

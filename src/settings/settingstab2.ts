@@ -44,6 +44,12 @@ interface ModelData {
   
   themeTerminal: string;
   themeTerminalOptions: ThemeTypes.ThemeInfo[];
+  
+  themeSyntax: string;
+  themeSyntaxOptions: ThemeTypes.ThemeInfo[];
+  
+  themeGUI: string;
+  themeGUIOptions: ThemeTypes.ThemeInfo[];
 }
 
 let idCounter = 0;
@@ -102,7 +108,13 @@ class EtSettingsTab extends ViewerElement {
       scrollbackLines: 10000,
       commandLineActions: [],
       themeTerminal: "",
-      themeTerminalOptions: []
+      themeTerminalOptions: [],
+      
+      themeSyntax: "",
+      themeSyntaxOptions: [],
+      
+      themeGUI: "",
+      themeGUIOptions: []
     };
   }
   
@@ -148,6 +160,8 @@ class EtSettingsTab extends ViewerElement {
     stripIds(cleanCommandLineAction);
     
     this._data.themeTerminal = config.themeTerminal;
+    this._data.themeSyntax = config.themeSyntax;
+    this._data.themeGUI = config.themeGUI;
     
     if ( ! _.isEqual(cleanCommandLineAction, config.commandLineActions)) {
       const updateCLA = _.cloneDeep(config.commandLineActions);
@@ -159,11 +173,15 @@ class EtSettingsTab extends ViewerElement {
   set themes(themes: ThemeTypes.ThemeInfo[]) {
     this._themes = themes;
 
-    const themeTerminalOptions = this._themes
-      .filter( (themeInfo) => themeInfo.type.indexOf('terminal') !== -1 );
-    this._data.themeTerminalOptions = _.sortBy(themeTerminalOptions,
-      (themeInfo: ThemeTypes.ThemeInfo): string => themeInfo.name );
-
+    const getThemesByType = (type: ThemeTypes.ThemeType): ThemeTypes.ThemeInfo[] => {
+      const themeTerminalOptions = this._themes
+        .filter( (themeInfo) => themeInfo.type.indexOf(type) !== -1 );
+      return _.sortBy(themeTerminalOptions, (themeInfo: ThemeTypes.ThemeInfo): string => themeInfo.name );
+    };
+    
+    this._data.themeTerminalOptions = getThemesByType('terminal');
+    this._data.themeSyntaxOptions = getThemesByType('syntax');
+    this._data.themeGUIOptions = getThemesByType('gui');
   }
 
   //-----------------------------------------------------------------------
@@ -224,14 +242,55 @@ class EtSettingsTab extends ViewerElement {
       <h2>Theme</h2>
       <div class="form-group">
         <label for="theme-terminal" class="col-sm-2 control-label">Terminal Theme:</label>
-        <div class="col-sm-10">
+        <div class="col-sm-3">
           <select class="form-control" id="theme-terminal" v-model="themeTerminal">
             <option v-for="option in themeTerminalOptions" v-bind:value="option.id">
               {{ option.name }}
             </option>
-          </select> themeTerminal: {{themeTerminal}}
+          </select>
+        </div>
+        <div class="col-sm-7">
+          <p v-if="themeTerminalComment != ''" class="help-block">
+            <i class="fa fa-info-circle"></i>
+            {{themeTerminalComment}}
+          </p>
         </div>
       </div>
+      
+      <div class="form-group">
+        <label for="theme-terminal" class="col-sm-2 control-label">Syntax Theme:</label>
+        <div class="col-sm-3">
+          <select class="form-control" id="theme-terminal" v-model="themeSyntax">
+            <option v-for="option in themeSyntaxOptions" v-bind:value="option.id">
+              {{ option.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-sm-7">
+          <p v-if="themeSyntaxComment != ''" class="help-block">
+            <i class="fa fa-info-circle"></i>
+            {{themeSyntaxComment}}
+          </p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="theme-terminal" class="col-sm-2 control-label">Interface Theme:</label>
+        <div class="col-sm-3">
+          <select class="form-control" id="theme-terminal" v-model="themeGUI">
+            <option v-for="option in themeGUIOptions" v-bind:value="option.id">
+              {{ option.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-sm-7">
+          <p v-if="themeGUIComment != ''" class="help-block">
+            <i class="fa fa-info-circle"></i>
+            {{themeGUIComment}}
+          </p>
+        </div>
+      </div>
+
     </div>
 
     <div id='${ID_COMMAND_OUTPUT_HANDLING}'>
@@ -280,6 +339,35 @@ class EtSettingsTab extends ViewerElement {
             this._data.commandLineActions.splice(index, 1);
           }
         }
+      },
+      computed: {
+        themeTerminalComment: function() {
+          const model = <ModelData> this;
+          for (let option of model.themeTerminalOptions) {
+            if (option.id === model.themeTerminal) {
+              return option.comment;
+            }
+          }
+          return "";
+        },
+        themeSyntaxComment: function() {
+          const model = <ModelData> this;
+          for (let option of model.themeSyntaxOptions) {
+            if (option.id === model.themeSyntax) {
+              return option.comment;
+            }
+          }
+          return "";
+        },
+        themeGUIComment: function() {
+          const model = <ModelData> this;
+          for (let option of model.themeGUIOptions) {
+            if (option.id === model.themeGUI) {
+              return option.comment;
+            }
+          }
+          return "";
+        },
       }
     });
     this._vm.$mount(divContainer);

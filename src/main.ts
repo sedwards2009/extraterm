@@ -472,8 +472,8 @@ function initConfig(): void {
   if (themeManager.getTheme(config.themeSyntax) === null) {
     config.themeSyntax = ThemeTypes.DEFAULT_THEME;
   }
-  if (themeManager.getTheme(config.themeUI) === null) {
-    config.themeUI = ThemeTypes.DEFAULT_THEME;
+  if (themeManager.getTheme(config.themeGUI) === null) {
+    config.themeGUI = ThemeTypes.DEFAULT_THEME;
   }
 
   registerThemeChangeListener(config);
@@ -508,7 +508,7 @@ function setConfigDefaults(config: Config): void {
 
   config.themeTerminal = config.themeTerminal == null ? "default" : config.themeTerminal;
   config.themeSyntax = config.themeSyntax == null ? "default" : config.themeSyntax;
-  config.themeUI = config.themeUI == null ? "default" : config.themeUI;
+  config.themeGUI = config.themeGUI == null ? "default" : config.themeGUI;
 
   if (config.commandLineActions === undefined) {
     const defaultCLA: CommandLineAction[] = [
@@ -566,14 +566,14 @@ function getThemes(): ThemeInfo[] {
 }
 
 function registerThemeChangeListener(config: Config): void {
-  const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeUI, ThemeTypes.DEFAULT_THEME];
+  const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_THEME];
   themeManager.registerChangeListener(themeIdList, (theme: ThemeInfo): void  => {
     sendThemeContents(mainWindow.webContents, themeIdList);
   });
 }
 
 function unregisterThemeChangeListener(config: Config): void {
-  const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeUI, ThemeTypes.DEFAULT_THEME];
+  const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_THEME];
   themeManager.unregisterChangeListener(themeIdList);
 }
 
@@ -693,7 +693,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.commandLineActions = incomingConfig.commandLineActions;
   newConfig.themeSyntax = incomingConfig.themeSyntax;
   newConfig.themeTerminal = incomingConfig.themeTerminal;
-  newConfig.themeUI = incomingConfig.themeUI;
+  newConfig.themeGUI = incomingConfig.themeGUI;
 
   setConfig(newConfig);
 
