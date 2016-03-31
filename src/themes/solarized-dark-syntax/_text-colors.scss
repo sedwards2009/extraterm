@@ -1,0 +1,139 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+ /* Solarized Dark */
+ /* See http://ethanschoonover.com/solarized */
+
+@mixin text-general {
+ background: #002b36;
+ color: #839496;
+}
+
+@mixin text-cursor {
+ border-left: 1px solid #ffb300;
+}
+
+@mixin text-selected {
+ background-color: #073642;
+}
+
+@mixin text-matchingbracket {
+ color: #859900;
+}
+
+@mixin text-activeline {
+ background-color: #202020;
+}
+
+@mixin text-gutters {
+ background: #002b36;
+ border-right: 1px solid #839496;
+}
+
+@mixin text-guttermarker {
+ color: #599eff;
+}
+
+@mixin text-guttermarker-subtle {
+ color: #839496;
+}
+
+@mixin text-linenumber {
+ color: #839496;
+}
+
+@mixin text-syntax-header {
+ color: #586e75;
+}
+
+@mixin text-syntax-quote {
+ color: #93a1a1;
+}
+
+@mixin text-syntax-keyword {
+ color: #cb4b16;
+}
+
+@mixin text-syntax-atom {
+ color: #d33682;
+}
+
+@mixin text-syntax-number {
+ color: #d33682;
+}
+
+@mixin text-syntax-def {
+ color: #2aa198;
+}
+
+@mixin text-syntax-variable {
+ color: #839496;
+}
+
+@mixin text-syntax-variable-2 {
+ color: #b58900;
+}
+
+@mixin text-syntax-variable-3 {
+ color: #6c71c4;
+}
+
+@mixin text-syntax-property {
+ color: #2aa198;
+}
+
+@mixin text-syntax-operator {
+ color: #6c71c4;
+}
+
+@mixin text-syntax-comment {
+  color: #586e75;
+  font-style:italic;
+}
+
+@mixin text-syntax-string {
+ color: #859900;
+}
+
+@mixin text-syntax-string-2 {
+ color: #b58900;
+}
+
+@mixin text-syntax-meta {
+ color: #859900;
+}
+
+@mixin text-syntax-qualifier {
+ color: #b58900;
+}
+
+@mixin text-syntax-builtin {
+ color: #d33682;
+}
+
+@mixin text-syntax-bracket {
+ color: #cb4b16;
+}
+
+@mixin text-syntax-tag {
+ color: #93a1a1;
+ font-weight: bold;
+}
+
+@mixin text-syntax-attribute {
+ color: #2aa198;
+}
+
+@mixin text-syntax-hr {
+ color: #586e75;
+}
+
+@mixin text-syntax-link {
+ color: #93a1a1;
+}
+
+@mixin text-syntax-error {
+  color: #586e75;
+  border-bottom: 1px dotted #dc322f;
+}

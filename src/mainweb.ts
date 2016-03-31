@@ -237,7 +237,16 @@ function setupConfiguration(newConfig: Config): Promise<void> {
   }
   configuration = newConfig;
   
-  const themeIdList = [newConfig.themeTerminal, newConfig.themeSyntax, newConfig.themeGUI,
-    ThemeTypes.DEFAULT_THEME];
+  const themeIdList = [];
+  if (newConfig.themeTerminal !== ThemeTypes.DEFAULT_THEME) {
+    themeIdList.push(newConfig.themeTerminal);
+  }
+  if (newConfig.themeSyntax !== ThemeTypes.DEFAULT_THEME) {
+    themeIdList.push(newConfig.themeSyntax);
+  }
+  if (newConfig.themeGUI !== ThemeTypes.DEFAULT_THEME) {
+    themeIdList.push(newConfig.themeGUI);
+  }
+  themeIdList.push(ThemeTypes.DEFAULT_THEME);
   return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
 }

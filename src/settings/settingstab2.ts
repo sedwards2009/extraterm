@@ -258,7 +258,7 @@ class EtSettingsTab extends ViewerElement {
       </div>
       
       <div class="form-group">
-        <label for="theme-terminal" class="col-sm-2 control-label">Syntax Theme:</label>
+        <label for="theme-terminal" class="col-sm-2 control-label">Text &amp; Syntax Theme:</label>
         <div class="col-sm-3">
           <select class="form-control" id="theme-terminal" v-model="themeSyntax">
             <option v-for="option in themeSyntaxOptions" v-bind:value="option.id">
@@ -404,6 +404,8 @@ class EtSettingsTab extends ViewerElement {
     newConfig.scrollbackLines = model.scrollbackLines;
     newConfig.commandLineActions = model.commandLineActions;
     newConfig.themeTerminal = model.themeTerminal;
+    newConfig.themeSyntax = model.themeSyntax;
+    newConfig.themeGUI = model.themeGUI;
 
     const event = new CustomEvent(EtSettingsTab.EVENT_CONFIG_CHANGE, { detail: {data: newConfig} });
     this.dispatchEvent(event);
