@@ -19,6 +19,7 @@ type CssFile = ThemeTypes.CssFile;
 const THEME_CONFIG = "theme.json";
 
 const DEBUG_SASS = true;
+const DEBUG_SASS_FINE = false;
 const DEBUG_SCAN = true;
 
 interface ListenerFunc {
@@ -247,6 +248,9 @@ class ThemeManagerImpl implements ThemeManager {
 
   private _loadSassFile(dirStack: string[], sassFileName: string): Promise<string> {
     return new Promise<string>( (resolve, cancel) => {
+      if (DEBUG_SASS) {
+        this._log.debug("Processing " + sassFileName);
+      }
       try {
         sass.importer(null);
         
@@ -256,7 +260,7 @@ class ThemeManagerImpl implements ThemeManager {
           const dirName = path.dirname(basePath);
           const baseName = path.basename(basePath);
           
-          if (DEBUG_SASS) {
+          if (DEBUG_SASS_FINE) {
             this._log.debug("Importer:", request);
             this._log.debug("dirName:", dirName);
             this._log.debug("baseName:", baseName);
@@ -273,11 +277,11 @@ class ThemeManagerImpl implements ThemeManager {
           
           for (let candidate of candidates) {
             const candidateFileName = this._findFile(dirStack, candidate);
-            if (DEBUG_SASS) {
+            if (DEBUG_SASS_FINE) {
               this._log.debug("Trying " + candidateFileName);
             }
             if (candidateFileName) {
-              if (DEBUG_SASS) {
+              if (DEBUG_SASS_FINE) {
                 this._log.debug("Importing SASS file " + candidateFileName);
               }
               try {
@@ -304,10 +308,18 @@ class ThemeManagerImpl implements ThemeManager {
         sass.compile(scssText, { precision: 8, inputPath: sassFileName }, (result) => {
           if (result.status === 0) {
             const successResult = <sass.SuccessResult> result;
+            if (DEBUG_SASS) {
+              this._log.debug("Succeeded done processing " + sassFileName);
+            }
+
             resolve(successResult.text);
           } else {
             const errorResult = <sass.ErrorResult> result;
-            this._log.warn("An error occurred while processing " + sassFileName, errorResult.formatted);
+            this._log.warn("An SASS error occurred while processing " + sassFileName, errorResult,
+              errorResult.formatted);
+            if (DEBUG_SASS) {
+              this._log.debug("Failed processing " + sassFileName);
+            }
             cancel();
           }
         });
@@ -320,12 +332,12 @@ class ThemeManagerImpl implements ThemeManager {
   }
   
   private _findFile(dirStack: string[], fileName: string): string {
-    if (DEBUG_SASS) {
+    if (DEBUG_SASS_FINE) {
       this._log.debug(`findFile(): Looking for ${fileName} in dirs ${dirStack}`);
     }    
     for (const dir of dirStack) {
       const candidateFileName = path.join(dir, fileName);
-      if (DEBUG_SASS) {
+      if (DEBUG_SASS_FINE) {
         this._log.debug(`findFile(): Checking ${candidateFileName}`);
       }    
       if (fs.existsSync(candidateFileName) && fs.statSync(candidateFileName).isFile()) {
