@@ -75,11 +75,7 @@ export function startUp(): void {
   webipc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
   
   const themePromise = webipc.requestConfig().then( (msg: Messages.ConfigMessage) => {
-    handleConfigMessage(msg);
-    
-    const themeIdList = [msg.config.themeTerminal, msg.config.themeSyntax, msg.config.themeUI,
-      ThemeTypes.DEFAULT_THEME];
-    return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
+    return handleConfigMessage(msg);
   });
   
   // Get the config and theme info in and then continue starting up.
@@ -194,10 +190,10 @@ export function startUp(): void {
   });
 }
 
-function handleConfigMessage(msg: Messages.Message): void {
+function handleConfigMessage(msg: Messages.Message): Promise<void> {
   const configMessage = <Messages.ConfigMessage> msg;
   configuration = configMessage.config;
-  setupConfiguration(configMessage.config);
+  return setupConfiguration(configMessage.config);
 }
 
 function handleThemeListMessage(msg: Messages.Message): void {
@@ -207,7 +203,6 @@ function handleThemeListMessage(msg: Messages.Message): void {
 
 function handleThemeContentsMessage(msg: Messages.Message): void {
   const themeContentsMessage = <Messages.ThemeContentsMessage> msg;
-
   const cssFileMap = new Map<ThemeTypes.CssFile, string>();
   ThemeTypes.cssFileEnumItems.forEach( (cssFile) => {
     cssFileMap.set(cssFile, themeContentsMessage.themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)]);
@@ -236,7 +231,7 @@ function handleClipboardRead(msg: Messages.Message): void {
 /**
  * 
  */
-function setupConfiguration(newConfig: Config): void {
+function setupConfiguration(newConfig: Config): Promise<void> {
   if (mainWebUi !== null) {
     mainWebUi.config = newConfig;
   }
@@ -244,5 +239,5 @@ function setupConfiguration(newConfig: Config): void {
   
   const themeIdList = [newConfig.themeTerminal, newConfig.themeSyntax, newConfig.themeUI,
     ThemeTypes.DEFAULT_THEME];
-  webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
+  return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
 }

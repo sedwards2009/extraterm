@@ -14,6 +14,8 @@ import Logger = require('./logger');
 const _log = new Logger("WebIPC");
 
 const DEBUG = false;
+const DEBUG_INCOMING = false;
+const DEBUG_OUTGOING = false;
 
 /**
  * Start IPC.
@@ -42,7 +44,7 @@ export function registerDefaultHandler(type: Messages.MessageType, handler: Hand
 
 function handleAsyncIpc(senderInfo: any, detail: any): void {
   const msg: Messages.Message = detail;
-  if (DEBUG) {
+  if (DEBUG_INCOMING) {
     _log.debug("incoming: ", msg);
   }
 
@@ -63,7 +65,7 @@ function handleAsyncIpc(senderInfo: any, detail: any): void {
 }
 
 function request(msg: Messages.Message, replyType: Messages.MessageType): Promise<Messages.Message> {
-  if (DEBUG) {
+  if (DEBUG_OUTGOING) {
     _log.debug("request: ", msg);
   }
   ipc.send(Messages.CHANNEL_NAME, msg);
@@ -83,6 +85,9 @@ export function requestThemeList(): Promise<Messages.ThemeListMessage> {
 }
 
 export function requestThemeContents(themeIdList: string[]): Promise<Messages.ThemeContentsMessage> {
+  if (DEBUG) {
+    _log.debug("requestThemeContents(): ", themeIdList);
+  }
   const msg: Messages.ThemeContentsRequestMessage = {type: Messages.MessageType.THEME_CONTENTS_REQUEST,
     themeIdList: themeIdList};
   return request(msg, Messages.MessageType.THEME_CONTENTS);

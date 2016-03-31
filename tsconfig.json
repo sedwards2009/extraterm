@@ -95,8 +95,7 @@
         "./src/typings/sass.js/sass.js.d.ts",
         "./src/typings/text-encoding/text-encoding.d.ts",
         "./src/typings/vuejs/vuejs.d.ts",
-        "./node_modules/typescript/lib/lib.es6.d.ts",
-        "./node_modules/immutable/dist/immutable.d.ts"
+        "./node_modules/typescript/lib/lib.es6.d.ts"
     ],
     "exclude": [],
     "atom": {
