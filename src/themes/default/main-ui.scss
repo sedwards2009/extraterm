@@ -69,19 +69,21 @@
   border-radius: 2px;
 }
 
-DIV.tab_content {
-  height: 100%;
-  width: 100%;
-}
-
-DIV.tab_content > * {
-  width: 100%;
-  height: 100%;
-}
-
 et-terminal {
   height: 100%;
   width: 100%;
+  margin-top: 6px;
+}
+
+/* Contents of the tabs at the top of the window. */
+DIV.tab_content {
+  height: 100%;
+  width: 100%;
+
+}
+DIV.tab_content > * {
+  width: 100%;
+  height: 100%;
 }
 
 DIV.tab_header_container {

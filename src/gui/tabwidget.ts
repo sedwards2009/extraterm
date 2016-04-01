@@ -126,7 +126,7 @@ class CbTabWidget extends ThemeableElementBase {
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
 <div id='${ID_TOP}'>
-<div id='${ID_TABBAR}'></div>
+<ul id='${ID_TABBAR}' class="nav nav-tabs"></ul>
 <div id='${ID_CONTENTS}'><cb-stackedwidget id='${ID_CONTENTSTACK}'></cb-stackedwidget></div>
 </div>
 `;
@@ -197,14 +197,17 @@ class CbTabWidget extends ThemeableElementBase {
     // Create tabs and content DIVs.
     while (tabElementCount < tabCount) {
       // The tab part.
-      const tabDiv = this.ownerDocument.createElement('div');
-      tabDiv.classList.add('tab');
-      tabDiv.classList.add('tab_inactive');
+      const tabLi = this.ownerDocument.createElement('li');
+      tabLi.classList.add('tab');
+      
+      const tabLink = this.ownerDocument.createElement('a');
+      tabLi.appendChild(tabLink);
+      
       let contentElement = this.ownerDocument.createElement('content');
       contentElement.setAttribute('select', '[' + ATTR_TAG + '="tab_' + tabElementCount + '"]');
       
-      tabDiv.appendChild(contentElement);
-      tabDiv.addEventListener('click', this._createTabClickHandler(tabElementCount));
+      tabLink.appendChild(contentElement);
+      tabLink.addEventListener('click', this._createTabClickHandler(tabElementCount));
       
       // Pages for the contents stack.
       const wrapperDiv = this.ownerDocument.createElement('div');
@@ -212,7 +215,7 @@ class CbTabWidget extends ThemeableElementBase {
       contentElement = this.ownerDocument.createElement('content');
       contentElement.setAttribute('select', '[' + ATTR_TAG + '="content_' + tabElementCount + '"]');
       
-      tabbar.insertBefore(tabDiv, catchAllDiv);
+      tabbar.insertBefore(tabLi, catchAllDiv);
       
       wrapperDiv.appendChild(contentElement);
       contentsStack.appendChild(wrapperDiv);
@@ -300,11 +303,9 @@ class CbTabWidget extends ThemeableElementBase {
       const item = <HTMLElement> tabbar.children.item(i);
       if (item.classList.contains('tab')) {
         if (i === index) {
-          item.classList.remove('tab_inactive');
-          item.classList.add('tab_active');
+          item.classList.add('active');
         } else {
-          item.classList.remove('tab_active');
-          item.classList.add('tab_inactive');
+          item.classList.remove('active');
         }
       }
     }
