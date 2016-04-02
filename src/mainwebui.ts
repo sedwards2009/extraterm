@@ -368,6 +368,36 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     
     this._setupIpc();
   }
+
+  private _createClone(): Node {
+    var template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
+    if (template === null) {
+      template = <HTMLTemplate>window.document.createElement('template');
+      template.id = ID;
+      template.innerHTML = this._html();
+      window.document.body.appendChild(template);
+    }
+    return window.document.importNode(template.content, true);
+  }
+
+  private _html(): string {
+    return `
+    <style id="${ThemeableElementBase.ID_THEME}"></style>
+    <div id="${ID_TOP}">` +
+        `<div id="${ID_PANE_LEFT}">` +
+          `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
+            `<div id="${ID_REST_DIV_PRIMARY}"><button class="" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
+            `<content></content></div>` +
+          `</cb-tabwidget>` +
+        `</div>` +
+        `<div id="${ID_GAP}"></div>` +
+        `<div id="${ID_PANE_RIGHT}">` +
+          `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
+            `<div id="${ID_REST_DIV_SECONDARY}"><button class="" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
+          `</cb-tabwidget>` +
+        `</div>` +
+      `</div>`;
+  }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.MAIN_UI];
@@ -375,6 +405,12 @@ class ExtratermMainWebUI extends ThemeableElementBase {
 
   destroy(): void {
   }
+  
+  //-----------------------------------------------------------------------
+  
+  //-----------------------------------------------------------------------
+  
+  //-----------------------------------------------------------------------
   
   focus(): void {
     // Put the focus onto the last terminal that had the focus.
@@ -863,25 +899,6 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     return null;
   }
 
-  private _html(): string {
-    return `
-    <style id="${ThemeableElementBase.ID_THEME}"></style>
-    <div id="${ID_TOP}">` +
-        `<div id="${ID_PANE_LEFT}">` +
-          `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
-            `<div id="${ID_REST_DIV_PRIMARY}"><button class="topcoat-icon-button--large--quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
-            `<content></content></div>` +
-          `</cb-tabwidget>` +
-        `</div>` +
-        `<div id="${ID_GAP}"></div>` +
-        `<div id="${ID_PANE_RIGHT}">` +
-          `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
-            `<div id="${ID_REST_DIV_SECONDARY}"><button class="topcoat-icon-button--large--quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
-          `</cb-tabwidget>` +
-        `</div>` +
-      `</div>`;
-  }
-
   //-----------------------------------------------------------------------
   // PTY and IPC handling
   //-----------------------------------------------------------------------
@@ -932,17 +949,6 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     shortTabList[i].focus();
   }
   
-  private _createClone(): Node {
-    var template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = this._html();
-      window.document.body.appendChild(template);
-    }
-    return window.document.importNode(template.content, true);
-  }
-
   private _getById(id: string): HTMLElement {
     return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
   }

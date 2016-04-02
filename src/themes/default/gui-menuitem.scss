@@ -8,23 +8,25 @@
 
 :host {
     display: block;
-    
-    font-family: $font-family-base;
-    font-size: $font-size-base;
-    line-height: $line-height-base;
-    color: $text-color;
-    background-color: $body-bg;
 }
 
 #ID_CONTAINER {
-    cursor: default;
-    padding: 1px;
     display: flex;
+    cursor: default;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    font-weight: normal;
+    line-height: $line-height-base;
+    color: $dropdown-link-color;
+    background-color: $dropdown-bg;
+    padding: 1px;
+    white-space: nowrap;
 }
 
-.selected {
-    color: $dropdown-link-active-color;
-    background-color: $dropdown-link-active-bg;
+#ID_CONTAINER.selected {
+    text-decoration: none;
+    color: $dropdown-link-hover-color;
+    background-color: $dropdown-link-hover-bg;
 }
 
 #ID_ICON1, #ID_ICON2 {

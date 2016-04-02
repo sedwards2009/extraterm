@@ -3,18 +3,25 @@
  */
 
 /* context menu */
+@import "bootstrap/variables";
 
 #ID_CONTAINER {
     position: fixed;
-    background-color: #F4F4F4;
-    border-radius: 4px;
-    padding: 4px 0px 4px 0px;
-    box-shadow: 0px 0px 8px black;
-    z-index: 101;
+    z-index: $zindex-dropdown;
+    min-width: 160px;
+    padding: 5px 0;    
+    font-size: $font-size-base;
+    background-color: $dropdown-bg;
+    border: 1px solid $dropdown-border;
+    border-radius:  $border-radius-base;
+    box-shadow: 0px 6px 12px rgba(0,0,0,.175);
+    background-clip: padding-box;
 }
 
 #ID_CONTAINER:focus {
     outline: none;
+    color: $dropdown-link-hover-color;
+    background-color: $dropdown-link-hover-bg;
 }
 .container_closed {
     display: none;
