@@ -28,7 +28,7 @@
     border: 1px solid transparent;
     border-bottom-width: 0;
     border-radius: $border-radius-base $border-radius-base 0 0;
-    padding: $nav-link-padding;
+    padding: 7px 7px 4px 7px;
 
     &:hover, &:focus {
       color: $link-hover-color;
@@ -51,10 +51,22 @@
 
   > li.remainder {
     flex-grow: 1;
+    color: $text-color;
+    padding: 0 0 3px 0;
+    
     &:hover, &:focus {
       background-color: inherit;
       border: 1px solid transparent;
       border-bottom-width: 0;
     }
+  }
+}
+
+.btn.btn-quiet {
+  border-color: transparent;
+  background-color: inherit;
+  
+  &:hover, &:focus {
+    border-color:$btn-default-border;
   }
 }

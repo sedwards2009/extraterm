@@ -101,7 +101,7 @@ export function startUp(): void {
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
       <div class="space"></div>
       <cb-dropdown>
-          <button class=""><i class="fa fa-bars"></i></button>
+          <button class="btn btn-quiet"><i class="fa fa-bars"></i></button>
           <cb-contextmenu id="main_menu">
               <cb-checkboxmenuitem icon="columns" id="split" name="split">Split</cb-checkboxmenuitem>
               <cb-menuitem icon="wrench" name="settings">Settings</cb-menuitem>

@@ -3,6 +3,7 @@
  */
 
 /* top UI */
+@import "bootstrap/variables";
 
 :host {
   display: block;
@@ -60,21 +61,6 @@
   flex-grow: 1;
 }
 
-#ID_NEW_TAB_BUTTON_PRIMARY, #ID_NEW_TAB_BUTTON_SECONDARY {
-  border: 0px;
-}
-
-#ID_NEW_TAB_BUTTON_PRIMARY:hover, #ID_NEW_TAB_BUTTON_SECONDARY:hover {
-  border: 1px solid black;
-  border-radius: 2px;
-}
-
-et-terminal {
-  height: 100%;
-  width: 100%;
-  margin-top: 6px;
-}
-
 /* Contents of the tabs at the top of the window. */
 DIV.tab_content {
   height: 100%;
@@ -83,7 +69,8 @@ DIV.tab_content {
 }
 DIV.tab_content > * {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 6px);
+  margin-top: 6px;
 }
 
 DIV.tab_header_container {
@@ -99,6 +86,8 @@ DIV.tab_header_middle {
   flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-left: 8px;
+  margin-right: 8px;
 }
 
 DIV.tab_header_close {
@@ -107,23 +96,14 @@ DIV.tab_header_close {
 }
 
 DIV.tab_header_close > BUTTON {
+  vertical-align: text-bottom;
   border: 0px;
-  padding: 0px;
   display: inline-block;
-  width: 13px;
-  height: 13px;
-  margin: 2px;
   background-color: transparent;
   border-radius: 2px;
-  margin-top: 3px;
 }
 
-DIV.tab_header_close > BUTTON > I {
-  position: relative;
-  top: -1px;
-}    
-
 DIV.tab_header_close:hover > BUTTON {
-  background-color: #ff5454;
-  color: #ffffff;
+  background-color: $btn-danger-bg;
+  color: $btn-danger-color;
 }

@@ -386,14 +386,14 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     <div id="${ID_TOP}">` +
         `<div id="${ID_PANE_LEFT}">` +
           `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
-            `<div id="${ID_REST_DIV_PRIMARY}"><button class="" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
+            `<div id="${ID_REST_DIV_PRIMARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
             `<content></content></div>` +
           `</cb-tabwidget>` +
         `</div>` +
         `<div id="${ID_GAP}"></div>` +
         `<div id="${ID_PANE_RIGHT}">` +
           `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
-            `<div id="${ID_REST_DIV_SECONDARY}"><button class="" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
+            `<div id="${ID_REST_DIV_SECONDARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
           `</cb-tabwidget>` +
         `</div>` +
       `</div>`;
