@@ -23,6 +23,7 @@ const ID_TOP = "ID_TOP";
 const ID_TABBAR = "ID_TABBAR";
 const ID_CONTENTSTACK = "ID_CONTENTSTACK";
 const ID_CONTENTS = "ID_CONTENTS";
+const CLASS_REMAINDER = "remainder";
 
 /**
  * A widget to display a stack of tabs.
@@ -126,7 +127,7 @@ class CbTabWidget extends ThemeableElementBase {
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
 <div id='${ID_TOP}'>
-<ul id='${ID_TABBAR}' class="nav nav-tabs"></ul>
+<ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
 <div id='${ID_CONTENTS}'><cb-stackedwidget id='${ID_CONTENTSTACK}'></cb-stackedwidget></div>
 </div>
 `;
@@ -178,17 +179,18 @@ class CbTabWidget extends ThemeableElementBase {
     }
     
     // Make sure that is a catch all element at the end.
-    const catchAlls = tabbar.querySelectorAll(".catch_all");
-    let catchAllDiv: HTMLDivElement = null;
+    const catchAlls = tabbar.querySelectorAll("." + CLASS_REMAINDER);
+    let catchAllLi: HTMLLIElement = null;
     if (catchAlls.length === 0) {
-      catchAllDiv = <HTMLDivElement> this.ownerDocument.createElement('DIV');
-      catchAllDiv.classList.add('catch_all');
+      catchAllLi = <HTMLLIElement> this.ownerDocument.createElement('LI');
+      catchAllLi.classList.add(CLASS_REMAINDER);
+            
       const catchAll = this.ownerDocument.createElement('content');
       catchAll.setAttribute('select', '[' + ATTR_TAG + '="rest"]');
-      catchAllDiv.appendChild(catchAll);
-      tabbar.appendChild(catchAllDiv);
+      catchAllLi.appendChild(catchAll);
+      tabbar.appendChild(catchAllLi);
     } else {
-      catchAllDiv = <HTMLDivElement> catchAlls[0];
+      catchAllLi = <HTMLLIElement> catchAlls[0];
     }
     
     let tabElementCount = tabbar.querySelectorAll(".tab").length;
@@ -200,14 +202,11 @@ class CbTabWidget extends ThemeableElementBase {
       const tabLi = this.ownerDocument.createElement('li');
       tabLi.classList.add('tab');
       
-      const tabLink = this.ownerDocument.createElement('a');
-      tabLi.appendChild(tabLink);
-      
       let contentElement = this.ownerDocument.createElement('content');
       contentElement.setAttribute('select', '[' + ATTR_TAG + '="tab_' + tabElementCount + '"]');
       
-      tabLink.appendChild(contentElement);
-      tabLink.addEventListener('click', this._createTabClickHandler(tabElementCount));
+      tabLi.appendChild(contentElement);
+      tabLi.addEventListener('click', this._createTabClickHandler(tabElementCount));
       
       // Pages for the contents stack.
       const wrapperDiv = this.ownerDocument.createElement('div');
@@ -215,7 +214,7 @@ class CbTabWidget extends ThemeableElementBase {
       contentElement = this.ownerDocument.createElement('content');
       contentElement.setAttribute('select', '[' + ATTR_TAG + '="content_' + tabElementCount + '"]');
       
-      tabbar.insertBefore(tabLi, catchAllDiv);
+      tabbar.insertBefore(tabLi, catchAllLi);
       
       wrapperDiv.appendChild(contentElement);
       contentsStack.appendChild(wrapperDiv);
