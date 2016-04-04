@@ -74,9 +74,6 @@ class EtImageViewer extends ViewerElement {
   private document: Document;
   private _visualState: VisualState;
 
-  private _mainStyleLoaded: boolean;
-  private _resizePollHandle: domutils.LaterHandle;
-
   private _viewportHeight: number;  // Used to detect changes in the viewport size when in SELECTION mode.
   
   // The current element height. This is a cached value used to prevent touching the DOM.
@@ -97,9 +94,6 @@ class EtImageViewer extends ViewerElement {
     this._visualState = VisualState.UNFOCUSED;
     
     this._currentElementHeight = -1;
-    
-    this._mainStyleLoaded = false;
-    this._resizePollHandle = null;
     
     this._viewportHeight = -1;
   }
@@ -486,59 +480,6 @@ class EtImageViewer extends ViewerElement {
     }    
   }
   
-  //-----------------------------------------------------------------------
-  //
-  // #######                        #                                            
-  // #        ####  #    # #####    #        ####    ##   #####  # #    #  ####  
-  // #       #    # ##   #   #      #       #    #  #  #  #    # # ##   # #    # 
-  // #####   #    # # #  #   #      #       #    # #    # #    # # # #  # #      
-  // #       #    # #  # #   #      #       #    # ###### #    # # #  # # #  ### 
-  // #       #    # #   ##   #      #       #    # #    # #    # # #   ## #    # 
-  // #        ####  #    #   #      #######  ####  #    # #####  # #    #  ####  
-  //
-  //-----------------------------------------------------------------------
-
-  private _initFontLoading(): void {
-    this._mainStyleLoaded = false;
-    
-    domutils.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
-      this._mainStyleLoaded = true;
-      this._handleStyleLoad();
-    });
-  }
-  
-  private _cleanUpFontLoading(): void {
-    if (this._resizePollHandle !== null) {
-      this._resizePollHandle.cancel();
-      this._resizePollHandle = null;
-    }
-  }
-
-  private _handleStyleLoad(): void {
-    if (this._mainStyleLoaded) {
-      // Start polling the term for application of the font.
-      this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
-    }
-  }
-  
-  private _effectiveFontFamily(): string {
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    const cs = window.getComputedStyle(containerDiv, null);
-    return cs.getPropertyValue("font-family");
-  }
-
-  private _resizePoll(): void {
-    if (this._mainStyleLoaded) {
-      // if ( ! this.isFontLoaded()) {
-        // Font has not been correctly applied yet.
-        this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
-      // } else {
-        // Yay! the font is correct. Resize the term soon.
-// FIXME do we need to do anything here?
-      // }
-    }
-  }
-
   private _getClientYScrollRange(): number {
     return Math.max(0, this.getVirtualHeight(this.getHeight()) - this.getHeight() + this.getReserveViewportHeight(this.getHeight()));
   }
@@ -556,14 +497,6 @@ class EtImageViewer extends ViewerElement {
       containerDiv.style.height = "" + elementHeight + "px";
     }
   }
-    
-  _themeCssSet(): void {  
-    // const themeTag = <HTMLStyleElement> util.getShadowId(this, ID_THEME_STYLE);
-    // if (themeTag !== null) {
-    //   themeTag.innerHTML = this.getThemeCss();
-    // }
-  }
-  
 }
 
 function px(value) {
