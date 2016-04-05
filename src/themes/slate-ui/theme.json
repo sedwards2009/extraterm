@@ -1,0 +1,6 @@
+{
+"name": "Slate UI theme",
+"type": ["gui"],
+"comment": "MIT license. See https://github.com/thomaspark/bootswatch",
+"debug": false
+}
