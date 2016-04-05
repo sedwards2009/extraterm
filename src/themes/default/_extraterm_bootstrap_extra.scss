@@ -65,8 +65,11 @@
 .btn.btn-quiet {
   border-color: transparent;
   background-color: inherit;
+  color: $text-color;
+  text-shadow: none;
   
   &:hover, &:focus {
-    border-color:$btn-default-border;
+    color: $text-color;
+    border-color: $btn-default-border;
   }
 }
