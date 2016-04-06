@@ -13,8 +13,8 @@ const print = console.log.bind(console);
 
 function main(): void {
   const tm = ThemeManager.makeThemeManager(['themes']);
-  tm.getAllThemes().forEach( (themeInfo) => {
-    tm.renderThemes([themeInfo.id]).then( (contents) => {
+  tm.getAllThemes().filter( (themeInfo) => themeInfo.id === 'spacelab-ui').forEach( (themeInfo) => {
+    tm.renderThemes([themeInfo.id,'default']).then( (contents) => {
       print("----");
       print("ID:   ", themeInfo.id);
       print("Name: ", themeInfo.name);

@@ -8,7 +8,7 @@
 
 @font-face {
   font-family: 'FontAwesome';
-  src: url('themes/default/fontawesome-webfont.ttf?v=4.1.0') format('truetype');
+  src: url($--source-dir-default + '/fontawesome-webfont.ttf?v=4.1.0') format('truetype');
   font-weight: normal;
   font-style: normal;
 }

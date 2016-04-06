@@ -8,5 +8,5 @@
 
 @font-face {
   font-family: "DejaVu Sans Mono";
-  src: url("themes/default/DejaVuSansMono.ttf");
+  src: url($--source-dir-default + "/DejaVuSansMono.ttf");
 }

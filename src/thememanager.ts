@@ -18,9 +18,9 @@ type ThemeContents = ThemeTypes.ThemeContents;
 type CssFile = ThemeTypes.CssFile;
 const THEME_CONFIG = "theme.json";
 
-const DEBUG_SASS = true;
+const DEBUG_SASS = false;
 const DEBUG_SASS_FINE = false;
-const DEBUG_SCAN = true;
+const DEBUG_SCAN = false;
 
 interface ListenerFunc {
   (theme: ThemeInfo): void;
@@ -227,9 +227,16 @@ class ThemeManagerImpl implements ThemeManager {
       (cssFile: CssFile): Promise<{ cssFile: CssFile; cssText: string;}> => {
       
       const dirStack = _.uniq(themeStack.map( (themeInfo) => themeInfo.path ));
+      
+      // Create SASS variables for the location of each theme directory.
+      const variables = new Map<string, string>();
+      themeStack.forEach( (themeInfo) => {
+        variables.set('--source-dir-' + themeInfo.id, themeInfo.path);
+      });
+      
       const sassFileName = ThemeTypes.cssFileNameBase(cssFile) + '.scss';
       
-      return this._loadSassFile(dirStack, sassFileName)
+      return this._loadSassFile(dirStack, sassFileName, variables)
         .then( (cssText: string): { cssFile: CssFile; cssText: string;} => {
           // if (theme.debug) {
           //   this._log.debug(`Sass output for ${theme.name}, ${ThemeTypes.cssFileNameBase(cssFile)}`, cssText);
@@ -246,7 +253,18 @@ class ThemeManagerImpl implements ThemeManager {
     });
   }
 
-  private _loadSassFile(dirStack: string[], sassFileName: string): Promise<string> {
+  private _loadSassFile(dirStack: string[], sassFileName: string, variables?: Map<string, string>): Promise<string> {
+    let formattedVariables = "";
+    if (variables !== undefined) {
+      variables.forEach( (value, key) => {
+          formattedVariables += `$${key}: "${value}";
+`;
+        });
+    }
+    if (DEBUG_SASS) {
+      this._log.debug("Formatted SASS variables: ", formattedVariables);
+    }
+    
     return new Promise<string>( (resolve, cancel) => {
       if (DEBUG_SASS) {
         this._log.debug("Processing " + sassFileName);
@@ -296,16 +314,14 @@ class ThemeManagerImpl implements ThemeManager {
           
           done( { error: "Unable to find " + basePath } );
         });
-                
-        // Find the starting point file.
-        const sassFilePath = this._findFile(dirStack, sassFileName);
-        if (sassFilePath === null) {
-          throw new Error(`Unable to find file '${sassFileName}' in directories ${dirStack}`);
-        }
         
-        // Start the compile
-        const scssText = fs.readFileSync(sassFilePath, {encoding: 'utf-8'});
-        sass.compile(scssText, { precision: 8, inputPath: sassFileName }, (result) => {
+        // Start the compile using a small virtual 'boot' file.
+        const scssText = formattedVariables + '\n@import "' + sassFileName + '";\n';
+        if (DEBUG_SASS_FINE) {
+          this._log.debug("Root sass text: ", scssText);
+        }
+
+        sass.compile(scssText, { precision: 8, inputPath: '__boot__' }, (result) => {
           if (result.status === 0) {
             const successResult = <sass.SuccessResult> result;
             if (DEBUG_SASS) {
