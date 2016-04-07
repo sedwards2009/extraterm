@@ -10,7 +10,7 @@ if test -n "$EXTRATERM_COOKIE"
     
     # Put our enhanced commands at the start of the PATH.
     set -l filedir (dirname (status -f))
-    set -x PATH $PWD/$filedir $PATH
+    set -x PATH (realpath $filedir) $PATH
 
     function extraterm_preexec -e fish_preexec
       echo -n -e -s "\033&" $EXTRATERM_COOKIE ";2;fish\007"
