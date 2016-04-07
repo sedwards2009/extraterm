@@ -231,7 +231,7 @@ class ThemeManagerImpl implements ThemeManager {
       // Create SASS variables for the location of each theme directory.
       const variables = new Map<string, string>();
       themeStack.forEach( (themeInfo) => {
-        variables.set('--source-dir-' + themeInfo.id, themeInfo.path);
+        variables.set('--source-dir-' + themeInfo.id, themeInfo.path.replace(/\\/g, "/"));
       });
       
       const sassFileName = ThemeTypes.cssFileNameBase(cssFile) + '.scss';
