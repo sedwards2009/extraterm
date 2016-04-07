@@ -189,7 +189,7 @@ export function factory(config: Config): PtyConnector {
   });
 
   proxy.stderr.on('data', function (data: Buffer) {
-    _log.warn('ptyproxy process stderr: ', data);
+    _log.warn('ptyproxy process stderr: ', data.toString());
   });
 
   proxy.on('close', function (code) {
