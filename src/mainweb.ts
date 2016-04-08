@@ -192,8 +192,9 @@ export function startUp(): void {
 
 function handleConfigMessage(msg: Messages.Message): Promise<void> {
   const configMessage = <Messages.ConfigMessage> msg;
+  const oldConfiguration = configuration;
   configuration = configMessage.config;
-  return setupConfiguration(configMessage.config);
+  return setupConfiguration(oldConfiguration, configMessage.config);
 }
 
 function handleThemeListMessage(msg: Messages.Message): void {
@@ -231,22 +232,34 @@ function handleClipboardRead(msg: Messages.Message): void {
 /**
  * 
  */
-function setupConfiguration(newConfig: Config): Promise<void> {
+function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void> {
   if (mainWebUi !== null) {
     mainWebUi.config = newConfig;
   }
-  configuration = newConfig;
   
+  if (oldConfig === null || oldConfig.themeTerminal !== newConfig.themeTerminal ||
+      oldConfig.themeSyntax !== newConfig.themeSyntax ||
+      oldConfig.themeGUI !== newConfig.themeGUI) {
+
+    oldConfig = newConfig;
+    return requestThemeContentsFromConfig(oldConfig);
+  }
+  
+  // no-op promise.
+  return new Promise<void>( (resolve, cancel) => { resolve(); } );
+}
+
+function requestThemeContentsFromConfig(config: Config): Promise<void> {
   const themeIdList = [];
-  if (newConfig.themeTerminal !== ThemeTypes.DEFAULT_THEME) {
-    themeIdList.push(newConfig.themeTerminal);
+  if (config.themeTerminal !== ThemeTypes.DEFAULT_THEME) {
+    themeIdList.push(config.themeTerminal);
   }
-  if (newConfig.themeSyntax !== ThemeTypes.DEFAULT_THEME) {
-    themeIdList.push(newConfig.themeSyntax);
+  if (config.themeSyntax !== ThemeTypes.DEFAULT_THEME) {
+    themeIdList.push(config.themeSyntax);
   }
-  if (newConfig.themeGUI !== ThemeTypes.DEFAULT_THEME) {
-    themeIdList.push(newConfig.themeGUI);
+  if (config.themeGUI !== ThemeTypes.DEFAULT_THEME) {
+    themeIdList.push(config.themeGUI);
   }
   themeIdList.push(ThemeTypes.DEFAULT_THEME);
-  return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
+  return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);  
 }
