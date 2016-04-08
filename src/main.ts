@@ -73,8 +73,13 @@ function main(): void {
   let failed = false;
   _log.startRecording();
 
+  // commander assumes that the first two values in argv are 'node' and 'blah.js' and then followed by the args.
+  // This is not the case when running from a packaged Electron app. Here you have first value 'appname' and then args.
+  const normalizedArgv = process.argv[0].includes('extraterm') ? ["extraterm", ...process.argv.slice(1)]
+                            : process.argv;
+
   // The extra fields which appear on the command object are declared in extra_commander.d.ts.
-  commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []').parse(process.argv);
+  commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []').parse(normalizedArgv);
 
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
