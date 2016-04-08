@@ -54,7 +54,7 @@ function main() {
   cp("-r", "src/commands", path.join(buildTmpPath, commandsDir));
   const codeDir = pwd();
   cd(buildTmpPath);
-  exec(`zip -r ${commandsDir}.zip ${commandsDir}`);
+  exec(`zip -y -r ${commandsDir}.zip ${commandsDir}`);
   cd(codeDir);
 
   const electronVersion = packageData.devDependencies['electron-prebuilt'];
@@ -111,7 +111,7 @@ function main() {
           cp("extraterm/README.md", versionedOutputDir);
           cp("extraterm/LICENSE.txt", versionedOutputDir);
           
-          exec(`zip -r ${outputZip} ${versionedOutputDir}`);
+          exec(`zip -y -r ${outputZip} ${versionedOutputDir}`);
           cd(thisCD);
           
           log("App bundle written to " + versionedOutputDir);
