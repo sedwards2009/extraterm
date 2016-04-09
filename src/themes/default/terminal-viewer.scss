@@ -73,11 +73,11 @@
 }
 
 .CodeMirror-selected, .terminal-unfocused .CodeMirror-selected {
-  background: #404040;
+  background: $terminal-selection-unfocused-background-color;
 }
 
 .CodeMirror-focused .CodeMirror-selected, .terminal-focused .CodeMirror-selected {
-  background: #005CCC;
+  background: $terminal-selection-background-color;
 }
 
 /* Character styles */
