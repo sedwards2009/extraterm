@@ -204,13 +204,29 @@ function handleThemeListMessage(msg: Messages.Message): void {
 
 function handleThemeContentsMessage(msg: Messages.Message): void {
   const themeContentsMessage = <Messages.ThemeContentsMessage> msg;
-  const cssFileMap = new Map<ThemeTypes.CssFile, string>();
-  ThemeTypes.cssFileEnumItems.forEach( (cssFile) => {
-    cssFileMap.set(cssFile, themeContentsMessage.themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)]);
-  });
+  
+  if (themeContentsMessage.success) {
+    const cssFileMap = new Map<ThemeTypes.CssFile, string>();
+    ThemeTypes.cssFileEnumItems.forEach( (cssFile) => {
+      cssFileMap.set(cssFile, themeContentsMessage.themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)]);
+    });
 
-  // Distribute the CSS files to the classes which want them.
-  ThemeConsumer.updateCss(cssFileMap);
+    // Distribute the CSS files to the classes which want them.
+    ThemeConsumer.updateCss(cssFileMap);
+  } else {
+    
+    // Something went wrong.
+    _log.warn(themeContentsMessage.errorMessage);
+    
+    if (themeContentsMessage.themeIdList.every( id => id === ThemeTypes.DEFAULT_THEME)) {
+      // Error occurred while trying to generate the default themes.
+      window.alert("Something has gone wrong. The default theme couldn't be generated. Sorry.");
+    } else {
+      _log.warn("Attempting to use the default theme.");
+      window.alert("Something has gone wrong while generating the theme. The default theme will be tried.");
+      requestThemeContents(ThemeTypes.DEFAULT_THEME, ThemeTypes.DEFAULT_THEME, ThemeTypes.DEFAULT_THEME);
+    }
+  }
 }
 
 function handleDevToolsStatus(msg: Messages.Message): void {
@@ -242,23 +258,23 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
       oldConfig.themeGUI !== newConfig.themeGUI) {
 
     oldConfig = newConfig;
-    return requestThemeContentsFromConfig(oldConfig);
+    return requestThemeContents(oldConfig.themeTerminal, oldConfig.themeSyntax, oldConfig.themeGUI);
   }
   
   // no-op promise.
   return new Promise<void>( (resolve, cancel) => { resolve(); } );
 }
 
-function requestThemeContentsFromConfig(config: Config): Promise<void> {
+function requestThemeContents(themeTerminal: string, themeSyntax: string, themeGUI: string): Promise<void> {
   const themeIdList = [];
-  if (config.themeTerminal !== ThemeTypes.DEFAULT_THEME) {
-    themeIdList.push(config.themeTerminal);
+  if (themeTerminal !== ThemeTypes.DEFAULT_THEME) {
+    themeIdList.push(themeTerminal);
   }
-  if (config.themeSyntax !== ThemeTypes.DEFAULT_THEME) {
-    themeIdList.push(config.themeSyntax);
+  if (themeSyntax !== ThemeTypes.DEFAULT_THEME) {
+    themeIdList.push(themeSyntax);
   }
-  if (config.themeGUI !== ThemeTypes.DEFAULT_THEME) {
-    themeIdList.push(config.themeGUI);
+  if (themeGUI !== ThemeTypes.DEFAULT_THEME) {
+    themeIdList.push(themeGUI);
   }
   themeIdList.push(ThemeTypes.DEFAULT_THEME);
   return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);  

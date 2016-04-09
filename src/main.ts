@@ -721,16 +721,26 @@ function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages
 }
 
 function sendThemeContents(webContents: GitHubElectron.WebContents, themeIdList: string[]): void {
-  themeManager.renderThemes(themeIdList).then( (renderResult) => {
-    const themeContents = renderResult.themeContents;
-    const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
-      themeIdList: themeIdList,
-      themeContents: themeContents,
-      success: true,
-      errorMessage: null
-    };
-    webContents.send(Messages.CHANNEL_NAME, msg);
-  });
+  themeManager.renderThemes(themeIdList)
+    .then( (renderResult) => {
+      const themeContents = renderResult.themeContents;
+      const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
+        themeIdList: themeIdList,
+        themeContents: themeContents,
+        success: true,
+        errorMessage: null
+      };
+      webContents.send(Messages.CHANNEL_NAME, msg);
+    })
+    .catch( (err: Error) => {
+      const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
+        themeIdList: themeIdList,
+        themeContents: null,
+        success: false,
+        errorMessage: err.message
+      };
+      webContents.send(Messages.CHANNEL_NAME, msg);      
+    });
 }
 
 //-------------------------------------------------------------------------
