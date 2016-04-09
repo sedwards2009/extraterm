@@ -721,10 +721,13 @@ function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages
 }
 
 function sendThemeContents(webContents: GitHubElectron.WebContents, themeIdList: string[]): void {
-  themeManager.renderThemes(themeIdList).then( (themeContents) => {
+  themeManager.renderThemes(themeIdList).then( (renderResult) => {
+    const themeContents = renderResult.themeContents;
     const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
       themeIdList: themeIdList,
-      themeContents: themeContents
+      themeContents: themeContents,
+      success: true,
+      errorMessage: null
     };
     webContents.send(Messages.CHANNEL_NAME, msg);
   });

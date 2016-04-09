@@ -129,7 +129,9 @@ export interface ThemeContentsRequestMessage extends Message {
  */
 export interface ThemeContentsMessage extends Message {
   themeIdList: string[];
-  themeContents: ThemeContents;
+  themeContents: ThemeContents; // is null in the case of errror.
+  success: boolean;             // true if the render was successful, otherwise there was an error.
+  errorMessage: string;         // contains the error message in the case of sucess=false, otherwise null.
 }
 
 // ********************************************************************

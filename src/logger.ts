@@ -99,6 +99,28 @@ class Logger {
   }
   
   /**
+   * Starts timing.
+   *
+   * See endTime().
+   *
+   * @param label identifying label for this timer
+   */
+  startTime(label: string): void {
+    console.time(label);
+  }
+  
+  /**
+   * Ends timing.
+   *
+   * Prints the timing result to the log. Label should be the same as the label given to startTime().
+   *
+   * @param label identifying label for the timer to end
+   */
+  endTime(label: string): void {
+    console.timeEnd(label);
+  }  
+  
+  /**
    * Gets the recorded log messages as a string.
    *
    * @return the record messages as string holding multiple lines

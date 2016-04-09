@@ -26,6 +26,12 @@ interface ListenerFunc {
   (theme: ThemeInfo): void;
 }
 
+export interface RenderResult {
+  success: boolean;
+  themeContents: ThemeContents;
+  errorMessage: string;
+}
+
 export interface ThemeManager {
   getTheme(themeName: string): ThemeInfo;
   
@@ -37,7 +43,7 @@ export interface ThemeManager {
    * @param  themeIds the stack or themes to render
    * @return the rendered CSS texts
    */
-  renderThemes(themeIdList: string[]): Promise<ThemeContents>;
+  renderThemes(themeIdList: string[]): Promise<RenderResult>;
   
   registerChangeListener(themeIdOrList: string | string[], listener: ListenerFunc): void;
   
@@ -88,19 +94,26 @@ class ThemeManagerImpl implements ThemeManager {
     return result;
   }
 
-  renderThemes(themeIdList: string[]): Promise<ThemeContents> {
+  renderThemes(themeIdList: string[]): Promise<RenderResult> {
     const themeInfoList = this._themeIdListToThemeInfoList(themeIdList);
 
     // Look for this combo in the cache.
     if ( ! this._themeStackCacheHas(themeIdList)) {
       return this._renderThemeStackContents(themeInfoList)
-        .then( (contents) => {
+        .then( (renderResults) => {
+          const contents = renderResults.themeContents;
           this._themeContents.set(themeStackCacheKey(themeIdList), contents);
-          return contents;
+          return renderResults;
         });
     } else {
-      return new Promise<ThemeContents>( (resolve, cancel) => {
-        resolve(this._themeContents.get(themeStackCacheKey(themeIdList)));
+      return new Promise<RenderResult>( (resolve, cancel) => {
+        const result: RenderResult = {
+          success: true,
+          themeContents: this._themeContents.get(themeStackCacheKey(themeIdList)),
+          errorMessage: null
+        };
+        
+        resolve(result);
       });
     }
   }
@@ -139,7 +152,8 @@ class ThemeManagerImpl implements ThemeManager {
             const oldThemeContents = this._themeContents.get(themeId);
             
             this._renderThemeStackContents(themeInfoList)
-              .then( (newThemeContents) => {
+              .then( (renderResult) => {
+                const newThemeContents = renderResult.themeContents;
                 if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
                   this._themeContents.set(themeId, newThemeContents);
                   listenerFunc(themeInfo);
@@ -217,39 +231,56 @@ class ThemeManagerImpl implements ThemeManager {
   private _validateThemeInfo(themeinfo: ThemeInfo): boolean {
     return _.isString(themeinfo.name) && themeinfo.name !== "";
   }
-  
-  private _renderThemeStackContents(themeStack: ThemeInfo[]): Promise<ThemeContents> {
-    const themeContents: ThemeContents = {
-      cssFiles: {}
-    };
 
-    const filePromises = ThemeTypes.cssFileEnumItems.map(
-      (cssFile: CssFile): Promise<{ cssFile: CssFile; cssText: string;}> => {
-      
-      const dirStack = _.uniq(themeStack.map( (themeInfo) => themeInfo.path ));
-      
-      // Create SASS variables for the location of each theme directory.
-      const variables = new Map<string, string>();
-      themeStack.forEach( (themeInfo) => {
-        variables.set('--source-dir-' + themeInfo.id, themeInfo.path.replace(/\\/g, "/"));
-      });
-      
-      const sassFileName = ThemeTypes.cssFileNameBase(cssFile) + '.scss';
-      
-      return this._loadSassFile(dirStack, sassFileName, variables)
-        .then( (cssText: string): { cssFile: CssFile; cssText: string;} => {
-          // if (theme.debug) {
-          //   this._log.debug(`Sass output for ${theme.name}, ${ThemeTypes.cssFileNameBase(cssFile)}`, cssText);
-          // }
-          return { cssText, cssFile };
-        });
+  private _renderThemeStackContents(themeStack: ThemeInfo[]): Promise<RenderResult> {
+    return this._recursiveRenderThemeStackContents(ThemeTypes.cssFileEnumItems.slice(0), themeStack);
+  }
+
+  private _recursiveRenderThemeStackContents(todoCssFile: ThemeTypes.CssFile[], themeStack: ThemeInfo[]):
+      Promise<RenderResult> {
+        
+    if (DEBUG_SASS) {
+      this._log.debug("Compiling _recursiveRenderThemeStackContents:" + todoCssFile.length);
+    }
+    
+    const cssFile = todoCssFile[0];
+    const dirStack = _.uniq(themeStack.map( (themeInfo) => themeInfo.path ));
+    const sassFileName = ThemeTypes.cssFileNameBase(cssFile) + '.scss';
+    
+    // Create SASS variables for the location of each theme directory.
+    const variables = new Map<string, string>();
+    themeStack.forEach( (themeInfo) => {
+      variables.set('--source-dir-' + themeInfo.id, themeInfo.path.replace(/\\/g, "/"));
     });
-
-    return Promise.all(filePromises).then( (results) => {
-      results.forEach( (result) => {
-        themeContents.cssFiles[ThemeTypes.cssFileNameBase(result.cssFile)] = result.cssText;
-      });
-      return themeContents;
+    
+    if (DEBUG_SASS) {
+      this._log.debug("Compiling " + sassFileName);
+      this._log.startTime("Compiling " + sassFileName);
+    }
+    
+    const loadSassPromise = this._loadSassFile(dirStack, sassFileName, variables);
+    return loadSassPromise.then( (cssText) => {
+      
+      if (DEBUG_SASS) {
+        this._log.endTime("Compiling " + sassFileName);
+        this._log.debug("Done " + sassFileName);
+      }
+      
+      if (todoCssFile.length <= 1) {
+        // Done. Send back some results.
+        const themeContents: ThemeContents = {
+          cssFiles: {}
+        };
+        themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)] = cssText;
+        const renderResult: RenderResult = { success: true, themeContents: themeContents, errorMessage: null };
+        return renderResult;
+      } else {
+        return this._recursiveRenderThemeStackContents(todoCssFile.slice(1), themeStack)
+          .then( (renderResult: RenderResult) => {
+            renderResult.themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)] = cssText;
+            return renderResult;
+          });
+      }
     });
   }
 
@@ -336,12 +367,12 @@ class ThemeManagerImpl implements ThemeManager {
             if (DEBUG_SASS) {
               this._log.debug("Failed processing " + sassFileName);
             }
-            cancel();
+            cancel(new Error("An SASS error occurred while processing " + sassFileName + "\n" + errorResult.formatted));
           }
         });
       } catch (err) {
         this._log.warn("An error occurred while processing " + sassFileName, err);
-        cancel();
+        cancel(err);
         return;
       }
     });
