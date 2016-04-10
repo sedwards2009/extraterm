@@ -61,8 +61,10 @@ sourceMapSupport.install();
 // be closed automatically when the javascript object is GCed.
 let mainWindow: GitHubElectron.BrowserWindow = null;
 
+const EXTRATERM_CONFIG_DIR = "extraterm";
 const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
+const USER_THEMES_DIR = "themes"
 
 let themeManager: ThemeManager.ThemeManager;
 let config: Config;
@@ -81,9 +83,12 @@ function main(): void {
   // The extra fields which appear on the command object are declared in extra_commander.d.ts.
   commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []').parse(normalizedArgv);
 
+  prepareAppData();  
+
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
-  themeManager = ThemeManager.makeThemeManager([themesdir]);
+  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
+  themeManager = ThemeManager.makeThemeManager([themesdir, userThemesDir]);
   
   initConfig();
   
@@ -465,6 +470,30 @@ function systemConfiguration(profiles: SessionProfile[]): SystemConfig {
 //
 //-------------------------------------------------------------------------
 
+function prepareAppData(): void {
+  const configDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR);
+  if ( ! fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir);
+  } else {
+    const statInfo = fs.statSync(configDir);
+    if ( ! statInfo.isDirectory()) {
+      _log.warn("Extraterm configuration path " + configDir + " is not a directory!");
+      return;
+    }
+  }
+  
+  const userThemesDir = path.join(configDir, USER_THEMES_DIR);
+  if ( ! fs.existsSync(userThemesDir)) {
+    fs.mkdirSync(userThemesDir);
+  } else {
+    const statInfo = fs.statSync(userThemesDir);
+    if ( ! statInfo.isDirectory()) {
+      _log.warn("Extraterm user themes path " + userThemesDir + " is not a directory!");
+      return;
+    }
+  }
+}
+
 function initConfig(): void {
   config = readConfigurationFile();
   config.systemConfig = systemConfiguration(config.sessionProfiles);
@@ -490,7 +519,7 @@ function initConfig(): void {
  * @returns The configuration object.
  */
 function readConfigurationFile(): Config {
-  const filename = path.join(app.getPath('appData'), MAIN_CONFIG);
+  const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
   let config: Config = { systemConfig: null, expandedProfiles: null };
 
   if (fs.existsSync(filename)) {
@@ -539,7 +568,7 @@ function writeConfigurationFile(config: Config): void {
   const cleanConfig = <Config> _.cloneDeep(config);
   cleanConfig.systemConfig = null;
   
-  const filename = path.join(app.getPath('appData'), MAIN_CONFIG);
+  const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
   fs.writeFileSync(filename, JSON.stringify(config, null, "  "));
 }
 
