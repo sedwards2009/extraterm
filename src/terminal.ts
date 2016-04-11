@@ -167,7 +167,8 @@ class EtTerminal extends ThemeableElementBase {
   private _scheduleLaterHandle: domutils.LaterHandle;
   private _scheduledCursorUpdates: EtTerminalViewer[];
   private _scheduledResize: boolean;
-
+  private _scheduleResizeBound: any;
+  
   // The current size of the emulator. This is used to detect changes in size.
   private _columns = -1;
   private _rows = -1;
@@ -291,7 +292,7 @@ class EtTerminal extends ThemeableElementBase {
       this._resizePollHandle = null;
     }
 
-    this._getWindow().removeEventListener('resize', this._scheduleResize.bind(this));
+    this._getWindow().removeEventListener('resize', this._scheduleResizeBound);
     if (this._emulator !== null) {
       this._emulator.destroy();
     }
@@ -423,7 +424,8 @@ class EtTerminal extends ThemeableElementBase {
     this._appendNewTerminalViewer();
 
     // FIXME there might be resizes for things other than changs in window size.
-    this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
+    this._scheduleResizeBound = this._scheduleResize.bind(this);
+    this._getWindow().addEventListener('resize', this._scheduleResizeBound);
     
     this.updateThemeCss();
     
@@ -467,6 +469,11 @@ class EtTerminal extends ThemeableElementBase {
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TERMINAL];
+  }
+
+  protected updateThemeCss() {
+    super.updateThemeCss();
+    this.resizeToContainer();
   }
 
   //-----------------------------------------------------------------------
