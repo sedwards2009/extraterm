@@ -11,6 +11,7 @@ Extraterm
 ### - [Getting Started Tutorial](docs/guide.md)
 ### - [Downloads and Releases](https://github.com/sedwards2009/extraterm/releases)
 ### - [FAQ](docs/faq.md)
+### - [Theming](docs/theming.md)
 ### - [Development and Contributing](docs/development.md)
 
 About
