@@ -23,7 +23,11 @@ function main(): void {
       
       ThemeTypes.cssFileEnumItems.forEach( (item) => {
         print("CSS " + ThemeTypes.cssFileNameBase(item) + "----");
-        print(contents.cssFiles[ThemeTypes.cssFileNameBase(item)]);
+        if (contents.success) {
+          print(contents.themeContents.cssFiles[ThemeTypes.cssFileNameBase(item)]);
+        } else {
+          print(contents.errorMessage);
+        }
       });
     });
   });
