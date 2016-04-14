@@ -47,6 +47,7 @@
         "./src/ptyproxy.ts",
         "./src/qs.d.ts",
         "./src/requirejs.d.ts",
+        "./src/resizeableelementbase.ts",
         "./src/resourceloader.ts",
         "./src/source-map-support.d.ts",
         "./src/sourceDir.ts",

@@ -12,6 +12,7 @@ export interface Config {
   themeTerminal?: string;
   themeSyntax?: string;
   themeGUI?: string;
+  terminalFontSize?: number;  // px
 
   commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;

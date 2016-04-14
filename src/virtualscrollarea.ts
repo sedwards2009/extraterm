@@ -333,6 +333,24 @@ export class VirtualScrollArea {
         });
     } );
   }
+
+  /**
+   * Update the virtual height and minimum height for all scrollables and then relayout.
+   */
+  updateAllScrollableSizes(): void {
+    this._updateAutoscrollBottom( (newState: VirtualAreaState): void => {
+      newState.scrollableStates
+        .forEach( (ss) => {
+          const newMinHeight = ss.scrollable.getMinHeight();
+          const newVirtualHeight = ss.scrollable.getVirtualHeight(this.getScrollContainerHeight());
+          const newReserveViewportHeight = ss.scrollable.getReserveViewportHeight(this.getScrollContainerHeight());
+
+          ss.virtualHeight = newVirtualHeight;
+          ss.minHeight = newMinHeight;
+          ss.reserveViewportHeight = newReserveViewportHeight;
+        });
+    } );
+  }
   
   /**
    * Scroll the view such that a range is visible.

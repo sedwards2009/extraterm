@@ -316,6 +316,16 @@ class EtTerminalViewer extends ViewerElement {
     }
   }
   
+  resize(): void {
+    if (this._codeMirror !== null) {
+      if (DEBUG_RESIZE) {
+        this._log.debug("calling codeMirror.refresh()");
+      }
+      this._codeMirror.refresh();
+    }
+    this.resizeEmulatorToParentContainer();
+  }
+  
   resizeEmulatorToParentContainer(): void {
     if (DEBUG_RESIZE) {
       this._log.debug("resizeEmulatorToParentContainer: ", this._emulator === null ? "(no emulator)" : "(have emulator)");

@@ -61,3 +61,4 @@ src/sourceDir.js
 src/generalevents.js
 src/themeableelementbase.js
 src/themeconsumer.js
+src/resizeableelementbase.js

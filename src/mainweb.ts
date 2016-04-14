@@ -52,7 +52,7 @@ export function startUp(): void {
 
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
-    setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
+    setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {      
       (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent =
         cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + cssMap.get(ThemeTypes.CssFile.TOP_WINDOW);
     }
@@ -96,6 +96,12 @@ export function startUp(): void {
     CbDropDown.init();
     MainWebUi.init();
     CbCheckBoxMenuItem.init();
+
+    window.addEventListener('resize', () => {
+      if (mainWebUi !== null) {
+        mainWebUi.resize();
+      }
+    });
 
     mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
@@ -253,6 +259,13 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
     mainWebUi.config = newConfig;
   }
   
+  if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize) {
+    setCssVars(newConfig.terminalFontSize);
+    if (mainWebUi !== null) {
+      mainWebUi.resize();
+    }
+  }
+
   if (oldConfig === null || oldConfig.themeTerminal !== newConfig.themeTerminal ||
       oldConfig.themeSyntax !== newConfig.themeSyntax ||
       oldConfig.themeGUI !== newConfig.themeGUI) {
@@ -260,6 +273,8 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
     oldConfig = newConfig;
     return requestThemeContents(oldConfig.themeTerminal, oldConfig.themeSyntax, oldConfig.themeGUI);
   }
+  
+  oldConfig = newConfig;
   
   // no-op promise.
   return new Promise<void>( (resolve, cancel) => { resolve(); } );
@@ -277,5 +292,14 @@ function requestThemeContents(themeTerminal: string, themeSyntax: string, themeG
     themeIdList.push(themeGUI);
   }
   themeIdList.push(ThemeTypes.DEFAULT_THEME);
-  return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);  
+  return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
+}
+
+function setCssVars(terminalFontSize: number): void {
+  (<HTMLStyleElement> document.getElementById('CSS_VARS')).textContent =
+    `
+    :root {
+      --terminal-font-size: ${terminalFontSize}px;
+    }
+    `;
 }

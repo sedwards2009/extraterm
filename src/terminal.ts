@@ -10,6 +10,7 @@ import base64arraybuffer = require('base64-arraybuffer');
 
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
+import ResizeableElementBase = require("./resizeableelementbase");
 import ThemeableElementBase = require('./themeableelementbase');
 import ThemeTypes = require('./theme');
 import EtEmbeddedViewer = require('./embeddedviewer');
@@ -422,10 +423,6 @@ class EtTerminal extends ThemeableElementBase {
     process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
     this._initEmulator(this._cookie);
     this._appendNewTerminalViewer();
-
-    // FIXME there might be resizes for things other than changs in window size.
-    this._scheduleResizeBound = this._scheduleResize.bind(this);
-    this._getWindow().addEventListener('resize', this._scheduleResizeBound);
     
     this.updateThemeCss();
     
@@ -475,7 +472,11 @@ class EtTerminal extends ThemeableElementBase {
     super.updateThemeCss();
     this.resizeToContainer();
   }
-
+  
+  resize(): void {
+    this._processFullResize();
+  }
+  
   //-----------------------------------------------------------------------
   //
   //   ######                                      
@@ -795,8 +796,18 @@ class EtTerminal extends ThemeableElementBase {
     this._enforceScrollbackLength();
   }
 
+  private _processFullResize(): void {
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    if (scrollerArea !== null) {
+      ResizeableElementBase.resizeChildNodes(scrollerArea);
+    }
+    
+    this._virtualScrollArea.updateAllScrollableSizes();
+    this._enforceScrollbackLength();
+  }
+
   /**
-   * Handle a resize event from the window.
+   * Handle a resize event from the above.
    */
   private _processResize(): void {
     if (this._terminalViewer !== null) {

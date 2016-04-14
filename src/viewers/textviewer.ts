@@ -562,7 +562,15 @@ class EtTextViewer extends ViewerElement {
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
-
+  
+  resize(): void {
+    if (this._codeMirror !== null) {
+      if (DEBUG_RESIZE) {
+        this._log.debug("calling codeMirror.refresh()");
+      }
+      this._codeMirror.refresh();
+    }
+  }
   //-----------------------------------------------------------------------
   //
   // ######                                      

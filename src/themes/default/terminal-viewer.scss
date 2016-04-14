@@ -31,7 +31,7 @@
 
 .terminal_container, .terminal, .CodeMirror {
     font-family: "DejaVu Sans Mono";
-    font-size: 13px;
+    font-size: var(--terminal-font-size);
     line-height: normal;
     color: $terminal-foreground-color;
     background-color: $terminal-background-color;

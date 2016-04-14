@@ -500,6 +500,12 @@ function initConfig(): void {
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
   config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, commander);
   
+  if (config.terminalFontSize === undefined || typeof config.terminalFontSize !== 'number') {
+    config.terminalFontSize = 12;
+  } else {
+    config.terminalFontSize = Math.max(Math.min(1024, config.terminalFontSize), 4);
+  }
+
   if (themeManager.getTheme(config.themeTerminal) === null) {
     config.themeTerminal = ThemeTypes.DEFAULT_THEME;
   }
@@ -724,6 +730,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   const newConfig = _.cloneDeep(config);
   newConfig.blinkingCursor = incomingConfig.blinkingCursor;
   newConfig.scrollbackLines = incomingConfig.scrollbackLines;
+  newConfig.terminalFontSize = incomingConfig.terminalFontSize;
   newConfig.commandLineActions = incomingConfig.commandLineActions;
   newConfig.themeSyntax = incomingConfig.themeSyntax;
   newConfig.themeTerminal = incomingConfig.themeTerminal;

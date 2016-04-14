@@ -25,6 +25,7 @@ const log = LogDecorator;
 
 const ID_SETTINGS = "ID_SETTINGS";
 const ID_SCROLLBACK = "ID_SCROLLBACK";
+const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
 const ID_COMMAND_OUTPUT_HANDLING = "ID_COMMAND_OUTPUT_HANDLING";
 const CLASS_MATCH_TYPE = "CLASS_MATCH_TYPE";
 const CLASS_MATCH = "CLASS_MATCH";
@@ -41,6 +42,7 @@ interface IdentifiableCommandLineAction extends CommandLineAction, Identifiable 
 interface ModelData {
   scrollbackLines: number;
   commandLineActions: IdentifiableCommandLineAction[];
+  terminalFontSize: number;
   
   themeTerminal: string;
   themeTerminalOptions: ThemeTypes.ThemeInfo[];
@@ -106,6 +108,7 @@ class EtSettingsTab extends ViewerElement {
     this._config = null;
     this._data = {
       scrollbackLines: 10000,
+      terminalFontSize: 12,
       commandLineActions: [],
       themeTerminal: "",
       themeTerminalOptions: [],
@@ -151,9 +154,12 @@ class EtSettingsTab extends ViewerElement {
     this._config = config;
 
     // We take care to only update things which have actually changed.
-    
     if (this._data.scrollbackLines !== config.scrollbackLines) {
       this._data.scrollbackLines = config.scrollbackLines;
+    }
+    
+    if (this._data.terminalFontSize !== config.terminalFontSize) {
+      this._data.terminalFontSize = config.terminalFontSize;
     }
     
     const cleanCommandLineAction = _.cloneDeep(this._data.commandLineActions);
@@ -227,10 +233,19 @@ class EtSettingsTab extends ViewerElement {
   <h2>Settings</h2>
   <div className='settingsform'>
   
-    <div class="form-inline">
+    <div class="form-horizontal">
       <div class="form-group">
-        <label for="${ID_SCROLLBACK}">Scrollback:</label>
-        <div class="input-group">
+        <label for="${ID_TERMINAL_FONT_SIZE}" class="col-sm-2 control-label">Terminal Font Size:</label>
+        <div class="input-group col-sm-2">
+          <input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="form-control" number v-model="terminalFontSize" min='1'
+            max='1024' debounce="100" />
+          <div class="input-group-addon">pixels</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="${ID_SCROLLBACK}" class="col-sm-2 control-label">Scrollback:</label>
+        <div class="input-group col-sm-2">
           <input id="${ID_SCROLLBACK}" type="number" class="form-control" number v-model="scrollbackLines" min='1'
             max='1000000' debounce="500" />
           <div class="input-group-addon">pixels</div>
@@ -402,6 +417,7 @@ class EtSettingsTab extends ViewerElement {
     stripIds(model.commandLineActions);
     
     newConfig.scrollbackLines = model.scrollbackLines;
+    newConfig.terminalFontSize = model.terminalFontSize;
     newConfig.commandLineActions = model.commandLineActions;
     newConfig.themeTerminal = model.themeTerminal;
     newConfig.themeSyntax = model.themeSyntax;

@@ -155,7 +155,7 @@ class TerminalTabInfo extends TabInfo {
   }
   
   resize(): void {
-    this.terminal.resizeToContainer();
+    this.terminal.resize();
   }
   
   hasFocus(): boolean {
@@ -545,6 +545,9 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     return this._split;
   }
   
+  resize(): void {
+    this._resize();
+  }
   /**
    * Initialise and insert a tab.
    * 
@@ -869,9 +872,10 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   
   //-----------------------------------------------------------------------
   private _resize(): void {
-    this._tabInfo.forEach( tabInfo => {
-      tabInfo.resize();
-    });
+    const tabWidgetLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    tabWidgetLeft.resize();
+    const tabWidgetRight = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
+    tabWidgetRight.resize();
   }
 
   private _sendTabOpenedEvent(): void {

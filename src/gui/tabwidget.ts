@@ -117,6 +117,15 @@ class CbTabWidget extends ThemeableElementBase {
     this.createTabHolders();
   }  
   
+  resize(): void {
+    const contentsStack = this._getContentsStack();
+    if (contentsStack === null) {
+      return;
+    }
+    contentsStack.resize();
+    super.resize();
+  }
+  
   /**
    * 
    */

@@ -7,11 +7,12 @@
 import ThemeTypes = require('./theme');
 import domutils = require('./domutils');
 import ThemeConsumer = require('./themeconsumer');
+import ResizeableElementBase = require('./resizeableelementbase');
 
 /**
  * A base class for HTMLElements which also want theming CSS support.
  */
-class ThemeableElementBase extends HTMLElement implements ThemeTypes.Themeable {
+class ThemeableElementBase extends ResizeableElementBase implements ThemeTypes.Themeable {
 
   static ID_THEME = "ID_THEME";
 
@@ -50,6 +51,7 @@ class ThemeableElementBase extends HTMLElement implements ThemeTypes.Themeable {
    */
   protected updateThemeCss(): void {
     this.setThemeCssMap(ThemeConsumer.cssMap());
+    this.resize();
   }
   
   /**

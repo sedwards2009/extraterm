@@ -19,7 +19,7 @@
 
 #ID_CONTAINER > DIV.CodeMirror {
   font-family: "DejaVu Sans Mono";
-  font-size: 13px;
+  font-size: var(--terminal-font-size);
   line-height: normal;
 }
 
