@@ -231,6 +231,20 @@ class EtTerminal extends ThemeableElementBase {
     // }
   }
   
+  /**
+   * The number of columns in the terminal screen.
+   */
+  get columns(): number {
+    return this._columns;
+  }
+  
+  /**
+   * The number of rows in the terminal screen.
+   */
+  get rows(): number {
+    return this._rows;
+  }
+  
   set scrollbackSize(scrollbackSize: number) {
     this._scrollbackSize = scrollbackSize;
   }

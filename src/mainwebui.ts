@@ -650,16 +650,16 @@ class ExtratermMainWebUI extends ThemeableElementBase {
       }
     });
     
-    let currentColumns = 80;
-    let currentRows = 24;
-    
+    let currentColumns = newTerminal.columns;
+    let currentRows = newTerminal.rows;
+
     // Terminal resize event
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_RESIZE, (ev: CustomEvent): void => {
       currentColumns = (<any> ev).detail.columns;
       currentRows = (<any> ev).detail.rows;
       if (tabInfo.ptyId !== null) {
         webipc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
-      }      
+      }
     });
 
     // Terminal title event
