@@ -557,7 +557,7 @@ class EtTerminalViewer extends ViewerElement {
           return;
         }
       }
-      this._emitBeforeSelectionChangeEvent();
+      this._emitBeforeSelectionChangeEvent(obj.origin === "*mouse");
     });
 
     this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
@@ -727,8 +727,9 @@ class EtTerminalViewer extends ViewerElement {
     this.dispatchEvent(event);
   }
 
-  private _emitBeforeSelectionChangeEvent(): void {
-    const event = new CustomEvent(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, { bubbles: true });
+  private _emitBeforeSelectionChangeEvent(originMouse: boolean): void {
+    const event = new CustomEvent(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, { detail: { originMouse: originMouse },
+      bubbles: true });
     this.dispatchEvent(event);
   }
 

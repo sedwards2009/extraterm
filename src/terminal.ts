@@ -561,8 +561,10 @@ class EtTerminal extends ThemeableElementBase {
         node.clearSelection();
       }
     });
-    
-    domutils.doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
+
+    if (ev.detail.originMouse) {
+      domutils.doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
+    }
   }
   
   // ----------------------------------------------------------------------

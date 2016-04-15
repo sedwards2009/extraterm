@@ -177,9 +177,6 @@ export function startUp(): void {
       }
     });
     
-    doc.addEventListener('selectionchange', () => {
-      mainWebUi.copyToClipboard();
-    });
     doc.addEventListener('mousedown', (ev: MouseEvent) => {
       if (ev.which === 2) {
         webipc.clipboardReadRequest();
