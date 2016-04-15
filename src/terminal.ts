@@ -816,6 +816,7 @@ class EtTerminal extends ThemeableElementBase {
       ResizeableElementBase.resizeChildNodes(scrollerArea);
     }
     
+    this._virtualScrollArea.resize();
     this._virtualScrollArea.updateAllScrollableSizes();
     this._enforceScrollbackLength();
   }
