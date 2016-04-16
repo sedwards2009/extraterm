@@ -3,13 +3,15 @@
  */
 
 /* gui-scrollbar styles */
+@import "extraterm-scrollbars";
 
 :host {
     display: block;
     color: transparent;
 }
+
 #ID_CONTAINER {
-  width: 17px;
+  width: $scrollbar-size + 2 * $scrollbar-pad;
   height: 100%;
   overflow-x: hidden;
   overflow-y: scroll;
