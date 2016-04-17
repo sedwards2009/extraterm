@@ -4030,7 +4030,10 @@ export class Emulator implements EmulatorAPI {
       } else if (p === 9) {
         // Crossed-out characters (ISO 6429).
         flags |= STRIKE_THROUGH_ATTR_FLAG;
-
+        
+      } else if (p >= 10 && p <= 20) {
+        // Font setting. Ignore
+        
       } else if (p === 22) {
         // not bold and not faint.
         flags &= ~BOLD_ATTR_FLAG;
@@ -4104,7 +4107,7 @@ export class Emulator implements EmulatorAPI {
         bg = backgroundFromCharAttr(Emulator.defAttr);
 
       } else {
-        this.error('Unknown SGR attribute: %d.', "" + p);
+        this.error('Unknown SGR attribute: %s.', "" + p);
       }
     }
 
