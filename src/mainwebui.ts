@@ -777,6 +777,11 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     tabInfo.contentDiv.parentNode.removeChild(tabInfo.contentDiv);
     tabInfo.cbTab.parentNode.removeChild(tabInfo.cbTab);
     tabInfo.destroy();
+
+    const tabContainer = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    tabContainer.update();
+    const tabContainer2 = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
+    tabContainer2.update();
     
     this._sendTabClosedEvent();
     
@@ -791,7 +796,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
       this.focusPane(tabInfo.position === TabPosition.LEFT ? TabPosition.RIGHT : TabPosition.LEFT);
     }
   }
-  
+
   focusTab(terminalId: number): void {
     let leftIndex = 0;
     let rightIndex = 0;
@@ -802,6 +807,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
           tabInfo.position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
         tabWidget.currentIndex = tabInfo.position === TabPosition.LEFT ? leftIndex : rightIndex;
         tabInfo.focus();
+        return;
       }
       
       if (tabInfo.position === TabPosition.LEFT) {
