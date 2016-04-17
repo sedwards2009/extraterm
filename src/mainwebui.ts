@@ -425,7 +425,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   }
   
   private _handleTabSwitch(tabWidget: TabWidget, position: TabPosition): void {
-    const tabInfos = this._tabInfo.filter( tabInfo => tabInfo.position === position );
+    const tabInfos = this._split ? this._tabInfo.filter( tabInfo => tabInfo.position === position ) : this._tabInfo;
     if (tabWidget.currentIndex >= 0 && tabWidget.currentIndex < tabInfos.length) {
       const tabInfo = tabInfos[tabWidget.currentIndex];
       
