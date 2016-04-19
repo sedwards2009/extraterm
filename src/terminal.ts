@@ -1056,6 +1056,13 @@ class EtTerminal extends ThemeableElementBase {
       // Shift+Ctrl+W
       this._deleteLastEmbeddedViewer();
 
+    } else if (ev.keyCode === 79 && ev.ctrlKey && ev.shiftKey) {
+      // Ctrl+Shift+O
+      const viewer = this._getLastEmbeddedViewer();
+      if (viewer !== null) {
+        this._embeddedViewerPopOutEvent(viewer);
+      }
+
     } else {
       // log("keyDown: ", ev);
       
