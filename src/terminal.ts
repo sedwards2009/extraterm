@@ -1051,6 +1051,10 @@ class EtTerminal extends ThemeableElementBase {
     } else if ((ev.keyCode === 86 && ev.ctrlKey) || (ev.keyCode === 0x2D && ev.shiftKey)) {
       // Shift+Ctrl+V or Shift+Insert
       this._pasteFromClipboard();
+      
+    } else if (ev.keyCode === 87 && ev.shiftKey && ev.ctrlKey){
+      // Shift+Ctrl+W
+      this._deleteLastEmbeddedViewer();
 
     } else {
       // log("keyDown: ", ev);
@@ -1290,6 +1294,28 @@ class EtTerminal extends ThemeableElementBase {
   public deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
     viewer.remove();
     this._virtualScrollArea.removeScrollable(viewer);
+  }
+  
+  private _getLastEmbeddedViewer(): EtEmbeddedViewer {
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);  
+    const kids = scrollerArea.children;
+    const len = kids.length;
+    for (let i=len-1; i>=0;i--) {
+      const kid = kids[i];
+      if (EtEmbeddedViewer.is(kid)) {
+        return kid;
+      }
+    }
+    return null;
+  }
+  
+  private _deleteLastEmbeddedViewer(): void {
+    const kid = this._getLastEmbeddedViewer();
+    if (kid === null) {
+      return;
+    }
+    this.deleteEmbeddedViewer(kid);
+    this.focus();
   }
   
   private _createEmbeddedViewerElement(title: string): EtEmbeddedViewer {
