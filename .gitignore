@@ -62,3 +62,5 @@ src/generalevents.js
 src/themeableelementbase.js
 src/themeconsumer.js
 src/resizeableelementbase.js
+src/shortcutmanager.js
+src/shortcutmanagertest.js
