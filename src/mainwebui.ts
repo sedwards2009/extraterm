@@ -26,6 +26,7 @@ import he = require('he');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 import LogDecorator = require('./logdecorator');
+import KeyBindingManager = require('./keybindingmanager');
 
 import Logger = require('./logger');
 
@@ -54,6 +55,12 @@ const CLASS_TAB_HEADER_ICON = "tab_header_icon";
 const CLASS_TAB_HEADER_MIDDLE = "tab_header_middle";
 const CLASS_TAB_HEADER_CLOSE = "tab_header_close";
 
+const KEYBINDINGS_MAIN_UI = "main-ui";
+const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
+const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
+const COMMAND_NEW_TAB = "newTab";
+const COMMAND_SELECT_OTHER_PANE = "selectOtherPane";
+const COMMAND_CLOSE_TAB = "closeTab";
 
 let registered = false;
 
@@ -308,6 +315,8 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   private _themes: ThemeTypes.ThemeInfo[];
 
   private _split: boolean;
+
+  private _keyBindingContexts: KeyBindingManager.KeyBindingContexts;
   
   private _initProperties(): void {
     this._log = new Logger("ExtratermMainWebUI");
@@ -316,6 +325,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     this._config = null;
     this._themes = [];
     this._split = false;
+    this._keyBindingContexts = null;
   }
   
   //-----------------------------------------------------------------------
@@ -548,6 +558,15 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   resize(): void {
     this._resize();
   }
+  
+  set keyBindingContexts(keyBindingContexts: KeyBindingManager.KeyBindingContexts) {
+    this._keyBindingContexts = keyBindingContexts;
+  }
+  
+  get keyBindingContexts() : KeyBindingManager.KeyBindingContexts {
+    return this._keyBindingContexts;
+  }
+  
   /**
    * Initialise and insert a tab.
    * 
@@ -595,32 +614,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     });
     
     // Key press event
-    tabInfo.contentDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
-      if (ev.keyCode === 37 && ev.altKey) {
-        // left-arrow
-        this._shiftTab(tabInfo.position, -1);
-    
-      } else if (ev.keyCode === 39 && ev.altKey) {
-        // right-arrow
-        this._shiftTab(tabInfo.position, 1);
-    
-      } else if (ev.keyCode === 84 && ev.ctrlKey && ev.shiftKey) {
-        // Ctrl+Shift+T - New tab.
-        this.focusTab(this.newTerminalTab(tabInfo.position));
-        
-      } else if (ev.keyCode === 81 && ev.ctrlKey && ev.shiftKey) {
-        // Ctrl+Shift+Q - Close tab.
-        this.closeTab(tabInfo.id);
-
-      } else if (ev.keyCode === 9 && ev.ctrlKey) {
-        // Ctrl+Tab
-        this.focusOtherPane();
-      } else {
-        return;
-      }
-      ev.stopPropagation();
-    });
-    
+    tabInfo.contentDiv.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabInfo), true);
   }
   
   /**
@@ -907,6 +901,56 @@ class ExtratermMainWebUI extends ThemeableElementBase {
       }
     }
     return null;
+  }
+  
+  // ----------------------------------------------------------------------
+  //
+  //   #    #                                                 
+  //   #   #  ###### #   # #####   ####    ##   #####  #####  
+  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
+  //   ###    #####    #   #####  #    # #    # #    # #    # 
+  //   #  #   #        #   #    # #    # ###### #####  #    # 
+  //   #   #  #        #   #    # #    # #    # #   #  #    # 
+  //   #    # ######   #   #####   ####  #    # #    # #####  
+  //                                                        
+  // ----------------------------------------------------------------------
+
+  private _handleKeyDownCapture(tabInfo: TabInfo, ev: KeyboardEvent): void {
+    if (this._keyBindingContexts === null) {
+      return;
+    }
+    
+    const bindings = this._keyBindingContexts.context(KEYBINDINGS_MAIN_UI);
+    if (bindings === null) {
+      return;
+    }
+    
+    const command = bindings.mapEventToCommand(ev);
+    switch (command) {
+      case COMMAND_SELECT_TAB_LEFT:
+        this._shiftTab(tabInfo.position, -1);
+        break;
+        
+      case COMMAND_SELECT_TAB_RIGHT:
+        this._shiftTab(tabInfo.position, 1);
+        break;
+        
+      case COMMAND_NEW_TAB:
+        this.focusTab(this.newTerminalTab(tabInfo.position));
+        break;
+        
+      case COMMAND_SELECT_OTHER_PANE:
+        this.focusOtherPane();
+        break;
+        
+      case COMMAND_CLOSE_TAB:
+        this.closeTab(tabInfo.id);
+        break;
+        
+      default:
+        return;
+    }
+    ev.stopPropagation();
   }
 
   //-----------------------------------------------------------------------

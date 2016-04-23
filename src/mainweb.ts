@@ -30,6 +30,8 @@ import ThemeTypes = require('./theme');
 import ThemeConsumer = require('./themeconsumer');
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
+import KeyBindingManager = require('./keybindingmanager');
+
 sourceMapSupport.install();
 
 const _log = new Logger("mainweb");
@@ -41,7 +43,7 @@ const _log = new Logger("mainweb");
 
 let terminalIdCounter = 0;
 let configuration: Config = null;
-
+let keyBindingContexts: KeyBindingManager.KeyBindingContexts = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 
@@ -119,6 +121,7 @@ export function startUp(): void {
 
     mainWebUi.config = configuration;
     mainWebUi.themes = themes;
+    mainWebUi.keyBindingContexts = keyBindingContexts;
     
     doc.body.appendChild(mainWebUi);
     
@@ -254,6 +257,11 @@ function handleClipboardRead(msg: Messages.Message): void {
 function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void> {
   if (mainWebUi !== null) {
     mainWebUi.config = newConfig;
+  }
+  
+  keyBindingContexts = KeyBindingManager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingContexts);
+  if (mainWebUi !== null) {
+    mainWebUi.keyBindingContexts = keyBindingContexts;
   }
   
   if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize) {

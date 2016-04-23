@@ -1,0 +1,9 @@
+{
+  "main-ui": {
+    "Alt-ArrowLeft": "selectTabLeft",
+    "Alt-ArrowRight": "selectTabRight",
+    "Ctrl-Shift-T": "newTab",
+    "Ctrl-Shift-Q": "closeTab",
+    "Ctrl-Tab": "selectOtherPane"
+  }
+}

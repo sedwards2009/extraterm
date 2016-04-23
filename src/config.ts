@@ -32,6 +32,7 @@ export interface CommandLineAction {
 
 export interface SystemConfig {
   homeDir: string;
+  keyBindingContexts: Object;
 }
 
 export const SESSION_TYPE_UNIX = "unix";

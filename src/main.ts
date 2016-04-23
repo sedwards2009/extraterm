@@ -65,6 +65,8 @@ const EXTRATERM_CONFIG_DIR = "extraterm";
 const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
+const KEYBINDINGS_DIRECTORY = "keybindings";
+const DEFAULT_KEYMAP = "keybindings.json";
 
 let themeManager: ThemeManager.ThemeManager;
 let config: Config;
@@ -455,7 +457,14 @@ function readPasswd(filename: string): PasswdLine[] {
  */
 function systemConfiguration(profiles: SessionProfile[]): SystemConfig {
   let homeDir = app.getPath('home');
-  return { homeDir: homeDir };
+  
+  const keymapsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
+  const defaultKeymapFilename = path.join(keymapsDir, DEFAULT_KEYMAP);
+  
+  const keymapJsonString = fs.readFileSync(defaultKeymapFilename, { encoding: "UTF8" } );
+  const keyBindingsJSON = JSON.parse(keymapJsonString);
+  
+  return { homeDir: homeDir, keyBindingContexts: keyBindingsJSON };
 }
 
 //-------------------------------------------------------------------------
