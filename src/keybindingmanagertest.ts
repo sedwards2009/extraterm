@@ -6,11 +6,11 @@
 
 import sourceMapSupport = require('source-map-support');
 import nodeunit = require('nodeunit');
-import ShortcutManager = require('./keybindingmanager');
+import KeyBindingsManager = require('./keybindingmanager');
 
 sourceMapSupport.install();
 
-const keyMap = {
+const keyBindingsMap = {
   "editor": {
     "Ctrl+O": "open",
     "Ctrl+Space": "togglemode",
@@ -30,49 +30,49 @@ const keyMap = {
 };
 
 export function testContext(test: nodeunit.Test): void {
-  const cutsContexts = ShortcutManager.loadShortcutsFromObject(keyMap);
-  const editorShortcuts = cutsContexts.context("editor");
+  const cutsContexts = KeyBindingsManager.loadKeyBindingsFromObject(keyBindingsMap);
+  const editorKeyBindings = cutsContexts.context("editor");
   
-  test.notEqual(editorShortcuts, null);
-  test.notEqual(editorShortcuts, undefined);
+  test.notEqual(editorKeyBindings, null);
+  test.notEqual(editorKeyBindings, undefined);
   test.done();
 }
 
 export function testMapEventToCommand(test: nodeunit.Test): void {
-  const cutsContexts = ShortcutManager.loadShortcutsFromObject(keyMap);
-  const editorShortcuts = cutsContexts.context("editor");
+  const cutsContexts = KeyBindingsManager.loadKeyBindingsFromObject(keyBindingsMap);
+  const editorKeyBindings = cutsContexts.context("editor");
   
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "o" }), "open");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: " " }), "togglemode");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "+" }), "zoom");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: true, shiftKey: true, key: "a" }), "all");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: " " }), "makespace");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: true, key: "s" }), "smeg");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: true, key: "w" }), "closewindow");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: true, key: "z" }), "sleep");  
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "PageUp" }), "pageup");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "Home" }), "gohome");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: false, key: "Tab" }), "dedent");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "End" }), "finish");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "ArrowUp" }), "up");
-  test.equal(editorShortcuts.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "F2" }), "rename");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "o" }), "open");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: " " }), "togglemode");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "+" }), "zoom");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: true, shiftKey: true, key: "a" }), "all");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: " " }), "makespace");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: true, key: "s" }), "smeg");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: true, key: "w" }), "closewindow");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: true, key: "z" }), "sleep");  
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "PageUp" }), "pageup");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "Home" }), "gohome");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: false, key: "Tab" }), "dedent");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "End" }), "finish");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "ArrowUp" }), "up");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "F2" }), "rename");
   
   test.done();
 }
 
-export function testMapCommandToShortcut(test: nodeunit.Test): void {
-  const cutsContexts = ShortcutManager.loadShortcutsFromObject(keyMap);
-  const editorShortcuts = cutsContexts.context("editor");
+export function testMapCommandToKeyBindings(test: nodeunit.Test): void {
+  const cutsContexts = KeyBindingsManager.loadKeyBindingsFromObject(keyBindingsMap);
+  const editorKeyBindings = cutsContexts.context("editor");
   
-  test.equal(editorShortcuts.mapCommandToShortcut("open"), "Ctrl+O");
-  test.equal(editorShortcuts.mapCommandToShortcut("smeg"), "Alt+Shift+S");
-  test.equal(editorShortcuts.mapCommandToShortcut("sleep"), "Shift+Z");
-  test.equal(editorShortcuts.mapCommandToShortcut("pageup"), "Page Up");
-  test.equal(editorShortcuts.mapCommandToShortcut("gohome"), "Home");
-  test.equal(editorShortcuts.mapCommandToShortcut("dedent"), "Alt+Tab");
-  test.equal(editorShortcuts.mapCommandToShortcut("finish"), "End");
-  test.equal(editorShortcuts.mapCommandToShortcut("up"), "Arrow Up");
-  test.equal(editorShortcuts.mapCommandToShortcut("rename"), "F2");
+  test.equal(editorKeyBindings.mapCommandToKeyBinding("open"), "Ctrl+O");
+  test.equal(editorKeyBindings.mapCommandToKeyBinding("smeg"), "Alt+Shift+S");
+  test.equal(editorKeyBindings.mapCommandToKeyBinding("sleep"), "Shift+Z");
+  test.equal(editorKeyBindings.mapCommandToKeyBinding("pageup"), "Page Up");
+  test.equal(editorKeyBindings.mapCommandToKeyBinding("gohome"), "Home");
+  test.equal(editorKeyBindings.mapCommandToKeyBinding("dedent"), "Alt+Tab");
+  test.equal(editorKeyBindings.mapCommandToKeyBinding("finish"), "End");
+  test.equal(editorKeyBindings.mapCommandToKeyBinding("up"), "Arrow Up");
+  test.equal(editorKeyBindings.mapCommandToKeyBinding("rename"), "F2");
 
   test.done();
 }

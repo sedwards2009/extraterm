@@ -13,7 +13,7 @@
     "run": "electron --force-device-scale-factor=1 src/main.js",
     "build": "tsc",
     "test": "npm run build ; nodeunit src/virtualscrollareatest.js",
-    "testshortcutmanager": "npm run build ; nodeunit src/shortcutmanagertest.js",
+    "testkeybindingmanager": "npm run build ; nodeunit src/keybindingmanagertest.js",
     "typedoc": "node src/build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
     "package": "node src/build_scripts/build_packages.js",
     "serve-test": "node src/test/httpserver.js"

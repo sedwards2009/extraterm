@@ -14,8 +14,8 @@ export interface MinimalKeyboardEvent {
   key: string;
 }
 
-// Internal data structure for pairing a shortcut with a command.
-interface Shortcut {
+// Internal data structure for pairing a key binding with a command.
+interface KeyBinding {
   altKey: boolean;
   ctrlKey: boolean;
   metaKey: boolean;
@@ -59,19 +59,19 @@ const eventKeyToHumanMapping = _.merge(configNameToEventKeyMapping, {
  * Mapping from keyboard events to command strings, and command strings to
  * shortcut names.
  */
-export class ShortcutMapping {
+export class KeyBindingMapping {
   
-  private _shortcutList: Shortcut[] = [];
+  private _keyBindingList: KeyBinding[] = [];
   
-  private _log = new Logger("ShortcutMapping");
+  private _log = new Logger("KeyBindingMapping");
   
   constructor(mappingJson: Object) {
     for (let key in mappingJson) {
-      const parsedShortcut = parseShortcut(key, mappingJson[key]);
-      if (parsedShortcut !== null) {
-        this._shortcutList.push(parsedShortcut);
+      const parsedKeyBinding = parseKeyBinding(key, mappingJson[key]);
+      if (parsedKeyBinding !== null) {
+        this._keyBindingList.push(parsedKeyBinding);
       } else {
-        this._log.warn("Unable to parse shortcut '" + key + "'. Skipping.");
+        this._log.warn("Unable to parse key binding '" + key + "'. Skipping.");
       }
     }
   }
@@ -81,41 +81,41 @@ export class ShortcutMapping {
    *
    * @param ev the keyboard event
    * @return the command string or `null` if the event doesn't have a matching
-   *         shortcut.
+   *         key binding.
    */
   mapEventToCommand(ev: MinimalKeyboardEvent): string {
     const key = ev.key.toLowerCase();
-    for (let shortcut of this._shortcutList) {
-      if (shortcut.key === ev.key &&
-          shortcut.altKey === ev.altKey &&
-          shortcut.ctrlKey === ev.ctrlKey &&
-          shortcut.shiftKey === ev.shiftKey &&
-          shortcut.metaKey === ev.metaKey) {
-        return shortcut.command;
+    for (let keyBinding of this._keyBindingList) {
+      if (keyBinding.key === ev.key &&
+          keyBinding.altKey === ev.altKey &&
+          keyBinding.ctrlKey === ev.ctrlKey &&
+          keyBinding.shiftKey === ev.shiftKey &&
+          keyBinding.metaKey === ev.metaKey) {
+        return keyBinding.command;
       }
     }
     return null;
   }
   
   /**
-   * Maps a command name to a readable shortcut name.
+   * Maps a command name to a readable key binding name.
    * 
    * @param  command the command to map
-   * @return the matching shortcut string if there is one preset, otherwise
+   * @return the matching key binding string if there is one preset, otherwise
    *         null
    */
-  mapCommandToShortcut(command: string): string {
-    for (let shortcut of this._shortcutList) {
-      if (shortcut.command === command) {
-        return formatShortcut(shortcut);
+  mapCommandToKeyBinding(command: string): string {
+    for (let keyBinding of this._keyBindingList) {
+      if (keyBinding.command === command) {
+        return formatKeyBinding(keyBinding);
       }
     }
     return null;
   }
 }
 
-function parseShortcut(shortcutString: string, command: string): Shortcut {
-  const parts = shortcutString.toLowerCase().replace(/\s/g,"").split(/\+/g);
+function parseKeyBinding(keyBindingString: string, command: string): KeyBinding {
+  const parts = keyBindingString.toLowerCase().replace(/\s/g,"").split(/\+/g);
   const partSet = new Set(parts);
   const hasShift = partSet.has("shift");
   partSet.delete("shift");
@@ -138,7 +138,7 @@ function parseShortcut(shortcutString: string, command: string): Shortcut {
     key = key.length === 1 ? key.toLowerCase() : _.capitalize(key.toLowerCase());
   }
   
-  const shortcut: Shortcut = {
+  const keyBinding: KeyBinding = {
     altKey: hasAlt,
     ctrlKey: hasCtrl,
     shiftKey: hasShift,
@@ -146,66 +146,66 @@ function parseShortcut(shortcutString: string, command: string): Shortcut {
     key: key,
     command: command
   };
-  return shortcut;
+  return keyBinding;
 }
 
-function formatShortcut(shortcut: Shortcut): string {
+function formatKeyBinding(keyBinding: KeyBinding): string {
   const parts: string[] = [];
-  if (shortcut.ctrlKey) {
+  if (keyBinding.ctrlKey) {
     parts.push("Ctrl");
   }
-  if (shortcut.metaKey) {
+  if (keyBinding.metaKey) {
     parts.push("Cmd");
   }
-  if (shortcut.altKey) {
+  if (keyBinding.altKey) {
     parts.push("Alt");
   }
-  if (shortcut.shiftKey) {
+  if (keyBinding.shiftKey) {
     parts.push("Shift");
   }
   
-  if (eventKeyToHumanMapping[shortcut.key] !== undefined) {
-    parts.push(eventKeyToHumanMapping[shortcut.key]);
+  if (eventKeyToHumanMapping[keyBinding.key] !== undefined) {
+    parts.push(eventKeyToHumanMapping[keyBinding.key]);
   } else {
-    parts.push(_.capitalize(shortcut.key));
+    parts.push(_.capitalize(keyBinding.key));
   }
   
   return parts.join("+");
 }
 
 /**
- * Container for mapping context names ot ShortcutMapper objects.
+ * Container for mapping context names ot KeyBindingMapper objects.
  */
-export class ShortcutContexts {
+export class KeyBindingContexts {
   
-  private _contexts = new Map<string, ShortcutMapping>();
+  private _contexts = new Map<string, KeyBindingMapping>();
   
   constructor(obj: Object) {
     for (let key in obj) {
-      const mapper = new ShortcutMapping(obj[key]);
+      const mapper = new KeyBindingMapping(obj[key]);
       this._contexts.set(key, mapper);
     }
   }
   
   /**
-   * Looks up the ShortcutMapping for a context by name.
+   * Looks up the KeyBindingMapping for a context by name.
    *
    * @parmam contextName the string name of the context to look up
-   * @return the `ShortcutMapping` object for the context or `null` if the
+   * @return the `KeyBindingMapping` object for the context or `null` if the
    *         context is unknown
    */
-  context(contextName: string): ShortcutMapping {
+  context(contextName: string): KeyBindingMapping {
     return this._contexts.get(contextName) || null;
   }
 }
 
 /**
- * Loads shortcuts in from a JSON style object.
+ * Loads key bindings in from a JSON style object.
  *
  * @param obj the JSON style object with keys being context names and values
- *            being objects mapping shortcut strings to command strings
- * @return the object which maps context names to `ShortcutMapping` objects
+ *            being objects mapping key binding strings to command strings
+ * @return the object which maps context names to `KeyBindingMapping` objects
  */
-export function loadShortcutsFromObject(obj: Object): ShortcutContexts {
-  return new ShortcutContexts(obj);
+export function loadKeyBindingsFromObject(obj: Object): KeyBindingContexts {
+  return new KeyBindingContexts(obj);
 }
