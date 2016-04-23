@@ -29,12 +29,17 @@ interface KeyBinding {
 const configNameToEventKeyMapping = {
   "Space": " ",
   "Plus": "+",
+  "Minus": "-",
   "PageUp": "PageUp",
   "PageDown": "PageDown",
   "Esc": "Escape",
+  "Up": "ArrowUp",
+  "Down": "ArrowDown",
+  "Left": "ArrowLeft",
+  "Right": "ArrowRight",
   "ArrowUp": "ArrowUp",
   "ArrowDown": "ArrowDown",
-  "ArrowLeftUp": "ArrowLeft",
+  "ArrowLeft": "ArrowLeft",
   "ArrowRight": "ArrowRight",
   "NumLock": "NumLock",
   "ScrollLock": "ScrollLock",
@@ -49,10 +54,10 @@ for (const key in configNameToEventKeyMapping) {
 const eventKeyToHumanMapping = _.merge(configNameToEventKeyMapping, {
   "PageUp": "Page Up",
   "PageDown": "Page Down",
-  "ArrowLeft": "Arrow Left",
-  "ArrowRight": "Arrow Right",
-  "ArrowUp": "Arrow Up",
-  "ArrowDown": "Arrow Down",
+  "ArrowLeft": "Left",
+  "ArrowRight": "Right",
+  "ArrowUp": "Up",
+  "ArrowDown": "Down",
 });
 
 /**
@@ -115,7 +120,7 @@ export class KeyBindingMapping {
 }
 
 function parseKeyBinding(keyBindingString: string, command: string): KeyBinding {
-  const parts = keyBindingString.toLowerCase().replace(/\s/g,"").split(/\+/g);
+  const parts = keyBindingString.toLowerCase().replace(/\s/g,"").split(/-/g);
   const partSet = new Set(parts);
   const hasShift = partSet.has("shift");
   partSet.delete("shift");
@@ -135,7 +140,7 @@ function parseKeyBinding(keyBindingString: string, command: string): KeyBinding 
   if (lowerConfigNameToEventKeyMapping[key.toLowerCase()] !== undefined) {
     key = lowerConfigNameToEventKeyMapping[key.toLowerCase()];
   } else {
-    key = key.length === 1 ? key.toLowerCase() : _.capitalize(key.toLowerCase());
+    key = key.length === 1 ? key.toUpperCase() : _.capitalize(key.toLowerCase());
   }
   
   const keyBinding: KeyBinding = {
