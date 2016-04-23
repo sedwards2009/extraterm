@@ -6,7 +6,7 @@
 
 import sourceMapSupport = require('source-map-support');
 import nodeunit = require('nodeunit');
-import ShortcutManager = require('./shortcutmanager');
+import ShortcutManager = require('./keybindingmanager');
 
 sourceMapSupport.install();
 
