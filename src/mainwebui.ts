@@ -61,6 +61,7 @@ const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
 const COMMAND_NEW_TAB = "newTab";
 const COMMAND_SELECT_OTHER_PANE = "selectOtherPane";
 const COMMAND_CLOSE_TAB = "closeTab";
+const COMMAND_TOGGLE_SPLIT = "toggleSplit";
 
 let registered = false;
 
@@ -290,13 +291,13 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   
   static TAG_NAME = 'extraterm-mainwebui';
   
-  static EVENT_TAB_OPENED = 'tab-opened';
+  static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
   
-  static EVENT_TAB_CLOSED = 'tab-closed';
+  static EVENT_TAB_CLOSED = 'mainwebui-tab-closed';
   
-  static EVENT_TITLE = 'title';
+  static EVENT_TITLE = 'mainwebui-title';
 
-  static EVENT_UNKNOWN_KEY_DOWN = "unknown-key-down";
+  static EVENT_SPLIT = 'mainwebui-split';
 
   static POSITION_LEFT = TabPosition.LEFT;
   
@@ -892,6 +893,11 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_TITLE, { detail: {title: title} });
     this.dispatchEvent(event);
   }
+  
+  private _sendSplitEvent(): void {
+    const event = new CustomEvent(ExtratermMainWebUI.EVENT_SPLIT, {  });
+    this.dispatchEvent(event);
+  }
 
   private _frameFinder(frameId: string): string {
     for (let i=0; i<this._tabInfo.length; i++) {
@@ -945,6 +951,11 @@ class ExtratermMainWebUI extends ThemeableElementBase {
         
       case COMMAND_CLOSE_TAB:
         this.closeTab(tabInfo.id);
+        break;
+        
+      case COMMAND_TOGGLE_SPLIT:
+        this.split = ! this._split;
+        this._sendSplitEvent();
         break;
         
       default:

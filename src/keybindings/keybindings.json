@@ -4,6 +4,7 @@
     "Alt-ArrowRight": "selectTabRight",
     "Ctrl-Shift-T": "newTab",
     "Ctrl-Shift-Q": "closeTab",
-    "Ctrl-Tab": "selectOtherPane"
+    "Ctrl-Tab": "selectOtherPane",
+    "Ctrl-Shift-S": "toggleSplit"
   }
 }

@@ -142,15 +142,9 @@ export function startUp(): void {
       window.document.title = "Extraterm - " + ev.detail.title;
     });
 
-    mainWebUi.addEventListener('keydown', (ev: KeyboardEvent) => {
-      if (ev.keyCode === 83 && ev.ctrlKey && ev.shiftKey) {
-        // Ctrl+Shift+S - Split/unsplit
-        const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
-        const checked = ! splitMenu.checked;
-        splitMenu.checked = checked;
-        mainWebUi.split = checked;
-      }
-      ev.stopPropagation();
+    mainWebUi.addEventListener(MainWebUi.EVENT_SPLIT, () => {
+      const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
+      splitMenu.checked = mainWebUi.split;
     });
 
     const mainMenu = doc.getElementById('main_menu');
