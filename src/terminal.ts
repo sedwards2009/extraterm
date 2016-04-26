@@ -20,6 +20,7 @@ import EtTerminalViewerTypes = require('./viewers/terminalviewertypes');
 import EtTextViewer = require('./viewers/textviewer');
 import EtImageViewer = require('./viewers/imageviewer');
 import generalevents = require('./generalevents');
+import KeyBindingManager = require('./keybindingmanager');
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger = require('./logger');
@@ -63,9 +64,18 @@ const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_CONTAINER = "ID_CONTAINER";
+const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
+const KEYBINDINGS_SELECTION_MODE = "terminal-selection-mode";
+const COMMAND_ENTER_SELECTION_MODE = "enterSelectionMode";
+const COMMAND_ENTER_NORMAL_MODE = "enterNormalMode";
+const COMMAND_SCROLL_PAGE_UP = "scrollPageUp";
+const COMMAND_SCROLL_PAGE_DOWN = "scrollPageDown";
+const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
+const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
+const COMMAND_DELETE_LAST_FRAME = "deleteLastFrame";
+const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
 
 const CLASS_SELECTION_MODE = "selection-mode";
-
 const SCROLL_STEP = 1;
 
 const enum ApplicationMode {
@@ -173,6 +183,8 @@ class EtTerminal extends ThemeableElementBase {
   // The current size of the emulator. This is used to detect changes in size.
   private _columns = -1;
   private _rows = -1;
+  
+  private _keyBindingContexts: KeyBindingManager.KeyBindingContexts;
 
   private _initProperties(): void {
     this._log = new Logger(EtTerminal.TAG_NAME);
@@ -205,6 +217,7 @@ class EtTerminal extends ThemeableElementBase {
     this._scheduleLaterHandle = null;
     this._scheduledCursorUpdates = [];
     this._scheduledResize = false;
+    this._keyBindingContexts = null;
   }
   
   //-----------------------------------------------------------------------
@@ -374,6 +387,14 @@ class EtTerminal extends ThemeableElementBase {
     const text = embeddedViewer.text;
     return text === undefined ? null : text;
   }
+  
+  set keyBindingContexts(keyBindingContexts: KeyBindingManager.KeyBindingContexts) {
+    this._keyBindingContexts = keyBindingContexts;
+  }
+  
+  get keyBindingContexts() : KeyBindingManager.KeyBindingContexts {
+    return this._keyBindingContexts;
+  }
 
   //-----------------------------------------------------------------------
   //
@@ -455,7 +476,6 @@ class EtTerminal extends ThemeableElementBase {
     scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
     scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
     scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
-    scrollerArea.addEventListener('keydown', this._handleKeyDown.bind(this));
     scrollerArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
 
     scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
@@ -971,46 +991,64 @@ class EtTerminal extends ThemeableElementBase {
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._terminalViewer === null) {
+    if (this._terminalViewer === null || this._keyBindingContexts === null) {
       return;
     }
     
-    switch (this._mode) {
-      case Mode.DEFAULT:
-        // Enter selection mode.
-        if (ev.keyCode === 32 && ev.ctrlKey) {
-          this._enterSelectionMode();
-          ev.stopPropagation();
-          return;
-        }
+    const keyBindings = this._keyBindingContexts.context(this._mode === Mode.DEFAULT
+        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);
+    const command = keyBindings.mapEventToCommand(ev);
+    switch (command) {
+      case COMMAND_ENTER_SELECTION_MODE:
+        this._enterSelectionMode();
         break;
 
-      case Mode.SELECTION:
-        // Exit Selection mode. Esc or Ctrl+Space toggle.
-        if (ev.keyCode === 32 && ev.ctrlKey) {
-          this._exitSelectionMode();
-          ev.stopPropagation();
-          return;
-        }
+      case COMMAND_ENTER_NORMAL_MODE:
+        this._exitSelectionMode();
+        break;
         
-        // Ctrl+C Copy
-        if (ev.keyCode === 67 && ev.ctrlKey) {
-          this.copyToClipboard();
-          ev.stopPropagation();
-          return;
+      case COMMAND_SCROLL_PAGE_UP:
+        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+          - this._virtualScrollArea.getScrollContainerHeight() / 2);
+        break;
+        
+      case COMMAND_SCROLL_PAGE_DOWN:
+        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+          + this._virtualScrollArea.getScrollContainerHeight() / 2);
+        break;
+
+      case COMMAND_COPY_TO_CLIPBOARD:
+        this.copyToClipboard();
+        break;
+
+      case COMMAND_PASTE_FROM_CLIPBOARD:
+        this._pasteFromClipboard();
+        break;
+
+      case COMMAND_DELETE_LAST_FRAME:
+        this._deleteLastEmbeddedViewer();
+        break;
+
+      case COMMAND_OPEN_LAST_FRAME:
+        const viewer = this._getLastEmbeddedViewer();
+        if (viewer !== null) {
+          this._embeddedViewerPopOutEvent(viewer);
         }
         break;
-    }
 
-    if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
-      // Route the key down to the current code mirror terminal which has the emulator attached.
-      const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
-      ev.stopPropagation();
-      if ( ! this._terminalViewer.dispatchEvent(simulatedKeydown)) {
-        // Cancelled.
-        ev.preventDefault();
-      }
+      default:
+        if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
+          // Route the key down to the current code mirror terminal which has the emulator attached.
+          const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
+          ev.stopPropagation();
+          if ( ! this._terminalViewer.dispatchEvent(simulatedKeydown)) {
+            // Cancelled.
+            ev.preventDefault();
+          }
+        }
+        return;
     }
+    ev.stopPropagation();
   }
 
   private _handleKeyPressCapture(ev: KeyboardEvent): void {
@@ -1028,47 +1066,6 @@ class EtTerminal extends ThemeableElementBase {
         ev.preventDefault();
       }
     }
-  }
-  
-  /**
-   * Handle an unknown key down event coming up from the term.
-   */
-  private _handleKeyDown(ev: KeyboardEvent): void {
-    if (ev.keyCode === 33 && ev.shiftKey) {
-      // page up
-      this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-        - this._virtualScrollArea.getScrollContainerHeight() / 2);
-      
-    } else if (ev.keyCode === 34 && ev.shiftKey) {
-      // page down
-      this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-        + this._virtualScrollArea.getScrollContainerHeight() / 2);
-
-    } else if (ev.keyCode === 67 && ev.ctrlKey){
-      // Shift+Ctrl+C
-      this.copyToClipboard();
-      
-    } else if ((ev.keyCode === 86 && ev.ctrlKey) || (ev.keyCode === 0x2D && ev.shiftKey)) {
-      // Shift+Ctrl+V or Shift+Insert
-      this._pasteFromClipboard();
-      
-    } else if (ev.keyCode === 87 && ev.shiftKey && ev.ctrlKey){
-      // Shift+Ctrl+W
-      this._deleteLastEmbeddedViewer();
-
-    } else if (ev.keyCode === 79 && ev.ctrlKey && ev.shiftKey) {
-      // Ctrl+Shift+O
-      const viewer = this._getLastEmbeddedViewer();
-      if (viewer !== null) {
-        this._embeddedViewerPopOutEvent(viewer);
-      }
-
-    } else {
-      // log("keyDown: ", ev);
-      
-      return;
-    }
-    ev.stopPropagation();
   }
 
   // ********************************************************************

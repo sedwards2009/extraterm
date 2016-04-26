@@ -129,6 +129,10 @@ class TabInfo {
     
   }
   
+  setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts): void {
+    
+  }
+  
   destroy(): void { }
   
   copyToClipboard(): void { }
@@ -195,6 +199,10 @@ class TerminalTabInfo extends TabInfo {
   getFrameContents(frameId: string): string {
     return this.terminal.getFrameContents(frameId);
   }  
+  
+  setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts): void {
+    this.terminal.keyBindingContexts = contexts;
+  }
 }
 
 /**
@@ -562,6 +570,10 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   
   set keyBindingContexts(keyBindingContexts: KeyBindingManager.KeyBindingContexts) {
     this._keyBindingContexts = keyBindingContexts;
+    
+    this._tabInfo.forEach( (tabInfo) => {
+      tabInfo.setKeyBindingContexts(keyBindingContexts);
+    });
   }
   
   get keyBindingContexts() : KeyBindingManager.KeyBindingContexts {
@@ -627,7 +639,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.frameFinder = this._frameFinder.bind(this);
     const tabInfo = new TerminalTabInfo(newTerminal, null);
-    
+    tabInfo.setKeyBindingContexts(this._keyBindingContexts);
     this._addTab(position, tabInfo);
     
     tabInfo.contentDiv.appendChild(newTerminal);

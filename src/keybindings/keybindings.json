@@ -6,5 +6,25 @@
     "Ctrl-Shift-Q": "closeTab",
     "Ctrl-Tab": "selectOtherPane",
     "Ctrl-Shift-S": "toggleSplit"
+  },
+  "terminal-default-mode": {
+    "Ctrl-Space": "enterSelectionMode",
+    "Shift-PageUp": "scrollPageUp",
+    "Shift-PageDown": "scrollPageDown",
+    "Ctrl-Shift-C": "copyToClipboard",
+    "Shift-Insert": "pasteFromClipboard",
+    "Ctrl-Shift-V": "pasteFromClipboard",
+    "Ctrl-Shift-W": "deleteLastFrame",
+    "Ctrl-Shift-O": "openLastFrame"
+  },
+  "terminal-selection-mode": {
+    "Ctrl-Space": "enterNormalMode",
+    "Shift-PageUp": "scrollPageUp",
+    "Shift-PageDown": "scrollPageDown",
+    "Ctrl-Shift-C": "copyToClipboard",
+    "Ctrl-C": "copyToClipboard",
+    "Shift-Insert": "pasteFromClipboard",
+    "Ctrl-Shift-V": "pasteFromClipboard"
   }
+
 }
