@@ -26,9 +26,7 @@
     "Shift-Insert": "pasteFromClipboard",
     "Ctrl-Shift-V": "pasteFromClipboard"
   },
-  "terminal-viewer": {
-    "Ctrl-Enter": "typeSelection",
-    "Ctrl-Shift-Enter": "typeSelectionAndCr",
+  "codemirror": {
     "Left": "goCharLeft",
     "Right": "goCharRight",
     "Up": "goLineUp",
@@ -62,5 +60,10 @@
     "Ctrl-]": "indentMore",
     "Ctrl-U": "undoSelection",
     "Shift-Ctrl-U": "redoSelection"
+  },
+  "terminal-viewer": {
+    "Ctrl-Enter": "typeSelection",
+    "Ctrl-Shift-Enter": "typeSelectionAndCr",
+    "fallthrough": "codemirror"
   }
 }

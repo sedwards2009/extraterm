@@ -6,6 +6,8 @@
 import Logger = require('./logger');
 import _ = require('lodash');
 
+const FALLTHROUGH = "fallthrough";
+
 export interface MinimalKeyboardEvent {
   altKey: boolean;
   ctrlKey: boolean;
@@ -71,15 +73,34 @@ export class KeyBindingMapping {
   
   private _log = new Logger("KeyBindingMapping");
   
-  constructor(mappingJson: Object) {
-    for (let key in mappingJson) {
-      const parsedKeyBinding = parseKeyBinding(key, mappingJson[key]);
+  constructor(mappingName: string, allMappingsJson: Object) {
+    this._gatherPairs(mappingName, allMappingsJson).forEach( (pair) => {
+      const parsedKeyBinding = parseKeyBinding(pair.key, pair.value);
       if (parsedKeyBinding !== null) {
         this.keyBindings.push(parsedKeyBinding);
       } else {
-        this._log.warn("Unable to parse key binding '" + key + "'. Skipping.");
+        this._log.warn(`Unable to parse key binding '${pair.key}'. Skipping.`);
+      }
+    });
+  }
+  
+  private _gatherPairs(name: string, allMappings: Object): { key: string, value: string}[] {
+    const mapping = allMappings[name];
+    if (mapping === undefined) {
+      this._log.warn(`Unable to find mapping with name '${name}'.`);
+      return [];
+    }
+    
+    let result = [];
+    if (mapping[FALLTHROUGH] !== undefined) {
+      result = this._gatherPairs(mapping[FALLTHROUGH], allMappings);
+    }
+    for (let key in mapping) {
+      if (key !== FALLTHROUGH) {
+        result.push( { key: key, value: mapping[key] } );
       }
     }
+    return result;
   }
   
   /**
@@ -189,7 +210,7 @@ export class KeyBindingContexts {
   
   constructor(obj: Object) {
     for (let key in obj) {
-      const mapper = new KeyBindingMapping(obj[key]);
+      const mapper = new KeyBindingMapping(key, obj);
       this._contexts.set(key, mapper);
     }
   }
