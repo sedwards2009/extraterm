@@ -184,8 +184,6 @@ class EtTerminal extends ThemeableElementBase {
   private _columns = -1;
   private _rows = -1;
   
-  private _keyBindingContexts: KeyBindingManager.KeyBindingContexts;
-
   private _initProperties(): void {
     this._log = new Logger(EtTerminal.TAG_NAME);
     this._virtualScrollArea = null;
@@ -217,7 +215,7 @@ class EtTerminal extends ThemeableElementBase {
     this._scheduleLaterHandle = null;
     this._scheduledCursorUpdates = [];
     this._scheduledResize = false;
-    this._keyBindingContexts = null;
+    this.keyBindingContexts = null;
   }
   
   //-----------------------------------------------------------------------
@@ -388,13 +386,7 @@ class EtTerminal extends ThemeableElementBase {
     return text === undefined ? null : text;
   }
   
-  set keyBindingContexts(keyBindingContexts: KeyBindingManager.KeyBindingContexts) {
-    this._keyBindingContexts = keyBindingContexts;
-  }
-  
-  get keyBindingContexts() : KeyBindingManager.KeyBindingContexts {
-    return this._keyBindingContexts;
-  }
+  public keyBindingContexts: KeyBindingManager.KeyBindingContexts;
 
   //-----------------------------------------------------------------------
   //
@@ -624,6 +616,7 @@ class EtTerminal extends ThemeableElementBase {
   private _appendNewTerminalViewer(): void {
     // Create the TerminalViewer
     const terminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
+    terminalViewer.keyBindingContexts = this.keyBindingContexts;
     
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(terminalViewer);
@@ -991,11 +984,11 @@ class EtTerminal extends ThemeableElementBase {
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._terminalViewer === null || this._keyBindingContexts === null) {
+    if (this._terminalViewer === null || this.keyBindingContexts === null) {
       return;
     }
     
-    const keyBindings = this._keyBindingContexts.context(this._mode === Mode.DEFAULT
+    const keyBindings = this.keyBindingContexts.context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);
     const command = keyBindings.mapEventToCommand(ev);
     switch (command) {
@@ -1325,6 +1318,7 @@ class EtTerminal extends ThemeableElementBase {
   private _createEmbeddedViewerElement(title: string): EtEmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
+    el.keyBindingContexts = this.keyBindingContexts;
     el.awesomeIcon = 'cog';
     el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
@@ -1534,6 +1528,7 @@ class EtTerminal extends ThemeableElementBase {
     }
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
+    dataViewer.keyBindingContexts = this.keyBindingContexts;
     const buffer = new Uint8Array(base64arraybuffer.decode(mimeData));
     dataViewer.setBytes(buffer, charset !== null ? mimeType + ";" + charset : mimeType);
     dataViewer.editable = true;

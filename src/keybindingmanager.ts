@@ -23,6 +23,7 @@ interface KeyBinding {
   key: string;
   
   command: string;
+  shortcutCode: string;
 }
 
 // Maps key names to the values used by browser keyboard events.
@@ -66,7 +67,7 @@ const eventKeyToHumanMapping = _.merge(configNameToEventKeyMapping, {
  */
 export class KeyBindingMapping {
   
-  private _keyBindingList: KeyBinding[] = [];
+  public keyBindings: KeyBinding[] = [];
   
   private _log = new Logger("KeyBindingMapping");
   
@@ -74,7 +75,7 @@ export class KeyBindingMapping {
     for (let key in mappingJson) {
       const parsedKeyBinding = parseKeyBinding(key, mappingJson[key]);
       if (parsedKeyBinding !== null) {
-        this._keyBindingList.push(parsedKeyBinding);
+        this.keyBindings.push(parsedKeyBinding);
       } else {
         this._log.warn("Unable to parse key binding '" + key + "'. Skipping.");
       }
@@ -90,7 +91,7 @@ export class KeyBindingMapping {
    */
   mapEventToCommand(ev: MinimalKeyboardEvent): string {
     const key = ev.key.toLowerCase();
-    for (let keyBinding of this._keyBindingList) {
+    for (let keyBinding of this.keyBindings) {
       if (keyBinding.key === ev.key &&
           keyBinding.altKey === ev.altKey &&
           keyBinding.ctrlKey === ev.ctrlKey &&
@@ -101,7 +102,7 @@ export class KeyBindingMapping {
     }
     return null;
   }
-  
+
   /**
    * Maps a command name to a readable key binding name.
    * 
@@ -110,7 +111,7 @@ export class KeyBindingMapping {
    *         null
    */
   mapCommandToKeyBinding(command: string): string {
-    for (let keyBinding of this._keyBindingList) {
+    for (let keyBinding of this.keyBindings) {
       if (keyBinding.command === command) {
         return formatKeyBinding(keyBinding);
       }
@@ -149,7 +150,8 @@ function parseKeyBinding(keyBindingString: string, command: string): KeyBinding 
     shiftKey: hasShift,
     metaKey: hasMeta,
     key: key,
-    command: command
+    command: command,
+    shortcutCode: keyBindingString
   };
   return keyBinding;
 }

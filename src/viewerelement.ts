@@ -9,6 +9,7 @@ import util = require('./gui/util');
 import virtualscrollarea = require('./virtualscrollarea');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
+import KeyBindingManager = require('./keybindingmanager');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -78,6 +79,8 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   
   public editable: boolean;
   
+  public keyBindingContexts: KeyBindingManager.KeyBindingContexts;
+
   // VirtualScrollable
   getMinHeight(): number {
     return 0;
@@ -104,7 +107,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
       bottom: 0,
       viewPortTop: 0
     };
-  } 
+  }
    
   setCursorPositionBottom(x: number): boolean {
     return false;
