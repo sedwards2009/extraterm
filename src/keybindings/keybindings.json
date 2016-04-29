@@ -70,5 +70,9 @@
     "Ctrl-Enter": "typeSelection",
     "Ctrl-Shift-Enter": "typeSelectionAndCr",
     "fallthrough": "codemirror"
-  }  
+  },
+  "image-viewer": {
+    "Up": "goUp",
+    "Down": "goDown"
+  }
 }

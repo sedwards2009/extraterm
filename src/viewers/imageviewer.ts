@@ -30,6 +30,10 @@ const CLASS_FORCE_UNFOCUSED = "force-unfocused";
 const CLASS_FOCUS_AUTO = "focus-auto";
 const SCROLL_STEP = 128;
 
+const KEYBINDINGS_SELECTION_MODE = "image-viewer";
+const COMMAND_GO_UP = "goUp";
+const COMMAND_GO_DOWN = "goDown";
+
 const DEBUG_SIZE = false;
 
 const log = LogDecorator;
@@ -437,44 +441,54 @@ class EtImageViewer extends ViewerElement {
   }
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._mode === ViewerElementTypes.Mode.SELECTION) {
-      let isUp: boolean = null;
-      if (ev.keyCode === 38) {
-        isUp = true;
-      } else if (ev.keyCode === 40) {
-        isUp = false;
-      }
-
-      if (isUp !== null) {
-        ev.preventDefault();
-        ev.stopPropagation();
+    if (this.keyBindingContexts !== null && this._mode === ViewerElementTypes.Mode.SELECTION) {
+      const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
+      if (keyBindings !== null) {
         
-        const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-        if (isUp) {
-          // Move the cursor up.
-          if (this._cursorTop !== 0) {
-            const newTop = Math.max(this._cursorTop - SCROLL_STEP, 0);
-            this._cursorTop = newTop;
-            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-            this.dispatchEvent(event);
+        const command = keyBindings.mapEventToCommand(ev);
+        if (command !== null) {
+          const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+          ev.preventDefault();
+          ev.stopPropagation();
+          
+          switch (command) {        
+            case COMMAND_GO_UP:
+              // Cursor up
+              if (this._cursorTop !== 0) {
+                const newTop = Math.max(this._cursorTop - SCROLL_STEP, 0);
+                this._cursorTop = newTop;
+                const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+                this.dispatchEvent(event);
 
-          } else {
-            const detail: ViewerElementTypes.CursorEdgeDetail = { edge: ViewerElementTypes.Edge.TOP, ch: 0 };
-            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-            this.dispatchEvent(event);
-          }
-        } else {
-          if (this._cursorTop + this._height < this._imageHeight) {
-            const newTop = Math.min(this._imageHeight - this._height, this._cursorTop + SCROLL_STEP);
-            this._cursorTop = newTop;
-            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-            this.dispatchEvent(event);
+              } else {
+                const detail: ViewerElementTypes.CursorEdgeDetail = { edge: ViewerElementTypes.Edge.TOP, ch: 0 };
+                const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+                this.dispatchEvent(event);
+              }
+              break;
+            
+            case COMMAND_GO_DOWN:
+              // Cursor down          
+              const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+              if (this._cursorTop + this._height < this._imageHeight) {
+                const newTop = Math.min(this._imageHeight - this._height, this._cursorTop + SCROLL_STEP);
+                this._cursorTop = newTop;
+                const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+                this.dispatchEvent(event);
 
-          } else {
-            const detail: ViewerElementTypes.CursorEdgeDetail = { edge: ViewerElementTypes.Edge.BOTTOM, ch: 0 };
-            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-            this.dispatchEvent(event);
+              } else {
+                const detail: ViewerElementTypes.CursorEdgeDetail = { edge: ViewerElementTypes.Edge.BOTTOM, ch: 0 };
+                const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+                this.dispatchEvent(event);
+              }
+              break;
+              
+            default:
+              break;
           }
+          ev.preventDefault();
+          ev.stopPropagation();          
+          return;
         }
       }
     }    
