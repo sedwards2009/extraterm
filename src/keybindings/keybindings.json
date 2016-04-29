@@ -65,5 +65,10 @@
     "Ctrl-Enter": "typeSelection",
     "Ctrl-Shift-Enter": "typeSelectionAndCr",
     "fallthrough": "codemirror"
-  }
+  },
+  "text-viewer": {
+    "Ctrl-Enter": "typeSelection",
+    "Ctrl-Shift-Enter": "typeSelectionAndCr",
+    "fallthrough": "codemirror"
+  }  
 }

@@ -38,6 +38,14 @@ const CLASS_HIDE_CURSOR = "hide_cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 
+const KEYBINDINGS_SELECTION_MODE = "text-viewer";
+const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
+const COMMAND_TYPE_SELECTION = "typeSelection";
+const COMMANDS = [
+  COMMAND_TYPE_AND_CR_SELECTION,
+  COMMAND_TYPE_SELECTION
+];
+
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const DEBUG_RESIZE = false;
@@ -420,7 +428,6 @@ class EtTextViewer extends ViewerElement {
     this.style.height = "0px";
     this._exitSelectionMode();
 
-
     const codeMirrorOptions: CodeMirror.EditorConfiguration = {
       value: "",
       readOnly: true,
@@ -428,7 +435,9 @@ class EtTextViewer extends ViewerElement {
       scrollbarStyle: "null",
       cursorScrollMargin: 0,
       showCursorWhenSelecting: true,
-      theme: "text"
+      styleActiveLine: true,
+      theme: "text",
+      keyMap: this._codeMirrorKeyMap()
     };
 
     if (this._mimeType !== null) {
@@ -691,7 +700,25 @@ class EtTextViewer extends ViewerElement {
   //   #    # ######   #   #####   ####  #    # #    # #####  
   //                                                        
   // ----------------------------------------------------------------------
-  
+  private _codeMirrorKeyMap(): any {
+    if (this.keyBindingContexts === null) {
+      return {};  // empty keymap
+    }
+    
+    const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
+    if (keyBindings === null) {
+      return {};
+    }
+
+    const codeMirrorKeyMap = keyBindings.keyBindings
+          .filter( (binding) => COMMANDS.indexOf(binding.command) === -1)
+          .reduce( (accu, binding) => {
+            accu[binding.shortcutCode] = binding.command;
+            return accu;
+          }, {});
+    return codeMirrorKeyMap;
+  }
+    
   public dispatchEvent(ev: Event): boolean {
     if (ev.type === 'keydown' || ev.type === 'keypress') {
       const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
@@ -730,28 +757,37 @@ class EtTextViewer extends ViewerElement {
   }
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
-    // Intercept Ctrl+Enter and Ctrl+Shift+Enter
-    if (this._mode === ViewerElementTypes.Mode.SELECTION && ev.ctrlKey && ev.keyCode === 13) {
-      ev.stopPropagation();
-      
-      const text = this._codeMirror.getDoc().getSelection();
-      if (text !== "") {
-        if (ev.shiftKey) {
-          // Exit selection mode.
-          const setModeDetail: generalevents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
-          const setModeEvent = new CustomEvent(generalevents.EVENT_SET_MODE, { detail: setModeDetail });
-          setModeEvent.initCustomEvent(generalevents.EVENT_SET_MODE, true, true, setModeDetail);
-          this.dispatchEvent(setModeEvent);
+    if (this.keyBindingContexts !== null && this._mode === ViewerElementTypes.Mode.SELECTION) {
+      const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
+      if (keyBindings !== null) {
+        const command = keyBindings.mapEventToCommand(ev);
+        switch (command) {
+          case COMMAND_TYPE_AND_CR_SELECTION:
+          case COMMAND_TYPE_SELECTION:
+            ev.stopPropagation();
+            const text = this._codeMirror.getDoc().getSelection();
+            if (text !== "") {
+              if (command === COMMAND_TYPE_AND_CR_SELECTION) {
+                // Exit selection mode.
+                const setModeDetail: generalevents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
+                const setModeEvent = new CustomEvent(generalevents.EVENT_SET_MODE, { detail: setModeDetail });
+                setModeEvent.initCustomEvent(generalevents.EVENT_SET_MODE, true, true, setModeDetail);
+                this.dispatchEvent(setModeEvent);
+              }              
+              const typeTextDetail: generalevents.TypeTextEventDetail =
+                                      { text: text + (command === COMMAND_TYPE_AND_CR_SELECTION ? "\n" : "") };
+              const typeTextEvent = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
+              typeTextEvent.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
+              this.dispatchEvent(typeTextEvent);
+            }            
+            return;
+            
+          default:
+            break;
         }
-        
-        const typeTextDetail: generalevents.TypeTextEventDetail = { text: text + (ev.shiftKey ? "\n" : "") };
-        const typeTextEvent = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
-        typeTextEvent.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
-        this.dispatchEvent(typeTextEvent);
-      }      
-      return;
+      }
     }
-    
+
     // Send all Alt+* and Ctrl+Shift+A-Z keys above
     if (ev.altKey || (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90)) {
       ev.stopPropagation();
