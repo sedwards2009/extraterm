@@ -27,6 +27,7 @@
     "files": [
         "./src/abouttab.ts",
         "./src/codemirror_extra.d.ts",
+        "./src/codemirrorcommands.ts",
         "./src/commandplaceholder.ts",
         "./src/config.ts",
         "./src/domutils.ts",

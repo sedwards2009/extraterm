@@ -25,7 +25,7 @@ interface KeyBinding {
   key: string;
   
   command: string;
-  shortcutCode: string;
+  normalizedShortcut: string;
 }
 
 // Maps key names to the values used by browser keyboard events.
@@ -62,6 +62,14 @@ const eventKeyToHumanMapping = _.merge(configNameToEventKeyMapping, {
   "ArrowUp": "Up",
   "ArrowDown": "Down",
 });
+
+const eventKeyToCodeMirrorMapping = {
+  "ArrowLeft": "Left",
+  "ArrowRight": "Right",
+  "ArrowUp": "Up",
+  "ArrowDown": "Down",
+  "Escape": "Esc",
+};
 
 /**
  * Mapping from keyboard events to command strings, and command strings to
@@ -172,8 +180,9 @@ function parseKeyBinding(keyBindingString: string, command: string): KeyBinding 
     metaKey: hasMeta,
     key: key,
     command: command,
-    shortcutCode: keyBindingString
+    normalizedShortcut: ""
   };
+  keyBinding.normalizedShortcut = formatNormalizedKeyBinding(keyBinding);
   return keyBinding;
 }
 
@@ -199,6 +208,33 @@ function formatKeyBinding(keyBinding: KeyBinding): string {
   }
   
   return parts.join("+");
+}
+
+/**
+ * Creates a formatted string name of the key binding the same way CodeMirror does internally.
+ */
+function formatNormalizedKeyBinding(keyBinding: KeyBinding): string {
+  const parts: string[] = [];
+  if (keyBinding.shiftKey) {
+    parts.push("Shift");
+  }
+  if (keyBinding.metaKey) {
+    parts.push("Cmd");
+  }
+  if (keyBinding.ctrlKey) {
+    parts.push("Ctrl");
+  }
+  if (keyBinding.altKey) {
+    parts.push("Alt");
+  }
+  
+  if (eventKeyToCodeMirrorMapping[keyBinding.key] !== undefined) {
+    parts.push(eventKeyToCodeMirrorMapping[keyBinding.key]);
+  } else {
+    parts.push(_.capitalize(keyBinding.key));
+  }
+  
+  return parts.join("-");
 }
 
 /**

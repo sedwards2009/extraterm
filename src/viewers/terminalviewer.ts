@@ -12,6 +12,7 @@ import ThemeableElementBase = require('../themeableelementbase');
 import util = require("../gui/util");
 import domutils = require("../domutils");
 import CodeMirror = require('codemirror');
+import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
 import EtTerminalViewerTypes = require('./terminalviewertypes');
 import termjs = require('../term');
@@ -831,12 +832,11 @@ class EtTerminalViewer extends ViewerElement {
     const codeMirrorKeyMap = keyBindings.keyBindings
           .filter( (binding) => COMMANDS.indexOf(binding.command) === -1)
           .reduce( (accu, binding) => {
-            accu[binding.shortcutCode] = binding.command;
+            accu[binding.normalizedShortcut] = binding.command;
             return accu;
           }, {});
     return codeMirrorKeyMap;
   }
-
   
   public dispatchEvent(ev: Event): boolean {
     if (ev.type === 'keydown' || ev.type === 'keypress') {
@@ -916,7 +916,7 @@ class EtTerminalViewer extends ViewerElement {
         }
       }
     }
-      
+    
     // Send all Alt+* and Ctrl+Shift+A-Z keys above
     if (ev.altKey || (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90)) {
       ev.stopPropagation();

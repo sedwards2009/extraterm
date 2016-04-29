@@ -44,7 +44,7 @@
     "Insert": "toggleOverwrite",
     "Esc": "singleSelection",
     "Ctrl-A": "selectAll",
-    "Ctrl-D": "deleteLine",
+    "Shift-Delete": "deleteLine",
     "Ctrl-Z": "undo",
     "Shift-Ctrl-Z": "redo",
     "Ctrl-Y": "redo",
@@ -59,7 +59,8 @@
     "Ctrl-[": "indentLess",
     "Ctrl-]": "indentMore",
     "Ctrl-U": "undoSelection",
-    "Shift-Ctrl-U": "redoSelection"
+    "Shift-Ctrl-U": "redoSelection",
+    "Ctrl-Shift-\\": "verticalMultiCursor"
   },
   "terminal-viewer": {
     "Ctrl-Enter": "typeSelection",

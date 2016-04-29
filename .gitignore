@@ -64,3 +64,4 @@ src/themeconsumer.js
 src/resizeableelementbase.js
 src/keybindingmanager.js
 src/keybindingmanagertest.js
+src/codemirrorcommands.js

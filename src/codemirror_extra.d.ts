@@ -28,6 +28,7 @@ declare module CodeMirror {
   interface Doc {
     getSelection(linesep?: string): string;
     getSelections(linesep?: string): string[];
+    setSelections(ranges: {anchor: CodeMirror.Position, head: CodeMirror.Position}[], primary?: number, options?: Object);
   }
   
   interface ModeInfo {
@@ -43,4 +44,5 @@ declare module CodeMirror {
   function findModeByExtension(ext: string): ModeInfo;
   function findModeByFileName(fileName: string): ModeInfo;
   function findModeByName(name: string): ModeInfo;
+  var commands: Object;
 }

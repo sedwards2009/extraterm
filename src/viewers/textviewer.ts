@@ -17,6 +17,7 @@ import util = require("../gui/util");
 import domutils = require("../domutils");
 import ThemeTypes = require('../theme');
 import CodeMirror = require('codemirror');
+import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
 import EtTextViewerTypes = require('./terminalviewertypes');
 import virtualscrollarea = require('../virtualscrollarea');
@@ -713,7 +714,7 @@ class EtTextViewer extends ViewerElement {
     const codeMirrorKeyMap = keyBindings.keyBindings
           .filter( (binding) => COMMANDS.indexOf(binding.command) === -1)
           .reduce( (accu, binding) => {
-            accu[binding.shortcutCode] = binding.command;
+            accu[binding.normalizedShortcut] = binding.command;
             return accu;
           }, {});
     return codeMirrorKeyMap;
