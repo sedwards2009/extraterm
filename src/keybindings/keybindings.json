@@ -62,7 +62,9 @@
     "Shift-Ctrl-U": "redoSelection",
     "Ctrl-Shift-\\": "verticalMultiCursor",
     "Ctrl-/": "backSlashesToForward",
-    "Ctrl-\\": "forwardSlashesToBack"
+    "Ctrl-\\": "forwardSlashesToBack",
+    "Ctrl-'": "escapeShellChars",
+    "Ctrl-Shift-'": "unescapeShellChars"
   },
   "terminal-viewer": {
     "Ctrl-Enter": "typeSelection",

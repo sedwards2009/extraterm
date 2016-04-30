@@ -71,6 +71,26 @@ function backSlashesToForward(cm: CodeMirror.Editor): void {
 }
 CodeMirror.commands["backSlashesToForward"] = backSlashesToForward;
 
+/**
+ * Command to backslash escape possible shell special characters in the selection.
+ * 
+ * @param cm the CodeMirror instance to operate on
+ */
+function escapeShellChars(cm: CodeMirror.Editor): void {
+  replaceInSelection(cm, /([^a-zA-Z0-9_./,])/g, "\\$1");
+}
+CodeMirror.commands["escapeShellChars"] = escapeShellChars;
+
+/**
+ * Command to unescape backslash escaped shell special characters in the selection.
+ * 
+ * @param cm the CodeMirror instance to operate on
+ */
+function unescapeShellChars(cm: CodeMirror.Editor): void {
+  replaceInSelection(cm, /\\(.)/g, "$1");
+}
+CodeMirror.commands["unescapeShellChars"] = unescapeShellChars;
+
 export function init() {
   // This is needed to make sure that the TypeScript compile sees that that module is used and should be included.
 }
