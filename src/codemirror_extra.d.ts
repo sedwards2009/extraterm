@@ -29,6 +29,7 @@ declare module CodeMirror {
     getSelection(linesep?: string): string;
     getSelections(linesep?: string): string[];
     setSelections(ranges: {anchor: CodeMirror.Position, head: CodeMirror.Position}[], primary?: number, options?: Object);
+    replaceSelections(replacements: string[], select?: 'around' | 'start');
   }
   
   interface ModeInfo {

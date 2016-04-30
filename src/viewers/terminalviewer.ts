@@ -55,6 +55,8 @@ const log = LogDecorator;
 let registered = false;
 let cssText: string = null;
 
+CodeMirrorCommands.init();
+
 function getCssText(): string {
   return cssText;
 }

@@ -6,7 +6,7 @@ import CodeMirror = require('codemirror');
 /**
  * Command to extend the selection vertically in both directions as multiple cursors.
  * 
- * @param  {CodeMirror.Editor} cm current CodeMirror instance
+ * @param cm the CodeMirror instance to operate on
  */
 function verticalMultiCursor(cm: CodeMirror.Editor): void {
   const doc = cm.getDoc();
@@ -35,3 +35,42 @@ function verticalMultiCursor(cm: CodeMirror.Editor): void {
 }
 
 CodeMirror.commands["verticalMultiCursor"] = verticalMultiCursor;
+
+/**
+ * Replaces text in the CodeMirror selection using a RegExp.
+ *
+ * @param cm the CodeMirror instance to operate on
+ * @param searchExp the regular expression matching the strings to replace
+ * @param replacement the replacement string
+ */
+function replaceInSelection(cm: CodeMirror.Editor, searchExp: RegExp, replacement: string): void {
+  const selectionsText = cm.getDoc().getSelections();
+  const replacements = selectionsText.map( (str) => {
+    return str.replace(searchExp, replacement);
+  });
+  cm.getDoc().replaceSelections(replacements, "around");
+}
+
+/**
+ * Command to replace forward slashes with back slashes in the selection.
+ * 
+ * @param cm the CodeMirror instance to operate on
+ */
+function forwardSlashesToBack(cm: CodeMirror.Editor): void {
+  replaceInSelection(cm, /\//g, "\\");
+}
+CodeMirror.commands["forwardSlashesToBack"] = forwardSlashesToBack;
+
+/**
+ * Command to replace back slashes with forward slashes in the selection.
+ * 
+ * @param cm the CodeMirror instance to operate on
+ */
+function backSlashesToForward(cm: CodeMirror.Editor): void {
+  replaceInSelection(cm, /\\/g, "/");
+}
+CodeMirror.commands["backSlashesToForward"] = backSlashesToForward;
+
+export function init() {
+  // This is needed to make sure that the TypeScript compile sees that that module is used and should be included.
+}

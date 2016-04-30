@@ -60,7 +60,9 @@
     "Ctrl-]": "indentMore",
     "Ctrl-U": "undoSelection",
     "Shift-Ctrl-U": "redoSelection",
-    "Ctrl-Shift-\\": "verticalMultiCursor"
+    "Ctrl-Shift-\\": "verticalMultiCursor",
+    "Ctrl-/": "backSlashesToForward",
+    "Ctrl-\\": "forwardSlashesToBack"
   },
   "terminal-viewer": {
     "Ctrl-Enter": "typeSelection",
