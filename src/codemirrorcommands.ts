@@ -17,9 +17,11 @@ function verticalMultiCursor(cm: CodeMirror.Editor): void {
   const headCol = Math.max(cursorHead.ch, cursorAnchor.ch);
 
   const newSelections: { anchor: CodeMirror.Position, head: CodeMirror.Position}[] = [];
-  const len = doc.lineCount();
+  const wholeHeight = cursorAnchor.line === cursorHead.line;
+  const start = wholeHeight ? 0 : Math.min(cursorAnchor.line, cursorHead.line);
+  const end = wholeHeight? doc.lineCount() : Math.max(cursorAnchor.line, cursorHead.line) + 1;
   let primaryIndex = 0;
-  for (let i=0; i<len; i++) {
+  for (let i=start; i<end; i++) {
     const lineStr = doc.getLine(i);
     if (lineStr.length >= anchorCol) {
       newSelections.push( {
