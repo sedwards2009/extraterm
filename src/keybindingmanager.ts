@@ -25,6 +25,7 @@ interface KeyBinding {
   key: string;
   
   command: string;
+  shortcut: string;
   normalizedShortcut: string;
 }
 
@@ -142,7 +143,7 @@ export class KeyBindingMapping {
   mapCommandToKeyBinding(command: string): string {
     for (let keyBinding of this.keyBindings) {
       if (keyBinding.command === command) {
-        return formatKeyBinding(keyBinding);
+        return keyBinding.shortcut;
       }
     }
     return null;
@@ -180,9 +181,11 @@ function parseKeyBinding(keyBindingString: string, command: string): KeyBinding 
     metaKey: hasMeta,
     key: key,
     command: command,
+    shortcut: "",
     normalizedShortcut: ""
   };
   keyBinding.normalizedShortcut = formatNormalizedKeyBinding(keyBinding);
+  keyBinding.shortcut = formatKeyBinding(keyBinding);
   return keyBinding;
 }
 
@@ -244,9 +247,12 @@ export class KeyBindingContexts {
   
   private _contexts = new Map<string, KeyBindingMapping>();
   
+  public contextNames = [];
+  
   constructor(obj: Object) {
     for (let key in obj) {
       const mapper = new KeyBindingMapping(key, obj);
+      this.contextNames.push(key);
       this._contexts.set(key, mapper);
     }
   }

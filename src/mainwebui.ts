@@ -11,6 +11,7 @@ import resourceLoader = require('./resourceloader');
 import EtTerminal = require('./terminal');
 import EtSettingsTab = require('./settings/settingstab2');
 import EtAboutTab = require('./abouttab');
+import EtKeyBindingsTab = require('./keybindingstab');
 import EtViewerTab = require('./viewertab');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
@@ -269,6 +270,16 @@ class AboutTabInfo extends ViewerElementTabInfo {
   }
 }
 
+class KeyBindingsTabInfo extends ViewerElementTabInfo {
+  constructor(public keyBindingsElement: EtKeyBindingsTab) {
+    super(keyBindingsElement);
+  }
+
+  setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts): void {
+    this.keyBindingsElement.keyBindingContexts = contexts;
+  }
+}
+
 const staticLog = new Logger("Static ExtratermMainWebUI");
 
 // Theme management
@@ -288,6 +299,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     TabWidget.init();
     EtTerminal.init();
     EtSettingsTab.init();
+    EtKeyBindingsTab.init();
     EtAboutTab.init();
     EtViewerTab.init();
     
@@ -747,6 +759,18 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     } else {
       const viewerElement = <EtSettingsTab> document.createElement(EtSettingsTab.TAG_NAME);
       const tabInfo = new SettingsTabInfo(viewerElement, this._themes);
+      this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
+    }
+  }
+  
+  openKeyBindingsTab(): void {
+    const keyBindingsTabs = this._tabInfo.filter( (tabInfo) => tabInfo instanceof KeyBindingsTabInfo );
+    if (keyBindingsTabs.length !== 0) {
+      this.focusTab(keyBindingsTabs[0].id);
+    } else {
+      const viewerElement = <EtKeyBindingsTab> document.createElement(EtKeyBindingsTab.TAG_NAME);
+      const tabInfo = new KeyBindingsTabInfo(viewerElement);
+      tabInfo.setKeyBindingContexts(this._keyBindingContexts);
       this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
     }
   }

@@ -34,6 +34,12 @@ import KeyBindingManager = require('./keybindingmanager');
 
 sourceMapSupport.install();
 
+const MENU_ITEM_SPLIT = 'split';
+const MENU_ITEM_SETTINGS = 'settings';
+const MENU_ITEM_KEY_BINDINGS = 'key_bindings';
+const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
+const MENU_ITEM_ABOUT = 'about';
+
 const _log = new Logger("mainweb");
 
 /**
@@ -111,10 +117,11 @@ export function startUp(): void {
       <cb-dropdown>
           <button class="btn btn-quiet"><i class="fa fa-bars"></i></button>
           <cb-contextmenu id="main_menu">
-              <cb-checkboxmenuitem icon="columns" id="split" name="split">Split</cb-checkboxmenuitem>
-              <cb-menuitem icon="wrench" name="settings">Settings</cb-menuitem>
-              <cb-checkboxmenuitem icon="cogs" id="developer_tools" name="developer_tools">Developer Tools</cb-checkboxmenuitem>
-              <cb-menuitem icon="lightbulb-o" name="about">About</cb-menuitem>
+              <cb-checkboxmenuitem icon="columns" id="${MENU_ITEM_SPLIT}" name="split">Split</cb-checkboxmenuitem>
+              <cb-menuitem icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</cb-menuitem>
+              <cb-menuitem icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</cb-menuitem>
+              <cb-checkboxmenuitem icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</cb-checkboxmenuitem>
+              <cb-menuitem icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</cb-menuitem>
           </cb-contextmenu>
       </cb-dropdown>
     </div>`;
@@ -150,21 +157,25 @@ export function startUp(): void {
     const mainMenu = doc.getElementById('main_menu');
     mainMenu.addEventListener('selected', (ev: CustomEvent) => {
       switch(ev.detail.name) {
-        case 'split':
+        case MENU_ITEM_SPLIT:
           const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
           mainWebUi.split = util.toBoolean(splitMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
           break;
           
-        case 'settings':
+        case MENU_ITEM_SETTINGS:
           mainWebUi.openSettingsTab();
           break;
           
-        case 'developer_tools':
+        case MENU_ITEM_KEY_BINDINGS:
+          mainWebUi.openKeyBindingsTab();
+          break;
+          
+        case MENU_ITEM_DEVELOPER_TOOLS:
           const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
           webipc.devToolsRequest(util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED)));
           break;
 
-        case 'about':
+        case MENU_ITEM_ABOUT:
           mainWebUi.openAboutTab();
           break;
           
