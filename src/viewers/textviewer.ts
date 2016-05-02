@@ -438,7 +438,6 @@ class EtTextViewer extends ViewerElement {
       scrollbarStyle: "null",
       cursorScrollMargin: 0,
       showCursorWhenSelecting: true,
-      styleActiveLine: true,
       theme: "text",
       keyMap: this._codeMirrorKeyMap()
     };
