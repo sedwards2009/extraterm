@@ -14,6 +14,7 @@ export interface MinimalKeyboardEvent {
   metaKey: boolean;
   shiftKey: boolean;  
   key: string;
+  keyCode: number;
 }
 
 // Internal data structure for pairing a key binding with a command.
@@ -120,9 +121,21 @@ export class KeyBindingMapping {
    *         key binding.
    */
   mapEventToCommand(ev: MinimalKeyboardEvent): string {
-    const key = ev.key.toLowerCase();
+    let key;
+    if (ev.key.length === 1 && ev.key.charCodeAt(0) <= 31) {
+      // Chrome on Windows sends us control codes directly in ev.key.
+      // Turn them back into normal characters.
+      if (ev.keyCode === 13) {
+        key = "Enter";
+      } else {
+        key = String.fromCharCode(ev.keyCode);
+      }
+    } else {
+      key = ev.key;
+    }
+
     for (let keyBinding of this.keyBindings) {
-      if (keyBinding.key === ev.key &&
+      if (keyBinding.key === key &&
           keyBinding.altKey === ev.altKey &&
           keyBinding.ctrlKey === ev.ctrlKey &&
           keyBinding.shiftKey === ev.shiftKey &&
