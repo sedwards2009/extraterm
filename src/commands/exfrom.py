@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
 #

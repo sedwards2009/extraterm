@@ -8,9 +8,8 @@
 if test -n "$EXTRATERM_COOKIE"
     echo "Setting up Extraterm support."
     
-    # Put our enhanced commands at the start of the PATH.
     set -l filedir (dirname (status -f))
-    set -x PATH (realpath $filedir) $PATH
+    set COMMAND_DIR (python3 -c import\ os.path\nimport\ sys\nprint\(os.path.abspath\(sys.argv\[1\]\)\)\n "$filedir")
 
     function extraterm_preexec -e fish_preexec
       echo -n -e -s "\033&" $EXTRATERM_COOKIE ";2;fish\007"
@@ -26,10 +25,10 @@ if test -n "$EXTRATERM_COOKIE"
     end
     
     function from 
-        exfrom.py $argv
+        python3 $COMMAND_DIR/exfrom.py $argv
     end
     
     function show
-        exshow.py $argv
+        python3 $COMMAND_DIR/exshow.py $argv
     end
 end
