@@ -10,6 +10,9 @@ import CbTab = require('./tab');
 import util = require('./util');
 import domutils = require('../domutils');
 import _ = require('lodash');
+import Logger = require('../logger');
+import LogDecorator = require('../logdecorator');
+const log = LogDecorator;
 
 CbStackedWidget.init();
 
@@ -24,6 +27,7 @@ const ID_TABBAR = "ID_TABBAR";
 const ID_CONTENTSTACK = "ID_CONTENTSTACK";
 const ID_CONTENTS = "ID_CONTENTS";
 const CLASS_REMAINDER = "remainder";
+const CLASS_ACTIVE = "active";
 
 /**
  * A widget to display a stack of tabs.
@@ -55,10 +59,13 @@ class CbTabWidget extends ThemeableElementBase {
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
+  private _log: Logger;
+  
   private _mutationObserver: MutationObserver;
   
   private _initProperties(): void {
-    this._mutationObserver = null;  
+    this._mutationObserver = null;
+    this._log = new Logger(CbTabWidget.TAG_NAME);
   }
   
   //-----------------------------------------------------------------------
@@ -164,7 +171,7 @@ class CbTabWidget extends ThemeableElementBase {
   private _getContentsStack(): CbStackedWidget {
     return <CbStackedWidget> this.__getById(ID_CONTENTSTACK);
   }
-
+  
   private createTabHolders(): void {
     const tabbar = this._getTabbar();
     const contentsStack = this._getContentsStack();
@@ -187,7 +194,7 @@ class CbTabWidget extends ThemeableElementBase {
       }
     }
     
-    // Make sure that is a catch all element at the end.
+    // Make sure that there is a catch all element at the end.
     const catchAlls = tabbar.querySelectorAll("." + CLASS_REMAINDER);
     let catchAllLi: HTMLLIElement = null;
     if (catchAlls.length === 0) {
@@ -203,7 +210,6 @@ class CbTabWidget extends ThemeableElementBase {
     }
     
     let tabElementCount = tabbar.querySelectorAll(".tab").length;
-    const selectTab = tabElementCount === 0 ? 0 : this.currentIndex;
     
     // Create tabs and content DIVs.
     while (tabElementCount < tabCount) {
@@ -215,7 +221,7 @@ class CbTabWidget extends ThemeableElementBase {
       contentElement.setAttribute('select', '[' + ATTR_TAG + '="tab_' + tabElementCount + '"]');
       
       tabLi.appendChild(contentElement);
-      tabLi.addEventListener('click', this._createTabClickHandler(tabElementCount));
+      tabLi.addEventListener('click', this._tabClickHandler.bind(this, tabLi, tabElementCount));
       
       // Pages for the contents stack.
       const wrapperDiv = this.ownerDocument.createElement('div');
@@ -240,22 +246,42 @@ class CbTabWidget extends ThemeableElementBase {
       tabElements = tabbar.querySelectorAll(".tab");
     }
     
+    // Try to find the previously active tab and take note of its index.
+    let selectTab = -1;
+    tabElements = tabbar.querySelectorAll(".tab");
+    for (let i=0; i<tabElements.length; i++) {
+      if (tabElements[i].classList.contains(CLASS_ACTIVE)) {
+        selectTab = i;
+        break;
+      }
+    }
+    
+    if (selectTab === -1) {
+      selectTab = Math.min(this.currentIndex, tabCount-1);
+    }
+    
     this.currentIndex = selectTab;
     this._showTab(selectTab);
   }
   
-  private _createTabClickHandler(index: number) {
-    return () => {
+  private _tabClickHandler(tabElement: HTMLElement, index: number) {
+    // This handler may fire when a tab is removed during the click event bubble procedure. This check
+    // supresses the event if the tab has been removed already.
+    if (tabElement.parentNode !== null) {
       this.currentIndex = index;
       domutils.doLater(this._sendSwitchEvent.bind(this));
-    };
+    }
   }
   
   set currentIndex(index: number) {
-    if (this._getContentsStack().currentIndex === index) {
+    if (index < 0 || this._getContentsStack().children.length <= index) {
+      this._log.warn("Out of range index given to the 'currentIndex' property.");
       return;
     }
     
+    if (this._getContentsStack().currentIndex === index) {
+      return;
+    }
     this._getContentsStack().currentIndex = index;
     this._showTab(index);
   }
@@ -307,14 +333,16 @@ class CbTabWidget extends ThemeableElementBase {
   
   private _showTab(index: number): void {
     const tabbar = this._getTabbar();
+    let tabCounter = 0;
     for (let i=0; i<tabbar.children.length; i++) {
       const item = <HTMLElement> tabbar.children.item(i);
       if (item.classList.contains('tab')) {
-        if (i === index) {
-          item.classList.add('active');
+        if (tabCounter === index) {
+          item.classList.add(CLASS_ACTIVE);
         } else {
-          item.classList.remove('active');
+          item.classList.remove(CLASS_ACTIVE);
         }
+        tabCounter++;
       }
     }
   }
