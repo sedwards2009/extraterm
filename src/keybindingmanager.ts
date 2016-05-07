@@ -63,6 +63,7 @@ const eventKeyToHumanMapping = _.merge(configNameToEventKeyMapping, {
   "ArrowRight": "Right",
   "ArrowUp": "Up",
   "ArrowDown": "Down",
+  " ": "Space",
 });
 
 const eventKeyToCodeMirrorMapping = {
