@@ -4654,6 +4654,12 @@ export class Emulator implements EmulatorAPI {
             this.glevel = previousGlevel;
             this.charsets = previousCharsets;
             
+            // Materialize the same number of rows as the normal lines array to ensure that
+            // the new screen buffer is rendered over all of the previous screen.
+            while (this.lines.length < normal.lines.length) {
+              this._getRow(this.lines.length);
+            }
+            
             this.normal = normal;
             this.showCursor();
           }
