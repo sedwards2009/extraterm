@@ -855,6 +855,8 @@ class EtTerminal extends ThemeableElementBase {
       const top = pos.top + nodeTop;
       const bottom = pos.bottom;      
       this._virtualScrollArea.scrollIntoView(top, bottom);
+    } else {
+      this._log.warn("_handleTerminalViewerCursor(): node is not a ViewerElement.");
     }
   }
   
@@ -865,7 +867,7 @@ class EtTerminal extends ThemeableElementBase {
     const kids = domutils.nodeListToArray(scrollerArea.childNodes);
     const index = kids.indexOf(<Node> ev.target);
     if (index === -1) {
-      this._log.warn("_handleTerminalViewerCursorEdge: Couldn't find the target.");
+      this._log.warn("_handleTerminalViewerCursorEdge(): Couldn't find the target.");
       return;
     }
 

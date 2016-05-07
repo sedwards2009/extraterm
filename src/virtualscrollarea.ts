@@ -8,7 +8,10 @@ import util = require('./gui/util');
 import _  = require('lodash');
 import Logger = require('./logger');
 
-const log = new Logger("VirtualScrollable");
+import LogDecorator = require('./logdecorator');
+
+const log = LogDecorator;
+const _log = new Logger("VirtualScrollable");
 
 export interface VirtualScrollable {
   /**
@@ -102,6 +105,8 @@ interface Mutator {
 export class VirtualScrollArea {
   
   private _currentState: VirtualAreaState = null;
+  
+  private _log: Logger = new Logger("VirtualScrollArea");
   
   constructor() {
     this._currentState = {
@@ -405,6 +410,7 @@ export class VirtualScrollArea {
     });
     
     ApplyState(this._currentState, newState);
+    // DumpState(newState);
     this._currentState = newState;
   }
   

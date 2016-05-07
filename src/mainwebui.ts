@@ -26,11 +26,10 @@ import config = require('./config');
 import he = require('he');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
-import LogDecorator = require('./logdecorator');
 import KeyBindingManager = require('./keybindingmanager');
 
 import Logger = require('./logger');
-
+import LogDecorator = require('./logdecorator');
 const log = LogDecorator;
 
 type Config = config.Config;
@@ -792,6 +791,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   closeTab(tabId: number): void {
     const matches = this._tabInfo.filter( (p) => p.id === tabId );
     if (matches.length === 0) {
+      this._log.warn("mainwebui.closeTab() Couldn't find the tab to close with id: " + tabId);
       return;
     }
     const tabInfo = matches[0];
