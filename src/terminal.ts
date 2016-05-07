@@ -853,7 +853,7 @@ class EtTerminal extends ThemeableElementBase {
       const pos = node.getCursorPosition();
       const nodeTop = this._virtualScrollArea.getScrollableTop(node);
       const top = pos.top + nodeTop;
-      const bottom = pos.bottom;      
+      const bottom = pos.bottom + nodeTop;
       this._virtualScrollArea.scrollIntoView(top, bottom);
     } else {
       this._log.warn("_handleTerminalViewerCursor(): node is not a ViewerElement.");
