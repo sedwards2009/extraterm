@@ -209,7 +209,7 @@ function formatKeyBinding(keyBinding: KeyBinding): string {
     parts.push("Ctrl");
   }
   if (keyBinding.metaKey) {
-    parts.push("Cmd");
+    parts.push("\u2318"); // Mac style 'pretzel' symbol
   }
   if (keyBinding.altKey) {
     parts.push("Alt");
