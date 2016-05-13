@@ -264,7 +264,7 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
     mainWebUi.config = newConfig;
   }
   
-  keyBindingContexts = KeyBindingManager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingContexts);
+  keyBindingContexts = KeyBindingManager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts);
   if (mainWebUi !== null) {
     mainWebUi.keyBindingContexts = keyBindingContexts;
   }

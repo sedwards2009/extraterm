@@ -1,0 +1,90 @@
+{
+  "name": "Mac OS X bindings",
+  "main-ui": {
+    "Cmd-ArrowLeft": "selectTabLeft",
+    "Cmd-ArrowRight": "selectTabRight",
+    "Cmd-T": "newTab",
+    "Cmd-Q": "closeTab",
+    "Cmd-Tab": "selectOtherPane",
+    "Cmd-S": "toggleSplit"
+  },
+  "terminal-default-mode": {
+    "Cmd-Space": "enterSelectionMode",
+    "Shift-PageUp": "scrollPageUp",
+    "Shift-PageDown": "scrollPageDown",
+    "Cmd-C": "copyToClipboard",
+    "Cmd-V": "pasteFromClipboard",
+    "Cmd-W": "deleteLastFrame",
+    "Cmd-O": "openLastFrame"
+  },
+  "terminal-selection-mode": {
+    "Cmd-Space": "enterNormalMode",
+    "Shift-PageUp": "scrollPageUp",
+    "Shift-PageDown": "scrollPageDown",
+    "Cmd-C": "copyToClipboard",
+    "Cmd-V": "pasteFromClipboard"
+  },
+  "codemirror": {
+    "Left": "goCharLeft",
+    "Right": "goCharRight",
+    "Up": "goLineUp",
+    "Down": "goLineDown",
+    "End": "goLineEnd",
+    "Home": "goLineStartSmart",
+    "PageUp": "goPageUp",
+    "PageDown": "goPageDown",
+    "Delete": "delCharAfter",
+    "Backspace": "delCharBefore",
+    "Shift-Backspace": "delCharBefore",
+    "Tab": "defaultTab",
+    "Shift-Tab": "indentAuto",
+    "Enter": "newlineAndIndent",
+    "Insert": "toggleOverwrite",
+    "Esc": "singleSelection",
+    "Cmd-A": "selectAll",
+    "Cmd-D": "deleteLine",
+    "Cmd-Z": "undo",
+    "Shift-Cmd-Z": "redo",
+    "Cmd-Y": "redo",
+    "Cmd-Home": "goDocStart",
+    "Cmd-Up": "goDocStart",
+    "Ctrl-Up": "goDocStart",
+    "Cmd-End": "goDocEnd",
+    "Cmd-Down": "goDocEnd",
+    "Ctrl-Down": "goDocEnd",
+    "Ctrl-Up": "goLineUp",
+    "Ctrl-Down": "goLineDown",
+    "Alt-Left": "goGroupLeft",
+    "Alt-Right": "goGroupRight",
+    "Alt-Backspace": "delGroupBefore",
+    "Ctrl-Alt-Backspace": "delGroupAfter",
+    "Alt-Delete": "delGroupAfter",
+    "Cmd-[": "indentLess",
+    "Cmd-]": "indentMore",
+    "Cmd-U": "undoSelection",
+    "Shift-Cmd-U": "redoSelection",
+    "Cmd-Shift-\\": "verticalMultiCursor",
+    "Cmd-/": "backSlashesToForward",
+    "Cmd-\\": "forwardSlashesToBack",
+    "Cmd-'": "escapeShellChars",
+    "Cmd-Shift-'": "unescapeShellChars",
+    "Cmd-Left": "goLineLeft",
+    "Cmd-Right": "goLineRight",
+    "Cmd-Backspace": "delWrappedLineLeft",
+    "Cmd-Delete": "delWrappedLineRight"
+  },  
+  "terminal-viewer": {
+    "Cmd-Enter": "typeSelection",
+    "Cmd-Shift-Enter": "typeSelectionAndCr",
+    "fallthrough": "codemirror"
+  },
+  "text-viewer": {
+    "Cmd-Enter": "typeSelection",
+    "Cmd-Shift-Enter": "typeSelectionAndCr",
+    "fallthrough": "codemirror"
+  },
+  "image-viewer": {
+    "Up": "goUp",
+    "Down": "goDown"
+  }
+}

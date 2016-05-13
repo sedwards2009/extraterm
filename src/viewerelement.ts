@@ -79,8 +79,24 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   
   public editable: boolean;
   
-  public keyBindingContexts: KeyBindingManager.KeyBindingContexts;
+  private _keyBindingContexts: KeyBindingManager.KeyBindingContexts;
 
+  set keyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts) {
+    this._setKeyBindingContexts(contexts);
+  }
+  
+  get keyBindingContexts(): KeyBindingManager.KeyBindingContexts {
+    return  this._getKeyBindingContexts();
+  }
+  
+  protected _setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts) {
+    this._keyBindingContexts = contexts;
+  }
+  
+  protected _getKeyBindingContexts(): KeyBindingManager.KeyBindingContexts {
+    return this._keyBindingContexts;
+  }
+  
   // VirtualScrollable
   getMinHeight(): number {
     return 0;

@@ -15,6 +15,7 @@ import config = require('../config');
 import ThemeTypes = require('../theme');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
+import GeneralEvents = require('../generalevents');
 
 type Config = config.Config;
 type CommandLineAction = config.CommandLineAction;
@@ -80,8 +81,6 @@ class EtSettingsTab extends ViewerElement {
   
   static TAG_NAME = "et-settings-tab";
   
-  static EVENT_CONFIG_CHANGE = "config-changed";
-
   static init(): void {
     if (registered === false) {
       window.document.registerElement(EtSettingsTab.TAG_NAME, {prototype: EtSettingsTab.prototype});
@@ -423,7 +422,7 @@ class EtSettingsTab extends ViewerElement {
     newConfig.themeSyntax = model.themeSyntax;
     newConfig.themeGUI = model.themeGUI;
 
-    const event = new CustomEvent(EtSettingsTab.EVENT_CONFIG_CHANGE, { detail: {data: newConfig} });
+    const event = new CustomEvent(GeneralEvents.EVENT_CONFIG_CHANGE, { detail: {data: newConfig} });
     this.dispatchEvent(event);
   }
 }

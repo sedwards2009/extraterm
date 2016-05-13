@@ -1,4 +1,5 @@
 {
+  "name": "PC style bindings",
   "main-ui": {
     "Alt-ArrowLeft": "selectTabLeft",
     "Alt-ArrowRight": "selectTabRight",

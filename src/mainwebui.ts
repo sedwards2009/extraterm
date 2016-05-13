@@ -27,6 +27,7 @@ import he = require('he');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 import KeyBindingManager = require('./keybindingmanager');
+import GeneralEvents = require('./generalevents');
 
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
@@ -276,6 +277,10 @@ class KeyBindingsTabInfo extends ViewerElementTabInfo {
 
   setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts): void {
     this.keyBindingsElement.keyBindingContexts = contexts;
+  }
+  
+  setConfig(config: Config): void {
+    this.keyBindingsElement.config = config;
   }
 }
 
@@ -742,7 +747,7 @@ class ExtratermMainWebUI extends ThemeableElementBase {
       });
     });
 
-    viewerElement.addEventListener(EtSettingsTab.EVENT_CONFIG_CHANGE, (ev: CustomEvent) => {
+    viewerElement.addEventListener(GeneralEvents.EVENT_CONFIG_CHANGE, (ev: CustomEvent) => {
       webipc.sendConfig(ev.detail.data);
     });
 

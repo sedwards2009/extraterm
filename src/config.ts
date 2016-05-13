@@ -16,6 +16,7 @@ export interface Config {
 
   commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;
+  keyBindingsFilename?: string;
 
   sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
   expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.
@@ -30,9 +31,15 @@ export interface CommandLineAction {
   frame: boolean;
 }
 
+export interface KeyBindingInfo {
+  name: string;
+  filename: string;
+}
+
 export interface SystemConfig {
   homeDir: string;
-  keyBindingContexts: Object;
+  keyBindingsFiles: KeyBindingInfo[];
+  keyBindingsContexts: Object;
 }
 
 export const SESSION_TYPE_UNIX = "unix";

@@ -66,7 +66,9 @@ const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
 const KEYBINDINGS_DIRECTORY = "keybindings";
-const DEFAULT_KEYMAP = "keybindings.json";
+const DEFAULT_KEYBINDING = "keybindings.json";
+const KEYBINDINGS_OSX = "keybindings-osx.json";
+const KEYBINDINGS_PC = "keybindings.json";
 
 let themeManager: ThemeManager.ThemeManager;
 let config: Config;
@@ -455,16 +457,16 @@ function readPasswd(filename: string): PasswdLine[] {
 /**
  * Extra information about the system configuration and platform.
  */
-function systemConfiguration(profiles: SessionProfile[]): SystemConfig {
+function systemConfiguration(config: Config): SystemConfig {
   let homeDir = app.getPath('home');
   
-  const keymapsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
-  const defaultKeymapFilename = path.join(keymapsDir, DEFAULT_KEYMAP);
+  const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
+  const keyBindingFiles = scanKeyBindingFiles(keyBindingsDir);
+  const defaultKeyBindingFilename = path.join(keyBindingsDir, config.keyBindingsFilename);
+  const keyBindingJsonString = fs.readFileSync(defaultKeyBindingFilename, { encoding: "UTF8" } );
+  const keyBindingsJSON = JSON.parse(keyBindingJsonString);
   
-  const keymapJsonString = fs.readFileSync(defaultKeymapFilename, { encoding: "UTF8" } );
-  const keyBindingsJSON = JSON.parse(keymapJsonString);
-  
-  return { homeDir: homeDir, keyBindingContexts: keyBindingsJSON };
+  return { homeDir: homeDir, keyBindingsContexts: keyBindingsJSON, keyBindingsFiles: keyBindingFiles };
 }
 
 //-------------------------------------------------------------------------
@@ -505,7 +507,7 @@ function prepareAppData(): void {
 
 function initConfig(): void {
   config = readConfigurationFile();
-  config.systemConfig = systemConfiguration(config.sessionProfiles);
+  config.systemConfig = systemConfiguration(config);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
   config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, commander);
   
@@ -524,7 +526,12 @@ function initConfig(): void {
   if (themeManager.getTheme(config.themeGUI) === null) {
     config.themeGUI = ThemeTypes.DEFAULT_THEME;
   }
-
+  
+  // Validate the selected keybindings config value.
+  if ( ! config.systemConfig.keyBindingsFiles.some( (t) => t.filename === config.keyBindingsFilename )) {
+    config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+  }
+  
   registerThemeChangeListener(config);
 }
 
@@ -572,6 +579,10 @@ function setConfigDefaults(config: Config): void {
     ];
     config.commandLineActions = defaultCLA;
   }
+  
+  if (config.keyBindingsFilename === undefined) {
+    config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+  }
 }
 
 /**
@@ -605,6 +616,8 @@ function getConfig(): Config {
 
 function getFullConfig(): Config {
   const fullConfig = _.cloneDeep(config);
+
+  fullConfig.systemConfig = systemConfiguration(config);
   
   _log.debug("Full config: ",fullConfig);
   return fullConfig;
@@ -624,6 +637,35 @@ function registerThemeChangeListener(config: Config): void {
 function unregisterThemeChangeListener(config: Config): void {
   const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_THEME];
   themeManager.unregisterChangeListener(themeIdList);
+}
+
+function scanKeyBindingFiles(keyBindingsDir: string): configInterfaces.KeyBindingInfo[] {
+  const result: configInterfaces.KeyBindingInfo[] = [];
+  if (fs.existsSync(keyBindingsDir)) {
+    const contents = fs.readdirSync(keyBindingsDir);
+    contents.forEach( (item) => {
+      if (item.endsWith(".json")) {
+        const infoPath = path.join(keyBindingsDir, item);
+        try {
+          const infoStr = fs.readFileSync(infoPath, {encoding: "utf8"});
+          const keyBindingJSON = JSON.parse(infoStr);
+          const name = keyBindingJSON.name;
+          if (name !== undefined) {
+            const info: configInterfaces.KeyBindingInfo = {
+              name: name,
+              filename: item
+            };
+            result.push(info);
+          } else {
+            _log.warn(`Unable to get 'name' from JSON file '${item}'`);
+          }
+        } catch(err) {
+          this._log.warn("Warning: Unable to read file ", infoPath, err);
+        }
+      }
+    });
+  }
+  return result;
 }
 
 //-------------------------------------------------------------------------
@@ -744,6 +786,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.themeSyntax = incomingConfig.themeSyntax;
   newConfig.themeTerminal = incomingConfig.themeTerminal;
   newConfig.themeGUI = incomingConfig.themeGUI;
+  newConfig.keyBindingsFilename = incomingConfig.keyBindingsFilename;
 
   setConfig(newConfig);
 

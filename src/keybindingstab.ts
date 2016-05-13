@@ -12,9 +12,18 @@ import ThemeTypes = require('./theme');
 import ViewerElement  = require('./viewerelement');
 import ThemeableElementBase = require('./themeableelementbase');
 import KeyBindingManager = require('./keybindingmanager');
+import Vue = require('vue');
 import domutils = require('./domutils');
+import configInterfaces = require('./config');
+type Config = configInterfaces.Config;
+import GeneralEvents = require('./generalevents');
+import LogDecorator = require('./logdecorator');
+
 var humanText = require('./keybindingstext.json');
 
+const log = LogDecorator;
+
+const ID_SELECTOR = "ID_SELECTOR";
 const ID_KEY_BINDINGS = "ID_KEY_BINDINGS";
 const CLASS_KEYCAP = "CLASS_KEYCAP";
 
@@ -32,6 +41,12 @@ function commandName(commandCode: string): string {
 function contextHeading(contextName: string): string {
   const str = humanText.contextNames[contextName];
   return str || contextName;
+}
+
+interface ModelData {
+  selectedKeyBindings: string;
+  keyBindingsFiles: configInterfaces.KeyBindingInfo[];
+  keyBindingsContextsStamp: any;
 }
 
 /**
@@ -60,8 +75,20 @@ class EtKeyBindingsTab extends ViewerElement {
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
+  private _config: Config;
   
+  private _vm: VueJSInstance<ModelData>;
+  
+  private _data: ModelData;
+
   private _initProperties(): void {
+    this._config = null;
+    this._vm = null;
+    this._data = {
+      selectedKeyBindings: "",
+      keyBindingsFiles: [],
+      keyBindingsContextsStamp: Date.now()
+    };
   }
   
   //-----------------------------------------------------------------------
@@ -92,6 +119,22 @@ class EtKeyBindingsTab extends ViewerElement {
     return false;
   }
   
+  set config(config: Config) {
+    this._config = config;
+
+    if (this._data.keyBindingsFiles.length !== config.systemConfig.keyBindingsFiles.length) {
+      this._data.keyBindingsFiles = config.systemConfig.keyBindingsFiles;
+    }
+    if (this._data.selectedKeyBindings !== config.keyBindingsFilename) {
+      this._data.selectedKeyBindings = config.keyBindingsFilename;
+    }
+  }
+  
+  protected _setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts): void {
+    super._setKeyBindingContexts(contexts);
+    this._data.keyBindingsContextsStamp = Date.now();
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -120,50 +163,49 @@ class EtKeyBindingsTab extends ViewerElement {
     const shadow = domutils.createShadowRoot(this);
     const themeStyle = document.createElement('style');
     themeStyle.id = ThemeableElementBase.ID_THEME;
-    
-    const divContainer = document.createElement('div');
-    divContainer.id = ID_KEY_BINDINGS;
-    divContainer.innerHTML = `<h1>Key Bindings</h1>
-    <p>Summary of current key bindings</p>
-  ${this._formatKeyBindingsPage(this.keyBindingContexts)}
-`;
-
     shadow.appendChild(themeStyle);
-    shadow.appendChild(divContainer);    
+    
+    const vueDivContainer = document.createElement('div');
+    vueDivContainer.id = ID_KEY_BINDINGS;
+    shadow.appendChild(vueDivContainer);
+    
+    Vue.config.debug = true;
+    
+    const elementThis: EtKeyBindingsTab = this;
+    this._vm = new Vue({
+      data: this._data,
+      template: 
+`<div className=''>
+  <h1>Key Bindings</h1>
+  
+  <div className=''>
+    <div class="form-horizontal">
+      <div class="form-group">
+        <label for="theme-terminal" class="col-sm-2 control-label">Key bindings style:</label>
+        <div class="col-sm-3">
+          <select class="form-control" id="keybindings-style" v-model="selectedKeyBindings">
+            <option v-for="option in keyBindingsFiles" v-bind:value="option.filename">
+              {{ option.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+  </div>
+  
+  {{{ summary }}}
+</div>
+`,
+      computed: {
+        summary: function() {
+          const foo = this.keyBindingsContextsStamp;
+          return formatKeyBindingsPage(elementThis.keyBindingContexts);
+        }
+      }
+    });
+    this._vm.$mount(vueDivContainer);
+    this._vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false, sync: false } );
     
     this.updateThemeCss();
-  }
-  
-  protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.KEY_BINDINGS_TAB];
-  }
-  
-  private _formatKeyBindingsPage(keyBindingContexts: KeyBindingManager.KeyBindingContexts): string {
-    return contexts()
-      .map( (contextName) => {
-          return `<h2>${contextHeading(contextName)}</h2>` +  this._formatKeyBindingsMapping(keyBindingContexts.context(contextName));
-        } ).join("");
-  }
-  
-  private _formatKeyBindingsMapping(context: KeyBindingManager.KeyBindingMapping): string {
-    const bindings = _.clone(context.keyBindings);
-    bindings.sort( (a,b): number => {
-      const nameA = commandName(a.command);
-      const nameB = commandName(b.command);
-      return nameA < nameB ? -1 : ( nameA > nameB ? 1 : 0);
-    });
-    
-    return `<table class='table'>
-      <tr>
-        <th class="col-md-7">Command</th>
-        <th class="col-md-2">Shortcut</th>
-        <th class="col-md-3">Code</th>
-      </tr>` +
-        bindings.map( (binding) => `<tr>
-          <td class="col-md-7">${commandName(binding.command)}</td>
-          <td class="col-md-2"><div class='${CLASS_KEYCAP}'><span>${binding.shortcut}</span></div></td>
-          <td class="col-md-3">${binding.command}</td></tr>`).join("\n") +
-        "</table>";
   }
   
   //-----------------------------------------------------------------------
@@ -177,6 +219,49 @@ class EtKeyBindingsTab extends ViewerElement {
   // #       #    # #   ##   #    #   #   ###### 
   //
   //-----------------------------------------------------------------------
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.KEY_BINDINGS_TAB];
+  }
+  
+  @log
+  private _dataChanged(newVal: ModelData): void {
+    const newConfig = _.cloneDeep(this._config);
+    if (newConfig.keyBindingsFilename !== newVal.selectedKeyBindings) {
+      newConfig.keyBindingsFilename = newVal.selectedKeyBindings;
+
+      const event = new CustomEvent(GeneralEvents.EVENT_CONFIG_CHANGE, { detail: {data: newConfig} });
+      this.dispatchEvent(event);
+    }
+  }
+}
+
+function formatKeyBindingsPage(keyBindingContexts: KeyBindingManager.KeyBindingContexts): string {
+  return contexts()
+    .map( (contextName) => {
+        return `<h2>${contextHeading(contextName)}</h2>` +  formatKeyBindingsMapping(keyBindingContexts.context(contextName));
+      } ).join("");
+}
+
+function formatKeyBindingsMapping(context: KeyBindingManager.KeyBindingMapping): string {
+  const bindings = _.clone(context.keyBindings);
+  bindings.sort( (a,b): number => {
+    const nameA = commandName(a.command);
+    const nameB = commandName(b.command);
+    return nameA < nameB ? -1 : ( nameA > nameB ? 1 : 0);
+  });
+  
+  return `<table class='table'>
+    <tr>
+      <th class="col-md-7">Command</th>
+      <th class="col-md-2">Shortcut</th>
+      <th class="col-md-3">Code</th>
+    </tr>` +
+      bindings.map( (binding) => `<tr>
+        <td class="col-md-7">${commandName(binding.command)}</td>
+        <td class="col-md-2"><div class='${CLASS_KEYCAP}'><span>${binding.shortcut}</span></div></td>
+        <td class="col-md-3">${binding.command}</td></tr>`).join("\n") +
+      "</table>";
 }
 
 export = EtKeyBindingsTab;
