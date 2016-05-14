@@ -16,6 +16,7 @@ import ThemeableElementBase = require('../themeableelementbase');
 import util = require("../gui/util");
 import domutils = require("../domutils");
 import ThemeTypes = require('../theme');
+import KeyBindingManager = require('../keybindingmanager');
 import CodeMirror = require('codemirror');
 import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
@@ -759,10 +760,11 @@ class EtTextViewer extends ViewerElement {
   }
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
+    let command: string = null;
     if (this.keyBindingContexts !== null && this._mode === ViewerElementTypes.Mode.SELECTION) {
       const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
-        const command = keyBindings.mapEventToCommand(ev);
+        command = keyBindings.mapEventToCommand(ev);
         switch (command) {
           case COMMAND_TYPE_AND_CR_SELECTION:
           case COMMAND_TYPE_SELECTION:
@@ -785,13 +787,31 @@ class EtTextViewer extends ViewerElement {
             return;
             
           default:
+            if (command !== null) {
+              return;
+            }
+            if (ev.shiftKey) {
+              const evWithoutShift: KeyBindingManager.MinimalKeyboardEvent = {
+                shiftKey: false,
+                metaKey: ev.metaKey,
+                altKey: ev.altKey,
+                ctrlKey: ev.ctrlKey,
+                key: ev.key,
+                keyCode: ev.keyCode
+              };
+              command = keyBindings.mapEventToCommand(evWithoutShift);
+              if (command !== null && command.startsWith("go")) {
+                // CodeMirror will handle this key.
+                return;
+              }
+            }
             break;
         }
       }
     }
 
     // Send all Alt+* and Ctrl+Shift+A-Z keys above
-    if (ev.altKey || (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90)) {
+    if (ev.metaKey || ev.altKey || (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90)) {
       ev.stopPropagation();
       this._scheduleSyntheticKeyDown(ev);
       return;
