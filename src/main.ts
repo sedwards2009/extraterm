@@ -77,6 +77,9 @@ let tagCounter = 1;
 
 function main(): void {
   let failed = false;
+
+  app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
+
   _log.startRecording();
 
   // commander assumes that the first two values in argv are 'node' and 'blah.js' and then followed by the args.
