@@ -16,6 +16,7 @@ import EtViewerTab = require('./viewertab');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
+import KeyBindingsElementBase = require('./keybindingselementbase');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeTypes = require('./theme');
 import webipc = require('./webipc');
@@ -282,7 +283,7 @@ let themeCss = "";
  * Top level UI component for a normal terminal window
  *
  */
-class ExtratermMainWebUI extends ThemeableElementBase {
+class ExtratermMainWebUI extends KeyBindingsElementBase {
   
   //-----------------------------------------------------------------------
   // Statics
@@ -328,8 +329,6 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   private _themes: ThemeTypes.ThemeInfo[];
 
   private _split: boolean;
-
-  private _keyBindingContexts: KeyBindingManager.KeyBindingContexts;
   
   private _initProperties(): void {
     this._log = new Logger("ExtratermMainWebUI");
@@ -338,7 +337,6 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     this._config = null;
     this._themes = [];
     this._split = false;
-    this._keyBindingContexts = null;
   }
   
   //-----------------------------------------------------------------------
@@ -937,11 +935,11 @@ class ExtratermMainWebUI extends ThemeableElementBase {
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(tabInfo: TabInfo, ev: KeyboardEvent): void {
-    if (this._keyBindingContexts === null) {
+    if (this.keyBindingContexts === null) {
       return;
     }
     
-    const bindings = this._keyBindingContexts.context(KEYBINDINGS_MAIN_UI);
+    const bindings = this.keyBindingContexts.context(KEYBINDINGS_MAIN_UI);
     if (bindings === null) {
       return;
     }
