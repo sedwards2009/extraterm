@@ -22,6 +22,7 @@ import LogDecorator = require('../logdecorator');
 import sourceDir = require('../sourceDir');
 import generalevents = require('../generalevents');
 import ThemeTypes = require('../theme');
+import KeyBindingManager = require('../keybindingmanager');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -638,6 +639,10 @@ class EtTerminalViewer extends ViewerElement {
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TERMINAL_VIEWER];
+  }
+
+  protected keyBindingContextsChanged(contexts: KeyBindingManager.KeyBindingContexts) {
+    this._codeMirror.setOption("keyMap", this._codeMirrorKeyMap());
   }
 
   //-----------------------------------------------------------------------

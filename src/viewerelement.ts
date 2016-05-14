@@ -8,7 +8,7 @@ import fs  = require('fs');
 import util = require('./gui/util');
 import virtualscrollarea = require('./virtualscrollarea');
 import ViewerElementTypes = require('./viewerelementtypes');
-import ThemeableElementBase = require('./themeableelementbase');
+import KeyBindingsElementBase = require('./keybindingselementbase');
 import KeyBindingManager = require('./keybindingmanager');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
@@ -17,7 +17,7 @@ type Mode = ViewerElementTypes.Mode;
 type VisualState = ViewerElementTypes.VisualState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
-abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable {
+abstract class ViewerElement extends KeyBindingsElementBase implements VirtualScrollable {
   
   static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
 
@@ -78,25 +78,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   public mimeType: string;
   
   public editable: boolean;
-  
-  private _keyBindingContexts: KeyBindingManager.KeyBindingContexts;
-
-  set keyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts) {
-    this._setKeyBindingContexts(contexts);
-  }
-  
-  get keyBindingContexts(): KeyBindingManager.KeyBindingContexts {
-    return  this._getKeyBindingContexts();
-  }
-  
-  protected _setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts) {
-    this._keyBindingContexts = contexts;
-  }
-  
-  protected _getKeyBindingContexts(): KeyBindingManager.KeyBindingContexts {
-    return this._keyBindingContexts;
-  }
-  
+    
   // VirtualScrollable
   getMinHeight(): number {
     return 0;

@@ -130,10 +130,6 @@ class TabInfo {
     
   }
   
-  setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts): void {
-    
-  }
-  
   destroy(): void { }
   
   copyToClipboard(): void { }
@@ -200,10 +196,6 @@ class TerminalTabInfo extends TabInfo {
   getFrameContents(frameId: string): string {
     return this.terminal.getFrameContents(frameId);
   }  
-  
-  setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts): void {
-    this.terminal.keyBindingContexts = contexts;
-  }
 }
 
 /**
@@ -275,10 +267,6 @@ class KeyBindingsTabInfo extends ViewerElementTabInfo {
     super(keyBindingsElement);
   }
 
-  setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts): void {
-    this.keyBindingsElement.keyBindingContexts = contexts;
-  }
-  
   setConfig(config: Config): void {
     this.keyBindingsElement.config = config;
   }
@@ -584,18 +572,6 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     this._resize();
   }
   
-  set keyBindingContexts(keyBindingContexts: KeyBindingManager.KeyBindingContexts) {
-    this._keyBindingContexts = keyBindingContexts;
-    
-    this._tabInfo.forEach( (tabInfo) => {
-      tabInfo.setKeyBindingContexts(keyBindingContexts);
-    });
-  }
-  
-  get keyBindingContexts() : KeyBindingManager.KeyBindingContexts {
-    return this._keyBindingContexts;
-  }
-  
   /**
    * Initialise and insert a tab.
    * 
@@ -655,7 +631,6 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.frameFinder = this._frameFinder.bind(this);
     const tabInfo = new TerminalTabInfo(newTerminal, null);
-    tabInfo.setKeyBindingContexts(this._keyBindingContexts);
     this._addTab(position, tabInfo);
     
     tabInfo.contentDiv.appendChild(newTerminal);
@@ -774,7 +749,6 @@ class ExtratermMainWebUI extends ThemeableElementBase {
     } else {
       const viewerElement = <EtKeyBindingsTab> document.createElement(EtKeyBindingsTab.TAG_NAME);
       const tabInfo = new KeyBindingsTabInfo(viewerElement);
-      tabInfo.setKeyBindingContexts(this._keyBindingContexts);
       this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
     }
   }

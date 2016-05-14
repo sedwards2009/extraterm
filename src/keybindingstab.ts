@@ -130,8 +130,8 @@ class EtKeyBindingsTab extends ViewerElement {
     }
   }
   
-  protected _setKeyBindingContexts(contexts: KeyBindingManager.KeyBindingContexts): void {
-    super._setKeyBindingContexts(contexts);
+  protected keyBindingContextsChanged(contexts: KeyBindingManager.KeyBindingContexts): void {
+    super.keyBindingContextsChanged(contexts);
     this._data.keyBindingsContextsStamp = Date.now();
   }
 

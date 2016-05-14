@@ -14,6 +14,7 @@ import CbDropDown = require('./gui/dropdown');
 import CbCheckBoxMenuItem = require('./gui/checkboxmenuitem');
 import MainWebUi = require('./mainwebui');
 import EtTerminal = require('./terminal');
+import KeyBindingsElementBase = require('./keybindingselementbase');
 import util = require('./gui/util');
 
 import EtEmbeddedViewer = require('./embeddedviewer');
@@ -128,7 +129,6 @@ export function startUp(): void {
 
     mainWebUi.config = configuration;
     mainWebUi.themes = themes;
-    mainWebUi.keyBindingContexts = keyBindingContexts;
     
     doc.body.appendChild(mainWebUi);
     
@@ -265,9 +265,7 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
   }
   
   keyBindingContexts = KeyBindingManager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts);
-  if (mainWebUi !== null) {
-    mainWebUi.keyBindingContexts = keyBindingContexts;
-  }
+  KeyBindingsElementBase.setKeyBindingContexts(keyBindingContexts);
   
   if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize) {
     setCssVars(newConfig.terminalFontSize);

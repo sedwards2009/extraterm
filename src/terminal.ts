@@ -11,6 +11,7 @@ import base64arraybuffer = require('base64-arraybuffer');
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeableElementBase = require("./resizeableelementbase");
+import KeyBindingsElementBase = require('./keybindingselementbase');
 import ThemeableElementBase = require('./themeableelementbase');
 import ThemeTypes = require('./theme');
 import EtEmbeddedViewer = require('./embeddedviewer');
@@ -98,7 +99,7 @@ viewerClasses.push(EtTextViewer);
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-class EtTerminal extends ThemeableElementBase {
+class EtTerminal extends KeyBindingsElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -215,7 +216,6 @@ class EtTerminal extends ThemeableElementBase {
     this._scheduleLaterHandle = null;
     this._scheduledCursorUpdates = [];
     this._scheduledResize = false;
-    this.keyBindingContexts = null;
   }
   
   //-----------------------------------------------------------------------
@@ -385,8 +385,6 @@ class EtTerminal extends ThemeableElementBase {
     const text = embeddedViewer.text;
     return text === undefined ? null : text;
   }
-  
-  public keyBindingContexts: KeyBindingManager.KeyBindingContexts;
 
   //-----------------------------------------------------------------------
   //
@@ -616,7 +614,6 @@ class EtTerminal extends ThemeableElementBase {
   private _appendNewTerminalViewer(): void {
     // Create the TerminalViewer
     const terminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
-    terminalViewer.keyBindingContexts = this.keyBindingContexts;
     
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(terminalViewer);
@@ -1320,7 +1317,6 @@ class EtTerminal extends ThemeableElementBase {
   private _createEmbeddedViewerElement(title: string): EtEmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
-    el.keyBindingContexts = this.keyBindingContexts;
     el.awesomeIcon = 'cog';
     el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
@@ -1530,7 +1526,6 @@ class EtTerminal extends ThemeableElementBase {
     }
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
-    dataViewer.keyBindingContexts = this.keyBindingContexts;
     const buffer = new Uint8Array(base64arraybuffer.decode(mimeData));
     dataViewer.setBytes(buffer, charset !== null ? mimeType + ";" + charset : mimeType);
     dataViewer.editable = true;

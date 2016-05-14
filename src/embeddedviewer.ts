@@ -14,6 +14,7 @@ import util = require('./gui/util');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
+import KeyBindingManager = require('./keybindingmanager');
 import virtualscrollarea = require('./virtualscrollarea');
 import ThemeTypes = require('./theme');
 import generalevents = require('./generalevents');
