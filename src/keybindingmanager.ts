@@ -25,6 +25,7 @@ interface KeyBinding {
   metaKey: boolean;
   shiftKey: boolean;  
   key: string;
+  keyLower: string;
   
   command: string;
   shortcut: string;
@@ -133,11 +134,16 @@ export class KeyBindingMapping {
         key = String.fromCharCode(ev.keyCode);
       }
     } else {
-      key = ev.key;
+      if (ev.key.charCodeAt(0) === 160) { // nbsp to space on the Mac
+        key = " ";
+      } else {
+        key = ev.key;
+      }
     }
 
+    const keyLower = key.toLowerCase();
     for (let keyBinding of this.keyBindings) {
-      if (keyBinding.key === key &&
+      if ((keyBinding.key === key || keyBinding.keyLower === keyLower) &&
           keyBinding.altKey === ev.altKey &&
           keyBinding.ctrlKey === ev.ctrlKey &&
           keyBinding.shiftKey === ev.shiftKey &&
@@ -195,6 +201,7 @@ function parseKeyBinding(keyBindingString: string, command: string): KeyBinding 
     shiftKey: hasShift,
     metaKey: hasMeta,
     key: key,
+    keyLower: key.toLowerCase(),
     command: command,
     shortcut: "",
     normalizedShortcut: ""
