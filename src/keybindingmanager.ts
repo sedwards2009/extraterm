@@ -7,6 +7,7 @@ import Logger = require('./logger');
 import _ = require('lodash');
 
 const FALLTHROUGH = "fallthrough";
+const NAME = "name";
 
 export interface MinimalKeyboardEvent {
   altKey: boolean;
@@ -259,15 +260,19 @@ function formatNormalizedKeyBinding(keyBinding: KeyBinding): string {
  */
 export class KeyBindingContexts {
   
+  private _log = new Logger("KeyBindingContexts");
+  
   private _contexts = new Map<string, KeyBindingMapping>();
   
   public contextNames = [];
   
   constructor(obj: Object) {
     for (let key in obj) {
-      const mapper = new KeyBindingMapping(key, obj);
-      this.contextNames.push(key);
-      this._contexts.set(key, mapper);
+      if (key !== NAME) {
+        const mapper = new KeyBindingMapping(key, obj);
+        this.contextNames.push(key);
+        this._contexts.set(key, mapper);
+      }
     }
   }
   
