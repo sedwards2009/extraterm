@@ -9,7 +9,7 @@
     "Cmd-S": "toggleSplit"
   },
   "terminal-default-mode": {
-    "Cmd-Space": "enterSelectionMode",
+    "Alt-Space": "enterSelectionMode",
     "Shift-PageUp": "scrollPageUp",
     "Shift-PageDown": "scrollPageDown",
     "Cmd-C": "copyToClipboard",
@@ -18,7 +18,7 @@
     "Cmd-O": "openLastFrame"
   },
   "terminal-selection-mode": {
-    "Cmd-Space": "enterNormalMode",
+    "Alt-Space": "enterNormalMode",
     "Shift-PageUp": "scrollPageUp",
     "Shift-PageDown": "scrollPageDown",
     "Cmd-C": "copyToClipboard",
