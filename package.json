@@ -10,7 +10,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "run": "electron --force-device-scale-factor=1 src/main.js",
+    "run": "electron src/main.js",
     "build": "tsc",
     "test": "npm run build ; nodeunit src/virtualscrollareatest.js",
     "testkeybindingmanager": "npm run build ; nodeunit src/keybindingmanagertest.js",
