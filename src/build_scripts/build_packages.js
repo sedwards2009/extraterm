@@ -93,7 +93,6 @@ function main() {
         version: electronVersion,
         ignore: ignoreFunc,
         overwrite: true,
-        "extend-info": path.join(srcRootDir, "src/build_scripts/com.electron.extraterm.plist"),
         out: buildTmpPath
       }, function done(err, appPath) {
         if (err !== null) {
