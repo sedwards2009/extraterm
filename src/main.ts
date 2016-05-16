@@ -80,6 +80,10 @@ function main(): void {
 
   app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
 
+  if (process.platform === "darwin") {
+    setupOSXDefaults();
+  }
+
   _log.startRecording();
 
   // commander assumes that the first two values in argv are 'node' and 'blah.js' and then followed by the args.
@@ -470,6 +474,11 @@ function systemConfiguration(config: Config): SystemConfig {
   const keyBindingsJSON = JSON.parse(keyBindingJsonString);
   
   return { homeDir: homeDir, keyBindingsContexts: keyBindingsJSON, keyBindingsFiles: keyBindingFiles };
+}
+
+function setupOSXDefaults() {
+  child_process.execFileSync("defaults", ["write",
+    "com.electron.extraterm", "ApplePressAndHoldEnabled", "-bool", "false"]);
 }
 
 //-------------------------------------------------------------------------
