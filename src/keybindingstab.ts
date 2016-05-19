@@ -43,6 +43,28 @@ function contextHeading(contextName: string): string {
   return str || contextName;
 }
 
+function formatShortcut(code: string): string {
+  if (process.platform !== "darwin") {
+    return code;
+  }
+  let parts = code.split(/\+/g);
+  parts = parts.map( (p) => {
+    switch (p) {
+      case 'Cmd':
+        return '\u2318';
+      case 'Shift':
+        return '\u21E7';
+      case 'Alt':
+        return '\u2325';
+      case 'Ctrl':
+        return '^';
+      default:
+        return p;
+    }
+  } );
+  return parts.join("");
+}
+
 interface ModelData {
   selectedKeyBindings: string;
   keyBindingsFiles: configInterfaces.KeyBindingInfo[];
@@ -259,7 +281,7 @@ function formatKeyBindingsMapping(context: KeyBindingManager.KeyBindingMapping):
     </tr>` +
       bindings.map( (binding) => `<tr>
         <td class="col-md-7">${commandName(binding.command)}</td>
-        <td class="col-md-2"><div class='${CLASS_KEYCAP}'><span>${binding.shortcut}</span></div></td>
+        <td class="col-md-2"><div class='${CLASS_KEYCAP}'><span>${formatShortcut(binding.shortcut)}</span></div></td>
         <td class="col-md-3">${binding.command}</td></tr>`).join("\n") +
       "</table>";
 }
