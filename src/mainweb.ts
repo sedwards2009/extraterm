@@ -3,6 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import electron = require('electron');
+const Menu = electron.remote.Menu;
+const MenuItem = electron.remote.MenuItem;
+
 import sourceMapSupport = require('source-map-support');
 import _ = require('lodash');
 import Logger = require('./logger');
@@ -58,6 +62,9 @@ let mainWebUi: MainWebUi = null;
  * 
  */
 export function startUp(): void {
+  if (process.platform === "darwin") {
+    setupOSXEmptyMenus();
+  }
 
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
@@ -137,6 +144,10 @@ export function startUp(): void {
       mainWebUi.focus();
     });
     
+    if (process.platform === "darwin") {
+      setupOSXMenus(mainWebUi);
+    }
+    
     // Detect when the last tab has closed.
     mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
       if (mainWebUi.tabCount === 0) {
@@ -199,6 +210,58 @@ export function startUp(): void {
     mainWebUi.focus();
     window.focus();
   });
+}
+
+function setupOSXEmptyMenus(): void {
+  const template: GitHubElectron.MenuItemOptions[] = [{
+    label: "Extraterm",
+  }];
+  
+  const emptyTopMenu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(emptyTopMenu);  
+}
+
+function setupOSXMenus(mainWebUi: MainWebUi): void {
+  const template: GitHubElectron.MenuItemOptions[] = [{
+    label: "Extraterm",
+    submenu: [
+      {
+        label: 'About Extraterm',
+        click(item, focusedWindow) {
+          mainWebUi.openAboutTab();
+        },
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Preferences...',
+        click(item, focusedWindow) {
+          mainWebUi.openSettingsTab();
+        },
+      },
+      {
+        label: 'Key Bindings...',
+        click(item, focusedWindow) {
+          mainWebUi.openKeyBindingsTab();
+        },
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Quit',
+        click(item, focusedWindow) {
+          webipc.windowCloseRequest();
+        },
+        accelerator: 'Command+Q'
+      }
+    ]
+  }];
+  
+  const topMenu = Menu.buildFromTemplate(template);
+  
+  Menu.setApplicationMenu(topMenu);
 }
 
 function handleConfigMessage(msg: Messages.Message): Promise<void> {

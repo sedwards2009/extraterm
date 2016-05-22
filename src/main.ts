@@ -81,7 +81,7 @@ function main(): void {
   app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
 
   if (process.platform === "darwin") {
-    setupOSXDefaults();
+    setupOSX();
   }
 
   _log.startRecording();
@@ -476,7 +476,7 @@ function systemConfiguration(config: Config): SystemConfig {
   return { homeDir: homeDir, keyBindingsContexts: keyBindingsJSON, keyBindingsFiles: keyBindingFiles };
 }
 
-function setupOSXDefaults() {
+function setupOSX(): void {
   child_process.execFileSync("defaults", ["write",
     "com.electron.extraterm", "ApplePressAndHoldEnabled", "-bool", "false"]);
 }
