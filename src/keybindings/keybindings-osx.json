@@ -4,7 +4,7 @@
     "Cmd-ArrowLeft": "selectTabLeft",
     "Cmd-ArrowRight": "selectTabRight",
     "Cmd-T": "newTab",
-    "Cmd-Q": "closeTab",
+    "Shift-Cmd-W": "closeTab",
     "Cmd-Tab": "selectOtherPane",
     "Cmd-S": "toggleSplit"
   },
