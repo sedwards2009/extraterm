@@ -155,6 +155,15 @@ class EtTerminal extends KeyBindingsElementBase {
   
   private _applicationMode: ApplicationMode;
   private _bracketStyle: string;
+
+  // The command line string of the last command started.
+  private _lastCommandLine: string;
+  
+  // The terminal viewer containing the start output of the last command started.
+  private _lastCommandTerminalViewer: EtTerminalViewer;
+  
+  // The line number of the start of output of the last command started.
+  private _lastCommandTerminalLine: number;
   
   private _mode: Mode;
   private _selectionPreviousLineCount: number;
@@ -216,6 +225,10 @@ class EtTerminal extends KeyBindingsElementBase {
     this._scheduleLaterHandle = null;
     this._scheduledCursorUpdates = [];
     this._scheduledResize = false;
+    
+    this._lastCommandLine = null;
+    this._lastCommandTerminalViewer = null;
+    this._lastCommandTerminalLine = null;
   }
   
   //-----------------------------------------------------------------------
@@ -1278,11 +1291,15 @@ class EtTerminal extends KeyBindingsElementBase {
       const el = this._createEmbeddedViewerElement(cleancommand);
       this._appendScrollableElement(el);
     } else {
-            
-      // Don't place an embedded viewer, but use an invisible place holder instead.
-      const el = <EtCommandPlaceHolder> this._getWindow().document.createElement(EtCommandPlaceHolder.TAG_NAME);
-      el.setAttribute(EtCommandPlaceHolder.ATTR_COMMAND_LINE, cleancommand);
-      this._appendScrollableElement(el);
+      this._emulator.moveRowsToScrollback();
+      
+      let currentTerminalViewer = this._terminalViewer;
+      if (currentTerminalViewer !== null) {
+        currentTerminalViewer.deleteScreen();
+      }
+      this._lastCommandTerminalLine = this._terminalViewer.lineCount();
+      this._lastCommandLine = cleancommand;
+      this._lastCommandTerminalViewer = this._terminalViewer;
     }
     this._virtualScrollArea.resize();
   }
@@ -1371,28 +1388,13 @@ class EtTerminal extends KeyBindingsElementBase {
   private _closeLastEmbeddedViewer(returnCode: string): void {
     const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     const startElement = scrollArea.querySelectorAll(
-      `${EtEmbeddedViewer.TAG_NAME}:not([${EtEmbeddedViewer.ATTR_RETURN_CODE}]), ${EtCommandPlaceHolder.TAG_NAME}`);
+      `${EtEmbeddedViewer.TAG_NAME}:not([${EtEmbeddedViewer.ATTR_RETURN_CODE}])`);
     
     if (startElement.length !== 0) {
+      // Finish framing an already existing Embedded viewer bar.
+      
       let embeddedSomethingElement = <HTMLElement>startElement[startElement.length-1];
-      let embeddedViewerElement: EtEmbeddedViewer = null;
-      if (EtCommandPlaceHolder.is(embeddedSomethingElement)) {
-        // There is a place holder and not an embedded viewer.
-        if (returnCode === "0") {
-          // The command returned successful, just remove the place holder and that is it.
-          this._removeScrollableElement(embeddedSomethingElement);
-          return;
-        } else {
-          // The command went wrong. Replace the place holder with a real viewer
-          // element and pretend that we had done this when the command started running.
-          const newViewerElement = this._createEmbeddedViewerElement(
-                                      embeddedSomethingElement.getAttribute(EtCommandPlaceHolder.ATTR_COMMAND_LINE));
-          this._replaceScrollableElement(embeddedSomethingElement, newViewerElement);
-          embeddedViewerElement = newViewerElement;
-        }
-      } else {
-        embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
-      }
+      const embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
       
       const activeTerminalViewer = this._terminalViewer;
       this._disconnectActiveTerminalViewer();
@@ -1421,6 +1423,62 @@ class EtTerminal extends KeyBindingsElementBase {
       if (restoreFocus) {
         previousActiveTerminal.focus();
       }
+    } else {
+      
+      if (this._lastCommandTerminalViewer === null) {
+        // Nothing to frame.
+        return;
+      }
+      
+      if (returnCode === "0") {
+        // No need to frame anything.
+        this._lastCommandLine = null;
+        this._lastCommandTerminalViewer = null;
+        return;
+      }
+      
+      // Insert a frame where there was none because this command returned an error code.
+      
+      // Close off the current terminal viewer.
+      this._emulator.moveRowsToScrollback();
+      if (this._terminalViewer !== null) {
+        this._terminalViewer.deleteScreen();
+      }
+      this._disconnectActiveTerminalViewer();
+      
+      // Extract the output of the failed command.
+      const moveText = this._lastCommandTerminalViewer.getDecoratedLines(this._lastCommandTerminalLine);
+      this._lastCommandTerminalViewer.deleteLines(this._lastCommandTerminalLine);
+      this._lastCommandTerminalViewer = null;
+      
+      // Append our new embedded viewer.
+      const newViewerElement = this._createEmbeddedViewerElement(this._lastCommandLine);
+      // Hang the terminal viewer under the Embedded viewer.
+      newViewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, returnCode);
+      newViewerElement.awesomeIcon = 'times';
+      newViewerElement.setAttribute(EtEmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
+      newViewerElement.className = "extraterm_output";
+      scrollArea.appendChild(newViewerElement);
+      
+      // Create a terminal viewer to display the output of the last command.
+      const outputTerminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
+      newViewerElement.viewerElement = outputTerminalViewer;
+      
+      outputTerminalViewer.visualState = domutils.getShadowRoot(this).activeElement !== null
+                                      ? VisualState.FOCUSED
+                                      : VisualState.UNFOCUSED;
+      outputTerminalViewer.returnCode = returnCode;
+      outputTerminalViewer.commandLine = this._lastCommandLine;
+      outputTerminalViewer.useVPad = false;
+      outputTerminalViewer.setDecoratedLines(moveText.text, moveText.decorations);
+      outputTerminalViewer.editable = true;
+      
+      this._virtualScrollArea.appendScrollable(newViewerElement);
+        
+      this._appendNewTerminalViewer();
+      
+      const activeTerminalViewer = this._terminalViewer;
+      this._virtualScrollArea.updateScrollableSize(activeTerminalViewer);
     }
   }
 

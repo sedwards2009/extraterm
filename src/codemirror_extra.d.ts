@@ -41,6 +41,10 @@ declare module CodeMirror {
     alias?: string[];
   }
   
+  interface TextMarker {
+    className: string;
+  }
+  
   function findModeByMIME(mime: string): ModeInfo;
   function findModeByExtension(ext: string): ModeInfo;
   function findModeByFileName(fileName: string): ModeInfo;

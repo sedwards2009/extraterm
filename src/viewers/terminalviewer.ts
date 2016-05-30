@@ -459,6 +459,38 @@ class EtTerminalViewer extends ViewerElement {
     this._terminalFirstRow -= linesToDelete;
     this._emitVirtualResizeEvent();
   }
+  
+  deleteLines(startLine: number, endLine?: number): void {
+    const doc = this._codeMirror.getDoc();
+    if (endLine === undefined) {
+      endLine = doc.lineCount()-1;
+    }
+    
+    this._deleteLines(startLine, endLine);
+    this._emitVirtualResizeEvent();
+  }
+
+  getDecoratedLines(startLine: number): { text: string; decorations: TextDecoration[]; } {
+    const doc = this._codeMirror.getDoc();
+    const endLine = this.lineCount();
+    const marks = doc.findMarks( { line: startLine, ch: 0}, { line: endLine, ch: 0 } );
+    
+    const decorations = this._codemirrorTextMarksToDecorations(marks);
+    decorations.forEach( (d) => {
+      d.line -= startLine;
+    });
+    
+    const text = doc.getRange( { line: startLine, ch: 0 }, { line: endLine, ch: 0 } );
+    return { text, decorations };
+  }
+
+  setDecoratedLines(text: string, decorations: TextDecoration[]): void {
+    const startPos = { line: 0, ch: 0 };
+    const endPos = { line: 0, ch: 0 };
+    this._insertLinesAtPos(startPos, endPos, text, decorations);
+    this._isEmpty = false;
+    this._emitVirtualResizeEvent();
+  }
 
   //-----------------------------------------------------------------------
   //
@@ -690,16 +722,17 @@ class EtTerminalViewer extends ViewerElement {
     }
     
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
-        newVisualState === VisualState.FOCUSED) {
+    if (containerDiv !== null) {
+      if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
+          newVisualState === VisualState.FOCUSED) {
 
-      containerDiv.classList.add(CLASS_FOCUSED);
-      containerDiv.classList.remove(CLASS_UNFOCUSED);
-    } else {
-      containerDiv.classList.add(CLASS_UNFOCUSED);
-      containerDiv.classList.remove(CLASS_FOCUSED);
+        containerDiv.classList.add(CLASS_FOCUSED);
+        containerDiv.classList.remove(CLASS_UNFOCUSED);
+      } else {
+        containerDiv.classList.add(CLASS_UNFOCUSED);
+        containerDiv.classList.remove(CLASS_FOCUSED);
+      }
     }
-    
     this._visualState = newVisualState;
   }
 
@@ -733,6 +766,21 @@ class EtTerminalViewer extends ViewerElement {
     this._mode = ViewerElementTypes.Mode.DEFAULT;
   }
   
+  private _codemirrorTextMarksToDecorations(markers: CodeMirror.TextMarker[]): TextDecoration[] {
+    const result = markers.map( (m) => {
+      const loc = m.find();
+      const td: TextDecoration = {
+        line: loc.from.line,
+        fromCh: loc.from.ch,
+        toCh: loc.to.ch,
+        classList: [m.className]
+      };
+      return td;
+    });
+    
+    return result;
+  }
+
   private _emitVirtualResizeEvent(): void {
     if (DEBUG_RESIZE) {
       this._log.debug("_emitVirtualResizeEvent");
@@ -1130,7 +1178,6 @@ class EtTerminalViewer extends ViewerElement {
   
   private _insertLinesAtPos(startPos: CodeMirror.Position, endPos: CodeMirror.Position, text: string,
       decorations: TextDecoration[]): void {
-// this._log.debug("_insertLinesAtPos: startPos: ",startPos, " endPos: ", endPos, " text: |"+text+"|");
 
     const doc = this._codeMirror.getDoc();
     doc.replaceRange(text, startPos, endPos);
@@ -1149,12 +1196,7 @@ class EtTerminalViewer extends ViewerElement {
           doc.markText( from, to, { className: classList[j] } );
         }
       }
-    }
-    
-    // this._log.debug("lineCount: " + doc.lineCount());
-    // this._log.debug("______________________________________");
-    // this._log.debug(doc.getValue());
-    // this._log.debug("______________________________________");    
+    }    
   }
   
   private _deleteScreen(): void {
@@ -1165,14 +1207,26 @@ class EtTerminalViewer extends ViewerElement {
     
     const doc = this._codeMirror.getDoc();
     const lineCount = doc.lineCount();
-    const endPos = { line: lineCount-1, ch: doc.getLine(lineCount-1).length };
-    if (this._terminalFirstRow === 0) {
-      const startPos = { line: this._terminalFirstRow, ch: 0 };
+    this._deleteLines(this._terminalFirstRow, lineCount-1);
+  }
+  
+  /**
+   * Deletes the given inclusive range of lines.
+   * 
+   * @param {number} startLine [description]
+   * @param {number} endLine   [description]
+   */
+  private _deleteLines(startLine: number, endLine: number): void {
+    const doc = this._codeMirror.getDoc();
+    const lineCount = doc.lineCount();
+    const endPos = { line: endLine, ch: doc.getLine(endLine).length };
+    if (startLine === 0) {
+      const startPos = { line: startLine, ch: 0 };
       doc.replaceRange("", startPos, endPos);  
-      this._isEmpty = true;
+      this._isEmpty = lineCount-1 === endLine;
     } else {
       // Start deleting from the end of the row before the top of the terminal.
-      const startPos = { line: this._terminalFirstRow-1, ch: doc.getLine(this._terminalFirstRow-1).length };
+      const startPos = { line: startLine-1, ch: doc.getLine(startLine-1).length };
       doc.replaceRange("", startPos, endPos);
     }
   }
