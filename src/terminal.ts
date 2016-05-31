@@ -1291,13 +1291,14 @@ class EtTerminal extends KeyBindingsElementBase {
       const el = this._createEmbeddedViewerElement(cleancommand);
       this._appendScrollableElement(el);
     } else {
-      this._emulator.moveRowsToScrollback();
       
       let currentTerminalViewer = this._terminalViewer;
       if (currentTerminalViewer !== null) {
         currentTerminalViewer.deleteScreen();
       }
-      this._lastCommandTerminalLine = this._terminalViewer.lineCount();
+      this._emulator.moveRowsToScrollback();
+      
+      this._lastCommandTerminalLine = this._terminalViewer.lineCount() -1;
       this._lastCommandLine = cleancommand;
       this._lastCommandTerminalViewer = this._terminalViewer;
     }
@@ -1440,10 +1441,6 @@ class EtTerminal extends KeyBindingsElementBase {
       // Insert a frame where there was none because this command returned an error code.
       
       // Close off the current terminal viewer.
-      this._emulator.moveRowsToScrollback();
-      if (this._terminalViewer !== null) {
-        this._terminalViewer.deleteScreen();
-      }
       this._disconnectActiveTerminalViewer();
       
       // Extract the output of the failed command.
