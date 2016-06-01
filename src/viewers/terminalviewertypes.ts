@@ -8,3 +8,7 @@ export interface TextDecoration {
   toCh: number;
   classList: string[];
 }
+
+export interface BookmarkRef {
+  bookmarkRefId: number;
+}

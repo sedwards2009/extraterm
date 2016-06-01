@@ -30,6 +30,7 @@ type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
+type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
 
 const ID = "CbTerminalViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -124,6 +125,9 @@ class EtTerminalViewer extends ViewerElement {
   private _currentElementHeight: number;
   private _renderEventListener: termjs.RenderEventHandler = this._handleRenderEvent.bind(this);
 
+  private _bookmarkCounter: number;
+  private _bookmarkIndex: Map<BookmarkRef, CodeMirror.TextBookmarkMarker>;
+
   private _initProperties(): void {
     this._log = new Logger(EtTerminalViewer.TAG_NAME);
     this._emulator = null;
@@ -152,6 +156,9 @@ class EtTerminalViewer extends ViewerElement {
     this._viewportHeight = -1;
 
     this._renderEventListener = null;
+
+    this._bookmarkCounter = 0;
+    this._bookmarkIndex = new Map<BookmarkRef, CodeMirror.TextBookmarkMarker>();
   }
 
   //-----------------------------------------------------------------------
@@ -460,17 +467,33 @@ class EtTerminalViewer extends ViewerElement {
     this._emitVirtualResizeEvent();
   }
   
-  deleteLines(startLine: number, endLine?: number): void {
+  deleteLines(startLineOrBookmark: number | BookmarkRef, endLineOrBookmark?: number | BookmarkRef): void {
     const doc = this._codeMirror.getDoc();
-    if (endLine === undefined) {
+    
+    let startLine = this._getLineNumberFromBookmark(startLineOrBookmark);
+    
+    let endLine = 0;
+    if (endLineOrBookmark === undefined) {
       endLine = doc.lineCount()-1;
+    } else {
+      endLine = this._getLineNumberFromBookmark(endLineOrBookmark);
+    }
+    
+    if (startLine < 0 || endLine < 0) {
+      this._log.warn(`Invalid arguments to deleteLines(). Resolved startLine=${startLine}, endLine=${endLine}.`);
+      return;
     }
     
     this._deleteLines(startLine, endLine);
     this._emitVirtualResizeEvent();
   }
 
-  getDecoratedLines(startLine: number): { text: string; decorations: TextDecoration[]; } {
+  getDecoratedLines(startLineOrBookmark: number | BookmarkRef): { text: string; decorations: TextDecoration[]; } {
+    const startLine = this._getLineNumberFromBookmark(startLineOrBookmark);
+    if (startLine < 0) {
+      return null;
+    }
+    
     const doc = this._codeMirror.getDoc();
     const endLine = this.lineCount();
     const marks = doc.findMarks( { line: startLine, ch: 0}, { line: endLine, ch: 0 } );
@@ -490,6 +513,20 @@ class EtTerminalViewer extends ViewerElement {
     this._insertLinesAtPos(startPos, endPos, text, decorations);
     this._isEmpty = false;
     this._emitVirtualResizeEvent();
+  }
+
+  bookmarkLine(lineNumber: number): BookmarkRef {
+    const doc = this._codeMirror.getDoc();
+    const textBookmark = doc.setBookmark( {line: lineNumber, ch: 0 } );
+    const bookmarkCounter = this._bookmarkCounter;
+    this._bookmarkCounter++;
+    
+    const ref: BookmarkRef = {
+      bookmarkRefId: bookmarkCounter
+    };
+    this._bookmarkIndex.set(ref, textBookmark);
+    
+    return ref;
   }
 
   //-----------------------------------------------------------------------
@@ -799,6 +836,20 @@ class EtTerminalViewer extends ViewerElement {
     const event = new CustomEvent(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, { detail: { originMouse: originMouse },
       bubbles: true });
     this.dispatchEvent(event);
+  }
+
+  private _getLineNumberFromBookmark(lineOrBookmark: number | BookmarkRef): number {
+    let startLine = 0;
+    if (typeof lineOrBookmark === 'number') {
+      return lineOrBookmark;
+    } else {
+      const marker = this._bookmarkIndex.get(lineOrBookmark);
+      if (marker === undefined) {
+        return -1;
+      }
+      const position = marker.find();
+      return position.line;
+    }
   }
 
   private scrollTo(x: number, y: number): void {

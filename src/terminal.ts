@@ -44,6 +44,7 @@ import config = require('./config');
 type CommandLineAction = config.CommandLineAction;
 
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
+type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -163,7 +164,7 @@ class EtTerminal extends KeyBindingsElementBase {
   private _lastCommandTerminalViewer: EtTerminalViewer;
   
   // The line number of the start of output of the last command started.
-  private _lastCommandTerminalLine: number;
+  private _lastCommandTerminalLine: BookmarkRef;
   
   private _mode: Mode;
   private _selectionPreviousLineCount: number;
@@ -1298,7 +1299,7 @@ class EtTerminal extends KeyBindingsElementBase {
       }
       this._emulator.moveRowsToScrollback();
       
-      this._lastCommandTerminalLine = this._terminalViewer.lineCount() -1;
+      this._lastCommandTerminalLine = this._terminalViewer.bookmarkLine(this._terminalViewer.lineCount() -1);
       this._lastCommandLine = cleancommand;
       this._lastCommandTerminalViewer = this._terminalViewer;
     }

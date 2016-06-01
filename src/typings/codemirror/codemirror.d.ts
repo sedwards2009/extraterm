@@ -558,7 +558,7 @@ declare module CodeMirror {
             /** By default, text typed when the cursor is on top of the bookmark will end up to the right of the bookmark.
             Set this option to true to make it go to the left instead. */
             insertLeft?: boolean;
-        }): CodeMirror.TextMarker;
+        }): CodeMirror.TextBookmarkMarker;
 
         /** Returns an array of all the bookmarks and marked ranges found between the given positions. */
         findMarks(from: CodeMirror.Position, to: CodeMirror.Position): TextMarker[];
@@ -585,6 +585,11 @@ declare module CodeMirror {
 
     interface LineHandle {
         text: string;
+    }
+
+    interface TextBookmarkMarker {
+      find(): CodeMirror.Position;
+      clear(): void;
     }
 
     interface TextMarker {
