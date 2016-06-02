@@ -7,6 +7,7 @@
 import fs  = require('fs');
 import crypto = require('crypto');
 import base64arraybuffer = require('base64-arraybuffer');
+import utf8 = require('utf8');
 
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
@@ -1541,7 +1542,8 @@ class EtTerminal extends KeyBindingsElementBase {
     const lines = data.split("\n");
     let encodedData: string = "";
     lines.forEach( (line: string) => {
-      encodedData = window.btoa(line +"\n");
+      const utf8line = utf8.encode(line);
+      encodedData = window.btoa(utf8line +"\n");
       this._sendDataToPtyEvent("#" + encodedData + "\n");
     });
       
