@@ -848,7 +848,7 @@ class EtTerminalViewer extends ViewerElement {
         return -1;
       }
       const position = marker.find();
-      return position.line;
+      return position !== undefined ? position.line : -1;
     }
   }
 
