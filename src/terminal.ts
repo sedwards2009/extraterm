@@ -1469,7 +1469,9 @@ class EtTerminal extends KeyBindingsElementBase {
       outputTerminalViewer.returnCode = returnCode;
       outputTerminalViewer.commandLine = this._lastCommandLine;
       outputTerminalViewer.useVPad = false;
-      outputTerminalViewer.setDecoratedLines(moveText.text, moveText.decorations);
+      if (moveText !== null) {
+        outputTerminalViewer.setDecoratedLines(moveText.text, moveText.decorations);
+      }
       outputTerminalViewer.editable = true;
       
       this._virtualScrollArea.appendScrollable(newViewerElement);
