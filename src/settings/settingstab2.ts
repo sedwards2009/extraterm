@@ -19,6 +19,7 @@ import GeneralEvents = require('../generalevents');
 
 type Config = config.Config;
 type CommandLineAction = config.CommandLineAction;
+type FontInfo = config.FontInfo;
 
 let registered = false;
 
@@ -53,6 +54,9 @@ interface ModelData {
   
   themeGUI: string;
   themeGUIOptions: ThemeTypes.ThemeInfo[];
+  
+  terminalFont: string;
+  terminalFontOptions: FontInfo[];
 }
 
 let idCounter = 0;
@@ -99,12 +103,15 @@ class EtSettingsTab extends ViewerElement {
   private _config: Config;
   
   private _themes: ThemeTypes.ThemeInfo[];
-  
+
+  private _fontOptions: FontInfo[];
+
   private _initProperties(): void {
     this._log = new Logger(EtSettingsTab.TAG_NAME);
     this._vm = null;
     this._themes = [];
     this._config = null;
+    this._fontOptions = [];
     this._data = {
       scrollbackLines: 10000,
       terminalFontSize: 12,
@@ -116,7 +123,10 @@ class EtSettingsTab extends ViewerElement {
       themeSyntaxOptions: [],
       
       themeGUI: "",
-      themeGUIOptions: []
+      themeGUIOptions: [],
+      
+      terminalFont: "",
+      terminalFontOptions: []
     };
   }
   
@@ -161,6 +171,23 @@ class EtSettingsTab extends ViewerElement {
       this._data.terminalFontSize = config.terminalFontSize;
     }
     
+    if (this._data.terminalFont !== config.terminalFont) {
+      this._data.terminalFont = config.terminalFont;
+    }
+    
+    const newFontOptions = [...config.systemConfig.availableFonts];
+    newFontOptions.sort( (a,b) => {
+      if (a.name === b.name) {
+        return 0;
+      }
+      return a.name < b.name ? -1 : 1;
+    });
+    
+    if ( ! _.isEqual(this._fontOptions, newFontOptions)) {
+      this._fontOptions = newFontOptions;
+      this._data.terminalFontOptions = newFontOptions;
+    }
+  
     const cleanCommandLineAction = _.cloneDeep(this._data.commandLineActions);
     stripIds(cleanCommandLineAction);
     
@@ -233,6 +260,17 @@ class EtSettingsTab extends ViewerElement {
   <div className='settingsform'>
   
     <div class="form-horizontal">
+      <div class="form-group">
+        <label for="terminal-font" class="col-sm-2 control-label">Terminal Font:</label>
+        <div class="col-sm-4">
+          <select class="col-sm-4 form-control" id="terminal-font" v-model="terminalFont">
+            <option v-for="option in terminalFontOptions" v-bind:value="option.postscriptName">
+              {{ option.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
       <div class="form-group">
         <label for="${ID_TERMINAL_FONT_SIZE}" class="col-sm-2 control-label">Terminal Font Size:</label>
         <div class="input-group col-sm-2">
@@ -417,6 +455,7 @@ class EtSettingsTab extends ViewerElement {
     
     newConfig.scrollbackLines = model.scrollbackLines;
     newConfig.terminalFontSize = model.terminalFontSize;
+    newConfig.terminalFont = model.terminalFont;
     newConfig.commandLineActions = model.commandLineActions;
     newConfig.themeTerminal = model.themeTerminal;
     newConfig.themeSyntax = model.themeSyntax;

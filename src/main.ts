@@ -23,6 +23,8 @@ import path = require('path');
 import fs = require('fs');
 import _ = require('lodash');
 import commander = require('commander');
+import fontManager = require('font-manager');
+import fontinfo = require('fontinfo');
 import ptyconnector = require('./ptyconnector');
 import resourceLoader = require('./resourceloader');
 import Messages = require('./windowmessages');
@@ -49,7 +51,7 @@ type Config = configInterfaces.Config;
 type CommandLineAction = configInterfaces.CommandLineAction;
 type SessionProfile = configInterfaces.SessionProfile;
 type SystemConfig = configInterfaces.SystemConfig;
-
+type FontInfo = configInterfaces.FontInfo;
 
 const LOG_FINE = false;
 
@@ -69,11 +71,13 @@ const KEYBINDINGS_DIRECTORY = "keybindings";
 const DEFAULT_KEYBINDING = "keybindings.json";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
 const KEYBINDINGS_PC = "keybindings.json";
+const TERMINAL_FONTS_DIRECTORY = "terminal_fonts";
 
 let themeManager: ThemeManager.ThemeManager;
 let config: Config;
 let ptyConnector: PtyConnector;
 let tagCounter = 1;
+let fonts: FontInfo[] = null;
 
 function main(): void {
   let failed = false;
@@ -473,7 +477,12 @@ function systemConfiguration(config: Config): SystemConfig {
   const keyBindingJsonString = fs.readFileSync(defaultKeyBindingFilename, { encoding: "UTF8" } );
   const keyBindingsJSON = JSON.parse(keyBindingJsonString);
   
-  return { homeDir: homeDir, keyBindingsContexts: keyBindingsJSON, keyBindingsFiles: keyBindingFiles };
+  return {
+    homeDir: homeDir,
+    keyBindingsContexts: keyBindingsJSON,
+    keyBindingsFiles: keyBindingFiles,
+    availableFonts: getFonts()
+  };
 }
 
 function setupOSX(): void {
@@ -527,6 +536,10 @@ function initConfig(): void {
     config.terminalFontSize = 12;
   } else {
     config.terminalFontSize = Math.max(Math.min(1024, config.terminalFontSize), 4);
+  }
+
+  if (config.terminalFont === undefined || config.terminalFont === null) {
+    config.terminalFont = "DejaVuSansMono";
   }
 
   if (themeManager.getTheme(config.themeTerminal) === null) {
@@ -680,6 +693,37 @@ function scanKeyBindingFiles(keyBindingsDir: string): configInterfaces.KeyBindin
   return result;
 }
 
+function getFonts(): FontInfo[] {
+  const fontResults = fontManager.findFontsSync( { monospace: true } );
+  
+  const allFonts = [...getBundledFonts(), ...fontResults.map( (result) => {
+        const name = result.family + (result.style==="Regular" ? "" : " " + result.style) +
+          (result.italic && result.style.indexOf("Italic") === -1 ? " Italic" : "");
+        const fontInfo: FontInfo = { name: name, path: result.path, postscriptName: result.postscriptName };
+        return fontInfo;
+      } ) ];
+
+  const fonts = _.unique(allFonts, false, "postscriptName");
+  return fonts;
+}
+
+function getBundledFonts(): FontInfo[] {
+  const fontsDir = path.join(__dirname, TERMINAL_FONTS_DIRECTORY);
+  const result: FontInfo[] = [];
+  if (fs.existsSync(fontsDir)) {
+    const contents = fs.readdirSync(fontsDir);
+    contents.forEach( (item) => {
+      if (item.endsWith(".ttf")) {
+        const ttfPath = path.join(fontsDir, item);
+        const fi = fontinfo(ttfPath);
+        result.push( { path: ttfPath, name: fi.name.fontName, postscriptName: fi.name.postscriptName });
+      }
+    });
+  }
+  
+  return result;
+}
+
 //-------------------------------------------------------------------------
 // 
 //  ### ######   #####  
@@ -794,6 +838,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.blinkingCursor = incomingConfig.blinkingCursor;
   newConfig.scrollbackLines = incomingConfig.scrollbackLines;
   newConfig.terminalFontSize = incomingConfig.terminalFontSize;
+  newConfig.terminalFont = incomingConfig.terminalFont;
   newConfig.commandLineActions = incomingConfig.commandLineActions;
   newConfig.themeSyntax = incomingConfig.themeSyntax;
   newConfig.themeTerminal = incomingConfig.themeTerminal;

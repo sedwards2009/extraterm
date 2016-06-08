@@ -4,14 +4,6 @@
 
 /* top-window */
 @import "fontawesome-fontface";
-@import "terminal-fontface";
-
-@font-face {
-  font-family: 'DejaVuSans';
-  src: url($--source-dir-default + '/DejaVuSans.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
 
 DIV.tab_bar_rest {
   display: flex;

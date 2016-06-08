@@ -35,6 +35,8 @@
         "./src/extra_commander.d.ts",
         "./src/extra_dom.d.ts",
         "./src/extra_lib.d.ts",
+        "./src/font-manager.d.ts",
+        "./src/fontinfo.d.ts",
         "./src/framefindertype.ts",
         "./src/generalevents.ts",
         "./src/keybindingmanager.ts",

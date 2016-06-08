@@ -12,6 +12,7 @@ export interface Config {
   themeTerminal?: string;
   themeSyntax?: string;
   themeGUI?: string;
+  terminalFont?: string;
   terminalFontSize?: number;  // px
 
   commandLineActions?: CommandLineAction[];
@@ -40,6 +41,14 @@ export interface SystemConfig {
   homeDir: string;
   keyBindingsFiles: KeyBindingInfo[];
   keyBindingsContexts: Object;
+  
+  availableFonts: FontInfo[];
+}
+
+export interface FontInfo {
+  path: string;
+  name: string;
+  postscriptName: string;
 }
 
 export const SESSION_TYPE_UNIX = "unix";

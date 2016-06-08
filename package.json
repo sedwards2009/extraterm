@@ -22,6 +22,7 @@
     "base64-arraybuffer": "0.1.5",
     "codemirror": "5.14.2",
     "commander": "2.9.0",
+    "font-manager": "0.2.2",
     "he": "0.5.0",
     "js-base64": "2.1.8",
     "lodash": "3.9.1",
@@ -30,6 +31,7 @@
     "sass.js": "0.9.7",
     "source-map-support": "0.3.2",
     "text-encoding": "0.5.5",
+    "fontinfo": "0.3.0",
     "utf8": "2.1.1",
     "vue": "1.0.10"
   },

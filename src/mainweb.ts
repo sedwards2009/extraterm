@@ -330,8 +330,12 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
   keyBindingContexts = KeyBindingManager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts);
   KeyBindingsElementBase.setKeyBindingContexts(keyBindingContexts);
   
-  if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize) {
-    setCssVars(newConfig.terminalFontSize);
+  if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize ||
+      oldConfig.terminalFont !== newConfig.terminalFont) {
+        
+    const matchingFonts = newConfig.systemConfig.availableFonts.filter(
+      (font) => font.postscriptName === newConfig.terminalFont);
+    setCssVars(newConfig.terminalFont, matchingFonts[0].path, newConfig.terminalFontSize);
     if (mainWebUi !== null) {
       mainWebUi.resize();
     }
@@ -366,11 +370,18 @@ function requestThemeContents(themeTerminal: string, themeSyntax: string, themeG
   return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
 }
 
-function setCssVars(terminalFontSize: number): void {
+function setCssVars(fontName: string, fontPath: string, terminalFontSize: number): void {
+  const fontCssName = fontName.replace(/\W/g, "_");
   (<HTMLStyleElement> document.getElementById('CSS_VARS')).textContent =
     `
+    @font-face {
+      font-family: "${fontCssName}";
+      src: url("${fontPath}");
+    }
+
     :root {
       --terminal-font-size: ${terminalFontSize}px;
+      --terminal-font: "${fontCssName}";
     }
     `;
 }
