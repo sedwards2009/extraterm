@@ -72,6 +72,7 @@ const DEFAULT_KEYBINDING = "keybindings.json";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
 const KEYBINDINGS_PC = "keybindings.json";
 const TERMINAL_FONTS_DIRECTORY = "terminal_fonts";
+const DEFAULT_TERMINALFONT = "DejaVuSansMono";
 
 let themeManager: ThemeManager.ThemeManager;
 let config: Config;
@@ -539,7 +540,11 @@ function initConfig(): void {
   }
 
   if (config.terminalFont === undefined || config.terminalFont === null) {
-    config.terminalFont = "DejaVuSansMono";
+    config.terminalFont = DEFAULT_TERMINALFONT;
+  }
+
+  if ( ! config.systemConfig.availableFonts.some( (font) => font.postscriptName === config.terminalFont)) {
+    config.terminalFont = DEFAULT_TERMINALFONT;
   }
 
   if (themeManager.getTheme(config.themeTerminal) === null) {
@@ -695,14 +700,15 @@ function scanKeyBindingFiles(keyBindingsDir: string): configInterfaces.KeyBindin
 
 function getFonts(): FontInfo[] {
   const fontResults = fontManager.findFontsSync( { monospace: true } );
-  
-  const allFonts = [...getBundledFonts(), ...fontResults.map( (result) => {
+  const systemFonts = fontResults.filter( (result) => result.path.toLowerCase().endsWith(".ttf" ))
+      .map( (result) => {
         const name = result.family + (result.style==="Regular" ? "" : " " + result.style) +
           (result.italic && result.style.indexOf("Italic") === -1 ? " Italic" : "");
         const fontInfo: FontInfo = { name: name, path: result.path, postscriptName: result.postscriptName };
         return fontInfo;
-      } ) ];
-
+      } );
+  
+  const allFonts = [...getBundledFonts(), ...systemFonts];
   const fonts = _.unique(allFonts, false, "postscriptName");
   return fonts;
 }
