@@ -704,7 +704,11 @@ function getFonts(): FontInfo[] {
       .map( (result) => {
         const name = result.family + (result.style==="Regular" ? "" : " " + result.style) +
           (result.italic && result.style.indexOf("Italic") === -1 ? " Italic" : "");
-        const fontInfo: FontInfo = { name: name, path: result.path, postscriptName: result.postscriptName };
+        const fontInfo: FontInfo = {
+          name: name,
+          path: pathToUrl(result.path),
+          postscriptName: result.postscriptName
+        };
         return fontInfo;
       } );
   
@@ -722,12 +726,23 @@ function getBundledFonts(): FontInfo[] {
       if (item.endsWith(".ttf")) {
         const ttfPath = path.join(fontsDir, item);
         const fi = fontinfo(ttfPath);
-        result.push( { path: ttfPath, name: fi.name.fontName, postscriptName: fi.name.postscriptName });
+        result.push( {
+          path: pathToUrl(ttfPath),
+          name: fi.name.fontName,
+          postscriptName: fi.name.postscriptName
+        });
       }
     });
   }
   
   return result;
+}
+
+function pathToUrl(path: string): string {
+  if (process.platform === "win32") {
+    return path.replace(/\\/g, "/");
+  }
+  return path;
 }
 
 //-------------------------------------------------------------------------
