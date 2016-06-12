@@ -67,3 +67,4 @@ src/keybindingmanagertest.js
 src/codemirrorcommands.js
 src/keybindingstab.js
 src/keybindingselementbase.js
+src/resizecanary.js

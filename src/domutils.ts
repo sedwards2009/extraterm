@@ -311,13 +311,14 @@ function doLaterTimeoutHandler(): void {
 /**
  * Schedule a function to be executed later.
  * 
- * @param  {Function}    func [description]
+ * @param  func the function to be executed later
+ * @param  msec Optional time delay in ms. Default is 0.
  * @return {LaterHandle} This object can be used to cancel the scheduled execution.
  */
-export function doLater(func: Function): LaterHandle {
+export function doLater(func: Function, msec=0): LaterHandle {
   laterList.push(func);
   if (doLaterId === -1) {
-    doLaterId = window.setTimeout(doLaterTimeoutHandler, 0);
+    doLaterId = window.setTimeout(doLaterTimeoutHandler, msec);
   }
   return { cancel: () => {
     laterList = laterList.filter( f => f!== func );

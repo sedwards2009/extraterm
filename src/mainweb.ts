@@ -26,6 +26,7 @@ import AboutTab = require('./abouttab');
 import SettingsTab = require('./settings/settingstab2');
 import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTextViewer = require('./viewers/textviewer');
+import ResizeCanary = require('./resizecanary');
 
 import config = require('./config');
 type Config = config.Config;
@@ -112,6 +113,7 @@ export function startUp(): void {
     CbDropDown.init();
     MainWebUi.init();
     CbCheckBoxMenuItem.init();
+    ResizeCanary.init();
 
     window.addEventListener('resize', () => {
       if (mainWebUi !== null) {
@@ -138,6 +140,14 @@ export function startUp(): void {
     mainWebUi.themes = themes;
     
     doc.body.appendChild(mainWebUi);
+    
+    // A special element for tracking when terminal fonts are effectively changed in the DOM.
+    const resizeCanary = <ResizeCanary> doc.createElement(ResizeCanary.TAG_NAME);
+    doc.body.appendChild(resizeCanary);
+    resizeCanary.addEventListener('resize', () => {
+      _log.debug("handling canary!!!");
+      mainWebUi.resize();
+    });
     
     // Make sure something sensible is focussed if the window gets the focus.
     window.addEventListener('focus', () => {
