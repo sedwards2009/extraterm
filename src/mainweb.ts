@@ -346,9 +346,6 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
     const matchingFonts = newConfig.systemConfig.availableFonts.filter(
       (font) => font.postscriptName === newConfig.terminalFont);
     setCssVars(newConfig.terminalFont, matchingFonts[0].path, newConfig.terminalFontSize);
-    if (mainWebUi !== null) {
-      mainWebUi.resize();
-    }
   }
 
   if (oldConfig === null || oldConfig.themeTerminal !== newConfig.themeTerminal ||

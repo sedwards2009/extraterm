@@ -76,7 +76,7 @@ class ResizeCanary extends HTMLElement {
           const event = new CustomEvent('resize', { detail: { } });
           this.dispatchEvent(event);
           this._laterHandle = null;
-        }, 2000);
+        }, 40);
       }
     });
   }
@@ -93,28 +93,20 @@ class ResizeCanary extends HTMLElement {
         top: 0px;
         left: 0px;
         display: block;
-/*        width: 1px;
+        width: 1px;
         height: 1px;
-        overflow: hidden;*/
+        overflow: hidden;
       }
       
       #${ID_SIZER} {
-        position: absolute;
-/*        top: 0px;
-        left: 0px;
-        display: block;*/
-/*        width: 1px;
-        height: 1px;
-        overflow: hidden;*/
-        
         font-family: var(--terminal-font);
         font-size: var(--terminal-font-size);
       }
       </style>
 ` +
-//`      <div id='${ID_CONTAINER}'>`
-`<div id='${ID_SIZER}'>mmmmmlllll<br />mmmmmlllll<br />mmmmmlllll</div>`
-//`</div>`;
+`      <div id='${ID_CONTAINER}'>` +
+`<div id='${ID_SIZER}'>mmmmmlllll<br />mmmmmlllll<br />mmmmmlllll</div>` +
+`</div>`;
 ;
       window.document.body.appendChild(template);
     }
