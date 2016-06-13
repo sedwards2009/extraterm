@@ -1153,7 +1153,7 @@ class EtTerminalViewer extends ViewerElement {
         // Update our realised rows var if needed.
         const doc = this._codeMirror.getDoc();
         const lineCount = doc.lineCount();
-        const currentRealizedRows = lineCount - this._terminalFirstRow
+        const currentRealizedRows = lineCount - this._terminalFirstRow;
         if (currentRealizedRows !== this._realizedRows) {
           this._realizedRows = currentRealizedRows;
           emitVirtualResizeEventFlag = true;
@@ -1181,7 +1181,7 @@ class EtTerminalViewer extends ViewerElement {
 
     if (lineCount - this._terminalFirstRow > realizedRows) {
       // Trim off the extra lines.
-      const startPos = this._terminalFirstRow === 0
+      const startPos = this._terminalFirstRow + realizedRows === 0
         ? { line: this._terminalFirstRow + realizedRows, ch: 0 }
         : { line: this._terminalFirstRow + realizedRows -1, ch: doc.getLine(this._terminalFirstRow + realizedRows-1).length };
       const endPos = { line: lineCount-1, ch: doc.getLine(lineCount-1).length };
