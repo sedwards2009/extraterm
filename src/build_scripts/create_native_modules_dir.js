@@ -13,7 +13,9 @@ const test = shelljs.test;
 const mkdir = shelljs.mkdir;
 const exec = shelljs.exec;
 const cd = shelljs.cd;
+const mv = shelljs.mv;
 const echo = shelljs.echo;
+const pwd = shelljs.pwd;
 
 const path = require('path');
 
@@ -33,9 +35,23 @@ function getPackageVersion(packageData, pkg) {
   throw new Error("Unable to find a version specified for module '" + pkg + "'");
 }
 
+function platformModuleDir() {
+  return  `node_modules-${process.platform}-${process.arch}`;
+}
+
 function main() {
   "use strict";
   
+  const target = platformModuleDir();
+  if (test('-d', target)) {
+    echo(`
+Target directory ${target} already exists. First delete it from git and run this again.
+
+Exiting.
+`);
+    return;
+  }
+
   const packageJson = fs.readFileSync('../../package.json');
   const packageData = JSON.parse(packageJson);
 
@@ -50,6 +66,7 @@ function main() {
     mkdir(BUILD_DIR);
   }
   
+  const currentDir = pwd();
   cd(BUILD_DIR);
   
   exec("npm init -f");
@@ -68,6 +85,9 @@ function main() {
   exec("npm uninstall electron-rebuild");
   exec("npm uninstall electron-prebuilt");
   
-  echo("Done");
+  cd(currentDir);
+  mv(path.join(BUILD_DIR, "node_modules"), target);
+  
+  echo(`Done. ${target} has been updated. You can add it back in with git.`);
 }
 main();
