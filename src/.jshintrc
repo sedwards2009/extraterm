@@ -2,5 +2,6 @@
   "predef": [ "window", "define"],
   "node": true,
   "undef": true,
-  "unused": true
+  "unused": true,
+  "esversion": 6
 }
