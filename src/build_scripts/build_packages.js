@@ -129,8 +129,8 @@ function main() {
       const targetSubDir = path.join(targetDir, rDir);
       if (test('-d', targetSubDir)) {
         rm('-r', targetSubDir);
-        cp('-r', path.join(replacementsDir, rDir), targetSubDir);
       }
+      cp('-r', path.join(replacementsDir, rDir), targetSubDir);
     });  
     cd(prevDir);
   }
@@ -146,7 +146,7 @@ function main() {
       return makePackage('ia32', 'linux'); })
       
     .then( () => {
-      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-darwin-x86');
+      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-darwin-x64');
       return makePackage('x64', 'darwin'); })
       
     .then( () => { log("Done"); } );
