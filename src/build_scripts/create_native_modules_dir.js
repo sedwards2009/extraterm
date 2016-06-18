@@ -56,7 +56,7 @@ Exiting.
   const packageData = JSON.parse(packageJson);
 
   const pkgList = [...MODULE_LIST];
-  if (process.platform !== 'win32') {
+  if (process.platform === 'linux') {
     pkgList.push('pty.js');
   }
 
@@ -71,7 +71,7 @@ Exiting.
   
   exec("npm init -f");
   
-  pkgList.forEach( (pkg) => {
+  pkgList.forEach( (pkg) => {    
     exec("npm install --save " + pkg + "@" + getPackageVersion(packageData, pkg));
   });
   
@@ -83,6 +83,12 @@ Exiting.
     exec(path.join(__dirname, "rebuild_mods_windows.bat"));
   } else {
     exec("node node_modules/electron-rebuild/lib/cli.js -f");
+  }
+  
+  // Rebuilding pty.js on OSX doesn't seem to work correctly. The normal
+  // installed build does though. Grab it.
+  if (process.platform === 'darwin') {
+    exec("npm install --save pty.js@" + getPackageVersion(packageData, "pty.js"));    
   }
 
   exec("npm uninstall electron-rebuild");
