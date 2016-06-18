@@ -135,6 +135,7 @@ function main() {
     cd(prevDir);
   }
   
+  replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-win32-x64');
   makePackage('x64', 'win32')
     .then( () => {
       replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-linux-x64');
