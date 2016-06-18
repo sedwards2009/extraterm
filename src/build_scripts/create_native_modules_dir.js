@@ -78,9 +78,12 @@ Exiting.
   exec("npm install --save electron-prebuilt@" + getPackageVersion(packageData, "electron-prebuilt"));
   exec("npm install --save electron-rebuild@" + getPackageVersion(packageData, "electron-rebuild"));
 
-  exec("npm config set msvs_version 2015");
-
-  exec(path.join(__dirname, "rebuild_mods_windows.bat"));
+  if (process.platform === 'win32') {
+    exec("npm config set msvs_version 2015");
+    exec(path.join(__dirname, "rebuild_mods_windows.bat"));
+  } else {
+    exec("node node_modules/electron-rebuild/lib/cli.js -f");
+  }
 
   exec("npm uninstall electron-rebuild");
   exec("npm uninstall electron-prebuilt");
