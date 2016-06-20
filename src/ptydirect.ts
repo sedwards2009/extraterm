@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as pty from 'pty.js';
+import * as pty from 'ptyw.js';
 import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions} from './ptyconnector';
 import configInterfaces = require('./config');
 type Config = configInterfaces.Config;

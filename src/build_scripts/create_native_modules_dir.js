@@ -56,8 +56,8 @@ Exiting.
   const packageData = JSON.parse(packageJson);
 
   const pkgList = [...MODULE_LIST];
-  if (process.platform === 'linux') {
-    pkgList.push('pty.js');
+  if (process.platform !== 'win32') {
+    pkgList.push('ptyw.js');
   }
 
   const BUILD_DIR = 'build_native';
@@ -87,9 +87,9 @@ Exiting.
   
   // Rebuilding pty.js on OSX doesn't seem to work correctly. The normal
   // installed build does though. Grab it.
-  if (process.platform === 'darwin') {
-    exec("npm install --save pty.js@" + getPackageVersion(packageData, "pty.js"));    
-  }
+  // if (process.platform === 'darwin') {
+  //   exec("npm install --save pty.js@" + getPackageVersion(packageData, "pty.js"));    
+  // }
 
   exec("npm uninstall electron-rebuild");
   exec("npm uninstall electron-prebuilt");

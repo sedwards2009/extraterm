@@ -1,11 +1,13 @@
-﻿// Type definitions for pty.js 0.2.7-1
+﻿// Type definitions for ptyw.js 0.2.7-1
 // Project: https://github.com/chjj/pty.js
 // Definitions by: Vadim Macagon <https://github.com/enlight/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
+// 2016-06-20 Simon Edwards <simon@simonzone.com> Moved over to ptyw.js.
+
 /// <reference path="../node/node.d.ts" />
 
-declare module 'pty.js' {
+declare module 'ptyw.js' {
     /** Options that can be used when creating a new pseudo-terminal. */
     interface TerminalOptions {
         name?: string;

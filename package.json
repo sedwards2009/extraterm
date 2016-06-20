@@ -37,7 +37,7 @@
     "vue": "1.0.10"
   },
   "optionalDependencies": {
-    "pty.js": "0.3.0"
+    "ptyw.js": "0.4.0"
   },
   "devDependencies": {
     "cajon": "0.2.10",
