@@ -16,3 +16,7 @@
 #ID_COMMAND_OUTPUT_HANDLING > table td.CLASS_FRAME {
   min-width: 10em;
 }
+
+div.input-group > select.form-control.form-control.form-control:first-child {
+  border-radius: $input-border-radius;
+}

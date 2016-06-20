@@ -262,8 +262,8 @@ class EtSettingsTab extends ViewerElement {
     <div class="form-horizontal">
       <div class="form-group">
         <label for="terminal-font" class="col-sm-2 control-label">Terminal Font:</label>
-        <div class="col-sm-4">
-          <select class="col-sm-4 form-control" id="terminal-font" v-model="terminalFont">
+        <div class="input-group col-sm-4">
+          <select class="form-control" id="terminal-font" v-model="terminalFont">
             <option v-for="option in terminalFontOptions" v-bind:value="option.postscriptName">
               {{ option.name }}
             </option>
