@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "cajon": "0.2.10",
-    "electron-packager": "6.0.0",
+    "electron-packager": "7.0.4",
     "electron-prebuilt": "0.37.2",
     "electron-rebuild": "1.1.5",
     "finalhandler": "0.4.0",
