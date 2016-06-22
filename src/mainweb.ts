@@ -145,7 +145,6 @@ export function startUp(): void {
     const resizeCanary = <ResizeCanary> doc.createElement(ResizeCanary.TAG_NAME);
     doc.body.appendChild(resizeCanary);
     resizeCanary.addEventListener('resize', () => {
-      _log.debug("handling canary!!!");
       mainWebUi.resize();
     });
     

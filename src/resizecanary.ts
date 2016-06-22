@@ -67,12 +67,8 @@ class ResizeCanary extends HTMLElement {
     const container = <HTMLDivElement> domutils.getShadowId(this, ID_SIZER);
     
     this._erd.listenTo(container, (el: HTMLElement) => {
-      this._log.debug("Got a resize event.");
-      
       if (this._laterHandle === null) {
         this._laterHandle = domutils.doLater( () => {
-          this._log.debug("Sending resize event.");
-          
           const event = new CustomEvent('resize', { detail: { } });
           this.dispatchEvent(event);
           this._laterHandle = null;
