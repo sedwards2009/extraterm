@@ -18,6 +18,16 @@
   -webkit-user-select: none;
 }
 
+#ID_TABBAR > li {
+  flex-shrink: 1;
+  overflow-x: hidden;
+  white-space: nowrap;
+}
+
+#ID_TABBAR > li.remainder {
+  flex-shrink: 0;
+}
+
 #ID_CONTENTS {
   flex: 1 1 auto;
   position: relative;
