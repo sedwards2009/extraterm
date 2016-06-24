@@ -195,13 +195,9 @@ class EtEmbeddedViewer extends ViewerElement {
   
   // See VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
-    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
-    const outputDiv =  <HTMLDivElement>this._getById(ID_OUTPUT);
-    const outputStyle = window.getComputedStyle(outputDiv);
-
-    const rect = headerDiv.getBoundingClientRect();
-    const result = rect.height + domutils.pixelLengthToInt(outputStyle.borderTopWidth) +
-      domutils.pixelLengthToInt(outputStyle.borderBottomWidth);
+    const {top, bottom} = this._borderSize();
+    const result = top + bottom;
+      
     if (DEBUG_SIZE) {
       this._log.debug("getReserveViewportHeight() => ", result);
     }
@@ -348,8 +344,16 @@ class EtEmbeddedViewer extends ViewerElement {
   getCursorPosition(): ViewerElementTypes.CursorMoveDetail {
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
-      return viewerElement.getCursorPosition();
-    }    
+      const borderSize = this._borderSize();
+      const {left, top, bottom, viewPortTop } = viewerElement.getCursorPosition();
+      return {
+        left,
+        top: top+borderSize.top,
+        bottom: bottom + borderSize.top,
+        viewPortTop: viewPortTop+borderSize.top
+      };
+    }
+    return null;
   }
   
   setCursorPositionTop(x: number): boolean {
@@ -648,6 +652,18 @@ class EtEmbeddedViewer extends ViewerElement {
       const icon = <HTMLDivElement>this._getById(ID_ICON);
       icon.className = "fa " + (newValue !== null && newValue !== undefined && newValue !== "" ? "fa-" : "") + newValue;
     }
+  }
+
+  private _borderSize(): {top: number; bottom: number;} {
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    const outputDiv =  <HTMLDivElement>this._getById(ID_OUTPUT);
+    const outputStyle = window.getComputedStyle(outputDiv);
+
+    const rect = headerDiv.getBoundingClientRect();
+    const top = rect.height + domutils.pixelLengthToInt(outputStyle.borderTopWidth);
+    const bottom = domutils.pixelLengthToInt(outputStyle.borderBottomWidth);
+    
+    return {top, bottom};
   }
 
   private _getViewerElement(): ViewerElement {
