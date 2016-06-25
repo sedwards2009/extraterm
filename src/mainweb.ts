@@ -138,6 +138,9 @@ export function startUp(): void {
 
     mainWebUi.config = configuration;
     mainWebUi.themes = themes;
+      
+    doc.body.classList.remove("preparing");
+    doc.body.innerHTML = "";  // Remove the old contents.
     
     doc.body.appendChild(mainWebUi);
     
