@@ -67,6 +67,7 @@ const EXTRATERM_CONFIG_DIR = "extraterm";
 const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
+const THEMES_CACHE_DIR = "theme_cache";
 const KEYBINDINGS_DIRECTORY = "keybindings";
 const DEFAULT_KEYBINDING = "keybindings.json";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
@@ -104,7 +105,12 @@ function main(): void {
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  themeManager = ThemeManager.makeThemeManager([themesdir, userThemesDir]);
+  
+  const userThemeCacheDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, THEMES_CACHE_DIR);
+  if ( ! fs.existsSync(userThemeCacheDir)) {
+    fs.mkdirSync(userThemeCacheDir);
+  }
+  themeManager = ThemeManager.makeThemeManager([themesdir, userThemesDir], userThemeCacheDir);
   
   initConfig();
   

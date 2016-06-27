@@ -56,6 +56,17 @@ interface ListenerItem {
   watcher: fs.FSWatcher;
 }
 
+//-------------------------------------------------------------------------
+//
+//  #######                             #     #                                           ###                      
+//     #    #    # ###### #    # ###### ##   ##   ##   #    #   ##    ####  ###### #####   #  #    # #####  #      
+//     #    #    # #      ##  ## #      # # # #  #  #  ##   #  #  #  #    # #      #    #  #  ##  ## #    # #      
+//     #    ###### #####  # ## # #####  #  #  # #    # # #  # #    # #      #####  #    #  #  # ## # #    # #      
+//     #    #    # #      #    # #      #     # ###### #  # # ###### #  ### #      #####   #  #    # #####  #      
+//     #    #    # #      #    # #      #     # #    # #   ## #    # #    # #      #   #   #  #    # #      #      
+//     #    #    # ###### #    # ###### #     # #    # #    # #    #  ####  ###### #    # ### #    # #      ######
+//
+//-------------------------------------------------------------------------
 class ThemeManagerImpl implements ThemeManager {
   
   private _log = new Logger("ThemeManagerImpl");
@@ -64,13 +75,18 @@ class ThemeManagerImpl implements ThemeManager {
   
   private _themes: Map<string, ThemeInfo> = null;
   
-  private _themeContents: Map<string, ThemeContents> = new Map();
+  private _cacheDirectory: string = null;
+  
+  private _themeContentsCache: ThemeCache = null;
   
   private _listeners: ListenerItem[] = [];
   
-  constructor(directories: string[]) {
+  constructor(directories: string[], cacheDirectory: string=null) {
     this._directories = directories;
-    
+    this._cacheDirectory = cacheDirectory;
+    this._themeContentsCache = new ThemeCache(this._directories, this._cacheDirectory);
+    this._themeContentsCache.load();
+
     const allThemes = new Map<string, ThemeInfo>();
     this._directories.forEach( (directory) => {
       const themes = this._scanThemeDirectory(directory);
@@ -94,33 +110,29 @@ class ThemeManagerImpl implements ThemeManager {
     return result;
   }
 
-  renderThemes(themeIdList: string[]): Promise<RenderResult> {
-    const themeInfoList = this._themeIdListToThemeInfoList(themeIdList);
+  renderThemes(themeStack: string[]): Promise<RenderResult> {
+    const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
 
     // Look for this combo in the cache.
-    if ( ! this._themeStackCacheHas(themeIdList)) {
+    const contents = this._themeContentsCache.get(themeStack);
+    
+    if (contents === null) {
       return this._renderThemeStackContents(themeInfoList)
         .then( (renderResults) => {
-          const contents = renderResults.themeContents;
-          this._themeContents.set(themeStackCacheKey(themeIdList), contents);
+          this._themeContentsCache.set(themeStack, renderResults.themeContents);
           return renderResults;
         });
     } else {
       return new Promise<RenderResult>( (resolve, cancel) => {
         const result: RenderResult = {
           success: true,
-          themeContents: this._themeContents.get(themeStackCacheKey(themeIdList)),
+          themeContents: contents,
           errorMessage: null
         };
         
         resolve(result);
       });
     }
-  }
-  
-  private _themeStackCacheHas(themeIds: string[]): boolean {
-    const key = themeStackCacheKey(themeIds);
-    return this._themeContents.has(key);
   }
   
   private _themeIdListToThemeInfoList(themeIdList: string[]): ThemeInfo[] {
@@ -137,32 +149,33 @@ class ThemeManagerImpl implements ThemeManager {
     return themeInfoList;
   }
   
-  registerChangeListener(themeIdOrList: string | string[], listenerFunc: (theme: ThemeInfo) => void): void {
-    const themeIdList = _.uniq(Array.isArray(themeIdOrList) ? themeIdOrList : [themeIdOrList]);
-    const themeInfoList = this._themeIdListToThemeInfoList(themeIdList);
+  registerChangeListener(themeIdOrStack: string | string[], listenerFunc: (theme: ThemeInfo) => void): void {
+    const themeStack = _.uniq(Array.isArray(themeIdOrStack) ? themeIdOrStack : [themeIdOrStack]);
+    const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
     
-    themeIdList.forEach( (themeId) => {
+    themeStack.forEach( (themeId) => {
       const themeInfo = this.getTheme(themeId);
       const themePath = themeInfo.path;
       
       const watcher = fs.watch(themePath, { persistent: false },
         (event, filename) => {
-          
-          if (this._themeStackCacheHas(themeIdList)) {
-            const oldThemeContents = this._themeContents.get(themeId);
+          const contents = this._themeContentsCache.get(themeStack);
+
+          if (contents !== null) {
+            const oldThemeContents = contents;
             
             this._renderThemeStackContents(themeInfoList)
               .then( (renderResult) => {
                 const newThemeContents = renderResult.themeContents;
                 if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
-                  this._themeContents.set(themeId, newThemeContents);
+                  this._themeContentsCache.set(themeStack, newThemeContents);
                   listenerFunc(themeInfo);
                 } else {
                   this._log.info("" + filename + " changed, but the theme contents did not.");
                 }
               });
           } else {
-            this.renderThemes(themeIdList).then( (result) => {
+            this.renderThemes(themeStack).then( (result) => {
               listenerFunc(themeInfo);
             });
           }
@@ -395,10 +408,153 @@ class ThemeManagerImpl implements ThemeManager {
   }  
 }
 
-function themeStackCacheKey(themeIds: string[]): string {
-  return themeIds.reduce( (accu, id) => accu + "/" + id, "");
+//-------------------------------------------------------------------------
+//
+//   #####                              
+//  #     #   ##    ####  #    # ###### 
+//  #        #  #  #    # #    # #      
+//  #       #    # #      ###### #####  
+//  #       ###### #      #    # #      
+//  #     # #    # #    # #    # #      
+//   #####  #    #  ####  #    # ###### 
+//
+//-------------------------------------------------------------------------
+
+interface ThemeCacheEntry {
+  timeStamp: number;        // Time stamp of the cache file 
+  contents: ThemeContents;
 }
 
-export function makeThemeManager(directories: string[]): ThemeManager {
-  return new ThemeManagerImpl(directories);
+const THEME_CACHE_ENTRY_SUFFIX = ".json";
+
+class ThemeCache {
+  
+  private _log = new Logger("ThemeCache");
+  
+  private _themeDirectories: string[] = null;
+  
+  private _cacheDirectory: string = null;
+  
+  private _cache: Map<string, ThemeCacheEntry> = new Map();
+  
+  constructor(themeDirectories: string[], cacheDirectory: string) {
+    this._themeDirectories = [...themeDirectories];
+    this._cacheDirectory = cacheDirectory;
+  }
+  
+  load(): void {
+    const contents = fs.readdirSync(this._cacheDirectory);
+
+    contents.forEach( (item) => {
+      const itemPath = path.join(this._cacheDirectory, item);
+      const info = fs.lstatSync(itemPath);
+      if (info.isFile() && item.endsWith(THEME_CACHE_ENTRY_SUFFIX)) {
+        const baseName = item.substr(0, item.length- THEME_CACHE_ENTRY_SUFFIX.length);
+        this._cache.set(baseName, {
+          timeStamp: info.mtime.getTime(),
+          contents: null
+        });        
+      }
+    });
+    
+  }
+  
+  get(themeStack: string[]): ThemeContents {
+    const key = themeStackName(themeStack);
+    const entry = this._cache.get(key);
+    if (entry === undefined) {
+      return null;
+    }
+    
+    // Check the timestamps of the theme directory files with the timestamp on the cache file.
+    const timeStamps = themeStack.map( (themeName) => recursiveDirectoryLastModified(findThemePath(this._themeDirectories, themeName)));
+    const latestTimeStamp = Math.max(...timeStamps);
+    const now = (new Date()).getTime();
+    if (entry.timeStamp <= latestTimeStamp) {
+      // Cache file is older than the timestamps on the theme directories.
+      return null;
+    }
+    
+    // We have a cached entry and it is all good.
+    if (entry.contents === null) {
+      // Load in the data from disk.
+      const cacheFileName = path.join(this._cacheDirectory, key + THEME_CACHE_ENTRY_SUFFIX);
+      const fileContents = fs.readFileSync(cacheFileName, { encoding: "utf-8" });
+      entry.contents = <ThemeContents> JSON.parse(fileContents);
+    }
+    return entry.contents;
+  }
+  
+  set(themeStack: string[], contents: ThemeContents): void {
+    const now = (new Date()).getTime();
+    const key = themeStackName(themeStack);
+    
+    const entry: ThemeCacheEntry = { timeStamp: now, contents };
+    
+    this._cache.set(key, entry);
+    const fileName = path.join(this._cacheDirectory, key + THEME_CACHE_ENTRY_SUFFIX);
+    fs.writeFileSync(fileName, JSON.stringify(entry.contents), { encoding: 'utf8'} );
+  }
+}
+
+// We use the period char to separate parts of the theme names.
+
+function themeStackName(themeStack: string[]): string {
+  return themeStack.map(escapeFileName).join(".");
+}
+
+function escapeFileName(name: string): string {
+  return name.replace(/_/g, "__").replace(/\./g, "_.");
+}
+
+function unescapeFileName(name: string): string {
+  return name.replace(/_\./g, ".").replace(/__/g, "_");
+}
+
+function decomposeThemeStackName(fileName: string): string[] {
+  const parts = fileName.split(/\./g).reduce( (accu, part) => {
+      if (accu.length === 0) {
+        return [part];
+      } else {
+        const last = accu[accu.length-1];
+        if (last.endsWith("_")) {
+          accu[accu.length-1] = last + "." + part;
+          return accu;
+        } else {
+          return [...accu, part];
+        }
+      }
+    }, []);
+  return parts.map(unescapeFileName);
+}
+
+function findThemePath(themeDirectories: string[], themeName: string): string {
+  for (let themeDir of themeDirectories) {
+    const fullThemePath = path.join(themeDir, themeName);
+    if (fs.existsSync(fullThemePath)) {
+      return fullThemePath;
+    }
+  }
+  return null;
+}
+
+function recursiveDirectoryLastModified(directory: string): number {
+  let lastModified = -1;
+  const contents = fs.readdirSync(directory);
+    
+  contents.forEach( (item) => {
+    const itemPath = path.join(directory, item);
+    const info = fs.lstatSync(itemPath);
+    if (info.isFile()) {
+      lastModified = Math.max(info.mtime.getTime(), lastModified);
+    } else if (info.isDirectory()) {
+      lastModified = Math.max(recursiveDirectoryLastModified(itemPath), lastModified);
+    }
+  } );
+  
+  return lastModified;
+}
+
+export function makeThemeManager(directories: string[], cacheDirectory: string=null): ThemeManager {
+  return new ThemeManagerImpl(directories, cacheDirectory);
 }
