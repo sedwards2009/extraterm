@@ -35,6 +35,13 @@
   cursor: default;
 }
 
+.CodeMirror-lines {
+  padding: 0 0; /* Vertical padding around content */
+}
+.CodeMirror pre {
+  padding: 0 0; /* Horizontal padding of content */
+}
+
 .cm-s-text {
   line-height: 1.3em;
 }
