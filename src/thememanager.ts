@@ -437,11 +437,22 @@ class ThemeCache {
   
   private _cache: Map<string, ThemeCacheEntry> = new Map();
   
+  /**
+   * Construct a theme cache instance.
+   * 
+   * @param  themeDirectories list of directories to look for theme files
+   * @param  cacheDirectory location of the cache directory on disk
+   */
   constructor(themeDirectories: string[], cacheDirectory: string) {
     this._themeDirectories = [...themeDirectories];
     this._cacheDirectory = cacheDirectory;
   }
   
+  /**
+   * Loads the cache metadata from disk.
+   *
+   * This should be called after construction but before use of the cache.
+   */
   load(): void {
     const contents = fs.readdirSync(this._cacheDirectory);
 
@@ -458,7 +469,13 @@ class ThemeCache {
     });
     
   }
-  
+
+  /**
+   * Gets the rendered CSS data for a stack of themes
+   * 
+   * @param  themeStack stack of theme names
+   * @return the theme contents if it is available in the cache, otherwise null
+   */
   get(themeStack: string[]): ThemeContents {
     const key = themeStackName(themeStack);
     const entry = this._cache.get(key);
@@ -485,6 +502,12 @@ class ThemeCache {
     return entry.contents;
   }
   
+  /**
+   * Stores rendered theme data in the cache
+   * 
+   * @param themeStack the stack of theme names the data belongs to
+   * @param contents   the theme contents
+   */
   set(themeStack: string[], contents: ThemeContents): void {
     const now = (new Date()).getTime();
     const key = themeStackName(themeStack);
@@ -493,24 +516,35 @@ class ThemeCache {
     
     this._cache.set(key, entry);
     const fileName = path.join(this._cacheDirectory, key + THEME_CACHE_ENTRY_SUFFIX);
-    fs.writeFileSync(fileName, JSON.stringify(entry.contents), { encoding: 'utf8'} );
+    fs.writeFileSync(fileName, JSON.stringify(entry.contents), { encoding: "utf-8" });
   }
 }
 
-// We use the period char to separate parts of the theme names.
-
+/**
+ * Maps a stack of theme names to a file name
+ * 
+ * @param  themeStack the stack of theme names to encode into a file name
+ * @return the file name which encodes the list of theme names
+ */
 function themeStackName(themeStack: string[]): string {
-  return themeStack.map(escapeFileName).join(".");
+  // We use the period char to separate parts of the theme names.
+  return themeStack.map(escapeThemeFileName).join(".");
 }
 
-function escapeFileName(name: string): string {
+function escapeThemeFileName(name: string): string {
   return name.replace(/_/g, "__").replace(/\./g, "_.");
 }
 
-function unescapeFileName(name: string): string {
+function unescapeThemeFileName(name: string): string {
   return name.replace(/_\./g, ".").replace(/__/g, "_");
 }
 
+/**
+ * Decomposes a theme cache file name into a stack theme names.
+ * 
+ * @param  fileName the base file name without extension
+ * @return the stack of theme names
+ */
 function decomposeThemeStackName(fileName: string): string[] {
   const parts = fileName.split(/\./g).reduce( (accu, part) => {
       if (accu.length === 0) {
@@ -525,9 +559,16 @@ function decomposeThemeStackName(fileName: string): string[] {
         }
       }
     }, []);
-  return parts.map(unescapeFileName);
+  return parts.map(unescapeThemeFileName);
 }
 
+/**
+ * Finds the path of a path in a list of directories.
+ * 
+ * @param  themeDirectories the list of directories to search
+ * @param  themeName        the theme to search for
+ * @return                  the full path to the theme directory or null if it could not be found
+ */
 function findThemePath(themeDirectories: string[], themeName: string): string {
   for (let themeDir of themeDirectories) {
     const fullThemePath = path.join(themeDir, themeName);
