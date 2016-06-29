@@ -421,7 +421,7 @@ class ThemeManagerImpl implements ThemeManager {
 //-------------------------------------------------------------------------
 
 interface ThemeCacheEntry {
-  timeStamp: number;        // Time stamp of the cache file 
+  hash: string;
   contents: ThemeContents;
 }
 
@@ -462,7 +462,7 @@ class ThemeCache {
       if (info.isFile() && item.endsWith(THEME_CACHE_ENTRY_SUFFIX)) {
         const baseName = item.substr(0, item.length- THEME_CACHE_ENTRY_SUFFIX.length);
         this._cache.set(baseName, {
-          timeStamp: info.mtime.getTime(),
+          hash: null,
           contents: null
         });        
       }
@@ -483,23 +483,24 @@ class ThemeCache {
       return null;
     }
     
-    // Check the timestamps of the theme directory files with the timestamp on the cache file.
-    const timeStamps = themeStack.map( (themeName) => recursiveDirectoryLastModified(findThemePath(this._themeDirectories, themeName)));
-    const latestTimeStamp = Math.max(...timeStamps);
-    const now = (new Date()).getTime();
-    if (entry.timeStamp <= latestTimeStamp) {
-      // Cache file is older than the timestamps on the theme directories.
-      return null;
-    }
-    
     // We have a cached entry and it is all good.
     if (entry.contents === null) {
       // Load in the data from disk.
       const cacheFileName = path.join(this._cacheDirectory, key + THEME_CACHE_ENTRY_SUFFIX);
       const fileContents = fs.readFileSync(cacheFileName, { encoding: "utf-8" });
-      entry.contents = <ThemeContents> JSON.parse(fileContents);
+      const newEntry = <ThemeCacheEntry> JSON.parse(fileContents);
+
+      // Check the timestamps of the theme directory files with the timestamp on the cache file.
+      const integrityHash = hashThemeStack(themeStack, this._themeDirectories);
+      
+      if (newEntry.hash !== integrityHash) {
+        return null;
+      }
+      this._cache.set(key, newEntry);
+      return newEntry.contents;
+    } else {
+      return entry.contents;
     }
-    return entry.contents;
   }
   
   /**
@@ -509,14 +510,13 @@ class ThemeCache {
    * @param contents   the theme contents
    */
   set(themeStack: string[], contents: ThemeContents): void {
-    const now = (new Date()).getTime();
     const key = themeStackName(themeStack);
-    
-    const entry: ThemeCacheEntry = { timeStamp: now, contents };
+    const integrityHash = hashThemeStack(themeStack, this._themeDirectories);
+    const entry: ThemeCacheEntry = { hash: integrityHash, contents };
     
     this._cache.set(key, entry);
     const fileName = path.join(this._cacheDirectory, key + THEME_CACHE_ENTRY_SUFFIX);
-    fs.writeFileSync(fileName, JSON.stringify(entry.contents), { encoding: "utf-8" });
+    fs.writeFileSync(fileName, JSON.stringify(entry), { encoding: "utf-8" });
   }
 }
 
@@ -579,21 +579,28 @@ function findThemePath(themeDirectories: string[], themeName: string): string {
   return null;
 }
 
-function recursiveDirectoryLastModified(directory: string): number {
-  let lastModified = -1;
+function hashThemeStack(themeStack: string[], themeDirectories: string[]): string {
+  const hashParts = themeStack.map( (themeName) => hashDirectoryMetaData(findThemePath(themeDirectories, themeName)));
+  const hash = hashParts.join("/");
+  return hash;
+}
+
+function hashDirectoryMetaData(directory: string): string {
   const contents = fs.readdirSync(directory);
-    
+  let result = "";
+  
+  contents.sort();  
   contents.forEach( (item) => {
     const itemPath = path.join(directory, item);
     const info = fs.lstatSync(itemPath);
     if (info.isFile()) {
-      lastModified = Math.max(info.mtime.getTime(), lastModified);
+      result += item + "/" + info.mtime.getTime() + "/" + info.size + "/";
     } else if (info.isDirectory()) {
-      lastModified = Math.max(recursiveDirectoryLastModified(itemPath), lastModified);
+      result += hashDirectoryMetaData(itemPath);
     }
   } );
   
-  return lastModified;
+  return result;
 }
 
 export function makeThemeManager(directories: string[], cacheDirectory: string=null): ThemeManager {
