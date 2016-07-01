@@ -79,6 +79,7 @@
         "./src/webresourceloader.ts",
         "./src/windowmessages.ts",
         "./src/gui/checkboxmenuitem.ts",
+        "./src/gui/commandpalette.ts",
         "./src/gui/contextmenu.ts",
         "./src/gui/dropdown.ts",
         "./src/gui/menuitem.ts",

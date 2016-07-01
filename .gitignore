@@ -6,6 +6,7 @@ src/config.js
 src/configuredialog.js
 src/domutils.js
 src/gui/checkboxmenuitem.js
+src/gui/commandpalette.js
 src/gui/contextmenu.js
 src/gui/dropdown.js
 src/gui/markdownviewer.js
