@@ -41,15 +41,6 @@
               const cssMap = new Map();
               cssMap.set(theme.CssFile.GUI_COMMANDPALETTE, `
                 /* Command Palette */
-                #ID_CONTAINER {
-                  border: 1px solid black;
-                  width: 300px;
-                  height: 150px;
-                }
-                #ID_COVER {
-                  background-color: #ff0000;
-                }
-                
                 div > #ID_FILTER {
                   box-sizing: border-box;
                   width: 100%;
@@ -85,7 +76,36 @@
                 .CLASS_RESULT_SHORTCUT {
                   flex: auto 0 0;
                 }
+                
+                #ID_COVER.CLASS_COVER_CLOSED {
+                  visibility: hidden;
+                }
+                
+                #ID_COVER.CLASS_COVER_OPEN {
+                  position: fixed;
+                  visibility: visible;
+                  top: 0;
+                  bottom: 0;
+                  left: 0;
+                  right: 0;
+                  background-color: rgba(255, 0, 0, 0.5);
+                  z-index: 1;
+                }
+                
+                #ID_CONTAINER.CLASS_CONTAINER_OPEN {
+                  position: absolute;
+                  
+                  border: 1px solid black;
+                  width: 300px;
+                  height: 150px;
 
+                  z-index: 2;
+                  
+                }
+                
+                #ID_CONTAINER.CLASS_CONTAINER_CLOSED {
+                  display: none;
+                }
 `);
               themeconsumer.updateCss(cssMap);
               
@@ -97,10 +117,19 @@
                 { id: "line-numbers", iconRight: "list-ol", label: "Line numbers", shortcut: "Ctrl+Shift+N" },
                 { id: "go-to-line", label: "Go to Line", shortcut: "Ctrl+Shift+L" },
               ];
+              palette.addEventListener('selected', (ev) => {
+                console.log(ev);
+                palette.close();
+              });
+              const boingButton = document.getElementById('boing');
+              boingButton.addEventListener('click', () => {
+                palette.open(10, 10);
+              });
     });
     </script>
 </head>
 <body>
 <CB-COMMANDPALETTE id="palette"></CB-COMMANDPALETTE>  
+<button id="boing">Open</button>
 </body>
 </html>

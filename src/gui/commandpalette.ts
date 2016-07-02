@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -22,6 +22,12 @@ const CLASS_RESULT_ICON_RIGHT = "CLASS_RESULT_ICON_RIGHT";
 const CLASS_RESULT_LABEL = "CLASS_RESULT_LABEL";
 const CLASS_RESULT_SHORTCUT = "CLASS_RESULT_SHORTCUT";
 const CLASS_RESULT_SELECTED = "CLASS_RESULT_SELECTED";
+const CLASS_CONTAINER_CLOSED = "CLASS_CONTAINER_CLOSED";
+const CLASS_CONTAINER_OPEN = "CLASS_CONTAINER_OPEN";
+const CLASS_COVER_CLOSED = "CLASS_COVER_CLOSED";
+const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
+
+const ATTR_DATA_ID = "data-id";
 
 let registered = false;
 
@@ -60,10 +66,14 @@ class CbCommandPalette extends ThemeableElementBase {
   // WARNING: Fields like this will not be initialised automatically.
   private _commandEntries: CommandEntry[];
   
-  private _selectedId: string = null;
+  private _selectedId: string;
+  
+  private _laterHandle: domutils.LaterHandle;
   
   private _initProperties(): void {
     this._commandEntries = [];
+    this._selectedId = null;
+    this._laterHandle = null;
   }
 
   set entries(entries: CommandEntry[]) {
@@ -86,11 +96,11 @@ class CbCommandPalette extends ThemeableElementBase {
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-
   /**
    * Custom Element 'created' life cycle hook.
    */
   createdCallback() {
+    this._initProperties(); // Initialise our properties. The constructor was not called.
     const shadow = domutils.createShadowRoot(this);
     const clone = this.createClone();
     shadow.appendChild(clone);
@@ -103,14 +113,24 @@ class CbCommandPalette extends ThemeableElementBase {
     
     filterInput.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
     
-    // const cover = <HTMLDivElement>this.__getById(ID_COVER);
-    
-    const resultsDiv =domutils.getShadowId(this, ID_RESULTS);
+    const resultsDiv = domutils.getShadowId(this, ID_RESULTS);
     resultsDiv.addEventListener('click', (ev: Event) => {
-      console.log('click', ev);
-      //ev.srcElement
+      for (let node of ev.path) {
+        if (node instanceof HTMLElement) {
+          const dataId = node.attributes.getNamedItem(ATTR_DATA_ID);
+          if (dataId !== undefined && dataId !== null) {
+            this._executeId(dataId.value);
+          }
+        }
+      }
+    });
+    
+    const coverDiv = domutils.getShadowId(this, ID_COVER);
+    coverDiv.addEventListener('mousedown', (ev) => {
+      this._executeId(null);
     });
   }
+  
   /**
    * 
    */
@@ -120,8 +140,8 @@ class CbCommandPalette extends ThemeableElementBase {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
-        ` // `<div id='${ID_COVER}' class=''></div>
-        + `<div id='${ID_CONTAINER}' class=''>
+        <div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
+        <div id='${ID_CONTAINER}' class='${CLASS_CONTAINER_CLOSED}'>
           <div><input type="text" id="${ID_FILTER}" /></div>
           <div id="${ID_RESULTS}"></div>
         </div>`;
@@ -157,12 +177,12 @@ class CbCommandPalette extends ThemeableElementBase {
   private handleKeyDown(ev: KeyboardEvent) {
     // Escape.
     if (ev.keyIdentifier === "U+001B") {
-      this.close();
+      this._executeId(null);
       ev.preventDefault();
       ev.stopPropagation();
       return;
     }
-  
+    
     if (ev.keyIdentifier === "Up" || ev.keyIdentifier === "Down" || ev.keyIdentifier === "Enter") {
       ev.preventDefault();
       ev.stopPropagation();
@@ -178,6 +198,11 @@ class CbCommandPalette extends ThemeableElementBase {
         this._selectedId = filteredEntries[Math.max(0, selectedIndex-1)].id;
       } else if (ev.keyIdentifier === "Down") {
         this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+1)].id;
+      } else {
+        // Enter
+        if (this._selectedId !== null) {
+          this._executeId(this._selectedId);
+        }
       }
       
       this._updateEntries();
@@ -187,54 +212,64 @@ class CbCommandPalette extends ThemeableElementBase {
   /**
    * 
    */
-  // open(x: number, y: number): void {
-  //   // Nuke any style like 'display: none' which can be use to prevent flicker.
-  //   this.setAttribute('style', '');
-  //   
-  //   const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
-  //   container.classList.remove('container_closed');
-  //   container.classList.add('container_open');  
-  // 
-  //   const rect = container.getBoundingClientRect();
-  // 
-  //   var sx = x;
-  //   if (sx+rect.width > window.innerWidth) {
-  //     sx = window.innerWidth - rect.width;
-  //   }
-  // 
-  //   var sy = y;
-  //   if (sy+rect.height > window.innerHeight) {
-  //     sy = window.innerHeight - rect.height;
-  //   }
-  // 
-  //   container.style.left = "" + sx + "px";
-  //   container.style.top = "" + sy + "px";
-  // 
-  //   const cover = <HTMLDivElement>this.__getById(ID_COVER);
-  //   cover.className = "cover_open";
-  // 
-  //   this.selectMenuItem(this.childNodes, null);
-  // 
-  //   container.focus();
-  // }
+  open(x: number, y: number): void {
+    // Nuke any style like 'display: none' which can be use to prevent flicker.
+    this.setAttribute('style', '');
+    
+    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
+    container.classList.remove(CLASS_CONTAINER_CLOSED);
+    container.classList.add(CLASS_CONTAINER_OPEN);
+  
+    const rect = container.getBoundingClientRect();
+  
+    var sx = x;
+    if (sx+rect.width > window.innerWidth) {
+      sx = window.innerWidth - rect.width;
+    }
+  
+    var sy = y;
+    if (sy+rect.height > window.innerHeight) {
+      sy = window.innerHeight - rect.height;
+    }
+  
+    container.style.left = "" + sx + "px";
+    container.style.top = "" + sy + "px";
+  
+    const cover = <HTMLDivElement> domutils.getShadowId(this, ID_COVER);
+    cover.classList.remove(CLASS_COVER_CLOSED);
+    cover.classList.add(CLASS_COVER_OPEN);
+  
+    const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
+    filterInput.value = "";
+    this._updateEntries();
+    filterInput.focus();
+  }
 
   /**
    * 
    */
   close(): void {
-    let event = new CustomEvent('before-close', { detail: null });
-    this.dispatchEvent(event);
-  
     const cover = <HTMLDivElement> domutils.getShadowId(this, ID_COVER);
-    cover.className = "cover_closed";
+    cover.classList.remove(CLASS_COVER_OPEN);
+    cover.classList.add(CLASS_COVER_CLOSED);
   
     const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
-    container.classList.remove('container_open');  
-    container.classList.add('container_closed');
-  
-    event = new CustomEvent('close', { detail: null });
-    this.dispatchEvent(event);
+    container.classList.remove(CLASS_CONTAINER_OPEN);
+    container.classList.add(CLASS_CONTAINER_CLOSED);
   }
+  
+  private _executeId(dataId: string): void {
+        console.log("_executeId ->"+dataId);
+    if (this._laterHandle === null) {
+      this._laterHandle = domutils.doLater( () => {
+        console.log("->"+dataId);
+        this._laterHandle = null;
+        const event = new CustomEvent('selected', { detail: {entryId: dataId } });
+        this.dispatchEvent(event);
+      });
+    }
+  }
+  
 }
 
 function filterEntries(entries: CommandEntry[], filter: string): CommandEntry[] {
@@ -247,7 +282,7 @@ function formatEntries(entries: CommandEntry[], selectedId: string): string {
 }
 
 function formatEntry(entry: CommandEntry, selected: boolean): string {
-  return `<div class='${CLASS_RESULT_ENTRY} ${selected ? CLASS_RESULT_SELECTED : ""}'>
+  return `<div class='${CLASS_RESULT_ENTRY} ${selected ? CLASS_RESULT_SELECTED : ""}' ${ATTR_DATA_ID}='${entry.id}'>
     <div class='${CLASS_RESULT_ICON_LEFT}'>${formatIcon(entry.iconLeft)}</div>
     <div class='${CLASS_RESULT_ICON_RIGHT}'>${formatIcon(entry.iconRight)}</div>
     <div class='${CLASS_RESULT_LABEL}'>${he.encode(entry.label)}</div>
