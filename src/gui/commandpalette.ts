@@ -9,6 +9,7 @@ import ThemeTypes = require('../theme');
 import domutils = require('../domutils');
 import util = require('./util');
 import he = require('he');
+import CommandEntryType = require('./commandentrytype');
 
 const ID = "CbContextMenuTemplate";
 const ID_COVER = "ID_COVER";
@@ -30,14 +31,6 @@ const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
 const ATTR_DATA_ID = "data-id";
 
 let registered = false;
-
-interface CommandEntry {
-  id: string;
-  iconLeft?: string;
-  iconRight?: string;
-  label: string;
-  shortcut?: string;
-}
 
 /**
  * A context menu.
@@ -64,7 +57,7 @@ class CbCommandPalette extends ThemeableElementBase {
   }
 
   // WARNING: Fields like this will not be initialised automatically.
-  private _commandEntries: CommandEntry[];
+  private _commandEntries: CommandEntryType.CommandEntry[];
   
   private _selectedId: string;
   
@@ -76,12 +69,12 @@ class CbCommandPalette extends ThemeableElementBase {
     this._laterHandle = null;
   }
 
-  set entries(entries: CommandEntry[]) {
+  set entries(entries: CommandEntryType.CommandEntry[]) {
     this._commandEntries = entries;
     this._updateEntries();
   }
 
-  get entries(): CommandEntry[] {
+  get entries(): CommandEntryType.CommandEntry[] {
     return this._commandEntries;
   }
 
@@ -142,7 +135,7 @@ class CbCommandPalette extends ThemeableElementBase {
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
         <div id='${ID_CONTAINER}' class='${CLASS_CONTAINER_CLOSED}'>
-          <div><input type="text" id="${ID_FILTER}" /></div>
+          <div class="form-group"><input type="text" id="${ID_FILTER}" class="form-control input-sm" /></div>
           <div id="${ID_RESULTS}"></div>
         </div>`;
       window.document.body.appendChild(template);
@@ -152,7 +145,7 @@ class CbCommandPalette extends ThemeableElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_COMMANDPALETTE];
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_COMMANDPALETTE];
   }
   
   //-----------------------------------------------------------------------
@@ -272,16 +265,16 @@ class CbCommandPalette extends ThemeableElementBase {
   
 }
 
-function filterEntries(entries: CommandEntry[], filter: string): CommandEntry[] {
+function filterEntries(entries: CommandEntryType.CommandEntry[], filter: string): CommandEntryType.CommandEntry[] {
   const lowerFilter = filter.toLowerCase();
   return entries.filter( (entry) => entry.label.toLowerCase().includes(lowerFilter) );
 }
 
-function formatEntries(entries: CommandEntry[], selectedId: string): string {
+function formatEntries(entries: CommandEntryType.CommandEntry[], selectedId: string): string {
   return entries.map( (entry) => formatEntry(entry, entry.id === selectedId) ).join("");
 }
 
-function formatEntry(entry: CommandEntry, selected: boolean): string {
+function formatEntry(entry: CommandEntryType.CommandEntry, selected: boolean): string {
   return `<div class='${CLASS_RESULT_ENTRY} ${selected ? CLASS_RESULT_SELECTED : ""}' ${ATTR_DATA_ID}='${entry.id}'>
     <div class='${CLASS_RESULT_ICON_LEFT}'>${formatIcon(entry.iconLeft)}</div>
     <div class='${CLASS_RESULT_ICON_RIGHT}'>${formatIcon(entry.iconRight)}</div>

@@ -16,9 +16,13 @@ import CbContextMenu = require('./gui/contextmenu');
 import CbMenuItem = require('./gui/menuitem');
 import CbDropDown = require('./gui/dropdown');
 import CbCheckBoxMenuItem = require('./gui/checkboxmenuitem');
+import CbCommandPalette = require('./gui/commandpalette');
+import CommandPaletteTypes = require('./commandpalettetypes');
+import CommandEntryType = require('./gui/commandentrytype');
 import MainWebUi = require('./mainwebui');
 import EtTerminal = require('./terminal');
 import KeyBindingsElementBase = require('./keybindingselementbase');
+import domutils = require('./domutils');
 import util = require('./gui/util');
 
 import EtEmbeddedViewer = require('./embeddedviewer');
@@ -45,6 +49,7 @@ const MENU_ITEM_SETTINGS = 'settings';
 const MENU_ITEM_KEY_BINDINGS = 'key_bindings';
 const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
 const MENU_ITEM_ABOUT = 'about';
+const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
 
 const _log = new Logger("mainweb");
 
@@ -113,6 +118,7 @@ export function startUp(): void {
     CbDropDown.init();
     MainWebUi.init();
     CbCheckBoxMenuItem.init();
+    CbCommandPalette.init();
     ResizeCanary.init();
 
     window.addEventListener('resize', () => {
@@ -150,6 +156,12 @@ export function startUp(): void {
     resizeCanary.addEventListener('resize', () => {
       mainWebUi.resize();
     });
+    
+    // Command palette
+    const commandPalette = <CbCommandPalette> doc.createElement(CbCommandPalette.TAG_NAME);
+    commandPalette.id = ID_COMMAND_PALETTE;
+    doc.body.appendChild(commandPalette);
+    commandPalette.addEventListener('selected', handleCommandPaletteSelected);
     
     // Make sure something sensible is focussed if the window gets the focus.
     window.addEventListener('focus', () => {
@@ -208,6 +220,10 @@ export function startUp(): void {
       }
     });
     
+    mainWebUi.addEventListener(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+        handleCommandPaletteRequest(ev.detail);
+      });
+      
     doc.addEventListener('mousedown', (ev: MouseEvent) => {
       if (ev.which === 2) {
         webipc.clipboardReadRequest();
@@ -393,4 +409,43 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
       --terminal-font: "${fontCssName}";
     }
     `;
+}
+
+//-----------------------------------------------------------------------
+//
+//   #####                                               ######                                          
+//  #     #  ####  #    # #    #   ##   #    # #####     #     #   ##   #      ###### ##### ##### ###### 
+//  #       #    # ##  ## ##  ##  #  #  ##   # #    #    #     #  #  #  #      #        #     #   #      
+//  #       #    # # ## # # ## # #    # # #  # #    #    ######  #    # #      #####    #     #   #####  
+//  #       #    # #    # #    # ###### #  # # #    #    #       ###### #      #        #     #   #      
+//  #     # #    # #    # #    # #    # #   ## #    #    #       #    # #      #        #     #   #      
+//   #####   ####  #    # #    # #    # #    # #####     #       #    # ###### ######   #     #   ###### 
+//                                                                                                      
+//-----------------------------------------------------------------------
+let commandPaletteRequest: CommandPaletteTypes.CommandPaletteRequest = null;
+
+function handleCommandPaletteRequest(request: CommandPaletteTypes.CommandPaletteRequest): void {
+  
+  domutils.doLater( () => {
+    commandPaletteRequest = request;
+    
+    const paletteEntries = request.commandEntries.map( (entry, index): CommandEntryType.CommandEntry => {
+      return {
+        id: "" + index,
+        iconLeft: entry.iconLeft,
+        iconRight: entry.iconRight,
+        label: entry.label,
+        shortcut: entry.shortcut
+      };
+    });
+    
+    const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
+    commandPalette.entries = paletteEntries;
+    commandPalette.open(10,10);
+  });
+}
+
+function handleCommandPaletteSelected(ev: Event): void {
+  const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
+  commandPalette.close();
 }

@@ -15,6 +15,7 @@ import CodeMirror = require('codemirror');
 import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
 import EtTerminalViewerTypes = require('./terminalviewertypes');
+import CommandPaletteTypes = require('../commandpalettetypes');
 import termjs = require('../term');
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
@@ -31,6 +32,7 @@ type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
+type CommandPaletteRequest = CommandPaletteTypes.CommandPaletteRequest;
 
 const ID = "CbTerminalViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -42,6 +44,7 @@ const CLASS_UNFOCUSED = "terminal-unfocused";
 const KEYBINDINGS_SELECTION_MODE = "terminal-viewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
+const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
 
 const COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,
@@ -63,7 +66,7 @@ function getCssText(): string {
   return cssText;
 }
 
-class EtTerminalViewer extends ViewerElement {
+class EtTerminalViewer extends ViewerElement implements CommandPaletteTypes.Commandable {
 
   static TAG_NAME = "et-terminal-viewer";
   
@@ -1018,6 +1021,16 @@ class EtTerminalViewer extends ViewerElement {
             }            
             return;
             
+          case COMMAND_OPEN_COMMAND_PALETTE:
+            const commandPaletteRequestDetail: CommandPaletteRequest = {
+                                                                    commandEntries: this._commandPaletteEntries() };
+            const commandPaletteRequestEvent = new CustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST,
+              { detail: commandPaletteRequestDetail });
+            commandPaletteRequestEvent.initCustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+              commandPaletteRequestDetail);
+            this.dispatchEvent(commandPaletteRequestEvent);
+            return;
+            
           default:
             if (command !== null) {
               return;
@@ -1066,6 +1079,17 @@ class EtTerminalViewer extends ViewerElement {
       ev.stopPropagation();
       ev.preventDefault();
     }      
+  }
+  
+  private _commandPaletteEntries(): CommandPaletteTypes.CommandEntry[] {
+    return [
+      { id: COMMAND_TYPE_SELECTION, label: "Type Selection", target: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, label: "Type Selection with Enter", target: this }
+    ];
+  }
+  
+  executeCommand(commandId: string): void {
+    console.log("commandId: "+commandId);
   }
   
   //-----------------------------------------------------------------------

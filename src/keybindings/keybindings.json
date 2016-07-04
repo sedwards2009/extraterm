@@ -70,11 +70,13 @@
   "terminal-viewer": {
     "Ctrl-Enter": "typeSelection",
     "Ctrl-Shift-Enter": "typeSelectionAndCr",
+    "Ctrl-Shift-P": "openCommandPalette",
     "fallthrough": "codemirror"
   },
   "text-viewer": {
     "Ctrl-Enter": "typeSelection",
     "Ctrl-Shift-Enter": "typeSelectionAndCr",
+    "Ctrl-Shift-P": "openCommandPalette",
     "fallthrough": "codemirror"
   },
   "image-viewer": {

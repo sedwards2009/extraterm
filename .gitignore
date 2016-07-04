@@ -69,3 +69,5 @@ src/codemirrorcommands.js
 src/keybindingstab.js
 src/keybindingselementbase.js
 src/resizecanary.js
+src/gui/commandentrytype.js
+src/commandpalettetypes.js
