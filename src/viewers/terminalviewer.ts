@@ -1023,7 +1023,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteTypes.Comm
             
           case COMMAND_OPEN_COMMAND_PALETTE:
             const commandPaletteRequestDetail: CommandPaletteRequest = {
-                                                                    commandEntries: this._commandPaletteEntries() };
+                srcElement: null,
+                commandEntries: this._commandPaletteEntries()
+              };
             const commandPaletteRequestEvent = new CustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST,
               { detail: commandPaletteRequestDetail });
             commandPaletteRequestEvent.initCustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
@@ -1085,8 +1087,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteTypes.Comm
   
   private _commandPaletteEntries(): CommandPaletteTypes.CommandEntry[] {
     return [
-      { id: COMMAND_TYPE_SELECTION, label: "Type Selection", target: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, label: "Type Selection with Enter", target: this }
+      { id: COMMAND_TYPE_SELECTION, iconRight: "terminal", label: "Type Selection", target: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "terminal", label: "Type Selection & Execute", target: this }
     ];
   }
   

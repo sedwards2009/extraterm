@@ -23,6 +23,8 @@ import EtTextViewer = require('./viewers/textviewer');
 import EtImageViewer = require('./viewers/imageviewer');
 import generalevents = require('./generalevents');
 import KeyBindingManager = require('./keybindingmanager');
+import CommandPaletteTypes = require('./commandpalettetypes');
+type CommandPaletteRequest = CommandPaletteTypes.CommandPaletteRequest;
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger = require('./logger');
@@ -101,7 +103,7 @@ viewerClasses.push(EtTextViewer);
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-class EtTerminal extends KeyBindingsElementBase {
+class EtTerminal extends KeyBindingsElementBase implements CommandPaletteTypes.Commandable {
   
   /**
    * The HTML tag name of this element.
@@ -451,6 +453,9 @@ class EtTerminal extends KeyBindingsElementBase {
 
     this.addEventListener('focus', this._handleFocus.bind(this));
     this.addEventListener('blur', this._handleBlur.bind(this));
+    this.addEventListener(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+        this._handleCommandPaletteRequest(ev);
+      });
 
     const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
@@ -1073,6 +1078,42 @@ class EtTerminal extends KeyBindingsElementBase {
         ev.preventDefault();
       }
     }
+  }
+  
+  private _handleCommandPaletteRequest(ev: CustomEvent): void {
+    if (ev.path[0] === this) { // Don't process our own messages.
+      return;
+    }
+    
+    ev.stopPropagation();
+    
+    const request: CommandPaletteTypes.CommandPaletteRequest = ev.detail;
+    const commandPaletteRequestDetail: CommandPaletteRequest = {
+        srcElement: this,
+        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries()]
+      };
+    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST,
+      { detail: commandPaletteRequestDetail });
+    commandPaletteRequestEvent.initCustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+      commandPaletteRequestDetail);
+    this.dispatchEvent(commandPaletteRequestEvent);
+  }
+
+  private _commandPaletteEntries(): CommandPaletteTypes.CommandEntry[] {
+    return [
+      { id: COMMAND_ENTER_SELECTION_MODE, iconRight: "i-cursor", label: "Enter cursor mode", target: this },
+      { id: COMMAND_ENTER_NORMAL_MODE, label: "Enter normal mode", target: this },
+      { id: COMMAND_SCROLL_PAGE_UP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this },
+      { id: COMMAND_SCROLL_PAGE_DOWN, iconRight: "angle-double-down", label: "Scroll Page Down", target: this },
+      { id: COMMAND_COPY_TO_CLIPBOARD, iconRight: "copy", label: "Copy to Clipboard", target: this },
+      { id: COMMAND_PASTE_FROM_CLIPBOARD, iconRight: "clipboard", label: "Paste from Clipboard", target: this },
+      { id: COMMAND_DELETE_LAST_FRAME, iconRight: "times-circle", label: "Delete Last Frame", target: this },
+      { id: COMMAND_OPEN_LAST_FRAME, iconRight: "external-link", label: "Open Last Frame", target: this },
+    ];
+  }
+
+  executeCommand(commandId: string): void {
+    console.log("commandId: "+commandId);
   }
 
   // ********************************************************************

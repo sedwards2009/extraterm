@@ -448,4 +448,7 @@ function handleCommandPaletteRequest(request: CommandPaletteTypes.CommandPalette
 function handleCommandPaletteSelected(ev: Event): void {
   const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
   commandPalette.close();
+  if (commandPaletteRequest.srcElement !== null) {
+    commandPaletteRequest.srcElement.focus();
+  }
 }
