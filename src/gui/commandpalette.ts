@@ -187,18 +187,26 @@ class CbCommandPalette extends ThemeableElementBase {
       }
   
       const selectedIndex = filteredEntries.findIndex( (entry) => entry.id === this._selectedId);
-      if (ev.keyIdentifier === "Up") {
-        this._selectedId = filteredEntries[Math.max(0, selectedIndex-1)].id;
-      } else if (ev.keyIdentifier === "Down") {
-        this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+1)].id;
-      } else {
+      
+      if (ev.keyIdentifier === "Enter") {
         // Enter
         if (this._selectedId !== null) {
           this._executeId(this._selectedId);
         }
+      } else {
+        if (ev.keyIdentifier === "Up") {
+          this._selectedId = filteredEntries[Math.max(0, selectedIndex-1)].id;
+        } else {
+          this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+1)].id;
+        }
+        const resultsDiv = domutils.getShadowId(this, ID_RESULTS);
+        const top = resultsDiv.scrollTop
+        this._updateEntries();
+        resultsDiv.scrollTop = top;
+        
+        const selectedElement = <HTMLElement> resultsDiv.querySelector("."+CLASS_RESULT_SELECTED);
+        selectedElement.scrollIntoView(ev.keyIdentifier === "Up");
       }
-      
-      this._updateEntries();
     }
   }
 
