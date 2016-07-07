@@ -179,7 +179,7 @@ class CbCommandPalette extends ThemeableElementBase {
     const isPageKey = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "PageDown";
     const isUp = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "Up";
     
-    if (isPageKey || isUp || ev.keyIdentifier === "Enter") {
+    if (isPageKey || isUp || ev.keyIdentifier === "Down" || ev.keyIdentifier === "Enter") {
       ev.preventDefault();
       ev.stopPropagation();
       
