@@ -176,7 +176,10 @@ class CbCommandPalette extends ThemeableElementBase {
       return;
     }
     
-    if (ev.keyIdentifier === "Up" || ev.keyIdentifier === "Down" || ev.keyIdentifier === "Enter") {
+    const isPageKey = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "PageDown";
+    const isUp = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "Up";
+    
+    if (isPageKey || isUp || ev.keyIdentifier === "Enter") {
       ev.preventDefault();
       ev.stopPropagation();
       
@@ -194,18 +197,32 @@ class CbCommandPalette extends ThemeableElementBase {
           this._executeId(this._selectedId);
         }
       } else {
-        if (ev.keyIdentifier === "Up") {
-          this._selectedId = filteredEntries[Math.max(0, selectedIndex-1)].id;
-        } else {
-          this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+1)].id;
-        }
+        
         const resultsDiv = domutils.getShadowId(this, ID_RESULTS);
+        
+        // Determine the step size.
+        let stepSize = 1;
+        if (isPageKey) {
+          const dims = resultsDiv.getBoundingClientRect();
+          dims.height;
+          
+          const selectedElement = <HTMLElement> resultsDiv.querySelector("."+CLASS_RESULT_SELECTED);
+          const selectedElementDims = selectedElement.getBoundingClientRect();
+          stepSize = Math.floor(dims.height / selectedElementDims.height);
+        }
+        
+        if (isUp) {
+          this._selectedId = filteredEntries[Math.max(0, selectedIndex-stepSize)].id;
+        } else {
+          this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+stepSize)].id;
+        }
+        
         const top = resultsDiv.scrollTop
         this._updateEntries();
         resultsDiv.scrollTop = top;
         
         const selectedElement = <HTMLElement> resultsDiv.querySelector("."+CLASS_RESULT_SELECTED);
-        selectedElement.scrollIntoView(ev.keyIdentifier === "Up");
+        selectedElement.scrollIntoView(isUp);
       }
     }
   }
