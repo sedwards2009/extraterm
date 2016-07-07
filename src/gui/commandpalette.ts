@@ -203,12 +203,10 @@ class CbCommandPalette extends ThemeableElementBase {
         // Determine the step size.
         let stepSize = 1;
         if (isPageKey) {
-          const dims = resultsDiv.getBoundingClientRect();
-          dims.height;
-          
           const selectedElement = <HTMLElement> resultsDiv.querySelector("."+CLASS_RESULT_SELECTED);
-          const selectedElementDims = selectedElement.getBoundingClientRect();
-          stepSize = Math.floor(dims.height / selectedElementDims.height);
+          const selectedElementDimensions = selectedElement.getBoundingClientRect();
+          
+          stepSize = Math.floor(resultsDiv.clientHeight / selectedElementDimensions.height);
         }
         
         if (isUp) {
@@ -217,12 +215,20 @@ class CbCommandPalette extends ThemeableElementBase {
           this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+stepSize)].id;
         }
         
-        const top = resultsDiv.scrollTop
+        const top = resultsDiv.scrollTop;
         this._updateEntries();
         resultsDiv.scrollTop = top;
         
         const selectedElement = <HTMLElement> resultsDiv.querySelector("."+CLASS_RESULT_SELECTED);
-        selectedElement.scrollIntoView(isUp);
+        const selectedRelativeTop = selectedElement.offsetTop - resultsDiv.offsetTop;
+        if (top > selectedRelativeTop) {
+          resultsDiv.scrollTop = selectedRelativeTop;
+        } else {
+          const selectedElementDimensions = selectedElement.getBoundingClientRect();
+          if (selectedRelativeTop + selectedElementDimensions.height > top + resultsDiv.clientHeight) {
+            resultsDiv.scrollTop = selectedRelativeTop + selectedElementDimensions.height - resultsDiv.clientHeight;
+          }
+        }
       }
     }
   }
