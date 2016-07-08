@@ -177,9 +177,9 @@ class CbCommandPalette extends ThemeableElementBase {
     }
     
     const isPageKey = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "PageDown";
-    const isUp = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "Up";
+    const isUp = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "Up" || ev.keyIdentifier === "Home";
     
-    if (isPageKey || isUp || ev.keyIdentifier === "Down" || ev.keyIdentifier === "Enter") {
+    if (isPageKey || isUp || ev.keyIdentifier === "Down" || ev.keyIdentifier === "End" || ev.keyIdentifier === "Enter") {
       ev.preventDefault();
       ev.stopPropagation();
       
@@ -210,9 +210,17 @@ class CbCommandPalette extends ThemeableElementBase {
         }
         
         if (isUp) {
-          this._selectedId = filteredEntries[Math.max(0, selectedIndex-stepSize)].id;
+          if (ev.keyIdentifier === "Home") {
+            this._selectedId = filteredEntries[0].id;
+          } else {
+            this._selectedId = filteredEntries[Math.max(0, selectedIndex-stepSize)].id;
+          }
         } else {
-          this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+stepSize)].id;
+          if (ev.keyIdentifier === "End") {
+            this._selectedId = filteredEntries[filteredEntries.length-1].id;
+          } else {
+            this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+stepSize)].id;
+          }
         }
         
         const top = resultsDiv.scrollTop;
