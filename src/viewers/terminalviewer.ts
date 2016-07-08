@@ -1086,10 +1086,20 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteTypes.Comm
   }
   
   private _commandPaletteEntries(): CommandPaletteTypes.CommandEntry[] {
-    return [
+    const commandList: CommandPaletteTypes.CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, iconRight: "terminal", label: "Type Selection", target: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "terminal", label: "Type Selection & Execute", target: this }
     ];
+    
+    const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
+    if (keyBindings !== null) {
+      commandList.forEach( (commandEntry) => {
+        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        commandEntry.shortcut = shortcut === null ? "" : shortcut;
+      });
+    }
+    
+    return commandList;
   }
   
   executeCommand(commandId: string): void {
