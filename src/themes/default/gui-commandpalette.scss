@@ -24,6 +24,7 @@ div > #ID_FILTER {
 #ID_RESULTS {
   max-height: 150px;
   overflow: auto;
+  cursor: default;
 }
 
 .CLASS_RESULT_ENTRY {
@@ -74,7 +75,7 @@ div > #ID_FILTER {
 #ID_CONTAINER.CLASS_CONTAINER_OPEN {
   position: absolute;
   
-  width: 300px;
+  width: 400px;
   
   font-family: $font-family-base;
   font-size: $font-size-base;
