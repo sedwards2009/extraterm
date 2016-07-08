@@ -1100,7 +1100,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteTypes.C
   }
 
   private _commandPaletteEntries(): CommandPaletteTypes.CommandEntry[] {
-    return [
+    const commandList: CommandPaletteTypes.CommandEntry[] = [
       { id: COMMAND_ENTER_SELECTION_MODE, iconRight: "i-cursor", label: "Enter cursor mode", target: this },
       { id: COMMAND_ENTER_NORMAL_MODE, label: "Enter normal mode", target: this },
       { id: COMMAND_SCROLL_PAGE_UP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this },
@@ -1110,6 +1110,16 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteTypes.C
       { id: COMMAND_DELETE_LAST_FRAME, iconRight: "times-circle", label: "Delete Last Frame", target: this },
       { id: COMMAND_OPEN_LAST_FRAME, iconRight: "external-link", label: "Open Last Frame", target: this },
     ];
+
+    const keyBindings = this.keyBindingContexts.context(this._mode === Mode.DEFAULT
+        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);
+    
+    commandList.forEach( (commandEntry) => {
+      const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+      commandEntry.shortcut = shortcut === null ? "" : shortcut;
+    });
+    
+    return commandList;
   }
 
   executeCommand(commandId: string): void {
