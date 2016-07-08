@@ -1113,12 +1113,12 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteTypes.C
 
     const keyBindings = this.keyBindingContexts.context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);
-    
-    commandList.forEach( (commandEntry) => {
-      const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
-      commandEntry.shortcut = shortcut === null ? "" : shortcut;
-    });
-    
+    if (keyBindings !== null) {
+      commandList.forEach( (commandEntry) => {
+        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        commandEntry.shortcut = shortcut === null ? "" : shortcut;
+      });
+    }    
     return commandList;
   }
 
