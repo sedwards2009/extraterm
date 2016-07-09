@@ -20,6 +20,7 @@ import KeyBindingsElementBase = require('./keybindingselementbase');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeTypes = require('./theme');
 import CommandPaletteTypes = require('./commandpalettetypes');
+type CommandPaletteRequest = CommandPaletteTypes.CommandPaletteRequest;
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import path = require('path');
@@ -28,6 +29,7 @@ import config = require('./config');
 import he = require('he');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
+
 import KeyBindingManager = require('./keybindingmanager');
 import GeneralEvents = require('./generalevents');
 
@@ -619,6 +621,10 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
     
     // Key press event
     tabInfo.contentDiv.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabInfo), true);
+    
+    tabInfo.contentDiv.addEventListener(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+      this._handleCommandPaletteRequest(tabInfo, ev);
+    });
   }
   
   /**
@@ -946,6 +952,58 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
     }
     
     const command = bindings.mapEventToCommand(ev);
+    if (this._executeCommand(tabInfo, command)) {
+      ev.stopPropagation();
+    }
+  }
+  
+  private _handleCommandPaletteRequest(tabInfo: TabInfo, ev: CustomEvent): void {
+    if (ev.path[0] === this) { // Don't process our own messages.
+      return;
+    }
+
+    ev.stopPropagation();
+    
+    const request: CommandPaletteRequest = ev.detail;
+    const commandPaletteRequestDetail: CommandPaletteRequest = {
+        srcElement: this,
+        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries(tabInfo)]
+      };
+    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST,
+      { detail: commandPaletteRequestDetail });
+    commandPaletteRequestEvent.initCustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+      commandPaletteRequestDetail);
+    this.dispatchEvent(commandPaletteRequestEvent);
+  }
+  
+  private _commandPaletteEntries(tabInfo: TabInfo): CommandPaletteTypes.CommandEntry[] {
+    
+    // Create a command target object which includes the tabInfo var.
+    const target: CommandPaletteTypes.Commandable = {
+      executeCommand: this._executeCommand.bind(this, tabInfo)
+    }
+    
+    const commandList: CommandPaletteTypes.CommandEntry[] = [
+      { id: COMMAND_SELECT_TAB_LEFT, label: "Select Previous Tab", target: target },
+      { id: COMMAND_SELECT_TAB_RIGHT, label: "Select Next Tab", target: target },
+      { id: COMMAND_NEW_TAB, iconRight: "plus", label: "New Tab", target: target },
+      { id: COMMAND_SELECT_OTHER_PANE, label: "Select other Pane", target: target },
+      { id: COMMAND_CLOSE_TAB, iconRight: "times", label: "Close Tab", target: target },
+      { id: COMMAND_TOGGLE_SPLIT, iconLeft: this._split ? "check-square-o" : "square-o",
+        iconRight: "columns", label: "Split", target: target },
+    ];
+
+    const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_MAIN_UI);
+    if (keyBindings !== null) {
+      commandList.forEach( (commandEntry) => {
+        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        commandEntry.shortcut = shortcut === null ? "" : shortcut;
+      });
+    }    
+    return commandList;
+  }
+  
+  private _executeCommand(tabInfo: TabInfo, command: string): boolean {
     switch (command) {
       case COMMAND_SELECT_TAB_LEFT:
         this._shiftTab(tabInfo.position, -1);
@@ -973,9 +1031,9 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
         break;
         
       default:
-        return;
+        return false;
     }
-    ev.stopPropagation();
+    return true;
   }
 
   //-----------------------------------------------------------------------
