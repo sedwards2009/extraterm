@@ -1000,61 +1000,30 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteTypes.Comm
       const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
-        switch (command) {
-          case COMMAND_TYPE_AND_CR_SELECTION:
-          case COMMAND_TYPE_SELECTION:
-            ev.stopPropagation();
-            const text = this._codeMirror.getDoc().getSelection();
-            if (text !== "") {
-              if (command === COMMAND_TYPE_AND_CR_SELECTION) {
-                // Exit selection mode.
-                const setModeDetail: generalevents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
-                const setModeEvent = new CustomEvent(generalevents.EVENT_SET_MODE, { detail: setModeDetail });
-                setModeEvent.initCustomEvent(generalevents.EVENT_SET_MODE, true, true, setModeDetail);
-                this.dispatchEvent(setModeEvent);
-              }              
-              const typeTextDetail: generalevents.TypeTextEventDetail =
-                                      { text: text + (command === COMMAND_TYPE_AND_CR_SELECTION ? "\n" : "") };
-              const typeTextEvent = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
-              typeTextEvent.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
-              this.dispatchEvent(typeTextEvent);
-            }            
-            return;
-            
-          case COMMAND_OPEN_COMMAND_PALETTE:
-            const commandPaletteRequestDetail: CommandPaletteRequest = {
-                srcElement: null,
-                commandEntries: this._commandPaletteEntries()
+        if (this._executeCommand(command)) {
+          ev.stopPropagation();
+          return;
+        } else {
+          if (this._mode ===ViewerElementTypes.Mode.SELECTION) {
+            if (command !== null) {
+              return;
+            }
+            if (ev.shiftKey) {
+              const evWithoutShift: KeyBindingManager.MinimalKeyboardEvent = {
+                shiftKey: false,
+                metaKey: ev.metaKey,
+                altKey: ev.altKey,
+                ctrlKey: ev.ctrlKey,
+                key: ev.key,
+                keyCode: ev.keyCode
               };
-            const commandPaletteRequestEvent = new CustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST,
-              { detail: commandPaletteRequestDetail });
-            commandPaletteRequestEvent.initCustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
-              commandPaletteRequestDetail);
-            this.dispatchEvent(commandPaletteRequestEvent);
-            return;
-            
-          default:
-            if (this._mode ===ViewerElementTypes.Mode.SELECTION) {
-              if (command !== null) {
+              command = keyBindings.mapEventToCommand(evWithoutShift);
+              if (command !== null && command.startsWith("go")) {
+                // CodeMirror will handle this key.
                 return;
               }
-              if (ev.shiftKey) {
-                const evWithoutShift: KeyBindingManager.MinimalKeyboardEvent = {
-                  shiftKey: false,
-                  metaKey: ev.metaKey,
-                  altKey: ev.altKey,
-                  ctrlKey: ev.ctrlKey,
-                  key: ev.key,
-                  keyCode: ev.keyCode
-                };
-                command = keyBindings.mapEventToCommand(evWithoutShift);
-                if (command !== null && command.startsWith("go")) {
-                  // CodeMirror will handle this key.
-                  return;
-                }
-              }
             }
-            break;
+          }
         }
       }
     }
@@ -1103,7 +1072,46 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteTypes.Comm
   }
   
   executeCommand(commandId: string): void {
-    console.log("commandId: "+commandId);
+    this._executeCommand(commandId);
+  }
+  
+  private _executeCommand(command): boolean {
+    switch (command) {
+      case COMMAND_TYPE_AND_CR_SELECTION:
+      case COMMAND_TYPE_SELECTION:
+        const text = this._codeMirror.getDoc().getSelection();
+        if (text !== "") {
+          if (command === COMMAND_TYPE_AND_CR_SELECTION) {
+            // Exit selection mode.
+            const setModeDetail: generalevents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
+            const setModeEvent = new CustomEvent(generalevents.EVENT_SET_MODE, { detail: setModeDetail });
+            setModeEvent.initCustomEvent(generalevents.EVENT_SET_MODE, true, true, setModeDetail);
+            this.dispatchEvent(setModeEvent);
+          }              
+          const typeTextDetail: generalevents.TypeTextEventDetail =
+                                  { text: text + (command === COMMAND_TYPE_AND_CR_SELECTION ? "\n" : "") };
+          const typeTextEvent = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
+          typeTextEvent.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
+          this.dispatchEvent(typeTextEvent);
+        }            
+        break;
+        
+      case COMMAND_OPEN_COMMAND_PALETTE:
+        const commandPaletteRequestDetail: CommandPaletteRequest = {
+            srcElement: null,
+            commandEntries: this._commandPaletteEntries()
+          };
+        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST,
+          { detail: commandPaletteRequestDetail });
+        commandPaletteRequestEvent.initCustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+          commandPaletteRequestDetail);
+        this.dispatchEvent(commandPaletteRequestEvent);
+        break;
+        
+      default:
+        return false;
+    }
+    return true;
   }
   
   //-----------------------------------------------------------------------

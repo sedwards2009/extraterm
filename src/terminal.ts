@@ -71,6 +71,7 @@ const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_CONTAINER = "ID_CONTAINER";
 const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
 const KEYBINDINGS_SELECTION_MODE = "terminal-selection-mode";
+
 const COMMAND_ENTER_SELECTION_MODE = "enterSelectionMode";
 const COMMAND_ENTER_NORMAL_MODE = "enterNormalMode";
 const COMMAND_SCROLL_PAGE_UP = "scrollPageUp";
@@ -1010,57 +1011,19 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteTypes.C
     const keyBindings = this.keyBindingContexts.context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);
     const command = keyBindings.mapEventToCommand(ev);
-    switch (command) {
-      case COMMAND_ENTER_SELECTION_MODE:
-        this._enterSelectionMode();
-        break;
-
-      case COMMAND_ENTER_NORMAL_MODE:
-        this._exitSelectionMode();
-        break;
-        
-      case COMMAND_SCROLL_PAGE_UP:
-        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-          - this._virtualScrollArea.getScrollContainerHeight() / 2);
-        break;
-        
-      case COMMAND_SCROLL_PAGE_DOWN:
-        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-          + this._virtualScrollArea.getScrollContainerHeight() / 2);
-        break;
-
-      case COMMAND_COPY_TO_CLIPBOARD:
-        this.copyToClipboard();
-        break;
-
-      case COMMAND_PASTE_FROM_CLIPBOARD:
-        this._pasteFromClipboard();
-        break;
-
-      case COMMAND_DELETE_LAST_FRAME:
-        this._deleteLastEmbeddedViewer();
-        break;
-
-      case COMMAND_OPEN_LAST_FRAME:
-        const viewer = this._getLastEmbeddedViewer();
-        if (viewer !== null) {
-          this._embeddedViewerPopOutEvent(viewer);
+    if (this._executeCommand(command)) {
+      ev.stopPropagation();
+    } else {
+      if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
+        // Route the key down to the current code mirror terminal which has the emulator attached.
+        const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
+        ev.stopPropagation();
+        if ( ! this._terminalViewer.dispatchEvent(simulatedKeydown)) {
+          // Cancelled.
+          ev.preventDefault();
         }
-        break;
-
-      default:
-        if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
-          // Route the key down to the current code mirror terminal which has the emulator attached.
-          const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
-          ev.stopPropagation();
-          if ( ! this._terminalViewer.dispatchEvent(simulatedKeydown)) {
-            // Cancelled.
-            ev.preventDefault();
-          }
-        }
-        return;
+      }
     }
-    ev.stopPropagation();
   }
 
   private _handleKeyPressCapture(ev: KeyboardEvent): void {
@@ -1123,7 +1086,52 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteTypes.C
   }
 
   executeCommand(commandId: string): void {
-    console.log("commandId: "+commandId);
+    this._executeCommand(commandId);
+  }
+  
+  private _executeCommand(command: string): boolean {
+      switch (command) {
+        case COMMAND_ENTER_SELECTION_MODE:
+          this._enterSelectionMode();
+          break;
+
+        case COMMAND_ENTER_NORMAL_MODE:
+          this._exitSelectionMode();
+          break;
+          
+        case COMMAND_SCROLL_PAGE_UP:
+          this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+            - this._virtualScrollArea.getScrollContainerHeight() / 2);
+          break;
+          
+        case COMMAND_SCROLL_PAGE_DOWN:
+          this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+            + this._virtualScrollArea.getScrollContainerHeight() / 2);
+          break;
+
+        case COMMAND_COPY_TO_CLIPBOARD:
+          this.copyToClipboard();
+          break;
+
+        case COMMAND_PASTE_FROM_CLIPBOARD:
+          this._pasteFromClipboard();
+          break;
+
+        case COMMAND_DELETE_LAST_FRAME:
+          this._deleteLastEmbeddedViewer();
+          break;
+
+        case COMMAND_OPEN_LAST_FRAME:
+          const viewer = this._getLastEmbeddedViewer();
+          if (viewer !== null) {
+            this._embeddedViewerPopOutEvent(viewer);
+          }
+          break;
+        
+      default:
+        return false;
+    }
+    return true;
   }
 
   // ********************************************************************

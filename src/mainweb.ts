@@ -445,10 +445,20 @@ function handleCommandPaletteRequest(request: CommandPaletteTypes.CommandPalette
   });
 }
 
-function handleCommandPaletteSelected(ev: Event): void {
+function handleCommandPaletteSelected(ev: CustomEvent): void {
   const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
   commandPalette.close();
   if (commandPaletteRequest.srcElement !== null) {
     commandPaletteRequest.srcElement.focus();
+  }
+  
+  const entryId = ev.detail.entryId;
+  if (entryId !== null) {
+    const commandIndex = Number.parseInt(entryId);
+    const commandEntry = commandPaletteRequest.commandEntries[commandIndex];
+    domutils.doLater( () => {
+      commandEntry.target.executeCommand(commandEntry.id);
+      commandPaletteRequest = null;
+    });
   }
 }
