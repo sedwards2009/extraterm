@@ -191,33 +191,7 @@ export function startUp(): void {
 
     const mainMenu = doc.getElementById('main_menu');
     mainMenu.addEventListener('selected', (ev: CustomEvent) => {
-      switch(ev.detail.name) {
-        case MENU_ITEM_SPLIT:
-          const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
-          mainWebUi.split = util.toBoolean(splitMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
-          break;
-          
-        case MENU_ITEM_SETTINGS:
-          mainWebUi.openSettingsTab();
-          break;
-          
-        case MENU_ITEM_KEY_BINDINGS:
-          mainWebUi.openKeyBindingsTab();
-          break;
-          
-        case MENU_ITEM_DEVELOPER_TOOLS:
-          const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
-          webipc.devToolsRequest(util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED)));
-          break;
-
-        case MENU_ITEM_ABOUT:
-          mainWebUi.openAboutTab();
-          break;
-          
-        default:
-          
-          break;
-      }
+      executeCommand(ev.detail.name);
     });
     
     mainWebUi.addEventListener(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
@@ -238,6 +212,36 @@ export function startUp(): void {
     mainWebUi.focus();
     window.focus();
   });
+}
+
+function executeCommand(command: string): boolean {
+  switch(command) {
+    case MENU_ITEM_SPLIT:
+      const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
+      mainWebUi.split = util.toBoolean(splitMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+      break;
+      
+    case MENU_ITEM_SETTINGS:
+      mainWebUi.openSettingsTab();
+      break;
+      
+    case MENU_ITEM_KEY_BINDINGS:
+      mainWebUi.openKeyBindingsTab();
+      break;
+      
+    case MENU_ITEM_DEVELOPER_TOOLS:
+      const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
+      webipc.devToolsRequest(util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED)));
+      break;
+
+    case MENU_ITEM_ABOUT:
+      mainWebUi.openAboutTab();
+      break;
+      
+    default:
+      return false;
+  }
+  return true;  
 }
 
 function setupOSXEmptyMenus(): void {
@@ -422,14 +426,17 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
 //   #####   ####  #    # #    # #    # #    # #####     #       #    # ###### ######   #     #   ###### 
 //                                                                                                      
 //-----------------------------------------------------------------------
-let commandPaletteRequest: CommandPaletteTypes.CommandPaletteRequest = null;
+let commandPaletteRequestSource: HTMLElement = null;
+let commandPaletteRequestEntries: CommandPaletteTypes.CommandEntry[] = null;
 
 function handleCommandPaletteRequest(request: CommandPaletteTypes.CommandPaletteRequest): void {
   
   domutils.doLater( () => {
-    commandPaletteRequest = request;
+    commandPaletteRequestSource = request.srcElement;
     
-    const paletteEntries = request.commandEntries.map( (entry, index): CommandEntryType.CommandEntry => {
+    const entries = [...request.commandEntries, ...commandPaletteEntries()];
+    commandPaletteRequestEntries = entries;
+    const paletteEntries = entries.map( (entry, index): CommandEntryType.CommandEntry => {
       return {
         id: "" + index,
         iconLeft: entry.iconLeft,
@@ -445,20 +452,36 @@ function handleCommandPaletteRequest(request: CommandPaletteTypes.CommandPalette
   });
 }
 
+function commandPaletteEntries(): CommandPaletteTypes.CommandEntry[] {
+  // Create a command target object which includes the tabInfo var.
+  const target: CommandPaletteTypes.Commandable = {
+    executeCommand: executeCommand
+  }
+
+  const commandList: CommandPaletteTypes.CommandEntry[] = [
+    { id: MENU_ITEM_SETTINGS, iconRight: "wrench", label: "Settings", target: target },
+    { id: MENU_ITEM_KEY_BINDINGS, iconRight: "keyboard-o", label: "Key Bindings", target: target },
+    { id: MENU_ITEM_DEVELOPER_TOOLS, iconRight: "cogs", label: "Developer Tools", target: target },
+    { id: MENU_ITEM_ABOUT, iconRight: "lightbulb-o", label: "About", target: target },
+  ];
+  return commandList;
+}
+
 function handleCommandPaletteSelected(ev: CustomEvent): void {
   const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
   commandPalette.close();
-  if (commandPaletteRequest.srcElement !== null) {
-    commandPaletteRequest.srcElement.focus();
+  if (commandPaletteRequestSource !== null) {
+    commandPaletteRequestSource.focus();
   }
   
   const entryId = ev.detail.entryId;
   if (entryId !== null) {
     const commandIndex = Number.parseInt(entryId);
-    const commandEntry = commandPaletteRequest.commandEntries[commandIndex];
+    const commandEntry = commandPaletteRequestEntries[commandIndex];
     domutils.doLater( () => {
       commandEntry.target.executeCommand(commandEntry.id);
-      commandPaletteRequest = null;
+      commandPaletteRequestSource = null;
+      commandPaletteRequestEntries = null;
     });
   }
 }
