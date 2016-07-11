@@ -23,4 +23,5 @@ export const EVENT_COMMAND_PALETTE_REQUEST = "EVENT_COMMAND_PALETTE_REQUEST";
 export interface CommandPaletteRequest {
   commandEntries: CommandEntry[];
   srcElement: HTMLElement;
+  contextElement: HTMLElement;
 }

@@ -291,10 +291,8 @@ class CbCommandPalette extends ThemeableElementBase {
   }
   
   private _executeId(dataId: string): void {
-        console.log("_executeId ->"+dataId);
     if (this._laterHandle === null) {
       this._laterHandle = domutils.doLater( () => {
-        console.log("->"+dataId);
         this._laterHandle = null;
         const event = new CustomEvent('selected', { detail: {entryId: dataId } });
         this.dispatchEvent(event);

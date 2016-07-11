@@ -1099,7 +1099,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       case COMMAND_OPEN_COMMAND_PALETTE:
         const commandPaletteRequestDetail: CommandPaletteRequest = {
             srcElement: null,
-            commandEntries: this._commandPaletteEntries()
+            commandEntries: this._commandPaletteEntries(),
+            contextElement: null
           };
         const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
           { detail: commandPaletteRequestDetail });

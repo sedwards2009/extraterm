@@ -448,7 +448,16 @@ function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.Command
     
     const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
     commandPalette.entries = paletteEntries;
-    commandPalette.open(10,10);
+    
+    let x = 10;
+    let y = 10;
+    if (request.contextElement !== null && request.contextElement !== undefined) {
+      const rect = request.contextElement.getBoundingClientRect();
+      y = rect.top;
+      x = rect.left + Math.floor((rect.width - 400) / 2);
+    }
+    
+    commandPalette.open(x, y);
   });
 }
 
