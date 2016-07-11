@@ -19,8 +19,10 @@ import ViewerElement = require('./viewerelement');
 import KeyBindingsElementBase = require('./keybindingselementbase');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeTypes = require('./theme');
-import CommandPaletteTypes = require('./commandpalettetypes');
-type CommandPaletteRequest = CommandPaletteTypes.CommandPaletteRequest;
+import CommandPaletteTypes = require('./gui/commandpalettetypes');
+import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
+
+type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import path = require('path');
@@ -622,7 +624,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
     // Key press event
     tabInfo.contentDiv.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabInfo), true);
     
-    tabInfo.contentDiv.addEventListener(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+    tabInfo.contentDiv.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
       this._handleCommandPaletteRequest(tabInfo, ev);
     });
   }
@@ -969,21 +971,21 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
         srcElement: this,
         commandEntries: [...request.commandEntries, ...this._commandPaletteEntries(tabInfo)]
       };
-    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST,
+    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
       { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+    commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
       commandPaletteRequestDetail);
     this.dispatchEvent(commandPaletteRequestEvent);
   }
   
-  private _commandPaletteEntries(tabInfo: TabInfo): CommandPaletteTypes.CommandEntry[] {
+  private _commandPaletteEntries(tabInfo: TabInfo): CommandPaletteRequestTypes.CommandEntry[] {
     
     // Create a command target object which includes the tabInfo var.
-    const target: CommandPaletteTypes.Commandable = {
+    const target: CommandPaletteRequestTypes.Commandable = {
       executeCommand: this._executeCommand.bind(this, tabInfo)
     }
     
-    const commandList: CommandPaletteTypes.CommandEntry[] = [
+    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_SELECT_TAB_LEFT, label: "Select Previous Tab", target: target },
       { id: COMMAND_SELECT_TAB_RIGHT, label: "Select Next Tab", target: target },
       { id: COMMAND_NEW_TAB, iconRight: "plus", label: "New Tab", target: target },

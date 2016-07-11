@@ -70,4 +70,5 @@ src/keybindingstab.js
 src/keybindingselementbase.js
 src/resizecanary.js
 src/gui/commandentrytype.js
-src/commandpalettetypes.js
+src/gui/commandpalettetypes.js
+src/commandpaletterequesttypes.js

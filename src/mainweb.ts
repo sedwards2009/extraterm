@@ -17,8 +17,8 @@ import CbMenuItem = require('./gui/menuitem');
 import CbDropDown = require('./gui/dropdown');
 import CbCheckBoxMenuItem = require('./gui/checkboxmenuitem');
 import CbCommandPalette = require('./gui/commandpalette');
-import CommandPaletteTypes = require('./commandpalettetypes');
-import CommandEntryType = require('./gui/commandentrytype');
+import CommandPaletteTypes = require('./gui/commandpalettetypes');
+import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
 import MainWebUi = require('./mainwebui');
 import EtTerminal = require('./terminal');
 import KeyBindingsElementBase = require('./keybindingselementbase');
@@ -194,7 +194,7 @@ export function startUp(): void {
       executeCommand(ev.detail.name);
     });
     
-    mainWebUi.addEventListener(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+    mainWebUi.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
         handleCommandPaletteRequest(ev.detail);
       });
       
@@ -427,16 +427,16 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
 //                                                                                                      
 //-----------------------------------------------------------------------
 let commandPaletteRequestSource: HTMLElement = null;
-let commandPaletteRequestEntries: CommandPaletteTypes.CommandEntry[] = null;
+let commandPaletteRequestEntries: CommandPaletteRequestTypes.CommandEntry[] = null;
 
-function handleCommandPaletteRequest(request: CommandPaletteTypes.CommandPaletteRequest): void {
+function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.CommandPaletteRequest): void {
   
   domutils.doLater( () => {
     commandPaletteRequestSource = request.srcElement;
     
     const entries = [...request.commandEntries, ...commandPaletteEntries()];
     commandPaletteRequestEntries = entries;
-    const paletteEntries = entries.map( (entry, index): CommandEntryType.CommandEntry => {
+    const paletteEntries = entries.map( (entry, index): CommandPaletteTypes.CommandEntry => {
       return {
         id: "" + index,
         iconLeft: entry.iconLeft,
@@ -452,13 +452,13 @@ function handleCommandPaletteRequest(request: CommandPaletteTypes.CommandPalette
   });
 }
 
-function commandPaletteEntries(): CommandPaletteTypes.CommandEntry[] {
+function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
   // Create a command target object which includes the tabInfo var.
-  const target: CommandPaletteTypes.Commandable = {
+  const target: CommandPaletteRequestTypes.Commandable = {
     executeCommand: executeCommand
   }
 
-  const commandList: CommandPaletteTypes.CommandEntry[] = [
+  const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
     { id: MENU_ITEM_SETTINGS, iconRight: "wrench", label: "Settings", target: target },
     { id: MENU_ITEM_KEY_BINDINGS, iconRight: "keyboard-o", label: "Key Bindings", target: target },
     { id: MENU_ITEM_DEVELOPER_TOOLS, iconRight: "cogs", label: "Developer Tools", target: target },

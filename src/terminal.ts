@@ -23,8 +23,8 @@ import EtTextViewer = require('./viewers/textviewer');
 import EtImageViewer = require('./viewers/imageviewer');
 import generalevents = require('./generalevents');
 import KeyBindingManager = require('./keybindingmanager');
-import CommandPaletteTypes = require('./commandpalettetypes');
-type CommandPaletteRequest = CommandPaletteTypes.CommandPaletteRequest;
+import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
+type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger = require('./logger');
@@ -104,7 +104,7 @@ viewerClasses.push(EtTextViewer);
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-class EtTerminal extends KeyBindingsElementBase implements CommandPaletteTypes.Commandable {
+class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequestTypes.Commandable {
   
   /**
    * The HTML tag name of this element.
@@ -454,7 +454,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteTypes.C
 
     this.addEventListener('focus', this._handleFocus.bind(this));
     this.addEventListener('blur', this._handleBlur.bind(this));
-    this.addEventListener(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+    this.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
         this._handleCommandPaletteRequest(ev);
       });
 
@@ -1050,20 +1050,20 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteTypes.C
     
     ev.stopPropagation();
     
-    const request: CommandPaletteTypes.CommandPaletteRequest = ev.detail;
+    const request: CommandPaletteRequestTypes.CommandPaletteRequest = ev.detail;
     const commandPaletteRequestDetail: CommandPaletteRequest = {
         srcElement: this,
         commandEntries: [...request.commandEntries, ...this._commandPaletteEntries()]
       };
-    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST,
+    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
       { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+    commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
       commandPaletteRequestDetail);
     this.dispatchEvent(commandPaletteRequestEvent);
   }
 
-  private _commandPaletteEntries(): CommandPaletteTypes.CommandEntry[] {
-    const commandList: CommandPaletteTypes.CommandEntry[] = [
+  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_ENTER_SELECTION_MODE, iconRight: "i-cursor", label: "Enter cursor mode", target: this },
       { id: COMMAND_ENTER_NORMAL_MODE, label: "Enter normal mode", target: this },
       { id: COMMAND_SCROLL_PAGE_UP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this },

@@ -9,7 +9,7 @@ import ThemeTypes = require('../theme');
 import domutils = require('../domutils');
 import util = require('./util');
 import he = require('he');
-import CommandEntryType = require('./commandentrytype');
+import CommandPaletteTypes = require('./commandpalettetypes');
 
 const ID = "CbContextMenuTemplate";
 const ID_COVER = "ID_COVER";
@@ -57,7 +57,7 @@ class CbCommandPalette extends ThemeableElementBase {
   }
 
   // WARNING: Fields like this will not be initialised automatically.
-  private _commandEntries: CommandEntryType.CommandEntry[];
+  private _commandEntries: CommandPaletteTypes.CommandEntry[];
   
   private _selectedId: string;
   
@@ -69,12 +69,12 @@ class CbCommandPalette extends ThemeableElementBase {
     this._laterHandle = null;
   }
 
-  set entries(entries: CommandEntryType.CommandEntry[]) {
+  set entries(entries: CommandPaletteTypes.CommandEntry[]) {
     this._commandEntries = entries;
     this._updateEntries();
   }
 
-  get entries(): CommandEntryType.CommandEntry[] {
+  get entries(): CommandPaletteTypes.CommandEntry[] {
     return this._commandEntries;
   }
 
@@ -304,16 +304,16 @@ class CbCommandPalette extends ThemeableElementBase {
   
 }
 
-function filterEntries(entries: CommandEntryType.CommandEntry[], filter: string): CommandEntryType.CommandEntry[] {
+function filterEntries(entries: CommandPaletteTypes.CommandEntry[], filter: string): CommandPaletteTypes.CommandEntry[] {
   const lowerFilter = filter.toLowerCase();
   return entries.filter( (entry) => entry.label.toLowerCase().includes(lowerFilter) );
 }
 
-function formatEntries(entries: CommandEntryType.CommandEntry[], selectedId: string): string {
+function formatEntries(entries: CommandPaletteTypes.CommandEntry[], selectedId: string): string {
   return entries.map( (entry) => formatEntry(entry, entry.id === selectedId) ).join("");
 }
 
-function formatEntry(entry: CommandEntryType.CommandEntry, selected: boolean): string {
+function formatEntry(entry: CommandPaletteTypes.CommandEntry, selected: boolean): string {
   return `<div class='${CLASS_RESULT_ENTRY} ${selected ? CLASS_RESULT_SELECTED : ""}' ${ATTR_DATA_ID}='${entry.id}'>
     <div class='${CLASS_RESULT_ICON_LEFT}'>${formatIcon(entry.iconLeft)}</div>
     <div class='${CLASS_RESULT_ICON_RIGHT}'>${formatIcon(entry.iconRight)}</div>

@@ -15,7 +15,7 @@ import CodeMirror = require('codemirror');
 import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
 import EtTerminalViewerTypes = require('./terminalviewertypes');
-import CommandPaletteTypes = require('../commandpalettetypes');
+import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
 import termjs = require('../term');
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
@@ -32,7 +32,7 @@ type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
-type CommandPaletteRequest = CommandPaletteTypes.CommandPaletteRequest;
+type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 const ID = "CbTerminalViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -66,7 +66,7 @@ function getCssText(): string {
   return cssText;
 }
 
-class EtTerminalViewer extends ViewerElement implements CommandPaletteTypes.Commandable {
+class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable {
 
   static TAG_NAME = "et-terminal-viewer";
   
@@ -1054,8 +1054,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteTypes.Comm
     }      
   }
   
-  private _commandPaletteEntries(): CommandPaletteTypes.CommandEntry[] {
-    const commandList: CommandPaletteTypes.CommandEntry[] = [
+  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, iconRight: "terminal", label: "Type Selection", target: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "terminal", label: "Type Selection & Execute", target: this }
     ];
@@ -1101,9 +1101,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteTypes.Comm
             srcElement: null,
             commandEntries: this._commandPaletteEntries()
           };
-        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST,
+        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
           { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(CommandPaletteTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
           commandPaletteRequestDetail);
         this.dispatchEvent(commandPaletteRequestEvent);
         break;
