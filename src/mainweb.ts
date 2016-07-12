@@ -449,15 +449,12 @@ function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.Command
     const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
     commandPalette.entries = paletteEntries;
     
-    let x = 10;
-    let y = 10;
+    let rect: ClientRect = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500 };
     if (request.contextElement !== null && request.contextElement !== undefined) {
-      const rect = request.contextElement.getBoundingClientRect();
-      y = rect.top;
-      x = rect.left + Math.floor((rect.width - 400) / 2);
+      rect = request.contextElement.getBoundingClientRect();
     }
     
-    commandPalette.open(x, y);
+    commandPalette.open(rect.left, rect.top, rect.width, rect.height);
   });
 }
 

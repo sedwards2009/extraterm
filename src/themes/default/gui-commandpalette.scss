@@ -4,12 +4,70 @@
 
 /* Command Palette */
 @import "bootstrap/variables";
+@import "extraterm-scrollbars";
 
 /*
 :host {
   visibility: hidden;
 }
 */
+
+#ID_COVER {
+  &.CLASS_COVER_CLOSED {
+    visibility: hidden;
+  }
+
+  &.CLASS_COVER_OPEN {
+    position: fixed;
+    visibility: visible;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
+}
+
+#ID_CONTAINER {
+  padding: $padding-base-vertical $padding-base-horizontal;
+}
+
+#ID_CONTEXT_COVER {
+  position: relative;
+}
+
+#ID_CONTEXT_COVER {
+  &.CLASS_CONTEXT_COVER_OPEN {
+  
+  }
+  
+  &.CLASS_CONTEXT_COVER_CLOSED {
+    display: none;
+  }
+}
+
+
+#ID_CONTAINER {
+  position: absolute;
+
+  $width: 400px;
+  width: $width;
+  left: calc(50% - #{$width} / 2);
+  
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  font-weight: normal;
+  line-height: $line-height-base;
+  color: $dropdown-link-color;
+  background-color: $dropdown-bg;
+
+  border: 1px solid $dropdown-border;
+  border-radius: $border-radius-base;
+  box-shadow: 0px 6px 12px rgba(0,0,0,.175);
+  background-clip: padding-box;
+
+  z-index: 101;  
+}
 
 div > #ID_FILTER {
   box-sizing: border-box;
@@ -22,7 +80,6 @@ div > #ID_FILTER {
 }
 
 #ID_RESULTS {
-  max-height: 150px;
   overflow: auto;
   cursor: default;
 }
@@ -30,12 +87,15 @@ div > #ID_FILTER {
 .CLASS_RESULT_ENTRY {
   display: flex;
   width: 100%;
-}
+  
+  padding-left: $padding-xs-horizontal;
+  padding-right: $padding-xs-horizontal;
 
-.CLASS_RESULT_ENTRY.CLASS_RESULT_SELECTED {
-  outline: none;
-  color: $btn-primary-color;
-  background-color: $btn-primary-bg;
+  &.CLASS_RESULT_SELECTED {
+    outline: none;
+    color: $btn-primary-color;
+    background-color: $btn-primary-bg;
+  }
 }
 
 .CLASS_RESULT_ICON_LEFT {
@@ -54,44 +114,3 @@ div > #ID_FILTER {
   flex: auto 0 0;
 }
 
-#ID_COVER.CLASS_COVER_CLOSED {
-  visibility: hidden;
-}
-
-#ID_COVER.CLASS_COVER_OPEN {
-  position: fixed;
-  visibility: visible;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-}
-
-#ID_CONTAINER {
-  padding: $padding-base-vertical $padding-base-horizontal 0px $padding-base-horizontal;
-}
-
-#ID_CONTAINER.CLASS_CONTAINER_OPEN {
-  position: absolute;
-  
-  width: 400px;
-  
-  font-family: $font-family-base;
-  font-size: $font-size-base;
-  font-weight: normal;
-  line-height: $line-height-base;
-  color: $dropdown-link-color;
-  background-color: $dropdown-bg;
-
-  border: 1px solid $dropdown-border;
-  border-radius:  $border-radius-base;
-  box-shadow: 0px 6px 12px rgba(0,0,0,.175);
-  background-clip: padding-box;
-
-  z-index: 101;  
-}
-
-#ID_CONTAINER.CLASS_CONTAINER_CLOSED {
-  display: none;
-}

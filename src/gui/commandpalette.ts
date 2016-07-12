@@ -13,6 +13,7 @@ import CommandPaletteTypes = require('./commandpalettetypes');
 
 const ID = "CbContextMenuTemplate";
 const ID_COVER = "ID_COVER";
+const ID_CONTEXT_COVER = "ID_CONTEXT_COVER";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
@@ -23,8 +24,8 @@ const CLASS_RESULT_ICON_RIGHT = "CLASS_RESULT_ICON_RIGHT";
 const CLASS_RESULT_LABEL = "CLASS_RESULT_LABEL";
 const CLASS_RESULT_SHORTCUT = "CLASS_RESULT_SHORTCUT";
 const CLASS_RESULT_SELECTED = "CLASS_RESULT_SELECTED";
-const CLASS_CONTAINER_CLOSED = "CLASS_CONTAINER_CLOSED";
-const CLASS_CONTAINER_OPEN = "CLASS_CONTAINER_OPEN";
+const CLASS_CONTEXT_COVER_OPEN = "CLASS_CONTEXT_COVER_OPEN";
+const CLASS_CONTEXT_COVER_CLOSED = "CLASS_CONTEXT_COVER_CLOSED";
 const CLASS_COVER_CLOSED = "CLASS_COVER_CLOSED";
 const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
 
@@ -71,6 +72,12 @@ class CbCommandPalette extends ThemeableElementBase {
 
   set entries(entries: CommandPaletteTypes.CommandEntry[]) {
     this._commandEntries = entries;
+    this._selectedId = null;
+    
+    const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
+    if (filterInput !== null) {
+      filterInput.value = "";
+    }
     this._updateEntries();
   }
 
@@ -134,9 +141,11 @@ class CbCommandPalette extends ThemeableElementBase {
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
-        <div id='${ID_CONTAINER}' class='${CLASS_CONTAINER_CLOSED}'>
-          <div class="form-group"><input type="text" id="${ID_FILTER}" class="form-control input-sm" /></div>
-          <div id="${ID_RESULTS}"></div>
+        <div id='${ID_CONTEXT_COVER}' class='${CLASS_CONTEXT_COVER_CLOSED}'>
+          <div id='${ID_CONTAINER}'>
+            <div class="form-group"><input type="text" id="${ID_FILTER}" class="form-control input-sm" /></div>
+            <div id="${ID_RESULTS}"></div>
+          </div>
         </div>`;
       window.document.body.appendChild(template);
     }
@@ -244,32 +253,25 @@ class CbCommandPalette extends ThemeableElementBase {
   /**
    * 
    */
-  open(x: number, y: number): void {
+  open(x: number, y: number, width: number, height: number): void {
     // Nuke any style like 'display: none' which can be use to prevent flicker.
     this.setAttribute('style', '');
     
-    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
-    container.classList.remove(CLASS_CONTAINER_CLOSED);
-    container.classList.add(CLASS_CONTAINER_OPEN);
+    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTEXT_COVER);
+    container.classList.remove(CLASS_CONTEXT_COVER_CLOSED);
+    container.classList.add(CLASS_CONTEXT_COVER_OPEN);
   
-    const rect = container.getBoundingClientRect();
-  
-    var sx = x;
-    if (sx+rect.width > window.innerWidth) {
-      sx = window.innerWidth - rect.width;
-    }
-  
-    var sy = y;
-    if (sy+rect.height > window.innerHeight) {
-      sy = window.innerHeight - rect.height;
-    }
-  
-    container.style.left = "" + sx + "px";
-    container.style.top = "" + sy + "px";
+    container.style.left = `${x}px`;
+    container.style.top = `${y}px`;
+    container.style.width = `${width}px`;
+    container.style.height = `${height}px`;
   
     const cover = <HTMLDivElement> domutils.getShadowId(this, ID_COVER);
     cover.classList.remove(CLASS_COVER_CLOSED);
     cover.classList.add(CLASS_COVER_OPEN);
+  
+    const resultsDiv = <HTMLDivElement> domutils.getShadowId(this, ID_RESULTS);
+    resultsDiv.style.maxHeight = `${height/2}px`;
   
     const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
     filterInput.value = "";
@@ -285,9 +287,9 @@ class CbCommandPalette extends ThemeableElementBase {
     cover.classList.remove(CLASS_COVER_OPEN);
     cover.classList.add(CLASS_COVER_CLOSED);
   
-    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
-    container.classList.remove(CLASS_CONTAINER_OPEN);
-    container.classList.add(CLASS_CONTAINER_CLOSED);
+    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTEXT_COVER);
+    container.classList.remove(CLASS_CONTEXT_COVER_OPEN);
+    container.classList.add(CLASS_CONTEXT_COVER_CLOSED);
   }
   
   private _executeId(dataId: string): void {
