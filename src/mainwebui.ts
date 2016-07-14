@@ -968,7 +968,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
     
     const request: CommandPaletteRequest = ev.detail;
     const commandPaletteRequestDetail: CommandPaletteRequest = {
-        srcElement: this,
+        srcElement: request.srcElement === null ? this : request.srcElement,
         commandEntries: [...request.commandEntries, ...this._commandPaletteEntries(tabInfo)],
         contextElement: request.contextElement
       };

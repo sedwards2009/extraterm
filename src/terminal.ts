@@ -1052,7 +1052,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
     
     const request: CommandPaletteRequestTypes.CommandPaletteRequest = ev.detail;
     const commandPaletteRequestDetail: CommandPaletteRequest = {
-        srcElement: this,
+        srcElement: request.srcElement === null ? this : request.srcElement,
         commandEntries: [...request.commandEntries, ...this._commandPaletteEntries()],
         contextElement: this
       };
