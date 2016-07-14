@@ -76,11 +76,13 @@
   "terminal-viewer": {
     "Cmd-Enter": "typeSelection",
     "Cmd-Shift-Enter": "typeSelectionAndCr",
+    "Cmd-Shift-P": "openCommandPalette",
     "fallthrough": "codemirror"
   },
   "text-viewer": {
     "Cmd-Enter": "typeSelection",
     "Cmd-Shift-Enter": "typeSelectionAndCr",
+    "Cmd-Shift-P": "openCommandPalette",
     "fallthrough": "codemirror"
   },
   "image-viewer": {
