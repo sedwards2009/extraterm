@@ -21,6 +21,7 @@ import CodeMirror = require('codemirror');
 import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
 import EtTextViewerTypes = require('./terminalviewertypes');
+import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
@@ -32,6 +33,7 @@ const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 type TextDecoration = EtTextViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
+type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 const ID = "CbTextViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -43,9 +45,12 @@ const CLASS_UNFOCUSED = "terminal-unfocused";
 const KEYBINDINGS_SELECTION_MODE = "text-viewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
+const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
+
 const COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,
-  COMMAND_TYPE_SELECTION
+  COMMAND_TYPE_SELECTION,
+  COMMAND_OPEN_COMMAND_PALETTE
 ];
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
@@ -76,7 +81,7 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-class EtTextViewer extends ViewerElement {
+class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable {
 
   static TAG_NAME = "et-text-viewer";
   
@@ -765,47 +770,28 @@ class EtTextViewer extends ViewerElement {
       const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
-        switch (command) {
-          case COMMAND_TYPE_AND_CR_SELECTION:
-          case COMMAND_TYPE_SELECTION:
-            ev.stopPropagation();
-            const text = this._codeMirror.getDoc().getSelection();
-            if (text !== "") {
-              if (command === COMMAND_TYPE_AND_CR_SELECTION) {
-                // Exit selection mode.
-                const setModeDetail: generalevents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
-                const setModeEvent = new CustomEvent(generalevents.EVENT_SET_MODE, { detail: setModeDetail });
-                setModeEvent.initCustomEvent(generalevents.EVENT_SET_MODE, true, true, setModeDetail);
-                this.dispatchEvent(setModeEvent);
-              }              
-              const typeTextDetail: generalevents.TypeTextEventDetail =
-                                      { text: text + (command === COMMAND_TYPE_AND_CR_SELECTION ? "\n" : "") };
-              const typeTextEvent = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
-              typeTextEvent.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
-              this.dispatchEvent(typeTextEvent);
-            }            
+        if (this._executeCommand(command)) {
+          ev.stopPropagation();
+          return;
+        } else {
+          if (command !== null) {
             return;
-            
-          default:
-            if (command !== null) {
+          }
+          if (ev.shiftKey) {
+            const evWithoutShift: KeyBindingManager.MinimalKeyboardEvent = {
+              shiftKey: false,
+              metaKey: ev.metaKey,
+              altKey: ev.altKey,
+              ctrlKey: ev.ctrlKey,
+              key: ev.key,
+              keyCode: ev.keyCode
+            };
+            command = keyBindings.mapEventToCommand(evWithoutShift);
+            if (command !== null && command.startsWith("go")) {
+              // CodeMirror will handle this key.
               return;
             }
-            if (ev.shiftKey) {
-              const evWithoutShift: KeyBindingManager.MinimalKeyboardEvent = {
-                shiftKey: false,
-                metaKey: ev.metaKey,
-                altKey: ev.altKey,
-                ctrlKey: ev.ctrlKey,
-                key: ev.key,
-                keyCode: ev.keyCode
-              };
-              command = keyBindings.mapEventToCommand(evWithoutShift);
-              if (command !== null && command.startsWith("go")) {
-                // CodeMirror will handle this key.
-                return;
-              }
-            }
-            break;
+          }
         }
       }
     }
@@ -831,6 +817,67 @@ class EtTextViewer extends ViewerElement {
     }      
   }
   
+  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
+      { id: COMMAND_TYPE_SELECTION, iconRight: "terminal", label: "Type Selection", target: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "terminal", label: "Type Selection & Execute", target: this }
+    ];
+    
+    const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
+    if (keyBindings !== null) {
+      commandList.forEach( (commandEntry) => {
+        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        commandEntry.shortcut = shortcut === null ? "" : shortcut;
+      });
+    }
+    
+    return commandList;
+  }
+  
+  executeCommand(commandId: string): void {
+    this._executeCommand(commandId);
+  }
+
+  private _executeCommand(command): boolean {
+    switch (command) {
+      case COMMAND_TYPE_AND_CR_SELECTION:
+      case COMMAND_TYPE_SELECTION:
+        const text = this._codeMirror.getDoc().getSelection();
+        if (text !== "") {
+          if (command === COMMAND_TYPE_AND_CR_SELECTION) {
+            // Exit selection mode.
+            const setModeDetail: generalevents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
+            const setModeEvent = new CustomEvent(generalevents.EVENT_SET_MODE, { detail: setModeDetail });
+            setModeEvent.initCustomEvent(generalevents.EVENT_SET_MODE, true, true, setModeDetail);
+            this.dispatchEvent(setModeEvent);
+          }              
+          const typeTextDetail: generalevents.TypeTextEventDetail =
+                                  { text: text + (command === COMMAND_TYPE_AND_CR_SELECTION ? "\n" : "") };
+          const typeTextEvent = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
+          typeTextEvent.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
+          this.dispatchEvent(typeTextEvent);
+        }            
+        break;
+        
+      case COMMAND_OPEN_COMMAND_PALETTE:
+        const commandPaletteRequestDetail: CommandPaletteRequest = {
+            srcElement: this,
+            commandEntries: this._commandPaletteEntries(),
+            contextElement: this
+          };
+        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
+          { detail: commandPaletteRequestDetail });
+        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+          commandPaletteRequestDetail);
+        this.dispatchEvent(commandPaletteRequestEvent);
+        break;
+        
+      default:
+        return false;
+    }
+    return true;
+  }
+
   //-----------------------------------------------------------------------
   //
   // #######                        #                                            
