@@ -18,6 +18,8 @@ declare module CodeMirror {
     
     on(eventName: 'scrollCursorIntoView', handle: (instance:  CodeMirror.Editor, event: Event) => void ): void;
     off(eventName: 'scrollCursorIntoView', handle: (instance:  CodeMirror.Editor, event: Event) => void ): void;
+    
+    execCommand(command: string): void;
   }
   
   interface EditorConfiguration {

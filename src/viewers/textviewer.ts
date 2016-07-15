@@ -818,10 +818,19 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
   
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
-    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
+    let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, iconRight: "terminal", label: "Type Selection", target: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "terminal", label: "Type Selection & Execute", target: this }
     ];
+    
+    if (this._mode ===ViewerElementTypes.Mode.SELECTION) {
+      const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
+        CodeMirrorCommands.commandDescriptions().map( (desc) => {
+          return { id: desc.command, iconRight: desc.icon !== undefined ? desc.icon : "", label: desc.label,
+            target: this };
+        });
+      commandList = [...commandList, ...cmCommandList];
+    }
     
     const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
     if (keyBindings !== null) {
@@ -873,7 +882,12 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
         break;
         
       default:
-        return false;
+        if (this._mode === ViewerElementTypes.Mode.SELECTION && CodeMirrorCommands.isCommand(command)) {
+          this._codeMirror.execCommand(command);
+          return true;
+        } else {
+          return false;
+        }
     }
     return true;
   }

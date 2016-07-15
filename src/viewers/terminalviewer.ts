@@ -46,7 +46,7 @@ const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
 const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
 
-const COMMANDS = [
+const NON_CODEMIRROR_COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,
   COMMAND_TYPE_SELECTION
 ];
@@ -939,7 +939,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     }
 
     const codeMirrorKeyMap = keyBindings.keyBindings
-          .filter( (binding) => COMMANDS.indexOf(binding.command) === -1)
+          .filter( (binding) => NON_CODEMIRROR_COMMANDS.indexOf(binding.command) === -1)
           .reduce( (accu, binding) => {
             accu[binding.normalizedShortcut] = binding.command;
             return accu;
@@ -1055,10 +1055,19 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
   
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
-    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
+    let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, iconRight: "terminal", label: "Type Selection", target: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "terminal", label: "Type Selection & Execute", target: this }
     ];
+    
+    if (this._mode ===ViewerElementTypes.Mode.SELECTION) {
+      const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
+        CodeMirrorCommands.commandDescriptions().map( (desc) => {
+          return { id: desc.command, iconRight: desc.icon !== undefined ? desc.icon : "", label: desc.label,
+            target: this };
+        });
+      commandList = [...commandList, ...cmCommandList];
+    }
     
     const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
     if (keyBindings !== null) {
@@ -1110,7 +1119,12 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         break;
         
       default:
-        return false;
+        if (this._mode === ViewerElementTypes.Mode.SELECTION && CodeMirrorCommands.isCommand(command)) {
+          this._codeMirror.execCommand(command);
+          return true;
+        } else {
+          return false;
+        }
     }
     return true;
   }

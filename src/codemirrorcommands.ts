@@ -35,8 +35,8 @@ function verticalMultiCursor(cm: CodeMirror.Editor): void {
   }
   doc.setSelections(newSelections, primaryIndex);
 }
-
-CodeMirror.commands["verticalMultiCursor"] = verticalMultiCursor;
+export const COMMAND_VERTICAL_MULTICURSOR = "verticalMultiCursor";
+CodeMirror.commands[COMMAND_VERTICAL_MULTICURSOR] = verticalMultiCursor;
 
 /**
  * Replaces text in the CodeMirror selection using a RegExp.
@@ -61,7 +61,8 @@ function replaceInSelection(cm: CodeMirror.Editor, searchExp: RegExp, replacemen
 function forwardSlashesToBack(cm: CodeMirror.Editor): void {
   replaceInSelection(cm, /\//g, "\\");
 }
-CodeMirror.commands["forwardSlashesToBack"] = forwardSlashesToBack;
+export const COMMAND_FORWARDSLASHES_TO_BACK = "forwardSlashesToBack";
+CodeMirror.commands[COMMAND_FORWARDSLASHES_TO_BACK] = forwardSlashesToBack;
 
 /**
  * Command to replace back slashes with forward slashes in the selection.
@@ -71,7 +72,9 @@ CodeMirror.commands["forwardSlashesToBack"] = forwardSlashesToBack;
 function backSlashesToForward(cm: CodeMirror.Editor): void {
   replaceInSelection(cm, /\\/g, "/");
 }
-CodeMirror.commands["backSlashesToForward"] = backSlashesToForward;
+
+export const COMMAND_BACKSLASHES_TO_FORWARD = "backSlashesToForward";
+CodeMirror.commands[COMMAND_BACKSLASHES_TO_FORWARD] = backSlashesToForward;
 
 /**
  * Command to backslash escape possible shell special characters in the selection.
@@ -81,7 +84,8 @@ CodeMirror.commands["backSlashesToForward"] = backSlashesToForward;
 function escapeShellChars(cm: CodeMirror.Editor): void {
   replaceInSelection(cm, /([^a-zA-Z0-9_./,])/g, "\\$1");
 }
-CodeMirror.commands["escapeShellChars"] = escapeShellChars;
+export const COMMAND_ESCAPE_SHELL_CHARS = "escapeShellChars";
+CodeMirror.commands[COMMAND_ESCAPE_SHELL_CHARS] = escapeShellChars;
 
 /**
  * Command to unescape backslash escaped shell special characters in the selection.
@@ -91,8 +95,35 @@ CodeMirror.commands["escapeShellChars"] = escapeShellChars;
 function unescapeShellChars(cm: CodeMirror.Editor): void {
   replaceInSelection(cm, /\\(.)/g, "$1");
 }
-CodeMirror.commands["unescapeShellChars"] = unescapeShellChars;
+export const COMMAND_UNESCAPE_SHELL_CHARS = "unescapeShellChars";
+CodeMirror.commands[COMMAND_UNESCAPE_SHELL_CHARS] = unescapeShellChars;
 
 export function init() {
   // This is needed to make sure that the TypeScript compile sees that that module is used and should be included.
+}
+
+export function isCommand(command: string): boolean {
+  return [COMMAND_FORWARDSLASHES_TO_BACK,
+      COMMAND_BACKSLASHES_TO_FORWARD,
+      COMMAND_ESCAPE_SHELL_CHARS,
+      COMMAND_UNESCAPE_SHELL_CHARS,
+      COMMAND_VERTICAL_MULTICURSOR,
+    ].indexOf(command) !== -1;
+}
+
+export interface CommandDescription {
+  command: string;
+  icon?: string;
+  label: string;
+}
+
+export function commandDescriptions(): CommandDescription[] {
+  const descriptions: CommandDescription[] = [
+    { command: COMMAND_FORWARDSLASHES_TO_BACK, icon: "", label: "Forward Slashes to Backslashes" },
+    { command: COMMAND_BACKSLASHES_TO_FORWARD, icon: "", label: "Backslashes to Forward Slashes" },
+    { command: COMMAND_ESCAPE_SHELL_CHARS, icon: "", label: "Escape Shell Characters" },
+    { command: COMMAND_UNESCAPE_SHELL_CHARS, icon: "", label: "Unescape Shell Characters" },
+    { command: COMMAND_VERTICAL_MULTICURSOR, icon: "", label: "Selection to Multiple Cursors" },
+  ];
+  return descriptions;
 }
