@@ -68,9 +68,13 @@ DIV.tab_content {
 
 }
 DIV.tab_content > * {
+  position: absolute;
   width: 100%;
-  height: calc(100% - 6px);
-  margin-top: 6px;
+  
+  top: 6px;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 DIV.tab_header_container {
