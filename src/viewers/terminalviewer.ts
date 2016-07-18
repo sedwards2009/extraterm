@@ -1062,8 +1062,11 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     
     if (this._mode ===ViewerElementTypes.Mode.SELECTION) {
       const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
-        CodeMirrorCommands.commandDescriptions().map( (desc) => {
-          return { id: desc.command, iconRight: desc.icon !== undefined ? desc.icon : "", label: desc.label,
+        CodeMirrorCommands.commandDescriptions(this._codeMirror).map( (desc) => {
+          return { id: desc.command,
+            iconLeft: desc.iconLeft,
+            iconRight: desc.iconRight,
+            label: desc.label,
             target: this };
         });
       commandList = [...commandList, ...cmCommandList];
@@ -1120,7 +1123,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         
       default:
         if (this._mode === ViewerElementTypes.Mode.SELECTION && CodeMirrorCommands.isCommand(command)) {
-          this._codeMirror.execCommand(command);
+          CodeMirrorCommands.executeCommand(this._codeMirror, command);
           return true;
         } else {
           return false;

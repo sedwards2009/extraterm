@@ -76,9 +76,16 @@
   background: $terminal-selection-unfocused-background-color;
 }
 
+.cm-s-text.CodeMirror { @include text-general; }
+
 .CodeMirror-focused .CodeMirror-selected, .terminal-focused .CodeMirror-selected {
   background: $terminal-selection-background-color;
 }
+
+.CodeMirror-gutters { @include text-gutters; }
+.CodeMirror-guttermarker { @include text-guttermarker; }
+.CodeMirror-guttermarker-subtle { @include text-guttermarker-subtle; }
+.CodeMirror-linenumber { @include text-linenumber; }
 
 /* Character styles */
 

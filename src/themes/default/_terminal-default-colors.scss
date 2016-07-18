@@ -273,3 +273,25 @@ $terminal-color-252: #d0d0d0;
 $terminal-color-253: #dadada;
 $terminal-color-254: #e4e4e4;
 $terminal-color-255: #eeeeee;
+
+@mixin text-general {
+ background: $terminal-background-color;
+ color: $terminal-foreground-color;
+}
+
+@mixin text-gutters {
+ background: #000000;
+ border-right: 1px solid #b2b2b2;
+}
+
+@mixin text-guttermarker {
+ color: #599eff;
+}
+
+@mixin text-guttermarker-subtle {
+ color: #b2b2b2;
+}
+
+@mixin text-linenumber {
+ color: #b2b2b2;
+}

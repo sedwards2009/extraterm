@@ -98,6 +98,12 @@ function unescapeShellChars(cm: CodeMirror.Editor): void {
 export const COMMAND_UNESCAPE_SHELL_CHARS = "unescapeShellChars";
 CodeMirror.commands[COMMAND_UNESCAPE_SHELL_CHARS] = unescapeShellChars;
 
+function toggleLineNumbers(cm: CodeMirror.Editor): void {
+  const isSet = cm.getOption("lineNumbers");
+  cm.setOption("lineNumbers", ! isSet);
+}
+export const COMMAND_TOGGLE_LINE_NUMBERS = "toggleLineNumbers";
+
 export function init() {
   // This is needed to make sure that the TypeScript compile sees that that module is used and should be included.
 }
@@ -108,22 +114,34 @@ export function isCommand(command: string): boolean {
       COMMAND_ESCAPE_SHELL_CHARS,
       COMMAND_UNESCAPE_SHELL_CHARS,
       COMMAND_VERTICAL_MULTICURSOR,
+      COMMAND_TOGGLE_LINE_NUMBERS,
     ].indexOf(command) !== -1;
+}
+
+export function executeCommand(cm: CodeMirror.Editor, command: string): void {
+  if (command === COMMAND_TOGGLE_LINE_NUMBERS) {
+    toggleLineNumbers(cm);
+  } else {
+    cm.execCommand(command);
+  }
 }
 
 export interface CommandDescription {
   command: string;
-  icon?: string;
+  iconLeft?: string;
+  iconRight?: string;
   label: string;
 }
 
-export function commandDescriptions(): CommandDescription[] {
+export function commandDescriptions(cm: CodeMirror.Editor): CommandDescription[] {
   const descriptions: CommandDescription[] = [
-    { command: COMMAND_FORWARDSLASHES_TO_BACK, icon: "", label: "Forward Slashes to Backslashes" },
-    { command: COMMAND_BACKSLASHES_TO_FORWARD, icon: "", label: "Backslashes to Forward Slashes" },
-    { command: COMMAND_ESCAPE_SHELL_CHARS, icon: "", label: "Escape Shell Characters" },
-    { command: COMMAND_UNESCAPE_SHELL_CHARS, icon: "", label: "Unescape Shell Characters" },
-    { command: COMMAND_VERTICAL_MULTICURSOR, icon: "", label: "Selection to Multiple Cursors" },
+    { command: COMMAND_FORWARDSLASHES_TO_BACK, iconRight: "", label: "Forward Slashes to Backslashes" },
+    { command: COMMAND_BACKSLASHES_TO_FORWARD, iconRight: "", label: "Backslashes to Forward Slashes" },
+    { command: COMMAND_ESCAPE_SHELL_CHARS, iconRight: "", label: "Escape Shell Characters" },
+    { command: COMMAND_UNESCAPE_SHELL_CHARS, iconRight: "", label: "Unescape Shell Characters" },
+    { command: COMMAND_VERTICAL_MULTICURSOR, iconRight: "", label: "Selection to Multiple Cursors" },
+    { command: COMMAND_TOGGLE_LINE_NUMBERS, iconLeft: cm.getOption("lineNumbers") ? "check-square-o" : "square-o",
+      iconRight: "list-ol", label: "Line Numbers" },
   ];
   return descriptions;
 }
