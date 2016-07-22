@@ -146,7 +146,7 @@ export class KeyBindingMapping {
       if (keyBinding.key === key &&
           keyBinding.altKey === ev.altKey &&
           keyBinding.ctrlKey === ev.ctrlKey &&
-          (keyBinding.key.length === 1 || keyBinding.shiftKey === ev.shiftKey) &&
+          ((key.length === 1 && key !== " ") || keyBinding.shiftKey === ev.shiftKey) &&
           keyBinding.metaKey === ev.metaKey) {
         return keyBinding.command;
       }
