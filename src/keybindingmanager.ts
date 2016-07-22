@@ -15,6 +15,7 @@ export interface MinimalKeyboardEvent {
   metaKey: boolean;
   shiftKey: boolean;  
   key: string;
+  keyIdentifier: string;
   keyCode: number;
 }
 
@@ -25,7 +26,6 @@ interface KeyBinding {
   metaKey: boolean;
   shiftKey: boolean;  
   key: string;
-  keyLower: string;
   
   command: string;
   shortcut: string;
@@ -140,13 +140,31 @@ export class KeyBindingMapping {
         key = ev.key;
       }
     }
+    
+this._log.debug('Using key: ' + key);
 
-    const keyLower = key.toLowerCase();
+    // Keyboard handling is better than in the past, but still a bit of a
+    // mess. keyIdentifier is deprecated, but it is often needed to find
+    // out what key-mapped character is intended by the user.
+    let keyIdentifier = ev.keyIdentifier;
+    if (key.length === 1 && ev.keyIdentifier.startsWith("U+")) {
+      // Parse the code point of the unicode character.
+      const keyValue = Number.parseInt(ev.keyIdentifier.substr(2), 16);
+      keyIdentifier = String.fromCodePoint(keyValue);
+    } else {
+      // Fall back.
+      keyIdentifier = key;
+    }
+// if (key.length !== 1) {
+  console.log(ev);
+// }
+this._log.debug('Using keyIdentifier: ' + keyIdentifier);
+
     for (let keyBinding of this.keyBindings) {
-      if ((keyBinding.key === key || keyBinding.keyLower === keyLower) &&
+      // Note: We don't compare Shift. It is assumed to be automatically handled by the case of the key sent.
+      if (keyBinding.key === keyIdentifier &&
           keyBinding.altKey === ev.altKey &&
           keyBinding.ctrlKey === ev.ctrlKey &&
-          keyBinding.shiftKey === ev.shiftKey &&
           keyBinding.metaKey === ev.metaKey) {
         return keyBinding.command;
       }
@@ -172,8 +190,8 @@ export class KeyBindingMapping {
 }
 
 function parseKeyBinding(keyBindingString: string, command: string): KeyBinding {
-  const parts = keyBindingString.toLowerCase().replace(/\s/g,"").split(/-/g);
-  const partSet = new Set(parts);
+  const parts = keyBindingString.replace(/\s/g,"").split(/-/g);
+  const partSet = new Set( parts.map( part => part.length !== 1 ? part.toLowerCase() : part) );
   const hasShift = partSet.has("shift");
   partSet.delete("shift");
   const hasCtrl = partSet.has("ctrl");
@@ -192,7 +210,7 @@ function parseKeyBinding(keyBindingString: string, command: string): KeyBinding 
   if (lowerConfigNameToEventKeyMapping[key.toLowerCase()] !== undefined) {
     key = lowerConfigNameToEventKeyMapping[key.toLowerCase()];
   } else {
-    key = key.length === 1 ? key.toUpperCase() : _.capitalize(key.toLowerCase());
+    key = key.length === 1 ? key : _.capitalize(key.toLowerCase());
   }
   
   const keyBinding: KeyBinding = {
@@ -201,7 +219,6 @@ function parseKeyBinding(keyBindingString: string, command: string): KeyBinding 
     shiftKey: hasShift,
     metaKey: hasMeta,
     key: key,
-    keyLower: key.toLowerCase(),
     command: command,
     shortcut: "",
     normalizedShortcut: ""
