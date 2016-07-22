@@ -15,7 +15,6 @@ export interface MinimalKeyboardEvent {
   metaKey: boolean;
   shiftKey: boolean;  
   key: string;
-  keyIdentifier: string;
   keyCode: number;
 }
 
@@ -140,31 +139,14 @@ export class KeyBindingMapping {
         key = ev.key;
       }
     }
-    
-this._log.debug('Using key: ' + key);
-
-    // Keyboard handling is better than in the past, but still a bit of a
-    // mess. keyIdentifier is deprecated, but it is often needed to find
-    // out what key-mapped character is intended by the user.
-    let keyIdentifier = ev.keyIdentifier;
-    if (key.length === 1 && ev.keyIdentifier.startsWith("U+")) {
-      // Parse the code point of the unicode character.
-      const keyValue = Number.parseInt(ev.keyIdentifier.substr(2), 16);
-      keyIdentifier = String.fromCodePoint(keyValue);
-    } else {
-      // Fall back.
-      keyIdentifier = key;
-    }
-// if (key.length !== 1) {
-  console.log(ev);
-// }
-this._log.debug('Using keyIdentifier: ' + keyIdentifier);
 
     for (let keyBinding of this.keyBindings) {
-      // Note: We don't compare Shift. It is assumed to be automatically handled by the case of the key sent.
-      if (keyBinding.key === keyIdentifier &&
+      // Note: We don't compare Shift. It is assumed to be automatically handled by the
+      // case of the key sent, except in the case where a special key is used.
+      if (keyBinding.key === key &&
           keyBinding.altKey === ev.altKey &&
           keyBinding.ctrlKey === ev.ctrlKey &&
+          (keyBinding.key.length === 1 || keyBinding.shiftKey === ev.shiftKey) &&
           keyBinding.metaKey === ev.metaKey) {
         return keyBinding.command;
       }

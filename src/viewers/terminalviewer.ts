@@ -1015,7 +1015,6 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
                 altKey: ev.altKey,
                 ctrlKey: ev.ctrlKey,
                 key: ev.key,
-                keyIdentifier: ev.keyIdentifier,
                 keyCode: ev.keyCode
               };
               command = keyBindings.mapEventToCommand(evWithoutShift);

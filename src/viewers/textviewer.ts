@@ -784,7 +784,6 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
               altKey: ev.altKey,
               ctrlKey: ev.ctrlKey,
               key: ev.key,
-              keyIdentifier: ev.keyIdentifier,
               keyCode: ev.keyCode
             };
             command = keyBindings.mapEventToCommand(evWithoutShift);
