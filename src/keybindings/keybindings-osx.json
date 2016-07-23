@@ -3,26 +3,26 @@
   "main-ui": {
     "Cmd-ArrowLeft": "selectTabLeft",
     "Cmd-ArrowRight": "selectTabRight",
-    "Cmd-T": "newTab",
+    "Cmd-t": "newTab",
     "Shift-Cmd-W": "closeTab",
     "Cmd-Tab": "selectOtherPane",
-    "Cmd-S": "toggleSplit"
+    "Cmd-s": "toggleSplit"
   },
   "terminal-default-mode": {
     "Alt-Space": "enterSelectionMode",
     "Shift-PageUp": "scrollPageUp",
     "Shift-PageDown": "scrollPageDown",
-    "Cmd-C": "copyToClipboard",
-    "Cmd-V": "pasteFromClipboard",
-    "Cmd-W": "deleteLastFrame",
-    "Cmd-O": "openLastFrame"
+    "Cmd-c": "copyToClipboard",
+    "Cmd-v": "pasteFromClipboard",
+    "Cmd-w": "deleteLastFrame",
+    "Cmd-o": "openLastFrame"
   },
   "terminal-selection-mode": {
     "Alt-Space": "enterNormalMode",
     "Shift-PageUp": "scrollPageUp",
     "Shift-PageDown": "scrollPageDown",
-    "Cmd-C": "copyToClipboard",
-    "Cmd-V": "pasteFromClipboard"
+    "Cmd-c": "copyToClipboard",
+    "Cmd-v": "pasteFromClipboard"
   },
   "codemirror": {
     "Left": "goCharLeft",
@@ -41,11 +41,11 @@
     "Enter": "newlineAndIndent",
     "Insert": "toggleOverwrite",
     "Esc": "singleSelection",
-    "Cmd-A": "selectAll",
-    "Cmd-D": "deleteLine",
-    "Cmd-Z": "undo",
+    "Cmd-a": "selectAll",
+    "Cmd-d": "deleteLine",
+    "Cmd-z": "undo",
     "Shift-Cmd-Z": "redo",
-    "Cmd-Y": "redo",
+    "Cmd-y": "redo",
     "Cmd-Home": "goDocStart",
     "Cmd-Up": "goDocStart",
     "Ctrl-Up": "goDocStart",
