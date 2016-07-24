@@ -1186,7 +1186,7 @@ export class Emulator implements EmulatorAPI {
       convertEol: false,
       termName: 'xterm',
       geometry: [80, 24],
-      cursorBlink: true,
+      cursorBlink: false,
       visualBell: false,
       popOnBell: false,
       scrollback: 1000,
@@ -1199,7 +1199,7 @@ export class Emulator implements EmulatorAPI {
     this.convertEol = options.convertEol === undefined ? false : options.convertEol;
     this.termName = options.termName === undefined ? 'xterm' : options.termName;
     this.geometry = options.geometry === undefined ? [80, 24] : options.geometry;
-    this.cursorBlink = options.cursorBlink === undefined ? true : options.cursorBlink;
+    this.cursorBlink = options.cursorBlink === undefined ? false : options.cursorBlink;
     this.scrollback = options.scrollback === undefined ? 1000 : options.scrollback;
     this.debug = options.debug === undefined ? false : options.debug;
     this.useStyle = options.useStyle === undefined ? false : options.useStyle;
