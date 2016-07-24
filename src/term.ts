@@ -3268,12 +3268,6 @@ export class Emulator implements EmulatorAPI {
       // page up
       case 33:
         if (ev.shiftKey) {
-          if ( !this.physicalScroll) {
-            // Virtual scroll up.
-            this.scrollDisp(-(this.rows - 1));
-            cancelEvent(ev);
-            return true;
-          }
           // Let this one bubble up when using physical scrolling.
           return false;
         } else {
@@ -3283,12 +3277,6 @@ export class Emulator implements EmulatorAPI {
       // page down
       case 34:
         if (ev.shiftKey) {
-          if ( !this.physicalScroll) {
-            // Virtual scroll down.
-            this.scrollDisp(this.rows - 1);
-            cancelEvent(ev);
-            return true;
-          }
           // Let this one bubble up when using physical scrolling.
           return false;
         } else {
