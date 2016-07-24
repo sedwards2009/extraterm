@@ -100,7 +100,6 @@ interface Options {
   scrollback?: number;
   debug?: boolean;
   useStyle?: boolean;
-  physicalScroll?: boolean;
   applicationModeCookie?: string;
 };
 
@@ -1149,7 +1148,6 @@ export class Emulator implements EmulatorAPI {
   private scrollback: number;
   public debug: boolean;
   private useStyle: boolean;
-  private physicalScroll: boolean;
   private applicationModeCookie: string;
   private isMac = false;
   
@@ -1205,7 +1203,6 @@ export class Emulator implements EmulatorAPI {
     this.scrollback = options.scrollback === undefined ? 1000 : options.scrollback;
     this.debug = options.debug === undefined ? false : options.debug;
     this.useStyle = options.useStyle === undefined ? false : options.useStyle;
-    this.physicalScroll = options.physicalScroll === undefined ? false : options.physicalScroll;
     this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
 
 
@@ -1306,11 +1303,6 @@ export class Emulator implements EmulatorAPI {
     this._blink = null;
     
     this.lines = [];
-    if ( !this.physicalScroll) {
-      for (let i = 0; i< this.rows; i++) {
-        this.lines.push(this.blankLine());
-      }
-    }
   //  this.tabs;
     this.setupStops();
   }
@@ -1797,11 +1789,6 @@ export class Emulator implements EmulatorAPI {
    * @param {number} end   end row (INCLUSIVE!) to refresh
    */
   private refresh(start: number, end: number): void {
-    if ( !this.physicalScroll && end >= this.lines.length) {
-      this.log('`end` is too large. Most likely a bad CSR.');
-      end = this.lines.length - 1;
-    }
-
     this._refreshStart = this._refreshStart < 0 ? start : Math.min(start, this._refreshStart);
     this._refreshEnd = this._refreshEnd < 0 ? end+1 : Math.max(end+1, this._refreshEnd);
   }
@@ -1901,22 +1888,9 @@ export class Emulator implements EmulatorAPI {
   }
 
   private scroll(): void {
-    if ( ! this.physicalScroll) {
-      // Normal, virtual scrolling.
-      ++this.ybase;
-      // See if we have exceeded the scrollbar buffer length.
-      if (this.ybase > this.scrollback) {
-        // Drop the oldest line out of the scrollback buffer.
-        this.ybase--;
-        this.lines = this.lines.slice(-(this.ybase + this.rows) + 1);
-      }
-    } else {
-      // Using physical scrolling
-      
-      // Drop the oldest line into the scrollback buffer.
-      if (this.scrollTop === 0) {
-        this._scrollbackLineQueue.push(this.lines[0]);        
-      }
+    // Drop the oldest line into the scrollback buffer.
+    if (this.scrollTop === 0) {
+      this._scrollbackLineQueue.push(this.lines[0]);        
     }
 
     this.ydisp = this.ybase;
@@ -3530,21 +3504,7 @@ export class Emulator implements EmulatorAPI {
 
     // resize rows
     if (this.rows < newrows) {
-      // Add new rows to match the new bigger rows value.
-      if ( !this.physicalScroll) {
-        // const el = this.element;
-        for (let j = this.rows; j < newrows; j++) {
-          if (this.lines.length < newrows + this.ybase) {
-            this.lines.push(this.blankLine());
-          }
-// FIXME DOM code and it only applies when physicalScroll is false.
-          // if (this.children.length < newrows) {
-          //   const line = this.document.createElement('div');
-          //   el.appendChild(line);
-          //   this.children.push(line);
-          // }
-        }
-      }
+      
     } else if (this.rows > newrows) {
       
       // Remove rows to match the new smaller rows value.
@@ -3572,7 +3532,7 @@ export class Emulator implements EmulatorAPI {
     this.normal = null;
     
     this.lastReportedPhysicalHeight = this.lines.length;
-    this.refresh(0, this.physicalScroll ? this.lines.length-1 : this.rows - 1);
+    this.refresh(0, this.lines.length-1);
     
     this._dispatchEvents();
   }
