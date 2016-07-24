@@ -3163,46 +3163,39 @@ export class Emulator implements EmulatorAPI {
     this.write(data + '\r\n');
   };
 
-  // Key Resources:
-  // https://developer.mozilla.org/en-US/docs/DOM/KeyboardEvent
   keyDown(ev: KeyboardEvent): boolean {
     let key: string = null;
-    let newScrollPosition: number;
-
-    switch (ev.keyCode) {
+    switch (ev.key) {
       // backspace
-      case 8:
+      case 'Backspace':
         if (ev.shiftKey) {
           key = '\x08'; // ^H
           break;
         }
         key = '\x7f'; // ^?
         break;
+
       // tab
-      case 9:
-        if (ev.ctrlKey) {
-          // Don't handle Ctrl+Tab
-          break;
-        }
+      case 'Tab':
         if (ev.shiftKey) {
           key = '\x1b[Z';
-          break;
+        } else {
+          key = '\t';
         }
-        key = '\t';
         break;
+
       // return/enter
-      case 13:
+      case 'Enter':
         key = '\r';
         break;
+
       // escape
-      case 27:
+      case 'Escape':
         key = '\x1b';
         break;
+
       // left-arrow
-      case 37:
-        if (ev.shiftKey) {
-          break;
-        }
+      case 'ArrowLeft':
         if (ev.ctrlKey) {
           key = "\x1b[1;5D";
           break;
@@ -3214,11 +3207,9 @@ export class Emulator implements EmulatorAPI {
         }
         key = '\x1b[D';
         break;
+
       // right-arrow
-      case 39:
-        if (ev.shiftKey) {
-          break;
-        }
+      case 'ArrowRight':
         if (ev.ctrlKey) {
           key = "\x1b[1;5C";
           break;
@@ -3229,192 +3220,148 @@ export class Emulator implements EmulatorAPI {
         }
         key = '\x1b[C';
         break;
+
       // up-arrow
-      case 38:
+      case 'ArrowUp':
         if (this.applicationCursor) {
           key = '\x1bOA';
           break;
         }
         if (ev.ctrlKey) {
-          if (ev.shiftKey) {
-            this.scrollDisp(-1);
-            cancelEvent(ev);
-            return true;
-          } else {
-            key = "\x1b[1;5A";
-          }
+          key = "\x1b[1;5A";
         } else {
           key = '\x1b[A';
         }
         break;
+
       // down-arrow
-      case 40:
+      case 'ArrowDown':
         if (this.applicationCursor) {
           key = '\x1bOB';
           break;
         }
         if (ev.ctrlKey) {
-          if (ev.shiftKey) {
-            this.scrollDisp(1);
-            cancelEvent(ev);
-            return true;
-          } else {
-            key = "\x1b[1;5B";
-          }
+          key = "\x1b[1;5B";
         } else {
           key = '\x1b[B';
         }
         break;
+        
       // delete
-      case 46:
+      case 'Delete':
         key = '\x1b[3~';
         break;
+
       // insert      
-      case 45:
-        if ( ! ev.shiftKey) {
-          key = '\x1b[2~';
-        }        
+      case 'Insert':
+        key = '\x1b[2~';
         break;
+        
       // home
-      case 36:
+      case 'Home':
         if (this.applicationKeypad) {
           key = '\x1bOH';
           break;
         }
         key = '\x1bOH';
         break;
+
       // end
-      case 35:
+      case 'End':
         if (this.applicationKeypad) {
           key = '\x1bOF';
           break;
         }
         key = '\x1bOF';
         break;
+        
       // page up
-      case 33:
-        if (ev.shiftKey) {
-          if ( !this.physicalScroll) {
-            // Virtual scroll up.
-            this.scrollDisp(-(this.rows - 1));
-            cancelEvent(ev);
-            return true;
-          }
-          // Let this one bubble up when using physical scrolling.
-          return false;
-        } else {
-          key = '\x1b[5~';
-        }
+      case 'PageUp':
+        key = '\x1b[5~';
         break;
+
       // page down
-      case 34:
-        if (ev.shiftKey) {
-          if ( !this.physicalScroll) {
-            // Virtual scroll down.
-            this.scrollDisp(this.rows - 1);
-            cancelEvent(ev);
-            return true;
-          }
-          // Let this one bubble up when using physical scrolling.
-          return false;
-        } else {
-          key = '\x1b[6~';
-        }
+      case 'PageDown':
+        key = '\x1b[6~';
         break;
+
       // F1
-      case 112:
+      case 'F1':
         key = '\x1bOP';
         break;
+        
       // F2
-      case 113:
+      case 'F2':
         key = '\x1bOQ';
         break;
+        
       // F3
-      case 114:
+      case 'F3':
         key = '\x1bOR';
         break;
+        
       // F4
-      case 115:
+      case 'F4':
         key = '\x1bOS';
         break;
+
       // F5
-      case 116:
+      case 'F5':
         key = '\x1b[15~';
         break;
+        
       // F6
-      case 117:
+      case 'F6':
         key = '\x1b[17~';
         break;
+        
       // F7
-      case 118:
+      case 'F7':
         key = '\x1b[18~';
         break;
+        
       // F8
-      case 119:
+      case 'F8':
         key = '\x1b[19~';
         break;
+        
       // F9
-      case 120:
+      case 'F9':
         key = '\x1b[20~';
         break;
+        
       // F10
-      case 121:
+      case 'F10':
         key = '\x1b[21~';
         break;
+        
       // F11
-      case 122:
+      case 'F11':
         key = '\x1b[23~';
         break;
+        
       // F12
-      case 123:
+      case 'F12':
         key = '\x1b[24~';
         break;
         
       default:
-        // a-z and space
-        if (ev.ctrlKey) {
-          if (ev.shiftKey) {
-            // Ctrl+Shift
-            
-            if (ev.keyCode === 189) {
-              // Ctrl+Shift+_ key
-              key = '\x1f';
+        // Control codes
+        if (ev.key.length === 1) {
+          if (ev.ctrlKey) {
+            if (ev.key >= '@' && ev.key <= '_') {
+              key = String.fromCodePoint(ev.key.codePointAt(0)-'@'.codePointAt(0));
+            } else if (ev.key >= 'a' && ev.key <= 'z') {
+              key = String.fromCodePoint(ev.key.codePointAt(0)-'a'.codePointAt(0)+1);
+            } else if (ev.key === ' ') {
+              key = '\x00';
             }
-            
-          } else {
-            // Ctrl, no shift.
-            if (ev.keyCode >= 65 && ev.keyCode <= 90) {
-              key = String.fromCharCode(ev.keyCode - 64);
-            } else if (ev.keyCode === 32) {
-              // Ctrl+Space
-              // // NUL
-              // key = String.fromCharCode(0);
-            } else if (ev.keyCode >= 51 && ev.keyCode <= 55) {
-              // escape, file sep, group sep, record sep, unit sep
-              key = String.fromCharCode(ev.keyCode - 51 + 27);
-            } else if (ev.keyCode === 56) {
-              // delete
-              key = String.fromCharCode(127);
-            } else if (ev.keyCode === 219) {
-              // ^[ - escape
-              key = String.fromCharCode(27);
-            } else if (ev.keyCode === 221) {
-              // ^] - group sep
-              key = String.fromCharCode(29);
-            }
-          }        
-          break;
 
-        } else if ((!this.isMac && ev.altKey) || (this.isMac && ev.metaKey)) {
-          if (ev.keyCode >= 65 && ev.keyCode <= 90) {
-            key = '\x1b' + String.fromCharCode(ev.keyCode + 32);
-          } else if (ev.keyCode === 192) {
-            key = '\x1b`';
-          } else if (ev.keyCode >= 48 && ev.keyCode <= 57) {
-            key = '\x1b' + (ev.keyCode - 48);
+          } else if ((!this.isMac && ev.altKey) || (this.isMac && ev.metaKey)) {  // Alt modifier handling.
+            if (ev.key.length === 1) {
+              key = '\x1b' + ev.key;
+            }
           }
-        } else {
-          return false;
         }
         break;
     }
@@ -3443,22 +3390,10 @@ export class Emulator implements EmulatorAPI {
   }
 
   keyPress(ev: KeyboardEvent): boolean {
-    let key;
-    if (ev.charCode) {
-      key = ev.charCode;
-    } else if (ev.which === undefined) {
-      key = ev.keyCode;
-    } else if (ev.which !== 0 && ev.charCode !== 0) {
-      key = ev.which;
-    } else {
+    const key = ev.key;
+    if (!key || key.length !== 1 || ev.ctrlKey || ev.altKey || ev.metaKey) {
       return false;
     }
-
-    if (!key || ev.ctrlKey || ev.altKey || ev.metaKey) {
-      return false;
-    }
-
-    key = String.fromCharCode(key);
 
     this.showCursor();
     this.handler(key);
