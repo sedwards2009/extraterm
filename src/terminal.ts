@@ -614,7 +614,6 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
     const emulator = new termjs.Emulator({
       scrollback: 1000,
       cursorBlink: this._blinkingCursor,
-      physicalScroll: true,
       applicationModeCookie: cookie,
       debug: true
     });
