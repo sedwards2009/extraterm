@@ -9,7 +9,7 @@
     "Ctrl-Shift-S": "toggleSplit"
   },
   "terminal-default-mode": {
-    "Ctrl-Space": "enterSelectionMode",
+    "Ctrl-Shift-Space": "enterSelectionMode",
     "Shift-PageUp": "scrollPageUp",
     "Shift-PageDown": "scrollPageDown",
     "Ctrl-Shift-C": "copyToClipboard",
@@ -19,13 +19,14 @@
     "Ctrl-Shift-O": "openLastFrame"
   },
   "terminal-selection-mode": {
-    "Ctrl-Space": "enterNormalMode",
+    "Ctrl-Shift-Space": "enterNormalMode",
     "Shift-PageUp": "scrollPageUp",
     "Shift-PageDown": "scrollPageDown",
     "Ctrl-Shift-C": "copyToClipboard",
     "Ctrl-c": "copyToClipboard",
     "Shift-Insert": "pasteFromClipboard",
-    "Ctrl-Shift-V": "pasteFromClipboard"
+    "Ctrl-Shift-V": "pasteFromClipboard",
+    "Ctrl-v": "pasteFromClipboard"
   },
   "codemirror": {
     "Left": "goCharLeft",
