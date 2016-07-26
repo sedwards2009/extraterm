@@ -796,13 +796,6 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       }
     }
 
-    // Send all Alt+* and Ctrl+Shift+A-Z keys above
-    if (ev.metaKey || ev.altKey || (ev.ctrlKey && ev.shiftKey && ev.keyCode >= 65 && ev.keyCode <= 90)) {
-      ev.stopPropagation();
-      this._scheduleSyntheticKeyDown(ev);
-      return;
-    }
-    
     if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
       ev.stopPropagation();
      // Emit a key down event which our parent elements can catch.
