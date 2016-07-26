@@ -3136,9 +3136,14 @@ export class Emulator implements EmulatorAPI {
   writeln(data: string): void {
     this.write(data + '\r\n');
   };
-
+  
   keyDown(ev: KeyboardEvent): boolean {
     let key: string = null;
+    
+    // Modifiers keys are often encoded using this scheme.
+    const mod = (ev.shiftKey ? 1 : 0) + (ev.altKey ? 2 : 0) + (ev.ctrlKey ? 4: 0) + 1;
+    const modStr = mod === 1 ? "" : ";" + mod;
+    
     switch (ev.key) {
       // backspace
       case 'Backspace':
@@ -3170,29 +3175,29 @@ export class Emulator implements EmulatorAPI {
 
       // left-arrow
       case 'ArrowLeft':
-        if (ev.ctrlKey) {
-          key = "\x1b[1;5D";
-          break;
-        }
         if (this.applicationCursor) {
           key = '\x1bOD'; // SS3 as ^[O for 7-bit
           //key = '\x8fD'; // SS3 as 0x8f for 8-bit
           break;
         }
-        key = '\x1b[D';
+        if (mod !== 1) {
+          key = "\x1b[1" + modStr + "D";
+        } else {
+          key = '\x1b[D';
+        }
         break;
 
       // right-arrow
       case 'ArrowRight':
-        if (ev.ctrlKey) {
-          key = "\x1b[1;5C";
-          break;
-        }
         if (this.applicationCursor) {
           key = '\x1bOC';
           break;
         }
-        key = '\x1b[C';
+        if (mod !== 1) {
+          key = "\x1b[1" + modStr + "C";
+        } else {
+          key = '\x1b[C';
+        }
         break;
 
       // up-arrow
@@ -3201,8 +3206,8 @@ export class Emulator implements EmulatorAPI {
           key = '\x1bOA';
           break;
         }
-        if (ev.ctrlKey) {
-          key = "\x1b[1;5A";
+        if (mod !== 1) {
+          key = "\x1b[1" + modStr + "A";
         } else {
           key = '\x1b[A';
         }
@@ -3214,21 +3219,11 @@ export class Emulator implements EmulatorAPI {
           key = '\x1bOB';
           break;
         }
-        if (ev.ctrlKey) {
-          key = "\x1b[1;5B";
+        if (mod !== 1) {
+          key = "\x1b[1" + modStr + "B";
         } else {
           key = '\x1b[B';
         }
-        break;
-        
-      // delete
-      case 'Delete':
-        key = '\x1b[3~';
-        break;
-
-      // insert      
-      case 'Insert':
-        key = '\x1b[2~';
         break;
         
       // home
@@ -3237,7 +3232,11 @@ export class Emulator implements EmulatorAPI {
           key = '\x1bOH';
           break;
         }
-        key = '\x1bOH';
+        if (mod !== 1) {
+          key = '\x1b[1' + modStr + 'H';
+        } else {
+          key = '\x1b[H';
+        }
         break;
 
       // end
@@ -3246,77 +3245,61 @@ export class Emulator implements EmulatorAPI {
           key = '\x1bOF';
           break;
         }
-        key = '\x1bOF';
+        if (mod !== 1) {
+          key = '\x1b[1' + modStr + 'F';
+        } else {
+          key = '\x1b[F';
+        }
         break;
-        
-      // page up
+
       case 'PageUp':
-        key = '\x1b[5~';
-        break;
-
-      // page down
       case 'PageDown':
-        key = '\x1b[6~';
-        break;
-
-      // F1
+      case 'Delete':
+      case 'Insert':
       case 'F1':
-        key = '\x1bOP';
-        break;
-        
-      // F2
       case 'F2':
-        key = '\x1bOQ';
-        break;
-        
-      // F3
       case 'F3':
-        key = '\x1bOR';
-        break;
-        
-      // F4
       case 'F4':
-        key = '\x1bOS';
-        break;
-
-      // F5
       case 'F5':
-        key = '\x1b[15~';
-        break;
-        
-      // F6
       case 'F6':
-        key = '\x1b[17~';
-        break;
-        
-      // F7
       case 'F7':
-        key = '\x1b[18~';
-        break;
-        
-      // F8
       case 'F8':
-        key = '\x1b[19~';
-        break;
-        
-      // F9
       case 'F9':
-        key = '\x1b[20~';
-        break;
-        
-      // F10
       case 'F10':
-        key = '\x1b[21~';
-        break;
-        
-      // F11
       case 'F11':
-        key = '\x1b[23~';
-        break;
-        
-      // F12
       case 'F12':
-        key = '\x1b[24~';
+        if (mod === 1) {
+          switch (ev.key) {
+            case 'F1': key = '\x1bOP'; break;
+            case 'F2': key = '\x1bOQ'; break;
+            case 'F3': key = '\x1bOR'; break;
+            case 'F4': key = '\x1bOS'; break;
+            default: break;
+          }
+          if (key !== null) {
+            break;
+          }
+        }
+
+        switch (ev.key) {
+          case 'PageUp': key = '\x1b[5' + modStr + '~'; break;
+          case 'PageDown': key = '\x1b[6' + modStr + '~'; break;
+          case 'Delete': key = '\x1b[3' + modStr + '~'; break;
+          case 'Insert': key = '\x1b[2' + modStr + '~'; break;
+          case 'F1': key = '\x1b[1' + modStr + 'P'; break;
+          case 'F2': key = '\x1b[1' + modStr + 'Q'; break;
+          case 'F3': key = '\x1b[1' + modStr + 'R'; break;
+          case 'F4': key = '\x1b[1' + modStr + 'S'; break;
+          case 'F5': key = '\x1b[15' + modStr + '~'; break;
+          case 'F6': key = '\x1b[17' + modStr + '~'; break;
+          case 'F7': key = '\x1b[18' + modStr + '~'; break;
+          case 'F8': key = '\x1b[19' + modStr + '~'; break;
+          case 'F9': key = '\x1b[20' + modStr + '~'; break;
+          case 'F10': key = '\x1b[21' + modStr + '~'; break;
+          case 'F11': key = '\x1b[23' + modStr + '~'; break;
+          case 'F12': key = '\x1b[24' + modStr + '~'; break;
+          default: break;
+        }
         break;
         
       default:
@@ -3328,6 +3311,7 @@ export class Emulator implements EmulatorAPI {
             } else if (ev.key >= 'a' && ev.key <= 'z') {
               key = String.fromCodePoint(ev.key.codePointAt(0)-'a'.codePointAt(0)+1);
             } else if (ev.key === ' ') {
+              // Ctrl space
               key = '\x00';
             }
 
