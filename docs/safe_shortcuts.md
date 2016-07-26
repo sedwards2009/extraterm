@@ -10,20 +10,20 @@ Terminal = This combination can be used by terminal programs.
 | Key       | No mod.  | Ctrl      | Shift     | Alt       | Ctrl+Shift| Ctrl+Alt | Shift+Alt | Notes |
 |-----------|----------|-----------|-----------|-----------|-----------|-----------|----------|-------|
 | @         | Terminal | Terminal  | *Free*    | Terminal  | *Free*    | *Free*    | *Free*   |       |
-| ArrowLeft | Terminal | Terminal  | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| ArrowRight| Terminal | Terminal  | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| ArrowUp   | Terminal | Terminal  | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| ArrowDown | Terminal | Terminal  | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
+| ArrowLeft | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
+| ArrowRight| Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
+| ArrowUp   | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
+| ArrowDown | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
 | Backspace | Terminal | *Free*    | Terminal  | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| Delete    | Terminal | *Free*    | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| End       | Terminal | *Free*    | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
+| Delete    | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
+| End       | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
 | Enter     | Terminal | *Free*    | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
 | Escape    | Terminal | *Free*    | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| F1 - F12  | Terminal | *Free*    | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| Home      | Terminal | *Free*    | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| Insert    | Terminal | *Free*    | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| PageDown  | Terminal | *Free*    | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
-| PageUp    | Terminal | *Free*    | *Free*    | *Free*    | *Free*    | *Free*    | *Free*   |       |
+| F1 - F12  | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
+| Home      | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
+| Insert    | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
+| PageDown  | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
+| PageUp    | Terminal | Terminal  | Terminal  | Terminal  | Terminal  | Terminal  | Terminal |       |
 | Tab       | Terminal | *Free*    | Terminal  | *Free*    | *Free*    | *Free*    | *Free*   | Alt+Tab is usually taken by the operating system |
 | [         | Terminal | Terminal  | *Free*    | Terminal  | *Free*    | *Free*    | *Free*   |  Ctrl+[ duplicates the Escape key |
 | \         | Terminal | Terminal  | *Free*    | Terminal  | *Free*    | *Free*    | *Free*   |       |
