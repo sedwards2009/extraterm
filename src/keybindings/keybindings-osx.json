@@ -5,7 +5,7 @@
     "Cmd-ArrowRight": "selectTabRight",
     "Cmd-t": "newTab",
     "Shift-Cmd-W": "closeTab",
-    "Cmd-Tab": "selectOtherPane",
+    "Ctrl-Tab": "selectOtherPane",
     "Cmd-s": "toggleSplit"
   },
   "terminal-default-mode": {
