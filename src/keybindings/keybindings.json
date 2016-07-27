@@ -1,8 +1,8 @@
 {
   "name": "PC style bindings",
   "main-ui": {
-    "Alt-Shift-ArrowLeft": "selectTabLeft",
-    "Alt-Shift-ArrowRight": "selectTabRight",
+    "Ctrl-,": "selectTabLeft",
+    "Ctrl-.": "selectTabRight",
     "Ctrl-Shift-T": "newTab",
     "Ctrl-Shift-Q": "closeTab",
     "Ctrl-Tab": "selectOtherPane",
