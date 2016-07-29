@@ -95,6 +95,7 @@
         "./src/viewers/terminalviewer.ts",
         "./src/viewers/terminalviewertypes.ts",
         "./src/viewers/textviewer.ts",
+        "./src/viewers/tipviewer.ts",
         "./src/settings/settingstab2.ts",
         "./src/typings/base64-arraybuffer/base64-arraybuffer.d.ts",
         "./src/typings/codemirror/codemirror.d.ts",

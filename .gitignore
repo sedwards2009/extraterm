@@ -72,3 +72,4 @@ src/resizecanary.js
 src/gui/commandentrytype.js
 src/gui/commandpalettetypes.js
 src/commandpaletterequesttypes.js
+src/viewers/tipviewer.js

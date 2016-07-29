@@ -21,6 +21,7 @@ import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTerminalViewerTypes = require('./viewers/terminalviewertypes');
 import EtTextViewer = require('./viewers/textviewer');
 import EtImageViewer = require('./viewers/imageviewer');
+import EtTipViewer = require('./viewers/tipviewer');
 import generalevents = require('./generalevents');
 import KeyBindingManager = require('./keybindingmanager');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
@@ -97,6 +98,7 @@ const enum ApplicationMode {
 const viewerClasses: ViewerElementTypes.SupportsMimeTypes[] = [];
 viewerClasses.push(EtImageViewer);
 viewerClasses.push(EtTextViewer);
+viewerClasses.push(EtTipViewer);
 
 /**
  * An Extraterm terminal.
@@ -134,6 +136,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
       EtTerminalViewer.init();
       EtTextViewer.init();
       EtImageViewer.init();
+      EtTipViewer.init();
 
       // EtMarkdownViewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
@@ -498,7 +501,9 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
     
+    this._appendMimeViewer(EtTipViewer.MIME_TYPE, "Tip", "utf8", "");
     this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
+    
     this._scheduleResize();
   }
   
@@ -1619,11 +1624,12 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
     }
     
     const metadata = JSON.parse(encodedData.substr(0, metadataSize));
-    const mimeType = metadata.mimeType;
-    const filename = metadata.filename;
     const charset = metadata.charset === undefined ? null : metadata.charset;
+    this._appendMimeViewer(metadata.mimeType, metadata.filename, charset, encodedData.slice(metadataSize));
+  }
 
-    const mimeViewerElement = this._createMimeViewer(mimeType, charset, encodedData.slice(metadataSize));
+  private _appendMimeViewer(mimeType:string, filename: string, charset: string, encodedData: string): void {
+    const mimeViewerElement = this._createMimeViewer(mimeType, charset, encodedData);
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");

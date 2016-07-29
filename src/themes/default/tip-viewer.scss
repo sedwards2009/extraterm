@@ -1,0 +1,23 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+@import "bootstrap/_variables";
+
+#ID_CONTAINER {
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-color;
+  background-color: $body-bg;
+  
+  padding: $panel-body-padding;
+  
+  &:focus {
+    outline: 0px solid black;
+  }
+}
+
+#ID_CONTROLS > div:last-child {
+  float: right;
+}
