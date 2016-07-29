@@ -3,6 +3,8 @@
  */
 
 "use strict";
+import electron = require('electron');
+const shell = electron.shell;
 import _  = require('lodash');
 import fs = require('fs');
 import ViewerElement = require("../viewerelement");
@@ -33,10 +35,15 @@ const KEYBINDINGS_SELECTION_MODE = "image-viewer";
 const DEBUG_SIZE = true;
 
 const tipData = [
-  `<h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip 1: Shell Integration</h2>`,
+  `<h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip 1: Shell Integration</h2>
+  <p>Extraterm's shell integration unlocks many powerful features such as frames around command output, reusing command
+  output and in-place editing of text. bash, zsh and fish shells are supported. To enable it in your shell session see
+  <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#shell-integration">this guide</a>.</p>`,
+  
   `<h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip 2: Command Palette</h2>
     <p>Extraterm has a pop up Command Palette where all relevant commands can be seen, searched and executed.
     </p>`,
+    
   `<h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip 3: Frames</h2>`
 ];
 
@@ -185,6 +192,17 @@ class EtTipViewer extends ViewerElement {
     const clone = this.createClone();
     shadow.appendChild(clone);
     this.updateThemeCss();
+    
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    
+    // Intercept link clicks and open them in an external browser.
+    containerDiv.addEventListener('click', (ev: MouseEvent) => {
+      const source = <HTMLElement> ev.target;
+      if (source.tagName === "A") {
+        ev.preventDefault();
+        shell.openExternal((<HTMLAnchorElement> source).href);
+      }
+    });
     
     this._setTipHTML(this._getTipHTML(0));
     
