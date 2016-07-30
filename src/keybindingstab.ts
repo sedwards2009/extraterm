@@ -14,8 +14,10 @@ import ThemeableElementBase = require('./themeableelementbase');
 import KeyBindingManager = require('./keybindingmanager');
 import Vue = require('vue');
 import domutils = require('./domutils');
-import configInterfaces = require('./config');
-type Config = configInterfaces.Config;
+import config = require('./config');
+type Config = config.Config;
+type ConfigManager = config.ConfigManager;
+
 import GeneralEvents = require('./generalevents');
 import LogDecorator = require('./logdecorator');
 
@@ -67,7 +69,7 @@ function formatShortcut(code: string): string {
 
 interface ModelData {
   selectedKeyBindings: string;
-  keyBindingsFiles: configInterfaces.KeyBindingInfo[];
+  keyBindingsFiles: config.KeyBindingInfo[];
   keyBindingsContextsStamp: any;
 }
 
@@ -97,14 +99,14 @@ class EtKeyBindingsTab extends ViewerElement {
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
-  private _config: Config;
-  
+  private _configManager: ConfigManager;
+
   private _vm: VueJSInstance<ModelData>;
   
   private _data: ModelData;
 
   private _initProperties(): void {
-    this._config = null;
+    this._configManager = null;
     this._vm = null;
     this._data = {
       selectedKeyBindings: "",
@@ -141,15 +143,12 @@ class EtKeyBindingsTab extends ViewerElement {
     return false;
   }
   
-  set config(config: Config) {
-    this._config = config;
-
-    if (this._data.keyBindingsFiles.length !== config.systemConfig.keyBindingsFiles.length) {
-      this._data.keyBindingsFiles = config.systemConfig.keyBindingsFiles;
-    }
-    if (this._data.selectedKeyBindings !== config.keyBindingsFilename) {
-      this._data.selectedKeyBindings = config.keyBindingsFilename;
-    }
+  setConfigManager(configManager: ConfigManager): void {
+    this._configManager = configManager;
+    this._configManager.registerChangeListener(this, () => {
+      this._setConfig(configManager.getConfig());
+    });
+    this._setConfig(configManager.getConfig());
   }
   
   protected keyBindingContextsChanged(contexts: KeyBindingManager.KeyBindingContexts): void {
@@ -229,7 +228,17 @@ class EtKeyBindingsTab extends ViewerElement {
     
     this.updateThemeCss();
   }
-  
+
+  /**
+   * Custom Element 'detached' life cycle hook.
+   */
+  detachedCallback(): void {
+    if (this._configManager !== null) {
+      this._configManager.unregisterChangeListener(this);
+    }
+    super.detachedCallback();
+  }
+
   //-----------------------------------------------------------------------
   //
   // ######                                      
@@ -241,6 +250,14 @@ class EtKeyBindingsTab extends ViewerElement {
   // #       #    # #   ##   #    #   #   ###### 
   //
   //-----------------------------------------------------------------------
+  private _setConfig(config: Config): void {
+    if (this._data.keyBindingsFiles.length !== config.systemConfig.keyBindingsFiles.length) {
+      this._data.keyBindingsFiles = config.systemConfig.keyBindingsFiles;
+    }
+    if (this._data.selectedKeyBindings !== config.keyBindingsFilename) {
+      this._data.selectedKeyBindings = config.keyBindingsFilename;
+    }
+  }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.KEY_BINDINGS_TAB];
@@ -248,12 +265,10 @@ class EtKeyBindingsTab extends ViewerElement {
   
   @log
   private _dataChanged(newVal: ModelData): void {
-    const newConfig = _.cloneDeep(this._config);
+    const newConfig = _.cloneDeep(this._configManager.getConfig());
     if (newConfig.keyBindingsFilename !== newVal.selectedKeyBindings) {
       newConfig.keyBindingsFilename = newVal.selectedKeyBindings;
-
-      const event = new CustomEvent(GeneralEvents.EVENT_CONFIG_CHANGE, { detail: {data: newConfig} });
-      this.dispatchEvent(event);
+      this._configManager.setConfig(newConfig);
     }
   }
 }

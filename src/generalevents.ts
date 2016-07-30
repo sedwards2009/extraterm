@@ -16,8 +16,3 @@ export const EVENT_SET_MODE = 'set-mode';
 export interface SetModeEventDetail {
   mode: viewerelementtypes.Mode;
 }
-
-export const EVENT_CONFIG_CHANGE = "config-changed";
-export interface ConfigChangeDetail {
-  data: configInterfaces.Config;
-}

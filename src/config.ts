@@ -91,3 +91,38 @@ export function expandEnvVariable(value: string, context: Map<string, string>): 
   });
   return result;
 }
+
+/**
+ * Interface for managing changes and updates to the Configuration.
+ */
+export interface ConfigManager {
+  /**
+   * Get the current config object.
+   *
+   * @return the current config.
+   */
+  getConfig(): Config;
+  
+  /**
+   * Register a listener to hear when the config has changed.
+   *
+   * @param key an opaque object which is used to identify this registration.
+   * @param onChange the function to call when the config changes.
+   */
+  registerChangeListener(key: any, onChange: () => void): void;
+  
+  /**
+   * Unregister a listener.
+   *
+   * @param key the same opaque object which was used during registerChangeListener().
+   */
+  unregisterChangeListener(key: any): void;
+  
+  /**
+   * Set a new application wide config.
+   *
+   * Note that this method is asynchronous in the sense that the config doesn't take effect until later.
+   * @param newConfig the new config object.
+   */
+  setConfig(newConfig: Config): void;
+}

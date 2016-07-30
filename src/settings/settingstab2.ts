@@ -12,12 +12,14 @@ import ViewerElement  = require('../viewerelement');
 import domutils = require('../domutils');
 import Vue = require('vue');
 import config = require('../config');
+type Config = config.Config;
+type ConfigManager = config.ConfigManager;
+
 import ThemeTypes = require('../theme');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 import GeneralEvents = require('../generalevents');
 
-type Config = config.Config;
 type CommandLineAction = config.CommandLineAction;
 type FontInfo = config.FontInfo;
 
@@ -100,7 +102,7 @@ class EtSettingsTab extends ViewerElement {
   
   private _data: ModelData;
   
-  private _config: Config;
+  private _configManager: ConfigManager;
   
   private _themes: ThemeTypes.ThemeInfo[];
 
@@ -110,7 +112,7 @@ class EtSettingsTab extends ViewerElement {
     this._log = new Logger(EtSettingsTab.TAG_NAME);
     this._vm = null;
     this._themes = [];
-    this._config = null;
+    this._configManager = null;
     this._fontOptions = [];
     this._data = {
       scrollbackLines: 10000,
@@ -159,9 +161,15 @@ class EtSettingsTab extends ViewerElement {
     return false;
   }
   
-  set config(config: Config) {
-    this._config = config;
-
+  setConfigManager(configManager: ConfigManager): void {
+    this._configManager = configManager;
+    configManager.registerChangeListener(this, () => {
+      this._setConfig(configManager.getConfig());
+    });
+    this._setConfig(configManager.getConfig());
+  }
+  
+  private _setConfig(config: Config): void {
     // We take care to only update things which have actually changed.
     if (this._data.scrollbackLines !== config.scrollbackLines) {
       this._data.scrollbackLines = config.scrollbackLines;
@@ -430,6 +438,9 @@ class EtSettingsTab extends ViewerElement {
    * Custom Element 'detached' life cycle hook.
    */
   detachedCallback(): void {
+    if (this._configManager !== null) {
+      this._configManager.unregisterChangeListener(this);
+    }
     super.detachedCallback();
   }
 
@@ -449,7 +460,7 @@ class EtSettingsTab extends ViewerElement {
   //
   //-----------------------------------------------------------------------
   private _dataChanged(newVal: ModelData): void {
-    const newConfig = _.cloneDeep(this._config);
+    const newConfig = _.cloneDeep(this._configManager.getConfig());
     const model = _.cloneDeep(newVal);
     stripIds(model.commandLineActions);
     
@@ -461,8 +472,7 @@ class EtSettingsTab extends ViewerElement {
     newConfig.themeSyntax = model.themeSyntax;
     newConfig.themeGUI = model.themeGUI;
 
-    const event = new CustomEvent(GeneralEvents.EVENT_CONFIG_CHANGE, { detail: {data: newConfig} });
-    this.dispatchEvent(event);
+    this._configManager.setConfig(newConfig);
   }
 }
 

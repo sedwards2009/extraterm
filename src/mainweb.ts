@@ -34,6 +34,7 @@ import ResizeCanary = require('./resizecanary');
 
 import config = require('./config');
 type Config = config.Config;
+type ConfigManager = config.ConfigManager;
 type SessionProfile = config.SessionProfile;
 
 import ThemeTypes = require('./theme');
@@ -59,10 +60,10 @@ const _log = new Logger("mainweb");
  */
 
 let terminalIdCounter = 0;
-let configuration: Config = null;
 let keyBindingContexts: KeyBindingManager.KeyBindingContexts = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
+let configManager: ConfigManagerImpl = null;
 
 /**
  * 
@@ -96,6 +97,8 @@ export function startUp(): void {
   
   webipc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
   
+  // Get the Config working.
+  configManager = new ConfigManagerImpl();
   const themePromise = webipc.requestConfig().then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
@@ -128,6 +131,7 @@ export function startUp(): void {
     });
 
     mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
+    mainWebUi.setConfigManager(configManager);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
       <div class="space"></div>
       <cb-dropdown>
@@ -142,7 +146,6 @@ export function startUp(): void {
       </cb-dropdown>
     </div>`;
 
-    mainWebUi.config = configuration;
     mainWebUi.themes = themes;
       
     doc.body.classList.remove("preparing");
@@ -298,9 +301,10 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
 
 function handleConfigMessage(msg: Messages.Message): Promise<void> {
   const configMessage = <Messages.ConfigMessage> msg;
-  const oldConfiguration = configuration;
-  configuration = configMessage.config;
-  return setupConfiguration(oldConfiguration, configMessage.config);
+  const oldConfiguration = configManager.getConfig();
+  const config = configMessage.config;
+  configManager.setNewConfig(config);
+  return setupConfiguration(oldConfiguration, config);
 }
 
 function handleThemeListMessage(msg: Messages.Message): void {
@@ -355,10 +359,6 @@ function handleClipboardRead(msg: Messages.Message): void {
  * 
  */
 function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void> {
-  if (mainWebUi !== null) {
-    mainWebUi.config = newConfig;
-  }
-  
   keyBindingContexts = KeyBindingManager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts);
   KeyBindingsElementBase.setKeyBindingContexts(keyBindingContexts);
   
@@ -489,5 +489,40 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
       commandPaletteRequestSource = null;
       commandPaletteRequestEntries = null;
     });
+  }
+}
+
+class ConfigManagerImpl implements ConfigManager {
+  
+  private _config: Config = null;
+  
+  private _listenerList: {key: any; onChange: ()=> void; }[] = [];  // Immutable list
+  
+  registerChangeListener(key: any, onChange: () => void): void {
+    this._listenerList = [...this._listenerList, {key, onChange}];
+  }
+  
+  unregisterChangeListener(key: any): void {
+    this._listenerList = this._listenerList.filter( (tup) => tup.key !== key);
+  }
+  
+  getConfig(): Config {
+    return this._config;
+  }
+  
+  setConfig(newConfig: Config): void {  
+    webipc.sendConfig(newConfig);
+  }
+  
+  /**
+   * Seta new configuration object as the application wide 
+   */
+  setNewConfig(newConfig: Config): void {
+    this._config = newConfig;
+    
+    const listenerList = this._listenerList;
+    for (const tup of listenerList) {
+      tup.onChange();
+    }
   }
 }

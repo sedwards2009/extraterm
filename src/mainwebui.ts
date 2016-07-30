@@ -19,28 +19,31 @@ import ViewerElement = require('./viewerelement');
 import KeyBindingsElementBase = require('./keybindingselementbase');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeTypes = require('./theme');
+
 import CommandPaletteTypes = require('./gui/commandpalettetypes');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
-
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
+
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import path = require('path');
 import _ = require('lodash');
+
 import config = require('./config');
+type Config = config.Config;
+type ConfigManager =config.ConfigManager;
+type SessionProfile = config.SessionProfile;
+
 import he = require('he');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 
 import KeyBindingManager = require('./keybindingmanager');
 import GeneralEvents = require('./generalevents');
-
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 const log = LogDecorator;
 
-type Config = config.Config;
-type SessionProfile = config.SessionProfile;
 const VisualState = ViewerElementTypes.VisualState;
 
 const ID = "ExtratermMainWebUITemplate";
@@ -132,10 +135,6 @@ class TabInfo {
     return false;
   }
   
-  setConfig(config: Config): void {
-    
-  }
-  
   destroy(): void { }
   
   copyToClipboard(): void { }
@@ -152,8 +151,12 @@ class TabInfo {
  */
 class TerminalTabInfo extends TabInfo {
   
-  constructor(public terminal: EtTerminal, public ptyId: number) {
+  constructor(configManager: ConfigManager, public terminal: EtTerminal, public ptyId: number) {
     super();
+    const config = configManager.getConfig();
+    this.terminal.blinkingCursor = config.blinkingCursor;
+    this.terminal.commandLineActions = config.commandLineActions !== undefined ? config.commandLineActions : null;
+    this.terminal.scrollbackSize = config.scrollbackLines;
   }
   
   title(): string {
@@ -175,12 +178,6 @@ class TerminalTabInfo extends TabInfo {
   
   hasFocus(): boolean {
     return this.terminal.hasFocus();
-  }
-  
-  setConfig(config: Config): void {
-    this.terminal.blinkingCursor = config.blinkingCursor;
-    this.terminal.commandLineActions = config.commandLineActions !== undefined ? config.commandLineActions : null;
-    this.terminal.scrollbackSize = config.scrollbackLines;
   }
   
   destroy(): void {
@@ -256,25 +253,19 @@ class SettingsTabInfo extends ViewerElementTabInfo {
     super(settingsElement);
     settingsElement.themes = themes;
   }
-  
-  setConfig(config: Config): void {
-    this.settingsElement.config = config;
-  }
 }
 
+// These classes act as markers for use with 'instanceof'.
 class AboutTabInfo extends ViewerElementTabInfo {
   constructor(public aboutElement: EtAboutTab) {
     super(aboutElement);
   }
 }
 
+// These classes act as markers for use with 'instanceof'.
 class KeyBindingsTabInfo extends ViewerElementTabInfo {
   constructor(public keyBindingsElement: EtKeyBindingsTab) {
     super(keyBindingsElement);
-  }
-
-  setConfig(config: Config): void {
-    this.keyBindingsElement.config = config;
   }
 }
 
@@ -329,7 +320,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
   
   private _tabIdCounter: number;
   
-  private _config: Config;
+  private _configManager: ConfigManager;
 
   private _themes: ThemeTypes.ThemeInfo[];
 
@@ -339,7 +330,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
     this._log = new Logger("ExtratermMainWebUI");
     this._tabInfo = [];
     this._tabIdCounter = 0;
-    this._config = null;
+    this._configManager = null;
     this._themes = [];
     this._split = false;
   }
@@ -460,9 +451,8 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
     }
   }
   
-  set config(config: Config) {
-    this._config = config;
-    this._tabInfo.forEach( (tabInfo) => tabInfo.setConfig(config));
+  setConfigManager(configManager: ConfigManager): void {
+    this._configManager = configManager;
   }
   
   set themes(themes: ThemeTypes.ThemeInfo[]) {
@@ -636,8 +626,9 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
    */
   newTerminalTab(position: TabPosition): number {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
+    newTerminal.setConfigManager(this._configManager);
     newTerminal.frameFinder = this._frameFinder.bind(this);
-    const tabInfo = new TerminalTabInfo(newTerminal, null);
+    const tabInfo = new TerminalTabInfo(this._configManager, newTerminal, null);
     this._addTab(position, tabInfo);
     
     tabInfo.contentDiv.appendChild(newTerminal);
@@ -677,10 +668,8 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
       this.focusTab(this.openViewerTab(tabInfo.position, ev.detail.embeddedViewer));
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
-
-    tabInfo.setConfig(this._config);
     
-    const sessionProfile = this._config.expandedProfiles[0];
+    const sessionProfile = this._configManager.getConfig().expandedProfiles[0];
     const newEnv = _.cloneDeep(process.env);
     const expandedExtra = sessionProfile.extraEnv;
 
@@ -719,7 +708,6 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
   
   _openViewerTabInfo(position: TabPosition, tabInfo: ViewerElementTabInfo, viewerElement: ViewerElement): number {
     viewerElement.focusable = true;
-    tabInfo.setConfig(this._config);
     this._addTab(position, tabInfo);
     tabInfo.contentDiv.appendChild(viewerElement);
 
@@ -727,10 +715,6 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
       this._tabInfo.forEach( tabInfo2 => {
         tabInfo2.lastFocus = tabInfo2 === tabInfo;
       });
-    });
-
-    viewerElement.addEventListener(GeneralEvents.EVENT_CONFIG_CHANGE, (ev: CustomEvent) => {
-      webipc.sendConfig(ev.detail.data);
     });
 
     tabInfo.updateTabTitle();
@@ -744,6 +728,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
       this.focusTab(settingsTabs[0].id);
     } else {
       const viewerElement = <EtSettingsTab> document.createElement(EtSettingsTab.TAG_NAME);
+      viewerElement.setConfigManager(this._configManager);
       const tabInfo = new SettingsTabInfo(viewerElement, this._themes);
       this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
     }
@@ -755,6 +740,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
       this.focusTab(keyBindingsTabs[0].id);
     } else {
       const viewerElement = <EtKeyBindingsTab> document.createElement(EtKeyBindingsTab.TAG_NAME);
+      viewerElement.setConfigManager(this._configManager);
       const tabInfo = new KeyBindingsTabInfo(viewerElement);
       this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
     }

@@ -45,6 +45,9 @@ import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 
 import config = require('./config');
+type Config = config.Config;
+type ConfigManager = config.ConfigManager;
+
 type CommandLineAction = config.CommandLineAction;
 
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
@@ -176,6 +179,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
   private _mode: Mode;
   private _selectionPreviousLineCount: number;
   
+  private _configManager: ConfigManager;
   private _blinkingCursor: boolean;
   private _title: string;
   private _commandLineActions: CommandLineAction[];
@@ -218,6 +222,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
     
     this._mode = Mode.DEFAULT;
     
+    this._configManager = null;
     this._blinkingCursor = false;
     this._commandLineActions = [];
     this._scrollbackSize = 10000;
@@ -275,6 +280,10 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
    */
   get rows(): number {
     return this._rows;
+  }
+
+  setConfigManager(configManager: ConfigManager): void {
+    this._configManager = configManager;
   }
   
   set scrollbackSize(scrollbackSize: number) {
