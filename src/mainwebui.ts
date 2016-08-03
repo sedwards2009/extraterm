@@ -16,7 +16,6 @@ import EtViewerTab = require('./viewertab');
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
-import KeyBindingsElementBase = require('./keybindingselementbase');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeTypes = require('./theme');
 
@@ -38,7 +37,9 @@ import he = require('he');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 
-import KeyBindingManager = require('./keybindingmanager');
+import keybindingmanager = require('./keybindingmanager');
+type KeyBindingManager = keybindingmanager.KeyBindingManager;
+
 import GeneralEvents = require('./generalevents');
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
@@ -279,7 +280,7 @@ let themeCss = "";
  * Top level UI component for a normal terminal window
  *
  */
-class ExtratermMainWebUI extends KeyBindingsElementBase {
+class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager {
   
   //-----------------------------------------------------------------------
   // Statics
@@ -321,6 +322,8 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
   private _tabIdCounter: number;
   
   private _configManager: ConfigManager;
+  
+  private _keyBindingManager: KeyBindingManager;
 
   private _themes: ThemeTypes.ThemeInfo[];
 
@@ -331,6 +334,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
     this._tabInfo = [];
     this._tabIdCounter = 0;
     this._configManager = null;
+    this._keyBindingManager = null;
     this._themes = [];
     this._split = false;
   }
@@ -425,10 +429,6 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
   
   //-----------------------------------------------------------------------
   
-  //-----------------------------------------------------------------------
-  
-  //-----------------------------------------------------------------------
-  
   focus(): void {
     // Put the focus onto the last terminal that had the focus.
     const lastFocus = this._tabInfo.filter( tabInfo => tabInfo.lastFocus );
@@ -453,6 +453,10 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
   
   setConfigManager(configManager: ConfigManager): void {
     this._configManager = configManager;
+  }
+  
+  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+    this._keyBindingManager = keyBindingManager;
   }
   
   set themes(themes: ThemeTypes.ThemeInfo[]) {
@@ -627,6 +631,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
   newTerminalTab(position: TabPosition): number {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setConfigManager(this._configManager);
+    keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.frameFinder = this._frameFinder.bind(this);
     const tabInfo = new TerminalTabInfo(this._configManager, newTerminal, null);
     this._addTab(position, tabInfo);
@@ -693,7 +698,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
   openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer): number {
     const viewerElement = embeddedViewer.viewerElement;
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
-    
+    keybindingmanager.injectKeyBindingManager(viewerTab, this._keyBindingManager);
     viewerTab.title = embeddedViewer.title;
     viewerTab.tag = embeddedViewer.tag;
     
@@ -729,6 +734,8 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
     } else {
       const viewerElement = <EtSettingsTab> document.createElement(EtSettingsTab.TAG_NAME);
       viewerElement.setConfigManager(this._configManager);
+      keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
+      
       const tabInfo = new SettingsTabInfo(viewerElement, this._themes);
       this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
     }
@@ -741,6 +748,8 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
     } else {
       const viewerElement = <EtKeyBindingsTab> document.createElement(EtKeyBindingsTab.TAG_NAME);
       viewerElement.setConfigManager(this._configManager);
+      keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
+      
       const tabInfo = new KeyBindingsTabInfo(viewerElement);
       this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
     }
@@ -752,6 +761,8 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
       this.focusTab(aboutTabs[0].id);
     } else {
       const viewerElement = <EtAboutTab> document.createElement(EtAboutTab.TAG_NAME);
+      keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
+      
       const tabInfo = new AboutTabInfo(viewerElement);
       this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
     }
@@ -930,11 +941,11 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(tabInfo: TabInfo, ev: KeyboardEvent): void {
-    if (this.keyBindingContexts === null) {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingContexts() === null) {
       return;
     }
     
-    const bindings = this.keyBindingContexts.context(KEYBINDINGS_MAIN_UI);
+    const bindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
     if (bindings === null) {
       return;
     }
@@ -982,7 +993,7 @@ class ExtratermMainWebUI extends KeyBindingsElementBase {
         iconRight: "columns", label: "Split", target: target },
     ];
 
-    const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_MAIN_UI);
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)

@@ -11,7 +11,9 @@ import _ = require('lodash');
 import ThemeTypes = require('./theme');
 import ViewerElement  = require('./viewerelement');
 import ThemeableElementBase = require('./themeableelementbase');
-import KeyBindingManager = require('./keybindingmanager');
+import keybindingmanager = require('./keybindingmanager');
+type KeyBindingManager = keybindingmanager.KeyBindingManager;
+
 import Vue = require('vue');
 import domutils = require('./domutils');
 import config = require('./config');
@@ -76,7 +78,7 @@ interface ModelData {
 /**
  * The Extraterm Key Bindings tab.
  */
-class EtKeyBindingsTab extends ViewerElement {
+class EtKeyBindingsTab extends ViewerElement implements keybindingmanager.AcceptsKeyBindingManager {
   
   /**
    * The HTML tag name of this element.
@@ -101,12 +103,15 @@ class EtKeyBindingsTab extends ViewerElement {
   // WARNING: Fields like this will not be initialised automatically.
   private _configManager: ConfigManager;
 
+  private _keyBindingManager: KeyBindingManager;
+
   private _vm: VueJSInstance<ModelData>;
   
   private _data: ModelData;
 
   private _initProperties(): void {
     this._configManager = null;
+    this._keyBindingManager = null;
     this._vm = null;
     this._data = {
       selectedKeyBindings: "",
@@ -126,7 +131,17 @@ class EtKeyBindingsTab extends ViewerElement {
   // #        ####  #####  ###### #  ####  
   //
   //-----------------------------------------------------------------------
-
+  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+    if (this._keyBindingManager !== null) {
+      this._keyBindingManager.unregisterChangeListener(this);
+    }
+    
+    this._keyBindingManager = newKeyBindingManager;
+    if (this._keyBindingManager !== null) {
+      this._keyBindingManager.registerChangeListener(this, this._onKeyBindingChange.bind(this));
+    }
+  }
+  
   get awesomeIcon(): string {
     return "keyboard-o";
   }
@@ -151,11 +166,6 @@ class EtKeyBindingsTab extends ViewerElement {
     this._setConfig(configManager.getConfig());
   }
   
-  protected keyBindingContextsChanged(contexts: KeyBindingManager.KeyBindingContexts): void {
-    super.keyBindingContextsChanged(contexts);
-    this._data.keyBindingsContextsStamp = Date.now();
-  }
-
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -192,7 +202,7 @@ class EtKeyBindingsTab extends ViewerElement {
     
     Vue.config.debug = true;
     
-    const elementThis: EtKeyBindingsTab = this;
+    const elementThis = this;
     this._vm = new Vue({
       data: this._data,
       template: 
@@ -219,7 +229,7 @@ class EtKeyBindingsTab extends ViewerElement {
       computed: {
         summary: function() {
           const foo = this.keyBindingsContextsStamp;
-          return formatKeyBindingsPage(elementThis.keyBindingContexts);
+          return formatKeyBindingsPage(elementThis._keyBindingManager.getKeyBindingContexts());
         }
       }
     });
@@ -236,6 +246,9 @@ class EtKeyBindingsTab extends ViewerElement {
     if (this._configManager !== null) {
       this._configManager.unregisterChangeListener(this);
     }
+    if (this._keyBindingManager !== null) {
+      this._keyBindingManager.unregisterChangeListener(this);
+    }
     super.detachedCallback();
   }
 
@@ -250,6 +263,10 @@ class EtKeyBindingsTab extends ViewerElement {
   // #       #    # #   ##   #    #   #   ###### 
   //
   //-----------------------------------------------------------------------
+  private _onKeyBindingChange(): void {
+    this._data.keyBindingsContextsStamp = Date.now();
+  }
+
   private _setConfig(config: Config): void {
     if (this._data.keyBindingsFiles.length !== config.systemConfig.keyBindingsFiles.length) {
       this._data.keyBindingsFiles = config.systemConfig.keyBindingsFiles;
@@ -273,14 +290,14 @@ class EtKeyBindingsTab extends ViewerElement {
   }
 }
 
-function formatKeyBindingsPage(keyBindingContexts: KeyBindingManager.KeyBindingContexts): string {
+function formatKeyBindingsPage(keyBindingContexts: keybindingmanager.KeyBindingContexts): string {
   return contexts()
     .map( (contextName) => {
         return `<h2>${contextHeading(contextName)}</h2>` +  formatKeyBindingsMapping(keyBindingContexts.context(contextName));
       } ).join("");
 }
 
-function formatKeyBindingsMapping(context: KeyBindingManager.KeyBindingMapping): string {
+function formatKeyBindingsMapping(context: keybindingmanager.KeyBindingMapping): string {
   const bindings = _.clone(context.keyBindings);
   bindings.sort( (a,b): number => {
     const nameA = commandName(a.command);

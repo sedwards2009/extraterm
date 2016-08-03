@@ -14,6 +14,8 @@ import ViewerElementTypes = require('../viewerelementtypes');
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
+import keybindingmanager = require('../keybindingmanager');
+type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -65,6 +67,7 @@ class EtImageViewer extends ViewerElement {
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
+  private _keyBindingManager: KeyBindingManager;
   private _text: string;
   private _buffer: Uint8Array;
   private _mimeType: string;
@@ -85,6 +88,7 @@ class EtImageViewer extends ViewerElement {
 
   private _initProperties(): void {
     this._log = new Logger(EtImageViewer.TAG_NAME);
+    this._keyBindingManager = null;
     this._text = null;
     this._buffer = null;
     this._mimeType = null;
@@ -441,8 +445,10 @@ class EtImageViewer extends ViewerElement {
   }
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this.keyBindingContexts !== null && this._mode === ViewerElementTypes.Mode.SELECTION) {
-      const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
+    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null &&
+        this._mode === ViewerElementTypes.Mode.SELECTION) {
+          
+      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
         
         const command = keyBindings.mapEventToCommand(ev);

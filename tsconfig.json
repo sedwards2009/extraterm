@@ -43,7 +43,6 @@
         "./src/generalevents.ts",
         "./src/keybindingmanager.ts",
         "./src/keybindingmanagertest.ts",
-        "./src/keybindingselementbase.ts",
         "./src/keybindingstab.ts",
         "./src/logdecorator.ts",
         "./src/logger.ts",

@@ -304,3 +304,43 @@ export class KeyBindingContexts {
 export function loadKeyBindingsFromObject(obj: Object): KeyBindingContexts {
   return new KeyBindingContexts(obj);
 }
+
+export interface KeyBindingManager {
+  /**
+   * Gets the KeyBindingContexts object contain within.
+   *
+   * @return the KeyBindingContexts object or Null if one is not available.
+   */
+  getKeyBindingContexts(): KeyBindingContexts;
+  
+  setKeyBindingContexts(newKeyBindingContexts: KeyBindingContexts): void;
+  
+  /**
+   * Register a listener to hear when the key bindings change.
+   *
+   * @param key an opaque object which is used to identify this registration.
+   * @param onChange the function to call when the config changes.
+   */
+  registerChangeListener(key: any, onChange: () => void): void;
+  
+  /**
+   * Unregister a listener.
+   *
+   * @param key the same opaque object which was used during registerChangeListener().
+   */
+  unregisterChangeListener(key: any): void;
+}
+
+export interface AcceptsKeyBindingManager {
+  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void;
+}
+
+export function isAcceptsKeyBindingManager(instance: any): instance is AcceptsKeyBindingManager {
+  return (<AcceptsKeyBindingManager> instance).setKeyBindingManager !== undefined;
+}
+
+export function injectKeyBindingManager(instance: any, keyBindingManager: KeyBindingManager): void {
+  if (isAcceptsKeyBindingManager(instance)) {
+    instance.setKeyBindingManager(keyBindingManager);
+  }
+}

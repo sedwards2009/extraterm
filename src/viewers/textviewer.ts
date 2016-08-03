@@ -16,7 +16,9 @@ import ThemeableElementBase = require('../themeableelementbase');
 import util = require("../gui/util");
 import domutils = require("../domutils");
 import ThemeTypes = require('../theme');
-import KeyBindingManager = require('../keybindingmanager');
+import keybindingmanager = require('../keybindingmanager');
+type KeyBindingManager = keybindingmanager.KeyBindingManager;
+
 import CodeMirror = require('codemirror');
 import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
@@ -81,7 +83,8 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable {
+class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+    keybindingmanager.AcceptsKeyBindingManager {
 
   static TAG_NAME = "et-text-viewer";
   
@@ -110,6 +113,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
+  private _keyBindingManager: KeyBindingManager;
   private _text: string;
   private _mimeType: string;
   
@@ -134,6 +138,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   private _currentElementHeight: number;
 
   private _initProperties(): void {
+    this._keyBindingManager = null;
     this._text = null;
     this._mimeType = null;
     this._log = new Logger(EtTextViewer.TAG_NAME);
@@ -168,7 +173,11 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   // #        ####  #####  ###### #  ####  
   //
   //-----------------------------------------------------------------------
-
+  
+  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+    this._keyBindingManager = newKeyBindingManager;
+  }
+  
   set commandLine(commandLine: string) {
     this._commandLine = commandLine;
   }
@@ -709,11 +718,11 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   //                                                        
   // ----------------------------------------------------------------------
   private _codeMirrorKeyMap(): any {
-    if (this.keyBindingContexts === null) {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingContexts() === null) {
       return {};  // empty keymap
     }
     
-    const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
     if (keyBindings === null) {
       return {};
     }
@@ -766,8 +775,10 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
-    if (this.keyBindingContexts !== null && this._mode === ViewerElementTypes.Mode.SELECTION) {
-      const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
+    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null  &&
+        this._mode === ViewerElementTypes.Mode.SELECTION) {
+          
+      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
         if (this._executeCommand(command)) {
@@ -778,7 +789,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
             return;
           }
           if (ev.shiftKey) {
-            const evWithoutShift: KeyBindingManager.MinimalKeyboardEvent = {
+            const evWithoutShift: keybindingmanager.MinimalKeyboardEvent = {
               shiftKey: false,
               metaKey: ev.metaKey,
               altKey: ev.altKey,
@@ -828,7 +839,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       commandList = [...commandList, ...cmCommandList];
     }
     
-    const keyBindings = this.keyBindingContexts.context(KEYBINDINGS_SELECTION_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)

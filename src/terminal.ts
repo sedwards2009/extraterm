@@ -12,7 +12,6 @@ import utf8 = require('utf8');
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeableElementBase = require("./resizeableelementbase");
-import KeyBindingsElementBase = require('./keybindingselementbase');
 import ThemeableElementBase = require('./themeableelementbase');
 import ThemeTypes = require('./theme');
 import EtEmbeddedViewer = require('./embeddedviewer');
@@ -23,7 +22,9 @@ import EtTextViewer = require('./viewers/textviewer');
 import EtImageViewer = require('./viewers/imageviewer');
 import EtTipViewer = require('./viewers/tipviewer');
 import generalevents = require('./generalevents');
-import KeyBindingManager = require('./keybindingmanager');
+import keybindingmanager = require('./keybindingmanager');
+type KeyBindingManager = keybindingmanager.KeyBindingManager;
+
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
@@ -109,7 +110,8 @@ viewerClasses.push(EtTipViewer);
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequestTypes.Commandable {
+class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTypes.Commandable,
+    keybindingmanager.AcceptsKeyBindingManager {
   
   /**
    * The HTML tag name of this element.
@@ -180,6 +182,8 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
   private _selectionPreviousLineCount: number;
   
   private _configManager: ConfigManager;
+  private _keyBindingManager: KeyBindingManager;
+  
   private _blinkingCursor: boolean;
   private _title: string;
   private _commandLineActions: CommandLineAction[];
@@ -223,6 +227,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
     this._mode = Mode.DEFAULT;
     
     this._configManager = null;
+    this._keyBindingManager = null;
     this._blinkingCursor = false;
     this._commandLineActions = [];
     this._scrollbackSize = 10000;
@@ -284,6 +289,10 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
 
   setConfigManager(configManager: ConfigManager): void {
     this._configManager = configManager;
+  }
+  
+  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+    this._keyBindingManager = keyBindingManager;
   }
   
   set scrollbackSize(scrollbackSize: number) {
@@ -648,7 +657,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
   private _appendNewTerminalViewer(): void {
     // Create the TerminalViewer
     const terminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
-    
+    keybindingmanager.injectKeyBindingManager(terminalViewer, this._keyBindingManager);
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(terminalViewer);
     
@@ -1017,11 +1026,12 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._terminalViewer === null || this.keyBindingContexts === null) {
+    if (this._terminalViewer === null || this._keyBindingManager === null ||
+        this._keyBindingManager.getKeyBindingContexts() === null) {
       return;
     }
     
-    const keyBindings = this.keyBindingContexts.context(this._mode === Mode.DEFAULT
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
@@ -1088,7 +1098,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
       { id: COMMAND_OPEN_LAST_FRAME, iconRight: "external-link", label: "Open Last Frame", target: this },
     ];
 
-    const keyBindings = this.keyBindingContexts.context(this._mode === Mode.DEFAULT
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
@@ -1410,6 +1420,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
   private _createEmbeddedViewerElement(title: string): EtEmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
+    keybindingmanager.injectKeyBindingManager(el, this._keyBindingManager);
     el.awesomeIcon = 'cog';
     el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
@@ -1534,6 +1545,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
       
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
+      keybindingmanager.injectKeyBindingManager(outputTerminalViewer, this._keyBindingManager);
       newViewerElement.viewerElement = outputTerminalViewer;
       
       outputTerminalViewer.visualState = domutils.getShadowRoot(this).activeElement !== null
@@ -1660,6 +1672,7 @@ class EtTerminal extends KeyBindingsElementBase implements CommandPaletteRequest
     }
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
+    keybindingmanager.injectKeyBindingManager(dataViewer, this._keyBindingManager);
     const buffer = new Uint8Array(base64arraybuffer.decode(mimeData));
     dataViewer.setBytes(buffer, charset !== null ? mimeType + ";" + charset : mimeType);
     dataViewer.editable = true;

@@ -21,7 +21,6 @@ import CommandPaletteTypes = require('./gui/commandpalettetypes');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
 import MainWebUi = require('./mainwebui');
 import EtTerminal = require('./terminal');
-import KeyBindingsElementBase = require('./keybindingselementbase');
 import domutils = require('./domutils');
 import util = require('./gui/util');
 
@@ -41,7 +40,9 @@ import ThemeTypes = require('./theme');
 import ThemeConsumer = require('./themeconsumer');
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
-import KeyBindingManager = require('./keybindingmanager');
+import keybindingmanager = require('./keybindingmanager');
+type KeyBindingManager = keybindingmanager.KeyBindingManager;
+type KeyBindingContexts = keybindingmanager.KeyBindingContexts;
 
 sourceMapSupport.install();
 
@@ -60,7 +61,7 @@ const _log = new Logger("mainweb");
  */
 
 let terminalIdCounter = 0;
-let keyBindingContexts: KeyBindingManager.KeyBindingContexts = null;
+let keyBindingManager: KeyBindingManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configManager: ConfigManagerImpl = null;
@@ -99,6 +100,7 @@ export function startUp(): void {
   
   // Get the Config working.
   configManager = new ConfigManagerImpl();
+  keyBindingManager = new KeyBindingManagerImpl();  // depends on the config.
   const themePromise = webipc.requestConfig().then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
@@ -132,6 +134,7 @@ export function startUp(): void {
 
     mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
     mainWebUi.setConfigManager(configManager);
+    keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
       <div class="space"></div>
       <cb-dropdown>
@@ -359,8 +362,8 @@ function handleClipboardRead(msg: Messages.Message): void {
  * 
  */
 function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void> {
-  keyBindingContexts = KeyBindingManager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts);
-  KeyBindingsElementBase.setKeyBindingContexts(keyBindingContexts);
+  const keyBindingContexts = keybindingmanager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts);
+  keyBindingManager.setKeyBindingContexts(keyBindingContexts);
   
   if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize ||
       oldConfig.terminalFont !== newConfig.terminalFont) {
@@ -524,5 +527,44 @@ class ConfigManagerImpl implements ConfigManager {
     for (const tup of listenerList) {
       tup.onChange();
     }
+  }
+}
+
+class KeyBindingManagerImpl {
+  
+  private _keyBindingContexts: KeyBindingContexts = null;
+  
+  private _listenerList: {key: any; onChange: ()=> void; }[] = [];  // Immutable list
+  
+  getKeyBindingContexts(): KeyBindingContexts {
+    return this._keyBindingContexts;
+  }
+  
+  setKeyBindingContexts(newKeyBindingContexts: KeyBindingContexts): void {
+    this._keyBindingContexts = newKeyBindingContexts;
+    
+    const listenerList = this._listenerList;
+    for (const tup of listenerList) {
+      tup.onChange();
+    }
+  }
+  
+  /**
+   * Register a listener to hear when the key bindings change.
+   *
+   * @param key an opaque object which is used to identify this registration.
+   * @param onChange the function to call when the config changes.
+   */
+  registerChangeListener(key: any, onChange: () => void): void {
+    this._listenerList = [...this._listenerList, {key, onChange}];
+  }
+  
+  /**
+   * Unregister a listener.
+   *
+   * @param key the same opaque object which was used during registerChangeListener().
+   */
+  unregisterChangeListener(key: any): void {
+    this._listenerList = this._listenerList.filter( (tup) => tup.key !== key);
   }
 }

@@ -8,8 +8,7 @@ import fs  = require('fs');
 import util = require('./gui/util');
 import virtualscrollarea = require('./virtualscrollarea');
 import ViewerElementTypes = require('./viewerelementtypes');
-import KeyBindingsElementBase = require('./keybindingselementbase');
-import KeyBindingManager = require('./keybindingmanager');
+import ThemeableElementBase = require('./themeableelementbase');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -17,7 +16,7 @@ type Mode = ViewerElementTypes.Mode;
 type VisualState = ViewerElementTypes.VisualState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
-abstract class ViewerElement extends KeyBindingsElementBase implements VirtualScrollable {
+abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable {
   
   static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
 
