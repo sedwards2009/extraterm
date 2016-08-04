@@ -6,6 +6,7 @@
 
 import fs  = require('fs');
 import crypto = require('crypto');
+import _ = require('lodash');
 import base64arraybuffer = require('base64-arraybuffer');
 import utf8 = require('utf8');
 
@@ -88,6 +89,7 @@ const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
 
 const CLASS_SELECTION_MODE = "selection-mode";
 const SCROLL_STEP = 1;
+const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 
 const enum ApplicationMode {
   APPLICATION_MODE_NONE = 0,
@@ -519,7 +521,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
     
-    this._appendMimeViewer(EtTipViewer.MIME_TYPE, "Tip", "utf8", "");
+    this._showTip();
     this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
     
     this._scheduleResize();
@@ -585,6 +587,25 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
   private _getDocument(): Document {
     return this.ownerDocument;
+  }
+  
+  private _showTip(): void {
+    const config = this._configManager.getConfig();
+    switch (config.showTips) {
+      case 'always':
+        break;
+      case 'never':
+        return;
+      case 'daily':
+        if ( (Date.now() - config.tipTimestamp) > MILLIS_PER_DAY) {
+          const newConfig = _.cloneDeep(config);
+          newConfig.tipTimestamp = Date.now();
+          this._configManager.setConfig(newConfig);
+        } else {
+          return;
+        }
+    }
+    this._appendMimeViewer(EtTipViewer.MIME_TYPE, "Tip", "utf8", "");
   }
   
   private _handleFocus(event: FocusEvent): void {

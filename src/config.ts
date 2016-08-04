@@ -20,7 +20,9 @@ export interface Config {
   commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;
   keyBindingsFilename?: string;
+  
   showTips?: ShowTipsStrEnum;
+  tipTimestamp?: number;
 
   sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
   expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.

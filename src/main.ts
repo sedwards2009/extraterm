@@ -46,12 +46,12 @@ type EnvironmentMap = ptyconnector.EnvironmentMap;
 const PtyConnectorFactory = require("./ptyconnectorfactory");
 
 // Interfaces.
-import configInterfaces = require('./config');
-type Config = configInterfaces.Config;
-type CommandLineAction = configInterfaces.CommandLineAction;
-type SessionProfile = configInterfaces.SessionProfile;
-type SystemConfig = configInterfaces.SystemConfig;
-type FontInfo = configInterfaces.FontInfo;
+import config_ = require('./config');
+type Config = config_.Config;
+type CommandLineAction = config_.CommandLineAction;
+type SessionProfile = config_.SessionProfile;
+type SystemConfig = config_.SystemConfig;
+type FontInfo = config_.FontInfo;
 
 const LOG_FINE = false;
 
@@ -262,7 +262,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
     if (profiles !== undefined && profiles !== null) {
       profiles.forEach( profile => {
         switch (profile.type) {
-          case configInterfaces.SESSION_TYPE_CYGWIN:
+          case config_.SESSION_TYPE_CYGWIN:
             let templateProfile = canonicalCygwinProfile;
             
             if (profile.cygwinDir !== undefined && profile.cygwinDir !== null) {
@@ -273,7 +273,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
             if (templateProfile !== null) {
               const expandedProfile: SessionProfile = {
                 name: profile.name,
-                type: configInterfaces.SESSION_TYPE_CYGWIN,
+                type: config_.SESSION_TYPE_CYGWIN,
                 command: profile.command !== undefined ? profile.command : templateProfile.command,
                 arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
                 extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv,
@@ -287,12 +287,12 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
           
             break;
             
-          case configInterfaces.SESSION_TYPE_BABUN:
+          case config_.SESSION_TYPE_BABUN:
             break;
             
           default:
             log(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
-              `It is neither ${configInterfaces.SESSION_TYPE_CYGWIN} nor ${configInterfaces.SESSION_TYPE_BABUN}.`);
+              `It is neither ${config_.SESSION_TYPE_CYGWIN} nor ${config_.SESSION_TYPE_BABUN}.`);
             break;
         }
 
@@ -310,11 +310,11 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
         switch (profile.type) {
           case undefined:
           case null:
-          case configInterfaces.SESSION_TYPE_UNIX:
+          case config_.SESSION_TYPE_UNIX:
             let templateProfile = canonicalProfile;
             const expandedProfile: SessionProfile = {
               name: profile.name,
-              type: configInterfaces.SESSION_TYPE_UNIX,
+              type: config_.SESSION_TYPE_UNIX,
               command: profile.command !== undefined ? profile.command : templateProfile.command,
               arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
               extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv
@@ -338,7 +338,7 @@ function defaultProfile(): SessionProfile {
   const shell = readDefaultUserShell(process.env.USER);
   return {
     name: "Default",
-    type: configInterfaces.SESSION_TYPE_UNIX,
+    type: config_.SESSION_TYPE_UNIX,
     command: shell,
     arguments: process.platform === "darwin" ? ["-l"] : [], // OSX expects shells to be login shells. Linux etc doesn't
     extraEnv: { }
@@ -402,7 +402,7 @@ function defaultCygwinProfile(cygwinDir: string): SessionProfile {
   
   return {
     name: "Cygwin",
-    type: configInterfaces.SESSION_TYPE_CYGWIN,
+    type: config_.SESSION_TYPE_CYGWIN,
     command: defaultShell,
     arguments: ["-l"],
     extraEnv: { HOME: homeDir },
@@ -592,16 +592,21 @@ function readConfigurationFile(): Config {
   return config;
 }
 
+function defaultValue<T>(value: T, defaultValue: T): T {
+  return value == null ? defaultValue : value;
+}
+
 function setConfigDefaults(config: Config): void {
-  config.systemConfig = config.systemConfig === undefined ? null : config.systemConfig;
-  config.expandedProfiles = config.expandedProfiles === undefined ? null : config.expandedProfiles;
-  config.blinkingCursor = config.blinkingCursor === undefined ? false : config.blinkingCursor;
-  config.scrollbackLines = config.scrollbackLines === undefined ? 500000 : config.scrollbackLines;
-  config.showTips = config.showTips === undefined ? 'always' : config.showTips;
+  config.systemConfig = defaultValue(config.systemConfig, null);
+  config.expandedProfiles = defaultValue(config.expandedProfiles, null);
+  config.blinkingCursor = defaultValue(config.blinkingCursor, false);
+  config.scrollbackLines = defaultValue(config.scrollbackLines, 500000);
+  config.showTips = defaultValue<config_.ShowTipsStrEnum>(config.showTips, 'always');
+  config.tipTimestamp = defaultValue(config.tipTimestamp, 0);
   
-  config.themeTerminal = config.themeTerminal == null ? "default" : config.themeTerminal;
-  config.themeSyntax = config.themeSyntax == null ? "default" : config.themeSyntax;
-  config.themeGUI = config.themeGUI == null ? "default" : config.themeGUI;
+  config.themeTerminal = defaultValue(config.themeTerminal, "default");
+  config.themeSyntax = defaultValue(config.themeSyntax, "default");
+  config.themeGUI = defaultValue(config.themeGUI, "default");
 
   if (config.commandLineActions === undefined) {
     const defaultCLA: CommandLineAction[] = [
@@ -676,8 +681,8 @@ function unregisterThemeChangeListener(config: Config): void {
   themeManager.unregisterChangeListener(themeIdList);
 }
 
-function scanKeyBindingFiles(keyBindingsDir: string): configInterfaces.KeyBindingInfo[] {
-  const result: configInterfaces.KeyBindingInfo[] = [];
+function scanKeyBindingFiles(keyBindingsDir: string): config_.KeyBindingInfo[] {
+  const result: config_.KeyBindingInfo[] = [];
   if (fs.existsSync(keyBindingsDir)) {
     const contents = fs.readdirSync(keyBindingsDir);
     contents.forEach( (item) => {
@@ -688,7 +693,7 @@ function scanKeyBindingFiles(keyBindingsDir: string): configInterfaces.KeyBindin
           const keyBindingJSON = JSON.parse(infoStr);
           const name = keyBindingJSON.name;
           if (name !== undefined) {
-            const info: configInterfaces.KeyBindingInfo = {
+            const info: config_.KeyBindingInfo = {
               name: name,
               filename: item
             };
@@ -864,6 +869,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   const incomingConfig = msg.config;
   const newConfig = _.cloneDeep(config);
   newConfig.showTips = incomingConfig.showTips;
+  newConfig.tipTimestamp = incomingConfig.tipTimestamp;
   newConfig.blinkingCursor = incomingConfig.blinkingCursor;
   newConfig.scrollbackLines = incomingConfig.scrollbackLines;
   newConfig.terminalFontSize = incomingConfig.terminalFontSize;
