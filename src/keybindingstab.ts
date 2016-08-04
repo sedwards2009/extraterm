@@ -78,7 +78,8 @@ interface ModelData {
 /**
  * The Extraterm Key Bindings tab.
  */
-class EtKeyBindingsTab extends ViewerElement implements keybindingmanager.AcceptsKeyBindingManager {
+class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigManager,
+    keybindingmanager.AcceptsKeyBindingManager {
   
   /**
    * The HTML tag name of this element.

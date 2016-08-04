@@ -597,7 +597,8 @@ function setConfigDefaults(config: Config): void {
   config.expandedProfiles = config.expandedProfiles === undefined ? null : config.expandedProfiles;
   config.blinkingCursor = config.blinkingCursor === undefined ? false : config.blinkingCursor;
   config.scrollbackLines = config.scrollbackLines === undefined ? 500000 : config.scrollbackLines;
-
+  config.showTips = config.showTips === undefined ? 'always' : config.showTips;
+  
   config.themeTerminal = config.themeTerminal == null ? "default" : config.themeTerminal;
   config.themeSyntax = config.themeSyntax == null ? "default" : config.themeSyntax;
   config.themeGUI = config.themeGUI == null ? "default" : config.themeGUI;
@@ -862,6 +863,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   // Copy in the updated fields.
   const incomingConfig = msg.config;
   const newConfig = _.cloneDeep(config);
+  newConfig.showTips = incomingConfig.showTips;
   newConfig.blinkingCursor = incomingConfig.blinkingCursor;
   newConfig.scrollbackLines = incomingConfig.scrollbackLines;
   newConfig.terminalFontSize = incomingConfig.terminalFontSize;

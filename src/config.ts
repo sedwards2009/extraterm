@@ -7,6 +7,8 @@ import util = require('./gui/util');
 import os = require('os');
 import _ = require('lodash');
 
+export type ShowTipsStrEnum = 'always' | 'daily' | 'never';
+
 export interface Config {
   blinkingCursor?: boolean;
   themeTerminal?: string;
@@ -18,6 +20,7 @@ export interface Config {
   commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;
   keyBindingsFilename?: string;
+  showTips?: ShowTipsStrEnum;
 
   sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
   expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.
@@ -125,4 +128,18 @@ export interface ConfigManager {
    * @param newConfig the new config object.
    */
   setConfig(newConfig: Config): void;
+}
+
+export interface AcceptsConfigManager {
+  setConfigManager(newConfigManager: ConfigManager): void;
+}
+
+export function isAcceptsConfigManager(instance: any): instance is AcceptsConfigManager {
+  return (<AcceptsConfigManager> instance).setConfigManager !== undefined;
+}
+
+export function injectConfigManager(instance: any, configManager: ConfigManager): void {
+  if (isAcceptsConfigManager(instance)) {
+    instance.setConfigManager(configManager);
+  }
 }

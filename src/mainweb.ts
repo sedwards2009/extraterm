@@ -133,7 +133,7 @@ export function startUp(): void {
     });
 
     mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
-    mainWebUi.setConfigManager(configManager);
+    config.injectConfigManager(mainWebUi, configManager);
     keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
       <div class="space"></div>
@@ -518,7 +518,7 @@ class ConfigManagerImpl implements ConfigManager {
   }
   
   /**
-   * Seta new configuration object as the application wide 
+   * Set a new configuration object as the application wide 
    */
   setNewConfig(newConfig: Config): void {
     this._config = newConfig;

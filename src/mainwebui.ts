@@ -280,7 +280,8 @@ let themeCss = "";
  * Top level UI component for a normal terminal window
  *
  */
-class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager {
+class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
+    config.AcceptsConfigManager {
   
   //-----------------------------------------------------------------------
   // Statics
@@ -630,7 +631,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
    */
   newTerminalTab(position: TabPosition): number {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
-    newTerminal.setConfigManager(this._configManager);
+    config.injectConfigManager(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.frameFinder = this._frameFinder.bind(this);
     const tabInfo = new TerminalTabInfo(this._configManager, newTerminal, null);
@@ -733,7 +734,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       this.focusTab(settingsTabs[0].id);
     } else {
       const viewerElement = <EtSettingsTab> document.createElement(EtSettingsTab.TAG_NAME);
-      viewerElement.setConfigManager(this._configManager);
+      config.injectConfigManager(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
       const tabInfo = new SettingsTabInfo(viewerElement, this._themes);
@@ -747,7 +748,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       this.focusTab(keyBindingsTabs[0].id);
     } else {
       const viewerElement = <EtKeyBindingsTab> document.createElement(EtKeyBindingsTab.TAG_NAME);
-      viewerElement.setConfigManager(this._configManager);
+      config.injectConfigManager(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
       const tabInfo = new KeyBindingsTabInfo(viewerElement);

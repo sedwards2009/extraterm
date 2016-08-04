@@ -44,6 +44,9 @@ interface IdentifiableCommandLineAction extends CommandLineAction, Identifiable 
 }
 
 interface ModelData {
+  showTips: config.ShowTipsStrEnum;
+  showTipsOptions:{ id: config.ShowTipsStrEnum, name: string; }[];
+  
   scrollbackLines: number;
   commandLineActions: IdentifiableCommandLineAction[];
   terminalFontSize: number;
@@ -83,7 +86,7 @@ function stripIds(list: Identifiable[]): void {
   });  
 }
 
-class EtSettingsTab extends ViewerElement {
+class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager {
   
   static TAG_NAME = "et-settings-tab";
   
@@ -115,6 +118,8 @@ class EtSettingsTab extends ViewerElement {
     this._configManager = null;
     this._fontOptions = [];
     this._data = {
+      showTips: 'always',
+      showTipsOptions: [ { id: 'always', name: 'Everytime' }, { id: 'daily', name: 'Daily'}, { id: 'never', name: 'Never'} ],
       scrollbackLines: 10000,
       terminalFontSize: 12,
       commandLineActions: [],
@@ -170,6 +175,11 @@ class EtSettingsTab extends ViewerElement {
   }
   
   private _setConfig(config: Config): void {
+    
+    if (this._data.showTips !== config.showTips) {
+      this._data.showTips = config.showTips;
+    }
+    
     // We take care to only update things which have actually changed.
     if (this._data.scrollbackLines !== config.scrollbackLines) {
       this._data.scrollbackLines = config.scrollbackLines;
@@ -266,6 +276,19 @@ class EtSettingsTab extends ViewerElement {
 `<div id='${ID_SETTINGS}' className='settingspane'>
   <h2>Settings</h2>
   <div className='settingsform'>
+  
+    <div class="form-horizontal">
+      <div class="form-group">
+        <label for="tips" class="col-sm-2 control-label">Show Tips:</label>
+        <div class="input-group col-sm-4">
+          <select class="form-control" id="tips" v-model="showTips">
+            <option v-for="option in showTipsOptions" v-bind:value="option.id">
+              {{ option.name }}
+            </option>
+          </select>
+        </div>
+      </div>  
+    </div>
   
     <div class="form-horizontal">
       <div class="form-group">
@@ -464,6 +487,7 @@ class EtSettingsTab extends ViewerElement {
     const model = _.cloneDeep(newVal);
     stripIds(model.commandLineActions);
     
+    newConfig.showTips = model.showTips;
     newConfig.scrollbackLines = model.scrollbackLines;
     newConfig.terminalFontSize = model.terminalFontSize;
     newConfig.terminalFont = model.terminalFont;

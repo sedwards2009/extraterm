@@ -7,6 +7,9 @@ import electron = require('electron');
 const shell = electron.shell;
 import _  = require('lodash');
 import fs = require('fs');
+import config = require('../config');
+type ConfigManager = config.ConfigManager;
+
 import ViewerElement = require("../viewerelement");
 import ThemeableElementBase = require('../themeableelementbase');
 import ThemeTypes = require('../theme');
@@ -29,6 +32,7 @@ const ID_CONTENT = "ID_CONTENT";
 const ID_CONTROLS = "ID_CONTROLS";
 const ID_PREVIOUS_BUTTON = "ID_PREVIOUS_BUTTON";
 const ID_NEXT_BUTTON = "ID_NEXT_BUTTON";
+const ID_SHOW_TIPS = "ID_SHOW_TIPS";
 
 const KEYBINDINGS_SELECTION_MODE = "image-viewer";
 
@@ -52,7 +56,7 @@ const log = LogDecorator;
 let registered = false;
 let instanceIdCounter = 0;
 
-class EtTipViewer extends ViewerElement {
+class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager {
 
   static TAG_NAME = "et-tip-viewer";
   
@@ -79,12 +83,15 @@ class EtTipViewer extends ViewerElement {
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
   
+  private _configManager: ConfigManager;
+  
   private _height: number;
   
   private _tipIndex: number;
   
   private _initProperties(): void {
     this._log = new Logger(EtTipViewer.TAG_NAME);
+    this._configManager = null;
     this._height = 0;
     this._tipIndex = 0;
   }
@@ -100,7 +107,17 @@ class EtTipViewer extends ViewerElement {
   // #        ####  #####  ###### #  ####  
   //
   //-----------------------------------------------------------------------
-
+  setConfigManager(newConfigManager: ConfigManager): void {
+    if (this._configManager !== null) {
+      this._configManager.unregisterChangeListener(this);
+    }
+    
+    this._configManager = newConfigManager;
+    if (this._configManager !== null) {
+      this._configManager.registerChangeListener(this, this._configChanged.bind(this));
+    }
+  }
+  
   get title(): string {
     return "Tip";
   }
@@ -217,6 +234,24 @@ class EtTipViewer extends ViewerElement {
       this._tipIndex = (this._tipIndex + this._getTipCount() - 1) % this._getTipCount();
       this._setTipHTML(this._getTipHTML(this._tipIndex));
     });
+    
+    const showTipsSelect = <HTMLSelectElement> domutils.getShadowId(this, ID_SHOW_TIPS);
+    showTipsSelect.value = this._configManager.getConfig().showTips;
+    showTipsSelect.addEventListener('change', () => {
+      const newConfig = _.cloneDeep(this._configManager.getConfig());
+      newConfig.showTips = <config.ShowTipsStrEnum> showTipsSelect.value;
+      this._configManager.setConfig(newConfig);
+    });
+  }
+  
+  /**
+   * Custom Element 'detached' life cycle hook.
+   */
+  detachedCallback(): void {
+    if (this._configManager !== null) {
+      this._configManager.unregisterChangeListener(this);
+    }
+    super.detachedCallback();
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -254,7 +289,7 @@ class EtTipViewer extends ViewerElement {
           </div>
           <div class="form-group form-group-sm">
             <label for="">Show tips: </label>
-            <select class="form-control">
+            <select id="${ID_SHOW_TIPS}" class="form-control">
               <option value="always">Everytime</option>
               <option value="daily">Daily</option>
               <option value="never">Never</option>
@@ -269,6 +304,11 @@ class EtTipViewer extends ViewerElement {
     return window.document.importNode(template.content, true);
   }
   
+  private _configChanged(): void {
+    const showTipsSelect = <HTMLSelectElement> domutils.getShadowId(this, ID_SHOW_TIPS);
+    showTipsSelect.value = this._configManager.getConfig().showTips;  
+  }
+
   private _setTipHTML(html: string): void {
     const contentDiv = domutils.getShadowId(this, ID_CONTENT);
     contentDiv.innerHTML = html;

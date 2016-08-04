@@ -111,7 +111,7 @@ viewerClasses.push(EtTipViewer);
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
 class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTypes.Commandable,
-    keybindingmanager.AcceptsKeyBindingManager {
+    keybindingmanager.AcceptsKeyBindingManager, config.AcceptsConfigManager {
   
   /**
    * The HTML tag name of this element.
@@ -658,6 +658,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     // Create the TerminalViewer
     const terminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
     keybindingmanager.injectKeyBindingManager(terminalViewer, this._keyBindingManager);
+    config.injectConfigManager(terminalViewer, this._configManager);
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(terminalViewer);
     
@@ -1421,6 +1422,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     // Create and set up a new command-frame.
     const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
     keybindingmanager.injectKeyBindingManager(el, this._keyBindingManager);
+    config.injectConfigManager(el, this._configManager);
     el.awesomeIcon = 'cog';
     el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
@@ -1546,6 +1548,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
       keybindingmanager.injectKeyBindingManager(outputTerminalViewer, this._keyBindingManager);
+      config.injectConfigManager(outputTerminalViewer, this._configManager);
       newViewerElement.viewerElement = outputTerminalViewer;
       
       outputTerminalViewer.visualState = domutils.getShadowRoot(this).activeElement !== null
@@ -1673,6 +1676,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
     keybindingmanager.injectKeyBindingManager(dataViewer, this._keyBindingManager);
+    config.injectConfigManager(dataViewer, this._configManager);
     const buffer = new Uint8Array(base64arraybuffer.decode(mimeData));
     dataViewer.setBytes(buffer, charset !== null ? mimeType + ";" + charset : mimeType);
     dataViewer.editable = true;
