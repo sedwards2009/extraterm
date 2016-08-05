@@ -331,7 +331,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
 
   private _keyBindingChanged(): void {
-    
+    this._setTipHTML(this._getTipHTML(this._tipIndex));
   }
 
   private _setTipHTML(html: string): void {
