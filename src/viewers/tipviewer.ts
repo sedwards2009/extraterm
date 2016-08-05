@@ -7,8 +7,12 @@ import electron = require('electron');
 const shell = electron.shell;
 import _  = require('lodash');
 import fs = require('fs');
+import he = require('he');
 import config = require('../config');
 type ConfigManager = config.ConfigManager;
+
+import keybindingmanager = require('../keybindingmanager');
+type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import ViewerElement = require("../viewerelement");
 import ThemeableElementBase = require('../themeableelementbase');
@@ -33,6 +37,7 @@ const ID_CONTROLS = "ID_CONTROLS";
 const ID_PREVIOUS_BUTTON = "ID_PREVIOUS_BUTTON";
 const ID_NEXT_BUTTON = "ID_NEXT_BUTTON";
 const ID_SHOW_TIPS = "ID_SHOW_TIPS";
+const CLASS_KEYCAP = "CLASS_KEYCAP";
 
 const KEYBINDINGS_SELECTION_MODE = "image-viewer";
 
@@ -45,7 +50,7 @@ const tipData = [
   <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#shell-integration">this guide</a>.</p>`,
   
   `<h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip 2: Command Palette</h2>
-    <p>Extraterm has a pop up Command Palette where all relevant commands can be seen, searched and executed.
+    <p>Extraterm has a pop up Command Palette <span class="CLASS_KEYCAP" data-context="terminal-viewer" data-command="openCommandPalette"></span> where all relevant commands can be seen, searched and executed.
     </p>`,
     
   `<h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip 3: Frames</h2>`
@@ -56,7 +61,7 @@ const log = LogDecorator;
 let registered = false;
 let instanceIdCounter = 0;
 
-class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager {
+class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, keybindingmanager.AcceptsKeyBindingManager {
 
   static TAG_NAME = "et-tip-viewer";
   
@@ -85,6 +90,8 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager {
   
   private _configManager: ConfigManager;
   
+  private _keyBindingManager: KeyBindingManager;
+  
   private _height: number;
   
   private _tipIndex: number;
@@ -92,6 +99,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager {
   private _initProperties(): void {
     this._log = new Logger(EtTipViewer.TAG_NAME);
     this._configManager = null;
+    this._keyBindingManager = null;
     this._height = 0;
     this._tipIndex = 0;
   }
@@ -115,6 +123,17 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager {
     this._configManager = newConfigManager;
     if (this._configManager !== null) {
       this._configManager.registerChangeListener(this, this._configChanged.bind(this));
+    }
+  }
+
+  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+    if (this._keyBindingManager !== null) {
+      this._keyBindingManager.unregisterChangeListener(this);
+    }
+    
+    this._keyBindingManager = newKeyBindingManager;
+    if (this._keyBindingManager !== null) {
+      this._keyBindingManager.registerChangeListener(this, this._keyBindingChanged.bind(this));
     }
   }
   
@@ -309,9 +328,15 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager {
     showTipsSelect.value = this._configManager.getConfig().showTips;  
   }
 
+  private _keyBindingChanged(): void {
+    
+  }
+
   private _setTipHTML(html: string): void {
     const contentDiv = domutils.getShadowId(this, ID_CONTENT);
     contentDiv.innerHTML = html;
+
+    this._substituteKeycaps(contentDiv);
     
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     const rect = containerDiv.getBoundingClientRect();
@@ -319,6 +344,26 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager {
     this._adjustHeight(this._height);
     
     this._emitVirtualResizeEvent();
+  }
+
+  private _substituteKeycaps(contentDiv: HTMLElement): void {
+    // Replace the kbd elements with the requested keyboard short cuts.
+    const kbdElements = contentDiv.querySelectorAll("span."+CLASS_KEYCAP);
+    domutils.toArray(kbdElements).forEach( (kbd) => {
+      const dataContext = kbd.getAttribute("data-context");
+      const dataCommand = kbd.getAttribute("data-command");
+      if (dataContext !== null && dataCommand !== null) {
+        const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(dataContext);
+        if (keyBindings != null) {
+          const shortcut = keyBindings.mapCommandToKeyBinding(dataCommand);
+          if (shortcut !== null) {
+            kbd.innerHTML = `<span>${he.encode(shortcut)}</span>`;
+          } else {
+            kbd.parentNode.removeChild(kbd);
+          }
+        }
+      }      
+    });
   }
 
   private _getTipHTML(tipNumber: number): string {

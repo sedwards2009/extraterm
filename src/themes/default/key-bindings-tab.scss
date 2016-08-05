@@ -6,6 +6,7 @@
 
 @import "extraterm-scrollbars";
 @import "bootstrap/_variables";
+@import "extraterm-keycaps";
 
 #ID_KEY_BINDINGS {
   height: 100%;
@@ -14,17 +15,5 @@
 }
 
 .CLASS_KEYCAP {
-  display: inline-block;
-  color: #333333;
-  border: 1px solid #cccccc;
-  border-bottom: 2px solid #cccccc;
-  border-radius: 4px;
-  padding: 0px 2px;
-  background-color: #ffffff;
-}
-
-.CLASS_KEYCAP > SPAN {
-  font-size: 80%;
-  background-color: #f7f7f7;
-  padding: 0px 5px;
+  @include keycap;
 }

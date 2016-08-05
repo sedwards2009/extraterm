@@ -3,6 +3,7 @@
  */
 
 @import "bootstrap/_variables";
+@import "extraterm-keycaps";
 
 #ID_CONTAINER {
   font-family: $font-family-base;
@@ -20,4 +21,8 @@
 
 #ID_CONTROLS > div:last-child {
   float: right;
+}
+
+SPAN.CLASS_KEYCAP {
+  @include keycap;
 }
