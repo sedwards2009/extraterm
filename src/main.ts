@@ -603,6 +603,7 @@ function setConfigDefaults(config: Config): void {
   config.scrollbackLines = defaultValue(config.scrollbackLines, 500000);
   config.showTips = defaultValue<config_.ShowTipsStrEnum>(config.showTips, 'always');
   config.tipTimestamp = defaultValue(config.tipTimestamp, 0);
+  config.tipCounter = defaultValue(config.tipCounter, 0);
   
   config.themeTerminal = defaultValue(config.themeTerminal, "default");
   config.themeSyntax = defaultValue(config.themeSyntax, "default");
@@ -870,6 +871,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   const newConfig = _.cloneDeep(config);
   newConfig.showTips = incomingConfig.showTips;
   newConfig.tipTimestamp = incomingConfig.tipTimestamp;
+  newConfig.tipCounter = incomingConfig.tipCounter;
   newConfig.blinkingCursor = incomingConfig.blinkingCursor;
   newConfig.scrollbackLines = incomingConfig.scrollbackLines;
   newConfig.terminalFontSize = incomingConfig.terminalFontSize;

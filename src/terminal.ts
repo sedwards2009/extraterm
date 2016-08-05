@@ -597,15 +597,16 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       case 'never':
         return;
       case 'daily':
-        if ( (Date.now() - config.tipTimestamp) > MILLIS_PER_DAY) {
-          const newConfig = _.cloneDeep(config);
-          newConfig.tipTimestamp = Date.now();
-          this._configManager.setConfig(newConfig);
-        } else {
+        if ( (Date.now() - config.tipTimestamp) < MILLIS_PER_DAY) {
           return;
         }
     }
+
     this._appendMimeViewer(EtTipViewer.MIME_TYPE, "Tip", "utf8", "");
+    const newConfig = _.cloneDeep(config);
+    newConfig.tipTimestamp = Date.now();
+    newConfig.tipCounter = newConfig.tipCounter + 1;
+    this._configManager.setConfig(newConfig);
   }
   
   private _handleFocus(event: FocusEvent): void {

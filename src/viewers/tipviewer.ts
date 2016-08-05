@@ -220,6 +220,8 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   attachedCallback(): void {
     super.attachedCallback();
     
+    this._tipIndex = this._configManager.getConfig().tipCounter % this._getTipCount();
+    
     if (domutils.getShadowRoot(this) !== null) {
       return;
     }
@@ -240,7 +242,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
       }
     });
     
-    this._setTipHTML(this._getTipHTML(0));
+    this._setTipHTML(this._getTipHTML(this._tipIndex));
     
     const nextButton = domutils.getShadowId(this, ID_NEXT_BUTTON);
     nextButton.addEventListener('click', () => {

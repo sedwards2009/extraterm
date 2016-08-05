@@ -22,6 +22,7 @@ export interface Config {
   keyBindingsFilename?: string;
   
   showTips?: ShowTipsStrEnum;
+  tipCounter?: number;
   tipTimestamp?: number;
 
   sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
