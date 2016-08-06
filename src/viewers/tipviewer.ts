@@ -347,6 +347,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     contentDiv.innerHTML = html;
 
     this._substituteKeycaps(contentDiv);
+    this._fixImgRelativeUrls(contentDiv);
     
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     const rect = containerDiv.getBoundingClientRect();
@@ -373,6 +374,15 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
           }
         }
       }      
+    });
+  }
+  
+  private _fixImgRelativeUrls(contentDiv: HTMLElement): void {
+    const imgElements = contentDiv.querySelectorAll("img");
+    const prefix = "file:///" + sourceDir.path + "/tips/";
+    domutils.toArray(imgElements).forEach( (element) => {
+      const img = <HTMLImageElement> element;
+      img.src = prefix + img.getAttribute("src");
     });
   }
 
