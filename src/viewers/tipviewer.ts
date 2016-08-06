@@ -7,7 +7,10 @@ import electron = require('electron');
 const shell = electron.shell;
 import _  = require('lodash');
 import fs = require('fs');
+import path = require('path');
 import he = require('he');
+import sourceDir = require('../sourceDir');
+
 import config = require('../config');
 type ConfigManager = config.ConfigManager;
 
@@ -43,23 +46,28 @@ const KEYBINDINGS_SELECTION_MODE = "image-viewer";
 
 const DEBUG_SIZE = true;
 
-const tipData = [
-  `<h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip 1: Shell Integration</h2>
-  <p>Extraterm's shell integration unlocks many powerful features such as frames around command output, reusing command
-  output and in-place editing of text. bash, zsh and fish shells are supported. To enable it in your shell session see
-  <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#shell-integration">this guide</a>.</p>`,
-  
-  `<h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip 2: Command Palette</h2>
-    <p>Extraterm has a pop up Command Palette <span class="CLASS_KEYCAP" data-context="terminal-viewer" data-command="openCommandPalette"></span> where all relevant commands can be seen, searched and executed.
-    </p>`,
-    
-  `<h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip 3: Frames</h2>`
-];
-
 const log = LogDecorator;
 
 let registered = false;
 let instanceIdCounter = 0;
+
+/**
+ * Load in the array of tips from src/tips/tips.html.
+ *
+ * Each separate tip in the HTML file must be enclosed by an article tag.
+ * @return the array of tip HTMLs.
+ */
+function loadTipFile(): string[] {
+  const tipPath = path.join(sourceDir.path, "tips/tips.html");
+  const tipHtml = fs.readFileSync(tipPath, {encoding: 'utf8'});
+  
+  const parts = tipHtml.split(/<article>([^]*?)<\/article>/m);
+  return parts.filter( (p, i) => {
+    return i % 2 === 1;
+  });  
+}
+
+const tipData = loadTipFile();
 
 class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, keybindingmanager.AcceptsKeyBindingManager {
 
