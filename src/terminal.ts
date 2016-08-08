@@ -1401,10 +1401,10 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     } else {
       
       let currentTerminalViewer = this._terminalViewer;
-      if (currentTerminalViewer !== null) {
-        currentTerminalViewer.deleteScreen();
+      this._emulator.moveRowsToScrollback();  // The order of these two operations is important 
+      if (currentTerminalViewer !== null) {   // because it can cause the CodeMirror instance
+        currentTerminalViewer.deleteScreen(); // to scroll around by itself.
       }
-      this._emulator.moveRowsToScrollback();
       
       this._lastCommandTerminalLine = this._terminalViewer.bookmarkLine(this._terminalViewer.lineCount() -1);
       this._lastCommandLine = cleancommand;
