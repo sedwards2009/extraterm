@@ -44,7 +44,7 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
 
 const KEYBINDINGS_SELECTION_MODE = "image-viewer";
 
-const DEBUG_SIZE = true;
+const DEBUG_SIZE = false;
 
 const log = LogDecorator;
 
