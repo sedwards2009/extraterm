@@ -2,8 +2,6 @@
 Getting Started
 ===============
 
-:warning: Extraterm is in development and not suitable for production use. This guide is currently aimed at developers and command line power users.
-
 Installation
 ------------
 Extraterm support Linux, Mac OS X and Cygwin on Windows. Download the zip file for your operating system on the [github releases page](https://github.com/sedwards2009/extraterm/releases).
@@ -25,26 +23,28 @@ When Extraterm starts it opens one tab and runs your default shell inside it. Th
 
 The plus sign next to the tab at the top of the window opens a new tab (shortcut `Ctrl+Shift+T`). Close a tab by using the little cross icon/button on the right side of the tab, or just exist the shell. `Ctrl+Shift+Q` is the shortcut for closing a tab directly.
 
-`Alt+CursorLeft` and `Alt+CursorRight` shortcuts let you move between tabs.
+Use the `Ctrl+,` and `Ctrl+.` shortcuts to move between tabs.
 
 Selections can be made with the mouse and are automatically copied to the system clipboard. `Ctrl+Shift+C` will also copy a selection. `Ctrl+Shift+V` or the middle mouse button pastes the contents of the clipboard.
 
 With `Shift+PageUp` and `Shift+PageDown` you can scroll through and view previous output which has scrolled out of view.
 
 
-Selection mode
---------------
-Extraterm features a keyboard based selection feature where you can select text in the terminal without having to reach for the mouse.
+Cursor mode
+-----------
+Extraterm features a cursor mode where you can navigate the screen and scrollback contents and select text in the terminal without having to reach for the mouse.
 
-To go into selection mode press `Ctrl+Space`. The block cursor will remain in place but there will also be a blinking vertical bar cursor. This is the selection cursor. It works the same as the cursor in a typical desktop text editor. Cursor keys work the same and `shift` + cursor creates selections. 
-`Ctrl+Shift+C` (or just `Ctrl+C`) copies the selection to the clipboard. The cursor can be placed using the mouse. 
+To go into cursor mode press `Ctrl+Shift+Space`. The block cursor will remain in place but there will also be a blinking vertical bar cursor. This is Extraterm's cursor mode cursor. It works the same as the cursor in a typical desktop text editor. Cursor keys work the same and `shift` + cursor creates selections. 
+`Ctrl+Shift+C` (or just `Ctrl+C`) copies the selection to the clipboard. The cursor can be placed using the mouse. When in cursor mode no keyboard input is sent to your shell.
 
-The `Ctrl+Space` shortcut acts as a toggle between selection mode and normal terminal mode. Press it again to go back to terminal mode.
+The `Ctrl+Shift+Space` shortcut acts as a toggle between cursor mode and normal terminal mode. Press it again to go back to terminal mode.
+
+See [Executing Commands from Cursor Mode](#executing-commands-from-cursor-mode) also.
 
 
 Shell Integration
 -----------------
-Extraterm becomes a lot more useful once the shell intergration has been set up. Currently the three major shells, bash, zshell and fish are supported.
+Extraterm becomes a lot more useful once the shell integration has been set up. Currently the three major shells, bash, zshell and fish are supported.
 
 Go to the [github releases page](https://github.com/sedwards2009/extraterm/releases) and download the `extraterms-commands` zip file. Unzip this file somewhere. Inside are a number of scripts called `setup_extraterm...`. Use your shell's source command to read the script which matches your shell.
 
@@ -62,7 +62,7 @@ When you run a command in your shell, Extraterm can now place a 'frame' around t
 
 ![Command frames in action](command_frames.png)
 
-Successful commands are shown with a green check mark on blue background. Failed commands are shown with a red background to get your attention.
+Successful commands are shown with a green check mark on a blue background. Failed commands are shown with a red background to get your attention.
 
 When scrolling back through long stretches of command output, the frame's title bar will remain visible so that you know what you are looking at.
 
@@ -73,15 +73,15 @@ The framing behaviour can be configured in the Setting tab, accessible from the 
 In the future more shortcuts and features will be added to make more use of this framing and shell integration.
 
 
-The Show Command
-----------------
-The shell integration makes a couple of new commands available. The `show` command is a general tool for showing the contents of a file inside the terminal. Currently it supports showing and highlighting many programming languages and mark up languages. It can also show the most common image formats directly in the terminal.
+The 'show' Command
+------------------
+The shell integration adds a pair of new Extraterm specific commands to your shell. The `show` command is a general tool for showing the contents of a file inside the terminal. Currently it supports showing and highlighting many programming languages and mark up languages. It can also show the most common image formats directly in the terminal.
 
 In the future this tool and the support needed in Extraterm itself will be expanded to support other file formats.
 
 
-The From Command
-----------------
+The 'from' Command
+------------------
 The `from` command is lets you use previous command output as input to a new command. Each command frame has a little tag icon in the title bar with a number. By running the `from` command with the number of the frame you want as its argument you can get the contents of that frame.
 
 For example:
@@ -105,8 +105,8 @@ Now I can go into selection mode and cut away the parts of the text I don't need
 With a shell pipe and `xargs` I can give the list of documents to the `wc` (word count) command:
 
 
-Executing Commands from Selection Mode
---------------------------------------
+Executing Commands from Cursor Mode
+-----------------------------------
 Command output in a frame can be edited directly. Extraterm also has some shortcuts to make this capability even more useful.
 
 * `Ctrl+Enter` will type the currently selected text into the shell.
@@ -121,18 +121,8 @@ See the [FAQ](faq.md) too
 
 Keyboard Shortcuts
 ------------------
-
-| Shortcut         | Action                                          |
-| --------         | ------                                          |
-| `Ctrl+Shift+T`   | Create a new tab                                |
-| `Alt+Left`       | Switch to the tab to the left                   |
-| `Alt+Right`      | Switch to the tab to the right                  |
-| `Ctrl+Shift+S`   | Split/unsplit the tabs vertically into 2 panes  |
-| `Ctrl+Shift+Q`   | Close the current tab                           |
-| `Ctrl+Tab`       | Switch between tab panes                        |
-| `Shift+PageUp`   | Scroll the terminal up                          |
-| `Shift+PageDown` | Scroll the terminal down                        |
-| `Ctrl+Shift+W`   | Delete the current frame when in selection mode |
+The list of available keyboard short cuts can be seen on the 'Key Bindings' tab which is accessible via the "hamburger
+menu" in the top right corner of the window.
 
 
 Terminal Tabs
