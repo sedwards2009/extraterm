@@ -18,6 +18,12 @@
 </article>
 
 <article>
+  <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Tabs</h2>
+  <p>
+  </p>
+</article>
+
+<article>
   <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Frames</h2>
   <p>
     Once <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#shell-integration">the shell
@@ -29,14 +35,29 @@
     <span class="CLASS_KEYCAP" data-context="terminal-default-mode" data-command="openLastFrame"></span>), plus many
     other things.
   </p>
-  <p>
-  </p>
 </article>
 
 <article>
   <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Cursor Mode</h2>
   <p>
-TODO    
+    Extraterm has two modes: <em>normal mode</em> which acts as a traditional terminal emulator, and
+    <em>cursor mode</em> which allows you to navigate the screen and the contents of the scrollback using a cursor
+    like in a text editor.
+  </p>
+  <p>
+    Enter cursor mode using <span class="CLASS_KEYCAP" data-context="terminal-default-mode" data-command="enterSelectionMode"></span>.
+    Once in cursor mode you have a blinking vertical bar cursor and keypresses are no longer sent to your shell. The
+    cursor keys works like a text editor and text can be selected using shift and copied to the clipboard  
+    <span class="CLASS_KEYCAP" data-context="terminal-selection-mode" data-command="copyToClipboard"></span>. Text
+    inside frames can also be edited in-place. Useful when you want to use previous command output to prepare your next
+    command line.
+  </p>
+  <p>
+    Exit cursor mode using <span class="CLASS_KEYCAP" data-context="terminal-selection-mode" data-command="enterNormalMode"></span>.
+  </p>
+  <p>
+    <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#cursor-mode">More detailed
+    information can be found here.</a>
   </p>
 </article>
 
@@ -48,9 +69,31 @@ TODO
 </article>
 
 <article>
-  <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Handy quote and slash edit commands</h2>
+  <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Use cursor mode and frames to prepare complex
+    commands</h2>
   <p>
-TODO    
+    Use <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#cursor-mode">cursor mode</a> and
+    <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#shell-integration">frames</a> to edit
+    text already on the screen to prepare a complex command.
+  </p>
+  <p>
+    Once your command is complete the next question is how to get the shell to execute it. One way is to select it and
+    copy it to the clipboard <span class="CLASS_KEYCAP" data-context="terminal-selection-mode"
+    data-command="copyToClipboard"></span>, exit cursor mode and then paste <span class="CLASS_KEYCAP"
+    data-context="terminal-normal-mode" data-command="pasteFromClipboard"></span> it into the shell.
+  </p>
+  <p>
+    Another, faster way is to select the text and one of these commands:
+  </p>
+  <ul>
+    <li>"type selection" command <span class="CLASS_KEYCAP" data-context="terminal-viewer"
+    data-command="typeSelection"></span> which types the selected text into the shell.</li>
+    <li>"type selection and hit enter" command <span class="CLASS_KEYCAP" data-context="terminal-viewer"
+    data-command="typeSelectionAndCr"></span> does the same thing as above but also executes the command.</li>
+  </ul>
+  <p>
+    <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/tour.md">Click here to see this technique
+      demonstrated in a short video clip.</a>
   </p>
 </article>
 
