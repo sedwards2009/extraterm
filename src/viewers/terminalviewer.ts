@@ -120,6 +120,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _mainStyleLoaded: boolean;
   private _resizePollHandle: domutils.LaterHandle;
   
+  private _operationRunning: boolean; // True if we are currently running an operation with the operation() method.
+  private _operationEmitResize: boolean;  // True if a resize evnet shuld be emitted once the operation is finished.
+  
   // Emulator dimensions
   private _rows: number;
   private _columns: number;
@@ -156,6 +159,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     
     this._mainStyleLoaded = false;
     this._resizePollHandle = null;
+
+    this._operationRunning = false;
+    this._operationEmitResize = false;
     
     this._rows = -1;
     this._columns = -1;
@@ -315,7 +321,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   setDimensionsAndScroll(setterState: SetterState): void {
     if (setterState.heightChanged || setterState.yOffsetChanged) {
       if (DEBUG_RESIZE) {
-        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged, setterState.yOffset, setterState.yOffsetChanged);
+        this._log.debug(`setDimensionsAndScroll(height=${setterState.height}, heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged})`);
       }
       this._adjustHeight(setterState.height);
       this.scrollTo(0, setterState.yOffset);
@@ -730,6 +736,22 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TERMINAL_VIEWER];
+  }
+
+  /**
+   * Quickly execute a function without intermediate on-screen updates.
+   *
+   * @param op the function to execute without updates.
+   */
+  operation(op: () => void): void {
+    this._operationRunning = true;
+    this._codeMirror.operation(op);
+    this._operationRunning = false;
+    
+    if (this._operationEmitResize) {
+      this._emitVirtualResizeEvent();
+    }
+    this._operationEmitResize = false;
   }
 
   //-----------------------------------------------------------------------
@@ -1209,7 +1231,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _handleRenderEvent(instance: termjs.Emulator, event: termjs.RenderEvent): void {
     let emitVirtualResizeEventFlag = false;
     
-    this._codeMirror.operation( () => {
+    const op = () => {
       emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
 
       // Refresh the active part of the screen.
@@ -1236,10 +1258,16 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         this._handleScrollbackEvent(event.scrollbackLines);
         emitVirtualResizeEventFlag = true;
       }
-    });
+    };
     
-    if (emitVirtualResizeEventFlag) {
-      this._emitVirtualResizeEvent();
+    if ( ! this._operationRunning) {
+      this._codeMirror.operation(op);
+      if (emitVirtualResizeEventFlag) {
+        this._emitVirtualResizeEvent();
+      }
+    } else {
+      op();
+      this._operationEmitResize = emitVirtualResizeEventFlag;
     }
   }
   
