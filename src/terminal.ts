@@ -705,7 +705,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   private _disconnectActiveTerminalViewer(): void {
-    this._emulator.moveRowsToScrollback();
+    this._emulator.moveRowsAboveCursorToScrollback();
     if (this._terminalViewer !== null) {
       this._terminalViewer.emulator = null;
       this._terminalViewer.deleteScreen();
@@ -716,7 +716,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   private _appendScrollableElement(el: ScrollableElement): void {
-    this._emulator.moveRowsToScrollback();
+    this._emulator.moveRowsAboveCursorToScrollback();
     let currentTerminalViewer = this._terminalViewer;
     
     if (currentTerminalViewer !== null) {
@@ -1404,11 +1404,11 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       
       if (currentTerminalViewer !== null) {
         currentTerminalViewer.operation( () => {
-          this._emulator.moveRowsToScrollback();  // The order of these two operations is important because it can
+          this._emulator.moveRowsAboveCursorToScrollback();  // The order of these two operations is important because it can
           currentTerminalViewer.deleteScreen();   // cause the CodeMirror instance to scroll around by itself.
         });
       } else {
-        this._emulator.moveRowsToScrollback();  
+        this._emulator.moveRowsAboveCursorToScrollback();  
       }
       
       this._lastCommandTerminalLine = this._terminalViewer.bookmarkLine(this._terminalViewer.lineCount() -1);

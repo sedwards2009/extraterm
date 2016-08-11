@@ -1562,7 +1562,7 @@ export class Emulator implements EmulatorAPI {
   }
 
   /**
-   * Moves all of the rendered rows into the physical scrollback area.
+   * Moves all of the rendered rows above the cursor to the physical scrollback area.
    * 
    * The rows on the terminal screen are moved into the scrollback area but
    * the new terminal rows are not rendered. Visually this does nothing as 
@@ -1572,15 +1572,13 @@ export class Emulator implements EmulatorAPI {
    * Future terminal rows will appear below the old last row in the window
    * once something is printed there.
    */
-  moveRowsToScrollback(): void {
+  moveRowsAboveCursorToScrollback(): void {
     let lines = this.lines;
     let newLines = [];
   
-    if (this.x === 0 && this.lines.length-1 === this.y) {
-      if (this.getLineText(this.y).trim() === '') {
-        lines = this.lines.slice(0, -1);
-        newLines = [this.lines[this.lines.length-1]];        
-      }
+    if (this.x === 0 && this.lines.length > this.y && this.getLineText(this.y).trim() === '') {
+      lines = this.lines.slice(0, this.y);
+      newLines = this.lines.slice(this.y);
     }
 
     lines.forEach( (line) => this._scrollbackLineQueue.push(line) );
