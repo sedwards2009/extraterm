@@ -30,7 +30,15 @@ $FAIL_COLOR: #ff5454;
 
 $TERMINAL_BACKGROUND: #000000;
 
+:host {
+  display: block;
+  width: 100%;
+  contain: strict;
+}
+
 #ID_CONTAINER {
+  contain: content;
+  
   margin-left: $TERMINAL_MARGIN_LEFT - $BLOCK_BORDER_LEFT;
   margin-right: $TERMINAL_MARGIN_RIGHT - $BLOCK_BORDER_RIGHT;
 }
