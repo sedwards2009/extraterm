@@ -346,9 +346,16 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
         this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
           setterState.yOffset, setterState.yOffsetChanged);
       }
-        
-      this._adjustHeight(setterState.height);
-      this.scrollTo(0, setterState.yOffset);
+      
+      const op = () => {
+        this._adjustHeight(setterState.height);
+        this.scrollTo(0, setterState.yOffset);
+      };
+      if (this._codeMirror !== null) {
+        this._codeMirror.operation(op);
+      } else {
+        op();
+      }
     }
   }
   
