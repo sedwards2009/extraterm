@@ -1413,7 +1413,6 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + codeMirrorHeight + "px";
       this._codeMirror.setSize("100%", "" + codeMirrorHeight + "px");
-      this._codeMirror.refresh();
     }
   }
     
