@@ -106,14 +106,31 @@
     data-command="typeSelectionAndCr"></span> does the same thing as above but also executes the command.</li>
   </ul>
   <p>
-    <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/tips/command_editing.md">Click here to see a short video clip.</a>
+    <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/tips/command_editing.md">Click here to see a
+      demo.</a>
   </p>
 </article>
 
 <article>
   <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Using text from a frame in a command pipe-line</h2>
   <p>
-    TODO
+    Once <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#shell-integration">shell
+    integration</a> is set up, Extraterm will place frames around the output of commands. Each frame has a little tag
+    <i class='fa fa-tag'></i> with a number which indentifies the frame. Extraterm's <code>from</code> command lets you
+    grab the contents of a frame and use it as part of a shell command.
+  </p>
+  <p>
+    For example, if we have run the <code>ls</code> command and it has tag <i class='fa fa-tag'></i>5 then we can
+    use <code>from</code> and the normal <code>grep</code> command to filter the output.
+  </p>
+  <samp>
+    from 5 | grep .txt
+  </samp>
+  <p>
+    This will find any lines with the text ".txt" in it. This works across tabs and terminal sessions.
+  </p>
+  <p>
+    <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/tips/from_command.md">Click here to see a demo.</a>
   </p>
 </article>
 
