@@ -1,0 +1,30 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* settings-tab styles */
+
+@import "extraterm-scrollbars";
+@import "bootstrap/_variables";
+
+#ID_SETTINGS {
+  height: 100%;
+  overflow: auto;
+  
+}
+
+section {
+  border-top: 1px solid $base-border-color;
+  padding: $panel-body-padding;
+}
+section:first-child {
+  border-top: 0px;
+}
+
+#ID_COMMAND_OUTPUT_HANDLING > table td.CLASS_FRAME {
+  min-width: 10em;
+}
+
+div.input-group > select.form-control.form-control.form-control:first-child {
+  border-radius: $input-border-radius;
+}
