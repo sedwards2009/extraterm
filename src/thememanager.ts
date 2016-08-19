@@ -229,8 +229,8 @@ class ThemeManagerImpl implements ThemeManager {
           this._log.warn("Warning: Unable to read file ", infoPath, err);
         }
       });
-      return themeMap;
     }
+    return themeMap;
   }
 
   private _fillThemeInfoDefaults(themeInfo: ThemeInfo): void {
@@ -454,20 +454,21 @@ class ThemeCache {
    * This should be called after construction but before use of the cache.
    */
   load(): void {
-    const contents = fs.readdirSync(this._cacheDirectory);
+    if (this._cacheDirectory !== null) {
+      const contents = fs.readdirSync(this._cacheDirectory);
 
-    contents.forEach( (item) => {
-      const itemPath = path.join(this._cacheDirectory, item);
-      const info = fs.lstatSync(itemPath);
-      if (info.isFile() && item.endsWith(THEME_CACHE_ENTRY_SUFFIX)) {
-        const baseName = item.substr(0, item.length- THEME_CACHE_ENTRY_SUFFIX.length);
-        this._cache.set(baseName, {
-          hash: null,
-          contents: null
-        });        
-      }
-    });
-    
+      contents.forEach( (item) => {
+        const itemPath = path.join(this._cacheDirectory, item);
+        const info = fs.lstatSync(itemPath);
+        if (info.isFile() && item.endsWith(THEME_CACHE_ENTRY_SUFFIX)) {
+          const baseName = item.substr(0, item.length- THEME_CACHE_ENTRY_SUFFIX.length);
+          this._cache.set(baseName, {
+            hash: null,
+            contents: null
+          });        
+        }
+      });
+    }
   }
 
   /**
@@ -515,8 +516,10 @@ class ThemeCache {
     const entry: ThemeCacheEntry = { hash: integrityHash, contents };
     
     this._cache.set(key, entry);
-    const fileName = path.join(this._cacheDirectory, key + THEME_CACHE_ENTRY_SUFFIX);
-    fs.writeFileSync(fileName, JSON.stringify(entry), { encoding: "utf-8" });
+    if (this._cacheDirectory !== null) {
+      const fileName = path.join(this._cacheDirectory, key + THEME_CACHE_ENTRY_SUFFIX);
+      fs.writeFileSync(fileName, JSON.stringify(entry), { encoding: "utf-8" });
+    }
   }
 }
 
