@@ -1,0 +1,62 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* gui-tabwidget */
+
+#ID_TOP {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#ID_TABBAR {
+  flex: 0 auto;
+  
+  cursor: default;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+#ID_TABBAR > li {
+  flex-shrink: 1;
+  // overflow-x: hidden;
+  white-space: nowrap;
+}
+
+#ID_TABBAR > li.remainder {
+  flex-shrink: 0;
+}
+
+#ID_CONTENTS {
+  flex: 1 1 auto;
+  position: relative;
+}
+
+#ID_CONTENTSTACK {
+  /* This and the pos:relative above are needed to get this at the correct height. */
+  /* See: https://stackoverflow.com/questions/15381172/css-flexbox-child-height-100 */
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  
+  display: block;
+}
+
+DIV.wrapper {
+  height: 100%;
+  width: 100%;  
+}
+
+DIV.catch_all {
+  flex-grow: 1;
+}
+
+DIV.show_frame > #ID_CONTENTSTACK {
+  border: 1px solid #9daca9;
+}
+
+DIV.show_frame > #ID_TABBAR {
+  position: relative;
+  top: 1px;
+}

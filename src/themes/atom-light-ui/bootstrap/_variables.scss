@@ -208,7 +208,12 @@ $button-background-color-hover: lighten($button-background-color, 5%);
 $button-background-color-selected: #888;
 $button-border-color: rgba(0, 0, 0, 0.15);
 
-
+$tab-bar-background-color: #d8d8d8;
+$tab-bar-border-color: #ddd;
+$tab-background-color: #e8e8e8;
+$tab-background-color-active: #f0f0f0;
+$tab-border-color: lighten($base-border-color, 10%);
+$tab-height: 26px;
 
 //== Forms
 //

@@ -1,0 +1,115 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* top UI */
+@import "bootstrap/variables";
+
+:host {
+  display: block;
+  position: relative;
+}
+
+#ID_TOP {
+  position: absolute;
+  top: 2px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  
+  display: flex;
+}
+
+#ID_PANE_LEFT {
+  flex: auto 1 1;  
+}
+
+#ID_PANE_LEFT, #ID_PANE_RIGHT {
+  position: relative;
+}
+
+#ID_TAB_CONTAINER_LEFT, #ID_TAB_CONTAINER_RIGHT {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+#ID_PANE_RIGHT {
+  display: none;
+}
+
+#ID_TOP > #ID_GAP {
+  visibility: collapse;
+  flex: 0px 0 0;
+}
+
+#ID_TOP.split > #ID_GAP {
+  visibility: visible;
+  flex: 2px 0 0;
+}
+
+#ID_TOP.split > #ID_PANE_RIGHT {
+  flex: auto 1 1;
+  display: block;
+}
+
+#ID_REST_DIV_PRIMARY {
+  display: flex;
+}
+
+#ID_REST_DIV_PRIMARY > DIV.space {
+  flex-grow: 1;
+}
+
+/* Contents of the tabs at the top of the window. */
+DIV.tab_content {
+  height: 100%;
+  width: 100%;
+
+}
+DIV.tab_content > * {
+  position: absolute;
+  width: 100%;
+  
+  top: 6px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+DIV.tab_header_container {
+  display: flex;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+DIV.tab_header_icon {
+  flex: 0 0 auto;
+}
+
+DIV.tab_header_middle {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+DIV.tab_header_close {
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+DIV.tab_header_close > BUTTON {
+  vertical-align: text-bottom;
+  border: 0px;
+  display: inline-block;
+  background-color: transparent;
+  border-radius: 2px;
+}
+
+DIV.tab_header_close:hover > BUTTON {
+  background-color: $btn-danger-bg;
+  color: $btn-danger-color;
+}
