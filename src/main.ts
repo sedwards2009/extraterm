@@ -673,7 +673,8 @@ function getThemes(): ThemeInfo[] {
 function registerThemeChangeListener(config: Config): void {
   const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_THEME];
   themeManager.registerChangeListener(themeIdList, (theme: ThemeInfo): void  => {
-    sendThemeContents(mainWindow.webContents, themeIdList);
+    const cleanIdList = [...themeIdList.filter( name => name !== ThemeTypes.DEFAULT_THEME), ThemeTypes.DEFAULT_THEME];
+    sendThemeContents(mainWindow.webContents, cleanIdList);
   });
 }
 
