@@ -382,11 +382,11 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
 
   <section id='${ID_COMMAND_OUTPUT_HANDLING}'>
     <h2>Command Output Handling Rules</h2>
-    <table class="table" v-if="commandLineActions.length !== 0">
-      <thead>
+    <table class="table">
+      <thead v-if="commandLineActions.length !== 0">
         <tr><th>Match</th><th>Command</th><th>Frame</th><th></th></tr>
       </thead>
-      <tr v-for="commandLineAction in commandLineActions" track-by="id">
+      <tr v-if="commandLineActions.length !== 0" v-for="commandLineAction in commandLineActions" track-by="id">
         <td class='${CLASS_MATCH_TYPE}'><select v-model="commandLineAction.matchType" class="form-control">
           <option value="name">Match command name</option>
           <option value="regexp">Match regular expression</option>
