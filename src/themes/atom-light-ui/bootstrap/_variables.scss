@@ -66,7 +66,9 @@ $font-family-base:        $font-family-sans-serif !default;
 $font-size-base:          11px !default;
 $font-size-large:         ceil(($font-size-base * 1.25)) !default; // ~18px
 $font-size-small:         ceil(($font-size-base * 0.85)) !default; // ~12px
+
 $input-font-size: 14px;
+$input-font-size-small:         ceil(($input-font-size * 0.85)) !default;
 
 $font-size-h1:            2em !default;
 $font-size-h2:            1.75em !default;
@@ -250,7 +252,7 @@ $select-input-height-base:       ($input-line-height-computed + ($padding-base-v
 //** Large `.form-control` height
 $input-height-large:             (ceil($font-size-large * $line-height-large) + ($padding-large-vertical * 2) + 2) !default;
 //** Small `.form-control` height
-$input-height-small:             (floor($font-size-small * $line-height-small) + ($padding-small-vertical * 2) + 2) !default;
+$input-height-small:             (floor($input-font-size-small * $line-height-small) + ($padding-small-vertical * 2) + 2) !default;
 
 //** `.form-group` margin
 $form-group-margin-bottom:       15px !default;
@@ -272,9 +274,9 @@ $cursor-disabled:                not-allowed !default;
 //## Dropdown menu container and contents.
 
 //** Background for the dropdown menu.
-$dropdown-bg:                    #fff !default;
+$dropdown-bg:                    #ececec !default;
 //** Dropdown menu `border-color`.
-$dropdown-border:                rgba(0,0,0,.15) !default;
+$dropdown-border:                $base-border-color !default;
 //** Dropdown menu `border-color` **for IE8**.
 $dropdown-fallback-border:       #ccc !default;
 //** Divider color for between dropdown items.

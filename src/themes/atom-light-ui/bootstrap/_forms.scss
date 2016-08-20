@@ -410,12 +410,12 @@ select.form-control {
 // The `.form-group-* form-control` variations are sadly duplicated to avoid the
 // issue documented in https://github.com/twbs/bootstrap/issues/15074.
 
-@include input-size('.input-sm', $input-height-small, $padding-small-vertical, $padding-small-horizontal, $font-size-small, $line-height-small, $input-border-radius-small);
+@include input-size('.input-sm', $input-height-small, $padding-small-vertical, $padding-small-horizontal, $input-font-size-small, $line-height-small, $input-border-radius-small);
 .form-group-sm {
   .form-control {
     height: $input-height-small;
     padding: $padding-small-vertical $padding-small-horizontal;
-    font-size: $font-size-small;
+    font-size: $input-font-size-small;
     line-height: $line-height-small;
     border-radius: $input-border-radius-small;
   }
@@ -429,9 +429,9 @@ select.form-control {
   }
   .form-control-static {
     height: $input-height-small;
-    min-height: ($line-height-computed + $font-size-small);
+    min-height: ($line-height-computed + $input-font-size-small);
     padding: ($padding-small-vertical + 1) $padding-small-horizontal;
-    font-size: $font-size-small;
+    font-size: $input-font-size-small;
     line-height: $line-height-small;
   }
 }
@@ -694,7 +694,7 @@ select.form-control {
     @media (min-width: $screen-sm-min) {
       .control-label {
         padding-top: ($padding-small-vertical + 1);
-        font-size: $font-size-small;
+        font-size: $input-font-size-small;
       }
     }
   }
