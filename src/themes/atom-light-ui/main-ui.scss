@@ -57,6 +57,11 @@
   display: flex;
 }
 
+#ID_NEW_TAB_BUTTON_PRIMARY {
+  position: relative;
+  top: 6px;  
+}
+
 #ID_REST_DIV_PRIMARY > DIV.space {
   flex-grow: 1;
 }

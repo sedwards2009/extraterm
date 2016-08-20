@@ -20,12 +20,12 @@
 
 #ID_TABBAR > li {
   flex-shrink: 1;
-  // overflow-x: hidden;
   white-space: nowrap;
 }
 
 #ID_TABBAR > li.remainder {
   flex-shrink: 0;
+  flex-grow: 1;
 }
 
 #ID_CONTENTS {

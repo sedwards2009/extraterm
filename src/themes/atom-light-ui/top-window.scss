@@ -1,0 +1,43 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* top-window */
+@import "fontawesome-fontface";
+
+DIV.tab_bar_rest {
+  display: flex;
+  width: 100%;
+  
+  & > * {
+    position: relative;
+    top: 5px;
+  }
+  
+  & > DIV.space {
+    flex-grow: 1;
+  }
+  
+}
+
+
+BODY {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+EXTRATERM-MAINWEBUI {
+  position: absolute; // or relative
+  left: 0;
+  top: 4px;
+  right: 0;
+  bottom: 0;
+}
+
+*:unresolved {
+  background-color: red;
+  border: 1px dashed red;
+}
