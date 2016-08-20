@@ -638,7 +638,7 @@ function writeConfigurationFile(config: Config): void {
   cleanConfig.systemConfig = null;
   
   const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
-  fs.writeFileSync(filename, JSON.stringify(config, null, "  "));
+  fs.writeFileSync(filename, JSON.stringify(cleanConfig, null, "  "));
 }
 
 function setConfig(newConfig: Config): void {
