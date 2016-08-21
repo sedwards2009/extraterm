@@ -288,10 +288,8 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
               </option>
             </select>
           </div>
-        </div>  
-      </div>
-    
-      <div class="form-horizontal">
+        </div>
+        
         <div class="form-group">
           <label for="terminal-font" class="col-sm-2 control-label">Terminal Font:</label>
           <div class="input-group col-sm-4">
