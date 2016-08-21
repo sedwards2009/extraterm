@@ -182,8 +182,7 @@ output {
 .form-control {
   display: block;
   width: 100%;
-  height: $input-height-base; // Make inputs at least the height of their button counterpart (base line-height + padding + border)
-  padding: $padding-base-vertical $padding-base-horizontal;
+  padding: 6px 5px;
   font-size: $input-font-size;
   line-height: $line-height-base;
   color: $input-color;
@@ -289,17 +288,19 @@ input[type="search"] {
 //
 // Indent the labels to position radios/checkboxes as hanging controls.
 
+$checkbox-space: 27px;
 .radio,
 .checkbox {
   position: relative;
   display: block;
-  margin-top: 10px;
+  margin-top: 6px;
   margin-bottom: 10px;
 
   label {
     min-height: $line-height-computed; // Ensure the input doesn't jump when there is no text
-    padding-left: 20px;
+    padding-left: $checkbox-space;
     margin-bottom: 0;
+    font-size: $input-font-size;
     font-weight: normal;
     cursor: pointer;
   }
@@ -309,7 +310,7 @@ input[type="search"] {
 .checkbox input[type="checkbox"],
 .checkbox-inline input[type="checkbox"] {
   position: absolute;
-  margin-left: -20px;
+  margin-left: -$checkbox-space;
   margin-top: 4px \9;
 }
 
@@ -366,8 +367,8 @@ input[type="checkbox"] {
   }
 }
 
-input[type="text"].form-control {
-  padding: 5px 5px;
+input[type="text"].form-control, input[type="number"].form-control {
+  padding: 5px 9px;
 }
 
 select.form-control:focus, input[type="text"]:focus, input[type="number"]:focus {
@@ -375,10 +376,6 @@ select.form-control:focus, input[type="text"]:focus, input[type="number"]:focus 
   box-shadow: none;
   border-color: $input-border;
   outline: 0;
-}
-
-select.form-control {
-  height: $select-input-height-base;
 }
 
 // Static form control text
@@ -662,11 +659,11 @@ select.form-control {
   // labels on narrow viewports stack the same as a default form example.
   @media (min-width: $screen-sm-min) {
     .control-label {
-      font-size: 1.2em;
+      font-size: $input-font-size;
       text-align: right;
       font-weight: normal;
       margin-bottom: 0;
-      padding-top: ($padding-base-vertical + 1); // Default padding plus a border
+      padding-top: $padding-base-vertical;
     }
   }
 
