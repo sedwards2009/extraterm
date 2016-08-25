@@ -1,0 +1,41 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* gui-menuitem styles */
+
+@import "bootstrap/_variables";
+
+:host {
+    display: block;
+}
+
+#ID_CONTAINER {
+    display: flex;
+    cursor: default;
+    font-family: $font-family-base;
+    font-size: $input-font-size;
+    font-weight: normal;
+    line-height: $line-height-base;
+    color: $dropdown-link-color;
+    background-color: $dropdown-bg;
+    padding: 1px;
+    white-space: nowrap;
+}
+
+#ID_CONTAINER.selected {
+    text-decoration: none;
+    color: $dropdown-link-hover-color;
+    background-color: $dropdown-link-hover-bg;
+}
+
+#ID_ICON1, #ID_ICON2 {
+    flex: auto 0 0;
+    white-space: pre;
+}
+
+#ID_LABEL {
+    flex: auto 1 1;
+    padding-left: 0.5rem;
+    white-space: pre;
+}

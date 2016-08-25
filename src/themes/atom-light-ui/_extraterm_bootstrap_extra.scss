@@ -1,0 +1,192 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* Extra rules and rule modifications on top of Bootstrap */
+
+$tab-radius: 3px;
+$modified-icon-width: 8px;
+$tab-skew: 30deg;
+$tab-top-padding: 5px;
+$tab-bottom-border-height: 5px;
+$tab-border: 1px solid $tab-border-color;
+$tab-max-width: 160px;
+
+.extraterm-tabs {
+  display: flex;
+  -webkit-user-select: none;
+  list-style: none;
+  position: relative;
+  margin: 0;
+  height: $tab-height + $tab-top-padding + $tab-bottom-border-height;
+  background-image: -webkit-linear-gradient(top, $tab-bar-background-color, lighten($tab-bar-background-color, 9%));
+  box-shadow: inset 0 -8px 8px -4px rgba(0,0,0, .15);
+  padding: 0 10px 0 25px;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    height: $tab-bottom-border-height;
+    left: 0;
+    right: 0;
+    background-color: $tab-background-color-active;
+    border-bottom: 1px solid $tab-bar-border-color;
+    border-top: 1px solid $tab-border-color;
+    pointer-events: none;
+  }
+
+  & > LI.tab {
+    position: relative;
+    display: inline-block;
+    top: $tab-top-padding;
+    flex: 1;
+    -webkit-user-drag: element;
+    max-width: $tab-max-width;
+    height: $tab-height;
+    line-height: $tab-height;
+    color: $text-color;
+    padding: 0;
+    margin: 0 20px 0 5px;
+
+    box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
+    transition: color .1s ease-in;
+
+    &, &:before, &:after {
+      background-image: -webkit-linear-gradient(top, $tab-background-color, darken($tab-background-color, 6%));
+      border-top: $tab-border;
+    }
+
+    &:before, &:after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      width: 25px;
+      height: $tab-height;
+    }
+
+    // left angled edge
+    &:before {
+      left: -14px;
+      border-top-left-radius: $tab-radius;
+      border-left: $tab-border;
+      box-shadow: inset 1px -1px 1px rgba(0,0,0, .05);
+      -webkit-transform: skewX(-$tab-skew);
+    }
+
+    // right angled edge
+    &:after {
+      right: -14px;
+      border-top-right-radius: $tab-radius;
+      border-right: $tab-border;
+      box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
+      -webkit-transform: skewX($tab-skew);
+    }
+
+    .close-icon {
+      right: 0;
+      z-index: 3;
+      text-align: right;
+      line-height: $tab-height;
+      color: $text-color;
+
+      &:hover {
+        color: inherit;
+      }
+    }
+
+    &.modified:not(:hover) .close-icon {
+      right: 0;
+      top: $tab-height/2 - $modified-icon-width/2 + 1px;
+      width: $modified-icon-width;
+      height: $modified-icon-width;
+    }
+
+    &.modified:hover .close-icon:hover {
+      color: $text-color-highlight;
+    }
+
+    & > * {
+      position: relative;
+      z-index: 1;
+      margin-top: -$tab-top-padding - 1px;
+      padding-top: $tab-top-padding + 1px;
+      padding-right: 10px;
+    }
+  }
+
+  & > LI.tab.active {
+    z-index: 1;
+    color: $text-color-highlight;
+    width: -webkit-fit-content;
+    flex: 2;
+    .close-icon {
+      line-height: $tab-height - 1px;
+      color: $text-color;
+    }
+
+    &, &:before, &:after {
+      background: $tab-background-color-active;
+      height: $tab-height + 1px;
+      box-shadow: none;
+    }
+  }
+
+  & > LI.tab:hover {
+    color: $text-color-highlight;
+  }
+
+  & > LI.tab.active:hover .close-icon {
+    color: $text-color;
+
+    &:hover {
+      color: inherit;
+    }
+  }
+
+  .placeholder {
+    height: $tab-height + $tab-top-padding + $tab-bottom-border-height;
+    margin-left: -9px; // center between tabs
+    pointer-events: none;
+    &:after {
+      top: $tab-height + $tab-top-padding + $tab-bottom-border-height - 2px;
+    }
+  }
+}
+
+.btn.btn-quiet {
+  $border-shadow: inset 0 0 0 1px $button-border-color;
+  $active-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+  color: $text-color;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+
+  &:hover {
+    box-shadow: $border-shadow;
+    color: $text-color-highlight;
+    background-image: -webkit-linear-gradient($button-background-color-hover, darken($button-background-color-hover, 8%));
+  }
+  &:active,
+  &.selected:hover:active {
+    background-image: -webkit-linear-gradient($button-background-color, darken($button-background-color, 8%));
+    box-shadow: $active-shadow, $border-shadow;
+  }
+  &.selected,
+  &.selected:hover {
+    color: $text-color-highlight;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0,.3), $border-shadow;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    background-image: -webkit-linear-gradient(darken($button-background-color-selected, 8%), $button-background-color-selected);
+  }
+  &.selected:hover {
+    box-shadow: $border-shadow;
+    background-image: -webkit-linear-gradient($button-background-color-selected, darken($button-background-color-selected, 8%));
+  }
+}

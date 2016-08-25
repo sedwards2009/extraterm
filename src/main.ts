@@ -638,7 +638,7 @@ function writeConfigurationFile(config: Config): void {
   cleanConfig.systemConfig = null;
   
   const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
-  fs.writeFileSync(filename, JSON.stringify(config, null, "  "));
+  fs.writeFileSync(filename, JSON.stringify(cleanConfig, null, "  "));
 }
 
 function setConfig(newConfig: Config): void {
@@ -673,7 +673,8 @@ function getThemes(): ThemeInfo[] {
 function registerThemeChangeListener(config: Config): void {
   const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_THEME];
   themeManager.registerChangeListener(themeIdList, (theme: ThemeInfo): void  => {
-    sendThemeContents(mainWindow.webContents, themeIdList);
+    const cleanIdList = [...themeIdList.filter( name => name !== ThemeTypes.DEFAULT_THEME), ThemeTypes.DEFAULT_THEME];
+    sendThemeContents(mainWindow.webContents, cleanIdList);
   });
 }
 
