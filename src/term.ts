@@ -4707,14 +4707,7 @@ export class Emulator implements EmulatorAPI {
             const currentcols = this.cols;
             const currentrows = this.rows;
             
-            // Make sure that this.normal.lines has as many materialized lines as this.lines, otherwise
-            // the emulator refresh will be incomplete and parts of the alt screen will stil be visible.
-            const altLineCount = this.lines.length
             this.lines = this.normal.lines;
-            while (this.lines.length < altLineCount) {
-              this._getRow(this.lines.length);
-            }
-            
             this.cols = this.normal.cols;
             this.rows = this.normal.rows;
             this.ybase = this.normal.ybase;
