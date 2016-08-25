@@ -16,6 +16,7 @@ export interface MinimalKeyboardEvent {
   shiftKey: boolean;  
   key: string;
   keyCode: number;
+  keyIdentifier: string;
 }
 
 // Internal data structure for pairing a key binding with a command.
@@ -85,7 +86,10 @@ export class KeyBindingMapping {
   
   private _log = new Logger("KeyBindingMapping");
   
-  constructor(mappingName: string, allMappingsJson: Object) {
+  private _platform: string;
+  
+  constructor(mappingName: string, allMappingsJson: Object, platform: string) {
+    this._platform = platform;
     this._gatherPairs(mappingName, allMappingsJson).forEach( (pair) => {
       const parsedKeyBinding = parseKeyBinding(pair.key, pair.value);
       if (parsedKeyBinding !== null) {
@@ -136,7 +140,23 @@ export class KeyBindingMapping {
       if (ev.key.charCodeAt(0) === 160) { // nbsp to space on the Mac
         key = " ";
       } else {
-        key = ev.key;
+        
+        key = ev.key; // use ev.key until proven otherwise.
+        if (this._platform === "linux") {
+          // FIXME The key handling on Linux is broken a bit in Chrome 52. This code is a work around.
+          //       It is mostly needed to make Dvorak work ok.
+          if (ev.keyIdentifier.startsWith("U+")) {
+            const keyValue = Number.parseInt(ev.keyIdentifier.slice(2), 16);
+            const keyStr = String.fromCodePoint(keyValue);
+            if ((keyStr >= 'a' && keyStr <= 'z') || (keyStr >= 'A' && keyStr <= 'Z')) {
+              if ( ! ev.shiftKey) {
+                key = keyStr.toLowerCase();
+              } else {
+                key = keyStr;
+              }
+            }
+          }
+        }
       }
     }
 
@@ -272,10 +292,10 @@ export class KeyBindingContexts {
   
   public contextNames = [];
   
-  constructor(obj: Object) {
+  constructor(obj: Object, platform: string) {
     for (let key in obj) {
       if (key !== NAME) {
-        const mapper = new KeyBindingMapping(key, obj);
+        const mapper = new KeyBindingMapping(key, obj, platform);
         this.contextNames.push(key);
         this._contexts.set(key, mapper);
       }
@@ -301,8 +321,8 @@ export class KeyBindingContexts {
  *            being objects mapping key binding strings to command strings
  * @return the object which maps context names to `KeyBindingMapping` objects
  */
-export function loadKeyBindingsFromObject(obj: Object): KeyBindingContexts {
-  return new KeyBindingContexts(obj);
+export function loadKeyBindingsFromObject(obj: Object, platform: string): KeyBindingContexts {
+  return new KeyBindingContexts(obj, platform);
 }
 
 export interface KeyBindingManager {

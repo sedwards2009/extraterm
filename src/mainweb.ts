@@ -362,7 +362,8 @@ function handleClipboardRead(msg: Messages.Message): void {
  * 
  */
 function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void> {
-  const keyBindingContexts = keybindingmanager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts);
+  const keyBindingContexts = keybindingmanager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts,
+    process.platform);
   keyBindingManager.setKeyBindingContexts(keyBindingContexts);
   
   if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize ||
