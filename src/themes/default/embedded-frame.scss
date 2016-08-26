@@ -30,9 +30,20 @@ $FAIL_COLOR: #ff5454;
 
 $TERMINAL_BACKGROUND: #000000;
 
+:host {
+  display: block;
+  width: 100%;
+}
+
 #ID_CONTAINER {
+  width: calc(100% - $TERMINAL_MARGIN_LEFT + $BLOCK_BORDER_LEFT - $TERMINAL_MARGIN_RIGHT + $BLOCK_BORDER_RIGHT);
+  height: 100%;
+  box-sizing: border-box;
+  
   margin-left: $TERMINAL_MARGIN_LEFT - $BLOCK_BORDER_LEFT;
   margin-right: $TERMINAL_MARGIN_RIGHT - $BLOCK_BORDER_RIGHT;
+  
+  position: relative;
 }
 
 #ID_HEADER {
@@ -40,6 +51,27 @@ $TERMINAL_BACKGROUND: #000000;
   display: flex;
   width: 100%;
   z-index: 5;
+}
+
+/* *** Output DIV *** */
+#ID_OUTPUT {
+  position: absolute;
+  bottom: 0px;
+  
+  width: 100%;
+  
+  border-left: $BLOCK_BORDER_LEFT solid rgba(0,0,0,0);
+  border-right: $BLOCK_BORDER_RIGHT solid rgba(0,0,0,0);
+  
+  padding-bottom: -1*$BLOCK_BORDER_BOTTOM;
+  border-bottom: $BLOCK_BORDER_BOTTOM solid rgba(0,0,0,0);
+  
+  border-bottom-left-radius: $CORNER_RADIUS;
+  border-bottom-right-radius: $CORNER_RADIUS;
+  
+  transition-property: border-left-color, border-right-color;
+  transition-duration: $FADE_DURATION, $FADE_DURATION;
+  overflow: hidden;
 }
 
 #ID_OUTPUT.closed {
@@ -147,21 +179,6 @@ $TERMINAL_BACKGROUND: #000000;
 
 #ID_CONTAINER.fail > #ID_HEADER > .header_spacer {
   border-color: rgba($FAIL_COLOR, 0.5);
-}
-
-/* *** Output DIV *** */
-#ID_OUTPUT {
-  border-left: $BLOCK_BORDER_LEFT solid rgba(0,0,0,0);
-  border-right: $BLOCK_BORDER_RIGHT solid rgba(0,0,0,0);
-  
-  padding-bottom: -1*$BLOCK_BORDER_BOTTOM;
-  border-bottom: $BLOCK_BORDER_BOTTOM solid rgba(0,0,0,0);
-  
-  border-bottom-left-radius: $CORNER_RADIUS;
-  border-bottom-right-radius: $CORNER_RADIUS;
-  
-  transition-property: border-left-color, border-right-color;
-  transition-duration: $FADE_DURATION, $FADE_DURATION;
 }
 
 #ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT {

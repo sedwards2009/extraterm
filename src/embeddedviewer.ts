@@ -119,17 +119,17 @@ class EtEmbeddedViewer extends ViewerElement {
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
 
-  private _currentElementHeight: number;
-  
   private _visualState: number;
 
   private _mode: ViewerElementTypes.Mode;
+
+  private _virtualScrollArea: virtualscrollarea.VirtualScrollArea;
   
   private _initProperties(): void {
     this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
-    this._currentElementHeight = -1;
     this._visualState = VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
+    this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
   }
   
   //-----------------------------------------------------------------------
@@ -153,6 +153,7 @@ class EtEmbeddedViewer extends ViewerElement {
       element.visualState = this._visualState;
       element.mode = this._mode;
       this.appendChild(element);
+      this._virtualScrollArea.appendScrollable(element);
     }
   }
   
@@ -185,7 +186,7 @@ class EtEmbeddedViewer extends ViewerElement {
     const viewerElement = this.viewerElement;
     let result = 0;
     if (viewerElement !== null) {
-      result = viewerElement.getVirtualHeight(containerHeight);
+      result = this._virtualScrollArea.getVirtualHeight();
     }
     if (DEBUG_SIZE) {
       this._log.debug("getVirtualHeight() => ", result);
@@ -212,9 +213,8 @@ class EtEmbeddedViewer extends ViewerElement {
         setterState.yOffset, setterState.yOffsetChanged);
     }
     
-    if (setterState.height !== this._currentElementHeight) {
+    if (setterState.heightChanged) {
       this.style.height = "" + setterState.height + "px";
-      this._currentElementHeight = setterState.height;
     }
 
     const containerDiv = <HTMLDivElement>this._getById(ID_CONTAINER);
@@ -227,8 +227,10 @@ class EtEmbeddedViewer extends ViewerElement {
     }
     
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
-    const rect = headerDiv.getBoundingClientRect();
+    const rect = headerDiv.getBoundingClientRect();   // FIXME slow
     headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
+    const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);
+    outputDiv.style.top = "" + rect.height + "px";
     
     if (setterState.physicalTop > 0 || setterState.height < setterState.containerHeight) {
       // Bottom part is visible
@@ -243,13 +245,11 @@ class EtEmbeddedViewer extends ViewerElement {
     const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
     scrollNameDiv.innerHTML = "" + percent + "%";
     
-    const viewerElement = this.viewerElement;
-    if (viewerElement !== null) {
-      const newSetterState = _.clone(setterState);
-      newSetterState.height = setterState.height - this.getReserveViewportHeight(0);
-      newSetterState.heightChanged = true;
-      viewerElement.setDimensionsAndScroll(newSetterState);
+    if (setterState.heightChanged) {
+      this._virtualScrollArea.resize();
     }
+    
+    this._virtualScrollArea.scrollTo(setterState.yOffset);
   }
   
   getSelectionText(): string {
@@ -417,12 +417,25 @@ class EtEmbeddedViewer extends ViewerElement {
 
     this._getById(ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
     this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
-    domutils.getShadowId(this, ID_HEADER).addEventListener('focus', this.focus.bind(this));
+    const headerDiv = domutils.getShadowId(this, ID_HEADER);
+    headerDiv.addEventListener('focus', this.focus.bind(this));
     
     const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);    
     outputDiv.addEventListener('mousedown', this.focus.bind(this));
     outputDiv.addEventListener('click', this.focus.bind(this));
     outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
+    
+    this._virtualScrollArea.setScrollContainer(outputDiv);
+    
+    outputDiv.addEventListener(virtualscrollarea.EVENT_RESIZE, (ev: CustomEvent) => {
+      const height = this._virtualScrollArea.getVirtualHeight();
+      this._virtualScrollArea.updateScrollableSize(<any> ev.target);
+      const newHeight = this._virtualScrollArea.getVirtualHeight();
+      if (height !== newHeight) {
+        const event = new CustomEvent(virtualscrollarea.EVENT_RESIZE, { bubbles: true });
+        this.dispatchEvent(event);
+      }
+    });
     
     // const expandbutton = this._getById(ID_EXPAND_BUTTON);
     // expandbutton.addEventListener('click', (): void => {
@@ -433,7 +446,6 @@ class EtEmbeddedViewer extends ViewerElement {
     domutils.addCustomEventResender(this, ViewerElement.EVENT_BEFORE_SELECTION_CHANGE);
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
-    domutils.addCustomEventResender(this, virtualscrollarea.EVENT_RESIZE);
 
     const cm = <contextmenu>this._getById(ID_CONTEXT_MENU);
     this._getById(ID_CONTAINER).addEventListener('contextmenu', (ev: MouseEvent): void => {
