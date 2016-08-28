@@ -1,0 +1,63 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* Extra rules and rule modifications on top of Bootstrap */
+
+.extraterm-tabs {
+  display: flex;
+  width: 100%;
+  
+  // Override default ul/ol
+  padding-left: 0;
+  margin-bottom: 0;
+  
+  border-bottom: 1px solid $nav-tabs-border-color;
+
+  > li {
+    display: block;
+    
+    color: $link-color;
+    
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin-bottom: 0;
+    
+    margin-right: 2px;
+    line-height: $line-height-base;
+    border: 1px solid transparent;
+    border-bottom-width: 0;
+    border-radius: $border-radius-base $border-radius-base 0 0;
+    padding: 7px 7px 4px 7px;
+
+    &:hover, &:focus {
+      color: $link-hover-color;
+      background-color: $nav-link-hover-bg;
+      border: 1px solid $nav-tabs-active-link-hover-border-color;
+      border-bottom-width: 0;
+      cursor: default;
+      border-color: $nav-tabs-link-hover-border-color $nav-tabs-link-hover-border-color $nav-tabs-border-color;
+    }
+    
+    &.active {
+      color: $nav-tabs-active-link-hover-color;
+      background-color: $nav-tabs-active-link-hover-bg;
+      border: 1px solid $nav-tabs-active-link-hover-border-color;
+      border-bottom-color: transparent;
+      cursor: default;      
+      box-shadow: 0px 2px 0px -1px $nav-tabs-active-link-hover-bg;
+    }
+  }
+
+  > li.remainder {
+    flex-grow: 1;
+    color: $text-color;
+    padding: 0 0 3px 0;
+    
+    &:hover, &:focus {
+      background-color: inherit;
+      border: 1px solid transparent;
+      border-bottom-width: 0;
+    }
+  }
+}

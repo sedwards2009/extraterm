@@ -8,7 +8,6 @@
 @import "mixins/labels";
 @import "mixins/reset-filter";
 @import "mixins/resize";
-@import "mixins/responsive-visibility";
 @import "mixins/size";
 @import "mixins/tab-focus";
 @import "mixins/reset-text";
@@ -22,9 +21,7 @@
 @import "mixins/panels";
 @import "mixins/pagination";
 @import "mixins/list-group";
-@import "mixins/nav-divider";
 @import "mixins/forms";
-@import "mixins/progress-bar";
 @import "mixins/table-row";
 
 // Skins
@@ -35,6 +32,5 @@
 // Layout
 @import "mixins/clearfix";
 @import "mixins/center-block";
-@import "mixins/nav-vertical-align";
 @import "mixins/grid-framework";
 @import "mixins/grid";
