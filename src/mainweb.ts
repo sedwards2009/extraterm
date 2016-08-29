@@ -78,7 +78,9 @@ export function startUp(): void {
   const topThemeable: ThemeTypes.Themeable = {
     setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {      
       (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent =
-        cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + cssMap.get(ThemeTypes.CssFile.TOP_WINDOW);
+        cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + 
+        cssMap.get(ThemeTypes.CssFile.FONT_AWESOME) + "\n" + 
+        cssMap.get(ThemeTypes.CssFile.TOP_WINDOW);
     }
   };
   ThemeConsumer.registerThemeable(topThemeable);

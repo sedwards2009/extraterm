@@ -284,7 +284,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.GUI_CONTROLS];
+    return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
   }
   
   //-----------------------------------------------------------------------
