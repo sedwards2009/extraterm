@@ -1,0 +1,216 @@
+//
+// Buttons
+// --------------------------------------------------
+
+
+// Base styles
+// --------------------------------------------------
+@mixin atom-button-bg($color, $hover-color, $selected-color, $border-color, $text-color, $text-color-hover) {
+  $border-shadow: inset 0 0 0 1px $border-color;
+  $active-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+  color: $text-color;
+  background-color: transparent;
+  background-image: -webkit-linear-gradient($color, darken($color, 8%));
+  box-shadow: $border-shadow;
+
+  &:hover {
+    color: $text-color-hover;
+    background-image: -webkit-linear-gradient($hover-color, darken($hover-color, 8%));
+  }
+  &:active,
+  &.selected:hover:active {
+    box-shadow: $active-shadow, $border-shadow;
+  }
+  &.selected,
+  &.selected:hover {
+    color: $text-color-hover;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0,.3), $border-shadow;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    background-image: -webkit-linear-gradient(darken($selected-color, 8%), $selected-color);
+  }
+  &.selected:hover {
+    box-shadow: $border-shadow;
+    background-image: -webkit-linear-gradient($selected-color, darken($selected-color, 8%));
+  }
+}
+
+@mixin atom-button-variant ($color) {
+  $bg: darken($color, 10%);
+  $hover: $color;
+  $selected: $color;
+  $border: fade_out(darken($color, 20%), 0.5);
+  @include atom-button-bg($bg, $hover, $selected, $border, $text-color-selected, $text-color-selected);
+}
+
+.btn {
+  display: inline-block;
+  margin-bottom: 0; // For input.btn
+  height: $component-line-height + 2px;
+  padding: 0 $component-padding;
+  font-size: $font-size-base;
+  font-weight: normal;
+  line-height: $component-line-height;
+  text-align: center;
+  vertical-align: middle;
+  border: none;
+  border-radius: $component-border-radius;
+  background-color: $btn-default-bg;
+  white-space: nowrap;
+  cursor: pointer;
+  z-index: 0;
+  -webkit-user-select: none;
+
+  &,
+  &:active,
+  &.active {
+    &:focus,
+    &.focus {
+      @include tab-focus;
+    }
+  }
+
+  &:hover,
+  &:focus,
+  &.focus {
+    color: $btn-default-color;
+    text-decoration: none;
+    background-color: $button-background-color-hover;
+  }
+
+  &:active,
+  &.active {
+    outline: 0;
+    background-image: none;
+    box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+  }
+
+  &.selected,
+  &.selected:hover {
+    // we want the selected button to behave like the :hover button; it's on top of the other buttons.
+    z-index: 1;
+    color: $text-color-selected;
+    background-color: $button-background-color-selected;
+  }
+
+  &.disabled,
+  &[disabled],
+  fieldset[disabled] & {
+    cursor: $cursor-disabled;
+    opacity: .65;
+    box-shadow: none;
+  }
+}
+
+a.btn {
+  &.disabled,
+  fieldset[disabled] & {
+    pointer-events: none; // Future-proof disabling of clicks on `<a>` elements
+  }
+}
+
+// Alternate buttons
+// --------------------------------------------------
+.btn {
+  @include atom-button-bg($button-background-color, $button-background-color-hover, $button-background-color-selected, $button-border-color, $text-color, $text-color-highlight);
+}
+
+.btn-default {
+  @include atom-button-bg($button-background-color, $button-background-color-hover, $button-background-color-selected, $button-border-color, $text-color, $text-color-highlight);
+}
+.btn-primary {
+  @include atom-button-variant($btn-primary-bg);
+}
+// Success appears as green
+.btn-success {
+  @include atom-button-variant($btn-success-bg);
+}
+// Info appears as blue-green
+.btn-info {
+  @include atom-button-variant($btn-info-bg);
+}
+// Warning appears as orange
+.btn-warning {
+  @include atom-button-variant($btn-warning-bg);
+}
+// Danger and error appear as red
+.btn-danger {
+  @include atom-button-variant($btn-danger-bg);
+}
+
+// Link buttons
+// -------------------------
+
+// Make a button look and behave like a link
+.btn-link {
+  color: $link-color;
+  font-weight: normal;
+  border-radius: 0;
+
+  &,
+  &:active,
+  &.active,
+  &[disabled],
+  fieldset[disabled] & {
+    background-color: transparent;
+    @include box-shadow(none);
+  }
+  &,
+  &:hover,
+  &:focus,
+  &:active {
+    border-color: transparent;
+  }
+  &:hover,
+  &:focus {
+    color: $link-hover-color;
+    text-decoration: $link-hover-decoration;
+    background-color: transparent;
+  }
+  &[disabled],
+  fieldset[disabled] & {
+    &:hover,
+    &:focus {
+      color: $btn-link-disabled-color;
+      text-decoration: none;
+    }
+  }
+}
+
+
+// Button Sizes
+// --------------------------------------------------
+
+.btn-lg {
+  // line-height: ensure even-numbered height of button next to large input
+  @include button-size($padding-large-vertical, $padding-large-horizontal, $font-size-large, $line-height-large, $btn-border-radius-large);
+}
+.btn-sm {
+  // line-height: ensure proper height of button next to small input
+  @include button-size($padding-small-vertical, $padding-small-horizontal, $font-size-small, $line-height-small, $btn-border-radius-small);
+}
+.btn-xs {
+  @include button-size($padding-xs-vertical, $padding-xs-horizontal, $font-size-small, $line-height-small, $btn-border-radius-small);
+}
+
+
+// Block button
+// --------------------------------------------------
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+// Vertically space out multiple block buttons
+.btn-block + .btn-block {
+  margin-top: 5px;
+}
+
+// Specificity overrides
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+  &.btn-block {
+    width: 100%;
+  }
+}
