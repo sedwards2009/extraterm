@@ -42,6 +42,7 @@
   visibility: collapse;
   flex: 0px 0 0;
   position: relative;
+  background-color: $tab-background-color-active;
   
   &::before {
     content: "";
@@ -63,7 +64,6 @@
     top: 31px;
     left: 0px;
     background-color: $tab-background-color-active;
-    border-bottom: 1px solid $tab-bar-border-color;
     border-top: 1px solid $tab-border-color;
     pointer-events: none;
   }
@@ -103,7 +103,7 @@ DIV.tab_content > * {
   position: absolute;
   width: 100%;
   
-  top: 6px;
+  top: 0px;
   bottom: 0;
   left: 0;
   right: 0;

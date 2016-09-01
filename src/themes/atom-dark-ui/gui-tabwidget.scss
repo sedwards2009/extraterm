@@ -1,6 +1,7 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
+@import "bootstrap/variables";
 
 /* gui-tabwidget */
 
@@ -31,6 +32,7 @@
 #ID_CONTENTS {
   flex: 1 1 auto;
   position: relative;
+  background-color: $tab-background-color-active;
 }
 
 #ID_CONTENTSTACK {
