@@ -188,7 +188,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
   private _blinkingCursor: boolean;
   private _title: string;
-  private _commandLineActions: CommandLineAction[];
   private _frameFinder: FrameFinder;
   private _scrollbackSize: number;
   
@@ -231,7 +230,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._configManager = null;
     this._keyBindingManager = null;
     this._blinkingCursor = false;
-    this._commandLineActions = [];
     this._scrollbackSize = 10000;
     this._frameFinder = null;
     this._title = "New Tab";
@@ -305,39 +303,38 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     return this._scrollbackSize;
   }
   
-  set commandLineActions(commandLineActions: CommandLineAction[]) {
-    if (commandLineActions === null) {
-      this._commandLineActions = [];
-      return;
-    }
-    
-    this._commandLineActions = commandLineActions;
-  }
-  
   private _isNoFrameCommand(commandLine: string): boolean {
     const cleanCommandLine = commandLine.trim();
     if (cleanCommandLine === "") {
       return true;
     }
     
-    const commandParts = cleanCommandLine.split(/\s+/);    
-    return this._commandLineActions.some( cla => {
-      if (cla.matchType === 'name') {
-        const matcherParts = cla.match.split(/\s+/);
-        for (let i=0; i < matcherParts.length; i++) {
-          if (i >= commandParts.length) {
-            return false;
+    const commandParts = cleanCommandLine.split(/\s+/);
+    if (this._configManager === null) {
+      return false;
+    } else {
+    
+      const commandLineActions = this._configManager.getConfig().commandLineActions || [];
+      return commandLineActions
+        .filter( cla => ! cla.frame)
+        .some( cla => {
+          if (cla.matchType === 'name') {
+            const matcherParts = cla.match.split(/\s+/);
+            for (let i=0; i < matcherParts.length; i++) {
+              if (i >= commandParts.length) {
+                return false;
+              }
+              if (matcherParts[i] !== commandParts[i]) {
+                return false;
+              }
+            }
+            return true;        
+          } else {
+            // regexp
+            return (new RegExp(cla.match)).test(cleanCommandLine);
           }
-          if (matcherParts[i] !== commandParts[i]) {
-            return false;
-          }
-        }
-        return true;        
-      } else {
-        // regexp
-        return (new RegExp(cla.match)).test(cleanCommandLine);
-      }
-    } );
+        } );
+    }
   }
 
   /**

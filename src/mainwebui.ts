@@ -156,7 +156,6 @@ class TerminalTabInfo extends TabInfo {
     super();
     const config = configManager.getConfig();
     this.terminal.blinkingCursor = config.blinkingCursor;
-    this.terminal.commandLineActions = config.commandLineActions !== undefined ? config.commandLineActions : null;
     this.terminal.scrollbackSize = config.scrollbackLines;
   }
   
