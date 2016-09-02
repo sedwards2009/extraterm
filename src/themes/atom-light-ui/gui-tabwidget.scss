@@ -3,6 +3,7 @@
  */
 
 /* gui-tabwidget */
+@import "bootstrap/variables";
 
 #ID_TOP {
   display: flex;
@@ -31,6 +32,7 @@
 #ID_CONTENTS {
   flex: 1 1 auto;
   position: relative;
+  background-color: $tab-background-color-active;
 }
 
 #ID_CONTENTSTACK {
