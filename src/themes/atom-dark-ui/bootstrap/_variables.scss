@@ -213,7 +213,7 @@ $button-border-color: $base-border-color;
 
 $tab-bar-background-color: #222;
 $tab-background-color: #333333;
-$tab-background-color-active: #222222;
+$tab-background-color-active: $base-background-color;
 $tab-border-color: #484848;
 $tab-bar-border-color: darken($tab-background-color-active, 10%);
 $tab-height: 26px;
