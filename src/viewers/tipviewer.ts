@@ -287,6 +287,10 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
   }
   
+  resize(): void {
+    this._processFullResize();
+  }
+
   //-----------------------------------------------------------------------
   //
   // ######                                      
@@ -349,12 +353,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     this._substituteKeycaps(contentDiv);
     this._fixImgRelativeUrls(contentDiv);
     
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    const rect = containerDiv.getBoundingClientRect();
-    this._height = rect.height;
-    this._adjustHeight(this._height);
-    
-    this._emitVirtualResizeEvent();
+    this._processFullResize();
   }
 
   private _substituteKeycaps(contentDiv: HTMLElement): void {
@@ -384,6 +383,17 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
       const img = <HTMLImageElement> element;
       img.src = prefix + img.getAttribute("src");
     });
+  }
+
+  private _processFullResize(): void {    
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    if (containerDiv !== null) {
+      const rect = containerDiv.getBoundingClientRect();
+      this._height = rect.height;
+      this._adjustHeight(this._height);
+      
+      this._emitVirtualResizeEvent();
+    }
   }
 
   private _getTipHTML(tipNumber: number): string {
