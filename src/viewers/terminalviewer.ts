@@ -1273,14 +1273,14 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
   
   private _handleSizeEvent(newRows: number, newColumns: number, realizedRows: number): boolean {
-    if (this._rows === newRows && this._columns === newColumns) {
+    const doc = this._codeMirror.getDoc();
+    const lineCount = doc.lineCount();
+    const currentRealizedRows = lineCount - this._terminalFirstRow;
+    if (this._rows === newRows && this._columns === newColumns && currentRealizedRows <= realizedRows) {
       return false; // Nothing to do.
     }
     
-    const doc = this._codeMirror.getDoc();
-    const lineCount = doc.lineCount();
-
-    if (lineCount - this._terminalFirstRow > realizedRows) {
+    if (currentRealizedRows > realizedRows) {
       // Trim off the extra lines.
       const startPos = this._terminalFirstRow + realizedRows === 0
         ? { line: this._terminalFirstRow + realizedRows, ch: 0 }
