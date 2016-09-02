@@ -346,9 +346,16 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
         this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
           setterState.yOffset, setterState.yOffsetChanged);
       }
-        
-      this._adjustHeight(setterState.height);
-      this.scrollTo(0, setterState.yOffset);
+      
+      const op = () => {
+        this._adjustHeight(setterState.height);
+        this.scrollTo(0, setterState.yOffset);
+      };
+      if (this._codeMirror !== null) {
+        this._codeMirror.operation(op);
+      } else {
+        op();
+      }
     }
   }
   
@@ -569,7 +576,6 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this._applyVisualState(this._visualState);
 
     if (this._text !== null) {
-      this._log.debug("setting text");
       this._codeMirror.getDoc().setValue(this._text);
       domutils.doLater(this._emitVirtualResizeEvent.bind(this));
       this._text = null;
@@ -981,7 +987,6 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + codeMirrorHeight + "px";
       this._codeMirror.setSize("100%", "" + codeMirrorHeight + "px");
-      this._codeMirror.refresh();
     }
   }
     

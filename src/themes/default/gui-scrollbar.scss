@@ -6,13 +6,15 @@
 @import "extraterm-scrollbars";
 
 :host {
-    display: block;
-    color: transparent;
+  display: block;
+  color: transparent;
+  contain: content;
 }
 
 #ID_CONTAINER {
   width: $scrollbar-size + 2 * $scrollbar-pad;
   height: 100%;
+  contain: strict;
   overflow-x: hidden;
   overflow-y: scroll;
 }

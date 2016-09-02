@@ -323,8 +323,16 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       if (DEBUG_RESIZE) {
         this._log.debug(`setDimensionsAndScroll(height=${setterState.height}, heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged})`);
       }
-      this._adjustHeight(setterState.height);
-      this.scrollTo(0, setterState.yOffset);
+      
+      const op = () => {
+        this._adjustHeight(setterState.height);
+        this.scrollTo(0, setterState.yOffset);
+      };
+      if (this._codeMirror !== null) {
+        this._codeMirror.operation(op);
+      } else {
+        op();
+      }
     }
   }
   
@@ -1414,7 +1422,6 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + codeMirrorHeight + "px";
       this._codeMirror.setSize("100%", "" + codeMirrorHeight + "px");
-      this._codeMirror.refresh();
     }
   }
     

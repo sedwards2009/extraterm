@@ -10,11 +10,13 @@
   display: block;
   width: 100%;
   white-space: normal;
+  contain: strict;
 }
 
 #ID_CONTAINER {
   width: 100%;
   overflow: hidden;
+  contain: strict;
 }
 
 #ID_CONTAINER:focus {

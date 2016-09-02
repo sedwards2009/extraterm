@@ -7,13 +7,15 @@
 
 :host {
   display: block;
+  contain: strict;
 }
 
 #ID_CONTAINER {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    height: 100%;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  contain: strict;
 }
 
 #ID_SCROLLBAR {
