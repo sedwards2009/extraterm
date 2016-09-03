@@ -80,7 +80,8 @@ export function startUp(): void {
       (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent =
         cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + 
         cssMap.get(ThemeTypes.CssFile.FONT_AWESOME) + "\n" + 
-        cssMap.get(ThemeTypes.CssFile.TOP_WINDOW);
+        cssMap.get(ThemeTypes.CssFile.TOP_WINDOW) + "\n" +
+        cssMap.get(ThemeTypes.CssFile.TERMINAL_VARS);
     }
   };
   ThemeConsumer.registerThemeable(topThemeable);

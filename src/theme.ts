@@ -38,7 +38,8 @@ export enum CssFile {
   KEY_BINDINGS_TAB,
   GUI_COMMANDPALETTE,
   TIP_VIEWER,
-  FONT_AWESOME
+  FONT_AWESOME,
+  TERMINAL_VARS,
 }
 
 export const cssFileEnumItems: CssFile[] = [
@@ -61,6 +62,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.GUI_COMMANDPALETTE,
   CssFile.TIP_VIEWER,
   CssFile.FONT_AWESOME,
+  CssFile.TERMINAL_VARS
 ];
 
 const _CssFileNameMapping = {
@@ -83,6 +85,7 @@ const _CssFileNameMapping = {
   [CssFile.GUI_COMMANDPALETTE]: "gui-commandpalette",
   [CssFile.TIP_VIEWER]: "tip-viewer",
   [CssFile.FONT_AWESOME]: "font-awesome",
+  [CssFile.TERMINAL_VARS]: "terminal-vars",
 };
 
 export function cssFileNameBase(cssFile: CssFile): string {

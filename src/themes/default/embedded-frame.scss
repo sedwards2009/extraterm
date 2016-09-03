@@ -28,8 +28,6 @@ $RUNNING_COLOR: #d6dfe9;
 $SUCCESS_COLOR: #54ff54;
 $FAIL_COLOR: #ff5454;
 
-$TERMINAL_BACKGROUND: #000000;
-
 :host {
   display: block;
   width: 100%;
@@ -166,7 +164,7 @@ $TERMINAL_BACKGROUND: #000000;
 }
 
 #ID_CONTAINER.scrolling > #ID_HEADER {
-  border-bottom: $TEAR_BORDER_HEIGHT dashed $TERMINAL_BACKGROUND;
+  border-bottom: $TEAR_BORDER_HEIGHT dashed var(--terminal-background-color);
 }
 
 #ID_CONTAINER.running > #ID_HEADER {

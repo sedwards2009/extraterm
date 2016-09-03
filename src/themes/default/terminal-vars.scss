@@ -1,0 +1,12 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* terminal CSS vars */
+
+@import "terminal-computed-colors";
+
+body {
+  --terminal-background-color: $terminal-background-color;
+  --terminal-foreground-color: $terminal-foreground-color;
+}
