@@ -323,25 +323,28 @@ function handleThemeContentsMessage(msg: Messages.Message): void {
   
   if (themeContentsMessage.success) {
     const cssFileMap = new Map<ThemeTypes.CssFile, string>();
-    ThemeTypes.cssFileEnumItems.forEach( (cssFile) => {
+    themeContentsMessage.cssFileList.forEach( (cssFile) => {
       cssFileMap.set(cssFile, themeContentsMessage.themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)]);
     });
 
     // Distribute the CSS files to the classes which want them.
     ThemeConsumer.updateCss(cssFileMap);
   } else {
-    
-    // Something went wrong.
-    _log.warn(themeContentsMessage.errorMessage);
-    
-    if (themeContentsMessage.themeIdList.every( id => id === ThemeTypes.DEFAULT_THEME)) {
-      // Error occurred while trying to generate the default themes.
-      window.alert("Something has gone wrong. The default theme couldn't be generated. Sorry.");
-    } else {
-      _log.warn("Attempting to use the default theme.");
-      window.alert("Something has gone wrong while generating the theme. The default theme will be tried.");
-      requestThemeContents(ThemeTypes.DEFAULT_THEME, ThemeTypes.DEFAULT_THEME, ThemeTypes.DEFAULT_THEME);
-    }
+    themeContentsError(themeContentsMessage);
+  }
+}
+
+function themeContentsError(themeContentsMessage: Messages.ThemeContentsMessage): void {
+  // Something went wrong.
+  _log.warn(themeContentsMessage.errorMessage);
+  
+  if (themeContentsMessage.themeIdList.every( id => id === ThemeTypes.DEFAULT_UI_THEME)) {
+    // Error occurred while trying to generate the default themes.
+    window.alert("Something has gone wrong. The default theme couldn't be generated. Sorry.");
+  } else {
+    _log.warn("Attempting to use the default theme.");
+    window.alert("Something has gone wrong while generating the theme. The default theme will be tried.");
+    requestThemeContents(ThemeTypes.DEFAULT_TERMINAL_THEME, ThemeTypes.DEFAULT_SYNTAX_THEME, ThemeTypes.DEFAULT_UI_THEME);
   }
 }
 
@@ -392,18 +395,42 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
 }
 
 function requestThemeContents(themeTerminal: string, themeSyntax: string, themeGUI: string): Promise<void> {
-  const themeIdList = [];
-  if (themeTerminal !== ThemeTypes.DEFAULT_THEME) {
-    themeIdList.push(themeTerminal);
-  }
-  if (themeSyntax !== ThemeTypes.DEFAULT_THEME) {
-    themeIdList.push(themeSyntax);
-  }
-  if (themeGUI !== ThemeTypes.DEFAULT_THEME) {
-    themeIdList.push(themeGUI);
-  }
-  themeIdList.push(ThemeTypes.DEFAULT_THEME);
-  return webipc.requestThemeContents(themeIdList).then(handleThemeContentsMessage);
+  const terminalThemeIdList = [themeTerminal, ThemeTypes.DEFAULT_TERMINAL_THEME];
+  const syntaxThemeIdList = [themeSyntax, ThemeTypes.DEFAULT_SYNTAX_THEME];
+  const uiThemeIdList = [themeGUI, ThemeTypes.DEFAULT_UI_THEME];
+  
+  const cssFileMap = new Map<ThemeTypes.CssFile, string>();
+  return webipc.requestThemeContents(terminalThemeIdList, ThemeTypes.TerminalCssFiles)
+    .then( (result) => {
+      if (result.success) {
+        ThemeTypes.TerminalCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
+          const key = ThemeTypes.cssFileNameBase(cssFile);
+          cssFileMap.set(cssFile, result.themeContents.cssFiles[key]);
+        });
+      }
+      return webipc.requestThemeContents(syntaxThemeIdList, ThemeTypes.SyntaxCssFiles);
+    }, themeContentsError)
+    .then( (result) => {
+      if (result.success) {
+        ThemeTypes.SyntaxCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
+          const key = ThemeTypes.cssFileNameBase(cssFile);
+          cssFileMap.set(cssFile, result.themeContents.cssFiles[key]);
+        });
+      }
+
+      return webipc.requestThemeContents(uiThemeIdList, ThemeTypes.UiCssFiles);
+    }, themeContentsError)
+    .then( (result) => {
+      if (result.success) {
+        ThemeTypes.UiCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
+          const key = ThemeTypes.cssFileNameBase(cssFile);
+          cssFileMap.set(cssFile, result.themeContents.cssFiles[key]);
+        });
+      }
+      
+      // Distribute the CSS files to the classes which want them.
+      ThemeConsumer.updateCss(cssFileMap);
+    }, themeContentsError);
 }
 
 function setCssVars(fontName: string, fontPath: string, terminalFontSize: number): void {

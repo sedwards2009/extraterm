@@ -554,13 +554,13 @@ function initConfig(): void {
   }
 
   if (themeManager.getTheme(config.themeTerminal) === null) {
-    config.themeTerminal = ThemeTypes.DEFAULT_THEME;
+    config.themeTerminal = ThemeTypes.DEFAULT_TERMINAL_THEME;
   }
   if (themeManager.getTheme(config.themeSyntax) === null) {
-    config.themeSyntax = ThemeTypes.DEFAULT_THEME;
+    config.themeSyntax = ThemeTypes.DEFAULT_SYNTAX_THEME;
   }
   if (themeManager.getTheme(config.themeGUI) === null) {
-    config.themeGUI = ThemeTypes.DEFAULT_THEME;
+    config.themeGUI = ThemeTypes.DEFAULT_UI_THEME;
   }
   
   // Validate the selected keybindings config value.
@@ -568,7 +568,7 @@ function initConfig(): void {
     config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
   }
   
-  registerThemeChangeListener(config);
+  // registerThemeChangeListener(config);
 }
 
 /**
@@ -646,10 +646,10 @@ function setConfig(newConfig: Config): void {
   writeConfigurationFile(newConfig);
 
   if (config !== null) {
-    unregisterThemeChangeListener(config);
+    // unregisterThemeChangeListener(config);
   }
 
-  registerThemeChangeListener(newConfig);
+  // registerThemeChangeListener(newConfig);
   config = newConfig;
 }
 
@@ -670,18 +670,19 @@ function getThemes(): ThemeInfo[] {
   return themeManager.getAllThemes();
 }
 
-function registerThemeChangeListener(config: Config): void {
-  const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_THEME];
-  themeManager.registerChangeListener(themeIdList, (theme: ThemeInfo): void  => {
-    const cleanIdList = [...themeIdList.filter( name => name !== ThemeTypes.DEFAULT_THEME), ThemeTypes.DEFAULT_THEME];
-    sendThemeContents(mainWindow.webContents, cleanIdList);
-  });
-}
-
-function unregisterThemeChangeListener(config: Config): void {
-  const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_THEME];
-  themeManager.unregisterChangeListener(themeIdList);
-}
+// function registerThemeChangeListener(config: Config): void {
+//   const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_UI_THEME,
+//     ThemeTypes.DEFAULT_TERMINAL_THEME, ThemeTypes.DEFAULT_SYNTAX_THEME]; // FIXME
+//   themeManager.registerChangeListener(themeIdList, (theme: ThemeInfo): void  => {
+//     const cleanIdList = [...themeIdList.filter( name => name !== ThemeTypes.DEFAULT_UI_THEME), ThemeTypes.DEFAULT_UI_THEME]; // FIXME
+//     sendThemeContents(mainWindow.webContents, cleanIdList);
+//   });
+// }
+// 
+// function unregisterThemeChangeListener(config: Config): void {
+//   const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_UI_THEME]; // FIXME
+//   themeManager.unregisterChangeListener(themeIdList);
+// }
 
 function scanKeyBindingFiles(keyBindingsDir: string): config_.KeyBindingInfo[] {
   const result: config_.KeyBindingInfo[] = [];
@@ -797,7 +798,8 @@ function handleIpc(event: GitHubElectron.IPCMainEvent, arg: any): void {
       break;
       
     case Messages.MessageType.THEME_CONTENTS_REQUEST:
-      sendThemeContents(event.sender, (<Messages.ThemeContentsRequestMessage> msg).themeIdList);
+      sendThemeContents(event.sender, (<Messages.ThemeContentsRequestMessage> msg).themeIdList,
+        (<Messages.ThemeContentsRequestMessage> msg).cssFileList);
       break;
       
     case Messages.MessageType.PTY_CREATE:
@@ -903,12 +905,15 @@ function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages
   return reply;
 }
 
-function sendThemeContents(webContents: GitHubElectron.WebContents, themeIdList: string[]): void {
-  themeManager.renderThemes(themeIdList)
+function sendThemeContents(webContents: GitHubElectron.WebContents, themeIdList: string[],
+    cssFileList: ThemeTypes.CssFile[]): void {
+
+  themeManager.renderThemes(themeIdList, cssFileList)
     .then( (renderResult) => {
       const themeContents = renderResult.themeContents;
-      const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
+      const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS,
         themeIdList: themeIdList,
+        cssFileList: cssFileList,
         themeContents: themeContents,
         success: true,
         errorMessage: null
@@ -918,6 +923,7 @@ function sendThemeContents(webContents: GitHubElectron.WebContents, themeIdList:
     .catch( (err: Error) => {
       const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
         themeIdList: themeIdList,
+        cssFileList: cssFileList,
         themeContents: null,
         success: false,
         errorMessage: err.message

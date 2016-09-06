@@ -9,7 +9,7 @@ export type ThemeType = 'terminal' | 'syntax' | 'gui';
 export interface ThemeInfo {
   name: string;
   id: string;
-  type: ThemeType[];  // Defines the type of theme this is.
+  type: ThemeType[];  // Defines the type of theme this is. FIXME make this singular.
   path: string;
   debug: boolean;
   comment: string;
@@ -96,4 +96,28 @@ export interface Themeable {
   setThemeCssMap(cssMap: Map<CssFile, string>): void;
 }
 
-export const DEFAULT_THEME = "default";
+export const DEFAULT_TERMINAL_THEME = "default";
+export const DEFAULT_SYNTAX_THEME = "default";
+export const DEFAULT_UI_THEME = "default";
+
+export const TerminalCssFiles: CssFile[] = [CssFile.TERMINAL_VARS, CssFile.TERMINAL_VIEWER];
+export const SyntaxCssFiles: CssFile[] = [CssFile.TEXT_VIEWER];
+export const UiCssFiles: CssFile[] = [
+  CssFile.GUI_CONTROLS,
+  CssFile.TOP_WINDOW,
+  CssFile.MAIN_UI,
+  CssFile.TERMINAL,
+  CssFile.IMAGE_VIEWER,
+  CssFile.EMBEDDED_FRAME,
+  CssFile.ABOUT_TAB,
+  CssFile.SETTINGS_TAB,
+  CssFile.GUI_MENUITEM,
+  CssFile.GUI_CONTEXTMENU,
+  CssFile.GUI_TABWIDGET,
+  CssFile.GUI_STACKEDWIDGET,
+  CssFile.GUI_SCROLLBAR,
+  CssFile.KEY_BINDINGS_TAB,
+  CssFile.GUI_COMMANDPALETTE,
+  CssFile.TIP_VIEWER,
+  CssFile.FONT_AWESOME
+];

@@ -10,6 +10,7 @@ const ipc = electron.ipcRenderer;
 import Messages = require('./windowmessages');
 import config = require('./config');
 import Logger = require('./logger');
+import ThemeTypes = require('./theme');
 
 const _log = new Logger("WebIPC");
 
@@ -84,12 +85,13 @@ export function requestThemeList(): Promise<Messages.ThemeListMessage> {
   return request(msg, Messages.MessageType.THEME_LIST);
 }
 
-export function requestThemeContents(themeIdList: string[]): Promise<Messages.ThemeContentsMessage> {
+export function requestThemeContents(themeIdList: string[], cssFileList: ThemeTypes.CssFile[]): Promise<Messages.ThemeContentsMessage> {
   if (DEBUG) {
     _log.debug("requestThemeContents(): ", themeIdList);
   }
   const msg: Messages.ThemeContentsRequestMessage = {type: Messages.MessageType.THEME_CONTENTS_REQUEST,
-    themeIdList: themeIdList};
+    themeIdList: themeIdList,
+    cssFileList: cssFileList};
   return request(msg, Messages.MessageType.THEME_CONTENTS);
 }
 

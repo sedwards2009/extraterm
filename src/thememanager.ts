@@ -43,7 +43,7 @@ export interface ThemeManager {
    * @param  themeIds the stack or themes to render
    * @return the rendered CSS texts
    */
-  renderThemes(themeIdList: string[]): Promise<RenderResult>;
+  renderThemes(themeIdList: string[], cssFileList: CssFile[]): Promise<RenderResult>;
   
   registerChangeListener(themeIdOrList: string | string[], listener: ListenerFunc): void;
   
@@ -110,14 +110,14 @@ class ThemeManagerImpl implements ThemeManager {
     return result;
   }
 
-  renderThemes(themeStack: string[]): Promise<RenderResult> {
+  renderThemes(themeStack: string[], cssFileList: CssFile[]): Promise<RenderResult> {
     const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
 
     // Look for this combo in the cache.
-    const contents = this._themeContentsCache.get(themeStack);
+    const contents = null; //this._themeContentsCache.get(themeStack); // FIXME
     
     if (contents === null) {
-      return this._renderThemeStackContents(themeInfoList)
+      return this._renderThemeStackContents(themeInfoList, cssFileList)
         .then( (renderResults) => {
           this._themeContentsCache.set(themeStack, renderResults.themeContents);
           return renderResults;
@@ -150,40 +150,40 @@ class ThemeManagerImpl implements ThemeManager {
   }
   
   registerChangeListener(themeIdOrStack: string | string[], listenerFunc: (theme: ThemeInfo) => void): void {
-    const themeStack = _.uniq(Array.isArray(themeIdOrStack) ? themeIdOrStack : [themeIdOrStack]);
-    const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
-    
-    themeStack.forEach( (themeId) => {
-      const themeInfo = this.getTheme(themeId);
-      const themePath = themeInfo.path;
-      
-      const watcher = fs.watch(themePath, { persistent: false },
-        (event, filename) => {
-          const contents = this._themeContentsCache.get(themeStack);
-
-          if (contents !== null) {
-            const oldThemeContents = contents;
-            
-            this._renderThemeStackContents(themeInfoList)
-              .then( (renderResult) => {
-                const newThemeContents = renderResult.themeContents;
-                if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
-                  this._themeContentsCache.set(themeStack, newThemeContents);
-                  listenerFunc(themeInfo);
-                } else {
-                  this._log.info("" + filename + " changed, but the theme contents did not.");
-                }
-              });
-          } else {
-            this.renderThemes(themeStack).then( (result) => {
-              listenerFunc(themeInfo);
-            });
-          }
-        });
-      
-      const listenerItem: ListenerItem = { themeId, listenerFunc, watcher };
-      this._listeners.push(listenerItem);
-    });
+    // const themeStack = _.uniq(Array.isArray(themeIdOrStack) ? themeIdOrStack : [themeIdOrStack]);
+    // const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
+    // 
+    // themeStack.forEach( (themeId) => {
+    //   const themeInfo = this.getTheme(themeId);
+    //   const themePath = themeInfo.path;
+    //   
+    //   const watcher = fs.watch(themePath, { persistent: false },
+    //     (event, filename) => {
+    //       const contents = this._themeContentsCache.get(themeStack);
+    // 
+    //       if (contents !== null) {
+    //         const oldThemeContents = contents;
+    //         
+    //         this._renderThemeStackContents(themeInfoList)
+    //           .then( (renderResult) => {
+    //             const newThemeContents = renderResult.themeContents;
+    //             if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
+    //               this._themeContentsCache.set(themeStack, newThemeContents);
+    //               listenerFunc(themeInfo);
+    //             } else {
+    //               this._log.info("" + filename + " changed, but the theme contents did not.");
+    //             }
+    //           });
+    //       } else {
+    //         this.renderThemes(themeStack).then( (result) => {
+    //           listenerFunc(themeInfo);
+    //         });
+    //       }
+    //     });
+    //   
+    //   const listenerItem: ListenerItem = { themeId, listenerFunc, watcher };
+    //   this._listeners.push(listenerItem);
+    // });
   }
   
   unregisterChangeListener(themeIdOrList: string | string[]): void {
@@ -245,8 +245,8 @@ class ThemeManagerImpl implements ThemeManager {
     return _.isString(themeinfo.name) && themeinfo.name !== "";
   }
 
-  private _renderThemeStackContents(themeStack: ThemeInfo[]): Promise<RenderResult> {
-    return this._recursiveRenderThemeStackContents(ThemeTypes.cssFileEnumItems.slice(0), themeStack);
+  private _renderThemeStackContents(themeStack: ThemeInfo[], cssFileList: CssFile[]): Promise<RenderResult> {
+    return this._recursiveRenderThemeStackContents(cssFileList.slice(0), themeStack);
   }
 
   private _recursiveRenderThemeStackContents(todoCssFile: ThemeTypes.CssFile[], themeStack: ThemeInfo[]):
