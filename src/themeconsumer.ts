@@ -52,7 +52,6 @@ export function updateCss(cssMap: Map<ThemeTypes.CssFile, string>): void {
   const newCssMap = new Map(currentCssMap);
   cssMap.forEach( (value, key) => newCssMap.set(key, value));
   currentCssMap = newCssMap;
-console.log("currentCssMap:",currentCssMap);  
   themeableRegistry.forEach( (themeable) => themeable.setThemeCssMap(newCssMap) );
 }
 

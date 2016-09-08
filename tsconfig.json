@@ -102,6 +102,7 @@
         "./src/typings/github-electron/github-electron.d.ts",
         "./src/typings/he/he.d.ts",
         "./src/typings/lodash/lodash.d.ts",
+        "./src/typings/node-sass/node-sass.d.ts",
         "./src/typings/node/node.d.ts",
         "./src/typings/nodeunit/nodeunit.d.ts",
         "./src/typings/ptyw.js/ptyw.js.d.ts",

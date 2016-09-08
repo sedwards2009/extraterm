@@ -6,7 +6,16 @@
 
 import fs = require('fs');
 import path = require('path');
-import sass = require('sass.js');
+
+import sourceDir = require('./sourceDir');
+const MODULE_VERSION = "49";
+if (process.versions.modules === MODULE_VERSION) {
+  // Patch in our special node-sass binary for V8 module verion 49 as used by Electron.
+  process.env.SASS_BINARY_PATH = path.join(sourceDir.path,
+    `node-sass-binary/${process.platform}-${process.arch}-${MODULE_VERSION}/binding.node`);
+}
+import nodeSass = require('node-sass');
+
 import _ = require('lodash');
 
 import Logger = require('./logger');
@@ -314,18 +323,18 @@ class ThemeManagerImpl implements ThemeManager {
         this._log.debug("Processing " + sassFileName);
       }
       try {
-        sass.importer(null);
-        
-        sass.importer( (request, done) => {
+        const importer: nodeSass.Importer = (url: string, prev: string, done: (data: { file?: string; contents?: string; })=> void) => {
           
-          const basePath = request.resolved.startsWith(path.sep) ? request.resolved.substr(1) : request.resolved;
-          const dirName = path.dirname(basePath);
+          const basePath = url;
+          const contextBaseDir = path.dirname(prev);
+          const dirName = path.join(contextBaseDir, path.dirname(basePath));
           const baseName = path.basename(basePath);
           
           if (DEBUG_SASS_FINE) {
-            this._log.debug("Importer:", request);
+            this._log.debug(`Import request: URL: ${url} prev: ${prev}`);
             this._log.debug("dirName:", dirName);
             this._log.debug("baseName:", baseName);
+            this._log.debug("contextBaseDir:", contextBaseDir);
           }
           
           const candidates = [basePath,
@@ -339,25 +348,25 @@ class ThemeManagerImpl implements ThemeManager {
           
           for (let candidate of candidates) {
             const candidateFileName = this._findFile(dirStack, candidate);
-            if (DEBUG_SASS_FINE) {
-              this._log.debug("Trying " + candidateFileName);
-            }
             if (candidateFileName) {
               if (DEBUG_SASS_FINE) {
-                this._log.debug("Importing SASS file " + candidateFileName);
+                this._log.debug("Trying " + candidateFileName);
+              }
+              if (DEBUG_SASS_FINE) {
+                this._log.debug("Importer returning SASS file: " + candidateFileName);
               }
               try {
                 const content = fs.readFileSync(candidateFileName, {encoding: 'utf-8'});
-                done( { content: content } );
+                done( { contents: content } );
               } catch(err) {
-                done( { error: "" + err } );
+                done(err);
               }
               return;
             }
           }
           
-          done( { error: "Unable to find " + basePath } );
-        });
+          done(new Error("Unable to find " + basePath));
+        };
         
         // Start the compile using a small virtual 'boot' file.
         const scssText = formattedVariables + '\n@import "' + sassFileName + '";\n';
@@ -365,22 +374,19 @@ class ThemeManagerImpl implements ThemeManager {
           this._log.debug("Root sass text: ", scssText);
         }
 
-        sass.compile(scssText, { precision: 8, inputPath: '__boot__' }, (result) => {
-          if (result.status === 0) {
-            const successResult = <sass.SuccessResult> result;
+        nodeSass.render({data: scssText, precision: 8, importer: importer }, (err, result) => {
+          if (err === null) {
             if (DEBUG_SASS) {
               this._log.debug("Succeeded done processing " + sassFileName);
             }
 
-            resolve(successResult.text);
+            resolve(result.css.toString('utf8'));
           } else {
-            const errorResult = <sass.ErrorResult> result;
-            this._log.warn("An SASS error occurred while processing " + sassFileName, errorResult,
-              errorResult.formatted);
+            this._log.warn("An SASS error occurred while processing " + sassFileName, err, err.message);
             if (DEBUG_SASS) {
               this._log.debug("Failed processing " + sassFileName);
             }
-            cancel(new Error("An SASS error occurred while processing " + sassFileName + "\n" + errorResult.formatted));
+            cancel(new Error("An SASS error occurred while processing " + sassFileName + "\n" + err.message));
           }
         });
       } catch (err) {
