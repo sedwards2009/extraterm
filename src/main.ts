@@ -61,13 +61,12 @@ sourceMapSupport.install();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
-let mainWindow: GitHubElectron.BrowserWindow = null;
+let mainWindow: Electron.BrowserWindow = null;
 
 const EXTRATERM_CONFIG_DIR = "extraterm";
 const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
-const THEMES_CACHE_DIR = "theme_cache";
 const KEYBINDINGS_DIRECTORY = "keybindings";
 const DEFAULT_KEYBINDING = "keybindings.json";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
@@ -106,11 +105,7 @@ function main(): void {
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
   
-  const userThemeCacheDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, THEMES_CACHE_DIR);
-  if ( ! fs.existsSync(userThemeCacheDir)) {
-    fs.mkdirSync(userThemeCacheDir);
-  }
-  themeManager = ThemeManager.makeThemeManager([themesdir, userThemesDir], userThemeCacheDir);
+  themeManager = ThemeManager.makeThemeManager([themesdir, userThemesDir]);
   
   initConfig();
   
@@ -567,8 +562,6 @@ function initConfig(): void {
   if ( ! config.systemConfig.keyBindingsFiles.some( (t) => t.filename === config.keyBindingsFilename )) {
     config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
   }
-  
-  // registerThemeChangeListener(config);
 }
 
 /**
@@ -644,12 +637,6 @@ function writeConfigurationFile(config: Config): void {
 function setConfig(newConfig: Config): void {
   // Write it to disk.
   writeConfigurationFile(newConfig);
-
-  if (config !== null) {
-    // unregisterThemeChangeListener(config);
-  }
-
-  // registerThemeChangeListener(newConfig);
   config = newConfig;
 }
 
@@ -669,20 +656,6 @@ function getFullConfig(): Config {
 function getThemes(): ThemeInfo[] {
   return themeManager.getAllThemes();
 }
-
-// function registerThemeChangeListener(config: Config): void {
-//   const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_UI_THEME,
-//     ThemeTypes.DEFAULT_TERMINAL_THEME, ThemeTypes.DEFAULT_SYNTAX_THEME]; // FIXME
-//   themeManager.registerChangeListener(themeIdList, (theme: ThemeInfo): void  => {
-//     const cleanIdList = [...themeIdList.filter( name => name !== ThemeTypes.DEFAULT_UI_THEME), ThemeTypes.DEFAULT_UI_THEME]; // FIXME
-//     sendThemeContents(mainWindow.webContents, cleanIdList);
-//   });
-// }
-// 
-// function unregisterThemeChangeListener(config: Config): void {
-//   const themeIdList = [config.themeTerminal, config.themeSyntax, config.themeGUI, ThemeTypes.DEFAULT_UI_THEME]; // FIXME
-//   themeManager.unregisterChangeListener(themeIdList);
-// }
 
 function scanKeyBindingFiles(keyBindingsDir: string): config_.KeyBindingInfo[] {
   const result: config_.KeyBindingInfo[] = [];
@@ -776,7 +749,7 @@ function startIpc(): void {
   ipc.on(Messages.CHANNEL_NAME, handleIpc);
 }
 
-function handleIpc(event: GitHubElectron.IPCMainEvent, arg: any): void {
+function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
   
@@ -905,7 +878,7 @@ function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages
   return reply;
 }
 
-function sendThemeContents(webContents: GitHubElectron.WebContents, themeIdList: string[],
+function sendThemeContents(webContents: Electron.WebContents, themeIdList: string[],
     cssFileList: ThemeTypes.CssFile[]): void {
 
   themeManager.renderThemes(themeIdList, cssFileList)
@@ -952,7 +925,7 @@ interface PtyTuple {
 
 const ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
 
-function createPty(sender: GitHubElectron.WebContents, file: string, args: string[], env: EnvironmentMap,
+function createPty(sender: Electron.WebContents, file: string, args: string[], env: EnvironmentMap,
     cols: number, rows: number): number {
     
   const ptyEnv = _.clone(env);
@@ -992,7 +965,7 @@ function createPty(sender: GitHubElectron.WebContents, file: string, args: strin
   return ptyId;
 }
 
-function handlePtyCreate(sender: GitHubElectron.WebContents, msg: Messages.CreatePtyRequestMessage): Messages.CreatedPtyMessage {
+function handlePtyCreate(sender: Electron.WebContents, msg: Messages.CreatePtyRequestMessage): Messages.CreatedPtyMessage {
   const id = createPty(sender, msg.command, msg.args, msg.env, msg.columns, msg.rows);
   const reply: Messages.CreatedPtyMessage = { type: Messages.MessageType.PTY_CREATED, id: id };
   return reply;
@@ -1027,7 +1000,7 @@ function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
   ptyMap.delete(msg.id);
 }
 
-function cleanUpPtyWindow(window: GitHubElectron.BrowserWindow): void {
+function cleanUpPtyWindow(window: Electron.BrowserWindow): void {
   mapKeys(ptyMap).forEach( k => {
     const tup = ptyMap.get(k);
     if (tup.windowId === window.id) {
@@ -1039,7 +1012,7 @@ function cleanUpPtyWindow(window: GitHubElectron.BrowserWindow): void {
 
 //-------------------------------------------------------------------------
 
-function handleDevToolsRequest(sender: GitHubElectron.WebContents, msg: Messages.DevToolsRequestMessage): void {
+function handleDevToolsRequest(sender: Electron.WebContents, msg: Messages.DevToolsRequestMessage): void {
   if (msg.open) {
     sender.openDevTools();
   } else {
@@ -1048,7 +1021,7 @@ function handleDevToolsRequest(sender: GitHubElectron.WebContents, msg: Messages
 }
 
 
-function sendDevToolStatus(window: GitHubElectron.BrowserWindow, open: boolean): void {
+function sendDevToolStatus(window: Electron.BrowserWindow, open: boolean): void {
   const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };
   window.webContents.send(Messages.CHANNEL_NAME, msg);
 }

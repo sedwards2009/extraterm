@@ -254,7 +254,7 @@ function executeCommand(command: string): boolean {
 }
 
 function setupOSXEmptyMenus(): void {
-  const template: GitHubElectron.MenuItemOptions[] = [{
+  const template: Electron.MenuItemOptions[] = [{
     label: "Extraterm",
   }];
   
@@ -263,7 +263,7 @@ function setupOSXEmptyMenus(): void {
 }
 
 function setupOSXMenus(mainWebUi: MainWebUi): void {
-  const template: GitHubElectron.MenuItemOptions[] = [{
+  const template: Electron.MenuItemOptions[] = [{
     label: "Extraterm",
     submenu: [
       {
