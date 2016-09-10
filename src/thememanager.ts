@@ -6,7 +6,16 @@
 
 import fs = require('fs');
 import path = require('path');
-import sass = require('sass.js');
+
+import sourceDir = require('./sourceDir');
+const MODULE_VERSION = "49";
+if (process.versions.modules === MODULE_VERSION) {
+  // Patch in our special node-sass binary for V8 module verion 49 as used by Electron.
+  process.env.SASS_BINARY_PATH = path.join(sourceDir.path,
+    `node-sass-binary/${process.platform}-${process.arch}-${MODULE_VERSION}/binding.node`);
+}
+import nodeSass = require('node-sass');
+
 import _ = require('lodash');
 
 import Logger = require('./logger');
@@ -43,11 +52,7 @@ export interface ThemeManager {
    * @param  themeIds the stack or themes to render
    * @return the rendered CSS texts
    */
-  renderThemes(themeIdList: string[]): Promise<RenderResult>;
-  
-  registerChangeListener(themeIdOrList: string | string[], listener: ListenerFunc): void;
-  
-  unregisterChangeListener(themeIdOrList: string | string[]): void;
+  renderThemes(themeIdList: string[], cssFileList: CssFile[]): Promise<RenderResult>;
 }
 
 interface ListenerItem {
@@ -75,17 +80,8 @@ class ThemeManagerImpl implements ThemeManager {
   
   private _themes: Map<string, ThemeInfo> = null;
   
-  private _cacheDirectory: string = null;
-  
-  private _themeContentsCache: ThemeCache = null;
-  
-  private _listeners: ListenerItem[] = [];
-  
-  constructor(directories: string[], cacheDirectory: string=null) {
+  constructor(directories: string[]) {
     this._directories = directories;
-    this._cacheDirectory = cacheDirectory;
-    this._themeContentsCache = new ThemeCache(this._directories, this._cacheDirectory);
-    this._themeContentsCache.load();
 
     const allThemes = new Map<string, ThemeInfo>();
     this._directories.forEach( (directory) => {
@@ -110,16 +106,15 @@ class ThemeManagerImpl implements ThemeManager {
     return result;
   }
 
-  renderThemes(themeStack: string[]): Promise<RenderResult> {
+  renderThemes(themeStack: string[], cssFileList: CssFile[]): Promise<RenderResult> {
     const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
 
     // Look for this combo in the cache.
-    const contents = this._themeContentsCache.get(themeStack);
+    const contents = null; //this._themeContentsCache.get(themeStack); // FIXME
     
     if (contents === null) {
-      return this._renderThemeStackContents(themeInfoList)
+      return this._renderThemeStackContents(themeInfoList, cssFileList)
         .then( (renderResults) => {
-          this._themeContentsCache.set(themeStack, renderResults.themeContents);
           return renderResults;
         });
     } else {
@@ -147,55 +142,6 @@ class ThemeManagerImpl implements ThemeManager {
       }
     }).filter( (themeInfo) => themeInfo !== null );
     return themeInfoList;
-  }
-  
-  registerChangeListener(themeIdOrStack: string | string[], listenerFunc: (theme: ThemeInfo) => void): void {
-    const themeStack = _.uniq(Array.isArray(themeIdOrStack) ? themeIdOrStack : [themeIdOrStack]);
-    const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
-    
-    themeStack.forEach( (themeId) => {
-      const themeInfo = this.getTheme(themeId);
-      const themePath = themeInfo.path;
-      
-      const watcher = fs.watch(themePath, { persistent: false },
-        (event, filename) => {
-          const contents = this._themeContentsCache.get(themeStack);
-
-          if (contents !== null) {
-            const oldThemeContents = contents;
-            
-            this._renderThemeStackContents(themeInfoList)
-              .then( (renderResult) => {
-                const newThemeContents = renderResult.themeContents;
-                if ( ! _.isEqual(oldThemeContents, newThemeContents)) {
-                  this._themeContentsCache.set(themeStack, newThemeContents);
-                  listenerFunc(themeInfo);
-                } else {
-                  this._log.info("" + filename + " changed, but the theme contents did not.");
-                }
-              });
-          } else {
-            this.renderThemes(themeStack).then( (result) => {
-              listenerFunc(themeInfo);
-            });
-          }
-        });
-      
-      const listenerItem: ListenerItem = { themeId, listenerFunc, watcher };
-      this._listeners.push(listenerItem);
-    });
-  }
-  
-  unregisterChangeListener(themeIdOrList: string | string[]): void {
-    const themeIdList = Array.isArray(themeIdOrList) ? themeIdOrList : [themeIdOrList];
-    themeIdList.forEach( (themeId) => {    
-      const matches = this._listeners.filter( (tup) => tup.themeId === themeId );
-      if (matches.length !== 0) {
-        matches[0].watcher.close();
-      }
-
-      this._listeners = this._listeners.filter( (tup) => tup.themeId !== themeId );
-    });
   }
   
   /**
@@ -245,8 +191,8 @@ class ThemeManagerImpl implements ThemeManager {
     return _.isString(themeinfo.name) && themeinfo.name !== "";
   }
 
-  private _renderThemeStackContents(themeStack: ThemeInfo[]): Promise<RenderResult> {
-    return this._recursiveRenderThemeStackContents(ThemeTypes.cssFileEnumItems.slice(0), themeStack);
+  private _renderThemeStackContents(themeStack: ThemeInfo[], cssFileList: CssFile[]): Promise<RenderResult> {
+    return this._recursiveRenderThemeStackContents(cssFileList.slice(0), themeStack);
   }
 
   private _recursiveRenderThemeStackContents(todoCssFile: ThemeTypes.CssFile[], themeStack: ThemeInfo[]):
@@ -314,18 +260,18 @@ class ThemeManagerImpl implements ThemeManager {
         this._log.debug("Processing " + sassFileName);
       }
       try {
-        sass.importer(null);
-        
-        sass.importer( (request, done) => {
+        const importer: nodeSass.Importer = (url: string, prev: string, done: (data: { file?: string; contents?: string; })=> void) => {
           
-          const basePath = request.resolved.startsWith(path.sep) ? request.resolved.substr(1) : request.resolved;
-          const dirName = path.dirname(basePath);
+          const basePath = url;
+          const contextBaseDir = path.dirname(prev);
+          const dirName = path.join(contextBaseDir, path.dirname(basePath));
           const baseName = path.basename(basePath);
           
           if (DEBUG_SASS_FINE) {
-            this._log.debug("Importer:", request);
+            this._log.debug(`Import request: URL: ${url} prev: ${prev}`);
             this._log.debug("dirName:", dirName);
             this._log.debug("baseName:", baseName);
+            this._log.debug("contextBaseDir:", contextBaseDir);
           }
           
           const candidates = [basePath,
@@ -339,25 +285,25 @@ class ThemeManagerImpl implements ThemeManager {
           
           for (let candidate of candidates) {
             const candidateFileName = this._findFile(dirStack, candidate);
-            if (DEBUG_SASS_FINE) {
-              this._log.debug("Trying " + candidateFileName);
-            }
             if (candidateFileName) {
               if (DEBUG_SASS_FINE) {
-                this._log.debug("Importing SASS file " + candidateFileName);
+                this._log.debug("Trying " + candidateFileName);
+              }
+              if (DEBUG_SASS_FINE) {
+                this._log.debug("Importer returning SASS file: " + candidateFileName);
               }
               try {
                 const content = fs.readFileSync(candidateFileName, {encoding: 'utf-8'});
-                done( { content: content } );
+                done( { contents: content } );
               } catch(err) {
-                done( { error: "" + err } );
+                done(err);
               }
               return;
             }
           }
           
-          done( { error: "Unable to find " + basePath } );
-        });
+          done(new Error("Unable to find " + basePath));
+        };
         
         // Start the compile using a small virtual 'boot' file.
         const scssText = formattedVariables + '\n@import "' + sassFileName + '";\n';
@@ -365,22 +311,19 @@ class ThemeManagerImpl implements ThemeManager {
           this._log.debug("Root sass text: ", scssText);
         }
 
-        sass.compile(scssText, { precision: 8, inputPath: '__boot__' }, (result) => {
-          if (result.status === 0) {
-            const successResult = <sass.SuccessResult> result;
+        nodeSass.render({data: scssText, precision: 8, importer: importer }, (err, result) => {
+          if (err === null) {
             if (DEBUG_SASS) {
               this._log.debug("Succeeded done processing " + sassFileName);
             }
 
-            resolve(successResult.text);
+            resolve(result.css.toString('utf8'));
           } else {
-            const errorResult = <sass.ErrorResult> result;
-            this._log.warn("An SASS error occurred while processing " + sassFileName, errorResult,
-              errorResult.formatted);
+            this._log.warn("An SASS error occurred while processing " + sassFileName, err, err.message);
             if (DEBUG_SASS) {
               this._log.debug("Failed processing " + sassFileName);
             }
-            cancel(new Error("An SASS error occurred while processing " + sassFileName + "\n" + errorResult.formatted));
+            cancel(new Error("An SASS error occurred while processing " + sassFileName + "\n" + err.message));
           }
         });
       } catch (err) {
@@ -406,121 +349,6 @@ class ThemeManagerImpl implements ThemeManager {
     }
     return null;
   }  
-}
-
-//-------------------------------------------------------------------------
-//
-//   #####                              
-//  #     #   ##    ####  #    # ###### 
-//  #        #  #  #    # #    # #      
-//  #       #    # #      ###### #####  
-//  #       ###### #      #    # #      
-//  #     # #    # #    # #    # #      
-//   #####  #    #  ####  #    # ###### 
-//
-//-------------------------------------------------------------------------
-
-interface ThemeCacheEntry {
-  hash: string;
-  contents: ThemeContents;
-}
-
-const THEME_CACHE_ENTRY_SUFFIX = ".json";
-
-class ThemeCache {
-  
-  private _log = new Logger("ThemeCache");
-  
-  private _themeDirectories: string[] = null;
-  
-  private _cacheDirectory: string = null;
-  
-  private _cache: Map<string, ThemeCacheEntry> = new Map();
-  
-  /**
-   * Construct a theme cache instance.
-   * 
-   * @param  themeDirectories list of directories to look for theme files
-   * @param  cacheDirectory location of the cache directory on disk
-   */
-  constructor(themeDirectories: string[], cacheDirectory: string) {
-    this._themeDirectories = [...themeDirectories];
-    this._cacheDirectory = cacheDirectory;
-  }
-  
-  /**
-   * Loads the cache metadata from disk.
-   *
-   * This should be called after construction but before use of the cache.
-   */
-  load(): void {
-    if (this._cacheDirectory !== null) {
-      const contents = fs.readdirSync(this._cacheDirectory);
-
-      contents.forEach( (item) => {
-        const itemPath = path.join(this._cacheDirectory, item);
-        const info = fs.lstatSync(itemPath);
-        if (info.isFile() && item.endsWith(THEME_CACHE_ENTRY_SUFFIX)) {
-          const baseName = item.substr(0, item.length- THEME_CACHE_ENTRY_SUFFIX.length);
-          this._cache.set(baseName, {
-            hash: null,
-            contents: null
-          });        
-        }
-      });
-    }
-  }
-
-  /**
-   * Gets the rendered CSS data for a stack of themes
-   * 
-   * @param  themeStack stack of theme names
-   * @return the theme contents if it is available in the cache, otherwise null
-   */
-  get(themeStack: string[]): ThemeContents {
-    const key = themeStackName(themeStack);
-    const entry = this._cache.get(key);
-    if (entry === undefined) {
-      return null;
-    }
-    
-    // We have a cached entry and it is all good.
-    if (entry.contents === null) {
-      // Load in the data from disk.
-      const cacheFileName = path.join(this._cacheDirectory, key + THEME_CACHE_ENTRY_SUFFIX);
-      const fileContents = fs.readFileSync(cacheFileName, { encoding: "utf-8" });
-      const newEntry = <ThemeCacheEntry> JSON.parse(fileContents);
-
-      // Check the timestamps of the theme directory files with the timestamp on the cache file.
-      const integrityHash = hashThemeStack(themeStack, this._themeDirectories);
-      
-      if (newEntry.hash !== integrityHash) {
-        return null;
-      }
-      this._cache.set(key, newEntry);
-      return newEntry.contents;
-    } else {
-      return entry.contents;
-    }
-  }
-  
-  /**
-   * Stores rendered theme data in the cache
-   * 
-   * @param themeStack the stack of theme names the data belongs to
-   * @param contents   the theme contents
-   */
-  set(themeStack: string[], contents: ThemeContents): void {
-    const key = themeStackName(themeStack);
-    const integrityHash = hashThemeStack(themeStack, this._themeDirectories);
-    const entry: ThemeCacheEntry = { hash: integrityHash, contents };
-    
-    this._cache.set(key, entry);
-    if (this._cacheDirectory !== null) {
-      const fileName = path.join(this._cacheDirectory, key + THEME_CACHE_ENTRY_SUFFIX);
-      fs.writeFileSync(fileName, JSON.stringify(entry), { encoding: "utf-8" });
-    }
-  }
 }
 
 /**
@@ -582,30 +410,6 @@ function findThemePath(themeDirectories: string[], themeName: string): string {
   return null;
 }
 
-function hashThemeStack(themeStack: string[], themeDirectories: string[]): string {
-  const hashParts = themeStack.map( (themeName) => hashDirectoryMetaData(findThemePath(themeDirectories, themeName)));
-  const hash = hashParts.join("/");
-  return hash;
-}
-
-function hashDirectoryMetaData(directory: string): string {
-  const contents = fs.readdirSync(directory);
-  let result = "";
-  
-  contents.sort();  
-  contents.forEach( (item) => {
-    const itemPath = path.join(directory, item);
-    const info = fs.lstatSync(itemPath);
-    if (info.isFile()) {
-      result += item + "/" + info.mtime.getTime() + "/" + info.size + "/";
-    } else if (info.isDirectory()) {
-      result += hashDirectoryMetaData(itemPath);
-    }
-  } );
-  
-  return result;
-}
-
-export function makeThemeManager(directories: string[], cacheDirectory: string=null): ThemeManager {
-  return new ThemeManagerImpl(directories, cacheDirectory);
+export function makeThemeManager(directories: string[]): ThemeManager {
+  return new ThemeManagerImpl(directories);
 }

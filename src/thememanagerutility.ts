@@ -50,14 +50,14 @@ function main(): void {
       const outputDir = options.output;
       if (outputDir !== undefined) {
         try {
-          fs.accessSync(outputDir, fs.F_OK);
+          fs.accessSync(outputDir, fs.constants.F_OK);
         } catch(err) {
           print(`Creating output directory '${outputDir}'`);
           fs.mkdir(outputDir);
         }
       }
       
-      tm.renderThemes([themeInfo.id,'default']).then( (contents) => {
+      tm.renderThemes([themeInfo.id,'default'], ThemeTypes.UiCssFiles).then( (contents) => {
         ThemeTypes.cssFileEnumItems.forEach( (item) => {
           if (contents.success) {
             if (outputDir !== undefined) {

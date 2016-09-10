@@ -9,7 +9,7 @@ export type ThemeType = 'terminal' | 'syntax' | 'gui';
 export interface ThemeInfo {
   name: string;
   id: string;
-  type: ThemeType[];  // Defines the type of theme this is.
+  type: ThemeType[];  // Defines the type of theme this is. FIXME make this singular.
   path: string;
   debug: boolean;
   comment: string;
@@ -38,7 +38,8 @@ export enum CssFile {
   KEY_BINDINGS_TAB,
   GUI_COMMANDPALETTE,
   TIP_VIEWER,
-  FONT_AWESOME
+  FONT_AWESOME,
+  TERMINAL_VARS,
 }
 
 export const cssFileEnumItems: CssFile[] = [
@@ -61,6 +62,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.GUI_COMMANDPALETTE,
   CssFile.TIP_VIEWER,
   CssFile.FONT_AWESOME,
+  CssFile.TERMINAL_VARS
 ];
 
 const _CssFileNameMapping = {
@@ -83,6 +85,7 @@ const _CssFileNameMapping = {
   [CssFile.GUI_COMMANDPALETTE]: "gui-commandpalette",
   [CssFile.TIP_VIEWER]: "tip-viewer",
   [CssFile.FONT_AWESOME]: "font-awesome",
+  [CssFile.TERMINAL_VARS]: "terminal-vars",
 };
 
 export function cssFileNameBase(cssFile: CssFile): string {
@@ -93,4 +96,28 @@ export interface Themeable {
   setThemeCssMap(cssMap: Map<CssFile, string>): void;
 }
 
-export const DEFAULT_THEME = "default";
+export const DEFAULT_TERMINAL_THEME = "default";
+export const DEFAULT_SYNTAX_THEME = "default";
+export const DEFAULT_UI_THEME = "default";
+
+export const TerminalCssFiles: CssFile[] = [CssFile.TERMINAL_VARS, CssFile.TERMINAL_VIEWER];
+export const SyntaxCssFiles: CssFile[] = [CssFile.TEXT_VIEWER];
+export const UiCssFiles: CssFile[] = [
+  CssFile.GUI_CONTROLS,
+  CssFile.TOP_WINDOW,
+  CssFile.MAIN_UI,
+  CssFile.TERMINAL,
+  CssFile.IMAGE_VIEWER,
+  CssFile.EMBEDDED_FRAME,
+  CssFile.ABOUT_TAB,
+  CssFile.SETTINGS_TAB,
+  CssFile.GUI_MENUITEM,
+  CssFile.GUI_CONTEXTMENU,
+  CssFile.GUI_TABWIDGET,
+  CssFile.GUI_STACKEDWIDGET,
+  CssFile.GUI_SCROLLBAR,
+  CssFile.KEY_BINDINGS_TAB,
+  CssFile.GUI_COMMANDPALETTE,
+  CssFile.TIP_VIEWER,
+  CssFile.FONT_AWESOME
+];

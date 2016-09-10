@@ -49,8 +49,10 @@ export function unregisterThemeable(themeable: ThemeTypes.Themeable): void {
  * @param cssMap the map of CssFiles to their matching CSS texts
  */
 export function updateCss(cssMap: Map<ThemeTypes.CssFile, string>): void {
-  currentCssMap = cssMap;
-  themeableRegistry.forEach( (themeable) => themeable.setThemeCssMap(cssMap) );
+  const newCssMap = new Map(currentCssMap);
+  cssMap.forEach( (value, key) => newCssMap.set(key, value));
+  currentCssMap = newCssMap;
+  themeableRegistry.forEach( (themeable) => themeable.setThemeCssMap(newCssMap) );
 }
 
 /**
