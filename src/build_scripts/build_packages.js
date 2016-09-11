@@ -75,18 +75,18 @@ function main() {
     return result;
   };
   
-
   function pruneNodeSass(versionedOutputDir, arch, platform) {
-    const nodeSassVendorDir = path.join(versionedOutputDir, "node_modules/node-sass/vendor");
+    const gutsDir = platform === "darwin" ? "extraterm.app/Contents/Resources/app" : "resources/app";
+    const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node-sass/vendor");
+
     rm('-rf', nodeSassVendorDir);
     
-    const nodeSassBinaryDir = path.join(versionedOutputDir, "src/node-sass-binary");
+    const nodeSassBinaryDir = path.join(versionedOutputDir, gutsDir, "src/node-sass-binary");
     ["darwin-x64", "linux-ia32", "linux-x64", "win32-x64"].forEach( (name) => {
       if (name !== platform + "-" + arch) {
         rm('-rf', path.join(nodeSassBinaryDir, name + "-" + MODULE_VERSON));
       }
     });
-
   }
 
   function makePackage(arch, platform) {
