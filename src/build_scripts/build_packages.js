@@ -74,6 +74,20 @@ function main() {
     return result;
   };
   
+
+  function pruneNodeSass(versionedOutputDir, arch, platform) {
+    const nodeSassVendorDir = path.join(versionedOutputDir, "node_modules/node-sass/vendor");
+    rm('-rf', nodeSassVendorDir);
+    
+    const nodeSassBinaryDir = path.join(versionedOutputDir, "src/node-sass-binary");
+    ["darwin-x64", "linux-ia32", "linux-x64", "win32-x64"].forEach( (name) => {
+      if (name !== platform + "-" + arch) {
+        rm('-rf', path.join(nodeSassBinaryDir, name + "-" + MODULE_VERSON));
+      }
+    });
+
+  }
+
   function makePackage(arch, platform) {
     log("");
     return new Promise(function(resolve, reject) {
@@ -102,6 +116,9 @@ function main() {
           // Rename the output dir to a one with a version number in it.
           mv(appPath[0], path.join(buildTmpPath, versionedOutputDir));
           
+          // Prune any unneeded node-sass binaries.
+          pruneNodeSass(versionedOutputDir, arch, platform);
+
           // Zip it up.
           log("Zipping up the package");
           
