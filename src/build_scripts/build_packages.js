@@ -10,6 +10,7 @@ const packager = require('electron-packager');
 
 const log = console.log.bind(console);
 const BUILD_TMP = 'build_tmp';
+const MODULE_VERSON = 49;
 
 function main() {
   "use strict";
