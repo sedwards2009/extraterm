@@ -77,7 +77,7 @@ function main() {
   
   function pruneNodeSass(versionedOutputDir, arch, platform) {
     const gutsDir = platform === "darwin" ? "extraterm.app/Contents/Resources/app" : "resources/app";
-    const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node-sass/vendor");
+    const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node_modules/node-sass/vendor");
 
     rm('-rf', nodeSassVendorDir);
     
@@ -117,14 +117,15 @@ function main() {
           // Rename the output dir to a one with a version number in it.
           mv(appPath[0], path.join(buildTmpPath, versionedOutputDir));
           
+          const thisCD = pwd();
+          cd(buildTmpPath);
+
           // Prune any unneeded node-sass binaries.
           pruneNodeSass(versionedOutputDir, arch, platform);
 
           // Zip it up.
           log("Zipping up the package");
-          
-          const thisCD = pwd();
-          cd(buildTmpPath);
+
           mv(path.join(versionedOutputDir, "LICENSE"), path.join(versionedOutputDir, "LICENSE_electron.txt"));
           cp("extraterm/README.md", versionedOutputDir);
           cp("extraterm/LICENSE.txt", versionedOutputDir);
