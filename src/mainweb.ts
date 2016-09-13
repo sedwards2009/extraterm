@@ -51,12 +51,13 @@ const MENU_ITEM_SETTINGS = 'settings';
 const MENU_ITEM_KEY_BINDINGS = 'key_bindings';
 const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
 const MENU_ITEM_ABOUT = 'about';
+const MENU_ITEM_RELOAD_CSS = 'reload_css';
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
 
 const _log = new Logger("mainweb");
 
 /**
- * This module is responsible has control of a window and is responsible for
+ * This module has control of the window and is responsible for
  * starting up the main component and handling the window directly.
  */
 
@@ -247,6 +248,10 @@ function executeCommand(command: string): boolean {
       mainWebUi.openAboutTab();
       break;
       
+    case MENU_ITEM_RELOAD_CSS:
+      reloadThemeContents();
+      break;
+
     default:
       return false;
   }
@@ -384,11 +389,8 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
       oldConfig.themeSyntax !== newConfig.themeSyntax ||
       oldConfig.themeGUI !== newConfig.themeGUI) {
 
-    oldConfig = newConfig;
-    return requestThemeContents(oldConfig.themeTerminal, oldConfig.themeSyntax, oldConfig.themeGUI);
+    return requestThemeContents(newConfig.themeTerminal, newConfig.themeSyntax, newConfig.themeGUI);
   }
-  
-  oldConfig = newConfig;
   
   // no-op promise.
   return new Promise<void>( (resolve, cancel) => { resolve(); } );
@@ -431,6 +433,11 @@ function requestThemeContents(themeTerminal: string, themeSyntax: string, themeG
       // Distribute the CSS files to the classes which want them.
       ThemeConsumer.updateCss(cssFileMap);
     }, themeContentsError);
+}
+
+function reloadThemeContents(): void {
+  const config = configManager.getConfig();
+  requestThemeContents(config.themeTerminal, config.themeSyntax, config.themeGUI);
 }
 
 function setCssVars(fontName: string, fontPath: string, terminalFontSize: number): void {
@@ -503,6 +510,7 @@ function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     { id: MENU_ITEM_KEY_BINDINGS, iconRight: "keyboard-o", label: "Key Bindings", target: target },
     { id: MENU_ITEM_DEVELOPER_TOOLS, iconRight: "cogs", label: "Developer Tools", target: target },
     { id: MENU_ITEM_ABOUT, iconRight: "lightbulb-o", label: "About", target: target },
+    { id: MENU_ITEM_RELOAD_CSS, iconRight: "refresh", label: "Reload Theme", target: target },
   ];
   return commandList;
 }
