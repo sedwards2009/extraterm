@@ -79,6 +79,7 @@ let config: Config;
 let ptyConnector: PtyConnector;
 let tagCounter = 1;
 let fonts: FontInfo[] = null;
+let titleBarVisible = false;
 
 function main(): void {
   let failed = false;
@@ -142,7 +143,9 @@ function main(): void {
     startIpc();
     
     // Create the browser window.
-    const options = {width: 1200, height: 600, "web-preferences": { "experimental-features": true }};
+    const options = {width: 1200, height: 600, "web-preferences": { "experimental-features": true },
+      frame: config.showTitleBar};
+    titleBarVisible = config.showTitleBar;
     mainWindow = new BrowserWindow(options);
     mainWindow.setMenu(null);
 
@@ -483,7 +486,8 @@ function systemConfiguration(config: Config): SystemConfig {
     homeDir: homeDir,
     keyBindingsContexts: keyBindingsJSON,
     keyBindingsFiles: keyBindingFiles,
-    availableFonts: getFonts()
+    availableFonts: getFonts(),
+    titleBarVisible: titleBarVisible
   };
 }
 
@@ -557,7 +561,11 @@ function initConfig(): void {
   if (themeManager.getTheme(config.themeGUI) === null) {
     config.themeGUI = ThemeTypes.DEFAULT_UI_THEME;
   }
-  
+
+  if (config.showTitleBar !== true && config.showTitleBar !== false) {
+    config.showTitleBar = false;
+  }
+
   // Validate the selected keybindings config value.
   if ( ! config.systemConfig.keyBindingsFiles.some( (t) => t.filename === config.keyBindingsFilename )) {
     config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
@@ -601,6 +609,7 @@ function setConfigDefaults(config: Config): void {
   config.themeTerminal = defaultValue(config.themeTerminal, "default");
   config.themeSyntax = defaultValue(config.themeSyntax, "default");
   config.themeGUI = defaultValue(config.themeGUI, "default");
+  config.showTitleBar = defaultValue(config.showTitleBar, false);
 
   if (config.commandLineActions === undefined) {
     const defaultCLA: CommandLineAction[] = [
@@ -857,6 +866,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.themeTerminal = incomingConfig.themeTerminal;
   newConfig.themeGUI = incomingConfig.themeGUI;
   newConfig.keyBindingsFilename = incomingConfig.keyBindingsFilename;
+  newConfig.showTitleBar = incomingConfig.showTitleBar;
 
   setConfig(newConfig);
 
@@ -881,7 +891,11 @@ function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages
 function sendThemeContents(webContents: Electron.WebContents, themeIdList: string[],
     cssFileList: ThemeTypes.CssFile[]): void {
 
-  themeManager.renderThemes(themeIdList, cssFileList)
+  const globalVariables = new Map<string, number|boolean|string>();
+  globalVariables.set("extraterm-titlebar-visible", titleBarVisible);
+  globalVariables.set("extraterm-platform", process.platform);
+
+  themeManager.renderThemes(themeIdList, cssFileList, globalVariables)
     .then( (renderResult) => {
       const themeContents = renderResult.themeContents;
       const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS,

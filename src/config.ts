@@ -24,6 +24,7 @@ export interface Config {
   showTips?: ShowTipsStrEnum;
   tipCounter?: number;
   tipTimestamp?: number;
+  showTitleBar?: boolean;
 
   sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
   expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.
@@ -49,6 +50,7 @@ export interface SystemConfig {
   keyBindingsContexts: Object;
   
   availableFonts: FontInfo[];
+  titleBarVisible: boolean;
 }
 
 export interface FontInfo {

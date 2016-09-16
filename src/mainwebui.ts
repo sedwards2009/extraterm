@@ -50,6 +50,7 @@ const VisualState = ViewerElementTypes.VisualState;
 const ID = "ExtratermMainWebUITemplate";
 
 const ID_TOP = "ID_TOP";
+const ID_DRAG_BAR = "ID_DRAG_BAR";
 const ID_PANE_LEFT = "ID_PANE_LEFT";
 const ID_PANE_RIGHT = "ID_PANE_RIGHT";
 const ID_GAP = "ID_GAP";
@@ -403,8 +404,9 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
 
   private _html(): string {
     return `
-    <style id="${ThemeableElementBase.ID_THEME}"></style>
-    <div id="${ID_TOP}">` +
+    <style id="${ThemeableElementBase.ID_THEME}"></style>` +
+    `<div id="${ID_DRAG_BAR}"></div>` +
+    `<div id="${ID_TOP}">` +
       `<div id="${ID_PANE_LEFT}">` +
         `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
           `<div id="${ID_REST_DIV_PRIMARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +

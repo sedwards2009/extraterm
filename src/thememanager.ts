@@ -52,7 +52,7 @@ export interface ThemeManager {
    * @param  themeIds the stack or themes to render
    * @return the rendered CSS texts
    */
-  renderThemes(themeIdList: string[], cssFileList: CssFile[]): Promise<RenderResult>;
+  renderThemes(themeIdList: string[], cssFileList: CssFile[], globalVariables?: Map<string, number|boolean|string>): Promise<RenderResult>;
 }
 
 interface ListenerItem {
@@ -106,28 +106,14 @@ class ThemeManagerImpl implements ThemeManager {
     return result;
   }
 
-  renderThemes(themeStack: string[], cssFileList: CssFile[]): Promise<RenderResult> {
+  renderThemes(themeStack: string[], cssFileList: CssFile[], globalVariables?: Map<string, number|boolean|string>): Promise<RenderResult> {
     const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
+    globalVariables = globalVariables || new Map<string, number|boolean|string>();
 
-    // Look for this combo in the cache.
-    const contents = null; //this._themeContentsCache.get(themeStack); // FIXME
-    
-    if (contents === null) {
-      return this._renderThemeStackContents(themeInfoList, cssFileList)
-        .then( (renderResults) => {
-          return renderResults;
-        });
-    } else {
-      return new Promise<RenderResult>( (resolve, cancel) => {
-        const result: RenderResult = {
-          success: true,
-          themeContents: contents,
-          errorMessage: null
-        };
-        
-        resolve(result);
+    return this._renderThemeStackContents(themeInfoList, cssFileList, globalVariables)
+      .then( (renderResults) => {
+        return renderResults;
       });
-    }
   }
   
   private _themeIdListToThemeInfoList(themeIdList: string[]): ThemeInfo[] {
@@ -191,11 +177,11 @@ class ThemeManagerImpl implements ThemeManager {
     return _.isString(themeinfo.name) && themeinfo.name !== "";
   }
 
-  private _renderThemeStackContents(themeStack: ThemeInfo[], cssFileList: CssFile[]): Promise<RenderResult> {
-    return this._recursiveRenderThemeStackContents(cssFileList.slice(0), themeStack);
+  private _renderThemeStackContents(themeStack: ThemeInfo[], cssFileList: CssFile[], globalVariables: Map<string, number|boolean|string>): Promise<RenderResult> {
+    return this._recursiveRenderThemeStackContents(cssFileList.slice(0), themeStack, globalVariables);
   }
 
-  private _recursiveRenderThemeStackContents(todoCssFile: ThemeTypes.CssFile[], themeStack: ThemeInfo[]):
+  private _recursiveRenderThemeStackContents(todoCssFile: ThemeTypes.CssFile[], themeStack: ThemeInfo[], globalVariables: Map<string, number|boolean|string>):
       Promise<RenderResult> {
         
     if (DEBUG_SASS) {
@@ -207,7 +193,7 @@ class ThemeManagerImpl implements ThemeManager {
     const sassFileName = ThemeTypes.cssFileNameBase(cssFile) + '.scss';
     
     // Create SASS variables for the location of each theme directory.
-    const variables = new Map<string, string>();
+    const variables = new Map<string, number|boolean|string>(globalVariables);
     themeStack.forEach( (themeInfo) => {
       variables.set('--source-dir-' + themeInfo.id, themeInfo.path.replace(/\\/g, "/"));
     });
@@ -234,7 +220,7 @@ class ThemeManagerImpl implements ThemeManager {
         const renderResult: RenderResult = { success: true, themeContents: themeContents, errorMessage: null };
         return renderResult;
       } else {
-        return this._recursiveRenderThemeStackContents(todoCssFile.slice(1), themeStack)
+        return this._recursiveRenderThemeStackContents(todoCssFile.slice(1), themeStack, globalVariables)
           .then( (renderResult: RenderResult) => {
             renderResult.themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)] = cssText;
             return renderResult;
@@ -243,11 +229,12 @@ class ThemeManagerImpl implements ThemeManager {
     });
   }
 
-  private _loadSassFile(dirStack: string[], sassFileName: string, variables?: Map<string, string>): Promise<string> {
+  private _loadSassFile(dirStack: string[], sassFileName: string, variables?: Map<string, number|boolean|string>): Promise<string> {
     let formattedVariables = "";
     if (variables !== undefined) {
       variables.forEach( (value, key) => {
-          formattedVariables += `$${key}: "${value}";
+          const formattedValue = typeof(value) === "string" ? `"${value}"` : "" + value;
+          formattedVariables += `$${key}: ${formattedValue};
 `;
         });
     }

@@ -36,11 +36,19 @@ const CLASS_MATCH = "CLASS_MATCH";
 const CLASS_FRAME = "CLASS_FRAME";
 const CLASS_DELETE = "CLASS_DELETE";
 
+type TitleBarType = 'native' | 'theme';
+
+
 interface Identifiable {
   id?: string;
 }
 
 interface IdentifiableCommandLineAction extends CommandLineAction, Identifiable {
+}
+
+interface TitleBarOption {
+  id: TitleBarType;
+  name: string;
 }
 
 interface ModelData {
@@ -62,6 +70,10 @@ interface ModelData {
   
   terminalFont: string;
   terminalFontOptions: FontInfo[];
+
+  titleBar: TitleBarType;
+  currentTitleBar: TitleBarType;
+  titleBarOptions: TitleBarOption[];
 }
 
 let idCounter = 0;
@@ -133,7 +145,13 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
       themeGUIOptions: [],
       
       terminalFont: "",
-      terminalFontOptions: []
+      terminalFontOptions: [],
+
+      titleBar: "theme",
+      currentTitleBar: "theme",
+      titleBarOptions: [
+        { id: "theme", name: "Theme title bar" },
+        { id: "native", name: "Native title bar" }]
     };
   }
   
@@ -212,7 +230,9 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
     this._data.themeTerminal = config.themeTerminal;
     this._data.themeSyntax = config.themeSyntax;
     this._data.themeGUI = config.themeGUI;
-    
+    this._data.titleBar = config.showTitleBar ? "native" : "theme";
+    this._data.currentTitleBar = config.systemConfig.titleBarVisible ? "native" : "theme";
+
     if ( ! _.isEqual(cleanCommandLineAction, config.commandLineActions)) {
       const updateCLA = _.cloneDeep(config.commandLineActions);
       setIds(updateCLA);
@@ -375,6 +395,24 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
           </p>
         </div>
       </div>
+
+      <div class="form-group">
+        <label for="theme-terminal" class="col-sm-2 control-label">Window Title Bar:</label>
+        <div class="col-sm-3">
+          <select class="form-control" id="title-bar" v-model="titleBar">
+            <option v-for="option in titleBarOptions" v-bind:value="option.id">
+              {{ option.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-sm-7">
+          <p v-if="titleBar != currentTitleBar" class="help-block">
+            <i class="fa fa-info-circle"></i>
+            A restart is requred before this change takes effect.
+          </p>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -494,7 +532,7 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
     newConfig.themeTerminal = model.themeTerminal;
     newConfig.themeSyntax = model.themeSyntax;
     newConfig.themeGUI = model.themeGUI;
-
+    newConfig.showTitleBar = model.titleBar === "native";
     this._configManager.setConfig(newConfig);
   }
 }
