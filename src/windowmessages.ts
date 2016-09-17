@@ -44,6 +44,8 @@ export const enum MessageType {
   CLIPBOARD_READ_REQUEST,
   CLIPBOARD_READ,
   WINDOW_CLOSE_REQUEST,
+  WINDOW_MINIMIZE_REQUEST,
+  WINDOW_MAXIMIZE_REQUEST,
   NEW_TAG_REQUEST,
   NEW_TAG
 }
@@ -333,6 +335,22 @@ export interface ClipboardReadMessage extends Message {
  * This is sent from a render process (and window) to the main process.
  */
 export interface WindowCloseRequestMessage extends Message {  
+}
+
+/**
+ * Request this window be minimized.
+ *
+ * This is sent from a render process (and window) to the main process.
+ */
+export interface WindowMinimizeRequestMessage extends Message {  
+}
+
+/**
+ * Request this window be maximized.
+ *
+ * This is sent from a render process (and window) to the main process.
+ */
+export interface WindowMaximizeRequestMessage extends Message {  
 }
 
 /**

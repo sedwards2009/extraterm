@@ -50,7 +50,14 @@ const VisualState = ViewerElementTypes.VisualState;
 const ID = "ExtratermMainWebUITemplate";
 
 const ID_TOP = "ID_TOP";
+const ID_TITLE_BAR = "ID_TITLE_BAR";
+const ID_TITLE_BAR_SPACE = "ID_TITLE_BAR_SPACE";
 const ID_DRAG_BAR = "ID_DRAG_BAR";
+const ID_TOP_RESIZE_BAR = "ID_TOP_RESIZE_BAR";
+const ID_MINIMIZE_BUTTON = "ID_MINIMIZE_BUTTON";
+const ID_MAXIMIZE_BUTTON = "ID_MAXIMIZE_BUTTON";
+const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
+
 const ID_PANE_LEFT = "ID_PANE_LEFT";
 const ID_PANE_RIGHT = "ID_PANE_RIGHT";
 const ID_GAP = "ID_GAP";
@@ -310,6 +317,12 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
 
   static EVENT_SPLIT = 'mainwebui-split';
 
+  static EVENT_MINIMIZE_WINDOW_REQUEST = "mainwebui-minimize-window-request";
+
+  static EVENT_MAXIMIZE_WINDOW_REQUEST = "mainwebui-maximize-window-request";
+
+  static EVENT_CLOSE_WINDOW_REQUEST = "mainwebui-close-window-request";
+
   static POSITION_LEFT = TabPosition.LEFT;
   
   static POSITION_RIGHT = TabPosition.RIGHT;
@@ -387,7 +400,25 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     newTabSecondaryButton.addEventListener('click', () => {
       this.focusTab(this.newTerminalTab(this._split ? TabPosition.LEFT : TabPosition.RIGHT));
     });
-    
+
+    const minimizeButton = this._getById(ID_MINIMIZE_BUTTON);
+    minimizeButton.addEventListener('click', () => {
+      this.focus();
+      this._sendWindowRequestEvent(ExtratermMainWebUI.EVENT_MINIMIZE_WINDOW_REQUEST);
+    });
+
+    const maximizeButton = this._getById(ID_MAXIMIZE_BUTTON);
+    maximizeButton.addEventListener('click', () => {
+      this.focus();
+      this._sendWindowRequestEvent(ExtratermMainWebUI.EVENT_MAXIMIZE_WINDOW_REQUEST);
+    });
+
+    const closeButton = this._getById(ID_CLOSE_BUTTON);
+    closeButton.addEventListener('click', () => {
+      this.focus();
+      this._sendWindowRequestEvent(ExtratermMainWebUI.EVENT_CLOSE_WINDOW_REQUEST);
+    });
+
     this._setupIpc();
   }
 
@@ -405,7 +436,15 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   private _html(): string {
     return `
     <style id="${ThemeableElementBase.ID_THEME}"></style>` +
-    `<div id="${ID_DRAG_BAR}"></div>` +
+    `<div id="${ID_TITLE_BAR}">` +
+      `<div id="${ID_TITLE_BAR_SPACE}">` +
+        `<div id="${ID_TOP_RESIZE_BAR}"></div>` +
+        `<div id="${ID_DRAG_BAR}"></div>` +
+      `</div>` +
+      `<button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>` +
+      `<button id="${ID_MAXIMIZE_BUTTON}" tabindex="-1"></button>` +
+      `<button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>` +
+    `</div>` +
     `<div id="${ID_TOP}">` +
       `<div id="${ID_PANE_LEFT}">` +
         `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
@@ -917,6 +956,11 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   
   private _sendSplitEvent(): void {
     const event = new CustomEvent(ExtratermMainWebUI.EVENT_SPLIT, {  });
+    this.dispatchEvent(event);
+  }
+
+  private _sendWindowRequestEvent(eventName: string): void {
+    const event = new CustomEvent(eventName, {  });
     this.dispatchEvent(event);
   }
 

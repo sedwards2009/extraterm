@@ -20,6 +20,17 @@
   display: flex;
 }
 
+#ID_DRAG_BAR {
+  width: 100%;
+  @if $extraterm-titlebar-visible == true {
+    height: 0px;
+  } @else {
+    -webkit-app-region: drag;
+    height: 16px;
+    cursor: move;
+  }
+}
+
 #ID_PANE_LEFT {
   flex: auto 1 1;  
 }

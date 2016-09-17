@@ -164,3 +164,13 @@ export function requestNewTagSync(): string {
   const newTagMessage = <Messages.NewTagMessage> event;
   return newTagMessage.tag;
 }
+
+export function windowMinimizeRequest(): void {
+  const msg: Messages.WindowMinimizeRequestMessage = { type: Messages.MessageType.WINDOW_MINIMIZE_REQUEST };
+  ipc.send(Messages.CHANNEL_NAME, msg);  
+}
+
+export function windowMaximizeRequest(): void {
+  const msg: Messages.WindowMaximizeRequestMessage = { type: Messages.MessageType.WINDOW_MAXIMIZE_REQUEST };
+  ipc.send(Messages.CHANNEL_NAME, msg);  
+}

@@ -816,6 +816,18 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       mainWindow.close();
       break;
       
+    case Messages.MessageType.WINDOW_MINIMIZE_REQUEST:
+      mainWindow.minimize();
+      break;
+
+    case Messages.MessageType.WINDOW_MAXIMIZE_REQUEST:
+      if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+      } else {
+        mainWindow.maximize();
+      }
+      break;
+
     case Messages.MessageType.CONFIG:
       handleConfig(<Messages.ConfigMessage> msg);
       break;

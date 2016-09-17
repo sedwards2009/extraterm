@@ -199,6 +199,18 @@ export function startUp(): void {
       splitMenu.checked = mainWebUi.split;
     });
 
+    mainWebUi.addEventListener(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST, () => {
+      webipc.windowMinimizeRequest();
+    });
+
+    mainWebUi.addEventListener(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST, () => {
+      webipc.windowMaximizeRequest();
+    });
+
+    mainWebUi.addEventListener(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST, () => {
+      webipc.windowCloseRequest();
+    });
+
     const mainMenu = doc.getElementById('main_menu');
     mainMenu.addEventListener('selected', (ev: CustomEvent) => {
       executeCommand(ev.detail.name);

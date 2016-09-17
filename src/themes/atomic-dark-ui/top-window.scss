@@ -16,6 +16,9 @@ DIV.tab_bar_rest {
   
   & > DIV.space {
     flex-grow: 1;
+    @if $extraterm-titlebar-visible == false {
+      -webkit-app-region: drag;
+    }
   }
   
 }
