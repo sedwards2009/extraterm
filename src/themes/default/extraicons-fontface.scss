@@ -1,0 +1,14 @@
+/*
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ *
+ * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
+ */
+
+/* just the font-face tag for extraicons */
+
+@font-face {
+  font-family: 'extraicons';
+  src: url($--source-dir-default + '/extraicons.ttf?v=1.0.0') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

@@ -49,7 +49,8 @@ const VisualState = ViewerElementTypes.VisualState;
 
 const ID = "ExtratermMainWebUITemplate";
 
-const ID_TOP = "ID_TOP";
+const ID_TOP_LAYOUT = "ID_TOP_LAYOUT";
+const ID_MAIN_CONTENTS = "ID_MAIN_CONTENTS";
 const ID_TITLE_BAR = "ID_TITLE_BAR";
 const ID_TITLE_BAR_SPACE = "ID_TITLE_BAR_SPACE";
 const ID_DRAG_BAR = "ID_DRAG_BAR";
@@ -427,6 +428,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     if (template === null) {
       template = <HTMLTemplate>window.document.createElement('template');
       template.id = ID;
+      this._log.debug(this._html());
       template.innerHTML = this._html();
       window.document.body.appendChild(template);
     }
@@ -436,28 +438,30 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   private _html(): string {
     return `
     <style id="${ThemeableElementBase.ID_THEME}"></style>` +
-    `<div id="${ID_TITLE_BAR}">` +
-      `<div id="${ID_TITLE_BAR_SPACE}">` +
-        `<div id="${ID_TOP_RESIZE_BAR}"></div>` +
-        `<div id="${ID_DRAG_BAR}"></div>` +
+    // `<div id="${ID_TOP_LAYOUT}">` +
+      `<div id="${ID_TITLE_BAR}">` +
+        `<div id="${ID_TITLE_BAR_SPACE}">` +
+          `<div id="${ID_TOP_RESIZE_BAR}"></div>` +
+          `<div id="${ID_DRAG_BAR}"></div>` +
+        `</div>` +
+        `<button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>` +
+        `<button id="${ID_MAXIMIZE_BUTTON}" tabindex="-1"></button>` +
+        `<button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>` +
       `</div>` +
-      `<button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>` +
-      `<button id="${ID_MAXIMIZE_BUTTON}" tabindex="-1"></button>` +
-      `<button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>` +
-    `</div>` +
-    `<div id="${ID_TOP}">` +
-      `<div id="${ID_PANE_LEFT}">` +
-        `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
-          `<div id="${ID_REST_DIV_PRIMARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
-          `<content></content></div>` +
-        `</cb-tabwidget>` +
-      `</div>` +
-      `<div id="${ID_GAP}"></div>` +
-      `<div id="${ID_PANE_RIGHT}">` +
-        `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
-          `<div id="${ID_REST_DIV_SECONDARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
-        `</cb-tabwidget>` +
-      `</div>` +
+      `<div id="${ID_MAIN_CONTENTS}">` +
+        `<div id="${ID_PANE_LEFT}">` +
+          `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
+            `<div id="${ID_REST_DIV_PRIMARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
+            `<content></content></div>` +
+          `</cb-tabwidget>` +
+        `</div>` +
+        `<div id="${ID_GAP}"></div>` +
+        `<div id="${ID_PANE_RIGHT}">` +
+          `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
+            `<div id="${ID_REST_DIV_SECONDARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
+          `</cb-tabwidget>` +
+        `</div>` +
+      // `</div>` +
     `</div>`;
   }
   
@@ -513,7 +517,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       return;
     }
 
-    const top = this._getById(ID_TOP);
+    const top = this._getById(ID_MAIN_CONTENTS);
     const tabContainerLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     const tabContainerRight = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
     const restDivPrimary = this._getById(ID_REST_DIV_PRIMARY);

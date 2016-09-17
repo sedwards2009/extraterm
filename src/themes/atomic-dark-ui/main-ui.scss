@@ -51,18 +51,21 @@ $resize-bar-height: 4px;
 }
 
 #ID_MINIMIZE_BUTTON:before {
-  content: "_";
+  font-family: extraicons;
+  content: "\ea02";
 }
 
 #ID_MAXIMIZE_BUTTON:before {
-  content: "[]";
+  font-family: extraicons;
+  content: "\ea01";
 }
 
 #ID_CLOSE_BUTTON:before {
-  content: "X";  
+  font-family: FontAwesome;
+  content: "\f00d";  
 }
 
-#ID_TOP {
+#ID_MAIN_CONTENTS {
   position: absolute;
   top: if($extraterm-titlebar-visible == true, 0px, $drag-bar-height + $resize-bar-height);
   bottom: 0;
@@ -90,7 +93,7 @@ $resize-bar-height: 4px;
   display: none;
 }
 
-#ID_TOP > #ID_GAP {
+#ID_MAIN_CONTENTS > #ID_GAP {
   visibility: collapse;
   flex: 0px 0 0;
   position: relative;
@@ -121,13 +124,13 @@ $resize-bar-height: 4px;
   }
 }
 
-#ID_TOP.split > #ID_GAP {
+#ID_MAIN_CONTENTS.split > #ID_GAP {
   visibility: visible;
   flex: 2px 0 0;
   
 }
 
-#ID_TOP.split > #ID_PANE_RIGHT {
+#ID_MAIN_CONTENTS.split > #ID_PANE_RIGHT {
   flex: auto 1 1;
   display: block;
 }

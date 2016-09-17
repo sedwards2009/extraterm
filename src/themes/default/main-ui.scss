@@ -10,14 +10,95 @@
   position: relative;
 }
 
-#ID_TOP {
+// #ID_TOP_LAYOUT {
+  // position: absolute;
+  // top: 0px;
+  // bottom: 0px;
+  // left: 0px;
+  // right: 0px;
+
+// width: 100%;
+// height: 100%;
+  // display: flex;
+  // flex-direction: column;
+// }
+
+$drag-bar-height: 16px;
+$resize-bar-height: 4px;
+
+#ID_TITLE_BAR {
+  // flex-grow: 0;
+
+  // position: relative;
+  display: flex;
+  width: 100%;
+}
+
+#ID_TITLE_BAR_SPACE {
+  flex-grow: 1;
+  position: relative;
+}
+
+#ID_TOP_RESIZE_BAR {
   position: absolute;
-  top: 2px;
+  top: 0px;
+  bottom: if($extraterm-titlebar-visible == true, 0px, $resize-bar-height);
+  width: 100%;
+}
+
+#ID_DRAG_BAR {
+  position: absolute;
+  top: if($extraterm-titlebar-visible == true, 0px, $resize-bar-height);
+  bottom: 0px;
+  width: 100%;
+
+  @if $extraterm-titlebar-visible == true {
+    height: 0px;
+  } @else {
+    -webkit-app-region: drag;
+    height: $drag-bar-height;
+    cursor: move;
+  }
+}
+
+#ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON, #ID_CLOSE_BUTTON {
+  flex-grow: 0;
+  flex-shrink: 0;
+
+  background-color: transparent;
+  border: 0px;
+}
+
+#ID_MINIMIZE_BUTTON:before {
+  font-family: extraicons;
+  content: "\ea02";
+}
+
+#ID_MAXIMIZE_BUTTON:before {
+  font-family: extraicons;
+  content: "\ea01";
+}
+
+#ID_CLOSE_BUTTON:before {
+  font-family: FontAwesome;
+  font-size: 120%;
+  content: "\f00d";  
+}
+
+// #ID_MAIN_CONTENTS {
+//   flex-grow: 1;
+  
+//   display: flex;
+// }
+
+#ID_MAIN_CONTENTS {
+  position: absolute;
+  top: if($extraterm-titlebar-visible == true, 2px, $resize-bar-height + $drag-bar-height);
   bottom: 0;
   left: 0;
   right: 0;
-  
-  display: flex;
+
+   display: flex;
 }
 
 #ID_DRAG_BAR {
@@ -30,6 +111,7 @@
     cursor: move;
   }
 }
+
 
 #ID_PANE_LEFT {
   flex: auto 1 1;  
@@ -48,18 +130,17 @@
 #ID_PANE_RIGHT {
   display: none;
 }
-
-#ID_TOP > #ID_GAP {
+#ID_MAIN_CONTENTS > #ID_GAP {
   visibility: collapse;
   flex: 0px 0 0;
 }
 
-#ID_TOP.split > #ID_GAP {
+#ID_MAIN_CONTENTS.split > #ID_GAP {
   visibility: visible;
   flex: 2px 0 0;
 }
 
-#ID_TOP.split > #ID_PANE_RIGHT {
+#ID_MAIN_CONTENTS.split > #ID_PANE_RIGHT {
   flex: auto 1 1;
   display: block;
 }

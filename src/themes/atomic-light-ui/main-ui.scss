@@ -10,7 +10,7 @@
   position: relative;
 }
 
-#ID_TOP {
+#ID_MAIN_CONTENTS {
   position: absolute;
   top: 0px;
   bottom: 0;
@@ -38,7 +38,7 @@
   display: none;
 }
 
-#ID_TOP > #ID_GAP {
+#ID_MAIN_CONTENTS > #ID_GAP {
   visibility: collapse;
   flex: 0px 0 0;
   position: relative;
