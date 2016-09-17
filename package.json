@@ -12,6 +12,7 @@
   "scripts": {
     "run": "electron src/main.js",
     "build": "tsc",
+    "buildicons": "node src/extra_icons/build.js",
     "test": "npm run build ; nodeunit src/virtualscrollareatest.js",
     "testkeybindingmanager": "npm run build ; nodeunit src/keybindingmanagertest.js",
     "typedoc": "node src/build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
@@ -50,7 +51,8 @@
     "shelljs": "0.6.0",
     "tsd": "0.6.0-beta.5",
     "typedoc": "0.3.12",
-    "typescript": "1.8.2"
+    "typescript": "1.8.2",
+    "webfont": "^4.0.0"
   },
   "jshintConfig": {
     "esversion": 6
