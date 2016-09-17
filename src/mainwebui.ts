@@ -438,7 +438,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   private _html(): string {
     return `
     <style id="${ThemeableElementBase.ID_THEME}"></style>` +
-    // `<div id="${ID_TOP_LAYOUT}">` +
+    `<div id="${ID_TOP_LAYOUT}">` +
       `<div id="${ID_TITLE_BAR}">` +
         `<div id="${ID_TITLE_BAR_SPACE}">` +
           `<div id="${ID_TOP_RESIZE_BAR}"></div>` +
@@ -461,7 +461,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
             `<div id="${ID_REST_DIV_SECONDARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
           `</cb-tabwidget>` +
         `</div>` +
-      // `</div>` +
+      `</div>` +
     `</div>`;
   }
   

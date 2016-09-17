@@ -10,26 +10,24 @@
   position: relative;
 }
 
-// #ID_TOP_LAYOUT {
-  // position: absolute;
-  // top: 0px;
-  // bottom: 0px;
-  // left: 0px;
-  // right: 0px;
+#ID_TOP_LAYOUT {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
 
-// width: 100%;
-// height: 100%;
-  // display: flex;
-  // flex-direction: column;
-// }
+  display: flex;
+  flex-direction: column;
+}
+
 
 $drag-bar-height: 16px;
 $resize-bar-height: 4px;
 
 #ID_TITLE_BAR {
-  // flex-grow: 0;
+  flex-grow: 0;
 
-  // position: relative;
   display: flex;
   width: 100%;
 }
@@ -85,22 +83,6 @@ $resize-bar-height: 4px;
   content: "\f00d";  
 }
 
-// #ID_MAIN_CONTENTS {
-//   flex-grow: 1;
-  
-//   display: flex;
-// }
-
-#ID_MAIN_CONTENTS {
-  position: absolute;
-  top: if($extraterm-titlebar-visible == true, 2px, $resize-bar-height + $drag-bar-height);
-  bottom: 0;
-  left: 0;
-  right: 0;
-
-   display: flex;
-}
-
 #ID_DRAG_BAR {
   width: 100%;
   @if $extraterm-titlebar-visible == true {
@@ -111,6 +93,13 @@ $resize-bar-height: 4px;
     cursor: move;
   }
 }
+
+
+#ID_MAIN_CONTENTS {
+  flex-grow: 1;  
+  display: flex;
+}
+
 
 
 #ID_PANE_LEFT {
