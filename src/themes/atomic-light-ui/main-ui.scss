@@ -4,19 +4,30 @@
 
 /* top UI */
 @import "bootstrap/variables";
+@import "main-ui-titlebar";
 
 :host {
   display: block;
   position: relative;
 }
 
-#ID_MAIN_CONTENTS {
+#ID_TOP_LAYOUT {
   position: absolute;
   top: 0px;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
   
+  display: flex;
+  flex-direction: column;
+}
+
+#ID_TITLE_BAR {
+  background: $tab-bar-background-color;
+}
+
+#ID_MAIN_CONTENTS {
+  flex-grow: 1;  
   display: flex;
 }
 
@@ -69,13 +80,13 @@
   }
 }
 
-#ID_TOP.split > #ID_GAP {
+#ID_MAIN_CONTENTS.split > #ID_GAP {
   visibility: visible;
   flex: 2px 0 0;
   
 }
 
-#ID_TOP.split > #ID_PANE_RIGHT {
+#ID_MAIN_CONTENTS.split > #ID_PANE_RIGHT {
   flex: auto 1 1;
   display: block;
 }

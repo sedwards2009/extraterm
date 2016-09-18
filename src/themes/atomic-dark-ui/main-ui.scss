@@ -4,74 +4,30 @@
 
 /* top UI */
 @import "bootstrap/variables";
+@import "main-ui-titlebar";
 
 :host {
   display: block;
   position: relative;
 }
 
-$drag-bar-height: 16px;
-$resize-bar-height: 4px;
+#ID_TOP_LAYOUT {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+
+  display: flex;
+  flex-direction: column;
+}
 
 #ID_TITLE_BAR {
-  width: 100%;
-  display: flex;
-}
-
-#ID_TITLE_BAR_SPACE {
-  flex-grow: 1;
-}
-
-#ID_TOP_RESIZE_BAR {
-  height: if($extraterm-titlebar-visible == true, 0px, $resize-bar-height);
-  width: 100%;
-  background-color: #ff00ff;
-}
-
-#ID_DRAG_BAR {
-  width: 100%;
-  background-color: #00ff00;
-
-  content: $extraterm-titlebar-visible; 
-  @if $extraterm-titlebar-visible == true {
-    height: 0px;
-  } @else {
-    -webkit-app-region: drag;
-    height: $drag-bar-height;
-    cursor: move;
-  }
-}
-
-#ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON, #ID_CLOSE_BUTTON {
-  flex-grow: 0;
-  flex-shrink: 0;
-
-  background-color: transparent;
-  border: 0px;
-}
-
-#ID_MINIMIZE_BUTTON:before {
-  font-family: extraicons;
-  content: "\ea02";
-}
-
-#ID_MAXIMIZE_BUTTON:before {
-  font-family: extraicons;
-  content: "\ea01";
-}
-
-#ID_CLOSE_BUTTON:before {
-  font-family: FontAwesome;
-  content: "\f00d";  
+  background: #222222;
 }
 
 #ID_MAIN_CONTENTS {
-  position: absolute;
-  top: if($extraterm-titlebar-visible == true, 0px, $drag-bar-height + $resize-bar-height);
-  bottom: 0;
-  left: 0;
-  right: 0;
-  
+  flex-grow: 1;  
   display: flex;
 }
 
