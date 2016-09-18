@@ -1,0 +1,79 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+$drag-bar-height: 16px;
+$resize-bar-height: 4px;
+
+@if($extraterm-titlebar-visible == true) {
+  #ID_TITLE_BAR {
+    display: none;
+  }
+
+} @else {
+
+  #ID_TITLE_BAR {
+    flex-grow: 0;
+
+    display: flex;
+    width: 100%;
+  }
+
+  #ID_TITLE_BAR_SPACE {
+    flex-grow: 1;
+    position: relative;
+  }
+
+  #ID_TOP_RESIZE_BAR {
+    position: absolute;
+    top: 0px;
+    bottom: $resize-bar-height;
+    width: 100%;
+  }
+
+  #ID_DRAG_BAR {
+    position: absolute;
+    top: $resize-bar-height;
+    bottom: 0px;
+    width: 100%;
+
+    -webkit-app-region: drag;
+    height: $drag-bar-height;
+    cursor: move;
+  }
+
+  #ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON, #ID_CLOSE_BUTTON {
+    flex-grow: 0;
+    flex-shrink: 0;
+
+    background-color: transparent;
+    border: 0px;
+
+    &:hover {
+      background-color: $input-group-addon-bg;
+    }
+  }
+
+  #ID_MINIMIZE_BUTTON:before {
+    font-family: extraicons;
+    content: "\ea02";
+  }
+
+  #ID_MAXIMIZE_BUTTON:before {
+    font-family: extraicons;
+    content: "\ea01";
+  }
+
+  #ID_CLOSE_BUTTON:before {
+    font-family: FontAwesome;
+    font-size: 120%;
+    content: "\f00d";  
+  }
+
+  #ID_DRAG_BAR {
+    width: 100%;
+    -webkit-app-region: drag;
+    height: 16px;
+    cursor: move;
+  }
+}
