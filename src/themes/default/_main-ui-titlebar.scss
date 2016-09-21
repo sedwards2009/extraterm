@@ -5,7 +5,7 @@
 $drag-bar-height: 16px;
 $resize-bar-height: 4px;
 
-@if($extraterm-titlebar-visible == true) {
+@if($extraterm-titlebar-visible == true or $extraterm-platform == "darwin") {
   #ID_TITLE_BAR {
     display: none;
   }
