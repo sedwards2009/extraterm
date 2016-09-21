@@ -58,6 +58,9 @@ const ID_TOP_RESIZE_BAR = "ID_TOP_RESIZE_BAR";
 const ID_MINIMIZE_BUTTON = "ID_MINIMIZE_BUTTON";
 const ID_MAXIMIZE_BUTTON = "ID_MAXIMIZE_BUTTON";
 const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
+const ID_OSX_MINIMIZE_BUTTON = "ID_OSX_MINIMIZE_BUTTON";
+const ID_OSX_MAXIMIZE_BUTTON = "ID_OSX_MAXIMIZE_BUTTON";
+const ID_OSX_CLOSE_BUTTON = "ID_OSX_CLOSE_BUTTON";
 
 const ID_PANE_LEFT = "ID_PANE_LEFT";
 const ID_PANE_RIGHT = "ID_PANE_RIGHT";
@@ -65,6 +68,7 @@ const ID_GAP = "ID_GAP";
 const ID_TAB_CONTAINER_LEFT = "ID_TAB_CONTAINER_LEFT";
 const ID_TAB_CONTAINER_RIGHT = "ID_TAB_CONTAINER_RIGHT";
 const ID_REST_DIV_PRIMARY = "ID_REST_DIV_PRIMARY";
+const ID_REST_DIV_LEFT = "ID_REST_DIV_LEFT";
 const ID_REST_DIV_SECONDARY = "ID_REST_DIV_SECONDARY";
 const ID_NEW_TAB_BUTTON_PRIMARY = "ID_NEW_TAB_BUTTON_PRIMARY";
 const ID_NEW_TAB_BUTTON_SECONDARY = "ID_NEW_TAB_BUTTON_SECONDARY";
@@ -402,23 +406,26 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       this.focusTab(this.newTerminalTab(this._split ? TabPosition.LEFT : TabPosition.RIGHT));
     });
 
-    const minimizeButton = this._getById(ID_MINIMIZE_BUTTON);
-    minimizeButton.addEventListener('click', () => {
+    const closeButtenHandler = () => {
       this.focus();
       this._sendWindowRequestEvent(ExtratermMainWebUI.EVENT_MINIMIZE_WINDOW_REQUEST);
-    });
+    };
+    this._getById(ID_MINIMIZE_BUTTON).addEventListener('click', closeButtenHandler);
+    this._getById(ID_OSX_MINIMIZE_BUTTON).addEventListener('click', closeButtenHandler);
 
-    const maximizeButton = this._getById(ID_MAXIMIZE_BUTTON);
-    maximizeButton.addEventListener('click', () => {
+    const maximizeButtonHandler = () => {
       this.focus();
       this._sendWindowRequestEvent(ExtratermMainWebUI.EVENT_MAXIMIZE_WINDOW_REQUEST);
-    });
+    };
+    this._getById(ID_MAXIMIZE_BUTTON).addEventListener('click', maximizeButtonHandler);
+    this._getById(ID_OSX_MAXIMIZE_BUTTON).addEventListener('click', maximizeButtonHandler);
 
-    const closeButton = this._getById(ID_CLOSE_BUTTON);
-    closeButton.addEventListener('click', () => {
+    const closeButtonHandler = () => {
       this.focus();
       this._sendWindowRequestEvent(ExtratermMainWebUI.EVENT_CLOSE_WINDOW_REQUEST);
-    });
+    };
+    this._getById(ID_CLOSE_BUTTON).addEventListener('click', closeButtonHandler);
+    this._getById(ID_OSX_CLOSE_BUTTON).addEventListener('click', closeButtonHandler);
 
     this._setupIpc();
   }
@@ -451,6 +458,11 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       `<div id="${ID_MAIN_CONTENTS}">` +
         `<div id="${ID_PANE_LEFT}">` +
           `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
+            `<div id="${ID_REST_DIV_LEFT}">` +
+              `<button id="${ID_OSX_CLOSE_BUTTON}" tabindex="-1"></button>` +
+              `<button id="${ID_OSX_MINIMIZE_BUTTON}" tabindex="-1"></button>` +
+              `<button id="${ID_OSX_MAXIMIZE_BUTTON}" tabindex="-1"></button>` +
+            `</div>` +
             `<div id="${ID_REST_DIV_PRIMARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
             `<content></content></div>` +
           `</cb-tabwidget>` +

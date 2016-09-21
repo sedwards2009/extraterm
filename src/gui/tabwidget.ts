@@ -20,14 +20,19 @@ const ID = "CbTabWidgetTemplate";
 const ATTR_TAG = 'data-cb-tag';
 const ATTR_SHOW_FRAME = "show-frame";
 
+const ATTR_TAG_REST_LEFT = "rest-left";
+const ATTR_TAG_REST_RIGHT = "rest";
+
 let registered = false;
 
 const ID_TOP = "ID_TOP";
 const ID_TABBAR = "ID_TABBAR";
 const ID_CONTENTSTACK = "ID_CONTENTSTACK";
 const ID_CONTENTS = "ID_CONTENTS";
-const CLASS_REMAINDER = "remainder";
+const CLASS_REMAINDER_LEFT = "remainder-left";
+const CLASS_REMAINDER_RIGHT = "remainder";
 const CLASS_ACTIVE = "active";
+const CLASS_TAB = "tab";
 
 /**
  * A widget to display a stack of tabs.
@@ -179,6 +184,7 @@ class CbTabWidget extends ThemeableElementBase {
     let stateInTab = false;
     
     // Tag the source content as tabs or content so that we can distribute it over our shadow DOM.
+    let restAttr = ATTR_TAG_REST_LEFT;
     for (let i=0; i<this.children.length; i++) {
       const kid = <HTMLElement>this.children.item(i);
       if (kid.nodeName === CbTab.TAG_NAME) {
@@ -189,33 +195,47 @@ class CbTabWidget extends ThemeableElementBase {
       } else if (kid.nodeName === "DIV" && stateInTab) {
         kid.setAttribute(ATTR_TAG, 'content_' + (tabCount-1));
         stateInTab = false;
+        restAttr = ATTR_TAG_REST_RIGHT;
+
       } else if (kid.nodeName=== "DIV") {
-        kid.setAttribute(ATTR_TAG, 'rest');
+        kid.setAttribute(ATTR_TAG, restAttr);
+        restAttr = ATTR_TAG_REST_RIGHT;
       }
     }
     
+    // Make sure that there is 'rest' element at the front.
+    if (tabbar.firstElementChild === null || ! tabbar.firstElementChild.classList.contains(CLASS_REMAINDER_LEFT)) {
+      const restAllLi = <HTMLLIElement> this.ownerDocument.createElement('LI');
+      restAllLi.classList.add(CLASS_REMAINDER_LEFT);
+
+      const catchAll = this.ownerDocument.createElement('content');
+      catchAll.setAttribute('select', `[${ATTR_TAG}="${ATTR_TAG_REST_LEFT}"]`);
+      restAllLi.appendChild(catchAll);
+      tabbar.insertAdjacentElement('afterbegin', restAllLi);
+    }
+
     // Make sure that there is a catch all element at the end.
-    const catchAlls = tabbar.querySelectorAll("." + CLASS_REMAINDER);
+    const catchAlls = tabbar.querySelectorAll("." + CLASS_REMAINDER_RIGHT);
     let catchAllLi: HTMLLIElement = null;
     if (catchAlls.length === 0) {
       catchAllLi = <HTMLLIElement> this.ownerDocument.createElement('LI');
-      catchAllLi.classList.add(CLASS_REMAINDER);
+      catchAllLi.classList.add(CLASS_REMAINDER_RIGHT);
             
       const catchAll = this.ownerDocument.createElement('content');
-      catchAll.setAttribute('select', '[' + ATTR_TAG + '="rest"]');
+      catchAll.setAttribute('select', `[${ATTR_TAG}="${ATTR_TAG_REST_RIGHT}"]`);
       catchAllLi.appendChild(catchAll);
       tabbar.appendChild(catchAllLi);
     } else {
       catchAllLi = <HTMLLIElement> catchAlls[0];
     }
     
-    let tabElementCount = tabbar.querySelectorAll(".tab").length;
+    let tabElementCount = tabbar.querySelectorAll("." + CLASS_TAB).length;
     
     // Create tabs and content DIVs.
     while (tabElementCount < tabCount) {
       // The tab part.
       const tabLi = this.ownerDocument.createElement('li');
-      tabLi.classList.add('tab');
+      tabLi.classList.add(CLASS_TAB);
       
       let contentElement = this.ownerDocument.createElement('content');
       contentElement.setAttribute('select', '[' + ATTR_TAG + '="tab_' + tabElementCount + '"]');
@@ -234,21 +254,21 @@ class CbTabWidget extends ThemeableElementBase {
       wrapperDiv.appendChild(contentElement);
       contentsStack.appendChild(wrapperDiv);
       
-      tabElementCount = tabbar.querySelectorAll(".tab").length;
+      tabElementCount = tabbar.querySelectorAll("." + CLASS_TAB).length;
     }
     
     // Delete any excess tab tags.
-    let tabElements = tabbar.querySelectorAll(".tab");
+    let tabElements = tabbar.querySelectorAll("." + CLASS_TAB);
     while (tabElements.length > tabCount) {
       const tabToDelete = tabElements[tabElements.length-1];
       tabbar.removeChild(tabToDelete);
       contentsStack.removeChild(contentsStack.children[contentsStack.children.length-1]);
-      tabElements = tabbar.querySelectorAll(".tab");
+      tabElements = tabbar.querySelectorAll("." + CLASS_TAB);
     }
     
     // Try to find the previously active tab and take note of its index.
     let selectTab = -1;
-    tabElements = tabbar.querySelectorAll(".tab");
+    tabElements = tabbar.querySelectorAll("." + CLASS_TAB);
     for (let i=0; i<tabElements.length; i++) {
       if (tabElements[i].classList.contains(CLASS_ACTIVE)) {
         selectTab = i;

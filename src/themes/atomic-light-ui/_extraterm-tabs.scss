@@ -19,7 +19,7 @@ $tab-max-width: 160px;
   height: $tab-height + $tab-top-padding + $tab-bottom-border-height;
   background-image: -webkit-linear-gradient(top, $tab-bar-background-color, lighten($tab-bar-background-color, 9%));
   box-shadow: inset 0 -8px 8px -4px rgba(0,0,0, .15);
-  padding: 0 10px 0 25px;
+  padding: 0px 0px 0px 0px;
   overflow-x: auto;
   overflow-y: hidden;
 
@@ -145,6 +145,10 @@ $tab-max-width: 160px;
     &:hover {
       color: inherit;
     }
+  }
+  
+  & > LI.remainder-left {
+    margin: 0 20px 0 5px;
   }
 
   .placeholder {
