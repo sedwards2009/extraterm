@@ -49,17 +49,18 @@
       color: transparent;
       position: relative;
 
-      &:hover {
-        color: rgba(0,0,0,0.5);
-      }
 
       &:before {
         position: relative;
-        left: -5px;
-        top: -5px;
+        left: 0px;
+        top: 0px;
         font-size: 120%;
         font-family: FontAwesome;
       }
+    }
+
+    &:hover > button {
+      color: rgba(0,0,0,0.5);
     }
   }
 
@@ -67,6 +68,7 @@
     background-color: #fc5753;
     margin-left: 3px !important;
     &:before {
+      top: -3px !important;
       content: "\f00d";
     }
   }
@@ -75,7 +77,7 @@
     background-color: #fdbc40;
 
     &:before {
-      top: -4px !important;
+      top: -1px !important;
       content: "\f068";
     }
   }
@@ -84,7 +86,7 @@
     background-color: #33c748;
 
     &:before {
-      top: -4px !important;
+      top: -1px !important;
       content: "\f067";
     }
   }
