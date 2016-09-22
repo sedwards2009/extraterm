@@ -53,9 +53,9 @@
       &:before {
         position: relative;
         left: 0px;
-        top: 0px;
-        font-size: 120%;
-        font-family: FontAwesome;
+        top: -2px;
+        font-size: 10px;
+        font-family: extraicons;
       }
     }
 
@@ -68,8 +68,7 @@
     background-color: #fc5753;
     margin-left: 3px !important;
     &:before {
-      top: -3px !important;
-      content: "\f00d";
+      content: "\ea03";
     }
   }
 
@@ -77,8 +76,7 @@
     background-color: #fdbc40;
 
     &:before {
-      top: -1px !important;
-      content: "\f068";
+      content: "\ea05";
     }
   }
 
@@ -86,8 +84,7 @@
     background-color: #33c748;
 
     &:before {
-      top: -1px !important;
-      content: "\f067";
+      content: "\ea04";
     }
   }
 } @else {

@@ -13,7 +13,10 @@ function main() {
   webfont({
     files: [
       'src/extra_icons/maximize.svg',
-      'src/extra_icons/minimize.svg'
+      'src/extra_icons/minimize.svg',
+      'src/extra_icons/osx_close.svg',
+      'src/extra_icons/osx_maximize.svg',
+      'src/extra_icons/osx_minimize.svg'
     ],
     fontName: 'extraicons'
   })
