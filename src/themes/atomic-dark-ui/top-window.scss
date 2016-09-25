@@ -36,7 +36,7 @@ BODY {
 EXTRATERM-MAINWEBUI {
   position: absolute; // or relative
   left: 0;
-  top: 0;
+  top: if($extraterm-titlebar-visible or $extraterm-platform == darwin, 5px, 0px);
   right: 0;
   bottom: 0;
 }

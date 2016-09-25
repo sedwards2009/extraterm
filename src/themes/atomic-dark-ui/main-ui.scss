@@ -22,75 +22,14 @@
   flex-direction: column;
 }
 
-#ID_TITLE_BAR {
-  background: #222222;
+#ID_REST_DIV_LEFT {
+  & > button {
+    margin-top: 7px;
+  }
 }
 
-@if $extraterm-platform == "darwin" {
-
-  // OSX style traffic light window controls.
-  #ID_REST_DIV_LEFT {
-
-    & > button {
-      display: inline-block;
-
-      width: 12px;
-      height: 12px;
-      padding: 0px;
-      margin-top: 12px;
-      margin-left: 4px;
-      margin-right: 4px;
-
-      box-sizing: border-box;
-      border-radius: 6px;
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      outline: none;
-
-      color: transparent;
-      position: relative;
-
-
-      &:before {
-        position: relative;
-        left: 0px;
-        top: -2px;
-        font-size: 10px;
-        font-family: extraicons;
-      }
-    }
-
-    &:hover > button {
-      color: rgba(0,0,0,0.5);
-    }
-  }
-
-  #ID_OSX_CLOSE_BUTTON {
-    background-color: #fc5753;
-    margin-left: 3px !important;
-    &:before {
-      content: "\ea03";
-    }
-  }
-
-  #ID_OSX_MINIMIZE_BUTTON {
-    background-color: #fdbc40;
-
-    &:before {
-      content: "\ea05";
-    }
-  }
-
-  #ID_OSX_MAXIMIZE_BUTTON {
-    background-color: #33c748;
-
-    &:before {
-      content: "\ea04";
-    }
-  }
-} @else {
-  #ID_REST_DIV_LEFT {
-    display: none;
-  }
+#ID_TITLE_BAR {
+  background: #222222;
 }
 
 #ID_MAIN_CONTENTS {

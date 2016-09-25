@@ -22,6 +22,12 @@
   flex-direction: column;
 }
 
+#ID_REST_DIV_LEFT {
+  & > button {
+    margin-top: 5px;
+  }
+}
+
 #ID_MAIN_CONTENTS {
   flex-grow: 1;  
   display: flex;
