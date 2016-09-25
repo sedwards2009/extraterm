@@ -12,7 +12,7 @@ DIV.tab_bar_rest {
   
   & > * {
     position: relative;
-    top: 5px;
+    top: 0px;
   }
   
   & > DIV.space {
@@ -31,12 +31,14 @@ BODY {
   bottom: 0;
   left: 0;
   right: 0;
+
+  background-color: #d8d8d8;
 }
 
 EXTRATERM-MAINWEBUI {
   position: absolute; // or relative
   left: 0;
-  top: 0;
+  top: if($extraterm-titlebar-visible or $extraterm-platform == darwin, 5px, 0px);
   right: 0;
   bottom: 0;
 }
