@@ -60,4 +60,17 @@
       border-bottom-width: 0;
     }
   }
+
+  > LI.remainder-left {
+    flex-grow: 0;
+    color: $text-color;
+    padding: 0 0 0 0;
+    margin-bottom: 3px;
+    
+    &:hover, &:focus {
+      background-color: inherit;
+      border: 1px solid transparent;
+      border-bottom-width: 0;
+    }
+  }
 }
