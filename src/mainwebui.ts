@@ -70,6 +70,7 @@ const ID_TAB_CONTAINER_RIGHT = "ID_TAB_CONTAINER_RIGHT";
 const ID_REST_DIV_PRIMARY = "ID_REST_DIV_PRIMARY";
 const ID_REST_DIV_LEFT = "ID_REST_DIV_LEFT";
 const ID_REST_DIV_SECONDARY = "ID_REST_DIV_SECONDARY";
+const ID_LEFT_REST_DIV_SECONDARY = "ID_LEFT_REST_DIV_SECONDARY";
 const ID_NEW_TAB_BUTTON_PRIMARY = "ID_NEW_TAB_BUTTON_PRIMARY";
 const ID_NEW_TAB_BUTTON_SECONDARY = "ID_NEW_TAB_BUTTON_SECONDARY";
 const CLASS_SPLIT = "split";
@@ -470,6 +471,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
         `<div id="${ID_GAP}"></div>` +
         `<div id="${ID_PANE_RIGHT}">` +
           `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
+            `<div id="${ID_LEFT_REST_DIV_SECONDARY}"></div>` +
             `<div id="${ID_REST_DIV_SECONDARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
           `</cb-tabwidget>` +
         `</div>` +
@@ -597,7 +599,8 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       // Move the terminal tabs from the right tab container to the left one.
       const nodesToMove = domutils.nodeListToArray(tabContainerRight.childNodes)
         .filter( node => ! (node.nodeName === "DIV" && ( (<HTMLDivElement>node).id === ID_REST_DIV_PRIMARY ||
-          (<HTMLDivElement>node).id === ID_REST_DIV_SECONDARY)));
+          (<HTMLDivElement>node).id === ID_REST_DIV_SECONDARY ||
+          (<HTMLDivElement>node).id === ID_LEFT_REST_DIV_SECONDARY)));
       nodesToMove.forEach( node => {
         tabContainerLeft.insertBefore(node, restDivPrimary);
         });
