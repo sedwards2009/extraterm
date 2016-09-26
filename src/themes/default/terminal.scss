@@ -3,8 +3,6 @@
  */
 /* terminal styles */
 
-@import "terminal-computed-colors";
-
 :host {
   display: block;
   contain: strict;
@@ -28,7 +26,7 @@
   height: 100%;
   overflow-x: hidden;
   overflow-y: hidden;
-  background-color: $terminal-background-color;
+  background-color: var(--terminal-background-color);
 }
 
 #ID_SCROLL_AREA > et-terminal-viewer {

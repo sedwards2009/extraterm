@@ -96,9 +96,9 @@ export interface Themeable {
   setThemeCssMap(cssMap: Map<CssFile, string>): void;
 }
 
-export const DEFAULT_TERMINAL_THEME = "default";
-export const DEFAULT_SYNTAX_THEME = "default";
-export const DEFAULT_UI_THEME = "default";
+export const FALLBACK_TERMINAL_THEME = "default-terminal";
+export const FALLBACK_SYNTAX_THEME = "default-syntax";
+export const FALLBACK_UI_THEME = "default";
 
 export const TerminalCssFiles: CssFile[] = [CssFile.TERMINAL_VARS, CssFile.TERMINAL_VIEWER];
 export const SyntaxCssFiles: CssFile[] = [CssFile.TEXT_VIEWER];

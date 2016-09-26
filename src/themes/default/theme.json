@@ -1,5 +1,5 @@
 {
-"name": "Default Extraterm theme",
-"type": ["terminal", "syntax", "gui"],
+"name": "Default Bootstrap Theme",
+"type": ["gui"],
 "debug": false
 }

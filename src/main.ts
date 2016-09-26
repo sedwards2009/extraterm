@@ -74,6 +74,10 @@ const KEYBINDINGS_PC = "keybindings.json";
 const TERMINAL_FONTS_DIRECTORY = "terminal_fonts";
 const DEFAULT_TERMINALFONT = "DejaVuSansMono";
 
+const DEFAULT_TERMINAL_THEME = "default-terminal";
+const DEFAULT_SYNTAX_THEME = "default-syntax";
+const DEFAULT_UI_THEME = "atomic-dark-ui";
+
 let themeManager: ThemeManager.ThemeManager;
 let config: Config;
 let ptyConnector: PtyConnector;
@@ -553,13 +557,13 @@ function initConfig(): void {
   }
 
   if (themeManager.getTheme(config.themeTerminal) === null) {
-    config.themeTerminal = ThemeTypes.DEFAULT_TERMINAL_THEME;
+    config.themeTerminal = ThemeTypes.FALLBACK_TERMINAL_THEME;
   }
   if (themeManager.getTheme(config.themeSyntax) === null) {
-    config.themeSyntax = ThemeTypes.DEFAULT_SYNTAX_THEME;
+    config.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
   }
   if (themeManager.getTheme(config.themeGUI) === null) {
-    config.themeGUI = ThemeTypes.DEFAULT_UI_THEME;
+    config.themeGUI = ThemeTypes.FALLBACK_UI_THEME;
   }
 
   if (config.showTitleBar !== true && config.showTitleBar !== false) {

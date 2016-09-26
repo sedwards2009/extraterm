@@ -355,13 +355,13 @@ function themeContentsError(themeContentsMessage: Messages.ThemeContentsMessage)
   // Something went wrong.
   _log.warn(themeContentsMessage.errorMessage);
   
-  if (themeContentsMessage.themeIdList.every( id => id === ThemeTypes.DEFAULT_UI_THEME)) {
+  if (themeContentsMessage.themeIdList.every( id => id === ThemeTypes.FALLBACK_UI_THEME)) {
     // Error occurred while trying to generate the default themes.
     window.alert("Something has gone wrong. The default theme couldn't be generated. Sorry.");
   } else {
     _log.warn("Attempting to use the default theme.");
     window.alert("Something has gone wrong while generating the theme. The default theme will be tried.");
-    requestThemeContents(ThemeTypes.DEFAULT_TERMINAL_THEME, ThemeTypes.DEFAULT_SYNTAX_THEME, ThemeTypes.DEFAULT_UI_THEME);
+    requestThemeContents(ThemeTypes.FALLBACK_TERMINAL_THEME, ThemeTypes.FALLBACK_SYNTAX_THEME, ThemeTypes.FALLBACK_UI_THEME);
   }
 }
 
@@ -409,9 +409,9 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
 }
 
 function requestThemeContents(themeTerminal: string, themeSyntax: string, themeGUI: string): Promise<void> {
-  const terminalThemeIdList = [themeTerminal, ThemeTypes.DEFAULT_TERMINAL_THEME];
-  const syntaxThemeIdList = [themeSyntax, ThemeTypes.DEFAULT_SYNTAX_THEME];
-  const uiThemeIdList = [themeGUI, ThemeTypes.DEFAULT_UI_THEME];
+  const terminalThemeIdList = [themeTerminal, ThemeTypes.FALLBACK_TERMINAL_THEME];
+  const syntaxThemeIdList = [themeSyntax, ThemeTypes.FALLBACK_SYNTAX_THEME];
+  const uiThemeIdList = [themeGUI, ThemeTypes.FALLBACK_UI_THEME];
   
   const cssFileMap = new Map<ThemeTypes.CssFile, string>();
   return webipc.requestThemeContents(terminalThemeIdList, ThemeTypes.TerminalCssFiles)
