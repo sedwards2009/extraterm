@@ -31,6 +31,7 @@ import Messages = require('./windowmessages');
 
 import ThemeTypes = require('./theme');
 type ThemeInfo = ThemeTypes.ThemeInfo;
+type ThemeType = ThemeTypes.ThemeType;
 import ThemeManager = require('./thememanager');
 
 import child_process = require('child_process');
@@ -536,6 +537,13 @@ function prepareAppData(): void {
   }
 }
 
+function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
+  if (themeInfo === null) {
+    return false;
+  }
+  return themeInfo.type.indexOf(themeType) !== -1;
+}
+
 function initConfig(): void {
   config = readConfigurationFile();
   config.systemConfig = systemConfiguration(config);
@@ -556,13 +564,13 @@ function initConfig(): void {
     config.terminalFont = DEFAULT_TERMINALFONT;
   }
 
-  if (themeManager.getTheme(config.themeTerminal) === null) {
+  if (isThemeType(themeManager.getTheme(config.themeTerminal), 'terminal')) {
     config.themeTerminal = ThemeTypes.FALLBACK_TERMINAL_THEME;
   }
-  if (themeManager.getTheme(config.themeSyntax) === null) {
+  if (isThemeType(themeManager.getTheme(config.themeSyntax), 'syntax')) {
     config.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
   }
-  if (themeManager.getTheme(config.themeGUI) === null) {
+  if (isThemeType(themeManager.getTheme(config.themeGUI), 'gui')) {
     config.themeGUI = ThemeTypes.FALLBACK_UI_THEME;
   }
 
