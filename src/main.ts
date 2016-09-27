@@ -564,13 +564,13 @@ function initConfig(): void {
     config.terminalFont = DEFAULT_TERMINALFONT;
   }
 
-  if (isThemeType(themeManager.getTheme(config.themeTerminal), 'terminal')) {
+  if ( ! isThemeType(themeManager.getTheme(config.themeTerminal), 'terminal')) {
     config.themeTerminal = ThemeTypes.FALLBACK_TERMINAL_THEME;
   }
-  if (isThemeType(themeManager.getTheme(config.themeSyntax), 'syntax')) {
+  if ( ! isThemeType(themeManager.getTheme(config.themeSyntax), 'syntax')) {
     config.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
   }
-  if (isThemeType(themeManager.getTheme(config.themeGUI), 'gui')) {
+  if ( ! isThemeType(themeManager.getTheme(config.themeGUI), 'gui')) {
     config.themeGUI = ThemeTypes.FALLBACK_UI_THEME;
   }
 
