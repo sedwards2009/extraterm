@@ -58,7 +58,7 @@ function main() {
   exec(`zip -y -r ${commandsDir}.zip ${commandsDir}`);
   cd(codeDir);
 
-  const electronVersion = packageData.devDependencies['electron-prebuilt'];
+  const electronVersion = packageData.devDependencies['electron'];
 
   const ignoreRegExp = [
     /^\/src\/build_scripts\//,
