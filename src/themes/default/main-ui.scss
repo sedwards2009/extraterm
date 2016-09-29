@@ -24,7 +24,17 @@
 
 #ID_REST_DIV_LEFT {
   & > button {
-    margin-top: 5px;
+    margin-top: 13px;
+  }
+}
+
+@if $extraterm-titlebar-visible != true {
+  #ID_REST_DIV_SECONDARY {
+    -webkit-app-region: drag;
+
+    > button {
+      -webkit-app-region: no-drag;  
+    }
   }
 }
 
