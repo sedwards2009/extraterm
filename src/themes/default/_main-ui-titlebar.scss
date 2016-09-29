@@ -79,7 +79,7 @@ $resize-bar-height: 4px;
   }
 }
 
-@if $extraterm-platform == "darwin" {
+@if $extraterm-platform == "darwin" and $extraterm-titlebar-visible != true {
 
   // OSX style traffic light window controls.
   #ID_REST_DIV_LEFT {
