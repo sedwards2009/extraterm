@@ -6,7 +6,6 @@
 
 import _ = require('lodash');
 import resourceLoader = require('./resourceloader');
-import contextmenu = require('./gui/contextmenu');
 import menuitem = require('./gui/menuitem');
 import checkboxmenuitem = require('./gui/checkboxmenuitem');
 import domutils = require('./domutils');
@@ -28,14 +27,12 @@ const VisualState = ViewerElementTypes.VisualState;
 
 const log = LogDecorator;
 
-contextmenu.init();
 menuitem.init();
 checkboxmenuitem.init();
 
 const ID = "EtEmbeddedViewerTemplate";
 
 const ID_CONTAINER = "ID_CONTAINER";
-const ID_CONTEXT_MENU = "ID_CONTEXT_MENU";
 const ID_HEADER = "ID_HEADER";
 const ID_OUTPUT = "ID_OUTPUT";
 const ID_ICON = "ID_ICON";
@@ -260,16 +257,6 @@ class EtEmbeddedViewer extends ViewerElement {
   /**
    * 
    */
-  openMenu(): void {
-    const header = <HTMLDivElement>this._getById(ID_HEADER);
-    const cm = <contextmenu>this._getById(ID_CONTEXT_MENU);
-    const rect = header.getBoundingClientRect();
-    cm.openAround(header); //(rect.left, rect.top );
-  }
-  
-  /**
-   * 
-   */
   get text(): string {
     const viewerElement = this.viewerElement;
     if (viewerElement === null) {
@@ -447,52 +434,11 @@ class EtEmbeddedViewer extends ViewerElement {
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
 
-    const cm = <contextmenu>this._getById(ID_CONTEXT_MENU);
     this._getById(ID_CONTAINER).addEventListener('contextmenu', (ev: MouseEvent): void => {
       ev.stopPropagation();
       ev.preventDefault();
-      const cm = <contextmenu>this._getById(ID_CONTEXT_MENU);
-      cm.open(ev.clientX, ev.clientY);
+// FIXME
     });
-
-    cm.addEventListener('selected', (ev: CustomEvent): void => {
-      let event: CustomEvent;
-      switch (ev.detail.name) {
-        case 'popout':
-          this._emitFramePopOut();
-          break;
-        
-        case "copycommand":
-          event = new CustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST);
-          event.initCustomEvent(EtEmbeddedViewer.EVENT_COPY_CLIPBOARD_REQUST, true, true,
-            this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE));
-          this.dispatchEvent(event);
-          break;
-
-        case "typecommand":
-          const detail: generalevents.TypeTextEventDetail = { text: this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE) };
-          event = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail });
-          event.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, detail);
-          this.dispatchEvent(event);
-          break;
-
-        case "expand":
-          this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, ev.detail.checked);
-          break;
-
-        case 'close':
-          this._emitCloseRequest();
-          break;
-
-        default:
-          break;
-      }
-      this.focus();
-    });
-
-    cm.addEventListener('before-close', (function(ev: Event) {
-      this.focus();
-    }).bind(this));
 
     const setterState: virtualscrollarea.SetterState = {
       height: this.getMinHeight(),
@@ -573,14 +519,7 @@ class EtEmbeddedViewer extends ViewerElement {
             `</div>` +
           `</div>
           <div id='${ID_OUTPUT}'><content></content></div>
-        </div>
-        <cb-contextmenu id='${ID_CONTEXT_MENU}' style='display: none;'>
-          <cb-menuitem icon='external-link' name='popout'>Open in Tab</cb-menuitem>
-          <cb-menuitem icon='terminal' name='typecommand'>Type Command</cb-menuitem>
-          <cb-menuitem icon='copy' name='copycommand'>Copy Command to Clipboard</cb-menuitem>
-` + //          <cb-checkboxmenuitem icon='list-ol' id='${ID_EXPAND_MENU_ITEM}' checked='true' name='expand'>Expand</cb-checkboxmenuitem>
-`          <cb-menuitem icon='times-circle' name='close'>Close</cb-menuitem>
-        </cb-contextmenu>`;
+        </div>`;
       window.document.body.appendChild(template);
     }
 
