@@ -32,11 +32,6 @@ interface ShadowRoot extends DocumentFragment {
   styleSheets: StyleSheetList;
 }
 
-// HTML Templates
-interface HTMLTemplate extends HTMLElement {
-  content: HTMLElement;
-}
-
 // HTML Template and custom element related.
 interface HTMLContentElement extends HTMLElement {
   select: string;
@@ -54,13 +49,12 @@ interface HTMLDialogElement extends HTMLElement {
 }
 
 interface Document {
-  createElement(tagName: "template"): HTMLTemplate;
+  createElement(tagName: "template"): HTMLTemplateElement;
   registerElement(tagName:string, props:any): any;
 }
 
 interface KeyboardEvent {
-  keyIdentifier: string;
-  code: string;
+  readonly keyIdentifier: string;
 }
 
 interface KeyboardEventInit {

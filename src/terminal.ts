@@ -557,7 +557,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   //-----------------------------------------------------------------------
   
   private _createClone(): Node {
-    let template = <HTMLTemplate>window.document.getElementById(ID);
+    let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
       template = window.document.createElement('template');
       template.id = ID;

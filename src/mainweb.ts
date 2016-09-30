@@ -415,7 +415,7 @@ function requestThemeContents(themeTerminal: string, themeSyntax: string, themeG
   
   const cssFileMap = new Map<ThemeTypes.CssFile, string>();
   return webipc.requestThemeContents(terminalThemeIdList, ThemeTypes.TerminalCssFiles)
-    .then( (result) => {
+    .then( (result: Messages.ThemeContentsMessage): Promise<Messages.ThemeContentsMessage> => {
       if (result.success) {
         ThemeTypes.TerminalCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
           const key = ThemeTypes.cssFileNameBase(cssFile);
@@ -424,7 +424,7 @@ function requestThemeContents(themeTerminal: string, themeSyntax: string, themeG
       }
       return webipc.requestThemeContents(syntaxThemeIdList, ThemeTypes.SyntaxCssFiles);
     }, themeContentsError)
-    .then( (result) => {
+    .then( (result: Messages.ThemeContentsMessage): Promise<Messages.ThemeContentsMessage> => {
       if (result.success) {
         ThemeTypes.SyntaxCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
           const key = ThemeTypes.cssFileNameBase(cssFile);
@@ -434,7 +434,7 @@ function requestThemeContents(themeTerminal: string, themeSyntax: string, themeG
 
       return webipc.requestThemeContents(uiThemeIdList, ThemeTypes.UiCssFiles);
     }, themeContentsError)
-    .then( (result) => {
+    .then( (result: Messages.ThemeContentsMessage): void => {
       if (result.success) {
         ThemeTypes.UiCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
           const key = ThemeTypes.cssFileNameBase(cssFile);

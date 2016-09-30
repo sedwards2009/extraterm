@@ -142,9 +142,9 @@ class CbTabWidget extends ThemeableElementBase {
    * 
    */
   private createClone() {
-    let template = <HTMLTemplate>window.document.getElementById(ID);
+    let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
+      template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
 <div id='${ID_TOP}'>

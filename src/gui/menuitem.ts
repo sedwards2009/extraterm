@@ -121,9 +121,9 @@ class CbMenuItem extends ThemeableElementBase {
   }
 
   private _createClone(): Node {
-    let template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
+    let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
+      template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = this._html();
       window.document.body.appendChild(template);

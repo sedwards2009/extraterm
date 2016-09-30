@@ -432,9 +432,9 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   }
 
   private _createClone(): Node {
-    var template: HTMLTemplate = <HTMLTemplate>window.document.getElementById(ID);
+    var template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
+      template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
       this._log.debug(this._html());
       template.innerHTML = this._html();

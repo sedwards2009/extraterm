@@ -1,12 +1,12 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es6",
         "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
         "removeComments": false,
         "sourceMap": true,
-        "noLib": true,
+        "noLib": false,
         "outDir": "src",
         "jsx": "react",
         "experimentalDecorators": true
@@ -20,9 +20,7 @@
         "./src/settings/*.tsx",
         "./src/typings/**/*.ts",
         "!./src/typings/tsd.d.ts",
-        "!./src/node_modules/**/*.ts",
-        "./node_modules/typescript/lib/lib.es6.d.ts",
-        "./node_modules/immutable/dist/*.ts"
+        "!./src/node_modules/**/*.ts"
     ],
     "files": [
         "./src/abouttab.ts",
@@ -107,8 +105,7 @@
         "./src/typings/nodeunit/nodeunit.d.ts",
         "./src/typings/ptyw.js/ptyw.js.d.ts",
         "./src/typings/text-encoding/text-encoding.d.ts",
-        "./src/typings/vuejs/vuejs.d.ts",
-        "./node_modules/typescript/lib/lib.es6.d.ts"
+        "./src/typings/vuejs/vuejs.d.ts"
     ],
     "exclude": [],
     "atom": {

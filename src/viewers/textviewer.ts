@@ -618,9 +618,9 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
    * 
    */
   private createClone(): Node {
-    let template = <HTMLTemplate>window.document.getElementById(ID);
+    let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
+      template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = `<style id="${ID_MAIN_STYLE}">
 
@@ -705,11 +705,24 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this.dispatchEvent(event);
   }
 
-  private scrollTo(x: number, y: number): void {
+  scrollTo(optionsOrX: ScrollToOptions | number, y?: number): void {
+    let xCoord = 0;
+    let yCoord = 0;
+
+    if (typeof optionsOrX === "number") {
+      xCoord = optionsOrX;
+      if (y !== undefined) {
+        yCoord = y;
+      }
+    } else {
+      xCoord = optionsOrX.left;
+      yCoord = optionsOrX.top;
+    }
+
     if (domutils.getShadowRoot(this) === null) {
       return;
     }
-    this._codeMirror.scrollTo(x, y);
+    this._codeMirror.scrollTo(xCoord, yCoord);
   }
     
   // ----------------------------------------------------------------------

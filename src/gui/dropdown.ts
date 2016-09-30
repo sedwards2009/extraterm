@@ -42,9 +42,9 @@ class CbDropDown extends HTMLElement {
   }
   
   private createClone() {
-    let template = <HTMLTemplate>window.document.getElementById(ID);
+    let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
+      template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = `<div><content select='cb-contextmenu'></content></div><div><content></content></div>`;
       window.document.body.appendChild(template);

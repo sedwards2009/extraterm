@@ -777,9 +777,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
    * 
    */
   private createClone(): Node {
-    let template = <HTMLTemplate>window.document.getElementById(ID);
+    let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
-      template = <HTMLTemplate>window.document.createElement('template');
+      template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = `<style id="${ID_MAIN_STYLE}">
         
@@ -900,8 +900,21 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     }
   }
 
-  private scrollTo(x: number, y: number): void {
-    this._codeMirror.scrollTo(x, y);
+  scrollTo(optionsOrX: ScrollToOptions | number, y?: number): void {
+    let xCoord = 0;
+    let yCoord = 0;
+
+    if (typeof optionsOrX === "number") {
+      xCoord = optionsOrX;
+      if (y !== undefined) {
+        yCoord = y;
+      }
+    } else {
+      xCoord = optionsOrX.left;
+      yCoord = optionsOrX.top;
+    }
+
+    this._codeMirror.scrollTo(xCoord, yCoord);
   }
   
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
