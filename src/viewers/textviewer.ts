@@ -47,7 +47,7 @@ const CLASS_UNFOCUSED = "terminal-unfocused";
 const KEYBINDINGS_SELECTION_MODE = "text-viewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
-const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
+const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 
 const COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,

@@ -9,6 +9,13 @@ export interface Commandable {
   executeCommand(commandId: string): void;
 }
 
+export function isCommandable(instance: any): instance is Commandable {
+  if (instance === null || instance === undefined) {
+    return false;
+  }
+  return (<Commandable> instance).executeCommand !== undefined;
+}
+
 export interface CommandEntry extends CommandPaletteTypes.CommandEntry {
   id: string;
   iconLeft?: string;
@@ -19,6 +26,7 @@ export interface CommandEntry extends CommandPaletteTypes.CommandEntry {
 }
 
 export const EVENT_COMMAND_PALETTE_REQUEST = "EVENT_COMMAND_PALETTE_REQUEST";
+export const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
 
 export interface CommandPaletteRequest {
   commandEntries: CommandEntry[];

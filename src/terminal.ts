@@ -462,16 +462,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     
     this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
 
-    // util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
-    //   this._mainStyleLoaded = true;
-    //   this._handleStyleLoad();
-    // });
-    // 
-    // util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', () => {
-    //   this._themeStyleLoaded = true;
-    //   this._handleStyleLoad();
-    //   });
-
     this.addEventListener('focus', this._handleFocus.bind(this));
     this.addEventListener('blur', this._handleBlur.bind(this));
     this.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {

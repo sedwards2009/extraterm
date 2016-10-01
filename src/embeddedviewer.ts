@@ -17,7 +17,7 @@ import KeyBindingManager = require('./keybindingmanager');
 import virtualscrollarea = require('./virtualscrollarea');
 import ThemeTypes = require('./theme');
 import generalevents = require('./generalevents');
-
+import CommandPaletteRequestTypes = require('./commandpaletterequesttypes'); 
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 
@@ -54,6 +54,8 @@ const CLASS_NOT_SCROLLING = "not-scrolling";
 const CLASS_BOTTOM_VISIBLE = "bottom-visible";
 const CLASS_BOTTOM_NOT_VISIBLE = "bottom-not-visible";
 
+const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
+
 let registered = false;
 
 const DEBUG_SIZE = false;
@@ -61,7 +63,7 @@ const DEBUG_SIZE = false;
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
-class EtEmbeddedViewer extends ViewerElement {
+class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable {
   
   /**
    * The HTML tag name of this element.
@@ -434,10 +436,22 @@ class EtEmbeddedViewer extends ViewerElement {
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
     domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
 
+    // Right mouse button click opens up the command palette.
     this._getById(ID_CONTAINER).addEventListener('contextmenu', (ev: MouseEvent): void => {
       ev.stopPropagation();
       ev.preventDefault();
-// FIXME
+
+      const viewerElement = this.viewerElement;
+      if (viewerElement === null) {
+        return;
+      }
+      // domutils.doLater( () => {
+        if (CommandPaletteRequestTypes.isCommandable(viewerElement)) {
+          viewerElement.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+        } else {
+          this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+        }
+      // });
     });
 
     const setterState: virtualscrollarea.SetterState = {
@@ -473,6 +487,10 @@ class EtEmbeddedViewer extends ViewerElement {
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.EMBEDDED_FRAME];
+  }
+
+  executeCommand(commandId: string): void {
+    this._executeCommand(commandId);
   }
 
   //-----------------------------------------------------------------------
@@ -639,6 +657,31 @@ class EtEmbeddedViewer extends ViewerElement {
       this._emitCloseRequest();
       return;
     }
+  }
+
+  private _executeCommand(command): boolean {
+    switch (command) {
+      case COMMAND_OPEN_COMMAND_PALETTE:
+        const commandPaletteRequestDetail: CommandPaletteRequestTypes.CommandPaletteRequest = {
+            srcElement: this,
+            commandEntries: this._commandPaletteEntries(),
+            contextElement: this
+          };
+        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
+          { detail: commandPaletteRequestDetail });
+        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+          commandPaletteRequestDetail);
+        this.dispatchEvent(commandPaletteRequestEvent);
+        break;
+        
+      default:
+          return false;
+    }
+    return true;
+  }
+
+  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+    return [];
   }
 
   /**

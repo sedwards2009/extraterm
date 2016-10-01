@@ -45,7 +45,7 @@ const CLASS_UNFOCUSED = "terminal-unfocused";
 const KEYBINDINGS_SELECTION_MODE = "terminal-viewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
-const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
+const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 
 const NON_CODEMIRROR_COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,
@@ -614,7 +614,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       cursorScrollMargin: 0,
       showCursorWhenSelecting: true,
       mode: null,
-      keyMap: this._codeMirrorKeyMap()
+      keyMap: this._codeMirrorKeyMap(),
+      resetSelectionOnContextMenu: false
     };
 
     // Create the CodeMirror instance
@@ -724,7 +725,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
     containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);
     containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
-    
+    containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
+
     const codeMirrorElement = this._codeMirror.getWrapperElement();
     codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
     codeMirrorElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
@@ -1105,7 +1107,15 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       ev.preventDefault();
     }      
   }
-  
+
+  private _handleContextMenuCapture(ev: MouseEvent): void {
+    // Prevent CodeMirror from seeing this event and messing with the hidden textarea and the focus.
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+
+    this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+  }
+
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, iconRight: "terminal", label: "Type Selection", target: this },

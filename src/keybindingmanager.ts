@@ -356,6 +356,9 @@ export interface AcceptsKeyBindingManager {
 }
 
 export function isAcceptsKeyBindingManager(instance: any): instance is AcceptsKeyBindingManager {
+  if (instance === null || instance === undefined) {
+    return false;
+  }
   return (<AcceptsKeyBindingManager> instance).setKeyBindingManager !== undefined;
 }
 
