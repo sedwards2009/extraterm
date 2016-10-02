@@ -253,7 +253,9 @@ function executeCommand(command: string): boolean {
       
     case MENU_ITEM_DEVELOPER_TOOLS:
       const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
-      webipc.devToolsRequest(util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED)));
+      const devToolsOpen = util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+      developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
+      webipc.devToolsRequest( ! devToolsOpen);
       break;
 
     case MENU_ITEM_ABOUT:
@@ -517,10 +519,13 @@ function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     executeCommand: executeCommand
   }
 
+  const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
+  const devToolsOpen = util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+
   const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
     { id: MENU_ITEM_SETTINGS, iconRight: "wrench", label: "Settings", target: target },
     { id: MENU_ITEM_KEY_BINDINGS, iconRight: "keyboard-o", label: "Key Bindings", target: target },
-    { id: MENU_ITEM_DEVELOPER_TOOLS, iconRight: "cogs", label: "Developer Tools", target: target },
+    { id: MENU_ITEM_DEVELOPER_TOOLS, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", target: target },
     { id: MENU_ITEM_RELOAD_CSS, iconRight: "refresh", label: "Reload Theme", target: target },
     { id: MENU_ITEM_ABOUT, iconRight: "lightbulb-o", label: "About", target: target },
   ];
