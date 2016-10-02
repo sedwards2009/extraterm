@@ -1049,11 +1049,11 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     }
     
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
+      { id: COMMAND_NEW_TAB, iconRight: "plus", label: "New Tab", target: target },
+      { id: COMMAND_CLOSE_TAB, iconRight: "times", label: "Close Tab", target: target },
       { id: COMMAND_SELECT_TAB_LEFT, label: "Select Previous Tab", target: target },
       { id: COMMAND_SELECT_TAB_RIGHT, label: "Select Next Tab", target: target },
-      { id: COMMAND_NEW_TAB, iconRight: "plus", label: "New Tab", target: target },
       { id: COMMAND_SELECT_OTHER_PANE, iconRight: "arrows-h",  label: "Select other Pane", target: target },
-      { id: COMMAND_CLOSE_TAB, iconRight: "times", label: "Close Tab", target: target },
       { id: COMMAND_TOGGLE_SPLIT, iconLeft: this._split ? "check-square-o" : "square-o",
         iconRight: "columns", label: "Split", target: target },
     ];

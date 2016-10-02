@@ -521,8 +521,8 @@ function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     { id: MENU_ITEM_SETTINGS, iconRight: "wrench", label: "Settings", target: target },
     { id: MENU_ITEM_KEY_BINDINGS, iconRight: "keyboard-o", label: "Key Bindings", target: target },
     { id: MENU_ITEM_DEVELOPER_TOOLS, iconRight: "cogs", label: "Developer Tools", target: target },
-    { id: MENU_ITEM_ABOUT, iconRight: "lightbulb-o", label: "About", target: target },
     { id: MENU_ITEM_RELOAD_CSS, iconRight: "refresh", label: "Reload Theme", target: target },
+    { id: MENU_ITEM_ABOUT, iconRight: "lightbulb-o", label: "About", target: target },
   ];
   return commandList;
 }
