@@ -124,7 +124,12 @@ class CbCommandPalette extends ThemeableElementBase {
         }
       }
     });
-    
+
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    containerDiv.addEventListener('contextmenu', (ev) => {
+      this._executeId(null);
+    }); 
+
     const coverDiv = domutils.getShadowId(this, ID_COVER);
     coverDiv.addEventListener('mousedown', (ev) => {
       this._executeId(null);
