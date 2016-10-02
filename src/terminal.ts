@@ -1106,16 +1106,20 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
 
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
-    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-      { id: COMMAND_ENTER_NORMAL_MODE, label: "Enter normal mode", target: this },
-      { id: COMMAND_ENTER_SELECTION_MODE, iconRight: "i-cursor", label: "Enter cursor mode", target: this },
-      { id: COMMAND_SCROLL_PAGE_UP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this },
-      { id: COMMAND_SCROLL_PAGE_DOWN, iconRight: "angle-double-down", label: "Scroll Page Down", target: this },
-      { id: COMMAND_COPY_TO_CLIPBOARD, iconRight: "copy", label: "Copy to Clipboard", target: this },
-      { id: COMMAND_PASTE_FROM_CLIPBOARD, iconRight: "clipboard", label: "Paste from Clipboard", target: this },
-      { id: COMMAND_OPEN_LAST_FRAME, iconRight: "external-link", label: "Open Last Frame", target: this },
-      { id: COMMAND_DELETE_LAST_FRAME, iconRight: "times-circle", label: "Delete Last Frame", target: this },
-    ];
+    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
+    if (this._mode === Mode.DEFAULT) {
+      commandList.push( { id: COMMAND_ENTER_SELECTION_MODE, iconRight: "i-cursor", label: "Enter cursor mode", target: this } );
+    } else {
+      commandList.push( { id: COMMAND_ENTER_NORMAL_MODE, label: "Enter normal mode", target: this } );
+    }
+    commandList.push( { id: COMMAND_SCROLL_PAGE_UP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this } );
+    commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, iconRight: "angle-double-down", label: "Scroll Page Down", target: this } );
+    commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, iconRight: "copy", label: "Copy to Clipboard", target: this } );
+    if (this._mode === Mode.SELECTION) {
+      commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, iconRight: "clipboard", label: "Paste from Clipboard", target: this } );
+    }
+    commandList.push( { id: COMMAND_OPEN_LAST_FRAME, iconRight: "external-link", label: "Open Last Frame", target: this } );
+    commandList.push( { id: COMMAND_DELETE_LAST_FRAME, iconRight: "times-circle", label: "Delete Last Frame", target: this } );
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);

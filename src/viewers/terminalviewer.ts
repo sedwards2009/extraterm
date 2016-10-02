@@ -1122,7 +1122,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       { id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "terminal", label: "Type Selection & Execute", target: this }
     ];
     
-    if (this._mode ===ViewerElementTypes.Mode.SELECTION) {
+    if (this._mode === ViewerElementTypes.Mode.SELECTION) {
       const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
         CodeMirrorCommands.commandDescriptions(this._codeMirror).map( (desc) => {
           return { id: desc.command,
