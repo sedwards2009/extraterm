@@ -43,6 +43,7 @@ const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 
 const KEYBINDINGS_SELECTION_MODE = "terminal-viewer";
+const PALETTE_GROUP = "terminalviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
 const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
@@ -1118,14 +1119,15 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-      { id: COMMAND_TYPE_SELECTION, iconRight: "terminal", label: "Type Selection", target: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "terminal", label: "Type Selection & Execute", target: this }
+      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this }
     ];
     
     if (this._mode === ViewerElementTypes.Mode.SELECTION) {
       const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
         CodeMirrorCommands.commandDescriptions(this._codeMirror).map( (desc) => {
           return { id: desc.command,
+            group: PALETTE_GROUP,
             iconLeft: desc.iconLeft,
             iconRight: desc.iconRight,
             label: desc.label,

@@ -18,6 +18,7 @@ const ID_CONTAINER = "ID_CONTAINER";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
 
+const CLASS_RESULT_GROUP_HEAD = "CLASS_RESULT_GROUP_HEAD";
 const CLASS_RESULT_ENTRY = "CLASS_RESULT_ENTRY";
 const CLASS_RESULT_ICON_LEFT = "CLASS_RESULT_ICON_LEFT";
 const CLASS_RESULT_ICON_RIGHT = "CLASS_RESULT_ICON_RIGHT";
@@ -164,8 +165,8 @@ class CbCommandPalette extends ThemeableElementBase {
   
   //-----------------------------------------------------------------------
   private _updateEntries(): void {
-    const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
-    const filteredEntries = filterEntries(this._commandEntries, filterInput.value);
+    const filterInputValue = (<HTMLInputElement> domutils.getShadowId(this, ID_FILTER)).value;
+    const filteredEntries = filterEntries(this._commandEntries, filterInputValue);
     
     if (filteredEntries.length === 0) {
       this._selectedId = null;
@@ -174,7 +175,7 @@ class CbCommandPalette extends ThemeableElementBase {
       this._selectedId = filteredEntries[Math.max(0, newSelectedIndex)].id;
     }
     
-    const html = formatEntries(filteredEntries, this._selectedId);
+    const html = (filterInputValue.trim() === "" ? formatEntriesWithGroups : formatEntries)(filteredEntries, this._selectedId);
     domutils.getShadowId(this, ID_RESULTS).innerHTML = html;
   }
 
@@ -318,8 +319,24 @@ function formatEntries(entries: CommandPaletteTypes.CommandEntry[], selectedId: 
   return entries.map( (entry) => formatEntry(entry, entry.id === selectedId) ).join("");
 }
 
-function formatEntry(entry: CommandPaletteTypes.CommandEntry, selected: boolean): string {
-  return `<div class='${CLASS_RESULT_ENTRY} ${selected ? CLASS_RESULT_SELECTED : ""}' ${ATTR_DATA_ID}='${entry.id}'>
+function formatEntriesWithGroups(entries: CommandPaletteTypes.CommandEntry[], selectedId: string): string {
+  let currentGroup: string = null;
+  const htmlParts: string[] = [];
+
+  for (let entry of entries) {
+    let extraClass = "";
+    if (entry.group !== currentGroup && currentGroup !== null) {
+      extraClass = CLASS_RESULT_GROUP_HEAD;
+    }
+    currentGroup = entry.group;
+    htmlParts.push(formatEntry(entry, entry.id === selectedId, extraClass));
+  }
+  
+  return htmlParts.join("");
+}
+
+function formatEntry(entry: CommandPaletteTypes.CommandEntry, selected: boolean, extraClassString = ""): string {
+  return `<div class='${CLASS_RESULT_ENTRY} ${selected ? CLASS_RESULT_SELECTED : ""} ${extraClassString}' ${ATTR_DATA_ID}='${entry.id}'>
     <div class='${CLASS_RESULT_ICON_LEFT}'>${formatIcon(entry.iconLeft)}</div>
     <div class='${CLASS_RESULT_ICON_RIGHT}'>${formatIcon(entry.iconRight)}</div>
     <div class='${CLASS_RESULT_LABEL}'>${he.encode(entry.label)}</div>

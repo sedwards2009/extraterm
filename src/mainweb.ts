@@ -46,6 +46,7 @@ type KeyBindingContexts = keybindingmanager.KeyBindingContexts;
 
 sourceMapSupport.install();
 
+const PALETTE_GROUP = "mainweb";
 const MENU_ITEM_SPLIT = 'split';
 const MENU_ITEM_SETTINGS = 'settings';
 const MENU_ITEM_KEY_BINDINGS = 'key_bindings';
@@ -494,6 +495,7 @@ function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.Command
     const paletteEntries = entries.map( (entry, index): CommandPaletteTypes.CommandEntry => {
       return {
         id: "" + index,
+        group: entry.group,
         iconLeft: entry.iconLeft,
         iconRight: entry.iconRight,
         label: entry.label,
@@ -523,11 +525,11 @@ function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
   const devToolsOpen = util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
 
   const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-    { id: MENU_ITEM_SETTINGS, iconRight: "wrench", label: "Settings", target: target },
-    { id: MENU_ITEM_KEY_BINDINGS, iconRight: "keyboard-o", label: "Key Bindings", target: target },
-    { id: MENU_ITEM_DEVELOPER_TOOLS, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", target: target },
-    { id: MENU_ITEM_RELOAD_CSS, iconRight: "refresh", label: "Reload Theme", target: target },
-    { id: MENU_ITEM_ABOUT, iconRight: "lightbulb-o", label: "About", target: target },
+    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", target: target },
+    { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", target: target },
+    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", target: target },
+    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", target: target },
+    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", target: target },
   ];
   return commandList;
 }

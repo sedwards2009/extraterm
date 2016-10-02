@@ -81,6 +81,7 @@ const CLASS_TAB_HEADER_MIDDLE = "tab_header_middle";
 const CLASS_TAB_HEADER_CLOSE = "tab_header_close";
 
 const KEYBINDINGS_MAIN_UI = "main-ui";
+const PALETTE_GROUP = "mainwebui";
 const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
 const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
 const COMMAND_NEW_TAB = "newTab";
@@ -1049,12 +1050,12 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     }
     
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-      { id: COMMAND_NEW_TAB, iconRight: "plus", label: "New Tab", target: target },
-      { id: COMMAND_CLOSE_TAB, iconRight: "times", label: "Close Tab", target: target },
-      { id: COMMAND_SELECT_TAB_LEFT, label: "Select Previous Tab", target: target },
-      { id: COMMAND_SELECT_TAB_RIGHT, label: "Select Next Tab", target: target },
-      { id: COMMAND_SELECT_OTHER_PANE, iconRight: "arrows-h",  label: "Select other Pane", target: target },
-      { id: COMMAND_TOGGLE_SPLIT, iconLeft: this._split ? "check-square-o" : "square-o",
+      { id: COMMAND_NEW_TAB, group: PALETTE_GROUP, iconRight: "plus", label: "New Tab", target: target },
+      { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", target: target },
+      { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", target: target },
+      { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", target: target },
+      { id: COMMAND_SELECT_OTHER_PANE, group: PALETTE_GROUP, iconRight: "arrows-h",  label: "Select other Pane", target: target },
+      { id: COMMAND_TOGGLE_SPLIT, group: PALETTE_GROUP, iconLeft: this._split ? "check-square-o" : "square-o",
         iconRight: "columns", label: "Split", target: target },
     ];
 

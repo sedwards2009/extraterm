@@ -78,6 +78,7 @@ const ID_CONTAINER = "ID_CONTAINER";
 const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
 const KEYBINDINGS_SELECTION_MODE = "terminal-selection-mode";
 
+const PALETTE_GROUP = "terminal";
 const COMMAND_ENTER_SELECTION_MODE = "enterSelectionMode";
 const COMMAND_ENTER_NORMAL_MODE = "enterNormalMode";
 const COMMAND_SCROLL_PAGE_UP = "scrollPageUp";
@@ -500,7 +501,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
     scrollerArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
     scrollerArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
-    this.executeCommand.bind(this, CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE));
 
     scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     scrollerArea.addEventListener(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
@@ -1108,18 +1108,18 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
     if (this._mode === Mode.DEFAULT) {
-      commandList.push( { id: COMMAND_ENTER_SELECTION_MODE, iconRight: "i-cursor", label: "Enter cursor mode", target: this } );
+      commandList.push( { id: COMMAND_ENTER_SELECTION_MODE, group: PALETTE_GROUP, iconRight: "i-cursor", label: "Enter cursor mode", target: this } );
     } else {
-      commandList.push( { id: COMMAND_ENTER_NORMAL_MODE, label: "Enter normal mode", target: this } );
+      commandList.push( { id: COMMAND_ENTER_NORMAL_MODE, group: PALETTE_GROUP, label: "Enter normal mode", target: this } );
     }
-    commandList.push( { id: COMMAND_SCROLL_PAGE_UP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this } );
-    commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, iconRight: "angle-double-down", label: "Scroll Page Down", target: this } );
-    commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, iconRight: "copy", label: "Copy to Clipboard", target: this } );
+    commandList.push( { id: COMMAND_SCROLL_PAGE_UP, group: PALETTE_GROUP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this } );
+    commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, group: PALETTE_GROUP, iconRight: "angle-double-down", label: "Scroll Page Down", target: this } );
+    commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "copy", label: "Copy to Clipboard", target: this } );
     if (this._mode === Mode.SELECTION) {
-      commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, iconRight: "clipboard", label: "Paste from Clipboard", target: this } );
+      commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "clipboard", label: "Paste from Clipboard", target: this } );
     }
-    commandList.push( { id: COMMAND_OPEN_LAST_FRAME, iconRight: "external-link", label: "Open Last Frame", target: this } );
-    commandList.push( { id: COMMAND_DELETE_LAST_FRAME, iconRight: "times-circle", label: "Delete Last Frame", target: this } );
+    commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "external-link", label: "Open Last Frame", target: this } );
+    commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "times-circle", label: "Delete Last Frame", target: this } );
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);

@@ -6,6 +6,7 @@
 
 export interface CommandEntry {
   id: string;
+  group: string;
   iconLeft?: string;
   iconRight?: string;
   label: string;

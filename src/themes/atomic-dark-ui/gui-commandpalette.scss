@@ -99,6 +99,10 @@ div > #ID_FILTER {
     color: $text-color-selected;
     background-color: $background-color-selected;
   }
+
+  &.CLASS_RESULT_GROUP_HEAD {
+    border-top: 1px solid $dropdown-link-color;
+  }
 }
 
 .CLASS_RESULT_ICON_LEFT {
