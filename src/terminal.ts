@@ -86,6 +86,7 @@ const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
 const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
 const COMMAND_DELETE_LAST_FRAME = "deleteLastFrame";
 const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
+const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 
 const CLASS_SELECTION_MODE = "selection-mode";
 const SCROLL_STEP = 1;
@@ -498,6 +499,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
     scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
     scrollerArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
+    scrollerArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
+    this.executeCommand.bind(this, CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE));
 
     scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     scrollerArea.addEventListener(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
@@ -1076,6 +1079,12 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
   }
   
+  private _handleContextMenu(): void {
+    if (this._terminalViewer !== null) {
+      this._terminalViewer.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+    }
+  }
+
   private _handleCommandPaletteRequest(ev: CustomEvent): void {
     if (ev.path[0] === this) { // Don't process our own messages.
       return;
@@ -1161,6 +1170,19 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
             this._embeddedViewerPopOutEvent(viewer);
           }
           break;
+
+      case COMMAND_OPEN_COMMAND_PALETTE:
+        const commandPaletteRequestDetail: CommandPaletteRequest = {
+            srcElement: this,
+            commandEntries: this._commandPaletteEntries(),
+            contextElement: null
+          };
+        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
+          { detail: commandPaletteRequestDetail });
+        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+          commandPaletteRequestDetail);
+        this.dispatchEvent(commandPaletteRequestEvent);
+        break;
         
       default:
         return false;

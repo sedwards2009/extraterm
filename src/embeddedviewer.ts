@@ -445,13 +445,12 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       if (viewerElement === null) {
         return;
       }
-      // domutils.doLater( () => {
-        if (CommandPaletteRequestTypes.isCommandable(viewerElement)) {
-          viewerElement.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
-        } else {
-          this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
-        }
-      // });
+
+      if (CommandPaletteRequestTypes.isCommandable(viewerElement)) {
+        viewerElement.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+      } else {
+        this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+      }
     });
 
     const setterState: virtualscrollarea.SetterState = {
