@@ -214,7 +214,7 @@ export function startUp(): void {
 
     const mainMenu = doc.getElementById('main_menu');
     mainMenu.addEventListener('selected', (ev: CustomEvent) => {
-      executeCommand(ev.detail.name);
+      executeMenuCommand(ev.detail.name);
     });
     
     mainWebUi.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
@@ -235,6 +235,19 @@ export function startUp(): void {
     mainWebUi.focus();
     window.focus();
   });
+}
+
+
+function executeMenuCommand(command: string): boolean {
+  if (command === MENU_ITEM_DEVELOPER_TOOLS) {
+    // Unflip what the user did to the state of the developer tools check box for a moment.
+    // Let executeCommand() toggle the checkbox itself. 
+    const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
+    const devToolsOpen = util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+    developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
+  }
+
+  return executeCommand(command);
 }
 
 function executeCommand(command: string): boolean {
