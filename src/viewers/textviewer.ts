@@ -348,15 +348,16 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
           setterState.yOffset, setterState.yOffsetChanged);
       }
       
-      const op = () => {
+      // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
+      // const op = () => {
         this._adjustHeight(setterState.height);
         this.scrollTo(0, setterState.yOffset);
-      };
-      if (this._codeMirror !== null) {
-        this._codeMirror.operation(op);
-      } else {
-        op();
-      }
+      // };
+      // if (this._codeMirror !== null) {
+      //   this._codeMirror.operation(op);
+      // } else {
+      //   op();
+      // }
     }
   }
   
