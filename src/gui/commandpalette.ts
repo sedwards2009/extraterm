@@ -17,6 +17,9 @@ const ID_CONTEXT_COVER = "ID_CONTEXT_COVER";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
+const ID_TITLE_PRIMARY = "ID_TITLE_PRIMARY";
+const ID_TITLE_SECONDARY = "ID_TITLE_SECONDARY";
+const ID_TITLE_CONTAINER = "ID_TITLE_CONTAINER";
 
 const CLASS_RESULT_GROUP_HEAD = "CLASS_RESULT_GROUP_HEAD";
 const CLASS_RESULT_ENTRY = "CLASS_RESULT_ENTRY";
@@ -63,12 +66,18 @@ class CbCommandPalette extends ThemeableElementBase {
   
   private _selectedId: string;
   
+  private _titlePrimary: string;
+
+  private _titleSecondary: string;
+
   private _laterHandle: domutils.LaterHandle;
   
   private _initProperties(): void {
     this._commandEntries = [];
     this._selectedId = null;
     this._laterHandle = null;
+    this._titlePrimary = "";
+    this._titleSecondary = "";
   }
 
   set entries(entries: CommandPaletteTypes.CommandEntry[]) {
@@ -84,6 +93,24 @@ class CbCommandPalette extends ThemeableElementBase {
 
   get entries(): CommandPaletteTypes.CommandEntry[] {
     return this._commandEntries;
+  }
+
+  set titlePrimary(text: string) {
+    this._titlePrimary = text;
+    this._updateTitle();
+  }
+
+  get titlePrimary(): string {
+    return this._titlePrimary;
+  }
+
+  set titleSecondary(text: string) {
+    this._titleSecondary = text;
+    this._updateTitle();
+  }
+
+  get titleSecondary(): string {
+    return this._titleSecondary;
   }
 
   //-----------------------------------------------------------------------
@@ -149,6 +176,7 @@ class CbCommandPalette extends ThemeableElementBase {
         <div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
         <div id='${ID_CONTEXT_COVER}' class='${CLASS_CONTEXT_COVER_CLOSED}'>
           <div id='${ID_CONTAINER}'>
+            <div id="${ID_TITLE_CONTAINER}"><div id="${ID_TITLE_PRIMARY}"></div><div id="${ID_TITLE_SECONDARY}"></div></div>
             <div class="form-group"><input type="text" id="${ID_FILTER}" class="form-control input-sm" /></div>
             <div id="${ID_RESULTS}"></div>
           </div>
@@ -164,6 +192,15 @@ class CbCommandPalette extends ThemeableElementBase {
   }
   
   //-----------------------------------------------------------------------
+
+  private _updateTitle(): void {
+    const titlePrimaryDiv = <HTMLDivElement> domutils.getShadowId(this, ID_TITLE_PRIMARY);
+    const titleSecondaryDiv = <HTMLDivElement> domutils.getShadowId(this, ID_TITLE_SECONDARY);
+
+    titlePrimaryDiv.innerText = this._titlePrimary;
+    titleSecondaryDiv.innerText = this._titleSecondary;
+  }
+
   private _updateEntries(): void {
     const filterInputValue = (<HTMLInputElement> domutils.getShadowId(this, ID_FILTER)).value;
     const filteredEntries = filterEntries(this._commandEntries, filterInputValue);

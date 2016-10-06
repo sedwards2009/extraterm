@@ -32,6 +32,26 @@
   padding: $padding-base-vertical $padding-base-horizontal;
 }
 
+#ID_TITLE_CONTAINER {
+  width: 100%;
+  display: flex;
+
+  font-family: $font-family-base;
+  font-size: $input-font-size;
+  line-height: $line-height-base;
+  color: $text-color;
+  margin-bottom: 5px;
+}
+
+#ID_TITLE_PRIMARY {
+  flex-grow: 1;
+  font-weight: normal;
+}
+
+#ID_TITLE_SECONDARY {
+  flex-grow: 0;
+}
+
 #ID_CONTEXT_COVER {
   position: relative;
 }

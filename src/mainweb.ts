@@ -171,6 +171,8 @@ export function startUp(): void {
     // Command palette
     const commandPalette = <CbCommandPalette> doc.createElement(CbCommandPalette.TAG_NAME);
     commandPalette.id = ID_COMMAND_PALETTE;
+    commandPalette.titlePrimary = "Command Palette";
+    commandPalette.titleSecondary = "Ctrl+Shift+P";
     doc.body.appendChild(commandPalette);
     commandPalette.addEventListener('selected', handleCommandPaletteSelected);
     
