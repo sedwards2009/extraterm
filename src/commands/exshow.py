@@ -177,7 +177,7 @@ modeInfo = [
     {"name": "mscgen", "mime": "text/x-mscgen", "mode": "mscgen", "ext": ["mscgen", "mscin", "msc"]},
     {"name": "xu", "mime": "text/x-xu", "mode": "mscgen", "ext": ["xu"]},
     {"name": "msgenny", "mime": "text/x-msgenny", "mode": "mscgen", "ext": ["msgenny"]}
-  ];
+  ]
   
 def FilenameToTextMimetype(name):
     lowerfilename = name.lower()
@@ -201,17 +201,18 @@ def FilenameToImageMimetype(name):
     return None
     
 
-def Show(filename):
+def Show(filename, mimeType=None, charset=None):
     if os.path.exists(filename):
-        charset = None
-        mimeType = FilenameToTextMimetype(os.path.basename(filename))
-        if mimeType is not None:
-            charset = "utf8"
-        else:
-            mimeType = FilenameToImageMimetype(os.path.basename(filename))
-            if mimeType is None:
-                mimeType = "text/plain"
-                charset = "utf8"
+        if mimeType is None:
+            mimeType = FilenameToTextMimetype(os.path.basename(filename))
+            if mimeType is not None:
+                if charset is None: 
+                    charset = "utf8"
+            else:
+                mimeType = FilenameToImageMimetype(os.path.basename(filename))
+                if mimeType is None:
+                    mimeType = "text/plain"
+                    charset = "utf8"
         SendMimeTypeData(filename, mimeType, charset)
         return 0
     else:
@@ -220,9 +221,11 @@ def Show(filename):
 
 def main():
     parser = argparse.ArgumentParser(prog='show', description='Show a file inside Extraterm.')
-    parser.add_argument('files', metavar='file', type=str, nargs='+', help='file name')
+    parser.add_argument('--mimetype', dest='mimetype', action='store', default=None, help='the mime-type of the input file (default: auto-detect)')
+    parser.add_argument('--charset', dest='charset', action='store', default=None, help='the character set of the input file (default: UTF8)')
+    parser.add_argument('files', metavar='file', type=str, nargs='*', help='file name. The file data is read from stdin if no files are specified.')
     args = parser.parse_args()
-
+ 
     if not extratermclient.isExtraterm():
         print("Sorry, you're not using Extraterm.")
         return 1
