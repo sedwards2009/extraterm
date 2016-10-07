@@ -519,6 +519,9 @@ function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.Command
     });
     
     const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
+    const shortcut = keyBindingManager.getKeyBindingContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
+    commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
+
     commandPalette.entries = paletteEntries;
     
     let rect: ClientRect = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500 };

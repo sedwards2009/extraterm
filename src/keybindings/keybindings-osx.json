@@ -6,7 +6,8 @@
     "Cmd-t": "newTab",
     "Shift-Cmd-W": "closeTab",
     "Ctrl-Tab": "selectOtherPane",
-    "Cmd-s": "toggleSplit"
+    "Cmd-s": "toggleSplit",
+    "Cmd-Shift-P": "openCommandPalette"
   },
   "terminal-default-mode": {
     "Alt-Space": "enterSelectionMode",
