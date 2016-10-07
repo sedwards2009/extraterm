@@ -7,6 +7,7 @@
 
 import sys
 import os
+import argparse
 import tty
 import termios
 import atexit
@@ -60,9 +61,11 @@ def sendData(b64data):
     sys.stdout.flush()
         
 def main():
-    if len(sys.argv) != 2:
-        print("[Error] 'from' command requires one argument: frame ID.", file=sys.stderr)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(prog='from', description='Fetch data from an Extraterm frame.')
+    parser.add_argument('frames', metavar='frame_ID', type=str, nargs='+', help='a frame ID')
+
+    args = parser.parse_args()
+
     if not extratermclient.isExtraterm():
         print("[Error] 'from' command can only be run inside Extraterm.", file=sys.stderr)
         sys.exit(1)
@@ -71,6 +74,8 @@ def main():
     if not os.isatty(sys.stdin.fileno()):
         print("[Error] 'from' command must be connected to tty on stdin.", file=sys.stderr)
         sys.exit(1)
-    return processRequest(sys.argv[1])
 
+    for frameid in args.frames:
+        processRequest(frameid)
+    sys.exit(0)
 main()
