@@ -6,6 +6,7 @@
 # 
 import sys
 import os.path
+import argparse
 import base64
 
 import extratermclient
@@ -218,11 +219,15 @@ def Show(filename):
         return 3
 
 def main():
+    parser = argparse.ArgumentParser(prog='show', description='Show a file inside Extraterm.')
+    parser.add_argument('files', metavar='file', type=str, nargs='+', help='file name')
+    args = parser.parse_args()
+
     if not extratermclient.isExtraterm():
         print("Sorry, you're not using Extraterm.")
         return 1
 
-    for filename in sys.argv[1:]:
+    for filename in args.files:
         return Show(filename)
 
 main()
