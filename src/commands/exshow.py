@@ -228,6 +228,9 @@ def main():
         return 1
 
     for filename in args.files:
-        return Show(filename)
+        result = Show(filename, mimeType=args.mimetype, charset=args.charset)
+        if result != 0:
+            return result
+    return 0
 
 main()
