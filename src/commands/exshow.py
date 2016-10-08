@@ -11,13 +11,19 @@ import base64
 
 import extratermclient
 
-def SendMimeTypeData(filename, mimeType, charset):
-    extratermclient.startFileTransfer(mimeType, charset, filename)
+def SendMimeTypeDataFromFile(filename, mimeType, charset, filenameMeta=None):
     with open(filename,'rb') as fhandle:
-        contents = fhandle.read(3*10240)    # This must be a multiple of 3 to keep concatinated base64 working.
-        while len(contents) != 0:
-            print(base64.b64encode(contents).decode(),end='')
-            contents = fhandle.read(3*10240)
+        SendMimeTypeData(fhandle, filename if filenameMeta is None else filenameMeta, mimeType, charset)
+
+def SendMimeTypeDataFromStdin(mimeType, charset, filenameMeta=None):
+    SendMimeTypeData(sys.stdin.buffer, filenameMeta, mimeType, charset)
+
+def SendMimeTypeData(fhandle, filename, mimeType, charset):
+    extratermclient.startFileTransfer(mimeType, charset, filename)
+    contents = fhandle.read(3*10240)    # This must be a multiple of 3 to keep concatinated base64 working.
+    while len(contents) != 0:
+        print(base64.b64encode(contents).decode(),end='')
+        contents = fhandle.read(3*10240)
     extratermclient.endFileTransfer()
 
 mimeTypeMap = {
@@ -199,9 +205,8 @@ def FilenameToImageMimetype(name):
         if extension in mimeTypeMap:
             return mimeTypeMap[extension]
     return None
-    
 
-def Show(filename, mimeType=None, charset=None):
+def ShowFile(filename, mimeType=None, charset=None, filenameMeta=None):
     if os.path.exists(filename):
         if mimeType is None:
             mimeType = FilenameToTextMimetype(os.path.basename(filename))
@@ -213,27 +218,35 @@ def Show(filename, mimeType=None, charset=None):
                 if mimeType is None:
                     mimeType = "text/plain"
                     charset = "utf8"
-        SendMimeTypeData(filename, mimeType, charset)
+        SendMimeTypeDataFromFile(filename, mimeType, charset, filenameMeta)
         return 0
     else:
         print("Unable to open file {0}.".format(filename))
         return 3
 
+def ShowStdin(mimeType=None, charset=None, filenameMeta=None):
+    SendMimeTypeDataFromStdin(mimeType, charset, filenameMeta)
+
 def main():
     parser = argparse.ArgumentParser(prog='show', description='Show a file inside Extraterm.')
     parser.add_argument('--mimetype', dest='mimetype', action='store', default=None, help='the mime-type of the input file (default: auto-detect)')
     parser.add_argument('--charset', dest='charset', action='store', default=None, help='the character set of the input file (default: UTF8)')
+    parser.add_argument('--filename', dest='filename', action='store', default=None, help='sets the file name in the metadata sent to the terminal (useful when reading from stdin).')
+    
     parser.add_argument('files', metavar='file', type=str, nargs='*', help='file name. The file data is read from stdin if no files are specified.')
     args = parser.parse_args()
  
     if not extratermclient.isExtraterm():
-        print("Sorry, you're not using Extraterm.")
+        print("Sorry, you're not using Extraterm as your terminal.")
         return 1
 
-    for filename in args.files:
-        result = Show(filename, mimeType=args.mimetype, charset=args.charset)
-        if result != 0:
-            return result
-    return 0
+    if len(args.files) != 0:
+        for filename in args.files:
+            result = ShowFile(filename, mimeType=args.mimetype, charset=args.charset, filenameMeta=args.filename)
+            if result != 0:
+                return result
+        return 0
+    else:
+        return ShowStdin(mimeType=args.mimetype, charset=args.charset, filenameMeta=args.filename)
 
 main()
