@@ -31,7 +31,11 @@ def markEndCommand(rc=None):
     print("\x00", end="")
 
 def startFileTransfer(mimeType, charset, filename):
-    payload = { "mimeType": mimeType, "filename": filename }
+    payload = {}
+    if mimeType is not None:
+        payload["mimeType"] = mimeType
+    if filename is not None:
+        payload["filename"] = filename
     if charset is not None:
         payload["charset"] = charset
     jsonPayload = json.dumps(payload)

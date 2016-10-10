@@ -45,6 +45,7 @@ import Messages = require('./windowmessages');
 import virtualscrollarea = require('./virtualscrollarea');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
+import mimetypedetector = require('./mimetypedetector');
 
 import config = require('./config');
 type Config = config.Config;
@@ -1688,8 +1689,24 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
     
     const metadata = JSON.parse(encodedData.substr(0, metadataSize));
-    const charset = metadata.charset === undefined ? null : metadata.charset;
-    this._appendMimeViewer(metadata.mimeType, metadata.filename, charset, encodedData.slice(metadataSize));
+    const filename = metadata.filename;
+
+    let mimeType: string = metadata.mimeType || null;
+    let charset: string = metadata.charset || null;
+    if (mimeType === null) {
+      // Try to determine a mimetype by inspecting the file name first.
+      const detectionResult = mimetypedetector.detect(filename, null);
+      if (detectionResult !== null) {
+        mimeType = detectionResult.mimeType;
+        if (charset === null) {
+          charset = detectionResult.charset;
+        }
+      }
+    }
+
+    if (mimeType !== null) {
+      this._appendMimeViewer(mimeType, filename, charset, encodedData.slice(metadataSize));
+    }
   }
 
   private _appendMimeViewer(mimeType:string, filename: string, charset: string, encodedData: string): void {
