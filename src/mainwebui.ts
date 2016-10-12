@@ -437,7 +437,6 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
-      this._log.debug(this._html());
       template.innerHTML = this._html();
       window.document.body.appendChild(template);
     }

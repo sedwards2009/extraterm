@@ -7,7 +7,7 @@
 import fs  = require('fs');
 import crypto = require('crypto');
 import _ = require('lodash');
-import base64arraybuffer = require('base64-arraybuffer');
+import ByteBuffer = require('bytebuffer');
 import utf8 = require('utf8');
 
 import ViewerElement = require("./viewerelement");
@@ -593,7 +593,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         }
     }
 
-    this._appendMimeViewer(EtTipViewer.MIME_TYPE, "Tip", "utf8", "");
+    this._appendMimeViewer(EtTipViewer.MIME_TYPE, "Tip", "utf8", null);
     const newConfig = _.cloneDeep(config);
     newConfig.tipTimestamp = Date.now();
     newConfig.tipCounter = newConfig.tipCounter + 1;
@@ -1688,6 +1688,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       return;
     }
     
+    const buffer = ByteBuffer.fromBase64(encodedData.slice(metadataSize));
     const metadata = JSON.parse(encodedData.substr(0, metadataSize));
     const filename = metadata.filename;
 
@@ -1695,7 +1696,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     let charset: string = metadata.charset || null;
     if (mimeType === null) {
       // Try to determine a mimetype by inspecting the file name first.
-      const detectionResult = mimetypedetector.detect(filename, null);
+      const detectionResult = mimetypedetector.detect(filename, buffer);
       if (detectionResult !== null) {
         mimeType = detectionResult.mimeType;
         if (charset === null) {
@@ -1705,12 +1706,12 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
 
     if (mimeType !== null) {
-      this._appendMimeViewer(mimeType, filename, charset, encodedData.slice(metadataSize));
+      this._appendMimeViewer(mimeType, filename, charset, buffer);
     }
   }
 
-  private _appendMimeViewer(mimeType:string, filename: string, charset: string, encodedData: string): void {
-    const mimeViewerElement = this._createMimeViewer(mimeType, charset, encodedData);
+  private _appendMimeViewer(mimeType:string, filename: string, charset: string, data: ByteBuffer): void {
+    const mimeViewerElement = this._createMimeViewer(mimeType, charset, data);
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
@@ -1723,7 +1724,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
   }
 
-  private _createMimeViewer(mimeType: string, charset: string, mimeData: string): ViewerElement {
+  private _createMimeViewer(mimeType: string, charset: string, data: ByteBuffer): ViewerElement {
     const candidates = viewerClasses.filter( (viewerClass) => viewerClass.supportsMimeType(mimeType) );
     
     if (candidates.length === 0) {
@@ -1734,8 +1735,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
     keybindingmanager.injectKeyBindingManager(dataViewer, this._keyBindingManager);
     config.injectConfigManager(dataViewer, this._configManager);
-    const buffer = new Uint8Array(base64arraybuffer.decode(mimeData));
-    dataViewer.setBytes(buffer, charset !== null ? mimeType + ";" + charset : mimeType);
+    if (data !== null) {
+      dataViewer.setBytes(data, charset !== null ? mimeType + ";" + charset : mimeType);
+    }
     dataViewer.editable = true;
     return dataViewer;
   }

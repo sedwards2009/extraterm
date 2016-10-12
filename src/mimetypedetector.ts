@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import ByteBuffer = require('bytebuffer');
 
 export interface DetectionResult {
   readonly mimeType: string;
@@ -16,7 +17,7 @@ export interface DetectionResult {
  * @param buffer string of bytes containing the first part of the file
  * @return the results of the detection or null if the type could not be detected.
  */
-export function detect(filename: string=null, buffer: string=null): DetectionResult | null {
+export function detect(filename: string=null, buffer: ByteBuffer=null): DetectionResult | null {
   if (filename !== null) {
     const mimeType = filenameToTextMimetype(filename);
     if (mimeType !== null) {
@@ -30,6 +31,12 @@ export function detect(filename: string=null, buffer: string=null): DetectionRes
   }
 
   // Check the data directly.
+  if (buffer !== null) {
+    const mimeType = magicToMimeType(buffer);
+    if (mimeType !== null) {
+      return {mimeType, charset: null };
+    }
+  }
 
   return null;
 }
@@ -188,7 +195,13 @@ const modeInfo: ModeInfo[] = [
   {name: "xu", mime: "text/x-xu", mode: "mscgen", ext: ["xu"]},
   {name: "msgenny", mime: "text/x-msgenny", mode: "mscgen", ext: ["msgenny"]}
 ];
-  
+
+/**
+ * Try to match a filename to a text mimetype.
+ * 
+ * @param name the filename to match.
+ * @return the matching mimetype or null if one could not be identified.
+ */
 function filenameToTextMimetype(name: string): string {
   const lowerFilename = name.toLowerCase();
   const dotIndex = lowerFilename.lastIndexOf('.');
@@ -223,6 +236,12 @@ const mimeTypeMap = {
     webp: "image/webp"
 };
 
+/**
+ * Try to match a filename to an image mimetype.
+ * 
+ * @param name the filename to match.
+ * @return the matching mimetype or null if one could not be identified.
+ */
 function filenameToImageMimetype(name: string): string {
   const lowerFilename = name.toLowerCase();
   const dotIndex = lowerFilename.lastIndexOf('.');
@@ -233,4 +252,62 @@ function filenameToImageMimetype(name: string): string {
     }
   }
   return null;
+}
+
+interface MagicTest {
+  tests: [number, string][];
+  mimetype: string;
+}
+
+const magic: MagicTest[] = [
+  { tests: [ [0, "GIF8"]], mimetype: "image/gif"},
+  { tests: [ [0, "\x89PNG\x0d\x0a\x1a\x0a"]], mimetype: "image/png"},
+  { tests: [ [0, "\xff\xd8"]], mimetype: "image/jpeg"},
+  { tests: [ [0, "BM"]], mimetype: "image/bmp"},
+  { tests: [ [0, "RIFF"], [8, "WEBP"]], mimetype: "image/webp"}
+];
+
+/**
+ * Try to match a buffer of bytes to a mimetype.
+ * 
+ * @param buffer the buffer off bytes to examine.
+ * @return the matching mimetype or null if one could not be identified.
+ */
+function magicToMimeType(buffer: ByteBuffer): string {
+  for (const mimeTypeTest of magic) {
+    let match = true;
+    for(const test of mimeTypeTest.tests) {
+      const offset = test[0];
+      const stringTest = test[1];
+      if ( ! bufferStartsWith(buffer, stringTest, offset)) {
+        match = false;
+        break;
+      }
+    }
+    if (match) {
+      return mimeTypeTest.mimetype;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check if a byte string appears at the start of a byte buffer.
+ * 
+ * @param buffer the byte buffer to compare against.
+ * @param testString the string of bytes to test.
+ * @param offset the offset to start comparing at in the buffer. Optional.
+ * @return true if the test string matches the buffer.  
+ */
+function bufferStartsWith(buffer: ByteBuffer, testString: string, offset=0): boolean {
+  if (testString.length + offset> buffer.limit) {
+    return false;
+  }
+  for (let i=0; i<testString.length; i++) {
+    if (testString.codePointAt(i) !== buffer.readUint8(i+offset)) {
+      return false;
+    }
+  }
+  return true;
 }

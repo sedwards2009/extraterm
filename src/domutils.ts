@@ -356,12 +356,12 @@ export function doLaterFrame(func: Function): LaterHandle {
 /**
  * Format a Uint8Array and mimetype as a data url.
  * 
- * @param  {Uint8Array} buffer   [description]
- * @param  {string}     mimeType [description]
- * @return {string}              [description]
+ * @param  buffer   [description]
+ * @param  mimeType [description]
+ * @return          [description]
  */
-export function CreateDataUrl(buffer: Uint8Array, mimeType: string): string {
-  const base64Data = base64arraybuffer.encode(buffer.buffer);
+export function CreateDataUrl(buffer: ByteBuffer, mimeType: string): string {
+  const base64Data = buffer.toBase64();
   return "data:" + mimeType + ";base64," + base64Data;
 }
 

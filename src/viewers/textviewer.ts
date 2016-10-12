@@ -6,7 +6,7 @@
 import _  = require('lodash');
 import fs = require('fs');
 import path = require('path');
-
+import ByteBuffer = require('bytebuffer');
 import textencoding = require('text-encoding');
 import utf8encoding = require('../utf8encoding');
 
@@ -255,7 +255,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     return this._mimeType;
   }
   
-  setBytes(buffer: Uint8Array, mimeType: string): void {
+  setBytes(buffer: ByteBuffer, mimeType: string): void {
     let charset = "utf-8";
     let cleanMimeType = mimeType;
     if (mimeType.indexOf(';') !== -1) {
@@ -265,10 +265,10 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     
     let decodedString: string;
     if (charset === 'utf8' || charset === 'utf-8') {
-      decodedString = utf8encoding.decodeUint8Array(buffer);
+      decodedString = buffer.readUTF8String(buffer.limit);
     } else {
       const decoder = textencoding.TextDecoder(charset);
-      decodedString = decoder.decode(buffer);
+      decodedString = decoder.decode(new Uint8Array(buffer.toArrayBuffer()));
     }
     
     this.text = decodedString;

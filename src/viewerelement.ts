@@ -114,7 +114,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
     return false;
   }
   
-  setBytes(buffer: Uint8Array, mimeType: string): void {
+  setBytes(buffer: ByteBuffer, mimeType: string): void {
     
   }
 }
