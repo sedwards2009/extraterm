@@ -96,7 +96,6 @@
         "./src/viewers/textviewer.ts",
         "./src/viewers/tipviewer.ts",
         "./src/settings/settingstab2.ts",
-        "./src/typings/base64-arraybuffer/base64-arraybuffer.d.ts",
         "./src/typings/codemirror/codemirror.d.ts",
         "./src/typings/commander/commander.d.ts",
         "./src/typings/github-electron/github-electron.d.ts",

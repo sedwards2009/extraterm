@@ -21,7 +21,6 @@
     "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
-    "base64-arraybuffer": "0.1.5",
     "codemirror": "5.14.2",
     "commander": "2.9.0",
     "element-resize-detector": "1.1.3",
