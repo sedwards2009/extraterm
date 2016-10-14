@@ -3,7 +3,6 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import ByteBuffer = require('bytebuffer');
 
 export interface DetectionResult {
   readonly mimeType: string;
@@ -17,7 +16,7 @@ export interface DetectionResult {
  * @param buffer string of bytes containing the first part of the file
  * @return the results of the detection or null if the type could not be detected.
  */
-export function detect(filename: string=null, buffer: ByteBuffer | Buffer=null): DetectionResult | null {
+export function detect(filename: string=null, buffer: Buffer=null): DetectionResult | null {
   if (filename !== null) {
     const mimeType = filenameToTextMimetype(filename);
     if (mimeType !== null) {
@@ -32,15 +31,7 @@ export function detect(filename: string=null, buffer: ByteBuffer | Buffer=null):
 
   // Check the data directly.
   if (buffer !== null) {
-
-    let mimeType: string;
-    if (buffer instanceof Buffer) {
-      mimeType = magicToMimeType(buffer);
-    } else {
-      // Dig out the Nodejs style Buffer object from the ByteBuffer.
-      mimeType = magicToMimeType((<any> buffer).buffer);
-    }
-
+    const mimeType = magicToMimeType(buffer);
     if (mimeType !== null) {
       return {mimeType, charset: null };
     }

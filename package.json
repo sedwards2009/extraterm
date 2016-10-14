@@ -42,7 +42,6 @@
     "ptyw.js": "0.4.0"
   },
   "devDependencies": {
-    "bytebuffer": "^5.0.1",
     "cajon": "0.2.10",
     "electron": "1.3.7",
     "electron-packager": "7.3.0",
