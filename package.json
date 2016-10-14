@@ -15,7 +15,7 @@
     "buildicons": "node src/extra_icons/build.js",
     "test": "npm run build ; nodeunit src/virtualscrollareatest.js",
     "testkeybindingmanager": "npm run build ; nodeunit src/keybindingmanagertest.js",
-    "testmimetypedetector":  "npm run build ; nodeunit src/mimetypedetectortest.js",
+    "testmimetypedetector": "npm run build ; nodeunit src/mimetypedetectortest.js",
     "typedoc": "node src/build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
     "package": "node src/build_scripts/build_packages.js",
     "serve-test": "node src/test/httpserver.js"
@@ -27,6 +27,7 @@
     "font-manager": "0.2.2",
     "fontinfo": "0.3.0",
     "he": "0.5.0",
+    "jschardet": "1.4.1",
     "lodash": "3.9.1",
     "markdown": "0.5.0",
     "node-sass": "3.9.3",

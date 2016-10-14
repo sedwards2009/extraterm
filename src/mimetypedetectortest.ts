@@ -51,3 +51,26 @@ export function testWebp(test: nodeunit.Test): void {
   test.equal("image/webp", result.mimeType);
   test.done();
 }
+
+export function testASCII(test: nodeunit.Test): void {
+  const result = mimetypedetector.detect(null, readTestFile("ascii.txt"));
+  test.notEqual(result, null);
+  test.equal("text/plain", result.mimeType);
+  test.done();
+}
+
+// Random binary data.
+export function testRandom(test: nodeunit.Test): void {
+  const result = mimetypedetector.detect(null, readTestFile("random.bin"));
+  test.notEqual(result, null);
+  test.equal("application/octet-stream", result.mimeType);
+  test.done();
+}
+
+// Part of a linux lib.so file.
+export function testLibSo(test: nodeunit.Test): void {
+  const result = mimetypedetector.detect(null, readTestFile("libso.bin"));
+  test.notEqual(result, null);
+  test.equal("application/octet-stream", result.mimeType);
+  test.done();
+}

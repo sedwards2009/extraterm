@@ -3,11 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import jschardet = require('jschardet');
 
 export interface DetectionResult {
   readonly mimeType: string;
   readonly charset: string;
 }
+
+const SAMPLE_SIZE = 1024;
 
 /**
  * Detect the mimetype of a file based on its filename and the first part of its contents.
@@ -35,9 +38,16 @@ export function detect(filename: string=null, buffer: Buffer=null): DetectionRes
     if (mimeType !== null) {
       return {mimeType, charset: null };
     }
+
+    if ( ! isNotText(buffer)) {
+      const result = jschardet.detect(buffer.slice(0, SAMPLE_SIZE).toString());
+      if (result.encoding !== null && result.confidence > 0.8) {
+        return { mimeType: "text/plain", charset: result.encoding };
+      }
+    }
   }
 
-  return null;
+  return { mimeType: "application/octet-stream", charset: null };
 }
 
 interface ModeInfo {
@@ -309,4 +319,27 @@ function bufferStartsWith(buffer: Buffer, testString: string, offset=0): boolean
     }
   }
   return true;
+}
+
+/**
+ * A crude test to see if a buffer contains a binary format or may be text.
+ * 
+ * @param buffer the buffer to test.
+ * @return true if the buffer looks like a binary file format.
+ */
+function isNotText(buffer: Buffer): boolean {
+  const bufferLength = buffer.length < SAMPLE_SIZE ? buffer.length: SAMPLE_SIZE;
+
+  let nonTextCharCount = 0;
+  for (let i=0; i<bufferLength; i++) {
+    const c = buffer.readUInt8(i);
+    if (c <= 6 || // ACK and lower
+        c === 8 ||  // Backspace
+        (c >= 16 && c <= 22) ||  //DLE to SYN
+        c === 255) {
+
+      nonTextCharCount++;
+    }
+  }
+  return nonTextCharCount > 4;  // Allow a couple of bad chars.
 }

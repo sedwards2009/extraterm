@@ -100,6 +100,7 @@
         "./src/typings/commander/commander.d.ts",
         "./src/typings/github-electron/github-electron.d.ts",
         "./src/typings/he/he.d.ts",
+        "./src/typings/jschardet/jschardet.d.ts",
         "./src/typings/lodash/lodash.d.ts",
         "./src/typings/node-sass/node-sass.d.ts",
         "./src/typings/node/node.d.ts",
