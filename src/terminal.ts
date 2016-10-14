@@ -1668,7 +1668,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     } else {
       data = this.getFrameContents(frameId);
     }
-    
+    // FIXME this should be binary safe and send metadata like mimetype and charset.
     const lines = data.split("\n");
     let encodedData: string = "";
     lines.forEach( (line: string) => {
