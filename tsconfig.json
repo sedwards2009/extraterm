@@ -105,7 +105,6 @@
         "./src/typings/node/node.d.ts",
         "./src/typings/nodeunit/nodeunit.d.ts",
         "./src/typings/ptyw.js/ptyw.js.d.ts",
-        "./src/typings/text-encoding/text-encoding.d.ts",
         "./src/typings/vuejs/vuejs.d.ts"
     ],
     "exclude": [],

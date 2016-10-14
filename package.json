@@ -32,7 +32,6 @@
     "node-sass": "3.9.3",
     "qs": "3.1.0",
     "source-map-support": "0.3.2",
-    "text-encoding": "0.5.5",
     "utf8": "2.1.1",
     "vue": "1.0.10"
   },
