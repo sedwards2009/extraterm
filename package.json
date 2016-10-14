@@ -15,6 +15,7 @@
     "buildicons": "node src/extra_icons/build.js",
     "test": "npm run build ; nodeunit src/virtualscrollareatest.js",
     "testkeybindingmanager": "npm run build ; nodeunit src/keybindingmanagertest.js",
+    "testmimetypedetector":  "npm run build ; nodeunit src/mimetypedetectortest.js",
     "typedoc": "node src/build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
     "package": "node src/build_scripts/build_packages.js",
     "serve-test": "node src/test/httpserver.js"

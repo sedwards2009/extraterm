@@ -48,6 +48,8 @@
         "./src/mainweb.ts",
         "./src/mainwebui.ts",
         "./src/markdown.js.d.ts",
+        "./src/mimetypedetector.ts",
+        "./src/mimetypedetectortest.ts",
         "./src/ptyconnector.ts",
         "./src/ptydirect.ts",
         "./src/ptyproxy.ts",

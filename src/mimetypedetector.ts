@@ -17,7 +17,7 @@ export interface DetectionResult {
  * @param buffer string of bytes containing the first part of the file
  * @return the results of the detection or null if the type could not be detected.
  */
-export function detect(filename: string=null, buffer: ByteBuffer=null): DetectionResult | null {
+export function detect(filename: string=null, buffer: ByteBuffer | Buffer=null): DetectionResult | null {
   if (filename !== null) {
     const mimeType = filenameToTextMimetype(filename);
     if (mimeType !== null) {
@@ -32,7 +32,15 @@ export function detect(filename: string=null, buffer: ByteBuffer=null): Detectio
 
   // Check the data directly.
   if (buffer !== null) {
-    const mimeType = magicToMimeType(buffer);
+
+    let mimeType: string;
+    if (buffer instanceof Buffer) {
+      mimeType = magicToMimeType(buffer);
+    } else {
+      // Dig out the Nodejs style Buffer object from the ByteBuffer.
+      mimeType = magicToMimeType((<any> buffer).buffer);
+    }
+
     if (mimeType !== null) {
       return {mimeType, charset: null };
     }
@@ -273,7 +281,7 @@ const magic: MagicTest[] = [
  * @param buffer the buffer off bytes to examine.
  * @return the matching mimetype or null if one could not be identified.
  */
-function magicToMimeType(buffer: ByteBuffer): string {
+function magicToMimeType(buffer: Buffer): string {
   for (const mimeTypeTest of magic) {
     let match = true;
     for(const test of mimeTypeTest.tests) {
@@ -300,12 +308,12 @@ function magicToMimeType(buffer: ByteBuffer): string {
  * @param offset the offset to start comparing at in the buffer. Optional.
  * @return true if the test string matches the buffer.  
  */
-function bufferStartsWith(buffer: ByteBuffer, testString: string, offset=0): boolean {
-  if (testString.length + offset> buffer.limit) {
+function bufferStartsWith(buffer: Buffer, testString: string, offset=0): boolean {
+  if (testString.length + offset> buffer.length) {
     return false;
   }
   for (let i=0; i<testString.length; i++) {
-    if (testString.codePointAt(i) !== buffer.readUint8(i+offset)) {
+    if (testString.codePointAt(i) !== buffer.readUInt8(i+offset)) {
       return false;
     }
   }
