@@ -5,7 +5,6 @@
  */
 
 import util = require('./gui/util');
-import base64arraybuffer = require('base64-arraybuffer');
 
 /**
  * Convert an array-like object to a real array.
@@ -360,8 +359,8 @@ export function doLaterFrame(func: Function): LaterHandle {
  * @param  mimeType [description]
  * @return          [description]
  */
-export function CreateDataUrl(buffer: ByteBuffer, mimeType: string): string {
-  const base64Data = buffer.toBase64();
+export function CreateDataUrl(buffer: Buffer, mimeType: string): string {
+  const base64Data = buffer.toString('base64');
   return "data:" + mimeType + ";base64," + base64Data;
 }
 

@@ -5,7 +5,6 @@
 "use strict";
 import _  = require('lodash');
 import fs = require('fs');
-import ByteBuffer = require('bytebuffer');
 import ViewerElement = require("../viewerelement");
 import ThemeableElementBase = require('../themeableelementbase');
 import ThemeTypes = require('../theme');
@@ -70,7 +69,7 @@ class EtImageViewer extends ViewerElement {
   private _log: Logger;
   private _keyBindingManager: KeyBindingManager;
   private _text: string;
-  private _buffer: ByteBuffer;
+  private _buffer: Buffer;
   private _mimeType: string;
   private _imageWidth: number;
   private _imageHeight: number;
@@ -172,7 +171,7 @@ class EtImageViewer extends ViewerElement {
     return this._mimeType;
   }
   
-  setBytes(buffer: ByteBuffer, mimeType: string): void {
+  setBytes(buffer: Buffer, mimeType: string): void {
     this.mimeType = mimeType;
     if (domutils.getShadowRoot(this) === null) {
       this._buffer = buffer;
@@ -408,7 +407,7 @@ class EtImageViewer extends ViewerElement {
     this.dispatchEvent(event);
   }
   
-  private _setImage(buffer: ByteBuffer, mimeType: string): void {
+  private _setImage(buffer: Buffer, mimeType: string): void {
     const dataUrl = domutils.CreateDataUrl(buffer, mimeType);
     const imageEl = domutils.getShadowId(this, ID_IMAGE);
     imageEl.setAttribute("src", dataUrl);

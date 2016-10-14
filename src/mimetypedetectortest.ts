@@ -9,7 +9,6 @@ import fs = require('fs');
 import path = require('path');
 import nodeunit = require('nodeunit');
 import mimetypedetector = require('./mimetypedetector');
-import ByteBuffer = require('bytebuffer');
 
 sourceMapSupport.install();
 

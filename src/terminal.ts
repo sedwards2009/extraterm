@@ -7,7 +7,6 @@
 import fs  = require('fs');
 import crypto = require('crypto');
 import _ = require('lodash');
-import ByteBuffer = require('bytebuffer');
 import utf8 = require('utf8');
 
 import ViewerElement = require("./viewerelement");
@@ -1688,7 +1687,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       return;
     }
     
-    const buffer = ByteBuffer.fromBase64(encodedData.slice(metadataSize));
+    const buffer = Buffer.from(encodedData.slice(metadataSize), 'base64');
     const metadata = JSON.parse(encodedData.substr(0, metadataSize));
     const filename = metadata.filename;
 
@@ -1710,7 +1709,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
   }
 
-  private _appendMimeViewer(mimeType:string, filename: string, charset: string, data: ByteBuffer): void {
+  private _appendMimeViewer(mimeType:string, filename: string, charset: string, data: Buffer): void {
     const mimeViewerElement = this._createMimeViewer(mimeType, charset, data);
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
@@ -1724,7 +1723,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
   }
 
-  private _createMimeViewer(mimeType: string, charset: string, data: ByteBuffer): ViewerElement {
+  private _createMimeViewer(mimeType: string, charset: string, data: Buffer): ViewerElement {
     const candidates = viewerClasses.filter( (viewerClass) => viewerClass.supportsMimeType(mimeType) );
     
     if (candidates.length === 0) {
