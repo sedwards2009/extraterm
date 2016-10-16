@@ -17,6 +17,8 @@ from signal import signal, SIGPIPE, SIG_DFL
 import extratermclient
 
 def requestFrame(frame_name):
+    """Returns a generator which outputs the frame contents as blocks of binary data.
+    """
     # Turn off echo on the tty.
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
@@ -43,7 +45,7 @@ def requestFrame(frame_name):
                 return 0
             else:
                 # Send the input to stdout.
-                sendData(base64.b64decode(b64data[1:]))   # Strip the leading # and decode.
+                yield base64.b64decode(b64data[1:]) # Strip the leading # and decode.
                 b64data = sys.stdin.readline()
     except OSError as ex:
         print(ex.strerror, file=sys.stderr)
@@ -52,14 +54,12 @@ def requestFrame(frame_name):
         signal(SIGPIPE,SIG_DFL)
 
 def outputFrame(frame_name):
-    requestFrame(frame_name)
-
-def sendData(binary_data):
-    if len(binary_data) == 0:
-        return
-    data = binary_data.decode('utf-8') # FIXME handle utf8 decode errors.
-    sys.stdout.write(data)
-    sys.stdout.flush()
+    for binary_data in requestFrame(frame_name):
+        if len(binary_data) == 0:
+            return
+        data = binary_data.decode('utf-8') # FIXME handle utf8 decode errors.
+        sys.stdout.write(data)
+        sys.stdout.flush()
 
 def xargs(frameIds, command_list):
     pass
