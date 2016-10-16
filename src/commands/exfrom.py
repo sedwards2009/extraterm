@@ -12,6 +12,8 @@ import tty
 import termios
 import atexit
 import base64
+import tempfile
+import subprocess
 from signal import signal, SIGPIPE, SIG_DFL 
 
 import extratermclient
@@ -61,8 +63,33 @@ def outputFrame(frame_name):
         sys.stdout.write(data)
         sys.stdout.flush()
 
-def xargs(frameIds, command_list):
-    pass
+def xargs(frame_names, command_list):
+    temp_files = []
+    try:
+        # Fetch the contents of each frame and put them in tmp files.
+        for frame_name in frame_names:
+            next_temp_file = readFrameToTempFile(frame_name)
+            temp_files.append(next_temp_file)
+
+        # Build the complete command and args.
+        args = command_list[:]
+        for temp_file in temp_files:
+            args.append(temp_file.name)
+
+        subprocess.run(args)
+
+    finally:
+        # Clean up any temp files.
+        for temp_file in temp_files:
+            os.unlink(temp_file.name)
+
+def readFrameToTempFile(frame_name):
+    fhandle = tempfile.NamedTemporaryFile('w+b', delete=False)
+    for binary_data in requestFrame(frame_name):
+        fhandle.write(binary_data)
+    fhandle.close()
+
+    return fhandle 
 
 def main():
     parser = argparse.ArgumentParser(prog='from', description='Fetch data from an Extraterm frame.')
