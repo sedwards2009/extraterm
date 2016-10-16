@@ -16,9 +16,7 @@ from signal import signal, SIGPIPE, SIG_DFL
 
 import extratermclient
 
-BUFFER_SIZE = 2048
-
-def processRequest(frame_name):
+def requestFrame(frame_name):
     # Turn off echo on the tty.
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
@@ -45,7 +43,7 @@ def processRequest(frame_name):
                 return 0
             else:
                 # Send the input to stdout.
-                sendData(b64data[1:])   # Strip the leading #
+                sendData(base64.b64decode(b64data[1:]))   # Strip the leading # and decode.
                 b64data = sys.stdin.readline()
     except OSError as ex:
         print(ex.strerror, file=sys.stderr)
@@ -53,16 +51,23 @@ def processRequest(frame_name):
         #Ignore further SIG_PIPE signals and don't throw exceptions
         signal(SIGPIPE,SIG_DFL)
 
-def sendData(b64data):
-    if len(b64data) == 0:
+def outputFrame(frame_name):
+    requestFrame(frame_name)
+
+def sendData(binary_data):
+    if len(binary_data) == 0:
         return
-    data = base64.b64decode(b64data).decode('utf-8') # FIXME handle utf8 decode errors.
+    data = binary_data.decode('utf-8') # FIXME handle utf8 decode errors.
     sys.stdout.write(data)
     sys.stdout.flush()
-        
+
+def xargs(frameIds, command_list):
+    pass
+
 def main():
     parser = argparse.ArgumentParser(prog='from', description='Fetch data from an Extraterm frame.')
     parser.add_argument('frames', metavar='frame_ID', type=str, nargs='+', help='a frame ID')
+    parser.add_argument('--xargs', metavar='xargs', type=str, nargs=argparse.REMAINDER, help='execute a command with frame contents as temp file names')
 
     args = parser.parse_args()
 
@@ -75,7 +80,12 @@ def main():
         print("[Error] 'from' command must be connected to tty on stdin.", file=sys.stderr)
         sys.exit(1)
 
-    for frameid in args.frames:
-        processRequest(frameid)
+    if args.xargs is None:
+        # Normal execution. Output the frames.
+        for frame_name in args.frames:
+            outputFrame(frame_name)
+    else:
+        xargs(args.frames, args.xargs)
+
     sys.exit(0)
 main()
