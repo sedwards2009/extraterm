@@ -827,20 +827,22 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _enterSelectionMode(): void {
     const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
-    
-    const doc = this._codeMirror.getDoc();
-    if (this._emulator !== null) {
-      const dimensions = this._emulator.getDimensions();
-      doc.setCursor( { line: dimensions.cursorY + this._terminalFirstRow, ch: dimensions.cursorX } );
-    } else {
-      doc.setCursor( { line: doc.lineCount()-1, ch: 0 } );
-    }
-    
-    this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
-    this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
-    if (this._editable) {
-      this._codeMirror.setOption("readOnly", false);
-    }
+
+    this._codeMirror.operation( () => {
+      const doc = this._codeMirror.getDoc();
+      if (this._emulator !== null) {
+        const dimensions = this._emulator.getDimensions();
+        doc.setCursor( { line: dimensions.cursorY + this._terminalFirstRow, ch: dimensions.cursorX } );
+      } else {
+        doc.setCursor( { line: doc.lineCount()-1, ch: 0 } );
+      }
+
+      this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
+      this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
+      if (this._editable) {
+        this._codeMirror.setOption("readOnly", false);
+      }
+    });
     this._mode = ViewerElementTypes.Mode.SELECTION;
   }
 

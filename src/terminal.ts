@@ -827,12 +827,17 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
   private _enterSelectionMode(): void {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
-      if (ViewerElement.isViewerElement(node)) {
-        node.mode = ViewerElementTypes.Mode.SELECTION;
-        node.visualState = VisualState.AUTO;
-      }
+
+    const childNodes = <ViewerElement[]> domutils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
+
+    // Setting all of the modes and then all of the visualStates saves us from DOM thrashing.
+    childNodes.forEach( (node) => {
+      node.mode = ViewerElementTypes.Mode.SELECTION;
     });
+    childNodes.forEach( (node) => {
+      node.visualState = VisualState.AUTO;
+    });
+
     this._mode = Mode.SELECTION;
     if (domutils.getShadowRoot(this).activeElement !== this._terminalViewer) {
       this._terminalViewer.focus();
