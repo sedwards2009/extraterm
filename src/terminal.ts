@@ -1054,6 +1054,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
       ev.stopPropagation();
+      ev.preventDefault();
     } else {
       if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
         // Route the key down to the current code mirror terminal which has the emulator attached.
