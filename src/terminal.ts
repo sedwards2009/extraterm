@@ -11,7 +11,7 @@ import utf8 = require('utf8');
 
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
-import ResizeableElementBase = require("./resizeableelementbase");
+import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import ThemeableElementBase = require('./themeableelementbase');
 import ThemeTypes = require('./theme');
 import EtEmbeddedViewer = require('./embeddedviewer');
@@ -886,7 +886,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _processFullResize(): void {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
-      ResizeableElementBase.resizeChildNodes(scrollerArea);
+      ResizeRefreshElementBase.resizeChildNodes(scrollerArea);
     }
     
     this._virtualScrollArea.resize();

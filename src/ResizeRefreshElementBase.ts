@@ -8,29 +8,29 @@ import LogDecorator = require('./logdecorator');
 const log = LogDecorator;
 
 /**
- * A base class for HTMLElements which also want to hear about possible resizes.
+ * A base class for HTMLElements which also want to hear about possible resizes and refreshes.
  */
-class ResizeableElementBase extends HTMLElement {
+class ResizeRefreshElementBase extends HTMLElement {
   
   static resizeChildNodes(node: Node): void {
     const kids = node.childNodes;
     for (let i=0; i<kids.length; i++) {
       const kid = kids[i];
-      if (ResizeableElementBase.is(kid)) {
+      if (ResizeRefreshElementBase.is(kid)) {
         kid.resize();
       } else {
-        ResizeableElementBase.resizeChildNodes(kid);
+        ResizeRefreshElementBase.resizeChildNodes(kid);
       }
     }
   }
   
-  static is(node: Node): node is ResizeableElementBase {
-    return node !== null && node !== undefined && node instanceof ResizeableElementBase;
+  static is(node: Node): node is ResizeRefreshElementBase {
+    return node !== null && node !== undefined && node instanceof ResizeRefreshElementBase;
   }
 
   resize(): void {
-    ResizeableElementBase.resizeChildNodes(this);
+    ResizeRefreshElementBase.resizeChildNodes(this);
   }
 }
 
-export = ResizeableElementBase;
+export = ResizeRefreshElementBase;
