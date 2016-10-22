@@ -19,6 +19,7 @@ type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import CodeMirror = require('codemirror');
 import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
+import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import EtTextViewerTypes = require('./terminalviewertypes');
 import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
 import virtualscrollarea = require('../virtualscrollarea');
@@ -361,10 +362,6 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     return this._isEmpty ? 0 : doc.lineCount();
   }
   
-  refresh(): void {
-    this._codeMirror.refresh();
-  }
-  
   getCursorPosition(): CursorMoveDetail {
     const cursorPos = this._codeMirror.cursorCoords(true, "local");
     const scrollInfo = this._codeMirror.getScrollInfo();
@@ -587,15 +584,21 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
-  
-  resize(): void {
+
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     if (this._codeMirror !== null) {
       if (DEBUG_RESIZE) {
         this._log.debug("calling codeMirror.refresh()");
       }
-      this._codeMirror.refresh();
+
+      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+        this._codeMirror.setSize(null, null);
+      } else {
+        this._codeMirror.refresh();
+      }
     }
   }
+
   //-----------------------------------------------------------------------
   //
   // ######                                      

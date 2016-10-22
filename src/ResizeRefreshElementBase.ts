@@ -7,19 +7,24 @@ import LogDecorator = require('./logdecorator');
 
 const log = LogDecorator;
 
+export enum RefreshLevel {
+  RESIZE = 1,
+  COMPLETE = 2
+};
+
 /**
  * A base class for HTMLElements which also want to hear about possible resizes and refreshes.
  */
-class ResizeRefreshElementBase extends HTMLElement {
+export class ResizeRefreshElementBase extends HTMLElement {
   
-  static resizeChildNodes(node: Node): void {
+  static refreshChildNodes(node: Node, level: RefreshLevel): void {
     const kids = node.childNodes;
     for (let i=0; i<kids.length; i++) {
       const kid = kids[i];
       if (ResizeRefreshElementBase.is(kid)) {
-        kid.resize();
+        kid.refresh(level);
       } else {
-        ResizeRefreshElementBase.resizeChildNodes(kid);
+        ResizeRefreshElementBase.refreshChildNodes(kid, level);
       }
     }
   }
@@ -28,9 +33,9 @@ class ResizeRefreshElementBase extends HTMLElement {
     return node !== null && node !== undefined && node instanceof ResizeRefreshElementBase;
   }
 
-  resize(): void {
-    ResizeRefreshElementBase.resizeChildNodes(this);
+  resize(foo): void {}
+
+  refresh(level: RefreshLevel): void {
+    ResizeRefreshElementBase.refreshChildNodes(this, level);
   }
 }
-
-export = ResizeRefreshElementBase;

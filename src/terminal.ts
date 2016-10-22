@@ -533,10 +533,10 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this.resizeToContainer();
   }
   
-  resize(): void {
-    this._processFullResize();
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    this._processRefresh(level);
   }
-  
+
   //-----------------------------------------------------------------------
   //
   //   ######                                      
@@ -883,10 +883,10 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._enforceScrollbackLength();
   }
 
-  private _processFullResize(): void {
+  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
-      ResizeRefreshElementBase.resizeChildNodes(scrollerArea);
+      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
     }
     
     this._virtualScrollArea.resize();

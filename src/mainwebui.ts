@@ -18,6 +18,7 @@ import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeTypes = require('./theme');
+import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 
 import CommandPaletteTypes = require('./gui/commandpalettetypes');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
@@ -145,8 +146,8 @@ class TabInfo {
   
   focus(): void { }
   
-  resize(): void { }
-  
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void { }
+
   hasFocus(): boolean {
     return false;
   }
@@ -187,10 +188,10 @@ class TerminalTabInfo extends TabInfo {
     this.terminal.focus();
   }
   
-  resize(): void {
-    this.terminal.resize();
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    this.terminal.refresh(level);
   }
-  
+
   hasFocus(): boolean {
     return this.terminal.hasFocus();
   }
@@ -618,17 +619,17 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     }
     
     this._split = split;
-    this._resize();
+    this._refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
   }
   
   get split(): boolean {
     return this._split;
   }
   
-  resize(): void {
-    this._resize();
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    this._refresh(level);
   }
-  
+
   /**
    * Initialise and insert a tab.
    * 
@@ -951,11 +952,11 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   }
   
   //-----------------------------------------------------------------------
-  private _resize(): void {
+  private _refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     const tabWidgetLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    tabWidgetLeft.resize();
+    tabWidgetLeft.refresh(level);
     const tabWidgetRight = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
-    tabWidgetRight.resize();
+    tabWidgetRight.refresh(level);
   }
 
   private _sendTabOpenedEvent(): void {

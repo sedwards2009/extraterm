@@ -24,6 +24,7 @@ import sourceDir = require('../sourceDir');
 import generalevents = require('../generalevents');
 import ThemeTypes = require('../theme');
 import keybindingmanager = require('../keybindingmanager');
+import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
@@ -372,17 +373,23 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return 0;
     }
   }
-  
-  resize(): void {
+
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     if (this._codeMirror !== null) {
       if (DEBUG_RESIZE) {
         this._log.debug("calling codeMirror.refresh()");
       }
-      this._codeMirror.refresh();
+
+      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+        this._codeMirror.setSize(null, null);
+      } else {
+        this._codeMirror.refresh();
+      }
     }
     this.resizeEmulatorToParentContainer();
   }
-  
+ 
+
   resizeEmulatorToParentContainer(): void {
     if (DEBUG_RESIZE) {
       this._log.debug("resizeEmulatorToParentContainer: ", this._emulator === null ? "(no emulator)" : "(have emulator)");
@@ -444,10 +451,6 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   lineCount(): number {
     const doc = this._codeMirror.getDoc();
     return this._isEmpty ? 0 : doc.lineCount();
-  }
-  
-  refresh(): void {
-    this._codeMirror.refresh();
   }
   
   deleteScreen(): void {

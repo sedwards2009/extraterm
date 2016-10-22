@@ -291,6 +291,10 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     this._processFullResize();
   }
 
+  refresh(): void {
+    this._processFullResize();
+  }
+
   //-----------------------------------------------------------------------
   //
   // ######                                      
@@ -385,7 +389,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     });
   }
 
-  private _processFullResize(): void {    
+  private _processFullResize(): void {
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     if (containerDiv !== null) {
       const rect = containerDiv.getBoundingClientRect();

@@ -17,6 +17,7 @@ import CbMenuItem = require('./gui/menuitem');
 import CbDropDown = require('./gui/dropdown');
 import CbCheckBoxMenuItem = require('./gui/checkboxmenuitem');
 import CbCommandPalette = require('./gui/commandpalette');
+import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 import CommandPaletteTypes = require('./gui/commandpalettetypes');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
 import MainWebUi = require('./mainwebui');
@@ -133,7 +134,7 @@ export function startUp(): void {
 
     window.addEventListener('resize', () => {
       if (mainWebUi !== null) {
-        mainWebUi.resize();
+        mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
       }
     });
 
@@ -165,7 +166,7 @@ export function startUp(): void {
     const resizeCanary = <ResizeCanary> doc.createElement(ResizeCanary.TAG_NAME);
     doc.body.appendChild(resizeCanary);
     resizeCanary.addEventListener('resize', () => {
-      mainWebUi.resize();
+      mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     });
     
     // Command palette

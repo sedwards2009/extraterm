@@ -7,6 +7,7 @@ import ThemeableElementBase = require('../themeableelementbase');
 import ThemeTypes = require('../theme');
 import CbStackedWidget = require('./stackedwidget');
 import CbTab = require('./tab');
+import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import util = require('./util');
 import domutils = require('../domutils');
 import _ = require('lodash');
@@ -129,15 +130,15 @@ class CbTabWidget extends ThemeableElementBase {
     this.createTabHolders();
   }  
   
-  resize(): void {
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     const contentsStack = this._getContentsStack();
     if (contentsStack === null) {
       return;
     }
-    contentsStack.resize();
-    super.resize();
+    contentsStack.refresh(level);
+    super.refresh(level);
   }
-  
+
   /**
    * 
    */
