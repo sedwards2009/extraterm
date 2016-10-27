@@ -17,8 +17,10 @@ import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
+import BulkDOMOperation = require('./BulkDOMOperation');
 import ThemeTypes = require('./theme');
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
+import CodeMirrorOperation = require('./codemirroroperation');
 
 import CommandPaletteTypes = require('./gui/commandpalettetypes');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
@@ -953,10 +955,21 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   
   //-----------------------------------------------------------------------
   private _refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    const tabWidgetLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    tabWidgetLeft.refresh(level);
-    const tabWidgetRight = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
-    tabWidgetRight.refresh(level);
+    const tabsWidgets = [<TabWidget> this._getById(ID_TAB_CONTAINER_LEFT), <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT)];
+
+    // Collect the bulk operations from the tabs.
+    const operation =  BulkDOMOperation.fromArray(tabsWidgets.map( (tab) => tab.bulkRefresh(level) ));
+    if (operation.runStep != null) {
+      // Do the heavy code mirror stuff first.
+      CodeMirrorOperation.bulkOperation( ()=> {
+        while (operation.runStep() === false) ;
+      });
+    }
+
+    if (operation.finish != null) {
+      // Finish up, let any signals fire.
+      operation.finish();
+    }
   }
 
   private _sendTabOpenedEvent(): void {

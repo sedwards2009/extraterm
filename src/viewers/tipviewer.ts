@@ -18,6 +18,7 @@ import keybindingmanager = require('../keybindingmanager');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import ViewerElement = require("../viewerelement");
+import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import ThemeableElementBase = require('../themeableelementbase');
 import ThemeTypes = require('../theme');
 import util = require("../gui/util");
@@ -26,6 +27,7 @@ import ViewerElementTypes = require('../viewerelementtypes');
 import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
+import BulkDOMOperation = require('../BulkDOMOperation');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -287,12 +289,8 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
   }
   
-  resize(): void {
-    this._processFullResize();
-  }
-
-  refresh(): void {
-    this._processFullResize();
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+    return this._processRefresh(level);
   }
 
   //-----------------------------------------------------------------------
@@ -357,7 +355,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     this._substituteKeycaps(contentDiv);
     this._fixImgRelativeUrls(contentDiv);
     
-    this._processFullResize();
+    BulkDOMOperation.execute(this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE));
   }
 
   private _substituteKeycaps(contentDiv: HTMLElement): void {
@@ -389,15 +387,23 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     });
   }
 
-  private _processFullResize(): void {
+  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     if (containerDiv !== null) {
-      const rect = containerDiv.getBoundingClientRect();
-      this._height = rect.height;
-      this._adjustHeight(this._height);
-      
-      this._emitVirtualResizeEvent();
+      return {
+        runStep: (): boolean => {
+          const rect = containerDiv.getBoundingClientRect();
+          this._height = rect.height;
+          this._adjustHeight(this._height);
+          return true;
+        },
+        finish: (): void => {
+          this._emitVirtualResizeEvent();
+        }
+      };
     }
+
+    return {};
   }
 
   private _getTipHTML(tipNumber: number): string {

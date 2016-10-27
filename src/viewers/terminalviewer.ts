@@ -25,6 +25,7 @@ import generalevents = require('../generalevents');
 import ThemeTypes = require('../theme');
 import keybindingmanager = require('../keybindingmanager');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
+import BulkDOMOperation = require('../BulkDOMOperation');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
@@ -374,21 +375,28 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     }
   }
 
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    if (this._codeMirror !== null) {
-      if (DEBUG_RESIZE) {
-        this._log.debug("calling codeMirror.refresh()");
-      }
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+    return {
+      runStep: (): boolean => {
+        if (this._codeMirror !== null) {
+          if (DEBUG_RESIZE) {
+            this._log.debug("calling codeMirror.refresh()");
+          }
 
-      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-        this._codeMirror.setSize(null, null);
-      } else {
-        this._codeMirror.refresh();
+          if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+            this._codeMirror.setSize(null, null);
+          } else {
+            this._codeMirror.refresh();
+          }
+        }
+        return true;
+      },
+
+      finish: (): void => {
+        this.resizeEmulatorToParentContainer();
       }
-    }
-    this.resizeEmulatorToParentContainer();
+    };
   }
- 
 
   resizeEmulatorToParentContainer(): void {
     if (DEBUG_RESIZE) {

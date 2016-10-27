@@ -12,6 +12,7 @@ import utf8 = require('utf8');
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
+import BulkDOMOperation = require('./BulkDOMOperation');
 import ThemeableElementBase = require('./themeableelementbase');
 import ThemeTypes = require('./theme');
 import EtEmbeddedViewer = require('./embeddedviewer');
@@ -533,8 +534,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this.resizeToContainer();
   }
   
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    this._processRefresh(level);
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+    return this._processRefresh(level);
   }
 
   //-----------------------------------------------------------------------
@@ -883,15 +884,22 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._enforceScrollbackLength();
   }
 
-  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
-      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
+      return ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level);
     }
     
-    this._virtualScrollArea.resize();
-    this._virtualScrollArea.updateAllScrollableSizes();
-    this._enforceScrollbackLength();
+    return {
+      runStep: (): boolean => {
+        this._virtualScrollArea.resize();
+        this._virtualScrollArea.updateAllScrollableSizes();
+        return true;
+      },
+      finish: (): void => {
+        this._enforceScrollbackLength();
+      }
+    };
   }
 
   /**

@@ -14,6 +14,7 @@ import util = require("../gui/util");
 import domutils = require("../domutils");
 import ThemeTypes = require('../theme');
 import keybindingmanager = require('../keybindingmanager');
+import BulkDOMOperation = require('../BulkDOMOperation');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import CodeMirror = require('codemirror');
@@ -585,18 +586,23 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
 
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    if (this._codeMirror !== null) {
-      if (DEBUG_RESIZE) {
-        this._log.debug("calling codeMirror.refresh()");
-      }
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+    return {
+      runStep: (): boolean => {
+        if (this._codeMirror !== null) {
+          if (DEBUG_RESIZE) {
+            this._log.debug("calling codeMirror.refresh()");
+          }
 
-      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-        this._codeMirror.setSize(null, null);
-      } else {
-        this._codeMirror.refresh();
+          if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+            this._codeMirror.setSize(null, null);
+          } else {
+            this._codeMirror.refresh();
+          }
+        }
+        return true;
       }
-    }
+    };
   }
 
   //-----------------------------------------------------------------------

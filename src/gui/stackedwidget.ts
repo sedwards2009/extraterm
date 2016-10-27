@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
+import BulkDOMOperation = require('../BulkDOMOperation');
 import ThemeableElementBase = require('../themeableelementbase');
 import ThemeTypes = require('../theme');
 import domutils = require('../domutils');

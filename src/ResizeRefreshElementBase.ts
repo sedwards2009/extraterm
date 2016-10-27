@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import BulkDOMOperation = require('./BulkDOMOperation');
 import LogDecorator = require('./logdecorator');
 
 const log = LogDecorator;
@@ -17,25 +18,30 @@ export enum RefreshLevel {
  */
 export class ResizeRefreshElementBase extends HTMLElement {
   
-  static refreshChildNodes(node: Node, level: RefreshLevel): void {
+  static bulkRefreshChildNodes(node: Node, level: RefreshLevel): BulkDOMOperation.BulkDOMOperation {
     const kids = node.childNodes;
+    const operations: BulkDOMOperation.BulkDOMOperation[] = [];
     for (let i=0; i<kids.length; i++) {
       const kid = kids[i];
       if (ResizeRefreshElementBase.is(kid)) {
-        kid.refresh(level);
+        operations.push(kid.bulkRefresh(level));
       } else {
-        ResizeRefreshElementBase.refreshChildNodes(kid, level);
+        operations.push(ResizeRefreshElementBase.bulkRefreshChildNodes(kid, level));
       }
     }
+
+    return BulkDOMOperation.fromArray(operations);
   }
   
   static is(node: Node): node is ResizeRefreshElementBase {
     return node !== null && node !== undefined && node instanceof ResizeRefreshElementBase;
   }
 
-  resize(foo): void {}
-
   refresh(level: RefreshLevel): void {
-    ResizeRefreshElementBase.refreshChildNodes(this, level);
+    BulkDOMOperation.execute(this.bulkRefresh(level));
+  }
+
+  bulkRefresh(level: RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+    return ResizeRefreshElementBase.bulkRefreshChildNodes(this, level);
   }
 }
