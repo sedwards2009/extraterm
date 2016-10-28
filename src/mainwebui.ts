@@ -958,18 +958,15 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     const tabsWidgets = [<TabWidget> this._getById(ID_TAB_CONTAINER_LEFT), <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT)];
 
     // Collect the bulk operations from the tabs.
-    const operation =  BulkDOMOperation.fromArray(tabsWidgets.map( (tab) => tab.bulkRefresh(level) ));
+    const operation = BulkDOMOperation.fromArray(tabsWidgets.map( (tab) => tab.bulkRefresh(level) ));
     if (operation.runStep != null) {
       // Do the heavy code mirror stuff first.
-      CodeMirrorOperation.bulkOperation( ()=> {
-        while (operation.runStep() === false) ;
+      CodeMirrorOperation.bulkOperation( () => {
+        BulkDOMOperation.executeRunSteps(operation);
       });
     }
 
-    if (operation.finish != null) {
-      // Finish up, let any signals fire.
-      operation.finish();
-    }
+    BulkDOMOperation.executeFinish(operation);
   }
 
   private _sendTabOpenedEvent(): void {
