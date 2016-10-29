@@ -78,6 +78,13 @@ class EtMarkdownViewer extends ViewerElement {
   setMode(mode: ViewerElementTypes.Mode): void {
   }
 
+  setVisualState(newVisualState: ViewerElementTypes.VisualState): void {
+  }
+  
+  getVisualState(): ViewerElementTypes.VisualState {
+    return ViewerElementTypes.VisualState.AUTO;
+  }
+
   createdCallback(): void {
     this._initProperties();
     const shadow = domutils.createShadowRoot(this);

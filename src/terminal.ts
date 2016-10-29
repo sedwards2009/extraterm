@@ -605,7 +605,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
+        node.setVisualState(this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED);
       }
     });
   }
@@ -615,7 +615,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = VisualState.UNFOCUSED;
+        node.setVisualState(VisualState.UNFOCUSED);
       }
     });
   }
@@ -675,9 +675,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(terminalViewer);
     
-    terminalViewer.visualState = domutils.getShadowRoot(this).activeElement !== null
+    terminalViewer.setVisualState(domutils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
-                                      : VisualState.UNFOCUSED;
+                                      : VisualState.UNFOCUSED);
     terminalViewer.emulator = this._emulator;
     this._virtualScrollArea.appendScrollable(terminalViewer);
 
@@ -836,7 +836,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       node.setMode(ViewerElementTypes.Mode.CURSOR);
     });
     childNodes.forEach( (node) => {
-      node.visualState = VisualState.AUTO;
+      node.setVisualState(VisualState.AUTO);
     });
 
     this._mode = Mode.CURSOR;
@@ -850,7 +850,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
       if (ViewerElement.isViewerElement(node)) {
         node.setMode(ViewerElementTypes.Mode.DEFAULT);
-        node.visualState = VisualState.FOCUSED;
+        node.setVisualState(VisualState.FOCUSED);
       }
     });
     this._mode = Mode.DEFAULT;
@@ -1514,9 +1514,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     // }).bind(this));
 // FIXME
     
-    el.visualState = domutils.getShadowRoot(this).activeElement !== null
+    el.setVisualState(domutils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
-                                      : VisualState.UNFOCUSED;
+                                      : VisualState.UNFOCUSED);
     el.setAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE, title);
     el.setAttribute(EtEmbeddedViewer.ATTR_TAG, "" + this._getNextTag());
     return el;
@@ -1605,9 +1605,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       config.injectConfigManager(outputTerminalViewer, this._configManager);
       newViewerElement.viewerElement = outputTerminalViewer;
       
-      outputTerminalViewer.visualState = domutils.getShadowRoot(this).activeElement !== null
+      outputTerminalViewer.setVisualState(domutils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
-                                      : VisualState.UNFOCUSED;
+                                      : VisualState.UNFOCUSED);
       outputTerminalViewer.returnCode = returnCode;
       outputTerminalViewer.commandLine = this._lastCommandLine;
       outputTerminalViewer.useVPad = false;

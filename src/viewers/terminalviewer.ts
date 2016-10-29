@@ -244,11 +244,11 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return hasFocus;
   }
   
-  set visualState(newVisualState: number) {
+  setVisualState(newVisualState: VisualState): void {
     this._setVisualState(newVisualState);
   }
   
-  get visualState(): number {
+  getVisualState(): VisualState {
     return this._visualState;
   }
   
@@ -815,7 +815,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return window.document.importNode(template.content, true);
   }
   
-  private _setVisualState(newVisualState: number): void {
+  private _setVisualState(newVisualState: ViewerElementTypes.VisualState): void {
     if (newVisualState === this._visualState) {
       return;
     }

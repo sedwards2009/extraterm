@@ -767,7 +767,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     
     const tabInfo = new ViewerTabInfo(viewerTab);
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
-    viewerElement.visualState = VisualState.AUTO;
+    viewerElement.setVisualState(VisualState.AUTO);
     const result = this._openViewerTabInfo(position, tabInfo, viewerTab);
     viewerTab.viewerElement = viewerElement;
     tabInfo.updateTabTitle();

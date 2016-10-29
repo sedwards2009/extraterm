@@ -68,7 +68,9 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   set focusable(value: boolean) {
   }
   
-  public visualState: VisualState;
+  abstract getVisualState(): VisualState;
+
+  abstract setVisualState(state: VisualState): void;
   
   abstract getMode(): Mode;
   

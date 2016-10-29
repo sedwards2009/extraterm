@@ -262,6 +262,13 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
   setMode(mode: ViewerElementTypes.Mode): void {
   }
 
+  getVisualState(): ViewerElementTypes.VisualState {
+    return ViewerElementTypes.VisualState.AUTO;
+  }
+
+  setVisualState(state: ViewerElementTypes.VisualState): void {
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         

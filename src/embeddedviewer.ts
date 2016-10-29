@@ -23,7 +23,7 @@ import LogDecorator = require('./logdecorator');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
-const VisualState = ViewerElementTypes.VisualState;
+type VisualState = ViewerElementTypes.VisualState;
 
 const log = LogDecorator;
 
@@ -118,7 +118,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
 
-  private _visualState: number;
+  private _visualState: VisualState;
 
   private _mode: ViewerElementTypes.Mode;
 
@@ -126,7 +126,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   private _initProperties(): void {
     this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
-    this._visualState = VisualState.AUTO;
+    this._visualState = ViewerElementTypes.VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
   }
@@ -149,7 +149,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     }
     
     if (element !== null) {
-      element.visualState = this._visualState;
+      element.setVisualState(this._visualState);
       element.setMode(this._mode);
       this.appendChild(element);
       this._virtualScrollArea.appendScrollable(element);
@@ -160,15 +160,15 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     return this._getViewerElement();
   }
   
-  set visualState(newVisualState: number) {
+  setVisualState(newVisualState: VisualState): void {
     this._visualState = newVisualState;
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
-      viewerElement.visualState = newVisualState;
+      viewerElement.setVisualState(newVisualState);
     }
   }
   
-  get visualState(): number {
+  getVisualState(): VisualState {
     return this._visualState;
   }
   

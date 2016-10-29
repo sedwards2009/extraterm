@@ -143,11 +143,11 @@ class EtImageViewer extends ViewerElement {
     return hasFocus;
   }
   
-  set visualState(newVisualState: number) {
+  setVisualState(newVisualState: ViewerElementTypes.VisualState): void {
     this._setVisualState(newVisualState);
   }
   
-  get visualState(): number {
+  getVisualState(): ViewerElementTypes.VisualState {
     return this._visualState;
   }
   

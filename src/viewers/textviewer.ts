@@ -218,11 +218,11 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     return hasFocus;
   }
   
-  set visualState(newVisualState: number) {
+  setVisualState(newVisualState: VisualState): void {
     this._setVisualState(newVisualState);
   }
   
-  get visualState(): number {
+  getVisualState(): VisualState {
     return this._visualState;
   }
   
@@ -644,7 +644,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     return window.document.importNode(template.content, true);
   }
   
-  private _setVisualState(newVisualState: number): void {
+  private _setVisualState(newVisualState: VisualState): void {
     if (newVisualState === this._visualState) {
       return;
     }    
@@ -655,7 +655,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this._visualState = newVisualState;
   }
   
-  private _applyVisualState(visualState: number): void {
+  private _applyVisualState(visualState: VisualState): void {
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     if ((visualState === VisualState.AUTO && this.hasFocus()) ||
         visualState === VisualState.FOCUSED) {

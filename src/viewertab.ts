@@ -215,6 +215,13 @@ class EtViewerTab extends ViewerElement {
 
   setMode(mode: ViewerElementTypes.Mode): void {
   }
+  
+  getVisualState(): ViewerElementTypes.VisualState {
+    return ViewerElementTypes.VisualState.AUTO;
+  }
+
+  setVisualState(state: VisualState): void {
+  }
 
   //-----------------------------------------------------------------------
   //
@@ -371,7 +378,7 @@ class EtViewerTab extends ViewerElement {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = VisualState.FOCUSED;
+        node.setVisualState(VisualState.FOCUSED);
       }
     });
   }
@@ -381,7 +388,7 @@ class EtViewerTab extends ViewerElement {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = VisualState.UNFOCUSED;
+        node.setVisualState(VisualState.UNFOCUSED);
       }
     });
   }
