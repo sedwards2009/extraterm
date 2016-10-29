@@ -6,7 +6,7 @@
 
 export enum Mode {
   DEFAULT,  // The default mode when using Extraterm. Default terminal like behaviour.
-  SELECTION // Mode for selecting parts of the output using the cursor.
+  CURSOR    // Mode for using the cursor and selecting or editing parts of the output.
 };
 
 export enum VisualState {

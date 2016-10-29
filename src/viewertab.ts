@@ -183,7 +183,7 @@ class EtViewerTab extends ViewerElement {
     
     if (element !== null) {
       // element.visualState = ViewerElementTypes. this._visualState; FIXME
-      element.setMode(ViewerElementTypes.Mode.SELECTION);
+      element.setMode(ViewerElementTypes.Mode.CURSOR);
       this._appendScrollableElement(element);
     }
   }
@@ -210,7 +210,7 @@ class EtViewerTab extends ViewerElement {
   }
 
   getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.SELECTION;
+    return ViewerElementTypes.Mode.CURSOR;
   }
 
   setMode(mode: ViewerElementTypes.Mode): void {

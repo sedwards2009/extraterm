@@ -10,7 +10,7 @@
     "Cmd-Shift-P": "openCommandPalette"
   },
   "terminal-default-mode": {
-    "Alt-Space": "enterSelectionMode",
+    "Alt-Space": "enterCursorMode",
     "Shift-PageUp": "scrollPageUp",
     "Shift-PageDown": "scrollPageDown",
     "Cmd-c": "copyToClipboard",
@@ -18,7 +18,7 @@
     "Cmd-w": "deleteLastFrame",
     "Cmd-o": "openLastFrame"
   },
-  "terminal-selection-mode": {
+  "terminal-cursor-mode": {
     "Alt-Space": "enterNormalMode",
     "Shift-PageUp": "scrollPageUp",
     "Shift-PageDown": "scrollPageDown",

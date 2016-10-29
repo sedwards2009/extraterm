@@ -50,15 +50,15 @@
     like in a text editor.
   </p>
   <p>
-    Enter cursor mode using <span class="CLASS_KEYCAP" data-context="terminal-default-mode" data-command="enterSelectionMode"></span>.
+    Enter cursor mode using <span class="CLASS_KEYCAP" data-context="terminal-default-mode" data-command="enterCursorMode"></span>.
     Once in cursor mode you have a blinking vertical bar cursor and keypresses are no longer sent to your shell. The
     cursor keys works like a text editor and text can be selected using shift and copied to the clipboard  
-    <span class="CLASS_KEYCAP" data-context="terminal-selection-mode" data-command="copyToClipboard"></span>. Text
+    <span class="CLASS_KEYCAP" data-context="terminal-cursor-mode" data-command="copyToClipboard"></span>. Text
     inside frames can also be edited in-place. Useful when you want to use previous command output to prepare your next
     command line.
   </p>
   <p>
-    Exit cursor mode using <span class="CLASS_KEYCAP" data-context="terminal-selection-mode" data-command="enterNormalMode"></span>.
+    Exit cursor mode using <span class="CLASS_KEYCAP" data-context="terminal-cursor-mode" data-command="enterNormalMode"></span>.
   </p>
   <p>
     <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#cursor-mode">More detailed
@@ -92,7 +92,7 @@
   </p>
   <p>
     Once your command is complete the next question is how to get the shell to execute it. One way is to select it and
-    copy it to the clipboard <span class="CLASS_KEYCAP" data-context="terminal-selection-mode"
+    copy it to the clipboard <span class="CLASS_KEYCAP" data-context="terminal-cursor-mode"
     data-command="copyToClipboard"></span>, exit cursor mode and then paste <span class="CLASS_KEYCAP"
     data-context="terminal-normal-mode" data-command="pasteFromClipboard"></span> it into the shell.
   </p>

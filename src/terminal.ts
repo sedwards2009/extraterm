@@ -77,10 +77,10 @@ const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_CONTAINER = "ID_CONTAINER";
 const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
-const KEYBINDINGS_SELECTION_MODE = "terminal-selection-mode";
+const KEYBINDINGS_CURSOR_MODE = "terminal-cursor-mode";
 
 const PALETTE_GROUP = "terminal";
-const COMMAND_ENTER_SELECTION_MODE = "enterSelectionMode";
+const COMMAND_ENTER_CURSOR_MODE = "enterCursorMode";
 const COMMAND_ENTER_NORMAL_MODE = "enterNormalMode";
 const COMMAND_SCROLL_PAGE_UP = "scrollPageUp";
 const COMMAND_SCROLL_PAGE_DOWN = "scrollPageDown";
@@ -90,7 +90,7 @@ const COMMAND_DELETE_LAST_FRAME = "deleteLastFrame";
 const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
 const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 
-const CLASS_SELECTION_MODE = "selection-mode";
+const CLASS_CURSOR_MODE = "cursor-mode";
 const SCROLL_STEP = 1;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -605,7 +605,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
-        node.visualState = this._mode === Mode.SELECTION ? VisualState.AUTO : VisualState.FOCUSED;
+        node.visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
       }
     });
   }
@@ -826,26 +826,26 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this.dispatchEvent(event);    
   }
   
-  private _enterSelectionMode(): void {
+  private _enterCursorMode(): void {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
 
     const childNodes = <ViewerElement[]> domutils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
 
     // Setting all of the modes and then all of the visualStates saves us from DOM thrashing.
     childNodes.forEach( (node) => {
-      node.setMode(ViewerElementTypes.Mode.SELECTION);
+      node.setMode(ViewerElementTypes.Mode.CURSOR);
     });
     childNodes.forEach( (node) => {
       node.visualState = VisualState.AUTO;
     });
 
-    this._mode = Mode.SELECTION;
+    this._mode = Mode.CURSOR;
     if (domutils.getShadowRoot(this).activeElement !== this._terminalViewer) {
       this._terminalViewer.focus();
     }
   }
   
-  private _exitSelectionMode(): void {
+  private _exitCursorMode(): void {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
       if (ViewerElement.isViewerElement(node)) {
@@ -1058,13 +1058,13 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
     
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
-        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);
+        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
       ev.stopPropagation();
       ev.preventDefault();
     } else {
-      if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
+      if (this._mode !== Mode.CURSOR && ev.target !== this._terminalViewer) {
         // Route the key down to the current code mirror terminal which has the emulator attached.
         const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
         ev.stopPropagation();
@@ -1081,7 +1081,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       return;
     }
 
-    if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
+    if (this._mode !== Mode.CURSOR && ev.target !== this._terminalViewer) {
       // Route the key down to the current code mirror terminal which has the emulator attached.
       const simulatedKeypress = domutils.newKeyboardEvent('keypress', ev);
       ev.preventDefault();
@@ -1122,21 +1122,21 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
     if (this._mode === Mode.DEFAULT) {
-      commandList.push( { id: COMMAND_ENTER_SELECTION_MODE, group: PALETTE_GROUP, iconRight: "i-cursor", label: "Enter cursor mode", target: this } );
+      commandList.push( { id: COMMAND_ENTER_CURSOR_MODE, group: PALETTE_GROUP, iconRight: "i-cursor", label: "Enter cursor mode", target: this } );
     } else {
       commandList.push( { id: COMMAND_ENTER_NORMAL_MODE, group: PALETTE_GROUP, label: "Enter normal mode", target: this } );
     }
     commandList.push( { id: COMMAND_SCROLL_PAGE_UP, group: PALETTE_GROUP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this } );
     commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, group: PALETTE_GROUP, iconRight: "angle-double-down", label: "Scroll Page Down", target: this } );
     commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "copy", label: "Copy to Clipboard", target: this } );
-    if (this._mode === Mode.SELECTION) {
+    if (this._mode === Mode.CURSOR) {
       commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "clipboard", label: "Paste from Clipboard", target: this } );
     }
     commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "external-link", label: "Open Last Frame", target: this } );
     commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "times-circle", label: "Delete Last Frame", target: this } );
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
-        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_SELECTION_MODE);
+        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
@@ -1152,12 +1152,12 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
   private _executeCommand(command: string): boolean {
       switch (command) {
-        case COMMAND_ENTER_SELECTION_MODE:
-          this._enterSelectionMode();
+        case COMMAND_ENTER_CURSOR_MODE:
+          this._enterCursorMode();
           break;
 
         case COMMAND_ENTER_NORMAL_MODE:
-          this._exitSelectionMode();
+          this._exitCursorMode();
           break;
           
         case COMMAND_SCROLL_PAGE_UP:
@@ -1493,11 +1493,11 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       if (detail.mode !== this._mode) {
         switch (this._mode) {
           case Mode.DEFAULT:
-              this._enterSelectionMode();
+              this._enterCursorMode();
               break;
 
-          case Mode.SELECTION:
-              this._exitSelectionMode();
+          case Mode.CURSOR:
+              this._exitCursorMode();
               break;
         }
       }

@@ -43,7 +43,7 @@ const CLASS_HIDE_CURSOR = "hide_cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 
-const KEYBINDINGS_SELECTION_MODE = "text-viewer";
+const KEYBINDINGS_CURSOR_MODE = "text-viewer";
 const PALETTE_GROUP = "textviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
@@ -132,7 +132,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
 
   private _lastCursorAnchorPosition: CodeMirror.Position;
   private _lastCursorHeadPosition: CodeMirror.Position;
-  private _viewportHeight: number;  // Used to detect changes in the viewport size when in SELECTION mode.
+  private _viewportHeight: number;  // Used to detect changes in the viewport size when in cursor mode.
   
   // The current element height. This is a cached value used to prevent touching the DOM.
   private _currentElementHeight: number;
@@ -275,13 +275,13 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     }
     
     switch (newMode) {
-      case ViewerElementTypes.Mode.SELECTION:
-        // Enter selection mode.
-        this._enterSelectionMode();
+      case ViewerElementTypes.Mode.CURSOR:
+        // Enter cursor mode.
+        this._enterCursorMode();
         break;
         
       case ViewerElementTypes.Mode.DEFAULT:
-        this._exitSelectionMode();
+        this._exitCursorMode();
         break;
     }
     this._mode = newMode;
@@ -293,7 +293,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   
   set editable(editable: boolean) {
     this._editable = editable;
-    if (this._mode === ViewerElementTypes.Mode.SELECTION) {
+    if (this._mode === ViewerElementTypes.Mode.CURSOR) {
       this._codeMirror.setOption("readOnly", ! editable);
     }
   }
@@ -442,7 +442,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
 
     this.style.height = "0px";
-    this._exitSelectionMode();
+    this._exitCursorMode();
 
     const codeMirrorOptions: CodeMirror.EditorConfiguration = {
       value: "",
@@ -542,7 +542,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     });
     
     this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
-      if (this._mode !== ViewerElementTypes.Mode.SELECTION) {
+      if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
         return;
       }
       
@@ -668,7 +668,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     }
   }
   
-  private _enterSelectionMode(): void {
+  private _enterCursorMode(): void {
     const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
     
@@ -680,10 +680,10 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     if (this._editable) {
       this._codeMirror.setOption("readOnly", false);
     }
-    this._mode = ViewerElementTypes.Mode.SELECTION;
+    this._mode = ViewerElementTypes.Mode.CURSOR;
   }
 
-  private _exitSelectionMode(): void {
+  private _exitCursorMode(): void {
     if (this._codeMirror !== null) {
       this._codeMirror.setOption("readOnly", true);
     }
@@ -743,7 +743,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       return {};  // empty keymap
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings === null) {
       return {};
     }
@@ -797,9 +797,9 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null  &&
-        this._mode === ViewerElementTypes.Mode.SELECTION) {
+        this._mode === ViewerElementTypes.Mode.CURSOR) {
           
-      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
+      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
         if (this._executeCommand(command)) {
@@ -849,7 +849,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this }
     ];
     
-    if (this._mode ===ViewerElementTypes.Mode.SELECTION) {
+    if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
       const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
         CodeMirrorCommands.commandDescriptions(this._codeMirror).map( (desc) => {
           return { id: desc.command,
@@ -862,7 +862,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       commandList = [...commandList, ...cmCommandList];
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
@@ -884,7 +884,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
         const text = this._codeMirror.getDoc().getSelection();
         if (text !== "") {
           if (command === COMMAND_TYPE_AND_CR_SELECTION) {
-            // Exit selection mode.
+            // Exit cursor mode.
             const setModeDetail: generalevents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
             const setModeEvent = new CustomEvent(generalevents.EVENT_SET_MODE, { detail: setModeDetail });
             setModeEvent.initCustomEvent(generalevents.EVENT_SET_MODE, true, true, setModeDetail);
@@ -912,7 +912,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
         break;
         
       default:
-        if (this._mode === ViewerElementTypes.Mode.SELECTION && CodeMirrorCommands.isCommand(command)) {
+        if (this._mode === ViewerElementTypes.Mode.CURSOR && CodeMirrorCommands.isCommand(command)) {
           CodeMirrorCommands.executeCommand(this._codeMirror, command);
           return true;
         } else {

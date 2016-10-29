@@ -44,7 +44,7 @@ const CLASS_HIDE_CURSOR = "hide-cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 
-const KEYBINDINGS_SELECTION_MODE = "terminal-viewer";
+const KEYBINDINGS_CURSOR_MODE = "terminal-viewer";
 const PALETTE_GROUP = "terminalviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
@@ -133,7 +133,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   private _lastCursorAnchorPosition: CodeMirror.Position;
   private _lastCursorHeadPosition: CodeMirror.Position;
-  private _viewportHeight: number;  // Used to detect changes in the viewport size when in SELECTION mode.
+  private _viewportHeight: number;  // Used to detect changes in the viewport size when in Cursor mode.
   
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
@@ -284,13 +284,13 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     }
     
     switch (newMode) {
-      case ViewerElementTypes.Mode.SELECTION:
-        // Enter selection mode.
-        this._enterSelectionMode();
+      case ViewerElementTypes.Mode.CURSOR:
+        // Enter cursor mode.
+        this._enterCursorMode();
         break;
         
       case ViewerElementTypes.Mode.DEFAULT:
-        this._exitSelectionMode();
+        this._exitCursorMode();
         break;
     }
     this._mode = newMode;
@@ -302,7 +302,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   set editable(editable: boolean) {
     this._editable = editable;
-    if (this._mode === ViewerElementTypes.Mode.SELECTION) {
+    if (this._mode === ViewerElementTypes.Mode.CURSOR) {
       this._codeMirror.setOption("readOnly", ! editable);
     }
   }
@@ -617,7 +617,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
 
     this.style.height = "0px";
-    this._exitSelectionMode();
+    this._exitCursorMode();
 
     const options = {
       value: "",
@@ -721,7 +721,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     });
     
     this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
-      if (this._mode !== ViewerElementTypes.Mode.SELECTION) {
+      if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
         return;
       }
       
@@ -835,7 +835,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._visualState = newVisualState;
   }
 
-  private _enterSelectionMode(): void {
+  private _enterCursorMode(): void {
     const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
 
@@ -854,10 +854,10 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         this._codeMirror.setOption("readOnly", false);
       }
     });
-    this._mode = ViewerElementTypes.Mode.SELECTION;
+    this._mode = ViewerElementTypes.Mode.CURSOR;
   }
 
-  private _exitSelectionMode(): void {
+  private _exitCursorMode(): void {
     if (this._codeMirror !== null) {
       this._codeMirror.setOption("readOnly", true);
     }
@@ -1007,7 +1007,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return {};  // empty keymap
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings === null) {
       return {};
     }
@@ -1071,14 +1071,14 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null) {
-      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
+      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
         if (this._executeCommand(command)) {
           ev.stopPropagation();
           return;
         } else {
-          if (this._mode ===ViewerElementTypes.Mode.SELECTION) {
+          if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
             if (command !== null) {
               return;
             }
@@ -1136,7 +1136,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this }
     ];
     
-    if (this._mode === ViewerElementTypes.Mode.SELECTION) {
+    if (this._mode === ViewerElementTypes.Mode.CURSOR) {
       const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
         CodeMirrorCommands.commandDescriptions(this._codeMirror).map( (desc) => {
           return { id: desc.command,
@@ -1149,7 +1149,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       commandList = [...commandList, ...cmCommandList];
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
@@ -1199,7 +1199,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         break;
         
       default:
-        if (this._mode === ViewerElementTypes.Mode.SELECTION && CodeMirrorCommands.isCommand(command)) {
+        if (this._mode === ViewerElementTypes.Mode.CURSOR && CodeMirrorCommands.isCommand(command)) {
           CodeMirrorCommands.executeCommand(this._codeMirror, command);
           return true;
         } else {

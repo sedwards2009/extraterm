@@ -11,9 +11,9 @@ Backwards compatibility with the decades of existing terminal based applications
 
 Use the shell integration to unlock Extraterm’s power. 
 
-Command output is clearly marked and return status of commands is clearly visible. Interesting command output can be put in its own tab, or just delete it directly. Bash, zshell and fish are currently supported. Extraterm features a powerful keyboard based selection mode. Copy and paste without having to leave the keyboard.
+Command output is clearly marked and return status of commands is clearly visible. Interesting command output can be put in its own tab, or just delete it directly. Bash, zshell and fish are currently supported. Extraterm features a powerful keyboard based cursor mode. Copy and paste without having to leave the keyboard.
 
-![Extraterm keyboard selection](selection_mode2.gif)
+![Extraterm keyboard cursor and selection](selection_mode2.gif)
 
 Extraterm supports directly viewing richer content than just text. Works across ssh too.
 

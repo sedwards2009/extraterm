@@ -2,7 +2,7 @@
   "contexts": [
     "main-ui",
     "terminal-default-mode",
-    "terminal-selection-mode",
+    "terminal-cursor-mode",
     "terminal-viewer",
     "text-viewer",
     "image-viewer"    
@@ -11,7 +11,7 @@
     "image-viewer": "Image viewer",
     "main-ui": "Window",
     "terminal-default-mode": "Terminal Tab: Normal mode",
-    "terminal-selection-mode": "Terminal Tab: Cursor mode",
+    "terminal-cursor-mode": "Terminal Tab: Cursor mode",
     "terminal-viewer": "Terminal Frame",
     "text-viewer": "Text Frame"
   },
@@ -56,7 +56,7 @@
     "closeTab": "Close tab",
     "selectOtherPane": "Focus the other pane",
     "toggleSplit": "Toggle split panes",
-    "enterSelectionMode": "Go to selection mode",
+    "enterCursorMode": "Go to cursor mode",
     "enterNormalMode": "Go to normal mode",
     "scrollPageUp": "Scroll page up",
     "scrollPageDown": "Scroll page down",

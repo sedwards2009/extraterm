@@ -81,7 +81,7 @@ class EtImageViewer extends ViewerElement {
   private document: Document;
   private _visualState: VisualState;
 
-  private _viewportHeight: number;  // Used to detect changes in the viewport size when in SELECTION mode.
+  private _viewportHeight: number;  // Used to detect changes in the viewport size when in CURSOR mode.
   
   // The current element height. This is a cached value used to prevent touching the DOM.
   private _currentElementHeight: number;
@@ -446,7 +446,7 @@ class EtImageViewer extends ViewerElement {
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null &&
-        this._mode === ViewerElementTypes.Mode.SELECTION) {
+        this._mode === ViewerElementTypes.Mode.CURSOR) {
           
       const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
