@@ -833,7 +833,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
     // Setting all of the modes and then all of the visualStates saves us from DOM thrashing.
     childNodes.forEach( (node) => {
-      node.mode = ViewerElementTypes.Mode.SELECTION;
+      node.setMode(ViewerElementTypes.Mode.SELECTION);
     });
     childNodes.forEach( (node) => {
       node.visualState = VisualState.AUTO;
@@ -849,7 +849,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
       if (ViewerElement.isViewerElement(node)) {
-        node.mode = ViewerElementTypes.Mode.DEFAULT;
+        node.setMode(ViewerElementTypes.Mode.DEFAULT);
         node.visualState = VisualState.FOCUSED;
       }
     });

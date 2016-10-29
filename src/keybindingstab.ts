@@ -13,6 +13,7 @@ import ViewerElement  = require('./viewerelement');
 import ThemeableElementBase = require('./themeableelementbase');
 import keybindingmanager = require('./keybindingmanager');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
+import ViewerElementTypes = require('./viewerelementtypes');
 
 import Vue = require('vue');
 import domutils = require('./domutils');
@@ -166,7 +167,14 @@ class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigMana
     });
     this._setConfig(configManager.getConfig());
   }
-  
+
+  getMode(): ViewerElementTypes.Mode {
+    return ViewerElementTypes.Mode.DEFAULT;
+  }
+
+  setMode(mode: ViewerElementTypes.Mode): void {
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         

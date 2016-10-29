@@ -269,7 +269,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
   
   
-  set mode(newMode: ViewerElementTypes.Mode) {
+  setMode(newMode: ViewerElementTypes.Mode): void {
     if (newMode === this._mode) {
       return;
     }
@@ -287,7 +287,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this._mode = newMode;
   }
   
-  get mode(): ViewerElementTypes.Mode {
+  getMode(): ViewerElementTypes.Mode {
     return this._mode;
   }
   

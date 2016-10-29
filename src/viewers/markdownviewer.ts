@@ -7,6 +7,7 @@ import ViewerElement = require('../viewerelement');
 import domutils = require('../domutils');
 import markdownMod = require('markdown');
 const markdown = markdownMod.markdown;
+import ViewerElementTypes = require("../viewerelementtypes");
 
 const ID = "CbMarkdownViewerTemplate";
 const ID_CONTAINER = "container";
@@ -69,7 +70,14 @@ class EtMarkdownViewer extends ViewerElement {
     this._focusable = value;
     this._updateFocusable(value);
   }
-  
+
+  getMode(): ViewerElementTypes.Mode {
+    return ViewerElementTypes.Mode.DEFAULT;
+  }
+
+  setMode(mode: ViewerElementTypes.Mode): void {
+  }
+
   createdCallback(): void {
     this._initProperties();
     const shadow = domutils.createShadowRoot(this);

@@ -70,8 +70,10 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   
   public visualState: VisualState;
   
-  public mode: Mode;
+  abstract getMode(): Mode;
   
+  abstract setMode(mode: Mode): void;
+
   public text: string;
   
   public mimeType: string;

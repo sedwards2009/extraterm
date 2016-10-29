@@ -10,6 +10,7 @@
 
 import ThemeTypes = require('./theme');
 import ViewerElement  = require('./viewerelement');
+import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
 import domutils = require('./domutils');
 
@@ -74,7 +75,15 @@ class EtAboutTab extends ViewerElement {
   hasFocus(): boolean {
     return false;
   }
-  
+
+  getMode(): ViewerElementTypes.Mode {
+    return ViewerElementTypes.Mode.DEFAULT;
+  }
+
+  setMode(mode: ViewerElementTypes.Mode): void {
+  }
+
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         

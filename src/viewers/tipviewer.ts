@@ -114,6 +114,13 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     this._tipIndex = 0;
   }
 
+  getMode(): ViewerElementTypes.Mode {
+    return ViewerElementTypes.Mode.DEFAULT;
+  }
+
+  setMode(mode: ViewerElementTypes.Mode): void {
+  }
+
   //-----------------------------------------------------------------------
   //
   // ######                                

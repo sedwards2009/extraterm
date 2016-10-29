@@ -19,6 +19,7 @@ import ThemeTypes = require('../theme');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 import GeneralEvents = require('../generalevents');
+import ViewerElementTypes = require('../viewerelementtypes');
 
 type CommandLineAction = config.CommandLineAction;
 type FontInfo = config.FontInfo;
@@ -252,6 +253,13 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
     this._data.themeTerminalOptions = getThemesByType('terminal');
     this._data.themeSyntaxOptions = getThemesByType('syntax');
     this._data.themeGUIOptions = getThemesByType('gui');
+  }
+
+  getMode(): ViewerElementTypes.Mode {
+    return ViewerElementTypes.Mode.DEFAULT;
+  }
+
+  setMode(mode: ViewerElementTypes.Mode): void {
   }
 
   //-----------------------------------------------------------------------

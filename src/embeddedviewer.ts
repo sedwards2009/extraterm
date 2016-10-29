@@ -150,7 +150,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     
     if (element !== null) {
       element.visualState = this._visualState;
-      element.mode = this._mode;
+      element.setMode(this._mode);
       this.appendChild(element);
       this._virtualScrollArea.appendScrollable(element);
     }
@@ -309,15 +309,15 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     viewerElement.clearSelection();
   }
 
-  set mode(newMode: ViewerElementTypes.Mode) {
+  setMode(newMode: ViewerElementTypes.Mode): void {
     this._mode = newMode;
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
-      viewerElement.mode = newMode;
+      viewerElement.setMode(newMode);
     }
   }
 
-  get mode(): ViewerElementTypes.Mode {
+  getMode(): ViewerElementTypes.Mode {
     return this._mode;
   }
 
