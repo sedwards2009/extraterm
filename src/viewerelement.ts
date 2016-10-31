@@ -9,6 +9,7 @@ import util = require('./gui/util');
 import virtualscrollarea = require('./virtualscrollarea');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
+import BulkDOMOperation = require('./BulkDOMOperation');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -70,11 +71,19 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   
   abstract getVisualState(): VisualState;
 
-  abstract setVisualState(state: VisualState): void;
+  setVisualState(state: VisualState): void {
+    BulkDOMOperation.execute(this.bulkSetVisualState(state));
+  }
+
+  abstract bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation;
   
   abstract getMode(): Mode;
   
-  abstract setMode(mode: Mode): void;
+  setMode(mode: Mode): void {
+    BulkDOMOperation.execute(this.bulkSetMode(mode));
+  }
+
+  abstract bulkSetMode(mode: Mode): BulkDOMOperation.BulkDOMOperation;
 
   public text: string;
   

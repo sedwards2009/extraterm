@@ -244,8 +244,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return hasFocus;
   }
   
-  setVisualState(newVisualState: VisualState): void {
-    this._setVisualState(newVisualState);
+  bulkSetVisualState(newVisualState: VisualState): BulkDOMOperation.BulkDOMOperation {
+    return this._bulkSetVisualState(newVisualState);
   }
   
   getVisualState(): VisualState {
@@ -278,22 +278,33 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return this._emulator;
   }
   
-  setMode(newMode: ViewerElementTypes.Mode): void {
+  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
     if (newMode === this._mode) {
-      return;
+      return {};
     }
-    
-    switch (newMode) {
-      case ViewerElementTypes.Mode.CURSOR:
-        // Enter cursor mode.
-        this._enterCursorMode();
-        break;
-        
-      case ViewerElementTypes.Mode.DEFAULT:
-        this._exitCursorMode();
-        break;
-    }
-    this._mode = newMode;
+
+    let done = false;
+    return {
+      runStep: (): boolean => {
+        if (done) {
+          return true;
+        }
+
+        switch (newMode) {
+          case ViewerElementTypes.Mode.CURSOR:
+            // Enter cursor mode.
+            this._enterCursorMode();
+            break;
+            
+          case ViewerElementTypes.Mode.DEFAULT:
+            this._exitCursorMode();
+            break;
+        }
+        this._mode = newMode;
+        done = true;
+        return true;
+      }
+    };
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -815,45 +826,52 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return window.document.importNode(template.content, true);
   }
   
-  private _setVisualState(newVisualState: ViewerElementTypes.VisualState): void {
+  private _bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
     if (newVisualState === this._visualState) {
-      return;
+      return {};
     }
     
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    if (containerDiv !== null) {
-      if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
-          newVisualState === VisualState.FOCUSED) {
+    let done = false;
+    return {
+      runStep: (): boolean => {
+        if ( ! done) {
+          const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+          if (containerDiv !== null) {
+            if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
+                newVisualState === VisualState.FOCUSED) {
 
-        containerDiv.classList.add(CLASS_FOCUSED);
-        containerDiv.classList.remove(CLASS_UNFOCUSED);
-      } else {
-        containerDiv.classList.add(CLASS_UNFOCUSED);
-        containerDiv.classList.remove(CLASS_FOCUSED);
+              containerDiv.classList.add(CLASS_FOCUSED);
+              containerDiv.classList.remove(CLASS_UNFOCUSED);
+            } else {
+              containerDiv.classList.add(CLASS_UNFOCUSED);
+              containerDiv.classList.remove(CLASS_FOCUSED);
+            }
+          }
+          this._visualState = newVisualState;
+          done = true;
+        }
+        return done;
       }
-    }
-    this._visualState = newVisualState;
+    };
   }
 
   private _enterCursorMode(): void {
     const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
 
-    this._codeMirror.operation( () => {
-      const doc = this._codeMirror.getDoc();
-      if (this._emulator !== null) {
-        const dimensions = this._emulator.getDimensions();
-        doc.setCursor( { line: dimensions.cursorY + this._terminalFirstRow, ch: dimensions.cursorX } );
-      } else {
-        doc.setCursor( { line: doc.lineCount()-1, ch: 0 } );
-      }
+    const doc = this._codeMirror.getDoc();
+    if (this._emulator !== null) {
+      const dimensions = this._emulator.getDimensions();
+      doc.setCursor( { line: dimensions.cursorY + this._terminalFirstRow, ch: dimensions.cursorX } );
+    } else {
+      doc.setCursor( { line: doc.lineCount()-1, ch: 0 } );
+    }
 
-      this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
-      this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
-      if (this._editable) {
-        this._codeMirror.setOption("readOnly", false);
-      }
-    });
+    this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
+    this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
+    if (this._editable) {
+      this._codeMirror.setOption("readOnly", false);
+    }
     this._mode = ViewerElementTypes.Mode.CURSOR;
   }
 

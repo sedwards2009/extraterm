@@ -20,6 +20,7 @@ import generalevents = require('./generalevents');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes'); 
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
+import BulkDOMOperation = require('./BulkDOMOperation');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -160,11 +161,13 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     return this._getViewerElement();
   }
   
-  setVisualState(newVisualState: VisualState): void {
+  bulkSetVisualState(newVisualState: VisualState): BulkDOMOperation.BulkDOMOperation {
     this._visualState = newVisualState;
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
-      viewerElement.setVisualState(newVisualState);
+      return viewerElement.bulkSetVisualState(newVisualState);
+    } else {
+      return {};
     }
   }
   
@@ -309,12 +312,17 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     viewerElement.clearSelection();
   }
 
-  setMode(newMode: ViewerElementTypes.Mode): void {
-    this._mode = newMode;
-    const viewerElement = this.viewerElement;
-    if (viewerElement !== null) {
-      viewerElement.setMode(newMode);
-    }
+  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
+    return {
+      runStep: (): boolean => {
+        this._mode = newMode;
+        const viewerElement = this.viewerElement;
+        if (viewerElement !== null) {
+          viewerElement.setMode(newMode);
+        }
+        return true;
+      }
+    };
   }
 
   getMode(): ViewerElementTypes.Mode {

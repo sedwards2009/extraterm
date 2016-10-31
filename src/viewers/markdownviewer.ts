@@ -8,6 +8,7 @@ import domutils = require('../domutils');
 import markdownMod = require('markdown');
 const markdown = markdownMod.markdown;
 import ViewerElementTypes = require("../viewerelementtypes");
+import BulkDOMOperation = require('../BulkDOMOperation');
 
 const ID = "CbMarkdownViewerTemplate";
 const ID_CONTAINER = "container";
@@ -75,10 +76,12 @@ class EtMarkdownViewer extends ViewerElement {
     return ViewerElementTypes.Mode.DEFAULT;
   }
 
-  setMode(mode: ViewerElementTypes.Mode): void {
+  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
 
-  setVisualState(newVisualState: ViewerElementTypes.VisualState): void {
+  bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
   
   getVisualState(): ViewerElementTypes.VisualState {

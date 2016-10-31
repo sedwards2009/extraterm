@@ -15,6 +15,7 @@ import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 import keybindingmanager = require('../keybindingmanager');
+import BulkDOMOperation = require('../BulkDOMOperation');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
@@ -143,8 +144,8 @@ class EtImageViewer extends ViewerElement {
     return hasFocus;
   }
   
-  setVisualState(newVisualState: ViewerElementTypes.VisualState): void {
-    this._setVisualState(newVisualState);
+  bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
+    return this._bulkSetVisualState(newVisualState);
   }
   
   getVisualState(): ViewerElementTypes.VisualState {
@@ -180,11 +181,13 @@ class EtImageViewer extends ViewerElement {
     }
   }
 
-  setMode(newMode: ViewerElementTypes.Mode): void {
+  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
     if (newMode === this._mode) {
-      return;
+      return {};
     }
     this._mode = newMode;
+
+    return {};
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -361,15 +364,24 @@ class EtImageViewer extends ViewerElement {
     return window.document.importNode(template.content, true);
   }
   
-  private _setVisualState(newVisualState: number): void {
+  private _bulkSetVisualState(newVisualState: number): BulkDOMOperation.BulkDOMOperation {
     if (newVisualState === this._visualState) {
-      return;
-    }    
+      return {};
+    }
 
-    if (domutils.getShadowRoot(this) !== null) {
-      this._applyVisualState(newVisualState);
-    }    
-    this._visualState = newVisualState;
+    let done = false;
+    return {
+      runStep: (): boolean => {
+        if ( ! done) {
+          if (domutils.getShadowRoot(this) !== null) {
+            this._applyVisualState(newVisualState);
+          }    
+          this._visualState = newVisualState;
+          done = true;
+        }
+        return done;
+      }
+    };
   }
   
   private _applyVisualState(visualState: VisualState): void {

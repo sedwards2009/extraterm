@@ -20,6 +20,7 @@ const clipboard = electron.clipboard;
 
 import webipc = require('./webipc');
 import virtualscrollarea = require('./virtualscrollarea');
+import BulkDOMOperation = require('./BulkDOMOperation');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -213,14 +214,16 @@ class EtViewerTab extends ViewerElement {
     return ViewerElementTypes.Mode.CURSOR;
   }
 
-  setMode(mode: ViewerElementTypes.Mode): void {
+  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
   
   getVisualState(): ViewerElementTypes.VisualState {
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  setVisualState(state: VisualState): void {
+  bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
 
   //-----------------------------------------------------------------------

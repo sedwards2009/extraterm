@@ -218,8 +218,8 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     return hasFocus;
   }
   
-  setVisualState(newVisualState: VisualState): void {
-    this._setVisualState(newVisualState);
+  bulkSetVisualState(newVisualState: VisualState): BulkDOMOperation.BulkDOMOperation {
+    return this._setVisualState(newVisualState);
   }
   
   getVisualState(): VisualState {
@@ -269,22 +269,29 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
   
   
-  setMode(newMode: ViewerElementTypes.Mode): void {
+  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
     if (newMode === this._mode) {
-      return;
+      return {};
     }
-    
-    switch (newMode) {
-      case ViewerElementTypes.Mode.CURSOR:
-        // Enter cursor mode.
-        this._enterCursorMode();
-        break;
-        
-      case ViewerElementTypes.Mode.DEFAULT:
-        this._exitCursorMode();
-        break;
-    }
-    this._mode = newMode;
+
+    let done = false;
+    return {
+      runStep: (): boolean => { 
+        switch (newMode) {
+          case ViewerElementTypes.Mode.CURSOR:
+            // Enter cursor mode.
+            this._enterCursorMode();
+            break;
+            
+          case ViewerElementTypes.Mode.DEFAULT:
+            this._exitCursorMode();
+            break;
+        }
+        this._mode = newMode;
+        done = true;
+        return true;
+      }
+    };
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -644,15 +651,24 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     return window.document.importNode(template.content, true);
   }
   
-  private _setVisualState(newVisualState: VisualState): void {
+  private _setVisualState(newVisualState: VisualState): BulkDOMOperation.BulkDOMOperation {
     if (newVisualState === this._visualState) {
-      return;
+      return {};
     }    
 
-    if (domutils.getShadowRoot(this) !== null) {
-      this._applyVisualState(newVisualState);
-    }    
-    this._visualState = newVisualState;
+    let done = false;
+    return {
+      runStep: (): boolean => {
+        if ( ! done) {
+          if (domutils.getShadowRoot(this) !== null) {
+            this._applyVisualState(newVisualState);
+          }    
+          this._visualState = newVisualState;
+        }
+        done = true;
+        return done;
+      }
+    };
   }
   
   private _applyVisualState(visualState: VisualState): void {

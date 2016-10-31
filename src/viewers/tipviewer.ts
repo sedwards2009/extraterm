@@ -118,14 +118,16 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     return ViewerElementTypes.Mode.DEFAULT;
   }
 
-  setMode(mode: ViewerElementTypes.Mode): void {
+  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
 
   getVisualState(): ViewerElementTypes.VisualState {
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  setVisualState(state: VisualState): void {
+  bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
 
   //-----------------------------------------------------------------------

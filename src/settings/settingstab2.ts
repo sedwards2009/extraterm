@@ -20,6 +20,7 @@ import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 import GeneralEvents = require('../generalevents');
 import ViewerElementTypes = require('../viewerelementtypes');
+import BulkDOMOperation = require('../BulkDOMOperation');
 
 type CommandLineAction = config.CommandLineAction;
 type FontInfo = config.FontInfo;
@@ -259,14 +260,16 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
     return ViewerElementTypes.Mode.DEFAULT;
   }
 
-  setMode(mode: ViewerElementTypes.Mode): void {
+  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
 
   getVisualState(): ViewerElementTypes.VisualState {
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  setVisualState(state: ViewerElementTypes.VisualState): void {
+  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
 
   //-----------------------------------------------------------------------

@@ -14,6 +14,7 @@ import ThemeableElementBase = require('./themeableelementbase');
 import keybindingmanager = require('./keybindingmanager');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import ViewerElementTypes = require('./viewerelementtypes');
+import BulkDOMOperation = require('./BulkDOMOperation');
 
 import Vue = require('vue');
 import domutils = require('./domutils');
@@ -172,14 +173,16 @@ class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigMana
     return ViewerElementTypes.Mode.DEFAULT;
   }
 
-  setMode(mode: ViewerElementTypes.Mode): void {
+  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
 
   getVisualState(): ViewerElementTypes.VisualState {
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  setVisualState(state: ViewerElementTypes.VisualState): void {
+  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
 
   //-----------------------------------------------------------------------
