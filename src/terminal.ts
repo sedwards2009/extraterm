@@ -885,21 +885,22 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
 
   private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    if (scrollerArea !== null) {
-      return ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level);
-    }
-    
-    return {
-      runStep: (): boolean => {
+    const lastOperation: BulkDOMOperation.BulkDOMOperation = {
+      finish: (): void => {
         this._virtualScrollArea.resize();
         this._virtualScrollArea.updateAllScrollableSizes();
-        return true;
-      },
-      finish: (): void => {
         this._enforceScrollbackLength();
       }
     };
+
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    if (scrollerArea !== null) {
+      return BulkDOMOperation.fromArray([
+        ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level),
+        lastOperation]);
+    } else {
+      return lastOperation;
+    }
   }
 
   /**
