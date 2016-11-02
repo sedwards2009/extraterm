@@ -277,6 +277,10 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     let done = false;
     return {
       runStep: (): boolean => {
+        if (done) {
+          return true;
+        }
+        
         switch (newMode) {
           case ViewerElementTypes.Mode.CURSOR:
             // Enter cursor mode.
