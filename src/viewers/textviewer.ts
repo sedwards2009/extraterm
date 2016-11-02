@@ -276,7 +276,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
 
     let done = false;
     return {
-      runStep: (): boolean => { 
+      runStep: (): boolean => {
         switch (newMode) {
           case ViewerElementTypes.Mode.CURSOR:
             // Enter cursor mode.
@@ -287,9 +287,11 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
             this._exitCursorMode();
             break;
         }
-        this._mode = newMode;
         done = true;
         return true;
+      },
+      finish: (): void => {
+        this._mode = newMode;
       }
     };
   }
@@ -450,6 +452,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
 
     this.style.height = "0px";
     this._exitCursorMode();
+    this._mode = ViewerElementTypes.Mode.DEFAULT;
 
     const codeMirrorOptions: CodeMirror.EditorConfiguration = {
       value: "",
@@ -696,7 +699,6 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     if (this._editable) {
       this._codeMirror.setOption("readOnly", false);
     }
-    this._mode = ViewerElementTypes.Mode.CURSOR;
   }
 
   private _exitCursorMode(): void {
@@ -706,7 +708,6 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
 
     const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
-    this._mode = ViewerElementTypes.Mode.DEFAULT;
   }
   
   private _emitVirtualResizeEvent(): void {

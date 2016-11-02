@@ -46,6 +46,7 @@ import virtualscrollarea = require('./virtualscrollarea');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 import mimetypedetector = require('./mimetypedetector');
+import CodeMirrorOperation = require('./codemirroroperation');
 
 import config = require('./config');
 type Config = config.Config;
@@ -831,13 +832,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
     const childNodes = <ViewerElement[]> domutils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
 
-    // Setting all of the modes and then all of the visualStates saves us from DOM thrashing.
-    childNodes.forEach( (node) => {
-      node.setMode(ViewerElementTypes.Mode.CURSOR);
+    const modeOperations = childNodes.map( (node) => node.bulkSetMode(ViewerElementTypes.Mode.CURSOR));
+    const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(VisualState.AUTO));
+    const allOperations = BulkDOMOperation.fromArray([...modeOperations, ...visualStateOperations]);
+
+    CodeMirrorOperation.bulkOperation( () => {
+      BulkDOMOperation.executeRunSteps(allOperations);
     });
-    childNodes.forEach( (node) => {
-      node.setVisualState(VisualState.AUTO);
-    });
+    BulkDOMOperation.executeFinish(allOperations);
 
     this._mode = Mode.CURSOR;
     if (domutils.getShadowRoot(this).activeElement !== this._terminalViewer) {
