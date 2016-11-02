@@ -58,6 +58,7 @@ type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 const VisualState = ViewerElementTypes.VisualState;
+type VisualState = ViewerElementTypes.VisualState;
 
 type Mode = ViewerElementTypes.Mode;  // This is the enum type.
 const Mode = ViewerElementTypes.Mode; // This gets us access to the object holding the enum values.
@@ -828,18 +829,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   private _enterCursorMode(): void {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-
-    const childNodes = <ViewerElement[]> domutils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
-
-    const modeOperations = childNodes.map( (node) => node.bulkSetMode(ViewerElementTypes.Mode.CURSOR));
-    const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(VisualState.AUTO));
-    const allOperations = BulkDOMOperation.fromArray([...modeOperations, ...visualStateOperations]);
-
-    CodeMirrorOperation.bulkOperation( () => {
-      BulkDOMOperation.executeRunSteps(allOperations);
-    });
-    BulkDOMOperation.executeFinish(allOperations);
+    this._setModeAndVisualState(ViewerElementTypes.Mode.CURSOR, VisualState.AUTO);
 
     this._mode = Mode.CURSOR;
     if (domutils.getShadowRoot(this).activeElement !== this._terminalViewer) {
@@ -848,16 +838,25 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   private _exitCursorMode(): void {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node) => {
-      if (ViewerElement.isViewerElement(node)) {
-        node.setMode(ViewerElementTypes.Mode.DEFAULT);
-        node.setVisualState(VisualState.FOCUSED);
-      }
-    });
+    this._setModeAndVisualState(ViewerElementTypes.Mode.DEFAULT, VisualState.FOCUSED);
     this._mode = Mode.DEFAULT;
   }
-  
+
+  private _setModeAndVisualState(mode: ViewerElementTypes.Mode, visualState: VisualState): void {
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+
+    const childNodes = <ViewerElement[]> domutils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
+
+    const modeOperations = childNodes.map( (node) => node.bulkSetMode(mode));
+    const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
+    const allOperations = BulkDOMOperation.fromArray([...modeOperations, ...visualStateOperations]);
+
+    CodeMirrorOperation.bulkOperation( () => {
+      BulkDOMOperation.executeRunSteps(allOperations);
+    });
+    BulkDOMOperation.executeFinish(allOperations);
+  }
+
   // ----------------------------------------------------------------------
   //
   //    #####                                                          ##        #####                           
