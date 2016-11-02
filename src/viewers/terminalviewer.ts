@@ -300,9 +300,12 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
             this._exitCursorMode();
             break;
         }
-        this._mode = newMode;
         done = true;
         return true;
+      },
+
+      finish: (): void => {
+        this._mode = newMode;
       }
     };
   }
@@ -629,6 +632,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
     this.style.height = "0px";
     this._exitCursorMode();
+    this._mode = ViewerElementTypes.Mode.DEFAULT;
 
     const options = {
       value: "",
@@ -872,7 +876,6 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     if (this._editable) {
       this._codeMirror.setOption("readOnly", false);
     }
-    this._mode = ViewerElementTypes.Mode.CURSOR;
   }
 
   private _exitCursorMode(): void {
@@ -882,7 +885,6 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
     const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
-    this._mode = ViewerElementTypes.Mode.DEFAULT;
   }
   
   private _codemirrorTextMarksToDecorations(markers: CodeMirror.TextMarker[]): TextDecoration[] {
