@@ -598,7 +598,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       top.classList.remove(CLASS_SPLIT);
       tabContainerLeft.appendChild(restDivPrimary);
       tabContainerRight.appendChild(restDivSecondary);
-      
+
       // Move the terminal tabs from the right tab container to the left one.
       const nodesToMove = domutils.nodeListToArray(tabContainerRight.childNodes)
         .filter( node => ! (node.nodeName === "DIV" && ( (<HTMLDivElement>node).id === ID_REST_DIV_PRIMARY ||
@@ -606,7 +606,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
           (<HTMLDivElement>node).id === ID_LEFT_REST_DIV_SECONDARY)));
       nodesToMove.forEach( node => {
         tabContainerLeft.insertBefore(node, restDivPrimary);
-        });
+      });
       
       // Fix up the list of terminal info objects
       this._tabInfo = [...this._tabInfo.filter( info => info.position == TabPosition.LEFT ),
@@ -1029,6 +1029,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     const command = bindings.mapEventToCommand(ev);
     if (this._executeCommand(tabInfo, command)) {
       ev.stopPropagation();
+      ev.preventDefault();
     }
   }
   
