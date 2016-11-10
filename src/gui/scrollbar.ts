@@ -7,6 +7,10 @@ import ThemeableElementBase = require('../themeableelementbase');
 import ThemeTypes = require('../theme');
 import domutils = require('../domutils');
 import util = require('./util');
+import BulkDOMOperation = require('../BulkDOMOperation');
+import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
+import Logger = require('../logger');
+import log = require('../logdecorator');
 
 const ID = "CbScrollbarTemplate";
 const ID_AREA = "ID_AREA";
@@ -48,10 +52,13 @@ class CbScrollbar extends ThemeableElementBase {
   private _position: number;
   
   private _length: number;
-  
+
+  private _log: Logger;
+
   private _initProperties(): void {
     this._position = 0;
     this._length = 1;
+    this._log = new Logger(CbScrollbar.TAG_NAME);
   }
 
   //-----------------------------------------------------------------------
@@ -79,34 +86,41 @@ class CbScrollbar extends ThemeableElementBase {
   attachedCallback(): void {
     super.attachedCallback();
 
-    if (domutils.getShadowRoot(this) !== null) {
-      return;
+    if (domutils.getShadowRoot(this) === null) {
+      // Set up the structure in the shadow DOM.
+      const shadow = domutils.createShadowRoot(this);
+      const clone = this._createClone();
+      shadow.appendChild(clone);
+      this.updateThemeCss();
+
+      this._getById(ID_CONTAINER).addEventListener('scroll', (ev: Event) => {
+        const container = this._getById(ID_CONTAINER);
+        const top = container.scrollTop;
+        this._position = top;
+        
+  // FIXME this should fire standard scroll events, not custom events.
+        
+        const event = new CustomEvent('scroll',
+            { detail: {
+              position: top,
+              isTop: top === 0,
+              isBottom: (container.scrollHeight - container.clientHeight) === top } });
+        this.dispatchEvent(event);
+      });
+      
+      this._updateLength(this.getAttribute(CbScrollbar.ATTR_LENGTH));
+      this._updatePosition(this.getAttribute(CbScrollbar.ATTR_POSITION));
+
+    } else {
+      // Being reattached.
+      this._updatePositionNumber(this._position);
     }
-
-    const shadow = domutils.createShadowRoot(this);
-    const clone = this._createClone();
-    shadow.appendChild(clone);
-    this.updateThemeCss();
-
-    this._getById(ID_CONTAINER).addEventListener('scroll', (ev: Event) => {
-      const container = this._getById(ID_CONTAINER);
-      const top = container.scrollTop;
-      this._position = top;
-      
-// FIXME this should fire standard scroll events, not custom events.
-      
-      const event = new CustomEvent('scroll',
-          { detail: {
-            position: top,
-            isTop: top === 0,
-            isBottom: (container.scrollHeight - container.clientHeight) === top } });
-      this.dispatchEvent(event);
-    });
-    
-    this._updateLength(this.getAttribute(CbScrollbar.ATTR_LENGTH));
-    this._updatePosition(this.getAttribute(CbScrollbar.ATTR_POSITION));
   }
-  
+
+  detachedCallback(): void {
+    super.detachedCallback();
+  }
+
   /**
    * Custom Element 'attribute changed' hook.
    */
@@ -148,6 +162,10 @@ class CbScrollbar extends ThemeableElementBase {
 
   // --- Length attribute ---
   set length(value: number) {
+    this._setLength(value);
+  }
+
+  private _setLength(value) {
     if (value !== this._length) {
       this._length = Math.max(0, value);
       this._updateLengthNumber(this._length);
@@ -155,6 +173,10 @@ class CbScrollbar extends ThemeableElementBase {
   }
   
   get length(): number {
+    return this._getLength();
+  }
+
+  private _getLength() {
     return this._length;
   }
   
@@ -177,6 +199,10 @@ class CbScrollbar extends ThemeableElementBase {
   
   // --- Position attribute ---
   set position(value: number) {
+    this._setPosition(value);
+  }
+
+  private _setPosition(value) {
     const container = this._getById(ID_CONTAINER);
     const cleanValue = Math.min(container.scrollHeight-container.clientHeight, Math.max(0, value));
     if (cleanValue !== this._position) {
@@ -186,6 +212,10 @@ class CbScrollbar extends ThemeableElementBase {
   }
   
   get position(): number {
+    return this._getPosition();
+  }
+
+  private _getPosition() {
     return this._position;
   }
   
@@ -214,6 +244,16 @@ class CbScrollbar extends ThemeableElementBase {
   get thumbSize(): number {
     return 7734;  // FIXME bogus.
   }
+
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+    return {
+      runStep: (): boolean => {
+        this._updatePositionNumber(this._position);
+        return true;
+      }
+    };
+  }
+
 }
 
 export = CbScrollbar;
