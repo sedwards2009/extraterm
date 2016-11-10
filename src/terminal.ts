@@ -203,6 +203,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _themeStyleLoaded: boolean;
   private _resizePollHandle: domutils.LaterHandle;
   private _elementAttached: boolean;
+  private _needsCompleteRefresh: boolean;
 
   // This flag is needed to prevent the _enforceScrollbackLength() method from being run recursively
   private _enforceScrollbackLengthGuard: boolean;
@@ -220,6 +221,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._log = new Logger(EtTerminal.TAG_NAME);
     this._virtualScrollArea = null;
     this._elementAttached = false;
+    this._needsCompleteRefresh = true;
     this._autoscroll = true;
     this._emulator = null;
     this._cookie = null;
@@ -455,69 +457,72 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   attachedCallback(): void {
     super.attachedCallback();
     
-    if (this._elementAttached) {
-      return;
-    }
-    this._elementAttached = true;
+    if ( ! this._elementAttached) {
+      this._elementAttached = true;
 
-    const shadow = domutils.createShadowRoot(this);
+      const shadow = domutils.createShadowRoot(this);
 
-    const clone = this._createClone();
-    shadow.appendChild(clone);
-    
-    this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
+      const clone = this._createClone();
+      shadow.appendChild(clone);
+      
+      this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
 
-    this.addEventListener('focus', this._handleFocus.bind(this));
-    this.addEventListener('blur', this._handleBlur.bind(this));
-    this.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-        this._handleCommandPaletteRequest(ev);
+      this.addEventListener('focus', this._handleFocus.bind(this));
+      this.addEventListener('blur', this._handleBlur.bind(this));
+      this.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+          this._handleCommandPaletteRequest(ev);
+        });
+
+      const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
+      const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+      
+      this._virtualScrollArea.setScrollContainer(scrollerArea);
+      this._virtualScrollArea.setScrollbar(scrollbar);
+      
+      // Set up the emulator
+      this._cookie = crypto.randomBytes(10).toString('hex');
+      process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
+      this._initEmulator(this._cookie);
+      this._appendNewTerminalViewer();
+      
+      this.updateThemeCss();
+      
+      scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
+        if (ev.target === scrollerArea) {
+          this._terminalViewer.focus();
+          ev.preventDefault();
+          ev.stopPropagation();
+        }
+      });
+      
+      scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
+        this._virtualScrollArea.scrollTo(scrollbar.position);
       });
 
-    const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    
-    this._virtualScrollArea.setScrollContainer(scrollerArea);
-    this._virtualScrollArea.setScrollbar(scrollbar);
-    
-    // Set up the emulator
-    this._cookie = crypto.randomBytes(10).toString('hex');
-    process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
-    this._initEmulator(this._cookie);
-    this._appendNewTerminalViewer();
-    
-    this.updateThemeCss();
-    
-    scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
-      if (ev.target === scrollerArea) {
-        this._terminalViewer.focus();
-        ev.preventDefault();
-        ev.stopPropagation();
-      }
-    });
-    
-    scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-      this._virtualScrollArea.scrollTo(scrollbar.position);
-    });
+      scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
+      scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+      scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
+      scrollerArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
+      scrollerArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
 
-    scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
-    scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
-    scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
-    scrollerArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
-    scrollerArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
+      scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
+      scrollerArea.addEventListener(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
+        this._virtualScrollArea.scrollToBottom();
+      });
+      scrollerArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
+        this._handleBeforeSelectionChange.bind(this));
+      scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
+      scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
+      
+      this._showTip();
+      this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
+      
+      this._scheduleResize();
+    } else {
 
-    scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-    scrollerArea.addEventListener(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
-      this._virtualScrollArea.scrollToBottom();
-    });
-    scrollerArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
-      this._handleBeforeSelectionChange.bind(this));
-    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
-    scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
-    
-    this._showTip();
-    this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
-    
-    this._scheduleResize();
+      // This was already attached at least once.
+      this._scheduleResize();
+    }
   }
   
   /**
@@ -525,6 +530,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
    */
   detachedCallback(): void {
     super.detachedCallback();
+    this._needsCompleteRefresh = true;
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -885,34 +891,32 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._enforceScrollbackLength();
   }
 
-  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+  private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+    let level = requestedLevel;
+    if (this._needsCompleteRefresh) {
+      level = ResizeRefreshElementBase.RefreshLevel.COMPLETE;
+      this._needsCompleteRefresh = false;
+    }
+
     const lastOperation: BulkDOMOperation.BulkDOMOperation = {
       finish: (): void => {
         this._virtualScrollArea.resize();
         this._virtualScrollArea.updateAllScrollableSizes();
+        this._virtualScrollArea.reapplyState();
         this._enforceScrollbackLength();
       }
     };
 
+    const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
       return BulkDOMOperation.fromArray([
         ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level),
+        scrollbar.bulkRefresh(level),
         lastOperation]);
     } else {
       return lastOperation;
     }
-  }
-
-  /**
-   * Handle a resize event from the above.
-   */
-  private _processResize(): void {
-    if (this._terminalViewer !== null) {
-      this._terminalViewer.resizeEmulatorToParentContainer();
-    }
-    this._virtualScrollArea.resize();
-    this._updateVirtualScrollableSize(this._terminalViewer);
   }
 
   private _handleTerminalViewerCursor(ev: CustomEvent): void {
@@ -1257,7 +1261,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._scheduledCursorUpdates = [];
     
     if (scheduledResize) {
-      this._processResize();
+      this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
     }    
   }
 
