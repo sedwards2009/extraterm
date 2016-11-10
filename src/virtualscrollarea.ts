@@ -99,6 +99,19 @@ interface Mutator {
   (newState: VirtualAreaState): void;
 }
 
+const emptyState: VirtualAreaState = {
+  scrollbar: null,
+  virtualScrollYOffset: 0,
+  containerHeight: 0,
+  container: null,
+  
+  containerScrollYOffset: 0,
+  scrollableStates: [],
+  
+  intersectIndex: -1,
+  realScrollYOffset: 0
+};
+
 /**
  * 
  */
@@ -109,18 +122,7 @@ export class VirtualScrollArea {
   private _log: Logger = new Logger("VirtualScrollArea");
   
   constructor() {
-    this._currentState = {
-      scrollbar: null,
-      virtualScrollYOffset: 0,
-      containerHeight: 0,
-      container: null,
-      
-      containerScrollYOffset: 0,
-      scrollableStates: [],
-      
-      intersectIndex: -1,
-      realScrollYOffset: 0
-    };
+    this._currentState = emptyState;
   }
   
   getScrollYOffset(): number {
@@ -359,7 +361,27 @@ export class VirtualScrollArea {
       return this._currentState.virtualScrollYOffset;
     }
   }
-  
+
+  /**
+   * Push the current state down to all of the VirtualScrollables and the scrollbar.
+   */
+  reapplyState(): void {
+    const bogusState: VirtualAreaState = {
+      scrollbar: null,
+      virtualScrollYOffset: -1,
+      containerHeight: -1,
+      container: null,
+      
+      containerScrollYOffset: -1,
+      scrollableStates: [],
+      
+      intersectIndex: -1,
+      realScrollYOffset: -1
+    };
+
+    ApplyState(bogusState, this._currentState);
+  }
+
   dumpState(): void {
     DumpState(this._currentState);
   }
