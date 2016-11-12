@@ -107,7 +107,8 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   }
   
   // VirtualScrollable
-  setDimensionsAndScroll(setterState: SetterState): void {
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
+    return {};
   }
 
   getCursorPosition(): CursorMoveDetail {

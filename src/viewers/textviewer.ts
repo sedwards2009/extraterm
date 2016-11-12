@@ -347,24 +347,33 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
   
   // VirtualScrollable
-  setDimensionsAndScroll(setterState: SetterState): void {
-    if (setterState.heightChanged || setterState.yOffsetChanged) {
-      if (DEBUG_RESIZE) {
-        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-          setterState.yOffset, setterState.yOffsetChanged);
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
+    let done = false;
+    return {
+      runStep: (): boolean => {
+        if ( ! done) {
+          if (setterState.heightChanged || setterState.yOffsetChanged) {
+            if (DEBUG_RESIZE) {
+              this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+                setterState.yOffset, setterState.yOffsetChanged);
+            }
+            
+            // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
+            // const op = () => {
+              this._adjustHeight(setterState.height);
+              this.scrollTo(0, setterState.yOffset);
+            // };
+            // if (this._codeMirror !== null) {
+            //   this._codeMirror.operation(op);
+            // } else {
+            //   op();
+            // }
+          }
+          done = true;
+        }
+        return done;
       }
-      
-      // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
-      // const op = () => {
-        this._adjustHeight(setterState.height);
-        this.scrollTo(0, setterState.yOffset);
-      // };
-      // if (this._codeMirror !== null) {
-      //   this._codeMirror.operation(op);
-      // } else {
-      //   op();
-      // }
-    }
+    };
   }
   
   isFontLoaded(): boolean {

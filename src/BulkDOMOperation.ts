@@ -106,3 +106,16 @@ export function executeFinish(operation: BulkDOMOperation): void {
   }
   operation.finish();
 }
+
+export function wrapGenerator(generator: IterableIterator<boolean>): () => boolean {
+  let done = false;
+  return () => {
+    if ( ! done) {
+      const result = generator.next();
+      if (result.done) {
+        done = true;
+      }
+    }
+    return done;
+  };
+}

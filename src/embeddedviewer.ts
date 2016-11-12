@@ -208,50 +208,76 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
   
   // See VirtualScrollable
-  setDimensionsAndScroll(setterState: SetterState): void {
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
+    let embeddedOperation: BulkDOMOperation.BulkDOMOperation = null;
 
-    if (DEBUG_SIZE) {
-      this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-        setterState.yOffset, setterState.yOffsetChanged);
-    }
-    
-    if (setterState.heightChanged) {
-      this.style.height = "" + setterState.height + "px";
-    }
+    const runStepGenerator = function* runStepGenerator() {
+      if (DEBUG_SIZE) {
+        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+          setterState.yOffset, setterState.yOffsetChanged);
+      }
+      
+      if (setterState.heightChanged) {
+        this.style.height = "" + setterState.height + "px";
+      }
 
-    const containerDiv = <HTMLDivElement>this._getById(ID_CONTAINER);
-    if (setterState.yOffset === 0) {
-      containerDiv.classList.remove(CLASS_SCROLLING);
-      containerDiv.classList.add(CLASS_NOT_SCROLLING);
-    } else {
-      containerDiv.classList.add(CLASS_SCROLLING);
-      containerDiv.classList.remove(CLASS_NOT_SCROLLING);
-    }
-    
-    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
-    const rect = headerDiv.getBoundingClientRect();   // FIXME slow
-    headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
-    const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);
-    outputDiv.style.top = "" + rect.height + "px";
-    
-    if (setterState.physicalTop > 0 || setterState.height < setterState.containerHeight) {
-      // Bottom part is visible
-      containerDiv.classList.remove(CLASS_BOTTOM_NOT_VISIBLE);
-      containerDiv.classList.add(CLASS_BOTTOM_VISIBLE);
-    } else {
-      containerDiv.classList.add(CLASS_BOTTOM_NOT_VISIBLE);
-      containerDiv.classList.remove(CLASS_BOTTOM_VISIBLE);
-    }
-    
-    const scrollNameDiv = <HTMLDivElement>this._getById(ID_SCROLL_NAME);
-    const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
-    scrollNameDiv.innerHTML = "" + percent + "%";
-    
-    if (setterState.heightChanged) {
-      this._virtualScrollArea.resize();
-    }
-    
-    this._virtualScrollArea.scrollTo(setterState.yOffset);
+      const containerDiv = <HTMLDivElement>this._getById(ID_CONTAINER);
+      if (setterState.yOffset === 0) {
+        containerDiv.classList.remove(CLASS_SCROLLING);
+        containerDiv.classList.add(CLASS_NOT_SCROLLING);
+      } else {
+        containerDiv.classList.add(CLASS_SCROLLING);
+        containerDiv.classList.remove(CLASS_NOT_SCROLLING);
+      }
+      
+      yield false;
+
+      const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+      const rect = headerDiv.getBoundingClientRect();   // FIXME slow
+
+      yield false;
+
+      headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
+      const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);
+      outputDiv.style.top = "" + rect.height + "px";
+      
+      if (setterState.physicalTop > 0 || setterState.height < setterState.containerHeight) {
+        // Bottom part is visible
+        containerDiv.classList.remove(CLASS_BOTTOM_NOT_VISIBLE);
+        containerDiv.classList.add(CLASS_BOTTOM_VISIBLE);
+      } else {
+        containerDiv.classList.add(CLASS_BOTTOM_NOT_VISIBLE);
+        containerDiv.classList.remove(CLASS_BOTTOM_VISIBLE);
+      }
+      
+      const scrollNameDiv = <HTMLDivElement>this._getById(ID_SCROLL_NAME);
+      const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
+      scrollNameDiv.innerHTML = "" + percent + "%";
+      
+      if (setterState.heightChanged) {
+        yield false;
+        embeddedOperation = this._virtualScrollArea.bulkResize();
+        if (embeddedOperation.runStep != null) {
+          while ( ! embeddedOperation.runStep()) {
+            yield false;
+          }
+        }
+      }
+      
+      this._virtualScrollArea.scrollTo(setterState.yOffset);
+
+      return true;
+    };
+
+    return {
+      runStep: BulkDOMOperation.wrapGenerator(runStepGenerator.bind(this)()),
+      finish: (): void => {
+        if (embeddedOperation != null && embeddedOperation.finish != null) {
+          embeddedOperation.finish();
+        }
+      }
+    };
+
   }
   
   getSelectionText(): string {
@@ -474,7 +500,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       containerHeightChanged: true
     };
 
-    this.setDimensionsAndScroll(setterState);
+    BulkDOMOperation.execute(this.bulkSetDimensionsAndScroll(setterState));
 
     // Remove the anti-flicker style.
     this._getById(ID_CONTAINER).setAttribute('style', '');

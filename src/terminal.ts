@@ -898,25 +898,71 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       this._needsCompleteRefresh = false;
     }
 
-    const lastOperation: BulkDOMOperation.BulkDOMOperation = {
-      finish: (): void => {
-        this._virtualScrollArea.resize();
-        this._virtualScrollArea.updateAllScrollableSizes();
-        this._virtualScrollArea.reapplyState();
-        this._enforceScrollbackLength();
-      }
-    };
-
-    const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
+    // Operations for scroll area contents
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
-      return BulkDOMOperation.fromArray([
-        ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level),
-        scrollbar.bulkRefresh(level),
-        lastOperation]);
+      const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
+      const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level)
+      const scrollbarOperation = scrollbar.bulkRefresh(level);
+
+      let doneVSA = false;
+      return {
+        runStep: (): boolean => {
+          // Run all of the stuff inside the scroll area first.
+          const doneScrollArea = scrollAreaOperation.runStep != null ? scrollAreaOperation.runStep() : true;
+          const doneScrollbar = scrollbarOperation.runStep != null ? scrollbarOperation.runStep() : true;
+          if (doneScrollArea && doneScrollbar) {
+            if ( ! doneVSA) {
+              this._virtualScrollArea.resize();
+              this._virtualScrollArea.updateAllScrollableSizes();
+              this._virtualScrollArea.reapplyState();
+              this._enforceScrollbackLength();
+              
+              doneVSA = true;
+            }
+            return true;
+          } else {
+            return false;
+          }
+        },
+
+        finish: () => {
+          if (scrollAreaOperation.finish != null) {
+            scrollAreaOperation.finish();
+          }
+          if (scrollbarOperation.finish != null) {
+            scrollbarOperation.finish();
+          }
+        }
+      };
+
     } else {
-      return lastOperation;
+
+      // no-op
+      return {};
     }
+
+
+
+    // const lastOperation: BulkDOMOperation.BulkDOMOperation = {
+    //   finish: (): void => {
+    //     this._virtualScrollArea.resize();
+    //     this._virtualScrollArea.updateAllScrollableSizes();
+    //     this._virtualScrollArea.reapplyState();
+    //     this._enforceScrollbackLength();
+    //   }
+    // };
+
+    // const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
+    // const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    // if (scrollerArea !== null) {
+    //   return BulkDOMOperation.fromArray([
+    //     ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level),
+    //     scrollbar.bulkRefresh(level),
+    //     lastOperation]);
+    // } else {
+    //   return lastOperation;
+    // }
   }
 
   private _handleTerminalViewerCursor(ev: CustomEvent): void {

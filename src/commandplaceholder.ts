@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import virtualscrollarea = require('./virtualscrollarea');
+import BulkDOMOperation = require('./BulkDOMOperation');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -81,8 +82,9 @@ class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
     return 0;
   }
   
-  setDimensionsAndScroll(setterState: SetterState): void {
-    }  
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
+    return {};
+  }
 }
 
 export = EtCommandPlaceHolder;

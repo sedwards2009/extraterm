@@ -194,11 +194,12 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
   
   // VirtualScrollable
-  setDimensionsAndScroll(setterState: SetterState): void {
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
     if (DEBUG_SIZE) {
       this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
         setterState.yOffset, setterState.yOffsetChanged);
     }
+    return {};
   }
 
   // VirtualScrollable

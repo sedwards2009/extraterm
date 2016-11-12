@@ -6,8 +6,8 @@
 
 import util = require('./gui/util');
 import _  = require('lodash');
+import BulkDOMOperation = require('./BulkDOMOperation');
 import Logger = require('./logger');
-
 import LogDecorator = require('./logdecorator');
 
 const log = LogDecorator;
@@ -44,7 +44,7 @@ export interface VirtualScrollable {
    * 
    * @param setterState information about the new state and context
    */
-  setDimensionsAndScroll(setterState: SetterState): void;
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation;
 }
 
 export interface SetterState {
@@ -264,11 +264,15 @@ export class VirtualScrollArea {
    * Signals to the VirtualScrollArea that the container has been resized.
    */
   resize(): void {
-    this._updateAutoscrollBottom( (newState) => {
+    BulkDOMOperation.execute(this.bulkResize());
+  }
+  
+  bulkResize(): BulkDOMOperation.BulkDOMOperation {
+    return this._bulkUpdateAutoscrollBottom( (newState) => {
       newState.containerHeight = newState.container.getBoundingClientRect().height;
     });
   }
-  
+
   /**
    * Scrolls the area to the given Y offset.
    *
@@ -418,8 +422,15 @@ export class VirtualScrollArea {
     // DumpState(newState);
     this._currentState = newState;
   }
-  
+
   private _updateAutoscrollBottom(...mutator: Mutator[]): void {
+    BulkDOMOperation.execute(this._bulkUpdateAutoscrollBottom(...mutator));
+  }
+
+  private _bulkUpdateAutoscrollBottom(...mutator: Mutator[]): BulkDOMOperation.BulkDOMOperation {
+
+
+
     // Carefully clone our state without jumping into any references to external objects.
     const newState = _.clone(this._currentState);
     newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
@@ -427,18 +438,20 @@ export class VirtualScrollArea {
     const virtualHeight = TotalVirtualHeight(this._currentState);
     const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
     
-    mutator.forEach( (m) => {
-      m(newState);
+    for (let i=0; i<mutator.length; i++) {
+      mutator[i](newState);
+      
       Compute(newState);
-    });
+    }
     
     if (isAtBottom) {
         newState.virtualScrollYOffset = Math.max(0, TotalVirtualHeight(newState) - newState.containerHeight);
         Compute(newState);
     }
     
-    ApplyState(this._currentState, newState);
+    const operation = BulkApplyState(this._currentState, newState);
     this._currentState = newState;
+    return operation;
   }
 }
 
@@ -590,12 +603,16 @@ function TotalVirtualHeight(state: VirtualAreaState): number {
   return result;
 }
 
+function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): void {
+  BulkDOMOperation.execute(BulkApplyState(oldState, newState));
+}
+
 /**
  * [ApplyState description]
  * @param {VirtualAreaState} oldState [description]
  * @param {VirtualAreaState} newState [description]
  */
-function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): void {
+function BulkApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): BulkDOMOperation.BulkDOMOperation {
   const oldTotalHeight = TotalVirtualHeight(oldState);
   const newTotalHeight = TotalVirtualHeight(newState);
   
@@ -614,6 +631,8 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): voi
   oldState.scrollableStates.forEach( (scrollableState: VirtualScrollableState): void => {
     oldMap.set(scrollableState.scrollable, scrollableState);
   });
+
+  const operationsList: BulkDOMOperation.BulkDOMOperation[] = [];
 
   // Update each Scrollable if needed.
   newState.scrollableStates.forEach( (newScrollableState: VirtualScrollableState): void => {
@@ -642,15 +661,20 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): voi
         containerHeight: newState.containerHeight,
         containerHeightChanged
       };
-
-      newScrollableState.scrollable.setDimensionsAndScroll(setterState);
+      operationsList.push(newScrollableState.scrollable.bulkSetDimensionsAndScroll(setterState));
     }
   });
   
   // Update the Y offset for the container.
   if (oldState.containerScrollYOffset !== newState.containerScrollYOffset) {
-    newState.container.scrollTop = newState.containerScrollYOffset;
+    operationsList.push({
+      finish: () => {
+        newState.container.scrollTop = newState.containerScrollYOffset;
+      }
+    });
   }
+
+  return BulkDOMOperation.fromArray(operationsList);
 }
 
 /**
