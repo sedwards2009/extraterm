@@ -209,14 +209,15 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   // See VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-    let embeddedOperation: BulkDOMOperation.BulkDOMOperation = null;
-
-    const runStepGenerator = function* runStepGenerator() {
+    const generator = function* generator(): IterableIterator<BulkDOMOperation.GeneratorPhase> {
       if (DEBUG_SIZE) {
         this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
           setterState.yOffset, setterState.yOffsetChanged);
       }
-      
+
+      // --- DOM Write ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+
       if (setterState.heightChanged) {
         this.style.height = "" + setterState.height + "px";
       }
@@ -230,12 +231,14 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
         containerDiv.classList.remove(CLASS_NOT_SCROLLING);
       }
       
-      yield false;
+      // --- DOM Read ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
 
       const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
-      const rect = headerDiv.getBoundingClientRect();   // FIXME slow
+      const rect = headerDiv.getBoundingClientRect();
 
-      yield false;
+      // --- DOM Write ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
 
       headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
       const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);
@@ -254,30 +257,31 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
       scrollNameDiv.innerHTML = "" + percent + "%";
       
+      let embeddedOperation: BulkDOMOperation.BulkDOMOperation = null;
       if (setterState.heightChanged) {
-        yield false;
         embeddedOperation = this._virtualScrollArea.bulkResize();
         if (embeddedOperation.runStep != null) {
+          let i = 0;
           while ( ! embeddedOperation.runStep()) {
-            yield false;
+            i++;
+            yield i % 2 === 0 ? BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE : BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
           }
         }
       }
-      
+
+      // --- DOM Write ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       this._virtualScrollArea.scrollTo(setterState.yOffset);
 
-      return true;
-    };
-
-    return {
-      runStep: BulkDOMOperation.wrapGenerator(runStepGenerator.bind(this)()),
-      finish: (): void => {
-        if (embeddedOperation != null && embeddedOperation.finish != null) {
-          embeddedOperation.finish();
-        }
+      if (embeddedOperation != null && embeddedOperation.finish != null) {
+        // --- Finish ---
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+        embeddedOperation.finish();
       }
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
   
   getSelectionText(): string {
