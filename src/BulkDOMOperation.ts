@@ -201,3 +201,22 @@ function runGenerator(generator: IterableIterator<GeneratorPhase>): GeneratorPha
   const result = generator.next();
   return result.done ? GeneratorPhase.DONE : result.value;
 }
+
+export function* yieldRunSteps(operation: BulkDOMOperation): IterableIterator<GeneratorPhase> {
+  if (operation == null || operation.runStep === undefined) {
+    return GeneratorPhase.BEGIN_DOM_WRITE;
+  }
+
+  yield GeneratorPhase.BEGIN_DOM_WRITE;
+
+  let counter = 1;
+  while ( ! operation.runStep()) {
+    yield counter % 2 === 0 ? GeneratorPhase.BEGIN_DOM_WRITE : GeneratorPhase.BEGIN_DOM_READ;
+    counter++;
+  }
+  return GeneratorPhase.BEGIN_DOM_READ;
+}
+
+export function nullOperation(): BulkDOMOperation {
+  return {};
+}

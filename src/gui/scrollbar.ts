@@ -246,14 +246,15 @@ class CbScrollbar extends ThemeableElementBase {
   }
 
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
-    return {
-      runStep: (): boolean => {
-        this._updatePositionNumber(this._position);
-        return true;
-      }
+    const generator = function* generator(this: CbScrollbar): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      // --- DOM Write ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      this._updatePositionNumber(this._position);
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
-  }
 
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+  }
 }
 
 export = CbScrollbar;

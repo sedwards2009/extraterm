@@ -280,34 +280,27 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
     if (newMode === this._mode) {
-      return {};
+      return BulkDOMOperation.nullOperation();
     }
 
-    let done = false;
-    return {
-      runStep: (): boolean => {
-        if (done) {
-          return true;
-        }
-
-        switch (newMode) {
-          case ViewerElementTypes.Mode.CURSOR:
-            // Enter cursor mode.
-            this._enterCursorMode();
-            break;
-            
-          case ViewerElementTypes.Mode.DEFAULT:
-            this._exitCursorMode();
-            break;
-        }
-        done = true;
-        return true;
-      },
-
-      finish: (): void => {
-        this._mode = newMode;
+    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      switch (newMode) {
+        case ViewerElementTypes.Mode.CURSOR:
+          // Enter cursor mode.
+          this._enterCursorMode();
+          break;
+          
+        case ViewerElementTypes.Mode.DEFAULT:
+          this._exitCursorMode();
+          break;
       }
+      this._mode = newMode;
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -336,31 +329,30 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   // VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-    let done = false;
-    return {
-      runStep: (): boolean => {
-        // FIXME fix the reads and writes.
-        if ( ! done) {
-          if (setterState.heightChanged || setterState.yOffsetChanged) {
-            if (DEBUG_RESIZE) {
-              this._log.debug(`setDimensionsAndScroll(height=${setterState.height}, heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged})`);
-            }
-            // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
-            // const op = () => {
-              this._adjustHeight(setterState.height);
-              this.scrollTo(0, setterState.yOffset);
-            // };
-            // if (this._codeMirror !== null) {
-            //   this._codeMirror.operation(op);
-            // } else {
-            //   op();
-            // }
-          }
-          done = true;
+    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      // --- DOM Write ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+
+      if (setterState.heightChanged || setterState.yOffsetChanged) {
+        if (DEBUG_RESIZE) {
+          this._log.debug(`setDimensionsAndScroll(height=${setterState.height}, heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged})`);
         }
-        return done;
+        // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
+        // const op = () => {
+          this._adjustHeight(setterState.height);
+          this.scrollTo(0, setterState.yOffset);
+        // };
+        // if (this._codeMirror !== null) {
+        //   this._codeMirror.operation(op);
+        // } else {
+        //   op();
+        // }
       }
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
   
   // VirtualScrollable
@@ -400,26 +392,27 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
 
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
-    return {
-      runStep: (): boolean => {
-        if (this._codeMirror !== null) {
-          if (DEBUG_RESIZE) {
-            this._log.debug("calling codeMirror.refresh()");
-          }
-
-          if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-            this._codeMirror.setSize(null, null);
-          } else {
-            this._codeMirror.refresh();
-          }
+    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      if (this._codeMirror !== null) {
+        if (DEBUG_RESIZE) {
+          this._log.debug("calling codeMirror.refresh()");
         }
-        return true;
-      },
 
-      finish: (): void => {
-        this.resizeEmulatorToParentContainer();
+        if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+          this._codeMirror.setSize(null, null);
+        } else {
+          this._codeMirror.refresh();
+        }
       }
+
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+      this.resizeEmulatorToParentContainer();
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
 
   resizeEmulatorToParentContainer(): void {
@@ -842,31 +835,29 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   private _bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
     if (newVisualState === this._visualState) {
-      return {};
+      return BulkDOMOperation.nullOperation();
     }
-    
-    let done = false;
-    return {
-      runStep: (): boolean => {
-        if ( ! done) {
-          const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-          if (containerDiv !== null) {
-            if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
-                newVisualState === VisualState.FOCUSED) {
 
-              containerDiv.classList.add(CLASS_FOCUSED);
-              containerDiv.classList.remove(CLASS_UNFOCUSED);
-            } else {
-              containerDiv.classList.add(CLASS_UNFOCUSED);
-              containerDiv.classList.remove(CLASS_FOCUSED);
-            }
-          }
-          this._visualState = newVisualState;
-          done = true;
+    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      if (containerDiv !== null) {
+        if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
+            newVisualState === VisualState.FOCUSED) {
+
+          containerDiv.classList.add(CLASS_FOCUSED);
+          containerDiv.classList.remove(CLASS_UNFOCUSED);
+        } else {
+          containerDiv.classList.add(CLASS_UNFOCUSED);
+          containerDiv.classList.remove(CLASS_FOCUSED);
         }
-        return done;
       }
+      this._visualState = newVisualState;
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
 
   private _enterCursorMode(): void {

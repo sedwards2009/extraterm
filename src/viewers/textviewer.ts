@@ -271,33 +271,29 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   
   bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
     if (newMode === this._mode) {
-      return {};
+      return BulkDOMOperation.nullOperation();
     }
 
-    let done = false;
-    return {
-      runStep: (): boolean => {
-        if (done) {
-          return true;
-        }
-        
-        switch (newMode) {
-          case ViewerElementTypes.Mode.CURSOR:
-            // Enter cursor mode.
-            this._enterCursorMode();
-            break;
-            
-          case ViewerElementTypes.Mode.DEFAULT:
-            this._exitCursorMode();
-            break;
-        }
-        done = true;
-        return true;
-      },
-      finish: (): void => {
-        this._mode = newMode;
+    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      // --- DOM Write ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+
+      switch (newMode) {
+        case ViewerElementTypes.Mode.CURSOR:
+          // Enter cursor mode.
+          this._enterCursorMode();
+          break;
+          
+        case ViewerElementTypes.Mode.DEFAULT:
+          this._exitCursorMode();
+          break;
       }
+      this._mode = newMode;
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -348,32 +344,31 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   
   // VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-    let done = false;
-    return {
-      runStep: (): boolean => {
-        if ( ! done) {
-          if (setterState.heightChanged || setterState.yOffsetChanged) {
-            if (DEBUG_RESIZE) {
-              this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-                setterState.yOffset, setterState.yOffsetChanged);
-            }
-            
-            // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
-            // const op = () => {
-              this._adjustHeight(setterState.height);
-              this.scrollTo(0, setterState.yOffset);
-            // };
-            // if (this._codeMirror !== null) {
-            //   this._codeMirror.operation(op);
-            // } else {
-            //   op();
-            // }
-          }
-          done = true;
+    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      // --- DOM Write ---
+      if (setterState.heightChanged || setterState.yOffsetChanged) {
+        if (DEBUG_RESIZE) {
+          this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+            setterState.yOffset, setterState.yOffsetChanged);
         }
-        return done;
+        
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+
+        // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
+        // const op = () => {
+          this._adjustHeight(setterState.height);
+          this.scrollTo(0, setterState.yOffset);
+        // };
+        // if (this._codeMirror !== null) {
+        //   this._codeMirror.operation(op);
+        // } else {
+        //   op();
+        // }
       }
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
   
   isFontLoaded(): boolean {
@@ -610,22 +605,23 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
 
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
-    return {
-      runStep: (): boolean => {
-        if (this._codeMirror !== null) {
-          if (DEBUG_RESIZE) {
-            this._log.debug("calling codeMirror.refresh()");
-          }
-
-          if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-            this._codeMirror.setSize(null, null);
-          } else {
-            this._codeMirror.refresh();
-          }
+    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      if (this._codeMirror !== null) {
+        if (DEBUG_RESIZE) {
+          this._log.debug("calling codeMirror.refresh()");
         }
-        return true;
+
+        if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+          this._codeMirror.setSize(null, null);
+        } else {
+          this._codeMirror.refresh();
+        }
       }
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
 
   //-----------------------------------------------------------------------
@@ -669,22 +665,19 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   
   private _setVisualState(newVisualState: VisualState): BulkDOMOperation.BulkDOMOperation {
     if (newVisualState === this._visualState) {
-      return {};
+      return BulkDOMOperation.nullOperation();
     }    
 
-    let done = false;
-    return {
-      runStep: (): boolean => {
-        if ( ! done) {
-          if (domutils.getShadowRoot(this) !== null) {
-            this._applyVisualState(newVisualState);
-          }    
-          this._visualState = newVisualState;
-        }
-        done = true;
-        return done;
-      }
+    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      if (domutils.getShadowRoot(this) !== null) {
+        this._applyVisualState(newVisualState);
+      }    
+      this._visualState = newVisualState;
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
   
   private _applyVisualState(visualState: VisualState): void {

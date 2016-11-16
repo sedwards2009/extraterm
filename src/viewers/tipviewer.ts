@@ -405,22 +405,30 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
 
   private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     if (containerDiv !== null) {
-      return {
-        runStep: (): boolean => {
-          const rect = containerDiv.getBoundingClientRect();
-          this._height = rect.height;
-          this._adjustHeight(this._height);
-          return true;
-        },
-        finish: (): void => {
-          this._emitVirtualResizeEvent();
-        }
-      };
-    }
 
-    return {};
+      const generator = function* generator(this: EtTipViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+        // --- DOM Read ---
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+
+        const rect = containerDiv.getBoundingClientRect();
+        this._height = rect.height;
+
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+        this._adjustHeight(this._height);
+
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+        this._emitVirtualResizeEvent();
+
+        return BulkDOMOperation.GeneratorPhase.DONE;
+      };
+
+      return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    } else {
+      return BulkDOMOperation.nullOperation();
+    }
   }
 
   private _getTipHTML(tipNumber: number): string {

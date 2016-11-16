@@ -959,12 +959,10 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
 
     // Collect the bulk operations from the tabs.
     const operation = BulkDOMOperation.fromArray(tabsWidgets.map( (tab) => tab.bulkRefresh(level) ));
-    if (operation.runStep != null) {
-      // Do the heavy code mirror stuff first.
-      CodeMirrorOperation.bulkOperation( () => {
-        BulkDOMOperation.executeRunSteps(operation);
-      });
-    }
+    // Do the heavy code mirror stuff first.
+    CodeMirrorOperation.bulkOperation( () => {
+      BulkDOMOperation.executeRunSteps(operation);
+    });
 
     BulkDOMOperation.executeFinish(operation);
   }

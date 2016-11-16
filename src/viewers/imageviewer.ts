@@ -210,28 +210,24 @@ class EtImageViewer extends ViewerElement {
   
   // VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-  let done = false;
-    return {
-      runStep: (): boolean => {
-        // FIXME fix reads and writes.
-        if ( ! done) {
-          if (setterState.heightChanged || setterState.yOffsetChanged) {
-            if (DEBUG_SIZE) {
-              this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-                setterState.yOffset, setterState.yOffsetChanged);
-            }
-            this._adjustHeight(setterState.height);
-            
-            const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-            if (containerDiv !== null) {
-              containerDiv.scrollTop = setterState.yOffset;
-            }
-          }
-          done = true;
+    const generator = function* generator(this: EtImageViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      if (setterState.heightChanged || setterState.yOffsetChanged) {
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+        if (DEBUG_SIZE) {
+          this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+            setterState.yOffset, setterState.yOffsetChanged);
         }
-        return true;
+        this._adjustHeight(setterState.height);
+        
+        const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+        if (containerDiv !== null) {
+          containerDiv.scrollTop = setterState.yOffset;
+        }
       }
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
 
   // VirtualScrollable
@@ -376,22 +372,21 @@ class EtImageViewer extends ViewerElement {
   
   private _bulkSetVisualState(newVisualState: number): BulkDOMOperation.BulkDOMOperation {
     if (newVisualState === this._visualState) {
-      return {};
+      return BulkDOMOperation.nullOperation();
     }
 
-    let done = false;
-    return {
-      runStep: (): boolean => {
-        if ( ! done) {
-          if (domutils.getShadowRoot(this) !== null) {
-            this._applyVisualState(newVisualState);
-          }    
-          this._visualState = newVisualState;
-          done = true;
-        }
-        return done;
-      }
+    const generator = function* generator(this: EtImageViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      // --- DOM Write ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      if (domutils.getShadowRoot(this) !== null) {
+        this._applyVisualState(newVisualState);
+      }    
+      this._visualState = newVisualState;
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
   
   private _applyVisualState(visualState: VisualState): void {
@@ -531,12 +526,11 @@ class EtImageViewer extends ViewerElement {
     if (this.parentNode === null || domutils.getShadowRoot(this) === null) {
       return;
     }
-    const elementHeight = this.getHeight();
-    if (elementHeight !== this._currentElementHeight) {
-      this._currentElementHeight = elementHeight;
-      this.style.height = "" + elementHeight + "px";
+    if (newHeight !== this._currentElementHeight) {
+      this._currentElementHeight = newHeight;
+      this.style.height = "" + newHeight + "px";
       const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-      containerDiv.style.height = "" + elementHeight + "px";
+      containerDiv.style.height = "" + newHeight + "px";
     }
   }
 }

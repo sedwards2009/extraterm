@@ -901,68 +901,39 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     // Operations for scroll area contents
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
-      const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
-      const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level)
-      const scrollbarOperation = scrollbar.bulkRefresh(level);
 
-      let doneVSA = false;
-      return {
-        runStep: (): boolean => {
-          // Run all of the stuff inside the scroll area first.
-          const doneScrollArea = scrollAreaOperation.runStep != null ? scrollAreaOperation.runStep() : true;
-          const doneScrollbar = scrollbarOperation.runStep != null ? scrollbarOperation.runStep() : true;
-          if (doneScrollArea && doneScrollbar) {
-            if ( ! doneVSA) {
-              this._virtualScrollArea.resize();
-              this._virtualScrollArea.updateAllScrollableSizes();
-              this._virtualScrollArea.reapplyState();
-              this._enforceScrollbackLength();
-              
-              doneVSA = true;
-            }
-            return true;
-          } else {
-            return false;
-          }
-        },
+      const generator = function* generator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorPhase> {
 
-        finish: () => {
-          if (scrollAreaOperation.finish != null) {
-            scrollAreaOperation.finish();
-          }
-          if (scrollbarOperation.finish != null) {
-            scrollbarOperation.finish();
-          }
-        }
+        // --- DOM Write ---
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+        
+        const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
+        const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level);
+        const scrollbarOperation = scrollbar.bulkRefresh(level);
+
+        const compositeOperation = BulkDOMOperation.fromArray([scrollAreaOperation, scrollbarOperation, this._virtualScrollArea.bulkResize()]);
+        yield* BulkDOMOperation.yieldRunSteps(compositeOperation);
+
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+        this._virtualScrollArea.updateAllScrollableSizes();
+
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+        this._virtualScrollArea.reapplyState();
+        this._enforceScrollbackLength();
+            
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH
+        BulkDOMOperation.executeFinish(compositeOperation);
+
+        return BulkDOMOperation.GeneratorPhase.DONE;
       };
+
+      return BulkDOMOperation.fromGenerator(generator.bind(this)());
 
     } else {
 
       // no-op
       return {};
     }
-
-
-
-    // const lastOperation: BulkDOMOperation.BulkDOMOperation = {
-    //   finish: (): void => {
-    //     this._virtualScrollArea.resize();
-    //     this._virtualScrollArea.updateAllScrollableSizes();
-    //     this._virtualScrollArea.reapplyState();
-    //     this._enforceScrollbackLength();
-    //   }
-    // };
-
-    // const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
-    // const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    // if (scrollerArea !== null) {
-    //   return BulkDOMOperation.fromArray([
-    //     ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level),
-    //     scrollbar.bulkRefresh(level),
-    //     lastOperation]);
-    // } else {
-    //   return lastOperation;
-    // }
   }
 
   private _handleTerminalViewerCursor(ev: CustomEvent): void {

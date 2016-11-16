@@ -429,29 +429,39 @@ export class VirtualScrollArea {
 
   private _bulkUpdateAutoscrollBottom(...mutator: Mutator[]): BulkDOMOperation.BulkDOMOperation {
 
+    const generator = function* bulkUpdateAutoscrollBottomGenerator(this: VirtualScrollArea): IterableIterator<BulkDOMOperation.GeneratorPhase> {
 
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+      // Carefully clone our state without jumping into any references to external objects.
+      const newState = _.clone(this._currentState);
+      newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
 
-    // Carefully clone our state without jumping into any references to external objects.
-    const newState = _.clone(this._currentState);
-    newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
-
-    const virtualHeight = TotalVirtualHeight(this._currentState);
-    const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
-    
-    for (let i=0; i<mutator.length; i++) {
-      mutator[i](newState);
+      const virtualHeight = TotalVirtualHeight(this._currentState);
+      const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
       
-      Compute(newState);
-    }
-    
-    if (isAtBottom) {
-        newState.virtualScrollYOffset = Math.max(0, TotalVirtualHeight(newState) - newState.containerHeight);
+      for (let i=0; i<mutator.length; i++) {
+        mutator[i](newState);
         Compute(newState);
-    }
-    
-    const operation = BulkApplyState(this._currentState, newState);
-    this._currentState = newState;
-    return operation;
+      }
+      
+      if (isAtBottom) {
+          newState.virtualScrollYOffset = Math.max(0, TotalVirtualHeight(newState) - newState.containerHeight);
+          Compute(newState);
+      }
+
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      const operation = BulkApplyState(this._currentState, newState);
+
+      yield* BulkDOMOperation.yieldRunSteps(operation);
+
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+      this._currentState = newState;
+      BulkDOMOperation.executeFinish(operation);
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
+    };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)());
   }
 }
 
@@ -667,11 +677,20 @@ function BulkApplyState(oldState: VirtualAreaState, newState: VirtualAreaState):
   
   // Update the Y offset for the container.
   if (oldState.containerScrollYOffset !== newState.containerScrollYOffset) {
-    operationsList.push({
-      finish: () => {
-        newState.container.scrollTop = newState.containerScrollYOffset;
-      }
-    });
+    const generator = function* generator(this: VirtualScrollArea): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      // --- DOM Read ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+
+
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+
+      // FIXME this should happen after all of the other stuff is updated.
+      newState.container.scrollTop = newState.containerScrollYOffset;
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
+    };
+
+    operationsList.push(BulkDOMOperation.fromGenerator(generator.bind(this)()));
   }
 
   return BulkDOMOperation.fromArray(operationsList);

@@ -209,7 +209,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   // See VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
       if (DEBUG_SIZE) {
         this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
           setterState.yOffset, setterState.yOffsetChanged);
@@ -260,24 +260,17 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       let embeddedOperation: BulkDOMOperation.BulkDOMOperation = null;
       if (setterState.heightChanged) {
         embeddedOperation = this._virtualScrollArea.bulkResize();
-        if (embeddedOperation.runStep != null) {
-          let i = 0;
-          while ( ! embeddedOperation.runStep()) {
-            i++;
-            yield i % 2 === 0 ? BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE : BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
-          }
-        }
+        yield* BulkDOMOperation.yieldRunSteps(embeddedOperation);
       }
 
       // --- DOM Write ---
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       this._virtualScrollArea.scrollTo(setterState.yOffset);
 
-      if (embeddedOperation != null && embeddedOperation.finish != null) {
-        // --- Finish ---
-        yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
-        embeddedOperation.finish();
-      }
+      // --- Finish ---
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+      BulkDOMOperation.executeFinish(embeddedOperation);
+
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
@@ -343,11 +336,12 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
 
   bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    const setModeOperation: BulkDOMOperation.BulkDOMOperation = {
-      finish: (): void => {
-        this._mode = newMode;
-      }
+    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
+    const setModeOperation = BulkDOMOperation.fromGenerator(generator.bind(this)());
 
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
