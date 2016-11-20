@@ -77,11 +77,11 @@ class EtMarkdownViewer extends ViewerElement {
   }
 
   bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
   
   getVisualState(): ViewerElementTypes.VisualState {

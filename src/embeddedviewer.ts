@@ -167,7 +167,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     if (viewerElement !== null) {
       return viewerElement.bulkSetVisualState(newVisualState);
     } else {
-      return {};
+      return BulkDOMOperation.nullOperation();
     }
   }
   
@@ -209,7 +209,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   // See VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
       if (DEBUG_SIZE) {
         this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
           setterState.yOffset, setterState.yOffsetChanged);
@@ -260,16 +260,12 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       let embeddedOperation: BulkDOMOperation.BulkDOMOperation = null;
       if (setterState.heightChanged) {
         embeddedOperation = this._virtualScrollArea.bulkResize();
-        yield* BulkDOMOperation.yieldRunSteps(embeddedOperation);
+        // yield* BulkDOMOperation.yieldRunSteps(embeddedOperation);
       }
 
       // --- DOM Write ---
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: embeddedOperation };
       this._virtualScrollArea.scrollTo(setterState.yOffset);
-
-      // --- Finish ---
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
-      BulkDOMOperation.executeFinish(embeddedOperation);
 
       return BulkDOMOperation.GeneratorPhase.DONE;
     };

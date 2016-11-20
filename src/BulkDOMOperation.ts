@@ -8,30 +8,13 @@
  * 
  * The idea is that multiple BulkDOMOperation objects can be collected and
  * then the execution of each operation can be interleaved with the others.
- * This is done by first calling `runStep` once on each operation in the group
- * and then calling `runStep` again for all, and again until all of them
- * return true. Then the `finish` functions must be called for all.
- * 
- * Note that these functions are both optional and thus may be missing.
+ *
+ * There is nothing inside this object which a user of BulkDOMOperation should
+ * call directly.
  */
 export interface BulkDOMOperation {
-  /**
-   * Execute one step of this operation.
-   * 
-   * This function is called multiple times until it returns true. This
-   * function should also be prepared to do nothing and return true if
-   * it is called again after having returned true.
-   * 
-   * @return True if this function is complete, otherwise false.
-   */
-  runStep?(): boolean;
-
-  /**
-   * Finish the operation.
-   * 
-   * This function is called once all of the steps are complete.
-   */
-  finish?(): void;
+  vote(): GeneratorPhase[];
+  runPhase(phase: GeneratorPhase): BulkDOMOperation;
 }
 
 /**
@@ -41,70 +24,34 @@ export interface BulkDOMOperation {
  * @return a single BulkDOMOperation which calls each BulkDOMOperation in the
  *          list.
  */
-export function fromArray(operations: BulkDOMOperation[]): BulkDOMOperation {
-  if (operations.length === 0 || operations.every( (op) => op.runStep == null && op.finish == null)) {
-    return {};
+export function fromArray(originalOperations: BulkDOMOperation[]): BulkDOMOperation {
+  if (originalOperations == null || originalOperations.length === 0) {
+    return nullOperation();
   }
+
+  let operations = originalOperations;
 
   return {
-    runStep: (): boolean => {
-      let done = true;
-      for (let i=0; i<operations.length; i++) {
-        const operation = operations[i];
-        if (operation.runStep != null) {
-          if (operation.runStep() === false) {
-            done = false;
-          }
-        }
-      }
-      return done;
+    vote(): GeneratorPhase[] {
+      return operations.map( op => op.vote() ).reduce( (a,b) => [...a, ...b]);
     },
 
-    finish: (): void => {
+    runPhase(currentPhase: GeneratorPhase): BulkDOMOperation {
+      const extraOperations: BulkDOMOperation[] = [];
       for (let i=0; i<operations.length; i++) {
-        const operation = operations[i];
-        if (operation.finish != null) {
-          operation.finish();
+        const extraOperation = operations[i].runPhase(currentPhase);
+        if (extraOperation != null) {
+          extraOperations.push(extraOperation);
         }
-      }      
+      }
+
+      if (extraOperations.length !== 0) {
+        operations = [...operations, ...extraOperations];
+      }
+
+      return null;
     }
   };
-}
-
-/**
- * Execute both the step and finish phases of a BulkDOMOperation.
- * 
- * @param operation the operation to fully execute.
- */
-export function execute(operation: BulkDOMOperation): void {
-  executeRunSteps(operation);
-  executeFinish(operation);
-}
-
-/**
- * Execute all of the steps in an operation.
- * 
- * @param operation the operation with the `runStep` function to execute.
- */
-export function executeRunSteps(operation: BulkDOMOperation): void {
-  if (operation == null || operation.runStep === undefined) {
-    return;
-  }
-
-  const runStep = operation.runStep;
-  while (runStep() === false) ;
-}
-
-/**
- * Execute the finish phase of an operation.
- * 
- * @param operation the operation with the `runStep` function to execute.
- */
-export function executeFinish(operation: BulkDOMOperation): void {
-  if (operation == null || operation.finish === undefined) {
-    return;
-  }
-  operation.finish();
 }
 
 /**
@@ -112,18 +59,24 @@ export function executeFinish(operation: BulkDOMOperation): void {
  * that the generator can request / announce.
  */
 export enum GeneratorPhase {
-  PRESTART,
-  BEGIN_DOM_READ,
-  BEGIN_DOM_WRITE,
-  BEGIN_FINISH,
-  DONE
+  PRESTART = 0,
+  BEGIN_DOM_READ = 1,
+  BEGIN_DOM_WRITE = 2,
+
+// FLUSH_DOM
+// WAITING
+
+  BEGIN_FINISH = 3,
+  DONE = 4
 }
+
+export type GeneratorResult = GeneratorPhase | { phase: GeneratorPhase; extraOperation?: BulkDOMOperation; };
 
 /**
  * Create a BulkDOMOperation object from a generator.
  * 
  * A generator is created by using a JavaScript generator function. The
- * generator yields `GeneratorPhase` values to indicate to the caller what
+ * generator yields `GeneratorResult` values to indicate to the caller what
  * kind of operation it will do next on the DOM. When the generator is called
  * it may perform the kind of DOM operation (i.e. a read or write, but not
  * both) that it requested by the last yield. By requiring that the generator
@@ -142,81 +95,103 @@ export enum GeneratorPhase {
  * @param generator the generator to wrap
  * @return the BulkDOMOperation which wraps the generator.
  */
-export function fromGenerator(generator: IterableIterator<GeneratorPhase>): BulkDOMOperation {
-  let runCounter = 0; // Even steps are DOM writes, odd are DOM reads.
+export function fromGenerator(generator: IterableIterator<GeneratorResult>): BulkDOMOperation {
   let phase = GeneratorPhase.PRESTART;
 
   return {
-    runStep: (): boolean => {
-
-      const mayDOMRead = runCounter % 2 === 0;
-      const mayDOMWrite = ! mayDOMRead;
-      runCounter++;
-
-      switch (phase) {
-        
-        // The generator hasn't been called yet.
-        case GeneratorPhase.PRESTART:
-          const result = runGenerator(generator);
-          switch (result) {
-            case GeneratorPhase.BEGIN_DOM_WRITE:
-              // We may do a DOM write in the first call to runStep().
-              phase = runGenerator(generator); // Let it run and collect the next desire.
-              break;
-
-            default:
-              phase = result;
-              break;
-          }
-          break;
-
-        case GeneratorPhase.BEGIN_DOM_READ:
-          if (mayDOMRead) {
-            phase = runGenerator(generator);
-          }
-          break;
-
-        case GeneratorPhase.BEGIN_DOM_WRITE:
-          if (mayDOMWrite) {
-            phase = runGenerator(generator);
-          }
-          break;
-
-        default:
-            break;
+    vote: (): GeneratorPhase[] => {
+      if (phase === GeneratorPhase.PRESTART) {
+        const result = runGenerator(generator);
+        if (typeof result === 'object') {
+          // The first call to the generator MAY NOT return a new operation.
+          phase = result.phase;
+        } else {
+          phase = result;
+        }
       }
-      return phase !== GeneratorPhase.BEGIN_DOM_READ && phase !== GeneratorPhase.BEGIN_DOM_WRITE;
+      return [phase];
     },
 
-    finish: (): void => {
-      if (phase === GeneratorPhase.BEGIN_FINISH) {
-        generator.next();
-        phase = GeneratorPhase.DONE;
+    runPhase(currentPhase: GeneratorPhase): BulkDOMOperation {
+      if (phase === currentPhase) {
+        const result = runGenerator(generator);
+        if (typeof result === 'object') {
+          phase = result.phase;
+          return result.extraOperation;
+        } else {
+          phase = result;
+        }
       }
+      return null;
     }
   };
 }
 
-function runGenerator(generator: IterableIterator<GeneratorPhase>): GeneratorPhase {
+function runGenerator(generator: IterableIterator<GeneratorResult>): GeneratorResult {
   const result = generator.next();
-  return result.done ? GeneratorPhase.DONE : result.value;
+  if (typeof result.value === 'object') {
+    if (result.value.extraOperation == null) {
+      return result.done ? GeneratorPhase.DONE : result.value.phase;
+    } else {
+      if (result.done) {
+        return { phase: GeneratorPhase.DONE, extraOperation: result.value.extraOperation };
+      } else {
+        return result.value;
+      }
+    }
+  } else {
+    return result.done ? GeneratorPhase.DONE : result.value;
+  } 
 }
 
-export function* yieldRunSteps(operation: BulkDOMOperation): IterableIterator<GeneratorPhase> {
-  if (operation == null || operation.runStep === undefined) {
-    return GeneratorPhase.BEGIN_DOM_WRITE;
+const nullOperationObject = {
+  vote(): GeneratorPhase[] {
+    return [GeneratorPhase.DONE];
+  },
+  runPhase(currentPhase: GeneratorPhase): BulkDOMOperation {
+    return null;
   }
-
-  yield GeneratorPhase.BEGIN_DOM_WRITE;
-
-  let counter = 1;
-  while ( ! operation.runStep()) {
-    yield counter % 2 === 0 ? GeneratorPhase.BEGIN_DOM_WRITE : GeneratorPhase.BEGIN_DOM_READ;
-    counter++;
-  }
-  return GeneratorPhase.BEGIN_DOM_READ;
-}
+};
 
 export function nullOperation(): BulkDOMOperation {
-  return {};
+  return nullOperationObject;
+}
+
+export function execute(operation: BulkDOMOperation): void {
+  let topOperation = operation;
+  let lastPhase = GeneratorPhase.BEGIN_DOM_READ;
+
+  let done = false;
+  while ( ! done) {
+    const votes = topOperation.vote();
+    const nextPhase = findTopVote(votes, lastPhase);
+
+    if (nextPhase === GeneratorPhase.DONE) {
+      break;
+    }
+
+    const newOperation = topOperation.runPhase(nextPhase);
+    if (newOperation != null) {
+      topOperation = fromArray( [topOperation, newOperation] );
+    }
+
+    lastPhase = nextPhase;
+  }
+
+}
+
+function findTopVote(votes: GeneratorPhase[], lastWinner: GeneratorPhase): GeneratorPhase {
+  // Look for the previus winner.
+  for (let i=0; i<votes.length; i++) {
+    if (votes[i] === lastWinner) {
+      return lastWinner
+    }
+  }
+
+  // Find the highest ranked vote then.
+  let bestVote = GeneratorPhase.DONE;
+  for (let i=0; i<votes.length; i++) {
+    bestVote = Math.min(bestVote, votes[i]);
+  }
+  return bestVote;
 }

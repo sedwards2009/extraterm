@@ -23,6 +23,8 @@
         "!./src/node_modules/**/*.ts"
     ],
     "files": [
+        "./src/BulkDOMOperation.ts",
+        "./src/BulkDOMOperationTest.ts",
         "./src/abouttab.ts",
         "./src/codemirror_extra.d.ts",
         "./src/codemirrorcommands.ts",

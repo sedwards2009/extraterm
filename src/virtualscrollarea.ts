@@ -429,7 +429,7 @@ export class VirtualScrollArea {
 
   private _bulkUpdateAutoscrollBottom(...mutator: Mutator[]): BulkDOMOperation.BulkDOMOperation {
 
-    const generator = function* bulkUpdateAutoscrollBottomGenerator(this: VirtualScrollArea): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+    const generator = function* bulkUpdateAutoscrollBottomGenerator(this: VirtualScrollArea): IterableIterator<BulkDOMOperation.GeneratorResult> {
 
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
       // Carefully clone our state without jumping into any references to external objects.
@@ -452,11 +452,8 @@ export class VirtualScrollArea {
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       const operation = BulkApplyState(this._currentState, newState);
 
-      yield* BulkDOMOperation.yieldRunSteps(operation);
-
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: operation };
       this._currentState = newState;
-      BulkDOMOperation.executeFinish(operation);
 
       return BulkDOMOperation.GeneratorPhase.DONE;
     };

@@ -70,7 +70,7 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: nu
     bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
       this._height = setterState.height;
       this._offset = setterState.yOffset;
-      return {};
+      return BulkDOMOperation.nullOperation();
     },
     
     getScrollOffset(): number {

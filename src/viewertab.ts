@@ -215,7 +215,7 @@ class EtViewerTab extends ViewerElement {
   }
 
   bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
   
   getVisualState(): ViewerElementTypes.VisualState {
@@ -223,7 +223,7 @@ class EtViewerTab extends ViewerElement {
   }
 
   bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   //-----------------------------------------------------------------------

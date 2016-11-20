@@ -78,3 +78,4 @@ src/mimetypedetectortest.js
 src/ResizeRefreshElementBase.js
 src/BulkDOMOperation.js
 src/codemirroroperation.ts
+src/BulkDOMOperationTest.js

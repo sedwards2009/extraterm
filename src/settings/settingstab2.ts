@@ -261,7 +261,7 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
   }
 
   bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   getVisualState(): ViewerElementTypes.VisualState {
@@ -269,7 +269,7 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
   }
 
   bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   //-----------------------------------------------------------------------

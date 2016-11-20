@@ -82,7 +82,7 @@ class EtAboutTab extends ViewerElement {
   }
 
   bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   getVisualState(): ViewerElementTypes.VisualState {
@@ -90,7 +90,7 @@ class EtAboutTab extends ViewerElement {
   }
 
   bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   //-----------------------------------------------------------------------

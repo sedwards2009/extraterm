@@ -174,7 +174,7 @@ class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigMana
   }
 
   bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   getVisualState(): ViewerElementTypes.VisualState {
@@ -182,7 +182,7 @@ class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigMana
   }
 
   bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   //-----------------------------------------------------------------------

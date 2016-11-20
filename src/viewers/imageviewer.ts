@@ -183,11 +183,11 @@ class EtImageViewer extends ViewerElement {
 
   bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
     if (newMode === this._mode) {
-      return {};
+      return BulkDOMOperation.nullOperation();
     }
     this._mode = newMode;
 
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
   
   getMode(): ViewerElementTypes.Mode {

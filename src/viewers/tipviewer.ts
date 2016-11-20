@@ -119,7 +119,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
 
   bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   getVisualState(): ViewerElementTypes.VisualState {
@@ -127,7 +127,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
 
   bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation {
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   //-----------------------------------------------------------------------
@@ -199,7 +199,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
       this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
         setterState.yOffset, setterState.yOffsetChanged);
     }
-    return {};
+    return BulkDOMOperation.nullOperation();
   }
 
   // VirtualScrollable

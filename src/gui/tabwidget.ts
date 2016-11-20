@@ -134,7 +134,7 @@ class CbTabWidget extends ThemeableElementBase {
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
     const contentsStack = this._getContentsStack();
     if (contentsStack === null) {
-      return {};
+      return BulkDOMOperation.nullOperation();
     }
     return BulkDOMOperation.fromArray([super.bulkRefresh(level), contentsStack.bulkRefresh(level)]);
   }

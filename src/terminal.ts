@@ -857,10 +857,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
     const allOperations = BulkDOMOperation.fromArray([...modeOperations, ...visualStateOperations]);
 
-    CodeMirrorOperation.bulkOperation( () => {
-      BulkDOMOperation.executeRunSteps(allOperations);
-    });
-    BulkDOMOperation.executeFinish(allOperations);
+    BulkDOMOperation.execute(allOperations);
   }
 
   // ----------------------------------------------------------------------
@@ -902,7 +899,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
 
-      const generator = function* generator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      const generator = function* generator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
 
         // --- DOM Write ---
         yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
@@ -912,18 +909,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         const scrollbarOperation = scrollbar.bulkRefresh(level);
 
         const compositeOperation = BulkDOMOperation.fromArray([scrollAreaOperation, scrollbarOperation, this._virtualScrollArea.bulkResize()]);
-        yield* BulkDOMOperation.yieldRunSteps(compositeOperation);
 
-        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ, extraOperation: compositeOperation};
         this._virtualScrollArea.updateAllScrollableSizes();
 
         yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         this._virtualScrollArea.reapplyState();
         this._enforceScrollbackLength();
             
-        yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH
-        BulkDOMOperation.executeFinish(compositeOperation);
-
         return BulkDOMOperation.GeneratorPhase.DONE;
       };
 
@@ -932,7 +925,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     } else {
 
       // no-op
-      return {};
+      return BulkDOMOperation.nullOperation();
     }
   }
 
