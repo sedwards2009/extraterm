@@ -281,15 +281,21 @@ export class VirtualScrollArea {
    * @return the actual offset used after clamping it into the valid range of offsets
    */
   scrollTo(offset: number): number {
+    const {operation,cleanOffset} = this.bulkScrollTo(offset);
+    CodeMirrorOperation.bulkDOMOperation(operation);
+    return cleanOffset;  
+  }
+  
+  bulkScrollTo(offset: number): { operation: BulkDOMOperation.BulkDOMOperation; cleanOffset: number; } {
     // Clamp the requested offset.
     const cleanOffset = Math.min(Math.max(0, offset),
       TotalVirtualHeight(this._currentState) - this._currentState.containerHeight);
-    this._update( (newState) => {
+    const operation = this._bulkUpdate( (newState) => {
       newState.virtualScrollYOffset = cleanOffset;
-    });    
-    return cleanOffset;
+    });
+    return { operation, cleanOffset};    
   }
-  
+
   /**
    * Scroll down to the extreme bottom.
    *
@@ -307,6 +313,7 @@ export class VirtualScrollArea {
    *
    * @param virtualScrollable the scrollable to update
    */
+  @log
   updateScrollableSize(virtualScrollable: VirtualScrollable): void {
     const newMinHeight = virtualScrollable.getMinHeight();
     const newVirtualHeight = virtualScrollable.getVirtualHeight(this.getScrollContainerHeight());
@@ -325,6 +332,7 @@ export class VirtualScrollArea {
   /**
    * Update the virtual height and minimum height for all scrollables and then relayout.
    */
+  @log
   updateAllScrollableSizes(): void {
     this._updateAutoscrollBottom( (newState: VirtualAreaState): void => {
       newState.scrollableStates
@@ -409,19 +417,34 @@ export class VirtualScrollArea {
    * @param  {VirtualAreaState} mutator [description]
    * @return {[type]}                   [description]
    */
+
   private _update(...mutator: Mutator[]): void {
-    // Carefully clone our state without jumping into any references to external objects.
-    const newState = _.clone(this._currentState);
-    newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
-    
-    mutator.forEach( (m) => {
-      m(newState);
-      Compute(newState);
-    });
-    
-    ApplyState(this._currentState, newState);
-    // DumpState(newState);
-    this._currentState = newState;
+    CodeMirrorOperation.bulkDOMOperation(this._bulkUpdate(...mutator));
+  }
+
+  private _bulkUpdate(...mutator: Mutator[]): BulkDOMOperation.BulkDOMOperation {
+
+    const generator = function* bulkUpdateGenerator(this: VirtualScrollArea): IterableIterator<BulkDOMOperation.GeneratorResult> {
+
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+
+      // Carefully clone our state without jumping into any references to external objects.
+      const newState = _.clone(this._currentState);
+      newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
+      
+      mutator.forEach( (m) => {
+        m(newState);
+        Compute(newState);
+      });
+      
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      const operation = BulkApplyState(this._currentState, newState);
+      // DumpState(newState);
+      this._currentState = newState;
+      return { phase: BulkDOMOperation.GeneratorPhase.DONE, extraOperation: operation };
+    };
+      
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), _log.getName());
   }
 
   private _updateAutoscrollBottom(...mutator: Mutator[]): void {
@@ -452,11 +475,9 @@ export class VirtualScrollArea {
 
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       const operation = BulkApplyState(this._currentState, newState);
-
-      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: operation };
       this._currentState = newState;
 
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return { phase: BulkDOMOperation.GeneratorPhase.DONE, extraOperation: operation };
     };
 
     return BulkDOMOperation.fromGenerator(generator.bind(this)(), _log.getName());

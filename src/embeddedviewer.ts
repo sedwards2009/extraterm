@@ -263,13 +263,10 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
         embeddedOperation = this._virtualScrollArea.bulkResize();
       }
 
-      // --- DOM Write ---
-      yield { phase: BulkDOMOperation.GeneratorPhase.FLUSH_DOM, extraOperation: embeddedOperation };
+      yield { phase: BulkDOMOperation.GeneratorPhase.FLUSH_DOM, extraOperation: embeddedOperation, waitOperation: embeddedOperation };
+      const { operation: scrollToOperation, cleanOffset } = this._virtualScrollArea.bulkScrollTo(setterState.yOffset);
 
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      this._virtualScrollArea.scrollTo(setterState.yOffset);
-
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return { phase: BulkDOMOperation.GeneratorPhase.DONE, extraOperation: scrollToOperation };
     };
 
     return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
