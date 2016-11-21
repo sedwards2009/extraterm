@@ -1,7 +1,10 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
-import CodeMirrorOperation = require("./codemirroroperation");
+import Logger = require('./logger'); 
+
+const _log = new Logger("BulkDOMOperation");
+const DEBUG = true;
 
 /**
  * Represents a complex DOM operation which can be done in smaller steps and
@@ -99,7 +102,7 @@ export type GeneratorResult = GeneratorPhase |
  * @param generator the generator to wrap
  * @return the BulkDOMOperation which wraps the generator.
  */
-export function fromGenerator(generator: IterableIterator<GeneratorResult>): BulkDOMOperation {
+export function fromGenerator(generator: IterableIterator<GeneratorResult>, name: string="???"): BulkDOMOperation {
   let phase = GeneratorPhase.PRESTART;
   let waitingOperation: BulkDOMOperation = null;
   let waiting = false;
@@ -112,6 +115,9 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>): Bul
         for (let i=0; i<votes.length; i++) {
           if (votes[i] !== GeneratorPhase.DONE && votes[i] !== GeneratorPhase.BEGIN_FINISH) {
             waiting = true;
+            if (DEBUG) {
+              _log.debug("    Vote: " + name + " is WAITING");
+            }
             return [GeneratorPhase.WAITING];
           }
         }
@@ -129,11 +135,17 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>): Bul
           phase = result;
         }
       }
+      if (DEBUG) {
+        _log.debug("Vote " + name + " is " + GeneratorPhase[phase]);
+      }
       return [phase];
     },
 
     runPhase(currentPhase: GeneratorPhase): BulkDOMOperation {
       if (phase === currentPhase && ! waiting) {
+        if (DEBUG) {
+          _log.debug("    Running " + name + " phase " + GeneratorPhase[currentPhase]);
+        }
         const result = runGenerator(generator);
         if (typeof result === 'object') {
           waitingOperation = result.waitOperation != null ? result.waitOperation : null;
@@ -142,6 +154,15 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>): Bul
         } else {
           phase = result;
         }
+      } else {
+        if (DEBUG) {
+          if (waiting) {
+            _log.debug("    Not running " + name + " in phase " + GeneratorPhase[currentPhase] + ". It is WAITING.");
+          } else {
+            _log.debug("    Not running " + name + " phase " + GeneratorPhase[currentPhase] + ". Wrong phase.");
+          }
+        }
+        
       }
       return null;
     }
@@ -185,6 +206,10 @@ export function nullOperation(): BulkDOMOperation {
  * @param contextFunc 
  */
 export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => void) => void): void {
+  if (DEBUG) {
+    _log.debug("------ Start execute() ------");
+  }
+
   let topOperation = operation;
   let lastPhase = GeneratorPhase.BEGIN_DOM_READ;
 
@@ -194,10 +219,20 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
 
   let done = false;
   while ( ! done) {
+    if (DEBUG) {
+      _log.debug("Entering context function.");
+    }
     contextFunc( () => {
       while ( ! done) {
+        if (DEBUG) {
+          _log.debug("*** Voting ***");
+        }
         const votes = topOperation.vote();
         const nextPhase = findTopVote(votes, lastPhase);
+
+        if (DEBUG) {
+          _log.debug("*** Winning phase is " + GeneratorPhase[nextPhase] + " ***");
+        }
 
         if (nextPhase === GeneratorPhase.FLUSH_DOM) {
           break;
@@ -208,6 +243,9 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
           break;
         }
 
+        if (DEBUG) {
+          _log.debug("Running phase " + GeneratorPhase[nextPhase]);
+        }
         const newOperation = topOperation.runPhase(nextPhase);
         if (newOperation != null) {
           topOperation = fromArray( [topOperation, newOperation] );
@@ -217,17 +255,27 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
       }
     });
 
+    if (DEBUG) {
+      _log.debug("Exited context function.");
+    }
+
     if ( ! done) {
       // Special handling for FLUSH_DOM.
       const votes = topOperation.vote();
       const nextPhase = findTopVote(votes, lastPhase);
       if (nextPhase === GeneratorPhase.FLUSH_DOM) {
+        if (DEBUG) {
+          _log.debug("Running phase " + GeneratorPhase[nextPhase] + " ***");
+        }
         const newOperation = topOperation.runPhase(nextPhase);
         if (newOperation != null) {
           topOperation = fromArray( [topOperation, newOperation] );
         }
       }      
     }    
+  }
+  if (DEBUG) {
+    _log.debug("------ End execute() ------");
   }
 }
 
