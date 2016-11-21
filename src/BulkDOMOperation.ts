@@ -64,12 +64,17 @@ export enum GeneratorPhase {
   BEGIN_DOM_READ = 1,
   BEGIN_DOM_WRITE = 2,
   FLUSH_DOM = 3,
-// WAITING = 4,
-  BEGIN_FINISH = 5,
-  DONE = 6
+  BEGIN_FINISH = 4,
+  DONE = 5,
+  WAITING = 6,  // Note: The order/value of these enums are important.
 }
 
-export type GeneratorResult = GeneratorPhase | { phase: GeneratorPhase; extraOperation?: BulkDOMOperation; };
+export type GeneratorResult = GeneratorPhase |
+  {
+    phase: GeneratorPhase;
+    extraOperation?: BulkDOMOperation;  // Optional extra operation to execute along side the others.
+    waitOperation?: BulkDOMOperation    // Optional operation to wait on till it reaches the finish stage.
+  };
 
 /**
  * Create a BulkDOMOperation object from a generator.
@@ -96,13 +101,29 @@ export type GeneratorResult = GeneratorPhase | { phase: GeneratorPhase; extraOpe
  */
 export function fromGenerator(generator: IterableIterator<GeneratorResult>): BulkDOMOperation {
   let phase = GeneratorPhase.PRESTART;
+  let waitingOperation: BulkDOMOperation = null;
+  let waiting = false;
 
   return {
     vote: (): GeneratorPhase[] => {
+      // Wait handling. If waiting then we case a WAITING vote.
+      if (waitingOperation !== null) {
+        const votes = waitingOperation.vote();
+        for (let i=0; i<votes.length; i++) {
+          if (votes[i] !== GeneratorPhase.DONE && votes[i] !== GeneratorPhase.BEGIN_FINISH) {
+            waiting = true;
+            return [GeneratorPhase.WAITING];
+          }
+        }
+        waitingOperation = null;
+        waiting = false;
+      }
+
       if (phase === GeneratorPhase.PRESTART) {
         const result = runGenerator(generator);
         if (typeof result === 'object') {
-          // The first call to the generator MAY NOT return a new operation.
+          // The first call to the generator MAY NOT return a new operation, but it may wait.
+          waitingOperation = result.waitOperation != null ? result.waitOperation : null;
           phase = result.phase;
         } else {
           phase = result;
@@ -112,9 +133,10 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>): Bul
     },
 
     runPhase(currentPhase: GeneratorPhase): BulkDOMOperation {
-      if (phase === currentPhase) {
+      if (phase === currentPhase && ! waiting) {
         const result = runGenerator(generator);
         if (typeof result === 'object') {
+          waitingOperation = result.waitOperation != null ? result.waitOperation : null;
           phase = result.phase;
           return result.extraOperation;
         } else {

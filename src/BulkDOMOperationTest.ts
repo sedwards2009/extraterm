@@ -277,3 +277,47 @@ export function testFlush2(test: nodeunit.Test): void {
   test.done();
 }
 
+export function testWait(test: nodeunit.Test): void {
+  let log = "";
+
+  const generator2 = function* generator2(): IterableIterator<BulkDOMOperation.GeneratorResult> {
+    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+    log += "W2";
+
+    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+    log += "R2";
+
+    yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+    log += "F";
+
+    return BulkDOMOperation.GeneratorPhase.DONE;
+  };
+
+  const generator = function* generator(): IterableIterator<BulkDOMOperation.GeneratorResult> {
+    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+    log += "R";
+
+    const extraOp = BulkDOMOperation.fromGenerator(generator2.bind(this)());
+    yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: extraOp, waitOperation: extraOp };
+    log += "W1";
+
+    yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
+    log += "L1";
+
+    yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+    log += "F";
+
+    return BulkDOMOperation.GeneratorPhase.DONE;
+  };
+
+  const contextFunc = function(func) {
+    log += "C";
+    func();
+  };
+
+  BulkDOMOperation.execute(BulkDOMOperation.fromGenerator(generator.bind(this)()), contextFunc);
+
+  test.equal(log, "CRW2R2W1L1CFF");
+  test.done();
+}
+
