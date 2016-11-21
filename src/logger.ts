@@ -40,6 +40,15 @@ class Logger {
   }
   
   /**
+   * Get the unique name of this logger instance.
+   * 
+   * @return the name of this instance
+   */
+  getName(): string {
+    return this._name;
+  }
+
+  /**
    * Log a debug message.
    * 
    * @param msg     the log message
