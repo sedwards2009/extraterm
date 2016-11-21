@@ -293,7 +293,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -368,7 +368,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   isFontLoaded(): boolean {
@@ -621,7 +621,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 
   //-----------------------------------------------------------------------
@@ -677,7 +677,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   private _applyVisualState(visualState: VisualState): void {

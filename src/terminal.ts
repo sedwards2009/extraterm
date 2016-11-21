@@ -921,7 +921,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         return BulkDOMOperation.GeneratorPhase.DONE;
       };
 
-      return BulkDOMOperation.fromGenerator(generator.bind(this)());
+      return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
 
     } else {
 

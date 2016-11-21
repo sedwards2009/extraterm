@@ -272,7 +272,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   getSelectionText(): string {
@@ -339,7 +339,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
 
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
-    const setModeOperation = BulkDOMOperation.fromGenerator(generator.bind(this)());
+    const setModeOperation = BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
 
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {

@@ -459,7 +459,7 @@ export class VirtualScrollArea {
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), _log.getName());
   }
 }
 
@@ -688,7 +688,7 @@ function BulkApplyState(oldState: VirtualAreaState, newState: VirtualAreaState):
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    operationsList.push(BulkDOMOperation.fromGenerator(generator.bind(this)()));
+    operationsList.push(BulkDOMOperation.fromGenerator(generator.bind(this)(), _log.getName()));
   }
 
   return BulkDOMOperation.fromArray(operationsList);

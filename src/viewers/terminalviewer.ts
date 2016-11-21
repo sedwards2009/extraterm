@@ -300,7 +300,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -352,7 +352,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   // VirtualScrollable
@@ -412,7 +412,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 
   resizeEmulatorToParentContainer(): void {
@@ -857,7 +857,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 
   private _enterCursorMode(): void {
