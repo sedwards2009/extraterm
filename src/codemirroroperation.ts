@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import CodeMirror = require('codemirror');
+import BulkDOMOperation = require("./BulkDOMOperation");
 
 /* This little module encapsulates a way of grouping many updates to
  * CodeMirror instances in one batch which efficiently updates the DOM. 
@@ -38,4 +39,8 @@ export function bulkOperation(func: ()=>void): void {
   }
 
   codeMirrorInstance.operation(func);
+}
+
+export function bulkDOMOperation(operation: BulkDOMOperation.BulkDOMOperation): void {
+  BulkDOMOperation.execute(operation, bulkOperation);
 }

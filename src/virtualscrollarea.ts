@@ -7,6 +7,7 @@
 import util = require('./gui/util');
 import _  = require('lodash');
 import BulkDOMOperation = require('./BulkDOMOperation');
+import CodeMirrorOperation = require('./codemirroroperation');
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 
@@ -264,7 +265,7 @@ export class VirtualScrollArea {
    * Signals to the VirtualScrollArea that the container has been resized.
    */
   resize(): void {
-    BulkDOMOperation.execute(this.bulkResize());
+    CodeMirrorOperation.bulkDOMOperation(this.bulkResize());
   }
   
   bulkResize(): BulkDOMOperation.BulkDOMOperation {
@@ -424,7 +425,7 @@ export class VirtualScrollArea {
   }
 
   private _updateAutoscrollBottom(...mutator: Mutator[]): void {
-    BulkDOMOperation.execute(this._bulkUpdateAutoscrollBottom(...mutator));
+    CodeMirrorOperation.bulkDOMOperation(this._bulkUpdateAutoscrollBottom(...mutator));
   }
 
   private _bulkUpdateAutoscrollBottom(...mutator: Mutator[]): BulkDOMOperation.BulkDOMOperation {
@@ -611,7 +612,7 @@ function TotalVirtualHeight(state: VirtualAreaState): number {
 }
 
 function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): void {
-  BulkDOMOperation.execute(BulkApplyState(oldState, newState));
+  CodeMirrorOperation.bulkDOMOperation(BulkApplyState(oldState, newState));
 }
 
 /**

@@ -1,6 +1,7 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
+import CodeMirrorOperation = require("./codemirroroperation");
 
 /**
  * Represents a complex DOM operation which can be done in smaller steps and
@@ -62,12 +63,10 @@ export enum GeneratorPhase {
   PRESTART = 0,
   BEGIN_DOM_READ = 1,
   BEGIN_DOM_WRITE = 2,
-
-// FLUSH_DOM
-// WAITING
-
-  BEGIN_FINISH = 3,
-  DONE = 4
+  FLUSH_DOM = 3,
+// WAITING = 4,
+  BEGIN_FINISH = 5,
+  DONE = 6
 }
 
 export type GeneratorResult = GeneratorPhase | { phase: GeneratorPhase; extraOperation?: BulkDOMOperation; };
@@ -157,27 +156,57 @@ export function nullOperation(): BulkDOMOperation {
   return nullOperationObject;
 }
 
-export function execute(operation: BulkDOMOperation): void {
+/**
+ *
+ * 
+ * @param operation
+ * @param contextFunc 
+ */
+export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => void) => void): void {
   let topOperation = operation;
   let lastPhase = GeneratorPhase.BEGIN_DOM_READ;
 
-  let done = false;
-  while ( ! done) {
-    const votes = topOperation.vote();
-    const nextPhase = findTopVote(votes, lastPhase);
-
-    if (nextPhase === GeneratorPhase.DONE) {
-      break;
-    }
-
-    const newOperation = topOperation.runPhase(nextPhase);
-    if (newOperation != null) {
-      topOperation = fromArray( [topOperation, newOperation] );
-    }
-
-    lastPhase = nextPhase;
+  if (contextFunc === undefined) {
+    contextFunc = (f) => f();
   }
 
+  let done = false;
+  while ( ! done) {
+    contextFunc( () => {
+      while ( ! done) {
+        const votes = topOperation.vote();
+        const nextPhase = findTopVote(votes, lastPhase);
+
+        if (nextPhase === GeneratorPhase.FLUSH_DOM) {
+          break;
+        }
+
+        if (nextPhase === GeneratorPhase.DONE) {
+          done = true;
+          break;
+        }
+
+        const newOperation = topOperation.runPhase(nextPhase);
+        if (newOperation != null) {
+          topOperation = fromArray( [topOperation, newOperation] );
+        }
+
+        lastPhase = nextPhase;
+      }
+    });
+
+    if ( ! done) {
+      // Special handling for FLUSH_DOM.
+      const votes = topOperation.vote();
+      const nextPhase = findTopVote(votes, lastPhase);
+      if (nextPhase === GeneratorPhase.FLUSH_DOM) {
+        const newOperation = topOperation.runPhase(nextPhase);
+        if (newOperation != null) {
+          topOperation = fromArray( [topOperation, newOperation] );
+        }
+      }      
+    }    
+  }
 }
 
 function findTopVote(votes: GeneratorPhase[], lastWinner: GeneratorPhase): GeneratorPhase {

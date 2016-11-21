@@ -21,6 +21,7 @@ import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 import BulkDOMOperation = require('./BulkDOMOperation');
+import CodeMirrorOperation = require('./codemirroroperation');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -260,11 +261,12 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       let embeddedOperation: BulkDOMOperation.BulkDOMOperation = null;
       if (setterState.heightChanged) {
         embeddedOperation = this._virtualScrollArea.bulkResize();
-        // yield* BulkDOMOperation.yieldRunSteps(embeddedOperation);
       }
 
       // --- DOM Write ---
-      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: embeddedOperation };
+      yield { phase: BulkDOMOperation.GeneratorPhase.FLUSH_DOM, extraOperation: embeddedOperation };
+
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       this._virtualScrollArea.scrollTo(setterState.yOffset);
 
       return BulkDOMOperation.GeneratorPhase.DONE;
@@ -494,7 +496,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       containerHeightChanged: true
     };
 
-    BulkDOMOperation.execute(this.bulkSetDimensionsAndScroll(setterState));
+    CodeMirrorOperation.bulkDOMOperation(this.bulkSetDimensionsAndScroll(setterState));
 
     // Remove the anti-flicker style.
     this._getById(ID_CONTAINER).setAttribute('style', '');

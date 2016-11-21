@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import BulkDOMOperation = require('./BulkDOMOperation');
+import CodeMirrorOperation = require('./codemirroroperation');
 import LogDecorator = require('./logdecorator');
 
 const log = LogDecorator;
@@ -38,7 +39,7 @@ export class ResizeRefreshElementBase extends HTMLElement {
   }
 
   refresh(level: RefreshLevel): void {
-    BulkDOMOperation.execute(this.bulkRefresh(level));
+    CodeMirrorOperation.bulkDOMOperation(this.bulkRefresh(level));
   }
 
   bulkRefresh(level: RefreshLevel): BulkDOMOperation.BulkDOMOperation {

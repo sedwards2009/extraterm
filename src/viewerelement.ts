@@ -10,6 +10,7 @@ import virtualscrollarea = require('./virtualscrollarea');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
 import BulkDOMOperation = require('./BulkDOMOperation');
+import CodeMirrorOperation = require('./codemirroroperation');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -72,7 +73,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   abstract getVisualState(): VisualState;
 
   setVisualState(state: VisualState): void {
-    BulkDOMOperation.execute(this.bulkSetVisualState(state));
+    CodeMirrorOperation.bulkDOMOperation(this.bulkSetVisualState(state));
   }
 
   abstract bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation;
@@ -80,7 +81,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   abstract getMode(): Mode;
   
   setMode(mode: Mode): void {
-    BulkDOMOperation.execute(this.bulkSetMode(mode));
+    CodeMirrorOperation.bulkDOMOperation(this.bulkSetMode(mode));
   }
 
   abstract bulkSetMode(mode: Mode): BulkDOMOperation.BulkDOMOperation;

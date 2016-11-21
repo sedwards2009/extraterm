@@ -857,7 +857,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
     const allOperations = BulkDOMOperation.fromArray([...modeOperations, ...visualStateOperations]);
 
-    BulkDOMOperation.execute(allOperations);
+    CodeMirrorOperation.bulkDOMOperation(allOperations);
   }
 
   // ----------------------------------------------------------------------
@@ -913,6 +913,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ, extraOperation: compositeOperation};
         this._virtualScrollArea.updateAllScrollableSizes();
 
+        yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
         yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         this._virtualScrollArea.reapplyState();
         this._enforceScrollbackLength();
