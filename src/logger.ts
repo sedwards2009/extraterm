@@ -55,7 +55,7 @@ class Logger {
    * @param ...opts extra values to log with the message
    */
   debug(msg: any, ...opts: any[]): void {
-    this._log("DEBUG", msg, opts);
+    console.log(this._log("DEBUG", msg, opts), ...opts);
   }
   
   /**
@@ -65,7 +65,7 @@ class Logger {
    * @param ...opts extra values to log with the message
    */
   info(msg: any, ...opts: any[]): void {
-    this._log("INFO", msg, opts);
+    console.log(this._log("INFO", msg, opts), ...opts);
   }
   
   /**
@@ -75,7 +75,7 @@ class Logger {
    * @param ...opts extra values to log with the message
    */
   warn(msg: any, ...opts: any[]): void {
-    this._log("WARN", msg, opts);
+    console.warn(this._log("WARN", msg, opts), ...opts);
   }
   
   /**
@@ -85,7 +85,7 @@ class Logger {
    * @param ...opts extra values to log with the message
    */
   severe(msg: any, ...opts: any[]): void {
-    this._log("SEVERE", msg, opts);
+    console.error(this._log("SEVERE", msg, opts), ...opts);
   }
   
   /**
@@ -138,12 +138,13 @@ class Logger {
     return this._messageLog.reduce( (accu, logMessage) => accu + "\n" + logMessage.msg, "");
   }
   
-  private _log(level: string, msg: string, opts: any[]): void {
+  private _log(level: string, msg: string, opts: any[]): string {
     const formatted = this._format(level, msg);
     if (this._recording) {
       this._messageLog.push( { level, msg: formatted + opts.reduce( (x, accu) => accu + x + ", ", "") } );
     }
-    console.log(formatted, ...opts);
+
+    return formatted;
   }
   
   private _format(level: string, msg: string): string {
