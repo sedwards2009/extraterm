@@ -313,7 +313,6 @@ export class VirtualScrollArea {
    *
    * @param virtualScrollable the scrollable to update
    */
-  @log
   updateScrollableSize(virtualScrollable: VirtualScrollable): void {
     const newMinHeight = virtualScrollable.getMinHeight();
     const newVirtualHeight = virtualScrollable.getVirtualHeight(this.getScrollContainerHeight());
@@ -332,9 +331,12 @@ export class VirtualScrollArea {
   /**
    * Update the virtual height and minimum height for all scrollables and then relayout.
    */
-  @log
   updateAllScrollableSizes(): void {
-    this._updateAutoscrollBottom( (newState: VirtualAreaState): void => {
+    CodeMirrorOperation.bulkDOMOperation(this.bulkUpdateAllScrollableSizes());
+  }
+
+  bulkUpdateAllScrollableSizes(): BulkDOMOperation.BulkDOMOperation {
+    return this._bulkUpdateAutoscrollBottom( (newState: VirtualAreaState): void => {
       newState.scrollableStates
         .forEach( (ss) => {
           const newMinHeight = ss.scrollable.getMinHeight();
