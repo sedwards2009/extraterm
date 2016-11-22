@@ -4,7 +4,7 @@
 import Logger = require('./logger'); 
 
 const _log = new Logger("BulkDOMOperation");
-const DEBUG = true;
+const DEBUG = false;
 
 /**
  * Represents a complex DOM operation which can be done in smaller steps and
@@ -199,6 +199,8 @@ export function nullOperation(): BulkDOMOperation {
   return nullOperationObject;
 }
 
+let executeCallDepth = 0;
+
 /**
  *
  * 
@@ -206,6 +208,12 @@ export function nullOperation(): BulkDOMOperation {
  * @param contextFunc 
  */
 export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => void) => void): void {
+  if (executeCallDepth !== 0) {
+    _log.warn("execute() has been called recursively! This can lead to update errors!");
+    // console.trace();
+  }
+
+  executeCallDepth++;
   if (DEBUG) {
     _log.debug("------ Start execute() ------");
   }
@@ -274,6 +282,7 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
       }      
     }    
   }
+  executeCallDepth--;
   if (DEBUG) {
     _log.debug("------ End execute() ------");
   }
