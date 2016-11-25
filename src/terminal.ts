@@ -914,7 +914,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
         const updateAllOperation = this._virtualScrollArea.bulkUpdateAllScrollableSizes();
         yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: updateAllOperation, waitOperation: updateAllOperation};
-        this._virtualScrollArea.reapplyState();
+        
+        const reapplyOperation = this._virtualScrollArea.bulkReapplyState();
+        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: reapplyOperation, waitOperation: reapplyOperation};
 
         yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
         this._enforceScrollbackLength();

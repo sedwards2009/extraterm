@@ -394,6 +394,10 @@ export class VirtualScrollArea {
    * Push the current state down to all of the VirtualScrollables and the scrollbar.
    */
   reapplyState(): void {
+    CodeMirrorOperation.bulkDOMOperation(this.bulkReapplyState());
+  }
+
+  bulkReapplyState(): BulkDOMOperation.BulkDOMOperation {
     const bogusState: VirtualAreaState = {
       scrollbar: null,
       virtualScrollYOffset: -1,
@@ -407,7 +411,7 @@ export class VirtualScrollArea {
       realScrollYOffset: -1
     };
 
-    ApplyState(bogusState, this._currentState);
+    return BulkApplyState(bogusState, this._currentState);
   }
 
   dumpState(): void {

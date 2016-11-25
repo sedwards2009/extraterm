@@ -337,16 +337,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         if (DEBUG_RESIZE) {
           this._log.debug(`setDimensionsAndScroll(height=${setterState.height}, heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged})`);
         }
-        // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
-        // const op = () => {
-          this._adjustHeight(setterState.height);
-          this.scrollTo(0, setterState.yOffset);
-        // };
-        // if (this._codeMirror !== null) {
-        //   this._codeMirror.operation(op);
-        // } else {
-        //   op();
-        // }
+        this._adjustHeight(setterState.height);
+        this.scrollTo(0, setterState.yOffset);
       }
 
       return BulkDOMOperation.GeneratorPhase.DONE;
