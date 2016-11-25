@@ -37,12 +37,26 @@ export function fromArray(originalOperations: BulkDOMOperation[]): BulkDOMOperat
 
   return {
     vote(): GeneratorPhase[] {
-      return operations.map( op => op.vote() ).reduce( (a,b) => [...a, ...b]);
+      const len = operations.length;
+      const result: GeneratorPhase[] = [];
+
+      for (let i=0; i<len; i++) {
+        const newVotes = operations[i].vote();
+
+        // Add the votes to the result array.
+        const len2 = newVotes.length;
+        for (let j=0; j<len2; j++) {
+          result.push(newVotes[j]);
+        }
+      }
+
+      return result;
     },
 
     runPhase(currentPhase: GeneratorPhase): BulkDOMOperation {
       const extraOperations: BulkDOMOperation[] = [];
-      for (let i=0; i<operations.length; i++) {
+      const len = operations.length;
+      for (let i=0; i<len; i++) {
         const extraOperation = operations[i].runPhase(currentPhase);
         if (extraOperation != null) {
           extraOperations.push(extraOperation);
@@ -50,7 +64,7 @@ export function fromArray(originalOperations: BulkDOMOperation[]): BulkDOMOperat
       }
 
       if (extraOperations.length !== 0) {
-        operations = [...operations, ...extraOperations];
+        operations = operations.concat(extraOperations);
       }
 
       return null;
@@ -71,6 +85,16 @@ export enum GeneratorPhase {
   DONE = 5,
   WAITING = 6,  // Note: The order/value of these enums are important.
 }
+
+// Versions of the enum in thier own lists for easy reuse and less pressure on the GC.
+const GeneratorPhaseLists = new Map<GeneratorPhase, GeneratorPhase[]>();
+GeneratorPhaseLists.set(GeneratorPhase.PRESTART, [GeneratorPhase.PRESTART]);
+GeneratorPhaseLists.set(GeneratorPhase.BEGIN_DOM_READ, [GeneratorPhase.BEGIN_DOM_READ]);
+GeneratorPhaseLists.set(GeneratorPhase.BEGIN_DOM_WRITE, [GeneratorPhase.BEGIN_DOM_WRITE]);
+GeneratorPhaseLists.set(GeneratorPhase.FLUSH_DOM, [GeneratorPhase.FLUSH_DOM]);
+GeneratorPhaseLists.set(GeneratorPhase.BEGIN_FINISH, [GeneratorPhase.BEGIN_FINISH]);
+GeneratorPhaseLists.set(GeneratorPhase.DONE, [GeneratorPhase.DONE]);
+GeneratorPhaseLists.set(GeneratorPhase.WAITING, [GeneratorPhase.WAITING]);
 
 export type GeneratorResult = GeneratorPhase |
   {
@@ -112,13 +136,15 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>, name
       // Wait handling. If waiting then we case a WAITING vote.
       if (waitingOperation !== null) {
         const votes = waitingOperation.vote();
-        for (let i=0; i<votes.length; i++) {
-          if (votes[i] !== GeneratorPhase.DONE && votes[i] !== GeneratorPhase.BEGIN_FINISH) {
+        const len = votes.length;
+        for (let i=0; i<len; i++) {
+          const vote = votes[i];
+          if (vote !== GeneratorPhase.DONE && vote !== GeneratorPhase.BEGIN_FINISH) {
             waiting = true;
             if (DEBUG) {
               _log.debug("    Vote: " + name + " is WAITING");
             }
-            return [GeneratorPhase.WAITING];
+            return GeneratorPhaseLists.get(GeneratorPhase.WAITING);
           }
         }
         waitingOperation = null;
@@ -138,7 +164,7 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>, name
       if (DEBUG) {
         _log.debug("Vote " + name + " is " + GeneratorPhase[phase]);
       }
-      return [phase];
+      return GeneratorPhaseLists.get(phase);
     },
 
     runPhase(currentPhase: GeneratorPhase): BulkDOMOperation {
@@ -188,7 +214,7 @@ function runGenerator(generator: IterableIterator<GeneratorResult>): GeneratorRe
 
 const nullOperationObject = {
   vote(): GeneratorPhase[] {
-    return [GeneratorPhase.DONE];
+    return GeneratorPhaseLists.get(GeneratorPhase.DONE);
   },
   runPhase(currentPhase: GeneratorPhase): BulkDOMOperation {
     return null;
@@ -290,7 +316,8 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
 
 function findTopVote(votes: GeneratorPhase[], lastWinner: GeneratorPhase): GeneratorPhase {
   // Look for the previus winner.
-  for (let i=0; i<votes.length; i++) {
+  const len = votes.length;
+  for (let i=0; i<len; i++) {
     if (votes[i] === lastWinner) {
       return lastWinner
     }
@@ -298,8 +325,9 @@ function findTopVote(votes: GeneratorPhase[], lastWinner: GeneratorPhase): Gener
 
   // Find the highest ranked vote then.
   let bestVote = GeneratorPhase.DONE;
-  for (let i=0; i<votes.length; i++) {
-    bestVote = Math.min(bestVote, votes[i]);
+  for (let i=0; i<len; i++) {
+    const vote = votes[i];
+    bestVote = bestVote < vote ? bestVote : vote;
   }
   return bestVote;
 }
