@@ -318,6 +318,19 @@ export class VirtualScrollArea {
     const newVirtualHeight = virtualScrollable.getVirtualHeight(this.getScrollContainerHeight());
     const newReserveViewportHeight = virtualScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
+    // Quickly check to see if anything really changed. Search from the newest back into the scrollback.
+    for (let i=this._currentState.scrollableStates.length-1; i>=0; i--) {
+      const ss = this._currentState.scrollableStates[i];
+      if (ss.scrollable === virtualScrollable) {
+        if (ss.virtualHeight == newVirtualHeight && ss.minHeight == newMinHeight &&
+            ss.reserveViewportHeight == newReserveViewportHeight) {
+          return; // Nothing needs to be done.
+        } else {
+          break;  // Get to work.
+        }
+      }
+    }
+
     this._updateAutoscrollBottom( (newState: VirtualAreaState): void => {
       newState.scrollableStates.filter( (ss) => ss.scrollable === virtualScrollable )
         .forEach( (ss) => {
