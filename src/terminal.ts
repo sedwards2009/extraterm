@@ -91,6 +91,7 @@ const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
 const COMMAND_DELETE_LAST_FRAME = "deleteLastFrame";
 const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
 const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
+const COMMAND_RESET_VT = "resetVT";
 
 const CLASS_CURSOR_MODE = "cursor-mode";
 const SCROLL_STEP = 1;
@@ -1154,6 +1155,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
     commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "external-link", label: "Open Last Frame", target: this } );
     commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "times-circle", label: "Delete Last Frame", target: this } );
+    commandList.push( { id: COMMAND_RESET_VT, group: PALETTE_GROUP, iconRight: "refresh", label: "Reset VT", target: this } );
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
@@ -1221,7 +1223,11 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
           commandPaletteRequestDetail);
         this.dispatchEvent(commandPaletteRequestEvent);
         break;
-        
+
+      case COMMAND_RESET_VT:
+        this._emulator.reset();
+        break;
+
       default:
         return false;
     }

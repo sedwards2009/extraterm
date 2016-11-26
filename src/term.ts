@@ -214,7 +214,12 @@ export interface EmulatorAPI {
   refreshScreen(): void;
   
   resize(newSize: TerminalSize): void;
-  
+
+  /**
+   * Reset the virtual terminal.
+   */
+  reset(): void;
+
   // Sending input events into the emulator
   keyDown(ev: KeyboardEvent): boolean;
   keyPress(ev: KeyboardEvent): boolean;
@@ -1217,6 +1222,7 @@ export class Emulator implements EmulatorAPI {
     this.refreshEnd = REFRESH_END_NULL;
 
     this._resetVariables();
+    this._hasFocus = false;
 
     this._writeBuffers = [];  // Buffer for incoming data waiting to be processed.
     this._processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.
@@ -1246,7 +1252,7 @@ export class Emulator implements EmulatorAPI {
     this._setCursorY(0);
     this.oldy = 0;
 
-    this.cursorState = false;       // Cursor blink state.
+    this.cursorState = true;       // Cursor blink state.
     
     this.cursorHidden = false;
     this._hasFocus = false;
@@ -1301,7 +1307,7 @@ export class Emulator implements EmulatorAPI {
     this.postfix = '';
     
     this._blink = null;
-    
+
     this.lines = [];
   //  this.tabs;
     this.setupStops();
@@ -1791,7 +1797,7 @@ export class Emulator implements EmulatorAPI {
     this._refreshEnd = this._refreshEnd < 0 ? end+1 : Math.max(end+1, this._refreshEnd);
   }
   
-  lineAtRow(row: number, showCursor?: boolean): Line {
+  lineAtRow(row: number): Line {
     if (row < 0 || row >= this.rows) {
       return null;
     }
@@ -2672,7 +2678,7 @@ export class Emulator implements EmulatorAPI {
 
       // ESC c Full Reset (RIS).
       case 'c':
-        this.reset();
+        this._fullReset();
         break;
 
       // ESC E Next Line ( NEL is 0x85).
@@ -3620,10 +3626,16 @@ export class Emulator implements EmulatorAPI {
     this.state = STATE_NORMAL;
   }
 
+  reset(): void {
+    this._fullReset();
+    this.x = 0;
+    this._setCursorY(0);
+    this._dispatchEvents()
+  }
+
   // ESC c Full Reset (RIS).
-  private reset(): void {
+  _fullReset(): void {
     this._resetVariables();
-    this.refresh(0, this.rows - 1);
   }
 
   // ESC H Tab Set (HTS is 0x88).
@@ -4525,7 +4537,7 @@ export class Emulator implements EmulatorAPI {
             const previousGlevel = this.glevel;
             const previousCharsets = this.charsets;
             
-            this.reset();
+            this._fullReset();
             
             this.charset = previousCharset;
             this.glevel = previousGlevel;
