@@ -6,6 +6,9 @@
 @import "extraterm-keycaps";
 
 #ID_CONTAINER {
+  display: flex;
+  align-items: stretch;
+
   font-family: $font-family-base;
   font-size: $font-size-base;
   line-height: $line-height-base;
@@ -19,8 +22,36 @@
   }
 }
 
-#ID_CONTROLS > div:last-child {
-  float: right;
+#ID_CONTENT {
+  flex-grow: 10;
+  & > h1, & > h2, & > h3 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+}
+
+#ID_CONTROLS {
+  flex-grow: 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-basis: 10em;
+
+  padding-left: 1em;
+
+  & > div {
+    // border: 1px solid red;
+    justify-content: flex-end;
+    flex-grow: 1;
+  }
+
+  & > div:last-child {
+    flex-grow: 0;
+    &.form-group-sm > select.form-control {
+      width: 100%;
+    }
+  }
 }
 
 SPAN.CLASS_KEYCAP {

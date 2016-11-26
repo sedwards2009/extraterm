@@ -333,21 +333,20 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
         </style>
         <div id="${ID_CONTAINER}" tabindex="-1" class="container-fluid">
           <div id="${ID_CONTENT}"></div>
-          <hr />
-        <div id="${ID_CONTROLS}" class="form-inline">
-          <div class="btn-group">
-            <button id="${ID_PREVIOUS_BUTTON}" title="Previous Tip" class="btn btn-default btn-sm"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
-            <button id="${ID_NEXT_BUTTON}" title="Next Tip" class="btn btn-default btn-sm"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+          <div id="${ID_CONTROLS}" class="form-inline">
+            <div class="btn-group">
+              <button id="${ID_PREVIOUS_BUTTON}" title="Previous Tip" class="btn btn-default btn-sm"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+              <button id="${ID_NEXT_BUTTON}" title="Next Tip" class="btn btn-default btn-sm"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+            </div>
+            <div class="form-group form-group-sm">
+              <label for="">Show tips: </label>
+              <select id="${ID_SHOW_TIPS}" class="form-control">
+                <option value="always">Everytime</option>
+                <option value="daily">Daily</option>
+                <option value="never">Never</option>
+              </select>
+            </div>
           </div>
-          <div class="form-group form-group-sm">
-            <label for="">Show tips: </label>
-            <select id="${ID_SHOW_TIPS}" class="form-control">
-              <option value="always">Everytime</option>
-              <option value="daily">Daily</option>
-              <option value="never">Never</option>
-            </select>
-          </div>
-        </div>
         </div>`;
 
       window.document.body.appendChild(template);
