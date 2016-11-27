@@ -92,6 +92,7 @@ const COMMAND_DELETE_LAST_FRAME = "deleteLastFrame";
 const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
 const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 const COMMAND_RESET_VT = "resetVT";
+const COMMAND_CLEAR_SCROLLBACK = "clearScrollback";
 
 const CLASS_CURSOR_MODE = "cursor-mode";
 const SCROLL_STEP = 1;
@@ -886,7 +887,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
     this._virtualScrollArea.updateScrollableSize(virtualScrollable);
-    this._enforceScrollbackLength();
+    this._enforceScrollbackLength(this._scrollbackSize);
   }
 
   private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
@@ -920,7 +921,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: reapplyOperation, waitOperation: reapplyOperation};
 
         yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
-        this._enforceScrollbackLength();
+        this._enforceScrollbackLength(this._scrollbackSize);
             
         return BulkDOMOperation.GeneratorPhase.DONE;
       };
@@ -990,28 +991,28 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._enforceScrollbackLengthGuard = true;
     const rc = func();
     this._enforceScrollbackLengthGuard = oldGuardFlag;
-    this._enforceScrollbackLength();
+    this._enforceScrollbackLength(this._scrollbackSize);
     return rc;
   }
   
-  private _enforceScrollbackLength(): void {
+  private _enforceScrollbackLength(scrollbackSize: number): void {
     // Prevent the scrollback check from running multiple times.
     if (this._enforceScrollbackLengthGuard) {
       return;
     }
     this._enforceScrollbackLengthGuard = true;
     const hasFocus = this.hasFocus();
-    this._enforceScrollbackLength2();
+    this._enforceScrollbackLength2(scrollbackSize);
     if (hasFocus && ! this.hasFocus()) {
       this.focus();
     }
     this._enforceScrollbackLengthGuard = false;
   }
-  
-  private _enforceScrollbackLength2(): void {
+
+  private _enforceScrollbackLength2(scrollbackSize: number): void {
     let virtualHeight = this._virtualScrollArea.getVirtualHeight();
-    const scrollbackSize = window.screen.height + this._scrollbackSize;
-    const hardLimit = Math.floor(scrollbackSize * 1.1);
+    const effectiveScrollbackSize = window.screen.height + scrollbackSize;
+    const hardLimit = Math.floor(effectiveScrollbackSize * 1.1);
     if (virtualHeight < hardLimit) {
       return;
     }
@@ -1023,12 +1024,12 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       const kidVirtualHeight = this._virtualScrollArea.getScrollableVirtualHeight(scrollableKid);
       const newVirtualHeight = virtualHeight - kidVirtualHeight;
       // We don't want to cut out too much at once.
-      if (newVirtualHeight > scrollbackSize) {
+      if (newVirtualHeight > effectiveScrollbackSize) {
         // Just remove the thing. There is plenty of scrollback left over.
         this._removeScrollableElement(scrollableKid);
         
       } else {
-        this._deleteTopPixels(scrollableKid, virtualHeight - scrollbackSize);
+        this._deleteTopPixels(scrollableKid, virtualHeight - effectiveScrollbackSize);
         break;
       }
       
@@ -1155,6 +1156,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
     commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "external-link", label: "Open Last Frame", target: this } );
     commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "times-circle", label: "Delete Last Frame", target: this } );
+    commandList.push( { id: COMMAND_CLEAR_SCROLLBACK, group: PALETTE_GROUP, iconRight: "eraser", label: "Clear Scrollback", target: this } );
     commandList.push( { id: COMMAND_RESET_VT, group: PALETTE_GROUP, iconRight: "refresh", label: "Reset VT", target: this } );
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
@@ -1226,6 +1228,10 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
       case COMMAND_RESET_VT:
         this._emulator.reset();
+        break;
+
+      case COMMAND_CLEAR_SCROLLBACK:
+        this._enforceScrollbackLength(0);
         break;
 
       default:
@@ -1759,7 +1765,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       viewerElement.awesomeIcon = mimeViewerElement.awesomeIcon;
       viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
       this._appendScrollableElement(viewerElement);
-      this._enforceScrollbackLength();
+      this._enforceScrollbackLength(this._scrollbackSize);
     }
   }
 
