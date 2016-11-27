@@ -646,7 +646,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     }, <any>options);
 
     this._codeMirror.on("cursorActivity", () => {
-      if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
+      const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
+                              (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
+      if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
         this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
         this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
         
