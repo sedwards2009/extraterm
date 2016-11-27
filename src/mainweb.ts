@@ -481,7 +481,7 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
     }
 
     :root {
-      --terminal-font-size: ${terminalFontSize}px;
+      --default-terminal-font-size: ${terminalFontSize}px;
       --terminal-font: "${fontCssName}";
     }
     `;

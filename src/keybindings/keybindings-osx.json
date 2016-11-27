@@ -16,14 +16,20 @@
     "Cmd-c": "copyToClipboard",
     "Cmd-v": "pasteFromClipboard",
     "Cmd-w": "deleteLastFrame",
-    "Cmd-o": "openLastFrame"
+    "Cmd-o": "openLastFrame",
+    "Cmd-Plus": "increaseFontSize",
+    "Cmd-Minus": "decreaseFontSize",
+    "Cmd-=": "resetFontSize"
   },
   "terminal-cursor-mode": {
     "Alt-Space": "enterNormalMode",
     "Shift-PageUp": "scrollPageUp",
     "Shift-PageDown": "scrollPageDown",
     "Cmd-c": "copyToClipboard",
-    "Cmd-v": "pasteFromClipboard"
+    "Cmd-v": "pasteFromClipboard",
+    "Cmd-Plus": "increaseFontSize",
+    "Cmd-Minus": "decreaseFontSize",
+    "Cmd-=": "resetFontSize"
   },
   "codemirror": {
     "Left": "goCharLeft",

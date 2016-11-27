@@ -78,6 +78,7 @@ const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_CONTAINER = "ID_CONTAINER";
+const ID_CSS_VARS = "ID_CSS_VARS";
 const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
 const KEYBINDINGS_CURSOR_MODE = "terminal-cursor-mode";
 
@@ -93,6 +94,9 @@ const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
 const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 const COMMAND_RESET_VT = "resetVT";
 const COMMAND_CLEAR_SCROLLBACK = "clearScrollback";
+const COMMAND_FONT_SIZE_INCREASE = "increaseFontSize";
+const COMMAND_FONT_SIZE_DECREASE = "decreaseFontSize";
+const COMMAND_FONT_SIZE_RESET = "resetFontSize";
 
 const CLASS_CURSOR_MODE = "cursor-mode";
 const SCROLL_STEP = 1;
@@ -106,6 +110,9 @@ const enum ApplicationMode {
   APPLICATION_MODE_REQUEST_FRAME = 4,
   APPLICATION_MODE_SHOW_FILE = 5,
 }
+
+const MINIMUM_FONT_SIZE = -3;
+const MAXIMUM_FONT_SIZE = 4;
 
 // List of viewer classes.
 const viewerClasses: ViewerElementTypes.SupportsMimeTypes[] = [];
@@ -218,7 +225,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   // The current size of the emulator. This is used to detect changes in size.
   private _columns = -1;
   private _rows = -1;
-  
+  private _fontSizeAdjustment: number;
+
   private _initProperties(): void {
     this._log = new Logger(EtTerminal.TAG_NAME);
     this._virtualScrollArea = null;
@@ -252,7 +260,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._scheduleLaterHandle = null;
     this._scheduledCursorUpdates = [];
     this._scheduledResize = false;
-    
+
+    this._fontSizeAdjustment = 0;
+
     this._lastCommandLine = null;
     this._lastCommandTerminalViewer = null;
     this._lastCommandTerminalLine = null;
@@ -567,6 +577,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       template.id = ID;
 
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
+      <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
           <cb-scrollbar id='${ID_SCROLLBAR}'></cb-scrollbar>
@@ -575,6 +586,19 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
 
     return window.document.importNode(template.content, true);
+  }
+
+  private _getCssVarsRules(): string {
+    return `
+    #${ID_CONTAINER} {
+        ${this._getCssFontSizeRule(this._fontSizeAdjustment)}
+    }
+    `;
+  }
+
+  private _getCssFontSizeRule(adjustment: number): string {
+    const scale = [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3][adjustment-MINIMUM_FONT_SIZE];
+    return `--terminal-font-size: calc(var(--default-terminal-font-size) * ${scale});`;
   }
 
   /**
@@ -1060,6 +1084,21 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
     this._removeScrollableElement(kidNode);
   }
+
+  private _adjustFontSize(delta: number): void {
+    const newAdjustment = Math.min(Math.max(this._fontSizeAdjustment + delta, MINIMUM_FONT_SIZE), MAXIMUM_FONT_SIZE);
+    if (newAdjustment !== this._fontSizeAdjustment) {
+      this._fontSizeAdjustment = newAdjustment;
+
+      const styleElement = <HTMLStyleElement> domutils.getShadowId(this, ID_CSS_VARS);
+      (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(newAdjustment);  // Type stubs are missing cssRules.
+      this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+    }
+  }
+
+  private _resetFontSize(): void {
+    this._adjustFontSize(-this._fontSizeAdjustment);
+  }
   
   // ----------------------------------------------------------------------
   //
@@ -1156,6 +1195,12 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
     commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "external-link", label: "Open Last Frame", target: this } );
     commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "times-circle", label: "Delete Last Frame", target: this } );
+
+    commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", target: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", target: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", target: this } );
+
+
     commandList.push( { id: COMMAND_CLEAR_SCROLLBACK, group: PALETTE_GROUP, iconRight: "eraser", label: "Clear Scrollback", target: this } );
     commandList.push( { id: COMMAND_RESET_VT, group: PALETTE_GROUP, iconRight: "refresh", label: "Reset VT", target: this } );
 
@@ -1232,6 +1277,18 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
       case COMMAND_CLEAR_SCROLLBACK:
         this._enforceScrollbackLength(0);
+        break;
+
+      case COMMAND_FONT_SIZE_INCREASE:
+        this._adjustFontSize(1);
+        break;
+
+      case COMMAND_FONT_SIZE_DECREASE:
+        this._adjustFontSize(-1);
+        break;
+
+      case COMMAND_FONT_SIZE_RESET:
+        this._resetFontSize();
         break;
 
       default:
