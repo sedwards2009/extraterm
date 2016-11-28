@@ -164,6 +164,10 @@ export function startUp(): void {
     
     // A special element for tracking when terminal fonts are effectively changed in the DOM.
     const resizeCanary = <ResizeCanary> doc.createElement(ResizeCanary.TAG_NAME);
+    resizeCanary.setCss(`
+    font-family: var(--terminal-font);
+    font-size: var(--default-terminal-font-size);
+`);
     doc.body.appendChild(resizeCanary);
     resizeCanary.addEventListener('resize', () => {
       mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);

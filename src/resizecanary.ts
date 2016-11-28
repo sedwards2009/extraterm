@@ -32,12 +32,19 @@ class ResizeCanary extends HTMLElement {
   
   private _laterHandle: domutils.LaterHandle;
   
+  private _css: string; 
+
   private _initProperties(): void {
     this._log = new Logger(ResizeCanary.TAG_NAME);
     this._erd = null;
     this._laterHandle = null;
+    this._css = "";
   }
-  
+
+  setCss(css: string): void {
+    this._css = css;
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -95,8 +102,7 @@ class ResizeCanary extends HTMLElement {
       }
       
       #${ID_SIZER} {
-        font-family: var(--terminal-font);
-        font-size: var(--terminal-font-size);
+        ${this._css}
       }
       </style>
 ` +
