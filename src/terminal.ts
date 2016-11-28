@@ -13,6 +13,7 @@ import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import BulkDOMOperation = require('./BulkDOMOperation');
+import ResizeCanary = require('./resizecanary');
 import ThemeableElementBase = require('./themeableelementbase');
 import ThemeTypes = require('./theme');
 import EtEmbeddedViewer = require('./embeddedviewer');
@@ -158,6 +159,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       EtTextViewer.init();
       EtImageViewer.init();
       EtTipViewer.init();
+      ResizeCanary.init();
 
       // EtMarkdownViewer.init();
       window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
@@ -226,6 +228,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _columns = -1;
   private _rows = -1;
   private _fontSizeAdjustment: number;
+  private _armResizeCanary: boolean;  // Controls when the resize canary is allowed to chirp.
 
   private _initProperties(): void {
     this._log = new Logger(EtTerminal.TAG_NAME);
@@ -262,6 +265,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._scheduledResize = false;
 
     this._fontSizeAdjustment = 0;
+    this._armResizeCanary = false;
 
     this._lastCommandLine = null;
     this._lastCommandTerminalViewer = null;
@@ -526,6 +530,22 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
       scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
       
+      // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
+      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
+      resizeCanary.setCss(`
+          font-family: var(--terminal-font);
+          font-size: var(--terminal-font-size);
+      `);
+      containerDiv.appendChild(resizeCanary);
+      resizeCanary.addEventListener('resize', () => {
+        console.timeStamp("Terminal canary");
+        if (this._armResizeCanary) {
+          this._armResizeCanary = false;
+          this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+        }
+      });
+
       this._showTip();
       this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
       
@@ -1092,7 +1112,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
       const styleElement = <HTMLStyleElement> domutils.getShadowId(this, ID_CSS_VARS);
       (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(newAdjustment);  // Type stubs are missing cssRules.
-      this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+      this._armResizeCanary = true;
+      // Don't refresh. Let the Resize Canary detect the real change in the DOM when it arrives.
     }
   }
 

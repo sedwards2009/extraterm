@@ -66,8 +66,7 @@ class ResizeCanary extends HTMLElement {
 
   attachedCallback(): void {
     const shadow = domutils.createShadowRoot(this);
-    const clone = this._createClone();
-    shadow.appendChild(clone);
+    shadow.appendChild(this._createNodes());
     
     this._erd = elementResizeDetectorMaker(); // Use the 'object' strategy, 'scroll' doesn't work here.
     
@@ -84,13 +83,9 @@ class ResizeCanary extends HTMLElement {
     });
   }
   
-  private _createClone(): Node {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = window.document.createElement('template');
-      template.id = ID;
-
-      template.innerHTML = `<style>
+  private _createNodes(): Node {
+    const div = <HTMLDivElement> window.document.createElement('div');
+    div.innerHTML = `<style>
       #${ID_CONTAINER} {
         position: absolute;
         top: 0px;
@@ -110,10 +105,12 @@ class ResizeCanary extends HTMLElement {
 `<div id='${ID_SIZER}'>mmmmmlllll<br />mmmmmlllll<br />mmmmmlllll</div>` +
 `</div>`;
 ;
-      window.document.body.appendChild(template);
-    }
 
-    return window.document.importNode(template.content, true);
+    const frag = window.document.createDocumentFragment();
+    for (const kid of domutils.nodeListToArray(div.childNodes)) { 
+      frag.appendChild(kid);
+    }
+    return frag;
   }
 }
 export = ResizeCanary;
