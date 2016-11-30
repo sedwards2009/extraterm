@@ -399,6 +399,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       }
 
       yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+      this._emitVirtualResizeEvent();
       this.resizeEmulatorToParentContainer();
 
       return BulkDOMOperation.GeneratorPhase.DONE;

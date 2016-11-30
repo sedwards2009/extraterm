@@ -539,7 +539,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       `);
       containerDiv.appendChild(resizeCanary);
       resizeCanary.addEventListener('resize', () => {
-        console.timeStamp("Terminal canary");
         if (this._armResizeCanary) {
           this._armResizeCanary = false;
           this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);

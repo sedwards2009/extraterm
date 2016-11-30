@@ -620,6 +620,10 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
           this._codeMirror.refresh();
         }
       }
+
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+      this._emitVirtualResizeEvent();
+      
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
