@@ -45,12 +45,16 @@ class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefreshElement
   protected detachedCallback(): void {
     ThemeConsumer.unregisterThemeable(this);
   }
-  
+
+  protected installThemeCss(): void {
+    this.setThemeCssMap(ThemeConsumer.cssMap());
+  }
+
   /**
    * Updates the Style element's CSS contents immediately.
    */
   protected updateThemeCss(): void {
-    this.setThemeCssMap(ThemeConsumer.cssMap());
+    this.installThemeCss();
     this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
   }
   

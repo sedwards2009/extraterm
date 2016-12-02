@@ -622,7 +622,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     shadow.appendChild(clone);
     
     this._initFontLoading();
-    this.updateThemeCss();
+    this.installThemeCss();
 
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
 
