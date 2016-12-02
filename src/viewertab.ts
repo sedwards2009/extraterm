@@ -260,6 +260,14 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     return BulkDOMOperation.nullOperation();
   }
 
+  getFontAdjust(): number {
+    return this._fontSizeAdjustment;
+  }
+
+  setFontAdjust(delta: number): void {
+    this._adjustFontSize(delta)
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -558,9 +566,11 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
       this._fontSizeAdjustment = newAdjustment;
 
       const styleElement = <HTMLStyleElement> domutils.getShadowId(this, ID_CSS_VARS);
-      (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(newAdjustment);  // Type stubs are missing cssRules.
-      this._armResizeCanary = true;
-      // Don't refresh. Let the Resize Canary detect the real change in the DOM when it arrives.
+      if (styleElement != null) {
+        (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(newAdjustment);  // Type stubs are missing cssRules.
+        this._armResizeCanary = true;
+        // Don't refresh. Let the Resize Canary detect the real change in the DOM when it arrives.
+      }
     }
   }
 

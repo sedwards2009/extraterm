@@ -733,7 +733,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     });
     
     newTerminal.addEventListener(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT, (ev: CustomEvent): void => {
-      this.focusTab(this.openViewerTab(tabInfo.position, ev.detail.embeddedViewer));
+      this.focusTab(this.openViewerTab(tabInfo.position, ev.detail.embeddedViewer, ev.detail.terminal.getFontAdjust()));
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
     
@@ -758,9 +758,10 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     return tabInfo.id;
   }
   
-  openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer): number {
+  openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer, fontAdjust: number): number {
     const viewerElement = embeddedViewer.viewerElement;
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
+    viewerTab.setFontAdjust(fontAdjust);
     keybindingmanager.injectKeyBindingManager(viewerTab, this._keyBindingManager);
     viewerTab.title = embeddedViewer.title;
     viewerTab.tag = embeddedViewer.tag;

@@ -447,6 +447,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     return text === undefined ? null : text;
   }
 
+  getFontAdjust(): number {
+    return this._fontSizeAdjustment;
+  }
+
+  setFontAdjust(delta: number): void {
+    this._adjustFontSize(delta)
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
