@@ -8,12 +8,19 @@ import fs  = require('fs');
 
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
+import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import EtEmbeddedViewer = require('./embeddedviewer');
 import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 import domutils = require('./domutils');
 import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
+import ResizeCanary = require('./resizecanary');
+import keybindingmanager = require('./keybindingmanager');
+type KeyBindingManager = keybindingmanager.KeyBindingManager;
+
+import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
+type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 import electron = require('electron');
 const clipboard = electron.clipboard;
@@ -41,13 +48,27 @@ const ID_SCROLLBAR = "scrollbar";
 const ID_CONTAINER = "terminal_container";
 const ID_MAIN_STYLE = "main_style";
 const ID_THEME_STYLE = "theme_style";
+const ID_CSS_VARS = "ID_CSS_VARS";
+const KEYBINDINGS_VIEWER_TAB = "viewer-tab";
+
+const PALETTE_GROUP = "viewertab";
+const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
+const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
+const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
+const COMMAND_FONT_SIZE_INCREASE = "increaseFontSize";
+const COMMAND_FONT_SIZE_DECREASE = "decreaseFontSize";
+const COMMAND_FONT_SIZE_RESET = "resetFontSize";
+
+const MINIMUM_FONT_SIZE = -3;
+const MAXIMUM_FONT_SIZE = 4;
 
 const SCROLL_STEP = 1;
 
 /**
  * A viewer tab which can contain any ViewerElement.
  */
-class EtViewerTab extends ViewerElement {
+class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+    keybindingmanager.AcceptsKeyBindingManager {
 
   /**
    * The HTML tag name of this element.
@@ -65,6 +86,7 @@ class EtViewerTab extends ViewerElement {
     if (registered === false) {
       CbScrollbar.init();
       EtEmbeddedViewer.init();
+      ResizeCanary.init();
       window.document.registerElement(EtViewerTab.TAG_NAME, {prototype: EtViewerTab.prototype});
       registered = true;
     }
@@ -83,6 +105,8 @@ class EtViewerTab extends ViewerElement {
   private _blinkingCursor: boolean;
   private _title: string;
 
+  private _keyBindingManager: KeyBindingManager;
+
   private _mainStyleLoaded: boolean;
   private _themeStyleLoaded: boolean;
   private _resizePollHandle: domutils.LaterHandle;
@@ -90,6 +114,9 @@ class EtViewerTab extends ViewerElement {
   
   private _scheduleLaterHandle: domutils.LaterHandle;
   private _scheduledResize: boolean;
+
+  private _fontSizeAdjustment: number;
+  private _armResizeCanary: boolean;  // Controls when the resize canary is allowed to chirp.
 
   private _initProperties(): void {
     this._virtualScrollArea = null;
@@ -105,6 +132,9 @@ class EtViewerTab extends ViewerElement {
     this._terminalSize = null;
     this._scrollYOffset = 0;
     this._virtualHeight = 0;
+
+    this._fontSizeAdjustment = 0;
+    this._armResizeCanary = false;
 
     this._scheduleLaterHandle = null;
     this._scheduledResize = false;
@@ -213,6 +243,10 @@ class EtViewerTab extends ViewerElement {
   getMode(): ViewerElementTypes.Mode {
     return ViewerElementTypes.Mode.CURSOR;
   }
+  
+  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+    this._keyBindingManager = keyBindingManager;
+  }
 
   bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
     return BulkDOMOperation.nullOperation();
@@ -296,16 +330,39 @@ class EtViewerTab extends ViewerElement {
       this._virtualScrollArea.scrollTo(scrollbar.position);
     });
 
-
     scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
     scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
 
     scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
-    
+
+        // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
+    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
+    resizeCanary.setCss(`
+        font-family: var(--terminal-font);
+        font-size: var(--terminal-font-size);
+    `);
+    containerDiv.appendChild(resizeCanary);
+    resizeCanary.addEventListener('resize', () => {
+      if (this._armResizeCanary) {
+        this._armResizeCanary = false;
+        this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+      }
+    });
+
     domutils.doLater(this._processResize.bind(this));
   }
-  
+
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+    const viewerElement = this._getViewerElement();
+    if (viewerElement == null) {
+      return BulkDOMOperation.nullOperation();
+    } else {
+      return viewerElement.bulkRefresh(level);
+    }
+  }
+
   //-----------------------------------------------------------------------
   //
   //   ######                                      
@@ -353,6 +410,7 @@ class EtViewerTab extends ViewerElement {
         }
         </style>
         <style id="${ID_THEME_STYLE}"></style>
+        <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
           <cb-scrollbar id='${ID_SCROLLBAR}'></cb-scrollbar>
@@ -361,6 +419,19 @@ class EtViewerTab extends ViewerElement {
     }
 
     return window.document.importNode(template.content, true);
+  }
+
+  private _getCssVarsRules(): string {
+    return `
+    #${ID_CONTAINER} {
+        ${this._getCssFontSizeRule(this._fontSizeAdjustment)}
+    }
+    `;
+  }
+
+  private _getCssFontSizeRule(adjustment: number): string {
+    const scale = [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3][adjustment-MINIMUM_FONT_SIZE];
+    return `--terminal-font-size: calc(var(--default-terminal-font-size) * ${scale});`;
   }
 
   /**
@@ -480,6 +551,22 @@ class EtViewerTab extends ViewerElement {
       this._virtualScrollArea.scrollIntoView(top, bottom);
     }
   }
+
+  private _adjustFontSize(delta: number): void {
+    const newAdjustment = Math.min(Math.max(this._fontSizeAdjustment + delta, MINIMUM_FONT_SIZE), MAXIMUM_FONT_SIZE);
+    if (newAdjustment !== this._fontSizeAdjustment) {
+      this._fontSizeAdjustment = newAdjustment;
+
+      const styleElement = <HTMLStyleElement> domutils.getShadowId(this, ID_CSS_VARS);
+      (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(newAdjustment);  // Type stubs are missing cssRules.
+      this._armResizeCanary = true;
+      // Don't refresh. Let the Resize Canary detect the real change in the DOM when it arrives.
+    }
+  }
+
+  private _resetFontSize(): void {
+    this._adjustFontSize(-this._fontSizeAdjustment);
+  }
   
   // ----------------------------------------------------------------------
   //
@@ -494,11 +581,15 @@ class EtViewerTab extends ViewerElement {
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    // Ctrl+C Copy
-    if (ev.keyCode === 67 && ev.ctrlKey) {
-      this.copyToClipboard();
-      ev.stopPropagation();
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingContexts() === null) {
       return;
+    }
+
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_VIEWER_TAB);
+    const command = keyBindings.mapEventToCommand(ev);
+    if (this._executeCommand(command)) {
+      ev.stopPropagation();
+      ev.preventDefault();
     }
   }
 
@@ -518,6 +609,69 @@ class EtViewerTab extends ViewerElement {
   //     }
   //   }
   // }
+
+  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
+
+    commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", target: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", target: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", target: this } );
+
+    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_VIEWER_TAB);
+    if (keyBindings !== null) {
+      commandList.forEach( (commandEntry) => {
+        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        commandEntry.shortcut = shortcut === null ? "" : shortcut;
+      });
+    }    
+    return commandList;
+  }
+
+
+  executeCommand(commandId: string): void {
+    this._executeCommand(commandId);
+  }
+  
+  private _executeCommand(command: string): boolean {
+    switch (command) {
+      case COMMAND_COPY_TO_CLIPBOARD:
+        this.copyToClipboard();
+        break;
+
+      case COMMAND_PASTE_FROM_CLIPBOARD:
+        this._pasteFromClipboard();
+        break;
+
+      case COMMAND_OPEN_COMMAND_PALETTE:
+        const commandPaletteRequestDetail: CommandPaletteRequest = {
+            srcElement: this,
+            commandEntries: this._commandPaletteEntries(),
+            contextElement: null
+          };
+        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
+          { detail: commandPaletteRequestDetail });
+        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+          commandPaletteRequestDetail);
+        this.dispatchEvent(commandPaletteRequestEvent);
+        break;
+
+      case COMMAND_FONT_SIZE_INCREASE:
+        this._adjustFontSize(1);
+        break;
+
+      case COMMAND_FONT_SIZE_DECREASE:
+        this._adjustFontSize(-1);
+        break;
+
+      case COMMAND_FONT_SIZE_RESET:
+        this._resetFontSize();
+        break;
+
+      default:
+        return false;
+    }
+    return true;
+  }
 
   // ********************************************************************
   //

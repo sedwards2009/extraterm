@@ -95,5 +95,14 @@
   "image-viewer": {
     "Up": "goUp",
     "Down": "goDown"
+  },
+  "viewer-tab": {
+    "Cmd-Shift-C": "copyToClipboard",
+    "Cmd-c": "copyToClipboard",
+    "Cmd-v": "pasteFromClipboard",
+    "Cmd-Shift-V": "pasteFromClipboard",
+    "Ctrl-Plus": "increaseFontSize",
+    "Ctrl-Minus": "decreaseFontSize",
+    "Ctrl-=": "resetFontSize"
   }
 }
