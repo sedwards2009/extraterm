@@ -73,7 +73,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   abstract getVisualState(): VisualState;
 
   setVisualState(state: VisualState): void {
-    CodeMirrorOperation.bulkDOMOperation(this.bulkSetVisualState(state));
+    CodeMirrorOperation.executeBulkDOMOperation(this.bulkSetVisualState(state));
   }
 
   abstract bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation;
@@ -81,7 +81,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   abstract getMode(): Mode;
   
   setMode(mode: Mode): void {
-    CodeMirrorOperation.bulkDOMOperation(this.bulkSetMode(mode));
+    CodeMirrorOperation.executeBulkDOMOperation(this.bulkSetMode(mode));
   }
 
   abstract bulkSetMode(mode: Mode): BulkDOMOperation.BulkDOMOperation;

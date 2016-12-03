@@ -39,7 +39,7 @@ export class ResizeRefreshElementBase extends HTMLElement {
   }
 
   refresh(level: RefreshLevel): void {
-    CodeMirrorOperation.bulkDOMOperation(this.bulkRefresh(level));
+    CodeMirrorOperation.executeBulkDOMOperation(this.bulkRefresh(level));
   }
 
   bulkRefresh(level: RefreshLevel): BulkDOMOperation.BulkDOMOperation {

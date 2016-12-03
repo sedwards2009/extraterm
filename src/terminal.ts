@@ -910,7 +910,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
     const allOperations = BulkDOMOperation.fromArray([...modeOperations, ...visualStateOperations]);
 
-    CodeMirrorOperation.bulkDOMOperation(allOperations);
+    CodeMirrorOperation.executeBulkDOMOperation(allOperations);
   }
 
   // ----------------------------------------------------------------------

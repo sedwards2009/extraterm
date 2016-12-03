@@ -41,6 +41,6 @@ export function bulkOperation(func: ()=>void): void {
   codeMirrorInstance.operation(func);
 }
 
-export function bulkDOMOperation(operation: BulkDOMOperation.BulkDOMOperation): void {
+export function executeBulkDOMOperation(operation: BulkDOMOperation.BulkDOMOperation): void {
   BulkDOMOperation.execute(operation, bulkOperation);
 }

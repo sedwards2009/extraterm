@@ -277,7 +277,7 @@ export class VirtualScrollArea {
    * Signals to the VirtualScrollArea that the container has been resized.
    */
   resize(): void {
-    CodeMirrorOperation.bulkDOMOperation(this.bulkResize());
+    CodeMirrorOperation.executeBulkDOMOperation(this.bulkResize());
   }
   
   bulkResize(): BulkDOMOperation.BulkDOMOperation {
@@ -294,7 +294,7 @@ export class VirtualScrollArea {
    */
   scrollTo(offset: number): number {
     const {operation,cleanOffset} = this.bulkScrollTo(offset);
-    CodeMirrorOperation.bulkDOMOperation(operation);
+    CodeMirrorOperation.executeBulkDOMOperation(operation);
     return cleanOffset;  
   }
   
@@ -353,11 +353,12 @@ export class VirtualScrollArea {
     } );
   }
 
+
   /**
    * Update the virtual height and minimum height for all scrollables and then relayout.
    */
   updateAllScrollableSizes(): void {
-    CodeMirrorOperation.bulkDOMOperation(this.bulkUpdateAllScrollableSizes());
+    CodeMirrorOperation.executeBulkDOMOperation(this.bulkUpdateAllScrollableSizes());
   }
 
   bulkUpdateAllScrollableSizes(): BulkDOMOperation.BulkDOMOperation {
@@ -406,7 +407,7 @@ export class VirtualScrollArea {
    * Push the current state down to all of the VirtualScrollables and the scrollbar.
    */
   reapplyState(): void {
-    CodeMirrorOperation.bulkDOMOperation(this.bulkReapplyState());
+    CodeMirrorOperation.executeBulkDOMOperation(this.bulkReapplyState());
   }
 
   bulkReapplyState(): BulkDOMOperation.BulkDOMOperation {
@@ -450,7 +451,7 @@ export class VirtualScrollArea {
    */
 
   private _update(...mutator: Mutator[]): void {
-    CodeMirrorOperation.bulkDOMOperation(this._bulkUpdate(...mutator));
+    CodeMirrorOperation.executeBulkDOMOperation(this._bulkUpdate(...mutator));
   }
 
   private _bulkUpdate(...mutator: Mutator[]): BulkDOMOperation.BulkDOMOperation {
@@ -479,7 +480,7 @@ export class VirtualScrollArea {
   }
 
   private _updateAutoscrollBottom(...mutator: Mutator[]): void {
-    CodeMirrorOperation.bulkDOMOperation(this._bulkUpdateAutoscrollBottom(...mutator));
+    CodeMirrorOperation.executeBulkDOMOperation(this._bulkUpdateAutoscrollBottom(...mutator));
   }
 
   private _bulkUpdateAutoscrollBottom(...mutator: Mutator[]): BulkDOMOperation.BulkDOMOperation {
@@ -664,7 +665,7 @@ function TotalVirtualHeight(state: VirtualAreaState): number {
 }
 
 function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): void {
-  CodeMirrorOperation.bulkDOMOperation(BulkApplyState(oldState, newState));
+  CodeMirrorOperation.executeBulkDOMOperation(BulkApplyState(oldState, newState));
 }
 
 /**

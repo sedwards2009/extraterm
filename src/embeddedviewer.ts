@@ -492,7 +492,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       containerHeightChanged: true
     };
 
-    CodeMirrorOperation.bulkDOMOperation(this.bulkSetDimensionsAndScroll(setterState));
+    CodeMirrorOperation.executeBulkDOMOperation(this.bulkSetDimensionsAndScroll(setterState));
 
     // Remove the anti-flicker style.
     this._getById(ID_CONTAINER).setAttribute('style', '');
