@@ -62,6 +62,18 @@ export interface SetterState {
 // The name of a custom event that VirtualScrollables should emit when they need to be resized.
 export const EVENT_RESIZE = "scrollable-resize";
 
+/**
+ * Emit a resize event.
+ * 
+ * This utility function is meant for use by VirtualScrollable objects.
+ * 
+ * @param el The element and VirtualScrollable object which needs to be resized.
+ */
+export function emitResizeEvent(el: VirtualScrollable & HTMLElement): void { //BulkDOMOperation.BulkDOMOperation {
+    const event = new CustomEvent(EVENT_RESIZE, { bubbles: true });
+    el.dispatchEvent(event);
+}
+
 // Describes the state of one Scrollable
 interface VirtualScrollableState {
   scrollable: VirtualScrollable;

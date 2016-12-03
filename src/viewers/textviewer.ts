@@ -726,8 +726,8 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     if (DEBUG_RESIZE) {
       this._log.debug("_emitVirtualResizeEvent");
     }
-    const event = new CustomEvent(virtualscrollarea.EVENT_RESIZE, { bubbles: true });
-    this.dispatchEvent(event);
+
+    virtualscrollarea.emitResizeEvent(this);
   }
   
   private _emitBeforeSelectionChangeEvent(originMouse: boolean): void {

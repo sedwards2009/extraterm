@@ -442,8 +442,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     if (DEBUG_SIZE) {
       this._log.debug("_emitVirtualResizeEvent");
     }
-    const event = new CustomEvent(virtualscrollarea.EVENT_RESIZE, { bubbles: true });
-    this.dispatchEvent(event);
+    virtualscrollarea.emitResizeEvent(this);
   }
 
   private _adjustHeight(newHeight: number): void {

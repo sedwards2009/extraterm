@@ -450,8 +450,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       this._virtualScrollArea.updateScrollableSize(<any> ev.target);
       const newHeight = this._virtualScrollArea.getVirtualHeight();
       if (height !== newHeight) {
-        const event = new CustomEvent(virtualscrollarea.EVENT_RESIZE, { bubbles: true });
-        this.dispatchEvent(event);
+        virtualscrollarea.emitResizeEvent(this);
       }
     });
     
