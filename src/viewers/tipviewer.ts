@@ -408,7 +408,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
     if (containerDiv !== null) {
 
-      const generator = function* generator(this: EtTipViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      const generator = function* generator(this: EtTipViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
         // --- DOM Read ---
         yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
 
@@ -417,10 +417,8 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
 
         yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         this._adjustHeight(this._height);
-
-        yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
-        this._emitVirtualResizeEvent();
-
+        const resizeOperation = virtualscrollarea.bulkEmitResizeEvent(this);
+        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
         return BulkDOMOperation.GeneratorPhase.DONE;
       };
 
@@ -438,13 +436,6 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     return tipData.length;
   }
   
-  private _emitVirtualResizeEvent(): void {
-    if (DEBUG_SIZE) {
-      this._log.debug("_emitVirtualResizeEvent");
-    }
-    virtualscrollarea.emitResizeEvent(this);
-  }
-
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
     if (this.parentNode === null || domutils.getShadowRoot(this) === null) {

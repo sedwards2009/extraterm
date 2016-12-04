@@ -58,6 +58,7 @@ type CommandLineAction = config.CommandLineAction;
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type VirtualScrollArea = virtualscrollarea.VirtualScrollArea;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 
@@ -932,13 +933,25 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
 
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
-    this._updateVirtualScrollableSize(<any> ev.target); 
+    const operation = this._updateVirtualScrollableSize(<any> ev.target);
       // ^ We know this event only comes from VirtualScrollable elements.
+    (<virtualscrollarea.ResizeEventDetail>ev.detail).addOperation(operation);
   }
 
-  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
-    this._virtualScrollArea.updateScrollableSize(virtualScrollable);
-    this._enforceScrollbackLength(this._scrollbackSize);
+  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): BulkDOMOperation.BulkDOMOperation {
+
+    const generator = function* bulkUpdateGenerator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
+
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+      const updateOperation = this._virtualScrollArea.bulkUpdateScrollableSize(virtualScrollable);
+
+      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ, extraOperation: updateOperation, waitOperation: updateOperation };
+      this._enforceScrollbackLength(this._scrollbackSize);
+
+      return BulkDOMOperation.GeneratorPhase.DONE;
+    };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
   }
 
   private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {

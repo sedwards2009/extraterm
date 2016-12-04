@@ -445,14 +445,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     
     this._virtualScrollArea.setScrollContainer(outputDiv);
     
-    outputDiv.addEventListener(virtualscrollarea.EVENT_RESIZE, (ev: CustomEvent) => {
-      const height = this._virtualScrollArea.getVirtualHeight();
-      this._virtualScrollArea.updateScrollableSize(<any> ev.target);
-      const newHeight = this._virtualScrollArea.getVirtualHeight();
-      if (height !== newHeight) {
-        virtualscrollarea.emitResizeEvent(this);
-      }
-    });
+    outputDiv.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     
     // const expandbutton = this._getById(ID_EXPAND_BUTTON);
     // expandbutton.addEventListener('click', (): void => {
@@ -730,6 +723,28 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     const event = new CustomEvent(EtEmbeddedViewer.EVENT_CLOSE_REQUEST);
     event.initCustomEvent(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, true, true, null);
     this.dispatchEvent(event);
+  }
+
+  private _handleVirtualScrollableResize(ev: CustomEvent): void {
+    const scrollable = <any> ev.target;
+
+    const generator = function* bulkUpdateGenerator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+
+      const height = this._virtualScrollArea.getVirtualHeight();
+      const updateOperation = this._virtualScrollArea.bulkUpdateScrollableSize(scrollable);
+      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ, extraOperation: updateOperation, waitOperation: updateOperation };
+
+      const newHeight = this._virtualScrollArea.getVirtualHeight();
+      if (height !== newHeight) {
+        const resizeOperation = virtualscrollarea.bulkEmitResizeEvent(this);
+        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
+      }
+      return BulkDOMOperation.GeneratorPhase.DONE;
+    };
+
+    const operation = BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    (<virtualscrollarea.ResizeEventDetail>ev.detail).addOperation(operation);
   }
 }
 

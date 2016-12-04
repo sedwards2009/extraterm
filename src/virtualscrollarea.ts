@@ -12,7 +12,7 @@ import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 
 const log = LogDecorator;
-const _log = new Logger("VirtualScrollable");
+const _log = new Logger("VirtualScrollableArea");
 
 export interface VirtualScrollable {
   /**
@@ -69,9 +69,30 @@ export const EVENT_RESIZE = "scrollable-resize";
  * 
  * @param el The element and VirtualScrollable object which needs to be resized.
  */
-export function emitResizeEvent(el: VirtualScrollable & HTMLElement): void { //BulkDOMOperation.BulkDOMOperation {
-    const event = new CustomEvent(EVENT_RESIZE, { bubbles: true });
+export function emitResizeEvent(el: VirtualScrollable & HTMLElement): void {
+  BulkDOMOperation.execute(bulkEmitResizeEvent(el));
+}
+
+export interface ResizeEventDetail {
+  addOperation(op: BulkDOMOperation.BulkDOMOperation): void;
+}
+
+export function bulkEmitResizeEvent(el: VirtualScrollable & HTMLElement): BulkDOMOperation.BulkDOMOperation {
+    const operations: BulkDOMOperation.BulkDOMOperation[] = [];
+
+    const detail: ResizeEventDetail = {
+      addOperation: (op: BulkDOMOperation.BulkDOMOperation): void => {
+        operations.push(op);
+      }
+    };
+
+    const event = new CustomEvent(EVENT_RESIZE, { bubbles: true, detail: detail });
     el.dispatchEvent(event);
+    if (operations.length === 0) {
+      return BulkDOMOperation.nullOperation();
+    } else {
+      return BulkDOMOperation.fromArray(operations);
+    }
 }
 
 // Describes the state of one Scrollable
@@ -319,13 +340,17 @@ export class VirtualScrollArea {
     }
     return this.scrollTo(TotalVirtualHeight(this._currentState) - this._currentState.containerHeight);
   }
-  
+
+  updateScrollableSize(virtualScrollable: VirtualScrollable): void {
+    CodeMirrorOperation.executeBulkDOMOperation(this.bulkUpdateScrollableSize(virtualScrollable));
+  }
+
   /**
    * Update the virtual height and minimum height for a scrollable and relayout.
    *
    * @param virtualScrollable the scrollable to update
    */
-  updateScrollableSize(virtualScrollable: VirtualScrollable): void {
+  bulkUpdateScrollableSize(virtualScrollable: VirtualScrollable): BulkDOMOperation.BulkDOMOperation {
     const newMinHeight = virtualScrollable.getMinHeight();
     const newVirtualHeight = virtualScrollable.getVirtualHeight(this.getScrollContainerHeight());
     const newReserveViewportHeight = virtualScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
@@ -336,14 +361,14 @@ export class VirtualScrollArea {
       if (ss.scrollable === virtualScrollable) {
         if (ss.virtualHeight == newVirtualHeight && ss.minHeight == newMinHeight &&
             ss.reserveViewportHeight == newReserveViewportHeight) {
-          return; // Nothing needs to be done.
+          return BulkDOMOperation.nullOperation(); // Nothing needs to be done.
         } else {
           break;  // Get to work.
         }
       }
     }
 
-    this._updateAutoscrollBottom( (newState: VirtualAreaState): void => {
+    return this._bulkUpdateAutoscrollBottom( (newState: VirtualAreaState): void => {
       newState.scrollableStates.filter( (ss) => ss.scrollable === virtualScrollable )
         .forEach( (ss) => {
           ss.virtualHeight = newVirtualHeight;
@@ -424,7 +449,7 @@ export class VirtualScrollArea {
       realScrollYOffset: -1
     };
 
-    return BulkApplyState(bogusState, this._currentState);
+    return BulkApplyState(bogusState, this._currentState, this._log);
   }
 
   dumpState(): void {
@@ -470,13 +495,13 @@ export class VirtualScrollArea {
       });
       
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      const operation = BulkApplyState(this._currentState, newState);
+      const operation = BulkApplyState(this._currentState, newState, this._log);
       // DumpState(newState);
       this._currentState = newState;
       return { phase: BulkDOMOperation.GeneratorPhase.DONE, extraOperation: operation };
     };
       
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), _log.getName());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 
   private _updateAutoscrollBottom(...mutator: Mutator[]): void {
@@ -506,13 +531,13 @@ export class VirtualScrollArea {
       }
 
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      const operation = BulkApplyState(this._currentState, newState);
+      const operation = BulkApplyState(this._currentState, newState, this._log);
       this._currentState = newState;
 
       return { phase: BulkDOMOperation.GeneratorPhase.DONE, extraOperation: operation };
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), _log.getName());
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 }
 
@@ -664,8 +689,8 @@ function TotalVirtualHeight(state: VirtualAreaState): number {
   return result;
 }
 
-function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): void {
-  CodeMirrorOperation.executeBulkDOMOperation(BulkApplyState(oldState, newState));
+function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log: Logger): void {
+  CodeMirrorOperation.executeBulkDOMOperation(BulkApplyState(oldState, newState, log));
 }
 
 /**
@@ -673,7 +698,7 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): voi
  * @param {VirtualAreaState} oldState [description]
  * @param {VirtualAreaState} newState [description]
  */
-function BulkApplyState(oldState: VirtualAreaState, newState: VirtualAreaState): BulkDOMOperation.BulkDOMOperation {
+function BulkApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log: Logger): BulkDOMOperation.BulkDOMOperation {
   const oldTotalHeight = TotalVirtualHeight(oldState);
   const newTotalHeight = TotalVirtualHeight(newState);
   
@@ -741,7 +766,7 @@ function BulkApplyState(oldState: VirtualAreaState, newState: VirtualAreaState):
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
-    operationsList.push(BulkDOMOperation.fromGenerator(generator.bind(this)(), _log.getName()));
+    operationsList.push(BulkDOMOperation.fromGenerator(generator.bind(this)(), log.getName()));
   }
 
   return BulkDOMOperation.fromArray(operationsList);

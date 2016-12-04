@@ -135,17 +135,10 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>, name
     vote: (): GeneratorPhase[] => {
       // Wait handling. If waiting then we case a WAITING vote.
       if (waitingOperation !== null) {
-        const votes = waitingOperation.vote();
-        const len = votes.length;
-        for (let i=0; i<len; i++) {
-          const vote = votes[i];
-          if (vote !== GeneratorPhase.DONE && vote !== GeneratorPhase.BEGIN_FINISH) {
-            waiting = true;
-            if (DEBUG) {
-              _log.debug("    Vote: " + name + " is WAITING");
-            }
-            return GeneratorPhaseLists.get(GeneratorPhase.WAITING);
-          }
+        const isWaitingDone = isFinishedDOM(waitingOperation);
+        if ( ! isWaitingDone) {
+          waiting = true;
+          return GeneratorPhaseLists.get(GeneratorPhase.WAITING);
         }
         waitingOperation = null;
         waiting = false;
@@ -155,6 +148,10 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>, name
         const result = runGenerator(generator);
         if (typeof result === 'object') {
           // The first call to the generator MAY NOT return a new operation, but it may wait.
+          if (result.extraOperation != null) {
+            _log.warn("First run of the generator '" + name + "'returned an extra operation. This is not supported.");
+          }
+
           waitingOperation = result.waitOperation != null ? result.waitOperation : null;
           phase = result.phase;
         } else {
@@ -193,6 +190,18 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>, name
       return null;
     }
   };
+}
+
+function isFinishedDOM(op: BulkDOMOperation): boolean {
+  const votes = op.vote();
+  const len = votes.length;
+  for (let i=0; i<len; i++) {
+    const vote = votes[i];
+    if (vote !== GeneratorPhase.DONE && vote !== GeneratorPhase.BEGIN_FINISH) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function runGenerator(generator: IterableIterator<GeneratorResult>): GeneratorResult {
@@ -284,7 +293,6 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
         if (newOperation != null) {
           topOperation = fromArray( [topOperation, newOperation] );
         }
-
         lastPhase = nextPhase;
       }
     });

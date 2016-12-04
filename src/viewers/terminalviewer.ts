@@ -384,7 +384,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
 
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       if (this._codeMirror !== null) {
         if (DEBUG_RESIZE) {
@@ -398,8 +398,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         }
       }
 
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
-      this._emitVirtualResizeEvent();
+      const resizeOperation = virtualscrollarea.bulkEmitResizeEvent(this);
+      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
       this.resizeEmulatorToParentContainer();
 
       return BulkDOMOperation.GeneratorPhase.DONE;
@@ -522,7 +522,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     doc.replaceRange("", pos, endPos);
 
     this._terminalFirstRow -= linesToDelete;
-    this._emitVirtualResizeEvent();
+    virtualscrollarea.emitResizeEvent(this);
   }
   
   deleteLines(startLineOrBookmark: number | BookmarkRef, endLineOrBookmark?: number | BookmarkRef): void {
@@ -543,7 +543,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     }
     
     this._deleteLines(startLine, endLine);
-    this._emitVirtualResizeEvent();
+    virtualscrollarea.emitResizeEvent(this);
   }
 
   getDecoratedLines(startLineOrBookmark: number | BookmarkRef): { text: string; decorations: TextDecoration[]; } {
@@ -570,7 +570,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     const endPos = { line: 0, ch: 0 };
     this._insertLinesAtPos(startPos, endPos, text, decorations);
     this._isEmpty = false;
-    this._emitVirtualResizeEvent();
+    virtualscrollarea.emitResizeEvent(this);
   }
 
   bookmarkLine(lineNumber: number): BookmarkRef {
@@ -741,7 +741,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       const height = to - from;
       if (height !== this._viewportHeight) {
         this._viewportHeight = height;
-        domutils.doLater(this._emitVirtualResizeEvent.bind(this));
+        domutils.doLater( () => {
+          virtualscrollarea.emitResizeEvent(this);
+        });
       }
     });
     
@@ -784,7 +786,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._operationRunning = false;
     
     if (this._operationEmitResize) {
-      this._emitVirtualResizeEvent();
+      virtualscrollarea.emitResizeEvent(this);
     }
     this._operationEmitResize = false;
   }
@@ -898,14 +900,6 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return result;
   }
 
-  private _emitVirtualResizeEvent(): void {
-    if (DEBUG_RESIZE) {
-      this._log.debug("_emitVirtualResizeEvent");
-    }
-
-    virtualscrollarea.emitResizeEvent(this);
-  }
-  
   private _emitKeyboardActivityEvent(): void {
     const scrollInfo = this._codeMirror.getScrollInfo();    
     const event = new CustomEvent(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
@@ -1326,7 +1320,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     if ( ! this._operationRunning) {
       this._codeMirror.operation(op);
       if (emitVirtualResizeEventFlag) {
-        this._emitVirtualResizeEvent();
+        virtualscrollarea.emitResizeEvent(this);
       }
     } else {
       op();
