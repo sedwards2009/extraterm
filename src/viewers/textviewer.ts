@@ -607,7 +607,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
 
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       if (this._codeMirror !== null) {
         if (DEBUG_RESIZE) {
@@ -621,8 +621,11 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
         }
       }
 
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
-      this._emitVirtualResizeEvent();
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH; // FIXME this line works, the second doesn't but should.
+    //  yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;  // Let CodeMirror sort itself out.
+
+      const resizeOperation = virtualscrollarea.bulkEmitResizeEvent(this);
+      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation};
       
       return BulkDOMOperation.GeneratorPhase.DONE;
     };

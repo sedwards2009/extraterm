@@ -943,9 +943,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const generator = function* bulkUpdateGenerator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
 
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
-      const updateOperation = this._virtualScrollArea.bulkUpdateScrollableSize(virtualScrollable);
-
-      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ, extraOperation: updateOperation, waitOperation: updateOperation };
+      this._virtualScrollArea.updateScrollableSize(virtualScrollable);
       this._enforceScrollbackLength(this._scrollbackSize);
 
       return BulkDOMOperation.GeneratorPhase.DONE;
@@ -974,15 +972,11 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level);
         const scrollbarOperation = scrollbar.bulkRefresh(level);
 
-        const compositeOperation = BulkDOMOperation.fromArray([scrollAreaOperation, scrollbarOperation, this._virtualScrollArea.bulkResize()]);
+        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ, extraOperation: scrollAreaOperation, waitOperation: scrollAreaOperation};
 
-        yield { phase: BulkDOMOperation.GeneratorPhase.FLUSH_DOM, extraOperation: compositeOperation, waitOperation: compositeOperation};
-
-        const updateAllOperation = this._virtualScrollArea.bulkUpdateAllScrollableSizes();
-        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: updateAllOperation, waitOperation: updateAllOperation};
-        
-        const reapplyOperation = this._virtualScrollArea.bulkReapplyState();
-        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: reapplyOperation, waitOperation: reapplyOperation};
+        this._virtualScrollArea.resize();
+        this._virtualScrollArea.updateAllScrollableSizes();
+        this._virtualScrollArea.reapplyState();
 
         yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
         this._enforceScrollbackLength(this._scrollbackSize);

@@ -298,11 +298,7 @@ export class VirtualScrollArea {
    * Signals to the VirtualScrollArea that the container has been resized.
    */
   resize(): void {
-    CodeMirrorOperation.executeBulkDOMOperation(this.bulkResize());
-  }
-  
-  bulkResize(): BulkDOMOperation.BulkDOMOperation {
-    return this._bulkUpdateAutoscrollBottom( (newState) => {
+    this._updateAutoscrollBottom( (newState) => {
       newState.containerHeight = newState.container.getBoundingClientRect().height;
     });
   }
@@ -314,19 +310,13 @@ export class VirtualScrollArea {
    * @return the actual offset used after clamping it into the valid range of offsets
    */
   scrollTo(offset: number): number {
-    const {operation,cleanOffset} = this.bulkScrollTo(offset);
-    CodeMirrorOperation.executeBulkDOMOperation(operation);
-    return cleanOffset;  
-  }
-  
-  bulkScrollTo(offset: number): { operation: BulkDOMOperation.BulkDOMOperation; cleanOffset: number; } {
     // Clamp the requested offset.
     const cleanOffset = Math.min(Math.max(0, offset),
       TotalVirtualHeight(this._currentState) - this._currentState.containerHeight);
-    const operation = this._bulkUpdate( (newState) => {
+    this._update( (newState) => {
       newState.virtualScrollYOffset = cleanOffset;
     });
-    return { operation, cleanOffset};    
+    return cleanOffset;
   }
 
   /**
@@ -341,16 +331,12 @@ export class VirtualScrollArea {
     return this.scrollTo(TotalVirtualHeight(this._currentState) - this._currentState.containerHeight);
   }
 
-  updateScrollableSize(virtualScrollable: VirtualScrollable): void {
-    CodeMirrorOperation.executeBulkDOMOperation(this.bulkUpdateScrollableSize(virtualScrollable));
-  }
-
   /**
    * Update the virtual height and minimum height for a scrollable and relayout.
    *
    * @param virtualScrollable the scrollable to update
    */
-  bulkUpdateScrollableSize(virtualScrollable: VirtualScrollable): BulkDOMOperation.BulkDOMOperation {
+  updateScrollableSize(virtualScrollable: VirtualScrollable): void {
     const newMinHeight = virtualScrollable.getMinHeight();
     const newVirtualHeight = virtualScrollable.getVirtualHeight(this.getScrollContainerHeight());
     const newReserveViewportHeight = virtualScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
@@ -361,14 +347,14 @@ export class VirtualScrollArea {
       if (ss.scrollable === virtualScrollable) {
         if (ss.virtualHeight == newVirtualHeight && ss.minHeight == newMinHeight &&
             ss.reserveViewportHeight == newReserveViewportHeight) {
-          return BulkDOMOperation.nullOperation(); // Nothing needs to be done.
+          return; // Nothing needs to be done.
         } else {
           break;  // Get to work.
         }
       }
     }
 
-    return this._bulkUpdateAutoscrollBottom( (newState: VirtualAreaState): void => {
+    this._updateAutoscrollBottom( (newState: VirtualAreaState): void => {
       newState.scrollableStates.filter( (ss) => ss.scrollable === virtualScrollable )
         .forEach( (ss) => {
           ss.virtualHeight = newVirtualHeight;
@@ -378,16 +364,11 @@ export class VirtualScrollArea {
     } );
   }
 
-
   /**
    * Update the virtual height and minimum height for all scrollables and then relayout.
    */
   updateAllScrollableSizes(): void {
-    CodeMirrorOperation.executeBulkDOMOperation(this.bulkUpdateAllScrollableSizes());
-  }
-
-  bulkUpdateAllScrollableSizes(): BulkDOMOperation.BulkDOMOperation {
-    return this._bulkUpdateAutoscrollBottom( (newState: VirtualAreaState): void => {
+    this._updateAutoscrollBottom( (newState: VirtualAreaState): void => {
       newState.scrollableStates
         .forEach( (ss) => {
           const newMinHeight = ss.scrollable.getMinHeight();
@@ -432,10 +413,6 @@ export class VirtualScrollArea {
    * Push the current state down to all of the VirtualScrollables and the scrollbar.
    */
   reapplyState(): void {
-    CodeMirrorOperation.executeBulkDOMOperation(this.bulkReapplyState());
-  }
-
-  bulkReapplyState(): BulkDOMOperation.BulkDOMOperation {
     const bogusState: VirtualAreaState = {
       scrollbar: null,
       virtualScrollYOffset: -1,
@@ -449,7 +426,7 @@ export class VirtualScrollArea {
       realScrollYOffset: -1
     };
 
-    return BulkApplyState(bogusState, this._currentState, this._log);
+    ApplyState(bogusState, this._currentState, this._log);
   }
 
   dumpState(): void {
@@ -476,68 +453,40 @@ export class VirtualScrollArea {
    */
 
   private _update(...mutator: Mutator[]): void {
-    CodeMirrorOperation.executeBulkDOMOperation(this._bulkUpdate(...mutator));
-  }
-
-  private _bulkUpdate(...mutator: Mutator[]): BulkDOMOperation.BulkDOMOperation {
-
-    const generator = function* bulkUpdateGenerator(this: VirtualScrollArea): IterableIterator<BulkDOMOperation.GeneratorResult> {
-
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
-
-      // Carefully clone our state without jumping into any references to external objects.
-      const newState = _.clone(this._currentState);
-      newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
-      
-      mutator.forEach( (m) => {
-        m(newState);
-        Compute(newState);
-      });
-      
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      const operation = BulkApplyState(this._currentState, newState, this._log);
-      // DumpState(newState);
-      this._currentState = newState;
-      return { phase: BulkDOMOperation.GeneratorPhase.DONE, extraOperation: operation };
-    };
-      
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    // Carefully clone our state without jumping into any references to external objects.
+    const newState = _.clone(this._currentState);
+    newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
+    
+    mutator.forEach( (m) => {
+      m(newState);
+      Compute(newState);
+    });
+    
+    ApplyState(this._currentState, newState, this._log);
+    // DumpState(newState);
+    this._currentState = newState;
   }
 
   private _updateAutoscrollBottom(...mutator: Mutator[]): void {
-    CodeMirrorOperation.executeBulkDOMOperation(this._bulkUpdateAutoscrollBottom(...mutator));
-  }
+    // Carefully clone our state without jumping into any references to external objects.
+    const newState = _.clone(this._currentState);
+    newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
 
-  private _bulkUpdateAutoscrollBottom(...mutator: Mutator[]): BulkDOMOperation.BulkDOMOperation {
-
-    const generator = function* bulkUpdateAutoscrollBottomGenerator(this: VirtualScrollArea): IterableIterator<BulkDOMOperation.GeneratorResult> {
-
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
-      // Carefully clone our state without jumping into any references to external objects.
-      const newState = _.clone(this._currentState);
-      newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
-
-      const virtualHeight = TotalVirtualHeight(this._currentState);
-      const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
-      
-      for (let i=0; i<mutator.length; i++) {
-        mutator[i](newState);
+    const virtualHeight = TotalVirtualHeight(this._currentState);
+    const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
+    
+    for (let i=0; i<mutator.length; i++) {
+      mutator[i](newState);
+      Compute(newState);
+    }
+    
+    if (isAtBottom) {
+        newState.virtualScrollYOffset = Math.max(0, TotalVirtualHeight(newState) - newState.containerHeight);
         Compute(newState);
-      }
-      
-      if (isAtBottom) {
-          newState.virtualScrollYOffset = Math.max(0, TotalVirtualHeight(newState) - newState.containerHeight);
-          Compute(newState);
-      }
+    }
 
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      const operation = BulkApplyState(this._currentState, newState, this._log);
-      this._currentState = newState;
-
-      return { phase: BulkDOMOperation.GeneratorPhase.DONE, extraOperation: operation };
-    };
-
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    ApplyState(this._currentState, newState, this._log);
+    this._currentState = newState;
   }
 }
 
@@ -690,15 +639,6 @@ function TotalVirtualHeight(state: VirtualAreaState): number {
 }
 
 function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log: Logger): void {
-  CodeMirrorOperation.executeBulkDOMOperation(BulkApplyState(oldState, newState, log));
-}
-
-/**
- * [ApplyState description]
- * @param {VirtualAreaState} oldState [description]
- * @param {VirtualAreaState} newState [description]
- */
-function BulkApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log: Logger): BulkDOMOperation.BulkDOMOperation {
   const oldTotalHeight = TotalVirtualHeight(oldState);
   const newTotalHeight = TotalVirtualHeight(newState);
   
@@ -750,26 +690,13 @@ function BulkApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, 
       operationsList.push(newScrollableState.scrollable.bulkSetDimensionsAndScroll(setterState));
     }
   });
+
+  CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.fromArray(operationsList));
   
   // Update the Y offset for the container.
   if (oldState.containerScrollYOffset !== newState.containerScrollYOffset) {
-    const generator = function* generator(this: VirtualScrollArea): IterableIterator<BulkDOMOperation.GeneratorPhase> {
-      // --- DOM Read ---
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
-
-
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-
-      // FIXME this should happen after all of the other stuff is updated.
       newState.container.scrollTop = newState.containerScrollYOffset;
-
-      return BulkDOMOperation.GeneratorPhase.DONE;
-    };
-
-    operationsList.push(BulkDOMOperation.fromGenerator(generator.bind(this)(), log.getName()));
   }
-
-  return BulkDOMOperation.fromArray(operationsList);
 }
 
 /**

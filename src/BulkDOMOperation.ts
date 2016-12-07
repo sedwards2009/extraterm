@@ -5,6 +5,7 @@ import Logger = require('./logger');
 
 const _log = new Logger("BulkDOMOperation");
 const DEBUG = false;
+const DEBUG_FINE = false;
 
 /**
  * Represents a complex DOM operation which can be done in smaller steps and
@@ -80,7 +81,7 @@ export enum GeneratorPhase {
   PRESTART = 0,
   BEGIN_DOM_READ = 1,
   BEGIN_DOM_WRITE = 2,
-  FLUSH_DOM = 3,
+  FLUSH_DOM = 3,  // FIXME flush Dom concept is bogus. DOM reads should always read a 'clean' state with nothing queued up, i.e. CodeMirror.
   BEGIN_FINISH = 4,
   DONE = 5,
   WAITING = 6,  // Note: The order/value of these enums are important.
@@ -158,7 +159,7 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>, name
           phase = result;
         }
       }
-      if (DEBUG) {
+      if (DEBUG && DEBUG_FINE) {
         _log.debug("Vote " + name + " is " + GeneratorPhase[phase]);
       }
       return GeneratorPhaseLists.get(phase);
@@ -178,7 +179,7 @@ export function fromGenerator(generator: IterableIterator<GeneratorResult>, name
           phase = result;
         }
       } else {
-        if (DEBUG) {
+        if (DEBUG && DEBUG_FINE) {
           if (waiting) {
             _log.debug("    Not running " + name + " in phase " + GeneratorPhase[currentPhase] + ". It is WAITING.");
           } else {
@@ -267,13 +268,13 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
     }
     contextFunc( () => {
       while ( ! done) {
-        if (DEBUG) {
+        if (DEBUG && DEBUG_FINE) {
           _log.debug("*** Voting ***");
         }
         const votes = topOperation.vote();
         const nextPhase = findTopVote(votes, lastPhase);
 
-        if (DEBUG) {
+        if (DEBUG && DEBUG_FINE) {
           _log.debug("*** Winning phase is " + GeneratorPhase[nextPhase] + " ***");
         }
 

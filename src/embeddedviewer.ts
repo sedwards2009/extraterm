@@ -258,15 +258,13 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
       scrollNameDiv.innerHTML = "" + percent + "%";
       
-      let embeddedOperation: BulkDOMOperation.BulkDOMOperation = null;
       if (setterState.heightChanged) {
-        embeddedOperation = this._virtualScrollArea.bulkResize();
+        this._virtualScrollArea.resize();
       }
 
-      yield { phase: BulkDOMOperation.GeneratorPhase.FLUSH_DOM, extraOperation: embeddedOperation, waitOperation: embeddedOperation };
-      const { operation: scrollToOperation, cleanOffset } = this._virtualScrollArea.bulkScrollTo(setterState.yOffset);
+      this._virtualScrollArea.scrollTo(setterState.yOffset);
 
-      return { phase: BulkDOMOperation.GeneratorPhase.DONE, extraOperation: scrollToOperation };
+      return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
     return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
@@ -732,8 +730,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
 
       const height = this._virtualScrollArea.getVirtualHeight();
-      const updateOperation = this._virtualScrollArea.bulkUpdateScrollableSize(scrollable);
-      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ, extraOperation: updateOperation, waitOperation: updateOperation };
+      this._virtualScrollArea.updateScrollableSize(scrollable);
 
       const newHeight = this._virtualScrollArea.getVirtualHeight();
       if (height !== newHeight) {
