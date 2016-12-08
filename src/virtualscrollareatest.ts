@@ -32,7 +32,10 @@ function SetUpScrollContainer(vsa: virtualscrollarea.VirtualScrollArea, height: 
       return { top: 0, bottom: 500, left: 0, right: 1024, height: height, width: 1024 };
     }
   };
-  vsa.setScrollContainer(scrollContainer);
+  vsa.setScrollFunction( (offset: number): void => {
+    scrollContainer.scrollTop = offset;
+  });
+  vsa.setContainerHeightFunction( () => scrollContainer.getBoundingClientRect().height);
   return scrollContainer;
 }
 

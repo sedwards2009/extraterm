@@ -318,7 +318,10 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     
-    this._virtualScrollArea.setScrollContainer(scrollerArea);
+    this._virtualScrollArea.setScrollFunction( (offset: number): void => {
+      scrollerArea.scrollTop = offset;
+    });
+    this._virtualScrollArea.setContainerHeightFunction( () => scrollerArea.getBoundingClientRect().height);
     this._virtualScrollArea.setScrollbar(scrollbar);
 
     // FIXME there might be resizes for things other than changs in window size.

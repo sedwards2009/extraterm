@@ -441,8 +441,11 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     outputDiv.addEventListener('click', this.focus.bind(this));
     outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
     
-    this._virtualScrollArea.setScrollContainer(outputDiv);
-    
+    this._virtualScrollArea.setScrollFunction( (offset: number): void => {
+      outputDiv.scrollTop = offset;
+    });
+    this._virtualScrollArea.setContainerHeightFunction( () => outputDiv.getBoundingClientRect().height);
+
     outputDiv.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     
     // const expandbutton = this._getById(ID_EXPAND_BUTTON);

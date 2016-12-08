@@ -113,8 +113,9 @@ interface VirtualAreaState {
   scrollbar: Scrollbar;
   virtualScrollYOffset: number;
   containerHeight: number;
-  container: HTMLElement;
-  
+  scrollFunction: (offset: number) => void;
+  containerHeightFunction: () => number;
+
   // Output - 
   containerScrollYOffset: number;
   scrollableStates: VirtualScrollableState[];
@@ -137,8 +138,9 @@ const emptyState: VirtualAreaState = {
   scrollbar: null,
   virtualScrollYOffset: 0,
   containerHeight: 0,
-  container: null,
-  
+  scrollFunction: null,
+  containerHeightFunction: null,
+
   containerScrollYOffset: 0,
   scrollableStates: [],
   
@@ -270,12 +272,18 @@ export class VirtualScrollArea {
     });
   }
   
-  setScrollContainer(container: HTMLElement): void {
+  setScrollFunction(scrollFunction: (offset: number) => void): void {
     this._update( (newState) => {
-      newState.container = container;
+      newState.scrollFunction = scrollFunction;
     });
   }
-  
+
+  setContainerHeightFunction(heightFunction: () => number): void {
+    this._update( (newState) => {
+      newState.containerHeightFunction = heightFunction;
+    });
+  }
+
   setScrollbar(scrollbar: Scrollbar): void {
     this._update( (newState) => {
       newState.scrollbar = scrollbar;
@@ -299,7 +307,7 @@ export class VirtualScrollArea {
    */
   resize(): void {
     this._updateAutoscrollBottom( (newState) => {
-      newState.containerHeight = newState.container.getBoundingClientRect().height;
+      newState.containerHeight = newState.containerHeightFunction();
     });
   }
 
@@ -417,8 +425,9 @@ export class VirtualScrollArea {
       scrollbar: null,
       virtualScrollYOffset: -1,
       containerHeight: -1,
-      container: null,
-      
+      scrollFunction: null,
+      containerHeightFunction: null,
+
       containerScrollYOffset: -1,
       scrollableStates: [],
       
@@ -496,7 +505,7 @@ export class VirtualScrollArea {
  * @param state the state which needs to be recomputed
  */
 function Compute(state: VirtualAreaState): boolean {
-  if (state.container === null) {
+  if (state.scrollFunction === null) {
     return false;
   }
 
@@ -695,7 +704,7 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
   
   // Update the Y offset for the container.
   if (oldState.containerScrollYOffset !== newState.containerScrollYOffset) {
-      newState.container.scrollTop = newState.containerScrollYOffset;
+      newState.scrollFunction(newState.containerScrollYOffset);
   }
 }
 
@@ -711,7 +720,7 @@ function VirtualAreaStateToString(state: VirtualAreaState): string {
     scrollbar: ${ElementToString(state.scrollbar)},
     virtualScrollYOffset: ${state.virtualScrollYOffset},
     containerHeight: ${state.containerHeight},
-    container: ${ElementToString(state.container)},
+
     // Output
     containerScrollYOffset: ${state.containerScrollYOffset},
     scrollableStates: ${state.scrollableStates.map(VirtualScrollableStateToString).join(',\n')},

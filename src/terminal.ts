@@ -501,7 +501,10 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
       const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
       
-      this._virtualScrollArea.setScrollContainer(scrollerArea);
+      this._virtualScrollArea.setScrollFunction( (offset: number): void => {
+        scrollerArea.scrollTop = offset;
+      });
+      this._virtualScrollArea.setContainerHeightFunction( () => scrollerArea.getBoundingClientRect().height);
       this._virtualScrollArea.setScrollbar(scrollbar);
       
       // Set up the emulator
