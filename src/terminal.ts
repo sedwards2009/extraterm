@@ -977,8 +977,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         this._virtualScrollArea.resize();
         this._virtualScrollArea.updateAllScrollableSizes();
         this._virtualScrollArea.reapplyState();
-
-        yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
         this._enforceScrollbackLength(this._scrollbackSize);
             
         return BulkDOMOperation.GeneratorPhase.DONE;

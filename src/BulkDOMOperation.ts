@@ -81,7 +81,6 @@ export enum GeneratorPhase {
   PRESTART = 0,
   BEGIN_DOM_READ = 1,
   BEGIN_DOM_WRITE = 2,
-  FLUSH_DOM = 3,  // FIXME flush Dom concept is bogus. DOM reads should always read a 'clean' state with nothing queued up, i.e. CodeMirror.
   BEGIN_FINISH = 4,
   DONE = 5,
   WAITING = 6,  // Note: The order/value of these enums are important.
@@ -92,7 +91,6 @@ const GeneratorPhaseLists = new Map<GeneratorPhase, GeneratorPhase[]>();
 GeneratorPhaseLists.set(GeneratorPhase.PRESTART, [GeneratorPhase.PRESTART]);
 GeneratorPhaseLists.set(GeneratorPhase.BEGIN_DOM_READ, [GeneratorPhase.BEGIN_DOM_READ]);
 GeneratorPhaseLists.set(GeneratorPhase.BEGIN_DOM_WRITE, [GeneratorPhase.BEGIN_DOM_WRITE]);
-GeneratorPhaseLists.set(GeneratorPhase.FLUSH_DOM, [GeneratorPhase.FLUSH_DOM]);
 GeneratorPhaseLists.set(GeneratorPhase.BEGIN_FINISH, [GeneratorPhase.BEGIN_FINISH]);
 GeneratorPhaseLists.set(GeneratorPhase.DONE, [GeneratorPhase.DONE]);
 GeneratorPhaseLists.set(GeneratorPhase.WAITING, [GeneratorPhase.WAITING]);
@@ -262,60 +260,80 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
   }
 
   let done = false;
+
+  if (DEBUG && DEBUG_FINE) {
+    _log.debug("*** Voting ***");
+  }
+  const votes = topOperation.vote();
+  let nextPhase = findTopVote(votes, lastPhase);
+  if (DEBUG && DEBUG_FINE) {
+    _log.debug("*** Winning phase is " + GeneratorPhase[nextPhase] + " ***");
+  }
+
   while ( ! done) {
     if (DEBUG) {
       _log.debug("Entering context function.");
     }
-    contextFunc( () => {
-      while ( ! done) {
-        if (DEBUG && DEBUG_FINE) {
-          _log.debug("*** Voting ***");
-        }
-        const votes = topOperation.vote();
-        const nextPhase = findTopVote(votes, lastPhase);
 
-        if (DEBUG && DEBUG_FINE) {
-          _log.debug("*** Winning phase is " + GeneratorPhase[nextPhase] + " ***");
-        }
-
-        if (nextPhase === GeneratorPhase.FLUSH_DOM) {
-          break;
-        }
-
-        if (nextPhase === GeneratorPhase.DONE) {
-          done = true;
-          break;
-        }
-
-        if (DEBUG) {
-          _log.debug("Running phase " + GeneratorPhase[nextPhase]);
-        }
-        const newOperation = topOperation.runPhase(nextPhase);
-        if (newOperation != null) {
-          topOperation = fromArray( [topOperation, newOperation] );
-        }
-        lastPhase = nextPhase;
+    if (nextPhase !== GeneratorPhase.BEGIN_DOM_WRITE) {
+      if (DEBUG) {
+        _log.debug("Running phase " + GeneratorPhase[nextPhase] + " ***");
       }
-    });
+      if (nextPhase === GeneratorPhase.DONE) {
+        done = true;
+        break;
+      }
+      const newOperation = topOperation.runPhase(nextPhase);
+      if (newOperation != null) {
+        topOperation = fromArray( [topOperation, newOperation] );
+      }
 
+      if (DEBUG && DEBUG_FINE) {
+        _log.debug("*** Voting ***");
+      }
+      const votes = topOperation.vote();
+      nextPhase = findTopVote(votes, lastPhase);
+
+      if (DEBUG && DEBUG_FINE) {
+        _log.debug("*** Winning phase is " + GeneratorPhase[nextPhase] + " ***");
+      }
+
+    } else {      
+
+      contextFunc( () => {
+        while ( ! done) {
+          if (nextPhase === GeneratorPhase.DONE) {
+            done = true;
+            break;
+          }
+          if (nextPhase !== GeneratorPhase.BEGIN_DOM_WRITE) {
+            break;
+          }
+
+          if (DEBUG) {
+            _log.debug("Running phase " + GeneratorPhase[nextPhase]);
+          }
+          const newOperation = topOperation.runPhase(nextPhase);
+          if (newOperation != null) {
+            topOperation = fromArray( [topOperation, newOperation] );
+          }
+          lastPhase = nextPhase;
+
+          if (DEBUG && DEBUG_FINE) {
+            _log.debug("*** Voting ***");
+          }
+          const votes = topOperation.vote();
+          nextPhase = findTopVote(votes, lastPhase);
+
+          if (DEBUG && DEBUG_FINE) {
+            _log.debug("*** Winning phase is " + GeneratorPhase[nextPhase] + " ***");
+          }
+        }
+      });
+    }
     if (DEBUG) {
       _log.debug("Exited context function.");
     }
-
-    if ( ! done) {
-      // Special handling for FLUSH_DOM.
-      const votes = topOperation.vote();
-      const nextPhase = findTopVote(votes, lastPhase);
-      if (nextPhase === GeneratorPhase.FLUSH_DOM) {
-        if (DEBUG) {
-          _log.debug("Running phase " + GeneratorPhase[nextPhase] + " ***");
-        }
-        const newOperation = topOperation.runPhase(nextPhase);
-        if (newOperation != null) {
-          topOperation = fromArray( [topOperation, newOperation] );
-        }
-      }      
-    }    
   }
   executeCallDepth--;
   if (DEBUG) {

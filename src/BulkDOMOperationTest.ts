@@ -194,89 +194,6 @@ export function testExtraOp2(test: nodeunit.Test): void {
   test.done();
 }
 
-export function testFlush(test: nodeunit.Test): void {
-  let log = "";
-
-  const generator = function* generator(): IterableIterator<BulkDOMOperation.GeneratorResult> {
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-    log += "W";
-
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
-    log += "R";
-
-    yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
-    log += "L";
-
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
-    log += "F";
-
-    return BulkDOMOperation.GeneratorPhase.DONE;
-  };
-
-  const contextFunc = function(func) {
-    log += "C";
-    func();
-  };
-
-  BulkDOMOperation.execute(BulkDOMOperation.fromGenerator(generator.bind(this)()), contextFunc);
-
-  test.equal(log, "CWRLCF");
-  test.done();
-}
-
-export function testFlush2(test: nodeunit.Test): void {
-  let log = "";
-
-  const generator = function* generator(): IterableIterator<BulkDOMOperation.GeneratorResult> {
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
-    log += "R";
-
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-    log += "W";
-
-    yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
-    log += "L";
-
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
-    log += "F";
-
-    return BulkDOMOperation.GeneratorPhase.DONE;
-  };
-
-  const generator2 = function* generator2(): IterableIterator<BulkDOMOperation.GeneratorResult> {
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-    log += "W";
-
-    yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
-    log += "L";
-
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
-    log += "R";
-
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-    log += "W";
-
-    yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
-    log += "F";
-
-    return BulkDOMOperation.GeneratorPhase.DONE;
-  };
-
-
-  const contextFunc = function(func) {
-    log += "C";
-    func();
-  };
-
-  BulkDOMOperation.execute(
-    BulkDOMOperation.fromArray( [ BulkDOMOperation.fromGenerator(generator.bind(this)()),
-                                  BulkDOMOperation.fromGenerator(generator2.bind(this)())
-                                ]), contextFunc);
-
-  test.equal(log, "CRWWLLCRWFF");
-  test.done();
-}
-
 export function testWait(test: nodeunit.Test): void {
   let log = "";
 
@@ -301,9 +218,6 @@ export function testWait(test: nodeunit.Test): void {
     yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: extraOp, waitOperation: extraOp };
     log += "W1";
 
-    yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;
-    log += "L1";
-
     yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
     log += "F";
 
@@ -317,7 +231,7 @@ export function testWait(test: nodeunit.Test): void {
 
   BulkDOMOperation.execute(BulkDOMOperation.fromGenerator(generator.bind(this)()), contextFunc);
 
-  test.equal(log, "CRW2R2W1L1CFF");
+  test.equal(log, "RCW2R2CW1FF");
   test.done();
 }
 
