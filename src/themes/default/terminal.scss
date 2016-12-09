@@ -21,11 +21,22 @@
     height: 100%;
 }
 
-#ID_SCROLL_AREA {
+#ID_SCROLL_CONTAINER {
   flex: 1;
   height: 100%;
   overflow-x: hidden;
   overflow-y: hidden;
+
+  position: relative;
+  background-color: green;
+}
+
+#ID_SCROLL_AREA {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+
   background-color: var(--terminal-background-color);
 }
 

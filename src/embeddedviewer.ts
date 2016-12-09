@@ -37,6 +37,7 @@ const ID = "EtEmbeddedViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_HEADER = "ID_HEADER";
 const ID_OUTPUT = "ID_OUTPUT";
+const ID_OUTPUT_CONTAINER = "ID_OUTPUT_CONTAINER";
 const ID_ICON = "ID_ICON";
 const ID_ICON_DIV = "ID_ICON_DIV";
 const ID_COMMAND_LINE = "ID_COMMAND_LINE";
@@ -441,10 +442,11 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     outputDiv.addEventListener('click', this.focus.bind(this));
     outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
     
+    const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
-      outputDiv.scrollTop = offset;
+      outputDiv.style.top = "-" + offset +"px";
     });
-    this._virtualScrollArea.setContainerHeightFunction( () => outputDiv.getBoundingClientRect().height);
+    this._virtualScrollArea.setContainerHeightFunction( () => outputContainerDiv.getBoundingClientRect().height);
 
     outputDiv.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     
@@ -557,7 +559,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
               <button id='${ID_CLOSE_BUTTON}' title='Close'><i class='fa fa-times-circle'></i></button>` +
             `</div>` +
           `</div>
-          <div id='${ID_OUTPUT}'><content></content></div>
+          <div id='${ID_OUTPUT_CONTAINER}'><div id='${ID_OUTPUT}'><content></content></div></div>
         </div>`;
       window.document.body.appendChild(template);
     }

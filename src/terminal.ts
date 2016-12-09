@@ -77,6 +77,7 @@ let registered = false;
 
 const ID = "EtTerminalTemplate";
 const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
+const ID_SCROLL_CONTAINER = "ID_SCROLL_CONTAINER";
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -499,12 +500,13 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         });
 
       const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
-      const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-      
+      const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+      const scrollContainter = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
+
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
-        scrollerArea.scrollTop = offset;
+        scrollArea.style.top = "-" + offset + "px";
       });
-      this._virtualScrollArea.setContainerHeightFunction( () => scrollerArea.getBoundingClientRect().height);
+      this._virtualScrollArea.setContainerHeightFunction( () => scrollContainter.getBoundingClientRect().height);
       this._virtualScrollArea.setScrollbar(scrollbar);
       
       // Set up the emulator
@@ -515,8 +517,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       
       this.updateThemeCss();
       
-      scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
-        if (ev.target === scrollerArea) {
+      scrollArea.addEventListener('mousedown', (ev: MouseEvent): void => {
+        if (ev.target === scrollArea) {
           this._terminalViewer.focus();
           ev.preventDefault();
           ev.stopPropagation();
@@ -527,20 +529,20 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         this._virtualScrollArea.scrollTo(scrollbar.position);
       });
 
-      scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
-      scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
-      scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
-      scrollerArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
-      scrollerArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
+      scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
+      scrollArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+      scrollArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
+      scrollArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
+      scrollArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
 
-      scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-      scrollerArea.addEventListener(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
+      scrollArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
+      scrollArea.addEventListener(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
         this._virtualScrollArea.scrollToBottom();
       });
-      scrollerArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
+      scrollArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
         this._handleBeforeSelectionChange.bind(this));
-      scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
-      scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
+      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
+      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
       
       // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
       const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
@@ -610,7 +612,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
       <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
-          <div id='${ID_SCROLL_AREA}'></div>
+          <div id='${ID_SCROLL_CONTAINER}'>
+            <div id='${ID_SCROLL_AREA}'></div>
+          </div>
           <cb-scrollbar id='${ID_SCROLLBAR}'></cb-scrollbar>
         </div>`;
       window.document.body.appendChild(template);

@@ -53,13 +53,21 @@ $FAIL_COLOR: #ff5454;
   z-index: 5;
 }
 
+#ID_OUTPUT_CONTAINER {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  
+  overflow: hidden;
+}
+
 /* *** Output DIV *** */
 #ID_OUTPUT {
   position: absolute;
-  bottom: 0px;
-  
   width: 100%;
-  
+
   border-left: $BLOCK_BORDER_LEFT solid rgba(0,0,0,0);
   border-right: $BLOCK_BORDER_RIGHT solid rgba(0,0,0,0);
   
@@ -71,14 +79,13 @@ $FAIL_COLOR: #ff5454;
   
   transition-property: border-left-color, border-right-color;
   transition-duration: $FADE_DURATION, $FADE_DURATION;
-  overflow: hidden;
 }
 
-#ID_OUTPUT.closed {
-  display: none;
-  height: 1px;
-  overflow: hidden;
-}
+// #ID_OUTPUT.closed {
+//   display: none;
+//   height: 1px;
+//   overflow: hidden;
+// }
 
 /* Block of controls top left/right */
 .left_block, .right_block {
@@ -181,14 +188,14 @@ $FAIL_COLOR: #ff5454;
   border-color: rgba($FAIL_COLOR, 0.5);
 }
 
-#ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT {
+#ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT_CONTAINER > #ID_OUTPUT {
   border-bottom-color: rgba(0, 0, 0, 0);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
 
 // Success mode
-#ID_CONTAINER.success > #ID_OUTPUT {
+#ID_CONTAINER.success > #ID_OUTPUT_CONTAINER > #ID_OUTPUT {
   border-left-color: $LITE_BACKGROUND_COLOR;
   border-right-color: $LITE_BACKGROUND_COLOR;
   border-bottom-color: $LITE_BACKGROUND_COLOR;
@@ -199,7 +206,7 @@ $FAIL_COLOR: #ff5454;
   background-color: $FAIL_BACKGROUND_COLOR;
 }
 
-#ID_CONTAINER.fail > #ID_OUTPUT {
+#ID_CONTAINER.fail > #ID_OUTPUT_CONTAINER > #ID_OUTPUT {
   border-left-color: $FAIL_BACKGROUND_COLOR;
   border-right-color: $FAIL_BACKGROUND_COLOR;
   border-bottom-color: $FAIL_BACKGROUND_COLOR;
