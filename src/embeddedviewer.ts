@@ -243,8 +243,8 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
 
       headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
-      const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);
-      outputDiv.style.top = "" + rect.height + "px";
+      const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
+      outputContainerDiv.style.top = "" + rect.height + "px";
       
       if (setterState.physicalTop > 0 || setterState.height < setterState.containerHeight) {
         // Bottom part is visible
