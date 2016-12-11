@@ -605,6 +605,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   createdCallback(): void {
     this._initProperties();
     this._renderEventListener = this._handleRenderEvent.bind(this);
+    this.tabIndex = 0;
   }
   
   /**
@@ -617,7 +618,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return;
     }
   
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);
     
@@ -679,6 +680,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         containerDiv.classList.add(CLASS_FOCUSED);
         containerDiv.classList.remove(CLASS_UNFOCUSED);
       }
+
+      super.focus();
     });
 
     this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {

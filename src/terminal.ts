@@ -232,6 +232,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _fontSizeAdjustment: number;
   private _armResizeCanary: boolean;  // Controls when the resize canary is allowed to chirp.
 
+  private _childFocusHandlerFunc: (ev: FocusEvent) => void;
+
   private _initProperties(): void {
     this._log = new Logger(EtTerminal.TAG_NAME);
     this._virtualScrollArea = null;
@@ -272,6 +274,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     this._lastCommandLine = null;
     this._lastCommandTerminalViewer = null;
     this._lastCommandTerminalLine = null;
+
+    this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
   }
   
   //-----------------------------------------------------------------------
@@ -393,12 +397,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
    */
   focus(): void {
     if (this._terminalViewer !== null) {
-      const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-      const top = scrollerArea.scrollTop;
-      const left = scrollerArea.scrollLeft;
       this._terminalViewer.focus();
-      scrollerArea.scrollTop = top;
-      scrollerArea.scrollLeft = left;
     }
   }
   
@@ -501,12 +500,12 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
       const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
       const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-      const scrollContainter = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
+      const scrollContainer = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
 
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
         scrollArea.style.top = "-" + offset + "px";
       });
-      this._virtualScrollArea.setContainerHeightFunction( () => scrollContainter.getBoundingClientRect().height);
+      this._virtualScrollArea.setContainerHeightFunction( () => scrollContainer.getBoundingClientRect().height);
       this._virtualScrollArea.setScrollbar(scrollbar);
       
       // Set up the emulator
@@ -532,7 +531,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
       scrollArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
       scrollArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
-      scrollArea.addEventListener('keypress', this._handleKeyPressCapture.bind(this), true);
       scrollArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
 
       scrollArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
@@ -702,7 +700,13 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       domutils.doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
     }
   }
-  
+
+  private _handleChildFocus(ev: FocusEvent): void {
+    if (this._mode === Mode.DEFAULT) {
+      this.focus();
+    }
+  }
+
   // ----------------------------------------------------------------------
   //
   // #######                                                 
@@ -739,6 +743,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _appendNewTerminalViewer(): void {
     // Create the TerminalViewer
     const terminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
+    terminalViewer.addEventListener('focus', this._childFocusHandlerFunc);
     keybindingmanager.injectKeyBindingManager(terminalViewer, this._keyBindingManager);
     config.injectConfigManager(terminalViewer, this._configManager);
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
@@ -776,6 +781,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   private _appendScrollableElement(el: ScrollableElement): void {
+    el.addEventListener('focus', this._childFocusHandlerFunc);
+
     this._emulator.moveRowsAboveCursorToScrollback();
     let currentTerminalViewer = this._terminalViewer;
     
@@ -809,6 +816,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   private _removeScrollableElement(el: ScrollableElement): void {
+    el.removeEventListener('focus', this._childFocusHandlerFunc);
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.removeChild(el);
     this._virtualScrollArea.removeScrollable(el);
@@ -1164,33 +1172,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     if (this._executeCommand(command)) {
       ev.stopPropagation();
       ev.preventDefault();
-    } else {
-      if (this._mode !== Mode.CURSOR && ev.target !== this._terminalViewer) {
-        // Route the key down to the current code mirror terminal which has the emulator attached.
-        const simulatedKeydown = domutils.newKeyboardEvent('keydown', ev);
-        ev.stopPropagation();
-        if ( ! this._terminalViewer.dispatchEvent(simulatedKeydown)) {
-          // Cancelled.
-          ev.preventDefault();
-        }
-      }
-    }
-  }
-
-  private _handleKeyPressCapture(ev: KeyboardEvent): void {
-    if (this._terminalViewer === null) {
-      return;
-    }
-
-    if (this._mode !== Mode.CURSOR && ev.target !== this._terminalViewer) {
-      // Route the key down to the current code mirror terminal which has the emulator attached.
-      const simulatedKeypress = domutils.newKeyboardEvent('keypress', ev);
-      ev.preventDefault();
-      ev.stopPropagation();
-      if ( ! this._terminalViewer.dispatchEvent(simulatedKeypress)) {
-        // Cancelled.
-        ev.preventDefault();
-      }
     }
   }
   
@@ -1575,6 +1556,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   public deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
+    viewer.removeEventListener('focus', this._childFocusHandlerFunc);
     viewer.remove();
     this._virtualScrollArea.removeScrollable(viewer);
   }
