@@ -8,7 +8,7 @@ import fs = require('fs');
 import path = require('path');
 
 import sourceDir = require('./sourceDir');
-const MODULE_VERSION = "49";
+const MODULE_VERSION = "50";
 if (process.versions.modules === MODULE_VERSION) {
   // Patch in our special node-sass binary for V8 module verion 49 as used by Electron.
   process.env.SASS_BINARY_PATH = path.join(sourceDir.path,
