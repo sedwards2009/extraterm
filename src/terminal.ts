@@ -485,8 +485,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     if ( ! this._elementAttached) {
       this._elementAttached = true;
 
-      const shadow = domutils.createShadowRoot(this);
-
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const clone = this._createClone();
       shadow.appendChild(clone);
       
@@ -494,14 +493,15 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
       this.addEventListener('focus', this._handleFocus.bind(this));
       this.addEventListener('blur', this._handleBlur.bind(this));
-      this.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-          this._handleCommandPaletteRequest(ev);
-        });
 
       const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
       const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
       const scrollContainer = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
       domutils.preventScroll(scrollContainer);
+
+      scrollContainer.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+          this._handleCommandPaletteRequest(ev);
+        });
 
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
         scrollArea.style.top = "-" + offset + "px";

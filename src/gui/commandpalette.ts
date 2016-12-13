@@ -129,7 +129,7 @@ class CbCommandPalette extends ThemeableElementBase {
    */
   createdCallback() {
     this._initProperties(); // Initialise our properties. The constructor was not called.
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this.createClone();
     shadow.appendChild(clone);
     this.updateThemeCss();

@@ -88,7 +88,7 @@ class CbScrollbar extends ThemeableElementBase {
 
     if (domutils.getShadowRoot(this) === null) {
       // Set up the structure in the shadow DOM.
-      const shadow = domutils.createShadowRoot(this);
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const clone = this._createClone();
       shadow.appendChild(clone);
       this.updateThemeCss();

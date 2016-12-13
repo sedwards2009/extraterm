@@ -253,7 +253,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
       return;
     }
     
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);
     this.updateThemeCss();
