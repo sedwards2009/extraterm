@@ -51,6 +51,10 @@ interface Element {
     shadowRoot: ShadowRoot | null;
 }
 
+interface Event {
+  composedPath(): Node[];
+}
+
 //----
 
 interface Element {
