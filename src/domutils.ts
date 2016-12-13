@@ -365,7 +365,7 @@ export function CreateDataUrl(buffer: Buffer, mimeType: string): string {
 }
 
 export function getEventDeepPath(ev: Event): Node[] {
-  return ev.deepPath !== undefined ? ev.deepPath : ev.path;
+  return ev.composedPath();
 }
 
 /**
@@ -374,23 +374,26 @@ export function getEventDeepPath(ev: Event): Node[] {
  * @param el the element to focus
  */
 export function focusWithoutScroll(el: HTMLElement): void {
-  let preScrollTops: {element: Element, top: number}[] = null;
-  
-  // Capture and record the scrollTop values of the elements on the event path.
-  const pathRecordHandler = (ev: Event) => {
-    const path = getEventDeepPath(ev);
-    preScrollTops = path.filter( (node) => node.nodeType === Node.ELEMENT_NODE ).map( (node) => {
-      const element = <Element> node;
-      return { element: element, top: element.scrollTop };
-    });
-  };
-  el.addEventListener('focus', pathRecordHandler, true);
-  
+  const preScrollTops: {element: Element, top: number}[] = [];
+
+  let p = el;
+  do {
+    preScrollTops.push( { element: p, top: p.scrollTop } );
+
+
+    let parent = p.parentElement;
+    if (parent == null) {
+      const nodeParent = p.parentNode;
+      if (nodeParent != null && nodeParent.nodeName === "#document-fragment") {
+        parent = (<ShadowRoot> nodeParent).host;
+      }
+    }
+    p = parent;
+  } while (p != null);
+
   el.focus();
-  
-  el.removeEventListener('focus', pathRecordHandler, true);
-  
-  if (preScrollTops !== null) {
+
+  if (preScrollTops.length !== 0) {
     // Restore the previous scroll top values.
     preScrollTops.forEach( (pair) => {
       if (pair.element.scrollTop !== pair.top) {
@@ -399,6 +402,21 @@ export function focusWithoutScroll(el: HTMLElement): void {
     });
   }
 }
+
+/**
+ * Prevent an Element from scrolling.
+ * 
+ * @param el the element to prevent all scrolling on.
+ */
+export function preventScroll(el: HTMLElement): void {
+  el.addEventListener('scroll', (ev) => {
+    el.scrollTop = 0;
+  }, true);
+  el.addEventListener('scroll', (ev) => {
+    el.scrollTop = 0;
+  });
+}
+
 
 /**
  * Convert a length with 'px' suffix to a plain integer.

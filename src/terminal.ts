@@ -397,7 +397,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
    */
   focus(): void {
     if (this._terminalViewer !== null) {
-      this._terminalViewer.focus();
+      domutils.focusWithoutScroll(this._terminalViewer);
     }
   }
   
@@ -501,13 +501,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
       const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
       const scrollContainer = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
+      domutils.preventScroll(scrollContainer);
 
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
         scrollArea.style.top = "-" + offset + "px";
       });
       this._virtualScrollArea.setContainerHeightFunction( () => scrollContainer.getBoundingClientRect().height);
       this._virtualScrollArea.setScrollbar(scrollbar);
-      
+
       // Set up the emulator
       this._cookie = crypto.randomBytes(10).toString('hex');
       process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
@@ -677,6 +678,12 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     });
   }
   
+  private _refocus(): void {
+    if (this.hasFocus() && this._mode === Mode.DEFAULT && this._terminalViewer != null && ! this._terminalViewer.hasFocus()) {
+      domutils.focusWithoutScroll(this._terminalViewer);
+    }
+  }
+
   private _handleBlur(event: FocusEvent): void {
     // Forcefully set the visual state of each thing in the terminal to appear unfocused.
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
@@ -812,6 +819,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       this._virtualScrollArea.appendScrollable(currentTerminalViewer);
     } else {
       this._appendNewTerminalViewer();
+      this._refocus();
     }
   }
   
@@ -1730,7 +1738,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       this._virtualScrollArea.appendScrollable(newViewerElement);
         
       this._appendNewTerminalViewer();
-      
+      this._refocus();
       const activeTerminalViewer = this._terminalViewer;
       this._virtualScrollArea.updateScrollableSize(activeTerminalViewer);
     }

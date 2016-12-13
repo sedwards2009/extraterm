@@ -126,12 +126,15 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _mode: ViewerElementTypes.Mode;
 
   private _virtualScrollArea: virtualscrollarea.VirtualScrollArea;
-  
+
+  private _childFocusHandlerFunc: (ev: FocusEvent) => void;
+
   private _initProperties(): void {
     this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
     this._visualState = ViewerElementTypes.VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
+    this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
   }
   
   //-----------------------------------------------------------------------
@@ -147,6 +150,11 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   //-----------------------------------------------------------------------
   
   set viewerElement(element: ViewerElement) {
+    const oldViewer = this._getViewerElement()
+    if (oldViewer != null) {
+      oldViewer.removeEventListener('focus', this._childFocusHandlerFunc);
+    }
+
     if (this.childNodes.length !== 0) {
       this.innerHTML = "";
     }
@@ -154,6 +162,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     if (element !== null) {
       element.setVisualState(this._visualState);
       element.setMode(this._mode);
+      element.addEventListener('focus', this._childFocusHandlerFunc);
       this.appendChild(element);
       this._virtualScrollArea.appendScrollable(element);
     }
@@ -406,6 +415,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
    */
   createdCallback(): void {
     this._initProperties();
+    this.tabIndex = 0;
   }
   
   /**
@@ -418,7 +428,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       return;
     }
 
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
 
     const clone = this._createClone();
     shadow.appendChild(clone);
@@ -443,6 +453,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
     
     const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
+    domutils.preventScroll(outputContainerDiv);
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
       outputDiv.style.top = "-" + offset +"px";
     });
@@ -559,7 +570,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
               <button id='${ID_CLOSE_BUTTON}' title='Close'><i class='fa fa-times-circle'></i></button>` +
             `</div>` +
           `</div>
-          <div id='${ID_OUTPUT_CONTAINER}'><div id='${ID_OUTPUT}'><content></content></div></div>
+          <div id='${ID_OUTPUT_CONTAINER}'><div id='${ID_OUTPUT}'><slot></slot></div></div>
         </div>`;
       window.document.body.appendChild(template);
     }
@@ -664,6 +675,10 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     } else {
       return null;
     }
+  }
+
+  private _handleChildFocus(ev: FocusEvent): void {
+    super.focus();
   }
 
   private _handleKeyDown(ev: KeyboardEvent): void {
