@@ -75,7 +75,7 @@ class CbStackedWidget extends ThemeableElementBase {
       return;
     }
 
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this.createClone();
     shadow.appendChild(clone);
     this.updateThemeCss();
@@ -167,13 +167,13 @@ class CbStackedWidget extends ThemeableElementBase {
     
     for (let i=0; i<this.children.length; i++) {
       const kid = this.children.item(i);
-      kid.setAttribute(ATTR_INDEX, "" + i);
+      kid.slot = "" + i;
     }
     
     while (container.childElementCount < this.childElementCount) {
       const holderDiv = this.ownerDocument.createElement('div');
-      const contentElement = this.ownerDocument.createElement('content');
-      contentElement.setAttribute('select', '[' + ATTR_INDEX + '="' + container.childElementCount + '"]');
+      const contentElement = this.ownerDocument.createElement('slot');
+      contentElement.setAttribute('name', "" + container.childElementCount);
       holderDiv.appendChild(contentElement);
       container.appendChild(holderDiv);
     }

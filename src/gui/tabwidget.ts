@@ -92,7 +92,7 @@ class CbTabWidget extends ThemeableElementBase {
    */
   createdCallback() {
     this._initProperties();
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);
     this.updateThemeCss();
@@ -190,16 +190,16 @@ class CbTabWidget extends ThemeableElementBase {
       const kid = <HTMLElement>this.children.item(i);
       if (kid.nodeName === CbTab.TAG_NAME) {
         tabCount++;
-        kid.setAttribute(ATTR_TAG, 'tab_' + (tabCount-1));
+        kid.slot = 'tab_' + (tabCount-1);
         stateInTab = true;
         
       } else if (kid.nodeName === "DIV" && stateInTab) {
-        kid.setAttribute(ATTR_TAG, 'content_' + (tabCount-1));
+        kid.slot = 'content_' + (tabCount-1);
         stateInTab = false;
         restAttr = ATTR_TAG_REST_RIGHT;
 
       } else if (kid.nodeName=== "DIV") {
-        kid.setAttribute(ATTR_TAG, restAttr);
+        kid.slot = restAttr;
         restAttr = ATTR_TAG_REST_RIGHT;
       }
     }
@@ -209,8 +209,8 @@ class CbTabWidget extends ThemeableElementBase {
       const restAllLi = <HTMLLIElement> this.ownerDocument.createElement('LI');
       restAllLi.classList.add(CLASS_REMAINDER_LEFT);
 
-      const catchAll = this.ownerDocument.createElement('content');
-      catchAll.setAttribute('select', `[${ATTR_TAG}="${ATTR_TAG_REST_LEFT}"]`);
+      const catchAll = this.ownerDocument.createElement('slot');
+      catchAll.setAttribute('name', ATTR_TAG_REST_LEFT);
       restAllLi.appendChild(catchAll);
       tabbar.insertAdjacentElement('afterbegin', restAllLi);
     }
@@ -222,8 +222,8 @@ class CbTabWidget extends ThemeableElementBase {
       catchAllLi = <HTMLLIElement> this.ownerDocument.createElement('LI');
       catchAllLi.classList.add(CLASS_REMAINDER_RIGHT);
             
-      const catchAll = this.ownerDocument.createElement('content');
-      catchAll.setAttribute('select', `[${ATTR_TAG}="${ATTR_TAG_REST_RIGHT}"]`);
+      const catchAll = this.ownerDocument.createElement('slot');
+      catchAll.setAttribute('name', ATTR_TAG_REST_RIGHT);
       catchAllLi.appendChild(catchAll);
       tabbar.appendChild(catchAllLi);
     } else {
@@ -238,8 +238,8 @@ class CbTabWidget extends ThemeableElementBase {
       const tabLi = this.ownerDocument.createElement('li');
       tabLi.classList.add(CLASS_TAB);
       
-      let contentElement = this.ownerDocument.createElement('content');
-      contentElement.setAttribute('select', '[' + ATTR_TAG + '="tab_' + tabElementCount + '"]');
+      let contentElement = this.ownerDocument.createElement('slot');
+      contentElement.setAttribute('name', 'tab_' + tabElementCount);
       
       tabLi.appendChild(contentElement);
       tabLi.addEventListener('click', this._tabClickHandler.bind(this, tabLi, tabElementCount));
@@ -247,8 +247,8 @@ class CbTabWidget extends ThemeableElementBase {
       // Pages for the contents stack.
       const wrapperDiv = this.ownerDocument.createElement('div');
       wrapperDiv.classList.add('wrapper');
-      contentElement = this.ownerDocument.createElement('content');
-      contentElement.setAttribute('select', '[' + ATTR_TAG + '="content_' + tabElementCount + '"]');
+      contentElement = this.ownerDocument.createElement('slot');
+      contentElement.setAttribute('name', 'content_' + tabElementCount);
       
       tabbar.insertBefore(tabLi, catchAllLi);
       

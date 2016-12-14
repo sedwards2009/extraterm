@@ -210,7 +210,7 @@ class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigMana
   attachedCallback(): void {
     super.attachedCallback();
     
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const themeStyle = document.createElement('style');
     themeStyle.id = ThemeableElementBase.ID_THEME;
     shadow.appendChild(themeStyle);

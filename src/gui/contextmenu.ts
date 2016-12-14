@@ -52,7 +52,7 @@ class CbContextMenu extends ThemeableElementBase {
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id='${ID_COVER}' class='cover_closed'></div>
-        <div id='${ID_CONTAINER}' class='container_closed' tabindex='0'><content></content></div>`;
+        <div id='${ID_CONTAINER}' class='container_closed' tabindex='0'><slot></slot></div>`;
       window.document.body.appendChild(template);
     }
 
@@ -86,7 +86,7 @@ class CbContextMenu extends ThemeableElementBase {
    * Custom Element 'created' life cycle hook.
    */
   createdCallback() {
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);
     this.updateThemeCss();

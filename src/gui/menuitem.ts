@@ -72,7 +72,7 @@ class CbMenuItem extends ThemeableElementBase {
       return;
     }
     
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this._createClone();
     shadow.appendChild(clone);
     this.updateThemeCss();
@@ -116,7 +116,7 @@ class CbMenuItem extends ThemeableElementBase {
       <div id='${ID_CONTAINER}'>
         <div id='${CbMenuItem.ID_ICON1}'><i class='fa fa-fw'></i></div>
         <div id='${ID_ICON2}'></div>
-      <div id='${ID_LABEL}'><content></content></div>
+      <div id='${ID_LABEL}'><slot></slot></div>
       </div>`;
   }
 

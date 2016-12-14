@@ -296,7 +296,7 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     }
     this._elementAttached = true;
     
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
 
     const clone = this._createClone();
     shadow.appendChild(clone);

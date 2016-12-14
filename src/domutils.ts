@@ -182,10 +182,6 @@ function nextDocumentOrderNodeUp(currentNode: Node): Node {
   }
   return nextDocumentOrderNodeUp(currentNode.parentNode);
 }
-
-export function createShadowRoot(self: HTMLElement): ShadowRoot {
-    return self.webkitCreateShadowRoot ? self.webkitCreateShadowRoot() : self.createShadowRoot();
-}
   
 export function getShadowRoot(self: HTMLElement): ShadowRoot {
     return self.webkitShadowRoot ? self.webkitShadowRoot : self.shadowRoot;

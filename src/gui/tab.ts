@@ -50,7 +50,7 @@ class CbTab extends HTMLElement {
    * Custom Element 'created' life cycle hook.
    */
   createdCallback() {
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);
   }
@@ -60,7 +60,7 @@ class CbTab extends HTMLElement {
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<div><content></content></div>`;
+      template.innerHTML = `<div><slot></slot></div>`;
       window.document.body.appendChild(template);
     }
     

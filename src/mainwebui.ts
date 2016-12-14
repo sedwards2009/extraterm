@@ -384,8 +384,8 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   
   attachedCallback(): void {
     super.attachedCallback();
-    
-    const shadow = domutils.createShadowRoot(this);
+
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this._createClone();
     shadow.appendChild(clone);
     this.updateThemeCss();
@@ -468,7 +468,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
               `<button id="${ID_OSX_MAXIMIZE_BUTTON}" tabindex="-1"></button>` +
             `</div>` +
             `<div id="${ID_REST_DIV_PRIMARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
-            `<content></content></div>` +
+            `<slot></slot></div>` +
           `</cb-tabwidget>` +
         `</div>` +
         `<div id="${ID_GAP}"></div>` +

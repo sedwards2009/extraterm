@@ -297,7 +297,7 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
   attachedCallback(): void {
     super.attachedCallback();
 
-    const shadow = domutils.createShadowRoot(this);
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const themeStyle = document.createElement('style');
     themeStyle.id = ThemeableElementBase.ID_THEME;
 

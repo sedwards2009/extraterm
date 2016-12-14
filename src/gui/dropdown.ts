@@ -9,9 +9,10 @@ import util = require('./util');
 
 contextmenu.init();
 
-var ID = "CbDropDownTemplate";
+const ID = "CbDropDownTemplate";
+const SLOT_CBCONTEXTMENU = "cb-contextmenu";
 
-var registered = false;
+let registered = false;
 
 /**
  * A Drop Down menu.
@@ -46,7 +47,7 @@ class CbDropDown extends HTMLElement {
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<div><content select='cb-contextmenu'></content></div><div><content></content></div>`;
+      template.innerHTML = `<div><slot name='${SLOT_CBCONTEXTMENU}'></slot></div><div><slot></slot></div>`;
       window.document.body.appendChild(template);
     }
 
@@ -69,36 +70,40 @@ class CbDropDown extends HTMLElement {
    * Custom Element 'created' life cycle hook.
    */
   createdCallback() {
-    var i: number;
-    var len: number;
-    var kid: Node;
-    var shadow: ShadowRoot;
-    var cm: contextmenu;
-    var clickHandler: (ev: MouseEvent) => void;
-    var clone: Node;
-
-    shadow = domutils.createShadowRoot(this);
-    clone = this.createClone();
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+    const clone = this.createClone();
     shadow.appendChild(clone);
 
-    clickHandler = (ev: MouseEvent) => {
-      var cm = <contextmenu>this.querySelector('cb-contextmenu');
+    const clickHandler = (ev: MouseEvent) => {
+      const cm = <contextmenu>this.querySelector('cb-contextmenu');
       cm.openAround(this);        
     };
 
-    len = this.childNodes.length;
-    for (i=0; i<len; i++) {
-      kid = this.childNodes[i];
+    this._assignSlotContent();
+
+    const len = this.childNodes.length;
+    for (let i=0; i<len; i++) {
+      const kid = this.childNodes[i];
       if (kid.nodeName.slice(0,1) !== '#' && kid.nodeName !== 'CB-CONTEXTMENU') {
         kid.addEventListener('click', clickHandler);
       }
     }
 
-    cm = <contextmenu>this.querySelector('cb-contextmenu');  
+    const cm = <contextmenu>this.querySelector('cb-contextmenu');  
     cm.addEventListener('selected', (ev: MouseEvent) => {
         var event = new CustomEvent('selected', { detail: ev.detail });
         this.dispatchEvent(event);
     });
+  }
+
+  private _assignSlotContent(): void {
+    const len = this.childNodes.length;
+    for (let i=0; i<len; i++) {
+      const kid = this.childNodes[i];
+      if (kid.nodeName === 'CB-CONTEXTMENU') {
+        (<HTMLElement> kid).slot = SLOT_CBCONTEXTMENU;
+      }
+    }
   }
 }
 
