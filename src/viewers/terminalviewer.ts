@@ -618,7 +618,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return;
     }
   
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this.createClone();
     shadow.appendChild(clone);
     

@@ -449,7 +449,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       return;
     }
     
-    const shadow = this.attachShadow( { mode: 'open', delegatesFocus: false } );
+    const shadow = this.attachShadow( { mode: 'open', delegatesFocus: true } );
     const clone = this.createClone();
     shadow.appendChild(clone);
     

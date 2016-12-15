@@ -913,16 +913,13 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
   private _enterCursorMode(): void {
     this._setModeAndVisualState(ViewerElementTypes.Mode.CURSOR, VisualState.AUTO);
-
     this._mode = Mode.CURSOR;
-    if (domutils.getShadowRoot(this).activeElement !== this._terminalViewer) {
-      this._terminalViewer.focus();
-    }
   }
   
   private _exitCursorMode(): void {
     this._setModeAndVisualState(ViewerElementTypes.Mode.DEFAULT, VisualState.FOCUSED);
     this._mode = Mode.DEFAULT;
+    this._refocus();
   }
 
   private _setModeAndVisualState(mode: ViewerElementTypes.Mode, visualState: VisualState): void {
@@ -1044,7 +1041,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         const node = kids[i];
         if (ViewerElement.isViewerElement(node)) {
           if (node.setCursorPositionBottom(detail.ch)) {
-            node.focus();
+            domutils.focusWithoutScroll(node);
             break;
           }
         }
@@ -1056,7 +1053,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         const node = kids[i];
         if (ViewerElement.isViewerElement(node)) {
           if (node.setCursorPositionTop(detail.ch)) {
-            node.focus();
+            domutils.focusWithoutScroll(node);
             break;
           }
         }
