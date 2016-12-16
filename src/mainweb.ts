@@ -55,6 +55,7 @@ const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
 const MENU_ITEM_ABOUT = 'about';
 const MENU_ITEM_RELOAD_CSS = 'reload_css';
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
+const ID_MENU_BUTTON = "ID_MENU_BUTTON";
 
 const _log = new Logger("mainweb");
 
@@ -144,7 +145,7 @@ export function startUp(): void {
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
       <div class="space"></div>
       <cb-dropdown>
-          <button class="btn btn-quiet"><i class="fa fa-bars"></i></button>
+          <button id="${ID_MENU_BUTTON}" class="btn btn-quiet"><i class="fa fa-bars"></i></button>
           <cb-contextmenu id="main_menu">
               <cb-checkboxmenuitem icon="columns" id="${MENU_ITEM_SPLIT}" name="split">Split</cb-checkboxmenuitem>
               <cb-menuitem icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</cb-menuitem>

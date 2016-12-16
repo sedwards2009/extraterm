@@ -11,6 +11,10 @@
   position: relative;
 }
 
+:host(:focus) {
+  outline: 0px solid transparent;
+}
+
 #ID_TOP_LAYOUT {
   position: absolute;
   top: 0px;
@@ -132,4 +136,12 @@ DIV.tab_header_close > BUTTON {
 DIV.tab_header_close:hover > BUTTON {
   background-color: $btn-danger-bg;
   color: $btn-danger-color;
+}
+
+DIV.tab_header_close > BUTTON:focus {
+  outline: 0px solid transparent;
+}
+
+#ID_NEW_TAB_BUTTON_PRIMARY:focus, #ID_NEW_TAB_BUTTON_SECONDARY:focus {
+  outline: 0px solid transparent;
 }

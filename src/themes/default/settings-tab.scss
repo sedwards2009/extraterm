@@ -7,6 +7,10 @@
 @import "extraterm-scrollbars";
 @import "bootstrap/_variables";
 
+:host(:focus) {
+  outline: 0px solid transparent;
+}
+
 #ID_SETTINGS {
   height: 100%;
   overflow: auto;

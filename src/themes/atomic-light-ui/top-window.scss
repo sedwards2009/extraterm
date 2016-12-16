@@ -47,3 +47,11 @@ EXTRATERM-MAINWEBUI {
   background-color: red;
   border: 1px dashed red;
 }
+
+#ID_MENU_BUTTON:focus {
+  outline: 0px solid transparent;
+}
+
+#ID_NEW_TAB_BUTTON_PRIMARY:focus, #ID_NEW_TAB_BUTTON_SECONDARY:focus {
+  outline: 0px solid transparent;
+}

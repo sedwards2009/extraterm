@@ -53,6 +53,10 @@ $resize-bar-height: 4px;
     &:hover {
       background-color: $input-group-addon-bg;
     }
+
+    &:focus {
+      outline: 0px solid transparent;
+    }
   }
 
   #ID_MINIMIZE_BUTTON:before {
@@ -110,6 +114,10 @@ $resize-bar-height: 4px;
         top: -2px;
         font-size: 10px;
         font-family: extraicons;
+      }
+
+      &:focus {
+        outline: 0px solid transparent;
       }
     }
 

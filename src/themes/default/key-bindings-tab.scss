@@ -8,6 +8,10 @@
 @import "bootstrap/_variables";
 @import "extraterm-keycaps";
 
+:host(:focus) {
+  outline: 0px solid transparent;
+}
+
 #ID_KEY_BINDINGS {
   height: 100%;
   overflow: auto;
