@@ -413,7 +413,11 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       this._log.debug("resizeEmulatorToParentContainer: ", this._emulator === null ? "(no emulator)" : "(have emulator)");
     }
     if (this._emulator !== null) {
-      this.resizeEmulatorToBox(this.parentElement.clientWidth, this.parentElement.clientHeight);
+      let viewportElement = this.parentElement;
+      while (window.getComputedStyle(viewportElement).position === 'absolute') {
+        viewportElement = viewportElement.parentElement;
+      }
+      this.resizeEmulatorToBox(viewportElement.clientWidth, viewportElement.clientHeight);
     }
   }
 
