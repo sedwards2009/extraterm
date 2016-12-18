@@ -16,6 +16,8 @@ import domutils = require('./domutils');
 import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
 import ResizeCanary = require('./resizecanary');
+import ThemeableElementBase = require('./themeableelementbase');
+import ThemeTypes = require('./theme');
 import keybindingmanager = require('./keybindingmanager');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
@@ -43,11 +45,9 @@ let registered = false;
 
 const ID = "EtTabViewerTemplate";
 
-const ID_SCROLL_AREA = "scroll_area";
-const ID_SCROLLBAR = "scrollbar";
-const ID_CONTAINER = "terminal_container";
-const ID_MAIN_STYLE = "main_style";
-const ID_THEME_STYLE = "theme_style";
+const ID_SCROLL_AREA = "ID_SCROLL_AREA";
+const ID_SCROLLBAR = "ID_SCROLLBAR";
+const ID_CONTAINER = "ID_CONTAINER";
 const ID_CSS_VARS = "ID_CSS_VARS";
 const KEYBINDINGS_VIEWER_TAB = "viewer-tab";
 
@@ -268,6 +268,10 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     this._adjustFontSize(delta)
   }
 
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.VIEWER_TAB];
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -302,16 +306,6 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     shadow.appendChild(clone);
     this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
 
-    // util.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
-    //   this._mainStyleLoaded = true;
-    //   this._handleStyleLoad();
-    // });
-    // 
-    // util.getShadowId(this, ID_THEME_STYLE).addEventListener('load', () => {
-    //   this._themeStyleLoaded = true;
-    //   this._handleStyleLoad();
-    //   });
-
     this.addEventListener('focus', this._handleFocus.bind(this));
     this.addEventListener('blur', this._handleBlur.bind(this));
 
@@ -323,15 +317,10 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     });
     this._virtualScrollArea.setContainerHeightFunction( () => scrollerArea.getBoundingClientRect().height);
     this._virtualScrollArea.setScrollbar(scrollbar);
-
-    // FIXME there might be resizes for things other than changs in window size.
-    // this._getWindow().addEventListener('resize', this._scheduleResize.bind(this));
     
     scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
     scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
       if (ev.target === scrollerArea) {
-        // FIXME
-        // this._codeMirrorTerminal.focus();
         ev.preventDefault();
         ev.stopPropagation();
       }
@@ -361,6 +350,8 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
         this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
       }
     });
+
+    this.updateThemeCss();
 
     domutils.doLater(this._processResize.bind(this));
   }
@@ -392,35 +383,8 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
       template = window.document.createElement('template');
       template.id = ID;
 
-      const background_color = "#000000";
-
-      template.innerHTML = `<style id="${ID_MAIN_STYLE}">
-        :host {
-          display: block;
-        }
-        
-        #${ID_CONTAINER} {
-            display: flex;
-            flex-direction: row;
-            width: 100%;
-            height: 100%;
-        }
-
-        #${ID_SCROLLBAR} {
-            flex: 0;
-            min-width: 15px;
-            height: 100%;
-        }
-        
-        #${ID_SCROLL_AREA} {
-          flex: 1;
-          height: 100%;
-          overflow-x: hidden;
-          overflow-y: hidden;
-          background-color: ${background_color};
-        }
-        </style>
-        <style id="${ID_THEME_STYLE}"></style>
+      template.innerHTML = `
+        <style id="${ThemeableElementBase.ID_THEME}"></style>
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
@@ -492,19 +456,6 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     scrollerArea.appendChild(el);
     this._virtualScrollArea.appendScrollable(el);
   }
-  
-  // private _removeScrollableElement(el: ScrollableElement): void {
-  //   const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-  //   scrollerArea.removeChild(el);
-  //   this._virtualScrollArea.removeScrollable(el);
-  // }
-  // 
-  // private _replaceScrollableElement(oldEl: ScrollableElement, newEl: ScrollableElement): void {
-  //   const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-  //   scrollerArea.insertBefore(newEl, oldEl);
-  //   scrollerArea.removeChild(oldEl);
-  //   this._virtualScrollArea.replaceScrollable(oldEl, newEl);
-  // }
 
   private _handleMouseDown(ev: MouseEvent): void {
     if (ev.buttons === 4) { // Middle mouse button
@@ -605,23 +556,6 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
       ev.preventDefault();
     }
   }
-
-  // private _handleKeyPressCapture(ev: KeyboardEvent): void {
-  //   if (this._terminalViewer === null) {
-  //     return;
-  //   }
-  // 
-  //   if (this._mode !== Mode.SELECTION && ev.target !== this._terminalViewer) {
-  //     // Route the key down to the current code mirror terminal which has the emulator attached.
-  //     const simulatedKeypress = domutils.newKeyboardEvent('keypress', ev);
-  //     ev.preventDefault();
-  //     ev.stopPropagation();
-  //     if ( ! this._terminalViewer.dispatchEvent(simulatedKeypress)) {
-  //       // Cancelled.
-  //       ev.preventDefault();
-  //     }
-  //   }
-  // }
 
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
@@ -726,25 +660,6 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     webipc.clipboardReadRequest();
   }
   
-  // private handleRequestFrame(frameId: string): void {
-  //   const sourceFrame: EtEmbeddedViewer = this._findFrame(frameId);
-  //   let data = sourceFrame !== null ? sourceFrame.text : "";
-  //   data = data === undefined ? "" : data;
-  //   const lines = data.split("\n");
-  //   let encodedData: string = "";
-  //   lines.forEach( (line: string) => {
-  //     encodedData = window.btoa(line +"\n");
-  //     this._sendDataToPtyEvent(encodedData+"\n");
-  //   });
-  //     
-  //   this._sendDataToPtyEvent("\x04");
-  //   
-  //   if (encodedData.length !== 0) {
-  //     this._sendDataToPtyEvent("\x04");
-  //   }
-  // }
-
-
   /**
    * Find a command frame by ID.
    */
