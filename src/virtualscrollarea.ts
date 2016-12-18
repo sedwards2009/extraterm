@@ -115,6 +115,7 @@ interface VirtualAreaState {
   containerHeight: number;
   scrollFunction: (offset: number) => void;
   containerHeightFunction: () => number;
+  bulkSetTopFunction: (scrollable: VirtualScrollable, top: number) => BulkDOMOperation.BulkDOMOperation;
 
   // Output - 
   containerScrollYOffset: number;
@@ -140,6 +141,7 @@ const emptyState: VirtualAreaState = {
   containerHeight: 0,
   scrollFunction: null,
   containerHeightFunction: null,
+  bulkSetTopFunction: null,
 
   containerScrollYOffset: 0,
   scrollableStates: [],
@@ -290,6 +292,18 @@ export class VirtualScrollArea {
     });
   }
 
+  /**
+   * Set a function to be used for positioning the top of a scrollable.
+   * 
+   * @param func function which should return a BulkDOMOperation which
+   *              positions the given scrollable's top at the new top.
+   */
+  setBulkSetTopFunction(func: (scrollable: VirtualScrollable, top: number) => BulkDOMOperation.BulkDOMOperation): void {
+    this._update( (newState) => {
+      newState.bulkSetTopFunction = func;
+    });
+  }
+
   //-----------------------------------------------------------------------
   //
   //    #                                        
@@ -427,6 +441,7 @@ export class VirtualScrollArea {
       containerHeight: -1,
       scrollFunction: null,
       containerHeightFunction: null,
+      bulkSetTopFunction: null,
 
       containerScrollYOffset: -1,
       scrollableStates: [],
@@ -675,7 +690,6 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
     
     const heightChanged = oldScrollableState === undefined ||
                             oldScrollableState.realHeight !== newScrollableState.realHeight;
-                            
     const yOffsetChanged = oldScrollableState === undefined ||
         oldScrollableState.virtualScrollYOffset !== newScrollableState.virtualScrollYOffset;
 
@@ -698,6 +712,12 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
       };
       operationsList.push(newScrollableState.scrollable.bulkSetDimensionsAndScroll(setterState));
     }
+
+    if (newState.bulkSetTopFunction != null && (oldScrollableState === undefined ||
+        oldScrollableState.realTop !== newScrollableState.realTop)) {
+      operationsList.push(newState.bulkSetTopFunction(newScrollableState.scrollable, newScrollableState.realTop));
+    }
+
   });
 
   CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.fromArray(operationsList));

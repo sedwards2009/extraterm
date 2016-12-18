@@ -489,8 +489,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       const clone = this._createClone();
       shadow.appendChild(clone);
       
-      this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
-
       this.addEventListener('focus', this._handleFocus.bind(this));
       this.addEventListener('blur', this._handleBlur.bind(this));
 
@@ -503,11 +501,13 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
           this._handleCommandPaletteRequest(ev);
         });
 
+      this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
         scrollArea.style.top = "-" + offset + "px";
       });
       this._virtualScrollArea.setContainerHeightFunction( () => scrollContainer.getBoundingClientRect().height);
       this._virtualScrollArea.setScrollbar(scrollbar);
+      this._virtualScrollArea.setBulkSetTopFunction(this._bulkSetTopFunction.bind(this));
 
       // Set up the emulator
       this._cookie = crypto.randomBytes(10).toString('hex');
@@ -1009,6 +1009,16 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       // no-op
       return BulkDOMOperation.nullOperation();
     }
+  }
+
+  private _bulkSetTopFunction(scrollable: VirtualScrollable, top: number):  BulkDOMOperation.BulkDOMOperation {
+    const generator = function* bulkSetTopGenerator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      (<HTMLElement> (<any> scrollable)).style.top = "" + top + "px";
+      return BulkDOMOperation.GeneratorPhase.DONE;
+    };
+
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
   }
 
   private _handleTerminalViewerCursor(ev: CustomEvent): void {

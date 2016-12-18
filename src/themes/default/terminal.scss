@@ -38,9 +38,12 @@
   width: 100%;
 
   background-color: var(--terminal-background-color);
-}
 
-#ID_SCROLL_AREA > et-terminal-viewer {
-    margin-left: 4px;
-    margin-right: 4px;
+  & > * {
+    position: absolute;
+  }
+  & > et-terminal-viewer {
+   left: 4px;
+   right: 4px;
+  }
 }
