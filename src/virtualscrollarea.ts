@@ -101,12 +101,13 @@ interface VirtualScrollableState {
   virtualHeight: number;
   minHeight: number;
   reserveViewportHeight: number;
-  
+
   // Output - These values are set by the calculate() method.
   realHeight: number;
   realTop: number;
   virtualScrollYOffset: number;
   virtualTop: number;
+  visible: boolean;
 }
 
 interface VirtualAreaState {
@@ -116,6 +117,7 @@ interface VirtualAreaState {
   scrollFunction: (offset: number) => void;
   containerHeightFunction: () => number;
   bulkSetTopFunction: (scrollable: VirtualScrollable, top: number) => BulkDOMOperation.BulkDOMOperation;
+  bulkStashFunction: (scrollable: VirtualScrollable, stash: boolean) => BulkDOMOperation.BulkDOMOperation;
 
   // Output - 
   containerScrollYOffset: number;
@@ -142,6 +144,7 @@ const emptyState: VirtualAreaState = {
   scrollFunction: null,
   containerHeightFunction: null,
   bulkSetTopFunction: null,
+  bulkStashFunction: null,
 
   containerScrollYOffset: 0,
   scrollableStates: [],
@@ -221,7 +224,8 @@ export class VirtualScrollArea {
         realHeight: 0,
         realTop: 0,
         virtualScrollYOffset: 0,
-        virtualTop: 0
+        virtualTop: 0,
+        visible: false
       } );
     });
   }
@@ -301,6 +305,12 @@ export class VirtualScrollArea {
   setBulkSetTopFunction(func: (scrollable: VirtualScrollable, top: number) => BulkDOMOperation.BulkDOMOperation): void {
     this._update( (newState) => {
       newState.bulkSetTopFunction = func;
+    });
+  }
+
+  setBulkStashFunction(func: (scrollable: VirtualScrollable, stash: boolean) => BulkDOMOperation.BulkDOMOperation): void {
+    this._update( (newState) => {
+      newState.bulkStashFunction = func;
     });
   }
 
@@ -442,6 +452,7 @@ export class VirtualScrollArea {
       scrollFunction: null,
       containerHeightFunction: null,
       bulkSetTopFunction: null,
+      bulkStashFunction: null,
 
       containerScrollYOffset: -1,
       scrollableStates: [],
@@ -579,6 +590,10 @@ function Compute(state: VirtualAreaState): boolean {
         state.containerScrollYOffset = realScrollableTop + pos - virtualScrollableTop;
         state.intersectIndex = i;
         state.realScrollYOffset = realScrollableTop;
+        scrollable.visible = true;
+      } else {
+        const posBottom = pos + viewPortHeight;
+        scrollable.visible = ! (pos >= virtualScrollableBottom || posBottom < virtualScrollableTop);
       }
       
     } else {
@@ -610,6 +625,8 @@ function Compute(state: VirtualAreaState): boolean {
             //                ---+
             scrollable.virtualScrollYOffset = pos - virtualScrollableTop;
             state.containerScrollYOffset = realScrollableTop + (pos + viewPortHeight - virtualScrollableBottom);
+
+            scrollable.visible = pos < virtualScrollableBottom;
             
           } else {
             // +------------+
@@ -620,6 +637,7 @@ function Compute(state: VirtualAreaState): boolean {
             scrollable.virtualScrollYOffset = pos - virtualScrollableTop;
             // The top of the scrollable is aligned with the top of the viewport.
             state.containerScrollYOffset = realScrollableTop; 
+            scrollable.visible = true;
           }
         } else {
           //                ---+
@@ -629,6 +647,9 @@ function Compute(state: VirtualAreaState): boolean {
           // |            | ---+
           // +------------+    
           scrollable.virtualScrollYOffset = 0;
+
+          const posBottom = pos + viewPortHeight;
+          scrollable.visible = posBottom >= virtualScrollableTop;
         }
         
       } else {
@@ -638,6 +659,7 @@ function Compute(state: VirtualAreaState): boolean {
           //                ---+
           //                   | <-- Viewport
         scrollable.virtualScrollYOffset = virtualScrollableHeight - (viewPortHeight - scrollable.reserveViewportHeight);
+        scrollable.visible = false;
 
   // log(`2. heightInfo ${i}, element scrollTo=${currentScrollHeight}, el.scrollTop=${realYBase + pos - virtualYBase - currentScrollHeight}`);
         // if (pos >= virtualScrollableTop) {
@@ -713,6 +735,10 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
       operationsList.push(newScrollableState.scrollable.bulkSetDimensionsAndScroll(setterState));
     }
 
+    if ((oldScrollableState === undefined || oldScrollableState.visible !== newScrollableState.visible) && newState.bulkStashFunction != null) {
+      operationsList.push(newState.bulkStashFunction(newScrollableState.scrollable, ! newScrollableState.visible));
+    }
+
     if (newState.bulkSetTopFunction != null && (oldScrollableState === undefined ||
         oldScrollableState.realTop !== newScrollableState.realTop)) {
       operationsList.push(newState.bulkSetTopFunction(newScrollableState.scrollable, newScrollableState.realTop));
@@ -758,8 +784,9 @@ function VirtualScrollableStateToString(state: VirtualScrollableState): string {
       // Output
       realHeight: ${state.realHeight},
       realTop: ${state.realTop},
-      virtualScrollYOffset: ${state.virtualScrollYOffset} ,
-      virtualTop: ${state.virtualTop}
+      virtualScrollYOffset: ${state.virtualScrollYOffset},
+      virtualTop: ${state.virtualTop},
+      visible: ${state.visible}
     }`;
 }
 
