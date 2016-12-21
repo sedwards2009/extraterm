@@ -1720,13 +1720,21 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
   private _closeLastEmbeddedViewer(returnCode: string): void {
     const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    const startElement = scrollArea.querySelectorAll(
-      `${EtEmbeddedViewer.TAG_NAME}:not([${EtEmbeddedViewer.ATTR_RETURN_CODE}])`);
+
+    // Find the terminal viewer which has no return code set on it.
+    let startElement: HTMLElement & VirtualScrollable = null;
+    for (let i=this._childElementList.length-1; i>=0; i--) {
+      const el = this._childElementList[i];
+      if (el.tagName === EtEmbeddedViewer.TAG_NAME && el.getAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE) == null) {
+        startElement = el;
+        break;
+      }
+    }
     
-    if (startElement.length !== 0) {
+    if (startElement != null) {
       // Finish framing an already existing Embedded viewer bar.
       
-      let embeddedSomethingElement = <HTMLElement>startElement[startElement.length-1];
+      let embeddedSomethingElement = <HTMLElement>startElement;
       const embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
       
       const activeTerminalViewer = this._terminalViewer;
