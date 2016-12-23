@@ -766,7 +766,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
     terminalViewer.emulator = this._emulator;
-    this._virtualScrollArea.appendScrollable(terminalViewer);
 
     this._terminalViewer = terminalViewer;
     this._emulator.refreshScreen();
@@ -774,12 +773,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
   private _appendScrollable(el: HTMLElement & VirtualScrollable): void {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-
-    el.setAttribute('data-order', "" + this._orderCounter);
-    this._orderCounter++;
-
     this._childElementList.push(el);
     scrollerArea.appendChild(el);
+    this._virtualScrollArea.appendScrollable(el);
   }
 
   private _removeScrollable(el: HTMLElement & VirtualScrollable): void {
@@ -829,7 +825,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       
       if (currentTerminalViewer.isEmpty()) {
         // Keep this terminal viewer and re-use it later in the new position.
-        this._virtualScrollArea.removeScrollable(currentTerminalViewer);
+        this._removeScrollable(currentTerminalViewer);
       } else {
         // This terminal viewer has stuff in it.
         currentTerminalViewer.emulator = null;
@@ -842,11 +838,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
     this._appendScrollable(el);
 
-    this._virtualScrollArea.appendScrollable(el);
     if (currentTerminalViewer !== null) {
       // Move it into the DOM.
       this._appendScrollable(currentTerminalViewer);
-      this._virtualScrollArea.appendScrollable(currentTerminalViewer);
     } else {
       this._appendNewTerminalViewer();
       this._refocus();
@@ -855,11 +849,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
   private _removeScrollableElement(el: ScrollableElement): void {
     el.removeEventListener('focus', this._childFocusHandlerFunc);
-
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.removeChild(el);
-
-
+    this._childElementList.splice(this._childElementList.indexOf(el), 1);
     this._virtualScrollArea.removeScrollable(el);
   }
 
@@ -867,6 +859,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.insertBefore(newEl, oldEl);
     scrollerArea.removeChild(oldEl);
+    this._childElementList.splice(this._childElementList.indexOf(oldEl), 1);
     this._virtualScrollArea.replaceScrollable(oldEl, newEl);
   }
 
@@ -993,34 +986,53 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
   private _bulkStash(scrollable: VirtualScrollable, stash: boolean): BulkDOMOperation.BulkDOMOperation {
 
-    // this._log.debug("scrollable: ", scrollable, ", stash: ", stash);
-    if (stash) {
-      // Move the scrollabe into the stash area.
-      this._stashArea.appendChild(<any>scrollable);
+    const generator = function* bulkStashGenerator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
 
-    } else {
-      // Move the scrollable out of the stash and into the DOM.
+      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+    
       const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+      if (stash) {
+        // Move the scrollable into the stash area.
+        this._stashArea.appendChild(<any>scrollable);
 
-      if (scrollerArea.children.length === 0) {
-        scrollerArea.appendChild(<any>scrollable);
       } else {
-        const firstIndex = this._childElementList.indexOf(<any> scrollerArea.children[0]);
-        const stashIndex = this._childElementList.indexOf(<any>scrollable);
-        if (stashIndex < firstIndex) {
-          scrollerArea.insertBefore(<any> scrollable, scrollerArea.children[0]);
-        } else {
-          scrollerArea.appendChild(<any>scrollable);
+        const element: HTMLElement = <any> scrollable;
+
+        if (element.parentElement !== scrollerArea) {
+          // Move the element can to the scroll area and place it in the correct position relative to the other child elements.
+
+          const scrollerAreaChildrenCount = scrollerArea.children.length;
+          if (scrollerAreaChildrenCount === 0) {
+            scrollerArea.appendChild(element);
+          } else {
+
+            let scrollerIndex = 0;
+            let childIndex = 0;
+            while (childIndex < this._childElementList.length) {
+
+              const currentElement = this._childElementList[childIndex];
+              if (currentElement === element) {
+                scrollerArea.insertBefore(element, scrollerArea.children[scrollerIndex]);
+                break;
+              }
+
+              if (scrollerArea.children[scrollerIndex] === currentElement) {
+                scrollerIndex++;
+                if (scrollerIndex >= scrollerAreaChildrenCount) {
+                  scrollerArea.appendChild(element);
+                  break;
+                }
+              }
+              childIndex++;
+            }
+          }
         }
       }
+      return BulkDOMOperation.GeneratorPhase.DONE;
+    };
 
-      // (<any> scrollable).style.outline = "4px solid yellow";
-      // (<any> scrollable).style.outlineOffset = "-4px";
-
-    }
-
-        return BulkDOMOperation.nullOperation();
-      }
+    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+  }
 
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): BulkDOMOperation.BulkDOMOperation {
 
@@ -1817,8 +1829,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       }
       outputTerminalViewer.editable = true;
       
-      this._virtualScrollArea.appendScrollable(newViewerElement);
-        
       this._appendNewTerminalViewer();
       this._refocus();
       const activeTerminalViewer = this._terminalViewer;
