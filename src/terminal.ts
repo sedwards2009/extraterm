@@ -513,7 +513,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       this._virtualScrollArea.setContainerHeightFunction( () => scrollContainer.getBoundingClientRect().height);
       this._virtualScrollArea.setScrollbar(scrollbar);
       this._virtualScrollArea.setBulkSetTopFunction(this._bulkSetTopFunction.bind(this));
-      this._virtualScrollArea.setBulkStashFunction(this._bulkStash.bind(this));
+      this._virtualScrollArea.setBulkMarkVisibleFunction(this._bulkMarkVisible.bind(this));
 
       // Set up the emulator
       this._cookie = crypto.randomBytes(10).toString('hex');
@@ -984,7 +984,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     (<virtualscrollarea.ResizeEventDetail>ev.detail).addOperation(operation);
   }
 
-  private _bulkStash(scrollable: VirtualScrollable, stash: boolean): BulkDOMOperation.BulkDOMOperation {
+  private _bulkMarkVisible(scrollable: VirtualScrollable, visible: boolean): BulkDOMOperation.BulkDOMOperation {
 
     const generator = function* bulkStashGenerator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
 
@@ -992,7 +992,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     
       const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
       const element: HTMLElement = <any> scrollable;
-      if (stash) {
+      if ( ! visible) {
 
         if (this._terminalViewer !== element && ! (ViewerElement.isViewerElement(element) && element.hasFocus())) {
           // Move the scrollable into the stash area.

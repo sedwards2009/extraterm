@@ -117,7 +117,7 @@ interface VirtualAreaState {
   scrollFunction: (offset: number) => void;
   containerHeightFunction: () => number;
   bulkSetTopFunction: (scrollable: VirtualScrollable, top: number) => BulkDOMOperation.BulkDOMOperation;
-  bulkStashFunction: (scrollable: VirtualScrollable, stash: boolean) => BulkDOMOperation.BulkDOMOperation;
+  bulkMarkVisibleFunction: (scrollable: VirtualScrollable, visible: boolean) => BulkDOMOperation.BulkDOMOperation;
 
   // Output - 
   containerScrollYOffset: number;
@@ -144,7 +144,7 @@ const emptyState: VirtualAreaState = {
   scrollFunction: null,
   containerHeightFunction: null,
   bulkSetTopFunction: null,
-  bulkStashFunction: null,
+  bulkMarkVisibleFunction: null,
 
   containerScrollYOffset: 0,
   scrollableStates: [],
@@ -220,7 +220,7 @@ export class VirtualScrollArea {
         virtualHeight: virtualHeight,
         minHeight: minHeight,
         reserveViewportHeight: reserveViewportHeight,
-        
+
         realHeight: 0,
         realTop: 0,
         virtualScrollYOffset: 0,
@@ -308,9 +308,9 @@ export class VirtualScrollArea {
     });
   }
 
-  setBulkStashFunction(func: (scrollable: VirtualScrollable, stash: boolean) => BulkDOMOperation.BulkDOMOperation): void {
+  setBulkMarkVisibleFunction(func: (scrollable: VirtualScrollable, visible: boolean) => BulkDOMOperation.BulkDOMOperation): void {
     this._update( (newState) => {
-      newState.bulkStashFunction = func;
+      newState.bulkMarkVisibleFunction = func;
     });
   }
 
@@ -452,7 +452,7 @@ export class VirtualScrollArea {
       scrollFunction: null,
       containerHeightFunction: null,
       bulkSetTopFunction: null,
-      bulkStashFunction: null,
+      bulkMarkVisibleFunction: null,
 
       containerScrollYOffset: -1,
       scrollableStates: [],
@@ -735,8 +735,8 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
       operationsList.push(newScrollableState.scrollable.bulkSetDimensionsAndScroll(setterState));
     }
 
-    if ((oldScrollableState === undefined || oldScrollableState.visible !== newScrollableState.visible) && newState.bulkStashFunction != null) {
-      operationsList.push(newState.bulkStashFunction(newScrollableState.scrollable, ! newScrollableState.visible));
+    if ((oldScrollableState === undefined || oldScrollableState.visible !== newScrollableState.visible) && newState.bulkMarkVisibleFunction != null) {
+      operationsList.push(newState.bulkMarkVisibleFunction(newScrollableState.scrollable, newScrollableState.visible));
     }
 
     if (newState.bulkSetTopFunction != null && (oldScrollableState === undefined ||
