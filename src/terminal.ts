@@ -991,12 +991,15 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
     
       const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+      const element: HTMLElement = <any> scrollable;
       if (stash) {
-        // Move the scrollable into the stash area.
-        this._stashArea.appendChild(<any>scrollable);
+
+        if (this._terminalViewer !== element && ! (ViewerElement.isViewerElement(element) && element.hasFocus())) {
+          // Move the scrollable into the stash area.
+          this._stashArea.appendChild(element);
+        }
 
       } else {
-        const element: HTMLElement = <any> scrollable;
 
         if (element.parentElement !== scrollerArea) {
           // Move the element can to the scroll area and place it in the correct position relative to the other child elements.
