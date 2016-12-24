@@ -1990,9 +1990,12 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       return null;
     }
     
-    const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    const matches = scrollArea.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
-    return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
+    for (const element of this._childElementList) {
+      if (EtEmbeddedViewer.is(element) && element.getAttribute('tag') === frameId) {
+        return element;
+      }
+    }
+    return null;
   }
   
   private _getNextTag(): string {
