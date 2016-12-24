@@ -991,7 +991,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
     
       const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-      const element: HTMLElement = <any> scrollable;
+      const element: ViewerElement = <any> scrollable;
       if ( ! visible) {
 
         if (this._terminalViewer !== element && ! (ViewerElement.isViewerElement(element) && element.hasFocus())) {
@@ -1029,12 +1029,24 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
               childIndex++;
             }
           }
+
+          // Set the current mode on the scrollable.
+          const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
+          const modeOperation = element.bulkSetMode(this._mode);
+          const visualStateOperation = element.bulkSetVisualState(visualState);
+          const allOperations = BulkDOMOperation.fromArray([modeOperation, visualStateOperation]);
+
+          yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: allOperations, waitOperation: allOperations };
         }
       }
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
     return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+  }
+
+  private _makeVisible(element: HTMLElement & VirtualScrollable): void {
+    CodeMirrorOperation.executeBulkDOMOperation(this._bulkMarkVisible(element, true));
   }
 
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): BulkDOMOperation.BulkDOMOperation {
@@ -1117,8 +1129,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     const detail = <ViewerElementTypes.CursorEdgeDetail> ev.detail;
     
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    const kids = domutils.nodeListToArray(scrollerArea.childNodes);
-    const index = kids.indexOf(<Node> ev.target);
+    const index = this._childElementList.indexOf(<any> ev.target);
     if (index === -1) {
       this._log.warn("_handleTerminalViewerCursorEdge(): Couldn't find the target.");
       return;
@@ -1127,8 +1138,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     if (detail.edge === ViewerElementTypes.Edge.TOP) {
       // A top edge was hit. Move the cursor to the bottom of the ViewerElement above it.
       for (let i=index-1; i>=0; i--) {
-        const node = kids[i];
+        const node = this._childElementList[i];
         if (ViewerElement.isViewerElement(node)) {
+          this._makeVisible(node);
           if (node.setCursorPositionBottom(detail.ch)) {
             domutils.focusWithoutScroll(node);
             break;
@@ -1138,9 +1150,10 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     
     } else {
       // Bottom edge. Move the cursor to the top of the next ViewerElement.
-      for (let i=index+1; i<kids.length; i++) {
-        const node = kids[i];
+      for (let i=index+1; i<this._childElementList.length; i++) {
+        const node = this._childElementList[i];
         if (ViewerElement.isViewerElement(node)) {
+          this._makeVisible(node);
           if (node.setCursorPositionTop(detail.ch)) {
             domutils.focusWithoutScroll(node);
             break;
