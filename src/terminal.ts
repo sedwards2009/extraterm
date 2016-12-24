@@ -224,7 +224,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _enforceScrollbackLengthGuard: boolean;
   
   private _scheduleLaterHandle: domutils.LaterHandle;
-  private _scheduledCursorUpdates: EtTerminalViewer[];
   private _scheduledResize: boolean;
   private _scheduleResizeBound: any;
   
@@ -269,7 +268,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
     this._enforceScrollbackLengthGuard = false;
     this._scheduleLaterHandle = null;
-    this._scheduledCursorUpdates = [];
     this._scheduledResize = false;
 
     this._fontSizeAdjustment = 0;
@@ -1468,12 +1466,10 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     // Make copies of all of the control variables.
     const scheduledResize = this._scheduledResize;
     this._scheduledResize = false;
-    const scheduledCursorUpdates = this._scheduledCursorUpdates;
-    this._scheduledCursorUpdates = [];
     
     if (scheduledResize) {
       this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
-    }    
+    }
   }
 
   // ********************************************************************
