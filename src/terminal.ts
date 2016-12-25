@@ -224,7 +224,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _enforceScrollbackLengthGuard: boolean;
   
   private _scheduleLaterHandle: domutils.LaterHandle;
-  private _scheduledResize: boolean;
+  private _scheduleLaterQueue: Function[];
+
   private _scheduleResizeBound: any;
   
   // The current size of the emulator. This is used to detect changes in size.
@@ -268,7 +269,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
     this._enforceScrollbackLengthGuard = false;
     this._scheduleLaterHandle = null;
-    this._scheduledResize = false;
+    this._scheduleLaterQueue = [];
 
     this._fontSizeAdjustment = 0;
     this._armResizeCanary = false;
@@ -1434,41 +1435,23 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   //    #####   ####  #    # ###### #####   ####  ###### # #    #  ####  
   //
   // ********************************************************************
-  
-  /**
-   * Schedule a cursor update to done later.
-   * 
-   * @param {EtTerminalViewer} updateTarget [description]
-   */
-  // private _scheduleCursorMoveUpdate(updateTarget: EtTerminalViewer): void {
-  //   this._scheduleProcessing();
-  //   
-  //   if (this._scheduledCursorUpdates.some( (cmv) => cmv === updateTarget)) {
-  //     return;
-  //   }
-  //   this._scheduledCursorUpdates.push(updateTarget);
-  // }
-  
+    
   private _scheduleResize(): void {
-    this._scheduleProcessing();
-    this._scheduledResize = true;
-  }
-  
-  private _scheduleProcessing(): void {
-    if (this._scheduleLaterHandle === null) {
-      this._scheduleLaterHandle = domutils.doLater(this._processScheduled.bind(this));
-    }
-  }
-  
-  private _processScheduled(): void {
-    this._scheduleLaterHandle = null;
-    
-    // Make copies of all of the control variables.
-    const scheduledResize = this._scheduledResize;
-    this._scheduledResize = false;
-    
-    if (scheduledResize) {
+    this._scheduleLaterProcessing( () => {
       this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
+    });
+  }
+  
+  private _scheduleLaterProcessing(func: Function): void {
+    this._scheduleLaterQueue.push(func);
+    
+    if (this._scheduleLaterHandle === null) {
+      this._scheduleLaterHandle = domutils.doLater( () => {
+        this._scheduleLaterHandle = null;
+        const queue = this._scheduleLaterQueue;
+        this._scheduleLaterQueue = [];
+        queue.forEach( (func) => func() );
+      });
     }
   }
 
