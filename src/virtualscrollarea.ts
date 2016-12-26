@@ -115,7 +115,6 @@ interface VirtualAreaState {
   virtualScrollYOffset: number;
   containerHeight: number;
   scrollFunction: (offset: number) => void;
-  containerHeightFunction: () => number;
   bulkSetTopFunction: (scrollable: VirtualScrollable, top: number) => BulkDOMOperation.BulkDOMOperation;
   bulkMarkVisibleFunction: (scrollable: VirtualScrollable, visible: boolean) => BulkDOMOperation.BulkDOMOperation;
 
@@ -142,7 +141,6 @@ const emptyState: VirtualAreaState = {
   virtualScrollYOffset: 0,
   containerHeight: 0,
   scrollFunction: null,
-  containerHeightFunction: null,
   bulkSetTopFunction: null,
   bulkMarkVisibleFunction: null,
 
@@ -284,12 +282,6 @@ export class VirtualScrollArea {
     });
   }
 
-  setContainerHeightFunction(heightFunction: () => number): void {
-    this._update( (newState) => {
-      newState.containerHeightFunction = heightFunction;
-    });
-  }
-
   setScrollbar(scrollbar: Scrollbar): void {
     this._update( (newState) => {
       newState.scrollbar = scrollbar;
@@ -327,11 +319,13 @@ export class VirtualScrollArea {
   //-----------------------------------------------------------------------
   
   /**
-   * Signals to the VirtualScrollArea that the container has been resized.
+   * Sets a new height for the container.
+   * 
+   * @param containerHeight the new height of the container.
    */
-  resize(): void {
+  updateContainerHeight(containerHeight: number): void {
     this._updateAutoscrollBottom( (newState) => {
-      newState.containerHeight = newState.containerHeightFunction();
+      newState.containerHeight = containerHeight;
     });
   }
 
@@ -454,7 +448,6 @@ export class VirtualScrollArea {
       virtualScrollYOffset: -1,
       containerHeight: -1,
       scrollFunction: null,
-      containerHeightFunction: null,
       bulkSetTopFunction: null,
       bulkMarkVisibleFunction: null,
 

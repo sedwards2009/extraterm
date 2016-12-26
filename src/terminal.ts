@@ -516,7 +516,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
         scrollArea.style.top = "-" + offset + "px";
       });
-      this._virtualScrollArea.setContainerHeightFunction( () => scrollContainer.getBoundingClientRect().height);
       this._virtualScrollArea.setScrollbar(scrollbar);
       this._virtualScrollArea.setBulkSetTopFunction(this._bulkSetTopFunction.bind(this));
       this._virtualScrollArea.setBulkMarkVisibleFunction(this._bulkMarkVisible.bind(this));
@@ -1103,7 +1102,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
         yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: scrollAreaOperation, waitOperation: scrollAreaOperation};
 
-        this._virtualScrollArea.resize();
+        const scrollContainer = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
+        this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 
         // Build the list of elements we will resize right now.
         const childrenToResize: VirtualScrollable[] = [];
@@ -1724,7 +1724,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       this._lastCommandLine = cleancommand;
       this._lastCommandTerminalViewer = this._terminalViewer;
     }
-    this._virtualScrollArea.resize();
+
+    const scrollContainer = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
+    this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
   }
   
   public deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {

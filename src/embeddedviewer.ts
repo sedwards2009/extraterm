@@ -269,7 +269,8 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       scrollNameDiv.innerHTML = "" + percent + "%";
       
       if (setterState.heightChanged) {
-        this._virtualScrollArea.resize();
+        const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
+        this._virtualScrollArea.updateContainerHeight(outputContainerDiv.getBoundingClientRect().height);
       }
 
       this._virtualScrollArea.scrollTo(setterState.yOffset);
@@ -457,7 +458,6 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
       outputDiv.style.top = "-" + offset +"px";
     });
-    this._virtualScrollArea.setContainerHeightFunction( () => outputContainerDiv.getBoundingClientRect().height);
 
     outputDiv.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     

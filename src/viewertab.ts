@@ -315,7 +315,6 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
       scrollerArea.scrollTop = offset;
     });
-    this._virtualScrollArea.setContainerHeightFunction( () => scrollerArea.getBoundingClientRect().height);
     this._virtualScrollArea.setScrollbar(scrollbar);
     
     scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
@@ -496,7 +495,8 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
    * Handle a resize event from the window.
    */
   private _processResize(): void {
-    this._virtualScrollArea.resize();
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    this._virtualScrollArea.updateContainerHeight(scrollerArea.getBoundingClientRect().height);
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
       this._updateVirtualScrollableSize(viewerElement);

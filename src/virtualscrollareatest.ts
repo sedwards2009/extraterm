@@ -35,7 +35,7 @@ function SetUpScrollContainer(vsa: virtualscrollarea.VirtualScrollArea, height: 
   vsa.setScrollFunction( (offset: number): void => {
     scrollContainer.scrollTop = offset;
   });
-  vsa.setContainerHeightFunction( () => scrollContainer.getBoundingClientRect().height);
+  // vsa.setContainerHeightFunction( () => scrollContainer.getBoundingClientRect().height);
   return scrollContainer;
 }
 
@@ -113,10 +113,10 @@ export function testBasic(test: nodeunit.Test): void {
   const vsa = new VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
-  SetUpScrollContainer(vsa, 500);
+  const scrollContainer = SetUpScrollContainer(vsa, 500);
   const scrollable = SetupScrollable(vsa, 500, 500, 0);
   
-  vsa.resize();
+  vsa.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
   
   test.equal(scrollbar.position, 0);
   test.equal(scrollable.getScrollOffset(), 0);
@@ -130,7 +130,7 @@ export function testLong(test: nodeunit.Test): void {
   const container = SetUpScrollContainer(vsa, 500);
   const scrollable = SetupScrollable(vsa, 500, 1500, 0);
   
-  vsa.resize();
+  vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   test.equal(scrollbar.position, 1000);
   test.equal(scrollbar.length, 1500);
@@ -153,7 +153,7 @@ export function test3Scrollables(test: nodeunit.Test): void {
   const scrollable2 = SetupScrollable(vsa, 500, 1500, 0);
   const scrollable3 = SetupScrollable(vsa, 500, 1500, 0);
   
-  vsa.resize();
+  vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   test.equal(scrollbar.position, 4000);
   test.equal(scrollbar.length, 4500);
@@ -196,7 +196,7 @@ export function testVirtualHeightUpdate(test: nodeunit.Test): void {
   const container = SetUpScrollContainer(vsa, 500);
   const scrollable = SetupScrollable(vsa, 500, 1500, 0);
   
-  vsa.resize();
+  vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   vsa.scrollTo(750);
   test.equal(scrollbar.position, 750);
@@ -221,7 +221,7 @@ export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
   const container = SetUpScrollContainer(vsa, 500);
   const scrollable = SetupScrollable(vsa, 500, 1500, 0);
   
-  vsa.resize();
+  vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   vsa.scrollTo(1000);
   test.equal(scrollbar.position, 1000);
@@ -244,10 +244,10 @@ export function testShortWithReserve(test: nodeunit.Test): void {
   const vsa = new VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
-  SetUpScrollContainer(vsa, 1000);
+  const container = SetUpScrollContainer(vsa, 1000);
   const scrollable = SetupScrollable(vsa, 500, 500, 200);
   
-  vsa.resize();
+  vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   test.equal(scrollbar.position, 0);
   test.equal(scrollable.getHeight(), 700);
@@ -260,10 +260,10 @@ export function testHeightWithReserve(test: nodeunit.Test): void {
   const vsa = new VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
-  SetUpScrollContainer(vsa, 500);
+  const container = SetUpScrollContainer(vsa, 500);
   const scrollable = SetupScrollable(vsa, 500, 500, 200);
   
-  vsa.resize();
+  vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   test.equal(scrollbar.position, 200);
   test.equal(scrollable.getScrollOffset(), 200);
@@ -275,10 +275,10 @@ export function testBottomWithReserve(test: nodeunit.Test): void {
   const vsa = new VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
-  SetUpScrollContainer(vsa, 500);
+  const container = SetUpScrollContainer(vsa, 500);
   const scrollable = SetupScrollable(vsa, 500, 500, 200);
   
-  vsa.resize();
+  vsa.updateContainerHeight(container.getBoundingClientRect().height);
   vsa.scrollToBottom();
   
   test.equal(scrollbar.position, 200);
@@ -295,7 +295,7 @@ export function testBug(test: nodeunit.Test): void {
   const scrollable1 = SetupScrollable(vsa, 0, 90, 0);
   const scrollable2 = SetupScrollable(vsa, 26, 0, 26);
   const scrollable3 = SetupScrollable(vsa, 0, 570, 0);
-  vsa.resize();
+  vsa.updateContainerHeight(container.getBoundingClientRect().height);
 
   vsa.scrollTo(90);
   test.equal(scrollbar.position, 90);
@@ -312,7 +312,7 @@ export function testBug2(test: nodeunit.Test): void {
   const scrollable1 = SetupScrollable(vsa,  0,  90,       0);
   const scrollable2 = SetupScrollable(vsa, 26, 585,      26);
   const scrollable3 = SetupScrollable(vsa,  0,  15,       0);
-  vsa.resize();
+  vsa.updateContainerHeight(container.getBoundingClientRect().height);
 
   vsa.scrollTo(145);
   test.equal(scrollbar.position, 145);
