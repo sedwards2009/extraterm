@@ -23,7 +23,7 @@ export interface BulkDOMOperation {
 }
 
 /**
- * Create a single BulkDOMOperation which calls an array of BulkDOMOperations.
+ * Create a single BulkDOMOperation which calls an array of BulkDOMOperations in parallel.
  * 
  * @param operations the list of BulkDOMOperations to called later.
  * @return a single BulkDOMOperation which calls each BulkDOMOperation in the
@@ -71,6 +71,26 @@ export function fromArray(originalOperations: BulkDOMOperation[]): BulkDOMOperat
       return null;
     }
   };
+}
+
+/**
+ * Create a single BulkDOMOperation which calls an array of BulkDOMOperations one at a time.
+ * 
+ * @param operations the list of BulkDOMOperations to called later.
+ * @return a single BulkDOMOperation which calls each BulkDOMOperation in the
+ *          list.
+ */
+export function sequence(operations: BulkDOMOperation[]): BulkDOMOperation {
+  
+  const generator = function* generator(): IterableIterator<GeneratorResult> {
+    yield GeneratorPhase.BEGIN_DOM_READ;
+    for (const op of operations) {    
+        yield { phase: GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: op, waitOperation: op };
+    }
+    return GeneratorPhase.DONE;
+  };
+
+  return fromGenerator(generator());
 }
 
 /**

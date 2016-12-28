@@ -718,6 +718,17 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
 
     const containerHeightChanged = oldState.containerHeight !== newState.containerHeight;
 
+    const scrollableOperationsList: BulkDOMOperation.BulkDOMOperation[] = [];
+
+    const visibleUpdateNeeded = (oldScrollableState === undefined ||
+            oldScrollableState.visible !== newScrollableState.visible) && newState.bulkMarkVisibleFunction != null;
+
+    if (visibleUpdateNeeded && newScrollableState.visible) {
+      // If the scrollable should be visible then do it now before the other update methods.
+      // Those methods may assume that it is visible and in the DOM.
+      scrollableOperationsList.push(newState.bulkMarkVisibleFunction(newScrollableState.scrollable, newScrollableState.visible));
+    }
+
     if (heightChanged || yOffsetChanged || physicalTopChanged || containerHeightChanged) {
       const setterState: SetterState = {
         height: newScrollableState.realHeight,
@@ -729,18 +740,21 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
         containerHeight: newState.containerHeight,
         containerHeightChanged
       };
-      operationsList.push(newScrollableState.scrollable.bulkSetDimensionsAndScroll(setterState));
-    }
-
-    if ((oldScrollableState === undefined || oldScrollableState.visible !== newScrollableState.visible) && newState.bulkMarkVisibleFunction != null) {
-      operationsList.push(newState.bulkMarkVisibleFunction(newScrollableState.scrollable, newScrollableState.visible));
+      scrollableOperationsList.push(newScrollableState.scrollable.bulkSetDimensionsAndScroll(setterState));
     }
 
     if (newState.bulkSetTopFunction != null && (oldScrollableState === undefined ||
         oldScrollableState.realTop !== newScrollableState.realTop)) {
-      operationsList.push(newState.bulkSetTopFunction(newScrollableState.scrollable, newScrollableState.realTop));
+      scrollableOperationsList.push(newState.bulkSetTopFunction(newScrollableState.scrollable, newScrollableState.realTop));
     }
 
+    if (visibleUpdateNeeded && ! newScrollableState.visible) {
+      scrollableOperationsList.push(newState.bulkMarkVisibleFunction(newScrollableState.scrollable, newScrollableState.visible));
+    }
+
+    if (scrollableOperationsList.length !== 0) {
+      operationsList.push(BulkDOMOperation.sequence(scrollableOperationsList));
+    }
   });
 
   CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.fromArray(operationsList));
