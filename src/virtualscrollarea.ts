@@ -46,6 +46,13 @@ export interface VirtualScrollable {
    * @param setterState information about the new state and context
    */
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation;
+
+  /**
+   * Signal to this scrollable that it has been made (in)visible.
+   * 
+   * @param visible true if this has been made visible, or false to indicate been not visible.
+   */
+  bulkVisible(visible: boolean): BulkDOMOperation.BulkDOMOperation;
 }
 
 export interface SetterState {
@@ -726,7 +733,8 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
     if (visibleUpdateNeeded && newScrollableState.visible) {
       // If the scrollable should be visible then do it now before the other update methods.
       // Those methods may assume that it is visible and in the DOM.
-      scrollableOperationsList.push(newState.bulkMarkVisibleFunction(newScrollableState.scrollable, newScrollableState.visible));
+      scrollableOperationsList.push(newState.bulkMarkVisibleFunction(newScrollableState.scrollable, true));
+      scrollableOperationsList.push(newScrollableState.scrollable.bulkVisible(true));
     }
 
     if (heightChanged || yOffsetChanged || physicalTopChanged || containerHeightChanged) {
@@ -749,7 +757,8 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
     }
 
     if (visibleUpdateNeeded && ! newScrollableState.visible) {
-      scrollableOperationsList.push(newState.bulkMarkVisibleFunction(newScrollableState.scrollable, newScrollableState.visible));
+      scrollableOperationsList.push(newScrollableState.scrollable.bulkVisible(false));
+      scrollableOperationsList.push(newState.bulkMarkVisibleFunction(newScrollableState.scrollable, false));
     }
 
     if (scrollableOperationsList.length !== 0) {

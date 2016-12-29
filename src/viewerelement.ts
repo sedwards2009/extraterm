@@ -112,6 +112,10 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
     return BulkDOMOperation.nullOperation();
   }
 
+  bulkVisible(visible: boolean): BulkDOMOperation.BulkDOMOperation {
+    return BulkDOMOperation.nullOperation();
+  }
+
   getCursorPosition(): CursorMoveDetail {
     return {
       left: 0,

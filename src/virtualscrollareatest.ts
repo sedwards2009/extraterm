@@ -76,6 +76,11 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: nu
       return BulkDOMOperation.nullOperation();
     },
     
+    bulkVisible(visible: boolean): BulkDOMOperation.BulkDOMOperation {
+      return BulkDOMOperation.nullOperation();
+    },
+
+
     getScrollOffset(): number {
       return this._offset;
     },

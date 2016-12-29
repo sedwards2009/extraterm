@@ -129,12 +129,20 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
 
+  private _requestContainerHeight: boolean; // true if the container needs a height update.
+  private _requestContainerScroll: boolean; // true if the container needs scroll to be set.
+  private _requestContainerYScroll: number; // the new scroll Y to use during update.
+
   private _initProperties(): void {
     this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
     this._visualState = ViewerElementTypes.VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
+
+    this._requestContainerHeight = false;
+    this._requestContainerScroll = false;
+    this._requestContainerYScroll = 0;
   }
   
   //-----------------------------------------------------------------------
@@ -269,18 +277,52 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       scrollNameDiv.innerHTML = "" + percent + "%";
       
       if (setterState.heightChanged) {
-        const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
-        this._virtualScrollArea.updateContainerHeight(outputContainerDiv.getBoundingClientRect().height);
+        this._requestContainerHeight = true;
       }
+      this._requestContainerScroll = true;
+      this._requestContainerYScroll = setterState.yOffset;
 
-      this._virtualScrollArea.scrollTo(setterState.yOffset);
+      if (this.parentElement != null) {
+         this._applyContainerChanges();
+      }
 
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
     return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
-  
+
+  bulkVisible(visible: boolean): BulkDOMOperation.BulkDOMOperation {
+    if (visible) {
+      const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
+        if (DEBUG_SIZE) {
+          this._log.debug("bulkVisible() generator: ");
+        }
+
+        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+        this._applyContainerChanges();
+        return BulkDOMOperation.GeneratorPhase.DONE;
+      };
+
+      return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    } else {
+
+      return BulkDOMOperation.nullOperation();
+    }
+  }
+
+  private _applyContainerChanges(): void {
+    if (this._requestContainerHeight) {
+      this._requestContainerHeight = false;
+      const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
+      this._virtualScrollArea.updateContainerHeight(outputContainerDiv.getBoundingClientRect().height);
+    }
+    if (this._requestContainerScroll) {
+      this._requestContainerScroll = false;
+      this._virtualScrollArea.scrollTo(this._requestContainerYScroll);
+    }
+  }
+
   getSelectionText(): string {
     const viewerElement = this.viewerElement;
     return viewerElement === null ? null : viewerElement.getSelectionText();

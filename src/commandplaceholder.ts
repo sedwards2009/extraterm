@@ -85,6 +85,10 @@ class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
     return BulkDOMOperation.nullOperation();
   }
+
+  bulkVisible(visible: boolean): BulkDOMOperation.BulkDOMOperation {
+    return BulkDOMOperation.nullOperation();
+  }
 }
 
 export = EtCommandPlaceHolder;
