@@ -1831,7 +1831,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       // Some focus management to make sure that activeTerminalViewer still keeps
       // the focus after we remove it from the DOM and place it else where.
       const restoreFocus = domutils.getShadowRoot(this).activeElement === activeTerminalViewer;
-      const previousActiveTerminal = activeTerminalViewer;
       
       embeddedViewerElement.viewerElement = activeTerminalViewer;
       activeTerminalViewer.editable = true;
@@ -1842,7 +1841,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       this._appendNewTerminalViewer();
       
       if (restoreFocus) {
-        previousActiveTerminal.focus();
+        this._terminalViewer.focus();
       }
     } else {
       
