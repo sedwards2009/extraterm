@@ -6,7 +6,7 @@
 const shelljs = require('shelljs');
 const fs = require('fs');
 
-const MODULE_LIST = ['font-manager'];
+const MODULE_LIST = ['font-manager', 'electron', 'electron-rebuild'];
 
 // This is mostly to keep the linter happy.
 const test = shelljs.test;
@@ -14,6 +14,7 @@ const mkdir = shelljs.mkdir;
 const exec = shelljs.exec;
 const cd = shelljs.cd;
 const mv = shelljs.mv;
+const rm = shelljs.rm;
 const echo = shelljs.echo;
 const pwd = shelljs.pwd;
 
@@ -60,11 +61,12 @@ Exiting.
     pkgList.push('ptyw.js');
   }
 
+  // Set up the build dir
   const BUILD_DIR = 'build_native';
-  
-  if ( ! test('-d', BUILD_DIR)) {
-    mkdir(BUILD_DIR);
+  if (test('-d', BUILD_DIR)) {
+    rm('-rf', BUILD_DIR);
   }
+  mkdir(BUILD_DIR);
   
   const currentDir = pwd();
   cd(BUILD_DIR);
@@ -74,9 +76,6 @@ Exiting.
   pkgList.forEach( (pkg) => {    
     exec("npm install --save " + pkg + "@" + getPackageVersion(packageData, pkg));
   });
-  
-  exec("npm install --save electron-prebuilt@" + getPackageVersion(packageData, "electron-prebuilt"));
-  exec("npm install --save electron-rebuild@" + getPackageVersion(packageData, "electron-rebuild"));
 
   if (process.platform === 'win32') {
     exec("npm config set msvs_version 2015");
@@ -92,7 +91,7 @@ Exiting.
   // }
 
   exec("npm uninstall electron-rebuild");
-  exec("npm uninstall electron-prebuilt");
+  exec("npm uninstall electron");
   
   cd(currentDir);
   mv(path.join(BUILD_DIR, "node_modules"), target);
