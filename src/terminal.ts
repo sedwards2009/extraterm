@@ -707,8 +707,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
   private _handleBeforeSelectionChange(ev: CustomEvent): void {
     const target = ev.target;
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+    this._childElementList.forEach( (nodeInfo): void => {
+      const node = nodeInfo.element;
       if (ViewerElement.isViewerElement(node) && node !== target) {
         node.clearSelection();
       }
@@ -784,8 +784,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
 
   private _removeScrollable(el: HTMLElement & VirtualScrollable): void {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    el.removeEventListener('focus', this._childFocusHandlerFunc);
 
+    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     if (el.parentElement === scrollerArea) {
       scrollerArea.removeChild(el);
     } else if(el.parentElement === this._stashArea) {
@@ -852,14 +853,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
   }
   
-  private _removeScrollableElement(el: ScrollableElement): void {
-    el.removeEventListener('focus', this._childFocusHandlerFunc);
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    scrollerArea.removeChild(el);
-    this._childElementList.splice(this._childElementListIndexOf(el), 1);
-    this._virtualScrollArea.removeScrollable(el);
-  }
-
   private _replaceScrollableElement(oldEl: ScrollableElement, newEl: ScrollableElement): void {
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.insertBefore(newEl, oldEl);
@@ -1169,8 +1162,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   
   private _handleTerminalViewerCursorEdge(ev: CustomEvent): void {
     const detail = <ViewerElementTypes.CursorEdgeDetail> ev.detail;
-    
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     const index = this._childElementListIndexOf(<any> ev.target);
     if (index === -1) {
       this._log.warn("_handleTerminalViewerCursorEdge(): Couldn't find the target.");
@@ -1237,16 +1228,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       return;
     }
     
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    const kids = domutils.nodeListToArray(scrollerArea.childNodes);
-    for (const kidNode of kids) {
-      const scrollableKid: VirtualScrollable & HTMLElement = <any> kidNode;
+    for (const nodeInfo of this._childElementList) {
+      const scrollableKid: VirtualScrollable & HTMLElement = <any> nodeInfo.element;
       const kidVirtualHeight = this._virtualScrollArea.getScrollableVirtualHeight(scrollableKid);
       const newVirtualHeight = virtualHeight - kidVirtualHeight;
       // We don't want to cut out too much at once.
       if (newVirtualHeight > effectiveScrollbackSize) {
         // Just remove the thing. There is plenty of scrollback left over.
-        this._removeScrollableElement(scrollableKid);
+        this._removeScrollable(scrollableKid);
         
       } else {
         this._deleteTopPixels(scrollableKid, virtualHeight - effectiveScrollbackSize);
@@ -1278,7 +1267,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         return;
       }
     }
-    this._removeScrollableElement(kidNode);
+    this._removeScrollable(kidNode);
   }
 
   private _adjustFontSize(delta: number): void {
@@ -1687,12 +1676,11 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
 
   private _handleApplicationModeBracketStart(): void {
-    const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    const startdivs = scrollArea.querySelectorAll(
-                        EtEmbeddedViewer.TAG_NAME + ":not([return-code]), "+EtCommandPlaceHolder.TAG_NAME);
-  
-    if (startdivs.length !== 0) {
-      return;  // Don't open a new frame.
+    for (const kidInfo of this._childElementList) {
+      const element = kidInfo.element;
+      if ((EtEmbeddedViewer.is(element) && element.returnCode == null) || EtCommandPlaceHolder.is(element)) {
+        return;  // Don't open a new frame.
+      }
     }
     
     // Fetch the command line.
@@ -1730,17 +1718,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   public deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
-    viewer.removeEventListener('focus', this._childFocusHandlerFunc);
-    viewer.remove();
-    this._virtualScrollArea.removeScrollable(viewer);
+    this._removeScrollable(viewer);
   }
   
   private _getLastEmbeddedViewer(): EtEmbeddedViewer {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);  
-    const kids = scrollerArea.children;
-    const len = kids.length;
+    const kids = this._childElementList;
+    const len = this._childElementList.length;
     for (let i=len-1; i>=0;i--) {
-      const kid = kids[i];
+      const kid = kids[i].element;
       if (EtEmbeddedViewer.is(kid)) {
         return kid;
       }
@@ -1814,8 +1799,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   private _closeLastEmbeddedViewer(returnCode: string): void {
-    const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-
     // Find the terminal viewer which has no return code set on it.
     let startElement: HTMLElement & VirtualScrollable = null;
     for (let i=this._childElementList.length-1; i>=0; i--) {
@@ -1936,10 +1919,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
    */
   copyToClipboard(): void {
     let text: string = null;
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    const kids = domutils.nodeListToArray(scrollerArea.childNodes);
-    for (let i=0; i<kids.length; i++) {
-      const node = kids[i];
+    for (let i=0; i<this._childElementList.length; i++) {
+      const node = this._childElementList[i].element;
       if (ViewerElement.isViewerElement(node)) {
         text = node.getSelectionText();
         if (text !== null) {
