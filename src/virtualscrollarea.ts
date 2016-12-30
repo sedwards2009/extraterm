@@ -98,7 +98,7 @@ export function bulkEmitResizeEvent(el: VirtualScrollable & HTMLElement): BulkDO
     if (operations.length === 0) {
       return BulkDOMOperation.nullOperation();
     } else {
-      return BulkDOMOperation.fromArray(operations);
+      return BulkDOMOperation.parallel(operations);
     }
 }
 
@@ -766,7 +766,7 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
     }
   });
 
-  CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.fromArray(operationsList));
+  CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.parallel(operationsList));
   
   // Update the Y offset for the container.
   if (oldState.containerScrollYOffset !== newState.containerScrollYOffset) {

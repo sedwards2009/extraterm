@@ -953,7 +953,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
     const modeOperations = childNodes.map( (node) => node.bulkSetMode(mode));
     const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
-    const allOperations = BulkDOMOperation.fromArray([...modeOperations, ...visualStateOperations]);
+    const allOperations = BulkDOMOperation.parallel([...modeOperations, ...visualStateOperations]);
 
     CodeMirrorOperation.executeBulkDOMOperation(allOperations);
   }
@@ -1044,7 +1044,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
           const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
           const modeOperation = element.bulkSetMode(this._mode);
           const visualStateOperation = element.bulkSetVisualState(visualState);
-          const allOperations = BulkDOMOperation.fromArray([modeOperation, visualStateOperation]);
+          const allOperations = BulkDOMOperation.parallel([modeOperation, visualStateOperation]);
 
           yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: allOperations, waitOperation: allOperations };
         }
@@ -1501,14 +1501,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
         if (stashedList.length !== 0) {
           const markVisibleOperations = stashedList.map( (el) => this._bulkMarkVisible(el, true) );
-          CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.fromArray(markVisibleOperations));
+          CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.parallel(markVisibleOperations));
         }
 
         this._virtualScrollArea.updateScrollableSizes(processList);
 
         if (stashedList.length !== 0) {
           const markVisibleOperations = stashedList.map( (el) => this._bulkMarkVisible(el, false) );
-          CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.fromArray(markVisibleOperations));
+          CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.parallel(markVisibleOperations));
         }
 
         this._scheduleStashedChildResize();

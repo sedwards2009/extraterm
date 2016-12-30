@@ -29,7 +29,7 @@ export interface BulkDOMOperation {
  * @return a single BulkDOMOperation which calls each BulkDOMOperation in the
  *          list.
  */
-export function fromArray(originalOperations: BulkDOMOperation[]): BulkDOMOperation {
+export function parallel(originalOperations: BulkDOMOperation[]): BulkDOMOperation {
   if (originalOperations == null || originalOperations.length === 0) {
     return nullOperation();
   }
@@ -305,7 +305,7 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
       }
       const newOperation = topOperation.runPhase(nextPhase);
       if (newOperation != null) {
-        topOperation = fromArray( [topOperation, newOperation] );
+        topOperation = parallel( [topOperation, newOperation] );
       }
 
       if (DEBUG && DEBUG_FINE) {
@@ -335,7 +335,7 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
           }
           const newOperation = topOperation.runPhase(nextPhase);
           if (newOperation != null) {
-            topOperation = fromArray( [topOperation, newOperation] );
+            topOperation = parallel( [topOperation, newOperation] );
           }
           lastPhase = nextPhase;
 

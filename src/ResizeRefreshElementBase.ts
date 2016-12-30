@@ -31,7 +31,7 @@ export class ResizeRefreshElementBase extends HTMLElement {
       }
     }
 
-    return BulkDOMOperation.fromArray(operations);
+    return BulkDOMOperation.parallel(operations);
   }
   
   static is(node: Node): node is ResizeRefreshElementBase {

@@ -38,7 +38,7 @@ export function testTwo(test: nodeunit.Test): void {
   };
 
   BulkDOMOperation.execute(
-    BulkDOMOperation.fromArray( [ BulkDOMOperation.fromGenerator(generator.bind(this)()),
+    BulkDOMOperation.parallel( [ BulkDOMOperation.fromGenerator(generator.bind(this)()),
                                   BulkDOMOperation.fromGenerator(generator2.bind(this)())
                                 ]));
 
@@ -92,7 +92,7 @@ export function testTwoSequence(test: nodeunit.Test): void {
   };
 
   BulkDOMOperation.execute(
-    BulkDOMOperation.fromArray( [ BulkDOMOperation.fromGenerator(generator.bind(this)()),
+    BulkDOMOperation.parallel( [ BulkDOMOperation.fromGenerator(generator.bind(this)()),
                                   BulkDOMOperation.fromGenerator(generator.bind(this)())
                                 ]));
 
@@ -124,7 +124,7 @@ export function testOrdered(test: nodeunit.Test): void {
   };
 
   BulkDOMOperation.execute(
-    BulkDOMOperation.fromArray( [ BulkDOMOperation.fromGenerator(generator.bind(this)()),
+    BulkDOMOperation.parallel( [ BulkDOMOperation.fromGenerator(generator.bind(this)()),
                                   BulkDOMOperation.fromGenerator(generator2.bind(this)())
                                 ]));
 
@@ -185,7 +185,7 @@ export function testExtraOp2(test: nodeunit.Test): void {
   };
 
   BulkDOMOperation.execute(
-    BulkDOMOperation.fromArray( [ BulkDOMOperation.fromGenerator(generator.bind(this)()),
+    BulkDOMOperation.parallel( [ BulkDOMOperation.fromGenerator(generator.bind(this)()),
                                   BulkDOMOperation.fromGenerator(generator.bind(this)()),
                                   BulkDOMOperation.fromGenerator(generator.bind(this)())
                                 ]));

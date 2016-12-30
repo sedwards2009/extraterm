@@ -136,7 +136,7 @@ class CbTabWidget extends ThemeableElementBase {
     if (contentsStack === null) {
       return BulkDOMOperation.nullOperation();
     }
-    return BulkDOMOperation.fromArray([super.bulkRefresh(level), contentsStack.bulkRefresh(level)]);
+    return BulkDOMOperation.parallel([super.bulkRefresh(level), contentsStack.bulkRefresh(level)]);
   }
 
   /**

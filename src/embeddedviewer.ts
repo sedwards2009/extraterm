@@ -391,7 +391,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
 
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
-      return BulkDOMOperation.fromArray([viewerElement.bulkSetMode(newMode), setModeOperation]);
+      return BulkDOMOperation.parallel([viewerElement.bulkSetMode(newMode), setModeOperation]);
     } else {
       return setModeOperation;
     }
