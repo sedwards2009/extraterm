@@ -17,7 +17,7 @@ Extraterm is built on the following technologies:
 * [TypeScript](http://www.typescriptlang.org) - superset of JavaScript which adds static typing.
 * [CodeMirror](http://electron.atom.io/) - text editor component which is used extensively to show terminal output and provide cursor based selections and editing.
 * [term.js](https://github.com/chjj/term.js) - Terminal emulator component, pulled into the Extraterm code base and heavily modified.
-* [pty.js](https://github.com/chjj/pty.js) - PTY support for node.js.
+* [ptyw.js](https://github.com/iiegor/ptyw.js) - PTY support for node.js.
 * … plus many other smaller libraries.
 
 Thanks go out to the people and organisations responsible for the great software and tools I've been able to build on.
@@ -55,6 +55,9 @@ The basic rule is just follow the formatting already being used in existing code
 * Prefer `null` over `undefined`.
 * Be explicit about showing what the code means. No cute shortcuts.
 
+Updating the Version of Electron used
+-------------------------------------
+[See this document](how_to_update_electron.md)
 
 Road Map
 --------
