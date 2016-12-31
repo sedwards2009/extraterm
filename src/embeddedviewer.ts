@@ -720,7 +720,8 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
 
   private _handleChildFocus(ev: FocusEvent): void {
-    super.focus();
+    const focusEvent = new FocusEvent('focus', {});
+    this.dispatchEvent(focusEvent);
   }
 
   private _handleKeyDown(ev: KeyboardEvent): void {

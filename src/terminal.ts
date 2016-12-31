@@ -761,7 +761,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _appendNewTerminalViewer(): void {
     // Create the TerminalViewer
     const terminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
-    terminalViewer.addEventListener('focus', this._childFocusHandlerFunc);
     keybindingmanager.injectKeyBindingManager(terminalViewer, this._keyBindingManager);
     config.injectConfigManager(terminalViewer, this._configManager);
     
@@ -777,6 +776,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
 
   private _appendScrollable(el: HTMLElement & VirtualScrollable): void {
+    el.addEventListener('focus', this._childFocusHandlerFunc);
+    
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
     this._childElementList.push( { element: el, needsResize: false } );
     scrollerArea.appendChild(el);
@@ -821,8 +822,6 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   private _appendScrollableElement(el: ScrollableElement): void {
-    el.addEventListener('focus', this._childFocusHandlerFunc);
-
     this._emulator.moveRowsAboveCursorToScrollback();
     let currentTerminalViewer = this._terminalViewer;
     
@@ -1811,9 +1810,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     
     if (startElement != null) {
       // Finish framing an already existing Embedded viewer bar.
-      
-      let embeddedSomethingElement = <HTMLElement>startElement;
-      const embeddedViewerElement = <EtEmbeddedViewer> embeddedSomethingElement;
+      const embeddedViewerElement = <EtEmbeddedViewer> startElement;
       
       const activeTerminalViewer = this._terminalViewer;
       this._disconnectActiveTerminalViewer();
