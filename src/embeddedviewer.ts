@@ -301,6 +301,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
 
         yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         this._applyContainerChanges();
+        this._virtualScrollArea.reapplyState();
         return BulkDOMOperation.GeneratorPhase.DONE;
       };
 
