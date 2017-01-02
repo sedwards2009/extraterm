@@ -12,6 +12,7 @@ Updating Electron itself
 
 * Install the version of node which matches the version used by the version of Electron you are moving to. `node -v` should show the new version number.
 * Bump the version of Electron in `package.json`. Consider bumping the version of `electron-rebuild` and `electron-packager` too.
+* Delete the `node_modules` directory.
 * `npm install electron`
 * (Linux, OSX) `node node_modules/electron-rebuild/lib/cli.js -f` -- This rebuilds any native module against the new Electron version and makes it ready for local development.
 * (Windwos) `src\build_scripts\rebuild_mods_windows.bat` -- This is the same as above, but for Windows.
