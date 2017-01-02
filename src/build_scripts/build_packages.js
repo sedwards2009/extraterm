@@ -10,7 +10,7 @@ const packager = require('electron-packager');
 
 const log = console.log.bind(console);
 const BUILD_TMP = 'build_tmp';
-const MODULE_VERSON = 49;
+const MODULE_VERSON = 50; // This version number also appears in thememanager.ts
 
 function main() {
   "use strict";
@@ -88,6 +88,18 @@ function main() {
       }
     });
   }
+  
+  function copyWindowsNodeSassBinary(versionedOutputDir, platform) {
+    // See the start of thememanager.ts. Once we are past node v6.5, this code here can be removed.
+    // See https://github.com/nodejs/node/issues/8444 This bug breaks the require() trick done in thememanager.ts.
+    if (platform === "win32") {
+      const gutsDir = "resources/app";
+      const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node_modules/node-sass/vendor//win32-x64-" + MODULE_VERSON);
+      const nodeSassBinary = path.join(versionedOutputDir, gutsDir, "src/node-sass-binary/win32-x64-" + MODULE_VERSON + "/binding.node");
+      mkdir(nodeSassVendorDir);
+      cp(nodeSassBinary, path.join(nodeSassVendorDir, "binding.node"));
+    }
+  }
 
   function makePackage(arch, platform) {
     log("");
@@ -122,6 +134,7 @@ function main() {
 
           // Prune any unneeded node-sass binaries.
           pruneNodeSass(versionedOutputDir, arch, platform);
+          copyWindowsNodeSassBinary(versionedOutputDir, platform);
 
           // Zip it up.
           log("Zipping up the package");
