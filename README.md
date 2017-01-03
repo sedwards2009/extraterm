@@ -28,7 +28,7 @@ Further Information
 * [FAQ](docs/faq.md)
 * [How to Create Themes](docs/theming.md)
 * [Development and Contributing](docs/development.md)
-
+* [Current Development Roadmap](https://github.com/sedwards2009/extraterm/issues/30)
 
 Status
 ------
