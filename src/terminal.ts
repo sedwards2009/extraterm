@@ -527,6 +527,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       this._appendNewTerminalViewer();
       
       this.updateThemeCss();
+
+      scrollContainer.addEventListener('mousedown', (ev: MouseEvent): void => {
+        if (ev.target === scrollContainer) {
+          this._terminalViewer.focus();
+          ev.preventDefault();
+          ev.stopPropagation();
+        }
+      });
       
       scrollArea.addEventListener('mousedown', (ev: MouseEvent): void => {
         if (ev.target === scrollArea) {
