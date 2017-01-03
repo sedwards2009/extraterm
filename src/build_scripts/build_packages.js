@@ -94,10 +94,12 @@ function main() {
     // See https://github.com/nodejs/node/issues/8444 This bug breaks the require() trick done in thememanager.ts.
     if (platform === "win32") {
       const gutsDir = "resources/app";
-      const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node_modules/node-sass/vendor//win32-x64-" + MODULE_VERSON);
+      const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node_modules/node-sass/vendor");
       const nodeSassBinary = path.join(versionedOutputDir, gutsDir, "src/node-sass-binary/win32-x64-" + MODULE_VERSON + "/binding.node");
       mkdir(nodeSassVendorDir);
-      cp(nodeSassBinary, path.join(nodeSassVendorDir, "binding.node"));
+      const nodeSassBinaryDir = path.join(nodeSassVendorDir, "win32-x64-" + MODULE_VERSON)
+      mkdir(nodeSassBinaryDir);
+      cp(nodeSassBinary, path.join(nodeSassBinaryDir, "binding.node"));
     }
   }
 
