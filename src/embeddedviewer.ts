@@ -133,6 +133,9 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _requestContainerScroll: boolean; // true if the container needs scroll to be set.
   private _requestContainerYScroll: number; // the new scroll Y to use during update.
 
+  private _headerTop: number;
+  private _headerBottom: number;
+
   private _initProperties(): void {
     this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
     this._visualState = ViewerElementTypes.VisualState.AUTO;
@@ -143,6 +146,9 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._requestContainerHeight = false;
     this._requestContainerScroll = false;
     this._requestContainerYScroll = 0;
+
+    this._headerTop = 0;
+    this._headerBottom = 0;
   }
   
   //-----------------------------------------------------------------------
@@ -706,9 +712,17 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     const outputStyle = window.getComputedStyle(outputDiv);
 
     const rect = headerDiv.getBoundingClientRect();
+
+    if (rect.width === 0) {
+      // Bogus info. This element most likely isn't in the DOM tree proper. Fall back to the last good read.
+      return { top: this._headerTop, bottom: this._headerBottom };
+    }
+
     const top = rect.height + domutils.pixelLengthToInt(outputStyle.borderTopWidth);
     const bottom = domutils.pixelLengthToInt(outputStyle.borderBottomWidth);
-    
+
+    this._headerTop = top;
+    this._headerBottom = bottom;
     return {top, bottom};
   }
 
