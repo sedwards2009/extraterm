@@ -726,6 +726,11 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       }
     });
 
+    newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, (ev: CustomEvent): void => {
+      const status: { bufferSize: number;} = <any> ev.detail;
+      webipc.ptyOutputBufferSize(tabInfo.ptyId, status.bufferSize);
+    });
+
     // Terminal title event
     newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (ev: CustomEvent): void => {
       tabInfo.updateTabTitle();
@@ -751,6 +756,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       .then( (msg: Messages.CreatedPtyMessage) => {
         tabInfo.ptyId = msg.id;
         webipc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
+        webipc.ptyOutputBufferSize(tabInfo.ptyId, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
       });
 
     tabInfo.updateTabTitle();
@@ -1119,7 +1125,8 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   private _handlePtyOutput(msg: Messages.PtyOutput): void {
     this._tabInfo.forEach( (tabInfo) => {
       if (tabInfo instanceof TerminalTabInfo && (<TerminalTabInfo>tabInfo).ptyId === msg.id) {
-        tabInfo.terminal.write(msg.data);
+        const status = tabInfo.terminal.write(msg.data);
+        webipc.ptyOutputBufferSize(msg.id, status.bufferSize);
       }
     });
   }

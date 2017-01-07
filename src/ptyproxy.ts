@@ -148,6 +148,14 @@ class ProxyPty implements Pty {
   
   destroy(): void {    
   }
+
+  pause(): void {
+// FIXME
+  }
+
+  resume(): void {
+// FIXME
+  }
 }
 
 function findCygwinPython(cygwinDir: string): string {

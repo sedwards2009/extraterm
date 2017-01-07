@@ -24,11 +24,21 @@ export interface Pty {
   resize(cols: number, rows: number): void;
   
   /**
+   * Puase the stream of data from the PTY.
+   */
+  pause(): void;
+
+  /**
+   * Pause the stream of data from the PTY.
+   */
+  resume(): void;  
+
+  /**
    * Destroy the pty and shut down the attached process
    */
   destroy(): void;
   
-  onData(callback: (data: any) => void): void;
+  onData(callback: (data: string) => void): void;
   
   onExit(callback: () => void): void;
 }

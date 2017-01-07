@@ -118,6 +118,11 @@ export function ptyInput(id: number, data: string): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
+export function ptyOutputBufferSize(id: number, size: number): void {
+  const msg: Messages.PtyOutputBufferSize = {type: Messages.MessageType.PTY_OUTPUT_BUFFER_SIZE, id, size };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
 export function ptyResize(id: number, columns: number, rows: number): void {
   const msg: Messages.PtyResize = {type: Messages.MessageType.PTY_RESIZE, id: id, columns: columns, rows: rows };
   ipc.send(Messages.CHANNEL_NAME, msg);

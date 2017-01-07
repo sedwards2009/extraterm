@@ -47,7 +47,8 @@ export const enum MessageType {
   WINDOW_MINIMIZE_REQUEST,
   WINDOW_MAXIMIZE_REQUEST,
   NEW_TAG_REQUEST,
-  NEW_TAG
+  NEW_TAG,
+  PTY_OUTPUT_BUFFER_SIZE
 }
 
 /**
@@ -229,6 +230,24 @@ export interface PtyOutput extends Message {
    * The output data from the PTY.
    */
   data: string;
+}
+
+/**
+ * Notification regarding the amount of data from the PTY which can be accepted.
+ * 
+ * This message is sent from the render process to the main process. This is
+ * more of an advisory than a hard limit.
+ */
+export interface PtyOutputBufferSize extends Message {
+  /**
+   * The ID of the PTY this message refers to.
+   */
+  id: number;
+
+  /**
+   * The size of the PTY output buffer in bytes.
+   */
+  size: number;
 }
 
 /**

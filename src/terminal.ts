@@ -130,6 +130,11 @@ interface ChildElementStatus {
   needsResize: boolean;
 }
 
+interface WriteBufferStatus {
+  acceptingWrites: boolean;
+  bufferSize: number;
+}
+
 /**
  * An Extraterm terminal.
  * 
@@ -147,7 +152,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   static EVENT_USER_INPUT = "user-input";
   
   static EVENT_TERMINAL_RESIZE = "terminal-resize";
-  
+
+  static EVENT_TERMINAL_BUFFER_SIZE = "temrinal-buffer-size";
+
   static EVENT_TITLE = "title";
   
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
@@ -429,8 +436,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
    * 
    * @param text the stream of data to write.
    */
-  write(text: string): void {
-    this._emulator.write(text);
+  write(text: string): WriteBufferStatus {
+    return this._emulator.write(text);
   }
   
   /**
@@ -762,7 +769,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     emulator.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
     emulator.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
     emulator.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
-    
+    emulator.addWriteBufferSizeEventListener(this._handleWriteBufferSize.bind(this));
     this._emulator = emulator;
   }
 
@@ -875,7 +882,12 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       this._pasteFromClipboard();
     }
   }
-  
+
+  private _handleWriteBufferSize(emulator: termjs.Emulator, status: termjs.WriteBufferStatus): void {
+    const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, { detail: status });
+    this.dispatchEvent(event);
+  }
+
   /**
    * Handle new stdout data from the pty.
    * 

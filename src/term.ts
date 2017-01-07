@@ -156,6 +156,7 @@ const TITLE_EVENT = "TITLE_EVENT";
 const APPLICATIONMODESTART_EVENT = "APPLICATIONMODESTART_EVENT";
 const APPLICATIONMODEDATA_EVENT = "APPLICATIONMODEDATA_EVENT";
 const APPLICATIONMODEEND_EVENT = "APPLICATIONMODEEND_EVENT";
+const WRITEBUFFERSIZE_EVENT = "WRITEBUFFERSIZE_EVENT";
 
 export interface RenderEvent {
   rows: number;         // the current number of rows in the emulator screen.
@@ -191,7 +192,11 @@ export interface ApplicationModeEventListener {
 }
 
 export interface ApplicationModeDataEventListener {
-    (instance: Emulator, data: string): void;
+  (instance: Emulator, data: string): void;
+}
+
+export interface WriteBufferSizeEventListener {
+  (instance: Emulator, status: WriteBufferStatus): void;
 }
 
 export interface MouseEventOptions {
@@ -203,6 +208,11 @@ export interface MouseEventOptions {
   shiftKey: boolean;
   metaKey: boolean;
   ctrlKey : boolean;
+}
+
+export interface WriteBufferStatus {
+  acceptingWrites: boolean;
+  bufferSize: number;
 }
 
 export interface EmulatorAPI {
@@ -243,7 +253,7 @@ export interface EmulatorAPI {
    */
   mouseMove(ev: MouseEventOptions): boolean;
   
-  write(data: string): void;
+  write(data: string): WriteBufferStatus;
   
   focus(): void;
   blur(): void;
@@ -261,6 +271,8 @@ export interface EmulatorAPI {
   addApplicationModeStartEventListener(eventHandler: ApplicationModeEventListener): void;
   addApplicationModeDataEventListener(eventHandler: ApplicationModeDataEventListener): void;
   addApplicationModeEndEventListener(eventHandler: ApplicationModeEventListener): void;  
+
+  addWriteBufferSizeEventListener(eventHandler: WriteBufferSizeEventListener): void;
 }
 
 export interface TerminalDataEventListener {
@@ -1064,6 +1076,8 @@ export const ITALIC_ATTR_FLAG = 32;
 export const STRIKE_THROUGH_ATTR_FLAG = 64;
 export const FAINT_ATTR_FLAG = 128;
 
+const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
+
 export function flagsFromCharAttr(attr: CharAttr): number {
   return attr >> 18;
 }
@@ -1242,7 +1256,7 @@ export class Emulator implements EmulatorAPI {
     
     this._events = {};
     this.handler = function() {};
-    this.write = function() {};
+    this.write = () => ( { acceptingWrites: false, bufferSize: 0 } );
   }
 
   private _resetVariables(): void {
@@ -1932,9 +1946,19 @@ export class Emulator implements EmulatorAPI {
     this.refresh(0, this.rows - 1);
   }
 
-  write(data: string): void {
+  write(data: string): WriteBufferStatus {
     this._writeBuffers.push(data);
     this._scheduleProcessWriteChunk();
+    return this._writeBufferStatus();
+  }
+
+  private _writeBufferStatus(): WriteBufferStatus {
+    const size = this._writeBuffers.map( (buf) => buf.length ).reduce( (accu, x) => accu + x, 0);
+    return { acceptingWrites: size < MAX_WRITE_BUFFER_SIZE, bufferSize: MAX_WRITE_BUFFER_SIZE - size };
+  }
+
+  private _emitWriteBufferSizeEvent(): void {
+    this._emit(WRITEBUFFERSIZE_EVENT, this, this._writeBufferStatus());
   }
 
   /**
@@ -1965,12 +1989,14 @@ export class Emulator implements EmulatorAPI {
         this._processWriteChunkTimer = -1;
         
         this._scheduleRefresh(true);
+        this._emitWriteBufferSizeEvent();
         break;
       }
       
       const nowtime = window.performance.now();
       if ((nowtime - starttime) > MAX_BATCH_TIME) {
         this._scheduleRefresh(false);
+        this._emitWriteBufferSizeEvent();
         break;
       }
     }
@@ -2003,6 +2029,7 @@ export class Emulator implements EmulatorAPI {
     while(this._processOneWriteChunk()) {
       // Keep on going until it is all done.
     }
+    this._emitWriteBufferSizeEvent();
   }
 
   /**
@@ -5446,6 +5473,10 @@ export class Emulator implements EmulatorAPI {
 
   addApplicationModeEndEventListener(eventHandler: ApplicationModeEventListener): void {
     this.addListener(APPLICATIONMODEEND_EVENT, eventHandler);
+  }
+
+  addWriteBufferSizeEventListener(eventHandler: WriteBufferSizeEventListener): void {
+    this.addListener(WRITEBUFFERSIZE_EVENT, eventHandler);
   }
 
   private addListener(type: string, listener: any): void {

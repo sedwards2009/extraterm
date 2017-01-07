@@ -36,6 +36,14 @@ class DirectPty implements Pty {
   destroy(): void {
     this.realPty.destroy();
   }
+
+  pause(): void {
+    this.realPty.pause();
+  }
+
+  resume(): void {
+    this.realPty.resume();
+  }
 }
 
 function spawn(file: string, args: string[], opt: PtyOptions): Pty {
