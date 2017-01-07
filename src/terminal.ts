@@ -131,7 +131,6 @@ interface ChildElementStatus {
 }
 
 interface WriteBufferStatus {
-  acceptingWrites: boolean;
   bufferSize: number;
 }
 

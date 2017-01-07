@@ -211,7 +211,6 @@ export interface MouseEventOptions {
 }
 
 export interface WriteBufferStatus {
-  acceptingWrites: boolean;
   bufferSize: number;
 }
 
@@ -1256,7 +1255,7 @@ export class Emulator implements EmulatorAPI {
     
     this._events = {};
     this.handler = function() {};
-    this.write = () => ( { acceptingWrites: false, bufferSize: 0 } );
+    this.write = () => ( { bufferSize: 0 } );
   }
 
   private _resetVariables(): void {
@@ -1954,7 +1953,7 @@ export class Emulator implements EmulatorAPI {
 
   private _writeBufferStatus(): WriteBufferStatus {
     const size = this._writeBuffers.map( (buf) => buf.length ).reduce( (accu, x) => accu + x, 0);
-    return { acceptingWrites: size < MAX_WRITE_BUFFER_SIZE, bufferSize: MAX_WRITE_BUFFER_SIZE - size };
+    return { bufferSize: MAX_WRITE_BUFFER_SIZE - size };
   }
 
   private _emitWriteBufferSizeEvent(): void {
