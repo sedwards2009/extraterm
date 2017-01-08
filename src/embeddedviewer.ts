@@ -390,6 +390,9 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
     const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+      if (DEBUG_SIZE) {
+        this._log.debug("bulkSetMode() generator: newMode=", newMode);
+      }
       yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
 
       return BulkDOMOperation.GeneratorPhase.DONE;
