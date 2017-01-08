@@ -982,8 +982,6 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
   //    cwd: process.env.HOME,
       env: ptyEnv } );
 
-  term.pause(); // the pty output is paused until we hear that there is buffer space available downstream.
-
   ptyCounter++;
   const ptyId = ptyCounter;
   const ptyTup = { windowId: BrowserWindow.fromWebContents(sender).id, ptyTerm: term, outputBufferSize: 0, outputPaused: true };
@@ -996,18 +994,6 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
     }
     const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: ptyId, data: data };
     sender.send(Messages.CHANNEL_NAME, msg);
-
-    // Keep track of how much data we are allowed to send. We may have to
-    // pause the pty and the app on the other side.
-    const outputBufferSize = ptyTup.outputBufferSize - data.length;
-    ptyTup.outputBufferSize = outputBufferSize;
-    if (outputBufferSize <= 0 && ! ptyTup.outputPaused) {
-      term.pause();
-      ptyTup.outputPaused = true;
-      if (LOG_FINE) {
-        log("Pausing the term output.");
-      }
-    }
   });
 
   term.onExit( () => {
@@ -1033,7 +1019,7 @@ function handlePtyCreate(sender: Electron.WebContents, msg: Messages.CreatePtyRe
 function handlePtyInput(msg: Messages.PtyInput): void {
   const ptyTerminalTuple = ptyMap.get(msg.id);
   if (ptyTerminalTuple === undefined) {
-    log("WARNING: Input arrived for a terminal which doesn't exist.");
+    log("handlePtyInput() WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
 
@@ -1043,34 +1029,20 @@ function handlePtyInput(msg: Messages.PtyInput): void {
 function handlePtyOutputBufferSize(msg: Messages.PtyOutputBufferSize): void {
   const ptyTerminalTuple = ptyMap.get(msg.id);
   if (ptyTerminalTuple === undefined) {
-    log("WARNING: Input arrived for a terminal which doesn't exist.");
+    log("handlePtyOutputBufferSize() WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
 
-  ptyTerminalTuple.outputBufferSize = msg.size;
-  if (msg.size > 0) {
-    if(ptyTerminalTuple.outputPaused) {
-      if (LOG_FINE) {
-        log("Got Output Buffer Size message. Resuming PTY output for ptyID=" + msg.id);
-      }
-      ptyTerminalTuple.ptyTerm.resume();  // Turn the pty output back on.
-      ptyTerminalTuple.outputPaused = false;
-    }
-  } else {
-    if( ! ptyTerminalTuple.outputPaused) {
-      if (LOG_FINE) {
-        log("Got Output Buffer Size message. Pausing PTY output for ptyID=" + msg.id);
-      }
-      ptyTerminalTuple.ptyTerm.pause();
-      ptyTerminalTuple.outputPaused = true;
-    }
+  if (LOG_FINE) {
+    log("Received Output Buffer Size message. Resuming PTY output for ptyID=" + msg.id);
   }
+  ptyTerminalTuple.ptyTerm.permittedDataSize(msg.size);
 }
 
 function handlePtyResize(msg: Messages.PtyResize): void {
   const ptyTerminalTuple = ptyMap.get(msg.id);
   if (ptyTerminalTuple === undefined) {
-    log("WARNING: Input arrived for a terminal which doesn't exist.");
+    log("handlePtyResize() WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
   ptyTerminalTuple.ptyTerm.resize(msg.columns, msg.rows);  
@@ -1079,7 +1051,7 @@ function handlePtyResize(msg: Messages.PtyResize): void {
 function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
   const ptyTerminalTuple = ptyMap.get(msg.id);
   if (ptyTerminalTuple === undefined) {
-    log("WARNING: Input arrived for a terminal which doesn't exist.");
+    log("handlePtyCloseRequest() WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
   ptyTerminalTuple.ptyTerm.destroy();

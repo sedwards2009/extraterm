@@ -22,16 +22,8 @@ export interface Pty {
    * @param rows number of rows in the terminal.
    */
   resize(cols: number, rows: number): void;
-  
-  /**
-   * Puase the stream of data from the PTY.
-   */
-  pause(): void;
 
-  /**
-   * Pause the stream of data from the PTY.
-   */
-  resume(): void;  
+  permittedDataSize(size: number): void;
 
   /**
    * Destroy the pty and shut down the attached process

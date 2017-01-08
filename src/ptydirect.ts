@@ -13,8 +13,23 @@ class DirectPty implements Pty {
   
   private realPty: pty.Terminal;
     
+  private _onDataCallback: (data: any) => void = null;
+
+  private _permittedDataSize = 0;
+  
+  private _paused = true;
+
   constructor(file?: string, args?: string[], opt?: PtyOptions) {
     this.realPty = pty.createTerminal(file, args, opt);
+
+    this.realPty.on('data', (data: any): void => {
+      if (this._onDataCallback != null) {
+        this._onDataCallback(data);
+      }
+      this.permittedDataSize(this._permittedDataSize - data.length);
+    });
+
+    this.realPty.pause();
   }
   
   write(data: any): void {
@@ -26,7 +41,7 @@ class DirectPty implements Pty {
   }
   
   onData(callback: (data: any) => void): void {
-    this.realPty.on('data', callback);
+    this._onDataCallback = callback;
   }
   
   onExit(callback: () => void): void {
@@ -37,12 +52,19 @@ class DirectPty implements Pty {
     this.realPty.destroy();
   }
 
-  pause(): void {
-    this.realPty.pause();
-  }
-
-  resume(): void {
-    this.realPty.resume();
+  permittedDataSize(size: number): void {
+    this._permittedDataSize = size;
+    if (size > 0) {
+      if (this._paused) {
+        this.realPty.resume();
+        this._paused = false;
+      }
+    } else {
+      if ( ! this._paused) {
+        this.realPty.pause();
+        this._paused = true;
+      }
+    }
   }
 }
 

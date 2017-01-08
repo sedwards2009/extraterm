@@ -44,14 +44,19 @@ class NonblockingFileReader:
         
         self.file_object = file_object
         self._custom_read = read
-        
+
+        # These are used to throttle our reading and sending of data.
+        self._read_valve = threading.Event()
+        self._read_valve.clear()
+        self._permit_data_size = 0
+
         self.id = nbfr_counter
         nbfr_counter += 1
         
         self._isEOF = False
         
         self.buffer = []
-        self.buffer_lock = threading.Lock()
+        self.buffer_lock = threading.RLock()
         
         self.thread = threading.Thread(name="Nonblocking File Reader "+str(self.id),
             target=self._thread_start)
@@ -75,18 +80,33 @@ class NonblockingFileReader:
         with self.buffer_lock:
             return len(self.buffer)==0 and self._isEOF
 
+    def permitDataSize(self, size):
+        if LOG_FINER:
+            log("NonblockingFileReader.permitDataSize(): Setting permit_data_size to " + str(size))
+        with self.buffer_lock:
+            self._permit_data_size = size
+            if size > 0:
+                self._read_valve.set()
+            else:
+                self._read_valve.clear()
+
     def _thread_start(self):
         global activity_event
         try:
             while True:
+                self._read_valve.wait()
+
                 chunk = self._read_next()
                 if LOG_FINER:
-                    log("_thread_start read:" + repr(chunk))
+                    log("NonblockingFileReader._thread_start() Read: " + repr(chunk))
+                
                 with self.buffer_lock:
                     self.buffer.append(chunk)
+                    self.permitDataSize(self._permit_data_size - len(chunk))
+
                 # Tick the alarm
                 if LOG_FINER:
-                    log("reading setting flag!")
+                    log("NonblockingFileReader._thread_start() Setting activity flag.")
                 activity_event.set()
         except EOFError:
             self._isEOF = True
@@ -101,6 +121,13 @@ class NonblockingFileReader:
             return self.file_object.read(10240)
 
 class NonblockingLineReader(NonblockingFileReader):
+    def __init__(self, file_object=None, read=None):
+        NonblockingFileReader.__init__(self, file_object=file_object, read=read)
+        self._read_valve.set()
+
+    def permitDataSize(self, size):
+        pass
+
     def _read_next(self):
         return self.file_object.readline()
 
@@ -168,6 +195,13 @@ pty_list = []   # List of dicts with structure {id: string, pty: pty, reader: }
 #   type: string = "terminate";
 # }
 #
+# permit data size
+# {
+#   type: string = "permit-data-size";
+#   id: number; // pty ID.
+#   size: number; // permitted number of characters to send.
+# }
+
 pty_counter = 1
 
 def process_command(json_command):
@@ -177,6 +211,8 @@ def process_command(json_command):
     if LOG_FINE:
         log("server process command:"+repr(json_command))
     cmd = json.loads(json_command)
+
+    # Create new PTY
     if cmd["type"] == "create":
         # Create a new pty.
         rows = cmd["rows"]
@@ -199,6 +235,7 @@ def process_command(json_command):
         send_to_controller({ "type": "created", "id": pty_id })
         return True
         
+    # Write to PTY
     if cmd["type"] == "write":
         pty = find_pty_by_id(cmd["id"])
         if pty is None:
@@ -207,17 +244,29 @@ def process_command(json_command):
         pty.write(cmd["data"].encode())
         return True
 
+    # Resize PTY
     if cmd["type"] == "resize":
         pty = find_pty_by_id(cmd["id"])
         if pty is None:
-            log("Received a resizee command for an unknown pty (id=" + str(cmd["id"]) + "")
+            log("Received a resize command for an unknown pty (id=" + str(cmd["id"]) + "")
             return
         pty.setwinsize(cmd["rows"], cmd["columns"])
         return True
-        
+
+    # Set permitted data size
+    if cmd["type"] == "permit-data-size":
+        reader = find_reader_by_id(cmd["id"])
+        if reader is None:
+            log("Received a permit-data-size command for an unknown pty (id=" + str(cmd["id"]) + "")
+            return
+        reader.permitDataSize(cmd["size"])
+        return True
+
+    # Terminate a PTY
     if cmd["type"] == "terminate":
         for pty_tup in pty_list:
             pty_tup["pty"].terminate(True)
+            pty_tup["reader"].permitDataSize(1024*1024*1024)
         return False
         
     log("ptyserver receive unrecognized message:" + json_command)
@@ -234,6 +283,12 @@ def find_pty_by_id(pty_id):
     for pty_tup in pty_list:
         if pty_tup["id"] == pty_id:
             return pty_tup["pty"]
+    return None
+
+def find_reader_by_id(pty_id):
+    for pty_tup in pty_list:
+        if pty_tup["id"] == pty_id:
+            return pty_tup["reader"]
     return None
 
 def cygwin_convert_path_variable(path_var):

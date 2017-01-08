@@ -728,7 +728,9 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
 
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, (ev: CustomEvent): void => {
       const status: { bufferSize: number;} = <any> ev.detail;
-      webipc.ptyOutputBufferSize(tabInfo.ptyId, status.bufferSize);
+      if(tabInfo.ptyId != null) {
+        webipc.ptyOutputBufferSize(tabInfo.ptyId, status.bufferSize);
+      }
     });
 
     // Terminal title event
