@@ -1302,7 +1302,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       const startRow = event.refreshStartRow;
       if (startRow !== -1) {
         const endRow = event.refreshEndRow;
-        const lines: termjs.FastLine[] = [];
+        const lines: termjs.Line[] = [];
         for (let row = startRow; row < endRow; row++) {
           lines.push(this._emulator.lineAtRow(row));
         }
@@ -1359,7 +1359,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return true;
   }
 
-  private _handleScrollbackEvent(scrollbackLines: termjs.FastLine[]): void {
+  private _handleScrollbackEvent(scrollbackLines: termjs.Line[]): void {
     const pos: CodeMirror.Position = { line: this._terminalFirstRow, ch: 0 };
     const {text: text, decorations: decorations} = this._linesToTextStyles(scrollbackLines);
     this._codeMirror.operation( () => {
@@ -1368,7 +1368,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
   }
 
-  private _insertLinesOnScreen(startRow: number, endRow: number,lines: termjs.FastLine[]): void {
+  private _insertLinesOnScreen(startRow: number, endRow: number,lines: termjs.Line[]): void {
     const doc = this._codeMirror.getDoc();
     const lineCount = doc.lineCount();
     
@@ -1487,7 +1487,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     // }
   }
   
-  private _linesToTextStyles(lines: termjs.FastLine[]): { text: string; decorations: TextDecoration[]; } {
+  private _linesToTextStyles(lines: termjs.Line[]): { text: string; decorations: TextDecoration[]; } {
     const allDecorations: TextDecoration[] = [];
     const allTextList: string[] = [];
     let cr = "";
@@ -1503,7 +1503,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return {text: allTextList.join(""), decorations: allDecorations};
   }
 
-  private _lineToStyleList(line: termjs.FastLine, lineNumber: number): {text: string, decorations: TextDecoration[] } {
+  private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
     const defAttr = termjs.Emulator.defAttr;
     let attr = defAttr;
     const {chars, attrs} = line;

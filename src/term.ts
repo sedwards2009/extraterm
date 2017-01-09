@@ -108,7 +108,7 @@ interface CharSet {
 }
 
 interface SavedState {
-  lines: FastLine[];
+  lines: Line[];
   cols: number;
   rows: number;
   ybase: number;
@@ -134,7 +134,7 @@ interface SavedState {
 
 export type CharAttr = number;
 
-export interface FastLine {
+export interface Line {
   chars: Uint32Array;
   attrs: Uint32Array;
 }
@@ -167,7 +167,7 @@ export interface RenderEvent {
                             // -1 indicates no refresh needed.
   refreshEndRow: number;    // The end row of a range on the screen which needds to be refreshed.
   
-  scrollbackLines: FastLine[];  // List of lines which have reached the scrollback. Can be null.
+  scrollbackLines: Line[];  // List of lines which have reached the scrollback. Can be null.
 }
 
 export interface RenderEventHandler {
@@ -218,7 +218,7 @@ export interface EmulatorAPI {
   
   size(): TerminalSize;
   
-  lineAtRow(row: number, showCursor?: boolean): FastLine;
+  lineAtRow(row: number, showCursor?: boolean): Line;
   
   refreshScreen(): void;
   
@@ -305,7 +305,7 @@ export class Terminal {
   private context: Window = null;
   private document: Document = null;
   private body: HTMLElement = null;
-  private _scrollbackBuffer: FastLine[] = [];  // Array of lines which have not been rendered to the browser.
+  private _scrollbackBuffer: Line[] = [];  // Array of lines which have not been rendered to the browser.
   private children: HTMLDivElement[] = [];
   private emulator: EmulatorAPI = null;
   
@@ -793,7 +793,7 @@ export class Terminal {
    * @param {Array} line Array describing a line of characters and attributes.
    * @returns {string} A HTML rendering of the line as a HTML string.
    */
-  static lineToHTML(line: FastLine): string {
+  static lineToHTML(line: Line): string {
     let attr = Emulator.defAttr;
     const width = line.chars.length;
     let out = '';
@@ -1021,7 +1021,7 @@ export class Terminal {
    * 
    * @return all of the scrollback lines which need to rendered.
    */
-  fetchScrollbackLines(): FastLine[] {
+  fetchScrollbackLines(): Line[] {
     const lines = this._scrollbackBuffer;
     this._scrollbackBuffer = [];
     return lines;
@@ -1157,7 +1157,7 @@ export class Emulator implements EmulatorAPI {
   
   private _blink = null;
     
-  private lines: FastLine[] = [];
+  private lines: Line[] = [];
   
   private convertEol: boolean;
   private termName: string;
@@ -1173,7 +1173,7 @@ export class Emulator implements EmulatorAPI {
   private _processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.  
   private _refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
 
-  private _scrollbackLineQueue: FastLine[] = [];  // Queue of scrollback lines which need to sent via an event.
+  private _scrollbackLineQueue: Line[] = [];  // Queue of scrollback lines which need to sent via an event.
   private _refreshStart = -1;
   private _refreshEnd = -1;
 
@@ -1613,7 +1613,7 @@ export class Emulator implements EmulatorAPI {
     this._dispatchEvents();
   }
 
-  private _getRow(row: number): FastLine {
+  private _getRow(row: number): Line {
     while (row >= this.lines.length) {
       this.lines.push(this.blankLine());
     }
@@ -1621,7 +1621,7 @@ export class Emulator implements EmulatorAPI {
   }
 
   // Fetch the LineCell at row 'row' if it exists, else return null.
-  private _tryGetRow(row: number): FastLine {
+  private _tryGetRow(row: number): Line {
     return row >= this.lines.length ? null : this.lines[row];
   }
 
@@ -1807,7 +1807,7 @@ export class Emulator implements EmulatorAPI {
     this._refreshEnd = this._refreshEnd < 0 ? end+1 : Math.max(end+1, this._refreshEnd);
   }
   
-  lineAtRow(row: number): FastLine {
+  lineAtRow(row: number): Line {
     if (row < 0 || row >= this.rows) {
       return null;
     }
@@ -1835,7 +1835,7 @@ export class Emulator implements EmulatorAPI {
    * 
    * @return {Line[]} the lines information. Do not change this data!
    */
-  getScreenLines(renderCursor:boolean=false): FastLine[] {
+  getScreenLines(renderCursor:boolean=false): Line[] {
     const linesCopy = [...this.lines];
     
     if (renderCursor) {
@@ -3620,7 +3620,7 @@ export class Emulator implements EmulatorAPI {
     this.eraseRight(0, y);
   }
 
-  private blankLine(cur?: boolean): FastLine {
+  private blankLine(cur?: boolean): Line {
     const chars = new Uint32Array(this.cols);
     const attrs = new Uint32Array(this.cols);
     const line = { chars, attrs };
