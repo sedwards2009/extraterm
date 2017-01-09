@@ -1302,7 +1302,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       const startRow = event.refreshStartRow;
       if (startRow !== -1) {
         const endRow = event.refreshEndRow;
-        const lines: termjs.Line[] = [];
+        const lines: termjs.FastLine[] = [];
         for (let row = startRow; row < endRow; row++) {
           lines.push(this._emulator.lineAtRow(row));
         }
@@ -1359,7 +1359,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return true;
   }
 
-  private _handleScrollbackEvent(scrollbackLines: termjs.Line[]): void {
+  private _handleScrollbackEvent(scrollbackLines: termjs.FastLine[]): void {
     const pos: CodeMirror.Position = { line: this._terminalFirstRow, ch: 0 };
     const {text: text, decorations: decorations} = this._linesToTextStyles(scrollbackLines);
     this._codeMirror.operation( () => {
@@ -1368,7 +1368,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
   }
 
-  private _insertLinesOnScreen(startRow: number, endRow: number,lines: termjs.Line[]): void {
+  private _insertLinesOnScreen(startRow: number, endRow: number,lines: termjs.FastLine[]): void {
     const doc = this._codeMirror.getDoc();
     const lineCount = doc.lineCount();
     
@@ -1487,39 +1487,40 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     // }
   }
   
-  private _linesToTextStyles(lines: termjs.Line[]): { text: string; decorations: TextDecoration[]; } {
+  private _linesToTextStyles(lines: termjs.FastLine[]): { text: string; decorations: TextDecoration[]; } {
     const allDecorations: TextDecoration[] = [];
-    let allText = "";
+    const allTextList: string[] = [];
     let cr = "";
+
     for (let i = 0; i < lines.length; i++) {
       const {text, decorations} = this._lineToStyleList(lines[i], i);
-      allText += cr;
-      allText += text;
+      allTextList.push(cr);
+      allTextList.push(text);
       cr = "\n";
       
       allDecorations.push(...decorations);
     }
-    return {text: allText, decorations: allDecorations};
+    return {text: allTextList.join(""), decorations: allDecorations};
   }
 
-  private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
+  private _lineToStyleList(line: termjs.FastLine, lineNumber: number): {text: string, decorations: TextDecoration[] } {
     const defAttr = termjs.Emulator.defAttr;
     let attr = defAttr;
-    let lineLength = line.length;
-    let text = '';
+    const {chars, attrs} = line;
+    let lineLength = chars.length;
     const decorations: TextDecoration[] = [];
-    
+    const spaceCodePoint = ' '.codePointAt(0);
+
     // Trim off any unstyled whitespace to the right of the line.
-    while (lineLength !==0 && line[lineLength-1][0] === defAttr && line[lineLength-1][1] === ' ') {
+    while (lineLength !==0 && attrs[lineLength-1] === defAttr && chars[lineLength-1] === spaceCodePoint) {
       lineLength--;
     }
 
     let currentDecoration: TextDecoration  = null;
+    const text = String.fromCodePoint(...chars).slice(0, lineLength);
     
     for (let i = 0; i < lineLength; i++) {
-      const data = line[i][0];
-      const ch = line[i][1];
-      text += ch;
+      const data = attrs[i];
       
       if (data !== attr) {
         if (attr !== defAttr) {
@@ -1529,7 +1530,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         }
         if (data !== defAttr) {
           const classList: string[] = [];
-          if (data === -1) {
+          if (data === 0xffffffff) {
             // Cursor itself
             classList.push("reverse-video");
             classList.push("terminal-cursor");

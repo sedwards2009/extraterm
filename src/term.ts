@@ -108,7 +108,7 @@ interface CharSet {
 }
 
 interface SavedState {
-  lines: Line[];
+  lines: FastLine[];
   cols: number;
   rows: number;
   ybase: number;
@@ -133,11 +133,11 @@ interface SavedState {
 // ------------------------------------------------------------------------
 
 export type CharAttr = number;
-export type LineCell = [CharAttr, string];
-export const LINECELL_ATTR = 0;
-export const LINECELL_CHAR = 1;
 
-export type Line = LineCell[];
+export interface FastLine {
+  chars: Uint32Array;
+  attrs: Uint32Array;
+}
 
 export interface TerminalCoord {
   x: number;
@@ -167,7 +167,7 @@ export interface RenderEvent {
                             // -1 indicates no refresh needed.
   refreshEndRow: number;    // The end row of a range on the screen which needds to be refreshed.
   
-  scrollbackLines: Line[];  // List of lines which have reached the scrollback. Can be null.
+  scrollbackLines: FastLine[];  // List of lines which have reached the scrollback. Can be null.
 }
 
 export interface RenderEventHandler {
@@ -218,7 +218,7 @@ export interface EmulatorAPI {
   
   size(): TerminalSize;
   
-  lineAtRow(row: number, showCursor?: boolean): Line;
+  lineAtRow(row: number, showCursor?: boolean): FastLine;
   
   refreshScreen(): void;
   
@@ -305,7 +305,7 @@ export class Terminal {
   private context: Window = null;
   private document: Document = null;
   private body: HTMLElement = null;
-  private _scrollbackBuffer: Line[] = [];  // Array of lines which have not been rendered to the browser.
+  private _scrollbackBuffer: FastLine[] = [];  // Array of lines which have not been rendered to the browser.
   private children: HTMLDivElement[] = [];
   private emulator: EmulatorAPI = null;
   
@@ -793,14 +793,14 @@ export class Terminal {
    * @param {Array} line Array describing a line of characters and attributes.
    * @returns {string} A HTML rendering of the line as a HTML string.
    */
-  static lineToHTML(line: LineCell[]): string {
+  static lineToHTML(line: FastLine): string {
     let attr = Emulator.defAttr;
-    const width = line.length;
+    const width = line.chars.length;
     let out = '';
     
     for (let i = 0; i < width; i++) {
-      const data: number = <number> line[i][LINECELL_ATTR];
-      const ch: string = <string> line[i][LINECELL_CHAR];
+      const data: number = <number> line.attrs[i];
+      const ch: string = <string> String.fromCodePoint(line.chars[i]);
 
       if (data !== attr) {
         if (attr !== Emulator.defAttr) {
@@ -1021,7 +1021,7 @@ export class Terminal {
    * 
    * @return all of the scrollback lines which need to rendered.
    */
-  fetchScrollbackLines(): Line[] {
+  fetchScrollbackLines(): FastLine[] {
     const lines = this._scrollbackBuffer;
     this._scrollbackBuffer = [];
     return lines;
@@ -1157,7 +1157,7 @@ export class Emulator implements EmulatorAPI {
   
   private _blink = null;
     
-  private lines: Line[] = [];
+  private lines: FastLine[] = [];
   
   private convertEol: boolean;
   private termName: string;
@@ -1173,7 +1173,7 @@ export class Emulator implements EmulatorAPI {
   private _processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.  
   private _refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
 
-  private _scrollbackLineQueue: Line[] = [];  // Queue of scrollback lines which need to sent via an event.
+  private _scrollbackLineQueue: FastLine[] = [];  // Queue of scrollback lines which need to sent via an event.
   private _refreshStart = -1;
   private _refreshEnd = -1;
 
@@ -1613,7 +1613,7 @@ export class Emulator implements EmulatorAPI {
     this._dispatchEvents();
   }
 
-  private _getRow(row: number): LineCell[] {
+  private _getRow(row: number): FastLine {
     while (row >= this.lines.length) {
       this.lines.push(this.blankLine());
     }
@@ -1621,7 +1621,7 @@ export class Emulator implements EmulatorAPI {
   }
 
   // Fetch the LineCell at row 'row' if it exists, else return null.
-  private _tryGetRow(row: number): LineCell[] {
+  private _tryGetRow(row: number): FastLine {
     return row >= this.lines.length ? null : this.lines[row];
   }
 
@@ -1640,11 +1640,8 @@ export class Emulator implements EmulatorAPI {
       return null;
     }
     const row = this.lines[y];
-    return row.map(function(tup) {
-      return tup[LINECELL_CHAR];
-    }).join("");
+    return String.fromCodePoint(...row.chars);
   }
-
 
   // encode button and
   // position to characters
@@ -1810,7 +1807,7 @@ export class Emulator implements EmulatorAPI {
     this._refreshEnd = this._refreshEnd < 0 ? end+1 : Math.max(end+1, this._refreshEnd);
   }
   
-  lineAtRow(row: number): Line {
+  lineAtRow(row: number): FastLine {
     if (row < 0 || row >= this.rows) {
       return null;
     }
@@ -1825,8 +1822,10 @@ export class Emulator implements EmulatorAPI {
         this.x < this.cols) {
 
       const x = this.x;
-      line = line.slice();
-      line[x] = [-1, <string> line[x][LINECELL_CHAR]];
+
+      const newLine = {chars: new Uint32Array(line.chars), attrs: new Uint32Array(line.attrs)};
+      newLine.attrs[x] = 0xffffffff;
+      return newLine;
     }
     return line;
   }
@@ -1836,7 +1835,7 @@ export class Emulator implements EmulatorAPI {
    * 
    * @return {Line[]} the lines information. Do not change this data!
    */
-  getScreenLines(renderCursor:boolean=false): Line[] {
+  getScreenLines(renderCursor:boolean=false): FastLine[] {
     const linesCopy = [...this.lines];
     
     if (renderCursor) {
@@ -1846,8 +1845,8 @@ export class Emulator implements EmulatorAPI {
           this.x < this.cols &&
           this.y < linesCopy.length) {
 
-        const cursorLine = [...linesCopy[this.y]];
-        cursorLine[this.x] = [-1, <string> cursorLine[this.x][LINECELL_CHAR]];
+        const cursorLine = {chars: new Uint32Array(linesCopy[this.y].chars), attrs: new Uint32Array(linesCopy[this.y].attrs)};
+        cursorLine.attrs[this.x] = -1;
         linesCopy[this.y] = cursorLine;
       }
     }
@@ -2131,27 +2130,42 @@ export class Emulator implements EmulatorAPI {
                   }
                 }
 
-                const line = this._getRow(this.y + this.ybase);
+                const {chars, attrs} = this._getRow(this.y + this.ybase);
                 if (this.insertMode) {
                   // Push the characters out of the way to make space.
-                  line.splice(this.x, 0, [this.curAttr, ' ']);
+
+                  chars.copyWithin(this.x+1, this.x);
+                  chars[this.x] = ' '.codePointAt(0);
+
+                  attrs.copyWithin(this.x+1, this.x);
+                  attrs[this.x] = this.curAttr;
+                  
+
                   if (isWide(ch)) {
-                    line.splice(this.x, 0, [this.curAttr, ' ']);
+                    chars.copyWithin(this.x+1, this.x);
+                    chars[this.x] = ' '.codePointAt(0);
+
+                    attrs.copyWithin(this.x+1, this.x);
+                    attrs[this.x] = this.curAttr;
                   }
-                  line.splice(this.cols, line.length-this.cols);
                 }
 
-                line[this.x] = [this.curAttr, ch];
+                chars[this.x] = ch.codePointAt(0);
+                attrs[this.x] = this.curAttr;
+
                 this.x++;
                 this.updateRange(this.y);
 
                 if (isWide(ch)) {
                   const j = this.y + this.ybase;
+                  const line = this._getRow(j);
                   if (this.cols < 2 || this.x >= this.cols) {
-                    this._getRow(j)[this.x - 1] = [this.curAttr, ' '];
+                    line.chars[this.x - 1] = ' '.codePointAt(0);
+                    line.attrs[this.x - 1] = this.curAttr;
                     break;
                   }
-                  this._getRow(j)[this.x] = [this.curAttr, ' '];
+                  line.chars[this.x] =  ' '.codePointAt(0);
+                  line.attrs[this.x] = this.curAttr;
                   this.x++;
                 }
               }
@@ -3432,20 +3446,29 @@ export class Emulator implements EmulatorAPI {
     // resize cols
     if (this.cols < newcols) {
       // Add chars to the lines to match the new (bigger) cols value.
-      const ch: LineCell = [Emulator.defAttr, ' ']; // does xterm use the default attr?
+      const chCodePoint = ' '.codePointAt(0);
+
       for (let i = this.lines.length-1; i >= 0; i--) {
-        const line = this.lines[i];
-        while (line.length < newcols) {
-          line.push(ch);
+        const {chars, attrs} = this.lines[i];
+
+        const biggerChars = new Uint32Array(newcols);
+        biggerChars.set(chars);
+
+        const biggerAttrs = new Uint32Array(newcols);
+        biggerAttrs.set(attrs);
+
+        for(let j=chars.length; j<newcols; j++) {
+          biggerChars[j] = chCodePoint;
+          biggerAttrs[j] = Emulator.defAttr;
         }
+
+        this.lines[i] = {chars: biggerChars, attrs: biggerAttrs};
       }
     } else if (this.cols > newcols) {
       // Remove chars from the lines to match the new (smaller) cols value.
       for (let i = this.lines.length-1; i >= 0; i--) {
         const line = this.lines[i];
-        while (line.length > newcols) {
-          line.pop();
-        }
+        this.lines[i] = {chars: line.chars.slice(0, newcols), attrs: line.attrs.slice(0, newcols)};
       }
     }
     this.setupStops(newcols);
@@ -3558,10 +3581,13 @@ export class Emulator implements EmulatorAPI {
     if (line === null) {
       return;
     }
-    const cell: LineCell = [this.eraseAttr(), ch]; // xterm
+    const {chars, attrs} = line;
+    const attr = this.eraseAttr();
+    const chCodePoint = ch.codePointAt(0);
 
     for (; x < this.cols; x++) {
-      line[x] = cell;
+      chars[x] = chCodePoint;
+      attrs[x] = attr;
     }
 
     this.updateRange(y);
@@ -3576,12 +3602,15 @@ export class Emulator implements EmulatorAPI {
   
   private eraseLeft(x: number, y: number): void {
     const line = this._getRow(this.ybase + y);
-    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
+    const {chars, attrs} = line;
+    const attr = this.eraseAttr();
+    const space = ' '.codePointAt(0);
 
     x++;
     while (x !== 0) {
       x--;
-      line[x] = ch;
+      chars[x] = space;
+      attrs[x] = attr;
     }
 
     this.updateRange(y);
@@ -3591,20 +3620,15 @@ export class Emulator implements EmulatorAPI {
     this.eraseRight(0, y);
   }
 
-  private blankLine(cur?: boolean): LineCell[] {
-    const attr = cur ? this.eraseAttr() : Emulator.defAttr;
-    const ch: LineCell = [attr, ' '];
-    
-    const line: LineCell[] = [];
-    for (let i = 0; i < this.cols; i++) {
-      line[i] = ch;
-    }
+  private blankLine(cur?: boolean): FastLine {
+    const chars = new Uint32Array(this.cols);
+    const attrs = new Uint32Array(this.cols);
+    const line = { chars, attrs };
+
+    chars.fill(' '.codePointAt(0));
+    attrs.fill(cur ? this.eraseAttr() : Emulator.defAttr);
 
     return line;
-  }
-
-  private ch(cur: boolean): LineCell {
-    return cur ? [this.eraseAttr(), ' '] : [Emulator.defAttr, ' '];
   }
 
   private is(term: string): boolean {
@@ -4103,12 +4127,19 @@ export class Emulator implements EmulatorAPI {
 
     const row = this.y + this.ybase;
     let j = this.x;
-    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
 
+    const attr = this.eraseAttr();
+    const chCodePoint = ' '.codePointAt(0);
+
+    const {chars, attrs} = this._getRow(row);
     while (param-- && j < this.cols) {
-      const line = this._getRow(row);
-      line.splice(j++, 0, ch);
-      line.pop();
+      chars.copyWithin(j+1, j);
+      chars[j] = chCodePoint;
+
+      attrs.copyWithin(j+1, j);
+      attrs[j] = attr;
+
+      j++;
     }
   }
 
@@ -4208,12 +4239,16 @@ export class Emulator implements EmulatorAPI {
     }
 
     const row = this.y + this.ybase;
-    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
+    const attr = this.eraseAttr();
+    const chCodePoint = ' '.codePointAt(0);
 
+    const {chars, attrs} = this.lines[row];
     while (param--) {
-      const line = this.lines[row];
-      line.splice(this.x, 1);
-      line.push(ch);
+      chars.copyWithin(this.x, this.x+1);
+      chars[chars.length-1] = chCodePoint;
+
+      attrs.copyWithin(this.x, this.x+1);
+      attrs[attrs.length-1] = attr;
     }
   }
 
@@ -4227,11 +4262,13 @@ export class Emulator implements EmulatorAPI {
 
     const row = this.y + this.ybase;
     let j = this.x;
-    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm
-    const line = this._getRow(row);
-    
+    const attr = this.eraseAttr();
+    const spaceCodePoint = ' '.codePointAt(0);
+    const {chars, attrs} = this._getRow(row);
+
     while (param-- && j < this.cols) {
-      line[j] = ch;
+      chars[j] = spaceCodePoint;
+      attrs[j] = attr;
       j++;
     }
   }
@@ -4876,11 +4913,14 @@ export class Emulator implements EmulatorAPI {
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
   private repeatPrecedingCharacter(params: number[]): void {
     let param = params[0] || 1;
-    const line = this._getRow(this.ybase + this.y);
-    const ch: LineCell = line[this.x - 1] || [Emulator.defAttr, ' '];
+    const {chars, attrs} = this._getRow(this.ybase + this.y);
+
+    const attr = this.x == 0 ? Emulator.defAttr : attrs[this.x-1];
+    const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : chars[this.x-1];
 
     while (param--) {
-      line[this.x] = ch;
+      chars[this.x] = chCodePoint;
+      attrs[this.x] = attr;
       this.x++;
     }
   }
@@ -5059,8 +5099,9 @@ export class Emulator implements EmulatorAPI {
 
     for (; t < b + 1; t++) {
       const line = this._getRow(this.ybase + t);
+      const attrs = line.attrs;
       for (let i = l; i < r; i++) {
-        line[i] = [attr, <string> line[i][LINECELL_CHAR]];
+        attrs[i] = attr;
       }
     }
 
@@ -5211,19 +5252,17 @@ export class Emulator implements EmulatorAPI {
   //     Pt; Pl; Pb; Pr denotes the rectangle.
   // NOTE: xterm doesn't enable this code by default.
   private fillRectangle(params: number[]): void {
-    var ch = params[0];
-    var t = params[1];
-    var l = params[2];
-    var b = params[3];
-    var r = params[4];
-
-    var line;
-    var i;
+    const ch = params[0];
+    let t = params[1];
+    const l = params[2];
+    const b = params[3];
+    const r = params[4];
 
     for (; t < b + 1; t++) {
-      line = this._getRow(this.ybase + t);
-      for (i = l; i < r; i++) {
-        line[i] = [line[i][LINECELL_ATTR], String.fromCharCode(ch)];
+      const chars = this._getRow(this.ybase + t).chars;
+
+      for (let i = l; i < r; i++) {
+        chars[i] = ch;
       }
     }
 
@@ -5260,12 +5299,14 @@ export class Emulator implements EmulatorAPI {
     const b = params[2];
     const r = params[3];
 
-    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm?
+    const attr = this.eraseAttr();
+    const chCodePoint = ' '.codePointAt(0);
 
     for (; t < b + 1; t++) {
-      const line = this._getRow(this.ybase + t);
+      const {chars, attrs} = this._getRow(this.ybase + t);
       for (let i = l; i < r; i++) {
-        line[i] = ch;
+        chars[i] = chCodePoint;
+        attrs[i] = attr;
       }
     }
 
@@ -5343,13 +5384,18 @@ export class Emulator implements EmulatorAPI {
   private insertColumns(params: number[]): void {
     let param = params[0];
     const l = this.ybase + this.rows;
-    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm?
+
+    const chCodePoint = ' '.codePointAt(0);
+    const attr = this.eraseAttr();
 
     while (param--) {
       for (let i = this.ybase; i < l; i++) {
-        const line = this._getRow(i);
-        line.splice(this.x + 1, 0, ch);
-        line.pop();
+        const {chars, attrs} = this._getRow(i);
+        chars.copyWithin(this.x+2, this.x+1);
+        chars[this.x+1] = chCodePoint;
+
+        attrs.copyWithin(this.x+2, this.x+1);
+        attrs[this.x+1] = attr;
       }
     }
 
@@ -5362,13 +5408,19 @@ export class Emulator implements EmulatorAPI {
   private deleteColumns(params: number[]): void {
     let param = params[0];
     const l = this.ybase + this.rows;
-    const ch: LineCell = [this.eraseAttr(), ' ']; // xterm?
+    
+    const chCodePoint = ' '.codePointAt(0);
+    const attr = this.eraseAttr();
 
     while (param--) {
       for (let i = this.ybase; i < l; i++) {
-        const line = this._getRow(i);
-        line.splice(this.x, 1);
-        line.push(ch);
+        const {chars, attrs} = this._getRow(i);
+
+        chars.copyWithin(this.x, this.x+1);
+        chars[chars.length-1] = chCodePoint;
+
+        attrs.copyWithin(this.x, this.x+1);
+        attrs[attrs.length-1] = attr;
       }
     }
 
