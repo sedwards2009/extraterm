@@ -308,40 +308,44 @@ def main():
         WaitOnIOActivity()
         if LOG_FINER:
             log("Server awake")
-        
-        # Check the stdin control channel.
-        if stdin_reader.isEOF():
-            if LOG_FINE:
-                log("server <<< main : EOF")
-            running = False
-            
-        chunk = stdin_reader.read()
-        while chunk is not None:
-            if LOG_FINE:
-                log("server <<< main : " + repr(chunk))
-            running = False if not running or not process_command(chunk.strip()) else True
-            if LOG_FINE:
-                log("running: " + str(running))
-            chunk = stdin_reader.read()
-            
-        # Check our ptys for output.
-        for pty_struct in pty_list:
-            pty_chunk = pty_struct["reader"].read()
-            while pty_chunk is not None:
-                if LOG_FINE:
-                    log("server <<< pty : " + repr(pty_chunk))
-                # Decode the chunk of bytes.
-                data = pty_chunk.decode(errors='ignore')
-                send_to_controller( {"type": "output", "id": pty_struct["id"], "data": data} )
-                pty_chunk = pty_struct["reader"].read()
 
-        # Check for exited ptys
-        for pty_struct in pty_list[:]:
-            if LOG_FINER:
-                log("checking live pty: "+str(pty_struct["pty"].isalive()))
-            if not pty_struct["pty"].isalive():
-                pty_list = [ t for t in pty_list if t["id"] != pty_struct["id"] ]
-                send_to_controller( {"type": "closed", "id": pty_struct["id"] } )
+        while not done and running:
+            done = True
+
+            # Check the stdin control channel.
+            if stdin_reader.isEOF():
+                if LOG_FINE:
+                    log("server <<< main : EOF")
+                running = False
+            
+            chunk = stdin_reader.read()
+            while chunk is not None:    # Consume all of the commands now. They have high prio.
+                if LOG_FINE:
+                    log("server <<< main : " + repr(chunk))
+                running = False if not running or not process_command(chunk.strip()) else True
+                if LOG_FINE:
+                    log("running: " + str(running))
+                chunk = stdin_reader.read()
+            
+            # Check our ptys for output.
+            for pty_struct in pty_list:
+                pty_chunk = pty_struct["reader"].read()
+                if pty_chunk is not None:   # Read one chunk at a time. Don't let one busy PTY suck up all of the attention.
+                    done = False
+                    if LOG_FINE:
+                        log("server <<< pty : " + repr(pty_chunk))
+                    # Decode the chunk of bytes.
+                    data = pty_chunk.decode(errors='ignore')
+                    send_to_controller( {"type": "output", "id": pty_struct["id"], "data": data} )
+
+            # Check for exited ptys
+            for pty_struct in pty_list[:]:
+                if LOG_FINER:
+                    log("checking live pty: "+str(pty_struct["pty"].isalive()))
+                if not pty_struct["pty"].isalive():
+                    pty_list = [ t for t in pty_list if t["id"] != pty_struct["id"] ]
+                    send_to_controller( {"type": "closed", "id": pty_struct["id"] } )
+                    done = False
 
         if LOG_FINER:
             log("pty server active count: " + str(threading.active_count()))
