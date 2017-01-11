@@ -32,7 +32,7 @@ Further Information
 
 Status
 ------
-:warning: Although generally stable, Extraterm is in development and alpha/beta in quality. Use at your own risk. :warning:
+:warning: Extraterm is in development and roughly 'beta' in quality. It is generally stable, but don't be too surprised if you encounter a few bugs. Use at your own risk. :warning:
 
 With that out of the way, the primary author does use it as their main terminal emulator on a daily basis. The basics are in place and it will run most common terminal applications such as vi, emacs and joe without problems and even more demanding applications such as midnight commander.
 
