@@ -308,7 +308,8 @@ def main():
         WaitOnIOActivity()
         if LOG_FINER:
             log("Server awake")
-
+            
+        done = False
         while not done and running:
             done = True
 
