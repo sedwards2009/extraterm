@@ -240,7 +240,7 @@ def process_command(json_command):
         pty = find_pty_by_id(cmd["id"])
         if pty is None:
             log("Received a write command for an unknown pty (id=" + str(cmd["id"]) + "")
-            return
+            return True
         pty.write(cmd["data"].encode())
         return True
 
@@ -249,7 +249,7 @@ def process_command(json_command):
         pty = find_pty_by_id(cmd["id"])
         if pty is None:
             log("Received a resize command for an unknown pty (id=" + str(cmd["id"]) + "")
-            return
+            return True
         pty.setwinsize(cmd["rows"], cmd["columns"])
         return True
 
@@ -258,7 +258,7 @@ def process_command(json_command):
         reader = find_reader_by_id(cmd["id"])
         if reader is None:
             log("Received a permit-data-size command for an unknown pty (id=" + str(cmd["id"]) + "")
-            return
+            return True
         reader.permitDataSize(cmd["size"])
         return True
 
