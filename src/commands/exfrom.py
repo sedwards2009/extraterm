@@ -13,7 +13,6 @@ import termios
 import atexit
 import base64
 import tempfile
-import subprocess
 from signal import signal, SIGPIPE, SIG_DFL 
 
 import extratermclient
@@ -75,8 +74,8 @@ def xargs(frame_names, command_list):
         args = command_list[:]
         for temp_file in temp_files:
             args.append(temp_file.name)
-
-        subprocess.run(args)
+        
+        os.spawnvp(os.P_WAIT, args[0], [os.path.basename(args[0])] + args[1:])
 
     finally:
         # Clean up any temp files.
