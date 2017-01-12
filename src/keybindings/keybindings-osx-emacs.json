@@ -1,0 +1,124 @@
+{
+  "name": "Mac OS X with emacs bindings",
+  "main-ui": {
+    "Cmd-ArrowLeft": "selectTabLeft",
+    "Cmd-ArrowRight": "selectTabRight",
+    "Cmd-t": "newTab",
+    "Shift-Cmd-W": "closeTab",
+    "Ctrl-Tab": "selectOtherPane",
+    "Cmd-s": "toggleSplit",
+    "Cmd-Shift-P": "openCommandPalette"
+  },
+  "terminal-default-mode": {
+    "Alt-Space": "enterCursorMode",
+    "Shift-PageUp": "scrollPageUp",
+    "Shift-PageDown": "scrollPageDown",
+    "Cmd-c": "copyToClipboard",
+    "Cmd-v": "pasteFromClipboard",
+    "Cmd-w": "deleteLastFrame",
+    "Cmd-o": "openLastFrame",
+    "Cmd-Plus": "increaseFontSize",
+    "Cmd-Minus": "decreaseFontSize",
+    "Cmd-=": "resetFontSize"
+  },
+  "terminal-cursor-mode": {
+    "Alt-Space": "enterNormalMode",
+    "Shift-PageUp": "scrollPageUp",
+    "Shift-PageDown": "scrollPageDown",
+    "Cmd-c": "copyToClipboard",
+    "Cmd-v": "pasteFromClipboard",
+    "Cmd-Plus": "increaseFontSize",
+    "Cmd-Minus": "decreaseFontSize",
+    "Cmd-=": "resetFontSize"
+  },
+  "codemirror": {
+    "Left": "goCharLeft",
+    "Ctrl-b": "goCharLeft",    
+    "Right": "goCharRight",
+    "Ctrl-f": "goCharRight",
+    
+    "Up": "goLineUp",
+    "Ctrl-p": "goLineUp",
+
+    "Down": "goLineDown",
+    "Ctrl-n": "goLineDown",
+    
+    "End": "goLineEnd",
+    "Ctrl-e": "goLineEnd",    
+    "Home": "goLineStartSmart",
+    "Ctrl-a": "goLineStartSmart",    
+    "PageUp": "goPageUp",
+    "PageDown": "goPageDown",
+    "Delete": "delCharAfter",
+    "Ctrl-d": "delCharAfter",
+    "Backspace": "delCharBefore",
+    "Shift-Backspace": "delCharBefore",
+    "Tab": "defaultTab",
+    "Shift-Tab": "indentAuto",
+    "Enter": "newlineAndIndent",
+    "Insert": "toggleOverwrite",
+    "Esc": "singleSelection",
+  
+    "Cmd-a": "selectAll",
+    "Cmd-d": "deleteLine",
+    "Cmd-z": "undo",
+
+    "Ctrl-_": "undo",
+    "Ctrl-x": "undo",
+    "Ctrl-u": "undo",
+
+    "Shift-Cmd-Z": "redo",
+    "Cmd-y": "redo",
+    "Cmd-Home": "goDocStart",
+    "Cmd-End": "goDocEnd",
+    "Cmd-Up": "goLineUp",
+    "Cmd-Down": "goLineDown",
+
+    "Alt-b": "goGroupLeft",
+    "Alt-Left": "goGroupLeft",
+
+    "Alt-f": "goGroupRight",
+    "Alt-Right": "goGroupRight",
+    "Alt-Backspace": "delGroupBefore",
+    "Ctrl-Alt-Backspace": "delGroupAfter",
+    "Alt-Delete": "delGroupAfter",
+    "Cmd-[": "indentLess",
+    "Cmd-]": "indentMore",
+    "Cmd-U": "undoSelection",
+    "Shift-Cmd-U": "redoSelection",
+    "Cmd-Shift-\\": "verticalMultiCursor",
+    "Cmd-/": "backSlashesToForward",
+    "Cmd-\\": "forwardSlashesToBack",
+    "Cmd-'": "escapeShellChars",
+    "Cmd-Shift-'": "unescapeShellChars",
+    "Cmd-Left": "goLineLeft",
+    "Cmd-Right": "goLineRight",
+    "Cmd-Backspace": "delWrappedLineLeft",
+    "Cmd-Delete": "delWrappedLineRight"
+  },
+  "terminal-viewer": {
+    "Cmd-Enter": "typeSelection",
+    "Cmd-Shift-Enter": "typeSelectionAndCr",
+    "Cmd-Shift-P": "openCommandPalette",
+    "fallthrough": "codemirror"
+  },
+  "text-viewer": {
+    "Cmd-Enter": "typeSelection",
+    "Cmd-Shift-Enter": "typeSelectionAndCr",
+    "Cmd-Shift-P": "openCommandPalette",
+    "fallthrough": "codemirror"
+  },
+  "image-viewer": {
+    "Up": "goUp",
+    "Down": "goDown"
+  },
+  "viewer-tab": {
+    "Cmd-Shift-C": "copyToClipboard",
+    "Cmd-c": "copyToClipboard",
+    "Cmd-v": "pasteFromClipboard",
+    "Cmd-Shift-V": "pasteFromClipboard",
+    "Ctrl-Plus": "increaseFontSize",
+    "Ctrl-Minus": "decreaseFontSize",
+    "Ctrl-=": "resetFontSize"
+  }
+}

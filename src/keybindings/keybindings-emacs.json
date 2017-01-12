@@ -1,0 +1,121 @@
+{
+  "name": "PC with emacs style bindings",
+  "main-ui": {
+    "Ctrl-,": "selectTabLeft",
+    "Ctrl-.": "selectTabRight",
+    "Ctrl-Shift-T": "newTab",
+    "Ctrl-Shift-Q": "closeTab",
+    "Ctrl-Tab": "selectOtherPane",
+    "Ctrl-Shift-S": "toggleSplit",
+    "Ctrl-Shift-P": "openCommandPalette"
+  },
+  "terminal-default-mode": {
+    "Ctrl-Shift-Space": "enterCursorMode",
+    "Shift-PageUp": "scrollPageUp",
+    "Shift-PageDown": "scrollPageDown",
+    "Ctrl-Shift-C": "copyToClipboard",
+    "Shift-Insert": "pasteFromClipboard",
+    "Ctrl-Shift-V": "pasteFromClipboard",
+    "Ctrl-Shift-W": "deleteLastFrame",
+    "Ctrl-Shift-O": "openLastFrame",
+    "Ctrl-Plus": "increaseFontSize",
+    "Ctrl-Minus": "decreaseFontSize",
+    "Ctrl-=": "resetFontSize"
+  },
+  "terminal-cursor-mode": {
+    "Ctrl-Shift-Space": "enterNormalMode",
+    "Shift-PageUp": "scrollPageUp",
+    "Shift-PageDown": "scrollPageDown",
+    "Ctrl-Shift-C": "copyToClipboard",
+    "Ctrl-c": "copyToClipboard",
+    "Shift-Insert": "pasteFromClipboard",
+    "Ctrl-Shift-V": "pasteFromClipboard",
+    "Ctrl-v": "pasteFromClipboard",
+    "Ctrl-Plus": "increaseFontSize",
+    "Ctrl-Minus": "decreaseFontSize",
+    "Ctrl-=": "resetFontSize"
+  },
+  "codemirror": {
+    "Left": "goCharLeft",
+    "Ctrl-b": "goCharLeft",
+    "Right": "goCharRight",
+    "Ctrl-f": "goCharRight",
+
+    "Up": "goLineUp",
+    "Ctrl-p": "goLineUp",
+
+    "Down": "goLineDown",
+    "Ctrl-n": "goLineDown",
+
+    "End": "goLineEnd",
+    "Ctrl-e": "goLineEnd",
+    "Home": "goLineStartSmart",
+    "Ctrl-a": "goLineStartSmart",
+    "PageUp": "goPageUp",
+    "PageDown": "goPageDown",
+    "Delete": "delCharAfter",
+    "Ctrl-d": "delCharAfter",
+    "Backspace": "delCharBefore",
+    "Shift-Backspace": "delCharBefore",
+    "Tab": "defaultTab",
+    "Shift-Tab": "indentAuto",
+    "Enter": "newlineAndIndent",
+    "Insert": "toggleOverwrite",
+    "Esc": "singleSelection",
+    
+    "Shift-Delete": "deleteLine",
+
+    "Ctrl-_": "undo",
+    "Ctrl-x": "undo",
+    "Ctrl-u": "undo",
+
+    "Shift-Ctrl-Z": "redo",
+    "Ctrl-Home": "goDocStart",
+    "Ctrl-End": "goDocEnd",
+    "Ctrl-Up": "goLineUp",
+    "Ctrl-Down": "goLineDown",
+
+    "Alt-b": "goGroupLeft",
+    "Ctrl-Left": "goGroupLeft",
+
+    "Alt-f": "goGroupRight",
+    "Ctrl-Right": "goGroupRight",
+
+    "Ctrl-Backspace": "delGroupBefore",
+    "Ctrl-Delete": "delGroupAfter",
+    "Ctrl-[": "indentLess",
+    "Ctrl-]": "indentMore",
+    "Shift-Ctrl-U": "redoSelection",
+    "Ctrl-Shift-\\": "verticalMultiCursor",
+    "Ctrl-/": "backSlashesToForward",
+    "Ctrl-\\": "forwardSlashesToBack",
+    "Ctrl-'": "escapeShellChars",
+    "Ctrl-Shift-'": "unescapeShellChars"
+  },
+  "terminal-viewer": {
+    "Ctrl-Enter": "typeSelection",
+    "Ctrl-Shift-Enter": "typeSelectionAndCr",
+    "Ctrl-Shift-P": "openCommandPalette",
+    "fallthrough": "codemirror"
+  },
+  "text-viewer": {
+    "Ctrl-Enter": "typeSelection",
+    "Ctrl-Shift-Enter": "typeSelectionAndCr",
+    "Ctrl-Shift-P": "openCommandPalette",
+    "fallthrough": "codemirror"
+  },
+  "image-viewer": {
+    "Up": "goUp",
+    "Down": "goDown"
+  },
+  "viewer-tab": {
+    "Ctrl-Shift-C": "copyToClipboard",
+    "Ctrl-c": "copyToClipboard",
+    "Shift-Insert": "pasteFromClipboard",
+    "Ctrl-Shift-V": "pasteFromClipboard",
+    "Ctrl-v": "pasteFromClipboard",
+    "Ctrl-Plus": "increaseFontSize",
+    "Ctrl-Minus": "decreaseFontSize",
+    "Ctrl-=": "resetFontSize"
+  }
+}
