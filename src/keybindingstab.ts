@@ -299,7 +299,6 @@ class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigMana
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.KEY_BINDINGS_TAB];
   }
   
-  @log
   private _dataChanged(newVal: ModelData): void {
     const newConfig = _.cloneDeep(this._configManager.getConfig());
     if (newConfig.keyBindingsFilename !== newVal.selectedKeyBindings) {
