@@ -131,6 +131,12 @@ SPAN.terminal-blink {
     animation: BLINK_ANIMATION 2s infinite;
 }
 
+SPAN.oversize {
+  display: inline-block;
+  width: var(--terminal-font-unit-width);
+  height: var(--terminal-font-unit-height);
+}
+
 /* Linux colours */
 SPAN.terminal-background-0 { background-color: $terminal-background-color-0; }
 SPAN.terminal-background-1 { background-color: $terminal-background-color-1; }

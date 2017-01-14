@@ -40,9 +40,11 @@ type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 const ID = "CbTerminalViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_MAIN_STYLE = "ID_MAIN_STYLE";
+const ID_CSS_VARS = "ID_CSS_VARS";
 const CLASS_HIDE_CURSOR = "hide-cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
+const OVERSIZE_CLASS_LIST = ["oversize"];
 
 const KEYBINDINGS_CURSOR_MODE = "terminal-viewer";
 const PALETTE_GROUP = "terminalviewer";
@@ -134,7 +136,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _lastCursorAnchorPosition: CodeMirror.Position;
   private _lastCursorHeadPosition: CodeMirror.Position;
   private _viewportHeight: number;  // Used to detect changes in the viewport size when in Cursor mode.
-  
+  private _fontUnitWidth: number;
+  private _fontUnitHeight: number;
+
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
   private _renderEventListener: termjs.RenderEventHandler = this._handleRenderEvent.bind(this);
@@ -159,6 +163,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._visualState = VisualState.AUTO;
     
     this._currentElementHeight = -1;
+
+    this._fontUnitWidth = 10; // slightly bogus defaults
+    this._fontUnitHeight = 10;
     
     this._mainStyleLoaded = false;
     this._resizePollHandle = null;
@@ -419,6 +426,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       }
       this.resizeEmulatorToBox(viewportElement.clientWidth, viewportElement.clientHeight);
     }
+    this._updateCssVars();
   }
 
   /**
@@ -828,6 +836,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         
         ${getCssText()}
         </style>
+        <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id="${ID_CONTAINER}" class="terminal_viewer terminal ${CLASS_UNFOCUSED}"></div>`
 
@@ -836,7 +845,30 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     
     return window.document.importNode(template.content, true);
   }
+
+  private _getCssVarsRules(): string {
+    return `#${ID_CONTAINER} {
+      ${this._getCssFontUnitSizeRule()}
+}`;
+  }
+
+  private _getCssFontUnitSizeRule(): string {
+    return `
+  --terminal-font-unit-width: ${this._fontUnitWidth}px;
+  --terminal-font-unit-height: ${this._fontUnitHeight}px;
+`;
+  }
+
+  private _updateCssVars():  void {
+    const charHeight = this._codeMirror.defaultTextHeight();
+    const charWidth = this._codeMirror.defaultCharWidth();
   
+    this._fontUnitWidth = charWidth;
+    this._fontUnitHeight = charHeight;
+    const styleElement = <HTMLStyleElement> domutils.getShadowId(this, ID_CSS_VARS);
+    styleElement.textContent = this._getCssVarsRules();
+  }
+
   private _bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
     if (newVisualState === this._visualState) {
       return BulkDOMOperation.nullOperation();
@@ -1518,10 +1550,18 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
     let currentDecoration: TextDecoration  = null;
     const text = String.fromCodePoint(...chars).slice(0, lineLength);
-    
+    const normalWidthCodePointCutOff = maxNormalWidthCodePoint();
     for (let i = 0; i < lineLength; i++) {
       const data = attrs[i];
       
+      const classList: string[] = [];
+      const codePoint = text.codePointAt(i);
+      const dataOversize = codePoint > normalWidthCodePointCutOff && isCodePointNormalWidth(codePoint) === false;
+
+      if (dataOversize) {
+        decorations.push( { line: lineNumber, fromCh: i, toCh: i+1, classList: OVERSIZE_CLASS_LIST } );
+      }
+
       if (data !== attr) {
         if (attr !== defAttr) {
           currentDecoration.toCh = i;
@@ -1529,7 +1569,6 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
           currentDecoration = null;
         }
         if (data !== defAttr) {
-          const classList: string[] = [];
           if (data === 0xffffffff) {
             // Cursor itself
             classList.push("reverse-video");
@@ -1607,7 +1646,10 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       }
 
       attr = data;
+
     }
+
+
 
     if (attr !== defAttr) {
       currentDecoration.toCh = lineLength;
@@ -1623,6 +1665,35 @@ function px(value) {
     return 0;
   }
   return parseInt(value.slice(0,-2),10);
-}  
+}
+
+function maxNormalWidthCodePoint(): number {
+  return 0x01c3;  // Last char before the Croatian digraphs. DejaVuSansMono has some extra wide chars after this.
+}
+
+/**
+ * Return true if a code point has a normal monospace width of one cell.
+ * 
+ * @param the unicode code point to test
+ * @return true if the code point has a normal monospace width of one cell.
+ */
+function isCodePointNormalWidth(codePoint: number): boolean {
+  if (codePoint < 0x01c4) { // Latin up to the Croatian digraphs.
+    return true;
+  }
+
+  if (codePoint <= 0x1cc) {// Croatian digraphs can be a problem.
+    return false; 
+  }
+
+  if (codePoint < 0x1f1) {  // Up to Latin leter DZ.
+    return true;
+  }
+  if (codePoint <= 0x1f3) { // Latin letter DZ.
+    return false;
+  }
+
+  return false;
+}
 
 export = EtTerminalViewer;
