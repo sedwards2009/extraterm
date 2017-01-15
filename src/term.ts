@@ -2051,6 +2051,22 @@ export class Emulator implements EmulatorAPI {
     const len = data.length;
     for (let i=0; i < len; i++) {
       let ch = data[i];
+
+      let codePoint = 0;
+
+      // Unicode UTF-16 surrogate handling.
+      if ((ch.charCodeAt(0) & 0xFC00) === 0xD800) { // High surrogate.
+        const highSurrogate = ch.charCodeAt(0);
+        i++;
+        if (i < len) {
+          const lowSurrogate = data[i].charCodeAt(0);
+          codePoint = ((highSurrogate & 0x03FF) << 10) | (lowSurrogate & 0x03FF) + 0x10000;
+        }
+        ch = ' '; // fake it just enough to hit the right code below.
+      } else {
+        codePoint = ch.codePointAt(0);
+      }
+
       switch (this.state) {
         case STATE_NORMAL:
           switch (ch) {
@@ -2150,7 +2166,7 @@ export class Emulator implements EmulatorAPI {
                   }
                 }
 
-                chars[this.x] = ch.codePointAt(0);
+                chars[this.x] = codePoint;
                 attrs[this.x] = this.curAttr;
 
                 this.x++;

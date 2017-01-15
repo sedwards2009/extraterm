@@ -229,7 +229,8 @@ def process_command(json_command):
         pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns), env=env) #cwd=, )
         pty_reader = NonblockingFileReader(read=pty.read)
         pty_id = pty_counter
-        pty_list.append( { "id": pty_id, "pty": pty, "reader": pty_reader } )
+        pty_list.append( { "id": pty_id, "pty": pty, "reader": pty_reader,
+            "readDecoder": codecs.lookup("utf8").incrementaldecoder(errors="ignore") } )
         pty_counter += 1
         
         send_to_controller({ "type": "created", "id": pty_id })
@@ -336,7 +337,7 @@ def main():
                     if LOG_FINE:
                         log("server <<< pty : " + repr(pty_chunk))
                     # Decode the chunk of bytes.
-                    data = pty_chunk.decode(errors='ignore')
+                    data = pty_struct["readDecoder"].decode(pty_chunk)
                     send_to_controller( {"type": "output", "id": pty_struct["id"], "data": data} )
 
             # Check for exited ptys

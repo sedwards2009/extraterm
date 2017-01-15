@@ -1538,33 +1538,41 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
     const defAttr = termjs.Emulator.defAttr;
     let attr = defAttr;
-    const {chars, attrs} = line;
-    let lineLength = chars.length;
+    const attrs = line.attrs;
+    const uint32Chars = line.chars;
+    let lineLength = uint32Chars.length;
     const decorations: TextDecoration[] = [];
     const spaceCodePoint = ' '.codePointAt(0);
 
     // Trim off any unstyled whitespace to the right of the line.
-    while (lineLength !==0 && attrs[lineLength-1] === defAttr && chars[lineLength-1] === spaceCodePoint) {
+    while (lineLength !==0 && attrs[lineLength-1] === defAttr && uint32Chars[lineLength-1] === spaceCodePoint) {
       lineLength--;
     }
 
     let currentDecoration: TextDecoration  = null;
-    const text = String.fromCodePoint(...chars).slice(0, lineLength);
+    let column = 0;
+    const text = String.fromCodePoint(...uint32Chars);
     const normalWidthCodePointCutOff = maxNormalWidthCodePoint();
-    for (let i = 0; i < lineLength; i++) {
+    for (let i = 0; i < lineLength; i++, column++) {
       const data = attrs[i];
       
       const classList: string[] = [];
-      const codePoint = text.codePointAt(i);
+      const codePoint = uint32Chars[i];
       const dataOversize = codePoint > normalWidthCodePointCutOff && isCodePointNormalWidth(codePoint) === false;
 
       if (dataOversize) {
-        decorations.push( { line: lineNumber, fromCh: i, toCh: i+1, classList: OVERSIZE_CLASS_LIST } );
+        if (codePoint >= 0x10000) {
+          // UTF-16 surrogate pair, takes up two chars.
+          decorations.push( { line: lineNumber, fromCh: column, toCh: column+2, classList: OVERSIZE_CLASS_LIST } );
+          column++;
+        } else {
+          decorations.push( { line: lineNumber, fromCh: column, toCh: column+1, classList: OVERSIZE_CLASS_LIST } );
+        }
       }
 
       if (data !== attr) {
         if (attr !== defAttr) {
-          currentDecoration.toCh = i;
+          currentDecoration.toCh = column;
           decorations.push(currentDecoration);
           currentDecoration = null;
         }
@@ -1640,16 +1648,13 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
           }
           
           if (classList.length !== 0) {
-            currentDecoration = { line: lineNumber, fromCh: i, toCh: null, classList: classList };
+            currentDecoration = { line: lineNumber, fromCh: column, toCh: null, classList: classList };
           }
         }
       }
 
       attr = data;
-
     }
-
-
 
     if (attr !== defAttr) {
       currentDecoration.toCh = lineLength;
