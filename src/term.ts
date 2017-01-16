@@ -2134,6 +2134,7 @@ export class Emulator implements EmulatorAPI {
               if (ch >= ' ') {
                 if (this.charset && this.charset[ch]) {
                   ch = this.charset[ch];
+                  codePoint = ch.codePointAt(0);
                 }
 
                 if (this.x >= this.cols) {
