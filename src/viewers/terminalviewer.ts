@@ -1301,7 +1301,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   private _resizePoll(): void {
     if (this._mainStyleLoaded) {
-      if ( ! this.isFontLoaded()) {
+      if ( ! this.isFontLoaded() || this.parentElement == null) {
         // Font has not been correctly applied yet.
         this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
       } else {
