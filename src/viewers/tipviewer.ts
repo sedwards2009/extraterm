@@ -107,7 +107,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   private _tipIndex: number;
   
   private _initProperties(): void {
-    this._log = new Logger(EtTipViewer.TAG_NAME);
+    this._log = new Logger(EtTipViewer.TAG_NAME, this);
     this._configManager = null;
     this._keyBindingManager = null;
     this._height = 0;

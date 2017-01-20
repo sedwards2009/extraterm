@@ -74,13 +74,14 @@ interface ListenerItem {
 //-------------------------------------------------------------------------
 class ThemeManagerImpl implements ThemeManager {
   
-  private _log = new Logger("ThemeManagerImpl");
+  private _log: Logger = null;
   
   private _directories: string[] = null;
   
   private _themes: Map<string, ThemeInfo> = null;
   
   constructor(directories: string[]) {
+    this._log = new Logger("ThemeManagerImpl", this);
     this._directories = directories;
 
     const allThemes = new Map<string, ThemeInfo>();

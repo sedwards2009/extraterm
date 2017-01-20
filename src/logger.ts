@@ -13,6 +13,8 @@
 
 const instanceCounter = new Map<string, number>();
 
+const instanceNames = new WeakMap<any, string>(); // Maps objects to the names used by their loggers.
+
 interface LogMessage {
   level: string;
   msg: string;
@@ -25,6 +27,18 @@ class Logger {
   private _recording = false;
 
   private _messageLog: LogMessage[] = [];
+
+  /**
+   * Try to map an object to a human understandable name.
+   * 
+   * @param obj the object
+   * @return the name of the object or null if one could not be found.
+   */
+  static objectName(obj: any): string {
+    const name = instanceNames.get(obj);
+    return name === undefined ? null : name;
+  }
+
   
   /**
    * Contruct a logger.
@@ -32,11 +46,15 @@ class Logger {
    * @param  name the name of the code or class associated with this logger instance.
    * @return the new logger instance
    */
-  constructor(name?: string) {
+  constructor(name?: string, instance?: any) {
     const baseName = name === undefined ? "(unknown)" : name;
     const instanceCount = instanceCounter.has(baseName) ? instanceCounter.get(baseName) + 1 : 0;
     instanceCounter.set(baseName, instanceCount);
     this._name = baseName + " #" + instanceCount;
+
+    if (instance != null) {
+      instanceNames.set(instance, this._name);
+    }
   }
   
   /**

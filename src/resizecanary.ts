@@ -35,7 +35,7 @@ class ResizeCanary extends HTMLElement {
   private _css: string; 
 
   private _initProperties(): void {
-    this._log = new Logger(ResizeCanary.TAG_NAME);
+    this._log = new Logger(ResizeCanary.TAG_NAME, this);
     this._erd = null;
     this._laterHandle = null;
     this._css = "";

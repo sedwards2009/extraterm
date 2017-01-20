@@ -84,11 +84,12 @@ export class KeyBindingMapping {
   
   public keyBindings: KeyBinding[] = [];
   
-  private _log = new Logger("KeyBindingMapping");
+  private _log: Logger = null;
   
   private _platform: string;
   
   constructor(mappingName: string, allMappingsJson: Object, platform: string) {
+    this._log = new Logger("KeyBindingMapping", this);
     this._platform = platform;
     this._gatherPairs(mappingName, allMappingsJson).forEach( (pair) => {
       const parsedKeyBinding = parseKeyBinding(pair.key, pair.value);
@@ -286,13 +287,14 @@ function formatNormalizedKeyBinding(keyBinding: KeyBinding): string {
  */
 export class KeyBindingContexts {
   
-  private _log = new Logger("KeyBindingContexts");
+  private _log: Logger = null;
   
   private _contexts = new Map<string, KeyBindingMapping>();
   
   public contextNames = [];
   
   constructor(obj: Object, platform: string) {
+    this._log = new Logger("KeyBindingContexts", this);
     for (let key in obj) {
       if (key !== NAME) {
         const mapper = new KeyBindingMapping(key, obj, platform);

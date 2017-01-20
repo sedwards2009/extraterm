@@ -72,7 +72,7 @@ class CbTabWidget extends ThemeableElementBase {
   
   private _initProperties(): void {
     this._mutationObserver = null;
-    this._log = new Logger(CbTabWidget.TAG_NAME);
+    this._log = new Logger(CbTabWidget.TAG_NAME, this);
   }
   
   //-----------------------------------------------------------------------

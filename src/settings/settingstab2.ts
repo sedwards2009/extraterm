@@ -126,7 +126,7 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
   private _fontOptions: FontInfo[];
 
   private _initProperties(): void {
-    this._log = new Logger(EtSettingsTab.TAG_NAME);
+    this._log = new Logger(EtSettingsTab.TAG_NAME, this);
     this._vm = null;
     this._themes = [];
     this._configManager = null;

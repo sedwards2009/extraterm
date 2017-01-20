@@ -88,7 +88,7 @@ class EtImageViewer extends ViewerElement {
   private _currentElementHeight: number;
 
   private _initProperties(): void {
-    this._log = new Logger(EtImageViewer.TAG_NAME);
+    this._log = new Logger(EtImageViewer.TAG_NAME, this);
     this._keyBindingManager = null;
     this._text = null;
     this._buffer = null;

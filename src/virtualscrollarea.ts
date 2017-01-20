@@ -165,9 +165,10 @@ export class VirtualScrollArea {
   
   private _currentState: VirtualAreaState = null;
   
-  private _log: Logger = new Logger("VirtualScrollArea");
+  private _log: Logger = null;
   
   constructor() {
+    this._log = new Logger("VirtualScrollArea", this);
     this._currentState = emptyState;
   }
   
