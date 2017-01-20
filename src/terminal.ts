@@ -127,7 +127,8 @@ viewerClasses.push(EtTipViewer);
 
 interface ChildElementStatus {
   element: VirtualScrollable & HTMLElement;
-  needsResize: boolean;
+  needsRefresh: boolean;
+  refreshLevel: ResizeRefreshElementBase.RefreshLevel;
 }
 
 interface WriteBufferStatus {
@@ -795,7 +796,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     el.addEventListener('focus', this._childFocusHandlerFunc);
     
     const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    this._childElementList.push( { element: el, needsResize: false } );
+    this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: ResizeRefreshElementBase.RefreshLevel.RESIZE } );
     scrollerArea.appendChild(el);
     this._virtualScrollArea.appendScrollable(el);
   }
@@ -1110,7 +1111,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
         
         const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
-        const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level);
+        const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level); // <-
         const scrollbarOperation = scrollbar.bulkRefresh(level);
 
         yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: scrollAreaOperation, waitOperation: scrollAreaOperation};
@@ -1133,7 +1134,8 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         for (let i=0; i<this._childElementList.length; i++) {
           const childStatus = this._childElementList[i];
           if ( ! childrenToResizeSet.has(childStatus.element)) {
-            childStatus.needsResize = true;
+            childStatus.needsRefresh = true;
+            childStatus.refreshLevel = level;
           }
         }
 
@@ -1509,8 +1511,9 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
 
     for (const childInfo of this._childElementList) {
       if (childInfo.element === el) {
-        if ( ! childInfo.needsResize) {
-          childInfo.needsResize = true;
+        if ( ! childInfo.needsRefresh) {
+          childInfo.needsRefresh = true;
+          childInfo.refreshLevel = ResizeRefreshElementBase.RefreshLevel.RESIZE;
           this._scheduleStashedChildResizeTask();
         }
         return;
@@ -1523,14 +1526,19 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _scheduleStashedChildResizeTask(): void {
     if (this._stashedChildResizeTask == null) {
       this._stashedChildResizeTask = () => {
-        // Gather the list of elements/scrollables that need updating.
+        // Gather the list of elements/scrollables that need refreshing and updating.
         const processCounter = 0;
         const processList: (HTMLElement & VirtualScrollable)[] = [];
+        const refreshOperations: BulkDOMOperation.BulkDOMOperation[] = [];
         for (let i=this._childElementList.length-1; i>=0 && processList.length < CHILD_RESIZE_BATCH_SIZE; i--) {
           const childStatus = this._childElementList[i];
-          if (childStatus.needsResize) {
+          if (childStatus.needsRefresh) {
             processList.push(childStatus.element);
-            childStatus.needsResize = false;
+            childStatus.needsRefresh = false;
+            const el = childStatus.element;
+            if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
+              refreshOperations.push(el.bulkRefresh(childStatus.refreshLevel));
+            }
           }
         }
 
@@ -1548,6 +1556,10 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
           if (stashedList.length !== 0) {
             const markVisibleOperations = stashedList.map( (el) => this._bulkMarkVisible(el, true) );
             CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.parallel(markVisibleOperations));
+          }
+
+          if (refreshOperations.length !==0) {
+            CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.parallel(refreshOperations));
           }
 
           this._virtualScrollArea.updateScrollableSizes(processList);
