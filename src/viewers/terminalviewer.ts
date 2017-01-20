@@ -124,6 +124,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   private _mainStyleLoaded: boolean;
   private _resizePollHandle: domutils.LaterHandle;
+  private _needEmulatorResize: boolean;
   
   private _operationRunning: boolean; // True if we are currently running an operation with the operation() method.
   private _operationEmitResize: boolean;  // True if a resize evnet shuld be emitted once the operation is finished.
@@ -169,6 +170,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     
     this._mainStyleLoaded = false;
     this._resizePollHandle = null;
+    this._needEmulatorResize = false;
 
     this._operationRunning = false;
     this._operationEmitResize = false;
@@ -250,7 +252,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     const hasFocus = this._codeMirror.getInputField() === domutils.getShadowRoot(this).activeElement;
     return hasFocus;
   }
-  
+
   bulkSetVisualState(newVisualState: VisualState): BulkDOMOperation.BulkDOMOperation {
     return this._bulkSetVisualState(newVisualState);
   }
@@ -626,157 +628,160 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   attachedCallback(): void {
     super.attachedCallback();
     
-    if (domutils.getShadowRoot(this) !== null) {
-      return;
-    }
-  
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    
-    this._initFontLoading();
-    this.installThemeCss();
+    if (domutils.getShadowRoot(this) === null) {
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+      const clone = this.createClone();
+      shadow.appendChild(clone);
+      
+      this._initFontLoading();
+      this.installThemeCss();
 
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
 
-    this.style.height = "0px";
-    this._exitCursorMode();
-    this._mode = ViewerElementTypes.Mode.DEFAULT;
+      this.style.height = "0px";
+      this._exitCursorMode();
+      this._mode = ViewerElementTypes.Mode.DEFAULT;
 
-    const options = {
-      value: "",
-      readOnly: true,
-      scrollbarStyle: "null",
-      cursorScrollMargin: 0,
-      showCursorWhenSelecting: true,
-      mode: null,
-      keyMap: this._codeMirrorKeyMap(),
-      resetSelectionOnContextMenu: false
-    };
+      const options = {
+        value: "",
+        readOnly: true,
+        scrollbarStyle: "null",
+        cursorScrollMargin: 0,
+        showCursorWhenSelecting: true,
+        mode: null,
+        keyMap: this._codeMirrorKeyMap(),
+        resetSelectionOnContextMenu: false
+      };
 
-    // Create the CodeMirror instance
-    this._codeMirror = CodeMirror( (el: HTMLElement): void => {
-      containerDiv.appendChild(el);
-    }, <any>options);
+      // Create the CodeMirror instance
+      this._codeMirror = CodeMirror( (el: HTMLElement): void => {
+        containerDiv.appendChild(el);
+      }, <any>options);
 
-    this._codeMirror.on("cursorActivity", () => {
-      const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
-                              (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
-      if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
-        this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
-        this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
+      this._codeMirror.on("cursorActivity", () => {
+        const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
+                                (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
+        if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
+          this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
+          this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
+          
+          const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+          this.dispatchEvent(event);
+        }
+      });
+      
+      this._codeMirror.on("scroll", () => {
+        // Over-scroll bug/feature fix
+        const scrollInfo = this._codeMirror.getScrollInfo();
+        // this._log.debug("codemirror event scroll:", scrollInfo);
         
-        const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-        this.dispatchEvent(event);
-      }
-    });
-    
-    this._codeMirror.on("scroll", () => {
-      // Over-scroll bug/feature fix
-      const scrollInfo = this._codeMirror.getScrollInfo();
-      // this._log.debug("codemirror event scroll:", scrollInfo);
+        const clientYScrollRange = this._getClientYScrollRange();
+        if (scrollInfo.top > clientYScrollRange) {
+          this._codeMirror.scrollTo(0, clientYScrollRange);
+        }
+      });
       
-      const clientYScrollRange = this._getClientYScrollRange();
-      if (scrollInfo.top > clientYScrollRange) {
-        this._codeMirror.scrollTo(0, clientYScrollRange);
-      }
-    });
-    
-    this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
-      if (this._emulator !== null) {
-        this._emulator.focus();
-      }
-      
-      if (this._visualState === VisualState.AUTO) {
-        const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-        containerDiv.classList.add(CLASS_FOCUSED);
-        containerDiv.classList.remove(CLASS_UNFOCUSED);
-      }
+      this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
+        if (this._emulator !== null) {
+          this._emulator.focus();
+        }
+        
+        if (this._visualState === VisualState.AUTO) {
+          const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+          containerDiv.classList.add(CLASS_FOCUSED);
+          containerDiv.classList.remove(CLASS_UNFOCUSED);
+        }
 
-      super.focus();
-    });
+        super.focus();
+      });
 
-    this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
-      if (this._emulator !== null) {
-        this._emulator.blur();
-      }
+      this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
+        if (this._emulator !== null) {
+          this._emulator.blur();
+        }
+        
+        if (this._visualState === VisualState.AUTO) {
+          containerDiv.classList.add(CLASS_UNFOCUSED);
+          containerDiv.classList.remove(CLASS_FOCUSED);
+        }
+      });
       
-      if (this._visualState === VisualState.AUTO) {
-        containerDiv.classList.add(CLASS_UNFOCUSED);
-        containerDiv.classList.remove(CLASS_FOCUSED);
-      }
-    });
-    
-    this._codeMirror.on("beforeSelectionChange", (instance: CodeMirror.Editor, obj): void => {
-        // obj: { ranges: {anchor: CodeMirror.Position; head: CodeMirror.Position; }[]; }
-      if (obj.ranges.length === 0) {
-        return;
-      }
-      
-      if (obj.ranges.length === 1) {
-        const pair = obj.ranges[0];
-        if (_.isEqual(pair.anchor, pair.head)) {
+      this._codeMirror.on("beforeSelectionChange", (instance: CodeMirror.Editor, obj): void => {
+          // obj: { ranges: {anchor: CodeMirror.Position; head: CodeMirror.Position; }[]; }
+        if (obj.ranges.length === 0) {
           return;
         }
-      }
-      this._emitBeforeSelectionChangeEvent(obj.origin === "*mouse");
-    });
-
-    this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
-      const isUp = name === "PageUp" || name === "Up";
-      const isDown = name === "PageDown" || name === "Down";
-      if (isUp || isDown) {
-        const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
-        const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
         
-        if (this._lastCursorHeadPosition !== null && this._lastCursorAnchorPosition !== null
-            && _.isEqual(this._lastCursorHeadPosition, this._lastCursorAnchorPosition)  // check for no selection
-            && _.isEqual(cursorHeadPos, cursorAnchorPos)  // check for no selection
-            && this._lastCursorHeadPosition.line === cursorHeadPos.line) {
+        if (obj.ranges.length === 1) {
+          const pair = obj.ranges[0];
+          if (_.isEqual(pair.anchor, pair.head)) {
+            return;
+          }
+        }
+        this._emitBeforeSelectionChangeEvent(obj.origin === "*mouse");
+      });
 
-          // The last action didn't move the cursor.
-          const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
+      this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
+        const isUp = name === "PageUp" || name === "Up";
+        const isDown = name === "PageDown" || name === "Down";
+        if (isUp || isDown) {
+          const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
+          const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
+          
+          if (this._lastCursorHeadPosition !== null && this._lastCursorAnchorPosition !== null
+              && _.isEqual(this._lastCursorHeadPosition, this._lastCursorAnchorPosition)  // check for no selection
+              && _.isEqual(cursorHeadPos, cursorAnchorPos)  // check for no selection
+              && this._lastCursorHeadPosition.line === cursorHeadPos.line) {
+
+            // The last action didn't move the cursor.
+            const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
+            domutils.doLater( () => {
+              const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
+                                                                      ? ViewerElementTypes.Edge.TOP
+                                                                      : ViewerElementTypes.Edge.BOTTOM,
+                                                                    ch: ch };
+              const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+              this.dispatchEvent(event);
+            });
+          }
+        }
+      });
+      
+      this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
+        if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
+          return;
+        }
+        
+        const height = to - from;
+        if (height !== this._viewportHeight) {
+          this._viewportHeight = height;
           domutils.doLater( () => {
-            const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
-                                                                    ? ViewerElementTypes.Edge.TOP
-                                                                    : ViewerElementTypes.Edge.BOTTOM,
-                                                                  ch: ch };
-            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-            this.dispatchEvent(event);
+            virtualscrollarea.emitResizeEvent(this);
           });
         }
-      }
-    });
-    
-    this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
-      if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
-        return;
-      }
+      });
       
-      const height = to - from;
-      if (height !== this._viewportHeight) {
-        this._viewportHeight = height;
-        domutils.doLater( () => {
-          virtualscrollarea.emitResizeEvent(this);
-        });
-      }
-    });
-    
-    // Filter the keyboard events before they reach CodeMirror.
-    containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
-    containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
-    containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);
-    containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
-    containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
+      // Filter the keyboard events before they reach CodeMirror.
+      containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
+      containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
+      containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);
+      containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
+      containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
 
-    const codeMirrorElement = this._codeMirror.getWrapperElement();
-    codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
-    codeMirrorElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
-    codeMirrorElement.addEventListener("mousemove", this._handleMouseMoveEvent.bind(this), true);
-    
-    this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
-      ev.preventDefault();
-    });
+      const codeMirrorElement = this._codeMirror.getWrapperElement();
+      codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
+      codeMirrorElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
+      codeMirrorElement.addEventListener("mousemove", this._handleMouseMoveEvent.bind(this), true);
+      
+      this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
+        ev.preventDefault();
+      });
+    }
+
+    if (this._needEmulatorResize) {
+      this._needEmulatorResize = false;
+      this._resizePoll();
+    }
   }
   
   /**
@@ -1300,14 +1305,25 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
 
   private _resizePoll(): void {
-    if (this._mainStyleLoaded) {
-      if ( ! this.isFontLoaded() || this.parentElement == null) {
+    if (this._mainStyleLoaded) {  // FIXME this font loading stuff needs to be replaced with resize canary.
+      if ( ! this.isFontLoaded()) {
         // Font has not been correctly applied yet.
         this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
       } else {
         // Yay! the font is correct. Resize the term soon.
         this._codeMirror.defaultTextHeight(); // tickle the DOM to maybe force CSS recalc.
-        window.setTimeout(this.resizeEmulatorToParentContainer.bind(this), 100);  // 100ms
+
+        if (this.parentElement == null) {
+          this._needEmulatorResize = true;  // Do it later.
+        } else {
+          window.setTimeout(() => {
+            if (this.parentElement == null) {
+              this._needEmulatorResize = true;  // Do it later.
+            } else {
+              this.resizeEmulatorToParentContainer();
+            }
+          }, 100);  // 100ms
+        }
       }
     }
   }
