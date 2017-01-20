@@ -43,6 +43,11 @@ function repr(obj: any): string {
   if (obj === null) {
     return "null";
   }
+
+  const name = Logger.objectName(obj);
+  if (name != null) {
+    return name;
+  }
   
   if (HTMLElement !== undefined) {
     if (obj instanceof HTMLElement) {

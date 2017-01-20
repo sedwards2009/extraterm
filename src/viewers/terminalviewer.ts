@@ -147,7 +147,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _bookmarkIndex: Map<BookmarkRef, CodeMirror.TextBookmarkMarker>;
 
   private _initProperties(): void {
-    this._log = new Logger(EtTerminalViewer.TAG_NAME);
+    this._log = new Logger(EtTerminalViewer.TAG_NAME, this);
     this._keyBindingManager = null;
     this._emulator = null;
     this._terminalFirstRow = 0;

@@ -250,7 +250,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
 
   private _initProperties(): void {
-    this._log = new Logger(EtTerminal.TAG_NAME);
+    this._log = new Logger(EtTerminal.TAG_NAME, this);
     this._virtualScrollArea = null;
     this._stashArea = null;
     this._childElementList = [];

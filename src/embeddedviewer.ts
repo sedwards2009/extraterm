@@ -137,7 +137,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _headerBottom: number;
 
   private _initProperties(): void {
-    this._log = new Logger(EtEmbeddedViewer.TAG_NAME);
+    this._log = new Logger(EtEmbeddedViewer.TAG_NAME, this);
     this._visualState = ViewerElementTypes.VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();

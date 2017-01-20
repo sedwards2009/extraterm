@@ -141,7 +141,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this._keyBindingManager = null;
     this._text = null;
     this._mimeType = null;
-    this._log = new Logger(EtTextViewer.TAG_NAME);
+    this._log = new Logger(EtTextViewer.TAG_NAME, this);
     this._commandLine = null;
     this._returnCode  =null;
     this._editable = false;

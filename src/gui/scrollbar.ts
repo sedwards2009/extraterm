@@ -58,7 +58,7 @@ class CbScrollbar extends ThemeableElementBase {
   private _initProperties(): void {
     this._position = 0;
     this._length = 1;
-    this._log = new Logger(CbScrollbar.TAG_NAME);
+    this._log = new Logger(CbScrollbar.TAG_NAME, this);
   }
 
   //-----------------------------------------------------------------------

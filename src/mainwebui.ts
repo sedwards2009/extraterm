@@ -354,7 +354,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   private _split: boolean;
   
   private _initProperties(): void {
-    this._log = new Logger("ExtratermMainWebUI");
+    this._log = new Logger("ExtratermMainWebUI", this);
     this._tabInfo = [];
     this._tabIdCounter = 0;
     this._configManager = null;
