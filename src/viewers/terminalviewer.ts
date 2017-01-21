@@ -1567,7 +1567,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
     let currentDecoration: TextDecoration  = null;
     let column = 0;
-    const text = String.fromCodePoint(...uint32Chars);
+    const text = lineLength !== uint32Chars.length ? String.fromCodePoint(...uint32Chars.slice(0,lineLength)) : String.fromCodePoint(...uint32Chars);
     const normalWidthCodePointCutOff = maxNormalWidthCodePoint();
     for (let i = 0; i < lineLength; i++, column++) {
       const data = attrs[i];
