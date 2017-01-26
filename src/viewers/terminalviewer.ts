@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Simon Edwards <simon@simonzone.com>
+ * Copyright 2015-2017 Simon Edwards <simon@simonzone.com>
  */
 
 "use strict";
@@ -26,6 +26,8 @@ import ThemeTypes = require('../theme');
 import keybindingmanager = require('../keybindingmanager');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import BulkDOMOperation = require('../BulkDOMOperation');
+import SupportsClipboardPaste = require('../SupportsClipboardPaste');
+
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
@@ -73,7 +75,7 @@ function getCssText(): string {
 }
 
 class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
-    keybindingmanager.AcceptsKeyBindingManager {
+    keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "et-terminal-viewer";
   
@@ -242,6 +244,19 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     }
     
     return doc.getSelection("\n");
+  }
+
+  // From SupportsClipboardPaste interface.
+  canPaste(): boolean {
+    return this._mode === ViewerElementTypes.Mode.CURSOR;
+  }
+
+  // From SupportsClipboardPaste interface.
+  pasteText(text: string): void {
+    if ( ! this.canPaste()) {
+      return;
+    }
+    this._codeMirror.getDoc().replaceSelection(text);
   }
 
   focus(): void {
@@ -520,7 +535,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     doc.setCursor( { line: doc.lineCount()-1 , ch: ch } );
     return true;
   }
-  
+
   /**
    * Delete the top n pixels from the scrollback.
    *

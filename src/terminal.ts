@@ -48,6 +48,7 @@ import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 import mimetypedetector = require('./mimetypedetector');
 import CodeMirrorOperation = require('./codemirroroperation');
+import SupportsClipboardPaste = require('./SupportsClipboardPaste');
 
 import config = require('./config');
 type Config = config.Config;
@@ -1991,7 +1992,20 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   }
   
   pasteText(text: string): void {
-    this.send(text);
+    if (this._mode === Mode.CURSOR) {
+      const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+      for (const node of scrollerArea.childNodes) {
+        if (ViewerElement.isViewerElement(node) && node.hasFocus()) {
+          if (SupportsClipboardPaste.isSupportsClipboardPaste(node) && node.canPaste()) {
+            node.pasteText(text);
+          }
+          break;
+        }
+      }
+
+    } else {
+      this.send(text);  // Send it to the PTY.
+    }
   }
 
   /**
