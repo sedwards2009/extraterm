@@ -4,7 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-/* just the font-face tag for color Emojie */
+/* just the font-face tag for color Emoji */
+
+@if($extraterm-platform == "linux") {
 
 @font-face {
   font-family: 'EmojiOne';
@@ -12,4 +14,5 @@
   font-weight: normal;
   font-style: normal;
   unicode-range: U+2000-1ffff;
+}
 }
