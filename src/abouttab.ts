@@ -125,9 +125,11 @@ class EtAboutTab extends ViewerElement {
     const divContainer = document.createElement('div');
     divContainer.innerHTML = `<div id='${ID_ABOUT}'>
   <h1>Extraterm</h1>
-  <p>Copyright &copy; 2015-2016 Simon Edwards &lt;simon@simonzone.com&gt;</p>
+  <p>Copyright &copy; 2015-2017 Simon Edwards &lt;simon@simonzone.com&gt;</p>
   <p>Published under the MIT license</p>
   <p>See https://github.com/sedwards2009/extraterm</p>
+  <hr>
+  <p>This software uses EmojiOne for color emoji under the Creative Commons Attribution 4.0 International (CC BY 4.0) license. http://emojione.com</p>
 </div>
 `;
 

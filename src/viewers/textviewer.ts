@@ -27,6 +27,7 @@ import virtualscrollarea = require('../virtualscrollarea');
 import Logger = require('../logger');
 import LogDecorator = require('../logdecorator');
 import generalevents = require('../generalevents');
+import SupportsClipboardPaste = require('../SupportsClipboardPaste');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -84,7 +85,7 @@ function LoadCodeMirrorMode(modeName: string): void {
 }
 
 class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
-    keybindingmanager.AcceptsKeyBindingManager {
+    keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "et-text-viewer";
   
@@ -238,6 +239,19 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     }
   }
   
+  // From SupportsClipboardPaste interface.
+  canPaste(): boolean {
+    return this._mode === ViewerElementTypes.Mode.CURSOR;
+  }
+
+  // From SupportsClipboardPaste interface.
+  pasteText(text: string): void {
+    if ( ! this.canPaste()) {
+      return;
+    }
+    this._codeMirror.getDoc().replaceSelection(text);
+  }
+
   set mimeType(mimeType: string) {
     this._mimeType = mimeType;
     

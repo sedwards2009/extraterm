@@ -22,6 +22,7 @@ import Logger = require('./logger');
 import LogDecorator = require('./logdecorator');
 import BulkDOMOperation = require('./BulkDOMOperation');
 import CodeMirrorOperation = require('./codemirroroperation');
+import SupportsClipboardPaste = require('./SupportsClipboardPaste');
 
 type VirtualScrollable = virtualscrollarea.VirtualScrollable;
 type SetterState = virtualscrollarea.SetterState;
@@ -66,7 +67,8 @@ const DEBUG_SIZE = false;
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
-class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable {
+class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+    SupportsClipboardPaste.SupportsClipboardPaste {
   
   /**
    * The HTML tag name of this element.
@@ -362,6 +364,14 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     return this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE);
   }
 
+  hasFocus(): boolean {
+    const el = this.viewerElement;
+    if (el == null) {
+      return false;
+    }
+    return el.hasFocus();
+  }
+
   set returnCode(returnCode: number) {
     this.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE,
       returnCode === null || returnCode === undefined ? null : "" + returnCode);
@@ -378,6 +388,26 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   get awesomeIcon(): string {
     return this.getAttribute(EtEmbeddedViewer.ATTR_AWESOME_ICON);
+  }
+
+  canPaste(): boolean {
+    const el = this.viewerElement;
+    if (el == null) {
+      return false;
+    }
+
+    return SupportsClipboardPaste.isSupportsClipboardPaste(el) && el.canPaste();
+  }
+
+  pasteText(text: string): void {
+    if ( ! this.canPaste()) {
+      return;
+    }
+
+    const el = this.viewerElement;
+    if (SupportsClipboardPaste.isSupportsClipboardPaste(el)) {
+      el.pasteText(text);
+    }
   }
 
   clearSelection(): void {

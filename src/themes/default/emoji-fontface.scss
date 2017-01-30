@@ -1,0 +1,18 @@
+/*
+ * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ *
+ * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
+ */
+
+/* just the font-face tag for color Emoji */
+
+@if($extraterm-platform == "linux") {
+
+@font-face {
+  font-family: 'EmojiOne';
+  src: url($--source-dir-default + '/emojione-android.ttf?v=1.0.0') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  unicode-range: U+2000-1ffff;
+}
+}

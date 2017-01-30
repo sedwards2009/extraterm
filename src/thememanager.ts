@@ -55,12 +55,6 @@ export interface ThemeManager {
   renderThemes(themeIdList: string[], cssFileList: CssFile[], globalVariables?: Map<string, number|boolean|string>): Promise<RenderResult>;
 }
 
-interface ListenerItem {
-  themeId: string;
-  listenerFunc: ListenerFunc;
-  watcher: fs.FSWatcher;
-}
-
 //-------------------------------------------------------------------------
 //
 //  #######                             #     #                                           ###                      

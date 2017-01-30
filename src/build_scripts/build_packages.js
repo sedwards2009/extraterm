@@ -88,7 +88,15 @@ function main() {
       }
     });
   }
-  
+
+  function pruneEmojiOne(versionedOutputDir, platform) {
+    if (platform !== "linux") {
+      const gutsDir = platform === "darwin" ? "extraterm.app/Contents/Resources/app" : "resources/app";
+      const emojiOnePath = path.join(versionedOutputDir, gutsDir, "src/themes/default/emojione-android.ttf");
+      rm(emojiOnePath);
+    }
+  }
+
   function copyWindowsNodeSassBinary(versionedOutputDir, platform) {
     // See the start of thememanager.ts. Once we are past node v6.5, this code here can be removed.
     // See https://github.com/nodejs/node/issues/8444 This bug breaks the require() trick done in thememanager.ts.
@@ -137,6 +145,7 @@ function main() {
           // Prune any unneeded node-sass binaries.
           pruneNodeSass(versionedOutputDir, arch, platform);
           copyWindowsNodeSassBinary(versionedOutputDir, platform);
+          pruneEmojiOne(versionedOutputDir, platform);
 
           // Zip it up.
           log("Zipping up the package");
