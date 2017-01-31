@@ -139,6 +139,11 @@ export interface Scrollbar {
   thumbSize: number;  // The size of the thumb.
 }
 
+export interface VirtualScrollableHeight {
+  readonly scrollable: VirtualScrollable;
+  readonly height: number;
+}
+
 interface Mutator { 
   (newState: VirtualAreaState): void;
 }
@@ -201,6 +206,16 @@ export class VirtualScrollArea {
   
   getVirtualHeight(): number {
     return TotalVirtualHeight(this._currentState);
+  }
+
+  getScrollableHeights(): VirtualScrollableHeight[] {
+    return this._currentState.scrollableStates.map<VirtualScrollableHeight>( (state): VirtualScrollableHeight => {
+      const smallState: VirtualScrollableHeight = {
+        scrollable: state.scrollable,
+        height: state.virtualHeight + state.reserveViewportHeight
+      };
+      return smallState;
+    });
   }
   
   //-----------------------------------------------------------------------

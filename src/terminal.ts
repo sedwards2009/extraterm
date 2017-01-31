@@ -101,6 +101,8 @@ const COMMAND_CLEAR_SCROLLBACK = "clearScrollback";
 const COMMAND_FONT_SIZE_INCREASE = "increaseFontSize";
 const COMMAND_FONT_SIZE_DECREASE = "decreaseFontSize";
 const COMMAND_FONT_SIZE_RESET = "resetFontSize";
+const COMMAND_GO_TO_PREVIOUS_FRAME = "goToPreviousFrame";
+const COMMAND_GO_TO_NEXT_FRAME = "goToNextFrame";
 
 const CHILD_RESIZE_BATCH_SIZE = 3;
 
@@ -1316,7 +1318,35 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _resetFontSize(): void {
     this._adjustFontSize(-this._fontSizeAdjustment);
   }
-  
+
+  private _goToPreviousFrame(): void {
+    const heights = this._virtualScrollArea.getScrollableHeights();
+
+    const y = this._virtualScrollArea.getScrollYOffset();
+    let heightCount = 0;
+    for (let i=0; i<heights.length; i++) {
+      if (y <= (heightCount + heights[i].height)) {
+        this._virtualScrollArea.scrollTo(heightCount);
+        break;
+      }
+      heightCount += heights[i].height;
+    }
+  }
+
+  private _goToNextFrame(): void {
+    const heights = this._virtualScrollArea.getScrollableHeights();
+
+    const y = this._virtualScrollArea.getScrollYOffset();
+    let heightCount = 0;
+    for (let i=0; i<heights.length; i++) {
+      if (y < (heightCount + heights[i].height)) {
+        this._virtualScrollArea.scrollTo(heightCount + heights[i].height);
+        break;
+      }
+      heightCount += heights[i].height;
+    }
+  }
+
   // ----------------------------------------------------------------------
   //
   //   #    #                                                 
@@ -1379,6 +1409,10 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     }
     commandList.push( { id: COMMAND_SCROLL_PAGE_UP, group: PALETTE_GROUP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this } );
     commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, group: PALETTE_GROUP, iconRight: "angle-double-down", label: "Scroll Page Down", target: this } );
+
+    commandList.push( { id: COMMAND_GO_TO_PREVIOUS_FRAME, group: PALETTE_GROUP, label: "Go to Previous Frame", target: this } );
+    commandList.push( { id: COMMAND_GO_TO_NEXT_FRAME, group: PALETTE_GROUP, label: "Go to Next Frame", target: this } );
+    
     commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "copy", label: "Copy to Clipboard", target: this } );
     if (this._mode === Mode.CURSOR) {
       commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "clipboard", label: "Paste from Clipboard", target: this } );
@@ -1427,6 +1461,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
         case COMMAND_SCROLL_PAGE_DOWN:
           this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
             + this._virtualScrollArea.getScrollContainerHeight() / 2);
+          break;
+
+        case COMMAND_GO_TO_PREVIOUS_FRAME:
+          this._goToPreviousFrame();
+          break;
+
+        case COMMAND_GO_TO_NEXT_FRAME:
+          this._goToNextFrame();
           break;
 
         case COMMAND_COPY_TO_CLIPBOARD:
