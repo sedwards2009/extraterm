@@ -372,12 +372,12 @@ export function getEventDeepPath(ev: Event): Node[] {
 export function focusWithoutScroll(el: HTMLElement): void {
   const preScrollTops: {element: Element, top: number}[] = [];
 
-  let p = el;
+  let p: Element = el;
   do {
     preScrollTops.push( { element: p, top: p.scrollTop } );
 
 
-    let parent = p.parentElement;
+    let parent: Element = p.parentElement;
     if (parent == null) {
       const nodeParent = p.parentNode;
       if (nodeParent != null && nodeParent.nodeName === "#document-fragment") {

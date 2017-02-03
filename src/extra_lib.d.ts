@@ -20,16 +20,10 @@ interface CaretPosition {
 }
 
 interface DocumentOrShadowRoot {
-    getSelection(): Selection | null;
-    elementFromPoint(x: number, y: number): Element | null;
-    elementsFromPoint(x: number, y: number): NodeListOf<Element>;
     caretPositionFromPoint(x: number, y: number): CaretPosition | null;
-    activeElement: Element | null;
-    styleSheets: StyleSheetList;
 }
 
 interface ShadowRoot extends DocumentFragment, DocumentOrShadowRoot {
-    host: HTMLElement;
     mode: ShadowRootMode;
 }
 
@@ -42,13 +36,6 @@ interface AssignedNodesOptions {
 interface HTMLSlotElement extends HTMLElement {
     name: string;
     assignedNodes(options?: AssignedNodesOptions): NodeList;
-}
-
-interface Element {
-    attachShadow(shadowRootInitDict: ShadowRootInit): ShadowRoot;
-    assignedSlot: HTMLSlotElement | null;
-    slot: string;
-    shadowRoot: ShadowRoot | null;
 }
 
 interface Event {
@@ -121,7 +108,6 @@ interface KeyboardEventInit {
 
 interface Event {
   path: Node[]; // <- obsolete. Removed from later the Shadow DOM spec.
-  deepPath: Node[];
   encapsulated: boolean;
 }
 
