@@ -3208,10 +3208,11 @@ export class Emulator implements EmulatorAPI {
     switch (ev.key) {
       // backspace
       case 'Backspace':
-        if (ev.shiftKey) {
-          key = '\x08'; // ^H
+        if ((!this.isMac && ev.altKey) || (this.isMac && ev.metaKey)) {  // Alt modifier handling.
+          key = '\x1b\x7f'; // ^[^?
           break;
         }
+
         key = '\x7f'; // ^?
         break;
 
