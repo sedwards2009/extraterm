@@ -11,7 +11,7 @@ import util = require('./util');
 import he = require('he');
 import CommandPaletteTypes = require('./commandpalettetypes');
 
-const ID = "CbContextMenuTemplate";
+const ID = "CbCommandPaletteTemplate";
 const ID_COVER = "ID_COVER";
 const ID_CONTEXT_COVER = "ID_CONTEXT_COVER";
 const ID_CONTAINER = "ID_CONTAINER";
