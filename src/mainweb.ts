@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import path = require('path');
 import electron = require('electron');
 const Menu = electron.remote.Menu;
 const MenuItem = electron.remote.MenuItem;
@@ -20,6 +21,11 @@ import CbCommandPalette = require('./gui/commandpalette');
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 import CommandPaletteTypes = require('./gui/commandpalettetypes');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
+
+import PluginApi = require('./PluginApi');
+import PluginManager = require('./PluginManager');
+import InternalExtratermApi = require('./InternalExtratermApi');
+
 import MainWebUi = require('./mainwebui');
 import EtTerminal = require('./terminal');
 import domutils = require('./domutils');
@@ -47,6 +53,8 @@ type KeyBindingContexts = keybindingmanager.KeyBindingContexts;
 
 sourceMapSupport.install();
 
+const PLUGINS_DIRECTORY = "plugins";
+
 const PALETTE_GROUP = "mainweb";
 const MENU_ITEM_SPLIT = 'split';
 const MENU_ITEM_SETTINGS = 'settings';
@@ -69,6 +77,8 @@ let keyBindingManager: KeyBindingManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configManager: ConfigManagerImpl = null;
+let pluginManager: PluginManager.PluginManager = null;
+let internalExtratermApi: InternalExtratermApiImpl = null;
 
 /**
  * 
@@ -139,7 +149,13 @@ export function startUp(): void {
       }
     });
 
+    // Get the plugins loaded.
+    pluginManager = new PluginManager.PluginManager(path.join(__dirname, PLUGINS_DIRECTORY));
+    internalExtratermApi = new InternalExtratermApiImpl();
+    pluginManager.load(internalExtratermApi);
+
     mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
+    mainWebUi.setInternalExtratermApi(internalExtratermApi);
     config.injectConfigManager(mainWebUi, configManager);
     keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
@@ -648,5 +664,39 @@ class KeyBindingManagerImpl {
    */
   unregisterChangeListener(key: any): void {
     this._listenerList = this._listenerList.filter( (tup) => tup.key !== key);
+  }
+}
+
+class InternalExtratermApiImpl implements InternalExtratermApi.InternalExtratermApi {
+
+  private _topLevelElement: HTMLElement = null;
+
+  private _topLevelEventListeners: PluginApi.ElementListener[] = [];
+
+  private _tabElements: HTMLElement[] = [];
+
+  private _tabEventListeners: PluginApi.ElementListener[] = [];
+ 
+
+  addNewTopLevelEventListener(callback: PluginApi.ElementListener): void {
+    this._topLevelEventListeners.push(callback);
+  }
+
+  setTopLevel(el: HTMLElement): void {
+    this._topLevelElement = el;
+    this._topLevelEventListeners.forEach( listener => listener(el) );
+  }
+
+  addNewTabEventListener(callback: PluginApi.ElementListener): void {
+    this._tabEventListeners.push(callback);
+  }
+
+  addTab(el: HTMLElement): void {
+    this._tabElements.push(el);
+    this._tabEventListeners.forEach( listener => listener(el) );
+  }
+
+  removeTab(el: HTMLElement): void {
+    this._tabElements = this._tabElements.filter( listEl => listEl !== el );
   }
 }

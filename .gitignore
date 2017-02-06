@@ -80,3 +80,7 @@ src/BulkDOMOperation.js
 src/codemirroroperation.ts
 src/BulkDOMOperationTest.js
 src/SupportsClipboardPaste.js
+src/PluginManager.js
+src/PluginApi.js
+src/InternalExtratermApi.js
+src/codemirroroperation.js
