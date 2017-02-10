@@ -111,6 +111,10 @@ interface Event {
   encapsulated: boolean;
 }
 
+interface EventInit {
+    composed?: boolean;
+}
+
 interface Console {
   timeStamp(label: string): void;
 }

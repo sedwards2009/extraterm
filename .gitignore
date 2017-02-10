@@ -84,3 +84,5 @@ src/PluginManager.js
 src/PluginApi.js
 src/InternalExtratermApi.js
 src/codemirroroperation.js
+src/gui/PopDownDialog.js
+src/gui/PopDownListPicker.js

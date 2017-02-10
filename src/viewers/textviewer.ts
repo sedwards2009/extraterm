@@ -50,6 +50,9 @@ const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
 const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 
+const COMMAND_SYNTAX_HIGHLIGHTING = "syntaxHighlighting";
+const EVENT_COMMAND_SYNTAX_HIGHLIGHTING = "TEXTVIEWER_EVENT_COMMAND_SYNTAX_HIGHLIGHTING";
+
 const COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,
   COMMAND_TYPE_SELECTION,
@@ -144,7 +147,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this._mimeType = null;
     this._log = new Logger(EtTextViewer.TAG_NAME, this);
     this._commandLine = null;
-    this._returnCode  =null;
+    this._returnCode = null;
     this._editable = false;
     this._codeMirror = null;
     this._height = 0;
@@ -256,8 +259,10 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this._mimeType = mimeType;
     
     const modeInfo = CodeMirror.findModeByMIME(mimeType);
-    if (modeInfo.mode !== undefined && modeInfo.mode !== null && modeInfo.mode !== "null") {
-      LoadCodeMirrorMode(modeInfo.mode);
+    if (modeInfo.mode !== undefined) {
+      if (modeInfo.mode !== null && modeInfo.mode !== "null") {
+        LoadCodeMirrorMode(modeInfo.mode);
+      }
       if (this._codeMirror !== null) {
         this._codeMirror.setOption("mode", mimeType);
       }
@@ -892,7 +897,8 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this }
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this },
+      { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax", target: this }
     ];
     
     if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
@@ -955,6 +961,10 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
         commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
           commandPaletteRequestDetail);
         this.dispatchEvent(commandPaletteRequestEvent);
+        break;
+
+      case COMMAND_SYNTAX_HIGHLIGHTING:
+        this.dispatchEvent(new CustomEvent(EVENT_COMMAND_SYNTAX_HIGHLIGHTING, {bubbles: true, composed: true, detail: { srcElement: this } } ));
         break;
         
       default:
