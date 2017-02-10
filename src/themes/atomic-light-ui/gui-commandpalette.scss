@@ -111,6 +111,12 @@ div > #ID_FILTER {
   padding-left: $padding-xs-horizontal;
   padding-right: $padding-xs-horizontal;
 
+  &:hover {
+    cursor: pointer;
+    outline: 1px solid $background-color-selected;
+    outline-offset: -1px;
+  }
+
   &.CLASS_RESULT_SELECTED {
     outline: none;
     color: $text-color-selected;

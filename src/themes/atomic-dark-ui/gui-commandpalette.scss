@@ -113,6 +113,12 @@ div > #ID_FILTER {
 
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
 
+  &:hover {
+    cursor: pointer;
+    outline: 1px solid $background-color-selected;
+    outline-offset: -1px;
+  }
+
   &.CLASS_RESULT_SELECTED {
     outline: none;
     text-shadow: none;

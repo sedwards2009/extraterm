@@ -107,9 +107,15 @@ div > #ID_FILTER {
 .CLASS_RESULT_ENTRY {
   display: flex;
   width: 100%;
-  
+
   padding-left: $padding-xs-horizontal;
   padding-right: $padding-xs-horizontal;
+
+  &:hover {
+    cursor: pointer;
+    outline: 1px solid $btn-primary-bg;
+    outline-offset: -1px;
+  }
 
   &.CLASS_RESULT_SELECTED {
     outline: none;
