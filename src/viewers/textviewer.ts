@@ -272,7 +272,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   get mimeType(): string {
     return this._mimeType;
   }
-  
+
   setBytes(buffer: Buffer, mimeType: string): void {
     let charset = "utf-8";
     let cleanMimeType = mimeType;
@@ -758,6 +758,15 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this.dispatchEvent(event);
   }
 
+  private _getMimeTypeName(): string {
+    for (const info of CodeMirror.modeInfo) {
+      if (info.mime === this._mimeType) {
+        return info.name;
+      }
+    }
+    return this._mimeType;
+  }
+
   scrollTo(optionsOrX: ScrollToOptions | number, y?: number): void {
     let xCoord = 0;
     let yCoord = 0;
@@ -891,14 +900,14 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
       ev.stopPropagation();
       ev.preventDefault();
-    }      
+    }
   }
   
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this },
-      { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax", target: this }
+      { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax: " + this._getMimeTypeName(), target: this }
     ];
     
     if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
