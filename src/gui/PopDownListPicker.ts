@@ -62,6 +62,8 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
 
   private _laterHandle: domutils.LaterHandle;
 
+  private _extraCssFiles: ThemeTypes.CssFile[];
+
   private _initProperties(): void {
     this._entries = [];
     this._selectedId = null;
@@ -71,6 +73,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
     this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): string => 
       filteredEntries.map(entry => `<div ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
     this._laterHandle = null;
+    this._extraCssFiles = [];
   }
 
   geSelected(): string {
@@ -128,6 +131,16 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
 
   setFormatEntriesFunc(func: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string): void {
     this._formatEntries = func;
+  }
+  
+  /**
+   * Specify extra Css files to load into this element.
+   * 
+   * @param extraCssFiles extra Css files which should be loaded along side the default set.
+   */
+  addExtraCss(extraCssFiles: ThemeTypes.CssFile[]): void {
+    this._extraCssFiles = [...this._extraCssFiles, ...extraCssFiles];
+    this.updateThemeCss();
   }
 
   //-----------------------------------------------------------------------
@@ -199,7 +212,8 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_POP_DOWN_LIST_PICKER];
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME,
+      ThemeTypes.CssFile.GUI_POP_DOWN_LIST_PICKER, ...this._extraCssFiles];
   }
 
   private _updateEntries(): void {
