@@ -1,0 +1,90 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* Command Palette */
+@import "bootstrap/variables";
+@import "extraterm-scrollbars";
+
+/*
+:host {
+  visibility: hidden;
+}
+*/
+
+#ID_COVER {
+  &.CLASS_COVER_CLOSED {
+    visibility: hidden;
+  }
+
+  &.CLASS_COVER_OPEN {
+    position: fixed;
+    visibility: visible;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
+}
+
+#ID_CONTAINER {
+  padding: $padding-base-vertical $padding-base-horizontal;
+}
+
+#ID_TITLE_CONTAINER {
+  width: 100%;
+  display: flex;
+
+  font-family: $font-family-base;
+  font-size: $input-font-size;
+  line-height: $line-height-base;
+  color: $text-color;
+  margin-bottom: 5px;
+}
+
+#ID_TITLE_PRIMARY {
+  flex-grow: 1;
+  font-weight: normal;
+}
+
+#ID_TITLE_SECONDARY {
+  flex-grow: 0;
+}
+
+#ID_CONTEXT_COVER {
+  position: relative;
+}
+
+#ID_CONTEXT_COVER {
+  &.CLASS_CONTEXT_COVER_OPEN {
+  
+  }
+  
+  &.CLASS_CONTEXT_COVER_CLOSED {
+    display: none;
+  }
+}
+
+
+#ID_CONTAINER {
+  position: absolute;
+
+  $width: 400px;
+  width: $width;
+  left: calc(50% - #{$width} / 2);
+  
+  font-family: $font-family-base;
+  font-size: $input-font-size;
+  font-weight: normal;
+  line-height: $line-height-base;
+  color: $dropdown-link-color;
+  background-color: $dropdown-bg;
+
+  border: 1px solid $dropdown-border;
+  border-radius: $border-radius-base;
+  box-shadow: 0px 6px 12px rgba(0,0,0,.175);
+  background-clip: padding-box;
+
+  z-index: 101;  
+}

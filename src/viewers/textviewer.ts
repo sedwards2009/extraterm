@@ -259,7 +259,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this._mimeType = mimeType;
     
     const modeInfo = CodeMirror.findModeByMIME(mimeType);
-    if (modeInfo.mode !== undefined) {
+    if (modeInfo != null) {
       if (modeInfo.mode !== null && modeInfo.mode !== "null") {
         LoadCodeMirrorMode(modeInfo.mode);
       }

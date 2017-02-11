@@ -138,7 +138,7 @@ class PopDownDialog extends ThemeableElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_COMMANDPALETTE];
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_POP_DOWN_DIALOG];
   }
   
   //-----------------------------------------------------------------------

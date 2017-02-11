@@ -37,6 +37,7 @@ export enum CssFile {
   GUI_SCROLLBAR,
   KEY_BINDINGS_TAB,
   GUI_COMMANDPALETTE,
+  GUI_POP_DOWN_DIALOG,
   TIP_VIEWER,
   FONT_AWESOME,
   TERMINAL_VARS,
@@ -61,6 +62,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.GUI_SCROLLBAR,
   CssFile.KEY_BINDINGS_TAB,
   CssFile.GUI_COMMANDPALETTE,
+  CssFile.GUI_POP_DOWN_DIALOG,
   CssFile.TIP_VIEWER,
   CssFile.FONT_AWESOME,
   CssFile.TERMINAL_VARS,
@@ -85,6 +87,7 @@ const _CssFileNameMapping = {
   [CssFile.GUI_SCROLLBAR]: "gui-scrollbar",
   [CssFile.KEY_BINDINGS_TAB]: "key-bindings-tab",
   [CssFile.GUI_COMMANDPALETTE]: "gui-commandpalette",
+  [CssFile.GUI_POP_DOWN_DIALOG]: "gui-popdowndialog",
   [CssFile.TIP_VIEWER]: "tip-viewer",
   [CssFile.FONT_AWESOME]: "font-awesome",
   [CssFile.TERMINAL_VARS]: "terminal-vars",
@@ -123,5 +126,6 @@ export const UiCssFiles: CssFile[] = [
   CssFile.GUI_COMMANDPALETTE,
   CssFile.TIP_VIEWER,
   CssFile.FONT_AWESOME,
-  CssFile.VIEWER_TAB
+  CssFile.VIEWER_TAB,
+  CssFile.GUI_POP_DOWN_DIALOG,
 ];
