@@ -26,11 +26,32 @@ class TextViewerPlugin {
           </div>`;
                 }).join("");
             });
-            this._syntaxDialog.setFilterEntriesFunc((entries, filterText) => {
-                const lowerFilterText = filterText.toLowerCase();
-                return entries.filter((entry) => {
+            this._syntaxDialog.setFilterAndRankEntriesFunc((entries, filterText) => {
+                const lowerFilterText = filterText.toLowerCase().trim();
+                const filtered = entries.filter((entry) => {
                     return entry.name.toLowerCase().indexOf(lowerFilterText) !== -1 || entry.id.toLowerCase().indexOf(lowerFilterText) !== -1;
                 });
+                const rankFunc = (entry, lowerFilterText) => {
+                    const lowerName = entry.name.toLowerCase();
+                    if (lowerName === lowerFilterText) {
+                        return 1000;
+                    }
+                    const lowerId = entry.id.toLowerCase();
+                    if (lowerId === lowerFilterText) {
+                        return 800;
+                    }
+                    const pos = lowerName.indexOf(lowerFilterText);
+                    if (pos !== -1) {
+                        return 500 - pos; // Bias it for matches at the front of  the text.
+                    }
+                    const pos2 = lowerId.indexOf(lowerFilterText);
+                    if (pos2 !== -1) {
+                        return 400 - pos2;
+                    }
+                    return 0;
+                };
+                filtered.sort((a, b) => rankFunc(b, lowerFilterText) - rankFunc(a, lowerFilterText));
+                return filtered;
             });
             this._syntaxDialog.addEventListener("selected", (ev) => {
                 if (ev.detail.selected != null) {

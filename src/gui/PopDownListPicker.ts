@@ -122,7 +122,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
     return this._titleSecondary;
   }
 
-  setFilterEntriesFunc(func: (entries: T[], filterText: string) => T[]): void {
+  setFilterAndRankEntriesFunc(func: (entries: T[], filterText: string) => T[]): void {
     this._filterEntries = func;
   }
 

@@ -46,11 +46,39 @@ class TextViewerPlugin implements PluginApi.ExtratermPlugin {
         }).join("");
       });
 
-      this._syntaxDialog.setFilterEntriesFunc( (entries: SyntaxEntry[], filterText: string): SyntaxEntry[] => {
-        const lowerFilterText = filterText.toLowerCase();
-        return entries.filter( (entry: SyntaxEntry): boolean => {
+      this._syntaxDialog.setFilterAndRankEntriesFunc( (entries: SyntaxEntry[], filterText: string): SyntaxEntry[] => {
+        const lowerFilterText = filterText.toLowerCase().trim();
+        const filtered = entries.filter( (entry: SyntaxEntry): boolean => {
           return entry.name.toLowerCase().indexOf(lowerFilterText) !== -1 || entry.id.toLowerCase().indexOf(lowerFilterText) !== -1;
         });
+
+        const rankFunc = (entry: SyntaxEntry, lowerFilterText: string): number => {
+          const lowerName = entry.name.toLowerCase();
+          if (lowerName === lowerFilterText) {
+            return 1000;
+          }
+
+          const lowerId = entry.id.toLowerCase();
+          if (lowerId === lowerFilterText) {
+            return 800;
+          }
+
+          const pos = lowerName.indexOf(lowerFilterText);
+          if (pos !== -1) {
+            return 500 - pos; // Bias it for matches at the front of  the text.
+          }
+
+          const pos2 = lowerId.indexOf(lowerFilterText);
+          if (pos2 !== -1) {
+            return 400 - pos2;
+          }
+
+          return 0;
+        };
+
+        filtered.sort( (a: SyntaxEntry,b: SyntaxEntry): number => rankFunc(b, lowerFilterText) - rankFunc(a, lowerFilterText));
+
+        return filtered;
       });
 
       this._syntaxDialog.addEventListener("selected", (ev: CustomEvent): void => {
