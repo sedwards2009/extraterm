@@ -31,6 +31,8 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
   static ATTR_DATA_ID = "data-id";
 
   static CLASS_RESULT_SELECTED = "CLASS_RESULT_SELECTED";
+  
+  static CLASS_RESULT_ENTRY = "CLASS_RESULT_ENTRY";
 
   /**
    * Initialize the PopDownListPicker class and resources.
@@ -132,7 +134,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
   setFormatEntriesFunc(func: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string): void {
     this._formatEntries = func;
   }
-  
+
   /**
    * Specify extra Css files to load into this element.
    * 

@@ -10,6 +10,7 @@ const MenuItem = electron.remote.MenuItem;
 
 import sourceMapSupport = require('source-map-support');
 import _ = require('lodash');
+import he = require('he');
 import Logger = require('./logger');
 import Messages = require('./windowmessages');
 import webipc = require('./webipc');
@@ -17,7 +18,7 @@ import CbContextMenu = require('./gui/contextmenu');
 import CbMenuItem = require('./gui/menuitem');
 import CbDropDown = require('./gui/dropdown');
 import CbCheckBoxMenuItem = require('./gui/checkboxmenuitem');
-import CbCommandPalette = require('./gui/commandpalette');
+import PopDownListPicker = require('./gui/PopDownListPicker');
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 import CommandPaletteTypes = require('./gui/commandpalettetypes');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
@@ -64,6 +65,12 @@ const MENU_ITEM_ABOUT = 'about';
 const MENU_ITEM_RELOAD_CSS = 'reload_css';
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
 const ID_MENU_BUTTON = "ID_MENU_BUTTON";
+
+const CLASS_RESULT_GROUP_HEAD = "CLASS_RESULT_GROUP_HEAD";
+const CLASS_RESULT_ICON_LEFT = "CLASS_RESULT_ICON_LEFT";
+const CLASS_RESULT_ICON_RIGHT = "CLASS_RESULT_ICON_RIGHT";
+const CLASS_RESULT_LABEL = "CLASS_RESULT_LABEL";
+const CLASS_RESULT_SHORTCUT = "CLASS_RESULT_SHORTCUT";
 
 const _log = new Logger("mainweb");
 
@@ -140,7 +147,7 @@ export function startUp(): void {
     CbDropDown.init();
     MainWebUi.init();
     CbCheckBoxMenuItem.init();
-    CbCommandPalette.init();
+    PopDownListPicker.init();
     ResizeCanary.init();
 
     window.addEventListener('resize', () => {
@@ -190,14 +197,8 @@ export function startUp(): void {
       mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     });
     
-    // Command palette
-    const commandPalette = <CbCommandPalette> doc.createElement(CbCommandPalette.TAG_NAME);
-    commandPalette.id = ID_COMMAND_PALETTE;
-    commandPalette.titlePrimary = "Command Palette";
-    commandPalette.titleSecondary = "Ctrl+Shift+P";
-    doc.body.appendChild(commandPalette);
-    commandPalette.addEventListener('selected', handleCommandPaletteSelected);
-    
+    setUpCommandPalette();
+
     // Make sure something sensible is focussed if the window gets the focus.
     window.addEventListener('focus', () => {
       mainWebUi.focus();
@@ -522,6 +523,23 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
 let commandPaletteRequestSource: HTMLElement = null;
 let commandPaletteRequestEntries: CommandPaletteRequestTypes.CommandEntry[] = null;
 
+function setUpCommandPalette(): void {
+  const doc = window.document;
+
+  // Command palette
+  const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> doc.createElement(PopDownListPicker.TAG_NAME);
+  commandPalette.id = ID_COMMAND_PALETTE;
+  commandPalette.setTitlePrimary("Command Palette");
+  commandPalette.setTitleSecondary("Ctrl+Shift+P");
+
+  commandPalette.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
+  commandPalette.setFormatEntriesFunc(commandPaletteFormatEntries);
+  commandPalette.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
+
+  doc.body.appendChild(commandPalette);
+  commandPalette.addEventListener('selected', handleCommandPaletteSelected);
+}    
+
 function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.CommandPaletteRequest): void {
   
   domutils.doLater( () => {
@@ -540,11 +558,11 @@ function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.Command
       };
     });
     
-    const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
+    const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> document.getElementById(ID_COMMAND_PALETTE);
     const shortcut = keyBindingManager.getKeyBindingContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
-    commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
+    commandPalette.setTitleSecondary(shortcut !== null ? shortcut : "");
 
-    commandPalette.entries = paletteEntries;
+    commandPalette.setEntries(paletteEntries);
     
     let rect: ClientRect = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500 };
     if (request.contextElement !== null && request.contextElement !== undefined) {
@@ -552,6 +570,7 @@ function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.Command
     }
     
     commandPalette.open(rect.left, rect.top, rect.width, rect.height);
+    commandPalette.focus();
   });
 }
 
@@ -575,15 +594,15 @@ function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
 }
 
 function handleCommandPaletteSelected(ev: CustomEvent): void {
-  const commandPalette = <CbCommandPalette> document.getElementById(ID_COMMAND_PALETTE);
+  const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> document.getElementById(ID_COMMAND_PALETTE);
   commandPalette.close();
   if (commandPaletteRequestSource !== null) {
     commandPaletteRequestSource.focus();
   }
   
-  const entryId = ev.detail.entryId;
-  if (entryId !== null) {
-    const commandIndex = Number.parseInt(entryId);
+  const selectedId = ev.detail.selected;
+  if (selectedId !== null) {
+    const commandIndex = Number.parseInt(selectedId);
     const commandEntry = commandPaletteRequestEntries[commandIndex];
     domutils.doLater( () => {
       commandEntry.target.executeCommand(commandEntry.id);
@@ -591,6 +610,48 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
       commandPaletteRequestEntries = null;
     });
   }
+}
+
+function commandPaletteFilterEntries(entries: CommandPaletteTypes.CommandEntry[], filter: string): CommandPaletteTypes.CommandEntry[] {
+  const lowerFilter = filter.toLowerCase();
+  return entries.filter( (entry) => entry.label.toLowerCase().includes(lowerFilter) );
+}
+
+function commandPaletteFormatEntries(entries: CommandPaletteTypes.CommandEntry[], selectedId: string, filterInputValue: string): string {
+    return (filterInputValue.trim() === "" ? commandPaletteFormatEntriesWithGroups : commandPaletteFormatEntriesAsList)(entries, this._selectedId);
+}
+
+function commandPaletteFormatEntriesAsList(entries: CommandPaletteTypes.CommandEntry[], selectedId: string): string {
+  return entries.map( (entry) => commandPaletteFormatEntry(entry, entry.id === selectedId) ).join("");
+}
+
+function commandPaletteFormatEntriesWithGroups(entries: CommandPaletteTypes.CommandEntry[], selectedId: string): string {
+  let currentGroup: string = null;
+  const htmlParts: string[] = [];
+
+  for (let entry of entries) {
+    let extraClass = "";
+    if (entry.group !== currentGroup && currentGroup !== null) {
+      extraClass = CLASS_RESULT_GROUP_HEAD;
+    }
+    currentGroup = entry.group;
+    htmlParts.push(commandPaletteFormatEntry(entry, entry.id === selectedId, extraClass));
+  }
+  
+  return htmlParts.join("");
+}
+
+function commandPaletteFormatEntry(entry: CommandPaletteTypes.CommandEntry, selected: boolean, extraClassString = ""): string {
+  return `<div class='${PopDownListPicker.CLASS_RESULT_ENTRY} ${selected ? PopDownListPicker.CLASS_RESULT_SELECTED : ""} ${extraClassString}' ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>
+    <div class='${CLASS_RESULT_ICON_LEFT}'>${commandPaletteFormatIcon(entry.iconLeft)}</div>
+    <div class='${CLASS_RESULT_ICON_RIGHT}'>${commandPaletteFormatIcon(entry.iconRight)}</div>
+    <div class='${CLASS_RESULT_LABEL}'>${he.encode(entry.label)}</div>
+    <div class='${CLASS_RESULT_SHORTCUT}'>${entry.shortcut !== undefined && entry.shortcut !== null ? he.encode(entry.shortcut) : ""}</div>
+  </div>`;
+}
+
+function commandPaletteFormatIcon(iconName?: string): string {
+  return `<i class='fa fa-fw ${iconName !== undefined && iconName !== null ? "fa-" + iconName : ""}'></i>`;
 }
 
 class ConfigManagerImpl implements ConfigManager {
