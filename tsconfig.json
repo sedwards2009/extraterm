@@ -88,7 +88,6 @@
         "./src/gui/PopDownDialog.ts",
         "./src/gui/PopDownListPicker.ts",
         "./src/gui/checkboxmenuitem.ts",
-        "./src/gui/commandpalette.ts",
         "./src/gui/commandpalettetypes.ts",
         "./src/gui/contextmenu.ts",
         "./src/gui/dropdown.ts",
