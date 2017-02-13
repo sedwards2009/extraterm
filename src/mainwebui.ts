@@ -26,6 +26,8 @@ import CommandPaletteTypes = require('./gui/commandpalettetypes');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
+import InternalExtratermApi = require('./InternalExtratermApi');
+
 import webipc = require('./webipc');
 import Messages = require('./windowmessages');
 import path = require('path');
@@ -353,6 +355,8 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
 
   private _split: boolean;
   
+  private _internalExtratermApi: InternalExtratermApi.InternalExtratermApi;
+
   private _initProperties(): void {
     this._log = new Logger("ExtratermMainWebUI", this);
     this._tabInfo = [];
@@ -361,6 +365,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     this._keyBindingManager = null;
     this._themes = [];
     this._split = false;
+    this._internalExtratermApi = null;
   }
   
   //-----------------------------------------------------------------------
@@ -512,7 +517,12 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       tabInfo.focus();
     }
   }
-  
+
+  setInternalExtratermApi(api: InternalExtratermApi.InternalExtratermApi): void {
+    this._internalExtratermApi = api;
+    api.setTopLevel(this);
+  }
+
   setConfigManager(configManager: ConfigManager): void {
     this._configManager = configManager;
   }
@@ -763,6 +773,8 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
 
     tabInfo.updateTabTitle();
     this._sendTabOpenedEvent();
+
+    this._internalExtratermApi.addTab(newTerminal);
     return tabInfo.id;
   }
   

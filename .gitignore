@@ -6,7 +6,6 @@ src/config.js
 src/configuredialog.js
 src/domutils.js
 src/gui/checkboxmenuitem.js
-src/gui/commandpalette.js
 src/gui/contextmenu.js
 src/gui/dropdown.js
 src/gui/markdownviewer.js
@@ -80,3 +79,11 @@ src/BulkDOMOperation.js
 src/codemirroroperation.ts
 src/BulkDOMOperationTest.js
 src/SupportsClipboardPaste.js
+src/PluginManager.js
+src/PluginApi.js
+src/InternalExtratermApi.js
+src/codemirroroperation.js
+src/gui/PopDownDialog.js
+src/gui/PopDownListPicker.js
+src/gui/PopDownNumberDialog.js
+src/plugins/TextViewer/TextViewerPlugin.js

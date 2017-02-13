@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-declare module CodeMirror {
+declare namespace CodeMirror {
   interface Editor {
     on(eventName: 'keyHandled', handler: (instance: CodeMirror.Editor, name: string, event: KeyboardEvent) => void ): void;
     off(eventName: 'keyHandled', handler: (instance: CodeMirror.Editor, name: string, event: KeyboardEvent) => void ): void;
@@ -30,7 +30,7 @@ declare module CodeMirror {
   interface Doc {
     getSelection(linesep?: string): string;
     getSelections(linesep?: string): string[];
-    setSelections(ranges: {anchor: CodeMirror.Position, head: CodeMirror.Position}[], primary?: number, options?: Object);
+    setSelections(ranges: {anchor: Position, head: Position}[], primary?: number, options?: Object);
     replaceSelections(replacements: string[], select?: 'around' | 'start');
   }
   

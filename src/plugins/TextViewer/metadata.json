@@ -1,0 +1,4 @@
+{
+  "name": "TextViewer",
+  "factory": "TextViewerPlugin.js"
+}

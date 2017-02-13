@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,81 +7,87 @@
 import ThemeableElementBase = require('../themeableelementbase');
 import ThemeTypes = require('../theme');
 import domutils = require('../domutils');
-import util = require('./util');
-import he = require('he');
-import CommandPaletteTypes = require('./commandpalettetypes');
+import PopDownDialog = require('./PopDownDialog');
 
-const ID = "CbContextMenuTemplate";
-const ID_COVER = "ID_COVER";
-const ID_CONTEXT_COVER = "ID_CONTEXT_COVER";
-const ID_CONTAINER = "ID_CONTAINER";
+const ID = "CbPopDownListPickerTemplate";
+const ID_DIALOG = "ID_DIALOG";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
-const ID_TITLE_PRIMARY = "ID_TITLE_PRIMARY";
-const ID_TITLE_SECONDARY = "ID_TITLE_SECONDARY";
-const ID_TITLE_CONTAINER = "ID_TITLE_CONTAINER";
-
-const CLASS_RESULT_GROUP_HEAD = "CLASS_RESULT_GROUP_HEAD";
-const CLASS_RESULT_ENTRY = "CLASS_RESULT_ENTRY";
-const CLASS_RESULT_ICON_LEFT = "CLASS_RESULT_ICON_LEFT";
-const CLASS_RESULT_ICON_RIGHT = "CLASS_RESULT_ICON_RIGHT";
-const CLASS_RESULT_LABEL = "CLASS_RESULT_LABEL";
-const CLASS_RESULT_SHORTCUT = "CLASS_RESULT_SHORTCUT";
-const CLASS_RESULT_SELECTED = "CLASS_RESULT_SELECTED";
-const CLASS_CONTEXT_COVER_OPEN = "CLASS_CONTEXT_COVER_OPEN";
-const CLASS_CONTEXT_COVER_CLOSED = "CLASS_CONTEXT_COVER_CLOSED";
-const CLASS_COVER_CLOSED = "CLASS_COVER_CLOSED";
-const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
-
-const ATTR_DATA_ID = "data-id";
 
 let registered = false;
 
 /**
- * A context menu.
+ * A Pop Down List Picker.
  */
-class CbCommandPalette extends ThemeableElementBase {
+class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = "CB-COMMANDPALETTE";
+  static TAG_NAME = "CB-POPDOWNLISTPICKER";
+
+  static ATTR_DATA_ID = "data-id";
+
+  static CLASS_RESULT_SELECTED = "CLASS_RESULT_SELECTED";
+  
+  static CLASS_RESULT_ENTRY = "CLASS_RESULT_ENTRY";
 
   /**
-   * Initialize the CbCommandPalette class and resources.
+   * Initialize the PopDownListPicker class and resources.
    *
-   * When CbContextMenu is imported into a render process, this static method
+   * When PopDownListPicker is imported into a render process, this static method
    * must be called before an instances may be created. This is can be safely
    * called multiple times.
    */
   static init(): void {
+    PopDownDialog.init();
     if (registered === false) {
-      window.document.registerElement(CbCommandPalette.TAG_NAME, {prototype: CbCommandPalette.prototype});
+      window.document.registerElement(PopDownListPicker.TAG_NAME, {prototype: PopDownListPicker.prototype});
       registered = true;
     }
   }
 
   // WARNING: Fields like this will not be initialised automatically.
-  private _commandEntries: CommandPaletteTypes.CommandEntry[];
-  
+  private _entries: T[];
+
   private _selectedId: string;
-  
+
   private _titlePrimary: string;
 
   private _titleSecondary: string;
 
+  private _filterEntries: (entries: T[], filterText: string) => T[];
+
+  private _formatEntries: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string;
+
   private _laterHandle: domutils.LaterHandle;
-  
+
+  private _extraCssFiles: ThemeTypes.CssFile[];
+
   private _initProperties(): void {
-    this._commandEntries = [];
+    this._entries = [];
     this._selectedId = null;
-    this._laterHandle = null;
     this._titlePrimary = "";
     this._titleSecondary = "";
+    this._filterEntries = (entries: T[], filterText: string): T[] => entries;
+    this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): string => 
+      filteredEntries.map(entry => `<div ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
+    this._laterHandle = null;
+    this._extraCssFiles = [];
   }
 
-  set entries(entries: CommandPaletteTypes.CommandEntry[]) {
-    this._commandEntries = entries;
+  getSelected(): string {
+    return this._selectedId;
+  }
+
+  setSelected(selectedId: string): void {
+    this._selectedId = selectedId;
+    this._updateEntries();
+    this._scrollToSelected();
+  }
+
+  setEntries(entries: T[]): void {
+    this._entries = entries;
     this._selectedId = null;
     
     const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
@@ -91,26 +97,50 @@ class CbCommandPalette extends ThemeableElementBase {
     this._updateEntries();
   }
 
-  get entries(): CommandPaletteTypes.CommandEntry[] {
-    return this._commandEntries;
+  getEntries(): T[] {
+    return this._entries;
   }
 
-  set titlePrimary(text: string) {
+  setTitlePrimary(text: string): void {
     this._titlePrimary = text;
-    this._updateTitle();
+    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    if (dialog != null) {
+      dialog.setTitlePrimary(text);
+    }
   }
 
-  get titlePrimary(): string {
+  getTitlePrimary(): string {
     return this._titlePrimary;
   }
 
-  set titleSecondary(text: string) {
+  setTitleSecondary(text: string): void {
     this._titleSecondary = text;
-    this._updateTitle();
+    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    if (dialog != null) {
+      dialog.setTitleSecondary(text);
+    }
   }
 
-  get titleSecondary(): string {
+  getTitleSecondary(): string {
     return this._titleSecondary;
+  }
+
+  setFilterAndRankEntriesFunc(func: (entries: T[], filterText: string) => T[]): void {
+    this._filterEntries = func;
+  }
+
+  setFormatEntriesFunc(func: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string): void {
+    this._formatEntries = func;
+  }
+
+  /**
+   * Specify extra Css files to load into this element.
+   * 
+   * @param extraCssFiles extra Css files which should be loaded along side the default set.
+   */
+  addExtraCss(extraCssFiles: ThemeTypes.CssFile[]): void {
+    this._extraCssFiles = [...this._extraCssFiles, ...extraCssFiles];
+    this.updateThemeCss();
   }
 
   //-----------------------------------------------------------------------
@@ -134,6 +164,13 @@ class CbCommandPalette extends ThemeableElementBase {
     shadow.appendChild(clone);
     this.updateThemeCss();
 
+    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    dialog.setTitlePrimary(this._titlePrimary);
+    dialog.setTitleSecondary(this._titleSecondary);
+    dialog.addEventListener(PopDownDialog.EVENT_CLOSE_REQUEST, () => {
+      dialog.close();
+    });
+
     const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
     filterInput.addEventListener('input', (ev: Event) => {
       this._updateEntries();
@@ -145,42 +182,29 @@ class CbCommandPalette extends ThemeableElementBase {
     resultsDiv.addEventListener('click', (ev: Event) => {
       for (let node of ev.path) {
         if (node instanceof HTMLElement) {
-          const dataId = node.attributes.getNamedItem(ATTR_DATA_ID);
+          const dataId = node.attributes.getNamedItem(PopDownListPicker.ATTR_DATA_ID);
           if (dataId !== undefined && dataId !== null) {
-            this._executeId(dataId.value);
+            this._okId(dataId.value);
           }
         }
       }
-    });
-
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    containerDiv.addEventListener('contextmenu', (ev) => {
-      this._executeId(null);
-    }); 
-
-    const coverDiv = domutils.getShadowId(this, ID_COVER);
-    coverDiv.addEventListener('mousedown', (ev) => {
-      this._executeId(null);
     });
   }
   
   /**
    * 
    */
-  private createClone() {
+  private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
-        <div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
-        <div id='${ID_CONTEXT_COVER}' class='${CLASS_CONTEXT_COVER_CLOSED}'>
-          <div id='${ID_CONTAINER}'>
-            <div id="${ID_TITLE_CONTAINER}"><div id="${ID_TITLE_PRIMARY}"></div><div id="${ID_TITLE_SECONDARY}"></div></div>
-            <div class="form-group"><input type="text" id="${ID_FILTER}" class="form-control input-sm" /></div>
-            <div id="${ID_RESULTS}"></div>
-          </div>
-        </div>`;
+        <${PopDownDialog.TAG_NAME} id="${ID_DIALOG}">
+          <div class="form-group"><input type="text" id="${ID_FILTER}" class="form-control input-sm" /></div>
+          <div id="${ID_RESULTS}"></div>
+        </${PopDownDialog.TAG_NAME}>
+        `;
       window.document.body.appendChild(template);
     }
 
@@ -188,22 +212,13 @@ class CbCommandPalette extends ThemeableElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_COMMANDPALETTE];
-  }
-  
-  //-----------------------------------------------------------------------
-
-  private _updateTitle(): void {
-    const titlePrimaryDiv = <HTMLDivElement> domutils.getShadowId(this, ID_TITLE_PRIMARY);
-    const titleSecondaryDiv = <HTMLDivElement> domutils.getShadowId(this, ID_TITLE_SECONDARY);
-
-    titlePrimaryDiv.innerText = this._titlePrimary;
-    titleSecondaryDiv.innerText = this._titleSecondary;
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME,
+      ThemeTypes.CssFile.GUI_POP_DOWN_LIST_PICKER, ...this._extraCssFiles];
   }
 
   private _updateEntries(): void {
     const filterInputValue = (<HTMLInputElement> domutils.getShadowId(this, ID_FILTER)).value;
-    const filteredEntries = filterEntries(this._commandEntries, filterInputValue);
+    const filteredEntries = this._filterEntries(this._entries, filterInputValue);
     
     if (filteredEntries.length === 0) {
       this._selectedId = null;
@@ -212,17 +227,25 @@ class CbCommandPalette extends ThemeableElementBase {
       this._selectedId = filteredEntries[Math.max(0, newSelectedIndex)].id;
     }
     
-    const html = (filterInputValue.trim() === "" ? formatEntriesWithGroups : formatEntries)(filteredEntries, this._selectedId);
+    const html = this._formatEntries(filteredEntries, this._selectedId, filterInputValue);
     domutils.getShadowId(this, ID_RESULTS).innerHTML = html;
   }
 
+  private _scrollToSelected(): void {
+    const resultsDiv = domutils.getShadowId(this, ID_RESULTS);
+    const selectedElement = <HTMLElement> resultsDiv.querySelector("." + PopDownListPicker.CLASS_RESULT_SELECTED);
+    const selectedRelativeTop = selectedElement.offsetTop - resultsDiv.offsetTop;
+    resultsDiv.scrollTop = selectedRelativeTop;
+  }
+
+  //-----------------------------------------------------------------------
   /**
    * 
    */
   private handleKeyDown(ev: KeyboardEvent) {
     // Escape.
     if (ev.keyIdentifier === "U+001B") {
-      this._executeId(null);
+      this._okId(null);
       ev.preventDefault();
       ev.stopPropagation();
       return;
@@ -236,7 +259,7 @@ class CbCommandPalette extends ThemeableElementBase {
       ev.stopPropagation();
       
       const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
-      const filteredEntries = filterEntries(this._commandEntries, filterInput.value);
+      const filteredEntries = this._filterEntries(this._entries, filterInput.value);
       if (filteredEntries.length === 0) {
         return;
       }
@@ -246,7 +269,7 @@ class CbCommandPalette extends ThemeableElementBase {
       if (ev.keyIdentifier === "Enter") {
         // Enter
         if (this._selectedId !== null) {
-          this._executeId(this._selectedId);
+          this._okId(this._selectedId);
         }
       } else {
         
@@ -255,7 +278,7 @@ class CbCommandPalette extends ThemeableElementBase {
         // Determine the step size.
         let stepSize = 1;
         if (isPageKey) {
-          const selectedElement = <HTMLElement> resultsDiv.querySelector("."+CLASS_RESULT_SELECTED);
+          const selectedElement = <HTMLElement> resultsDiv.querySelector("." + PopDownListPicker.CLASS_RESULT_SELECTED);
           const selectedElementDimensions = selectedElement.getBoundingClientRect();
           
           stepSize = Math.floor(resultsDiv.clientHeight / selectedElementDimensions.height);
@@ -279,7 +302,7 @@ class CbCommandPalette extends ThemeableElementBase {
         this._updateEntries();
         resultsDiv.scrollTop = top;
         
-        const selectedElement = <HTMLElement> resultsDiv.querySelector("."+CLASS_RESULT_SELECTED);
+        const selectedElement = <HTMLElement> resultsDiv.querySelector("." + PopDownListPicker.CLASS_RESULT_SELECTED);
         const selectedRelativeTop = selectedElement.offsetTop - resultsDiv.offsetTop;
         if (top > selectedRelativeTop) {
           resultsDiv.scrollTop = selectedRelativeTop;
@@ -297,22 +320,6 @@ class CbCommandPalette extends ThemeableElementBase {
    * 
    */
   open(x: number, y: number, width: number, height: number): void {
-    // Nuke any style like 'display: none' which can be use to prevent flicker.
-    this.setAttribute('style', '');
-    
-    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTEXT_COVER);
-    container.classList.remove(CLASS_CONTEXT_COVER_CLOSED);
-    container.classList.add(CLASS_CONTEXT_COVER_OPEN);
-  
-    container.style.left = `${x}px`;
-    container.style.top = `${y}px`;
-    container.style.width = `${width}px`;
-    container.style.height = `${height}px`;
-  
-    const cover = <HTMLDivElement> domutils.getShadowId(this, ID_COVER);
-    cover.classList.remove(CLASS_COVER_CLOSED);
-    cover.classList.add(CLASS_COVER_OPEN);
-  
     const resultsDiv = <HTMLDivElement> domutils.getShadowId(this, ID_RESULTS);
     resultsDiv.style.maxHeight = `${height/2}px`;
   
@@ -320,69 +327,31 @@ class CbCommandPalette extends ThemeableElementBase {
     filterInput.value = "";
     this._updateEntries();
     filterInput.focus();
+
+    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    dialog.open(x, y, width, height);
+
+    this._scrollToSelected();      
   }
 
   /**
    * 
    */
   close(): void {
-    const cover = <HTMLDivElement> domutils.getShadowId(this, ID_COVER);
-    cover.classList.remove(CLASS_COVER_OPEN);
-    cover.classList.add(CLASS_COVER_CLOSED);
-  
-    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTEXT_COVER);
-    container.classList.remove(CLASS_CONTEXT_COVER_OPEN);
-    container.classList.add(CLASS_CONTEXT_COVER_CLOSED);
+    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    dialog.close();
   }
-  
-  private _executeId(dataId: string): void {
+
+  private _okId(selectedId: string): void {
     if (this._laterHandle === null) {
       this._laterHandle = domutils.doLater( () => {
+        this.close();
         this._laterHandle = null;
-        const event = new CustomEvent('selected', { detail: {entryId: dataId } });
+        const event = new CustomEvent("selected", { detail: {selected: selectedId } });
         this.dispatchEvent(event);
       });
     }
   }
-  
 }
 
-function filterEntries(entries: CommandPaletteTypes.CommandEntry[], filter: string): CommandPaletteTypes.CommandEntry[] {
-  const lowerFilter = filter.toLowerCase();
-  return entries.filter( (entry) => entry.label.toLowerCase().includes(lowerFilter) );
-}
-
-function formatEntries(entries: CommandPaletteTypes.CommandEntry[], selectedId: string): string {
-  return entries.map( (entry) => formatEntry(entry, entry.id === selectedId) ).join("");
-}
-
-function formatEntriesWithGroups(entries: CommandPaletteTypes.CommandEntry[], selectedId: string): string {
-  let currentGroup: string = null;
-  const htmlParts: string[] = [];
-
-  for (let entry of entries) {
-    let extraClass = "";
-    if (entry.group !== currentGroup && currentGroup !== null) {
-      extraClass = CLASS_RESULT_GROUP_HEAD;
-    }
-    currentGroup = entry.group;
-    htmlParts.push(formatEntry(entry, entry.id === selectedId, extraClass));
-  }
-  
-  return htmlParts.join("");
-}
-
-function formatEntry(entry: CommandPaletteTypes.CommandEntry, selected: boolean, extraClassString = ""): string {
-  return `<div class='${CLASS_RESULT_ENTRY} ${selected ? CLASS_RESULT_SELECTED : ""} ${extraClassString}' ${ATTR_DATA_ID}='${entry.id}'>
-    <div class='${CLASS_RESULT_ICON_LEFT}'>${formatIcon(entry.iconLeft)}</div>
-    <div class='${CLASS_RESULT_ICON_RIGHT}'>${formatIcon(entry.iconRight)}</div>
-    <div class='${CLASS_RESULT_LABEL}'>${he.encode(entry.label)}</div>
-    <div class='${CLASS_RESULT_SHORTCUT}'>${entry.shortcut !== undefined && entry.shortcut !== null ? he.encode(entry.shortcut) : ""}</div>
-  </div>`;
-}
-
-function formatIcon(iconName?: string): string {
-  return `<i class='fa fa-fw ${iconName !== undefined && iconName !== null ? "fa-" + iconName : ""}'></i>`;
-}
-
-export = CbCommandPalette;
+export = PopDownListPicker;
