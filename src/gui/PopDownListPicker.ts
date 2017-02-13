@@ -26,8 +26,6 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
    */
   static TAG_NAME = "CB-POPDOWNLISTPICKER";
 
-  static EVENT_CLOSE_REQUEST = "CB-POPDOWNLISTPICKER-CLOSE_REQUEST";
-
   static ATTR_DATA_ID = "data-id";
 
   static CLASS_RESULT_SELECTED = "CLASS_RESULT_SELECTED";
@@ -78,7 +76,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
     this._extraCssFiles = [];
   }
 
-  geSelected(): string {
+  getSelected(): string {
     return this._selectedId;
   }
 
