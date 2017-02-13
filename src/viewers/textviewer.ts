@@ -53,6 +53,9 @@ const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COM
 const COMMAND_SYNTAX_HIGHLIGHTING = "syntaxHighlighting";
 const EVENT_COMMAND_SYNTAX_HIGHLIGHTING = "TEXTVIEWER_EVENT_COMMAND_SYNTAX_HIGHLIGHTING";
 
+const COMMAND_TAB_SIZE = "tabSize";
+const EVENT_COMMAND_TAB_SIZE = "TEXTVIEWER_EVENT_COMMAND_TAB_WIDTH";
+
 const COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,
   COMMAND_TYPE_SELECTION,
@@ -271,6 +274,14 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   
   get mimeType(): string {
     return this._mimeType;
+  }
+
+  getTabSize(): number {
+    return parseInt(this._codeMirror.getOption("tabSize"), 10);
+  }
+
+  setTabSize(size: number): void {
+    this._codeMirror.setOption("tabSize", size);
   }
 
   setBytes(buffer: Buffer, mimeType: string): void {
@@ -907,7 +918,8 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this },
-      { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax: " + this._getMimeTypeName(), target: this }
+      { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax: " + this._getMimeTypeName(), target: this },
+      { id: COMMAND_TAB_SIZE, group: PALETTE_GROUP, iconRight: "", label: "Tab Size: " + this.getTabSize(), target: this }
     ];
     
     if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
@@ -975,7 +987,11 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       case COMMAND_SYNTAX_HIGHLIGHTING:
         this.dispatchEvent(new CustomEvent(EVENT_COMMAND_SYNTAX_HIGHLIGHTING, {bubbles: true, composed: true, detail: { srcElement: this } } ));
         break;
-        
+
+      case COMMAND_TAB_SIZE:
+        this.dispatchEvent(new CustomEvent(EVENT_COMMAND_TAB_SIZE, {bubbles: true, composed: true, detail: { srcElement: this } } ));
+        break;
+
       default:
         if (this._mode === ViewerElementTypes.Mode.CURSOR && CodeMirrorCommands.isCommand(command)) {
           CodeMirrorCommands.executeCommand(this._codeMirror, command);

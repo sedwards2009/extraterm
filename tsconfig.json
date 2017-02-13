@@ -87,6 +87,7 @@
         "./src/windowmessages.ts",
         "./src/gui/PopDownDialog.ts",
         "./src/gui/PopDownListPicker.ts",
+        "./src/gui/PopDownNumberDialog.ts",
         "./src/gui/checkboxmenuitem.ts",
         "./src/gui/commandpalettetypes.ts",
         "./src/gui/contextmenu.ts",

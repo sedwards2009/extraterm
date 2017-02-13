@@ -85,3 +85,5 @@ src/InternalExtratermApi.js
 src/codemirroroperation.js
 src/gui/PopDownDialog.js
 src/gui/PopDownListPicker.js
+src/gui/PopDownNumberDialog.js
+src/plugins/TextViewer/TextViewerPlugin.js

@@ -7,6 +7,7 @@ import * as PluginApi from '../../PluginApi';
 import Logger =  require('../../logger');
 import TextViewer = require('../../viewers/textviewer');
 import PopDownListPicker = require('../../gui/PopDownListPicker');
+import PopDownNumberDialog = require('../../gui/PopDownNumberDialog');
 import CodeMirror = require('codemirror');
 import he = require('he');
 
@@ -21,6 +22,8 @@ class TextViewerPlugin implements PluginApi.ExtratermPlugin {
 
   private _syntaxDialog: PopDownListPicker<SyntaxEntry> = null;
 
+  private _tabSizeDialog: PopDownNumberDialog = null;
+
   constructor(api: PluginApi.ExtratermApi) {
     this._log = new Logger("TextViewerPlugin", this);
     // api.addNewTopLevelEventListener( (el: HTMLElement): void => {
@@ -29,6 +32,9 @@ class TextViewerPlugin implements PluginApi.ExtratermPlugin {
 
     api.addNewTabEventListener( (el: HTMLElement): void => {
       el.addEventListener("TEXTVIEWER_EVENT_COMMAND_SYNTAX_HIGHLIGHTING", this._handleSyntaxHighlighting.bind(this));
+    });
+    api.addNewTabEventListener( (el: HTMLElement): void => {
+      el.addEventListener("TEXTVIEWER_EVENT_COMMAND_TAB_WIDTH", this._handleTabSize.bind(this));
     });
   }
 
@@ -101,10 +107,34 @@ class TextViewerPlugin implements PluginApi.ExtratermPlugin {
     this._syntaxDialog.focus();
   }
 
+  private _handleTabSize(ev: CustomEvent): void {
+    const srcElement = <TextViewer> ev.detail.srcElement;
+    if (this._tabSizeDialog == null) {
+      this._tabSizeDialog = <PopDownNumberDialog> window.document.createElement(PopDownNumberDialog.TAG_NAME);
+      this._tabSizeDialog.setTitlePrimary("Tab Size");
+      this._tabSizeDialog.setMinimum(0);
+      this._tabSizeDialog.setMaximum(32);
+
+      this._tabSizeDialog.addEventListener("selected", (ev: CustomEvent): void => {
+        if (ev.detail.value != null) {
+          srcElement.setTabSize(ev.detail.value);
+        }
+        srcElement.focus();
+      });
+      window.document.body.appendChild(this._tabSizeDialog);
+    }
+
+    this._tabSizeDialog.setValue(srcElement.getTabSize());
+
+    const rect = (<HTMLElement> ev.target).getBoundingClientRect();
+    this._tabSizeDialog.open(rect.left, rect.top, rect.width, rect.height);
+    this._tabSizeDialog.focus();
+  }
 }
 
 function factory(api: PluginApi.ExtratermApi): PluginApi.ExtratermPlugin {
   PopDownListPicker.init();
+  PopDownNumberDialog.init();
   return new TextViewerPlugin(api);
 }
 export = factory;
