@@ -1059,13 +1059,13 @@ function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
 }
 
 function cleanUpPtyWindow(window: Electron.BrowserWindow): void {
-  mapKeys(ptyMap).forEach( k => {
-    const tup = ptyMap.get(k);
-    if (tup.windowId === window.id) {
-      tup.ptyTerm.destroy();
-      ptyMap.delete(k);
+  const keys = [...ptyMap.keys()];
+  for (const tup of keys) {
+    if (tup[1].windowId === window.id) {
+      tup[1].ptyTerm.destroy();
+      ptyMap.delete(tup[0]);
     }
-  });
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -1100,18 +1100,6 @@ function handleNewTagRequest(msg: Messages.NewTagRequestMessage): Messages.NewTa
   const reply: Messages.NewTagMessage = { type: Messages.MessageType.NEW_TAG, tag: "" + tagCounter };
   tagCounter++;
   return reply;
-}
-
-// FIXME use for-of when it become available instead of this.
-function mapKeys<K,V>(map: Map<K,V>): K[] {
-  const it = map.keys();
-  const keys: K[] = [];
-  let iterResult = it.next();
-  while (!iterResult.done) {
-    keys.push(iterResult.value);
-    iterResult = it.next();
-  }
-  return keys;
 }
 
 main();
