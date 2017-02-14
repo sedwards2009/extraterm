@@ -56,8 +56,11 @@ function main(): void {
           fs.mkdir(outputDir);
         }
       }
-      
-      tm.renderThemes([themeInfo.id,'default'], ThemeTypes.UiCssFiles).then( (contents) => {
+      const globalVariables = new Map<string, number|boolean|string>();
+      globalVariables.set("extraterm-platform", process.platform);
+      globalVariables.set("extraterm-titlebar-visible", false);
+
+      tm.renderThemes([themeInfo.id,'default'], ThemeTypes.UiCssFiles, globalVariables).then( (contents) => {
         ThemeTypes.cssFileEnumItems.forEach( (item) => {
           if (contents.success) {
             if (outputDir !== undefined) {
