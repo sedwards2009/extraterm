@@ -5,6 +5,7 @@
  */
 import domutils = require('../domutils');
 import util = require("./util");
+import Logger = require('../logger');
 
 const ID = "CbTabTemplate";
 
@@ -35,6 +36,17 @@ class CbTab extends HTMLElement {
   }
 
   //-----------------------------------------------------------------------
+  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
+  private _log: Logger;
+  
+  private _mutationObserver: MutationObserver;
+
+  private _initProperties(): void {
+    this._mutationObserver = null;
+    this._log = new Logger(CbTab.TAG_NAME, this);
+  }
+
+  //-----------------------------------------------------------------------
   //
   //   #                                                         
   //   #       # ###### ######  ####  #   #  ####  #      ###### 
@@ -50,9 +62,15 @@ class CbTab extends HTMLElement {
    * Custom Element 'created' life cycle hook.
    */
   createdCallback() {
+    this._initProperties();
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);
+
+    this._mutationObserver = new MutationObserver( (mutations) => {
+      this._applyDraggable();
+    });
+    this._mutationObserver.observe(this, { childList: true });
   }
   
   private createClone() {
@@ -65,6 +83,15 @@ class CbTab extends HTMLElement {
     }
     
     return window.document.importNode(template.content, true);
+  }
+
+  private _applyDraggable(): void {
+    this._log.debug("_applyDraggable");
+    for (const kid of this.childNodes) {
+      if (kid instanceof HTMLElement) {
+        kid.setAttribute("draggable", "true");
+      }
+    }
   }
 }
 

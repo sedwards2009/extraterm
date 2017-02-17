@@ -23,8 +23,13 @@ function start() {
       contentDiv.appendChild(newTabWidget);
 
       const newTab = document.createElement(Tab.TAG_NAME);
-      newTab.innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;Tab "+i;
+      newTab.innerHTML = "<div>&nbsp;&nbsp;&nbsp;&nbsp;Tab "+i+"</div>";
       newTabWidget.appendChild(newTab);
+
+      const newContent = document.createElement("DIV");
+      newContent.innerHTML = "Tab " + i + " content";
+      newTabWidget.appendChild(newContent);
+      
     }
   });
 

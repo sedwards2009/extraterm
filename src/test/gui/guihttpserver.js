@@ -1,5 +1,8 @@
 /*
  * A little webserver to serving the GUI test files and keeping the browser happy.
+ * 
+ * Don't forget to fill the `css/` dir with CSS from a theme.
+ * Try: `node src/thememanagerutility.js -c atomic-dark-ui -o src/test/gui/css/`
  */
 const finalhandler = require('finalhandler');
 const http = require('http');

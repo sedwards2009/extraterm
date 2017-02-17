@@ -2,6 +2,7 @@
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
 @import "bootstrap/variables";
+@import "extraicons-fontface";
 
 /* gui-tabwidget */
 
@@ -9,6 +10,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+
+  position: relative; // Needed for the drop indicator.
 }
 
 #ID_TABBAR {
@@ -61,4 +64,48 @@ DIV.show_frame > #ID_CONTENTSTACK {
 DIV.show_frame > #ID_TABBAR {
   position: relative;
   top: 1px;
+}
+
+#ID_DRAG_INDICATOR_CONTAINER {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 0px;
+  height: 100%;
+  z-index: 10;
+  
+  &.CLASS_INDICATOR_HIDE {
+    display: none;
+  }
+
+  &.CLASS_INDICATOR_SHOW {
+    pointer-events: none;
+  }
+}
+
+#ID_DRAG_INDICATOR {
+  position: absolute;
+
+  width: 0px;
+  height: 100%;
+
+  color: $background-color-selected;
+
+  &:before, &:after {
+    position: absolute;
+    font-family: extraicons;
+    width: 1em;
+    left: -0.5em;
+    text-align: center;
+  }
+
+  &:before {
+    top: 0px;
+    content: "\ea06";
+  }
+
+  &:after {
+    bottom: 0px;
+    content: "\ea07";
+  }
 }

@@ -31,6 +31,11 @@ const ID_TOP = "ID_TOP";
 const ID_TABBAR = "ID_TABBAR";
 const ID_CONTENTSTACK = "ID_CONTENTSTACK";
 const ID_CONTENTS = "ID_CONTENTS";
+const ID_DRAG_INDICATOR_CONTAINER = "ID_DRAG_INDICATOR_CONTAINER";
+const ID_DRAG_INDICATOR = "ID_DRAG_INDICATOR";
+
+const CLASS_INDICATOR_HIDE = "CLASS_INDICATOR_HIDE";
+const CLASS_INDICATOR_SHOW = "CLASS_INDICATOR_SHOW";
 const CLASS_REMAINDER_LEFT = "remainder-left";
 const CLASS_REMAINDER_RIGHT = "remainder";
 const CLASS_ACTIVE = "active";
@@ -86,7 +91,7 @@ class CbTabWidget extends ThemeableElementBase {
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-
+                                                           
   /**
    * Custom Element 'created' life cycle hook.
    */
@@ -105,6 +110,16 @@ class CbTabWidget extends ThemeableElementBase {
       this.createTabHolders();
     });
     this._mutationObserver.observe(this, { childList: true });
+
+    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
+
+    const tabBar = this._getTabbar();
+    tabBar.addEventListener("dragover", this._handleDragOver.bind(this));
+    tabBar.addEventListener("dragenter", this._handleDragEnter.bind(this));
+    tabBar.addEventListener("dragexit", this._handleDragExit.bind(this));
+    tabBar.addEventListener("dragleave", this._handleDragLeave.bind(this));
+    tabBar.addEventListener("dragend", this._handleDragEnd.bind(this));
   }
   
   /**
@@ -151,6 +166,7 @@ class CbTabWidget extends ThemeableElementBase {
 <div id='${ID_TOP}'>
 <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
 <div id='${ID_CONTENTS}'><cb-stackedwidget id='${ID_CONTENTSTACK}'></cb-stackedwidget></div>
+<div id='${ID_DRAG_INDICATOR_CONTAINER}'><div id='${ID_DRAG_INDICATOR}'></div></div>
 </div>
 `;
       window.document.body.appendChild(template);
@@ -237,13 +253,16 @@ class CbTabWidget extends ThemeableElementBase {
       // The tab part.
       const tabLi = this.ownerDocument.createElement('li');
       tabLi.classList.add(CLASS_TAB);
-      
+
       let contentElement = this.ownerDocument.createElement('slot');
       contentElement.setAttribute('name', 'tab_' + tabElementCount);
       
       tabLi.appendChild(contentElement);
       tabLi.addEventListener('click', this._tabClickHandler.bind(this, tabLi, tabElementCount));
-      
+
+      tabLi.setAttribute("draggable", "true");
+      tabLi.addEventListener("dragstart", this._handleTabDragStart.bind(this, contentElement));
+
       // Pages for the contents stack.
       const wrapperDiv = this.ownerDocument.createElement('div');
       wrapperDiv.classList.add('wrapper');
@@ -372,6 +391,112 @@ class CbTabWidget extends ThemeableElementBase {
     const event = new CustomEvent(CbTabWidget.EVENT_TAB_SWITCH, { detail: null });
     this.dispatchEvent(event);
   }
+
+  //-----------------------------------------------------------------------
+  //
+  //  ######                            ##       ######                       
+  //  #     # #####    ##    ####      #  #      #     # #####   ####  #####  
+  //  #     # #    #  #  #  #    #      ##       #     # #    # #    # #    # 
+  //  #     # #    # #    # #          ###       #     # #    # #    # #    # 
+  //  #     # #####  ###### #  ###    #   # #    #     # #####  #    # #####  
+  //  #     # #   #  #    # #    #    #    #     #     # #   #  #    # #      
+  //  ######  #    # #    #  ####      ###  #    ######  #    #  ####  #      
+  //                                                                         
+  //-----------------------------------------------------------------------
+
+  private _handleTabDragStart(contentElement: HTMLElement, ev: DragEvent): void {
+    this._log.debug("dragstart");
+    ev.stopPropagation();
+    ev.dataTransfer.effectAllowed = 'move';
+    ev.dataTransfer.setData("text/plain", "Hello");
+    (<any>ev.dataTransfer).setDragImage(contentElement, 20 ,20);
+  }
+
+  private _handleDragEnter(ev: DragEvent): void {
+    this._log.debug(`_getTabbar() dragenter`);
+    ev.preventDefault();
+  }
+
+  private  _handleDragOver(ev: DragEvent): void {
+    const rect = this.getBoundingClientRect();
+    const elementX = ev.pageX - rect.left;
+    const elementY = ev.pageY - rect.top;
+
+    // this._log.debug(`_getTabbar() dragover: offsetX=${ev.pageX} offsetY=${ev.pageY} left=${rect.left} top=${rect.top} elementX=${elementX} elementY=${elementY}`);
+    
+    // Figure out which tabs the drop indicator should appear in between.
+    const tabBar = this._getTabbar();
+    let index = 0;
+    const childElements = domutils.toArray(tabBar.children).filter( kid => kid.classList.contains(CLASS_TAB));
+    for (const kid of childElements) {
+      const rect = kid.getBoundingClientRect();
+      // this._log.debug(`kid left=${rect.left} width=${rect.width}`);
+
+      if (elementX <= rect.left + rect.width/2) {
+        break;
+      }
+      index++;
+    }
+
+    // Position the drop indicator.
+    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    let indicatorX = 0;
+
+    if (index === 0) {
+      // Left end of the tab bar.
+      const kid = childElements[index];
+      const kidRect = kid.getBoundingClientRect();
+      indicatorX = Math.floor((kidRect.left + rect.left ) / 2);
+
+    } else if (index < childElements.length) {
+      // Somewhere in the middle.
+      const kidLeft = childElements[index-1];
+      const kidRight = childElements[index];
+
+      const rectLeft = kidLeft.getBoundingClientRect();
+      const rectRight = kidRight.getBoundingClientRect();
+      indicatorX = Math.floor((rectLeft.right + rectRight.left) / 2);
+
+    } else {
+      // Right of the tab bar.
+      const kid = childElements[childElements.length-1];
+      const kidRect = kid.getBoundingClientRect();
+      indicatorX = Math.floor((kidRect.right + rect.right) /2);
+    }
+
+    indicatorX -= rect.left;
+    dragIndicatorContainer.style.left = "" + indicatorX + "px";
+    dragIndicatorContainer.classList.add(CLASS_INDICATOR_SHOW);
+    dragIndicatorContainer.classList.remove(CLASS_INDICATOR_HIDE);
+
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = "move";
+  }
+
+  private _handleDragLeave(ev: DragEvent): void {
+    this._log.debug(`_getTabbar() dragleave`);
+
+    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
+    dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
+  }
+
+  private _handleDragExit(ev: DragEvent): void {
+    this._log.debug(`_getTabbar() dragexit`);
+    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
+    dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
+    // ev.preventDefault();
+  }
+
+  private _handleDragEnd(ev: DragEvent): void {
+    this._log.debug(`_getTabbar() dragend`);
+
+    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
+    dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
+  }
+
 }
 
 export = CbTabWidget;
