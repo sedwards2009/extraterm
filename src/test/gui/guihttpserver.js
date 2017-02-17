@@ -17,7 +17,7 @@ const modulePath = path.join(__dirname, '../../..');
 const moduleServe = serveStatic(modulePath, { dotfiles: "allow"});
 console.log("Root path: ", modulePath);
 
-const cssPath = path.join(__dirname, 'css');
+const cssPath = __dirname;
 const cssServe = serveStatic(cssPath, { dotfiles: "allow"});
 console.log("CSS path: ", cssPath);
 
