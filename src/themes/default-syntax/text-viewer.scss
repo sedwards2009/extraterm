@@ -23,6 +23,7 @@
   font-family: var(--terminal-font);
   font-size: var(--terminal-font-size);
   line-height: normal;
+  min-height: 1em;  /* Prevent CodeMirror from freaking out and hanging the CPU if the height becomes 0. */
 }
 
 #ID_CONTAINER:focus {
