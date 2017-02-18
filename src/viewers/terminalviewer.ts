@@ -16,7 +16,7 @@ import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
 import EtTerminalViewerTypes = require('./terminalviewertypes');
 import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
-import termjs = require('../term');
+import * as Term from '../Term';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
@@ -108,7 +108,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   private _keyBindingManager: KeyBindingManager;
   
-  private _emulator: termjs.Emulator;
+  private _emulator: Term.Emulator;
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
   private _terminalFirstRow: number;
@@ -144,7 +144,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
-  private _renderEventListener: termjs.RenderEventHandler = this._handleRenderEvent.bind(this);
+  private _renderEventListener: Term.RenderEventHandler = this._handleRenderEvent.bind(this);
 
   private _bookmarkCounter: number;
   private _bookmarkIndex: Map<BookmarkRef, CodeMirror.TextBookmarkMarker>;
@@ -284,7 +284,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return this._isEmpty;
   }
     
-  set emulator(emulator: termjs.Emulator) {
+  set emulator(emulator: Term.Emulator) {
     if (this._emulator !== null) {
       // Disconnect the last emulator.
       this._emulator.removeRenderEventListener(this._renderEventListener);
@@ -298,7 +298,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._emulator = emulator;
   }
 
-  get emulator(): termjs.Emulator {
+  get emulator(): Term.Emulator {
     return this._emulator;
   }
   
@@ -1002,7 +1002,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._codeMirror.scrollTo(xCoord, yCoord);
   }
   
-  private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: termjs.MouseEventOptions) => void): void {
+  private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: Term.MouseEventOptions) => void): void {
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
     if (ev.ctrlKey) { 
@@ -1017,7 +1017,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
 
     // send the button
-    const options: termjs.MouseEventOptions = {
+    const options: Term.MouseEventOptions = {
       leftButton: button === 0,
       middleButton: button === 1,
       rightButton: button === 2,
@@ -1355,7 +1355,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   //                                            
   //-----------------------------------------------------------------------
 
-  private _handleRenderEvent(instance: termjs.Emulator, event: termjs.RenderEvent): void {
+  private _handleRenderEvent(instance: Term.Emulator, event: Term.RenderEvent): void {
     let emitVirtualResizeEventFlag = false;
     
     const op = () => {
@@ -1365,7 +1365,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       const startRow = event.refreshStartRow;
       if (startRow !== -1) {
         const endRow = event.refreshEndRow;
-        const lines: termjs.Line[] = [];
+        const lines: Term.Line[] = [];
         for (let row = startRow; row < endRow; row++) {
           lines.push(this._emulator.lineAtRow(row));
         }
@@ -1422,7 +1422,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return true;
   }
 
-  private _handleScrollbackEvent(scrollbackLines: termjs.Line[]): void {
+  private _handleScrollbackEvent(scrollbackLines: Term.Line[]): void {
     const pos: CodeMirror.Position = { line: this._terminalFirstRow, ch: 0 };
     const {text: text, decorations: decorations} = this._linesToTextStyles(scrollbackLines);
     this._codeMirror.operation( () => {
@@ -1431,7 +1431,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
   }
 
-  private _insertLinesOnScreen(startRow: number, endRow: number,lines: termjs.Line[]): void {
+  private _insertLinesOnScreen(startRow: number, endRow: number,lines: Term.Line[]): void {
     const doc = this._codeMirror.getDoc();
     const lineCount = doc.lineCount();
     
@@ -1550,7 +1550,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     // }
   }
   
-  private _linesToTextStyles(lines: termjs.Line[]): { text: string; decorations: TextDecoration[]; } {
+  private _linesToTextStyles(lines: Term.Line[]): { text: string; decorations: TextDecoration[]; } {
     const allDecorations: TextDecoration[] = [];
     const allTextList: string[] = [];
     let cr = "";
@@ -1566,8 +1566,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return {text: allTextList.join(""), decorations: allDecorations};
   }
 
-  private _lineToStyleList(line: termjs.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
-    const defAttr = termjs.Emulator.defAttr;
+  private _lineToStyleList(line: Term.Line, lineNumber: number): {text: string, decorations: TextDecoration[] } {
+    const defAttr = Term.Emulator.defAttr;
     let attr = defAttr;
     const attrs = line.attrs;
     const uint32Chars = line.chars;
@@ -1614,12 +1614,12 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
             classList.push("terminal-cursor");
           } else {
           
-            let bg = termjs.backgroundFromCharAttr(data);
-            let fg = termjs.foregroundFromCharAttr(data);
-            const flags = termjs.flagsFromCharAttr(data);
+            let bg = Term.backgroundFromCharAttr(data);
+            let fg = Term.foregroundFromCharAttr(data);
+            const flags = Term.flagsFromCharAttr(data);
             
             // bold
-            if (flags & termjs.BOLD_ATTR_FLAG) {
+            if (flags & Term.BOLD_ATTR_FLAG) {
               classList.push('terminal-bold');
 
               // See: XTerm*boldColors
@@ -1629,35 +1629,35 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
             }
 
             // italic
-            if (flags & termjs.ITALIC_ATTR_FLAG) {
+            if (flags & Term.ITALIC_ATTR_FLAG) {
               classList.push('terminal-italic');
             }
             
             // underline
-            if (flags & termjs.UNDERLINE_ATTR_FLAG) {
+            if (flags & Term.UNDERLINE_ATTR_FLAG) {
               classList.push('terminal-underline');
             }
 
             // strike through
-            if (flags & termjs.STRIKE_THROUGH_ATTR_FLAG) { 
+            if (flags & Term.STRIKE_THROUGH_ATTR_FLAG) { 
               classList.push('terminal-strikethrough');
             }
             
             // inverse
-            if (flags & termjs.INVERSE_ATTR_FLAG) {
+            if (flags & Term.INVERSE_ATTR_FLAG) {
               let tmp = fg;
               fg = bg;
               bg = tmp;
               
               // Should inverse just be before the
               // above boldColors effect instead?
-              if ((flags & termjs.BOLD_ATTR_FLAG) && fg < 8) {
+              if ((flags & Term.BOLD_ATTR_FLAG) && fg < 8) {
                 fg += 8;  // Use the bright version of the color.
               }
             }
 
             // invisible
-            if (flags & termjs.INVISIBLE_ATTR_FLAG) {
+            if (flags & Term.INVISIBLE_ATTR_FLAG) {
               classList.push('terminal-invisible');
             }
 
@@ -1665,7 +1665,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
               classList.push('terminal-background-' + bg);
             }
 
-            if (flags & termjs.FAINT_ATTR_FLAG) {
+            if (flags & Term.FAINT_ATTR_FLAG) {
               classList.push('terminal-faint-' + fg);
             } else {
               if (fg !== 257) {
@@ -1673,7 +1673,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
               }
             }
             
-            if (flags & termjs.BLINK_ATTR_FLAG) {
+            if (flags & Term.BLINK_ATTR_FLAG) {
               classList.push("terminal-blink");
             }
           }

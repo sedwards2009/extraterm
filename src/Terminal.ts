@@ -34,7 +34,7 @@ type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 import Logger from './Logger';
 import LogDecorator = require('./logdecorator');
 import domutils = require('./domutils');
-import termjs = require('./term');
+import * as Term from './Term';
 import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
 
@@ -198,7 +198,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   
   private _terminalViewer: EtTerminalViewer;
   
-  private _emulator: termjs.Emulator;
+  private _emulator: Term.Emulator;
   private _cookie: string;
   private _htmlData: string;
   
@@ -758,7 +758,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   // ----------------------------------------------------------------------
 
   private _initEmulator(cookie: string): void {
-    const emulator = new termjs.Emulator({
+    const emulator = new Term.Emulator({
       scrollback: 1000,
       cursorBlink: this._blinkingCursor,
       applicationModeCookie: cookie,
@@ -825,7 +825,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
    * 
    * @param title The new window title for this terminal.
    */
-  private _handleTitle(emulator: termjs.Emulator, title: string): void {
+  private _handleTitle(emulator: Term.Emulator, title: string): void {
     this._title = title;
     this._sendTitleEvent(title);
   }
@@ -888,7 +888,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     }
   }
 
-  private _handleWriteBufferSize(emulator: termjs.Emulator, status: termjs.WriteBufferStatus): void {
+  private _handleWriteBufferSize(emulator: Term.Emulator, status: Term.WriteBufferStatus): void {
     const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, { detail: status });
     this.dispatchEvent(event);
   }
@@ -918,11 +918,11 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
    * This just pushes the keys from the user through to the pty.
    * @param {string} data The data to process.
    */
-  private _handleTermData(emulator: termjs.Emulator, data: string): void {
+  private _handleTermData(emulator: Term.Emulator, data: string): void {
     this._sendDataToPtyEvent(data);
   }
   
-  private _handleTermSize(emulator: termjs.Emulator, event: termjs.RenderEvent): void {
+  private _handleTermSize(emulator: Term.Emulator, event: Term.RenderEvent): void {
     const newColumns = event.columns;
     const newRows = event.rows;
     if (this._columns === newColumns && this._rows === newRows) {
@@ -1653,7 +1653,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
    * @param {array} params The list of parameter which were specified in the
    *     escape sequence.
    */
-  private _handleApplicationModeStart(emulator: termjs.Emulator, params: string[]): void {
+  private _handleApplicationModeStart(emulator: Term.Emulator, params: string[]): void {
     if (DEBUG_APPLICATION_MODE) {
       this._log.debug("application-mode started! ",params);
     }

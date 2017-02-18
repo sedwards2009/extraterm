@@ -67,7 +67,7 @@
         "./src/source-map-support.d.ts",
         "./src/sourceDir.ts",
         "./src/SupportsClipboardPaste.ts",
-        "./src/term.ts",
+        "./src/Term.ts",
         "./src/Terminal.ts",
         "./src/Theme.ts",
         "./src/themeableelementbase.ts",
