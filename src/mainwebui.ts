@@ -8,7 +8,7 @@ import util = require('./gui/util');
 import ThemeableElementBase = require('./themeableelementbase');
 import TabWidget = require('./gui/tabwidget');
 import resourceLoader = require('./resourceloader');
-import EtTerminal = require('./terminal');
+import EtTerminal from './Terminal';
 import EtSettingsTab = require('./settings/settingstab2');
 import EtAboutTab = require('./abouttab');
 import EtKeyBindingsTab = require('./keybindingstab');

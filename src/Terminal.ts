@@ -144,7 +144,7 @@ interface WriteBufferStatus {
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTypes.Commandable,
+export default class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTypes.Commandable,
     keybindingmanager.AcceptsKeyBindingManager, config.AcceptsConfigManager {
   
   /**
@@ -2179,5 +2179,3 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     });
   }
 }
-
-export = EtTerminal;

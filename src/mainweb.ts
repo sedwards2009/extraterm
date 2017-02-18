@@ -28,7 +28,7 @@ import PluginManager = require('./PluginManager');
 import InternalExtratermApi = require('./InternalExtratermApi');
 
 import MainWebUi = require('./mainwebui');
-import EtTerminal = require('./terminal');
+import EtTerminal from './Terminal';
 import domutils = require('./domutils');
 import util = require('./gui/util');
 
