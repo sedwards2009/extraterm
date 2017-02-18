@@ -18,7 +18,7 @@ import EtTerminalViewerTypes = require('./terminalviewertypes');
 import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
 import termjs = require('../term');
 import virtualscrollarea = require('../virtualscrollarea');
-import Logger = require('../logger');
+import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import sourceDir = require('../sourceDir');
 import generalevents = require('../generalevents');

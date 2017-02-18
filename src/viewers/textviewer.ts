@@ -24,7 +24,7 @@ import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import EtTextViewerTypes = require('./terminalviewertypes');
 import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
 import virtualscrollarea = require('../virtualscrollarea');
-import Logger = require('../logger');
+import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import generalevents = require('../generalevents');
 import SupportsClipboardPaste = require('../SupportsClipboardPaste');

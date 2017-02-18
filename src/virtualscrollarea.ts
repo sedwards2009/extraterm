@@ -8,7 +8,7 @@ import util = require('./gui/util');
 import _  = require('lodash');
 import BulkDOMOperation = require('./BulkDOMOperation');
 import CodeMirrorOperation = require('./codemirroroperation');
-import Logger = require('./logger');
+import Logger from './Logger';
 import LogDecorator = require('./logdecorator');
 
 const log = LogDecorator;

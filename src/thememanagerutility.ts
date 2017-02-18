@@ -15,7 +15,7 @@ import ThemeTypes = require('./theme');
 import SourceDir = require('./sourceDir');
 import commander = require('commander');
 
-import Logger = require('./logger');
+import Logger from './Logger';
 
 const print = console.log.bind(console);
 

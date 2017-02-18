@@ -20,7 +20,7 @@ interface LogMessage {
   msg: string;
 }
 
-class Logger {
+export default class {
   
   private _name: string;
   
@@ -169,5 +169,3 @@ class Logger {
     return `${(new Date()).toISOString().replace(/(T|Z)/g," ").trim()} ${level} [${this._name}] ${msg}`;
   }
 }
-
-export = Logger;

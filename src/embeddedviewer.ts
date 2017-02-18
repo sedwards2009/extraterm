@@ -18,7 +18,7 @@ import virtualscrollarea = require('./virtualscrollarea');
 import ThemeTypes = require('./theme');
 import generalevents = require('./generalevents');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes'); 
-import Logger = require('./logger');
+import Logger from './Logger';
 import LogDecorator = require('./logdecorator');
 import BulkDOMOperation = require('./BulkDOMOperation');
 import CodeMirrorOperation = require('./codemirroroperation');

@@ -31,7 +31,7 @@ import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
-import Logger = require('./logger');
+import Logger from './Logger';
 import LogDecorator = require('./logdecorator');
 import domutils = require('./domutils');
 import termjs = require('./term');

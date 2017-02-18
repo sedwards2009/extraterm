@@ -25,7 +25,7 @@ import util = require("../gui/util");
 import domutils = require("../domutils");
 import ViewerElementTypes = require('../viewerelementtypes');
 import virtualscrollarea = require('../virtualscrollarea');
-import Logger = require('../logger');
+import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import BulkDOMOperation = require('../BulkDOMOperation');
 

@@ -18,7 +18,7 @@ import nodeSass = require('node-sass');
 
 import _ = require('lodash');
 
-import Logger = require('./logger');
+import Logger from './Logger';
 import log = require('./logdecorator');
 import ThemeTypes = require('./theme');
 

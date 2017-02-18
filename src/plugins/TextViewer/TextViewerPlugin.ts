@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as PluginApi from '../../PluginApi';
-import Logger =  require('../../logger');
+import Logger from '../../Logger';
 import TextViewer = require('../../viewers/textviewer');
 import PopDownListPicker = require('../../gui/PopDownListPicker');
 import PopDownNumberDialog = require('../../gui/PopDownNumberDialog');

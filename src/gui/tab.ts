@@ -5,7 +5,7 @@
  */
 import domutils = require('../domutils');
 import util = require("./util");
-import Logger = require('../logger');
+import Logger from '../Logger';
 
 const ID = "CbTabTemplate";
 

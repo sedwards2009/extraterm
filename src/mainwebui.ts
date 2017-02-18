@@ -46,7 +46,7 @@ import keybindingmanager = require('./keybindingmanager');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import GeneralEvents = require('./generalevents');
-import Logger = require('./logger');
+import Logger from './Logger';
 import LogDecorator = require('./logdecorator');
 const log = LogDecorator;
 

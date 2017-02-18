@@ -47,7 +47,7 @@
         "./src/keybindingmanagertest.ts",
         "./src/keybindingstab.ts",
         "./src/logdecorator.ts",
-        "./src/logger.ts",
+        "./src/Logger.ts",
         "./src/main.ts",
         "./src/mainweb.ts",
         "./src/mainwebui.ts",

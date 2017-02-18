@@ -1,7 +1,7 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
-import Logger = require('./logger'); 
+import Logger from './Logger';
 
 const _log = new Logger("BulkDOMOperation");
 const DEBUG = false;

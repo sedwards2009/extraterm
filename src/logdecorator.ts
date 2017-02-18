@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import Logger = require('./logger');
+import Logger from './Logger';
 
 /**
  * Decorator to log method calls.

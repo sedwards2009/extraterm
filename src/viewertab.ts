@@ -10,7 +10,7 @@ import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import EtEmbeddedViewer = require('./embeddedviewer');
-import Logger = require('./logger');
+import Logger from './Logger';
 import LogDecorator = require('./logdecorator');
 import domutils = require('./domutils');
 import CbScrollbar = require('./gui/scrollbar');

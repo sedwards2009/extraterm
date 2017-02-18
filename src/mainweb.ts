@@ -11,7 +11,7 @@ const MenuItem = electron.remote.MenuItem;
 import sourceMapSupport = require('source-map-support');
 import _ = require('lodash');
 import he = require('he');
-import Logger = require('./logger');
+import Logger from './Logger';
 import Messages = require('./windowmessages');
 import webipc = require('./webipc');
 import CbContextMenu = require('./gui/contextmenu');

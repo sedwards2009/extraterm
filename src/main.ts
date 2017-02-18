@@ -36,7 +36,7 @@ import ThemeManager = require('./thememanager');
 
 import child_process = require('child_process');
 import util = require('./gui/util');
-import Logger = require('./logger');
+import Logger from './Logger';
 
 type PtyConnector  = ptyconnector.PtyConnector;
 type Pty = ptyconnector.Pty;

@@ -16,7 +16,7 @@ type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 
 import ThemeTypes = require('../theme');
-import Logger = require('../logger');
+import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import GeneralEvents = require('../generalevents');
 import ViewerElementTypes = require('../viewerelementtypes');

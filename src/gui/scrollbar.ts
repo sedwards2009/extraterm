@@ -9,7 +9,7 @@ import domutils = require('../domutils');
 import util = require('./util');
 import BulkDOMOperation = require('../BulkDOMOperation');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
-import Logger = require('../logger');
+import Logger from '../Logger';
 import log = require('../logdecorator');
 
 const ID = "CbScrollbarTemplate";
