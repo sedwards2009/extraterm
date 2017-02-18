@@ -28,11 +28,11 @@ import electron = require('electron');
 const clipboard = electron.clipboard;
 
 import * as WebIpc from './WebIpc';
-import virtualscrollarea = require('./virtualscrollarea');
+import * as VirtualScrollArea from './VirtualScrollArea';
 import BulkDOMOperation = require('./BulkDOMOperation');
 
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type SetterState = virtualscrollarea.SetterState;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
+type SetterState = VirtualScrollArea.SetterState;
 type ScrollableElement = VirtualScrollable & HTMLElement;
 type VisualState = ViewerElementTypes.VisualState;
 const VisualState = ViewerElementTypes.VisualState;
@@ -96,7 +96,7 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
   // WARNING: Fields like this will not be initialised automatically.
   private _log: Logger;
 
-  private _virtualScrollArea: virtualscrollarea.VirtualScrollArea;
+  private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
   
   private _terminalSize: ClientRect;
   private _scrollYOffset: number; // The Y scroll offset into the virtual height.
@@ -304,7 +304,7 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
 
     const clone = this._createClone();
     shadow.appendChild(clone);
-    this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
+    this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
 
     this.addEventListener('focus', this._handleFocus.bind(this));
     this.addEventListener('blur', this._handleBlur.bind(this));
@@ -332,7 +332,7 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
     scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
 
-    scrollerArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
+    scrollerArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
 
         // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.

@@ -14,7 +14,7 @@ import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
 import KeyBindingManager = require('./keybindingmanager');
-import virtualscrollarea = require('./virtualscrollarea');
+import * as VirtualScrollArea from './VirtualScrollArea';
 import ThemeTypes = require('./theme');
 import generalevents = require('./generalevents');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes'); 
@@ -24,8 +24,8 @@ import BulkDOMOperation = require('./BulkDOMOperation');
 import CodeMirrorOperation = require('./codemirroroperation');
 import SupportsClipboardPaste = require('./SupportsClipboardPaste');
 
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type SetterState = virtualscrollarea.SetterState;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
+type SetterState = VirtualScrollArea.SetterState;
 type VisualState = ViewerElementTypes.VisualState;
 
 const log = LogDecorator;
@@ -127,7 +127,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   private _mode: ViewerElementTypes.Mode;
 
-  private _virtualScrollArea: virtualscrollarea.VirtualScrollArea;
+  private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
 
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
 
@@ -142,7 +142,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._log = new Logger(EtEmbeddedViewer.TAG_NAME, this);
     this._visualState = ViewerElementTypes.VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
-    this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
+    this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
 
     this._requestContainerHeight = false;
@@ -541,7 +541,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       outputDiv.style.top = "-" + offset +"px";
     });
 
-    outputDiv.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
+    outputDiv.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     
     // const expandbutton = this._getById(ID_EXPAND_BUTTON);
     // expandbutton.addEventListener('click', (): void => {
@@ -570,7 +570,7 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
       }
     });
 
-    const setterState: virtualscrollarea.SetterState = {
+    const setterState: VirtualScrollArea.SetterState = {
       height: this.getMinHeight(),
       heightChanged: true,
       yOffset: 0,
@@ -845,14 +845,14 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
 
       const newHeight = this._virtualScrollArea.getVirtualHeight();
       if (height !== newHeight) {
-        const resizeOperation = virtualscrollarea.bulkEmitResizeEvent(this);
+        const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
         yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
       }
       return BulkDOMOperation.GeneratorPhase.DONE;
     };
 
     const operation = BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
-    (<virtualscrollarea.ResizeEventDetail>ev.detail).addOperation(operation);
+    (<VirtualScrollArea.ResizeEventDetail>ev.detail).addOperation(operation);
   }
 }
 

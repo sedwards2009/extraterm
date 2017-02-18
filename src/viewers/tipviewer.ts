@@ -24,13 +24,13 @@ import ThemeTypes = require('../theme');
 import util = require("../gui/util");
 import domutils = require("../domutils");
 import ViewerElementTypes = require('../viewerelementtypes');
-import virtualscrollarea = require('../virtualscrollarea');
+import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import BulkDOMOperation = require('../BulkDOMOperation');
 
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type SetterState = virtualscrollarea.SetterState;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
+type SetterState = VirtualScrollArea.SetterState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 type VisualState = ViewerElementTypes.VisualState;
 const VisualState = ViewerElementTypes.VisualState;
@@ -417,7 +417,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
 
         yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         this._adjustHeight(this._height);
-        const resizeOperation = virtualscrollarea.bulkEmitResizeEvent(this);
+        const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
         yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
         return BulkDOMOperation.GeneratorPhase.DONE;
       };

@@ -3,11 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import virtualscrollarea = require('./virtualscrollarea');
+import * as VirtualScrollArea from './VirtualScrollArea';
 import BulkDOMOperation = require('./BulkDOMOperation');
 
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type SetterState = virtualscrollarea.SetterState;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
+type SetterState = VirtualScrollArea.SetterState;
 
 const ID = "EtCommandPlaceHolderTemplate";
 

@@ -43,7 +43,7 @@ const clipboard = electron.clipboard;
 
 import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
-import virtualscrollarea = require('./virtualscrollarea');
+import * as VirtualScrollArea from './VirtualScrollArea';
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 import mimetypedetector = require('./mimetypedetector');
@@ -58,8 +58,8 @@ type CommandLineAction = config.CommandLineAction;
 
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type VirtualScrollArea = virtualscrollarea.VirtualScrollArea;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
+type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 
@@ -190,7 +190,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   // WARNING: Fields like this will not be initialised automatically.
   private _log: Logger;
 
-  private _virtualScrollArea: virtualscrollarea.VirtualScrollArea;
+  private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
   private _stashArea: DocumentFragment;
   private _childElementList: ChildElementStatus[];
 
@@ -524,7 +524,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
           this._handleCommandPaletteRequest(ev);
         });
 
-      this._virtualScrollArea = new virtualscrollarea.VirtualScrollArea();
+      this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
         scrollArea.style.top = "-" + offset + "px";
       });
@@ -565,7 +565,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       scrollArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
       scrollArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
 
-      scrollArea.addEventListener(virtualscrollarea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
+      scrollArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
       scrollArea.addEventListener(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
         this._virtualScrollArea.scrollToBottom();
       });
@@ -1015,7 +1015,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
     const operation = this._updateVirtualScrollableSize(<any> ev.target);
       // ^ We know this event only comes from VirtualScrollable elements.
-    (<virtualscrollarea.ResizeEventDetail>ev.detail).addOperation(operation);
+    (<VirtualScrollArea.ResizeEventDetail>ev.detail).addOperation(operation);
   }
 
   private _bulkMarkVisible(scrollable: VirtualScrollable, visible: boolean): BulkDOMOperation.BulkDOMOperation {

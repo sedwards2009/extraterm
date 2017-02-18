@@ -17,7 +17,7 @@ import ViewerElementTypes = require('../viewerelementtypes');
 import EtTerminalViewerTypes = require('./terminalviewertypes');
 import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
 import termjs = require('../term');
-import virtualscrollarea = require('../virtualscrollarea');
+import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import sourceDir = require('../sourceDir');
@@ -30,8 +30,8 @@ import SupportsClipboardPaste = require('../SupportsClipboardPaste');
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type SetterState = virtualscrollarea.SetterState;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
+type SetterState = VirtualScrollArea.SetterState;
 type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 const VisualState = ViewerElementTypes.VisualState;
@@ -422,7 +422,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         }
       }
 
-      const resizeOperation = virtualscrollarea.bulkEmitResizeEvent(this);
+      const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
       yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
       this.resizeEmulatorToParentContainer();
 
@@ -551,7 +551,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     doc.replaceRange("", pos, endPos);
 
     this._terminalFirstRow -= linesToDelete;
-    virtualscrollarea.emitResizeEvent(this);
+    VirtualScrollArea.emitResizeEvent(this);
   }
   
   deleteLines(startLineOrBookmark: number | BookmarkRef, endLineOrBookmark?: number | BookmarkRef): void {
@@ -572,7 +572,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     }
     
     this._deleteLines(startLine, endLine);
-    virtualscrollarea.emitResizeEvent(this);
+    VirtualScrollArea.emitResizeEvent(this);
   }
 
   getDecoratedLines(startLineOrBookmark: number | BookmarkRef): { text: string; decorations: TextDecoration[]; } {
@@ -599,7 +599,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     const endPos = { line: 0, ch: 0 };
     this._insertLinesAtPos(startPos, endPos, text, decorations);
     this._isEmpty = false;
-    virtualscrollarea.emitResizeEvent(this);
+    VirtualScrollArea.emitResizeEvent(this);
   }
 
   bookmarkLine(lineNumber: number): BookmarkRef {
@@ -771,7 +771,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         if (height !== this._viewportHeight) {
           this._viewportHeight = height;
           domutils.doLater( () => {
-            virtualscrollarea.emitResizeEvent(this);
+            VirtualScrollArea.emitResizeEvent(this);
           });
         }
       });
@@ -821,7 +821,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     this._operationRunning = false;
     
     if (this._operationEmitResize) {
-      virtualscrollarea.emitResizeEvent(this);
+      VirtualScrollArea.emitResizeEvent(this);
     }
     this._operationEmitResize = false;
   }
@@ -1390,7 +1390,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     if ( ! this._operationRunning) {
       this._codeMirror.operation(op);
       if (emitVirtualResizeEventFlag) {
-        virtualscrollarea.emitResizeEvent(this);
+        VirtualScrollArea.emitResizeEvent(this);
       }
     } else {
       op();

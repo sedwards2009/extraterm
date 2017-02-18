@@ -23,14 +23,14 @@ import ViewerElementTypes = require('../viewerelementtypes');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import EtTextViewerTypes = require('./terminalviewertypes');
 import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
-import virtualscrollarea = require('../virtualscrollarea');
+import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import generalevents = require('../generalevents');
 import SupportsClipboardPaste = require('../SupportsClipboardPaste');
 
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type SetterState = virtualscrollarea.SetterState;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
+type SetterState = VirtualScrollArea.SetterState;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 type TextDecoration = EtTextViewerTypes.TextDecoration;
@@ -654,7 +654,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH; // FIXME this line works, the second doesn't but should.
     //  yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;  // Let CodeMirror sort itself out.
 
-      const resizeOperation = virtualscrollarea.bulkEmitResizeEvent(this);
+      const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
       yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation};
       
       return BulkDOMOperation.GeneratorPhase.DONE;
@@ -760,7 +760,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       this._log.debug("_emitVirtualResizeEvent");
     }
 
-    virtualscrollarea.emitResizeEvent(this);
+    VirtualScrollArea.emitResizeEvent(this);
   }
   
   private _emitBeforeSelectionChangeEvent(originMouse: boolean): void {

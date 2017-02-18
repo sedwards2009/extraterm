@@ -6,14 +6,14 @@
 
 import fs  = require('fs');
 import util = require('./gui/util');
-import virtualscrollarea = require('./virtualscrollarea');
+import * as VirtualScrollArea from './VirtualScrollArea';
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
 import BulkDOMOperation = require('./BulkDOMOperation');
 import CodeMirrorOperation = require('./codemirroroperation');
 
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type SetterState = virtualscrollarea.SetterState;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
+type SetterState = VirtualScrollArea.SetterState;
 type Mode = ViewerElementTypes.Mode;
 type VisualState = ViewerElementTypes.VisualState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;

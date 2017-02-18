@@ -6,15 +6,13 @@
 import sourceMapSupport = require('source-map-support');
 import nodeunit = require('nodeunit');
 import BulkDOMOperation = require('./BulkDOMOperation');
-import virtualscrollarea = require('./virtualscrollarea');
-type SetterState = virtualscrollarea.SetterState;
+import * as VirtualScrollArea from './VirtualScrollArea';
+type SetterState = VirtualScrollArea.SetterState;
 
 sourceMapSupport.install();
 
-const VirtualScrollArea = virtualscrollarea.VirtualScrollArea;
-
-type Scrollbar = virtualscrollarea.Scrollbar;
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
+type Scrollbar = VirtualScrollArea.Scrollbar;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 
 interface VirtualScrollableWithExtra extends VirtualScrollable {
   getScrollOffset(): number;
@@ -24,7 +22,7 @@ interface VirtualScrollableWithExtra extends VirtualScrollable {
   setReserveViewportHeight(newReserveViewportHeight: number): void;
 }
 
-function SetUpScrollContainer(vsa: virtualscrollarea.VirtualScrollArea, height: number): HTMLElement {
+function SetUpScrollContainer(vsa: VirtualScrollArea.VirtualScrollArea, height: number): HTMLElement {
   const scrollContainer = <HTMLElement> {
     scrollTop: 0,
     
@@ -39,7 +37,7 @@ function SetUpScrollContainer(vsa: virtualscrollarea.VirtualScrollArea, height: 
   return scrollContainer;
 }
 
-function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: number,
+function SetupScrollable(vsa: VirtualScrollArea.VirtualScrollArea, minHeight: number,
     virtualHeight: number, reserveViewportHeight: number): VirtualScrollableWithExtra {
 
   const scrollable = {
@@ -94,7 +92,7 @@ function SetupScrollable(vsa: virtualscrollarea.VirtualScrollArea, minHeight: nu
   return scrollable;
 }
 
-function SetupScrollbar(vsa: virtualscrollarea.VirtualScrollArea): Scrollbar {
+function SetupScrollbar(vsa: VirtualScrollArea.VirtualScrollArea): Scrollbar {
   const scrollbar: Scrollbar =  {
     length: 37337,
     position: 7734,
@@ -115,7 +113,7 @@ function SetupScrollbar(vsa: virtualscrollarea.VirtualScrollArea): Scrollbar {
 //-------------------------------------------------------------------------
 
 export function testBasic(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
   const scrollContainer = SetUpScrollContainer(vsa, 500);
@@ -129,7 +127,7 @@ export function testBasic(test: nodeunit.Test): void {
 }
 
 export function testLong(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 500);
@@ -150,7 +148,7 @@ export function testLong(test: nodeunit.Test): void {
 }
 
 export function test3Scrollables(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 500);
@@ -196,7 +194,7 @@ export function test3Scrollables(test: nodeunit.Test): void {
 }
 
 export function testVirtualHeightUpdate(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 500);
   const scrollable = SetupScrollable(vsa, 500, 1500, 0);
@@ -221,7 +219,7 @@ export function testVirtualHeightUpdate(test: nodeunit.Test): void {
 }
 
 export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 500);
   const scrollable = SetupScrollable(vsa, 500, 1500, 0);
@@ -246,7 +244,7 @@ export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
 }
 
 export function testShortWithReserve(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 1000);
@@ -262,7 +260,7 @@ export function testShortWithReserve(test: nodeunit.Test): void {
 }
 
 export function testHeightWithReserve(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 500);
@@ -277,7 +275,7 @@ export function testHeightWithReserve(test: nodeunit.Test): void {
 }
 
 export function testBottomWithReserve(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 500);
@@ -293,7 +291,7 @@ export function testBottomWithReserve(test: nodeunit.Test): void {
 }
 
 export function testBug(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 571);
@@ -309,7 +307,7 @@ export function testBug(test: nodeunit.Test): void {
 }
 
 export function testBug2(test: nodeunit.Test): void {
-  const vsa = new VirtualScrollArea();
+  const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 571);

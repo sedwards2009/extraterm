@@ -11,15 +11,15 @@ import ThemeTypes = require('../theme');
 import util = require("../gui/util");
 import domutils = require("../domutils");
 import ViewerElementTypes = require('../viewerelementtypes');
-import virtualscrollarea = require('../virtualscrollarea');
+import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import keybindingmanager = require('../keybindingmanager');
 import BulkDOMOperation = require('../BulkDOMOperation');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-type VirtualScrollable = virtualscrollarea.VirtualScrollable;
-type SetterState = virtualscrollarea.SetterState;
+type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
+type SetterState = VirtualScrollArea.SetterState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 type VisualState = ViewerElementTypes.VisualState;
 const VisualState = ViewerElementTypes.VisualState;
@@ -415,7 +415,7 @@ class EtImageViewer extends ViewerElement {
     if (DEBUG_SIZE) {
       this._log.debug("_emitVirtualResizeEvent");
     }
-    virtualscrollarea.emitResizeEvent(this);
+    VirtualScrollArea.emitResizeEvent(this);
   }
   
   private _emitBeforeSelectionChangeEvent(): void {
