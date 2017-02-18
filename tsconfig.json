@@ -78,7 +78,7 @@
         "./src/utf8encoding.ts",
         "./src/viewerelement.ts",
         "./src/viewerelementtypes.ts",
-        "./src/viewertab.ts",
+        "./src/ViewerTab.ts",
         "./src/VirtualScrollArea.ts",
         "./src/virtualscrollareatest.ts",
         "./src/virtualscrollareatestdebugger.ts",

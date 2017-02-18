@@ -67,7 +67,7 @@ const SCROLL_STEP = 1;
 /**
  * A viewer tab which can contain any ViewerElement.
  */
-class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export default class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     keybindingmanager.AcceptsKeyBindingManager {
 
   /**
@@ -673,5 +673,3 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
     return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
   }
 }
-
-export = EtViewerTab;
