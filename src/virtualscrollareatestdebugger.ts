@@ -6,7 +6,7 @@
 
 import sourceMapSupport = require('source-map-support');
 import nodeunit = require('nodeunit');
-import tests = require('./virtualscrollareatest');
+import * as tests from './VirtualScrollAreaTest';
 
 sourceMapSupport.install();
 

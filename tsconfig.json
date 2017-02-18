@@ -80,7 +80,7 @@
         "./src/viewerelementtypes.ts",
         "./src/ViewerTab.ts",
         "./src/VirtualScrollArea.ts",
-        "./src/virtualscrollareatest.ts",
+        "./src/VirtualScrollAreaTest.ts",
         "./src/virtualscrollareatestdebugger.ts",
         "./src/WebIpc.ts",
         "./src/WebResourceLoader.ts",
