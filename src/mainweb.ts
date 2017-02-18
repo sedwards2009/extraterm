@@ -12,7 +12,7 @@ import sourceMapSupport = require('source-map-support');
 import _ = require('lodash');
 import he = require('he');
 import Logger from './Logger';
-import Messages = require('./windowmessages');
+import * as Messages from './WindowMessages';
 import webipc = require('./webipc');
 import CbContextMenu = require('./gui/contextmenu');
 import CbMenuItem = require('./gui/menuitem');

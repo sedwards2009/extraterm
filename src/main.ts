@@ -27,7 +27,7 @@ import fontManager = require('font-manager');
 import fontinfo = require('fontinfo');
 import ptyconnector = require('./ptyconnector');
 import resourceLoader = require('./resourceloader');
-import Messages = require('./windowmessages');
+import * as Messages from './WindowMessages';
 
 import ThemeTypes = require('./theme');
 type ThemeInfo = ThemeTypes.ThemeInfo;

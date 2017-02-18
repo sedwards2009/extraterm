@@ -29,7 +29,7 @@ type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 import InternalExtratermApi = require('./InternalExtratermApi');
 
 import webipc = require('./webipc');
-import Messages = require('./windowmessages');
+import * as Messages from './WindowMessages';
 import path = require('path');
 import _ = require('lodash');
 

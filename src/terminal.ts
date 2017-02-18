@@ -42,7 +42,7 @@ import electron = require('electron');
 const clipboard = electron.clipboard;
 
 import webipc = require('./webipc');
-import Messages = require('./windowmessages');
+import * as Messages from './WindowMessages';
 import virtualscrollarea = require('./virtualscrollarea');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
