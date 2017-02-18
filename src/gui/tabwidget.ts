@@ -115,6 +115,7 @@ class CbTabWidget extends ThemeableElementBase {
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
 
     const tabBar = this._getTabbar();
+    tabBar.addEventListener("dragstart", this._handleDragStart.bind(this));
     tabBar.addEventListener("dragover", this._handleDragOver.bind(this));
     tabBar.addEventListener("dragenter", this._handleDragEnter.bind(this));
     tabBar.addEventListener("dragexit", this._handleDragExit.bind(this));
@@ -260,9 +261,6 @@ class CbTabWidget extends ThemeableElementBase {
       tabLi.appendChild(contentElement);
       tabLi.addEventListener('click', this._tabClickHandler.bind(this, tabLi, tabElementCount));
 
-      tabLi.setAttribute("draggable", "true");
-      tabLi.addEventListener("dragstart", this._handleTabDragStart.bind(this, contentElement));
-
       // Pages for the contents stack.
       const wrapperDiv = this.ownerDocument.createElement('div');
       wrapperDiv.classList.add('wrapper');
@@ -404,12 +402,18 @@ class CbTabWidget extends ThemeableElementBase {
   //                                                                         
   //-----------------------------------------------------------------------
 
-  private _handleTabDragStart(contentElement: HTMLElement, ev: DragEvent): void {
-    this._log.debug("dragstart");
+  private _handleDragStart(ev: DragEvent): void {
+    this._log.debug("tabbar dragstart", ev.target);
+
+    // Only let the 'tab' elements be dragged and not our LIs.
+    if ((<HTMLElement>ev.target).getAttribute("draggable") === null) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      return;
+    }
+
     ev.stopPropagation();
-    ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.setData("text/plain", "Hello");
-    (<any>ev.dataTransfer).setDragImage(contentElement, 20 ,20);
   }
 
   private _handleDragEnter(ev: DragEvent): void {
@@ -470,7 +474,7 @@ class CbTabWidget extends ThemeableElementBase {
     dragIndicatorContainer.classList.remove(CLASS_INDICATOR_HIDE);
 
     ev.preventDefault();
-    ev.dataTransfer.dropEffect = "move";
+    ev.stopPropagation();
   }
 
   private _handleDragLeave(ev: DragEvent): void {

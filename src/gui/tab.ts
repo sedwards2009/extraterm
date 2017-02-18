@@ -85,6 +85,10 @@ class CbTab extends HTMLElement {
     return window.document.importNode(template.content, true);
   }
 
+  attachedCallback(): void {
+    this._applyDraggable();
+  }
+
   private _applyDraggable(): void {
     this._log.debug("_applyDraggable");
     for (const kid of this.childNodes) {

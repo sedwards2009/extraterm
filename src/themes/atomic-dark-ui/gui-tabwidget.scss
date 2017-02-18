@@ -81,6 +81,10 @@ DIV.show_frame > #ID_TABBAR {
   &.CLASS_INDICATOR_SHOW {
     pointer-events: none;
   }
+  
+  &.CLASS_INDICATOR_SHOW * {
+    pointer-events: none;
+  }
 }
 
 #ID_DRAG_INDICATOR {

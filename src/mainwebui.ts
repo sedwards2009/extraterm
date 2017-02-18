@@ -306,6 +306,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   // Statics
   
   static init(): void {
+    CbTab.init();
     TabWidget.init();
     EtTerminal.init();
     EtSettingsTab.init();

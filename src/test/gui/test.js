@@ -23,7 +23,7 @@ function start() {
       contentDiv.appendChild(newTabWidget);
 
       const newTab = document.createElement(Tab.TAG_NAME);
-      newTab.innerHTML = "<div>&nbsp;&nbsp;&nbsp;&nbsp;Tab "+i+"</div>";
+      newTab.innerHTML = "<div>&nbsp;&nbsp;&nbsp;&nbsp;Tab "+i+"<span>[X]</span></div>";
       newTabWidget.appendChild(newTab);
 
       const newContent = document.createElement("DIV");
