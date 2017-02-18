@@ -28,7 +28,7 @@ type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 import InternalExtratermApi = require('./InternalExtratermApi');
 
-import webipc = require('./webipc');
+import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
 import path = require('path');
 import _ = require('lodash');
@@ -204,7 +204,7 @@ class TerminalTabInfo extends TabInfo {
     this.terminal.destroy();
     
     if (this.ptyId !== null) {
-      webipc.ptyClose(this.ptyId);
+      WebIpc.ptyClose(this.ptyId);
     }
   }
   
@@ -721,7 +721,7 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     // User input event
     newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (ev: CustomEvent): void => {
       if (tabInfo.ptyId !== null) {
-        webipc.ptyInput(tabInfo.ptyId, (<any> ev).detail.data);
+        WebIpc.ptyInput(tabInfo.ptyId, (<any> ev).detail.data);
       }
     });
     
@@ -733,14 +733,14 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       currentColumns = (<any> ev).detail.columns;
       currentRows = (<any> ev).detail.rows;
       if (tabInfo.ptyId !== null) {
-        webipc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
+        WebIpc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
       }
     });
 
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, (ev: CustomEvent): void => {
       const status: { bufferSize: number;} = <any> ev.detail;
       if(tabInfo.ptyId != null) {
-        webipc.ptyOutputBufferSize(tabInfo.ptyId, status.bufferSize);
+        WebIpc.ptyOutputBufferSize(tabInfo.ptyId, status.bufferSize);
       }
     });
 
@@ -764,12 +764,12 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
       newEnv[prop] = expandedExtra[prop];
     }
     
-    webipc.requestPtyCreate(sessionProfile.command, sessionProfile.arguments,
+    WebIpc.requestPtyCreate(sessionProfile.command, sessionProfile.arguments,
         currentColumns, currentRows, newEnv)
       .then( (msg: Messages.CreatedPtyMessage) => {
         tabInfo.ptyId = msg.id;
-        webipc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
-        webipc.ptyOutputBufferSize(tabInfo.ptyId, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
+        WebIpc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
+        WebIpc.ptyOutputBufferSize(tabInfo.ptyId, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
       });
 
     tabInfo.updateTabTitle();
@@ -1133,15 +1133,15 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
   // PTY and IPC handling
   //-----------------------------------------------------------------------
   private _setupIpc(): void {
-    webipc.registerDefaultHandler(Messages.MessageType.PTY_OUTPUT, this._handlePtyOutput.bind(this));
-    webipc.registerDefaultHandler(Messages.MessageType.PTY_CLOSE, this._handlePtyClose.bind(this));
+    WebIpc.registerDefaultHandler(Messages.MessageType.PTY_OUTPUT, this._handlePtyOutput.bind(this));
+    WebIpc.registerDefaultHandler(Messages.MessageType.PTY_CLOSE, this._handlePtyClose.bind(this));
   }
   
   private _handlePtyOutput(msg: Messages.PtyOutput): void {
     this._tabInfo.forEach( (tabInfo) => {
       if (tabInfo instanceof TerminalTabInfo && (<TerminalTabInfo>tabInfo).ptyId === msg.id) {
         const status = tabInfo.terminal.write(msg.data);
-        webipc.ptyOutputBufferSize(msg.id, status.bufferSize);
+        WebIpc.ptyOutputBufferSize(msg.id, status.bufferSize);
       }
     });
   }

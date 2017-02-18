@@ -41,7 +41,7 @@ import util = require('./gui/util');
 import electron = require('electron');
 const clipboard = electron.clipboard;
 
-import webipc = require('./webipc');
+import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
 import virtualscrollarea = require('./virtualscrollarea');
 import FrameFinderType = require('./framefindertype');
@@ -2026,7 +2026,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
       if (ViewerElement.isViewerElement(node)) {
         text = node.getSelectionText();
         if (text !== null) {
-          webipc.clipboardWrite(text);
+          WebIpc.clipboardWrite(text);
           break;
         }
       }
@@ -2056,7 +2056,7 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
    * This method is async and returns before the paste is done.
    */
   private _pasteFromClipboard(): void {
-    webipc.clipboardReadRequest();
+    WebIpc.clipboardReadRequest();
   }
   
   private _embeddedViewerPopOutEvent(viewerElement: EtEmbeddedViewer): void {
@@ -2167,14 +2167,14 @@ class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTy
     if (tag === null) {
       // Fetching new tags from the main process is async. If we get here it means
       // that we were waiting for a new tag to arrive. Just fetch one sync.
-      tag = webipc.requestNewTagSync();
+      tag = WebIpc.requestNewTagSync();
     }
     this._fetchNextTag();
     return tag;
   }
   
   private _fetchNextTag(): void {
-    webipc.requestNewTag().then( (msg: Messages.NewTagMessage) => {
+    WebIpc.requestNewTag().then( (msg: Messages.NewTagMessage) => {
       this._nextTag = msg.tag;
     });
   }

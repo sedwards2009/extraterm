@@ -82,7 +82,7 @@
         "./src/virtualscrollarea.ts",
         "./src/virtualscrollareatest.ts",
         "./src/virtualscrollareatestdebugger.ts",
-        "./src/webipc.ts",
+        "./src/WebIpc.ts",
         "./src/WebResourceLoader.ts",
         "./src/WindowMessages.ts",
         "./src/gui/checkboxmenuitem.ts",

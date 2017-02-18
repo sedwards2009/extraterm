@@ -27,7 +27,7 @@ type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 import electron = require('electron');
 const clipboard = electron.clipboard;
 
-import webipc = require('./webipc');
+import * as WebIpc from './WebIpc';
 import virtualscrollarea = require('./virtualscrollarea');
 import BulkDOMOperation = require('./BulkDOMOperation');
 
@@ -644,7 +644,7 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
       if (ViewerElement.isViewerElement(node)) {
         text = node.getSelectionText();
         if (text !== null) {
-          webipc.clipboardWrite(text);
+          WebIpc.clipboardWrite(text);
           break;
         }
       }
@@ -657,7 +657,7 @@ class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Co
    * This method is async and returns before the paste is done.
    */
   private _pasteFromClipboard(): void {
-    webipc.clipboardReadRequest();
+    WebIpc.clipboardReadRequest();
   }
   
   /**

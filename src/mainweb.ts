@@ -13,7 +13,7 @@ import _ = require('lodash');
 import he = require('he');
 import Logger from './Logger';
 import * as Messages from './WindowMessages';
-import webipc = require('./webipc');
+import * as WebIpc from './WebIpc';
 import CbContextMenu = require('./gui/contextmenu');
 import CbMenuItem = require('./gui/menuitem');
 import CbDropDown = require('./gui/dropdown');
@@ -107,30 +107,30 @@ export function startUp(): void {
   };
   ThemeConsumer.registerThemeable(topThemeable);
 
-  webipc.start();
+  WebIpc.start();
   
   const doc = window.document;
   
   // Default handling for config messages.
-  webipc.registerDefaultHandler(Messages.MessageType.CONFIG, handleConfigMessage);
+  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, handleConfigMessage);
   
   // Default handling for theme messages.
-  webipc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
-  webipc.registerDefaultHandler(Messages.MessageType.THEME_CONTENTS, handleThemeContentsMessage);
+  WebIpc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
+  WebIpc.registerDefaultHandler(Messages.MessageType.THEME_CONTENTS, handleThemeContentsMessage);
   
-  webipc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
+  WebIpc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
   
-  webipc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
+  WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
   
   // Get the Config working.
   configManager = new ConfigManagerImpl();
   keyBindingManager = new KeyBindingManagerImpl();  // depends on the config.
-  const themePromise = webipc.requestConfig().then( (msg: Messages.ConfigMessage) => {
+  const themePromise = WebIpc.requestConfig().then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
   
   // Get the config and theme info in and then continue starting up.
-  const allPromise = Promise.all<void>( [themePromise, webipc.requestThemeList().then(handleThemeListMessage)] );
+  const allPromise = Promise.all<void>( [themePromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
   allPromise.then( (): Promise<FontFace[]> => {
     // Next phase is wait for the fonts to load.
     const fontPromises: Promise<FontFace>[] = [];
@@ -211,7 +211,7 @@ export function startUp(): void {
     // Detect when the last tab has closed.
     mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
       if (mainWebUi.tabCount === 0) {
-        webipc.windowCloseRequest();
+        WebIpc.windowCloseRequest();
       }
     });
     
@@ -226,15 +226,15 @@ export function startUp(): void {
     });
 
     mainWebUi.addEventListener(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST, () => {
-      webipc.windowMinimizeRequest();
+      WebIpc.windowMinimizeRequest();
     });
 
     mainWebUi.addEventListener(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST, () => {
-      webipc.windowMaximizeRequest();
+      WebIpc.windowMaximizeRequest();
     });
 
     mainWebUi.addEventListener(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST, () => {
-      webipc.windowCloseRequest();
+      WebIpc.windowCloseRequest();
     });
 
     const mainMenu = doc.getElementById('main_menu');
@@ -248,7 +248,7 @@ export function startUp(): void {
       
     doc.addEventListener('mousedown', (ev: MouseEvent) => {
       if (ev.which === 2) {
-        webipc.clipboardReadRequest();
+        WebIpc.clipboardReadRequest();
         
         // This is needed to stop the autoscroll blob from appearing on Windows.
         ev.preventDefault();
@@ -294,7 +294,7 @@ function executeCommand(command: string): boolean {
       const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
       const devToolsOpen = util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
       developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
-      webipc.devToolsRequest( ! devToolsOpen);
+      WebIpc.devToolsRequest( ! devToolsOpen);
       break;
 
     case MENU_ITEM_ABOUT:
@@ -351,7 +351,7 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
       {
         label: 'Quit',
         click(item, focusedWindow) {
-          webipc.windowCloseRequest();
+          WebIpc.windowCloseRequest();
         },
         accelerator: 'Command+Q'
       }
@@ -455,7 +455,7 @@ function requestThemeContents(themeTerminal: string, themeSyntax: string, themeG
   const uiThemeIdList = [themeGUI, ThemeTypes.FALLBACK_UI_THEME];
   
   const cssFileMap = new Map<ThemeTypes.CssFile, string>();
-  return webipc.requestThemeContents(terminalThemeIdList, ThemeTypes.TerminalCssFiles)
+  return WebIpc.requestThemeContents(terminalThemeIdList, ThemeTypes.TerminalCssFiles)
     .then( (result: Messages.ThemeContentsMessage): Promise<Messages.ThemeContentsMessage> => {
       if (result.success) {
         ThemeTypes.TerminalCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
@@ -463,7 +463,7 @@ function requestThemeContents(themeTerminal: string, themeSyntax: string, themeG
           cssFileMap.set(cssFile, result.themeContents.cssFiles[key]);
         });
       }
-      return webipc.requestThemeContents(syntaxThemeIdList, ThemeTypes.SyntaxCssFiles);
+      return WebIpc.requestThemeContents(syntaxThemeIdList, ThemeTypes.SyntaxCssFiles);
     }, themeContentsError)
     .then( (result: Messages.ThemeContentsMessage): Promise<Messages.ThemeContentsMessage> => {
       if (result.success) {
@@ -473,7 +473,7 @@ function requestThemeContents(themeTerminal: string, themeSyntax: string, themeG
         });
       }
 
-      return webipc.requestThemeContents(uiThemeIdList, ThemeTypes.UiCssFiles);
+      return WebIpc.requestThemeContents(uiThemeIdList, ThemeTypes.UiCssFiles);
     }, themeContentsError)
     .then( (result: Messages.ThemeContentsMessage): void => {
       if (result.success) {
@@ -673,7 +673,7 @@ class ConfigManagerImpl implements ConfigManager {
   }
   
   setConfig(newConfig: Config): void {  
-    webipc.sendConfig(newConfig);
+    WebIpc.sendConfig(newConfig);
   }
   
   /**
