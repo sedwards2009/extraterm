@@ -6,7 +6,7 @@
 
 import * as ThemeTypes from './Theme';
 import domutils = require('./domutils');
-import ThemeConsumer = require('./themeconsumer');
+import * as ThemeConsumer from './ThemeConsumer';
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 
 /**

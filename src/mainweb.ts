@@ -45,7 +45,7 @@ type ConfigManager = config.ConfigManager;
 type SessionProfile = config.SessionProfile;
 
 import * as ThemeTypes from './Theme';
-import ThemeConsumer = require('./themeconsumer');
+import * as ThemeConsumer from './ThemeConsumer';
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
 import keybindingmanager = require('./keybindingmanager');

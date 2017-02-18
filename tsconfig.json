@@ -71,7 +71,7 @@
         "./src/terminal.ts",
         "./src/Theme.ts",
         "./src/themeableelementbase.ts",
-        "./src/themeconsumer.ts",
+        "./src/ThemeConsumer.ts",
         "./src/ThemeManager.ts",
         "./src/ThemeManagerUtility.ts",
         "./src/utf8.d.ts",
