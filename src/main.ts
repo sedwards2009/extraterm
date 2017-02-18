@@ -103,7 +103,9 @@ function main(): void {
                             : process.argv;
 
   // The extra fields which appear on the command object are declared in extra_commander.d.ts.
-  commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []').parse(normalizedArgv);
+  commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []')
+    .option('-d, --dev-tools [devTools]', 'Open the dev tools on start up')
+    .parse(normalizedArgv);
 
   prepareAppData();  
 
@@ -152,6 +154,11 @@ function main(): void {
       frame: config.showTitleBar};
     titleBarVisible = config.showTitleBar;
     mainWindow = new BrowserWindow(options);
+
+    if ((<any>commander).devTools) {
+      mainWindow.webContents.openDevTools();
+    }
+
     mainWindow.setMenu(null);
 
     // Emitted when the window is closed.
