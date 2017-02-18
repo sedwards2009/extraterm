@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 
 /**
  * Module for handling the distribution of newly computed CSS themes to all

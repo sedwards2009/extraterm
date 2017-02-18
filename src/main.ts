@@ -29,7 +29,7 @@ import ptyconnector = require('./ptyconnector');
 import resourceLoader = require('./resourceloader');
 import * as Messages from './WindowMessages';
 
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
 import * as ThemeManager from './ThemeManager';

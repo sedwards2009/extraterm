@@ -15,7 +15,7 @@ import config = require('../config');
 type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 
-import ThemeTypes = require('../theme');
+import * as ThemeTypes from '../Theme';
 import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import GeneralEvents = require('../generalevents');

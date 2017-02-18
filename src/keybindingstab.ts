@@ -8,7 +8,7 @@
 
 "use strict";
 import _ = require('lodash');
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 import ViewerElement  = require('./viewerelement');
 import ThemeableElementBase = require('./themeableelementbase');
 import keybindingmanager = require('./keybindingmanager');

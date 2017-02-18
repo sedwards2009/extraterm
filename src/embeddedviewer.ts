@@ -15,7 +15,7 @@ import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
 import KeyBindingManager = require('./keybindingmanager');
 import * as VirtualScrollArea from './VirtualScrollArea';
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 import generalevents = require('./generalevents');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes'); 
 import Logger from './Logger';

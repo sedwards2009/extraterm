@@ -5,7 +5,7 @@
  */
 
 import ThemeableElementBase = require('../themeableelementbase');
-import ThemeTypes = require('../theme');
+import * as ThemeTypes from '../Theme';
 import domutils = require('../domutils');
 
 const ID = "CbPopDownDialogTemplate";

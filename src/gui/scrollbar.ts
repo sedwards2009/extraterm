@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import ThemeableElementBase = require('../themeableelementbase');
-import ThemeTypes = require('../theme');
+import * as ThemeTypes from '../Theme';
 import domutils = require('../domutils');
 import util = require('./util');
 import BulkDOMOperation = require('../BulkDOMOperation');

@@ -15,7 +15,7 @@ import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import BulkDOMOperation = require('./BulkDOMOperation');
 import ResizeCanary = require('./resizecanary');
 import ThemeableElementBase = require('./themeableelementbase');
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 import EtEmbeddedViewer = require('./embeddedviewer');
 import EtCommandPlaceHolder = require('./commandplaceholder');
 import EtTerminalViewer = require('./viewers/terminalviewer');

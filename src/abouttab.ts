@@ -8,7 +8,7 @@
 
 "use strict";
 
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 import ViewerElement  = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');

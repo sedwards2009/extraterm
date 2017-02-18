@@ -20,7 +20,7 @@ import _ = require('lodash');
 
 import Logger from './Logger';
 import log = require('./logdecorator');
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeContents = ThemeTypes.ThemeContents;

@@ -69,7 +69,7 @@
         "./src/SupportsClipboardPaste.ts",
         "./src/term.ts",
         "./src/terminal.ts",
-        "./src/theme.ts",
+        "./src/Theme.ts",
         "./src/themeableelementbase.ts",
         "./src/themeconsumer.ts",
         "./src/ThemeManager.ts",

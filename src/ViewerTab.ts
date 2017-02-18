@@ -17,7 +17,7 @@ import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
 import ResizeCanary = require('./resizecanary');
 import ThemeableElementBase = require('./themeableelementbase');
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 import keybindingmanager = require('./keybindingmanager');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 

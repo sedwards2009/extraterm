@@ -11,7 +11,7 @@
 import path = require('path');
 import fs = require('fs');
 import * as ThemeManager from './ThemeManager';
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 import SourceDir = require('./sourceDir');
 import commander = require('commander');
 

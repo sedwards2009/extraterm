@@ -7,7 +7,7 @@ import ThemeableElementBase = require('../themeableelementbase');
 import domutils = require('../domutils');
 import util = require('./util');
 import resourceLoader = require('../resourceloader');
-import ThemeTypes = require('../theme');
+import * as ThemeTypes from '../Theme';
 
 const ID = "CbMenuItemTemplate";
 const ID_CONTAINER = "ID_CONTAINER";

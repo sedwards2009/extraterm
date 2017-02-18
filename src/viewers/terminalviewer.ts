@@ -22,7 +22,7 @@ import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
 import sourceDir = require('../sourceDir');
 import generalevents = require('../generalevents');
-import ThemeTypes = require('../theme');
+import * as ThemeTypes from '../Theme';
 import keybindingmanager = require('../keybindingmanager');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import BulkDOMOperation = require('../BulkDOMOperation');

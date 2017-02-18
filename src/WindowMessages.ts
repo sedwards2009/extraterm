@@ -9,7 +9,7 @@
  */
 
 import config = require('./config');
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeContents = ThemeTypes.ThemeContents;

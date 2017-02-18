@@ -44,7 +44,7 @@ type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 type SessionProfile = config.SessionProfile;
 
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 import ThemeConsumer = require('./themeconsumer');
 type ThemeInfo = ThemeTypes.ThemeInfo;
 

@@ -18,7 +18,7 @@ import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import BulkDOMOperation = require('./BulkDOMOperation');
-import ThemeTypes = require('./theme');
+import * as ThemeTypes from './Theme';
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 import CodeMirrorOperation = require('./codemirroroperation');
 
