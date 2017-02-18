@@ -32,7 +32,7 @@ import * as Messages from './WindowMessages';
 import ThemeTypes = require('./theme');
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
-import ThemeManager = require('./thememanager');
+import * as ThemeManager from './ThemeManager';
 
 import child_process = require('child_process');
 import util = require('./gui/util');

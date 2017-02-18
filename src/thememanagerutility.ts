@@ -10,7 +10,7 @@
  */
 import path = require('path');
 import fs = require('fs');
-import ThemeManager = require('./thememanager');
+import * as ThemeManager from './ThemeManager';
 import ThemeTypes = require('./theme');
 import SourceDir = require('./sourceDir');
 import commander = require('commander');
