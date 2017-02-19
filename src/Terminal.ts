@@ -46,7 +46,7 @@ import * as Messages from './WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
-import mimetypedetector = require('./mimetypedetector');
+import * as MmeTypeDetector from './MimeTypeDetector';
 import CodeMirrorOperation = require('./codemirroroperation');
 import SupportsClipboardPaste = require('./SupportsClipboardPaste');
 
@@ -2099,7 +2099,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     let charset: string = metadata.charset || null;
     if (mimeType === null) {
       // Try to determine a mimetype by inspecting the file name first.
-      const detectionResult = mimetypedetector.detect(filename, buffer);
+      const detectionResult = MmeTypeDetector.detect(filename, buffer);
       if (detectionResult !== null) {
         mimeType = detectionResult.mimeType;
         if (charset === null) {

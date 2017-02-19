@@ -52,7 +52,7 @@
         "./src/mainweb.ts",
         "./src/mainwebui.ts",
         "./src/markdown.js.d.ts",
-        "./src/mimetypedetector.ts",
+        "./src/MimeTypeDetector.ts",
         "./src/MimeTypeDetectorTest.ts",
         "./src/PluginApi.ts",
         "./src/PluginManager.ts",
