@@ -21,7 +21,7 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 import * as SourceDir from '../SourceDir';
-import generalevents = require('../generalevents');
+import * as GeneralEvents from '../GeneralEvents';
 import * as ThemeTypes from '../Theme';
 import * as keybindingmanager from '../KeyBindingManager';
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
@@ -1239,15 +1239,15 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         if (text !== "") {
           if (command === COMMAND_TYPE_AND_CR_SELECTION) {
             // Exit selection mode.
-            const setModeDetail: generalevents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
-            const setModeEvent = new CustomEvent(generalevents.EVENT_SET_MODE, { detail: setModeDetail });
-            setModeEvent.initCustomEvent(generalevents.EVENT_SET_MODE, true, true, setModeDetail);
+            const setModeDetail: GeneralEvents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
+            const setModeEvent = new CustomEvent(GeneralEvents.EVENT_SET_MODE, { detail: setModeDetail });
+            setModeEvent.initCustomEvent(GeneralEvents.EVENT_SET_MODE, true, true, setModeDetail);
             this.dispatchEvent(setModeEvent);
           }              
-          const typeTextDetail: generalevents.TypeTextEventDetail =
+          const typeTextDetail: GeneralEvents.TypeTextEventDetail =
                                   { text: text + (command === COMMAND_TYPE_AND_CR_SELECTION ? "\n" : "") };
-          const typeTextEvent = new CustomEvent(generalevents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
-          typeTextEvent.initCustomEvent(generalevents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
+          const typeTextEvent = new CustomEvent(GeneralEvents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
+          typeTextEvent.initCustomEvent(GeneralEvents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
           this.dispatchEvent(typeTextEvent);
         }            
         break;

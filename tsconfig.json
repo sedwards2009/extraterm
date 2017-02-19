@@ -41,7 +41,7 @@
         "./src/font-manager.d.ts",
         "./src/fontinfo.d.ts",
         "./src/framefindertype.ts",
-        "./src/generalevents.ts",
+        "./src/GeneralEvents.ts",
         "./src/InternalExtratermApi.ts",
         "./src/KeyBindingManager.ts",
         "./src/KeyBindingManagerTest.ts",

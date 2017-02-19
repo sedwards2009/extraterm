@@ -44,7 +44,7 @@ type FrameFinder = FrameFinderType.FrameFinder;
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import GeneralEvents = require('./generalevents');
+import * as GeneralEvents from './GeneralEvents';
 import Logger from './Logger';
 import LogDecorator from './LogDecorator';
 const log = LogDecorator;

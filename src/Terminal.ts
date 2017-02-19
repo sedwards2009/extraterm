@@ -23,7 +23,7 @@ import EtTerminalViewerTypes = require('./viewers/terminalviewertypes');
 import EtTextViewer = require('./viewers/textviewer');
 import EtImageViewer = require('./viewers/imageviewer');
 import EtTipViewer = require('./viewers/tipviewer');
-import generalevents = require('./generalevents');
+import * as GeneralEvents from './GeneralEvents';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
@@ -1858,13 +1858,13 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       this.focus();
     });
 
-    el.addEventListener(generalevents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
-      const detail: generalevents.TypeTextEventDetail = ev.detail;
+    el.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
+      const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
       this._sendDataToPtyEvent(ev.detail.text);
     });
 
-    el.addEventListener(generalevents.EVENT_SET_MODE, (ev: CustomEvent) => {
-      const detail: generalevents.SetModeEventDetail = ev.detail;
+    el.addEventListener(GeneralEvents.EVENT_SET_MODE, (ev: CustomEvent) => {
+      const detail: GeneralEvents.SetModeEventDetail = ev.detail;
       if (detail.mode !== this._mode) {
         switch (this._mode) {
           case Mode.DEFAULT:

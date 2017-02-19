@@ -18,7 +18,7 @@ type ConfigManager = config.ConfigManager;
 import * as ThemeTypes from '../Theme';
 import Logger from '../Logger';
 import log from '../LogDecorator';
-import GeneralEvents = require('../generalevents');
+import * as GeneralEvents from '../GeneralEvents';
 import ViewerElementTypes = require('../viewerelementtypes');
 import BulkDOMOperation = require('../BulkDOMOperation');
 

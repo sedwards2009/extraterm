@@ -22,7 +22,7 @@ import config = require('./config');
 type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 
-import GeneralEvents = require('./generalevents');
+import * as GeneralEvents from './GeneralEvents';
 import log from './LogDecorator';
 
 const humanText = require('./keybindingstext.json');

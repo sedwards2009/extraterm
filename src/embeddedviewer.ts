@@ -16,7 +16,7 @@ import ThemeableElementBase = require('./themeableelementbase');
 import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ThemeTypes from './Theme';
-import generalevents = require('./generalevents');
+import * as GeneralEvents from './GeneralEvents';
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes'); 
 import Logger from './Logger';
 import log from './LogDecorator';
