@@ -5,7 +5,7 @@
  */
 
 import _ = require('lodash');
-import resourceLoader = require('./resourceloader');
+import * as ResourceLoader from './ResourceLoader';
 import menuitem = require('./gui/menuitem');
 import checkboxmenuitem = require('./gui/checkboxmenuitem');
 import domutils = require('./domutils');

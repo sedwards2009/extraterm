@@ -26,7 +26,7 @@ import commander = require('commander');
 import fontManager = require('font-manager');
 import fontinfo = require('fontinfo');
 import ptyconnector = require('./ptyconnector');
-import resourceLoader = require('./resourceloader');
+import * as ResourceLoader from './ResourceLoader';
 import * as Messages from './WindowMessages';
 
 import * as ThemeTypes from './Theme';
@@ -168,7 +168,7 @@ function main(): void {
     });
     
     // and load the index.html of the app.
-    mainWindow.loadURL(resourceLoader.toUrl('main.html'));
+    mainWindow.loadURL(ResourceLoader.toUrl('main.html'));
 
     mainWindow.on('devtools-closed', function() {
       sendDevToolStatus(mainWindow, false);

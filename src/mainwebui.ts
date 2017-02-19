@@ -7,7 +7,6 @@ import domutils = require('./domutils');
 import util = require('./gui/util');
 import ThemeableElementBase = require('./themeableelementbase');
 import TabWidget = require('./gui/tabwidget');
-import resourceLoader = require('./resourceloader');
 import EtTerminal from './Terminal';
 import EtSettingsTab = require('./settings/settingstab2');
 import EtAboutTab = require('./abouttab');

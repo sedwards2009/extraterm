@@ -63,7 +63,7 @@
         "./src/requirejs.d.ts",
         "./src/resizecanary.ts",
         "./src/ResizeRefreshElementBase.ts",
-        "./src/resourceloader.ts",
+        "./src/ResourceLoader.ts",
         "./src/source-map-support.d.ts",
         "./src/SourceDir.ts",
         "./src/SupportsClipboardPaste.ts",
