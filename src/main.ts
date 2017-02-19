@@ -44,7 +44,7 @@ type PtyOptions = ptyconnector.PtyOptions;
 type EnvironmentMap = ptyconnector.EnvironmentMap;
 
 // Our special 'fake' module which selects the correct pty connector factory implementation.
-const PtyConnectorFactory = require("./ptyconnectorfactory");
+const PtyConnectorFactory = require("./PtyConnectorFactory");
 
 // Interfaces.
 import config_ = require('./config');
