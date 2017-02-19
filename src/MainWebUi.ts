@@ -10,7 +10,7 @@ import TabWidget = require('./gui/tabwidget');
 import EtTerminal from './Terminal';
 import EtSettingsTab = require('./settings/settingstab2');
 import EtAboutTab = require('./abouttab');
-import EtKeyBindingsTab = require('./keybindingstab');
+import EtKeyBindingsTab from './KeyBindingsTab';
 import EtViewerTab from './ViewerTab';
 import EtEmbeddedViewer = require('./embeddedviewer');
 import CbTab = require('./gui/tab');

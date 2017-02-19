@@ -78,7 +78,7 @@ interface ModelData {
 /**
  * The Extraterm Key Bindings tab.
  */
-class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigManager,
+export default class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigManager,
     keybindingmanager.AcceptsKeyBindingManager {
   
   /**
@@ -333,5 +333,3 @@ function formatKeyBindingsMapping(context: keybindingmanager.KeyBindingMapping):
         <td class="col-md-3">${binding.command}</td></tr>`).join("\n") +
       "</table>";
 }
-
-export = EtKeyBindingsTab;
