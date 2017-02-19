@@ -30,7 +30,7 @@
         "./src/codemirror_extra.d.ts",
         "./src/codemirrorcommands.ts",
         "./src/codemirroroperation.ts",
-        "./src/commandpaletterequesttypes.ts",
+        "./src/CommandPaletteRequestTypes.ts",
         "./src/CommandPlaceholder.ts",
         "./src/Config.ts",
         "./src/DomUtils.ts",

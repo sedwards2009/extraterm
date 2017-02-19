@@ -15,7 +15,7 @@ import CodeMirror = require('codemirror');
 import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
 import EtTerminalViewerTypes = require('./terminalviewertypes');
-import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
+import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import * as Term from '../Term';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';

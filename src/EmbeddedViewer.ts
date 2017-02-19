@@ -17,7 +17,7 @@ import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ThemeTypes from './Theme';
 import * as GeneralEvents from './GeneralEvents';
-import CommandPaletteRequestTypes = require('./commandpaletterequesttypes'); 
+import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 import Logger from './Logger';
 import log from './LogDecorator';
 import BulkDOMOperation = require('./BulkDOMOperation');

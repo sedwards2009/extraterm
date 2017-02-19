@@ -22,7 +22,7 @@ import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import EtTextViewerTypes = require('./terminalviewertypes');
-import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
+import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';

@@ -21,7 +21,7 @@ import * as ThemeTypes from './Theme';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
+import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 import electron = require('electron');

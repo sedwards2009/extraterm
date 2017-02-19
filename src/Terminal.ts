@@ -27,7 +27,7 @@ import * as GeneralEvents from './GeneralEvents';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
+import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');

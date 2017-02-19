@@ -22,7 +22,7 @@ import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 import CodeMirrorOperation = require('./codemirroroperation');
 
 import CommandPaletteTypes = require('./gui/commandpalettetypes');
-import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');
+import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 import InternalExtratermApi = require('./InternalExtratermApi');
