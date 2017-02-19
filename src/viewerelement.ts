@@ -10,7 +10,7 @@ import * as VirtualScrollArea from './VirtualScrollArea';
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
 import BulkDOMOperation = require('./BulkDOMOperation');
-import CodeMirrorOperation = require('./codemirroroperation');
+import * as CodeMirrorOperation from './CodeMirrorOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;

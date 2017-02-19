@@ -46,7 +46,7 @@ import * as Messages from './WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
 import * as MmeTypeDetector from './MimeTypeDetector';
-import CodeMirrorOperation = require('./codemirroroperation');
+import * as CodeMirrorOperation from './CodeMirrorOperation';
 import SupportsClipboardPaste = require('./SupportsClipboardPaste');
 
 import * as config from './Config';

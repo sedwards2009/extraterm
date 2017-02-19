@@ -19,7 +19,7 @@ import ViewerElementTypes = require('./viewerelementtypes');
 import BulkDOMOperation = require('./BulkDOMOperation');
 import * as ThemeTypes from './Theme';
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
-import CodeMirrorOperation = require('./codemirroroperation');
+import * as CodeMirrorOperation from './CodeMirrorOperation';
 
 import CommandPaletteTypes = require('./gui/commandpalettetypes');
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';

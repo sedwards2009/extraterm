@@ -7,7 +7,7 @@
 import util = require('./gui/util');
 import _  = require('lodash');
 import BulkDOMOperation = require('./BulkDOMOperation');
-import CodeMirrorOperation = require('./codemirroroperation');
+import * as CodeMirrorOperation from './CodeMirrorOperation';
 import Logger from './Logger';
 import log from './LogDecorator';
 

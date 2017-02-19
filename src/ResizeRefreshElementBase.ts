@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import BulkDOMOperation = require('./BulkDOMOperation');
-import CodeMirrorOperation = require('./codemirroroperation');
+import * as CodeMirrorOperation from './CodeMirrorOperation';
 import log from './LogDecorator';
 
 export enum RefreshLevel {

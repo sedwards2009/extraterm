@@ -21,7 +21,7 @@ import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 import Logger from './Logger';
 import log from './LogDecorator';
 import BulkDOMOperation = require('./BulkDOMOperation');
-import CodeMirrorOperation = require('./codemirroroperation');
+import * as CodeMirrorOperation from './CodeMirrorOperation';
 import SupportsClipboardPaste = require('./SupportsClipboardPaste');
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
