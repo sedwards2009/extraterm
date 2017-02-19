@@ -49,7 +49,7 @@
         "./src/logdecorator.ts",
         "./src/Logger.ts",
         "./src/main.ts",
-        "./src/mainweb.ts",
+        "./src/MainWeb.ts",
         "./src/MainWebUi.ts",
         "./src/markdown.js.d.ts",
         "./src/MimeTypeDetector.ts",
