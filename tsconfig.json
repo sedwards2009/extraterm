@@ -58,7 +58,7 @@
         "./src/PluginManager.ts",
         "./src/ptyconnector.ts",
         "./src/ptydirect.ts",
-        "./src/ptyproxy.ts",
+        "./src/PtyProxy.ts",
         "./src/qs.d.ts",
         "./src/requirejs.d.ts",
         "./src/ResizeCanary.ts",
