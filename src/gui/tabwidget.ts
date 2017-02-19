@@ -13,8 +13,7 @@ import util = require('./util');
 import domutils = require('../domutils');
 import _ = require('lodash');
 import Logger from '../Logger';
-import LogDecorator = require('../logdecorator');
-const log = LogDecorator;
+import log from '../LogDecorator';
 
 CbStackedWidget.init();
 

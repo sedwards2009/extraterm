@@ -19,7 +19,7 @@ import * as ThemeTypes from './Theme';
 import generalevents = require('./generalevents');
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes'); 
 import Logger from './Logger';
-import LogDecorator = require('./logdecorator');
+import log from './LogDecorator';
 import BulkDOMOperation = require('./BulkDOMOperation');
 import CodeMirrorOperation = require('./codemirroroperation');
 import SupportsClipboardPaste = require('./SupportsClipboardPaste');
@@ -27,8 +27,6 @@ import SupportsClipboardPaste = require('./SupportsClipboardPaste');
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
 type VisualState = ViewerElementTypes.VisualState;
-
-const log = LogDecorator;
 
 menuitem.init();
 checkboxmenuitem.init();

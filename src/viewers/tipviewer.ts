@@ -26,7 +26,7 @@ import domutils = require("../domutils");
 import ViewerElementTypes = require('../viewerelementtypes');
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
-import LogDecorator = require('../logdecorator');
+import log from '../LogDecorator';
 import BulkDOMOperation = require('../BulkDOMOperation');
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -47,8 +47,6 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
 const KEYBINDINGS_SELECTION_MODE = "image-viewer";
 
 const DEBUG_SIZE = false;
-
-const log = LogDecorator;
 
 let registered = false;
 let instanceIdCounter = 0;

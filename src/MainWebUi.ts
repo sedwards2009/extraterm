@@ -46,7 +46,7 @@ type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import GeneralEvents = require('./generalevents');
 import Logger from './Logger';
-import LogDecorator = require('./logdecorator');
+import LogDecorator from './LogDecorator';
 const log = LogDecorator;
 
 const VisualState = ViewerElementTypes.VisualState;

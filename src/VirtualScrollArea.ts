@@ -9,9 +9,8 @@ import _  = require('lodash');
 import BulkDOMOperation = require('./BulkDOMOperation');
 import CodeMirrorOperation = require('./codemirroroperation');
 import Logger from './Logger';
-import LogDecorator = require('./logdecorator');
+import log from './LogDecorator';
 
-const log = LogDecorator;
 const _log = new Logger("VirtualScrollableArea");
 
 export interface VirtualScrollable {

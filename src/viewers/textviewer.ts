@@ -25,7 +25,7 @@ import EtTextViewerTypes = require('./terminalviewertypes');
 import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
-import LogDecorator = require('../logdecorator');
+import log from '../LogDecorator';
 import generalevents = require('../generalevents');
 import SupportsClipboardPaste = require('../SupportsClipboardPaste');
 
@@ -65,8 +65,6 @@ const COMMANDS = [
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const DEBUG_RESIZE = false;
-
-const log = LogDecorator;
 
 let registered = false;
 

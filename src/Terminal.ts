@@ -32,7 +32,7 @@ type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger from './Logger';
-import LogDecorator = require('./logdecorator');
+import LogDecorator from './LogDecorator';
 import domutils = require('./domutils');
 import * as Term from './Term';
 import CbScrollbar = require('./gui/scrollbar');

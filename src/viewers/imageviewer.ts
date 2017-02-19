@@ -13,7 +13,7 @@ import domutils = require("../domutils");
 import ViewerElementTypes = require('../viewerelementtypes');
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
-import LogDecorator = require('../logdecorator');
+import log from '../LogDecorator';
 import keybindingmanager = require('../keybindingmanager');
 import BulkDOMOperation = require('../BulkDOMOperation');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -38,8 +38,6 @@ const COMMAND_GO_UP = "goUp";
 const COMMAND_GO_DOWN = "goDown";
 
 const DEBUG_SIZE = false;
-
-const log = LogDecorator;
 
 let registered = false;
 let instanceIdCounter = 0;

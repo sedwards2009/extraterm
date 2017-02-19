@@ -10,7 +10,7 @@ import util = require('./util');
 import BulkDOMOperation = require('../BulkDOMOperation');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import Logger from '../Logger';
-import log = require('../logdecorator');
+import log from '../LogDecorator';
 
 const ID = "CbScrollbarTemplate";
 const ID_AREA = "ID_AREA";

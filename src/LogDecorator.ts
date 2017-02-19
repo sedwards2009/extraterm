@@ -14,7 +14,7 @@ import Logger from './Logger';
  * @param  {any}    descriptor [description]
  * @return {[type]}            [description]
  */
-function log(target: Object, key: string, descriptor: any) {
+export default function log(target: Object, key: string, descriptor: any) {
   const originalMethod = descriptor.value; 
 
   descriptor.value =  function (...args: any[]) {
@@ -66,5 +66,3 @@ function repr(obj: any): string {
       return "object";
   }
 }
-
-export = log;

@@ -5,9 +5,7 @@
  */
 import BulkDOMOperation = require('./BulkDOMOperation');
 import CodeMirrorOperation = require('./codemirroroperation');
-import LogDecorator = require('./logdecorator');
-
-const log = LogDecorator;
+import log from './LogDecorator';
 
 export enum RefreshLevel {
   RESIZE = 1,

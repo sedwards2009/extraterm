@@ -23,11 +23,9 @@ type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 
 import GeneralEvents = require('./generalevents');
-import LogDecorator = require('./logdecorator');
+import log from './LogDecorator';
 
-var humanText = require('./keybindingstext.json');
-
-const log = LogDecorator;
+const humanText = require('./keybindingstext.json');
 
 const ID_SELECTOR = "ID_SELECTOR";
 const ID_KEY_BINDINGS = "ID_KEY_BINDINGS";

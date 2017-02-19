@@ -11,7 +11,7 @@ import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import EtEmbeddedViewer = require('./embeddedviewer');
 import Logger from './Logger';
-import LogDecorator = require('./logdecorator');
+import log from './LogDecorator';
 import domutils = require('./domutils');
 import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
@@ -36,8 +36,6 @@ type SetterState = VirtualScrollArea.SetterState;
 type ScrollableElement = VirtualScrollable & HTMLElement;
 type VisualState = ViewerElementTypes.VisualState;
 const VisualState = ViewerElementTypes.VisualState;
-
-const log = LogDecorator;
 
 const DEBUG = true;
 

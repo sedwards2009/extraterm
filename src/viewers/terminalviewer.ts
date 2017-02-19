@@ -19,7 +19,7 @@ import CommandPaletteRequestTypes = require('../commandpaletterequesttypes');
 import * as Term from '../Term';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
-import LogDecorator = require('../logdecorator');
+import log from '../LogDecorator';
 import * as SourceDir from '../SourceDir';
 import generalevents = require('../generalevents');
 import * as ThemeTypes from '../Theme';
@@ -62,8 +62,6 @@ const NON_CODEMIRROR_COMMANDS = [
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const DEBUG_RESIZE = false;
-
-const log = LogDecorator;
 
 let registered = false;
 let cssText: string = null;

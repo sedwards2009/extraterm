@@ -17,7 +17,7 @@ type ConfigManager = config.ConfigManager;
 
 import * as ThemeTypes from '../Theme';
 import Logger from '../Logger';
-import LogDecorator = require('../logdecorator');
+import log from '../LogDecorator';
 import GeneralEvents = require('../generalevents');
 import ViewerElementTypes = require('../viewerelementtypes');
 import BulkDOMOperation = require('../BulkDOMOperation');
@@ -26,8 +26,6 @@ type CommandLineAction = config.CommandLineAction;
 type FontInfo = config.FontInfo;
 
 let registered = false;
-
-const log = LogDecorator;
 
 const ID_SETTINGS = "ID_SETTINGS";
 const ID_SCROLLBACK = "ID_SCROLLBACK";
