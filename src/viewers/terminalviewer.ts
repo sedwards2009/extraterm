@@ -12,7 +12,7 @@ import ThemeableElementBase = require('../themeableelementbase');
 import util = require("../gui/util");
 import * as DomUtils from '../DomUtils';
 import CodeMirror = require('codemirror');
-import CodeMirrorCommands = require('../codemirrorcommands');
+import * as CodeMirrorCommands from '../CodeMirrorCommands';
 import ViewerElementTypes = require('../viewerelementtypes');
 import EtTerminalViewerTypes = require('./terminalviewertypes');
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';

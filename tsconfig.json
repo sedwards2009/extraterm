@@ -28,7 +28,7 @@
         "./src/BulkDOMOperation.ts",
         "./src/BulkDOMOperationTest.ts",
         "./src/codemirror_extra.d.ts",
-        "./src/codemirrorcommands.ts",
+        "./src/CodeMirrorCommands.ts",
         "./src/CodeMirrorOperation.ts",
         "./src/CommandPaletteRequestTypes.ts",
         "./src/CommandPlaceholder.ts",

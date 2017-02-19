@@ -18,7 +18,7 @@ import BulkDOMOperation = require('../BulkDOMOperation');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import CodeMirror = require('codemirror');
-import CodeMirrorCommands = require('../codemirrorcommands');
+import * as CodeMirrorCommands from '../CodeMirrorCommands';
 import ViewerElementTypes = require('../viewerelementtypes');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import EtTextViewerTypes = require('./terminalviewertypes');
