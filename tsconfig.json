@@ -56,7 +56,7 @@
         "./src/mimetypedetectortest.ts",
         "./src/PluginApi.ts",
         "./src/PluginManager.ts",
-        "./src/ptyconnector.ts",
+        "./src/PtyConnector.ts",
         "./src/PtyDirect.ts",
         "./src/PtyProxy.ts",
         "./src/qs.d.ts",

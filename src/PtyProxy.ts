@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import child_process = require('child_process');
-import ptyconnector = require('./ptyconnector');
+import * as PtyConnector from './PtyConnector';
 import _ = require("lodash");
 import configInterfaces = require('./config');
 import fs = require('fs');
@@ -14,9 +14,9 @@ import * as SourceDir from './SourceDir';
 
 type Config = configInterfaces.Config;
 
-type PtyConnector = ptyconnector.PtyConnector;
-type Pty = ptyconnector.Pty;
-type PtyOptions = ptyconnector.PtyOptions;
+type PtyConnector = PtyConnector.PtyConnector;
+type Pty = PtyConnector.Pty;
+type PtyOptions = PtyConnector.PtyOptions;
 
 const DEBUG_FINE = false;
 

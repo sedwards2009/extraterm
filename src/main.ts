@@ -25,7 +25,7 @@ import _ = require('lodash');
 import commander = require('commander');
 import fontManager = require('font-manager');
 import fontinfo = require('fontinfo');
-import ptyconnector = require('./ptyconnector');
+import * as PtyConnector from './PtyConnector';
 import * as ResourceLoader from './ResourceLoader';
 import * as Messages from './WindowMessages';
 
@@ -38,10 +38,10 @@ import child_process = require('child_process');
 import util = require('./gui/util');
 import Logger from './Logger';
 
-type PtyConnector  = ptyconnector.PtyConnector;
-type Pty = ptyconnector.Pty;
-type PtyOptions = ptyconnector.PtyOptions;
-type EnvironmentMap = ptyconnector.EnvironmentMap;
+type PtyConnector  = PtyConnector.PtyConnector;
+type Pty = PtyConnector.Pty;
+type PtyOptions = PtyConnector.PtyOptions;
+type EnvironmentMap = PtyConnector.EnvironmentMap;
 
 // Our special 'fake' module which selects the correct pty connector factory implementation.
 const PtyConnectorFactory = require("./PtyConnectorFactory");
