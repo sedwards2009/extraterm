@@ -17,7 +17,7 @@ import ResizeCanary from './ResizeCanary';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as ThemeTypes from './Theme';
 import EtEmbeddedViewer from './EmbeddedViewer';
-import EtCommandPlaceHolder = require('./commandplaceholder');
+import EtCommandPlaceHolder from './CommandPlaceholder';
 import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTerminalViewerTypes = require('./viewers/terminalviewertypes');
 import EtTextViewer = require('./viewers/textviewer');

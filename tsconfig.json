@@ -31,7 +31,7 @@
         "./src/codemirrorcommands.ts",
         "./src/codemirroroperation.ts",
         "./src/commandpaletterequesttypes.ts",
-        "./src/commandplaceholder.ts",
+        "./src/CommandPlaceholder.ts",
         "./src/Config.ts",
         "./src/DomUtils.ts",
         "./src/element-resize-detector.d.ts",

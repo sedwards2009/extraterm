@@ -16,7 +16,7 @@ let registered = false;
 /**
  * An invisible element which can be placed in a terminal to mark the start of command output.
  */
-class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
+export default class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
   
   /**
    * The HTML tag name of this element.
@@ -90,5 +90,3 @@ class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
     return BulkDOMOperation.nullOperation();
   }
 }
-
-export = EtCommandPlaceHolder;
