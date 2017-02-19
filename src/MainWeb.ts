@@ -29,7 +29,7 @@ import InternalExtratermApi = require('./InternalExtratermApi');
 
 import MainWebUi from './MainWebUi';
 import EtTerminal from './Terminal';
-import domutils = require('./domutils');
+import * as DomUtils from './DomUtils';
 import util = require('./gui/util');
 
 import EtEmbeddedViewer from './EmbeddedViewer';
@@ -542,7 +542,7 @@ function setUpCommandPalette(): void {
 
 function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.CommandPaletteRequest): void {
   
-  domutils.doLater( () => {
+  DomUtils.doLater( () => {
     commandPaletteRequestSource = request.srcElement;
     
     const entries = [...request.commandEntries, ...commandPaletteEntries()];
@@ -604,7 +604,7 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
   if (selectedId !== null) {
     const commandIndex = Number.parseInt(selectedId);
     const commandEntry = commandPaletteRequestEntries[commandIndex];
-    domutils.doLater( () => {
+    DomUtils.doLater( () => {
       commandEntry.target.executeCommand(commandEntry.id);
       commandPaletteRequestSource = null;
       commandPaletteRequestEntries = null;

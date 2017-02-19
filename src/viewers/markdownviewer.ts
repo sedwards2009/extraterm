@@ -4,7 +4,7 @@
 
 "use strict";
 import ViewerElement = require('../viewerelement');
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import markdownMod = require('markdown');
 const markdown = markdownMod.markdown;
 import ViewerElementTypes = require("../viewerelementtypes");
@@ -44,7 +44,7 @@ class EtMarkdownViewer extends ViewerElement {
   }
   
   getSelectionText(): string {
-    const root = domutils.getShadowRoot(this);
+    const root = DomUtils.getShadowRoot(this);
     const selection = root.getSelection();
     if (selection !== undefined && selection !== null && selection.rangeCount !== 0 &&
         ! selection.getRangeAt(0).collapsed) {
@@ -55,11 +55,11 @@ class EtMarkdownViewer extends ViewerElement {
   }
 
   focus(): void {
-    domutils.getShadowId(this, ID_CONTAINER).focus();
+    DomUtils.getShadowId(this, ID_CONTAINER).focus();
   }
   
   hasFocus(): boolean {
-    const root = domutils.getShadowRoot(this);
+    const root = DomUtils.getShadowRoot(this);
     return root.activeElement !== null;
   }
   
@@ -96,7 +96,7 @@ class EtMarkdownViewer extends ViewerElement {
     
     this._updateFocusable(this._focusable);
     
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
       if (ev.keyCode === 9 && ! ev.ctrlKey) {
         ev.preventDefault();
@@ -105,7 +105,7 @@ class EtMarkdownViewer extends ViewerElement {
   }
 
   attachedCallback(): void {
-    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
+    const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     const kids = this.childNodes;
     
     // Collect the raw text content.
@@ -153,7 +153,7 @@ class EtMarkdownViewer extends ViewerElement {
   }
   
   private _updateFocusable(focusable: boolean): void {
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");
   }
 }

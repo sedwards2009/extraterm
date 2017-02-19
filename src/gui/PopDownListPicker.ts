@@ -6,7 +6,7 @@
 
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import PopDownDialog = require('./PopDownDialog');
 
 const ID = "CbPopDownListPickerTemplate";
@@ -60,7 +60,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
 
   private _formatEntries: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string;
 
-  private _laterHandle: domutils.LaterHandle;
+  private _laterHandle: DomUtils.LaterHandle;
 
   private _extraCssFiles: ThemeTypes.CssFile[];
 
@@ -90,7 +90,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
     this._entries = entries;
     this._selectedId = null;
     
-    const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
     if (filterInput !== null) {
       filterInput.value = "";
     }
@@ -103,7 +103,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
 
   setTitlePrimary(text: string): void {
     this._titlePrimary = text;
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     if (dialog != null) {
       dialog.setTitlePrimary(text);
     }
@@ -115,7 +115,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
 
   setTitleSecondary(text: string): void {
     this._titleSecondary = text;
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     if (dialog != null) {
       dialog.setTitleSecondary(text);
     }
@@ -164,21 +164,21 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
     shadow.appendChild(clone);
     this.updateThemeCss();
 
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     dialog.setTitlePrimary(this._titlePrimary);
     dialog.setTitleSecondary(this._titleSecondary);
     dialog.addEventListener(PopDownDialog.EVENT_CLOSE_REQUEST, () => {
       dialog.close();
     });
 
-    const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
     filterInput.addEventListener('input', (ev: Event) => {
       this._updateEntries();
     });
     
     filterInput.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
     
-    const resultsDiv = domutils.getShadowId(this, ID_RESULTS);
+    const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
     resultsDiv.addEventListener('click', (ev: Event) => {
       for (let node of ev.path) {
         if (node instanceof HTMLElement) {
@@ -217,7 +217,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
   }
 
   private _updateEntries(): void {
-    const filterInputValue = (<HTMLInputElement> domutils.getShadowId(this, ID_FILTER)).value;
+    const filterInputValue = (<HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER)).value;
     const filteredEntries = this._filterEntries(this._entries, filterInputValue);
     
     if (filteredEntries.length === 0) {
@@ -228,11 +228,11 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
     }
     
     const html = this._formatEntries(filteredEntries, this._selectedId, filterInputValue);
-    domutils.getShadowId(this, ID_RESULTS).innerHTML = html;
+    DomUtils.getShadowId(this, ID_RESULTS).innerHTML = html;
   }
 
   private _scrollToSelected(): void {
-    const resultsDiv = domutils.getShadowId(this, ID_RESULTS);
+    const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
     const selectedElement = <HTMLElement> resultsDiv.querySelector("." + PopDownListPicker.CLASS_RESULT_SELECTED);
     const selectedRelativeTop = selectedElement.offsetTop - resultsDiv.offsetTop;
     resultsDiv.scrollTop = selectedRelativeTop;
@@ -258,7 +258,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
       ev.preventDefault();
       ev.stopPropagation();
       
-      const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
+      const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
       const filteredEntries = this._filterEntries(this._entries, filterInput.value);
       if (filteredEntries.length === 0) {
         return;
@@ -273,7 +273,7 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
         }
       } else {
         
-        const resultsDiv = domutils.getShadowId(this, ID_RESULTS);
+        const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
         
         // Determine the step size.
         let stepSize = 1;
@@ -320,15 +320,15 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
    * 
    */
   open(x: number, y: number, width: number, height: number): void {
-    const resultsDiv = <HTMLDivElement> domutils.getShadowId(this, ID_RESULTS);
+    const resultsDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_RESULTS);
     resultsDiv.style.maxHeight = `${height/2}px`;
   
-    const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_FILTER);
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
     filterInput.value = "";
     this._updateEntries();
     filterInput.focus();
 
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     dialog.open(x, y, width, height);
 
     this._scrollToSelected();      
@@ -338,13 +338,13 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
    * 
    */
   close(): void {
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     dialog.close();
   }
 
   private _okId(selectedId: string): void {
     if (this._laterHandle === null) {
-      this._laterHandle = domutils.doLater( () => {
+      this._laterHandle = DomUtils.doLater( () => {
         this.close();
         this._laterHandle = null;
         const event = new CustomEvent("selected", { detail: {selected: selectedId } });

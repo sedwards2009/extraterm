@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import contextmenu = require('./contextmenu');
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import util = require('./util');
 
 contextmenu.init();

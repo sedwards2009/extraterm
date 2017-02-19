@@ -7,7 +7,7 @@
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
 import menuitem = require('./menuitem');
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import util = require('./util');
 
 menuitem.init();
@@ -63,7 +63,7 @@ class CbContextMenu extends ThemeableElementBase {
    * 
    */
   private __getById(id:string): Element {
-    return domutils.getShadowRoot(this).querySelector('#'+id);
+    return DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

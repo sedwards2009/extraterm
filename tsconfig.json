@@ -33,7 +33,7 @@
         "./src/commandpaletterequesttypes.ts",
         "./src/commandplaceholder.ts",
         "./src/config.ts",
-        "./src/domutils.ts",
+        "./src/DomUtils.ts",
         "./src/element-resize-detector.d.ts",
         "./src/EmbeddedViewer.ts",
         "./src/extra_commander.d.ts",

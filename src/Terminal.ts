@@ -33,7 +33,7 @@ type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger from './Logger';
 import LogDecorator from './LogDecorator';
-import domutils = require('./domutils');
+import * as DomUtils from './DomUtils';
 import * as Term from './Term';
 import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
@@ -232,14 +232,14 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   private _themeCssPath: string;
   private _mainStyleLoaded: boolean;
   private _themeStyleLoaded: boolean;
-  private _resizePollHandle: domutils.LaterHandle;
+  private _resizePollHandle: DomUtils.LaterHandle;
   private _elementAttached: boolean;
   private _needsCompleteRefresh: boolean;
 
   // This flag is needed to prevent the _enforceScrollbackLength() method from being run recursively
   private _enforceScrollbackLengthGuard: boolean;
   
-  private _scheduleLaterHandle: domutils.LaterHandle;
+  private _scheduleLaterHandle: DomUtils.LaterHandle;
   private _scheduleLaterQueue: Function[];
   private _stashedChildResizeTask: () => void;
 
@@ -418,7 +418,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
    */
   focus(): void {
     if (this._terminalViewer !== null) {
-      domutils.focusWithoutScroll(this._terminalViewer);
+      DomUtils.focusWithoutScroll(this._terminalViewer);
     }
   }
   
@@ -428,7 +428,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
    * @return true if the terminal has the focus.
    */
   hasFocus(): boolean {
-    const shadowRoot = domutils.getShadowRoot(this);
+    const shadowRoot = DomUtils.getShadowRoot(this);
     if (shadowRoot === null) {
       return false;
     }
@@ -514,10 +514,10 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       this.addEventListener('focus', this._handleFocus.bind(this));
       this.addEventListener('blur', this._handleBlur.bind(this));
 
-      const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
-      const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-      const scrollContainer = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
-      domutils.preventScroll(scrollContainer);
+      const scrollbar = <CbScrollbar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+      const scrollArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+      const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
+      DomUtils.preventScroll(scrollContainer);
 
       scrollContainer.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
           this._handleCommandPaletteRequest(ev);
@@ -574,7 +574,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
       
       // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
       resizeCanary.setCss(`
           font-family: var(--terminal-font);
@@ -700,8 +700,8 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   
   private _handleFocus(event: FocusEvent): void {
     // Forcefully set the visual state of each thing in the terminal to appear focused.
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+    DomUtils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
         node.setVisualState(this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED);
       }
@@ -710,14 +710,14 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   
   private _refocus(): void {
     if (this.hasFocus() && this._mode === Mode.DEFAULT && this._terminalViewer != null && ! this._terminalViewer.hasFocus()) {
-      domutils.focusWithoutScroll(this._terminalViewer);
+      DomUtils.focusWithoutScroll(this._terminalViewer);
     }
   }
 
   private _handleBlur(event: FocusEvent): void {
     // Forcefully set the visual state of each thing in the terminal to appear unfocused.
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+    DomUtils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
         node.setVisualState(VisualState.UNFOCUSED);
       }
@@ -734,7 +734,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     });
 
     if (ev.detail.originMouse) {
-      domutils.doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
+      DomUtils.doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
     }
   }
 
@@ -786,7 +786,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     terminalViewer.emulator = this._emulator;
     this._appendScrollable(terminalViewer)
     
-    terminalViewer.setVisualState(domutils.getShadowRoot(this).activeElement !== null
+    terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
 
@@ -797,7 +797,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   private _appendScrollable(el: HTMLElement & VirtualScrollable): void {
     el.addEventListener('focus', this._childFocusHandlerFunc);
     
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: ResizeRefreshElementBase.RefreshLevel.RESIZE } );
     scrollerArea.appendChild(el);
     this._virtualScrollArea.appendScrollable(el);
@@ -806,7 +806,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   private _removeScrollable(el: HTMLElement & VirtualScrollable): void {
     el.removeEventListener('focus', this._childFocusHandlerFunc);
 
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (el.parentElement === scrollerArea) {
       scrollerArea.removeChild(el);
     } else if(el.parentNode === this._stashArea) {
@@ -872,7 +872,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   }
   
   private _replaceScrollableElement(oldEl: ScrollableElement, newEl: ScrollableElement): void {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.insertBefore(newEl, oldEl);
     scrollerArea.removeChild(oldEl);
     this._childElementList.splice(this._childElementListIndexOf(oldEl), 1);
@@ -970,9 +970,9 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   }
 
   private _setModeAndVisualState(mode: ViewerElementTypes.Mode, visualState: VisualState): void {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
 
-    const childNodes = <ViewerElement[]> domutils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
+    const childNodes = <ViewerElement[]> DomUtils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
 
     const modeOperations = childNodes.map( (node) => node.bulkSetMode(mode));
     const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
@@ -1023,7 +1023,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
 
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
     
-      const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+      const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
       const element: ViewerElement = <any> scrollable;
       if ( ! visible) {
 
@@ -1104,7 +1104,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     }
 
     // Operations for scroll area contents
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
 
       const generator = function* generator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
@@ -1112,13 +1112,13 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
         // --- DOM Write ---
         yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
         
-        const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
+        const scrollbar = <CbScrollbar> DomUtils.getShadowId(this, ID_SCROLLBAR);
         const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level); // <-
         const scrollbarOperation = scrollbar.bulkRefresh(level);
 
         yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: scrollAreaOperation, waitOperation: scrollAreaOperation};
 
-        const scrollContainer = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
+        const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
         this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 
         // Build the list of elements we will resize right now.
@@ -1199,7 +1199,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
         if (ViewerElement.isViewerElement(node)) {
           this._makeVisible(node);
           if (node.setCursorPositionBottom(detail.ch)) {
-            domutils.focusWithoutScroll(node);
+            DomUtils.focusWithoutScroll(node);
             break;
           }
         }
@@ -1212,7 +1212,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
         if (ViewerElement.isViewerElement(node)) {
           this._makeVisible(node);
           if (node.setCursorPositionTop(detail.ch)) {
-            domutils.focusWithoutScroll(node);
+            DomUtils.focusWithoutScroll(node);
             break;
           }
         }
@@ -1307,7 +1307,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     if (newAdjustment !== this._fontSizeAdjustment) {
       this._fontSizeAdjustment = newAdjustment;
 
-      const styleElement = <HTMLStyleElement> domutils.getShadowId(this, ID_CSS_VARS);
+      const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
       (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(newAdjustment);  // Type stubs are missing cssRules.
       this._armResizeCanary = true;
       // Don't refresh. Let the Resize Canary detect the real change in the DOM when it arrives.
@@ -1586,7 +1586,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
 
         if (processList.length !== 0) {
           // Find the elements which need to be moved into the scroll area.
-          const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+          const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
           const stashedList: (HTMLElement & VirtualScrollable)[] = [];
           for (let i=0; i<processList.length; i++) {
             const element = processList[i];
@@ -1625,7 +1625,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     this._scheduleLaterQueue.push(func);
     
     if (this._scheduleLaterHandle === null) {
-      this._scheduleLaterHandle = domutils.doLater( () => {
+      this._scheduleLaterHandle = DomUtils.doLater( () => {
         this._scheduleLaterHandle = null;
         const queue = this._scheduleLaterQueue;
         this._scheduleLaterQueue = [];
@@ -1817,7 +1817,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       this._lastCommandTerminalViewer = this._terminalViewer;
     }
 
-    const scrollContainer = domutils.getShadowId(this, ID_SCROLL_CONTAINER);
+    const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
     this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
   }
   
@@ -1888,7 +1888,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     // }).bind(this));
 // FIXME
     
-    el.setVisualState(domutils.getShadowRoot(this).activeElement !== null
+    el.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
     el.setAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE, title);
@@ -1932,7 +1932,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       
       // Some focus management to make sure that activeTerminalViewer still keeps
       // the focus after we remove it from the DOM and place it else where.
-      const restoreFocus = domutils.getShadowRoot(this).activeElement === activeTerminalViewer;
+      const restoreFocus = DomUtils.getShadowRoot(this).activeElement === activeTerminalViewer;
       
       embeddedViewerElement.viewerElement = activeTerminalViewer;
       activeTerminalViewer.editable = true;
@@ -1985,7 +1985,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       config.injectConfigManager(outputTerminalViewer, this._configManager);
       newViewerElement.viewerElement = outputTerminalViewer;
       
-      outputTerminalViewer.setVisualState(domutils.getShadowRoot(this).activeElement !== null
+      outputTerminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
       outputTerminalViewer.returnCode = returnCode;
@@ -2034,7 +2034,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   
   pasteText(text: string): void {
     if (this._mode === Mode.CURSOR) {
-      const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+      const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
       for (const node of scrollerArea.childNodes) {
         if (ViewerElement.isViewerElement(node) && node.hasFocus()) {
           if (SupportsClipboardPaste.isSupportsClipboardPaste(node) && node.canPaste()) {

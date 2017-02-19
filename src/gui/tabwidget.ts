@@ -10,7 +10,7 @@ import CbTab = require('./tab');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import BulkDOMOperation = require('../BulkDOMOperation');
 import util = require('./util');
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import _ = require('lodash');
 import Logger from '../Logger';
 import log from '../LogDecorator';
@@ -110,7 +110,7 @@ class CbTabWidget extends ThemeableElementBase {
     });
     this._mutationObserver.observe(this, { childList: true });
 
-    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
 
     const tabBar = this._getTabbar();
@@ -179,7 +179,7 @@ class CbTabWidget extends ThemeableElementBase {
    * 
    */
   private __getById(id:string): Element {
-    return domutils.getShadowRoot(this).querySelector('#'+id);
+    return DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
   
   private _getTop(): HTMLDivElement {
@@ -306,7 +306,7 @@ class CbTabWidget extends ThemeableElementBase {
     // supresses the event if the tab has been removed already.
     if (tabElement.parentNode !== null) {
       this.currentIndex = index;
-      domutils.doLater(this._sendSwitchEvent.bind(this));
+      DomUtils.doLater(this._sendSwitchEvent.bind(this));
     }
   }
   
@@ -328,7 +328,7 @@ class CbTabWidget extends ThemeableElementBase {
   }
   
   private _getCbTabs(): CbTab[] {
-    return <CbTab[]> domutils.toArray<Element>(this.children).filter( element => element.nodeName === CbTab.TAG_NAME );
+    return <CbTab[]> DomUtils.toArray<Element>(this.children).filter( element => element.nodeName === CbTab.TAG_NAME );
   }
   
   set currentTab(selectTab: CbTab) {
@@ -430,7 +430,7 @@ class CbTabWidget extends ThemeableElementBase {
     // Figure out which tabs the drop indicator should appear in between.
     const tabBar = this._getTabbar();
     let index = 0;
-    const childElements = domutils.toArray(tabBar.children).filter( kid => kid.classList.contains(CLASS_TAB));
+    const childElements = DomUtils.toArray(tabBar.children).filter( kid => kid.classList.contains(CLASS_TAB));
     for (const kid of childElements) {
       const rect = kid.getBoundingClientRect();
       // this._log.debug(`kid left=${rect.left} width=${rect.width}`);
@@ -442,7 +442,7 @@ class CbTabWidget extends ThemeableElementBase {
     }
 
     // Position the drop indicator.
-    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     let indicatorX = 0;
 
     if (index === 0) {
@@ -479,14 +479,14 @@ class CbTabWidget extends ThemeableElementBase {
   private _handleDragLeave(ev: DragEvent): void {
     this._log.debug(`_getTabbar() dragleave`);
 
-    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
   }
 
   private _handleDragExit(ev: DragEvent): void {
     this._log.debug(`_getTabbar() dragexit`);
-    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
     // ev.preventDefault();
@@ -495,7 +495,7 @@ class CbTabWidget extends ThemeableElementBase {
   private _handleDragEnd(ev: DragEvent): void {
     this._log.debug(`_getTabbar() dragend`);
 
-    const dragIndicatorContainer = domutils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
+    const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
   }

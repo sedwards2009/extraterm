@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import domutils = require('./domutils');
+import * as DomUtils from './DomUtils';
 import Logger from './Logger';
 import elementResizeDetectorMaker = require('element-resize-detector');
 
@@ -30,7 +30,7 @@ export default class ResizeCanary extends HTMLElement {
   
   private _erd: ElementResizeDetector.Detector;
   
-  private _laterHandle: domutils.LaterHandle;
+  private _laterHandle: DomUtils.LaterHandle;
   
   private _css: string; 
 
@@ -70,11 +70,11 @@ export default class ResizeCanary extends HTMLElement {
     
     this._erd = elementResizeDetectorMaker(); // Use the 'object' strategy, 'scroll' doesn't work here.
     
-    const container = <HTMLDivElement> domutils.getShadowId(this, ID_SIZER);
+    const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_SIZER);
     
     this._erd.listenTo(container, (el: HTMLElement) => {
       if (this._laterHandle === null) {
-        this._laterHandle = domutils.doLater( () => {
+        this._laterHandle = DomUtils.doLater( () => {
           const event = new CustomEvent('resize', { detail: { } });
           this.dispatchEvent(event);
           this._laterHandle = null;
@@ -107,7 +107,7 @@ export default class ResizeCanary extends HTMLElement {
 ;
 
     const frag = window.document.createDocumentFragment();
-    for (const kid of domutils.nodeListToArray(div.childNodes)) { 
+    for (const kid of DomUtils.nodeListToArray(div.childNodes)) { 
       frag.appendChild(kid);
     }
     return frag;

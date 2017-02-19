@@ -8,8 +8,8 @@ import fs = require('fs');
 import ViewerElement = require("../viewerelement");
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
-import util = require("../gui/util");
-import domutils = require("../domutils");
+import util = require('../gui/util');
+import * as DomUtils from '../DomUtils';
 import ViewerElementTypes = require('../viewerelementtypes');
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
@@ -130,15 +130,15 @@ class EtImageViewer extends ViewerElement {
   }
 
   focus(): void {
-    if (domutils.getShadowRoot(this) === null) {
+    if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    domutils.focusWithoutScroll(containerDiv);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    DomUtils.focusWithoutScroll(containerDiv);
   }
 
   hasFocus(): boolean {
-    const hasFocus = this === domutils.getShadowRoot(this).activeElement; // FIXME
+    const hasFocus = this === DomUtils.getShadowRoot(this).activeElement; // FIXME
     return hasFocus;
   }
   
@@ -172,7 +172,7 @@ class EtImageViewer extends ViewerElement {
   
   setBytes(buffer: Buffer, mimeType: string): void {
     this.mimeType = mimeType;
-    if (domutils.getShadowRoot(this) === null) {
+    if (DomUtils.getShadowRoot(this) === null) {
       this._buffer = buffer;
     } else {
       this._setImage(buffer, mimeType);
@@ -217,7 +217,7 @@ class EtImageViewer extends ViewerElement {
         }
         this._adjustHeight(setterState.height);
         
-        const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+        const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
         if (containerDiv !== null) {
           containerDiv.scrollTop = setterState.yOffset;
         }
@@ -306,7 +306,7 @@ class EtImageViewer extends ViewerElement {
   attachedCallback(): void {
     super.attachedCallback();
     
-    if (domutils.getShadowRoot(this) !== null) {
+    if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }
     
@@ -315,16 +315,16 @@ class EtImageViewer extends ViewerElement {
     shadow.appendChild(clone);
     this.updateThemeCss();
     
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     this.style.height = "0px";
     
     containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
     containerDiv.addEventListener('focus', (ev) => {
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       this._cursorTop = containerDiv.scrollTop;
     } );
     
-    const imgElement = <HTMLImageElement> domutils.getShadowId(this, ID_IMAGE);
+    const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
     imgElement.addEventListener('load', this._handleImageLoad.bind(this));
     this._applyVisualState(this._visualState);
 
@@ -376,7 +376,7 @@ class EtImageViewer extends ViewerElement {
     const generator = function* generator(this: EtImageViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
       // --- DOM Write ---
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (domutils.getShadowRoot(this) !== null) {
+      if (DomUtils.getShadowRoot(this) !== null) {
         this._applyVisualState(newVisualState);
       }    
       this._visualState = newVisualState;
@@ -388,7 +388,7 @@ class EtImageViewer extends ViewerElement {
   }
   
   private _applyVisualState(visualState: VisualState): void {
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
     containerDiv.classList.remove(CLASS_FORCE_FOCUSED);
     containerDiv.classList.remove(CLASS_FORCE_UNFOCUSED);
@@ -422,16 +422,16 @@ class EtImageViewer extends ViewerElement {
   }
   
   private _setImage(buffer: Buffer, mimeType: string): void {
-    const dataUrl = domutils.CreateDataUrl(buffer, mimeType);
-    const imageEl = domutils.getShadowId(this, ID_IMAGE);
+    const dataUrl = DomUtils.CreateDataUrl(buffer, mimeType);
+    const imageEl = DomUtils.getShadowId(this, ID_IMAGE);
     imageEl.setAttribute("src", dataUrl);
   }
   private _handleImageLoad(): void {
-    const imgElement = <HTMLImageElement> domutils.getShadowId(this, ID_IMAGE);
+    const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
     this._imageWidth = imgElement.width;
     this._imageHeight = imgElement.height;
     
-    const cursorDiv = domutils.getShadowId(this, ID_CURSOR);
+    const cursorDiv = DomUtils.getShadowId(this, ID_CURSOR);
     cursorDiv.style.height = "" + imgElement.height + "px";
     
     this._emitVirtualResizeEvent()
@@ -451,7 +451,7 @@ class EtImageViewer extends ViewerElement {
   
   public dispatchEvent(ev: Event): boolean {
     if (ev.type === 'keydown' || ev.type === 'keypress') {
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       return containerDiv.dispatchEvent(ev);
     } else {
       return super.dispatchEvent(ev);
@@ -467,7 +467,7 @@ class EtImageViewer extends ViewerElement {
         
         const command = keyBindings.mapEventToCommand(ev);
         if (command !== null) {
-          const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+          const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
           ev.preventDefault();
           ev.stopPropagation();
           
@@ -489,7 +489,7 @@ class EtImageViewer extends ViewerElement {
             
             case COMMAND_GO_DOWN:
               // Cursor down          
-              const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+              const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
               if (this._cursorTop + this._height < this._imageHeight) {
                 const newTop = Math.min(this._imageHeight - this._height, this._cursorTop + SCROLL_STEP);
                 this._cursorTop = newTop;
@@ -520,13 +520,13 @@ class EtImageViewer extends ViewerElement {
 
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
-    if (this.parentNode === null || domutils.getShadowRoot(this) === null) {
+    if (this.parentNode === null || DomUtils.getShadowRoot(this) === null) {
       return;
     }
     if (newHeight !== this._currentElementHeight) {
       this._currentElementHeight = newHeight;
       this.style.height = "" + newHeight + "px";
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + newHeight + "px";
     }
   }

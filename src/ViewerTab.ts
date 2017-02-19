@@ -12,7 +12,7 @@ import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import EtEmbeddedViewer from './EmbeddedViewer';
 import Logger from './Logger';
 import log from './LogDecorator';
-import domutils = require('./domutils');
+import * as DomUtils from './DomUtils';
 import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
 import ResizeCanary from './ResizeCanary';
@@ -107,10 +107,10 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
 
   private _mainStyleLoaded: boolean;
   private _themeStyleLoaded: boolean;
-  private _resizePollHandle: domutils.LaterHandle;
+  private _resizePollHandle: DomUtils.LaterHandle;
   private _elementAttached: boolean;
   
-  private _scheduleLaterHandle: domutils.LaterHandle;
+  private _scheduleLaterHandle: DomUtils.LaterHandle;
   private _scheduledResize: boolean;
 
   private _fontSizeAdjustment: number;
@@ -198,7 +198,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
    * @return true if the terminal has the focus.
    */
   hasFocus(): boolean {
-    const shadowRoot = domutils.getShadowRoot(this);
+    const shadowRoot = DomUtils.getShadowRoot(this);
     if (shadowRoot === null) {
       return false;
     }
@@ -307,8 +307,8 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
     this.addEventListener('focus', this._handleFocus.bind(this));
     this.addEventListener('blur', this._handleBlur.bind(this));
 
-    const scrollbar = <CbScrollbar> domutils.getShadowId(this, ID_SCROLLBAR);
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const scrollbar = <CbScrollbar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
       scrollerArea.scrollTop = offset;
@@ -334,7 +334,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
 
         // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
     resizeCanary.setCss(`
         font-family: var(--terminal-font);
@@ -350,7 +350,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
 
     this.updateThemeCss();
 
-    domutils.doLater(this._processResize.bind(this));
+    DomUtils.doLater(this._processResize.bind(this));
   }
 
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
@@ -421,8 +421,8 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
   
   private _handleFocus(event: FocusEvent): void {
     // Forcefully set the visual state of each thing in the terminal to appear focused.
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+    DomUtils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
         node.setVisualState(VisualState.FOCUSED);
       }
@@ -431,8 +431,8 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
   
   private _handleBlur(event: FocusEvent): void {
     // Forcefully set the visual state of each thing in the terminal to appear unfocused.
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    domutils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+    DomUtils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
       if (ViewerElement.isViewerElement(node)) {
         node.setVisualState(VisualState.UNFOCUSED);
       }
@@ -440,7 +440,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
   }
   
   private _getViewerElement(): ViewerElement {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);    
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);    
     if (scrollerArea.firstElementChild !== null && scrollerArea.firstElementChild instanceof ViewerElement) {
       return <ViewerElement> scrollerArea.firstElementChild;
     } else {
@@ -449,7 +449,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
   }
   
   private _appendScrollableElement(el: ScrollableElement): void {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(el);
     this._virtualScrollArea.appendScrollable(el);
   }
@@ -493,7 +493,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
    * Handle a resize event from the window.
    */
   private _processResize(): void {
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     this._virtualScrollArea.updateContainerHeight(scrollerArea.getBoundingClientRect().height);
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
@@ -517,7 +517,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
     if (newAdjustment !== this._fontSizeAdjustment) {
       this._fontSizeAdjustment = newAdjustment;
 
-      const styleElement = <HTMLStyleElement> domutils.getShadowId(this, ID_CSS_VARS);
+      const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
       if (styleElement != null) {
         (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(newAdjustment);  // Type stubs are missing cssRules.
         this._armResizeCanary = true;
@@ -635,8 +635,8 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
    */
   copyToClipboard(): void {
     let text: string = null;
-    const scrollerArea = domutils.getShadowId(this, ID_SCROLL_AREA);
-    const kids = domutils.nodeListToArray(scrollerArea.childNodes);
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+    const kids = DomUtils.nodeListToArray(scrollerArea.childNodes);
     for (let i=0; i<kids.length; i++) {
       const node = kids[i];
       if (ViewerElement.isViewerElement(node)) {
@@ -666,7 +666,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
       return null;
     }
     
-    const scrollArea = domutils.getShadowId(this, ID_SCROLL_AREA);
+    const scrollArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     const matches = scrollArea.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
     return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
   }

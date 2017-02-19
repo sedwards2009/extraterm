@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import util = require("./util");
 import Logger from '../Logger';
 

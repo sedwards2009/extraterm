@@ -8,7 +8,7 @@ import _ = require('lodash');
 import * as ResourceLoader from './ResourceLoader';
 import menuitem = require('./gui/menuitem');
 import checkboxmenuitem = require('./gui/checkboxmenuitem');
-import domutils = require('./domutils');
+import * as DomUtils from './DomUtils';
 import util = require('./gui/util');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
@@ -505,7 +505,7 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
   attachedCallback(): void {
     super.attachedCallback();
     
-    if (domutils.getShadowRoot(this) !== null) {
+    if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }
 
@@ -525,7 +525,7 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
 
     this._getById(ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
     this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
-    const headerDiv = domutils.getShadowId(this, ID_HEADER);
+    const headerDiv = DomUtils.getShadowId(this, ID_HEADER);
     headerDiv.addEventListener('focus', this.focus.bind(this));
     
     const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);    
@@ -534,7 +534,7 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
     outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
     
     const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
-    domutils.preventScroll(outputContainerDiv);
+    DomUtils.preventScroll(outputContainerDiv);
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
       outputDiv.style.top = "-" + offset +"px";
     });
@@ -547,9 +547,9 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
     //   this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, "" + !expanded);
     // });
 
-    domutils.addCustomEventResender(this, ViewerElement.EVENT_BEFORE_SELECTION_CHANGE);
-    domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
-    domutils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
+    DomUtils.addCustomEventResender(this, ViewerElement.EVENT_BEFORE_SELECTION_CHANGE);
+    DomUtils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
+    DomUtils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
 
     // Right mouse button click opens up the command palette.
     this._getById(ID_CONTAINER).addEventListener('contextmenu', (ev: MouseEvent): void => {
@@ -662,14 +662,14 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
    * 
    */
   private _getById(id: string): Element {
-    return domutils.getShadowRoot(this).querySelector('#'+id);
+    return DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
 
   /**
    * Process an attribute value change.
    */
   private _setAttr(attrName: string, newValue: string): void {
-    if (domutils.getShadowRoot(this) === null) {
+    if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
 
@@ -749,8 +749,8 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
       return { top: this._headerTop, bottom: this._headerBottom };
     }
 
-    const top = rect.height + domutils.pixelLengthToInt(outputStyle.borderTopWidth);
-    const bottom = domutils.pixelLengthToInt(outputStyle.borderBottomWidth);
+    const top = rect.height + DomUtils.pixelLengthToInt(outputStyle.borderTopWidth);
+    const bottom = DomUtils.pixelLengthToInt(outputStyle.borderBottomWidth);
 
     this._headerTop = top;
     this._headerBottom = bottom;

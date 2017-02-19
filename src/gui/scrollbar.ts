@@ -5,7 +5,7 @@
  */
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import util = require('./util');
 import BulkDOMOperation = require('../BulkDOMOperation');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
@@ -86,7 +86,7 @@ class CbScrollbar extends ThemeableElementBase {
   attachedCallback(): void {
     super.attachedCallback();
 
-    if (domutils.getShadowRoot(this) === null) {
+    if (DomUtils.getShadowRoot(this) === null) {
       // Set up the structure in the shadow DOM.
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const clone = this._createClone();
@@ -157,7 +157,7 @@ class CbScrollbar extends ThemeableElementBase {
   }
 
   private _getById(id: string): HTMLElement {
-    return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
+    return <HTMLElement>DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
 
   // --- Length attribute ---

@@ -6,7 +6,7 @@
 
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 
 const ID = "CbPopDownDialogTemplate";
 const ID_COVER = "ID_COVER";
@@ -57,7 +57,7 @@ class PopDownDialog extends ThemeableElementBase {
 
   private _titleSecondary: string;
 
-  private _laterHandle: domutils.LaterHandle;
+  private _laterHandle: DomUtils.LaterHandle;
   
   private _initProperties(): void {
     this._laterHandle = null;
@@ -104,12 +104,12 @@ class PopDownDialog extends ThemeableElementBase {
     shadow.appendChild(clone);
     this.updateThemeCss();
 
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.addEventListener('contextmenu', (ev) => {
       this.dispatchEvent(new CustomEvent(PopDownDialog.EVENT_CLOSE_REQUEST, {bubbles: false}));
     }); 
 
-    const coverDiv = domutils.getShadowId(this, ID_COVER);
+    const coverDiv = DomUtils.getShadowId(this, ID_COVER);
     coverDiv.addEventListener('mousedown', (ev) => {
       this.dispatchEvent(new CustomEvent(PopDownDialog.EVENT_CLOSE_REQUEST, {bubbles: false}));
     });
@@ -144,8 +144,8 @@ class PopDownDialog extends ThemeableElementBase {
   //-----------------------------------------------------------------------
 
   private _updateTitle(): void {
-    const titlePrimaryDiv = <HTMLDivElement> domutils.getShadowId(this, ID_TITLE_PRIMARY);
-    const titleSecondaryDiv = <HTMLDivElement> domutils.getShadowId(this, ID_TITLE_SECONDARY);
+    const titlePrimaryDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_TITLE_PRIMARY);
+    const titleSecondaryDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_TITLE_SECONDARY);
 
     titlePrimaryDiv.innerText = this._titlePrimary;
     titleSecondaryDiv.innerText = this._titleSecondary;
@@ -158,7 +158,7 @@ class PopDownDialog extends ThemeableElementBase {
     // Nuke any style like 'display: none' which can be use to prevent flicker.
     this.setAttribute('style', '');
     
-    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTEXT_COVER);
+    const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTEXT_COVER);
     container.classList.remove(CLASS_CONTEXT_COVER_CLOSED);
     container.classList.add(CLASS_CONTEXT_COVER_OPEN);
   
@@ -167,7 +167,7 @@ class PopDownDialog extends ThemeableElementBase {
     container.style.width = `${width}px`;
     container.style.height = `${height}px`;
   
-    const cover = <HTMLDivElement> domutils.getShadowId(this, ID_COVER);
+    const cover = <HTMLDivElement> DomUtils.getShadowId(this, ID_COVER);
     cover.classList.remove(CLASS_COVER_CLOSED);
     cover.classList.add(CLASS_COVER_OPEN);
   }
@@ -176,11 +176,11 @@ class PopDownDialog extends ThemeableElementBase {
    * 
    */
   close(): void {
-    const cover = <HTMLDivElement> domutils.getShadowId(this, ID_COVER);
+    const cover = <HTMLDivElement> DomUtils.getShadowId(this, ID_COVER);
     cover.classList.remove(CLASS_COVER_OPEN);
     cover.classList.add(CLASS_COVER_CLOSED);
   
-    const container = <HTMLDivElement> domutils.getShadowId(this, ID_CONTEXT_COVER);
+    const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTEXT_COVER);
     container.classList.remove(CLASS_CONTEXT_COVER_OPEN);
     container.classList.add(CLASS_CONTEXT_COVER_CLOSED);
   }

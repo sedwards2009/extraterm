@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import ThemeableElementBase = require('../themeableelementbase');
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import util = require('./util');
 import * as ThemeTypes from '../Theme';
 
@@ -67,7 +67,7 @@ class CbMenuItem extends ThemeableElementBase {
    */
   attachedCallback(): void {
     super.attachedCallback();
-    if (domutils.getShadowRoot(this) !== null) {
+    if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }
     
@@ -133,7 +133,7 @@ class CbMenuItem extends ThemeableElementBase {
   _clicked(): void {}
   
   private updateKeyboardSelected(value: string): void {
-    const shadow = domutils.getShadowRoot(this);
+    const shadow = DomUtils.getShadowRoot(this);
     const container = <HTMLDivElement>shadow.querySelector("#" +ID_CONTAINER);
     const on = value === "true";
     if (on) {

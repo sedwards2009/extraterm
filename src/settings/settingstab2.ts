@@ -9,7 +9,7 @@
 import _ = require('lodash');
 import ThemeableElementBase = require('../themeableelementbase');
 import ViewerElement  = require('../viewerelement');
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import Vue = require('vue');
 import config = require('../config');
 type Config = config.Config;

@@ -11,7 +11,7 @@ import * as SourceDir from '../SourceDir';
 import ViewerElement = require("../viewerelement");
 import ThemeableElementBase = require('../themeableelementbase');
 import util = require("../gui/util");
-import domutils = require("../domutils");
+import * as DomUtils from '../DomUtils';
 import * as ThemeTypes from '../Theme';
 import * as keybindingmanager from '../KeyBindingManager';
 import BulkDOMOperation = require('../BulkDOMOperation');
@@ -133,7 +133,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   private _visualState: VisualState;
 
   private _mainStyleLoaded: boolean;
-  private _resizePollHandle: domutils.LaterHandle;
+  private _resizePollHandle: DomUtils.LaterHandle;
 
   private _lastCursorAnchorPosition: CodeMirror.Position;
   private _lastCursorHeadPosition: CodeMirror.Position;
@@ -219,7 +219,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
 
   hasFocus(): boolean {
-    const hasFocus = this._codeMirror.getInputField() === domutils.getShadowRoot(this).activeElement;
+    const hasFocus = this._codeMirror.getInputField() === DomUtils.getShadowRoot(this).activeElement;
     return hasFocus;
   }
   
@@ -473,7 +473,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   attachedCallback(): void {
     super.attachedCallback();
 
-    if (domutils.getShadowRoot(this) !== null) {
+    if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }
     
@@ -484,7 +484,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this._initFontLoading();
     this.installThemeCss();
 
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
     this.style.height = "0px";
     this._exitCursorMode();
@@ -535,7 +535,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     
     this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
       if (this._visualState === VisualState.AUTO) {
-        const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+        const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
         containerDiv.classList.add(CLASS_FOCUSED);
         containerDiv.classList.remove(CLASS_UNFOCUSED);
       }
@@ -577,7 +577,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
 
           // The last action didn't move the cursor.
           const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
-          domutils.doLater( () => {
+          DomUtils.doLater( () => {
             const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
                                                                     ? ViewerElementTypes.Edge.TOP
                                                                     : ViewerElementTypes.Edge.BOTTOM,
@@ -597,7 +597,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       const height = to - from;
       if (height !== this._viewportHeight) {
         this._viewportHeight = height;
-        domutils.doLater(this._emitVirtualResizeEvent.bind(this));
+        DomUtils.doLater(this._emitVirtualResizeEvent.bind(this));
       }
     });
     
@@ -616,7 +616,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
 
     if (this._text !== null) {
       this._codeMirror.getDoc().setValue(this._text);
-      domutils.doLater(this._emitVirtualResizeEvent.bind(this));
+      DomUtils.doLater(this._emitVirtualResizeEvent.bind(this));
       this._text = null;
     }
 
@@ -707,7 +707,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
 
     const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (domutils.getShadowRoot(this) !== null) {
+      if (DomUtils.getShadowRoot(this) !== null) {
         this._applyVisualState(newVisualState);
       }    
       this._visualState = newVisualState;
@@ -718,7 +718,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
   
   private _applyVisualState(visualState: VisualState): void {
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     if ((visualState === VisualState.AUTO && this.hasFocus()) ||
         visualState === VisualState.FOCUSED) {
 
@@ -731,7 +731,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
   
   private _enterCursorMode(): void {
-    const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
     
     const doc = this._codeMirror.getDoc();
@@ -749,7 +749,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       this._codeMirror.setOption("readOnly", true);
     }
 
-    const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
   }
   
@@ -790,7 +790,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       yCoord = optionsOrX.top;
     }
 
-    if (domutils.getShadowRoot(this) === null) {
+    if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
     this._codeMirror.scrollTo(xCoord, yCoord);
@@ -828,7 +828,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     
   public dispatchEvent(ev: Event): boolean {
     if (ev.type === 'keydown' || ev.type === 'keypress') {
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       return containerDiv.dispatchEvent(ev);
     } else {
       return super.dispatchEvent(ev);
@@ -836,8 +836,8 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
   
   private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
-    domutils.doLater( () => {
-      const fakeKeyDownEvent = domutils.newKeyboardEvent('keydown', {
+    DomUtils.doLater( () => {
+      const fakeKeyDownEvent = DomUtils.newKeyboardEvent('keydown', {
         bubbles: true,
         key: ev.key,        
         code: ev.code,
@@ -1016,7 +1016,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   private _initFontLoading(): void {
     this._mainStyleLoaded = false;
     
-    domutils.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
+    DomUtils.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
       this._mainStyleLoaded = true;
       this._handleStyleLoad();
     });
@@ -1032,12 +1032,12 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   private _handleStyleLoad(): void {
     if (this._mainStyleLoaded) {
       // Start polling the term for application of the font.
-      this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
+      this._resizePollHandle = DomUtils.doLaterFrame(this._resizePoll.bind(this));
     }
   }
   
   private _effectiveFontFamily(): string {
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     const cs = window.getComputedStyle(containerDiv, null);
     return cs.getPropertyValue("font-family");
   }
@@ -1046,7 +1046,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     if (this._mainStyleLoaded) {
       if ( ! this.isFontLoaded()) {
         // Font has not been correctly applied yet.
-        this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
+        this._resizePollHandle = DomUtils.doLaterFrame(this._resizePoll.bind(this));
       } else {
         // Yay! the font is correct. Resize the term soon.
 // FIXME do we need to do anything here?
@@ -1055,7 +1055,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
   
   private getVirtualTextHeight(): number {
-    if (domutils.getShadowRoot(this) === null) {
+    if (DomUtils.getShadowRoot(this) === null) {
       return 8;
     }
     return this._isEmpty ? 0 : this._codeMirror.defaultTextHeight() * this.lineCount();
@@ -1067,7 +1067,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
 
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
-    if (this.parentNode === null || domutils.getShadowRoot(this) === null) {
+    if (this.parentNode === null || DomUtils.getShadowRoot(this) === null) {
       return;
     }
     const elementHeight = this.getHeight();
@@ -1079,7 +1079,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       let codeMirrorHeight;
       codeMirrorHeight = elementHeight;        
 
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + codeMirrorHeight + "px";
       this._codeMirror.setSize("100%", "" + codeMirrorHeight + "px");
     }

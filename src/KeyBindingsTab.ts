@@ -17,7 +17,7 @@ import ViewerElementTypes = require('./viewerelementtypes');
 import BulkDOMOperation = require('./BulkDOMOperation');
 
 import Vue = require('vue');
-import domutils = require('./domutils');
+import * as DomUtils from './DomUtils';
 import config = require('./config');
 type Config = config.Config;
 type ConfigManager = config.ConfigManager;

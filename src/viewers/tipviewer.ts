@@ -22,7 +22,7 @@ import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
 import util = require("../gui/util");
-import domutils = require("../domutils");
+import * as DomUtils from '../DomUtils';
 import ViewerElementTypes = require('../viewerelementtypes');
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
@@ -174,15 +174,15 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
 
   focus(): void {
-    if (domutils.getShadowRoot(this) === null) {
+    if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
-    domutils.focusWithoutScroll(containerDiv);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    DomUtils.focusWithoutScroll(containerDiv);
   }
 
   hasFocus(): boolean {
-    const hasFocus = this === domutils.getShadowRoot(this).activeElement; // FIXME
+    const hasFocus = this === DomUtils.getShadowRoot(this).activeElement; // FIXME
     return hasFocus;
   }
 
@@ -247,7 +247,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     
     this._tipIndex = this._configManager.getConfig().tipCounter % this._getTipCount();
     
-    if (domutils.getShadowRoot(this) !== null) {
+    if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }
     
@@ -256,7 +256,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     shadow.appendChild(clone);
     this.updateThemeCss();
     
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     
     // Intercept link clicks and open them in an external browser.
     containerDiv.addEventListener('click', (ev: MouseEvent) => {
@@ -269,19 +269,19 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     
     this._setTipHTML(this._getTipHTML(this._tipIndex));
     
-    const nextButton = domutils.getShadowId(this, ID_NEXT_BUTTON);
+    const nextButton = DomUtils.getShadowId(this, ID_NEXT_BUTTON);
     nextButton.addEventListener('click', () => {
       this._tipIndex = (this._tipIndex + 1) % this._getTipCount();
       this._setTipHTML(this._getTipHTML(this._tipIndex));
     });
     
-    const previousButton = domutils.getShadowId(this, ID_PREVIOUS_BUTTON);
+    const previousButton = DomUtils.getShadowId(this, ID_PREVIOUS_BUTTON);
     previousButton.addEventListener('click', () => {
       this._tipIndex = (this._tipIndex + this._getTipCount() - 1) % this._getTipCount();
       this._setTipHTML(this._getTipHTML(this._tipIndex));
     });
     
-    const showTipsSelect = <HTMLSelectElement> domutils.getShadowId(this, ID_SHOW_TIPS);
+    const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
     showTipsSelect.value = this._configManager.getConfig().showTips;
     showTipsSelect.addEventListener('change', () => {
       const newConfig = _.cloneDeep(this._configManager.getConfig());
@@ -354,7 +354,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
   
   private _configChanged(): void {
-    const showTipsSelect = <HTMLSelectElement> domutils.getShadowId(this, ID_SHOW_TIPS);
+    const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
     showTipsSelect.value = this._configManager.getConfig().showTips;  
   }
 
@@ -363,7 +363,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
 
   private _setTipHTML(html: string): void {
-    const contentDiv = domutils.getShadowId(this, ID_CONTENT);
+    const contentDiv = DomUtils.getShadowId(this, ID_CONTENT);
     contentDiv.innerHTML = html;
 
     this._substituteKeycaps(contentDiv);
@@ -375,7 +375,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   private _substituteKeycaps(contentDiv: HTMLElement): void {
     // Replace the kbd elements with the requested keyboard short cuts.
     const kbdElements = contentDiv.querySelectorAll("span."+CLASS_KEYCAP);
-    domutils.toArray(kbdElements).forEach( (kbd) => {
+    DomUtils.toArray(kbdElements).forEach( (kbd) => {
       const dataContext = kbd.getAttribute("data-context");
       const dataCommand = kbd.getAttribute("data-command");
       if (dataContext !== null && dataCommand !== null) {
@@ -395,7 +395,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   private _fixImgRelativeUrls(contentDiv: HTMLElement): void {
     const imgElements = contentDiv.querySelectorAll("img");
     const prefix = "file:///" + SourceDir.path + "/tips/";
-    domutils.toArray(imgElements).forEach( (element) => {
+    DomUtils.toArray(imgElements).forEach( (element) => {
       const img = <HTMLImageElement> element;
       img.src = prefix + img.getAttribute("src");
     });
@@ -403,7 +403,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
 
   private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
 
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     if (containerDiv !== null) {
 
       const generator = function* generator(this: EtTipViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
@@ -436,7 +436,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
-    if (this.parentNode === null || domutils.getShadowRoot(this) === null) {
+    if (this.parentNode === null || DomUtils.getShadowRoot(this) === null) {
       return;
     }
     this.style.height = "" + newHeight + "px";

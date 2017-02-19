@@ -5,7 +5,7 @@
  */
 
 import * as ThemeTypes from './Theme';
-import domutils = require('./domutils');
+import * as DomUtils from './DomUtils';
 import * as ThemeConsumer from './ThemeConsumer';
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 
@@ -20,11 +20,11 @@ class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefreshElement
    * See `ThemeTypes.Themeable.setThemeCssMap()`
    */
   setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
-    if (domutils.getShadowRoot(this) === null) {
+    if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
     
-    const themeElement = (<HTMLStyleElement> domutils.getShadowId(this, ThemeableElementBase.ID_THEME));
+    const themeElement = (<HTMLStyleElement> DomUtils.getShadowId(this, ThemeableElementBase.ID_THEME));
     if (themeElement === null) {
       return;
     }

@@ -8,7 +8,7 @@ import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import BulkDOMOperation = require('../BulkDOMOperation');
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import util = require('./util');
 
 const ID = "CbStackedWidgetTemplate";
@@ -71,7 +71,7 @@ class CbStackedWidget extends ThemeableElementBase {
   attachedCallback(): void {
     super.attachedCallback();
 
-    if (domutils.getShadowRoot(this) !== null) {
+    if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }
 
@@ -104,7 +104,7 @@ class CbStackedWidget extends ThemeableElementBase {
    * 
    */
   private __getById(id:string): Element {
-    return domutils.getShadowRoot(this).querySelector('#'+id);
+    return DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

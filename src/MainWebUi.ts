@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import domutils = require('./domutils');
+import * as DomUtils from './DomUtils';
 import util = require('./gui/util');
 import ThemeableElementBase = require('./themeableelementbase');
 import TabWidget = require('./gui/tabwidget');
@@ -609,7 +609,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
       tabContainerRight.appendChild(restDivSecondary);
 
       // Move the terminal tabs from the right tab container to the left one.
-      const nodesToMove = domutils.nodeListToArray(tabContainerRight.childNodes)
+      const nodesToMove = DomUtils.nodeListToArray(tabContainerRight.childNodes)
         .filter( node => ! (node.nodeName === "DIV" && ( (<HTMLDivElement>node).id === ID_REST_DIV_PRIMARY ||
           (<HTMLDivElement>node).id === ID_REST_DIV_SECONDARY ||
           (<HTMLDivElement>node).id === ID_LEFT_REST_DIV_SECONDARY)));
@@ -682,7 +682,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     tabWidget.insertBefore(contentDiv, restDiv);
     tabWidget.update();
     
-    const closeTabButton = domutils.getShadowRoot(this).getElementById("close_tag_id_" + newId);
+    const closeTabButton = DomUtils.getShadowRoot(this).getElementById("close_tag_id_" + newId);
     closeTabButton.addEventListener('click', (ev: MouseEvent): void => {
       this.closeTab(tabInfo.id);
     });
@@ -1179,6 +1179,6 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
   }
   
   private _getById(id: string): HTMLElement {
-    return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
+    return <HTMLElement>DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
 }

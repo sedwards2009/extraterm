@@ -10,7 +10,7 @@ import path = require('path');
 import ViewerElement = require("../viewerelement");
 import ThemeableElementBase = require('../themeableelementbase');
 import util = require("../gui/util");
-import domutils = require("../domutils");
+import * as DomUtils from '../DomUtils';
 import CodeMirror = require('codemirror');
 import CodeMirrorCommands = require('../codemirrorcommands');
 import ViewerElementTypes = require('../viewerelementtypes');
@@ -123,7 +123,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _visualState: VisualState;
 
   private _mainStyleLoaded: boolean;
-  private _resizePollHandle: domutils.LaterHandle;
+  private _resizePollHandle: DomUtils.LaterHandle;
   private _needEmulatorResize: boolean;
   
   private _operationRunning: boolean; // True if we are currently running an operation with the operation() method.
@@ -262,7 +262,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
 
   hasFocus(): boolean {
-    const hasFocus = this._codeMirror.getInputField() === domutils.getShadowRoot(this).activeElement;
+    const hasFocus = this._codeMirror.getInputField() === DomUtils.getShadowRoot(this).activeElement;
     return hasFocus;
   }
 
@@ -641,7 +641,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   attachedCallback(): void {
     super.attachedCallback();
     
-    if (domutils.getShadowRoot(this) === null) {
+    if (DomUtils.getShadowRoot(this) === null) {
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
       const clone = this.createClone();
       shadow.appendChild(clone);
@@ -649,7 +649,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       this._initFontLoading();
       this.installThemeCss();
 
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
       this.style.height = "0px";
       this._exitCursorMode();
@@ -700,7 +700,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         }
         
         if (this._visualState === VisualState.AUTO) {
-          const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+          const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
           containerDiv.classList.add(CLASS_FOCUSED);
           containerDiv.classList.remove(CLASS_UNFOCUSED);
         }
@@ -748,7 +748,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
             // The last action didn't move the cursor.
             const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
-            domutils.doLater( () => {
+            DomUtils.doLater( () => {
               const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
                                                                       ? ViewerElementTypes.Edge.TOP
                                                                       : ViewerElementTypes.Edge.BOTTOM,
@@ -768,7 +768,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         const height = to - from;
         if (height !== this._viewportHeight) {
           this._viewportHeight = height;
-          domutils.doLater( () => {
+          DomUtils.doLater( () => {
             VirtualScrollArea.emitResizeEvent(this);
           });
         }
@@ -883,7 +883,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   
     this._fontUnitWidth = charWidth;
     this._fontUnitHeight = charHeight;
-    const styleElement = <HTMLStyleElement> domutils.getShadowId(this, ID_CSS_VARS);
+    const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
     styleElement.textContent = this._getCssVarsRules();
   }
 
@@ -894,7 +894,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
     const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
       yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       if (containerDiv !== null) {
         if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
             newVisualState === VisualState.FOCUSED) {
@@ -915,7 +915,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
 
   private _enterCursorMode(): void {
-    const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
 
     const doc = this._codeMirror.getDoc();
@@ -938,7 +938,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       this._codeMirror.setOption("readOnly", true);
     }
 
-    const containerDiv = <HTMLDivElement> domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
   }
   
@@ -1090,7 +1090,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   
   public dispatchEvent(ev: Event): boolean {
     if (ev.type === 'keydown' || ev.type === 'keypress') {
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       return containerDiv.dispatchEvent(ev);
     } else {
       return super.dispatchEvent(ev);
@@ -1098,8 +1098,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
   
   private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
-    domutils.doLater( () => {
-      const fakeKeyDownEvent = domutils.newKeyboardEvent('keydown', {
+    DomUtils.doLater( () => {
+      const fakeKeyDownEvent = DomUtils.newKeyboardEvent('keydown', {
         bubbles: true,
         key: ev.key,        
         code: ev.code,
@@ -1291,7 +1291,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _initFontLoading(): void {
     this._mainStyleLoaded = false;
     
-    domutils.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
+    DomUtils.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
       this._mainStyleLoaded = true;
       this._handleStyleLoad();
     });
@@ -1307,12 +1307,12 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _handleStyleLoad(): void {
     if (this._mainStyleLoaded) {
       // Start polling the term for application of the font.
-      this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
+      this._resizePollHandle = DomUtils.doLaterFrame(this._resizePoll.bind(this));
     }
   }
   
   private _effectiveFontFamily(): string {
-    const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     const cs = window.getComputedStyle(containerDiv, null);
     return cs.getPropertyValue("font-family");
   }
@@ -1321,7 +1321,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     if (this._mainStyleLoaded) {  // FIXME this font loading stuff needs to be replaced with resize canary.
       if ( ! this.isFontLoaded()) {
         // Font has not been correctly applied yet.
-        this._resizePollHandle = domutils.doLaterFrame(this._resizePoll.bind(this));
+        this._resizePollHandle = DomUtils.doLaterFrame(this._resizePoll.bind(this));
       } else {
         // Yay! the font is correct. Resize the term soon.
         this._codeMirror.defaultTextHeight(); // tickle the DOM to maybe force CSS recalc.
@@ -1535,7 +1535,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         codeMirrorHeight = elementHeight;        
       }
 
-      const containerDiv = domutils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       containerDiv.style.height = "" + codeMirrorHeight + "px";
       this._codeMirror.setSize("100%", "" + codeMirrorHeight + "px");
     }

@@ -12,7 +12,7 @@ import * as ThemeTypes from './Theme';
 import ViewerElement  = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
-import domutils = require('./domutils');
+import * as DomUtils from './DomUtils';
 import BulkDOMOperation = require('./BulkDOMOperation');
 
 const ID_ABOUT = "ID_ABOUT";

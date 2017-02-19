@@ -6,7 +6,7 @@
 
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
-import domutils = require('../domutils');
+import * as DomUtils from '../DomUtils';
 import PopDownDialog = require('./PopDownDialog');
 
 const ID = "CbPopDownNumberDialogTemplate";
@@ -45,7 +45,7 @@ class PopDownNumberDialog extends ThemeableElementBase {
 
   private _titleSecondary: string;
 
-  private _laterHandle: domutils.LaterHandle;
+  private _laterHandle: DomUtils.LaterHandle;
 
   private _extraCssFiles: ThemeTypes.CssFile[];
 
@@ -57,28 +57,28 @@ class PopDownNumberDialog extends ThemeableElementBase {
   }
 
   getValue(): number {
-    const textInput = <HTMLInputElement> domutils.getShadowId(this, ID_INPUT);
+    const textInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_INPUT);
     return textInput.valueAsNumber;
   }
 
   setValue(value: number): void {
-    const textInput = <HTMLInputElement> domutils.getShadowId(this, ID_INPUT);
+    const textInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_INPUT);
     textInput.valueAsNumber = value;
   }
 
   setMinimum(min: number): void {
-    const textInput = <HTMLInputElement> domutils.getShadowId(this, ID_INPUT);
+    const textInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_INPUT);
     textInput.setAttribute("min", "" + min);
   }
 
   setMaximum(max: number): void {
-    const textInput = <HTMLInputElement> domutils.getShadowId(this, ID_INPUT);
+    const textInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_INPUT);
     textInput.setAttribute("max", "" + max);
   }
 
   setTitlePrimary(text: string): void {
     this._titlePrimary = text;
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     if (dialog != null) {
       dialog.setTitlePrimary(text);
     }
@@ -90,7 +90,7 @@ class PopDownNumberDialog extends ThemeableElementBase {
 
   setTitleSecondary(text: string): void {
     this._titleSecondary = text;
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     if (dialog != null) {
       dialog.setTitleSecondary(text);
     }
@@ -131,14 +131,14 @@ class PopDownNumberDialog extends ThemeableElementBase {
     shadow.appendChild(clone);
     this.updateThemeCss();
 
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     dialog.setTitlePrimary(this._titlePrimary);
     dialog.setTitleSecondary(this._titleSecondary);
     dialog.addEventListener(PopDownDialog.EVENT_CLOSE_REQUEST, () => {
       dialog.close();
     });
 
-    const textInput = <HTMLInputElement> domutils.getShadowId(this, ID_INPUT);
+    const textInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_INPUT);
     textInput.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
   }
   
@@ -183,7 +183,7 @@ class PopDownNumberDialog extends ThemeableElementBase {
       ev.preventDefault();
       ev.stopPropagation();
       
-      const filterInput = <HTMLInputElement> domutils.getShadowId(this, ID_INPUT);
+      const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_INPUT);
   
       if (ev.keyIdentifier === "Enter") {
         // Enter
@@ -196,10 +196,10 @@ class PopDownNumberDialog extends ThemeableElementBase {
    * 
    */
   open(x: number, y: number, width: number, height: number): void {
-    const textInput = <HTMLInputElement> domutils.getShadowId(this, ID_INPUT);
+    const textInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_INPUT);
     textInput.focus();
 
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     dialog.open(x, y, width, height);
   }
 
@@ -207,13 +207,13 @@ class PopDownNumberDialog extends ThemeableElementBase {
    * 
    */
   close(): void {
-    const dialog = <PopDownDialog> domutils.getShadowId(this, ID_DIALOG);
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     dialog.close();
   }
 
   private _okId(value: number): void {
     if (this._laterHandle === null) {
-      this._laterHandle = domutils.doLater( () => {
+      this._laterHandle = DomUtils.doLater( () => {
         this.close();
         this._laterHandle = null;
         const event = new CustomEvent("selected", { detail: {value: value } });
