@@ -53,7 +53,7 @@
         "./src/mainwebui.ts",
         "./src/markdown.js.d.ts",
         "./src/mimetypedetector.ts",
-        "./src/mimetypedetectortest.ts",
+        "./src/MimeTypeDetectorTest.ts",
         "./src/PluginApi.ts",
         "./src/PluginManager.ts",
         "./src/PtyConnector.ts",
