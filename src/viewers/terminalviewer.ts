@@ -20,7 +20,7 @@ import * as Term from '../Term';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import LogDecorator = require('../logdecorator');
-import sourceDir = require('../sourceDir');
+import * as SourceDir from '../SourceDir';
 import generalevents = require('../generalevents');
 import * as ThemeTypes from '../Theme';
 import keybindingmanager = require('../keybindingmanager');

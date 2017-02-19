@@ -9,7 +9,7 @@ import _  = require('lodash');
 import fs = require('fs');
 import path = require('path');
 import he = require('he');
-import sourceDir = require('../sourceDir');
+import * as SourceDir from '../SourceDir';
 
 import config = require('../config');
 type ConfigManager = config.ConfigManager;
@@ -60,7 +60,7 @@ let instanceIdCounter = 0;
  * @return the array of tip HTMLs.
  */
 function loadTipFile(): string[] {
-  const tipPath = path.join(sourceDir.path, "tips/tips.html");
+  const tipPath = path.join(SourceDir.path, "tips/tips.html");
   const tipHtml = fs.readFileSync(tipPath, {encoding: 'utf8'});
   
   const parts = tipHtml.split(/<article>([^]*?)<\/article>/m);
@@ -396,7 +396,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   
   private _fixImgRelativeUrls(contentDiv: HTMLElement): void {
     const imgElements = contentDiv.querySelectorAll("img");
-    const prefix = "file:///" + sourceDir.path + "/tips/";
+    const prefix = "file:///" + SourceDir.path + "/tips/";
     domutils.toArray(imgElements).forEach( (element) => {
       const img = <HTMLImageElement> element;
       img.src = prefix + img.getAttribute("src");

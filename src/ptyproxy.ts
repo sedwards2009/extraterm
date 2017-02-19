@@ -10,7 +10,7 @@ import configInterfaces = require('./config');
 import fs = require('fs');
 import path = require('path');
 import Logger from './Logger';
-import sourceDir = require('./sourceDir');
+import * as SourceDir from './SourceDir';
 
 type Config = configInterfaces.Config;
 
@@ -187,7 +187,7 @@ export function factory(config: Config): PtyConnector {
 
   const serverEnv = _.clone(process.env);
   serverEnv["PYTHONIOENCODING"] = "utf-8:ignore";
-  const proxy = child_process.spawn(pythonExe, [path.join(sourceDir.path,'python/ptyserver2.py')], {env: serverEnv});
+  const proxy = child_process.spawn(pythonExe, [path.join(SourceDir.path,'python/ptyserver2.py')], {env: serverEnv});
   let messageBuffer = "";
 
   proxy.stdout.on('data', function(data: Buffer) {

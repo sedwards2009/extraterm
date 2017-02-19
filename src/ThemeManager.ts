@@ -7,11 +7,11 @@
 import fs = require('fs');
 import path = require('path');
 
-import sourceDir = require('./sourceDir');
+import * as SourceDir from './SourceDir';
 const MODULE_VERSION = "50";  // This version number also appears in build_package.js
 if (process.versions.modules === MODULE_VERSION && process.platform !== "win32") {  // <- win32 with node v6.5 has a bug which breaks this trick.
   // Patch in our special node-sass binary for V8 module verion 50 as used by Electron.
-  process.env.SASS_BINARY_PATH = path.join(sourceDir.path,
+  process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
     `node-sass-binary/${process.platform}-${process.arch}-${MODULE_VERSION}/binding.node`);
 }
 import nodeSass = require('node-sass');

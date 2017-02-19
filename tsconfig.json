@@ -65,7 +65,7 @@
         "./src/ResizeRefreshElementBase.ts",
         "./src/resourceloader.ts",
         "./src/source-map-support.d.ts",
-        "./src/sourceDir.ts",
+        "./src/SourceDir.ts",
         "./src/SupportsClipboardPaste.ts",
         "./src/Term.ts",
         "./src/Terminal.ts",
