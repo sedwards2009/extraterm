@@ -44,7 +44,7 @@
         "./src/generalevents.ts",
         "./src/InternalExtratermApi.ts",
         "./src/keybindingmanager.ts",
-        "./src/keybindingmanagertest.ts",
+        "./src/KeyBindingManagerTest.ts",
         "./src/KeyBindingsTab.ts",
         "./src/LogDecorator.ts",
         "./src/Logger.ts",
