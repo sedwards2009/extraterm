@@ -9,4 +9,4 @@
  *
  * Note: This file isn't compiled from TS. It just is.
  */
-exports.factory = require(process.platform === "win32" ? "./PtyProxy" : "./ptydirect").factory;
+exports.factory = require(process.platform === "win32" ? "./PtyProxy" : "./PtyDirect").factory;
