@@ -38,8 +38,7 @@ type ConfigManager =config.ConfigManager;
 type SessionProfile = config.SessionProfile;
 
 import he = require('he');
-import FrameFinderType = require('./framefindertype');
-type FrameFinder = FrameFinderType.FrameFinder;
+import {FrameFinder} from './FrameFinderType';
 
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;

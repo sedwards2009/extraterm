@@ -40,7 +40,7 @@
         "./src/extra_lib.d.ts",
         "./src/font-manager.d.ts",
         "./src/fontinfo.d.ts",
-        "./src/framefindertype.ts",
+        "./src/FrameFinderType.ts",
         "./src/GeneralEvents.ts",
         "./src/InternalExtratermApi.ts",
         "./src/KeyBindingManager.ts",
