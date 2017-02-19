@@ -10,7 +10,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "run": "electron src/main.js --dev-tools",
+    "run": "electron src/Main.js --dev-tools",
     "build": "tsc",
     "buildicons": "node src/extra_icons/build.js",
     "test": "npm run build ; nodeunit src/virtualscrollareatest.js",

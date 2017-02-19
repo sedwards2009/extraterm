@@ -48,7 +48,7 @@
         "./src/keybindingstab.ts",
         "./src/logdecorator.ts",
         "./src/Logger.ts",
-        "./src/main.ts",
+        "./src/Main.ts",
         "./src/MainWeb.ts",
         "./src/MainWebUi.ts",
         "./src/markdown.js.d.ts",
