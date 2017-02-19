@@ -15,7 +15,7 @@ import LogDecorator = require('./logdecorator');
 import domutils = require('./domutils');
 import CbScrollbar = require('./gui/scrollbar');
 import util = require('./gui/util');
-import ResizeCanary = require('./resizecanary');
+import ResizeCanary from './ResizeCanary';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as ThemeTypes from './Theme';
 import keybindingmanager = require('./keybindingmanager');

@@ -13,7 +13,7 @@ const ID = "ExtratermResizeCanaryTemplate";
 const ID_SIZER = "ID_SIZER";
 const ID_CONTAINER = "ID_CONTAINER";
 
-class ResizeCanary extends HTMLElement {
+export default class ResizeCanary extends HTMLElement {
   
   static TAG_NAME = "et-resize-canary";
 
@@ -113,4 +113,3 @@ class ResizeCanary extends HTMLElement {
     return frag;
   }
 }
-export = ResizeCanary;

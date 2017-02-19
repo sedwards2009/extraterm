@@ -13,7 +13,7 @@ import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import BulkDOMOperation = require('./BulkDOMOperation');
-import ResizeCanary = require('./resizecanary');
+import ResizeCanary from './ResizeCanary';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as ThemeTypes from './Theme';
 import EtEmbeddedViewer = require('./embeddedviewer');

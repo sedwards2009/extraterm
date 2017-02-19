@@ -61,7 +61,7 @@
         "./src/ptyproxy.ts",
         "./src/qs.d.ts",
         "./src/requirejs.d.ts",
-        "./src/resizecanary.ts",
+        "./src/ResizeCanary.ts",
         "./src/ResizeRefreshElementBase.ts",
         "./src/ResourceLoader.ts",
         "./src/source-map-support.d.ts",

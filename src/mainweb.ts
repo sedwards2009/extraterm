@@ -37,7 +37,7 @@ import AboutTab = require('./abouttab');
 import SettingsTab = require('./settings/settingstab2');
 import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTextViewer = require('./viewers/textviewer');
-import ResizeCanary = require('./resizecanary');
+import ResizeCanary from './ResizeCanary';
 
 import config = require('./config');
 type Config = config.Config;
