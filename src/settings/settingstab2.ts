@@ -11,7 +11,7 @@ import ThemeableElementBase = require('../themeableelementbase');
 import ViewerElement  = require('../viewerelement');
 import * as DomUtils from '../DomUtils';
 import Vue = require('vue');
-import config = require('../config');
+import * as config from '../Config';
 type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 

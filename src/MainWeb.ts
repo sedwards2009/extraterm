@@ -39,7 +39,7 @@ import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTextViewer = require('./viewers/textviewer');
 import ResizeCanary from './ResizeCanary';
 
-import config = require('./config');
+import * as config from './Config';
 type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 type SessionProfile = config.SessionProfile;

@@ -32,7 +32,7 @@
         "./src/codemirroroperation.ts",
         "./src/commandpaletterequesttypes.ts",
         "./src/commandplaceholder.ts",
-        "./src/config.ts",
+        "./src/Config.ts",
         "./src/DomUtils.ts",
         "./src/element-resize-detector.d.ts",
         "./src/EmbeddedViewer.ts",

@@ -11,7 +11,7 @@ import path = require('path');
 import he = require('he');
 import * as SourceDir from '../SourceDir';
 
-import config = require('../config');
+import * as config from '../Config';
 type ConfigManager = config.ConfigManager;
 
 import * as keybindingmanager from '../KeyBindingManager';

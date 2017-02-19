@@ -18,7 +18,7 @@ import BulkDOMOperation = require('./BulkDOMOperation');
 
 import Vue = require('vue');
 import * as DomUtils from './DomUtils';
-import config = require('./config');
+import * as config from './Config';
 type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 

@@ -8,7 +8,7 @@
  * Message formats for the IPC between the main process and render processes.
  */
 
-import config = require('./config');
+import * as Config from './Config';
 import * as ThemeTypes from './Theme';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
@@ -78,7 +78,7 @@ export interface ConfigMessage extends Message {
   /**
    * The current configuration.
    */
-  config: config.Config;
+  config: Config.Config;
 }
 
 /**

@@ -49,7 +49,7 @@ import * as MmeTypeDetector from './MimeTypeDetector';
 import CodeMirrorOperation = require('./codemirroroperation');
 import SupportsClipboardPaste = require('./SupportsClipboardPaste');
 
-import config = require('./config');
+import * as config from './Config';
 type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 

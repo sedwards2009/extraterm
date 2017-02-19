@@ -8,7 +8,7 @@ import electron = require('electron');
 const ipc = electron.ipcRenderer;
 
 import * as Messages from './WindowMessages';
-import config = require('./config');
+import * as config from './Config';
 import Logger from './Logger';
 import * as ThemeTypes from './Theme';
 

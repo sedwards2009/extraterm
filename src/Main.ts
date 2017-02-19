@@ -47,7 +47,7 @@ type EnvironmentMap = PtyConnector.EnvironmentMap;
 const PtyConnectorFactory = require("./PtyConnectorFactory");
 
 // Interfaces.
-import config_ = require('./config');
+import * as config_ from './Config';
 type Config = config_.Config;
 type CommandLineAction = config_.CommandLineAction;
 type SessionProfile = config_.SessionProfile;

@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import viewerelementtypes = require('./viewerelementtypes');
-import configInterfaces = require('./config');
 
 export const EVENT_TYPE_TEXT = 'type-text';
 

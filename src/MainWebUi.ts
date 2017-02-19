@@ -32,7 +32,7 @@ import * as Messages from './WindowMessages';
 import path = require('path');
 import _ = require('lodash');
 
-import config = require('./config');
+import * as config from './Config';
 type Config = config.Config;
 type ConfigManager =config.ConfigManager;
 type SessionProfile = config.SessionProfile;
