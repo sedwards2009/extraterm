@@ -12,7 +12,7 @@ import EtSettingsTab = require('./settings/settingstab2');
 import EtAboutTab = require('./abouttab');
 import EtKeyBindingsTab from './KeyBindingsTab';
 import EtViewerTab from './ViewerTab';
-import EtEmbeddedViewer = require('./embeddedviewer');
+import EtEmbeddedViewer from './EmbeddedViewer';
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');

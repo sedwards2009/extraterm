@@ -9,7 +9,7 @@ import fs  = require('fs');
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
-import EtEmbeddedViewer = require('./embeddedviewer');
+import EtEmbeddedViewer from './EmbeddedViewer';
 import Logger from './Logger';
 import log from './LogDecorator';
 import domutils = require('./domutils');

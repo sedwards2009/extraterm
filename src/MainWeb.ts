@@ -32,7 +32,7 @@ import EtTerminal from './Terminal';
 import domutils = require('./domutils');
 import util = require('./gui/util');
 
-import EtEmbeddedViewer = require('./embeddedviewer');
+import EtEmbeddedViewer from './EmbeddedViewer';
 import AboutTab = require('./abouttab');
 import SettingsTab = require('./settings/settingstab2');
 import EtTerminalViewer = require('./viewers/terminalviewer');

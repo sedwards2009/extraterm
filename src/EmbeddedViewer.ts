@@ -65,7 +65,7 @@ const DEBUG_SIZE = false;
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
-class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export default class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     SupportsClipboardPaste.SupportsClipboardPaste {
   
   /**
@@ -853,5 +853,3 @@ class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTyp
     (<VirtualScrollArea.ResizeEventDetail>ev.detail).addOperation(operation);
   }
 }
-
-export = EtEmbeddedViewer;
