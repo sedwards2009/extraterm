@@ -298,7 +298,7 @@ let themeCss = "";
  * Top level UI component for a normal terminal window
  *
  */
-class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
+export default class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
     config.AcceptsConfigManager {
   
   //-----------------------------------------------------------------------
@@ -1183,5 +1183,3 @@ class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanag
     return <HTMLElement>domutils.getShadowRoot(this).querySelector('#'+id);
   }
 }
-
-export = ExtratermMainWebUI;
