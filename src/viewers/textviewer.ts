@@ -13,7 +13,7 @@ import ThemeableElementBase = require('../themeableelementbase');
 import util = require("../gui/util");
 import domutils = require("../domutils");
 import * as ThemeTypes from '../Theme';
-import keybindingmanager = require('../keybindingmanager');
+import * as keybindingmanager from '../KeyBindingManager';
 import BulkDOMOperation = require('../BulkDOMOperation');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 

@@ -13,7 +13,7 @@ import util = require('./gui/util');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
-import KeyBindingManager = require('./keybindingmanager');
+import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ThemeTypes from './Theme';
 import generalevents = require('./generalevents');

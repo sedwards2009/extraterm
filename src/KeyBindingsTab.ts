@@ -11,7 +11,7 @@ import _ = require('lodash');
 import * as ThemeTypes from './Theme';
 import ViewerElement  = require('./viewerelement');
 import ThemeableElementBase = require('./themeableelementbase');
-import keybindingmanager = require('./keybindingmanager');
+import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import ViewerElementTypes = require('./viewerelementtypes');
 import BulkDOMOperation = require('./BulkDOMOperation');

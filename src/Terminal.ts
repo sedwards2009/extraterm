@@ -24,7 +24,7 @@ import EtTextViewer = require('./viewers/textviewer');
 import EtImageViewer = require('./viewers/imageviewer');
 import EtTipViewer = require('./viewers/tipviewer');
 import generalevents = require('./generalevents');
-import keybindingmanager = require('./keybindingmanager');
+import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');

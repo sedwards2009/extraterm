@@ -41,7 +41,7 @@ import he = require('he');
 import FrameFinderType = require('./framefindertype');
 type FrameFinder = FrameFinderType.FrameFinder;
 
-import keybindingmanager = require('./keybindingmanager');
+import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import GeneralEvents = require('./generalevents');

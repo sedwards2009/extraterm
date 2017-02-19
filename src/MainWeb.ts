@@ -48,7 +48,7 @@ import * as ThemeTypes from './Theme';
 import * as ThemeConsumer from './ThemeConsumer';
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
-import keybindingmanager = require('./keybindingmanager');
+import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 type KeyBindingContexts = keybindingmanager.KeyBindingContexts;
 

@@ -43,7 +43,7 @@
         "./src/framefindertype.ts",
         "./src/generalevents.ts",
         "./src/InternalExtratermApi.ts",
-        "./src/keybindingmanager.ts",
+        "./src/KeyBindingManager.ts",
         "./src/KeyBindingManagerTest.ts",
         "./src/KeyBindingsTab.ts",
         "./src/LogDecorator.ts",

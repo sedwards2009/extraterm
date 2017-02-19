@@ -14,7 +14,7 @@ import ViewerElementTypes = require('../viewerelementtypes');
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
-import keybindingmanager = require('../keybindingmanager');
+import * as keybindingmanager from '../KeyBindingManager';
 import BulkDOMOperation = require('../BulkDOMOperation');
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 

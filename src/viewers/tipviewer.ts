@@ -14,7 +14,7 @@ import * as SourceDir from '../SourceDir';
 import config = require('../config');
 type ConfigManager = config.ConfigManager;
 
-import keybindingmanager = require('../keybindingmanager');
+import * as keybindingmanager from '../KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import ViewerElement = require("../viewerelement");

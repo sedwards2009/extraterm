@@ -18,7 +18,7 @@ import util = require('./gui/util');
 import ResizeCanary from './ResizeCanary';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as ThemeTypes from './Theme';
-import keybindingmanager = require('./keybindingmanager');
+import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import CommandPaletteRequestTypes = require('./commandpaletterequesttypes');

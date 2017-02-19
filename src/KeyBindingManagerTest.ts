@@ -6,7 +6,7 @@
 
 import sourceMapSupport = require('source-map-support');
 import nodeunit = require('nodeunit');
-import KeyBindingsManager = require('./keybindingmanager');
+import * as KeyBindingsManager from './KeyBindingManager';
 
 sourceMapSupport.install();
 

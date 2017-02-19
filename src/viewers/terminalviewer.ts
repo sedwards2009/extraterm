@@ -23,7 +23,7 @@ import log from '../LogDecorator';
 import * as SourceDir from '../SourceDir';
 import generalevents = require('../generalevents');
 import * as ThemeTypes from '../Theme';
-import keybindingmanager = require('../keybindingmanager');
+import * as keybindingmanager from '../KeyBindingManager';
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import BulkDOMOperation = require('../BulkDOMOperation');
 import SupportsClipboardPaste = require('../SupportsClipboardPaste');
