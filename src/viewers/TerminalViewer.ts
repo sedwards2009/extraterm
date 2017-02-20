@@ -14,7 +14,7 @@ import * as DomUtils from '../DomUtils';
 import CodeMirror = require('codemirror');
 import * as CodeMirrorCommands from '../CodeMirrorCommands';
 import ViewerElementTypes = require('../viewerelementtypes');
-import EtTerminalViewerTypes = require('./terminalviewertypes');
+import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import * as Term from '../Term';
 import * as VirtualScrollArea from '../VirtualScrollArea';
@@ -72,7 +72,7 @@ function getCssText(): string {
   return cssText;
 }
 
-class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export default class TerminalViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "et-terminal-viewer";
@@ -85,7 +85,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
         + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
 
-      window.document.registerElement(EtTerminalViewer.TAG_NAME, {prototype: EtTerminalViewer.prototype});
+      window.document.registerElement(TerminalViewer.TAG_NAME, {prototype: TerminalViewer.prototype});
       registered = true;
     }
   }
@@ -96,8 +96,8 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
    * @param  node the node to test
    * @return      True if the node is a EtTerminalViewer.
    */
-  static is(node: Node): node is EtTerminalViewer {
-    return node !== null && node !== undefined && node instanceof EtTerminalViewer;
+  static is(node: Node): node is TerminalViewer {
+    return node !== null && node !== undefined && node instanceof TerminalViewer;
   }
 
   //-----------------------------------------------------------------------
@@ -148,7 +148,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   private _bookmarkIndex: Map<BookmarkRef, CodeMirror.TextBookmarkMarker>;
 
   private _initProperties(): void {
-    this._log = new Logger(EtTerminalViewer.TAG_NAME, this);
+    this._log = new Logger(TerminalViewer.TAG_NAME, this);
     this._keyBindingManager = null;
     this._emulator = null;
     this._terminalFirstRow = 0;
@@ -305,7 +305,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return BulkDomOperation.nullOperation();
     }
 
-    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       switch (newMode) {
         case ViewerElementTypes.Mode.CURSOR:
@@ -351,7 +351,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   // VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       // --- DOM Write ---
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
 
@@ -406,7 +406,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
 
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
+    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       if (this._codeMirror !== null) {
         if (DEBUG_RESIZE) {
@@ -892,7 +892,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       return BulkDomOperation.nullOperation();
     }
 
-    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       if (containerDiv !== null) {
@@ -959,7 +959,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
 
   private _emitKeyboardActivityEvent(): void {
     const scrollInfo = this._codeMirror.getScrollInfo();    
-    const event = new CustomEvent(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
+    const event = new CustomEvent(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
     this.dispatchEvent(event);
   }
 
@@ -1729,5 +1729,3 @@ function isCodePointNormalWidth(codePoint: number): boolean {
 
   return false;
 }
-
-export = EtTerminalViewer;

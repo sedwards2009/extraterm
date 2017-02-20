@@ -16,13 +16,13 @@ import * as BulkDomOperation from './BulkDomOperation';
 import ResizeCanary from './ResizeCanary';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as ThemeTypes from './Theme';
-import EtEmbeddedViewer from './EmbeddedViewer';
-import EtCommandPlaceHolder from './CommandPlaceholder';
-import EtTerminalViewer = require('./viewers/terminalviewer');
-import EtTerminalViewerTypes = require('./viewers/terminalviewertypes');
-import EtTextViewer = require('./viewers/textviewer');
-import EtImageViewer = require('./viewers/imageviewer');
-import EtTipViewer = require('./viewers/tipviewer');
+import EmbeddedViewer from './EmbeddedViewer';
+import CommandPlaceHolder from './CommandPlaceholder';
+import TerminalViewer from './viewers/TerminalViewer';
+import * as TerminalViewerTypes from './viewers/TerminalViewerTypes';
+import TextViewer from './viewers/TextViewer';
+import ImageViewer from './viewers/ImageViewer';
+import TipViewer from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -55,8 +55,8 @@ type ConfigManager = config.ConfigManager;
 
 type CommandLineAction = config.CommandLineAction;
 
-type TextDecoration = EtTerminalViewerTypes.TextDecoration;
-type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
+type TextDecoration = TerminalViewerTypes.TextDecoration;
+type BookmarkRef = TerminalViewerTypes.BookmarkRef;
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
 const VisualState = ViewerElementTypes.VisualState;
@@ -123,9 +123,9 @@ const MAXIMUM_FONT_SIZE = 4;
 
 // List of viewer classes.
 const viewerClasses: ViewerElementTypes.SupportsMimeTypes[] = [];
-viewerClasses.push(EtImageViewer);
-viewerClasses.push(EtTextViewer);
-viewerClasses.push(EtTipViewer);
+viewerClasses.push(ImageViewer);
+viewerClasses.push(TextViewer);
+viewerClasses.push(TipViewer);
 
 interface ChildElementStatus {
   element: VirtualScrollable & HTMLElement;
@@ -171,12 +171,12 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   static init(): void {
     if (registered === false) {
       CbScrollbar.init();
-      EtEmbeddedViewer.init();
-      EtCommandPlaceHolder.init();
-      EtTerminalViewer.init();
-      EtTextViewer.init();
-      EtImageViewer.init();
-      EtTipViewer.init();
+      EmbeddedViewer.init();
+      CommandPlaceHolder.init();
+      TerminalViewer.init();
+      TextViewer.init();
+      ImageViewer.init();
+      TipViewer.init();
       ResizeCanary.init();
 
       // EtMarkdownViewer.init();
@@ -195,7 +195,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
 
   private _autoscroll: boolean;
   
-  private _terminalViewer: EtTerminalViewer;
+  private _terminalViewer: TerminalViewer;
   
   private _emulator: Term.Emulator;
   private _cookie: string;
@@ -211,7 +211,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   private _lastCommandLine: string;
   
   // The terminal viewer containing the start output of the last command started.
-  private _lastCommandTerminalViewer: EtTerminalViewer;
+  private _lastCommandTerminalViewer: TerminalViewer;
   
   // The line number of the start of output of the last command started.
   private _lastCommandTerminalLine: BookmarkRef;
@@ -565,7 +565,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       scrollArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
 
       scrollArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-      scrollArea.addEventListener(EtTerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
+      scrollArea.addEventListener(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
         this._virtualScrollArea.scrollToBottom();
       });
       scrollArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
@@ -691,7 +691,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
         }
     }
 
-    this._appendMimeViewer(EtTipViewer.MIME_TYPE, "Tip", "utf8", null);
+    this._appendMimeViewer(TipViewer.MIME_TYPE, "Tip", "utf8", null);
     const newConfig = _.cloneDeep(config);
     newConfig.tipTimestamp = Date.now();
     newConfig.tipCounter = newConfig.tipCounter + 1;
@@ -779,7 +779,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
 
   private _appendNewTerminalViewer(): void {
     // Create the TerminalViewer
-    const terminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
+    const terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
     keybindingmanager.injectKeyBindingManager(terminalViewer, this._keyBindingManager);
     config.injectConfigManager(terminalViewer, this._configManager);
     
@@ -1280,20 +1280,20 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
 
   private _deleteTopPixels(kidNode: HTMLElement & VirtualScrollable, pixelCount: number): void {
     // Try to cut part of it off.
-    if (EtTerminalViewer.is(kidNode)) {
+    if (TerminalViewer.is(kidNode)) {
       kidNode.deleteTopPixels(pixelCount);
       this._scheduleStashedChildResize(kidNode);
       return;
       
-    } else if (EtEmbeddedViewer.is(kidNode)) {
+    } else if (EmbeddedViewer.is(kidNode)) {
       const viewer = kidNode.viewerElement;
 
-      if (EtTerminalViewer.is(viewer)) {
+      if (TerminalViewer.is(viewer)) {
         viewer.deleteTopPixels(pixelCount);
         this._scheduleStashedChildResize(kidNode);
         return;  
         
-      } else if (EtTextViewer.is(viewer)) {
+      } else if (TextViewer.is(viewer)) {
         viewer.deleteTopPixels(pixelCount);
         this._scheduleStashedChildResize(kidNode);
         return;
@@ -1782,7 +1782,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   private _handleApplicationModeBracketStart(): void {
     for (const kidInfo of this._childElementList) {
       const element = kidInfo.element;
-      if ((EtEmbeddedViewer.is(element) && element.returnCode == null) || EtCommandPlaceHolder.is(element)) {
+      if ((EmbeddedViewer.is(element) && element.returnCode == null) || CommandPlaceHolder.is(element)) {
         return;  // Don't open a new frame.
       }
     }
@@ -1821,16 +1821,16 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
   }
   
-  public deleteEmbeddedViewer(viewer: EtEmbeddedViewer): void {
+  public deleteEmbeddedViewer(viewer: EmbeddedViewer): void {
     this._removeScrollable(viewer);
   }
   
-  private _getLastEmbeddedViewer(): EtEmbeddedViewer {
+  private _getLastEmbeddedViewer(): EmbeddedViewer {
     const kids = this._childElementList;
     const len = this._childElementList.length;
     for (let i=len-1; i>=0;i--) {
       const kid = kids[i].element;
-      if (EtEmbeddedViewer.is(kid)) {
+      if (EmbeddedViewer.is(kid)) {
         return kid;
       }
     }
@@ -1846,13 +1846,13 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     this.focus();
   }
   
-  private _createEmbeddedViewerElement(title: string): EtEmbeddedViewer {
+  private _createEmbeddedViewerElement(title: string): EmbeddedViewer {
     // Create and set up a new command-frame.
-    const el = <EtEmbeddedViewer> this._getWindow().document.createElement(EtEmbeddedViewer.TAG_NAME);
+    const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
     keybindingmanager.injectKeyBindingManager(el, this._keyBindingManager);
     config.injectConfigManager(el, this._configManager);
     el.awesomeIcon = 'cog';
-    el.addEventListener(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
+    el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
       this.focus();
     });
@@ -1877,8 +1877,8 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       }
     });
 
-    el.addEventListener(EtEmbeddedViewer.EVENT_FRAME_POP_OUT, (ev: CustomEvent) => {
-      this._embeddedViewerPopOutEvent(<EtEmbeddedViewer>ev.srcElement);
+    el.addEventListener(EmbeddedViewer.EVENT_FRAME_POP_OUT, (ev: CustomEvent) => {
+      this._embeddedViewerPopOutEvent(<EmbeddedViewer>ev.srcElement);
       ev.stopPropagation();
     });
 
@@ -1891,8 +1891,8 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     el.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
-    el.setAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE, title);
-    el.setAttribute(EtEmbeddedViewer.ATTR_TAG, "" + this._getNextTag());
+    el.setAttribute(EmbeddedViewer.ATTR_FRAME_TITLE, title);
+    el.setAttribute(EmbeddedViewer.ATTR_TAG, "" + this._getNextTag());
     return el;
   }
   
@@ -1907,7 +1907,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     let startElement: HTMLElement & VirtualScrollable = null;
     for (let i=this._childElementList.length-1; i>=0; i--) {
       const el = this._childElementList[i].element;
-      if (el.tagName === EtEmbeddedViewer.TAG_NAME && el.getAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE) == null) {
+      if (el.tagName === EmbeddedViewer.TAG_NAME && el.getAttribute(EmbeddedViewer.ATTR_RETURN_CODE) == null) {
         startElement = el;
         break;
       }
@@ -1915,19 +1915,19 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     
     if (startElement != null) {
       // Finish framing an already existing Embedded viewer bar.
-      const embeddedViewerElement = <EtEmbeddedViewer> startElement;
+      const embeddedViewerElement = <EmbeddedViewer> startElement;
       
       const activeTerminalViewer = this._terminalViewer;
       this._disconnectActiveTerminalViewer();
       
       activeTerminalViewer.returnCode = returnCode;
-      activeTerminalViewer.commandLine = embeddedViewerElement.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE);
+      activeTerminalViewer.commandLine = embeddedViewerElement.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE);
       activeTerminalViewer.useVPad = false;
       
       // Hang the terminal viewer under the Embedded viewer.
-      embeddedViewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, returnCode);
+      embeddedViewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, returnCode);
       embeddedViewerElement.awesomeIcon = returnCode === '0' ? 'check' : 'times';
-      embeddedViewerElement.setAttribute(EtEmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
+      embeddedViewerElement.setAttribute(EmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
       embeddedViewerElement.className = "extraterm_output";
       
       // Some focus management to make sure that activeTerminalViewer still keeps
@@ -1972,15 +1972,15 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       // Append our new embedded viewer.
       const newViewerElement = this._createEmbeddedViewerElement(this._lastCommandLine);
       // Hang the terminal viewer under the Embedded viewer.
-      newViewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, returnCode);
+      newViewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, returnCode);
       newViewerElement.awesomeIcon = 'times';
-      newViewerElement.setAttribute(EtEmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
+      newViewerElement.setAttribute(EmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
       newViewerElement.className = "extraterm_output";
 
       this._appendScrollable(newViewerElement);
       
       // Create a terminal viewer to display the output of the last command.
-      const outputTerminalViewer = <EtTerminalViewer> document.createElement(EtTerminalViewer.TAG_NAME);
+      const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
       keybindingmanager.injectKeyBindingManager(outputTerminalViewer, this._keyBindingManager);
       config.injectConfigManager(outputTerminalViewer, this._configManager);
       newViewerElement.viewerElement = outputTerminalViewer;
@@ -2058,7 +2058,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     WebIpc.clipboardReadRequest();
   }
   
-  private _embeddedViewerPopOutEvent(viewerElement: EtEmbeddedViewer): void {
+  private _embeddedViewerPopOutEvent(viewerElement: EmbeddedViewer): void {
     const event = new CustomEvent(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT,
       { detail: { terminal: this, embeddedViewer: viewerElement} });
     this.dispatchEvent(event);
@@ -2118,9 +2118,9 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
       viewerElement.viewerElement = mimeViewerElement;
-      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE, filename);
+      viewerElement.setAttribute(EmbeddedViewer.ATTR_FRAME_TITLE, filename);
       viewerElement.awesomeIcon = mimeViewerElement.awesomeIcon;
-      viewerElement.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
+      viewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
       this._appendScrollableElement(viewerElement);
       this._enforceScrollbackLength(this._scrollbackSize);
     }
@@ -2147,14 +2147,14 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   /**
    * Find a command frame by ID.
    */
-  private _findFrame(frameId: string): EtEmbeddedViewer {
+  private _findFrame(frameId: string): EmbeddedViewer {
     if (/[^0-9]/.test(frameId)) {
       return null;
     }
     
     for (const elementStat of this._childElementList) {
       const element = elementStat.element;
-      if (EtEmbeddedViewer.is(element) && element.getAttribute('tag') === frameId) {
+      if (EmbeddedViewer.is(element) && element.getAttribute('tag') === frameId) {
         return element;
       }
     }

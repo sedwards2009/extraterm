@@ -9,7 +9,7 @@ import fs  = require('fs');
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
-import EtEmbeddedViewer from './EmbeddedViewer';
+import EmbeddedViewer from './EmbeddedViewer';
 import Logger from './Logger';
 import log from './LogDecorator';
 import * as DomUtils from './DomUtils';
@@ -83,7 +83,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
   static init(): void {
     if (registered === false) {
       CbScrollbar.init();
-      EtEmbeddedViewer.init();
+      EmbeddedViewer.init();
       ResizeCanary.init();
       window.document.registerElement(EtViewerTab.TAG_NAME, {prototype: EtViewerTab.prototype});
       registered = true;
@@ -661,13 +661,13 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
   /**
    * Find a command frame by ID.
    */
-  private _findFrame(frameId: string): EtEmbeddedViewer {
+  private _findFrame(frameId: string): EmbeddedViewer {
     if (/[^0-9]/.test(frameId)) {
       return null;
     }
     
     const scrollArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    const matches = scrollArea.querySelectorAll(EtEmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
-    return matches.length === 0 ? null : <EtEmbeddedViewer>matches[0];
+    const matches = scrollArea.querySelectorAll(EmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
+    return matches.length === 0 ? null : <EmbeddedViewer>matches[0];
   }
 }

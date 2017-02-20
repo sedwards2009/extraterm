@@ -65,7 +65,7 @@ const DEBUG_SIZE = false;
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
-export default class EtEmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export default class EmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     SupportsClipboardPaste.SupportsClipboardPaste {
   
   /**
@@ -102,7 +102,7 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EtEmbeddedViewer.TAG_NAME, {prototype: EtEmbeddedViewer.prototype});
+      window.document.registerElement(EmbeddedViewer.TAG_NAME, {prototype: EmbeddedViewer.prototype});
       registered = true;
     }
   }
@@ -113,8 +113,8 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
    * @param  node the node to test
    * @return      True if the node is a EtEmbeddedViewer.
    */
-  static is(node: Node): node is EtEmbeddedViewer {
-    return node !== null && node !== undefined && node instanceof EtEmbeddedViewer;
+  static is(node: Node): node is EmbeddedViewer {
+    return node !== null && node !== undefined && node instanceof EmbeddedViewer;
   }
   
   //-----------------------------------------------------------------------
@@ -137,7 +137,7 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
   private _headerBottom: number;
 
   private _initProperties(): void {
-    this._log = new Logger(EtEmbeddedViewer.TAG_NAME, this);
+    this._log = new Logger(EmbeddedViewer.TAG_NAME, this);
     this._visualState = ViewerElementTypes.VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
@@ -234,7 +234,7 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
   
   // See VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
+    const generator = function* generator(this: EmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
       if (DEBUG_SIZE) {
         this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
           setterState.yOffset, setterState.yOffsetChanged);
@@ -300,7 +300,7 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
 
   bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
     if (visible) {
-      const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
+      const generator = function* generator(this: EmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
         if (DEBUG_SIZE) {
           this._log.debug("bulkVisible() generator: ");
         }
@@ -347,19 +347,19 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
   }
   
   set tag(tag: string) {
-    this.setAttribute(EtEmbeddedViewer.ATTR_TAG, tag);
+    this.setAttribute(EmbeddedViewer.ATTR_TAG, tag);
   }
   
   get tag(): string {
-    return this.getAttribute(EtEmbeddedViewer.ATTR_TAG);
+    return this.getAttribute(EmbeddedViewer.ATTR_TAG);
   }
 
   set title(newTitle: string) {
-    this.setAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE, newTitle);
+    this.setAttribute(EmbeddedViewer.ATTR_FRAME_TITLE, newTitle);
   }
 
   get title(): string {
-    return this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE);
+    return this.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE);
   }
 
   hasFocus(): boolean {
@@ -371,21 +371,21 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
   }
 
   set returnCode(returnCode: number) {
-    this.setAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE,
+    this.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE,
       returnCode === null || returnCode === undefined ? null : "" + returnCode);
   }
 
   get returnCode(): number {
-    const rcString = this.getAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE);
+    const rcString = this.getAttribute(EmbeddedViewer.ATTR_RETURN_CODE);
     return rcString === null || rcString === undefined ? null : parseInt(rcString, 10);
   }
 
   set awesomeIcon(iconName: string) {
-    this.setAttribute(EtEmbeddedViewer.ATTR_AWESOME_ICON, iconName);
+    this.setAttribute(EmbeddedViewer.ATTR_AWESOME_ICON, iconName);
   }
 
   get awesomeIcon(): string {
-    return this.getAttribute(EtEmbeddedViewer.ATTR_AWESOME_ICON);
+    return this.getAttribute(EmbeddedViewer.ATTR_AWESOME_ICON);
   }
 
   canPaste(): boolean {
@@ -417,7 +417,7 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
   }
 
   bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: EmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       if (DEBUG_SIZE) {
         this._log.debug("bulkSetMode() generator: newMode=", newMode);
       }
@@ -514,12 +514,12 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
     const clone = this._createClone();
     shadow.appendChild(clone);
 
-    this._setAttr(EtEmbeddedViewer.ATTR_FRAME_TITLE, this.getAttribute(EtEmbeddedViewer.ATTR_FRAME_TITLE));
-    this._setAttr(EtEmbeddedViewer.ATTR_RETURN_CODE, this.getAttribute(EtEmbeddedViewer.ATTR_RETURN_CODE));
-    this._setAttr(EtEmbeddedViewer.ATTR_EXPAND, this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND));
-    this._setAttr(EtEmbeddedViewer.ATTR_TAG, this.getAttribute(EtEmbeddedViewer.ATTR_TAG));
-    this._setAttr(EtEmbeddedViewer.ATTR_TOOL_TIP, this.getAttribute(EtEmbeddedViewer.ATTR_TOOL_TIP));
-    this._setAttr(EtEmbeddedViewer.ATTR_AWESOME_ICON, this.getAttribute(EtEmbeddedViewer.ATTR_AWESOME_ICON));
+    this._setAttr(EmbeddedViewer.ATTR_FRAME_TITLE, this.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE));
+    this._setAttr(EmbeddedViewer.ATTR_RETURN_CODE, this.getAttribute(EmbeddedViewer.ATTR_RETURN_CODE));
+    this._setAttr(EmbeddedViewer.ATTR_EXPAND, this.getAttribute(EmbeddedViewer.ATTR_EXPAND));
+    this._setAttr(EmbeddedViewer.ATTR_TAG, this.getAttribute(EmbeddedViewer.ATTR_TAG));
+    this._setAttr(EmbeddedViewer.ATTR_TOOL_TIP, this.getAttribute(EmbeddedViewer.ATTR_TOOL_TIP));
+    this._setAttr(EmbeddedViewer.ATTR_AWESOME_ICON, this.getAttribute(EmbeddedViewer.ATTR_AWESOME_ICON));
 
     this.installThemeCss();
 
@@ -673,12 +673,12 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
       return;
     }
 
-    if (attrName === EtEmbeddedViewer.ATTR_FRAME_TITLE) {
+    if (attrName === EmbeddedViewer.ATTR_FRAME_TITLE) {
       (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).innerText = newValue;
       return;
     }
 
-    if (attrName === EtEmbeddedViewer.ATTR_RETURN_CODE) {
+    if (attrName === EmbeddedViewer.ATTR_RETURN_CODE) {
       const container = <HTMLDivElement>this._getById(ID_CONTAINER);
 
       if (newValue === null || newValue === undefined || newValue === "") {
@@ -700,7 +700,7 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
       return;
     }
 
-    if (attrName === EtEmbeddedViewer.ATTR_EXPAND) {
+    if (attrName === EmbeddedViewer.ATTR_EXPAND) {
       const output = <HTMLDivElement>this._getById(ID_OUTPUT);
       // const expandicon = <HTMLDivElement>this._getById(ID_EXPAND_ICON);
       if (util.htmlValueToBool(newValue, true)) {
@@ -719,19 +719,19 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
       return;
     }
 
-    if (attrName === EtEmbeddedViewer.ATTR_TAG) {
+    if (attrName === EmbeddedViewer.ATTR_TAG) {
       const tagName = <HTMLDivElement>this._getById(ID_TAG_NAME);
       tagName.innerText = newValue;
     }
     
-    if (attrName === EtEmbeddedViewer.ATTR_TOOL_TIP) {
+    if (attrName === EmbeddedViewer.ATTR_TOOL_TIP) {
       const iconDiv = <HTMLDivElement>this._getById(ID_ICON_DIV);
       if (newValue !== null) {
         iconDiv.setAttribute('title', newValue);
       }
     }
     
-    if (attrName === EtEmbeddedViewer.ATTR_AWESOME_ICON) {
+    if (attrName === EmbeddedViewer.ATTR_AWESOME_ICON) {
       const icon = <HTMLDivElement>this._getById(ID_ICON);
       icon.className = "fa " + (newValue !== null && newValue !== undefined && newValue !== "" ? "fa-" : "") + newValue;
     }
@@ -815,27 +815,27 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
    * 
    */
   private _emitManualScroll(): void {
-    const event = new CustomEvent(EtEmbeddedViewer.EVENT_SCROLL_MOVE);
-    event.initCustomEvent(EtEmbeddedViewer.EVENT_SCROLL_MOVE, true, true, null);
+    const event = new CustomEvent(EmbeddedViewer.EVENT_SCROLL_MOVE);
+    event.initCustomEvent(EmbeddedViewer.EVENT_SCROLL_MOVE, true, true, null);
     this.dispatchEvent(event);
   }
   
   private _emitFramePopOut(): void {
-    const event = new CustomEvent(EtEmbeddedViewer.EVENT_FRAME_POP_OUT);
-    event.initCustomEvent(EtEmbeddedViewer.EVENT_FRAME_POP_OUT, true, true, this);
+    const event = new CustomEvent(EmbeddedViewer.EVENT_FRAME_POP_OUT);
+    event.initCustomEvent(EmbeddedViewer.EVENT_FRAME_POP_OUT, true, true, this);
     this.dispatchEvent(event);
   }
 
   private _emitCloseRequest(): void {
-    const event = new CustomEvent(EtEmbeddedViewer.EVENT_CLOSE_REQUEST);
-    event.initCustomEvent(EtEmbeddedViewer.EVENT_CLOSE_REQUEST, true, true, null);
+    const event = new CustomEvent(EmbeddedViewer.EVENT_CLOSE_REQUEST);
+    event.initCustomEvent(EmbeddedViewer.EVENT_CLOSE_REQUEST, true, true, null);
     this.dispatchEvent(event);
   }
 
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
     const scrollable = <any> ev.target;
 
-    const generator = function* bulkUpdateGenerator(this: EtEmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
+    const generator = function* bulkUpdateGenerator(this: EmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
 
       const height = this._virtualScrollArea.getVirtualHeight();

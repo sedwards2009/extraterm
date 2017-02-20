@@ -16,7 +16,7 @@ let registered = false;
 /**
  * An invisible element which can be placed in a terminal to mark the start of command output.
  */
-export default class EtCommandPlaceHolder extends HTMLElement implements VirtualScrollable {
+export default class CommandPlaceHolder extends HTMLElement implements VirtualScrollable {
   
   /**
    * The HTML tag name of this element.
@@ -34,7 +34,7 @@ export default class EtCommandPlaceHolder extends HTMLElement implements Virtual
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EtCommandPlaceHolder.TAG_NAME, {prototype: EtCommandPlaceHolder.prototype});
+      window.document.registerElement(CommandPlaceHolder.TAG_NAME, {prototype: CommandPlaceHolder.prototype});
       registered = true;
     }
   }
@@ -45,8 +45,8 @@ export default class EtCommandPlaceHolder extends HTMLElement implements Virtual
    * @param  node the node to test
    * @return      True if the node is a EtCommandPlaceHolder.
    */
-  static is(node: Node): node is EtCommandPlaceHolder {
-    return node !== null && node !== undefined && node instanceof EtCommandPlaceHolder;
+  static is(node: Node): node is CommandPlaceHolder {
+    return node !== null && node !== undefined && node instanceof CommandPlaceHolder;
   }
   
   //-----------------------------------------------------------------------

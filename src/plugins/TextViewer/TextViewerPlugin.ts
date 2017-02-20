@@ -5,7 +5,7 @@
  */
 import * as PluginApi from '../../PluginApi';
 import Logger from '../../Logger';
-import TextViewer = require('../../viewers/textviewer');
+import TextViewer from '../../viewers/TextViewer';
 import PopDownListPicker = require('../../gui/PopDownListPicker');
 import PopDownNumberDialog = require('../../gui/PopDownNumberDialog');
 import CodeMirror = require('codemirror');

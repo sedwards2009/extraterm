@@ -42,13 +42,13 @@ const DEBUG_SIZE = false;
 let registered = false;
 let instanceIdCounter = 0;
 
-class EtImageViewer extends ViewerElement {
+export default class ImageViewer extends ViewerElement {
 
   static TAG_NAME = "et-image-viewer";
   
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EtImageViewer.TAG_NAME, {prototype: EtImageViewer.prototype});
+      window.document.registerElement(ImageViewer.TAG_NAME, {prototype: ImageViewer.prototype});
       registered = true;
     }
   }
@@ -59,8 +59,8 @@ class EtImageViewer extends ViewerElement {
    * @param  node the node to test
    * @return      True if the node is a EtTerminalViewer.
    */
-  static is(node: Node): node is EtImageViewer {
-    return node !== null && node !== undefined && node instanceof EtImageViewer;
+  static is(node: Node): node is ImageViewer {
+    return node !== null && node !== undefined && node instanceof ImageViewer;
   }
   
   //-----------------------------------------------------------------------
@@ -86,7 +86,7 @@ class EtImageViewer extends ViewerElement {
   private _currentElementHeight: number;
 
   private _initProperties(): void {
-    this._log = new Logger(EtImageViewer.TAG_NAME, this);
+    this._log = new Logger(ImageViewer.TAG_NAME, this);
     this._keyBindingManager = null;
     this._text = null;
     this._buffer = null;
@@ -208,7 +208,7 @@ class EtImageViewer extends ViewerElement {
   
   // VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: ImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       if (setterState.heightChanged || setterState.yOffsetChanged) {
         yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         if (DEBUG_SIZE) {
@@ -373,7 +373,7 @@ class EtImageViewer extends ViewerElement {
       return BulkDomOperation.nullOperation();
     }
 
-    const generator = function* generator(this: EtImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: ImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       // --- DOM Write ---
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       if (DomUtils.getShadowRoot(this) !== null) {
@@ -538,5 +538,3 @@ function px(value) {
   }
   return parseInt(value.slice(0,-2),10);
 }  
-
-export = EtImageViewer;

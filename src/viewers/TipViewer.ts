@@ -69,7 +69,7 @@ function loadTipFile(): string[] {
 
 const tipData = loadTipFile();
 
-class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, keybindingmanager.AcceptsKeyBindingManager {
+export default class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, keybindingmanager.AcceptsKeyBindingManager {
 
   static TAG_NAME = "et-tip-viewer";
   
@@ -442,5 +442,3 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     this.style.height = "" + newHeight + "px";
   }
 }
-
-export = EtTipViewer;

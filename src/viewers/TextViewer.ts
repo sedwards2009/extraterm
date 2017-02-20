@@ -21,7 +21,7 @@ import CodeMirror = require('codemirror');
 import * as CodeMirrorCommands from '../CodeMirrorCommands';
 import ViewerElementTypes = require('../viewerelementtypes');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
-import EtTextViewerTypes = require('./terminalviewertypes');
+import * as EtTextViewerTypes from './TerminalViewerTypes';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
@@ -88,7 +88,7 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export default class TextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "et-text-viewer";
@@ -100,7 +100,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
         + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
 
-      window.document.registerElement(EtTextViewer.TAG_NAME, {prototype: EtTextViewer.prototype});
+      window.document.registerElement(TextViewer.TAG_NAME, {prototype: TextViewer.prototype});
       registered = true;
     }
   }
@@ -111,8 +111,8 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
    * @param  node the node to test
    * @return      True if the node is a EtTerminalViewer.
    */
-  static is(node: Node): node is EtTextViewer {
-    return node !== null && node !== undefined && node instanceof EtTextViewer;
+  static is(node: Node): node is TextViewer {
+    return node !== null && node !== undefined && node instanceof TextViewer;
   }
   
   //-----------------------------------------------------------------------
@@ -146,7 +146,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
     this._keyBindingManager = null;
     this._text = null;
     this._mimeType = null;
-    this._log = new Logger(EtTextViewer.TAG_NAME, this);
+    this._log = new Logger(TextViewer.TAG_NAME, this);
     this._commandLine = null;
     this._returnCode = null;
     this._editable = false;
@@ -302,7 +302,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       return BulkDomOperation.nullOperation();
     }
 
-    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       // --- DOM Write ---
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
 
@@ -372,7 +372,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   
   // VirtualScrollable
   bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       // --- DOM Write ---
       if (setterState.heightChanged || setterState.yOffsetChanged) {
         if (DEBUG_RESIZE) {
@@ -635,7 +635,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
   }
 
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
+    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       if (this._codeMirror !== null) {
         if (DEBUG_RESIZE) {
@@ -705,7 +705,7 @@ class EtTextViewer extends ViewerElement implements CommandPaletteRequestTypes.C
       return BulkDomOperation.nullOperation();
     }    
 
-    const generator = function* generator(this: EtTextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       if (DomUtils.getShadowRoot(this) !== null) {
         this._applyVisualState(newVisualState);
@@ -1100,5 +1100,3 @@ function px(value) {
   }
   return parseInt(value.slice(0,-2),10);
 }  
-
-export = EtTextViewer;

@@ -32,11 +32,11 @@ import EtTerminal from './Terminal';
 import * as DomUtils from './DomUtils';
 import util = require('./gui/util');
 
-import EtEmbeddedViewer from './EmbeddedViewer';
+import EmbeddedViewer from './EmbeddedViewer';
 import AboutTab from './AboutTab';
 import SettingsTab = require('./settings/settingstab2');
-import EtTerminalViewer = require('./viewers/terminalviewer');
-import EtTextViewer = require('./viewers/textviewer');
+import TerminalViewer from './viewers/TerminalViewer';
+import TextViewer from'./viewers/TextViewer';
 import ResizeCanary from './ResizeCanary';
 
 import * as config from './Config';

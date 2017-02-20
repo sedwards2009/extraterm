@@ -12,7 +12,7 @@ import EtSettingsTab = require('./settings/settingstab2');
 import AboutTab from './AboutTab';
 import EtKeyBindingsTab from './KeyBindingsTab';
 import EtViewerTab from './ViewerTab';
-import EtEmbeddedViewer from './EmbeddedViewer';
+import EmbeddedViewer from './EmbeddedViewer';
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
@@ -777,7 +777,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     return tabInfo.id;
   }
   
-  openViewerTab(position: TabPosition, embeddedViewer: EtEmbeddedViewer, fontAdjust: number): number {
+  openViewerTab(position: TabPosition, embeddedViewer: EmbeddedViewer, fontAdjust: number): number {
     const viewerElement = embeddedViewer.viewerElement;
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
