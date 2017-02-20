@@ -14,7 +14,7 @@
     "build": "tsc",
     "buildicons": "node src/extra_icons/build.js",
     "test": "npm run build ; nodeunit src/virtualscrollareatest.js",
-    "testbulkdomoperation": "npm run build ; nodeunit src/BulkDOMOperationTest.js",
+    "testbulkdomoperation": "npm run build ; nodeunit src/BulkDomOperationTest.js",
     "testkeybindingmanager": "npm run build ; nodeunit src/KeyBindingManagerTest.js",
     "testmimetypedetector": "npm run build ; nodeunit src/MimeTypeDetectorTest.js",
     "typedoc": "node src/build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",

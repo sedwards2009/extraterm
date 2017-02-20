@@ -26,7 +26,7 @@
     "files": [
         "./src/abouttab.ts",
         "./src/BulkDOMOperation.ts",
-        "./src/BulkDOMOperationTest.ts",
+        "./src/BulkDomOperationTest.ts",
         "./src/codemirror_extra.d.ts",
         "./src/CodeMirrorCommands.ts",
         "./src/CodeMirrorOperation.ts",
