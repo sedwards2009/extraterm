@@ -22,7 +22,7 @@ let registered = false;
 /**
  * The Extraterm About tab.
  */
-class EtAboutTab extends ViewerElement {
+export default class AboutTab extends ViewerElement {
   
   /**
    * The HTML tag name of this element.
@@ -38,7 +38,7 @@ class EtAboutTab extends ViewerElement {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EtAboutTab.TAG_NAME, {prototype: EtAboutTab.prototype});
+      window.document.registerElement(AboutTab.TAG_NAME, {prototype: AboutTab.prototype});
       registered = true;
     }
   }
@@ -155,5 +155,3 @@ class EtAboutTab extends ViewerElement {
   //
   //-----------------------------------------------------------------------
 }
-
-export = EtAboutTab;

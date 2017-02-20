@@ -33,7 +33,7 @@ import * as DomUtils from './DomUtils';
 import util = require('./gui/util');
 
 import EtEmbeddedViewer from './EmbeddedViewer';
-import AboutTab = require('./abouttab');
+import AboutTab from './AboutTab';
 import SettingsTab = require('./settings/settingstab2');
 import EtTerminalViewer = require('./viewers/terminalviewer');
 import EtTextViewer = require('./viewers/textviewer');

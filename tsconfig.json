@@ -24,7 +24,7 @@
         "!./src/node_modules/**/*.ts"
     ],
     "files": [
-        "./src/abouttab.ts",
+        "./src/AboutTab.ts",
         "./src/BulkDomOperation.ts",
         "./src/BulkDomOperationTest.ts",
         "./src/codemirror_extra.d.ts",

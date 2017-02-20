@@ -9,7 +9,7 @@ import ThemeableElementBase = require('./themeableelementbase');
 import TabWidget = require('./gui/tabwidget');
 import EtTerminal from './Terminal';
 import EtSettingsTab = require('./settings/settingstab2');
-import EtAboutTab = require('./abouttab');
+import AboutTab from './AboutTab';
 import EtKeyBindingsTab from './KeyBindingsTab';
 import EtViewerTab from './ViewerTab';
 import EtEmbeddedViewer from './EmbeddedViewer';
@@ -275,7 +275,7 @@ class SettingsTabInfo extends ViewerElementTabInfo {
 
 // These classes act as markers for use with 'instanceof'.
 class AboutTabInfo extends ViewerElementTabInfo {
-  constructor(public aboutElement: EtAboutTab) {
+  constructor(public aboutElement: AboutTab) {
     super(aboutElement);
   }
 }
@@ -309,7 +309,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     EtTerminal.init();
     EtSettingsTab.init();
     EtKeyBindingsTab.init();
-    EtAboutTab.init();
+    AboutTab.init();
     EtViewerTab.init();
     
     if (registered === false) {
@@ -843,7 +843,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     if (aboutTabs.length !== 0) {
       this.focusTab(aboutTabs[0].id);
     } else {
-      const viewerElement = <EtAboutTab> document.createElement(EtAboutTab.TAG_NAME);
+      const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
       const tabInfo = new AboutTabInfo(viewerElement);
