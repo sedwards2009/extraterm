@@ -16,7 +16,7 @@ import EtEmbeddedViewer from './EmbeddedViewer';
 import CbTab = require('./gui/tab');
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
-import BulkDOMOperation = require('./BulkDOMOperation');
+import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 import * as CodeMirrorOperation from './CodeMirrorOperation';
@@ -978,7 +978,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     const tabsWidgets = [<TabWidget> this._getById(ID_TAB_CONTAINER_LEFT), <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT)];
 
     // Collect the bulk operations from the tabs.
-    const operation = BulkDOMOperation.parallel(tabsWidgets.map( (tab) => tab.bulkRefresh(level) ));
+    const operation = BulkDomOperation.parallel(tabsWidgets.map( (tab) => tab.bulkRefresh(level) ));
     // Do the heavy code mirror stuff first.
     CodeMirrorOperation.executeBulkDOMOperation(operation);
   }

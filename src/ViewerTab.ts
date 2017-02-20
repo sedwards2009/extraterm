@@ -29,7 +29,7 @@ const clipboard = electron.clipboard;
 
 import * as WebIpc from './WebIpc';
 import * as VirtualScrollArea from './VirtualScrollArea';
-import BulkDOMOperation = require('./BulkDOMOperation');
+import * as BulkDomOperation from './BulkDomOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -246,16 +246,16 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
     this._keyBindingManager = keyBindingManager;
   }
 
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    return BulkDOMOperation.nullOperation();
+  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
+    return BulkDomOperation.nullOperation();
   }
   
   getVisualState(): ViewerElementTypes.VisualState {
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation {
-    return BulkDOMOperation.nullOperation();
+  bulkSetVisualState(state: VisualState): BulkDomOperation.BulkDOMOperation {
+    return BulkDomOperation.nullOperation();
   }
 
   getFontAdjust(): number {
@@ -353,10 +353,10 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
     DomUtils.doLater(this._processResize.bind(this));
   }
 
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
     const viewerElement = this._getViewerElement();
     if (viewerElement == null) {
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     } else {
       return viewerElement.bulkRefresh(level);
     }

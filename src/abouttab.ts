@@ -13,7 +13,7 @@ import ViewerElement  = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
 import * as DomUtils from './DomUtils';
-import BulkDOMOperation = require('./BulkDOMOperation');
+import * as BulkDomOperation from './BulkDomOperation';
 
 const ID_ABOUT = "ID_ABOUT";
 
@@ -81,16 +81,16 @@ class EtAboutTab extends ViewerElement {
     return ViewerElementTypes.Mode.DEFAULT;
   }
 
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    return BulkDOMOperation.nullOperation();
+  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
+    return BulkDomOperation.nullOperation();
   }
 
   getVisualState(): ViewerElementTypes.VisualState {
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
-    return BulkDOMOperation.nullOperation();
+  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
+    return BulkDomOperation.nullOperation();
   }
 
   //-----------------------------------------------------------------------

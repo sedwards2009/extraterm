@@ -9,7 +9,7 @@ import util = require('./gui/util');
 import * as VirtualScrollArea from './VirtualScrollArea';
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
-import BulkDOMOperation = require('./BulkDOMOperation');
+import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -76,7 +76,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
     CodeMirrorOperation.executeBulkDOMOperation(this.bulkSetVisualState(state));
   }
 
-  abstract bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation;
+  abstract bulkSetVisualState(state: VisualState): BulkDomOperation.BulkDOMOperation;
   
   abstract getMode(): Mode;
   
@@ -84,7 +84,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
     CodeMirrorOperation.executeBulkDOMOperation(this.bulkSetMode(mode));
   }
 
-  abstract bulkSetMode(mode: Mode): BulkDOMOperation.BulkDOMOperation;
+  abstract bulkSetMode(mode: Mode): BulkDomOperation.BulkDOMOperation;
 
   public text: string;
   
@@ -108,12 +108,12 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-    return BulkDOMOperation.nullOperation();
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
+    return BulkDomOperation.nullOperation();
   }
 
-  bulkVisible(visible: boolean): BulkDOMOperation.BulkDOMOperation {
-    return BulkDOMOperation.nullOperation();
+  bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
+    return BulkDomOperation.nullOperation();
   }
 
   getCursorPosition(): CursorMoveDetail {

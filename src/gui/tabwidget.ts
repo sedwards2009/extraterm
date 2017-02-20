@@ -8,7 +8,7 @@ import * as ThemeTypes from '../Theme';
 import CbStackedWidget = require('./stackedwidget');
 import CbTab = require('./tab');
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
-import BulkDOMOperation = require('../BulkDOMOperation');
+import * as BulkDomOperation from '../BulkDomOperation';
 import util = require('./util');
 import * as DomUtils from '../DomUtils';
 import _ = require('lodash');
@@ -146,12 +146,12 @@ class CbTabWidget extends ThemeableElementBase {
     this.createTabHolders();
   }  
   
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
     const contentsStack = this._getContentsStack();
     if (contentsStack === null) {
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     }
-    return BulkDOMOperation.parallel([super.bulkRefresh(level), contentsStack.bulkRefresh(level)]);
+    return BulkDomOperation.parallel([super.bulkRefresh(level), contentsStack.bulkRefresh(level)]);
   }
 
   /**

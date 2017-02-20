@@ -5,7 +5,7 @@
  */
 import sourceMapSupport = require('source-map-support');
 import nodeunit = require('nodeunit');
-import BulkDOMOperation = require('./BulkDOMOperation');
+import * as BulkDomOperation from './BulkDomOperation';
 import * as VirtualScrollArea from './VirtualScrollArea';
 type SetterState = VirtualScrollArea.SetterState;
 
@@ -68,14 +68,14 @@ function SetupScrollable(vsa: VirtualScrollArea.VirtualScrollArea, minHeight: nu
       reserveViewportHeight = newReserveViewportHeight;
     },
 
-    bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
+    bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
       this._height = setterState.height;
       this._offset = setterState.yOffset;
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     },
     
-    bulkVisible(visible: boolean): BulkDOMOperation.BulkDOMOperation {
-      return BulkDOMOperation.nullOperation();
+    bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
+      return BulkDomOperation.nullOperation();
     },
 
 

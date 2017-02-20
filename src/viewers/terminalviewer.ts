@@ -25,7 +25,7 @@ import * as GeneralEvents from '../GeneralEvents';
 import * as ThemeTypes from '../Theme';
 import * as keybindingmanager from '../KeyBindingManager';
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
-import BulkDOMOperation = require('../BulkDOMOperation');
+import * as BulkDomOperation from '../BulkDomOperation';
 import SupportsClipboardPaste = require('../SupportsClipboardPaste');
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -266,7 +266,7 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return hasFocus;
   }
 
-  bulkSetVisualState(newVisualState: VisualState): BulkDOMOperation.BulkDOMOperation {
+  bulkSetVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
     return this._bulkSetVisualState(newVisualState);
   }
   
@@ -300,13 +300,13 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     return this._emulator;
   }
   
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
+  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
     if (newMode === this._mode) {
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     }
 
-    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       switch (newMode) {
         case ViewerElementTypes.Mode.CURSOR:
           // Enter cursor mode.
@@ -319,10 +319,10 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       }
       this._mode = newMode;
 
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -350,10 +350,10 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
   }
 
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
+    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       // --- DOM Write ---
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
 
       if (setterState.heightChanged || setterState.yOffsetChanged) {
         if (DEBUG_RESIZE) {
@@ -363,10 +363,10 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
         this.scrollTo(0, setterState.yOffset);
       }
 
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   // VirtualScrollable
@@ -405,9 +405,9 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     }
   }
 
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
+    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       if (this._codeMirror !== null) {
         if (DEBUG_RESIZE) {
           this._log.debug("calling codeMirror.refresh()");
@@ -421,13 +421,13 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       }
 
       const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-      yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
+      yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
       this.resizeEmulatorToParentContainer();
 
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 
   resizeEmulatorToParentContainer(): void {
@@ -887,13 +887,13 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
     styleElement.textContent = this._getCssVarsRules();
   }
 
-  private _bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
+  private _bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
     if (newVisualState === this._visualState) {
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     }
 
-    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+    const generator = function* generator(this: EtTerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       if (containerDiv !== null) {
         if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
@@ -908,10 +908,10 @@ class EtTerminalViewer extends ViewerElement implements CommandPaletteRequestTyp
       }
       this._visualState = newVisualState;
 
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 
   private _enterCursorMode(): void {

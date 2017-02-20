@@ -6,7 +6,7 @@
 
 import util = require('./gui/util');
 import _  = require('lodash');
-import BulkDOMOperation = require('./BulkDOMOperation');
+import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import Logger from './Logger';
 import log from './LogDecorator';
@@ -44,14 +44,14 @@ export interface VirtualScrollable {
    * 
    * @param setterState information about the new state and context
    */
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation;
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation;
 
   /**
    * Signal to this scrollable that it has been made (in)visible.
    * 
    * @param visible true if this has been made visible, or false to indicate been not visible.
    */
-  bulkVisible(visible: boolean): BulkDOMOperation.BulkDOMOperation;
+  bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation;
 }
 
 export interface SetterState {
@@ -76,18 +76,18 @@ export const EVENT_RESIZE = "scrollable-resize";
  * @param el The element and VirtualScrollable object which needs to be resized.
  */
 export function emitResizeEvent(el: VirtualScrollable & HTMLElement): void {
-  BulkDOMOperation.execute(bulkEmitResizeEvent(el));
+  BulkDomOperation.execute(bulkEmitResizeEvent(el));
 }
 
 export interface ResizeEventDetail {
-  addOperation(op: BulkDOMOperation.BulkDOMOperation): void;
+  addOperation(op: BulkDomOperation.BulkDOMOperation): void;
 }
 
-export function bulkEmitResizeEvent(el: VirtualScrollable & HTMLElement): BulkDOMOperation.BulkDOMOperation {
-    const operations: BulkDOMOperation.BulkDOMOperation[] = [];
+export function bulkEmitResizeEvent(el: VirtualScrollable & HTMLElement): BulkDomOperation.BulkDOMOperation {
+    const operations: BulkDomOperation.BulkDOMOperation[] = [];
 
     const detail: ResizeEventDetail = {
-      addOperation: (op: BulkDOMOperation.BulkDOMOperation): void => {
+      addOperation: (op: BulkDomOperation.BulkDOMOperation): void => {
         operations.push(op);
       }
     };
@@ -95,9 +95,9 @@ export function bulkEmitResizeEvent(el: VirtualScrollable & HTMLElement): BulkDO
     const event = new CustomEvent(EVENT_RESIZE, { bubbles: true, detail: detail });
     el.dispatchEvent(event);
     if (operations.length === 0) {
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     } else {
-      return BulkDOMOperation.parallel(operations);
+      return BulkDomOperation.parallel(operations);
     }
 }
 
@@ -121,8 +121,8 @@ interface VirtualAreaState {
   virtualScrollYOffset: number;
   containerHeight: number;
   scrollFunction: (offset: number) => void;
-  bulkSetTopFunction: (scrollable: VirtualScrollable, top: number) => BulkDOMOperation.BulkDOMOperation;
-  bulkMarkVisibleFunction: (scrollable: VirtualScrollable, visible: boolean) => BulkDOMOperation.BulkDOMOperation;
+  bulkSetTopFunction: (scrollable: VirtualScrollable, top: number) => BulkDomOperation.BulkDOMOperation;
+  bulkMarkVisibleFunction: (scrollable: VirtualScrollable, visible: boolean) => BulkDomOperation.BulkDOMOperation;
 
   // Output - 
   containerScrollYOffset: number;
@@ -316,13 +316,13 @@ export class VirtualScrollArea {
    * @param func function which should return a BulkDOMOperation which
    *              positions the given scrollable's top at the new top.
    */
-  setBulkSetTopFunction(func: (scrollable: VirtualScrollable, top: number) => BulkDOMOperation.BulkDOMOperation): void {
+  setBulkSetTopFunction(func: (scrollable: VirtualScrollable, top: number) => BulkDomOperation.BulkDOMOperation): void {
     this._update( (newState) => {
       newState.bulkSetTopFunction = func;
     });
   }
 
-  setBulkMarkVisibleFunction(func: (scrollable: VirtualScrollable, visible: boolean) => BulkDOMOperation.BulkDOMOperation): void {
+  setBulkMarkVisibleFunction(func: (scrollable: VirtualScrollable, visible: boolean) => BulkDomOperation.BulkDOMOperation): void {
     this._update( (newState) => {
       newState.bulkMarkVisibleFunction = func;
     });
@@ -723,7 +723,7 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
     oldMap.set(scrollableState.scrollable, scrollableState);
   });
 
-  const operationsList: BulkDOMOperation.BulkDOMOperation[] = [];
+  const operationsList: BulkDomOperation.BulkDOMOperation[] = [];
 
   // Update each Scrollable if needed.
   newState.scrollableStates.forEach( (newScrollableState: VirtualScrollableState): void => {
@@ -740,7 +740,7 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
 
     const containerHeightChanged = oldState.containerHeight !== newState.containerHeight;
 
-    const scrollableOperationsList: BulkDOMOperation.BulkDOMOperation[] = [];
+    const scrollableOperationsList: BulkDomOperation.BulkDOMOperation[] = [];
 
     const visibleUpdateNeeded = (oldScrollableState === undefined ||
             oldScrollableState.visible !== newScrollableState.visible) && newState.bulkMarkVisibleFunction != null;
@@ -777,11 +777,11 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
     }
 
     if (scrollableOperationsList.length !== 0) {
-      operationsList.push(BulkDOMOperation.sequence(scrollableOperationsList));
+      operationsList.push(BulkDomOperation.sequence(scrollableOperationsList));
     }
   });
 
-  CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.parallel(operationsList));
+  CodeMirrorOperation.executeBulkDOMOperation(BulkDomOperation.parallel(operationsList));
   
   // Update the Y offset for the container.
   if (oldState.containerScrollYOffset !== newState.containerScrollYOffset) {

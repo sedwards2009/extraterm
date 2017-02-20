@@ -7,7 +7,7 @@ import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import util = require('./util');
-import BulkDOMOperation = require('../BulkDOMOperation');
+import * as BulkDomOperation from '../BulkDomOperation';
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import Logger from '../Logger';
 import log from '../LogDecorator';
@@ -245,15 +245,15 @@ class CbScrollbar extends ThemeableElementBase {
     return 7734;  // FIXME bogus.
   }
 
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(this: CbScrollbar): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
+    const generator = function* generator(this: CbScrollbar): IterableIterator<BulkDomOperation.GeneratorPhase> {
       // --- DOM Write ---
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       this._updatePositionNumber(this._position);
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDomOperation.fromGenerator(generator.bind(this)());
   }
 }
 

@@ -12,7 +12,7 @@ import utf8 = require('utf8');
 import ViewerElement = require("./viewerelement");
 import ViewerElementTypes = require("./viewerelementtypes");
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
-import BulkDOMOperation = require('./BulkDOMOperation');
+import * as BulkDomOperation from './BulkDomOperation';
 import ResizeCanary from './ResizeCanary';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as ThemeTypes from './Theme';
@@ -616,7 +616,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     this.resizeToContainer();
   }
   
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
     return this._processRefresh(level);
   }
 
@@ -976,7 +976,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
 
     const modeOperations = childNodes.map( (node) => node.bulkSetMode(mode));
     const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
-    const allOperations = BulkDOMOperation.parallel([...modeOperations, ...visualStateOperations]);
+    const allOperations = BulkDomOperation.parallel([...modeOperations, ...visualStateOperations]);
 
     CodeMirrorOperation.executeBulkDOMOperation(allOperations);
   }
@@ -1017,11 +1017,11 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     (<VirtualScrollArea.ResizeEventDetail>ev.detail).addOperation(operation);
   }
 
-  private _bulkMarkVisible(scrollable: VirtualScrollable, visible: boolean): BulkDOMOperation.BulkDOMOperation {
+  private _bulkMarkVisible(scrollable: VirtualScrollable, visible: boolean): BulkDomOperation.BulkDOMOperation {
 
-    const generator = function* bulkStashGenerator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
+    const generator = function* bulkStashGenerator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
 
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
     
       const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
       const element: ViewerElement = <any> scrollable;
@@ -1067,36 +1067,36 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
           const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
           const modeOperation = element.bulkSetMode(this._mode);
           const visualStateOperation = element.bulkSetVisualState(visualState);
-          const allOperations = BulkDOMOperation.parallel([modeOperation, visualStateOperation]);
+          const allOperations = BulkDomOperation.parallel([modeOperation, visualStateOperation]);
 
-          yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: allOperations, waitOperation: allOperations };
+          yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: allOperations, waitOperation: allOperations };
         }
       }
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
   }
 
   private _makeVisible(element: HTMLElement & VirtualScrollable): void {
     CodeMirrorOperation.executeBulkDOMOperation(this._bulkMarkVisible(element, true));
   }
 
-  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): BulkDOMOperation.BulkDOMOperation {
+  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): BulkDomOperation.BulkDOMOperation {
 
-    const generator = function* bulkUpdateGenerator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
+    const generator = function* bulkUpdateGenerator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
 
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
       this._virtualScrollArea.updateScrollableSize(virtualScrollable);
       this._enforceScrollbackLength(this._scrollbackSize);
 
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
   }
 
-  private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+  private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
     let level = requestedLevel;
     if (this._needsCompleteRefresh) {
       level = ResizeRefreshElementBase.RefreshLevel.COMPLETE;
@@ -1107,16 +1107,16 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
 
-      const generator = function* generator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
+      const generator = function* generator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
 
         // --- DOM Write ---
-        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
         
         const scrollbar = <CbScrollbar> DomUtils.getShadowId(this, ID_SCROLLBAR);
         const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level); // <-
         const scrollbarOperation = scrollbar.bulkRefresh(level);
 
-        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: scrollAreaOperation, waitOperation: scrollAreaOperation};
+        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: scrollAreaOperation, waitOperation: scrollAreaOperation};
 
         const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
         this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
@@ -1149,26 +1149,26 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
         this._virtualScrollArea.reapplyState();
         this._enforceScrollbackLength(this._scrollbackSize);
             
-        return BulkDOMOperation.GeneratorPhase.DONE;
+        return BulkDomOperation.GeneratorPhase.DONE;
       };
 
-      return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+      return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
 
     } else {
 
       // no-op
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     }
   }
 
-  private _bulkSetTopFunction(scrollable: VirtualScrollable, top: number):  BulkDOMOperation.BulkDOMOperation {
-    const generator = function* bulkSetTopGenerator(this: EtTerminal): IterableIterator<BulkDOMOperation.GeneratorResult> {
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+  private _bulkSetTopFunction(scrollable: VirtualScrollable, top: number):  BulkDomOperation.BulkDOMOperation {
+    const generator = function* bulkSetTopGenerator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       (<HTMLElement> (<any> scrollable)).style.top = "" + top + "px";
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
   }
 
   private _handleTerminalViewerCursor(ev: CustomEvent): void {
@@ -1571,7 +1571,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
         // Gather the list of elements/scrollables that need refreshing and updating.
         const processCounter = 0;
         const processList: (HTMLElement & VirtualScrollable)[] = [];
-        const refreshOperations: BulkDOMOperation.BulkDOMOperation[] = [];
+        const refreshOperations: BulkDomOperation.BulkDOMOperation[] = [];
         for (let i=this._childElementList.length-1; i>=0 && processList.length < CHILD_RESIZE_BATCH_SIZE; i--) {
           const childStatus = this._childElementList[i];
           if (childStatus.needsRefresh) {
@@ -1597,18 +1597,18 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
 
           if (stashedList.length !== 0) {
             const markVisibleOperations = stashedList.map( (el) => this._bulkMarkVisible(el, true) );
-            CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.parallel(markVisibleOperations));
+            CodeMirrorOperation.executeBulkDOMOperation(BulkDomOperation.parallel(markVisibleOperations));
           }
 
           if (refreshOperations.length !==0) {
-            CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.parallel(refreshOperations));
+            CodeMirrorOperation.executeBulkDOMOperation(BulkDomOperation.parallel(refreshOperations));
           }
 
           this._virtualScrollArea.updateScrollableSizes(processList);
 
           if (stashedList.length !== 0) {
             const markVisibleOperations = stashedList.map( (el) => this._bulkMarkVisible(el, false) );
-            CodeMirrorOperation.executeBulkDOMOperation(BulkDOMOperation.parallel(markVisibleOperations));
+            CodeMirrorOperation.executeBulkDOMOperation(BulkDomOperation.parallel(markVisibleOperations));
           }
 
           this._scheduleStashedChildResizeTask();

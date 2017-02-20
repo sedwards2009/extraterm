@@ -27,7 +27,7 @@ import ViewerElementTypes = require('../viewerelementtypes');
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
-import BulkDOMOperation = require('../BulkDOMOperation');
+import * as BulkDomOperation from '../BulkDomOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -116,16 +116,16 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     return ViewerElementTypes.Mode.DEFAULT;
   }
 
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    return BulkDOMOperation.nullOperation();
+  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
+    return BulkDomOperation.nullOperation();
   }
 
   getVisualState(): ViewerElementTypes.VisualState {
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  bulkSetVisualState(state: VisualState): BulkDOMOperation.BulkDOMOperation {
-    return BulkDOMOperation.nullOperation();
+  bulkSetVisualState(state: VisualState): BulkDomOperation.BulkDOMOperation {
+    return BulkDomOperation.nullOperation();
   }
 
   //-----------------------------------------------------------------------
@@ -192,12 +192,12 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
     if (DEBUG_SIZE) {
       this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
         setterState.yOffset, setterState.yOffsetChanged);
     }
-    return BulkDOMOperation.nullOperation();
+    return BulkDomOperation.nullOperation();
   }
 
   // VirtualScrollable
@@ -304,7 +304,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
   }
   
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
     return this._processRefresh(level);
   }
 
@@ -369,7 +369,7 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     this._substituteKeycaps(contentDiv);
     this._fixImgRelativeUrls(contentDiv);
     
-    BulkDOMOperation.execute(this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE));
+    BulkDomOperation.execute(this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE));
   }
 
   private _substituteKeycaps(contentDiv: HTMLElement): void {
@@ -401,28 +401,28 @@ class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, 
     });
   }
 
-  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDOMOperation.BulkDOMOperation {
+  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
 
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     if (containerDiv !== null) {
 
-      const generator = function* generator(this: EtTipViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
+      const generator = function* generator(this: EtTipViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
         // --- DOM Read ---
-        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
 
         const rect = containerDiv.getBoundingClientRect();
         this._height = rect.height;
 
-        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         this._adjustHeight(this._height);
         const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
-        return BulkDOMOperation.GeneratorPhase.DONE;
+        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
+        return BulkDomOperation.GeneratorPhase.DONE;
       };
 
-      return BulkDOMOperation.fromGenerator(generator.bind(this)());
+      return BulkDomOperation.fromGenerator(generator.bind(this)());
     } else {
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     }
   }
 

@@ -20,7 +20,7 @@ import * as GeneralEvents from './GeneralEvents';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 import Logger from './Logger';
 import log from './LogDecorator';
-import BulkDOMOperation = require('./BulkDOMOperation');
+import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import SupportsClipboardPaste = require('./SupportsClipboardPaste');
 
@@ -186,13 +186,13 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
     return this._getViewerElement();
   }
   
-  bulkSetVisualState(newVisualState: VisualState): BulkDOMOperation.BulkDOMOperation {
+  bulkSetVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
     this._visualState = newVisualState;
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
       return viewerElement.bulkSetVisualState(newVisualState);
     } else {
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     }
   }
   
@@ -233,15 +233,15 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
   }
   
   // See VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
+    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
       if (DEBUG_SIZE) {
         this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
           setterState.yOffset, setterState.yOffsetChanged);
       }
 
       // --- DOM Write ---
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
 
       if (setterState.heightChanged) {
         this.style.height = "" + setterState.height + "px";
@@ -257,13 +257,13 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
       }
       
       // --- DOM Read ---
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
 
       const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
       const rect = headerDiv.getBoundingClientRect();
 
       // --- DOM Write ---
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
 
       headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
       const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
@@ -292,29 +292,29 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
          this._applyContainerChanges();
       }
 
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 
-  bulkVisible(visible: boolean): BulkDOMOperation.BulkDOMOperation {
+  bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
     if (visible) {
-      const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
+      const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
         if (DEBUG_SIZE) {
           this._log.debug("bulkVisible() generator: ");
         }
 
-        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         this._applyContainerChanges();
         this._virtualScrollArea.reapplyState();
-        return BulkDOMOperation.GeneratorPhase.DONE;
+        return BulkDomOperation.GeneratorPhase.DONE;
       };
 
-      return BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+      return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
     } else {
 
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     }
   }
 
@@ -416,20 +416,20 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
     viewerElement.clearSelection();
   }
 
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
+    const generator = function* generator(this: EtEmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       if (DEBUG_SIZE) {
         this._log.debug("bulkSetMode() generator: newMode=", newMode);
       }
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_FINISH;
+      yield BulkDomOperation.GeneratorPhase.BEGIN_FINISH;
 
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
-    const setModeOperation = BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    const setModeOperation = BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
 
     const viewerElement = this.viewerElement;
     if (viewerElement !== null) {
-      return BulkDOMOperation.parallel([viewerElement.bulkSetMode(newMode), setModeOperation]);
+      return BulkDomOperation.parallel([viewerElement.bulkSetMode(newMode), setModeOperation]);
     } else {
       return setModeOperation;
     }
@@ -835,8 +835,8 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
     const scrollable = <any> ev.target;
 
-    const generator = function* bulkUpdateGenerator(this: EtEmbeddedViewer): IterableIterator<BulkDOMOperation.GeneratorResult> {
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_READ;
+    const generator = function* bulkUpdateGenerator(this: EtEmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
 
       const height = this._virtualScrollArea.getVirtualHeight();
       this._virtualScrollArea.updateScrollableSize(scrollable);
@@ -844,12 +844,12 @@ export default class EtEmbeddedViewer extends ViewerElement implements CommandPa
       const newHeight = this._virtualScrollArea.getVirtualHeight();
       if (height !== newHeight) {
         const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-        yield { phase: BulkDOMOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
+        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
       }
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    const operation = BulkDOMOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    const operation = BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
     (<VirtualScrollArea.ResizeEventDetail>ev.detail).addOperation(operation);
   }
 }

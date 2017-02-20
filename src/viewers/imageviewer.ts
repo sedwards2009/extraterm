@@ -15,7 +15,7 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 import * as keybindingmanager from '../KeyBindingManager';
-import BulkDOMOperation = require('../BulkDOMOperation');
+import * as BulkDomOperation from '../BulkDomOperation';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -142,7 +142,7 @@ class EtImageViewer extends ViewerElement {
     return hasFocus;
   }
   
-  bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDOMOperation.BulkDOMOperation {
+  bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
     return this._bulkSetVisualState(newVisualState);
   }
   
@@ -179,13 +179,13 @@ class EtImageViewer extends ViewerElement {
     }
   }
 
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDOMOperation.BulkDOMOperation {
+  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
     if (newMode === this._mode) {
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     }
     this._mode = newMode;
 
-    return BulkDOMOperation.nullOperation();
+    return BulkDomOperation.nullOperation();
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -207,10 +207,10 @@ class EtImageViewer extends ViewerElement {
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDOMOperation.BulkDOMOperation {
-    const generator = function* generator(this: EtImageViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
+    const generator = function* generator(this: EtImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       if (setterState.heightChanged || setterState.yOffsetChanged) {
-        yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         if (DEBUG_SIZE) {
           this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
             setterState.yOffset, setterState.yOffsetChanged);
@@ -222,10 +222,10 @@ class EtImageViewer extends ViewerElement {
           containerDiv.scrollTop = setterState.yOffset;
         }
       }
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDomOperation.fromGenerator(generator.bind(this)());
   }
 
   // VirtualScrollable
@@ -368,23 +368,23 @@ class EtImageViewer extends ViewerElement {
     return window.document.importNode(template.content, true);
   }
   
-  private _bulkSetVisualState(newVisualState: number): BulkDOMOperation.BulkDOMOperation {
+  private _bulkSetVisualState(newVisualState: number): BulkDomOperation.BulkDOMOperation {
     if (newVisualState === this._visualState) {
-      return BulkDOMOperation.nullOperation();
+      return BulkDomOperation.nullOperation();
     }
 
-    const generator = function* generator(this: EtImageViewer): IterableIterator<BulkDOMOperation.GeneratorPhase> {
+    const generator = function* generator(this: EtImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
       // --- DOM Write ---
-      yield BulkDOMOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       if (DomUtils.getShadowRoot(this) !== null) {
         this._applyVisualState(newVisualState);
       }    
       this._visualState = newVisualState;
 
-      return BulkDOMOperation.GeneratorPhase.DONE;
+      return BulkDomOperation.GeneratorPhase.DONE;
     };
 
-    return BulkDOMOperation.fromGenerator(generator.bind(this)());
+    return BulkDomOperation.fromGenerator(generator.bind(this)());
   }
   
   private _applyVisualState(visualState: VisualState): void {
