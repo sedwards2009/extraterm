@@ -6,11 +6,11 @@
 
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
-import menuitem = require('./menuitem');
+import MenuItem from './MenuItem';
 import * as DomUtils from '../DomUtils';
-import util = require('./util');
+import * as Util from './Util';
 
-menuitem.init();
+MenuItem.init();
 
 const ID = "CbContextMenuTemplate";
 const ID_COVER = "ID_COVER";
@@ -21,7 +21,7 @@ let registered = false;
 /**
  * A context menu.
  */
-class CbContextMenu extends ThemeableElementBase {
+export default class CbContextMenu extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -125,8 +125,8 @@ class CbContextMenu extends ThemeableElementBase {
     });
     
     container.addEventListener('click', (ev: MouseEvent) => {
-      if (ev.srcElement instanceof menuitem) {
-        const item = <menuitem>ev.srcElement;
+      if (ev.srcElement instanceof MenuItem) {
+        const item = <MenuItem>ev.srcElement;
         this.activateItem(item);
       }
     });
@@ -140,14 +140,14 @@ class CbContextMenu extends ThemeableElementBase {
   /**
    * 
    */
-  private fetchCbMenuItems(kids: NodeList): menuitem[] {
+  private fetchCbMenuItems(kids: NodeList): MenuItem[] {
     const len = kids.length;
-    const result: menuitem[] = [];
+    const result: MenuItem[] = [];
     for (let i=0; i<len; i++) {
       const item = kids[i];
 
-      if(item instanceof menuitem) {
-        result.push(<menuitem>item);
+      if(item instanceof MenuItem) {
+        result.push(<MenuItem>item);
       }
     }
     return result;
@@ -161,8 +161,8 @@ class CbContextMenu extends ThemeableElementBase {
     for (let i=0; i<len; i++) {
       const item = kids[i];
 
-      if (item instanceof menuitem) {
-        (<menuitem>item).setAttribute('selected', selectitem === item ? "true" : "false");
+      if (item instanceof MenuItem) {
+        (<MenuItem>item).setAttribute('selected', selectitem === item ? "true" : "false");
       }
     }
   }
@@ -185,7 +185,7 @@ class CbContextMenu extends ThemeableElementBase {
         return;
       }
 
-      const keyboardselected = menuitems.filter( (item:menuitem) => util.htmlValueToBool(item.getAttribute("selected")));
+      const keyboardselected = menuitems.filter( (item:MenuItem) => Util.htmlValueToBool(item.getAttribute("selected")));
 
       if (ev.keyIdentifier === "Up") {
         if (keyboardselected.length === 0) {
@@ -218,7 +218,7 @@ class CbContextMenu extends ThemeableElementBase {
   /**
    * 
    */
-  private activateItem(item: menuitem): void {
+  private activateItem(item: MenuItem): void {
     item._clicked();
 
     const name = item.getAttribute('name');
@@ -242,7 +242,7 @@ class CbContextMenu extends ThemeableElementBase {
         return;
       }
 
-      const keyboardselected = menuitems.filter( (item:menuitem) => util.htmlValueToBool(item.getAttribute("selected")) );
+      const keyboardselected = menuitems.filter( (item:MenuItem) => Util.htmlValueToBool(item.getAttribute("selected")) );
       if (keyboardselected.length !== 0) {
         this.activateItem(keyboardselected[0]);
       }
@@ -352,5 +352,3 @@ class CbContextMenu extends ThemeableElementBase {
     this.dispatchEvent(event);
   }
 }
-
-export = CbContextMenu;

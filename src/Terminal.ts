@@ -35,8 +35,8 @@ import Logger from './Logger';
 import LogDecorator from './LogDecorator';
 import * as DomUtils from './DomUtils';
 import * as Term from './Term';
-import CbScrollbar = require('./gui/scrollbar');
-import util = require('./gui/util');
+import CbScrollbar from './gui/ScrollBar';
+import * as util from './gui/Util';
 
 import electron = require('electron');
 const clipboard = electron.clipboard;

@@ -35,7 +35,7 @@ type ThemeType = ThemeTypes.ThemeType;
 import * as ThemeManager from './ThemeManager';
 
 import child_process = require('child_process');
-import util = require('./gui/util');
+import * as Util from './gui/Util';
 import Logger from './Logger';
 
 type PtyConnector  = PtyConnector.PtyConnector;
@@ -201,9 +201,9 @@ function mapBadChar(m: string): string {
       return '\\"';
     default:
       if (c <= 255) {
-        return "\\x" + util.to2DigitHex(c);
+        return "\\x" + Util.to2DigitHex(c);
       } else {
-        return "\\u" + util.to2DigitHex( c >> 8) + util.to2DigitHex(c & 0xff);
+        return "\\u" + Util.to2DigitHex( c >> 8) + Util.to2DigitHex(c & 0xff);
       }
   }
 }

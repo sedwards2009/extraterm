@@ -5,7 +5,7 @@
  */
 
 import fs  = require('fs');
-import util = require('./gui/util');
+import * as Util from './gui/Util';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');

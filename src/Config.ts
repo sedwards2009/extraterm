@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import util = require('./gui/util');
+import * as Util from './gui/Util';
 import os = require('os');
 import _ = require('lodash');
 

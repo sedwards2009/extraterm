@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as DomUtils from '../DomUtils';
-import util = require("./util");
+import * as Util from './Util';
 import Logger from '../Logger';
 
 const ID = "CbTabTemplate";
@@ -14,7 +14,7 @@ let registered = false;
 /**
  * Holds the contents of one tab inside a CbTabWidget tag.
  */
-class CbTab extends HTMLElement {
+export default class CbTab extends HTMLElement {
   
   /**
    * The HTML tag name of this element.
@@ -98,5 +98,3 @@ class CbTab extends HTMLElement {
     }
   }
 }
-
-export = CbTab;

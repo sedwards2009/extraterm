@@ -8,7 +8,7 @@ import fs = require('fs');
 import ViewerElement = require("../viewerelement");
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
-import util = require('../gui/util');
+import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import ViewerElementTypes = require('../viewerelementtypes');
 import * as VirtualScrollArea from '../VirtualScrollArea';

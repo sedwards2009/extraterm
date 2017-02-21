@@ -6,10 +6,10 @@
 
 import _ = require('lodash');
 import * as ResourceLoader from './ResourceLoader';
-import menuitem = require('./gui/menuitem');
-import checkboxmenuitem = require('./gui/checkboxmenuitem');
+import MenuItem from './gui/MenuItem';
+import CheckboxMenuItem from './gui/CheckboxMenuItem';
 import * as DomUtils from './DomUtils';
-import util = require('./gui/util');
+import * as Util from './gui/Util';
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
@@ -28,8 +28,8 @@ type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
 type VisualState = ViewerElementTypes.VisualState;
 
-menuitem.init();
-checkboxmenuitem.init();
+MenuItem.init();
+CheckboxMenuItem.init();
 
 const ID = "EtEmbeddedViewerTemplate";
 
@@ -703,7 +703,7 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
     if (attrName === EmbeddedViewer.ATTR_EXPAND) {
       const output = <HTMLDivElement>this._getById(ID_OUTPUT);
       // const expandicon = <HTMLDivElement>this._getById(ID_EXPAND_ICON);
-      if (util.htmlValueToBool(newValue, true)) {
+      if (Util.htmlValueToBool(newValue, true)) {
         // Expanded.
         output.classList.remove('closed');
         // expandicon.classList.remove('fa-plus-square-o');

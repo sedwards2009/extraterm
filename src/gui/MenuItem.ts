@@ -5,7 +5,7 @@
  */
 import ThemeableElementBase = require('../themeableelementbase');
 import * as DomUtils from '../DomUtils';
-import util = require('./util');
+import * as Util from './Util';
 import * as ThemeTypes from '../Theme';
 
 const ID = "CbMenuItemTemplate";
@@ -19,7 +19,7 @@ let registered = false;
 /**
  * A menu item suitable for use inside a CbContextMenu.
  */
-class CbMenuItem extends ThemeableElementBase {
+export default class CbMenuItem extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -143,5 +143,3 @@ class CbMenuItem extends ThemeableElementBase {
     }
   }
 }
-
-export = CbMenuItem;

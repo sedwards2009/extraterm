@@ -14,10 +14,10 @@ import he = require('he');
 import Logger from './Logger';
 import * as Messages from './WindowMessages';
 import * as WebIpc from './WebIpc';
-import CbContextMenu = require('./gui/contextmenu');
-import CbMenuItem = require('./gui/menuitem');
-import CbDropDown = require('./gui/dropdown');
-import CbCheckBoxMenuItem = require('./gui/checkboxmenuitem');
+import CbContextMenu from './gui/ContextMenu';
+import CbMenuItem from './gui/MenuItem';
+import CbDropDown from './gui/DropDown';
+import CbCheckBoxMenuItem from './gui/CheckboxMenuItem';
 import PopDownListPicker = require('./gui/PopDownListPicker');
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 import CommandPaletteTypes = require('./gui/commandpalettetypes');
@@ -30,7 +30,7 @@ import InternalExtratermApi = require('./InternalExtratermApi');
 import MainWebUi from './MainWebUi';
 import EtTerminal from './Terminal';
 import * as DomUtils from './DomUtils';
-import util = require('./gui/util');
+import * as Util from './gui/Util';
 
 import EmbeddedViewer from './EmbeddedViewer';
 import AboutTab from './AboutTab';
@@ -268,7 +268,7 @@ function executeMenuCommand(command: string): boolean {
     // Unflip what the user did to the state of the developer tools check box for a moment.
     // Let executeCommand() toggle the checkbox itself. 
     const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
-    const devToolsOpen = util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+    const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
     developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
   }
 
@@ -279,7 +279,7 @@ function executeCommand(command: string): boolean {
   switch(command) {
     case MENU_ITEM_SPLIT:
       const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
-      mainWebUi.split = util.toBoolean(splitMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+      mainWebUi.split = Util.toBoolean(splitMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
       break;
       
     case MENU_ITEM_SETTINGS:
@@ -292,7 +292,7 @@ function executeCommand(command: string): boolean {
       
     case MENU_ITEM_DEVELOPER_TOOLS:
       const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
-      const devToolsOpen = util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+      const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
       developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
       WebIpc.devToolsRequest( ! devToolsOpen);
       break;
@@ -581,7 +581,7 @@ function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
   }
 
   const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
-  const devToolsOpen = util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+  const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
 
   const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
     { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", target: target },

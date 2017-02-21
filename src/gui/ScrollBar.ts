@@ -6,7 +6,7 @@
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
-import util = require('./util');
+import * as Util from './Util';
 import * as BulkDomOperation from '../BulkDomOperation';
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import Logger from '../Logger';
@@ -21,7 +21,7 @@ let registered = false;
 /**
  * A scrollbar.
  */
-class CbScrollbar extends ThemeableElementBase {
+export default class CbScrollbar extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -256,5 +256,3 @@ class CbScrollbar extends ThemeableElementBase {
     return BulkDomOperation.fromGenerator(generator.bind(this)());
   }
 }
-
-export = CbScrollbar;

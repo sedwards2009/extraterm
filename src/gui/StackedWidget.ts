@@ -9,7 +9,7 @@ import * as BulkDomOperation from '../BulkDomOperation';
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
-import util = require('./util');
+import * as Util from './Util';
 
 const ID = "CbStackedWidgetTemplate";
 const ID_CONTAINER = 'ID_CONTAINER';
@@ -20,7 +20,7 @@ let registered = false;
 /**
  * A widget which displays one of its DIV contents at a time.
  */
-class CbStackedWidget extends ThemeableElementBase {
+export default class CbStackedWidget extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -183,5 +183,3 @@ class CbStackedWidget extends ThemeableElementBase {
     }
   }
 }
-
-export = CbStackedWidget;

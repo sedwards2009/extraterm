@@ -3,11 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import contextmenu = require('./contextmenu');
+import ContextMenu from './ContextMenu';
 import * as DomUtils from '../DomUtils';
-import util = require('./util');
+import * as Util from './Util';
 
-contextmenu.init();
+ContextMenu.init();
 
 const ID = "CbDropDownTemplate";
 const SLOT_CBCONTEXTMENU = "cb-contextmenu";
@@ -21,7 +21,7 @@ let registered = false;
  * element like a button which emits a click event. When the user activates
  * the button, the CbContextMenu is displayed.
  */
-class CbDropDown extends HTMLElement {
+export default class CbDropDown extends HTMLElement {
   
   /**
    * The HTML tag name of this element.
@@ -75,7 +75,7 @@ class CbDropDown extends HTMLElement {
     shadow.appendChild(clone);
 
     const clickHandler = (ev: MouseEvent) => {
-      const cm = <contextmenu>this.querySelector('cb-contextmenu');
+      const cm = <ContextMenu>this.querySelector('cb-contextmenu');
       cm.openAround(this);        
     };
 
@@ -89,7 +89,7 @@ class CbDropDown extends HTMLElement {
       }
     }
 
-    const cm = <contextmenu>this.querySelector('cb-contextmenu');  
+    const cm = <ContextMenu>this.querySelector('cb-contextmenu');  
     cm.addEventListener('selected', (ev: MouseEvent) => {
         var event = new CustomEvent('selected', { detail: ev.detail });
         this.dispatchEvent(event);
@@ -106,5 +106,3 @@ class CbDropDown extends HTMLElement {
     }
   }
 }
-
-export = CbDropDown;

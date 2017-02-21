@@ -5,11 +5,11 @@
  */
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
-import CbStackedWidget = require('./stackedwidget');
-import CbTab = require('./tab');
+import CbStackedWidget from './StackedWidget';
+import CbTab from './Tab';
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import * as BulkDomOperation from '../BulkDomOperation';
-import util = require('./util');
+import * as Util from './Util';
 import * as DomUtils from '../DomUtils';
 import _ = require('lodash');
 import Logger from '../Logger';
@@ -45,7 +45,7 @@ const CLASS_TAB = "tab";
  *
  * See CbTab.
  */
-class CbTabWidget extends ThemeableElementBase {
+export default class CbTabWidget extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -128,7 +128,7 @@ class CbTabWidget extends ThemeableElementBase {
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     switch (attrName) {
       case ATTR_SHOW_FRAME:
-        this._showFrame(util.toBoolean(newValue));
+        this._showFrame(Util.toBoolean(newValue));
         break;
         
       default:
@@ -354,7 +354,7 @@ class CbTabWidget extends ThemeableElementBase {
   
   get showFrame(): boolean {
     if (this.hasAttribute(ATTR_SHOW_FRAME)) {
-      return util.toBoolean(this.getAttribute(ATTR_SHOW_FRAME));
+      return Util.toBoolean(this.getAttribute(ATTR_SHOW_FRAME));
     } else {
       return true;
     }
@@ -501,5 +501,3 @@ class CbTabWidget extends ThemeableElementBase {
   }
 
 }
-
-export = CbTabWidget;

@@ -4,16 +4,16 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as DomUtils from './DomUtils';
-import util = require('./gui/util');
+import * as util from './gui/Util';
 import ThemeableElementBase = require('./themeableelementbase');
-import TabWidget = require('./gui/tabwidget');
+import TabWidget from './gui/TabWidget';
 import EtTerminal from './Terminal';
 import EtSettingsTab = require('./settings/settingstab2');
 import AboutTab from './AboutTab';
 import EtKeyBindingsTab from './KeyBindingsTab';
 import EtViewerTab from './ViewerTab';
 import EmbeddedViewer from './EmbeddedViewer';
-import CbTab = require('./gui/tab');
+import CbTab from './gui/Tab';
 import ViewerElement = require('./viewerelement');
 import ViewerElementTypes = require('./viewerelementtypes');
 import * as BulkDomOperation from './BulkDomOperation';

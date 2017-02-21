@@ -3,9 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import CbMenuItem = require('./menuitem');
+import CbMenuItem from './MenuItem';
 import * as DomUtils from '../DomUtils';
-import util = require('./util');
+import * as Util from './Util';
 
 const ID = "CbCheckBoxMenuItemTemplate";
 
@@ -14,7 +14,7 @@ let registered = false;
 /**
  * A check box menu item for use inside a context menu.
  */
-class CbCheckBoxMenuItem extends CbMenuItem {
+export default class CbCheckBoxMenuItem extends CbMenuItem {
   
   /**
    * The HTML tag name of this element.
@@ -74,24 +74,22 @@ class CbCheckBoxMenuItem extends CbMenuItem {
 
   //-----------------------------------------------------------------------
   set checked(checked: boolean) {
-    this.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, util.booleanToString(checked));
+    this.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, Util.booleanToString(checked));
   }
 
   get checked(): boolean {
-    return util.htmlValueToBool(this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+    return Util.htmlValueToBool(this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
   }
 
   //-----------------------------------------------------------------------
   _clicked(): void {
     const checked = this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED);
-    this.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, (! util.htmlValueToBool(checked)) ? "true" : "false");
+    this.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, (! Util.htmlValueToBool(checked)) ? "true" : "false");
   }
 
   private _updateChecked(checked: string): void {
     const shadow = DomUtils.getShadowRoot(this);
-    const checkedhtml = "<i class='fa fa-fw fa-" + (util.htmlValueToBool(checked) ? "check-" : "") + "square-o'></i>";
+    const checkedhtml = "<i class='fa fa-fw fa-" + (Util.htmlValueToBool(checked) ? "check-" : "") + "square-o'></i>";
     (<HTMLDivElement>shadow.querySelector("#" + CbMenuItem.ID_ICON1)).innerHTML = checkedhtml; 
   }
 }
-
-export = CbCheckBoxMenuItem;

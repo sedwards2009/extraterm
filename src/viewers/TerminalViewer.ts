@@ -9,7 +9,7 @@ import path = require('path');
 
 import ViewerElement = require("../viewerelement");
 import ThemeableElementBase = require('../themeableelementbase');
-import util = require("../gui/util");
+import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import CodeMirror = require('codemirror');
 import * as CodeMirrorCommands from '../CodeMirrorCommands';

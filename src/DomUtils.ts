@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import util = require('./gui/util');
+import * as Util from './gui/Util';
 
 /**
  * Convert an array-like object to a real array.
@@ -150,7 +150,7 @@ export function extractTextFromRange(range: Range): string {
     } else if (currentNode.nodeName === "DIV") {
       const divElement = <HTMLDivElement> currentNode;
       if (divElement.classList.contains('terminal-active') || divElement.classList.contains('terminal-scrollback')) {
-        result = util.trimRight(result) + "\n";
+        result = Util.trimRight(result) + "\n";
       }
     }
     

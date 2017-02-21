@@ -10,7 +10,7 @@ import path = require('path');
 import * as SourceDir from '../SourceDir';
 import ViewerElement = require("../viewerelement");
 import ThemeableElementBase = require('../themeableelementbase');
-import util = require("../gui/util");
+import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ThemeTypes from '../Theme';
 import * as keybindingmanager from '../KeyBindingManager';
