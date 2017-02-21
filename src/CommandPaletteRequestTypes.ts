@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import CommandPaletteTypes = require('./gui/commandpalettetypes');
+import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 
 export interface Commandable {
   executeCommand(commandId: string): void;

@@ -20,7 +20,7 @@ import CbDropDown from './gui/DropDown';
 import CbCheckBoxMenuItem from './gui/CheckboxMenuItem';
 import PopDownListPicker = require('./gui/PopDownListPicker');
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
-import CommandPaletteTypes = require('./gui/commandpalettetypes');
+import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 
 import PluginApi = require('./PluginApi');

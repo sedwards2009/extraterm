@@ -21,7 +21,7 @@ import * as ThemeTypes from './Theme';
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 
-import CommandPaletteTypes = require('./gui/commandpalettetypes');
+import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
