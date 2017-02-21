@@ -13,7 +13,7 @@ import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import CodeMirror = require('codemirror');
 import * as CodeMirrorCommands from '../CodeMirrorCommands';
-import ViewerElementTypes = require('../viewerelementtypes');
+import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import * as Term from '../Term';

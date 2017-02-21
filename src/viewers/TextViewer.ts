@@ -19,7 +19,7 @@ type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import CodeMirror = require('codemirror');
 import * as CodeMirrorCommands from '../CodeMirrorCommands';
-import ViewerElementTypes = require('../viewerelementtypes');
+import * as ViewerElementTypes from '../ViewerElementTypes';
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import * as EtTextViewerTypes from './TerminalViewerTypes';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';

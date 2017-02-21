@@ -10,7 +10,7 @@ import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
-import ViewerElementTypes = require('../viewerelementtypes');
+import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';

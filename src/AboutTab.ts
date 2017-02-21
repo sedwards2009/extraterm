@@ -10,7 +10,7 @@
 
 import * as ThemeTypes from './Theme';
 import ViewerElement from './ViewerElement';
-import ViewerElementTypes = require('./viewerelementtypes');
+import * as ViewerElementTypes from './ViewerElementTypes';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as DomUtils from './DomUtils';
 import * as BulkDomOperation from './BulkDomOperation';

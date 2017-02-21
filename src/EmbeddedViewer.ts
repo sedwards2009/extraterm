@@ -11,7 +11,7 @@ import CheckboxMenuItem from './gui/CheckboxMenuItem';
 import * as DomUtils from './DomUtils';
 import * as Util from './gui/Util';
 import ViewerElement from './ViewerElement';
-import ViewerElementTypes = require('./viewerelementtypes');
+import * as ViewerElementTypes from './ViewerElementTypes';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';

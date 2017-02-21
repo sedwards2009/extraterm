@@ -7,7 +7,7 @@
 import fs  = require('fs');
 
 import ViewerElement from "./ViewerElement";
-import ViewerElementTypes = require("./viewerelementtypes");
+import * as ViewerElementTypes from './ViewerElementTypes';
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import EmbeddedViewer from './EmbeddedViewer';
 import Logger from './Logger';

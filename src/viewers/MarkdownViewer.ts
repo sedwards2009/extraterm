@@ -7,7 +7,7 @@ import ViewerElement from '../ViewerElement';
 import * as DomUtils from '../DomUtils';
 import markdownMod = require('markdown');
 const markdown = markdownMod.markdown;
-import ViewerElementTypes = require("../viewerelementtypes");
+import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as BulkDomOperation from '../BulkDomOperation';
 
 const ID = "CbMarkdownViewerTemplate";

@@ -15,7 +15,7 @@ import EtViewerTab from './ViewerTab';
 import EmbeddedViewer from './EmbeddedViewer';
 import CbTab from './gui/Tab';
 import ViewerElement from './ViewerElement';
-import ViewerElementTypes = require('./viewerelementtypes');
+import * as ViewerElementTypes from './ViewerElementTypes';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
 import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');

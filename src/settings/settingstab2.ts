@@ -19,7 +19,7 @@ import * as ThemeTypes from '../Theme';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 import * as GeneralEvents from '../GeneralEvents';
-import ViewerElementTypes = require('../viewerelementtypes');
+import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as BulkDomOperation from '../BulkDomOperation';
 
 type CommandLineAction = config.CommandLineAction;

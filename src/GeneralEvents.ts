@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import viewerelementtypes = require('./viewerelementtypes');
+import * as ViewerElementTypes from './ViewerElementTypes';
 
 export const EVENT_TYPE_TEXT = 'type-text';
 
@@ -13,5 +13,5 @@ export interface TypeTextEventDetail {
 
 export const EVENT_SET_MODE = 'set-mode';
 export interface SetModeEventDetail {
-  mode: viewerelementtypes.Mode;
+  mode: ViewerElementTypes.Mode;
 }

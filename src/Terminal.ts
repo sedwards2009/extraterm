@@ -10,7 +10,7 @@ import _ = require('lodash');
 import utf8 = require('utf8');
 
 import ViewerElement from './ViewerElement';
-import ViewerElementTypes = require("./viewerelementtypes");
+import * as ViewerElementTypes from './ViewerElementTypes';
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import * as BulkDomOperation from './BulkDomOperation';
 import ResizeCanary from './ResizeCanary';

@@ -13,7 +13,7 @@ import ViewerElement from './ViewerElement';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
-import ViewerElementTypes = require('./viewerelementtypes');
+import * as ViewerElementTypes from './ViewerElementTypes';
 import * as BulkDomOperation from './BulkDomOperation';
 
 import Vue = require('vue');
