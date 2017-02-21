@@ -104,7 +104,7 @@
         "./src/viewers/TerminalViewerTypes.ts",
         "./src/viewers/TextViewer.ts",
         "./src/viewers/TipViewer.ts",
-        "./src/settings/settingstab2.ts",
+        "./src/settings/SettingsTab.ts",
         "./src/plugins/TerminalViewerExtra/TerminalViewerExtra.ts",
         "./src/plugins/TextViewer/TextViewerPlugin.ts",
         "./src/typings/codemirror/codemirror.d.ts",

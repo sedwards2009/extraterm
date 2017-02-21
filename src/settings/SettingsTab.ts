@@ -98,13 +98,13 @@ function stripIds(list: Identifiable[]): void {
   });  
 }
 
-class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager {
+export default class SettingsTab extends ViewerElement implements config.AcceptsConfigManager {
   
   static TAG_NAME = "et-settings-tab";
   
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EtSettingsTab.TAG_NAME, {prototype: EtSettingsTab.prototype});
+      window.document.registerElement(SettingsTab.TAG_NAME, {prototype: SettingsTab.prototype});
       registered = true;
     }
   }
@@ -124,7 +124,7 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
   private _fontOptions: FontInfo[];
 
   private _initProperties(): void {
-    this._log = new Logger(EtSettingsTab.TAG_NAME, this);
+    this._log = new Logger(SettingsTab.TAG_NAME, this);
     this._vm = null;
     this._themes = [];
     this._configManager = null;
@@ -552,5 +552,3 @@ class EtSettingsTab extends ViewerElement implements config.AcceptsConfigManager
     this._configManager.setConfig(newConfig);
   }
 }
-
-export = EtSettingsTab;

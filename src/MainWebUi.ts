@@ -8,7 +8,7 @@ import * as util from './gui/Util';
 import ThemeableElementBase = require('./themeableelementbase');
 import TabWidget from './gui/TabWidget';
 import EtTerminal from './Terminal';
-import EtSettingsTab = require('./settings/settingstab2');
+import SettingsTab from './settings/SettingsTab';
 import AboutTab from './AboutTab';
 import EtKeyBindingsTab from './KeyBindingsTab';
 import EtViewerTab from './ViewerTab';
@@ -267,7 +267,7 @@ class ViewerTabInfo extends ViewerElementTabInfo {
 }
 
 class SettingsTabInfo extends ViewerElementTabInfo {
-  constructor(public settingsElement: EtSettingsTab, public themes: ThemeTypes.ThemeInfo[]) {
+  constructor(public settingsElement: SettingsTab, public themes: ThemeTypes.ThemeInfo[]) {
     super(settingsElement);
     settingsElement.themes = themes;
   }
@@ -307,7 +307,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     CbTab.init();
     TabWidget.init();
     EtTerminal.init();
-    EtSettingsTab.init();
+    SettingsTab.init();
     EtKeyBindingsTab.init();
     AboutTab.init();
     EtViewerTab.init();
@@ -815,7 +815,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     if (settingsTabs.length !== 0) {
       this.focusTab(settingsTabs[0].id);
     } else {
-      const viewerElement = <EtSettingsTab> document.createElement(EtSettingsTab.TAG_NAME);
+      const viewerElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigManager(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       

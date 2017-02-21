@@ -34,7 +34,7 @@ import * as Util from './gui/Util';
 
 import EmbeddedViewer from './EmbeddedViewer';
 import AboutTab from './AboutTab';
-import SettingsTab = require('./settings/settingstab2');
+import SettingsTab from './settings/SettingsTab';
 import TerminalViewer from './viewers/TerminalViewer';
 import TextViewer from'./viewers/TextViewer';
 import ResizeCanary from './ResizeCanary';
