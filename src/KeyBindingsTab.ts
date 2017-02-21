@@ -9,7 +9,7 @@
 "use strict";
 import _ = require('lodash');
 import * as ThemeTypes from './Theme';
-import ViewerElement  = require('./viewerelement');
+import ViewerElement from './ViewerElement';
 import ThemeableElementBase = require('./themeableelementbase');
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;

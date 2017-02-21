@@ -8,7 +8,7 @@
 
 import _ = require('lodash');
 import ThemeableElementBase = require('../themeableelementbase');
-import ViewerElement  = require('../viewerelement');
+import ViewerElement from '../ViewerElement';
 import * as DomUtils from '../DomUtils';
 import Vue = require('vue');
 import * as config from '../Config';

@@ -8,7 +8,7 @@ import fs = require('fs');
 import path = require('path');
 
 import * as SourceDir from '../SourceDir';
-import ViewerElement = require("../viewerelement");
+import ViewerElement from '../ViewerElement';
 import ThemeableElementBase = require('../themeableelementbase');
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';

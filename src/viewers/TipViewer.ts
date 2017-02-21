@@ -17,7 +17,7 @@ type ConfigManager = config.ConfigManager;
 import * as keybindingmanager from '../KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import ViewerElement = require("../viewerelement");
+import ViewerElement from '../ViewerElement';
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';

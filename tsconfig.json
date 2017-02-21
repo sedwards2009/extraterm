@@ -76,7 +76,7 @@
         "./src/ThemeManagerUtility.ts",
         "./src/utf8.d.ts",
         "./src/utf8encoding.ts",
-        "./src/viewerelement.ts",
+        "./src/ViewerElement.ts",
         "./src/viewerelementtypes.ts",
         "./src/ViewerTab.ts",
         "./src/VirtualScrollArea.ts",

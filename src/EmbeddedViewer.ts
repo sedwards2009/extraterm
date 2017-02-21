@@ -10,7 +10,7 @@ import MenuItem from './gui/MenuItem';
 import CheckboxMenuItem from './gui/CheckboxMenuItem';
 import * as DomUtils from './DomUtils';
 import * as Util from './gui/Util';
-import ViewerElement = require('./viewerelement');
+import ViewerElement from './ViewerElement';
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
 import * as KeyBindingManager from './KeyBindingManager';

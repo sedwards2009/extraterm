@@ -5,7 +5,7 @@
 "use strict";
 import _  = require('lodash');
 import fs = require('fs');
-import ViewerElement = require("../viewerelement");
+import ViewerElement from '../ViewerElement';
 import ThemeableElementBase = require('../themeableelementbase');
 import * as ThemeTypes from '../Theme';
 import * as Util from '../gui/Util';

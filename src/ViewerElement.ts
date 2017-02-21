@@ -137,5 +137,4 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
     
   }
 }
-
-export = ViewerElement;
+export default ViewerElement;

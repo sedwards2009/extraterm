@@ -9,7 +9,7 @@
 "use strict";
 
 import * as ThemeTypes from './Theme';
-import ViewerElement  = require('./viewerelement');
+import ViewerElement from './ViewerElement';
 import ViewerElementTypes = require('./viewerelementtypes');
 import ThemeableElementBase = require('./themeableelementbase');
 import * as DomUtils from './DomUtils';

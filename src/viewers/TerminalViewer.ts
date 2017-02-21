@@ -7,7 +7,7 @@ import _  = require('lodash');
 import fs = require('fs');
 import path = require('path');
 
-import ViewerElement = require("../viewerelement");
+import ViewerElement from '../ViewerElement';
 import ThemeableElementBase = require('../themeableelementbase');
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';

@@ -14,7 +14,7 @@ import EtKeyBindingsTab from './KeyBindingsTab';
 import EtViewerTab from './ViewerTab';
 import EmbeddedViewer from './EmbeddedViewer';
 import CbTab from './gui/Tab';
-import ViewerElement = require('./viewerelement');
+import ViewerElement from './ViewerElement';
 import ViewerElementTypes = require('./viewerelementtypes');
 import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
