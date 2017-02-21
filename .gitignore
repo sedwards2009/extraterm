@@ -1,5 +1,6 @@
 *~
 *.map
+.vscode
 node_modules/
 src/resourceloader.js
 src/utf8encoding.js
@@ -71,3 +72,19 @@ src/viewers/TerminalViewer.js
 src/viewers/TerminalViewerTypes.js
 src/viewers/TextViewer.js
 src/viewers/TipViewer.js
+src/SupportsClipboardPaste.js
+src/ViewerElement.js
+src/gui/CheckboxMenuItem.js
+src/gui/CommandPaletteTypes.js
+src/gui/ContextMenu.js
+src/gui/DropDown.js
+src/gui/MenuItem.js
+src/gui/PopDownDialog.js
+src/gui/PopDownListPicker.js
+src/gui/PopDownNumberDialog.js
+src/gui/ScrollBar.js
+src/gui/StackedWidget.js
+src/gui/Tab.js
+src/gui/TabWidget.js
+src/gui/Util.js
+src/plugins/TextViewer/TextViewerPlugin.js
