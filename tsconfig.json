@@ -21,7 +21,8 @@
         "./src/plugins/**/*.ts",
         "./src/typings/**/*.ts",
         "!./src/typings/tsd.d.ts",
-        "!./src/node_modules/**/*.ts"
+        "!./src/node_modules/**/*.ts",
+        "./src/node_modules/@types/**/*.d.ts"
     ],
     "files": [
         "./src/AboutTab.ts",
@@ -74,7 +75,6 @@
         "./src/ThemeConsumer.ts",
         "./src/ThemeManager.ts",
         "./src/ThemeManagerUtility.ts",
-        "./src/utf8.d.ts",
         "./src/ViewerElement.ts",
         "./src/ViewerElementTypes.ts",
         "./src/ViewerTab.ts",

@@ -41,6 +41,7 @@
     "ptyw.js": "0.4.0"
   },
   "devDependencies": {
+    "@types/utf8": "^2.1.5",
     "cajon": "0.2.10",
     "electron": "1.4.12",
     "electron-packager": "8.4.0",
