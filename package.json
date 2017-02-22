@@ -43,7 +43,8 @@
   "devDependencies": {
     "@types/commander": "2.3.31",
     "@types/electron": "1.4.32",
-    "@types/lodash": "^3.10.0",
+    "@types/he": "0.5.29",
+    "@types/lodash": "3.10.0",
     "@types/node": "7.0.5",
     "@types/node-sass": "3.10.32",
     "@types/source-map-support": "0.2.28",
