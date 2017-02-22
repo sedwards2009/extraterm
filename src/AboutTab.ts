@@ -11,7 +11,7 @@
 import * as ThemeTypes from './Theme';
 import ViewerElement from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import ThemeableElementBase = require('./themeableelementbase');
+import ThemeableElementBase from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
 import * as BulkDomOperation from './BulkDomOperation';
 

@@ -9,7 +9,7 @@ import path = require('path');
 
 import * as SourceDir from '../SourceDir';
 import ViewerElement from '../ViewerElement';
-import ThemeableElementBase = require('../themeableelementbase');
+import ThemeableElementBase from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ThemeTypes from '../Theme';

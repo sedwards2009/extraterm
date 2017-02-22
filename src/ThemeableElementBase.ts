@@ -12,7 +12,7 @@ import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
 /**
  * A base class for HTMLElements which also want theming CSS support.
  */
-class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefreshElementBase implements ThemeTypes.Themeable {
+export default class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefreshElementBase implements ThemeTypes.Themeable {
 
   static ID_THEME = "ID_THEME";
 
@@ -72,5 +72,3 @@ class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefreshElement
     return [];
   }
 }
-
-export = ThemeableElementBase;

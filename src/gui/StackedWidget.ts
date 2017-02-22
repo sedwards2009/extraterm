@@ -6,7 +6,7 @@
 
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import * as BulkDomOperation from '../BulkDomOperation';
-import ThemeableElementBase = require('../themeableelementbase');
+import ThemeableElementBase from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';

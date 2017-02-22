@@ -16,7 +16,7 @@ import * as DomUtils from './DomUtils';
 import CbScrollbar from'./gui/ScrollBar';
 import * as Util from './gui/Util';
 import ResizeCanary from './ResizeCanary';
-import ThemeableElementBase = require('./themeableelementbase');
+import ThemeableElementBase from './ThemeableElementBase';
 import * as ThemeTypes from './Theme';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;

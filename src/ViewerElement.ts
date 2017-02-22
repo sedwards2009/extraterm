@@ -8,7 +8,7 @@ import fs  = require('fs');
 import * as Util from './gui/Util';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import ThemeableElementBase = require('./themeableelementbase');
+import ThemeableElementBase from './ThemeableElementBase';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 

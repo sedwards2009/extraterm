@@ -5,7 +5,7 @@
  */
 import * as DomUtils from './DomUtils';
 import * as util from './gui/Util';
-import ThemeableElementBase = require('./themeableelementbase');
+import ThemeableElementBase from './ThemeableElementBase';
 import TabWidget from './gui/TabWidget';
 import EtTerminal from './Terminal';
 import SettingsTab from './settings/SettingsTab';

@@ -19,7 +19,7 @@ type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import ViewerElement from '../ViewerElement';
 import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
-import ThemeableElementBase = require('../themeableelementbase');
+import ThemeableElementBase from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';

@@ -7,7 +7,7 @@
 "use strict";
 
 import _ = require('lodash');
-import ThemeableElementBase = require('../themeableelementbase');
+import ThemeableElementBase from '../ThemeableElementBase';
 import ViewerElement from '../ViewerElement';
 import * as DomUtils from '../DomUtils';
 import Vue = require('vue');

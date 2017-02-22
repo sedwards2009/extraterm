@@ -70,7 +70,7 @@
         "./src/Term.ts",
         "./src/Terminal.ts",
         "./src/Theme.ts",
-        "./src/themeableelementbase.ts",
+        "./src/ThemeableElementBase.ts",
         "./src/ThemeConsumer.ts",
         "./src/ThemeManager.ts",
         "./src/ThemeManagerUtility.ts",

@@ -12,7 +12,7 @@ import * as DomUtils from './DomUtils';
 import * as Util from './gui/Util';
 import ViewerElement from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import ThemeableElementBase = require('./themeableelementbase');
+import ThemeableElementBase from './ThemeableElementBase';
 import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ThemeTypes from './Theme';

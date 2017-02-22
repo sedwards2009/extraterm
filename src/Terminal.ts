@@ -14,7 +14,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
 import * as BulkDomOperation from './BulkDomOperation';
 import ResizeCanary from './ResizeCanary';
-import ThemeableElementBase = require('./themeableelementbase');
+import ThemeableElementBase from './ThemeableElementBase';
 import * as ThemeTypes from './Theme';
 import EmbeddedViewer from './EmbeddedViewer';
 import CommandPlaceHolder from './CommandPlaceholder';

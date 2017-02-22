@@ -10,7 +10,7 @@
 import _ = require('lodash');
 import * as ThemeTypes from './Theme';
 import ViewerElement from './ViewerElement';
-import ThemeableElementBase = require('./themeableelementbase');
+import ThemeableElementBase from './ThemeableElementBase';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import * as ViewerElementTypes from './ViewerElementTypes';
