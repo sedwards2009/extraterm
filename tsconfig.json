@@ -108,7 +108,6 @@
         "./src/typings/codemirror/codemirror.d.ts",
         "./src/typings/he/he.d.ts",
         "./src/typings/jschardet/jschardet.d.ts",
-        "./src/typings/lodash/lodash.d.ts",
         "./src/typings/nodeunit/nodeunit.d.ts",
         "./src/typings/ptyw.js/ptyw.js.d.ts",
         "./src/typings/vuejs/vuejs.d.ts"

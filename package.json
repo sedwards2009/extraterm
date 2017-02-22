@@ -29,7 +29,7 @@
     "fontinfo": "0.3.0",
     "he": "0.5.0",
     "jschardet": "1.4.1",
-    "lodash": "3.9.1",
+    "lodash": "3.10.1",
     "markdown": "0.5.0",
     "node-sass": "4.1.0",
     "qs": "3.1.0",
@@ -43,6 +43,7 @@
   "devDependencies": {
     "@types/commander": "2.3.31",
     "@types/electron": "1.4.32",
+    "@types/lodash": "^3.10.0",
     "@types/node": "7.0.5",
     "@types/node-sass": "3.10.32",
     "@types/source-map-support": "0.2.28",
