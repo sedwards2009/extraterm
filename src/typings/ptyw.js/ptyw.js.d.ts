@@ -5,8 +5,6 @@
 
 // 2016-06-20 Simon Edwards <simon@simonzone.com> Moved over to ptyw.js.
 
-/// <reference path="../node/node.d.ts" />
-
 declare module 'ptyw.js' {
     /** Options that can be used when creating a new pseudo-terminal. */
     interface TerminalOptions {
