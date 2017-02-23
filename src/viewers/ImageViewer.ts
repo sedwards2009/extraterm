@@ -4,7 +4,7 @@
 
 "use strict";
 import _  = require('lodash');
-import fs = require('fs');
+import * as fs from 'fs';
 import ViewerElement from '../ViewerElement';
 import ThemeableElementBase from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';

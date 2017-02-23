@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import _ = require('lodash');
+import * as _ from 'lodash';
 import * as ResourceLoader from './ResourceLoader';
 import MenuItem from './gui/MenuItem';
 import CheckboxMenuItem from './gui/CheckboxMenuItem';

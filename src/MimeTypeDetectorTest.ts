@@ -5,8 +5,8 @@
  */
 
 import sourceMapSupport = require('source-map-support');
-import fs = require('fs');
-import path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 import nodeunit = require('nodeunit');
 import * as MimeTypeDetector from './MimeTypeDetector';
 

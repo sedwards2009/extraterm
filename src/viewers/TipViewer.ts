@@ -6,8 +6,8 @@
 import electron = require('electron');
 const shell = electron.shell;
 import _  = require('lodash');
-import fs = require('fs');
-import path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 import he = require('he');
 import * as SourceDir from '../SourceDir';
 

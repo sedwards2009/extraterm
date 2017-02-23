@@ -7,8 +7,8 @@ import child_process = require('child_process');
 import * as PtyConnector from './PtyConnector';
 import _ = require("lodash");
 import * as configInterfaces from './Config';
-import fs = require('fs');
-import path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 import Logger from './Logger';
 import * as SourceDir from './SourceDir';
 

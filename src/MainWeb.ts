@@ -3,13 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import path = require('path');
+import * as path from 'path';
 import electron = require('electron');
 const Menu = electron.remote.Menu;
 const MenuItem = electron.remote.MenuItem;
 
 import sourceMapSupport = require('source-map-support');
-import _ = require('lodash');
+import * as _ from 'lodash';
 import he = require('he');
 import Logger from './Logger';
 import * as Messages from './WindowMessages';

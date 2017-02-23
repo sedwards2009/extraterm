@@ -5,7 +5,7 @@
  */
 import * as Util from './gui/Util';
 import os = require('os');
-import _ = require('lodash');
+import * as _ from 'lodash';
 
 export type ShowTipsStrEnum = 'always' | 'daily' | 'never';
 

@@ -29,8 +29,8 @@ import InternalExtratermApi = require('./InternalExtratermApi');
 
 import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
-import path = require('path');
-import _ = require('lodash');
+import * as path from 'path';
+import * as _ from 'lodash';
 
 import * as config from './Config';
 type Config = config.Config;

@@ -6,7 +6,7 @@
 
 import fs  = require('fs');
 import crypto = require('crypto');
-import _ = require('lodash');
+import * as _ from 'lodash';
 import utf8 = require('utf8');
 
 import ViewerElement from './ViewerElement';

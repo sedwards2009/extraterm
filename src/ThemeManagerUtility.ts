@@ -8,8 +8,8 @@
  * This little utility can be run from the command line using node. It lets you view the metadata of all of the
  * themes in the src/themes directory, and it can compile a theme into CSS and report any errors.
  */
-import path = require('path');
-import fs = require('fs');
+import * as path from 'path';
+import * as fs from 'fs';
 import * as ThemeManager from './ThemeManager';
 import * as ThemeTypes from './Theme';
 import * as SourceDir from './SourceDir';

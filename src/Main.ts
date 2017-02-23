@@ -19,9 +19,9 @@ const ipc = electron.ipcMain;
 const clipboard = electron.clipboard;
 const dialog = electron.dialog;
 
-import path = require('path');
-import fs = require('fs');
-import _ = require('lodash');
+import * as path from 'path';
+import * as fs from 'fs';
+import * as _ from 'lodash';
 import commander = require('commander');
 import fontManager = require('font-manager');
 import fontinfo = require('fontinfo');

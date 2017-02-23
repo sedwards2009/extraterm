@@ -11,7 +11,7 @@ import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
 import * as BulkDomOperation from '../BulkDomOperation';
 import * as Util from './Util';
 import * as DomUtils from '../DomUtils';
-import _ = require('lodash');
+import * as _ from 'lodash';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 

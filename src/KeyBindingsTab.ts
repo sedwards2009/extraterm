@@ -7,7 +7,7 @@
 // Key bindings tab
 
 "use strict";
-import _ = require('lodash');
+import * as _ from 'lodash';
 import * as ThemeTypes from './Theme';
 import ViewerElement from './ViewerElement';
 import ThemeableElementBase from './ThemeableElementBase';

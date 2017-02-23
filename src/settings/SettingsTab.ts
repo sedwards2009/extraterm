@@ -6,7 +6,7 @@
 
 "use strict";
 
-import _ = require('lodash');
+import * as _ from 'lodash';
 import ThemeableElementBase from '../ThemeableElementBase';
 import ViewerElement from '../ViewerElement';
 import * as DomUtils from '../DomUtils';
