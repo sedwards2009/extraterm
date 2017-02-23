@@ -60,7 +60,6 @@
         "./src/PtyConnector.ts",
         "./src/PtyDirect.ts",
         "./src/PtyProxy.ts",
-        "./src/qs.d.ts",
         "./src/requirejs.d.ts",
         "./src/ResizeCanary.ts",
         "./src/ResizeRefreshElementBase.ts",
