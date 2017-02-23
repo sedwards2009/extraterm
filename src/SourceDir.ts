@@ -6,4 +6,4 @@
 
 // This is a bit of a hack to find the path to the source code and other resources
 // in a way that works during development and also from a packaged version.
-export const path = require.resolve('./sourceDir').slice(0,-12);
+export const path = require.resolve('./SourceDir').slice(0,-12);
