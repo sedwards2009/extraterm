@@ -3,7 +3,7 @@
  */
 
 "use strict";
-import _  = require('lodash');
+import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -11,7 +11,7 @@ import ViewerElement from '../ViewerElement';
 import ThemeableElementBase from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
-import CodeMirror = require('codemirror');
+import * as CodeMirror from 'codemirror';
 import * as CodeMirrorCommands from '../CodeMirrorCommands';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
@@ -24,9 +24,9 @@ import * as SourceDir from '../SourceDir';
 import * as GeneralEvents from '../GeneralEvents';
 import * as ThemeTypes from '../Theme';
 import * as keybindingmanager from '../KeyBindingManager';
-import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
+import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as BulkDomOperation from '../BulkDomOperation';
-import SupportsClipboardPaste = require('../SupportsClipboardPaste');
+import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 

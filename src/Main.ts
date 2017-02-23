@@ -9,22 +9,22 @@
  *
  * This file is the main entry point for the node process and the whole application.
  */
-import sourceMapSupport = require('source-map-support');
+import * as SourceMapSupport from 'source-map-support';
 
-import electron = require('electron');
-const app = electron.app;
-const BrowserWindow = electron.BrowserWindow;
-const crashReporter = electron.crashReporter;
-const ipc = electron.ipcMain;
-const clipboard = electron.clipboard;
-const dialog = electron.dialog;
+import * as Electron from 'electron';
+const app = Electron.app;
+const BrowserWindow = Electron.BrowserWindow;
+const crashReporter = Electron.crashReporter;
+const ipc = Electron.ipcMain;
+const clipboard = Electron.clipboard;
+const dialog = Electron.dialog;
 
 import * as path from 'path';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import commander = require('commander');
-import fontManager = require('font-manager');
-import fontinfo = require('fontinfo');
+import * as commander from 'commander';
+import * as fontManager from 'font-manager';
+import fontinfo = require('fontinfo');  // This isn't a proper module. We have to use require().
 import * as PtyConnector from './PtyConnector';
 import * as ResourceLoader from './ResourceLoader';
 import * as Messages from './WindowMessages';
@@ -34,7 +34,7 @@ type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
 import * as ThemeManager from './ThemeManager';
 
-import child_process = require('child_process');
+import * as child_process from 'child_process';
 import * as Util from './gui/Util';
 import Logger from './Logger';
 
@@ -56,7 +56,7 @@ type FontInfo = config_.FontInfo;
 
 const LOG_FINE = false;
 
-sourceMapSupport.install();
+SourceMapSupport.install();
 
 // crashReporter.start(); // Report crashes
 

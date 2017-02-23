@@ -30,7 +30,7 @@ let registered = false;
 /**
  * A Pop Down Dialog.
  */
-class PopDownDialog extends ThemeableElementBase {
+export default class PopDownDialog extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -185,5 +185,3 @@ class PopDownDialog extends ThemeableElementBase {
     container.classList.add(CLASS_CONTEXT_COVER_CLOSED);
   }
 }
-
-export = PopDownDialog;

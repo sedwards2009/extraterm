@@ -7,7 +7,7 @@
 import ThemeableElementBase from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
-import PopDownDialog = require('./PopDownDialog');
+import PopDownDialog from './PopDownDialog';
 
 const ID = "CbPopDownListPickerTemplate";
 const ID_DIALOG = "ID_DIALOG";
@@ -19,7 +19,7 @@ let registered = false;
 /**
  * A Pop Down List Picker.
  */
-class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase {
+export default class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -353,5 +353,3 @@ class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase 
     }
   }
 }
-
-export = PopDownListPicker;

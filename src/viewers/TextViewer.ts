@@ -3,7 +3,7 @@
  */
 
 "use strict";
-import _  = require('lodash');
+import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -17,17 +17,17 @@ import * as keybindingmanager from '../KeyBindingManager';
 import * as BulkDomOperation from '../BulkDomOperation';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import CodeMirror = require('codemirror');
+import * as CodeMirror from 'codemirror';
 import * as CodeMirrorCommands from '../CodeMirrorCommands';
 import * as ViewerElementTypes from '../ViewerElementTypes';
-import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
+import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as EtTextViewerTypes from './TerminalViewerTypes';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 import * as GeneralEvents from '../GeneralEvents';
-import SupportsClipboardPaste = require('../SupportsClipboardPaste');
+import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;

@@ -1,7 +1,7 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
-import CodeMirror = require('codemirror');
+import * as CodeMirror from 'codemirror';
 
 /**
  * Command to extend the selection vertically in both directions as multiple cursors.

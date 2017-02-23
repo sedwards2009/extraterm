@@ -8,7 +8,7 @@ import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 import * as BulkDomOperation from '../BulkDomOperation';
-import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
+import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 

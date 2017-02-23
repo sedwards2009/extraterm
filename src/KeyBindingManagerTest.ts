@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import sourceMapSupport = require('source-map-support');
-import nodeunit = require('nodeunit');
+import * as SourceMapSupport from 'source-map-support';
+import * as nodeunit from 'nodeunit';
 import * as KeyBindingsManager from './KeyBindingManager';
 
-sourceMapSupport.install();
+SourceMapSupport.install();
 
 const keyBindingsMap = {
   "editor": {

@@ -5,7 +5,7 @@
  */
 
 import * as Util from './gui/Util';
-import _  = require('lodash');
+import * as _ from 'lodash';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import Logger from './Logger';

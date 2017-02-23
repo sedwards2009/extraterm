@@ -5,7 +5,7 @@
  */
 import * as DomUtils from './DomUtils';
 import Logger from './Logger';
-import elementResizeDetectorMaker = require('element-resize-detector');
+import elementResizeDetectorMaker = require('element-resize-detector'); // This is not a proper module. We must use require().
 
 let registered = false;
 

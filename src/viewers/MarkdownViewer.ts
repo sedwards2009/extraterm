@@ -5,7 +5,7 @@
 "use strict";
 import ViewerElement from '../ViewerElement';
 import * as DomUtils from '../DomUtils';
-import markdownMod = require('markdown');
+import * as markdownMod from 'markdown';
 const markdown = markdownMod.markdown;
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as BulkDomOperation from '../BulkDomOperation';

@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import sourceMapSupport = require('source-map-support');
-import nodeunit = require('nodeunit');
+import * as sourceMapSupport from 'source-map-support';
+import * as nodeunit from 'nodeunit';
 import * as BulkDomOperation from './BulkDomOperation';
 
 sourceMapSupport.install();

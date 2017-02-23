@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import fs  = require('fs');
+import * as fs from 'fs';
 import * as Util from './gui/Util';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ViewerElementTypes from './ViewerElementTypes';

@@ -4,13 +4,13 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as path from 'path';
-import electron = require('electron');
-const Menu = electron.remote.Menu;
-const MenuItem = electron.remote.MenuItem;
+import * as Electron from 'electron';
+const Menu = Electron.remote.Menu;
+const MenuItem = Electron.remote.MenuItem;
 
-import sourceMapSupport = require('source-map-support');
+import * as SourceMapSupport from 'source-map-support';
 import * as _ from 'lodash';
-import he = require('he');
+import * as he from 'he';
 import Logger from './Logger';
 import * as Messages from './WindowMessages';
 import * as WebIpc from './WebIpc';
@@ -18,14 +18,14 @@ import CbContextMenu from './gui/ContextMenu';
 import CbMenuItem from './gui/MenuItem';
 import CbDropDown from './gui/DropDown';
 import CbCheckBoxMenuItem from './gui/CheckboxMenuItem';
-import PopDownListPicker = require('./gui/PopDownListPicker');
-import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
+import PopDownListPicker from './gui/PopDownListPicker';
+import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 
-import PluginApi = require('./PluginApi');
-import PluginManager = require('./PluginManager');
-import InternalExtratermApi = require('./InternalExtratermApi');
+import * as PluginApi from './PluginApi';
+import * as PluginManager from './PluginManager';
+import * as InternalExtratermApi from './InternalExtratermApi';
 
 import MainWebUi from './MainWebUi';
 import EtTerminal from './Terminal';
@@ -52,7 +52,7 @@ import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 type KeyBindingContexts = keybindingmanager.KeyBindingContexts;
 
-sourceMapSupport.install();
+SourceMapSupport.install();
 
 const PLUGINS_DIRECTORY = "plugins";
 

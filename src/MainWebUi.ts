@@ -18,14 +18,14 @@ import ViewerElement from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
-import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
+import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
-import InternalExtratermApi = require('./InternalExtratermApi');
+import * as InternalExtratermApi from './InternalExtratermApi';
 
 import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
@@ -37,7 +37,7 @@ type Config = config.Config;
 type ConfigManager =config.ConfigManager;
 type SessionProfile = config.SessionProfile;
 
-import he = require('he');
+import * as he from 'he';
 import {FrameFinder} from './FrameFinderType';
 
 import * as keybindingmanager from './KeyBindingManager';

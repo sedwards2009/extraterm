@@ -3,9 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import child_process = require('child_process');
+import * as child_process from 'child_process';
 import * as PtyConnector from './PtyConnector';
-import _ = require("lodash");
+import * as _ from 'lodash';
 import * as configInterfaces from './Config';
 import * as fs from 'fs';
 import * as path from 'path';

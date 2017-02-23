@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import jschardet = require('jschardet');
+import * as jschardet from 'jschardet';
 
 export interface DetectionResult {
   readonly mimeType: string;

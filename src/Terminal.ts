@@ -4,14 +4,14 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import fs  = require('fs');
-import crypto = require('crypto');
+import * as fs from 'fs';
+import * as crypto from 'crypto';
 import * as _ from 'lodash';
-import utf8 = require('utf8');
+import * as utf8 from 'utf8';
 
 import ViewerElement from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
+import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as BulkDomOperation from './BulkDomOperation';
 import ResizeCanary from './ResizeCanary';
 import ThemeableElementBase from './ThemeableElementBase';
@@ -38,8 +38,8 @@ import * as Term from './Term';
 import CbScrollbar from './gui/ScrollBar';
 import * as util from './gui/Util';
 
-import electron = require('electron');
-const clipboard = electron.clipboard;
+import * as Electron from 'electron';
+const clipboard = Electron.clipboard;
 
 import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
@@ -47,7 +47,7 @@ import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
 import * as MmeTypeDetector from './MimeTypeDetector';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
-import SupportsClipboardPaste = require('./SupportsClipboardPaste');
+import * as SupportsClipboardPaste from './SupportsClipboardPaste';
 
 import * as config from './Config';
 type Config = config.Config;

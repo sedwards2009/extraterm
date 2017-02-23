@@ -4,11 +4,11 @@
  
 // This is a small test harness to get the unit tests into iron-node for debugging.
 
-import sourceMapSupport = require('source-map-support');
-import nodeunit = require('nodeunit');
+import * as SourceMapSupport from 'source-map-support';
+import * as nodeunit from 'nodeunit';
 import * as tests from './VirtualScrollAreaTest';
 
-sourceMapSupport.install();
+SourceMapSupport.install();
 
 const nodeunitTest: nodeunit.Test = {
 		done(err?: any): void { },

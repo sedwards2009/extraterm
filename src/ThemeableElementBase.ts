@@ -7,7 +7,7 @@
 import * as ThemeTypes from './Theme';
 import * as DomUtils from './DomUtils';
 import * as ThemeConsumer from './ThemeConsumer';
-import ResizeRefreshElementBase = require('./ResizeRefreshElementBase');
+import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 
 /**
  * A base class for HTMLElements which also want theming CSS support.

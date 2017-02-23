@@ -10,7 +10,7 @@ import * as _ from 'lodash';
 import ThemeableElementBase from '../ThemeableElementBase';
 import ViewerElement from '../ViewerElement';
 import * as DomUtils from '../DomUtils';
-import Vue = require('vue');
+import * as Vue from 'vue';
 import * as config from '../Config';
 type Config = config.Config;
 type ConfigManager = config.ConfigManager;

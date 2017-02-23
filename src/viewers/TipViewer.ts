@@ -3,12 +3,12 @@
  */
 
 "use strict";
-import electron = require('electron');
-const shell = electron.shell;
-import _  = require('lodash');
+import * as Electron from 'electron';
+const shell = Electron.shell;
+import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
-import he = require('he');
+import * as he from 'he';
 import * as SourceDir from '../SourceDir';
 
 import * as config from '../Config';
@@ -18,7 +18,7 @@ import * as keybindingmanager from '../KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import ViewerElement from '../ViewerElement';
-import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
+import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import ThemeableElementBase from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as Util from '../gui/Util';

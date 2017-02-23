@@ -14,7 +14,7 @@ if (process.versions.modules === MODULE_VERSION && process.platform !== "win32")
   process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
     `node-sass-binary/${process.platform}-${process.arch}-${MODULE_VERSION}/binding.node`);
 }
-import nodeSass = require('node-sass');
+import * as NodeSass from 'node-sass';
 
 import * as _ from 'lodash';
 
@@ -242,7 +242,7 @@ class ThemeManagerImpl implements ThemeManager {
         this._log.debug("Processing " + sassFileName);
       }
       try {
-        const importer: nodeSass.Importer = (url: string, prev: string, done: (data: { file?: string; contents?: string; })=> void) => {
+        const importer: NodeSass.Importer = (url: string, prev: string, done: (data: { file?: string; contents?: string; })=> void) => {
           
           const basePath = url;
           const contextBaseDir = path.dirname(prev);
@@ -293,7 +293,7 @@ class ThemeManagerImpl implements ThemeManager {
           this._log.debug("Root sass text: ", scssText);
         }
 
-        nodeSass.render({data: scssText, precision: 8, importer: importer }, (err, result) => {
+        NodeSass.render({data: scssText, precision: 8, importer: importer }, (err, result) => {
           if (err === null) {
             if (DEBUG_SASS) {
               this._log.debug("Succeeded done processing " + sassFileName);

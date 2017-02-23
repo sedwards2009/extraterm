@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import CodeMirror = require('codemirror');
+import * as CodeMirror from 'codemirror';
 import * as BulkDomOperation from './BulkDomOperation';
 
 /* This little module encapsulates a way of grouping many updates to

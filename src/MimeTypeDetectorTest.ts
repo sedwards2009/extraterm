@@ -4,13 +4,13 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import sourceMapSupport = require('source-map-support');
+import * as SourceMapSupport from 'source-map-support';
 import * as fs from 'fs';
 import * as path from 'path';
-import nodeunit = require('nodeunit');
+import * as nodeunit from 'nodeunit';
 import * as MimeTypeDetector from './MimeTypeDetector';
 
-sourceMapSupport.install();
+SourceMapSupport.install();
 
 function readTestFile(filename: string): Buffer {
   const fullPath = path.join('src', 'testfiles', filename);

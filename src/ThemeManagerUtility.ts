@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as ThemeManager from './ThemeManager';
 import * as ThemeTypes from './Theme';
 import * as SourceDir from './SourceDir';
-import commander = require('commander');
+import * as Commander from 'commander';
 
 import Logger from './Logger';
 
@@ -26,12 +26,12 @@ interface CommandLineOptions {
 }
 
 function main(): void {
-  commander
+  Commander
     .option('-l, --list', 'List all available themes.')
     .option('-c, --compile [theme_id]', 'Compile a theme and write it to stdout.')
     .option('-o, --output [directory]', 'Write compiled theme files to this directory instead of stdout.')
     .parse(process.argv);
-  const options = <CommandLineOptions> commander;
+  const options = <CommandLineOptions> Commander;
   
   const tm = ThemeManager.makeThemeManager([path.join(SourceDir.path, 'themes')]);
   const allThemes = tm.getAllThemes();

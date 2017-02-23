@@ -22,7 +22,7 @@ import Logger from './Logger';
 import log from './LogDecorator';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
-import SupportsClipboardPaste = require('./SupportsClipboardPaste');
+import * as SupportsClipboardPaste from './SupportsClipboardPaste';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;

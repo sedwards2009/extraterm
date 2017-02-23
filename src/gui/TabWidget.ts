@@ -7,7 +7,7 @@ import ThemeableElementBase from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import CbStackedWidget from './StackedWidget';
 import CbTab from './Tab';
-import ResizeRefreshElementBase = require('../ResizeRefreshElementBase');
+import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as BulkDomOperation from '../BulkDomOperation';
 import * as Util from './Util';
 import * as DomUtils from '../DomUtils';

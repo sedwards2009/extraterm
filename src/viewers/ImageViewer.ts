@@ -3,7 +3,7 @@
  */
 
 "use strict";
-import _  = require('lodash');
+import * as _ from 'lodash';
 import * as fs from 'fs';
 import ViewerElement from '../ViewerElement';
 import ThemeableElementBase from '../ThemeableElementBase';

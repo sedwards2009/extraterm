@@ -7,7 +7,7 @@
 import ThemeableElementBase from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
-import PopDownDialog = require('./PopDownDialog');
+import PopDownDialog from './PopDownDialog';
 
 const ID = "CbPopDownNumberDialogTemplate";
 const ID_DIALOG = "ID_DIALOG";
@@ -18,7 +18,7 @@ let registered = false;
 /**
  * A Pop Down Number Dialog
  */
-class PopDownNumberDialog extends ThemeableElementBase {
+export default class PopDownNumberDialog extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
@@ -222,5 +222,3 @@ class PopDownNumberDialog extends ThemeableElementBase {
     }
   }
 }
-
-export = PopDownNumberDialog;

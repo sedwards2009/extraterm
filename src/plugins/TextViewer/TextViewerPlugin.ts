@@ -6,10 +6,10 @@
 import * as PluginApi from '../../PluginApi';
 import Logger from '../../Logger';
 import TextViewer from '../../viewers/TextViewer';
-import PopDownListPicker = require('../../gui/PopDownListPicker');
-import PopDownNumberDialog = require('../../gui/PopDownNumberDialog');
-import CodeMirror = require('codemirror');
-import he = require('he');
+import PopDownListPicker from '../../gui/PopDownListPicker';
+import PopDownNumberDialog from '../../gui/PopDownNumberDialog';
+import * as CodeMirror from 'codemirror';
+import * as he from 'he';
 
 interface SyntaxEntry {
   id: string;

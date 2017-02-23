@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import electron = require('electron');
-const ipc = electron.ipcRenderer;
+import * as Electron from 'electron';
+const ipc = Electron.ipcRenderer;
 
 import * as Messages from './WindowMessages';
 import * as config from './Config';

@@ -7,7 +7,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Logger from './Logger';
-import PluginApi = require('./PluginApi');
+import * as PluginApi from './PluginApi';
 
 const PLUGIN_METADATA = "metadata.json";
 

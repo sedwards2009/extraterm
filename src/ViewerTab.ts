@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import fs  = require('fs');
+import * as fs from 'fs';
 
 import ViewerElement from "./ViewerElement";
 import * as ViewerElementTypes from './ViewerElementTypes';
-import ResizeRefreshElementBase = require("./ResizeRefreshElementBase");
+import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import EmbeddedViewer from './EmbeddedViewer';
 import Logger from './Logger';
 import log from './LogDecorator';
@@ -24,8 +24,8 @@ type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
-import electron = require('electron');
-const clipboard = electron.clipboard;
+import * as Electron from 'electron';
+const clipboard = Electron.clipboard;
 
 import * as WebIpc from './WebIpc';
 import * as VirtualScrollArea from './VirtualScrollArea';
