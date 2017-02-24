@@ -88,3 +88,6 @@ src/gui/Tab.js
 src/gui/TabWidget.js
 src/gui/Util.js
 src/plugins/TextViewer/TextViewerPlugin.js
+src/ThemeableElementBase.js
+src/ViewerElementTypes.js
+src/settings/SettingsTab.js
