@@ -4,7 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-declare module 'fontinfo' {
+declare var fontinfo: fontinfo.Parse;
+export = fontinfo;
+
+declare namespace fontinfo {
   
   interface NameInfo {
     copyright: string;
@@ -32,7 +35,9 @@ declare module 'fontinfo' {
     name: NameInfo;
     post: PostInfo;
   }
-  
-  function parse(filename: string): FontInfo;
-  export = parse;
+
+  interface Parse {
+    (filename: string): FontInfo;
+  }
+
 }

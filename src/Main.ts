@@ -22,9 +22,9 @@ const dialog = Electron.dialog;
 import * as path from 'path';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import * as commander from 'commander';
-import * as fontManager from 'font-manager';
-import fontinfo = require('fontinfo');  // This isn't a proper module. We have to use require().
+import * as Commander from 'commander';
+import * as FontManager from 'font-manager';
+import FontInfo from 'fontinfo';
 import * as PtyConnector from './PtyConnector';
 import * as ResourceLoader from './ResourceLoader';
 import * as Messages from './WindowMessages';
@@ -103,7 +103,7 @@ function main(): void {
                             : process.argv;
 
   // The extra fields which appear on the command object are declared in extra_commander.d.ts.
-  commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []')
+  Commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []')
     .option('-d, --dev-tools [devTools]', 'Open the dev tools on start up')
     .parse(normalizedArgv);
 
@@ -155,7 +155,7 @@ function main(): void {
     titleBarVisible = config.showTitleBar;
     mainWindow = new BrowserWindow(options);
 
-    if ((<any>commander).devTools) {
+    if ((<any>Commander).devTools) {
       mainWindow.webContents.openDevTools();
     }
 
@@ -555,7 +555,7 @@ function initConfig(): void {
   config = readConfigurationFile();
   config.systemConfig = systemConfiguration(config);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
-  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, commander);
+  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, Commander);
   
   if (config.terminalFontSize === undefined || typeof config.terminalFontSize !== 'number') {
     config.terminalFontSize = 12;
@@ -715,7 +715,7 @@ function scanKeyBindingFiles(keyBindingsDir: string): config_.KeyBindingInfo[] {
 }
 
 function getFonts(): FontInfo[] {
-  const fontResults = fontManager.findFontsSync( { monospace: true } );
+  const fontResults = FontManager.findFontsSync( { monospace: true } );
   const systemFonts = fontResults.filter( (result) => result.path.toLowerCase().endsWith(".ttf" ))
       .map( (result) => {
         const name = result.family + (result.style==="Regular" ? "" : " " + result.style) +
@@ -741,7 +741,7 @@ function getBundledFonts(): FontInfo[] {
     contents.forEach( (item) => {
       if (item.endsWith(".ttf")) {
         const ttfPath = path.join(fontsDir, item);
-        const fi = fontinfo(ttfPath);
+        const fi = FontInfo(ttfPath);
         result.push( {
           path: pathToUrl(ttfPath),
           name: fi.name.fontName,
