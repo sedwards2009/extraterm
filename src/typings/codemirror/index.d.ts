@@ -368,8 +368,8 @@ declare namespace CodeMirror {
 
         /** This event is fired before the selection is moved. Its handler may modify the resulting selection head and anchor.
         Handlers for this event have the same restriction as "beforeChange" handlers � they should not do anything to directly update the state of the editor. */
-        on(eventName: 'beforeSelectionChange', handler: (instance: CodeMirror.Editor, selection: { head: CodeMirror.Position; anchor: CodeMirror.Position; }) => void ): void;
-        off(eventName: 'beforeSelectionChange', handler: (instance: CodeMirror.Editor, selection: { head: CodeMirror.Position; anchor: CodeMirror.Position; }) => void ): void;
+        on(eventName: 'beforeSelectionChange', handler: (instance: CodeMirror.Editor, selection: { ranges: {anchor: CodeMirror.Position; head: CodeMirror.Position; }[]; head: CodeMirror.Position; anchor: CodeMirror.Position; origin: string; }) => void ): void;
+        off(eventName: 'beforeSelectionChange', handler: (instance: CodeMirror.Editor, selection: { ranges: {anchor: CodeMirror.Position; head: CodeMirror.Position; }[]; head: CodeMirror.Position; anchor: CodeMirror.Position; origin: string; }) => void ): void;
 
         /** Fires whenever the view port of the editor changes (due to scrolling, editing, or any other factor).
         The from and to arguments give the new start and end of the viewport. */
@@ -402,6 +402,21 @@ declare namespace CodeMirror {
         The handler may mess with the style of the resulting element, or add event handlers, but should not try to change the state of the editor. */
         on(eventName: 'renderLine', handler: (instance: CodeMirror.Editor, line: CodeMirror.LineHandle, element: HTMLElement) => void ): void;
         off(eventName: 'renderLine', handler: (instance: CodeMirror.Editor, line: CodeMirror.LineHandle, element: HTMLElement) => void ): void;
+
+        on(eventName: 'keyHandled', handler: (instance: CodeMirror.Editor, name: string, event: KeyboardEvent) => void ): void;
+        off(eventName: 'keyHandled', handler: (instance: CodeMirror.Editor, name: string, event: KeyboardEvent) => void ): void;
+        
+        on(eventName: 'keydown', handler: (instance: CodeMirror.Editor, event: KeyboardEvent) => void ): void;
+        on(eventName: 'keyup', handler: (instance: CodeMirror.Editor, event: KeyboardEvent) => void ): void;
+        on(eventName: 'keypress', handler: (instance: CodeMirror.Editor, event: KeyboardEvent) => void ): void;
+        off(eventName: 'keydown', handler: (instance: CodeMirror.Editor, event: KeyboardEvent) => void ): void;
+        off(eventName: 'keyup', handler: (instance: CodeMirror.Editor, event: KeyboardEvent) => void ): void;
+        off(eventName: 'keypress', handler: (instance: CodeMirror.Editor, event: KeyboardEvent) => void ): void;
+        
+        on(eventName: 'scrollCursorIntoView', handle: (instance:  CodeMirror.Editor, event: Event) => void ): void;
+        off(eventName: 'scrollCursorIntoView', handle: (instance:  CodeMirror.Editor, event: Event) => void ): void;
+        
+        execCommand(command: string): void;
 
         /** Expose the state object, so that the Editor.state.completionActive property is reachable*/
         state: any;
@@ -485,6 +500,10 @@ declare namespace CodeMirror {
 
         /** Get the currently selected code. */
         getSelection(): string;
+        getSelection(linesep?: string): string;
+        getSelections(linesep?: string): string[];
+        setSelections(ranges: {anchor: Position, head: Position}[], primary?: number, options?: Object);
+        replaceSelections(replacements: string[], select?: 'around' | 'start');
 
         /** Replace the selection with the given string. By default, the new selection will span the inserted text.
         The optional collapse argument can be used to change this � passing "start" or "end" will collapse the selection to the start or end of the inserted text. */
@@ -631,6 +650,7 @@ declare namespace CodeMirror {
 
         /**  Returns an object representing the options for the marker. If copyWidget is given true, it will clone the value of the replacedWith option, if any. */
         getOptions(copyWidget: boolean): CodeMirror.TextMarkerOptions;
+        className: string;
     }
 
     interface LineWidget {
@@ -830,6 +850,9 @@ declare namespace CodeMirror {
 
         /** Optional value to be used in conjunction with CodeMirror’s placeholder add-on. */
         placeholder?: string;
+
+        scrollbarStyle?: string;
+        cursorScrollMargin?: number;
     }
 
     interface TextMarkerOptions {
@@ -1246,4 +1269,25 @@ declare namespace CodeMirror {
           setShowDifferences(showDifferences: boolean): void;
       }
     }
+
+    interface TextMarker {
+        className: string;
+    }
+
+    interface ModeInfo {
+        name: string;
+        mime?: string;
+        mimes?: string[];
+        mode?: string;
+        ext?: string[];
+        alias?: string[];
+    }
+
+    var modeInfo: ModeInfo[];
+
+    function findModeByMIME(mime: string): ModeInfo;
+    function findModeByExtension(ext: string): ModeInfo;
+    function findModeByFileName(fileName: string): ModeInfo;
+    function findModeByName(name: string): ModeInfo;
+    var commands: Object;
 }

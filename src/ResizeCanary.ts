@@ -5,7 +5,7 @@
  */
 import * as DomUtils from './DomUtils';
 import Logger from './Logger';
-import elementResizeDetectorMaker = require('element-resize-detector'); // This is not a proper module. We must use require().
+import ElementResizeDetectorMaker = require('element-resize-detector');
 
 let registered = false;
 
@@ -28,7 +28,7 @@ export default class ResizeCanary extends HTMLElement {
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
   
-  private _erd: ElementResizeDetector.Detector;
+  private _erd: any; //ElementResizeDetector.Detector;
   
   private _laterHandle: DomUtils.LaterHandle;
   
@@ -67,9 +67,7 @@ export default class ResizeCanary extends HTMLElement {
   attachedCallback(): void {
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     shadow.appendChild(this._createNodes());
-    
-    this._erd = elementResizeDetectorMaker(); // Use the 'object' strategy, 'scroll' doesn't work here.
-    
+    this._erd = ElementResizeDetectorMaker(); // Use the 'object' strategy, 'scroll' doesn't work here.
     const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_SIZER);
     
     this._erd.listenTo(container, (el: HTMLElement) => {

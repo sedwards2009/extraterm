@@ -3,8 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+declare var elementResizeDetector: ElementResizeDetector.elementResizeDetectorMaker;
+export = elementResizeDetector;
+export as namespace ElementResizeDetector;
 
-declare module ElementResizeDetector {
+declare namespace ElementResizeDetector {
   interface Options {
     strategy?: 'scroll'
   }
@@ -16,9 +19,7 @@ declare module ElementResizeDetector {
     uninstall(): void;
   }
 
-}
-
-declare module 'element-resize-detector' {
-  function elementResizeDetectorMaker(options?: ElementResizeDetector.Options): ElementResizeDetector.Detector;
-  export = elementResizeDetectorMaker;
+  interface elementResizeDetectorMaker {
+    (options?: ElementResizeDetector.Options): ElementResizeDetector.Detector;
+  }
 }

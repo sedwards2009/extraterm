@@ -145,7 +145,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
   private _renderEventListener: Term.RenderEventHandler = this._handleRenderEvent.bind(this);
 
   private _bookmarkCounter: number;
-  private _bookmarkIndex: Map<BookmarkRef, CodeMirror.TextBookmarkMarker>;
+  private _bookmarkIndex: Map<BookmarkRef, CodeMirror.TextMarker>;
 
   private _initProperties(): void {
     this._log = new Logger(TerminalViewer.TAG_NAME, this);
@@ -185,7 +185,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
     this._renderEventListener = null;
 
     this._bookmarkCounter = 0;
-    this._bookmarkIndex = new Map<BookmarkRef, CodeMirror.TextBookmarkMarker>();
+    this._bookmarkIndex = new Map<BookmarkRef, CodeMirror.TextMarker>();
   }
 
   //-----------------------------------------------------------------------
@@ -979,7 +979,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
         return -1;
       }
       const position = marker.find();
-      return position !== undefined ? position.line : -1;
+      return position !== undefined ? position.from.line : -1;
     }
   }
 

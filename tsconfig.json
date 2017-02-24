@@ -9,7 +9,14 @@
         "noLib": false,
         "outDir": "src",
         "jsx": "react",
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "types": ["fontinfo"],
+        "typeRoots" : ["./src/typings"],
+        "paths": {
+         "*": ["./src/typings/*"]
+        },
+        "baseUrl": "."
+      
     },
     "filesGlob": [
         "./src/*.ts",
@@ -20,7 +27,6 @@
         "./src/settings/*.tsx",
         "./src/plugins/**/*.ts",
         "./src/typings/**/*.ts",
-        "!./src/typings/tsd.d.ts",
         "!./src/node_modules/**/*.ts",
         "./src/node_modules/@types/**/*.d.ts"
     ],
@@ -28,19 +34,15 @@
         "./src/AboutTab.ts",
         "./src/BulkDomOperation.ts",
         "./src/BulkDomOperationTest.ts",
-        "./src/typings/codemirror_extra.d.ts",
         "./src/CodeMirrorCommands.ts",
         "./src/CodeMirrorOperation.ts",
         "./src/CommandPaletteRequestTypes.ts",
         "./src/CommandPlaceholder.ts",
         "./src/Config.ts",
         "./src/DomUtils.ts",
-        "./src/typings/element-resize-detector.d.ts",
         "./src/EmbeddedViewer.ts",
         "./src/typings/extra_commander.d.ts",
         "./src/typings/extra_lib.d.ts",
-        "./src/typings/font-manager.d.ts",
-        "./src/typings/fontinfo.d.ts",
         "./src/FrameFinderType.ts",
         "./src/GeneralEvents.ts",
         "./src/InternalExtratermApi.ts",
@@ -52,7 +54,6 @@
         "./src/Main.ts",
         "./src/MainWeb.ts",
         "./src/MainWebUi.ts",
-        "./src/typings/markdown.js.d.ts",
         "./src/MimeTypeDetector.ts",
         "./src/MimeTypeDetectorTest.ts",
         "./src/PluginApi.ts",
@@ -104,8 +105,6 @@
         "./src/settings/SettingsTab.ts",
         "./src/plugins/TerminalViewerExtra/TerminalViewerExtra.ts",
         "./src/plugins/TextViewer/TextViewerPlugin.ts",
-        "./src/typings/codemirror/codemirror.d.ts",
-        "./src/typings/jschardet/jschardet.d.ts",
         "./src/typings/ptyw.js/ptyw.js.d.ts",
         "./src/typings/vuejs/vuejs.d.ts"
     ],

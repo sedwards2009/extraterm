@@ -24,7 +24,7 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as Commander from 'commander';
 import * as FontManager from 'font-manager';
-import FontInfo from 'fontinfo';
+import fontInfo = require('fontinfo');
 import * as PtyConnector from './PtyConnector';
 import * as ResourceLoader from './ResourceLoader';
 import * as Messages from './WindowMessages';
@@ -741,7 +741,7 @@ function getBundledFonts(): FontInfo[] {
     contents.forEach( (item) => {
       if (item.endsWith(".ttf")) {
         const ttfPath = path.join(fontsDir, item);
-        const fi = FontInfo(ttfPath);
+        const fi = fontInfo(ttfPath);
         result.push( {
           path: pathToUrl(ttfPath),
           name: fi.name.fontName,

@@ -15,9 +15,7 @@ teseq - Output stream and control stream decoder.
 
 Clean up TODO
 =============
-* Use ES6 imports style
-* Fix the file name capitalisation.
 * Move to the Custom Elements v1 spec. No more registerElement().
 * eliminate properties on elements. Use old school setters and getters.
 * Eliminate the init() thing in the elements.
-* Modernise the typing system.
+
