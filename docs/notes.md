@@ -15,7 +15,6 @@ teseq - Output stream and control stream decoder.
 
 Clean up TODO
 =============
-* Move to the Custom Elements v1 spec. No more registerElement().
-* eliminate properties on elements. Use old school setters and getters.
+* Move to the Custom Elements v1 spec. No more registerElement(). (Need Electron 1.6 and an updated nodejs.)
 * Eliminate the init() thing in the elements.
 

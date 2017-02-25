@@ -143,11 +143,11 @@ export default class EtKeyBindingsTab extends ViewerElement implements config.Ac
     }
   }
   
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return "keyboard-o";
   }
   
-  get title(): string {
+  getTitle(): string {
     return "Key Bindings";
   }
 

@@ -156,15 +156,15 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
    * This is the window title of the terminal, don't confuse it with more
    * general HTML title of the element.
    */
-  get terminalTitle(): string {
+  getTerminalTitle(): string {
     return this._title;
   }
   
-  get title(): string {
+  getTitle(): string {
     return this._title;
   }
   
-  set title(newTitle: string) {
+  setTitle(newTitle: string): void {
     this._title = newTitle;
   }
   
@@ -186,7 +186,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
    * Focus on this ViewerTab.
    */
   focus(): void {
-    const element = this.viewerElement;
+    const element = this.getViewerElement();
     if (element !== null) {
       element.focus();
     }
@@ -205,7 +205,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
     return shadowRoot.activeElement !== null;
   }
   
-  set viewerElement(element: ViewerElement) {
+  setViewerElement(element: ViewerElement): void {
     if (this.childNodes.length !== 0) {
       this.innerHTML = "";
     }
@@ -217,17 +217,17 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
     }
   }
   
-  get viewerElement(): ViewerElement {
+  getViewerElement(): ViewerElement {
     return this._getViewerElement();
   }
   
-  get awesomeIcon(): string {
-    const viewerElement = this.viewerElement;
-    return viewerElement === null ? "desktop" : viewerElement.awesomeIcon;
+  getAwesomeIcon(): string {
+    const viewerElement = this.getViewerElement();
+    return viewerElement === null ? "desktop" : viewerElement.getAwesomeIcon();
   }
   
   getFrameContents(frameId: string): string {
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     if (viewerElement === null) {
       return null;
     }
@@ -324,7 +324,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
     });
     
     scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-      this._virtualScrollArea.scrollTo(scrollbar.position);
+      this._virtualScrollArea.scrollTo(scrollbar.getPosition());
     });
 
     scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
@@ -495,7 +495,7 @@ export default class EtViewerTab extends ViewerElement implements CommandPalette
   private _processResize(): void {
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     this._virtualScrollArea.updateContainerHeight(scrollerArea.getBoundingClientRect().height);
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
       this._updateVirtualScrollableSize(viewerElement);
     }

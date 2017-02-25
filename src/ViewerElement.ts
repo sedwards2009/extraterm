@@ -36,7 +36,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
     return node !== null && node !== undefined && node instanceof ViewerElement;
   }
   
-  get title(): string {
+  getTitle(): string {
     return "ViewerElement";
   }
   
@@ -47,7 +47,7 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   /**
    * Name of a Font Awesome icon to represent this viewer.
    */
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return "desktop";
   }
   
@@ -63,11 +63,11 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
   clearSelection(): void {
   }
  
-  get focusable(): boolean {
+  isFocusable(): boolean {
     return false;
   }
   
-  set focusable(value: boolean) {
+  setFocusable(value: boolean) {
   }
   
   abstract getVisualState(): VisualState;

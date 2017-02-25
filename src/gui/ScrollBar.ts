@@ -161,7 +161,7 @@ export default class CbScrollbar extends ThemeableElementBase {
   }
 
   // --- Length attribute ---
-  set length(value: number) {
+  setLength(value: number): void {
     this._setLength(value);
   }
 
@@ -172,7 +172,7 @@ export default class CbScrollbar extends ThemeableElementBase {
     }
   }
   
-  get length(): number {
+  getLength(): number {
     return this._getLength();
   }
 
@@ -189,7 +189,7 @@ export default class CbScrollbar extends ThemeableElementBase {
       console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_LENGTH + "' was NaN.");
       return;
     }
-    this.length = numberValue;
+    this.setLength(numberValue);
   }
   
   private _updateLengthNumber(value: number): void {
@@ -198,7 +198,7 @@ export default class CbScrollbar extends ThemeableElementBase {
   }
   
   // --- Position attribute ---
-  set position(value: number) {
+  setPosition(value: number): void {
     this._setPosition(value);
   }
 
@@ -211,7 +211,7 @@ export default class CbScrollbar extends ThemeableElementBase {
     }
   }
   
-  get position(): number {
+  getPosition(): number {
     return this._getPosition();
   }
 
@@ -228,7 +228,7 @@ export default class CbScrollbar extends ThemeableElementBase {
       console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_LENGTH + "' was NaN.");
       return;
     }
-    this.position = numberValue;
+    this.setPosition(numberValue);
   }
   
   private _updatePositionNumber(value: number): void {
@@ -237,11 +237,11 @@ export default class CbScrollbar extends ThemeableElementBase {
   }
   
   // --- Thumbsize attribute ---
-  set thumbSize(size: number) {
+  setThumbSize(size: number): void {
     
   }
   
-  get thumbSize(): number {
+  getThumbSize(): number {
     return 7734;  // FIXME bogus.
   }
 

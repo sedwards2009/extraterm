@@ -213,15 +213,15 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
     }
   }
 
-  set commandLine(commandLine: string) {
+  setCommandLine(commandLine: string): void {
     this._commandLine = commandLine;
   }
   
-  set returnCode(returnCode: string) {
+  setReturnCode(returnCode: string): void {
     this._returnCode = returnCode;
   }
   
-  get title(): string {
+  getTitle(): string {
     if (this._commandLine !== null) {
       return this._commandLine;
     } else {
@@ -229,7 +229,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
     }
   }
   
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return "terminal";
   }
   
@@ -274,7 +274,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
     return this._visualState;
   }
   
-  get text(): string {
+  getText(): string {
     return this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
   }
   
@@ -282,7 +282,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
     return this._isEmpty;
   }
     
-  set emulator(emulator: Term.Emulator) {
+  setEmulator(emulator: Term.Emulator): void {
     if (this._emulator !== null) {
       // Disconnect the last emulator.
       this._emulator.removeRenderEventListener(this._renderEventListener);
@@ -296,7 +296,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
     this._emulator = emulator;
   }
 
-  get emulator(): Term.Emulator {
+  getEmulator(): Term.Emulator {
     return this._emulator;
   }
   
@@ -329,14 +329,14 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
     return this._mode;
   }
   
-  set editable(editable: boolean) {
+  setEditable(editable: boolean): void {
     this._editable = editable;
     if (this._mode === ViewerElementTypes.Mode.CURSOR) {
       this._codeMirror.setOption("readOnly", ! editable);
     }
   }
   
-  get editable(): boolean {
+  getEditable(): boolean {
     return this._editable;
   }  
 
@@ -374,7 +374,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
     return 0;
   }
 
-  set useVPad(use: boolean) {
+  setUseVPad(use: boolean): void {
     this._useVPad = use;
   }
 
@@ -450,7 +450,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
    * @returns Object with the new colums (cols field) and rows (rows field) information.
    */
   resizeEmulatorToBox(widthPixels: number, heightPixels: number): {cols: number; rows: number;} {
-    const {columns: cols, rows: rows} = this.emulator.size();
+    const {columns: cols, rows: rows} = this.getEmulator().size();
     
     if (DEBUG_RESIZE) {
       this._log.debug("resizeEmulatorToBox() this.effectiveFontFamily(): " + this._effectiveFontFamily());
@@ -474,7 +474,7 @@ export default class TerminalViewer extends ViewerElement implements CommandPale
     const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
     
     if (newCols !== cols || newRows !== rows) {
-      this.emulator.resize( { rows: newRows, columns: newCols } );
+      this.getEmulator().resize( { rows: newRows, columns: newCols } );
     }
     
     if (DEBUG_RESIZE) {

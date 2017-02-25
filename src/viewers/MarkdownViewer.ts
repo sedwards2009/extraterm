@@ -39,7 +39,7 @@ class EtMarkdownViewer extends ViewerElement {
     this._focusable = false;
   }
 
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return "file-text-o";
   }
   
@@ -63,11 +63,11 @@ class EtMarkdownViewer extends ViewerElement {
     return root.activeElement !== null;
   }
   
-  get focusable(): boolean {
+  isFocusable(): boolean {
     return this._focusable;
   }
   
-  set focusable(value: boolean) {
+  setFocusable(value: boolean) {
     this._focusable = value;
     this._updateFocusable(value);
   }

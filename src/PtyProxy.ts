@@ -93,11 +93,11 @@ class ProxyPty implements Pty {
     this._writeFunc = writeFunc;
   }
   
-  get id(): number {
+  getId(): number {
     return this._id;
   }
   
-  set id(id: number) {
+  setId(id: number): void {
     this._id = id;
     if (this._live) {
       this._writeQueue.forEach( (msg) => {
@@ -239,8 +239,8 @@ export function factory(config: Config): PtyConnector {
       const createdPtyMsg = <CreatedPtyMessage> msg;
       for (let i=0; i<ptys.length; i++) {
         const pty = ptys[i];
-        if (pty.id === NULL_ID) {
-          pty.id = createdPtyMsg.id;
+        if (pty.getId() === NULL_ID) {
+          pty.setId(createdPtyMsg.id);
           break;
         }
       }
@@ -266,7 +266,7 @@ export function factory(config: Config): PtyConnector {
   
   function findPtyById(id: number): ProxyPty {
     for (let i=0; i<ptys.length; i++) {
-      if (ptys[i].id === id) {
+      if (ptys[i].getId() === id) {
         return ptys[i];
       }
     }

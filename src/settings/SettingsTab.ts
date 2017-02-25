@@ -167,11 +167,11 @@ export default class SettingsTab extends ViewerElement implements config.Accepts
   //
   //-----------------------------------------------------------------------
 
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return "wrench";
   }
   
-  get title(): string {
+  getTitle(): string {
     return "Settings";
   }
 
@@ -240,7 +240,7 @@ export default class SettingsTab extends ViewerElement implements config.Accepts
     }
   }
 
-  set themes(themes: ThemeTypes.ThemeInfo[]) {
+  setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._themes = themes;
 
     const getThemesByType = (type: ThemeTypes.ThemeType): ThemeTypes.ThemeInfo[] => {

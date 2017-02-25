@@ -179,7 +179,7 @@ export function startUp(): void {
       </cb-dropdown>
     </div>`;
 
-    mainWebUi.themes = themes;
+    mainWebUi.setThemes(themes);
       
     doc.body.classList.remove("preparing");
     doc.body.innerHTML = "";  // Remove the old contents.
@@ -210,7 +210,7 @@ export function startUp(): void {
     
     // Detect when the last tab has closed.
     mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
-      if (mainWebUi.tabCount === 0) {
+      if (mainWebUi.getTabCount() === 0) {
         WebIpc.windowCloseRequest();
       }
     });
@@ -222,7 +222,7 @@ export function startUp(): void {
 
     mainWebUi.addEventListener(MainWebUi.EVENT_SPLIT, () => {
       const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
-      splitMenu.checked = mainWebUi.split;
+      splitMenu.setChecked(mainWebUi.getSplit());
     });
 
     mainWebUi.addEventListener(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST, () => {
@@ -279,7 +279,7 @@ function executeCommand(command: string): boolean {
   switch(command) {
     case MENU_ITEM_SPLIT:
       const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
-      mainWebUi.split = Util.toBoolean(splitMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+      mainWebUi.setSplit(Util.toBoolean(splitMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED)));
       break;
       
     case MENU_ITEM_SETTINGS:

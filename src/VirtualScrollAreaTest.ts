@@ -92,11 +92,24 @@ function SetupScrollable(vsa: VirtualScrollArea.VirtualScrollArea, minHeight: nu
   return scrollable;
 }
 
-function SetupScrollbar(vsa: VirtualScrollArea.VirtualScrollArea): Scrollbar {
-  const scrollbar: Scrollbar =  {
-    length: 37337,
-    position: 7734,
-    thumbSize: 42
+interface SuperScrollbar extends Scrollbar {
+  getLength(): number;
+  getPosition(): number;
+  getThumbSize(): number;
+}
+
+function SetupScrollbar(vsa: VirtualScrollArea.VirtualScrollArea): SuperScrollbar {
+  let length = 123;
+  let position = 7743;
+  let thumbSize = 12;
+
+  const scrollbar: SuperScrollbar =  {
+    setLength: (len: number) => { length = len; },
+    getLength: () => length,
+    setPosition: (pos: number) => { position = pos; },
+    getPosition: () => position,
+    setThumbSize: (size: number): void => {thumbSize =size; },
+    getThumbSize: () => thumbSize
   };
   vsa.setScrollbar(scrollbar);
   return scrollbar;
@@ -121,7 +134,7 @@ export function testBasic(test: nodeunit.Test): void {
   
   vsa.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
   
-  test.equal(scrollbar.position, 0);
+  test.equal(scrollbar.getPosition(), 0);
   test.equal(scrollable.getScrollOffset(), 0);
   test.done();
 }
@@ -135,12 +148,12 @@ export function testLong(test: nodeunit.Test): void {
   
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
-  test.equal(scrollbar.position, 1000);
-  test.equal(scrollbar.length, 1500);
+  test.equal(scrollbar.getPosition(), 1000);
+  test.equal(scrollbar.getLength(), 1500);
   test.equal(scrollable.getScrollOffset(), 1000);
   
   vsa.scrollTo(750);
-  test.equal(scrollbar.position, 750);
+  test.equal(scrollbar.getPosition(), 750);
   test.equal(container.scrollTop, 0);
   test.equal(scrollable.getScrollOffset(), 750);
 
@@ -158,33 +171,33 @@ export function test3Scrollables(test: nodeunit.Test): void {
   
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
-  test.equal(scrollbar.position, 4000);
-  test.equal(scrollbar.length, 4500);
+  test.equal(scrollbar.getPosition(), 4000);
+  test.equal(scrollbar.getLength(), 4500);
   test.equal(scrollable1.getScrollOffset(), 1000);
   
   vsa.scrollTo(750);
-  test.equal(scrollbar.position, 750);
+  test.equal(scrollbar.getPosition(), 750);
   test.equal(container.scrollTop, 0);
   test.equal(scrollable1.getScrollOffset(), 750);
   test.equal(scrollable2.getScrollOffset(), 0);
   test.equal(scrollable3.getScrollOffset(), 0);
   
   vsa.scrollTo(1500);
-  test.equal(scrollbar.position, 1500);
+  test.equal(scrollbar.getPosition(), 1500);
   test.equal(container.scrollTop, 500);
   test.equal(scrollable1.getScrollOffset(), 1000);
   test.equal(scrollable2.getScrollOffset(), 0);
   test.equal(scrollable3.getScrollOffset(), 0);
   
   vsa.scrollTo(2500);
-  test.equal(scrollbar.position, 2500);
+  test.equal(scrollbar.getPosition(), 2500);
   test.equal(container.scrollTop, 500);
   test.equal(scrollable1.getScrollOffset(), 1000);
   test.equal(scrollable2.getScrollOffset(), 1000);
   test.equal(scrollable3.getScrollOffset(), 0);
   
   vsa.scrollTo(3500);
-  test.equal(scrollbar.position, 3500);
+  test.equal(scrollbar.getPosition(), 3500);
   test.equal(container.scrollTop, 1000);
   test.equal(scrollable1.getScrollOffset(), 1000);
   test.equal(scrollable2.getScrollOffset(), 1000);
@@ -202,7 +215,7 @@ export function testVirtualHeightUpdate(test: nodeunit.Test): void {
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   vsa.scrollTo(750);
-  test.equal(scrollbar.position, 750);
+  test.equal(scrollbar.getPosition(), 750);
   test.equal(container.scrollTop, 0);
   test.equal(scrollable.getScrollOffset(), 750);
   
@@ -211,7 +224,7 @@ export function testVirtualHeightUpdate(test: nodeunit.Test): void {
   scrollable.setReserveViewportHeight(0);
   vsa.updateScrollableSize(scrollable);
   
-  test.equal(scrollbar.position, 750);
+  test.equal(scrollbar.getPosition(), 750);
   test.equal(container.scrollTop, 0);
   test.equal(scrollable.getScrollOffset(), 750);
   
@@ -227,7 +240,7 @@ export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   vsa.scrollTo(1000);
-  test.equal(scrollbar.position, 1000);
+  test.equal(scrollbar.getPosition(), 1000);
   test.equal(container.scrollTop, 0);
   test.equal(scrollable.getScrollOffset(), 1000);
   
@@ -236,7 +249,7 @@ export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
   scrollable.setReserveViewportHeight(0);
   vsa.updateScrollableSize(scrollable);
   
-  test.equal(scrollbar.position, 1500);
+  test.equal(scrollbar.getPosition(), 1500);
   test.equal(container.scrollTop, 0);
   test.equal(scrollable.getScrollOffset(), 1500);
   
@@ -252,10 +265,10 @@ export function testShortWithReserve(test: nodeunit.Test): void {
   
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
-  test.equal(scrollbar.position, 0);
+  test.equal(scrollbar.getPosition(), 0);
   test.equal(scrollable.getHeight(), 700);
   test.equal(scrollable.getScrollOffset(), 0);
-  test.equal(scrollbar.length, 700);
+  test.equal(scrollbar.getLength(), 700);
   test.done();
 }
 
@@ -268,9 +281,9 @@ export function testHeightWithReserve(test: nodeunit.Test): void {
   
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
-  test.equal(scrollbar.position, 200);
+  test.equal(scrollbar.getPosition(), 200);
   test.equal(scrollable.getScrollOffset(), 200);
-  test.equal(scrollbar.length, 700);
+  test.equal(scrollbar.getLength(), 700);
   test.done();
 }
 
@@ -284,9 +297,9 @@ export function testBottomWithReserve(test: nodeunit.Test): void {
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   vsa.scrollToBottom();
   
-  test.equal(scrollbar.position, 200);
+  test.equal(scrollbar.getPosition(), 200);
   test.equal(scrollable.getScrollOffset(), 200);
-  test.equal(scrollbar.length, 700);
+  test.equal(scrollbar.getLength(), 700);
   test.done();
 }
 
@@ -301,7 +314,7 @@ export function testBug(test: nodeunit.Test): void {
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
 
   vsa.scrollTo(90);
-  test.equal(scrollbar.position, 90);
+  test.equal(scrollbar.getPosition(), 90);
   test.equal(container.scrollTop, 90);
   test.done();
 }
@@ -318,7 +331,7 @@ export function testBug2(test: nodeunit.Test): void {
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
 
   vsa.scrollTo(145);
-  test.equal(scrollbar.position, 145);
+  test.equal(scrollbar.getPosition(), 145);
   test.equal(container.scrollTop, 105);
   test.done();
 }

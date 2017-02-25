@@ -173,12 +173,12 @@ class TerminalTabInfo extends TabInfo {
   constructor(configManager: ConfigManager, public terminal: EtTerminal, public ptyId: number) {
     super();
     const config = configManager.getConfig();
-    this.terminal.blinkingCursor = config.blinkingCursor;
-    this.terminal.scrollbackSize = config.scrollbackLines;
+    this.terminal.setBlinkingCursor(config.blinkingCursor);
+    this.terminal.setScrollbackSize(config.scrollbackLines);
   }
   
   title(): string {
-    return this.terminal.terminalTitle;
+    return this.terminal.getTerminalTitle();
   }
   
   tabIcon(): string {
@@ -228,7 +228,7 @@ class ViewerElementTabInfo extends TabInfo {
   }
   
   tabIcon(): string {
-    return this.viewerElement.awesomeIcon;
+    return this.viewerElement.getAwesomeIcon();
   }
   
   title(): string {
@@ -269,7 +269,7 @@ class ViewerTabInfo extends ViewerElementTabInfo {
 class SettingsTabInfo extends ViewerElementTabInfo {
   constructor(public settingsElement: SettingsTab, public themes: ThemeTypes.ThemeInfo[]) {
     super(settingsElement);
-    settingsElement.themes = themes;
+    settingsElement.setThemes(themes);
   }
 }
 
@@ -509,8 +509,8 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
   
   private _handleTabSwitch(tabWidget: TabWidget, position: TabPosition): void {
     const tabInfos = this._split ? this._tabInfo.filter( tabInfo => tabInfo.position === position ) : this._tabInfo;
-    if (tabWidget.currentIndex >= 0 && tabWidget.currentIndex < tabInfos.length) {
-      const tabInfo = tabInfos[tabWidget.currentIndex];
+    if (tabWidget.getCurrentIndex() >= 0 && tabWidget.getCurrentIndex() < tabInfos.length) {
+      const tabInfo = tabInfos[tabWidget.getCurrentIndex()];
       
       this._sendTitleEvent(tabInfo.title());
       tabInfo.focus();
@@ -530,15 +530,15 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     this._keyBindingManager = keyBindingManager;
   }
   
-  set themes(themes: ThemeTypes.ThemeInfo[]) {
+  setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._themes = themes;
   }
   
-  get tabCount(): number {
+  getTabCount(): number {
     return this._tabInfo.length;
   }
   
-  set split(split: boolean) {
+  setSplit(split: boolean): void {
     if (split === this._split) {
       return;
     }
@@ -552,7 +552,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     if (split) {
       // Split it in two.
 
-      const currentTab = tabContainerLeft.currentTab;
+      const currentTab = tabContainerLeft.getCurrentTab();
       const selectedTabInfo = _.first(this._tabInfo.filter( tabInfo => tabInfo.cbTab === currentTab ));
 
       top.classList.add(CLASS_SPLIT);
@@ -574,15 +574,15 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
       const tabContainer = selectedTabInfo.position === TabPosition.LEFT ? tabContainerLeft : tabContainerRight
       const otherTabContainer = selectedTabInfo.position !== TabPosition.LEFT ? tabContainerLeft : tabContainerRight;
         
-      tabContainer.currentTab = selectedTabInfo.cbTab;
+      tabContainer.setCurrentTab(selectedTabInfo.cbTab);
       selectedTabInfo.focus();
         
       const otherShownList = this._tabInfo.filter(
                                 tabInfo => tabInfo.position !== selectedTabInfo.position && tabInfo.wasShown);
       if (otherShownList.length !== 0) {
-        otherTabContainer.currentTab = otherShownList[0].cbTab;
+        otherTabContainer.setCurrentTab(otherShownList[0].cbTab);
       } else {
-        otherTabContainer.currentIndex = 0;
+        otherTabContainer.setCurrentIndex(0);
       }
       
     } else {
@@ -590,13 +590,13 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
 
       // Keep track of which tabs were being shown so that we can make split reversable.
       const leftList = this._tabInfo.filter( tabInfo => tabInfo.position === TabPosition.LEFT );
-      const leftSelectedTab = tabContainerLeft.currentTab;
+      const leftSelectedTab = tabContainerLeft.getCurrentTab();
       leftList.forEach( (tabInfo, i) => {
         tabInfo.wasShown = tabInfo.cbTab === leftSelectedTab;
       });
       
       const rightList = this._tabInfo.filter( tabInfo => tabInfo.position === TabPosition.RIGHT );
-      const rightSelectedTab = tabContainerRight.currentTab;
+      const rightSelectedTab = tabContainerRight.getCurrentTab();
       rightList.forEach( (tabInfo, i) => {
         tabInfo.wasShown = tabInfo.cbTab === rightSelectedTab;
       });
@@ -624,7 +624,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
       tabContainerLeft.update();
       // Try to focus and show the same tab.
       if (focusedList.length !== 0) {
-        tabContainerLeft.currentTab = focusedList[0].cbTab;
+        tabContainerLeft.setCurrentTab(focusedList[0].cbTab);
         focusedList[0].focus();
       }
     }
@@ -633,7 +633,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     this._refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
   }
   
-  get split(): boolean {
+  getSplit(): boolean {
     return this._split;
   }
   
@@ -704,7 +704,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     config.injectConfigManager(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
-    newTerminal.frameFinder = this._frameFinder.bind(this);
+    newTerminal.setFrameFinder(this._frameFinder.bind(this));
     const tabInfo = new TerminalTabInfo(this._configManager, newTerminal, null);
     this._addTab(position, tabInfo);
     
@@ -723,8 +723,8 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
       }
     });
     
-    let currentColumns = newTerminal.columns;
-    let currentRows = newTerminal.rows;
+    let currentColumns = newTerminal.getColumns();
+    let currentRows = newTerminal.getRows();
 
     // Terminal resize event
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_RESIZE, (ev: CustomEvent): void => {
@@ -778,24 +778,24 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
   }
   
   openViewerTab(position: TabPosition, embeddedViewer: EmbeddedViewer, fontAdjust: number): number {
-    const viewerElement = embeddedViewer.viewerElement;
+    const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
     keybindingmanager.injectKeyBindingManager(viewerTab, this._keyBindingManager);
     viewerTab.title = embeddedViewer.title;
-    viewerTab.tag = embeddedViewer.tag;
+    viewerTab.tag = embeddedViewer.getTag();
     
     const tabInfo = new ViewerTabInfo(viewerTab);
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
     viewerElement.setVisualState(VisualState.AUTO);
     const result = this._openViewerTabInfo(position, tabInfo, viewerTab);
-    viewerTab.viewerElement = viewerElement;
+    viewerTab.setViewerElement(viewerElement);
     tabInfo.updateTabTitle();
     return result;
   }
   
   _openViewerTabInfo(position: TabPosition, tabInfo: ViewerElementTabInfo, viewerElement: ViewerElement): number {
-    viewerElement.focusable = true;
+    viewerElement.setFocusable(true);
     this._addTab(position, tabInfo);
     tabInfo.contentDiv.appendChild(viewerElement);
 
@@ -902,7 +902,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
       if (tabInfo.id === terminalId) {
         const tabWidget = <TabWidget> this._getById(
           tabInfo.position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
-        tabWidget.currentIndex = tabInfo.position === TabPosition.LEFT ? leftIndex : rightIndex;
+        tabWidget.setCurrentIndex(tabInfo.position === TabPosition.LEFT ? leftIndex : rightIndex);
         tabInfo.focus();
         return;
       }
@@ -937,14 +937,14 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
   focusPane(position: TabPosition): void {
     const tabContainer = <TabWidget> this._getById(position === TabPosition.LEFT
       ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
-    if (tabContainer.currentIndex < 0) {
+    if (tabContainer.getCurrentIndex() < 0) {
       return;
     }
     
     // Figure out the terminal object associated with the currently shown tab inside the tab container.
     const tabsInfos = this._tabInfo.filter( tabInfo => tabInfo.position === position);
     if (tabsInfos.length !== 0) {
-      tabsInfos[tabContainer.currentIndex].focus(); // Give it the focus.
+      tabsInfos[tabContainer.getCurrentIndex()].focus(); // Give it the focus.
     }
   }
 
@@ -1117,7 +1117,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
         break;
         
       case COMMAND_TOGGLE_SPLIT:
-        this.split = ! this._split;
+        this.setSplit( ! this._split);
         this._sendSplitEvent();
         break;
         
@@ -1167,14 +1167,14 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     const tabWidgetId = (this._split===false || position === TabPosition.LEFT)
                           ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT;
     const tabWidget = <TabWidget> this._getById(tabWidgetId);
-    let i = tabWidget.currentIndex;
+    let i = tabWidget.getCurrentIndex();
     i = i + direction;
     if (i < 0) {
       i = len - 1;
     } else if (i >= len) {
       i = 0;
     }
-    tabWidget.currentIndex = i;
+    tabWidget.setCurrentIndex(i);
     shortTabList[i].focus();
   }
   

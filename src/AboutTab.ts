@@ -61,11 +61,11 @@ export default class AboutTab extends ViewerElement {
   //
   //-----------------------------------------------------------------------
 
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return "lightbulb-o";
   }
   
-  get title(): string {
+  getTitle(): string {
     return "About";
   }
 

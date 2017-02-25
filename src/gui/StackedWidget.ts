@@ -135,7 +135,7 @@ export default class CbStackedWidget extends ThemeableElementBase {
     return result;
   }
   
-  set currentIndex(index: number) {
+  setCurrentIndex(index: number): void {
     if (index < 0 || index >= this.childElementCount) {
       return;
     }
@@ -144,7 +144,7 @@ export default class CbStackedWidget extends ThemeableElementBase {
     this.showIndex(index);
   }
   
-  get currentIndex(): number {
+  getCurrentIndex(): number {
     return this._currentIndex;
   }
   

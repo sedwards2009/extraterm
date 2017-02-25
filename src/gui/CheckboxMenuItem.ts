@@ -73,11 +73,11 @@ export default class CbCheckBoxMenuItem extends CbMenuItem {
   }
 
   //-----------------------------------------------------------------------
-  set checked(checked: boolean) {
+  setChecked(checked: boolean): void {
     this.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, Util.booleanToString(checked));
   }
 
-  get checked(): boolean {
+  getChecked(): boolean {
     return Util.htmlValueToBool(this.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
   }
 

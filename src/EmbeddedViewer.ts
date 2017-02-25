@@ -163,7 +163,7 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
   //
   //-----------------------------------------------------------------------
   
-  set viewerElement(element: ViewerElement) {
+  setViewerElement(element: ViewerElement): void {
     const oldViewer = this._getViewerElement()
     if (oldViewer != null) {
       oldViewer.removeEventListener('focus', this._childFocusHandlerFunc);
@@ -182,13 +182,13 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
     }
   }
   
-  get viewerElement(): ViewerElement {
+  getViewerElement(): ViewerElement {
     return this._getViewerElement();
   }
   
   bulkSetVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
     this._visualState = newVisualState;
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
       return viewerElement.bulkSetVisualState(newVisualState);
     } else {
@@ -210,7 +210,7 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
   
   // See VirtualScrollable
   getVirtualHeight(containerHeight: number): number {
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     let result = 0;
     if (viewerElement !== null) {
       result = this._virtualScrollArea.getVirtualHeight();
@@ -331,65 +331,65 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
   }
 
   getSelectionText(): string {
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     return viewerElement === null ? null : viewerElement.getSelectionText();
   }
   
   /**
    * 
    */
-  get text(): string {
-    const viewerElement = this.viewerElement;
+  getText(): string {
+    const viewerElement = this.getViewerElement();
     if (viewerElement === null) {
       return "";
     }
     return viewerElement.text;
   }
   
-  set tag(tag: string) {
+  setTag(tag: string): void {
     this.setAttribute(EmbeddedViewer.ATTR_TAG, tag);
   }
   
-  get tag(): string {
+  getTag(): string {
     return this.getAttribute(EmbeddedViewer.ATTR_TAG);
   }
 
-  set title(newTitle: string) {
+  setTitle(newTitle: string): void {
     this.setAttribute(EmbeddedViewer.ATTR_FRAME_TITLE, newTitle);
   }
 
-  get title(): string {
+  getTitle(): string {
     return this.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE);
   }
 
   hasFocus(): boolean {
-    const el = this.viewerElement;
+    const el = this.getViewerElement();
     if (el == null) {
       return false;
     }
     return el.hasFocus();
   }
 
-  set returnCode(returnCode: number) {
+  setReturnCode(returnCode: number): void {
     this.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE,
       returnCode === null || returnCode === undefined ? null : "" + returnCode);
   }
 
-  get returnCode(): number {
+  getReturnCode(): number {
     const rcString = this.getAttribute(EmbeddedViewer.ATTR_RETURN_CODE);
     return rcString === null || rcString === undefined ? null : parseInt(rcString, 10);
   }
 
-  set awesomeIcon(iconName: string) {
+  setAwesomeIcon(iconName: string): void {
     this.setAttribute(EmbeddedViewer.ATTR_AWESOME_ICON, iconName);
   }
 
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return this.getAttribute(EmbeddedViewer.ATTR_AWESOME_ICON);
   }
 
   canPaste(): boolean {
-    const el = this.viewerElement;
+    const el = this.getViewerElement();
     if (el == null) {
       return false;
     }
@@ -402,14 +402,14 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
       return;
     }
 
-    const el = this.viewerElement;
+    const el = this.getViewerElement();
     if (SupportsClipboardPaste.isSupportsClipboardPaste(el)) {
       el.pasteText(text);
     }
   }
 
   clearSelection(): void {
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     if (viewerElement === null) {
       return;
     }
@@ -427,7 +427,7 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
     };
     const setModeOperation = BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
 
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
       return BulkDomOperation.parallel([viewerElement.bulkSetMode(newMode), setModeOperation]);
     } else {
@@ -440,7 +440,7 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
   }
 
   focus(): void {
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
       return viewerElement.focus();
     } else {
@@ -449,7 +449,7 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
   }
 
   getCursorPosition(): ViewerElementTypes.CursorMoveDetail {
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
       const borderSize = this._borderSize();
       const {left, top, bottom, viewPortTop } = viewerElement.getCursorPosition();
@@ -464,7 +464,7 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
   }
   
   setCursorPositionTop(x: number): boolean {
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
       return viewerElement.setCursorPositionTop(x);
     }
@@ -472,7 +472,7 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
   }
   
   setCursorPositionBottom(x: number): boolean {
-    const viewerElement = this.viewerElement;
+    const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
       return viewerElement.setCursorPositionBottom(x);
     }
@@ -556,7 +556,7 @@ export default class EmbeddedViewer extends ViewerElement implements CommandPale
       ev.stopPropagation();
       ev.preventDefault();
 
-      const viewerElement = this.viewerElement;
+      const viewerElement = this.getViewerElement();
       if (viewerElement === null) {
         return;
       }

@@ -161,11 +161,11 @@ export default class EtTipViewer extends ViewerElement implements config.Accepts
     }
   }
   
-  get title(): string {
+  getTitle(): string {
     return "Tip";
   }
   
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return "idea";
   }
   

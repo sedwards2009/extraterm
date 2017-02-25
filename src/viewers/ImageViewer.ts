@@ -117,11 +117,11 @@ export default class ImageViewer extends ViewerElement {
   //
   //-----------------------------------------------------------------------
 
-  get title(): string {
+  getTitle(): string {
     return "Text";
   }
   
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return "file-image-o";
   }
   
@@ -150,11 +150,11 @@ export default class ImageViewer extends ViewerElement {
     return this._visualState;
   }
   
-  // get text(): string {
+  // getText(): string {
   //   return null;
   // }
   // 
-  // set text(newText: string) {
+  // setText(newText: string): void {
   //   if (this._codeMirror === null) {
   //     this._text = newText;
   //   } else {
@@ -162,11 +162,11 @@ export default class ImageViewer extends ViewerElement {
   //   }
   // }
   
-  set mimeType(mimeType: string) {
+  setMimeType(mimeType: string): void {
     this._mimeType = mimeType;
   }
   
-  get mimeType(): string {
+  getMimeType(): string {
     return this._mimeType;
   }
   
@@ -192,11 +192,11 @@ export default class ImageViewer extends ViewerElement {
     return this._mode;
   }
   
-  set editable(editable: boolean) {
+  setEditable(editable: boolean): void {
     // this._editable = editable;
   }
   
-  get editable(): boolean {
+  getEditable(): boolean {
     // return this._editable;
     return false;
   }  

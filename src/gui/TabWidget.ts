@@ -102,8 +102,8 @@ export default class CbTabWidget extends ThemeableElementBase {
     this.updateThemeCss();
     
     this.createTabHolders();
-    this.currentIndex = 0;
-    this._showFrame(this.showFrame);
+    this.setCurrentIndex(0);
+    this._showFrame(this.getShowFrame());
     
     this._mutationObserver = new MutationObserver( (mutations) => {
       this.createTabHolders();
@@ -294,10 +294,10 @@ export default class CbTabWidget extends ThemeableElementBase {
     }
     
     if (selectTab === -1) {
-      selectTab = Math.min(this.currentIndex, tabCount-1);
+      selectTab = Math.min(this.getCurrentIndex(), tabCount-1);
     }
     
-    this.currentIndex = selectTab;
+    this.setCurrentIndex(selectTab);
     this._showTab(selectTab);
   }
   
@@ -305,42 +305,42 @@ export default class CbTabWidget extends ThemeableElementBase {
     // This handler may fire when a tab is removed during the click event bubble procedure. This check
     // supresses the event if the tab has been removed already.
     if (tabElement.parentNode !== null) {
-      this.currentIndex = index;
+      this.setCurrentIndex(index);
       DomUtils.doLater(this._sendSwitchEvent.bind(this));
     }
   }
   
-  set currentIndex(index: number) {
+  setCurrentIndex(index: number) {
     if (index < 0 || this._getContentsStack().children.length <= index) {
       this._log.warn("Out of range index given to the 'currentIndex' property.");
       return;
     }
     
-    if (this._getContentsStack().currentIndex === index) {
+    if (this._getContentsStack().getCurrentIndex() === index) {
       return;
     }
-    this._getContentsStack().currentIndex = index;
+    this._getContentsStack().setCurrentIndex(index);
     this._showTab(index);
   }
   
-  get currentIndex(): number {
-    return this._getContentsStack().currentIndex;
+  getCurrentIndex(): number {
+    return this._getContentsStack().getCurrentIndex();
   }
   
   private _getCbTabs(): CbTab[] {
     return <CbTab[]> DomUtils.toArray<Element>(this.children).filter( element => element.nodeName === CbTab.TAG_NAME );
   }
   
-  set currentTab(selectTab: CbTab) {
+  setCurrentTab(selectTab: CbTab): void {
     const index = _.findIndex(this._getCbTabs(), tab => tab === selectTab );
     if (index === -1) {
       return;
     }
-    this.currentIndex = index;
+    this.setCurrentIndex(index);
   }
   
-  get currentTab(): CbTab {
-    const currentIndex = this.currentIndex;
+  getCurrentTab(): CbTab {
+    const currentIndex = this.getCurrentIndex();
     if (currentIndex === -1) {
       return null;
     }
@@ -348,11 +348,11 @@ export default class CbTabWidget extends ThemeableElementBase {
     return currentTab;
   }
   
-  set showFrame(value: boolean) {
+  setShowFrame(value: boolean): void {
     this.setAttribute(ATTR_SHOW_FRAME, "" + value);
   }
   
-  get showFrame(): boolean {
+  getShowFrame(): boolean {
     if (this.hasAttribute(ATTR_SHOW_FRAME)) {
       return Util.toBoolean(this.getAttribute(ATTR_SHOW_FRAME));
     } else {

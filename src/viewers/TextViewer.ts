@@ -183,15 +183,15 @@ export default class TextViewer extends ViewerElement implements CommandPaletteR
     this._keyBindingManager = newKeyBindingManager;
   }
   
-  set commandLine(commandLine: string) {
+  setCommandLine(commandLine: string): void {
     this._commandLine = commandLine;
   }
   
-  set returnCode(returnCode: string) {
+  setReturnCode(returnCode: string): void {
     this._returnCode = returnCode;
   }
   
-  get title(): string {
+  getTitle(): string {
     if (this._commandLine !== null) {
       return this._commandLine;
     } else {
@@ -199,7 +199,7 @@ export default class TextViewer extends ViewerElement implements CommandPaletteR
     }
   }
   
-  get awesomeIcon(): string {
+  getAwesomeIcon(): string {
     return "file-text-o";
   }
   
@@ -231,11 +231,11 @@ export default class TextViewer extends ViewerElement implements CommandPaletteR
     return this._visualState;
   }
   
-  get text(): string {
+  getText(): string {
     return this._codeMirror.getDoc().getValue();
   }
   
-  set text(newText: string) {
+  setText(newText: string): void {
     if (this._codeMirror === null) {
       this._text = newText;
     } else {
@@ -256,7 +256,7 @@ export default class TextViewer extends ViewerElement implements CommandPaletteR
     this._codeMirror.getDoc().replaceSelection(text);
   }
 
-  set mimeType(mimeType: string) {
+  setMimeType(mimeType: string): void {
     this._mimeType = mimeType;
     
     const modeInfo = CodeMirror.findModeByMIME(mimeType);
@@ -270,7 +270,7 @@ export default class TextViewer extends ViewerElement implements CommandPaletteR
     }
   }
   
-  get mimeType(): string {
+  getMimeType(): string {
     return this._mimeType;
   }
 
@@ -328,14 +328,14 @@ export default class TextViewer extends ViewerElement implements CommandPaletteR
     return this._mode;
   }
   
-  set editable(editable: boolean) {
+  setEditable(editable: boolean): void {
     this._editable = editable;
     if (this._mode === ViewerElementTypes.Mode.CURSOR) {
       this._codeMirror.setOption("readOnly", ! editable);
     }
   }
   
-  get editable(): boolean {
+  getEditable(): boolean {
     return this._editable;
   }  
 

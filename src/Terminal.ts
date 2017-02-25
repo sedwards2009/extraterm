@@ -316,7 +316,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
    * 
    * True means the cursor should blink, otherwise it doesn't.
    */
-  set blinkingCursor(blink: boolean) {
+  setBlinkingCursor(blink: boolean): void {
     // this._blinkingCursor = blink;
     // if (this._term !== null) {
     //   this._term.setCursorBlink(blink);
@@ -326,14 +326,14 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   /**
    * The number of columns in the terminal screen.
    */
-  get columns(): number {
+  getColumns(): number {
     return this._columns;
   }
   
   /**
    * The number of rows in the terminal screen.
    */
-  get rows(): number {
+  getRows(): number {
     return this._rows;
   }
 
@@ -345,11 +345,11 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     this._keyBindingManager = keyBindingManager;
   }
   
-  set scrollbackSize(scrollbackSize: number) {
+  setScrollbackSize(scrollbackSize: number): void {
     this._scrollbackSize = scrollbackSize;
   }
   
-  get scrollbackSize(): number {
+  getScrollbackSize(): number {
     return this._scrollbackSize;
   }
   
@@ -393,7 +393,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
    * This is the window title of the terminal, don't confuse it with more
    * general HTML title of the element.
    */
-  get terminalTitle(): string {
+  getTerminalTitle(): string {
     return this._title;
   }
   
@@ -456,7 +456,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     this._scheduleResize();
   }
   
-  set frameFinder(func: FrameFinder) {
+  setFrameFinder(func: FrameFinder): void {
     this._frameFinder = func;
   }
   
@@ -556,7 +556,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       });
       
       scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-        this._virtualScrollArea.scrollTo(scrollbar.position);
+        this._virtualScrollArea.scrollTo(scrollbar.getPosition());
       });
 
       scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
@@ -783,7 +783,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     keybindingmanager.injectKeyBindingManager(terminalViewer, this._keyBindingManager);
     config.injectConfigManager(terminalViewer, this._configManager);
     
-    terminalViewer.emulator = this._emulator;
+    terminalViewer.setEmulator(this._emulator);
     this._appendScrollable(terminalViewer)
     
     terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
@@ -832,9 +832,9 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   private _disconnectActiveTerminalViewer(): void {
     this._emulator.moveRowsAboveCursorToScrollback();
     if (this._terminalViewer !== null) {
-      this._terminalViewer.emulator = null;
+      this._terminalViewer.setEmulator(null);
       this._terminalViewer.deleteScreen();
-      this._terminalViewer.useVPad = false;
+      this._terminalViewer.setUseVPad(false);
       this._virtualScrollArea.updateScrollableSize(this._terminalViewer);
       this._terminalViewer = null;
     }
@@ -852,8 +852,8 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
         this._removeScrollable(currentTerminalViewer);
       } else {
         // This terminal viewer has stuff in it.
-        currentTerminalViewer.emulator = null;
-        currentTerminalViewer.useVPad = false;
+        currentTerminalViewer.setEmulator(null);
+        currentTerminalViewer.setUseVPad(false);
         this._virtualScrollArea.updateScrollableSize(currentTerminalViewer);
         this._terminalViewer = null;
         currentTerminalViewer = null;
@@ -1286,7 +1286,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       return;
       
     } else if (EmbeddedViewer.is(kidNode)) {
-      const viewer = kidNode.viewerElement;
+      const viewer = kidNode.getViewerElement();
 
       if (TerminalViewer.is(viewer)) {
         viewer.deleteTopPixels(pixelCount);
@@ -1782,7 +1782,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
   private _handleApplicationModeBracketStart(): void {
     for (const kidInfo of this._childElementList) {
       const element = kidInfo.element;
-      if ((EmbeddedViewer.is(element) && element.returnCode == null) || CommandPlaceHolder.is(element)) {
+      if ((EmbeddedViewer.is(element) && element.getReturnCode() == null) || CommandPlaceHolder.is(element)) {
         return;  // Don't open a new frame.
       }
     }
@@ -1851,7 +1851,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
     keybindingmanager.injectKeyBindingManager(el, this._keyBindingManager);
     config.injectConfigManager(el, this._configManager);
-    el.awesomeIcon = 'cog';
+    el.setAwesomeIcon('cog');
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
       this.focus();
@@ -1920,13 +1920,13 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       const activeTerminalViewer = this._terminalViewer;
       this._disconnectActiveTerminalViewer();
       
-      activeTerminalViewer.returnCode = returnCode;
-      activeTerminalViewer.commandLine = embeddedViewerElement.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE);
-      activeTerminalViewer.useVPad = false;
+      activeTerminalViewer.setReturnCode(returnCode);
+      activeTerminalViewer.setCommandLine(embeddedViewerElement.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE));
+      activeTerminalViewer.setUseVPad(false);
       
       // Hang the terminal viewer under the Embedded viewer.
       embeddedViewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, returnCode);
-      embeddedViewerElement.awesomeIcon = returnCode === '0' ? 'check' : 'times';
+      embeddedViewerElement.setAwesomeIcon(returnCode === '0' ? 'check' : 'times');
       embeddedViewerElement.setAttribute(EmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
       embeddedViewerElement.className = "extraterm_output";
       
@@ -1934,7 +1934,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       // the focus after we remove it from the DOM and place it else where.
       const restoreFocus = DomUtils.getShadowRoot(this).activeElement === activeTerminalViewer;
       
-      embeddedViewerElement.viewerElement = activeTerminalViewer;
+      embeddedViewerElement.setViewerElement(activeTerminalViewer);
       activeTerminalViewer.editable = true;
 
       this._removeScrollable(activeTerminalViewer);
@@ -1973,7 +1973,7 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       const newViewerElement = this._createEmbeddedViewerElement(this._lastCommandLine);
       // Hang the terminal viewer under the Embedded viewer.
       newViewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, returnCode);
-      newViewerElement.awesomeIcon = 'times';
+      newViewerElement.setAwesomeIcon('times');
       newViewerElement.setAttribute(EmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
       newViewerElement.className = "extraterm_output";
 
@@ -1983,14 +1983,14 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
       const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
       keybindingmanager.injectKeyBindingManager(outputTerminalViewer, this._keyBindingManager);
       config.injectConfigManager(outputTerminalViewer, this._configManager);
-      newViewerElement.viewerElement = outputTerminalViewer;
+      newViewerElement.setViewerElement(outputTerminalViewer);
       
       outputTerminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
-      outputTerminalViewer.returnCode = returnCode;
-      outputTerminalViewer.commandLine = this._lastCommandLine;
-      outputTerminalViewer.useVPad = false;
+      outputTerminalViewer.setReturnCode(returnCode);
+      outputTerminalViewer.setCommandLine(this._lastCommandLine);
+      outputTerminalViewer.setUseVPad(false);
       if (moveText !== null) {
         outputTerminalViewer.setDecoratedLines(moveText.text, moveText.decorations);
       }
@@ -2117,9 +2117,9 @@ export default class EtTerminal extends ThemeableElementBase implements CommandP
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
-      viewerElement.viewerElement = mimeViewerElement;
+      viewerElement.setViewerElement(mimeViewerElement);
       viewerElement.setAttribute(EmbeddedViewer.ATTR_FRAME_TITLE, filename);
-      viewerElement.awesomeIcon = mimeViewerElement.awesomeIcon;
+      viewerElement.setAwesomeIcon(mimeViewerElement.getAwesomeIcon());
       viewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
       this._appendScrollableElement(viewerElement);
       this._enforceScrollbackLength(this._scrollbackSize);
