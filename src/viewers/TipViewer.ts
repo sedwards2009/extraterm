@@ -17,9 +17,9 @@ type ConfigManager = config.ConfigManager;
 import * as keybindingmanager from '../KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import ViewerElement from '../ViewerElement';
+import {ViewerElement} from '../ViewerElement';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import ThemeableElementBase from '../ThemeableElementBase';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
@@ -69,7 +69,7 @@ function loadTipFile(): string[] {
 
 const tipData = loadTipFile();
 
-export default class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, keybindingmanager.AcceptsKeyBindingManager {
+export class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, keybindingmanager.AcceptsKeyBindingManager {
 
   static TAG_NAME = "et-tip-viewer";
   

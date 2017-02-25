@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import ThemeableElementBase from '../ThemeableElementBase';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 
@@ -30,7 +30,7 @@ let registered = false;
 /**
  * A Pop Down Dialog.
  */
-export default class PopDownDialog extends ThemeableElementBase {
+export class PopDownDialog extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.

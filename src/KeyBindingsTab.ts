@@ -9,8 +9,8 @@
 "use strict";
 import * as _ from 'lodash';
 import * as ThemeTypes from './Theme';
-import ViewerElement from './ViewerElement';
-import ThemeableElementBase from './ThemeableElementBase';
+import {ViewerElement} from './ViewerElement';
+import {ThemeableElementBase} from './ThemeableElementBase';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import * as ViewerElementTypes from './ViewerElementTypes';
@@ -78,7 +78,7 @@ interface ModelData {
 /**
  * The Extraterm Key Bindings tab.
  */
-export default class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigManager,
+export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigManager,
     keybindingmanager.AcceptsKeyBindingManager {
   
   /**

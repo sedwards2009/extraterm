@@ -12,7 +12,7 @@ import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 /**
  * A base class for HTMLElements which also want theming CSS support.
  */
-export default class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefreshElementBase implements ThemeTypes.Themeable {
+export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefreshElementBase implements ThemeTypes.Themeable {
 
   static ID_THEME = "ID_THEME";
 

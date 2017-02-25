@@ -14,7 +14,7 @@ let registered = false;
 /**
  * Holds the contents of one tab inside a CbTabWidget tag.
  */
-export default class CbTab extends HTMLElement {
+export class CbTab extends HTMLElement {
   
   /**
    * The HTML tag name of this element.

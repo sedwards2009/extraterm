@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import ContextMenu from './ContextMenu';
+import {CbContextMenu as ContextMenu} from './ContextMenu';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 
@@ -21,7 +21,7 @@ let registered = false;
  * element like a button which emits a click event. When the user activates
  * the button, the CbContextMenu is displayed.
  */
-export default class CbDropDown extends HTMLElement {
+export class CbDropDown extends HTMLElement {
   
   /**
    * The HTML tag name of this element.

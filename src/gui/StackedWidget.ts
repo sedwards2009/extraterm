@@ -6,7 +6,7 @@
 
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as BulkDomOperation from '../BulkDomOperation';
-import ThemeableElementBase from '../ThemeableElementBase';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
@@ -20,7 +20,7 @@ let registered = false;
 /**
  * A widget which displays one of its DIV contents at a time.
  */
-export default class CbStackedWidget extends ThemeableElementBase {
+export class CbStackedWidget extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.

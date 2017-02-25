@@ -3,10 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import ThemeableElementBase from '../ThemeableElementBase';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
-import CbStackedWidget from './StackedWidget';
-import CbTab from './Tab';
+import {CbStackedWidget} from './StackedWidget';
+import {CbTab} from './Tab';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as BulkDomOperation from '../BulkDomOperation';
 import * as Util from './Util';
@@ -45,7 +45,7 @@ const CLASS_TAB = "tab";
  *
  * See CbTab.
  */
-export default class CbTabWidget extends ThemeableElementBase {
+export class CbTabWidget extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.

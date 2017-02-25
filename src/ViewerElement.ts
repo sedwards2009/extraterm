@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as Util from './gui/Util';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import ThemeableElementBase from './ThemeableElementBase';
+import {ThemeableElementBase} from './ThemeableElementBase';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 
@@ -18,7 +18,7 @@ type Mode = ViewerElementTypes.Mode;
 type VisualState = ViewerElementTypes.VisualState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
-abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable {
+export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable {
   
   static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
 
@@ -137,4 +137,3 @@ abstract class ViewerElement extends ThemeableElementBase implements VirtualScro
     
   }
 }
-export default ViewerElement;

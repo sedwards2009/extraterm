@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import CbMenuItem from './MenuItem';
+import {CbMenuItem} from './MenuItem';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 
@@ -14,7 +14,7 @@ let registered = false;
 /**
  * A check box menu item for use inside a context menu.
  */
-export default class CbCheckBoxMenuItem extends CbMenuItem {
+export class CbCheckBoxMenuItem extends CbMenuItem {
   
   /**
    * The HTML tag name of this element.

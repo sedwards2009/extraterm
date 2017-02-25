@@ -8,8 +8,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import * as SourceDir from '../SourceDir';
-import ViewerElement from '../ViewerElement';
-import ThemeableElementBase from '../ThemeableElementBase';
+import {ViewerElement} from '../ViewerElement';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ThemeTypes from '../Theme';
@@ -88,7 +88,7 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-export default class TextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export class TextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "et-text-viewer";

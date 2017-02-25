@@ -6,17 +6,17 @@
 
 import * as fs from 'fs';
 
-import ViewerElement from "./ViewerElement";
+import {ViewerElement} from "./ViewerElement";
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import EmbeddedViewer from './EmbeddedViewer';
+import {EmbeddedViewer} from './EmbeddedViewer';
 import Logger from './Logger';
 import log from './LogDecorator';
 import * as DomUtils from './DomUtils';
-import CbScrollbar from'./gui/ScrollBar';
+import {CbScrollbar} from'./gui/ScrollBar';
 import * as Util from './gui/Util';
-import ResizeCanary from './ResizeCanary';
-import ThemeableElementBase from './ThemeableElementBase';
+import {ResizeCanary} from './ResizeCanary';
+import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from './Theme';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -65,7 +65,7 @@ const SCROLL_STEP = 1;
 /**
  * A viewer tab which can contain any ViewerElement.
  */
-export default class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     keybindingmanager.AcceptsKeyBindingManager {
 
   /**

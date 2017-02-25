@@ -4,10 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import ThemeableElementBase from '../ThemeableElementBase';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
-import PopDownDialog from './PopDownDialog';
+import {PopDownDialog} from './PopDownDialog';
 
 const ID = "CbPopDownNumberDialogTemplate";
 const ID_DIALOG = "ID_DIALOG";
@@ -18,7 +18,7 @@ let registered = false;
 /**
  * A Pop Down Number Dialog
  */
-export default class PopDownNumberDialog extends ThemeableElementBase {
+export class PopDownNumberDialog extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.

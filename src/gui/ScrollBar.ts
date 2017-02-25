@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import ThemeableElementBase from '../ThemeableElementBase';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
@@ -21,7 +21,7 @@ let registered = false;
 /**
  * A scrollbar.
  */
-export default class CbScrollbar extends ThemeableElementBase {
+export class CbScrollbar extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.

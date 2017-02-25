@@ -9,9 +9,9 @@
 "use strict";
 
 import * as ThemeTypes from './Theme';
-import ViewerElement from './ViewerElement';
+import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import ThemeableElementBase from './ThemeableElementBase';
+import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
 import * as BulkDomOperation from './BulkDomOperation';
 
@@ -22,7 +22,7 @@ let registered = false;
 /**
  * The Extraterm About tab.
  */
-export default class AboutTab extends ViewerElement {
+export class AboutTab extends ViewerElement {
   
   /**
    * The HTML tag name of this element.

@@ -5,16 +5,16 @@
  */
 import * as DomUtils from './DomUtils';
 import * as util from './gui/Util';
-import ThemeableElementBase from './ThemeableElementBase';
-import TabWidget from './gui/TabWidget';
-import EtTerminal from './Terminal';
-import SettingsTab from './settings/SettingsTab';
-import AboutTab from './AboutTab';
-import EtKeyBindingsTab from './KeyBindingsTab';
-import EtViewerTab from './ViewerTab';
-import EmbeddedViewer from './EmbeddedViewer';
-import CbTab from './gui/Tab';
-import ViewerElement from './ViewerElement';
+import {ThemeableElementBase} from './ThemeableElementBase';
+import {CbTabWidget as TabWidget} from './gui/TabWidget';
+import {EtTerminal} from './Terminal';
+import {SettingsTab} from './settings/SettingsTab';
+import {AboutTab} from './AboutTab';
+import {EtKeyBindingsTab} from './KeyBindingsTab';
+import {EtViewerTab} from './ViewerTab';
+import {EmbeddedViewer} from './EmbeddedViewer';
+import {CbTab} from './gui/Tab';
+import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
@@ -290,14 +290,14 @@ class KeyBindingsTabInfo extends ViewerElementTabInfo {
 const staticLog = new Logger("Static ExtratermMainWebUI");
 
 // Theme management
-const activeInstances: Set<ExtratermMainWebUI> = new Set();
+const activeInstances: Set<MainWebUi> = new Set();
 let themeCss = "";
 
 /**
  * Top level UI component for a normal terminal window
  *
  */
-export default class ExtratermMainWebUI extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
+export class MainWebUi extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
     config.AcceptsConfigManager {
   
   //-----------------------------------------------------------------------
@@ -313,7 +313,7 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
     EtViewerTab.init();
     
     if (registered === false) {
-      window.document.registerElement(ExtratermMainWebUI.TAG_NAME, {prototype: ExtratermMainWebUI.prototype});
+      window.document.registerElement(MainWebUi.TAG_NAME, {prototype: MainWebUi.prototype});
       registered = true;
     }
   }
@@ -417,21 +417,21 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
 
     const closeButtenHandler = () => {
       this.focus();
-      this._sendWindowRequestEvent(ExtratermMainWebUI.EVENT_MINIMIZE_WINDOW_REQUEST);
+      this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
     };
     this._getById(ID_MINIMIZE_BUTTON).addEventListener('click', closeButtenHandler);
     this._getById(ID_OSX_MINIMIZE_BUTTON).addEventListener('click', closeButtenHandler);
 
     const maximizeButtonHandler = () => {
       this.focus();
-      this._sendWindowRequestEvent(ExtratermMainWebUI.EVENT_MAXIMIZE_WINDOW_REQUEST);
+      this._sendWindowRequestEvent(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST);
     };
     this._getById(ID_MAXIMIZE_BUTTON).addEventListener('click', maximizeButtonHandler);
     this._getById(ID_OSX_MAXIMIZE_BUTTON).addEventListener('click', maximizeButtonHandler);
 
     const closeButtonHandler = () => {
       this.focus();
-      this._sendWindowRequestEvent(ExtratermMainWebUI.EVENT_CLOSE_WINDOW_REQUEST);
+      this._sendWindowRequestEvent(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST);
     };
     this._getById(ID_CLOSE_BUTTON).addEventListener('click', closeButtonHandler);
     this._getById(ID_OSX_CLOSE_BUTTON).addEventListener('click', closeButtonHandler);
@@ -984,22 +984,22 @@ export default class ExtratermMainWebUI extends ThemeableElementBase implements 
   }
 
   private _sendTabOpenedEvent(): void {
-    const event = new CustomEvent(ExtratermMainWebUI.EVENT_TAB_OPENED, { detail: null });
+    const event = new CustomEvent(MainWebUi.EVENT_TAB_OPENED, { detail: null });
     this.dispatchEvent(event);
   }
   
   private _sendTabClosedEvent(): void {
-    const event = new CustomEvent(ExtratermMainWebUI.EVENT_TAB_CLOSED, { detail: null });
+    const event = new CustomEvent(MainWebUi.EVENT_TAB_CLOSED, { detail: null });
     this.dispatchEvent(event);    
   }
 
   private _sendTitleEvent(title: string): void {
-    const event = new CustomEvent(ExtratermMainWebUI.EVENT_TITLE, { detail: {title: title} });
+    const event = new CustomEvent(MainWebUi.EVENT_TITLE, { detail: {title: title} });
     this.dispatchEvent(event);
   }
   
   private _sendSplitEvent(): void {
-    const event = new CustomEvent(ExtratermMainWebUI.EVENT_SPLIT, {  });
+    const event = new CustomEvent(MainWebUi.EVENT_SPLIT, {  });
     this.dispatchEvent(event);
   }
 

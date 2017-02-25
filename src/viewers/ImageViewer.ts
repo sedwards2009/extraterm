@@ -5,8 +5,8 @@
 "use strict";
 import * as _ from 'lodash';
 import * as fs from 'fs';
-import ViewerElement from '../ViewerElement';
-import ThemeableElementBase from '../ThemeableElementBase';
+import {ViewerElement} from '../ViewerElement';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
@@ -42,7 +42,7 @@ const DEBUG_SIZE = false;
 let registered = false;
 let instanceIdCounter = 0;
 
-export default class ImageViewer extends ViewerElement {
+export class ImageViewer extends ViewerElement {
 
   static TAG_NAME = "et-image-viewer";
   

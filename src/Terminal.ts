@@ -9,20 +9,20 @@ import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import * as utf8 from 'utf8';
 
-import ViewerElement from './ViewerElement';
+import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as BulkDomOperation from './BulkDomOperation';
-import ResizeCanary from './ResizeCanary';
-import ThemeableElementBase from './ThemeableElementBase';
+import {ResizeCanary} from './ResizeCanary';
+import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from './Theme';
-import EmbeddedViewer from './EmbeddedViewer';
-import CommandPlaceHolder from './CommandPlaceholder';
-import TerminalViewer from './viewers/TerminalViewer';
+import {EmbeddedViewer} from './EmbeddedViewer';
+import {CommandPlaceHolder} from './CommandPlaceholder';
+import {TerminalViewer} from './viewers/TerminalViewer';
 import * as TerminalViewerTypes from './viewers/TerminalViewerTypes';
-import TextViewer from './viewers/TextViewer';
-import ImageViewer from './viewers/ImageViewer';
-import TipViewer from './viewers/TipViewer';
+import {TextViewer} from './viewers/TextViewer';
+import {ImageViewer} from './viewers/ImageViewer';
+import {EtTipViewer as TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -35,7 +35,7 @@ import Logger from './Logger';
 import LogDecorator from './LogDecorator';
 import * as DomUtils from './DomUtils';
 import * as Term from './Term';
-import CbScrollbar from './gui/ScrollBar';
+import {CbScrollbar} from './gui/ScrollBar';
 import * as util from './gui/Util';
 
 import * as Electron from 'electron';
@@ -143,7 +143,7 @@ interface WriteBufferStatus {
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-export default class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTypes.Commandable,
+export class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTypes.Commandable,
     keybindingmanager.AcceptsKeyBindingManager, config.AcceptsConfigManager {
   
   /**

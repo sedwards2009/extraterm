@@ -7,8 +7,8 @@
 "use strict";
 
 import * as _ from 'lodash';
-import ThemeableElementBase from '../ThemeableElementBase';
-import ViewerElement from '../ViewerElement';
+import {ThemeableElementBase} from '../ThemeableElementBase';
+import {ViewerElement} from '../ViewerElement';
 import * as DomUtils from '../DomUtils';
 import * as Vue from 'vue';
 import * as config from '../Config';
@@ -98,7 +98,7 @@ function stripIds(list: Identifiable[]): void {
   });  
 }
 
-export default class SettingsTab extends ViewerElement implements config.AcceptsConfigManager {
+export class SettingsTab extends ViewerElement implements config.AcceptsConfigManager {
   
   static TAG_NAME = "et-settings-tab";
   

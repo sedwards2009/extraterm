@@ -16,7 +16,7 @@ let registered = false;
 /**
  * An invisible element which can be placed in a terminal to mark the start of command output.
  */
-export default class CommandPlaceHolder extends HTMLElement implements VirtualScrollable {
+export class CommandPlaceHolder extends HTMLElement implements VirtualScrollable {
   
   /**
    * The HTML tag name of this element.

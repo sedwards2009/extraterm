@@ -3,7 +3,7 @@
  */
 
 "use strict";
-import ViewerElement from '../ViewerElement';
+import {ViewerElement} from '../ViewerElement';
 import * as DomUtils from '../DomUtils';
 import * as markdownMod from 'markdown';
 const markdown = markdownMod.markdown;

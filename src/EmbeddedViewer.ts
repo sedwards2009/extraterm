@@ -6,13 +6,13 @@
 
 import * as _ from 'lodash';
 import * as ResourceLoader from './ResourceLoader';
-import MenuItem from './gui/MenuItem';
-import CheckboxMenuItem from './gui/CheckboxMenuItem';
+import {CbMenuItem as MenuItem} from './gui/MenuItem';
+import {CbCheckBoxMenuItem as CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import * as DomUtils from './DomUtils';
 import * as Util from './gui/Util';
-import ViewerElement from './ViewerElement';
+import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import ThemeableElementBase from './ThemeableElementBase';
+import {ThemeableElementBase} from './ThemeableElementBase';
 import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ThemeTypes from './Theme';
@@ -65,7 +65,7 @@ const DEBUG_SIZE = false;
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
-export default class EmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export class EmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     SupportsClipboardPaste.SupportsClipboardPaste {
   
   /**
