@@ -9,7 +9,7 @@ const http = require('http');
 const path = require('path');
 const serveStatic = require('serve-static');
 const fs = require('fs');
-const theme = require('../../theme');
+const theme = require('../../Theme');
 
 // Serve up public/ftp folder 
 const staticPath = path.join(__dirname, '../..');
