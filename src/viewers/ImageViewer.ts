@@ -24,7 +24,7 @@ type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 type VisualState = ViewerElementTypes.VisualState;
 const VisualState = ViewerElementTypes.VisualState;
 
-const ID = "CbImageViewerTemplate";
+const ID = "EtImageViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_CURSOR = "ID_CURSOR";
 const ID_IMAGE = "ID_IMAGE";
@@ -44,7 +44,7 @@ let instanceIdCounter = 0;
 
 export class ImageViewer extends ViewerElement {
 
-  static TAG_NAME = "et-image-viewer";
+  static TAG_NAME = "ET-IMAGE-VIEWER";
   
   static init(): void {
     if (registered === false) {

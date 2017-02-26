@@ -69,15 +69,15 @@ function loadTipFile(): string[] {
 
 const tipData = loadTipFile();
 
-export class EtTipViewer extends ViewerElement implements config.AcceptsConfigManager, keybindingmanager.AcceptsKeyBindingManager {
+export class TipViewer extends ViewerElement implements config.AcceptsConfigManager, keybindingmanager.AcceptsKeyBindingManager {
 
-  static TAG_NAME = "et-tip-viewer";
+  static TAG_NAME = "ET-TIP-VIEWER";
   
   static MIME_TYPE = "application/x-extraterm-tip";
   
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EtTipViewer.TAG_NAME, {prototype: EtTipViewer.prototype});
+      window.document.registerElement(TipViewer.TAG_NAME, {prototype: TipViewer.prototype});
       registered = true;
     }
   }
@@ -88,8 +88,8 @@ export class EtTipViewer extends ViewerElement implements config.AcceptsConfigMa
    * @param  node the node to test
    * @return      True if the node is a EtTipViewer.
    */
-  static is(node: Node): node is EtTipViewer {
-    return node !== null && node !== undefined && node instanceof EtTipViewer;
+  static is(node: Node): node is TipViewer {
+    return node !== null && node !== undefined && node instanceof TipViewer;
   }
   
   //-----------------------------------------------------------------------
@@ -105,7 +105,7 @@ export class EtTipViewer extends ViewerElement implements config.AcceptsConfigMa
   private _tipIndex: number;
   
   private _initProperties(): void {
-    this._log = new Logger(EtTipViewer.TAG_NAME, this);
+    this._log = new Logger(TipViewer.TAG_NAME, this);
     this._configManager = null;
     this._keyBindingManager = null;
     this._height = 0;
@@ -223,7 +223,7 @@ export class EtTipViewer extends ViewerElement implements config.AcceptsConfigMa
   
   // From viewerelementtypes.SupportsMimeTypes
   static supportsMimeType(mimeType): boolean {
-    return [EtTipViewer.MIME_TYPE].indexOf(mimeType) !== -1;
+    return [TipViewer.MIME_TYPE].indexOf(mimeType) !== -1;
   }
   
   //-----------------------------------------------------------------------
@@ -406,7 +406,7 @@ export class EtTipViewer extends ViewerElement implements config.AcceptsConfigMa
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     if (containerDiv !== null) {
 
-      const generator = function* generator(this: EtTipViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
+      const generator = function* generator(this: TipViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
         // --- DOM Read ---
         yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
 

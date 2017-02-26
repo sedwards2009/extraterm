@@ -15,7 +15,7 @@ const ID_CONTAINER = "ID_CONTAINER";
 
 export class ResizeCanary extends HTMLElement {
   
-  static TAG_NAME = "et-resize-canary";
+  static TAG_NAME = "ET-RESIZE-CANARY";
 
   static init(): void {
     if (registered === false) {

@@ -37,7 +37,7 @@ type TextDecoration = EtTextViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
-const ID = "CbTextViewerTemplate";
+const ID = "EtTextViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_MAIN_STYLE = "ID_MAIN_STYLE";
 const CLASS_HIDE_CURSOR = "hide_cursor";
@@ -91,7 +91,7 @@ function LoadCodeMirrorMode(modeName: string): void {
 export class TextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
 
-  static TAG_NAME = "et-text-viewer";
+  static TAG_NAME = "ET-TEXT-VIEWER";
   
   static init(): void {
     if (registered === false) {

@@ -5,8 +5,8 @@
  */
 import * as path from 'path';
 import * as Electron from 'electron';
-const Menu = Electron.remote.Menu;
-const MenuItem = Electron.remote.MenuItem;
+const ElectronMenu = Electron.remote.Menu;
+const ElectronMenuItem = Electron.remote.MenuItem;
 
 import * as SourceMapSupport from 'source-map-support';
 import * as _ from 'lodash';
@@ -14,10 +14,10 @@ import * as he from 'he';
 import Logger from './Logger';
 import * as Messages from './WindowMessages';
 import * as WebIpc from './WebIpc';
-import {CbContextMenu} from './gui/ContextMenu';
-import {CbMenuItem} from './gui/MenuItem';
-import {CbDropDown} from './gui/DropDown';
-import {CbCheckBoxMenuItem} from './gui/CheckboxMenuItem';
+import {ContextMenu} from './gui/ContextMenu';
+import {MenuItem} from './gui/MenuItem';
+import {DropDown} from './gui/DropDown';
+import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {PopDownListPicker} from './gui/PopDownListPicker';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
@@ -142,11 +142,11 @@ export function startUp(): void {
     return Promise.all<FontFace>( fontPromises );
   }).then( () => {
     // Fonts are loaded, continue.
-    CbContextMenu.init();
-    CbMenuItem.init();
-    CbDropDown.init();
+    ContextMenu.init();
+    MenuItem.init();
+    DropDown.init();
     MainWebUi.init();
-    CbCheckBoxMenuItem.init();
+    CheckboxMenuItem.init();
     PopDownListPicker.init();
     ResizeCanary.init();
 
@@ -167,16 +167,16 @@ export function startUp(): void {
     keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
       <div class="space"></div>
-      <cb-dropdown>
+      <${DropDown.TAG_NAME}>
           <button id="${ID_MENU_BUTTON}" class="btn btn-quiet"><i class="fa fa-bars"></i></button>
-          <cb-contextmenu id="main_menu">
-              <cb-checkboxmenuitem icon="columns" id="${MENU_ITEM_SPLIT}" name="split">Split</cb-checkboxmenuitem>
-              <cb-menuitem icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</cb-menuitem>
-              <cb-menuitem icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</cb-menuitem>
-              <cb-checkboxmenuitem icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</cb-checkboxmenuitem>
-              <cb-menuitem icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</cb-menuitem>
-          </cb-contextmenu>
-      </cb-dropdown>
+          <${ContextMenu.TAG_NAME} id="main_menu">
+              <${CheckboxMenuItem.TAG_NAME} icon="columns" id="${MENU_ITEM_SPLIT}" name="split">Split</${CheckboxMenuItem.TAG_NAME}>
+              <${MenuItem.TAG_NAME} icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
+              <${MenuItem.TAG_NAME} icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</c${MenuItem.TAG_NAME}
+              <${CheckboxMenuItem.TAG_NAME} icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
+              <${MenuItem.TAG_NAME} icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
+          </${ContextMenu.TAG_NAME}>
+      </${DropDown.TAG_NAME}>
     </div>`;
 
     mainWebUi.setThemes(themes);
@@ -221,7 +221,7 @@ export function startUp(): void {
     });
 
     mainWebUi.addEventListener(MainWebUi.EVENT_SPLIT, () => {
-      const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
+      const splitMenu = <CheckboxMenuItem> document.getElementById("split");
       splitMenu.setChecked(mainWebUi.getSplit());
     });
 
@@ -267,9 +267,9 @@ function executeMenuCommand(command: string): boolean {
   if (command === MENU_ITEM_DEVELOPER_TOOLS) {
     // Unflip what the user did to the state of the developer tools check box for a moment.
     // Let executeCommand() toggle the checkbox itself. 
-    const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
-    const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
-    developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
+    const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
+    const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
+    developerToolMenu.setAttribute(CheckboxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
   }
 
   return executeCommand(command);
@@ -278,8 +278,8 @@ function executeMenuCommand(command: string): boolean {
 function executeCommand(command: string): boolean {
   switch(command) {
     case MENU_ITEM_SPLIT:
-      const splitMenu = <CbCheckBoxMenuItem> document.getElementById("split");
-      mainWebUi.setSplit(Util.toBoolean(splitMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED)));
+      const splitMenu = <CheckboxMenuItem> document.getElementById("split");
+      mainWebUi.setSplit(Util.toBoolean(splitMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED)));
       break;
       
     case MENU_ITEM_SETTINGS:
@@ -291,9 +291,9 @@ function executeCommand(command: string): boolean {
       break;
       
     case MENU_ITEM_DEVELOPER_TOOLS:
-      const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
-      const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
-      developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
+      const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
+      const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
+      developerToolMenu.setAttribute(CheckboxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
       WebIpc.devToolsRequest( ! devToolsOpen);
       break;
 
@@ -316,8 +316,8 @@ function setupOSXEmptyMenus(): void {
     label: "Extraterm",
   }];
   
-  const emptyTopMenu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(emptyTopMenu);  
+  const emptyTopMenu = ElectronMenu.buildFromTemplate(template);
+  ElectronMenu.setApplicationMenu(emptyTopMenu);  
 }
 
 function setupOSXMenus(mainWebUi: MainWebUi): void {
@@ -358,9 +358,9 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
     ]
   }];
   
-  const topMenu = Menu.buildFromTemplate(template);
+  const topMenu = ElectronMenu.buildFromTemplate(template);
   
-  Menu.setApplicationMenu(topMenu);
+  ElectronMenu.setApplicationMenu(topMenu);
 }
 
 function handleConfigMessage(msg: Messages.Message): Promise<void> {
@@ -408,11 +408,11 @@ function themeContentsError(themeContentsMessage: Messages.ThemeContentsMessage)
 
 function handleDevToolsStatus(msg: Messages.Message): void {
   const devToolsStatusMessage = <Messages.DevToolsStatusMessage> msg;
-  const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
+  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   if (developerToolMenu === null) {
     return;
   }
-  developerToolMenu.setAttribute(CbCheckBoxMenuItem.ATTR_CHECKED, "" + devToolsStatusMessage.open);
+  developerToolMenu.setAttribute(CheckboxMenuItem.ATTR_CHECKED, "" + devToolsStatusMessage.open);
 }
 
 function handleClipboardRead(msg: Messages.Message): void {
@@ -580,8 +580,8 @@ function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     executeCommand: executeCommand
   }
 
-  const developerToolMenu = <CbCheckBoxMenuItem> document.getElementById("developer_tools");
-  const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CbCheckBoxMenuItem.ATTR_CHECKED));
+  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
+  const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
 
   const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
     { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", target: target },

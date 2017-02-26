@@ -12,7 +12,7 @@ import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 
-const ID = "CbScrollbarTemplate";
+const ID = "EtScrollbarTemplate";
 const ID_AREA = "ID_AREA";
 const ID_CONTAINER = "ID_CONTAINER";
 
@@ -21,12 +21,12 @@ let registered = false;
 /**
  * A scrollbar.
  */
-export class CbScrollbar extends ThemeableElementBase {
+export class ScrollBar extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = 'CB-SCROLLBAR';
+  static TAG_NAME = 'ET-SCROLLBAR';
   
   static ATTR_LENGTH = "length";
   
@@ -35,15 +35,15 @@ export class CbScrollbar extends ThemeableElementBase {
   static ATTR_THUMBSIZE = "thumbsize";
   
   /**
-   * Initialize the CbScrollbar class and resources.
+   * Initialize the Scrollbar class and resources.
    *
-   * When CbScrollbar is imported into a render process, this static method
+   * When Scrollbar is imported into a render process, this static method
    * must be called before an instances may be created. This is can be safely
    * called multiple times.
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(CbScrollbar.TAG_NAME, {prototype: CbScrollbar.prototype});
+      window.document.registerElement(ScrollBar.TAG_NAME, {prototype: ScrollBar.prototype});
       registered = true;
     }
   }
@@ -58,7 +58,7 @@ export class CbScrollbar extends ThemeableElementBase {
   private _initProperties(): void {
     this._position = 0;
     this._length = 1;
-    this._log = new Logger(CbScrollbar.TAG_NAME, this);
+    this._log = new Logger(ScrollBar.TAG_NAME, this);
   }
 
   //-----------------------------------------------------------------------
@@ -108,8 +108,8 @@ export class CbScrollbar extends ThemeableElementBase {
         this.dispatchEvent(event);
       });
       
-      this._updateLength(this.getAttribute(CbScrollbar.ATTR_LENGTH));
-      this._updatePosition(this.getAttribute(CbScrollbar.ATTR_POSITION));
+      this._updateLength(this.getAttribute(ScrollBar.ATTR_LENGTH));
+      this._updatePosition(this.getAttribute(ScrollBar.ATTR_POSITION));
 
     } else {
       // Being reattached.
@@ -126,11 +126,11 @@ export class CbScrollbar extends ThemeableElementBase {
    */
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
     switch (attrName) {
-      case CbScrollbar.ATTR_LENGTH:
+      case ScrollBar.ATTR_LENGTH:
         this._updateLength(newValue);
         break;
 
-      case CbScrollbar.ATTR_POSITION:
+      case ScrollBar.ATTR_POSITION:
         this._updatePosition(newValue);
         break;
         
@@ -186,7 +186,7 @@ export class CbScrollbar extends ThemeableElementBase {
     }
     const numberValue = parseInt(value, 10);
     if (isNaN(numberValue)) {
-      console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_LENGTH + "' was NaN.");
+      console.warn("Value '" + value + "'to scrollbar attribute '" + ScrollBar.ATTR_LENGTH + "' was NaN.");
       return;
     }
     this.setLength(numberValue);
@@ -225,7 +225,7 @@ export class CbScrollbar extends ThemeableElementBase {
     }
     const numberValue = parseInt(value, 10);
     if (isNaN(numberValue)) {
-      console.warn("Value '" + value + "'to scrollbar attribute '" + CbScrollbar.ATTR_LENGTH + "' was NaN.");
+      console.warn("Value '" + value + "'to scrollbar attribute '" + ScrollBar.ATTR_LENGTH + "' was NaN.");
       return;
     }
     this.setPosition(numberValue);
@@ -246,7 +246,7 @@ export class CbScrollbar extends ThemeableElementBase {
   }
 
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: CbScrollbar): IterableIterator<BulkDomOperation.GeneratorPhase> {
+    const generator = function* generator(this: ScrollBar): IterableIterator<BulkDomOperation.GeneratorPhase> {
       // --- DOM Write ---
       yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
       this._updatePositionNumber(this._position);

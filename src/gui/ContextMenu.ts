@@ -6,13 +6,14 @@
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
-import {CbMenuItem as MenuItem} from './MenuItem';
+import {MenuItem} from './MenuItem';
+import {CheckboxMenuItem} from './CheckboxMenuItem';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 
 MenuItem.init();
 
-const ID = "CbContextMenuTemplate";
+const ID = "EtContextMenuTemplate";
 const ID_COVER = "ID_COVER";
 const ID_CONTAINER = "ID_CONTAINER";
 
@@ -21,23 +22,23 @@ let registered = false;
 /**
  * A context menu.
  */
-export class CbContextMenu extends ThemeableElementBase {
+export class ContextMenu extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = "CB-CONTEXTMENU";
+  static TAG_NAME = "ET-CONTEXTMENU";
 
   /**
-   * Initialize the CbContextMenu class and resources.
+   * Initialize the ContextMenu class and resources.
    *
-   * When CbContextMenu is imported into a render process, this static method
+   * When ContextMenu is imported into a render process, this static method
    * must be called before an instances may be created. This is can be safely
    * called multiple times.
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(CbContextMenu.TAG_NAME, {prototype: CbContextMenu.prototype});
+      window.document.registerElement(ContextMenu.TAG_NAME, {prototype: ContextMenu.prototype});
       registered = true;
     }
   }
@@ -113,7 +114,7 @@ export class CbContextMenu extends ThemeableElementBase {
     });
     
     container.addEventListener('mousemove', (ev: MouseEvent) => {
-      if (ev.srcElement.nodeName === 'CB-MENUITEM' || ev.srcElement.nodeName === 'CB-CHECKBOXMENUITEM') {
+      if (ev.srcElement.nodeName === MenuItem.TAG_NAME || ev.srcElement.nodeName === CheckboxMenuItem.TAG_NAME) {
         this.selectMenuItem(this.childNodes, ev.srcElement);
       } else {
         this.selectMenuItem(this.childNodes, null);
@@ -140,7 +141,7 @@ export class CbContextMenu extends ThemeableElementBase {
   /**
    * 
    */
-  private fetchCbMenuItems(kids: NodeList): MenuItem[] {
+  private fetchMenuItems(kids: NodeList): MenuItem[] {
     const len = kids.length;
     const result: MenuItem[] = [];
     for (let i=0; i<len; i++) {
@@ -180,7 +181,7 @@ export class CbContextMenu extends ThemeableElementBase {
     }
 
     if (ev.keyIdentifier === "Up" || ev.keyIdentifier === "Down" || ev.keyIdentifier === "Enter") {
-      const menuitems = this.fetchCbMenuItems(this.childNodes);
+      const menuitems = this.fetchMenuItems(this.childNodes);
       if (menuitems.length === 0) {
         return;
       }
@@ -237,7 +238,7 @@ export class CbContextMenu extends ThemeableElementBase {
     ev.stopPropagation();
 
     if (ev.keyIdentifier === "Enter") {
-      const menuitems = this.fetchCbMenuItems(this.childNodes);
+      const menuitems = this.fetchMenuItems(this.childNodes);
       if (menuitems.length === 0) {
         return;
       }

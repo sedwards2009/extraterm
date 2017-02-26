@@ -7,30 +7,30 @@ import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 import Logger from '../Logger';
 
-const ID = "CbTabTemplate";
+const ID = "EtTabTemplate";
 
 let registered = false;
 
 /**
- * Holds the contents of one tab inside a CbTabWidget tag.
+ * Holds the contents of one tab inside a TabWidget tag.
  */
-export class CbTab extends HTMLElement {
+export class Tab extends HTMLElement {
   
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = "CB-TAB";
+  static TAG_NAME = "ET-TAB";
 
   /**
-   * Initialize the CbTab class and resources.
+   * Initialize the Tab class and resources.
    *
-   * When CbTab is imported into a render process, this static method
+   * When Tab is imported into a render process, this static method
    * must be called before an instances may be created. This is can be safely
    * called multiple times.
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(CbTab.TAG_NAME, {prototype: CbTab.prototype});
+      window.document.registerElement(Tab.TAG_NAME, {prototype: Tab.prototype});
       registered = true;
     }
   }
@@ -43,7 +43,7 @@ export class CbTab extends HTMLElement {
 
   private _initProperties(): void {
     this._mutationObserver = null;
-    this._log = new Logger(CbTab.TAG_NAME, this);
+    this._log = new Logger(Tab.TAG_NAME, this);
   }
 
   //-----------------------------------------------------------------------

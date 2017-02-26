@@ -8,7 +8,7 @@ import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 import * as ThemeTypes from '../Theme';
 
-const ID = "CbMenuItemTemplate";
+const ID = "EtbMenuItemTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_ICON2 = "ID_ICON2";
 const ID_LABEL = "ID_LABEL";
@@ -17,29 +17,29 @@ const CLASS_SELECTED = "selected";
 let registered = false;
 
 /**
- * A menu item suitable for use inside a CbContextMenu.
+ * A menu item suitable for use inside a ContextMenu.
  */
-export class CbMenuItem extends ThemeableElementBase {
+export class MenuItem extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = 'CB-MENUITEM';
+  static TAG_NAME = 'ET-MENUITEM';
   
   static ATTR_SELECTED = 'selected';
   
   static ID_ICON1 = "ID_ICON1";
 
   /**
-   * Initialize the CbMenuItem class and resources.
+   * Initialize the MenuItem class and resources.
    *
-   * When CbMenuItem is imported into a render process, this static method
+   * When MenuItem is imported into a render process, this static method
    * must be called before an instances may be created. This is can be safely
    * called multiple times.
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(CbMenuItem.TAG_NAME, {prototype: CbMenuItem.prototype});
+      window.document.registerElement(MenuItem.TAG_NAME, {prototype: MenuItem.prototype});
       registered = true;
     }
   }
@@ -85,7 +85,7 @@ export class CbMenuItem extends ThemeableElementBase {
     }
     (<HTMLElement>shadow.querySelector("#" + ID_ICON2)).innerHTML = iconhtml;
     
-    this.updateKeyboardSelected(this.getAttribute(CbMenuItem.ATTR_SELECTED));
+    this.updateKeyboardSelected(this.getAttribute(MenuItem.ATTR_SELECTED));
   }
 
   /**
@@ -99,7 +99,7 @@ export class CbMenuItem extends ThemeableElementBase {
    * Custom Element 'attribute changed' hook.
    */
   attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
-    if (attrName === CbMenuItem.ATTR_SELECTED) {
+    if (attrName === MenuItem.ATTR_SELECTED) {
       this.updateKeyboardSelected(newValue);
     }
   }
@@ -113,7 +113,7 @@ export class CbMenuItem extends ThemeableElementBase {
     return `
       <style id='${ThemeableElementBase.ID_THEME}'></style>
       <div id='${ID_CONTAINER}'>
-        <div id='${CbMenuItem.ID_ICON1}'><i class='fa fa-fw'></i></div>
+        <div id='${MenuItem.ID_ICON1}'><i class='fa fa-fw'></i></div>
         <div id='${ID_ICON2}'></div>
       <div id='${ID_LABEL}'><slot></slot></div>
       </div>`;

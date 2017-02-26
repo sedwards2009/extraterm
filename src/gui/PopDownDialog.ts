@@ -8,7 +8,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 
-const ID = "CbPopDownDialogTemplate";
+const ID = "EtPopDownDialogTemplate";
 const ID_COVER = "ID_COVER";
 const ID_CONTEXT_COVER = "ID_CONTEXT_COVER";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -35,9 +35,9 @@ export class PopDownDialog extends ThemeableElementBase {
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = "CB-POPDOWNDIALOG";
+  static TAG_NAME = "ET-POPDOWNDIALOG";
 
-  static EVENT_CLOSE_REQUEST = "CB-POPDOWNDIALOG-CLOSE_REQUEST";
+  static EVENT_CLOSE_REQUEST = "ET-POPDOWNDIALOG-CLOSE_REQUEST";
 
   /**
    * Initialize the PopDownDialog class and resources.

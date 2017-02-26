@@ -6,8 +6,8 @@
 
 import * as _ from 'lodash';
 import * as ResourceLoader from './ResourceLoader';
-import {CbMenuItem as MenuItem} from './gui/MenuItem';
-import {CbCheckBoxMenuItem as CheckboxMenuItem} from './gui/CheckboxMenuItem';
+import {MenuItem} from './gui/MenuItem';
+import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import * as DomUtils from './DomUtils';
 import * as Util from './gui/Util';
 import {ViewerElement} from './ViewerElement';

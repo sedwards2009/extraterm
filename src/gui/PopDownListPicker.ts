@@ -9,7 +9,7 @@ import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import {PopDownDialog} from './PopDownDialog';
 
-const ID = "CbPopDownListPickerTemplate";
+const ID = "EtPopDownListPickerTemplate";
 const ID_DIALOG = "ID_DIALOG";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
@@ -24,7 +24,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = "CB-POPDOWNLISTPICKER";
+  static TAG_NAME = "ET-POPDOWNLISTPICKER";
 
   static ATTR_DATA_ID = "data-id";
 

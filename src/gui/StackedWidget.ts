@@ -11,32 +11,32 @@ import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 
-const ID = "CbStackedWidgetTemplate";
+const ID = "EtStackedWidgetTemplate";
 const ID_CONTAINER = 'ID_CONTAINER';
-const ATTR_INDEX = 'data-cb-index';
+const ATTR_INDEX = 'data-et-index';
 
 let registered = false;
 
 /**
  * A widget which displays one of its DIV contents at a time.
  */
-export class CbStackedWidget extends ThemeableElementBase {
+export class StackedWidget extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = 'CB-STACKEDWIDGET';
+  static TAG_NAME = 'ET-STACKEDWIDGET';
   
   /**
-   * Initialize the CbStackedWidget class and resources.
+   * Initialize the StackedWidget class and resources.
    *
-   * When CbStackedWidget is imported into a render process, this static method
+   * When StackedWidget is imported into a render process, this static method
    * must be called before an instances may be created. This is can be safely
    * called multiple times.
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(CbStackedWidget.TAG_NAME, {prototype: CbStackedWidget.prototype});
+      window.document.registerElement(StackedWidget.TAG_NAME, {prototype: StackedWidget.prototype});
       registered = true;
     }
   }

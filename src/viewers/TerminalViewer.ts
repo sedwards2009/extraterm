@@ -39,7 +39,7 @@ type VisualState = ViewerElementTypes.VisualState;
 type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
-const ID = "CbTerminalViewerTemplate";
+const ID = "EtTerminalViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_MAIN_STYLE = "ID_MAIN_STYLE";
 const ID_CSS_VARS = "ID_CSS_VARS";
@@ -75,7 +75,7 @@ function getCssText(): string {
 export class TerminalViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
     keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
 
-  static TAG_NAME = "et-terminal-viewer";
+  static TAG_NAME = "ET-TERMINAL-VIEWER";
   
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
 

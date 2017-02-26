@@ -6,14 +6,14 @@
 import * as DomUtils from './DomUtils';
 import * as util from './gui/Util';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import {CbTabWidget as TabWidget} from './gui/TabWidget';
+import {TabWidget as TabWidget} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
 import {SettingsTab} from './settings/SettingsTab';
 import {AboutTab} from './AboutTab';
 import {EtKeyBindingsTab} from './KeyBindingsTab';
 import {EtViewerTab} from './ViewerTab';
 import {EmbeddedViewer} from './EmbeddedViewer';
-import {CbTab} from './gui/Tab';
+import {Tab} from './gui/Tab';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as BulkDomOperation from './BulkDomOperation';
@@ -115,7 +115,7 @@ class TabInfo {
   
   contentDiv: HTMLDivElement;
   
-  cbTab: CbTab;
+  tab: Tab;
   
   constructor() {
   }
@@ -137,11 +137,11 @@ class TabInfo {
   }
   
   updateTabTitle(): void {
-    const iconDiv = <HTMLDivElement> this.cbTab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
+    const iconDiv = <HTMLDivElement> this.tab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
     const icon = this.tabIcon();
     iconDiv.innerHTML = icon !== null ? '<i class="fa fa-' + icon + '"></i>' : "";
     
-    const middleDiv = <HTMLDivElement> this.cbTab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
+    const middleDiv = <HTMLDivElement> this.tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
     middleDiv.title = this.title();
     middleDiv.innerHTML = this.htmlTitle();
   }
@@ -304,7 +304,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   // Statics
   
   static init(): void {
-    CbTab.init();
+    Tab.init();
     TabWidget.init();
     EtTerminal.init();
     SettingsTab.init();
@@ -318,7 +318,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  static TAG_NAME = 'extraterm-mainwebui';
+  static TAG_NAME = 'EXTRATERM-MAINWEBUI';
   
   static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
   
@@ -465,7 +465,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       `</div>` +
       `<div id="${ID_MAIN_CONTENTS}">` +
         `<div id="${ID_PANE_LEFT}">` +
-          `<cb-tabwidget id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
+          `<${TabWidget.TAG_NAME} id="${ID_TAB_CONTAINER_LEFT}" show-frame="false">` +
             `<div id="${ID_REST_DIV_LEFT}">` +
               `<button id="${ID_OSX_CLOSE_BUTTON}" tabindex="-1"></button>` +
               `<button id="${ID_OSX_MINIMIZE_BUTTON}" tabindex="-1"></button>` +
@@ -473,14 +473,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
             `</div>` +
             `<div id="${ID_REST_DIV_PRIMARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
             `<slot></slot></div>` +
-          `</cb-tabwidget>` +
+          `</${TabWidget.TAG_NAME}>` +
         `</div>` +
         `<div id="${ID_GAP}"></div>` +
         `<div id="${ID_PANE_RIGHT}">` +
-          `<cb-tabwidget id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
+          `<${TabWidget.TAG_NAME} id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
             `<div id="${ID_LEFT_REST_DIV_SECONDARY}"></div>` +
             `<div id="${ID_REST_DIV_SECONDARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
-          `</cb-tabwidget>` +
+          `</${TabWidget.TAG_NAME}>` +
         `</div>` +
       `</div>` +
     `</div>`;
@@ -553,14 +553,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       // Split it in two.
 
       const currentTab = tabContainerLeft.getCurrentTab();
-      const selectedTabInfo = _.first(this._tabInfo.filter( tabInfo => tabInfo.cbTab === currentTab ));
+      const selectedTabInfo = _.first(this._tabInfo.filter( tabInfo => tabInfo.tab === currentTab ));
 
       top.classList.add(CLASS_SPLIT);
       // The primary controls have the burger menu. When it is split, the controls are moved to the right side.
       
       this._tabInfo.filter( tabInfo => tabInfo.position === TabPosition.RIGHT )
         .forEach( tabInfo => {
-          tabContainerRight.appendChild(tabInfo.cbTab);
+          tabContainerRight.appendChild(tabInfo.tab);
           tabContainerRight.appendChild(tabInfo.contentDiv);
         });
       
@@ -574,13 +574,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const tabContainer = selectedTabInfo.position === TabPosition.LEFT ? tabContainerLeft : tabContainerRight
       const otherTabContainer = selectedTabInfo.position !== TabPosition.LEFT ? tabContainerLeft : tabContainerRight;
         
-      tabContainer.setCurrentTab(selectedTabInfo.cbTab);
+      tabContainer.setCurrentTab(selectedTabInfo.tab);
       selectedTabInfo.focus();
         
       const otherShownList = this._tabInfo.filter(
                                 tabInfo => tabInfo.position !== selectedTabInfo.position && tabInfo.wasShown);
       if (otherShownList.length !== 0) {
-        otherTabContainer.setCurrentTab(otherShownList[0].cbTab);
+        otherTabContainer.setCurrentTab(otherShownList[0].tab);
       } else {
         otherTabContainer.setCurrentIndex(0);
       }
@@ -592,13 +592,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const leftList = this._tabInfo.filter( tabInfo => tabInfo.position === TabPosition.LEFT );
       const leftSelectedTab = tabContainerLeft.getCurrentTab();
       leftList.forEach( (tabInfo, i) => {
-        tabInfo.wasShown = tabInfo.cbTab === leftSelectedTab;
+        tabInfo.wasShown = tabInfo.tab === leftSelectedTab;
       });
       
       const rightList = this._tabInfo.filter( tabInfo => tabInfo.position === TabPosition.RIGHT );
       const rightSelectedTab = tabContainerRight.getCurrentTab();
       rightList.forEach( (tabInfo, i) => {
-        tabInfo.wasShown = tabInfo.cbTab === rightSelectedTab;
+        tabInfo.wasShown = tabInfo.tab === rightSelectedTab;
       });
       
       const focusedList = this._tabInfo.filter( tabInfo => tabInfo.hasFocus() );
@@ -624,7 +624,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       tabContainerLeft.update();
       // Try to focus and show the same tab.
       if (focusedList.length !== 0) {
-        tabContainerLeft.setCurrentTab(focusedList[0].cbTab);
+        tabContainerLeft.setCurrentTab(focusedList[0].tab);
         focusedList[0].focus();
       }
     }
@@ -650,9 +650,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   private _addTab(position: TabPosition, tabInfo: TabInfo): void {
     const newId = this._tabIdCounter;
     this._tabIdCounter++;
-    const newCbTab = <CbTab> document.createElement(CbTab.TAG_NAME);
-    newCbTab.setAttribute('id', "tab_id_"+newId);
-    newCbTab.innerHTML =
+    const newTab = <Tab> document.createElement(Tab.TAG_NAME);
+    newTab.setAttribute('id', "tab_id_"+newId);
+    newTab.innerHTML =
       `<div class="${CLASS_TAB_HEADER_CONTAINER}">` +
         `<div class="${CLASS_TAB_HEADER_ICON}"></div>` +
         `<div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>` +
@@ -666,7 +666,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     
     tabInfo.id = newId;
     tabInfo.position = position;
-    tabInfo.cbTab = newCbTab;
+    tabInfo.tab = newTab;
     tabInfo.contentDiv = contentDiv;
     this._tabInfo.push(tabInfo);
     
@@ -678,7 +678,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const restDiv = this._getById(
                         this._split === (position === TabPosition.LEFT) ? ID_REST_DIV_SECONDARY : ID_REST_DIV_PRIMARY);
     
-    tabWidget.insertBefore(newCbTab, restDiv);
+    tabWidget.insertBefore(newTab, restDiv);
     tabWidget.insertBefore(contentDiv, restDiv);
     tabWidget.update();
     
@@ -872,7 +872,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     paneTabInfos = paneTabInfos.filter( tabInfo2 => tabInfo2.id !== tabId );
 
     tabInfo.contentDiv.parentNode.removeChild(tabInfo.contentDiv);
-    tabInfo.cbTab.parentNode.removeChild(tabInfo.cbTab);
+    tabInfo.tab.parentNode.removeChild(tabInfo.tab);
     tabInfo.destroy();
 
     const tabContainer = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);

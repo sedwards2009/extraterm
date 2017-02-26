@@ -5,8 +5,8 @@
  */
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
-import {CbStackedWidget} from './StackedWidget';
-import {CbTab} from './Tab';
+import {StackedWidget} from './StackedWidget';
+import {Tab} from './Tab';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as BulkDomOperation from '../BulkDomOperation';
 import * as Util from './Util';
@@ -15,10 +15,10 @@ import * as _ from 'lodash';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 
-CbStackedWidget.init();
+StackedWidget.init();
 
-const ID = "CbTabWidgetTemplate";
-const ATTR_TAG = 'data-cb-tag';
+const ID = "EtTabWidgetTemplate";
+const ATTR_TAG = 'data-et-tag';
 const ATTR_SHOW_FRAME = "show-frame";
 
 const ATTR_TAG_REST_LEFT = "rest-left";
@@ -43,25 +43,25 @@ const CLASS_TAB = "tab";
 /**
  * A widget to display a stack of tabs.
  *
- * See CbTab.
+ * See Tab.
  */
-export class CbTabWidget extends ThemeableElementBase {
+export class TabWidget extends ThemeableElementBase {
   
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = "CB-TABWIDGET";
+  static TAG_NAME = "ET-TABWIDGET";
   
   /**
-   * Initialize the CbTabWidget class and resources.
+   * Initialize the TabWidget class and resources.
    *
-   * When CbTabWidget is imported into a render process, this static method
+   * When TabWidget is imported into a render process, this static method
    * must be called before an instances may be created. This is can be safely
    * called multiple times.
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(CbTabWidget.TAG_NAME, {prototype: CbTabWidget.prototype});
+      window.document.registerElement(TabWidget.TAG_NAME, {prototype: TabWidget.prototype});
       registered = true;
     }
   }
@@ -76,7 +76,7 @@ export class CbTabWidget extends ThemeableElementBase {
   
   private _initProperties(): void {
     this._mutationObserver = null;
-    this._log = new Logger(CbTabWidget.TAG_NAME, this);
+    this._log = new Logger(TabWidget.TAG_NAME, this);
   }
   
   //-----------------------------------------------------------------------
@@ -165,7 +165,7 @@ export class CbTabWidget extends ThemeableElementBase {
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
 <div id='${ID_TOP}'>
 <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
-<div id='${ID_CONTENTS}'><cb-stackedwidget id='${ID_CONTENTSTACK}'></cb-stackedwidget></div>
+<div id='${ID_CONTENTS}'><${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></${StackedWidget.TAG_NAME}></div>
 <div id='${ID_DRAG_INDICATOR_CONTAINER}'><div id='${ID_DRAG_INDICATOR}'></div></div>
 </div>
 `;
@@ -190,8 +190,8 @@ export class CbTabWidget extends ThemeableElementBase {
     return <HTMLDivElement> this.__getById(ID_TABBAR);
   }
   
-  private _getContentsStack(): CbStackedWidget {
-    return <CbStackedWidget> this.__getById(ID_CONTENTSTACK);
+  private _getContentsStack(): StackedWidget {
+    return <StackedWidget> this.__getById(ID_CONTENTSTACK);
   }
   
   private createTabHolders(): void {
@@ -204,7 +204,7 @@ export class CbTabWidget extends ThemeableElementBase {
     let restAttr = ATTR_TAG_REST_LEFT;
     for (let i=0; i<this.children.length; i++) {
       const kid = <HTMLElement>this.children.item(i);
-      if (kid.nodeName === CbTab.TAG_NAME) {
+      if (kid.nodeName === Tab.TAG_NAME) {
         tabCount++;
         kid.slot = 'tab_' + (tabCount-1);
         stateInTab = true;
@@ -327,24 +327,24 @@ export class CbTabWidget extends ThemeableElementBase {
     return this._getContentsStack().getCurrentIndex();
   }
   
-  private _getCbTabs(): CbTab[] {
-    return <CbTab[]> DomUtils.toArray<Element>(this.children).filter( element => element.nodeName === CbTab.TAG_NAME );
+  private _getTabs(): Tab[] {
+    return <Tab[]> DomUtils.toArray<Element>(this.children).filter( element => element.nodeName === Tab.TAG_NAME );
   }
   
-  setCurrentTab(selectTab: CbTab): void {
-    const index = _.findIndex(this._getCbTabs(), tab => tab === selectTab );
+  setCurrentTab(selectTab: Tab): void {
+    const index = _.findIndex(this._getTabs(), tab => tab === selectTab );
     if (index === -1) {
       return;
     }
     this.setCurrentIndex(index);
   }
   
-  getCurrentTab(): CbTab {
+  getCurrentTab(): Tab {
     const currentIndex = this.getCurrentIndex();
     if (currentIndex === -1) {
       return null;
     }
-    const currentTab = this._getCbTabs()[currentIndex];
+    const currentTab = this._getTabs()[currentIndex];
     return currentTab;
   }
   
@@ -385,7 +385,7 @@ export class CbTabWidget extends ThemeableElementBase {
   }
   
   private _sendSwitchEvent(): void {
-    const event = new CustomEvent(CbTabWidget.EVENT_TAB_SWITCH, { detail: null });
+    const event = new CustomEvent(TabWidget.EVENT_TAB_SWITCH, { detail: null });
     this.dispatchEvent(event);
   }
 

@@ -13,7 +13,7 @@ import {EmbeddedViewer} from './EmbeddedViewer';
 import Logger from './Logger';
 import log from './LogDecorator';
 import * as DomUtils from './DomUtils';
-import {CbScrollbar} from'./gui/ScrollBar';
+import {ScrollBar} from'./gui/ScrollBar';
 import * as Util from './gui/Util';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
@@ -82,7 +82,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
    */
   static init(): void {
     if (registered === false) {
-      CbScrollbar.init();
+      ScrollBar.init();
       EmbeddedViewer.init();
       ResizeCanary.init();
       window.document.registerElement(EtViewerTab.TAG_NAME, {prototype: EtViewerTab.prototype});
@@ -307,7 +307,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     this.addEventListener('focus', this._handleFocus.bind(this));
     this.addEventListener('blur', this._handleBlur.bind(this));
 
-    const scrollbar = <CbScrollbar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+    const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
@@ -385,7 +385,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
-          <cb-scrollbar id='${ID_SCROLLBAR}'></cb-scrollbar>
+          <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
         </div>`;
       window.document.body.appendChild(template);
     }

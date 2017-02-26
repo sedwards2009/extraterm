@@ -100,7 +100,7 @@ function stripIds(list: Identifiable[]): void {
 
 export class SettingsTab extends ViewerElement implements config.AcceptsConfigManager {
   
-  static TAG_NAME = "et-settings-tab";
+  static TAG_NAME = "ET-SETTINGS-TAB";
   
   static init(): void {
     if (registered === false) {

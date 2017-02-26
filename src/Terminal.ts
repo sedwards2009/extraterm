@@ -22,7 +22,7 @@ import {TerminalViewer} from './viewers/TerminalViewer';
 import * as TerminalViewerTypes from './viewers/TerminalViewerTypes';
 import {TextViewer} from './viewers/TextViewer';
 import {ImageViewer} from './viewers/ImageViewer';
-import {EtTipViewer as TipViewer} from './viewers/TipViewer';
+import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -35,7 +35,7 @@ import Logger from './Logger';
 import LogDecorator from './LogDecorator';
 import * as DomUtils from './DomUtils';
 import * as Term from './Term';
-import {CbScrollbar} from './gui/ScrollBar';
+import {ScrollBar} from './gui/ScrollBar';
 import * as util from './gui/Util';
 
 import * as Electron from 'electron';
@@ -170,7 +170,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
    */
   static init(): void {
     if (registered === false) {
-      CbScrollbar.init();
+      ScrollBar.init();
       EmbeddedViewer.init();
       CommandPlaceHolder.init();
       TerminalViewer.init();
@@ -514,7 +514,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       this.addEventListener('focus', this._handleFocus.bind(this));
       this.addEventListener('blur', this._handleBlur.bind(this));
 
-      const scrollbar = <CbScrollbar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
       const scrollArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
       const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
       DomUtils.preventScroll(scrollContainer);
@@ -644,7 +644,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
           <div id='${ID_SCROLL_CONTAINER}'>
             <div id='${ID_SCROLL_AREA}'></div>
           </div>
-          <cb-scrollbar id='${ID_SCROLLBAR}'></cb-scrollbar>
+          <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
         </div>`;
       window.document.body.appendChild(template);
     }
@@ -1112,7 +1112,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
         // --- DOM Write ---
         yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
         
-        const scrollbar = <CbScrollbar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+        const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
         const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level); // <-
         const scrollbarOperation = scrollbar.bulkRefresh(level);
 

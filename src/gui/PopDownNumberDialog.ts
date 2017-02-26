@@ -9,7 +9,7 @@ import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import {PopDownDialog} from './PopDownDialog';
 
-const ID = "CbPopDownNumberDialogTemplate";
+const ID = "EtPopDownNumberDialogTemplate";
 const ID_DIALOG = "ID_DIALOG";
 const ID_INPUT = "ID_INPUT";
 
@@ -23,7 +23,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
   /**
    * The HTML tag name of this element.
    */
-  static TAG_NAME = "CB-POPDOWNNUMBERDIALOG";
+  static TAG_NAME = "ET-POPDOWNNUMBERDIALOG";
 
   /**
    * Initialize the PopDownNumberDialog class and resources.

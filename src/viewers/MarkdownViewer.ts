@@ -10,7 +10,7 @@ const markdown = markdownMod.markdown;
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as BulkDomOperation from '../BulkDomOperation';
 
-const ID = "CbMarkdownViewerTemplate";
+const ID = "EtMarkdownViewerTemplate";
 const ID_CONTAINER = "container";
 const ID_MAIN_STYLE = "main_style";
 const ENCODING_ATTR = "encoding";
@@ -22,7 +22,7 @@ let registered = false;
 
 class EtMarkdownViewer extends ViewerElement {
   
-  static TAG_NAME = "cb-markdown-viewer";
+  static TAG_NAME = "ET-MARKDOWN-VIEWER";
   
   static init(): void {
     if (registered === false) {
