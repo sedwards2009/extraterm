@@ -44,7 +44,7 @@ export class StackedWidget extends ThemeableElementBase {
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _currentIndex: number;
-  
+
   private _initProperties(): void {
     this._currentIndex = -1;
   }
@@ -116,6 +116,11 @@ export class StackedWidget extends ThemeableElementBase {
   // Override
   appendChild(newNode: Node): Node {
     const result = super.appendChild(newNode);
+
+    if (DomUtils.getShadowRoot(this) === null) {
+      return result;
+    }
+
     this.createPageHolders();
     if (this._currentIndex === -1) {
       this._currentIndex = 0;
@@ -149,6 +154,10 @@ export class StackedWidget extends ThemeableElementBase {
   }
   
   private showIndex(index: number): void {
+    if (DomUtils.getShadowRoot(this) === null) {
+      return;
+    }
+    
     const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
     for (let i=0; i<container.children.length; i++) {
       const kid = <HTMLElement>container.children.item(i);
