@@ -7,8 +7,6 @@ import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 import Logger from '../Logger';
 
-const ID = "EtTabTemplate";
-
 let registered = false;
 
 /**
@@ -63,9 +61,6 @@ export class Tab extends HTMLElement {
    */
   createdCallback() {
     this._initProperties();
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
 
     this._mutationObserver = new MutationObserver( (mutations) => {
       this._applyDraggable();
@@ -73,24 +68,13 @@ export class Tab extends HTMLElement {
     this._mutationObserver.observe(this, { childList: true });
   }
   
-  private createClone() {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<div><slot></slot></div>`;
-      window.document.body.appendChild(template);
-    }
-    
-    return window.document.importNode(template.content, true);
-  }
 
   attachedCallback(): void {
     this._applyDraggable();
   }
 
   private _applyDraggable(): void {
-    this._log.debug("_applyDraggable");
+this._log.debug("_applyDraggable");
     for (const kid of this.childNodes) {
       if (kid instanceof HTMLElement) {
         kid.setAttribute("draggable", "true");
