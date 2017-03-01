@@ -1,0 +1,53 @@
+/**
+ * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ */
+
+/* gui-splitter styles */
+
+#ID_TOP {
+  position: relative;
+  border: 2px solid #ff00ff;
+  height: 100%;
+}
+
+.CLASS_DIVIDER {
+  position: absolute;
+  top: 0px;
+  width: 10px;
+  height: 100%;
+  background-color: #00ff00;
+}
+
+.CLASS_PANE {
+  position: absolute;
+  height: 100%;
+  top: 0px;
+}
+
+#ID_INDICATOR {
+  position: absolute;
+  top: 0px;
+  height: 100%;
+  z-index: 11;
+
+  background-color: #ff0000;
+}
+
+#ID_TOP.CLASS_NORMAL {
+  & > #ID_COVER {
+    display: none;
+  }
+
+  & > #ID_INDICATOR {
+    display: none;
+  }
+}
+
+#ID_COVER {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  z-index: 10;
+}

@@ -11,9 +11,38 @@
     font-weight: normal;
     font-style: normal;
   }
+  .inline {
+    display: inline-block;
+  }
+
+  #splitter {
+    width: 400px;
+    height: 200px;
+  }
+
+  #splitter_container {
+    position: absolute;
+    top: 75px;
+    width: 400px;
+    height: 200px;
+  }
   </style>
 </head>
 <body onload="start();">
-<div id="content"></div>
+<shadow-container>
+<shadow-container>
+  <div id="content"></div>
+</shadow-container>
+</shadow-container>
+<shadow-owner></shadow-owner>
+
+<div id="splitter_container">
+
+<et-splitter id="splitter">
+  <div>one one one one one one one one one one one one one one one one one one one one one one one one one one one one one one one one one </div>
+  <div>two two two two two two two two two two two two two two two two two two two two two two two two two two two two two two two two two </div>
+</et-splitter>
+</div>
+
 </body>
 </html>
