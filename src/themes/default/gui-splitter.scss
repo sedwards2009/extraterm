@@ -6,7 +6,9 @@
 
 #ID_TOP {
   position: relative;
-  border: 2px solid #ff00ff;
+
+  outline-offset: 1px;
+  outline: 1px solid #ff00ff;
   height: 100%;
 }
 
@@ -28,9 +30,20 @@
   position: absolute;
   top: 0px;
   height: 100%;
-  z-index: 11;
+  // z-index: 11;
 
   background-color: #ff0000;
+}
+
+#ID_COVER {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  z-index: 10;
+  background-color: rgba(255,255,0,0.5);
+  // border: 1px solid yellow;
 }
 
 #ID_TOP.CLASS_NORMAL {
@@ -43,11 +56,3 @@
   }
 }
 
-#ID_COVER {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
-  z-index: 10;
-}
