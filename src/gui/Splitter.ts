@@ -210,7 +210,6 @@ export class Splitter extends ThemeableElementBase {
     const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
     indicatorDiv.style.left = "" + (ev.clientX - topRect.left - this._dividerDragOffsetX) + "px";
-
   }
 
   private _handleMouseUp(ev: MouseEvent): void {
@@ -220,6 +219,13 @@ export class Splitter extends ThemeableElementBase {
 
     ev.preventDefault();
     ev.stopPropagation();
+
+    const topDiv = DomUtils.getShadowId(this, ID_TOP);
+    const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
+    const topRect = topDiv.getBoundingClientRect();
+    const newIndicatorLeft = ev.clientX - topRect.left - this._dividerDragOffsetX;
+    this._paneWidths = this._adjustPaneWidth(this._paneWidths, this._dividerDrag, newIndicatorLeft);
+    this._setSizes(this._paneWidths);
 
     this._stopDrag();
   }

@@ -17,6 +17,7 @@
   top: 0px;
   width: 10px;
   height: 100%;
+  cursor: col-resize;
   background-color: #00ff00;
 }
 
@@ -42,8 +43,6 @@
   right: 0px;
   bottom: 0px;
   z-index: 10;
-  background-color: rgba(255,255,0,0.5);
-  // border: 1px solid yellow;
 }
 
 #ID_TOP.CLASS_NORMAL {
