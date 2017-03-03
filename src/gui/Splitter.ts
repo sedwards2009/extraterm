@@ -213,6 +213,10 @@ export class Splitter extends ThemeableElementBase {
   }
 
   private _handleMouseUp(ev: MouseEvent): void {
+    if (this._dividerDrag === NOT_DRAGGING) {
+      return;
+    }
+    
     const target = <HTMLElement> ev.target;
     this._log.debug("target: ", target);
     this._log.debug("has divider: ", target.classList.contains(CLASS_DIVIDER));
