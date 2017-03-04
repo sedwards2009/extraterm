@@ -9,8 +9,7 @@ function start() {
   document.getElementById("add_pane_button").addEventListener("click", () => {
     const splitter = document.getElementById("splitter");
 
-    let text = "" + splitter.children.length + " ";
-    text = text + text;
+    let text = "" + Math.floor(Math.random()*1000) + " ";
     text = text + text;
     text = text + text;
     text = text + text;
@@ -28,7 +27,22 @@ function start() {
     if (splitter.children.length !== 0) {
       splitter.removeChild(splitter.children.item(splitter.children.length-1));
     }
+  });
 
+  document.getElementById("remove_first_pane_button").addEventListener("click", () => {
+    const splitter = document.getElementById("splitter");
+
+    if (splitter.children.length !== 0) {
+      splitter.removeChild(splitter.children.item(0));
+    }
+  });
+
+  document.getElementById("remove_middlet_pane_button").addEventListener("click", () => {
+    const splitter = document.getElementById("splitter");
+
+    if (splitter.children.length !== 0) {
+      splitter.removeChild(splitter.children.item(Math.floor(splitter.children.length/2)));
+    }
   });
 
   require(["./ThemeConsumer", "./gui/TabWidget", "./gui/Tab", "./gui/Splitter", "./cssmap"],

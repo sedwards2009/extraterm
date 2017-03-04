@@ -395,7 +395,7 @@ class PaneWidths {
     copy[dividerIndex] += delta;
     copy[dividerIndex+1] -= delta;
     
-    return new PaneWidths(copy);
+    return new PaneWidths(copy, this._panes);
   }
 
   getPaneRight(index: number): number {
@@ -405,27 +405,31 @@ class PaneWidths {
   update(newTotalWidth: number, newPanes: Object[]): PaneWidths {
     // const oldTotalPaneWidth = this._paneWidths.reduce( (accu, width) => accu+width, 0);
 
-    const newPaneWidths = this._updateRemovedPanes(newPanes);
+    const newPaneWidths = this._updateRemovedPanes(newPanes)._updateAddedPanes(newPanes);
 
     // Redistribute any extra space or reduce the total width to fit the new total splitter size.
 
-    return new PaneWidths(newPaneWidths, newPanes);
+    return newPaneWidths;
   }
 
-  private _updateRemovedPanes(newPanes: Object[]): number[] {
-    // Handle any panes which have been removed.
-    const removedPanes = _.difference(this._panes, newPanes);
+  reverse(): PaneWidths {
+    return new PaneWidths(this._paneWidths.slice().reverse(), this._panes.slice().reverse());
+  }
 
+  private _updateRemovedPanes(newPanes: Object[]): PaneWidths {
+    // Handle any panes which have been removed.
     let spaceAccount = 0;
     const newPaneWidths: number[] = [];
+    const tempPanes: Object[] = [];
     for (let i=0; i<this._paneWidths.length; i++) {
-      if (removedPanes.indexOf(this._panes[i]) !== -1) {
+      if (newPanes.indexOf(this._panes[i]) === -1) {
         // This pane was removed.
         spaceAccount += this._paneWidths[i];
         spaceAccount += DIVIDER_WIDTH;
       } else {
         // This pane still exists. Give it the spare space.
         newPaneWidths.push(this._paneWidths[i] + spaceAccount);
+        tempPanes.push(this._panes[i]);
         spaceAccount = 0;
       }
     }
@@ -434,7 +438,41 @@ class PaneWidths {
       newPaneWidths[newPaneWidths.length-1] += spaceAccount;
     }
 
-    return newPaneWidths;
+    return new PaneWidths(newPaneWidths, tempPanes);
+  }
+
+  private _updateAddedPanes(newPanes: Object[]): PaneWidths {
+    const newPaneWidths: number[] = [];
+    const tempPanes: Object[] = [];
+    for (let i=0; i<newPanes.length; i++) {
+      const oldIndex = this._panes.indexOf(newPanes[i]);
+      if (oldIndex === -1) {
+        // New pane.
+        if (newPaneWidths.length === 0) {
+          // Let the reverse step fix this one.
+
+        } else {
+          const previousWidth = newPaneWidths[newPaneWidths.length-1];
+          const half = Math.floor((previousWidth - DIVIDER_WIDTH) / 2); // Avoid fractional widths.
+          newPaneWidths[newPaneWidths.length-1] = previousWidth - DIVIDER_WIDTH - half;
+          newPaneWidths.push(half);
+          tempPanes.push(newPanes[i]);
+        }
+
+      } else {
+        // Old pane.
+        newPaneWidths.push(this._paneWidths[oldIndex]);
+        tempPanes.push(newPanes[i]);
+      }
+    }
+
+    if (tempPanes.length !== newPanes.length) {
+      const reverseNewPanes = newPanes.slice().reverse();
+      return (new PaneWidths(newPaneWidths, newPanes)).reverse()._updateAddedPanes(reverseNewPanes).reverse();
+
+    } else {
+      return new PaneWidths(newPaneWidths, newPanes);
+    }
   }
 
 }
