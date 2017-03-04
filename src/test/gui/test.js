@@ -6,6 +6,31 @@ let Splitter = null;
 function start() {
   console.log("Starting");
 
+  document.getElementById("add_pane_button").addEventListener("click", () => {
+    const splitter = document.getElementById("splitter");
+
+    let text = "" + splitter.children.length + " ";
+    text = text + text;
+    text = text + text;
+    text = text + text;
+    text = text + text;
+    text = text + text;
+    text = text + text;
+
+    const newDiv = document.createElement("DIV");
+    newDiv.innerHTML = text;
+    splitter.appendChild(newDiv);
+  });
+
+  document.getElementById("remove_last_pane_button").addEventListener("click", () => {
+    const splitter = document.getElementById("splitter");
+
+    if (splitter.children.length !== 0) {
+      splitter.removeChild(splitter.children.item(splitter.children.length-1));
+    }
+
+  });
+
   require(["./ThemeConsumer", "./gui/TabWidget", "./gui/Tab", "./gui/Splitter", "./cssmap"],
     function(ThemeConsumer, TabWidgetModule, TabModule, SplitterModule, style) {
 

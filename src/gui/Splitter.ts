@@ -111,12 +111,10 @@ export class Splitter extends ThemeableElementBase {
     indicatorDiv.style.width = "" + DIVIDER_WIDTH + "px";
 
     const rect = topDiv.getBoundingClientRect();
-    this._paneWidths = PaneWidths.equalPaneWidths(rect.width, this.children.length);
+    this._paneWidths = PaneWidths.equalPaneWidths(rect.width, DomUtils.toArray(this.children));
     this._createLayout(this._paneWidths);
 
-    this._mutationObserver = new MutationObserver( (mutations) => {
-      // this._createLayout();
-    });
+    this._mutationObserver = new MutationObserver(this._handleMutations.bind(this));
     this._mutationObserver.observe(this, { childList: true });
   }
   
@@ -270,6 +268,14 @@ export class Splitter extends ThemeableElementBase {
     this._stopDrag();
   }
 
+  private _handleMutations(mutations: MutationRecord[]): void {
+    const topDiv = DomUtils.getShadowId(this, ID_TOP);
+    const rect = topDiv.getBoundingClientRect();
+    this._paneWidths = this._paneWidths.update(rect.width, DomUtils.toArray(this.children));
+
+    this._createLayout(this._paneWidths);
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                        
@@ -346,22 +352,26 @@ class PaneWidths {
 
   private _paneWidths: number[];
 
-  static equalPaneWidths(totalWidth: number, paneCount: number) {
+  private _panes: Object[];
+
+  static equalPaneWidths(totalWidth: number, panes: Object[]) {
     // Distribute the panes evenly.
+    const paneCount = panes.length;
     const paneWidth = (totalWidth - (paneCount-1) * DIVIDER_WIDTH) / paneCount;
     const paneWidths: number[] = [];
     for (let i=0; i<paneCount; i++) {
       paneWidths.push(paneWidth);
     }
-    return new PaneWidths(paneWidths);
+    return new PaneWidths(paneWidths, panes);
   }
 
-  constructor(paneWidthArray: number[] = null) {
+  constructor(paneWidthArray: number[] = null, panes: Object[] = null) {
     if (paneWidthArray == null) {
       this._paneWidths = [];
     } else {
       this._paneWidths = paneWidthArray;
     }
+    this._panes = panes;
   }
 
   get(index: number): number {
@@ -390,6 +400,41 @@ class PaneWidths {
 
   getPaneRight(index: number): number {
     return this._paneWidths.slice(0, index+1).reduce( (accu, w) => accu+w, 0) + index * DIVIDER_WIDTH;
+  }
+
+  update(newTotalWidth: number, newPanes: Object[]): PaneWidths {
+    // const oldTotalPaneWidth = this._paneWidths.reduce( (accu, width) => accu+width, 0);
+
+    const newPaneWidths = this._updateRemovedPanes(newPanes);
+
+    // Redistribute any extra space or reduce the total width to fit the new total splitter size.
+
+    return new PaneWidths(newPaneWidths, newPanes);
+  }
+
+  private _updateRemovedPanes(newPanes: Object[]): number[] {
+    // Handle any panes which have been removed.
+    const removedPanes = _.difference(this._panes, newPanes);
+
+    let spaceAccount = 0;
+    const newPaneWidths: number[] = [];
+    for (let i=0; i<this._paneWidths.length; i++) {
+      if (removedPanes.indexOf(this._panes[i]) !== -1) {
+        // This pane was removed.
+        spaceAccount += this._paneWidths[i];
+        spaceAccount += DIVIDER_WIDTH;
+      } else {
+        // This pane still exists. Give it the spare space.
+        newPaneWidths.push(this._paneWidths[i] + spaceAccount);
+        spaceAccount = 0;
+      }
+    }
+
+    if (newPaneWidths.length !== 0) {
+      newPaneWidths[newPaneWidths.length-1] += spaceAccount;
+    }
+
+    return newPaneWidths;
   }
 
 }
