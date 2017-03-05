@@ -468,7 +468,7 @@ class PaneWidths {
 
     if (tempPanes.length !== newPanes.length) {
       const reverseNewPanes = newPanes.slice().reverse();
-      return (new PaneWidths(newPaneWidths, newPanes)).reverse()._updateAddedPanes(reverseNewPanes).reverse();
+      return (new PaneWidths(newPaneWidths, tempPanes)).reverse()._updateAddedPanes(reverseNewPanes).reverse();
 
     } else {
       return new PaneWidths(newPaneWidths, newPanes);

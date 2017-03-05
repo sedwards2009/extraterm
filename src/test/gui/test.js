@@ -21,6 +21,22 @@ function start() {
     splitter.appendChild(newDiv);
   });
 
+  document.getElementById("prepend_pane_button").addEventListener("click", () => {
+    const splitter = document.getElementById("splitter");
+
+    let text = "" + Math.floor(Math.random()*1000) + " ";
+    text = text + text;
+    text = text + text;
+    text = text + text;
+    text = text + text;
+    text = text + text;
+
+    const newDiv = document.createElement("DIV");
+    newDiv.innerHTML = text;
+    splitter.insertBefore(newDiv, splitter.firstElementChild);
+  });
+  
+
   document.getElementById("remove_last_pane_button").addEventListener("click", () => {
     const splitter = document.getElementById("splitter");
 
