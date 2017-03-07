@@ -2,6 +2,7 @@
 let TabWidget = null;
 let Tab = null;
 let Splitter = null;
+let ResizeRefreshElementBase = null;
 
 function start() {
   console.log("Starting");
@@ -61,9 +62,26 @@ function start() {
     }
   });
 
-  require(["./ThemeConsumer", "./gui/TabWidget", "./gui/Tab", "./gui/Splitter", "./cssmap"],
-    function(ThemeConsumer, TabWidgetModule, TabModule, SplitterModule, style) {
+  document.getElementById("big_splitter").addEventListener("click", () => {
+    const splitterContainer = document.getElementById("splitter_container");
+    splitterContainer.classList.add("big");
 
+    const splitter = document.getElementById("splitter");
+    splitter.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
+
+  });
+  document.getElementById("small_splitter").addEventListener("click", () => {
+    const splitterContainer = document.getElementById("splitter_container");
+    splitterContainer.classList.remove("big");
+
+    const splitter = document.getElementById("splitter");
+    splitter.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
+  });
+
+  require(["./ThemeConsumer", "./ResizeRefreshElementBase", "./gui/TabWidget", "./gui/Tab", "./gui/Splitter", "./cssmap"],
+    function(ThemeConsumer, _ResizeRefreshElementBase, TabWidgetModule, TabModule, SplitterModule, style) {
+
+    ResizeRefreshElementBase = _ResizeRefreshElementBase;
     TabWidget = TabWidgetModule.TabWidget;
     Tab = TabModule.Tab;
     Splitter = SplitterModule.Splitter;

@@ -96,7 +96,6 @@ export class Splitter extends ThemeableElementBase {
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);
-    this.updateThemeCss();
 
     const topDiv = DomUtils.getShadowId(this, ID_TOP);
     topDiv.classList.add(CLASS_NORMAL);
@@ -116,6 +115,8 @@ export class Splitter extends ThemeableElementBase {
 
     this._mutationObserver = new MutationObserver(this._handleMutations.bind(this));
     this._mutationObserver.observe(this, { childList: true });
+
+    this.updateThemeCss();
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -124,17 +125,35 @@ export class Splitter extends ThemeableElementBase {
   
   //-----------------------------------------------------------------------
 
-  update(): void {
+  // update(): void {
     // this._paneWidths = this._equalPaneWidths();
     // this._createLayout();
-  }
+  // }
   
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    // const contentsStack = this._getContentsStack();
-    // if (contentsStack === null) {
+
+    if (DomUtils.getShadowRoot(this) === null) {
       return BulkDomOperation.nullOperation();
-    // }
-    // return BulkDomOperation.parallel([super.bulkRefresh(level), contentsStack.bulkRefresh(level)]);
+    } else {
+      const superBulkRefresh = super.bulkRefresh;
+
+      const generator = function* bulkRefreshGenerator(this: Splitter): IterableIterator<BulkDomOperation.GeneratorResult> {
+        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
+        const topDiv = DomUtils.getShadowId(this, ID_TOP);
+        const rect = topDiv.getBoundingClientRect();
+        const newPaneWidths = this._paneWidths.updateTotalWidth(rect.width);
+
+        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+        this._paneWidths = newPaneWidths;
+        this._setSizes(newPaneWidths);
+
+        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, 
+        extraOperation: BulkDomOperation.parallel([superBulkRefresh.call(this, level)]) };
+
+        return BulkDomOperation.GeneratorPhase.DONE;
+      };
+      return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    }
   }
 
   /**
@@ -271,7 +290,7 @@ export class Splitter extends ThemeableElementBase {
   private _handleMutations(mutations: MutationRecord[]): void {
     const topDiv = DomUtils.getShadowId(this, ID_TOP);
     const rect = topDiv.getBoundingClientRect();
-    this._paneWidths = this._paneWidths.update(rect.width, DomUtils.toArray(this.children));
+    this._paneWidths = this._paneWidths.update(DomUtils.toArray(this.children));
 
     this._createLayout(this._paneWidths);
   }
@@ -402,18 +421,38 @@ class PaneWidths {
     return this._paneWidths.slice(0, index+1).reduce( (accu, w) => accu+w, 0) + index * DIVIDER_WIDTH;
   }
 
-  update(newTotalWidth: number, newPanes: Object[]): PaneWidths {
-    // const oldTotalPaneWidth = this._paneWidths.reduce( (accu, width) => accu+width, 0);
+  updateTotalWidth(newTotalWidth: number): PaneWidths {
+    return this._resizeWidths(newTotalWidth);
+  }
 
-    const newPaneWidths = this._updateRemovedPanes(newPanes)._updateAddedPanes(newPanes);
-
-    // Redistribute any extra space or reduce the total width to fit the new total splitter size.
-
-    return newPaneWidths;
+  update(newPanes: Object[]): PaneWidths {
+    return this._updateRemovedPanes(newPanes)._updateAddedPanes(newPanes);
   }
 
   reverse(): PaneWidths {
     return new PaneWidths(this._paneWidths.slice().reverse(), this._panes.slice().reverse());
+  }
+
+  private _resizeWidths(newTotalWidth: number): PaneWidths {
+    const effectiveUsableWidth = newTotalWidth - (this._panes.length-1) * DIVIDER_WIDTH;
+
+    const currentTotalWidth = this._paneWidths.reduce( (accu, w) => accu+w, 0);
+    const distributableSpace = effectiveUsableWidth - currentTotalWidth;
+
+    const newWidths: number[] = [];
+    let usedExtraSpace = 0;
+    for (let i=0; i<this._paneWidths.length; i++) {
+      if (i !== this._paneWidths.length-1) {
+        const delta = Math.round(this._paneWidths[i] / currentTotalWidth * distributableSpace);
+        usedExtraSpace += delta;
+        newWidths.push(this._paneWidths[i] + delta);
+      } else {
+        // We do it this way to avoid rounding errors and ensure that distribute the exact amount of space.
+        newWidths.push(this._paneWidths[i] + distributableSpace - usedExtraSpace);
+      }
+    }
+
+    return new PaneWidths(newWidths, this._panes);
   }
 
   private _updateRemovedPanes(newPanes: Object[]): PaneWidths {
