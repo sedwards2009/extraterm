@@ -118,24 +118,6 @@ class TabInfo {
     return "";
   }
   
-  htmlTitle(): string {
-    return he.escape(this.title());
-  }
-  
-  tabIcon(): string {
-    return null;
-  }
-  
-  updateTabTitle(): void {
-    const iconDiv = <HTMLDivElement> this.tab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
-    const icon = this.tabIcon();
-    iconDiv.innerHTML = icon !== null ? '<i class="fa fa-' + icon + '"></i>' : "";
-    
-    const middleDiv = <HTMLDivElement> this.tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
-    middleDiv.title = this.title();
-    middleDiv.innerHTML = this.htmlTitle();
-  }
-  
   focus(): void { }
   
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void { }
@@ -170,10 +152,6 @@ class TerminalTabInfo extends TabInfo {
   title(): string {
     return this.terminal.getTerminalTitle();
   }
-  
-  tabIcon(): string {
-    return "keyboard-o";
-  }  
   
   focus(): void {
     this.terminal.resizeToContainer();
@@ -217,10 +195,6 @@ class ViewerElementTabInfo extends TabInfo {
     super();
   }
   
-  tabIcon(): string {
-    return this.viewerElement.getAwesomeIcon();
-  }
-  
   title(): string {
     return this.viewerElement.title;
   }
@@ -237,14 +211,6 @@ class ViewerElementTabInfo extends TabInfo {
 class ViewerTabInfo extends ViewerElementTabInfo {
   constructor(public viewer: EtViewerTab) {
     super(viewer);
-  }
-
-  htmlTitle(): string {
-    if (this.viewer.tag !== null) {
-      return he.escape(this.title()) + " &nbsp;&nbsp;&nbsp;<i class='fa fa-tag'></i>" + this.viewer.tag;
-    } else {
-      return he.escape(this.title());
-    }
   }
   
   getFrameContents(frameId: string): string {
@@ -605,7 +571,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     // Terminal title event
     newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (ev: CustomEvent): void => {
-      tabInfo.updateTabTitle();
+      this._updateTabTitle(newTerminal);
       this._sendTitleEvent(ev.detail.title);
     });
     
@@ -631,7 +597,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         WebIpc.ptyOutputBufferSize(tabInfo.ptyId, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
       });
 
-    tabInfo.updateTabTitle();
+    this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
     this._internalExtratermApi.addTab(newTerminal);
@@ -651,11 +617,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     viewerElement.setVisualState(VisualState.AUTO);
     const result = this._openViewerTabInfo(tabInfo, viewerTab);
     viewerTab.setViewerElement(viewerElement);
-    tabInfo.updateTabTitle();
+
+    this._updateTabTitle(viewerTab);
+
     return result;
   }
   
-  _openViewerTabInfo(tabInfo: ViewerElementTabInfo, viewerElement: ViewerElement): number {
+  private _openViewerTabInfo(tabInfo: ViewerElementTabInfo, viewerElement: ViewerElement): number {
     viewerElement.setFocusable(true);
     this._addTab(tabInfo);
     tabInfo.contentDiv.appendChild(viewerElement);
@@ -666,11 +634,52 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       });
     });
 
-    tabInfo.updateTabTitle();
+    this._updateTabTitle(viewerElement);
     this._sendTabOpenedEvent();
     return tabInfo.id;
   }
   
+  private _updateTabTitle(el: HTMLElement): void {
+    const prevEl = el.parentElement.previousElementSibling;
+    if (prevEl instanceof Tab) {
+      
+      let title = "";
+      let htmlTitle = "";
+      let icon = null;
+
+      if (el instanceof EtTerminal) {
+        title = el.getTerminalTitle();
+        htmlTitle = he.escape(title);
+        icon = "keyboard-o";
+
+      } else if (el instanceof ViewerElement) {
+        title = el.title;
+        htmlTitle = he.escape(title);
+        icon = el.getAwesomeIcon();
+
+      } else if (el instanceof EtViewerTab) {
+        title = el.title;
+        if (el.tag !== null) {
+          htmlTitle = he.escape(title) + " &nbsp;&nbsp;&nbsp;<i class='fa fa-tag'></i>" + el.tag;
+        } else {
+          htmlTitle = he.escape(title);
+        }
+        icon = el.getAwesomeIcon();
+      }
+
+      const tab = prevEl;
+      const iconDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
+      iconDiv.innerHTML = icon !== null ? '<i class="fa fa-' + icon + '"></i>' : "";
+      
+      const middleDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
+
+      middleDiv.title = title;
+      middleDiv.innerHTML = htmlTitle;
+    } else {
+      this._log.warn("Unable to find the Tab element for ", el);
+    }
+  }
+
   openSettingsTab(): void {
     const settingsTabs = this._tabInfo.filter( (tabInfo) => tabInfo instanceof SettingsTabInfo );
     if (settingsTabs.length !== 0) {
@@ -766,24 +775,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       leftIndex++;
     }
   }
-
-  /**
-   * Gives the input focus to the other (non-focussed) pane.
-   */
-  // focusOtherPane(): void {
-  //   if ( ! this._split) {
-  //     return;
-  //   }
-    
-  //   const focussedTabInfos = this._tabInfo.filter( tabInfo => tabInfo.hasFocus() );
-  //   if (focussedTabInfos.length === 0) {
-  //     return;
-  //   }
-    
-  //   // Get the other tab container, the one we want to focus to.
-  //   const focussedTabInfo = focussedTabInfos[0];
-  //   this.focusPane();
-  // }
 
   focusPane(): void {
     const tabContainer = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
