@@ -114,10 +114,6 @@ class TabInfo {
   
   lastFocus: boolean = false; // True if this tab had the focus last.
   
-  title(): string {
-    return "";
-  }
-  
   focus(): void { }
   
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void { }
@@ -147,10 +143,6 @@ class TerminalTabInfo extends TabInfo {
     const config = configManager.getConfig();
     this.terminal.setBlinkingCursor(config.blinkingCursor);
     this.terminal.setScrollbackSize(config.scrollbackLines);
-  }
-  
-  title(): string {
-    return this.terminal.getTerminalTitle();
   }
   
   focus(): void {
@@ -193,10 +185,6 @@ class TerminalTabInfo extends TabInfo {
 class ViewerElementTabInfo extends TabInfo {
   constructor(public viewerElement: ViewerElement) {
     super();
-  }
-  
-  title(): string {
-    return this.viewerElement.title;
   }
   
   focus(): void {
@@ -439,12 +427,21 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   
   private _handleTabSwitch(tabWidget: TabWidget): void {
     const tabInfos = this._tabInfo;
-    if (tabWidget.getCurrentIndex() >= 0 && tabWidget.getCurrentIndex() < tabInfos.length) {
-      const tabInfo = tabInfos[tabWidget.getCurrentIndex()];
-      
-      this._sendTitleEvent(tabInfo.title());
-      tabInfo.focus();
+
+    const tabInfo = tabInfos[tabWidget.getCurrentIndex()];
+    
+    const el = tabWidget.getCurrentTab().nextElementSibling;
+    let title = "";
+    if (el instanceof EtTerminal) {
+      title = el.getTerminalTitle();
+    } else if (el instanceof ViewerElement) {
+      title = el.title;
+    } else if (el instanceof EtViewerTab) {        
+      title = el.title;
     }
+
+    this._sendTitleEvent(title);
+    tabInfo.focus();
   }
 
   setInternalExtratermApi(api: InternalExtratermApi.InternalExtratermApi): void {
