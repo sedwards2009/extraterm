@@ -125,10 +125,6 @@ export class Splitter extends ThemeableElementBase {
   
   //-----------------------------------------------------------------------
 
-  // update(): void {
-    // this._paneWidths = this._equalPaneWidths();
-    // this._createLayout();
-  // }
   
   bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
 

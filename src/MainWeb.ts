@@ -57,7 +57,6 @@ SourceMapSupport.install();
 const PLUGINS_DIRECTORY = "plugins";
 
 const PALETTE_GROUP = "mainweb";
-const MENU_ITEM_SPLIT = 'split';
 const MENU_ITEM_SETTINGS = 'settings';
 const MENU_ITEM_KEY_BINDINGS = 'key_bindings';
 const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
@@ -170,9 +169,8 @@ export function startUp(): void {
       <${DropDown.TAG_NAME}>
           <button id="${ID_MENU_BUTTON}" class="btn btn-quiet"><i class="fa fa-bars"></i></button>
           <${ContextMenu.TAG_NAME} id="main_menu">
-              <${CheckboxMenuItem.TAG_NAME} icon="columns" id="${MENU_ITEM_SPLIT}" name="split">Split</${CheckboxMenuItem.TAG_NAME}>
               <${MenuItem.TAG_NAME} icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
-              <${MenuItem.TAG_NAME} icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</c${MenuItem.TAG_NAME}
+              <${MenuItem.TAG_NAME} icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</${MenuItem.TAG_NAME}>
               <${CheckboxMenuItem.TAG_NAME} icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
               <${MenuItem.TAG_NAME} icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
           </${ContextMenu.TAG_NAME}>
@@ -220,11 +218,6 @@ export function startUp(): void {
       window.document.title = "Extraterm - " + ev.detail.title;
     });
 
-    mainWebUi.addEventListener(MainWebUi.EVENT_SPLIT, () => {
-      const splitMenu = <CheckboxMenuItem> document.getElementById("split");
-      splitMenu.setChecked(mainWebUi.getSplit());
-    });
-
     mainWebUi.addEventListener(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST, () => {
       WebIpc.windowMinimizeRequest();
     });
@@ -256,7 +249,7 @@ export function startUp(): void {
       }
     });
     
-    mainWebUi.newTerminalTab(MainWebUi.POSITION_LEFT);
+    mainWebUi.newTerminalTab();
     mainWebUi.focus();
     window.focus();
   });
@@ -277,11 +270,6 @@ function executeMenuCommand(command: string): boolean {
 
 function executeCommand(command: string): boolean {
   switch(command) {
-    case MENU_ITEM_SPLIT:
-      const splitMenu = <CheckboxMenuItem> document.getElementById("split");
-      mainWebUi.setSplit(Util.toBoolean(splitMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED)));
-      break;
-      
     case MENU_ITEM_SETTINGS:
       mainWebUi.openSettingsTab();
       break;

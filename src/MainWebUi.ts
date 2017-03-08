@@ -69,13 +69,12 @@ const ID_PANE_LEFT = "ID_PANE_LEFT";
 const ID_PANE_RIGHT = "ID_PANE_RIGHT";
 const ID_GAP = "ID_GAP";
 const ID_TAB_CONTAINER_LEFT = "ID_TAB_CONTAINER_LEFT";
-const ID_TAB_CONTAINER_RIGHT = "ID_TAB_CONTAINER_RIGHT";
 const ID_REST_DIV_PRIMARY = "ID_REST_DIV_PRIMARY";
 const ID_REST_DIV_LEFT = "ID_REST_DIV_LEFT";
 const ID_REST_DIV_SECONDARY = "ID_REST_DIV_SECONDARY";
 const ID_LEFT_REST_DIV_SECONDARY = "ID_LEFT_REST_DIV_SECONDARY";
 const ID_NEW_TAB_BUTTON_PRIMARY = "ID_NEW_TAB_BUTTON_PRIMARY";
-const ID_NEW_TAB_BUTTON_SECONDARY = "ID_NEW_TAB_BUTTON_SECONDARY";
+
 const CLASS_SPLIT = "split";
 
 const CLASS_TAB_HEADER_CONTAINER = "tab_header_container";
@@ -88,16 +87,9 @@ const PALETTE_GROUP = "mainwebui";
 const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
 const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
 const COMMAND_NEW_TAB = "newTab";
-const COMMAND_SELECT_OTHER_PANE = "selectOtherPane";
 const COMMAND_CLOSE_TAB = "closeTab";
-const COMMAND_TOGGLE_SPLIT = "toggleSplit";
 
 let registered = false;
-
-const enum TabPosition {
-  LEFT,
-  RIGHT
-}
 
 enum TabType {
   TERMINAL,
@@ -110,8 +102,6 @@ enum TabType {
 class TabInfo {
   
   id: number;
-  
-  position: TabPosition;
   
   contentDiv: HTMLDivElement;
   
@@ -326,18 +316,12 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   
   static EVENT_TITLE = 'mainwebui-title';
 
-  static EVENT_SPLIT = 'mainwebui-split';
-
   static EVENT_MINIMIZE_WINDOW_REQUEST = "mainwebui-minimize-window-request";
 
   static EVENT_MAXIMIZE_WINDOW_REQUEST = "mainwebui-maximize-window-request";
 
   static EVENT_CLOSE_WINDOW_REQUEST = "mainwebui-close-window-request";
 
-  static POSITION_LEFT = TabPosition.LEFT;
-  
-  static POSITION_RIGHT = TabPosition.RIGHT;
-  
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
@@ -352,8 +336,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _themes: ThemeTypes.ThemeInfo[];
 
-  private _split: boolean;
-  
   private _internalExtratermApi: InternalExtratermApi.InternalExtratermApi;
 
   private _initProperties(): void {
@@ -363,7 +345,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._configManager = null;
     this._keyBindingManager = null;
     this._themes = [];
-    this._split = false;
     this._internalExtratermApi = null;
   }
   
@@ -397,24 +378,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     // Update the window title when the selected tab changes and resize the terminal.
     const tabWidgetLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     tabWidgetLeft.addEventListener(TabWidget.EVENT_TAB_SWITCH, (e) => {
-      this._handleTabSwitch(tabWidgetLeft, TabPosition.LEFT);
+      this._handleTabSwitch(tabWidgetLeft);
     });
 
-    const tabWidgetRight = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
-    tabWidgetRight.addEventListener(TabWidget.EVENT_TAB_SWITCH, (e) => {
-      this._handleTabSwitch(tabWidgetRight, TabPosition.RIGHT);
-    });
-    
     const newTabPrimaryButton = this._getById(ID_NEW_TAB_BUTTON_PRIMARY);
     newTabPrimaryButton.addEventListener('click', () => {
-      this.focusTab(this.newTerminalTab(this._split ? TabPosition.RIGHT : TabPosition.LEFT));
+      this.focusTab(this.newTerminalTab());
     });
     
-    const newTabSecondaryButton = this._getById(ID_NEW_TAB_BUTTON_SECONDARY);
-    newTabSecondaryButton.addEventListener('click', () => {
-      this.focusTab(this.newTerminalTab(this._split ? TabPosition.LEFT : TabPosition.RIGHT));
-    });
-
     const closeButtenHandler = () => {
       this.focus();
       this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
@@ -475,13 +446,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
             `<slot></slot></div>` +
           `</${TabWidget.TAG_NAME}>` +
         `</div>` +
-        `<div id="${ID_GAP}"></div>` +
-        `<div id="${ID_PANE_RIGHT}">` +
-          `<${TabWidget.TAG_NAME} id="${ID_TAB_CONTAINER_RIGHT}" show-frame="false">` +
-            `<div id="${ID_LEFT_REST_DIV_SECONDARY}"></div>` +
-            `<div id="${ID_REST_DIV_SECONDARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_SECONDARY}"><i class="fa fa-plus"></i></button></div>` +
-          `</${TabWidget.TAG_NAME}>` +
-        `</div>` +
       `</div>` +
     `</div>`;
   }
@@ -507,8 +471,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  private _handleTabSwitch(tabWidget: TabWidget, position: TabPosition): void {
-    const tabInfos = this._split ? this._tabInfo.filter( tabInfo => tabInfo.position === position ) : this._tabInfo;
+  private _handleTabSwitch(tabWidget: TabWidget): void {
+    const tabInfos = this._tabInfo;
     if (tabWidget.getCurrentIndex() >= 0 && tabWidget.getCurrentIndex() < tabInfos.length) {
       const tabInfo = tabInfos[tabWidget.getCurrentIndex()];
       
@@ -538,105 +502,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return this._tabInfo.length;
   }
   
-  setSplit(split: boolean): void {
-    if (split === this._split) {
-      return;
-    }
-
-    const top = this._getById(ID_MAIN_CONTENTS);
-    const tabContainerLeft = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    const tabContainerRight = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
-    const restDivPrimary = this._getById(ID_REST_DIV_PRIMARY);
-    const restDivSecondary = this._getById(ID_REST_DIV_SECONDARY);
-    
-    if (split) {
-      // Split it in two.
-
-      const currentTab = tabContainerLeft.getCurrentTab();
-      const selectedTabInfo = _.first(this._tabInfo.filter( tabInfo => tabInfo.tab === currentTab ));
-
-      top.classList.add(CLASS_SPLIT);
-      // The primary controls have the burger menu. When it is split, the controls are moved to the right side.
-      
-      this._tabInfo.filter( tabInfo => tabInfo.position === TabPosition.RIGHT )
-        .forEach( tabInfo => {
-          tabContainerRight.appendChild(tabInfo.tab);
-          tabContainerRight.appendChild(tabInfo.contentDiv);
-        });
-      
-      tabContainerRight.appendChild(restDivPrimary);
-      tabContainerLeft.appendChild(restDivSecondary);
-      
-      tabContainerLeft.update();
-      tabContainerRight.update();
-      
-      // Select the right tabs and set focus.
-      const tabContainer = selectedTabInfo.position === TabPosition.LEFT ? tabContainerLeft : tabContainerRight
-      const otherTabContainer = selectedTabInfo.position !== TabPosition.LEFT ? tabContainerLeft : tabContainerRight;
-        
-      tabContainer.setCurrentTab(selectedTabInfo.tab);
-      selectedTabInfo.focus();
-        
-      const otherShownList = this._tabInfo.filter(
-                                tabInfo => tabInfo.position !== selectedTabInfo.position && tabInfo.wasShown);
-      if (otherShownList.length !== 0) {
-        otherTabContainer.setCurrentTab(otherShownList[0].tab);
-      } else {
-        otherTabContainer.setCurrentIndex(0);
-      }
-      
-    } else {
-      // Go from a split with two panes to just one pane.
-
-      // Keep track of which tabs were being shown so that we can make split reversable.
-      const leftList = this._tabInfo.filter( tabInfo => tabInfo.position === TabPosition.LEFT );
-      const leftSelectedTab = tabContainerLeft.getCurrentTab();
-      leftList.forEach( (tabInfo, i) => {
-        tabInfo.wasShown = tabInfo.tab === leftSelectedTab;
-      });
-      
-      const rightList = this._tabInfo.filter( tabInfo => tabInfo.position === TabPosition.RIGHT );
-      const rightSelectedTab = tabContainerRight.getCurrentTab();
-      rightList.forEach( (tabInfo, i) => {
-        tabInfo.wasShown = tabInfo.tab === rightSelectedTab;
-      });
-      
-      const focusedList = this._tabInfo.filter( tabInfo => tabInfo.hasFocus() );
-
-      // Move the 'rest' DIV from the right to the left.
-      top.classList.remove(CLASS_SPLIT);
-      tabContainerLeft.appendChild(restDivPrimary);
-      tabContainerRight.appendChild(restDivSecondary);
-
-      // Move the terminal tabs from the right tab container to the left one.
-      const nodesToMove = DomUtils.nodeListToArray(tabContainerRight.childNodes)
-        .filter( node => ! (node.nodeName === "DIV" && ( (<HTMLDivElement>node).id === ID_REST_DIV_PRIMARY ||
-          (<HTMLDivElement>node).id === ID_REST_DIV_SECONDARY ||
-          (<HTMLDivElement>node).id === ID_LEFT_REST_DIV_SECONDARY)));
-      nodesToMove.forEach( node => {
-        tabContainerLeft.insertBefore(node, restDivPrimary);
-      });
-      
-      // Fix up the list of terminal info objects
-      this._tabInfo = [...this._tabInfo.filter( info => info.position == TabPosition.LEFT ),
-                            ...this._tabInfo.filter( info => info.position == TabPosition.RIGHT)];
-         
-      tabContainerLeft.update();
-      // Try to focus and show the same tab.
-      if (focusedList.length !== 0) {
-        tabContainerLeft.setCurrentTab(focusedList[0].tab);
-        focusedList[0].focus();
-      }
-    }
-    
-    this._split = split;
-    this._refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
-  }
-  
-  getSplit(): boolean {
-    return this._split;
-  }
-  
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     this._refresh(level);
   }
@@ -644,10 +509,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   /**
    * Initialise and insert a tab.
    * 
-   * @param {TabPosition} position where to insert the tab, which pane.
    * @param {TabInfo}     tabInfo  Object describing the tab.
    */
-  private _addTab(position: TabPosition, tabInfo: TabInfo): void {
+  private _addTab(tabInfo: TabInfo): void {
     const newId = this._tabIdCounter;
     this._tabIdCounter++;
     const newTab = <Tab> document.createElement(Tab.TAG_NAME);
@@ -665,18 +529,15 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     contentDiv.classList.add('tab_content');
     
     tabInfo.id = newId;
-    tabInfo.position = position;
     tabInfo.tab = newTab;
     tabInfo.contentDiv = contentDiv;
     this._tabInfo.push(tabInfo);
     
-    const tabWidget = <TabWidget> this._getById(
-                        position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
+    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
                         
     // The way the split view changes the position of the 'rest' controls
     // in the tab widgets causes this expression below.
-    const restDiv = this._getById(
-                        this._split === (position === TabPosition.LEFT) ? ID_REST_DIV_SECONDARY : ID_REST_DIV_PRIMARY);
+    const restDiv = this._getById(ID_REST_DIV_PRIMARY);
     
     tabWidget.insertBefore(newTab, restDiv);
     tabWidget.insertBefore(contentDiv, restDiv);
@@ -700,13 +561,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
    *
    * @return ID of the new terminal.
    */
-  newTerminalTab(position: TabPosition): number {
+  newTerminalTab(): number {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     config.injectConfigManager(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
     const tabInfo = new TerminalTabInfo(this._configManager, newTerminal, null);
-    this._addTab(position, tabInfo);
+    this._addTab(tabInfo);
     
     tabInfo.contentDiv.appendChild(newTerminal);
     
@@ -749,7 +610,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     });
     
     newTerminal.addEventListener(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT, (ev: CustomEvent): void => {
-      this.focusTab(this.openViewerTab(tabInfo.position, ev.detail.embeddedViewer, ev.detail.terminal.getFontAdjust()));
+      this.focusTab(this.openViewerTab(ev.detail.embeddedViewer, ev.detail.terminal.getFontAdjust()));
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
     
@@ -777,7 +638,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return tabInfo.id;
   }
   
-  openViewerTab(position: TabPosition, embeddedViewer: EmbeddedViewer, fontAdjust: number): number {
+  openViewerTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): number {
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
@@ -788,15 +649,15 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const tabInfo = new ViewerTabInfo(viewerTab);
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
     viewerElement.setVisualState(VisualState.AUTO);
-    const result = this._openViewerTabInfo(position, tabInfo, viewerTab);
+    const result = this._openViewerTabInfo(tabInfo, viewerTab);
     viewerTab.setViewerElement(viewerElement);
     tabInfo.updateTabTitle();
     return result;
   }
   
-  _openViewerTabInfo(position: TabPosition, tabInfo: ViewerElementTabInfo, viewerElement: ViewerElement): number {
+  _openViewerTabInfo(tabInfo: ViewerElementTabInfo, viewerElement: ViewerElement): number {
     viewerElement.setFocusable(true);
-    this._addTab(position, tabInfo);
+    this._addTab(tabInfo);
     tabInfo.contentDiv.appendChild(viewerElement);
 
     viewerElement.addEventListener('focus', (ev: FocusEvent) => {
@@ -820,7 +681,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
       const tabInfo = new SettingsTabInfo(viewerElement, this._themes);
-      this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
+      this.focusTab(this._openViewerTabInfo(tabInfo, viewerElement));
     }
   }
   
@@ -834,7 +695,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
       const tabInfo = new KeyBindingsTabInfo(viewerElement);
-      this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
+      this.focusTab(this._openViewerTabInfo(tabInfo, viewerElement));
     }
   }
   
@@ -847,7 +708,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
       const tabInfo = new AboutTabInfo(viewerElement);
-      this.focusTab(this._openViewerTabInfo(TabPosition.LEFT, tabInfo, viewerElement));
+      this.focusTab(this._openViewerTabInfo(tabInfo, viewerElement));
     }
   }
   
@@ -861,9 +722,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       return;
     }
     const tabInfo = matches[0];
-    const position = tabInfo.position;
     
-    let paneTabInfos = this._tabInfo.filter( tabInfo2 => tabInfo2.position === position );
+    let paneTabInfos = this._tabInfo;
     
     let index = paneTabInfos.indexOf(tabInfo);
     
@@ -877,12 +737,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     const tabContainer = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     tabContainer.update();
-    const tabContainer2 = <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT);
-    tabContainer2.update();
     
     this._sendTabClosedEvent();
     
-    paneTabInfos = this._split ? this._tabInfo.filter( tabInfo2 => tabInfo2.position === position ) : this._tabInfo;
+    paneTabInfos = this._tabInfo;
     
     if (index >= paneTabInfos.length) {
       index--;
@@ -890,59 +748,51 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     if (paneTabInfos.length !== 0) {
       this.focusTab(paneTabInfos[index].id);
     } else {
-      this.focusPane(tabInfo.position === TabPosition.LEFT ? TabPosition.RIGHT : TabPosition.LEFT);
+      this.focusPane();
     }
   }
 
   focusTab(terminalId: number): void {
     let leftIndex = 0;
-    let rightIndex = 0;
     for (let i=0; i<this._tabInfo.length; i++) {
       const tabInfo = this._tabInfo[i];
       if (tabInfo.id === terminalId) {
-        const tabWidget = <TabWidget> this._getById(
-          tabInfo.position === TabPosition.LEFT ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
-        tabWidget.setCurrentIndex(tabInfo.position === TabPosition.LEFT ? leftIndex : rightIndex);
+        const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+        tabWidget.setCurrentIndex(leftIndex);
         tabInfo.focus();
         return;
       }
       
-      if (tabInfo.position === TabPosition.LEFT) {
-        leftIndex++;
-      } else {
-        rightIndex++;
-      }
+      leftIndex++;
     }
   }
 
   /**
    * Gives the input focus to the other (non-focussed) pane.
    */
-  focusOtherPane(): void {
-    if ( ! this._split) {
-      return;
-    }
+  // focusOtherPane(): void {
+  //   if ( ! this._split) {
+  //     return;
+  //   }
     
-    const focussedTabInfos = this._tabInfo.filter( tabInfo => tabInfo.hasFocus() );
-    if (focussedTabInfos.length === 0) {
-      return;
-    }
+  //   const focussedTabInfos = this._tabInfo.filter( tabInfo => tabInfo.hasFocus() );
+  //   if (focussedTabInfos.length === 0) {
+  //     return;
+  //   }
     
-    // Get the other tab container, the one we want to focus to.
-    const focussedTabInfo = focussedTabInfos[0];
-    const position = focussedTabInfo.position;
-    this.focusPane(position === TabPosition.LEFT ? TabPosition.RIGHT : TabPosition.LEFT);    
-  }
+  //   // Get the other tab container, the one we want to focus to.
+  //   const focussedTabInfo = focussedTabInfos[0];
+  //   this.focusPane();
+  // }
 
-  focusPane(position: TabPosition): void {
-    const tabContainer = <TabWidget> this._getById(position === TabPosition.LEFT
-      ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT);
+  focusPane(): void {
+    const tabContainer = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     if (tabContainer.getCurrentIndex() < 0) {
       return;
     }
     
     // Figure out the terminal object associated with the currently shown tab inside the tab container.
-    const tabsInfos = this._tabInfo.filter( tabInfo => tabInfo.position === position);
+    const tabsInfos = this._tabInfo;
     if (tabsInfos.length !== 0) {
       tabsInfos[tabContainer.getCurrentIndex()].focus(); // Give it the focus.
     }
@@ -975,7 +825,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   
   //-----------------------------------------------------------------------
   private _refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    const tabsWidgets = [<TabWidget> this._getById(ID_TAB_CONTAINER_LEFT), <TabWidget> this._getById(ID_TAB_CONTAINER_RIGHT)];
+    const tabsWidgets = [<TabWidget> this._getById(ID_TAB_CONTAINER_LEFT)];
 
     // Collect the bulk operations from the tabs.
     const operation = BulkDomOperation.parallel(tabsWidgets.map( (tab) => tab.bulkRefresh(level) ));
@@ -998,11 +848,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this.dispatchEvent(event);
   }
   
-  private _sendSplitEvent(): void {
-    const event = new CustomEvent(MainWebUi.EVENT_SPLIT, {  });
-    this.dispatchEvent(event);
-  }
-
   private _sendWindowRequestEvent(eventName: string): void {
     const event = new CustomEvent(eventName, {  });
     this.dispatchEvent(event);
@@ -1079,9 +924,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", target: target },
       { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", target: target },
       { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", target: target },
-      { id: COMMAND_SELECT_OTHER_PANE, group: PALETTE_GROUP, iconRight: "arrows-h",  label: "Select other Pane", target: target },
-      { id: COMMAND_TOGGLE_SPLIT, group: PALETTE_GROUP, iconLeft: this._split ? "check-square-o" : "square-o",
-        iconRight: "columns", label: "Split", target: target },
     ];
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
@@ -1097,28 +939,19 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   private _executeCommand(tabInfo: TabInfo, command: string): boolean {
     switch (command) {
       case COMMAND_SELECT_TAB_LEFT:
-        this._shiftTab(tabInfo.position, -1);
+        this._shiftTab(-1);
         break;
         
       case COMMAND_SELECT_TAB_RIGHT:
-        this._shiftTab(tabInfo.position, 1);
+        this._shiftTab(1);
         break;
         
       case COMMAND_NEW_TAB:
-        this.focusTab(this.newTerminalTab(tabInfo.position));
-        break;
-        
-      case COMMAND_SELECT_OTHER_PANE:
-        this.focusOtherPane();
+        this.focusTab(this.newTerminalTab());
         break;
         
       case COMMAND_CLOSE_TAB:
         this.closeTab(tabInfo.id);
-        break;
-        
-      case COMMAND_TOGGLE_SPLIT:
-        this.setSplit( ! this._split);
-        this._sendSplitEvent();
         break;
         
       default:
@@ -1155,18 +988,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   
   //-----------------------------------------------------------------------
   
-  private _shiftTab(position: TabPosition, direction: number): void {
-    const shortTabList = this._split
-                            ? this._tabInfo.filter( tabInfo => tabInfo.position === position)
-                            : this._tabInfo;
+  private _shiftTab(direction: number): void {
+    const shortTabList = this._tabInfo;
     const len = shortTabList.length;
     if (len === 0) {
       return;
     }
     
-    const tabWidgetId = (this._split===false || position === TabPosition.LEFT)
-                          ? ID_TAB_CONTAINER_LEFT : ID_TAB_CONTAINER_RIGHT;
-    const tabWidget = <TabWidget> this._getById(tabWidgetId);
+    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     let i = tabWidget.getCurrentIndex();
     i = i + direction;
     if (i < 0) {
