@@ -187,20 +187,6 @@ class SettingsTabInfo extends ViewerElementTabInfo {
   }
 }
 
-// These classes act as markers for use with 'instanceof'.
-class AboutTabInfo extends ViewerElementTabInfo {
-  constructor(public aboutElement: AboutTab) {
-    super(aboutElement);
-  }
-}
-
-// These classes act as markers for use with 'instanceof'.
-class KeyBindingsTabInfo extends ViewerElementTabInfo {
-  constructor(public keyBindingsElement: EtKeyBindingsTab) {
-    super(keyBindingsElement);
-  }
-}
-
 const staticLog = new Logger("Static ExtratermMainWebUI");
 
 // Theme management
@@ -648,9 +634,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   openSettingsTab(): void {
-    const settingsTabs = this._tabInfo.filter( (tabInfo) => tabInfo instanceof SettingsTabInfo );
+    const settingsTabs = this._getAllTabElements().filter( (el) => el instanceof SettingsTab );
     if (settingsTabs.length !== 0) {
-      this.focusTab(settingsTabs[0].id);
+      this.focusTab(settingsTabs[0]);
     } else {
       const viewerElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigManager(viewerElement, this._configManager);
@@ -662,28 +648,28 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
   
   openKeyBindingsTab(): void {
-    const keyBindingsTabs = this._tabInfo.filter( (tabInfo) => tabInfo instanceof KeyBindingsTabInfo );
+    const keyBindingsTabs = this._getAllTabElements().filter( (el) => el instanceof EtKeyBindingsTab );
     if (keyBindingsTabs.length !== 0) {
-      this.focusTab(keyBindingsTabs[0].id);
+      this.focusTab(keyBindingsTabs[0]);
     } else {
       const viewerElement = <EtKeyBindingsTab> document.createElement(EtKeyBindingsTab.TAG_NAME);
       config.injectConfigManager(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
-      const tabInfo = new KeyBindingsTabInfo(viewerElement);
+      const tabInfo = new ViewerElementTabInfo(viewerElement);
       this.focusTab(this._openViewerTabInfo(tabInfo, viewerElement));
     }
   }
   
   openAboutTab(): void {
-    const aboutTabs = this._tabInfo.filter( (tabInfo) => tabInfo instanceof AboutTabInfo );
+    const aboutTabs = this._getAllTabElements().filter( (el) => el instanceof AboutTab );
     if (aboutTabs.length !== 0) {
-      this.focusTab(aboutTabs[0].id);
+      this.focusTab(aboutTabs[0]);
     } else {
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
-      const tabInfo = new AboutTabInfo(viewerElement);
+      const tabInfo = new ViewerElementTabInfo(viewerElement);
       this.focusTab(this._openViewerTabInfo(tabInfo, viewerElement));
     }
   }
@@ -728,18 +714,25 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
 
-  focusTab(terminalId: number): void {
-    let leftIndex = 0;
-    for (let i=0; i<this._tabInfo.length; i++) {
-      const tabInfo = this._tabInfo[i];
-      if (tabInfo.id === terminalId) {
-        const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-        tabWidget.setCurrentIndex(leftIndex);
-        tabInfo.focus();
-        return;
-      }
+  focusTab(terminalIdOrElement: number | Element): void {
+    if (terminalIdOrElement instanceof Element) {
+      const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+      tabWidget.setCurrentIndex(this._getAllTabElements().indexOf(terminalIdOrElement));
+
+    } else {
       
-      leftIndex++;
+      let leftIndex = 0;
+      for (let i=0; i<this._tabInfo.length; i++) {
+        const tabInfo = this._tabInfo[i];
+        if (tabInfo.id === terminalIdOrElement) {
+          const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+          tabWidget.setCurrentIndex(leftIndex);
+          tabInfo.focus();
+          return;
+        }
+        
+        leftIndex++;
+      }
     }
   }
 
@@ -782,9 +775,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
 
-  private _getTabElementWithFocus(): HTMLElement {
+  private _getAllTabElements(): Element[] {
     const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    for (const el of DomUtils.toArray(tabWidget.children)) {
+    return DomUtils.toArray(tabWidget.children)
+  }
+
+  private _getTabElementWithFocus(): Element {
+    for (const el of this._getAllTabElements()) {
       if (el instanceof EtViewerTab || el instanceof EtTerminal) {
         if (el.hasFocus()) {
           return el;
