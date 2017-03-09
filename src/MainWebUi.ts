@@ -110,8 +110,6 @@ class TabInfo {
   constructor() {
   }
   
-  wasShown: boolean = false;
-  
   lastFocus: boolean = false; // True if this tab had the focus last.
   
   focus(): void { }
@@ -128,11 +126,8 @@ class TabInfo {
  */
 class TerminalTabInfo extends TabInfo {
   
-  constructor(configManager: ConfigManager, public terminal: EtTerminal, public ptyId: number) {
+  constructor(public terminal: EtTerminal, public ptyId: number) {
     super();
-    const config = configManager.getConfig();
-    this.terminal.setBlinkingCursor(config.blinkingCursor);
-    this.terminal.setScrollbackSize(config.scrollbackLines);
   }
   
   focus(): void {
@@ -177,13 +172,6 @@ class ViewerTabInfo extends ViewerElementTabInfo {
     } else {
       return null;
     }
-  }
-}
-
-class SettingsTabInfo extends ViewerElementTabInfo {
-  constructor(public settingsElement: SettingsTab, public themes: ThemeTypes.ThemeInfo[]) {
-    super(settingsElement);
-    settingsElement.setThemes(themes);
   }
 }
 
@@ -485,7 +473,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     config.injectConfigManager(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
-    const tabInfo = new TerminalTabInfo(this._configManager, newTerminal, null);
+
+    const tabInfo = new TerminalTabInfo(newTerminal, null);
+    const currentConfig = this._configManager.getConfig();
+    newTerminal.setBlinkingCursor(currentConfig.blinkingCursor);
+    newTerminal.setScrollbackSize(currentConfig.scrollbackLines);
     this._addTab(tabInfo);
     
     tabInfo.contentDiv.appendChild(newTerminal);
@@ -642,7 +634,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       config.injectConfigManager(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
-      const tabInfo = new SettingsTabInfo(viewerElement, this._themes);
+      const tabInfo = new ViewerElementTabInfo(viewerElement);
+      viewerElement.setThemes(this._themes);
       this.focusTab(this._openViewerTabInfo(tabInfo, viewerElement));
     }
   }
