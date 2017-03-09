@@ -115,18 +115,8 @@ class TabInfo {
   lastFocus: boolean = false; // True if this tab had the focus last.
   
   focus(): void { }
-  
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void { }
-
-  hasFocus(): boolean {
-    return false;
-  }
-  
+    
   destroy(): void { }
-  
-  copyToClipboard(): void { }
-  
-  pasteText(text: string ): void { }
   
   getFrameContents(frameId: string): string {
     return null;
@@ -149,15 +139,7 @@ class TerminalTabInfo extends TabInfo {
     this.terminal.resizeToContainer();
     this.terminal.focus();
   }
-  
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    this.terminal.refresh(level);
-  }
-
-  hasFocus(): boolean {
-    return this.terminal.hasFocus();
-  }
-  
+    
   destroy(): void {
     this.terminal.destroy();
     
@@ -166,17 +148,9 @@ class TerminalTabInfo extends TabInfo {
     }
   }
   
-  copyToClipboard(): void {
-    this.terminal.copyToClipboard();
-  }
-  
-  pasteText(text: string ): void {
-    this.terminal.pasteText(text);
-  }
-  
   getFrameContents(frameId: string): string {
     return this.terminal.getFrameContents(frameId);
-  }  
+  }
 }
 
 /**
@@ -190,10 +164,6 @@ class ViewerElementTabInfo extends TabInfo {
   focus(): void {
     this.viewerElement.focus();
   }
-  
-  hasFocus(): boolean {
-    return this.viewerElement.hasFocus();
-  }  
 }
 
 class ViewerTabInfo extends ViewerElementTabInfo {
@@ -790,11 +760,12 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
    * Copys the selection in the focussed terminal to the clipboard.
    */
   copyToClipboard(): void {
-    const termsWithFocus = this._tabInfo.filter( tabInfo => tabInfo.hasFocus() );
-    if (termsWithFocus.length === 0) {
-      return;
+    const elWithFocus = this._getTabElementWithFocus();
+    if (elWithFocus != null) {
+      if (elWithFocus instanceof EtTerminal || elWithFocus instanceof EtViewerTab) {
+        elWithFocus.copyToClipboard();
+      }
     }
-    termsWithFocus[0].copyToClipboard();
   }
   
   /**
@@ -803,14 +774,26 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
    * @param text the text to paste.
    */
   pasteText(text: string): void {
-    const termsWithFocus = this._tabInfo.filter( tabInfo => tabInfo.hasFocus() );
-    if (termsWithFocus.length === 0) {
-      this._log.warn("pasteText() couldn't find the target tab.");
-      return;
+    const elWithFocus = this._getTabElementWithFocus();
+    if (elWithFocus != null) {
+      if (elWithFocus instanceof EtTerminal) {
+        elWithFocus.pasteText(text);
+      }
     }
-    termsWithFocus[0].pasteText(text);
   }
-  
+
+  private _getTabElementWithFocus(): HTMLElement {
+    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    for (const el of DomUtils.toArray(tabWidget.children)) {
+      if (el instanceof EtViewerTab || el instanceof EtTerminal) {
+        if (el.hasFocus()) {
+          return el;
+        }
+      }
+    }
+    return null;
+  }
+
   //-----------------------------------------------------------------------
   private _refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     const tabsWidgets = [<TabWidget> this._getById(ID_TAB_CONTAINER_LEFT)];
