@@ -102,6 +102,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
   
   private _blinkingCursor: boolean;
   private _title: string;
+  private _tag: string;
 
   private _keyBindingManager: KeyBindingManager;
 
@@ -122,7 +123,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     this._blinkingCursor = false;
 
     this._title = "New Tab";
-    this.tag = null;
+    this._tag = null;
 
     this._mainStyleLoaded = false;
     this._themeStyleLoaded = false;
@@ -168,7 +169,13 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     this._title = newTitle;
   }
   
-  tag: string;
+  getTag(): string {
+    return this._tag;
+  }
+  
+  setTag(tag: string): void {
+    this._tag = tag;
+  }
   
   /**
    * Destroy the ViewerTab
@@ -231,7 +238,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     if (viewerElement === null) {
       return null;
     }
-    if (this.tag === frameId) {
+    if (this._tag === frameId) {
       return viewerElement.text;
     } else {
       return null;

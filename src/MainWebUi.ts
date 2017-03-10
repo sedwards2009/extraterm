@@ -81,6 +81,7 @@ const CLASS_TAB_HEADER_CONTAINER = "tab_header_container";
 const CLASS_TAB_HEADER_ICON = "tab_header_icon";
 const CLASS_TAB_HEADER_MIDDLE = "tab_header_middle";
 const CLASS_TAB_HEADER_CLOSE = "tab_header_close";
+const CLASS_TAB_CONTENT = "tab_content";
 
 const KEYBINDINGS_MAIN_UI = "main-ui";
 const PALETTE_GROUP = "mainwebui";
@@ -91,89 +92,7 @@ const COMMAND_CLOSE_TAB = "closeTab";
 
 let registered = false;
 
-enum TabType {
-  TERMINAL,
-  VIEWER
-}
-
-/**
- * Class for holding info about the contents of our tabs.
- */
-class TabInfo {
-  
-  id: number;
-  
-  contentDiv: HTMLDivElement;
-  
-  tab: Tab;
-  
-  constructor() {
-  }
-  
-  lastFocus: boolean = false; // True if this tab had the focus last.
-  
-  focus(): void { }
-    
-  destroy(): void { }
-  
-  getFrameContents(frameId: string): string {
-    return null;
-  }  
-}
-
-/**
- * A tab which contains a terminal.
- */
-class TerminalTabInfo extends TabInfo {
-  
-  constructor(public terminal: EtTerminal, public ptyId: number) {
-    super();
-  }
-  
-  focus(): void {
-    this.terminal.resizeToContainer();
-    this.terminal.focus();
-  }
-    
-  destroy(): void {
-    this.terminal.destroy();
-    
-    if (this.ptyId !== null) {
-      WebIpc.ptyClose(this.ptyId);
-    }
-  }
-  
-  getFrameContents(frameId: string): string {
-    return this.terminal.getFrameContents(frameId);
-  }
-}
-
-/**
- * A tab which contains a viewer.
- */
-class ViewerElementTabInfo extends TabInfo {
-  constructor(public viewerElement: ViewerElement) {
-    super();
-  }
-  
-  focus(): void {
-    this.viewerElement.focus();
-  }
-}
-
-class ViewerTabInfo extends ViewerElementTabInfo {
-  constructor(public viewer: EtViewerTab) {
-    super(viewer);
-  }
-  
-  getFrameContents(frameId: string): string {
-    if (this.viewer.tag === frameId) {
-      return this.viewer.getFrameContents(frameId);
-    } else {
-      return null;
-    }
-  }
-}
+const LAST_FOCUS = "last_focus";
 
 const staticLog = new Logger("Static ExtratermMainWebUI");
 
@@ -224,8 +143,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
   
-  private _tabInfo: TabInfo[];
-  
+  private _terminalPtyIdMap: Map<EtTerminal,number>;
+
+  private _ptyIdTerminalMap: Map<number, EtTerminal>;
+
   private _tabIdCounter: number;
   
   private _configManager: ConfigManager;
@@ -236,14 +157,55 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _internalExtratermApi: InternalExtratermApi.InternalExtratermApi;
 
+  private _lastFocus: Element;
+
   private _initProperties(): void {
     this._log = new Logger("ExtratermMainWebUI", this);
-    this._tabInfo = [];
+    this._terminalPtyIdMap = new Map<EtTerminal, number>();
+    this._ptyIdTerminalMap = new Map<number, EtTerminal>();
+    this._lastFocus = null;
     this._tabIdCounter = 0;
     this._configManager = null;
     this._keyBindingManager = null;
     this._themes = [];
     this._internalExtratermApi = null;
+  }
+  
+  focus(): void {
+    if (this._lastFocus != null) {
+      this._focusTabContent(this._lastFocus);
+    } else {
+
+      const allContentElements = this._getAllTabElements();
+      if (allContentElements.length !== 0) {
+        this._focusTabContent(allContentElements[0]);
+      }
+    }
+  }
+  
+  setInternalExtratermApi(api: InternalExtratermApi.InternalExtratermApi): void {
+    this._internalExtratermApi = api;
+    api.setTopLevel(this);
+  }
+
+  setConfigManager(configManager: ConfigManager): void {
+    this._configManager = configManager;
+  }
+  
+  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+    this._keyBindingManager = keyBindingManager;
+  }
+  
+  setThemes(themes: ThemeTypes.ThemeInfo[]): void {
+    this._themes = themes;
+  }
+  
+  getTabCount(): number {
+    return this._getAllTabElements().length;
+  }
+  
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    this._refresh(level);
   }
   
   //-----------------------------------------------------------------------
@@ -281,7 +243,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     const newTabPrimaryButton = this._getById(ID_NEW_TAB_BUTTON_PRIMARY);
     newTabPrimaryButton.addEventListener('click', () => {
-      this.focusTab(this.newTerminalTab());
+      this._switchToTab(this.newTerminalTab());
     });
     
     const closeButtenHandler = () => {
@@ -355,70 +317,24 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   destroy(): void {
   }
   
-  //-----------------------------------------------------------------------
-  
-  focus(): void {
-    // Put the focus onto the last terminal that had the focus.
-    const lastFocus = this._tabInfo.filter( tabInfo => tabInfo.lastFocus );
-    if (lastFocus.length !== 0) {
-      lastFocus[0].focus();
-    } else {
-      if (this._tabInfo.length !==0) {
-        this._tabInfo[0].focus();
-      }
-    }
-  }
-  
-  private _handleTabSwitch(tabWidget: TabWidget): void {
-    const tabInfos = this._tabInfo;
 
-    const tabInfo = tabInfos[tabWidget.getCurrentIndex()];
-    
-    const el = tabWidget.getCurrentTab().nextElementSibling;
-    let title = "";
-    if (el instanceof EtTerminal) {
-      title = el.getTerminalTitle();
-    } else if (el instanceof ViewerElement) {
-      title = el.title;
-    } else if (el instanceof EtViewerTab) {        
-      title = el.title;
-    }
-
-    this._sendTitleEvent(title);
-    tabInfo.focus();
-  }
-
-  setInternalExtratermApi(api: InternalExtratermApi.InternalExtratermApi): void {
-    this._internalExtratermApi = api;
-    api.setTopLevel(this);
-  }
-
-  setConfigManager(configManager: ConfigManager): void {
-    this._configManager = configManager;
-  }
-  
-  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
-    this._keyBindingManager = keyBindingManager;
-  }
-  
-  setThemes(themes: ThemeTypes.ThemeInfo[]): void {
-    this._themes = themes;
-  }
-  
-  getTabCount(): number {
-    return this._tabInfo.length;
-  }
-  
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    this._refresh(level);
-  }
+  // ----------------------------------------------------------------------
+  //
+  //   #######                      
+  //      #      ##   #####   ####  
+  //      #     #  #  #    # #      
+  //      #    #    # #####   ####  
+  //      #    ###### #    #      # 
+  //      #    #    # #    # #    # 
+  //      #    #    # #####   ####  
+  //
+  // ----------------------------------------------------------------------
 
   /**
    * Initialise and insert a tab.
    * 
-   * @param {TabInfo}     tabInfo  Object describing the tab.
    */
-  private _addTab(tabInfo: TabInfo): void {
+  private _addTab(tabContentElement: Element): {contentDiv: HTMLDivElement; tab: Tab;} {
     const newId = this._tabIdCounter;
     this._tabIdCounter++;
     const newTab = <Tab> document.createElement(Tab.TAG_NAME);
@@ -433,13 +349,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       `</div>`;
     
     const contentDiv = document.createElement('div');
-    contentDiv.classList.add('tab_content');
-    
-    tabInfo.id = newId;
-    tabInfo.tab = newTab;
-    tabInfo.contentDiv = contentDiv;
-    this._tabInfo.push(tabInfo);
-    
+    contentDiv.classList.add(CLASS_TAB_CONTENT);
+
     const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
                         
     // The way the split view changes the position of the 'rest' controls
@@ -452,15 +363,52 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     
     const closeTabButton = DomUtils.getShadowRoot(this).getElementById("close_tag_id_" + newId);
     closeTabButton.addEventListener('click', (ev: MouseEvent): void => {
-      this.closeTab(tabInfo.id);
+      this.closeTab(tabContentElement);
     });
     
     // Key press event
-    tabInfo.contentDiv.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabInfo), true);
+    contentDiv.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabContentElement), true);
     
-    tabInfo.contentDiv.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-      this._handleCommandPaletteRequest(tabInfo, ev);
+    contentDiv.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+      this._handleCommandPaletteRequest(tabContentElement, ev);
     });
+
+    return {contentDiv, tab: newTab};
+  }
+
+  private _tabContentDivFromElement(el: Element): HTMLDivElement {
+    if (el instanceof Tab) {
+      return <HTMLDivElement> el.nextElementSibling;
+    } else if (el instanceof HTMLDivElement && el.classList.contains(CLASS_TAB_CONTENT)) {
+      return el;
+    } else {
+      return <HTMLDivElement> el.parentElement;
+    }
+  }
+
+  private _tabFromElement(el: Element): Tab {
+    if (el instanceof HTMLDivElement && el.classList.contains(CLASS_TAB_CONTENT)) {
+      return <Tab> el.previousElementSibling;
+    } else if (el instanceof Tab) {
+      return el;
+    } else {
+      return <Tab> el.parentElement.previousElementSibling;
+    }
+  }
+
+  private _handleTabSwitch(tabWidget: TabWidget): void {    
+    const el = tabWidget.getCurrentTab().nextElementSibling.children[0];
+    let title = "";
+    if (el instanceof EtTerminal) {
+      title = el.getTerminalTitle();
+    } else if (el instanceof EtViewerTab) {        
+      title = el.title;
+    } else if (el instanceof ViewerElement) {
+      title = el.title;
+    }
+
+    this._sendTitleEvent(title);
+    this._focusTabContent(el);
   }
   
   /**
@@ -468,30 +416,29 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
    *
    * @return ID of the new terminal.
    */
-  newTerminalTab(): number {
+  newTerminalTab(): EtTerminal {
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     config.injectConfigManager(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
-    const tabInfo = new TerminalTabInfo(newTerminal, null);
+    this._terminalPtyIdMap.set(newTerminal, null);
     const currentConfig = this._configManager.getConfig();
     newTerminal.setBlinkingCursor(currentConfig.blinkingCursor);
     newTerminal.setScrollbackSize(currentConfig.scrollbackLines);
-    this._addTab(tabInfo);
+    const {contentDiv, tab} = this._addTab(newTerminal);
     
-    tabInfo.contentDiv.appendChild(newTerminal);
+    contentDiv.appendChild(newTerminal);
     
     newTerminal.addEventListener('focus', (ev: FocusEvent) => {
-      this._tabInfo.forEach( tabInfo2 => {
-        tabInfo2.lastFocus = tabInfo2 === tabInfo;
-      });
+      this._lastFocus = newTerminal;
     });
     
     // User input event
     newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (ev: CustomEvent): void => {
-      if (tabInfo.ptyId !== null) {
-        WebIpc.ptyInput(tabInfo.ptyId, (<any> ev).detail.data);
+      const ptyId = this._terminalPtyIdMap.get(newTerminal);
+      if (ptyId != null) {
+        WebIpc.ptyInput(ptyId, (<any> ev).detail.data);
       }
     });
     
@@ -502,15 +449,17 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_RESIZE, (ev: CustomEvent): void => {
       currentColumns = (<any> ev).detail.columns;
       currentRows = (<any> ev).detail.rows;
-      if (tabInfo.ptyId !== null) {
-        WebIpc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
+      const ptyId = this._terminalPtyIdMap.get(newTerminal);
+      if (ptyId != null) {
+        WebIpc.ptyResize(ptyId, currentColumns, currentRows);
       }
     });
 
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, (ev: CustomEvent): void => {
       const status: { bufferSize: number;} = <any> ev.detail;
-      if(tabInfo.ptyId != null) {
-        WebIpc.ptyOutputBufferSize(tabInfo.ptyId, status.bufferSize);
+      const ptyId = this._terminalPtyIdMap.get(newTerminal);
+      if(ptyId != null) {
+        WebIpc.ptyOutputBufferSize(ptyId, status.bufferSize);
       }
     });
 
@@ -521,7 +470,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     });
     
     newTerminal.addEventListener(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT, (ev: CustomEvent): void => {
-      this.focusTab(this.openViewerTab(ev.detail.embeddedViewer, ev.detail.terminal.getFontAdjust()));
+      this.openViewerTab(ev.detail.embeddedViewer, ev.detail.terminal.getFontAdjust());
+      this._switchToTab(ev.detail.embeddedViewer);
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
     
@@ -537,210 +487,229 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     WebIpc.requestPtyCreate(sessionProfile.command, sessionProfile.arguments,
         currentColumns, currentRows, newEnv)
       .then( (msg: Messages.CreatedPtyMessage) => {
-        tabInfo.ptyId = msg.id;
-        WebIpc.ptyResize(tabInfo.ptyId, currentColumns, currentRows);
-        WebIpc.ptyOutputBufferSize(tabInfo.ptyId, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
+        this._terminalPtyIdMap.set(newTerminal, msg.id);
+        this._ptyIdTerminalMap.set(msg.id, newTerminal);
+        WebIpc.ptyResize(msg.id, currentColumns, currentRows);
+        WebIpc.ptyOutputBufferSize(msg.id, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
       });
 
     this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
     this._internalExtratermApi.addTab(newTerminal);
-    return tabInfo.id;
+    return newTerminal;
   }
   
-  openViewerTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): number {
+  openViewerTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): void {
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
     keybindingmanager.injectKeyBindingManager(viewerTab, this._keyBindingManager);
-    viewerTab.title = embeddedViewer.title;
-    viewerTab.tag = embeddedViewer.getTag();
+    viewerTab.setTitle(embeddedViewer.getTitle());
+    viewerTab.setTag(embeddedViewer.getTag());
     
-    const tabInfo = new ViewerTabInfo(viewerTab);
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
     viewerElement.setVisualState(VisualState.AUTO);
-    const result = this._openViewerTabInfo(tabInfo, viewerTab);
+    const result = this._openViewerTab(viewerTab);
     viewerTab.setViewerElement(viewerElement);
 
     this._updateTabTitle(viewerTab);
-
-    return result;
   }
   
-  private _openViewerTabInfo(tabInfo: ViewerElementTabInfo, viewerElement: ViewerElement): number {
+  private _openViewerTab(viewerElement: ViewerElement): void {
     viewerElement.setFocusable(true);
-    this._addTab(tabInfo);
-    tabInfo.contentDiv.appendChild(viewerElement);
+    const {contentDiv, tab} = this._addTab(viewerElement);
+    contentDiv.appendChild(viewerElement);
 
     viewerElement.addEventListener('focus', (ev: FocusEvent) => {
-      this._tabInfo.forEach( tabInfo2 => {
-        tabInfo2.lastFocus = tabInfo2 === tabInfo;
-      });
+      this._lastFocus = viewerElement;
     });
 
     this._updateTabTitle(viewerElement);
     this._sendTabOpenedEvent();
-    return tabInfo.id;
   }
   
   private _updateTabTitle(el: HTMLElement): void {
-    const prevEl = el.parentElement.previousElementSibling;
-    if (prevEl instanceof Tab) {
-      
-      let title = "";
-      let htmlTitle = "";
-      let icon = null;
+    const tab = this._tabFromElement(el);
+     
+    let title = "";
+    let htmlTitle = "";
+    let icon = null;
 
-      if (el instanceof EtTerminal) {
-        title = el.getTerminalTitle();
+    if (el instanceof EtTerminal) {
+      title = el.getTerminalTitle();
+      htmlTitle = he.escape(title);
+      icon = "keyboard-o";
+
+    } else if (el instanceof EtViewerTab) {
+      title = el.getTitle();
+      if (el.getTag() !== null) {
+        htmlTitle = he.escape(title) + " &nbsp;&nbsp;&nbsp;<i class='fa fa-tag'></i>" + el.getTag();
+      } else {
         htmlTitle = he.escape(title);
-        icon = "keyboard-o";
-
-      } else if (el instanceof ViewerElement) {
-        title = el.title;
-        htmlTitle = he.escape(title);
-        icon = el.getAwesomeIcon();
-
-      } else if (el instanceof EtViewerTab) {
-        title = el.title;
-        if (el.tag !== null) {
-          htmlTitle = he.escape(title) + " &nbsp;&nbsp;&nbsp;<i class='fa fa-tag'></i>" + el.tag;
-        } else {
-          htmlTitle = he.escape(title);
-        }
-        icon = el.getAwesomeIcon();
       }
+      icon = el.getAwesomeIcon();
 
-      const tab = prevEl;
-      const iconDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
-      iconDiv.innerHTML = icon !== null ? '<i class="fa fa-' + icon + '"></i>' : "";
-      
-      const middleDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
+    } else if (el instanceof ViewerElement) {
+      title = el.getTitle();
+      htmlTitle = he.escape(title);
+      icon = el.getAwesomeIcon();
 
-      middleDiv.title = title;
-      middleDiv.innerHTML = htmlTitle;
     } else {
-      this._log.warn("Unable to find the Tab element for ", el);
+      this._log.warn(`Unrecognized element type in _updateTabTitle(). ${el}`);
     }
+
+    const iconDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
+    iconDiv.innerHTML = icon !== null ? '<i class="fa fa-' + icon + '"></i>' : "";
+    
+    const middleDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
+
+    middleDiv.title = title;
+    middleDiv.innerHTML = htmlTitle;
   }
 
   openSettingsTab(): void {
     const settingsTabs = this._getAllTabElements().filter( (el) => el instanceof SettingsTab );
     if (settingsTabs.length !== 0) {
-      this.focusTab(settingsTabs[0]);
+      this._switchToTab(settingsTabs[0]);
     } else {
       const viewerElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigManager(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
-      const tabInfo = new ViewerElementTabInfo(viewerElement);
       viewerElement.setThemes(this._themes);
-      this.focusTab(this._openViewerTabInfo(tabInfo, viewerElement));
+      this._openViewerTab(viewerElement);
+      this._switchToTab(viewerElement);
     }
   }
   
   openKeyBindingsTab(): void {
     const keyBindingsTabs = this._getAllTabElements().filter( (el) => el instanceof EtKeyBindingsTab );
     if (keyBindingsTabs.length !== 0) {
-      this.focusTab(keyBindingsTabs[0]);
+      this._switchToTab(keyBindingsTabs[0]);
     } else {
       const viewerElement = <EtKeyBindingsTab> document.createElement(EtKeyBindingsTab.TAG_NAME);
       config.injectConfigManager(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
-      
-      const tabInfo = new ViewerElementTabInfo(viewerElement);
-      this.focusTab(this._openViewerTabInfo(tabInfo, viewerElement));
+
+      this._openViewerTab(viewerElement);
+      this._switchToTab(viewerElement);
     }
   }
   
   openAboutTab(): void {
     const aboutTabs = this._getAllTabElements().filter( (el) => el instanceof AboutTab );
     if (aboutTabs.length !== 0) {
-      this.focusTab(aboutTabs[0]);
+      this._switchToTab(aboutTabs[0]);
     } else {
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
-      
-      const tabInfo = new ViewerElementTabInfo(viewerElement);
-      this.focusTab(this._openViewerTabInfo(tabInfo, viewerElement));
+      this._openViewerTab(viewerElement);
+      this._switchToTab(viewerElement);
     }
   }
   
   /**
    *
    */
-  closeTab(tabId: number): void {
-    const matches = this._tabInfo.filter( (p) => p.id === tabId );
-    if (matches.length === 0) {
-      this._log.warn("mainwebui.closeTab() Couldn't find the tab to close with id: " + tabId);
-      return;
-    }
-    const tabInfo = matches[0];
-    
-    let paneTabInfos = this._tabInfo;
-    
-    let index = paneTabInfos.indexOf(tabInfo);
-    
-    // Remove the tab from the list.
-    this._tabInfo = this._tabInfo.filter( (p) => p.id !== tabId );
-    paneTabInfos = paneTabInfos.filter( tabInfo2 => tabInfo2.id !== tabId );
+  closeTab(tabContentElement: Element): void {
+    let tabContentElements = this._getAllTabElements();
+    const index = tabContentElements.indexOf(tabContentElement);
 
-    tabInfo.contentDiv.parentNode.removeChild(tabInfo.contentDiv);
-    tabInfo.tab.parentNode.removeChild(tabInfo.tab);
-    tabInfo.destroy();
+    const contentDiv = this._tabContentDivFromElement(tabContentElement);
+    const tabElement = this._tabFromElement(tabContentElement);
+
+    contentDiv.parentNode.removeChild(contentDiv);
+    tabElement.parentNode.removeChild(tabElement);
+
+    if (tabContentElement instanceof EtTerminal) {
+      const ptyId = this._terminalPtyIdMap.get(tabContentElement);
+      tabContentElement.destroy();
+      if (ptyId !== null) {
+        WebIpc.ptyClose(ptyId);
+      }
+    }
 
     const tabContainer = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     tabContainer.update();
     
     this._sendTabClosedEvent();
-    
-    paneTabInfos = this._tabInfo;
-    
-    if (index >= paneTabInfos.length) {
-      index--;
-    }
-    if (paneTabInfos.length !== 0) {
-      this.focusTab(paneTabInfos[index].id);
+
+    tabContentElements = this._getAllTabElements();
+    if (tabContentElements.length !== 0) {
+      this._switchToTab(tabContentElements[Math.min(index, tabContentElements.length-1)]);
     } else {
       this.focusPane();
     }
   }
 
-  focusTab(terminalIdOrElement: number | Element): void {
-    if (terminalIdOrElement instanceof Element) {
-      const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-      tabWidget.setCurrentIndex(this._getAllTabElements().indexOf(terminalIdOrElement));
-
-    } else {
-      
-      let leftIndex = 0;
-      for (let i=0; i<this._tabInfo.length; i++) {
-        const tabInfo = this._tabInfo[i];
-        if (tabInfo.id === terminalIdOrElement) {
-          const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-          tabWidget.setCurrentIndex(leftIndex);
-          tabInfo.focus();
-          return;
-        }
-        
-        leftIndex++;
-      }
-    }
+  private _switchToTab(tabContentElement: Element): void {
+    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    const tabContents = this._getAllTabElements();
+    tabWidget.setCurrentIndex(tabContents.indexOf(tabContentElement));
+    this._focusTabContent(tabContentElement);
   }
 
-  focusPane(): void {
-    const tabContainer = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    if (tabContainer.getCurrentIndex() < 0) {
+  private _shiftTab(direction: number): void {
+    const tabElementList = this._getAllTabElements();
+    const len = tabElementList.length;
+    if (len === 0) {
       return;
     }
     
-    // Figure out the terminal object associated with the currently shown tab inside the tab container.
-    const tabsInfos = this._tabInfo;
-    if (tabsInfos.length !== 0) {
-      tabsInfos[tabContainer.getCurrentIndex()].focus(); // Give it the focus.
+    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    let i = tabWidget.getCurrentIndex();
+    i = i + direction;
+    if (i < 0) {
+      i = len - 1;
+    } else if (i >= len) {
+      i = 0;
+    }
+    tabWidget.setCurrentIndex(i);
+    this._focusTabContent(tabElementList[i]);
+  }
+
+  focusPane(): void {
+    // FIXME
+  }
+
+  private _getAllTabElements(): Element[] {
+    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    return DomUtils.toArray(tabWidget.children).filter( el => el instanceof Tab ).map( el => el.nextElementSibling.children[0] );
+  }
+
+  private _getTabElementWithFocus(): Element {
+    for (const el of this._getAllTabElements()) {
+      if (el instanceof EtViewerTab || el instanceof EtTerminal) {
+        if (el.hasFocus()) {
+          return el;
+        }
+      }
+    }
+    return null;
+  }
+
+  private _focusTabContent(el: Element): void {
+    if (el instanceof EtTerminal) {
+      el.resizeToContainer();
+      el.focus();
+    } else if (el instanceof ViewerElement) {
+      el.focus();
     }
   }
+
+
+  //-----------------------------------------------------------------------
+  //
+  //    #####                                                     
+  //   #     # #      # #####  #####   ####    ##   #####  #####  
+  //   #       #      # #    # #    # #    #  #  #  #    # #    # 
+  //   #       #      # #    # #####  #    # #    # #    # #    # 
+  //   #       #      # #####  #    # #    # ###### #####  #    # 
+  //   #     # #      # #      #    # #    # #    # #   #  #    # 
+  //    #####  ###### # #      #####   ####  #    # #    # #####  
+  //
+  //-----------------------------------------------------------------------
 
   /**
    * Copys the selection in the focussed terminal to the clipboard.
@@ -766,22 +735,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         elWithFocus.pasteText(text);
       }
     }
-  }
-
-  private _getAllTabElements(): Element[] {
-    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    return DomUtils.toArray(tabWidget.children)
-  }
-
-  private _getTabElementWithFocus(): Element {
-    for (const el of this._getAllTabElements()) {
-      if (el instanceof EtViewerTab || el instanceof EtTerminal) {
-        if (el.hasFocus()) {
-          return el;
-        }
-      }
-    }
-    return null;
   }
 
   //-----------------------------------------------------------------------
@@ -815,15 +768,19 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _frameFinder(frameId: string): string {
-    for (let i=0; i<this._tabInfo.length; i++) {
-      const text = this._tabInfo[i].getFrameContents(frameId);
-      if (text !== null) {
+    for (const el of this._getAllTabElements()) {
+      let text = null;
+      if (el instanceof EtViewerTab && el.getTag() === frameId) {
+        text = el.getFrameContents(frameId);
+      } else if (el instanceof EtTerminal) {
+        text = el.getFrameContents(frameId);
+      }
+      if (text != null) {
         return text;
       }
     }
-    return null;
   }
-  
+
   // ----------------------------------------------------------------------
   //
   //   #    #                                                 
@@ -836,7 +793,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   //                                                        
   // ----------------------------------------------------------------------
 
-  private _handleKeyDownCapture(tabInfo: TabInfo, ev: KeyboardEvent): void {
+  private _handleKeyDownCapture(tabContentElement: Element, ev: KeyboardEvent): void {
     if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingContexts() === null) {
       return;
     }
@@ -847,13 +804,25 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
     
     const command = bindings.mapEventToCommand(ev);
-    if (this._executeCommand(tabInfo, command)) {
+    if (this._executeCommand(tabContentElement, command)) {
       ev.stopPropagation();
       ev.preventDefault();
     }
   }
-  
-  private _handleCommandPaletteRequest(tabInfo: TabInfo, ev: CustomEvent): void {
+
+  //-----------------------------------------------------------------------
+  //
+  //    #####                                               ######                                          
+  //   #     #  ####  #    # #    #   ##   #    # #####     #     #   ##   #      ###### ##### ##### ###### 
+  //   #       #    # ##  ## ##  ##  #  #  ##   # #    #    #     #  #  #  #      #        #     #   #      
+  //   #       #    # # ## # # ## # #    # # #  # #    #    ######  #    # #      #####    #     #   #####  
+  //   #       #    # #    # #    # ###### #  # # #    #    #       ###### #      #        #     #   #      
+  //   #     # #    # #    # #    # #    # #   ## #    #    #       #    # #      #        #     #   #      
+  //    #####   ####  #    # #    # #    # #    # #####     #       #    # ###### ######   #     #   ###### 
+  //
+  //-----------------------------------------------------------------------
+
+  private _handleCommandPaletteRequest(tabContentElement: Element, ev: CustomEvent): void {
     if (ev.path[0] === this) { // Don't process our own messages.
       return;
     }
@@ -863,7 +832,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const request: CommandPaletteRequest = ev.detail;
     const commandPaletteRequestDetail: CommandPaletteRequest = {
         srcElement: request.srcElement === null ? this : request.srcElement,
-        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries(tabInfo)],
+        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries(tabContentElement)],
         contextElement: request.contextElement
       };
     const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
@@ -873,11 +842,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this.dispatchEvent(commandPaletteRequestEvent);
   }
   
-  private _commandPaletteEntries(tabInfo: TabInfo): CommandPaletteRequestTypes.CommandEntry[] {
+  private _commandPaletteEntries(tabContentElement: Element): CommandPaletteRequestTypes.CommandEntry[] {
     
-    // Create a command target object which includes the tabInfo var.
+    // Create a command target object which includes the tabContentElement var.
     const target: CommandPaletteRequestTypes.Commandable = {
-      executeCommand: this._executeCommand.bind(this, tabInfo)
+      executeCommand: this._executeCommand.bind(this, tabContentElement)
     }
     
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
@@ -897,7 +866,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return commandList;
   }
   
-  private _executeCommand(tabInfo: TabInfo, command: string): boolean {
+  private _executeCommand(tabElement: Element, command: string): boolean {
     switch (command) {
       case COMMAND_SELECT_TAB_LEFT:
         this._shiftTab(-1);
@@ -908,11 +877,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         break;
         
       case COMMAND_NEW_TAB:
-        this.focusTab(this.newTerminalTab());
+        this._switchToTab(this.newTerminalTab());
         break;
         
       case COMMAND_CLOSE_TAB:
-        this.closeTab(tabInfo.id);
+        this.closeTab(tabElement);
         break;
         
       default:
@@ -922,7 +891,15 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   //-----------------------------------------------------------------------
-  // PTY and IPC handling
+  //
+  //   ######  ####### #     # 
+  //   #     #    #     #   #  
+  //   #     #    #      # #   
+  //   ######     #       #    
+  //   #          #       #    
+  //   #          #       #    
+  //   #          #       #    
+  //
   //-----------------------------------------------------------------------
   private _setupIpc(): void {
     WebIpc.registerDefaultHandler(Messages.MessageType.PTY_OUTPUT, this._handlePtyOutput.bind(this));
@@ -930,43 +907,31 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
   
   private _handlePtyOutput(msg: Messages.PtyOutput): void {
-    this._tabInfo.forEach( (tabInfo) => {
-      if (tabInfo instanceof TerminalTabInfo && (<TerminalTabInfo>tabInfo).ptyId === msg.id) {
-        const status = tabInfo.terminal.write(msg.data);
-        WebIpc.ptyOutputBufferSize(msg.id, status.bufferSize);
-      }
-    });
+    const terminal = this._ptyIdTerminalMap.get(msg.id);
+    if (terminal == null) {
+      this._log.warn(`Unable to find a Terminal object to match pty ID ${msg.id}`);
+      return;
+    }
+
+    const status = terminal.write(msg.data);
+    WebIpc.ptyOutputBufferSize(msg.id, status.bufferSize);
   }
   
   private _handlePtyClose(msg: Messages.PtyClose): void {
-    this._tabInfo.forEach( (tabInfo) => {
-      if (tabInfo instanceof TerminalTabInfo && (<TerminalTabInfo>tabInfo).ptyId === msg.id) {
-        (<TerminalTabInfo>tabInfo).ptyId = null;
-        this.closeTab(tabInfo.id);
-      }
-    });
+    const terminal = this._ptyIdTerminalMap.get(msg.id);
+    if (terminal == null) {
+      this._log.warn(`Unable to find a Terminal object to match pty ID ${msg.id}`);
+      return;
+    }
+
+    this._terminalPtyIdMap.delete(terminal);
+    this._ptyIdTerminalMap.delete(msg.id);
+
+    this.closeTab(terminal);
   }
   
   //-----------------------------------------------------------------------
   
-  private _shiftTab(direction: number): void {
-    const shortTabList = this._tabInfo;
-    const len = shortTabList.length;
-    if (len === 0) {
-      return;
-    }
-    
-    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    let i = tabWidget.getCurrentIndex();
-    i = i + direction;
-    if (i < 0) {
-      i = len - 1;
-    } else if (i >= len) {
-      i = 0;
-    }
-    tabWidget.setCurrentIndex(i);
-    shortTabList[i].focus();
-  }
   
   private _getById(id: string): HTMLElement {
     return <HTMLElement>DomUtils.getShadowRoot(this).querySelector('#'+id);
