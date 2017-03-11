@@ -238,7 +238,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     const newTabPrimaryButton = this._getById(ID_NEW_TAB_BUTTON_PRIMARY);
     newTabPrimaryButton.addEventListener('click', () => {
-      this._switchToTab(this.newTerminalTab());
+      this._switchToTab(this.newTerminalTab(tabWidgetLeft));
     });
     
     const closeButtenHandler = () => {
@@ -327,7 +327,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
    * Initialise and insert a tab.
    * 
    */
-  private _addTab(tabContentElement: Element): {contentDiv: HTMLDivElement; tab: Tab;} {
+  private _addTab(tabWidget: TabWidget, tabContentElement: Element): {contentDiv: HTMLDivElement; tab: Tab;} {
     const newId = this._tabIdCounter;
     this._tabIdCounter++;
     const newTab = <Tab> document.createElement(Tab.TAG_NAME);
@@ -344,14 +344,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const contentDiv = document.createElement('div');
     contentDiv.classList.add(CLASS_TAB_CONTENT);
 
-    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-                        
     // The way the split view changes the position of the 'rest' controls
     // in the tab widgets causes this expression below.
     const restDiv = this._getById(ID_REST_DIV_PRIMARY);
-    
-    tabWidget.insertBefore(newTab, restDiv);
-    tabWidget.insertBefore(contentDiv, restDiv);
+    if (restDiv.parentElement === tabWidget) {
+      tabWidget.insertBefore(newTab, restDiv);
+      tabWidget.insertBefore(contentDiv, restDiv);
+    }
+
     tabWidget.update();
     
     const closeTabButton = DomUtils.getShadowRoot(this).getElementById("close_tag_id_" + newId);
@@ -389,6 +389,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
 
+  private _tabWidgetFromElement(el: Element): TabWidget {
+    return <TabWidget> this._tabFromElement(el).parentElement;
+  }
+
+  private _firstTabWidget(): TabWidget {
+    return <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+  }
+
   private _handleTabSwitch(tabWidget: TabWidget): void {    
     const el = tabWidget.getCurrentTab().nextElementSibling.children[0];
     let title = "";
@@ -409,7 +417,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
    *
    * @return ID of the new terminal.
    */
-  newTerminalTab(): EtTerminal {
+  newTerminalTab(tabWidget: TabWidget = null): EtTerminal {
+    if (tabWidget == null) {
+      tabWidget = this._firstTabWidget();
+    }
+
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     config.injectConfigManager(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
@@ -419,7 +431,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const currentConfig = this._configManager.getConfig();
     newTerminal.setBlinkingCursor(currentConfig.blinkingCursor);
     newTerminal.setScrollbackSize(currentConfig.scrollbackLines);
-    const {contentDiv, tab} = this._addTab(newTerminal);
+
+    const {contentDiv, tab} = this._addTab(tabWidget, newTerminal);
     
     contentDiv.appendChild(newTerminal);
     
@@ -503,15 +516,15 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
     viewerElement.setVisualState(VisualState.AUTO);
-    const result = this._openViewerTab(viewerTab);
+    const result = this._openViewerTab(this._firstTabWidget(), viewerTab);
     viewerTab.setViewerElement(viewerElement);
 
     this._updateTabTitle(viewerTab);
   }
   
-  private _openViewerTab(viewerElement: ViewerElement): void {
+  private _openViewerTab(tabWidget: TabWidget, viewerElement: ViewerElement): void {
     viewerElement.setFocusable(true);
-    const {contentDiv, tab} = this._addTab(viewerElement);
+    const {contentDiv, tab} = this._addTab(tabWidget, viewerElement);
     contentDiv.appendChild(viewerElement);
 
     viewerElement.addEventListener('focus', (ev: FocusEvent) => {
@@ -571,7 +584,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
       viewerElement.setThemes(this._themes);
-      this._openViewerTab(viewerElement);
+      this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);
     }
   }
@@ -585,7 +598,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       config.injectConfigManager(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
 
-      this._openViewerTab(viewerElement);
+      this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);
     }
   }
@@ -597,7 +610,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     } else {
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
-      this._openViewerTab(viewerElement);
+      this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);
     }
   }
@@ -606,6 +619,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
    *
    */
   closeTab(tabContentElement: Element): void {
+    const tabWidget = this._tabWidgetFromElement(tabContentElement);
+
     let tabContentElements = this._getAllTabElements();
     const index = tabContentElements.indexOf(tabContentElement);
 
@@ -623,8 +638,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       }
     }
 
-    const tabContainer = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    tabContainer.update();
+    tabWidget.update();
     
     this._sendTabClosedEvent();
 
@@ -637,20 +651,19 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _switchToTab(tabContentElement: Element): void {
-    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    const tabWidget = this._tabWidgetFromElement(tabContentElement);
     const tabContents = this._getAllTabElements();
     tabWidget.setCurrentIndex(tabContents.indexOf(tabContentElement));
     this._focusTabContent(tabContentElement);
   }
 
-  private _shiftTab(direction: number): void {
+  private _shiftTab(tabWidget: TabWidget, direction: number): void {
     const tabElementList = this._getAllTabElements();
     const len = tabElementList.length;
     if (len === 0) {
       return;
     }
     
-    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
     let i = tabWidget.getCurrentIndex();
     i = i + direction;
     if (i < 0) {
@@ -862,15 +875,15 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   private _executeCommand(tabElement: Element, command: string): boolean {
     switch (command) {
       case COMMAND_SELECT_TAB_LEFT:
-        this._shiftTab(-1);
+        this._shiftTab(this._tabWidgetFromElement(tabElement), -1);
         break;
         
       case COMMAND_SELECT_TAB_RIGHT:
-        this._shiftTab(1);
+        this._shiftTab(this._tabWidgetFromElement(tabElement), 1);
         break;
         
       case COMMAND_NEW_TAB:
-        this._switchToTab(this.newTerminalTab());
+        this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement)));
         break;
         
       case COMMAND_CLOSE_TAB:
