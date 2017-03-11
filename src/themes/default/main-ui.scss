@@ -44,39 +44,13 @@
 
 #ID_MAIN_CONTENTS {
   flex-grow: 1;  
-  display: flex;
-}
-
-#ID_PANE_LEFT {
-  flex: auto 1 1;  
-}
-
-#ID_PANE_LEFT, #ID_PANE_RIGHT {
   position: relative;
-}
 
-#ID_TAB_CONTAINER_LEFT, #ID_TAB_CONTAINER_RIGHT {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-
-#ID_PANE_RIGHT {
-  display: none;
-}
-#ID_MAIN_CONTENTS > #ID_GAP {
-  visibility: collapse;
-  flex: 0px 0 0;
-}
-
-#ID_MAIN_CONTENTS.split > #ID_GAP {
-  visibility: visible;
-  flex: 2px 0 0;
-}
-
-#ID_MAIN_CONTENTS.split > #ID_PANE_RIGHT {
-  flex: auto 1 1;
-  display: block;
+  & > * {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 #ID_REST_DIV_PRIMARY {
@@ -142,6 +116,6 @@ DIV.tab_header_close > BUTTON:focus {
   outline: 0px solid transparent;
 }
 
-#ID_NEW_TAB_BUTTON_PRIMARY:focus, #ID_NEW_TAB_BUTTON_SECONDARY:focus {
+#ID_NEW_TAB_BUTTON_PRIMARY:focus {
   outline: 0px solid transparent;
 }
