@@ -66,9 +66,8 @@ const ID_OSX_MAXIMIZE_BUTTON = "ID_OSX_MAXIMIZE_BUTTON";
 const ID_OSX_CLOSE_BUTTON = "ID_OSX_CLOSE_BUTTON";
 
 const ID_TAB_CONTAINER_LEFT = "ID_TAB_CONTAINER_LEFT";
-const ID_REST_DIV_PRIMARY = "ID_REST_DIV_PRIMARY";
+const ID_REST_SLOT = "ID_REST_SLOT";
 const ID_REST_DIV_LEFT = "ID_REST_DIV_LEFT";
-const ID_NEW_TAB_BUTTON_PRIMARY = "ID_NEW_TAB_BUTTON_PRIMARY";
 
 const CLASS_SPLIT = "split";
 
@@ -77,6 +76,8 @@ const CLASS_TAB_HEADER_ICON = "tab_header_icon";
 const CLASS_TAB_HEADER_MIDDLE = "tab_header_middle";
 const CLASS_TAB_HEADER_CLOSE = "tab_header_close";
 const CLASS_TAB_CONTENT = "tab_content";
+const CLASS_NEW_BUTTON_CONTAINER = "CLASS_NEW_BUTTON_CONTAINER";
+const CLASS_NEW_TAB_BUTTON = "CLASS_NEW_TAB_BUTTON";
 
 const KEYBINDINGS_MAIN_UI = "main-ui";
 const PALETTE_GROUP = "mainwebui";
@@ -238,11 +239,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._handleTabSwitch(tabWidgetLeft);
     });
 
-    const newTabPrimaryButton = this._getById(ID_NEW_TAB_BUTTON_PRIMARY);
-    newTabPrimaryButton.addEventListener('click', () => {
-      this._switchToTab(this.newTerminalTab(tabWidgetLeft));
-    });
-    
+    this._installTabWidgetHandlers(tabWidgetLeft);
+
     const closeButtenHandler = () => {
       this.focus();
       this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
@@ -298,13 +296,24 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
             `<button id="${ID_OSX_MINIMIZE_BUTTON}" tabindex="-1"></button>` +
             `<button id="${ID_OSX_MAXIMIZE_BUTTON}" tabindex="-1"></button>` +
           `</div>` +
-          `<div id="${ID_REST_DIV_PRIMARY}"><button class="btn btn-quiet" id="${ID_NEW_TAB_BUTTON_PRIMARY}"><i class="fa fa-plus"></i></button>` +
-          `<slot></slot></div>` +
+          this._newButtonHtml() +
+          `<slot id="${ID_REST_SLOT}"></slot></div>` +
         `</${TabWidget.TAG_NAME}>` +
       `</div>` +
     `</div>`;
   }
-  
+
+  private _newButtonHtml(): string {
+    return `<div class="${CLASS_NEW_BUTTON_CONTAINER}"><button class="btn btn-quiet ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>`;
+  }
+
+  private _installTabWidgetHandlers(tabWidget: TabWidget): void {
+    const newTabPrimaryButton = tabWidget.querySelector("." + CLASS_NEW_TAB_BUTTON);
+    newTabPrimaryButton.addEventListener('click', () => {
+      this._switchToTab(this.newTerminalTab(tabWidget));
+    });
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.MAIN_UI];
   }
@@ -348,7 +357,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     // The way the split view changes the position of the 'rest' controls
     // in the tab widgets causes this expression below.
-    const restDiv = this._getById(ID_REST_DIV_PRIMARY);
+    const restDiv = tabWidget.querySelector("." + CLASS_NEW_BUTTON_CONTAINER);
     if (restDiv.parentElement === tabWidget) {
       tabWidget.insertBefore(newTab, restDiv);
       tabWidget.insertBefore(contentDiv, restDiv);
@@ -707,7 +716,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _newTabWidget(): TabWidget {
-    return <TabWidget> document.createElement(TabWidget.TAG_NAME);
+    const tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+    tabWidget.appendChild(DomUtils.htmlToFragment(this._newButtonHtml()));
+    this._installTabWidgetHandlers(tabWidget);
+    return tabWidget;
   }
 
   private _verticalSplit(tabContentElement: Element): void {

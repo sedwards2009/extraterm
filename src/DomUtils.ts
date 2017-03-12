@@ -428,3 +428,19 @@ export function pixelLengthToInt(length: string | number): number {
     return length;
   }
 }
+
+/**
+ * Expand a HTML string into Document Fragment.
+ * 
+ * @param {html} the HTML code to use.
+ * @return A Document Fragment containing the nodes defined by the `html` parameter.
+ */
+export function htmlToFragment(html: string): DocumentFragment {
+  const div = document.createElement("DIV");
+  div.innerHTML = html;
+  const frag = document.createDocumentFragment();
+  while (div.childNodes.length !== 0) {
+    frag.appendChild(div.childNodes[0]);
+  }
+  return frag;
+}
