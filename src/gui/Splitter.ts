@@ -26,7 +26,7 @@ const CLASS_PANE = "CLASS_PANE";
 const CLASS_NORMAL = "CLASS_NORMAL";
 const CLASS_DRAG = "CLASS_DRAG";
 
-const DIVIDER_WIDTH = 10;
+const DIVIDER_WIDTH = 4;
 const NOT_DRAGGING = -1;
 const MIN_PANE_WIDTH = 32;
 

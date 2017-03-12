@@ -3,12 +3,13 @@
  */
 
 /* gui-splitter styles */
+@import "bootstrap/variables";
+
+$divider-width: 4px;
 
 #ID_TOP {
   position: relative;
 
-  outline-offset: 1px;
-  outline: 1px solid #ff00ff;
   height: 100%;
 }
 
@@ -20,10 +21,10 @@
 .CLASS_DIVIDER {
   position: absolute;
   top: 0px;
-  width: 10px;
+  width: $divider-width;
   height: 100%;
   cursor: col-resize;
-  background-color: #00ff00;
+  background-color: $body-bg;
 }
 
 .CLASS_PANE {
@@ -38,7 +39,7 @@
   height: 100%;
   // z-index: 11;
 
-  background-color: #ff0000;
+  background-color: $text-color;
 }
 
 #ID_COVER {
