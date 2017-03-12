@@ -65,6 +65,10 @@ export class ResizeCanary extends HTMLElement {
   }
 
   attachedCallback(): void {
+    if (DomUtils.getShadowRoot(this) != null) {
+      return;
+    }
+
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     shadow.appendChild(this._createNodes());
     this._erd = ElementResizeDetectorMaker(); // Use the 'object' strategy, 'scroll' doesn't work here.

@@ -15,6 +15,7 @@ import {EtViewerTab} from './ViewerTab';
 import {EmbeddedViewer} from './EmbeddedViewer';
 import {Tab} from './gui/Tab';
 import {ViewerElement} from './ViewerElement';
+import {Splitter} from './gui/Splitter';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
@@ -45,8 +46,7 @@ type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import * as GeneralEvents from './GeneralEvents';
 import Logger from './Logger';
-import LogDecorator from './LogDecorator';
-const log = LogDecorator;
+import log from './LogDecorator';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -84,6 +84,7 @@ const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
 const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
 const COMMAND_NEW_TAB = "newTab";
 const COMMAND_CLOSE_TAB = "closeTab";
+const COMMAND_VERTICAL_SPLIT = "COMMAND_VERTICAL_SPLIT";
 
 let registered = false;
 
@@ -113,7 +114,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     EtKeyBindingsTab.init();
     AboutTab.init();
     EtViewerTab.init();
-    
+    Splitter.init();
+
     if (registered === false) {
       window.document.registerElement(MainWebUi.TAG_NAME, {prototype: MainWebUi.prototype});
       registered = true;
@@ -704,6 +706,28 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
 
+  private _newTabWidget(): TabWidget {
+    return <TabWidget> document.createElement(TabWidget.TAG_NAME);
+  }
+
+  private _verticalSplit(tabContentElement: Element): void {
+    const tabWidget = this._tabWidgetFromElement(tabContentElement);
+    const rootContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
+
+    if (tabWidget.parentElement === rootContainer) {
+      // Single tab widget directly inside the container DIV.
+      const splitter = <Splitter> document.createElement(Splitter.TAG_NAME);
+      rootContainer.appendChild(splitter);
+      splitter.appendChild(tabWidget);
+      const newTabWidget = this._newTabWidget();
+      splitter.appendChild(newTabWidget);
+      splitter.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+    } else {
+
+
+
+    }
+  }
 
   //-----------------------------------------------------------------------
   //
@@ -860,6 +884,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", target: target },
       { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", target: target },
       { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", target: target },
+      { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target }
     ];
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
@@ -889,7 +914,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       case COMMAND_CLOSE_TAB:
         this.closeTab(tabElement);
         break;
-        
+
+      case COMMAND_VERTICAL_SPLIT:
+        this._verticalSplit(tabElement);
+        break;
+
       default:
         return false;
     }

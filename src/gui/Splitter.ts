@@ -13,7 +13,6 @@ import * as _ from 'lodash';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 
-
 const ID = "EtSplitterTemplate";
 let registered = false;
 
@@ -110,7 +109,8 @@ export class Splitter extends ThemeableElementBase {
     indicatorDiv.style.width = "" + DIVIDER_WIDTH + "px";
 
     const rect = topDiv.getBoundingClientRect();
-    this._paneWidths = PaneWidths.equalPaneWidths(rect.width, DomUtils.toArray(this.children));
+    const width = rect.width === 0 ? 1024 : rect.width;
+    this._paneWidths = PaneWidths.equalPaneWidths(width, DomUtils.toArray(this.children));
     this._createLayout(this._paneWidths);
 
     this._mutationObserver = new MutationObserver(this._handleMutations.bind(this));
@@ -118,7 +118,11 @@ export class Splitter extends ThemeableElementBase {
 
     this.updateThemeCss();
   }
-  
+
+  attachedCallback(): void {
+    this._handleMutations([]);
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_SPLITTER];
   }
@@ -135,6 +139,16 @@ export class Splitter extends ThemeableElementBase {
 
       const generator = function* bulkRefreshGenerator(this: Splitter): IterableIterator<BulkDomOperation.GeneratorResult> {
         yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
+
+        if (level === ResizeRefreshElementBase.RefreshLevel.COMPLETE) {
+          this._paneWidths = this._paneWidths.update(DomUtils.toArray(this.children));
+
+          yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+          this._createLayout(this._paneWidths);
+
+          yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
+        }
+
         const topDiv = DomUtils.getShadowId(this, ID_TOP);
         const rect = topDiv.getBoundingClientRect();
         const newPaneWidths = this._paneWidths.updateTotalWidth(rect.width);
@@ -143,8 +157,7 @@ export class Splitter extends ThemeableElementBase {
         this._paneWidths = newPaneWidths;
         this._setSizes(newPaneWidths);
 
-        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, 
-        extraOperation: BulkDomOperation.parallel([superBulkRefresh.call(this, level)]) };
+        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: superBulkRefresh.call(this, level) };
 
         return BulkDomOperation.GeneratorPhase.DONE;
       };
@@ -238,6 +251,7 @@ export class Splitter extends ThemeableElementBase {
     ev.preventDefault();
     ev.stopPropagation();
 
+    // Now actually move the divider.
     const topDiv = DomUtils.getShadowId(this, ID_TOP);
     const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
@@ -246,6 +260,9 @@ export class Splitter extends ThemeableElementBase {
     this._setSizes(this._paneWidths);
 
     this._stopDrag();
+
+    // Refresh the kids.
+    this.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
   }
 
   private _stopDrag(): void {
@@ -284,8 +301,6 @@ export class Splitter extends ThemeableElementBase {
   }
 
   private _handleMutations(mutations: MutationRecord[]): void {
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
-    const rect = topDiv.getBoundingClientRect();
     this._paneWidths = this._paneWidths.update(DomUtils.toArray(this.children));
 
     this._createLayout(this._paneWidths);
@@ -477,6 +492,21 @@ class PaneWidths {
   }
 
   private _updateAddedPanes(newPanes: Object[]): PaneWidths {
+    if (this._paneWidths.length === 0) {  // Special case for going from 0 panes to >0.
+      return PaneWidths.equalPaneWidths(1024, newPanes);
+    }
+
+    const tempPaneWidths = this._distributeAddedPanes(newPanes);
+    if (tempPaneWidths._panes.length !== newPanes.length) {
+      const reverseNewPanes = newPanes.slice().reverse();
+      return tempPaneWidths.reverse()._distributeAddedPanes(reverseNewPanes).reverse();
+
+    } else {
+      return tempPaneWidths;
+    }
+  }
+
+  private _distributeAddedPanes(newPanes: Object[]): PaneWidths {
     const newPaneWidths: number[] = [];
     const tempPanes: Object[] = [];
     for (let i=0; i<newPanes.length; i++) {
@@ -500,14 +530,7 @@ class PaneWidths {
         tempPanes.push(newPanes[i]);
       }
     }
-
-    if (tempPanes.length !== newPanes.length) {
-      const reverseNewPanes = newPanes.slice().reverse();
-      return (new PaneWidths(newPaneWidths, tempPanes)).reverse()._updateAddedPanes(reverseNewPanes).reverse();
-
-    } else {
-      return new PaneWidths(newPaneWidths, newPanes);
-    }
+    return new PaneWidths(newPaneWidths, newPanes);
   }
-
+  
 }

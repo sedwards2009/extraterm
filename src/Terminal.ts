@@ -1148,7 +1148,9 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
         this._virtualScrollArea.updateScrollableSizes(childrenToResize);
         this._virtualScrollArea.reapplyState();
         this._enforceScrollbackLength(this._scrollbackSize);
-            
+
+        this.resizeToContainer(); // This will schedule a resize of the terminal PTY itself.
+
         return BulkDomOperation.GeneratorPhase.DONE;
       };
 
