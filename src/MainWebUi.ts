@@ -781,10 +781,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   //-----------------------------------------------------------------------
   private _refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    const tabsWidgets = [<TabWidget> this._getById(ID_TAB_CONTAINER_LEFT)];
+    const operation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(
+      DomUtils.getShadowId(this, ID_MAIN_CONTENTS), level);
 
-    // Collect the bulk operations from the tabs.
-    const operation = BulkDomOperation.parallel(tabsWidgets.map( (tab) => tab.bulkRefresh(level) ));
     // Do the heavy code mirror stuff first.
     CodeMirrorOperation.executeBulkDOMOperation(operation);
   }
