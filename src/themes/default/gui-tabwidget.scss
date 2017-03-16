@@ -26,6 +26,8 @@
 
 #ID_TABBAR > li.remainder {
   flex-shrink: 0;
+  flex-grow: 1;
+  display: flex;
 }
 
 #ID_CONTENTS {

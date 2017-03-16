@@ -296,15 +296,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
             `<button id="${ID_OSX_MINIMIZE_BUTTON}" tabindex="-1"></button>` +
             `<button id="${ID_OSX_MAXIMIZE_BUTTON}" tabindex="-1"></button>` +
           `</div>` +
-          this._newButtonHtml() +
-          `<slot id="${ID_REST_SLOT}"></slot></div>` +
+          this._newTabRestAreaHtml(`<slot id="${ID_REST_SLOT}"></slot>`) +
         `</${TabWidget.TAG_NAME}>` +
       `</div>` +
     `</div>`;
   }
 
-  private _newButtonHtml(): string {
-    return `<div class="${CLASS_NEW_BUTTON_CONTAINER}"><button class="btn btn-quiet ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>`;
+  private _newTabRestAreaHtml(extraContents = ""): string {
+    return `<div class="${CLASS_NEW_BUTTON_CONTAINER}"><button class="btn btn-quiet ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>${extraContents}</div>`;
   }
 
   private _installTabWidgetHandlers(tabWidget: TabWidget): void {
@@ -717,7 +716,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _newTabWidget(): TabWidget {
     const tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
-    tabWidget.appendChild(DomUtils.htmlToFragment(this._newButtonHtml()));
+    tabWidget.appendChild(DomUtils.htmlToFragment(this._newTabRestAreaHtml()));
     this._installTabWidgetHandlers(tabWidget);
     return tabWidget;
   }

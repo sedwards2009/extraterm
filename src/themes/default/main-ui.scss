@@ -53,12 +53,13 @@
   }
 }
 
-#ID_REST_DIV_PRIMARY {
+.CLASS_NEW_BUTTON_CONTAINER {
   display: flex;
-}
-
-#ID_REST_DIV_PRIMARY > DIV.space {
   flex-grow: 1;
+
+  & > button {
+    flex-grow: 0;
+  }
 }
 
 /* Contents of the tabs at the top of the window. */
