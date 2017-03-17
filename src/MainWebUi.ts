@@ -732,12 +732,38 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       splitter.appendChild(tabWidget);
       const newTabWidget = this._newTabWidget();
       splitter.appendChild(newTabWidget);
+
+      this._repositionParentContent();
+
       splitter.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     } else {
 
 
 
     }
+  }
+
+  private _repositionParentContent(): void {
+    const topRightTabWidget = this._findTopRightTabWidget(DomUtils.getShadowId(this, ID_MAIN_CONTENTS));
+    const restSlot = DomUtils.getShadowId(this, ID_REST_SLOT);
+    const newButtonContainer = topRightTabWidget.querySelector("."  + CLASS_NEW_BUTTON_CONTAINER);
+    newButtonContainer.appendChild(restSlot);
+  }
+
+  private _findTopRightTabWidget(parentEl: HTMLElement): TabWidget {
+    const lastChild = parentEl.children.item(parentEl.children.length-1);
+    if (lastChild instanceof Splitter) {
+      // Check for vertical or horizontal split.
+      // if (vertical) {
+        return this._findTopRightTabWidget(lastChild);
+      // } else {
+      //   return this._findTopLeftTabWidget(lastChild);
+      // }
+    }
+    if (lastChild instanceof TabWidget) {
+      return lastChild;
+    }
+    return null;
   }
 
   //-----------------------------------------------------------------------
