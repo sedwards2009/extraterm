@@ -174,7 +174,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._focusTabContent(this._lastFocus);
     } else {
 
-      const allContentElements = this._getAllTabElements();
+      const allContentElements = this._getAllTabContentElements();
       if (allContentElements.length !== 0) {
         this._focusTabContent(allContentElements[0]);
       }
@@ -199,7 +199,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
   
   getTabCount(): number {
-    return this._getAllTabElements().length;
+    return this._getAllTabContentElements().length;
   }
   
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
@@ -585,7 +585,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   openSettingsTab(): void {
-    const settingsTabs = this._getAllTabElements().filter( (el) => el instanceof SettingsTab );
+    const settingsTabs = this._getAllTabContentElements().filter( (el) => el instanceof SettingsTab );
     if (settingsTabs.length !== 0) {
       this._switchToTab(settingsTabs[0]);
     } else {
@@ -600,7 +600,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
   
   openKeyBindingsTab(): void {
-    const keyBindingsTabs = this._getAllTabElements().filter( (el) => el instanceof EtKeyBindingsTab );
+    const keyBindingsTabs = this._getAllTabContentElements().filter( (el) => el instanceof EtKeyBindingsTab );
     if (keyBindingsTabs.length !== 0) {
       this._switchToTab(keyBindingsTabs[0]);
     } else {
@@ -614,7 +614,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
   
   openAboutTab(): void {
-    const aboutTabs = this._getAllTabElements().filter( (el) => el instanceof AboutTab );
+    const aboutTabs = this._getAllTabContentElements().filter( (el) => el instanceof AboutTab );
     if (aboutTabs.length !== 0) {
       this._switchToTab(aboutTabs[0]);
     } else {
@@ -631,7 +631,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   closeTab(tabContentElement: Element): void {
     const tabWidget = this._tabWidgetFromElement(tabContentElement);
 
-    let tabContentElements = this._getAllTabElements();
+    let tabContentElements = this._getAllTabContentElements();
     const index = tabContentElements.indexOf(tabContentElement);
 
     const contentDiv = this._tabContentDivFromElement(tabContentElement);
@@ -652,7 +652,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     
     this._sendTabClosedEvent();
 
-    tabContentElements = this._getAllTabElements();
+    tabContentElements = this._getAllTabContentElements();
     if (tabContentElements.length !== 0) {
       this._switchToTab(tabContentElements[Math.min(index, tabContentElements.length-1)]);
     } else {
@@ -662,13 +662,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _switchToTab(tabContentElement: Element): void {
     const tabWidget = this._tabWidgetFromElement(tabContentElement);
-    const tabContents = this._getAllTabElements();
+    const tabContents = this._getAllTabContentElements();
     tabWidget.setCurrentIndex(tabContents.indexOf(tabContentElement));
     this._focusTabContent(tabContentElement);
   }
 
   private _shiftTab(tabWidget: TabWidget, direction: number): void {
-    const tabElementList = this._getAllTabElements();
+    const tabElementList = this._getAllTabContentElements();
     const len = tabElementList.length;
     if (len === 0) {
       return;
@@ -689,13 +689,23 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     // FIXME
   }
 
-  private _getAllTabElements(): Element[] {
-    const tabWidget = <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
-    return DomUtils.toArray(tabWidget.children).filter( el => el instanceof Tab ).map( el => el.nextElementSibling.children[0] );
+  private _getAllTabContentElements(el: Element = null): Element[] {
+    if (el == null) {
+      el = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
+    }
+
+    const findAllTabs = (el: Element): Element[] => {
+      if (el instanceof Tab) {
+        return [el];
+      }
+      return DomUtils.toArray(el.children).map(findAllTabs).reduce( (accu, x): Element[] => [...accu, ...x], []);
+    };
+
+    return findAllTabs(el).map( el => el.nextElementSibling.children[0] );
   }
 
   private _getTabElementWithFocus(): Element {
-    for (const el of this._getAllTabElements()) {
+    for (const el of this._getAllTabContentElements()) {
       if (el instanceof EtViewerTab || el instanceof EtTerminal) {
         if (el.hasFocus()) {
           return el;
@@ -834,7 +844,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _frameFinder(frameId: string): string {
-    for (const el of this._getAllTabElements()) {
+    for (const el of this._getAllTabContentElements()) {
       let text = null;
       if (el instanceof EtViewerTab && el.getTag() === frameId) {
         text = el.getFrameContents(frameId);
