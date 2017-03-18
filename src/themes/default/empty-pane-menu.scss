@@ -1,0 +1,25 @@
+/**
+ * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ */
+@import "bootstrap/variables";
+
+:host(:focus) {
+  outline: 0px solid transparent;
+}
+
+#ID_CONTAINER {
+  display: block;
+  width: 320px;
+  margin-left: calc((100% - 320px)/2);
+  margin-right: calc((100% - 320px)/2);
+}
+
+#ID_TITLE {
+  width: 100%;
+
+  font-family: $font-family-base;
+  font-size: $input-font-size;
+  line-height: $line-height-base;
+  color: $text-color;
+  margin-bottom: 5px;
+}

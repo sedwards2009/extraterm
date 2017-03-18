@@ -12,9 +12,8 @@
 }
 */
 
-div > #ID_FILTER {
-  box-sizing: border-box;
-  width: 100%;
+:host:focus {
+  outline: none;
 }
 
 #ID_FILTER {

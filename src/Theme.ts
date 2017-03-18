@@ -43,7 +43,8 @@ export enum CssFile {
   FONT_AWESOME,
   TERMINAL_VARS,
   VIEWER_TAB,
-  GUI_SPLITTER
+  GUI_SPLITTER,
+  EMPTY_PANE_MENU
 }
 
 export const cssFileEnumItems: CssFile[] = [
@@ -70,7 +71,8 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.FONT_AWESOME,
   CssFile.TERMINAL_VARS,
   CssFile.VIEWER_TAB,
-  CssFile.GUI_SPLITTER
+  CssFile.GUI_SPLITTER,
+  CssFile.EMPTY_PANE_MENU
 ];
 
 const _CssFileNameMapping = {
@@ -97,7 +99,8 @@ const _CssFileNameMapping = {
   [CssFile.FONT_AWESOME]: "font-awesome",
   [CssFile.TERMINAL_VARS]: "terminal-vars",
   [CssFile.VIEWER_TAB]: "viewer-tab",
-  [CssFile.GUI_SPLITTER]: "gui-splitter"
+  [CssFile.GUI_SPLITTER]: "gui-splitter",
+  [CssFile.EMPTY_PANE_MENU]: "empty-pane-menu"
 };
 
 export function cssFileNameBase(cssFile: CssFile): string {
@@ -135,5 +138,6 @@ export const UiCssFiles: CssFile[] = [
   CssFile.VIEWER_TAB,
   CssFile.GUI_POP_DOWN_DIALOG,
   CssFile.GUI_POP_DOWN_LIST_PICKER,
-  CssFile.GUI_SPLITTER
+  CssFile.GUI_SPLITTER,
+  CssFile.EMPTY_PANE_MENU
 ];

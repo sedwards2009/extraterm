@@ -16,6 +16,7 @@ import {EmbeddedViewer} from './EmbeddedViewer';
 import {Tab} from './gui/Tab';
 import {ViewerElement} from './ViewerElement';
 import {Splitter} from './gui/Splitter';
+import {EmptyPaneMenu} from './EmptyPaneMenu';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
@@ -116,6 +117,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     AboutTab.init();
     EtViewerTab.init();
     Splitter.init();
+    EmptyPaneMenu.init();
 
     if (registered === false) {
       window.document.registerElement(MainWebUi.TAG_NAME, {prototype: MainWebUi.prototype});
@@ -742,6 +744,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       splitter.appendChild(tabWidget);
       const newTabWidget = this._newTabWidget();
       splitter.appendChild(newTabWidget);
+
+      // Insert an Empty Pane Menu 
+      const emptyPaneMenuTab = <Tab> document.createElement(Tab.TAG_NAME);
+      const emptyPaneMenuDiv = <HTMLDivElement> document.createElement("DIV");
+      const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
+      emptyPaneMenuDiv.appendChild(emptyPaneMenu);
+      newTabWidget.appendChild(emptyPaneMenuTab);
+      newTabWidget.appendChild(emptyPaneMenuDiv);
 
       this._repositionParentContent();
 
