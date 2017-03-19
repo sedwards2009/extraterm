@@ -3,23 +3,36 @@
  */
 @import "bootstrap/variables";
 
+
 :host(:focus) {
   outline: 0px solid transparent;
 }
 
+#ID_EMPTY_PANE_MENU {
+  font-family: $font-family-base;
+  font-size: $input-font-size;
+  line-height: $line-height-base;
+  color: $text-color;
+
+  background-color: $dropdown-bg;
+
+  width: 100%;
+  height: 100%;
+  contain: strict;
+}
+
 #ID_CONTAINER {
+  --empty-pane-menu-container-width: 400px;
+
   display: block;
-  width: 320px;
-  margin-left: calc((100% - 320px)/2);
-  margin-right: calc((100% - 320px)/2);
+  width: var(--empty-pane-menu-container-width);
+  margin-left: calc((100% - var(--empty-pane-menu-container-width) )/2);
+  margin-right: calc((100% - var(--empty-pane-menu-container-width) )/2);
+
 }
 
 #ID_TITLE {
   width: 100%;
 
-  font-family: $font-family-base;
-  font-size: $input-font-size;
-  line-height: $line-height-base;
-  color: $text-color;
   margin-bottom: 5px;
 }

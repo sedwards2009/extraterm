@@ -36,6 +36,7 @@
         "./src/BulkDomOperationTest.ts",
         "./src/CodeMirrorCommands.ts",
         "./src/CodeMirrorOperation.ts",
+        "./src/CommandPaletteFunctions.ts",
         "./src/CommandPaletteRequestTypes.ts",
         "./src/CommandPlaceholder.ts",
         "./src/Config.ts",

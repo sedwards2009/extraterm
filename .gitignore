@@ -14,11 +14,13 @@ src/BulkDomOperation.js
 src/BulkDomOperationTest.js
 src/CodeMirrorCommands.js
 src/CodeMirrorOperation.js
+src/CommandPaletteFunctions.js
 src/CommandPaletteRequestTypes.js
 src/CommandPlaceholder.js
 src/Config.js
 src/DomUtils.js
 src/EmbeddedViewer.js
+src/EmptyPaneMenu.js
 src/FrameFinderType.js
 src/GeneralEvents.js
 src/InternalExtratermApi.js
@@ -79,11 +81,13 @@ src/gui/CommandPaletteTypes.js
 src/gui/ContextMenu.js
 src/gui/DropDown.js
 src/gui/MenuItem.js
+src/gui/ListPicker.js
 src/gui/PopDownDialog.js
 src/gui/PopDownListPicker.js
 src/gui/PopDownNumberDialog.js
 src/gui/ScrollBar.js
 src/gui/StackedWidget.js
+src/gui/Splitter.js
 src/gui/Tab.js
 src/gui/TabWidget.js
 src/gui/Util.js

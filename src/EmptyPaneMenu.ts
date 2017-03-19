@@ -12,6 +12,8 @@ import * as ThemeTypes from './Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import {ListPicker} from './gui/ListPicker';
 import * as DomUtils from './DomUtils';
+import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
+import * as CommandPaletteFunctions from './CommandPaletteFunctions';
 
 const ID_EMPTY_PANE_MENU = "ID_EMPTY_PANE_MENU";
 const ID_LIST_PICKER = "ID_LIST_PICKER";
@@ -48,8 +50,13 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
-  
+  private _entries: CommandPaletteTypes.CommandEntry[];
+
+  private _selectedId: string;
+
   private _initProperties(): void {
+    this._entries = [];
+    this._selectedId = null;
   }
   
   //-----------------------------------------------------------------------
@@ -70,6 +77,20 @@ export class EmptyPaneMenu extends ThemeableElementBase {
 
   hasFocus(): boolean {
     return false;
+  }
+
+  setEntries(entries: CommandPaletteTypes.CommandEntry[]): void {
+    this._entries = entries;
+    this._selectedId = null;
+    
+    if (DomUtils.getShadowRoot(this) != null) {
+      const listPicker = <ListPicker<CommandPaletteTypes.CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+      listPicker.setEntries(entries);
+    }
+  }
+
+  getEntries(): CommandPaletteTypes.CommandEntry[] {
+    return this._entries;
   }
 
   //-----------------------------------------------------------------------
@@ -97,27 +118,35 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   attachedCallback(): void {
     super.attachedCallback();
     
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-    const themeStyle = document.createElement('style');
-    themeStyle.id = ThemeableElementBase.ID_THEME;
-    
-    const divContainer = document.createElement('div');
-    divContainer.id = ID_EMPTY_PANE_MENU;
-    divContainer.innerHTML = `<div id="${ID_CONTAINER}">
-      <div id="${ID_TITLE}">Pane Menu</div>
-      <${ListPicker.TAG_NAME} id="${ID_LIST_PICKER}"></${ListPicker.TAG_NAME}>
-    </div>
-`;
+    if (DomUtils.getShadowRoot(this) == null) {
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+      const themeStyle = document.createElement('style');
+      themeStyle.id = ThemeableElementBase.ID_THEME;
+      
+      const divContainer = document.createElement('div');
+      divContainer.id = ID_EMPTY_PANE_MENU;
+      divContainer.innerHTML = `<div id="${ID_CONTAINER}">
+        <div id="${ID_TITLE}">Pane Menu</div>
+        <${ListPicker.TAG_NAME} id="${ID_LIST_PICKER}"></${ListPicker.TAG_NAME}>
+      </div>
+  `;
 
-    shadow.appendChild(themeStyle);
-    shadow.appendChild(divContainer);    
-    
-    this.updateThemeCss();
+      shadow.appendChild(themeStyle);
+      shadow.appendChild(divContainer);    
+
+      const listPicker = <ListPicker<CommandPaletteTypes.CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+      listPicker.setFilterAndRankEntriesFunc(CommandPaletteFunctions.commandPaletteFilterEntries);
+      listPicker.setFormatEntriesFunc(CommandPaletteFunctions.commandPaletteFormatEntries);
+      listPicker.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
+      
+      listPicker.setEntries(this._entries);
+      
+      this.updateThemeCss();
+    }
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.EMPTY_PANE_MENU];
-    // return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.EMPTY_PANE_MENU];
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.EMPTY_PANE_MENU];
   }
   
   //-----------------------------------------------------------------------

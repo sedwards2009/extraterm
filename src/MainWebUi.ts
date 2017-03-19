@@ -748,8 +748,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       // Insert an Empty Pane Menu 
       const emptyPaneMenuTab = <Tab> document.createElement(Tab.TAG_NAME);
       const emptyPaneMenuDiv = <HTMLDivElement> document.createElement("DIV");
-      const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
-      emptyPaneMenuDiv.appendChild(emptyPaneMenu);
+      emptyPaneMenuDiv.classList.add(CLASS_TAB_CONTENT);
+
+      emptyPaneMenuDiv.appendChild(this._createEmptyPaneMenu());
       newTabWidget.appendChild(emptyPaneMenuTab);
       newTabWidget.appendChild(emptyPaneMenuDiv);
 
@@ -761,6 +762,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
 
     }
+  }
+
+  private _createEmptyPaneMenu(): EmptyPaneMenu {
+    const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
+
+    emptyPaneMenu.setEntries(this._commandPaletteEntries(emptyPaneMenu));
+    return emptyPaneMenu;
   }
 
   private _repositionParentContent(): void {
