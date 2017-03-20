@@ -356,6 +356,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const contentDiv = document.createElement('div');
     contentDiv.classList.add(CLASS_TAB_CONTENT);
 
+    this._deleteAnyEmptyPaneMenu(tabWidget);
+
     // The way the split view changes the position of the 'rest' controls
     // in the tab widgets causes this expression below.
     const restDiv = tabWidget.querySelector("." + CLASS_NEW_BUTTON_CONTAINER);
@@ -650,6 +652,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       }
     }
 
+    if (DomUtils.toArray(tabWidget.children).filter( (kid) => kid instanceof Tab).length === 0) {
+      this._insertEmptyPaneMenu(tabWidget);
+    }
+
     tabWidget.update();
     
     this._sendTabClosedEvent();
@@ -733,6 +739,18 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return tabWidget;
   }
 
+  //-----------------------------------------------------------------------
+  //
+  //    #####
+  //   #     # #####  #      # #####  ####  
+  //   #       #    # #      #   #   #      
+  //    #####  #    # #      #   #    ####  
+  //         # #####  #      #   #        # 
+  //   #     # #      #      #   #   #    # 
+  //    #####  #      ###### #   #    ####  
+  //
+  //-----------------------------------------------------------------------
+
   private _verticalSplit(tabContentElement: Element): void {
     const tabWidget = this._tabWidgetFromElement(tabContentElement);
     const rootContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
@@ -745,14 +763,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const newTabWidget = this._newTabWidget();
       splitter.appendChild(newTabWidget);
 
-      // Insert an Empty Pane Menu 
-      const emptyPaneMenuTab = <Tab> document.createElement(Tab.TAG_NAME);
-      const emptyPaneMenuDiv = <HTMLDivElement> document.createElement("DIV");
-      emptyPaneMenuDiv.classList.add(CLASS_TAB_CONTENT);
-
-      emptyPaneMenuDiv.appendChild(this._createEmptyPaneMenu());
-      newTabWidget.appendChild(emptyPaneMenuTab);
-      newTabWidget.appendChild(emptyPaneMenuDiv);
+      this._insertEmptyPaneMenu(newTabWidget);
 
       this._repositionParentContent();
 
@@ -764,11 +775,37 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
 
-  private _createEmptyPaneMenu(): EmptyPaneMenu {
+  private _insertEmptyPaneMenu(tabWidget: TabWidget): EmptyPaneMenu {
+    // Insert an Empty Pane Menu 
+    const emptyPaneMenuTab = <Tab> document.createElement(Tab.TAG_NAME);
+    const emptyPaneMenuDiv = <HTMLDivElement> document.createElement("DIV");
+    emptyPaneMenuDiv.classList.add(CLASS_TAB_CONTENT);
+
     const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
 
+    emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
+      this._executeCommand(emptyPaneMenu, ev.detail.selected);
+    });
+
     emptyPaneMenu.setEntries(this._commandPaletteEntries(emptyPaneMenu));
+    emptyPaneMenuDiv.appendChild(emptyPaneMenu);
+    tabWidget.appendChild(emptyPaneMenuTab);
+    tabWidget.appendChild(emptyPaneMenuDiv);
+
     return emptyPaneMenu;
+  }
+
+  private _deleteAnyEmptyPaneMenu(tabWidget: TabWidget): void {
+    for (const kid of DomUtils.toArray(tabWidget.children)) {
+      if (kid.classList.contains(CLASS_TAB_CONTENT)) {
+        if (kid.firstElementChild instanceof EmptyPaneMenu) {
+          const tab = this._tabFromElement(kid.firstElementChild);
+          tabWidget.removeChild(tab);
+          tabWidget.removeChild(kid);
+          break;
+        }
+      }
+    }
   }
 
   private _repositionParentContent(): void {

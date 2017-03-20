@@ -135,6 +135,11 @@ export class EmptyPaneMenu extends ThemeableElementBase {
       shadow.appendChild(divContainer);    
 
       const listPicker = <ListPicker<CommandPaletteTypes.CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+      listPicker.addEventListener("selected", (ev: CustomEvent): void => {
+        const event = new CustomEvent("selected", { detail: {selected: ev.detail.selected } });
+        this.dispatchEvent(event);
+      });
+
       listPicker.setFilterAndRankEntriesFunc(CommandPaletteFunctions.commandPaletteFilterEntries);
       listPicker.setFormatEntriesFunc(CommandPaletteFunctions.commandPaletteFormatEntries);
       listPicker.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
