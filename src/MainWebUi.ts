@@ -201,7 +201,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
   
   getTabCount(): number {
-    return this._getAllTabContentElements().length;
+    return this._getAllTabContentElements().filter( (el) => !(el instanceof EmptyPaneMenu)).length;
   }
   
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
