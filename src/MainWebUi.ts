@@ -798,9 +798,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     emptyPaneMenu.setEntries(this._commandPaletteEntries(emptyPaneMenu));
     emptyPaneMenuDiv.appendChild(emptyPaneMenu);
-    tabWidget.appendChild(emptyPaneMenuTab);
-    tabWidget.appendChild(emptyPaneMenuDiv);
 
+    if (tabWidget.children.length !== 0) {
+      tabWidget.insertBefore(emptyPaneMenuDiv, tabWidget.children.item(0));
+      tabWidget.insertBefore(emptyPaneMenuTab, emptyPaneMenuDiv);
+    } else {
+      tabWidget.appendChild(emptyPaneMenuTab);
+      tabWidget.appendChild(emptyPaneMenuDiv);
+    }
     return emptyPaneMenu;
   }
 
