@@ -8,6 +8,8 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import {PopDownDialog} from './PopDownDialog';
+import Logger from '../Logger';
+import log from '../LogDecorator';
 
 const ID = "EtListPickerTemplate";
 const ID_DIALOG = "ID_DIALOG";
@@ -47,7 +49,11 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     }
   }
 
+  //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
+  private _log: Logger;
+  
+
   private _entries: T[];
 
   private _selectedId: string;
@@ -61,6 +67,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   private _extraCssFiles: ThemeTypes.CssFile[];
 
   private _initProperties(): void {
+    this._log = new Logger(ListPicker.TAG_NAME, this);
     this._entries = [];
     this._selectedId = null;
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;

@@ -14,6 +14,8 @@ import {ListPicker} from './gui/ListPicker';
 import * as DomUtils from './DomUtils';
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteFunctions from './CommandPaletteFunctions';
+import Logger from './Logger';
+import log from './LogDecorator';
 
 const ID_EMPTY_PANE_MENU = "ID_EMPTY_PANE_MENU";
 const ID_LIST_PICKER = "ID_LIST_PICKER";
@@ -50,11 +52,14 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically.
+  private _log: Logger;
+  
   private _entries: CommandPaletteTypes.CommandEntry[];
 
   private _selectedId: string;
 
   private _initProperties(): void {
+    this._log = new Logger(EmptyPaneMenu.TAG_NAME, this);
     this._entries = [];
     this._selectedId = null;
   }
