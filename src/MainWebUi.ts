@@ -734,6 +734,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _newTabWidget(): TabWidget {
     const tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+    tabWidget.setShowFrame(false);
     tabWidget.appendChild(DomUtils.htmlToFragment(this._newTabRestAreaHtml()));
     this._installTabWidgetHandlers(tabWidget);
     return tabWidget;
