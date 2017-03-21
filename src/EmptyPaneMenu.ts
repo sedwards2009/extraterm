@@ -77,7 +77,10 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   //-----------------------------------------------------------------------
 
   focus(): void {
-    // util.getShadowId(this, ID_CONTAINER).focus();
+    const listPicker = DomUtils.getShadowId(this, ID_LIST_PICKER);
+    if (listPicker != null) {
+      listPicker.focus();
+    }
   }
 
   hasFocus(): boolean {

@@ -87,7 +87,7 @@ export function startUp(): void {
   if (process.platform === "darwin") {
     setupOSXEmptyMenus();
   }
-
+  
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
     setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {      

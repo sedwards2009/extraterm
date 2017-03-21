@@ -77,6 +77,13 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     this._extraCssFiles = [];
   }
 
+  focus(): void {
+    const filter = DomUtils.getShadowId(this, ID_FILTER);
+    if (filter != null) {
+      filter.focus();
+    }
+  }
+
   getSelected(): string {
     return this._selectedId;
   }

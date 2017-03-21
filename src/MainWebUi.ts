@@ -763,11 +763,16 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const newTabWidget = this._newTabWidget();
       splitter.appendChild(newTabWidget);
 
-      this._insertEmptyPaneMenu(newTabWidget);
+      const emptyPaneMenu = this._insertEmptyPaneMenu(newTabWidget);
 
       this._repositionParentContent();
-
+      tabWidget.update();
       splitter.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+
+      setTimeout(()=>{  // FIXME using a time out doesn't feel right, and I don't know why an immediate .focus() doesn't work.
+        emptyPaneMenu.focus();
+      }, 0);
+
     } else {
 
 
@@ -785,6 +790,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
       this._executeCommand(emptyPaneMenu, ev.detail.selected);
+    });
+    emptyPaneMenu.addEventListener('focus', (ev: FocusEvent) => {
+      this._lastFocus = emptyPaneMenu;
     });
 
     emptyPaneMenu.setEntries(this._commandPaletteEntries(emptyPaneMenu));
