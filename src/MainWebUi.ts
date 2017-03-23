@@ -650,6 +650,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       if (ptyId !== null) {
         WebIpc.ptyClose(ptyId);
       }
+      this._terminalPtyIdMap.delete(tabContentElement);
+      this._ptyIdTerminalMap.delete(ptyId);
     }
 
     if (DomUtils.toArray(tabWidget.children).filter( (kid) => kid instanceof Tab).length === 0) {
@@ -1073,9 +1075,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._log.warn(`Unable to find a Terminal object to match pty ID ${msg.id}`);
       return;
     }
-
-    this._terminalPtyIdMap.delete(terminal);
-    this._ptyIdTerminalMap.delete(msg.id);
 
     this.closeTab(terminal);
   }
