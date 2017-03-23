@@ -74,9 +74,12 @@ export class TabWidget extends ThemeableElementBase {
   
   private _mutationObserver: MutationObserver;
   
+  private _showTabs: boolean;
+
   private _initProperties(): void {
-    this._mutationObserver = null;
     this._log = new Logger(TabWidget.TAG_NAME, this);
+    this._mutationObserver = null;
+    this._showTabs = true;
   }
   
   //-----------------------------------------------------------------------
@@ -245,47 +248,59 @@ export class TabWidget extends ThemeableElementBase {
     } else {
       catchAllLi = <HTMLLIElement> catchAlls[0];
     }
-    
-    let tabElementCount = tabbar.querySelectorAll("." + CLASS_TAB).length;
-    
-    // Create tabs and content DIVs.
-    while (tabElementCount < tabCount) {
-      // The tab part.
-      const tabLi = this.ownerDocument.createElement('li');
-      tabLi.classList.add(CLASS_TAB);
+    if (this._showTabs) {
+      // Create tabs.
+      let tabElementCount = tabbar.querySelectorAll("." + CLASS_TAB).length;
+      while (tabElementCount < tabCount) {
+        // The tab part.
+        const tabLi = this.ownerDocument.createElement('li');
+        tabLi.classList.add(CLASS_TAB);
 
-      let contentElement = this.ownerDocument.createElement('slot');
-      contentElement.setAttribute('name', 'tab_' + tabElementCount);
-      
-      tabLi.appendChild(contentElement);
-      tabLi.addEventListener('click', this._tabClickHandler.bind(this, tabLi, tabElementCount));
+        const contentElement = this.ownerDocument.createElement('slot');
+        contentElement.setAttribute('name', 'tab_' + tabElementCount);
+        
+        tabLi.appendChild(contentElement);
+        tabLi.addEventListener('click', this._tabClickHandler.bind(this, tabLi, tabElementCount));
+        tabbar.insertBefore(tabLi, catchAllLi);
 
+        tabElementCount = tabbar.querySelectorAll("." + CLASS_TAB).length;
+      }
+
+      // Delete any excess tab tags.
+      const tabElements = DomUtils.toArray(tabbar.querySelectorAll("." + CLASS_TAB));
+      if (tabElements.length > tabCount) {
+        tabElements.slice(tabCount).forEach( el => tabbar.removeChild(el));
+      }
+    } else {
+      // Delete all tab tags. We don't need to show them.
+      const tabElements = DomUtils.toArray(tabbar.querySelectorAll("." + CLASS_TAB));
+      if (tabElements.length > tabCount) {
+        tabElements.slice(tabCount).forEach( el => tabbar.removeChild(el));
+      }
+    }
+
+    // Create content holders
+    let contentWrapperElementCount = contentsStack.children.length;
+    while (contentWrapperElementCount < tabCount) {
       // Pages for the contents stack.
       const wrapperDiv = this.ownerDocument.createElement('div');
       wrapperDiv.classList.add('wrapper');
-      contentElement = this.ownerDocument.createElement('slot');
-      contentElement.setAttribute('name', 'content_' + tabElementCount);
-      
-      tabbar.insertBefore(tabLi, catchAllLi);
-      
+      const contentElement = this.ownerDocument.createElement('slot');
+      contentElement.setAttribute('name', 'content_' + contentWrapperElementCount);
+            
       wrapperDiv.appendChild(contentElement);
       contentsStack.appendChild(wrapperDiv);
-      
-      tabElementCount = tabbar.querySelectorAll("." + CLASS_TAB).length;
+
+      contentWrapperElementCount++;
     }
-    
-    // Delete any excess tab tags.
-    let tabElements = tabbar.querySelectorAll("." + CLASS_TAB);
-    while (tabElements.length > tabCount) {
-      const tabToDelete = tabElements[tabElements.length-1];
-      tabbar.removeChild(tabToDelete);
+        
+    while (contentsStack.children.length > tabCount) {
       contentsStack.removeChild(contentsStack.children[contentsStack.children.length-1]);
-      tabElements = tabbar.querySelectorAll("." + CLASS_TAB);
     }
-    
+
     // Try to find the previously active tab and take note of its index.
     let selectTab = -1;
-    tabElements = tabbar.querySelectorAll("." + CLASS_TAB);
+    const tabElements = DomUtils.toArray(tabbar.querySelectorAll("." + CLASS_TAB));
     for (let i=0; i<tabElements.length; i++) {
       if (tabElements[i].classList.contains(CLASS_ACTIVE)) {
         selectTab = i;
@@ -309,7 +324,19 @@ export class TabWidget extends ThemeableElementBase {
       DomUtils.doLater(this._sendSwitchEvent.bind(this));
     }
   }
-  
+
+  //-----------------------------------------------------------------------
+  //
+  //   ######                                
+  //   #     # #    # #####  #      #  ####  
+  //   #     # #    # #    # #      # #    # 
+  //   ######  #    # #####  #      # #      
+  //   #       #    # #    # #      # #      
+  //   #       #    # #    # #      # #    # 
+  //   #        ####  #####  ###### #  ####  
+  //
+  //-----------------------------------------------------------------------
+
   setCurrentIndex(index: number) {
     if (index < 0 || this._getContentsStack().children.length <= index) {
       this._log.warn("Out of range index given to the 'currentIndex' property.");
@@ -360,6 +387,18 @@ export class TabWidget extends ThemeableElementBase {
     }
   }
   
+  setShowTabs(show: boolean): void {
+    if (show !== this._showTabs) {
+      this._showTabs = show;
+      this.update();
+    }
+  }
+
+  getShowTabs(): boolean {
+    return this._showTabs;
+  }
+
+  //-----------------------------------------------------------------------
   private _showFrame(value: boolean): void {
     if (value) {
       this._getTop().classList.add('show_frame');
@@ -369,17 +408,19 @@ export class TabWidget extends ThemeableElementBase {
   }
   
   private _showTab(index: number): void {
-    const tabbar = this._getTabbar();
-    let tabCounter = 0;
-    for (let i=0; i<tabbar.children.length; i++) {
-      const item = <HTMLElement> tabbar.children.item(i);
-      if (item.classList.contains('tab')) {
-        if (tabCounter === index) {
-          item.classList.add(CLASS_ACTIVE);
-        } else {
-          item.classList.remove(CLASS_ACTIVE);
+    if (this._showTabs) {
+      const tabbar = this._getTabbar();
+      let tabCounter = 0;
+      for (let i=0; i<tabbar.children.length; i++) {
+        const item = <HTMLElement> tabbar.children.item(i);
+        if (item.classList.contains('tab')) {
+          if (tabCounter === index) {
+            item.classList.add(CLASS_ACTIVE);
+          } else {
+            item.classList.remove(CLASS_ACTIVE);
+          }
+          tabCounter++;
         }
-        tabCounter++;
       }
     }
   }

@@ -764,6 +764,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       rootContainer.appendChild(splitter);
       splitter.appendChild(tabWidget);
       const newTabWidget = this._newTabWidget();
+      newTabWidget.setShowTabs(false);
       splitter.appendChild(newTabWidget);
 
       const emptyPaneMenu = this._insertEmptyPaneMenu(newTabWidget);
@@ -808,6 +809,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       tabWidget.appendChild(emptyPaneMenuTab);
       tabWidget.appendChild(emptyPaneMenuDiv);
     }
+    tabWidget.setShowTabs(false);
     return emptyPaneMenu;
   }
 
@@ -822,6 +824,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         }
       }
     }
+    tabWidget.setShowTabs(true);
   }
 
   private _repositionParentContent(): void {
