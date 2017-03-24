@@ -44,6 +44,7 @@ src/ResourceLoader.js
 src/ResizeRefreshElementBase.js
 src/SupportClipboardPaste.js
 src/SourceDir.js
+src/SplitLayout.js
 src/Term.js
 src/Terminal.js
 src/Theme.js
