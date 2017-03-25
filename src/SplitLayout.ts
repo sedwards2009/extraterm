@@ -13,6 +13,10 @@ interface ElementFactory {
   (): Element;
 }
 
+interface TabContentContainerElementFactory {
+  (tabWidget: TabWidget, tab: Tab, tabContent: Element): Element;
+}
+
 enum SplitterOrientation {
   VERTICAL,
   HORIZONTAL
@@ -59,7 +63,7 @@ export class SplitLayout {
 
   private _rootContainer: Element = null;
 
-  private _tabContainerFactory: ElementFactory = null;
+  private _tabContainerFactory: TabContentContainerElementFactory = null;
 
   private _emptySplitFactory: ElementFactory = null;
 
@@ -90,11 +94,11 @@ export class SplitLayout {
     return this._rootContainer;
   }
 
-  setTabContainerFactory(factory: ElementFactory): void {
+  setTabContainerFactory(factory: TabContentContainerElementFactory): void {
     this._tabContainerFactory = factory;
   }
 
-  getTabContainerFactory(): ElementFactory {
+  getTabContainerFactory(): TabContentContainerElementFactory {
     return this._tabContainerFactory;
   }
 
@@ -236,7 +240,7 @@ export class SplitLayout {
       targetChildrenList.push(kidInfo.tab);
 
       if (kidInfo.container == null) {
-        kidInfo.container = this._tabContainerFactory()
+        kidInfo.container = this._tabContainerFactory(tabWidget, kidInfo.tab, kidInfo.content);
         kidInfo.container.appendChild(kidInfo.content);
       }
       targetChildrenList.push(kidInfo.container);
