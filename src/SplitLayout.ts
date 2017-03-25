@@ -34,16 +34,24 @@ interface TabWidgetInfoNode {
 
   emptyTab: Tab;
   emptyTabContent: Element
+  leftSpaceDefaultElement: Element;
   rightSpaceDefaultElement: Element;
 }
 
 interface TabInfo {
   tab: Tab;
   content: Element;
-  container: HTMLDivElement;
+  container: Element;
 }
 
 type RootInfoNode = SplitterInfoNode | TabWidgetInfoNode;
+
+enum RelativePosition {
+  TOP_LEFT,
+  TOP_RIGHT,
+  TOP_WIDE,
+  OTHER
+}
 
 export class SplitLayout {
 
@@ -51,7 +59,7 @@ export class SplitLayout {
 
   private _rootContainer: Element = null;
 
-  private _tabContainerDivClass: string = null;  
+  private _tabContainerFactory: ElementFactory = null;
 
   private _emptySplitFactory: ElementFactory = null;
 
@@ -59,14 +67,19 @@ export class SplitLayout {
 
   private _topRightElement: Element = null;
 
+  private _leftSpaceDefaultElementFactory: ElementFactory = null;
+
   private _rightSpaceDefaultElementFactory: ElementFactory = null;
 
   private _rootInfoNode: RootInfoNode = null;
 
   constructor() {
+    this._tabContainerFactory = () => document.createElement("DIV");
+
     const tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
     tabWidget.setShowFrame(false);
-    this._rootInfoNode = {type: "tabwidget", children: [], tabWidget: tabWidget, emptyTab: null, emptyTabContent: null, rightSpaceDefaultElement: null};
+    this._rootInfoNode = {type: "tabwidget", children: [], tabWidget: tabWidget, emptyTab: null,
+      emptyTabContent: null, leftSpaceDefaultElement: null, rightSpaceDefaultElement: null};
   }
 
   setRootContainer(el: Element): void {
@@ -77,12 +90,12 @@ export class SplitLayout {
     return this._rootContainer;
   }
 
-  setTabContainerDivClass(clazz: string): void {
-    this._tabContainerDivClass = clazz;
+  setTabContainerFactory(factory: ElementFactory): void {
+    this._tabContainerFactory = factory;
   }
 
-  getTabContainerDivClass(): string {
-    return this._tabContainerDivClass;
+  getTabContainerFactory(): ElementFactory {
+    return this._tabContainerFactory;
   }
 
   // Set the factory function to use when creating content to fill the situation where there are not tabs.
@@ -110,8 +123,20 @@ export class SplitLayout {
     return this._topRightElement;
   }
 
+  setLeftSpaceDefaultElementFactory(el: ElementFactory): void {
+    this._leftSpaceDefaultElementFactory = el;
+  }
+  
+  getLeftSpaceDefaultElementFactory(): ElementFactory {
+    return this._leftSpaceDefaultElementFactory;
+  }
+
   setRightSpaceDefaultElementFactory(el: ElementFactory): void {
     this._rightSpaceDefaultElementFactory = el;
+  }
+
+  getRightSpaceDefaultElementFactory(): ElementFactory {
+    return this._rightSpaceDefaultElementFactory;
   }
 
   appendTab(tabWidget: TabWidget, tab: Tab, tabContent: Element): void {
@@ -129,10 +154,10 @@ export class SplitLayout {
   }
 
   update(): void {
-    this._update(this._rootContainer, this._rootInfoNode);
+    this._update(this._rootContainer, this._rootInfoNode, RelativePosition.TOP_WIDE);
   }
 
-  private _update(container: Element, infoNode: RootInfoNode): void {
+  private _update(container: Element, infoNode: RootInfoNode, position: RelativePosition): void {
     if (infoNode.type === "splitter") {
       // Remove the unneeded children.
       removeAllChildrenExceptOne(container, infoNode.splitter);
@@ -155,22 +180,47 @@ export class SplitLayout {
         }
         container.appendChild(infoNode.tabWidget);
       }
-      this._updateTabWidget(infoNode);
+      this._updateTabWidget(infoNode, position);
 
     }
   }
 
-  private _updateTabWidget(infoNode: TabWidgetInfoNode): void {
+  private _updateTabWidget(infoNode: TabWidgetInfoNode, position: RelativePosition): void {
     const tabWidget = infoNode.tabWidget;
+
+    // Compute the correct thing to place on the left side.
+    let leftSpaceElement = infoNode.leftSpaceDefaultElement;
+    if ((position === RelativePosition.TOP_LEFT || position == RelativePosition.TOP_WIDE) && this._topLeftElement != null) {
+      leftSpaceElement = this._topLeftElement;
+    } else {
+      if (this._leftSpaceDefaultElementFactory != null && infoNode.leftSpaceDefaultElement == null) {
+        infoNode.leftSpaceDefaultElement = this._leftSpaceDefaultElementFactory();
+        leftSpaceElement = infoNode.leftSpaceDefaultElement;
+      }
+    }
+
+    // Compute the correct thing to place on the right side.
+    let rightSpaceElement = infoNode.rightSpaceDefaultElement;
+    if ((position === RelativePosition.TOP_RIGHT || position == RelativePosition.TOP_WIDE) && this._topRightElement != null) {
+      rightSpaceElement = this._topRightElement;
+    } else {
+      if (this._rightSpaceDefaultElementFactory != null && infoNode.rightSpaceDefaultElement == null) {
+        infoNode.rightSpaceDefaultElement = this._rightSpaceDefaultElementFactory();
+        rightSpaceElement = infoNode.rightSpaceDefaultElement;
+      }
+    }
 
     // Figure out which current children we definitely don't need.
     const unneededChildrenSet = new Set<Element>(DomUtils.toArray(tabWidget.children));
+    if (leftSpaceElement != null) {
+      unneededChildrenSet.delete(leftSpaceElement);
+    }
     for (const kid of infoNode.children) {
       unneededChildrenSet.delete(kid.tab);
       unneededChildrenSet.delete(kid.container);
     }
-    if (infoNode.rightSpaceDefaultElement != null) {
-      unneededChildrenSet.delete(infoNode.rightSpaceDefaultElement);
+    if (rightSpaceElement != null) {
+      unneededChildrenSet.delete(rightSpaceElement);
     }
 
     for (const kid of unneededChildrenSet) {
@@ -179,25 +229,21 @@ export class SplitLayout {
 
     // Build the list of desired children nodes in order.
     const targetChildrenList: Element[] = [];
+    if (leftSpaceElement != null) {
+      targetChildrenList.push(leftSpaceElement);
+    }
     for (const kidInfo of infoNode.children) {
       targetChildrenList.push(kidInfo.tab);
 
       if (kidInfo.container == null) {
-        kidInfo.container = <HTMLDivElement> document.createElement("DIV");
-        if (this._tabContainerDivClass != null) {
-          kidInfo.container.classList.add(this._tabContainerDivClass);
-        }
+        kidInfo.container = this._tabContainerFactory()
         kidInfo.container.appendChild(kidInfo.content);
       }
       targetChildrenList.push(kidInfo.container);
     }
 
-    // Add any special space filling element to the right of the tabs.
-    if (this._rightSpaceDefaultElementFactory != null) {
-      if (infoNode.rightSpaceDefaultElement == null) {
-        infoNode.rightSpaceDefaultElement = this._rightSpaceDefaultElementFactory();
-      }
-      targetChildrenList.push(infoNode.rightSpaceDefaultElement);
+    if (rightSpaceElement != null) {
+      targetChildrenList.push(rightSpaceElement);
     }
 
     // Insert the missing children and fix the order.
