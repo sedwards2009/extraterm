@@ -5,6 +5,7 @@
  */
 import Logger from './Logger';
 import * as _ from 'lodash';
+import * as SetUtils from './utils/SetUtils';
 
 const FALLTHROUGH = "fallthrough";
 const NAME = "name";
@@ -76,6 +77,17 @@ const eventKeyToCodeMirrorMapping = {
   "Escape": "Esc",
 };
 
+function mapBool(b: boolean): string {
+  if (b === undefined) {
+    return "?";
+  }
+  return b ? "T" : "F";
+}
+
+function mapString(s: string): string {
+  return s === undefined ? "" : s;
+}
+
 /**
  * Mapping from keyboard events to command strings, and command strings to
  * shortcut names.
@@ -101,6 +113,32 @@ export class KeyBindingMapping {
     });
   }
   
+  equals(other: KeyBindingMapping): boolean {
+    if (other == null) {
+      return false;
+    }
+    if (other === this) {
+      return true;
+    }
+
+    if (other._platform !== this._platform) {
+      return false;
+    }
+
+    const myBindings = this.keyBindings.map(this._makeKey);
+    const otherBindings = other.keyBindings.map(this._makeKey);
+    myBindings.sort();
+    otherBindings.sort();
+
+    return _.isEqual(myBindings, otherBindings);
+  }
+
+  private _makeKey(binding: KeyBinding): string {
+    return `${mapString(binding.key)}:${mapString(binding.command)}:${mapString(binding.shortcut)}` +
+      `:${mapString(binding.normalizedShortcut)}:${mapBool(binding.altKey)}:${mapBool(binding.ctrlKey)}:` +
+      `${mapBool(binding.metaKey)}:${mapBool(binding.shiftKey)}`;
+  }
+
   private _gatherPairs(name: string, allMappings: Object): { key: string, value: string}[] {
     const mapping = allMappings[name];
     if (mapping === undefined) {
@@ -303,7 +341,33 @@ export class KeyBindingContexts {
       }
     }
   }
-  
+
+  equals(other: KeyBindingContexts): boolean {
+    if (other == null) {
+      return false;
+    }
+    if (this === other) {
+      return true;
+    }
+
+    if ( ! SetUtils.equals(new Set(this._contexts.keys()), new Set(other._contexts.keys()))) {
+      return false;
+    }
+
+    const contexts = this._contexts;
+    const otherContexts = other._contexts;
+
+    for (const key of contexts.keys()) {
+      const value1 = contexts.get(key);
+      const value2 = otherContexts.get(key);
+      if (value1 !== value2 && ! value1.equals(value2)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   /**
    * Looks up the KeyBindingMapping for a context by name.
    *

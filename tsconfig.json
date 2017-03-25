@@ -110,7 +110,8 @@
         "./src/plugins/TerminalViewerExtra/TerminalViewerExtra.ts",
         "./src/plugins/TextViewer/TextViewerPlugin.ts",
         "./src/typings/ptyw.js/ptyw.js.d.ts",
-        "./src/typings/vuejs/vuejs.d.ts"
+        "./src/typings/vuejs/vuejs.d.ts",
+        "./src/utils/SetUtils.ts"
     ],
     "exclude": [],
     "atom": {
