@@ -153,8 +153,61 @@ export class SplitLayout {
     info.children.push({tab: tab, content: tabContent, container: null});
   }
 
+  removeTabContent(tabContent: Element): void {
+    const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
+    if (info == null) {
+      this._log.severe("Unable to find the info for TabWidget ", tabContent);
+      return;
+    }
+
+    const {tabWidgetInfo, tabInfo} = info;
+    tabWidgetInfo.children = tabWidgetInfo.children.filter( info => info !== tabInfo);
+  }
+
+  getAllTabContents(): Element[] {
+    return getAllTabContents(this._rootInfoNode);
+  }
+
+  getTabByTabContent(tabContent: Element): Tab {
+    const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
+    if (info == null) {
+      this._log.severe("Unable to find the info for TabWidget ", tabContent);
+      return;
+    }
+    return info.tabInfo.tab;
+  }
+
+  getTabWidgetByTabContent(tabContent: Element): TabWidget {
+    const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
+    if (info == null) {
+      this._log.severe("Unable to find the info for TabWidget ", tabContent);
+      return;
+    }
+    return info.tabWidgetInfo.tabWidget;
+  }
+
+  getTabContentByTab(tab: Tab): Element {
+    const info = findTabWidgetInfoByTab(this._rootInfoNode, tab);
+    if (info == null) {
+      this._log.severe("Unable to find the info for Tab ", tab);
+      return;
+    }
+    return info.tabInfo.content;
+  }
+
   firstTabWidget(): TabWidget {
     return firstTabWidget(this._rootInfoNode);
+  }
+
+  showTabByTabContent(tabContent: Element): void {
+    const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
+    if (info == null) {
+      this._log.severe("Unable to find the info for TabWidget ", tabContent);
+      return;
+    }
+
+    const {tabWidgetInfo, tabInfo} = info;
+    tabWidgetInfo.tabWidget.setCurrentIndex(tabWidgetInfo.children.indexOf(tabInfo));
   }
 
   update(): void {
@@ -299,4 +352,48 @@ function firstTabWidget(infoNode: RootInfoNode): TabWidget {
   }
 }
 
+function findTabWidgetInfoByTabContent(infoNode: RootInfoNode, tabContent: Element): {tabWidgetInfo: TabWidgetInfoNode, tabInfo: TabInfo} {
+  if (infoNode.type === "splitter") {
+    for (const kid of infoNode.children) {
+      const info = findTabWidgetInfoByTabContent(kid, tabContent);
+      if (info != null) {
+        return info;
+      }
+    }
+  } else {
+    // Tab widget
+    for (const tabInfo of infoNode.children) {
+      if (tabInfo.content === tabContent) {
+        return { tabWidgetInfo: infoNode, tabInfo };
+      }
+    }
+  }
+  return null;
+}
 
+function findTabWidgetInfoByTab(infoNode: RootInfoNode, tab: Tab): {tabWidgetInfo: TabWidgetInfoNode, tabInfo: TabInfo} {
+  if (infoNode.type === "splitter") {
+    for (const kid of infoNode.children) {
+      const info = findTabWidgetInfoByTab(kid, tab);
+      if (info != null) {
+        return info;
+      }
+    }
+  } else {
+    // Tab widget
+    for (const tabInfo of infoNode.children) {
+      if (tabInfo.tab === tab) {
+        return { tabWidgetInfo: infoNode, tabInfo };
+      }
+    }
+  }
+  return null;
+}
+
+function getAllTabContents(infoNode: RootInfoNode): Element[] {
+  if (infoNode.type === "splitter") {
+    return infoNode.children.map(getAllTabContents).reduce( (accu,list) => [...accu, ...list], []);
+  } else {
+    return infoNode.children.map(kidInfo => kidInfo.content);
+  }
+}
