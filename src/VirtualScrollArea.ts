@@ -185,15 +185,23 @@ export class VirtualScrollArea {
   }
   
   getScrollableTop(scrollable: VirtualScrollable): number {
-    let result: number = undefined;
-    this._currentState.scrollableStates.forEach( (s) => {
+    for (const s of this._currentState.scrollableStates) {
       if (s.scrollable === scrollable) {
-        result = s.virtualTop;
+        return s.virtualTop;
       }
-    });
-    return result;
+    }
+    return null;
   }
   
+  getScrollableVisible(scrollable: VirtualScrollable): boolean {
+    for (const s of this._currentState.scrollableStates) {
+      if (s.scrollable === scrollable) {
+        return s.visible;
+      }
+    }
+    return null;
+  }
+
   getScrollableVirtualHeight(scrollable: VirtualScrollable): number {
     for (const state of this._currentState.scrollableStates) {
       if (state.scrollable === scrollable) {

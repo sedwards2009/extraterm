@@ -1035,7 +1035,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       } else {
 
         if (element.parentElement !== scrollerArea) {
-          // Move the element can to the scroll area and place it in the correct position relative to the other child elements.
+          // Move the element to the scroll area and place it in the correct position relative to the other child elements.
 
           const scrollerAreaChildrenCount = scrollerArea.children.length;
           if (scrollerAreaChildrenCount === 0) {
@@ -1609,7 +1609,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
           this._virtualScrollArea.updateScrollableSizes(processList);
 
           if (stashedList.length !== 0) {
-            const markVisibleOperations = stashedList.map( (el) => this._bulkMarkVisible(el, false) );
+            const markVisibleOperations = stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))
+              .map( (el) => this._bulkMarkVisible(el, false) );
             CodeMirrorOperation.executeBulkDOMOperation(BulkDomOperation.parallel(markVisibleOperations));
           }
 
