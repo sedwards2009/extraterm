@@ -68,6 +68,7 @@
         "./src/ResizeRefreshElementBase.ts",
         "./src/ResourceLoader.ts",
         "./src/SourceDir.ts",
+        "./src/SplitLayout.ts",
         "./src/SupportsClipboardPaste.ts",
         "./src/Term.ts",
         "./src/Terminal.ts",

@@ -426,7 +426,7 @@ export class TabWidget extends ThemeableElementBase {
   }
   
   private _sendSwitchEvent(): void {
-    const event = new CustomEvent(TabWidget.EVENT_TAB_SWITCH, { detail: null });
+    const event = new CustomEvent(TabWidget.EVENT_TAB_SWITCH, { detail: null, bubbles: true });
     this.dispatchEvent(event);
   }
 

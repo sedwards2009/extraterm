@@ -444,3 +444,34 @@ export function htmlToFragment(html: string): DocumentFragment {
   }
   return frag;
 }
+
+/**
+ * Update the list of children on an element.
+ * 
+ * This function updates the children while trying to do as few changes on
+ * the DOM as possible.
+ * 
+ * @param el the Element to update.
+ * @param targetChildrenList the desired list of child elements.
+ */
+export function setElementChildren(el: Element, targetChildrenList: Element[]): void {
+  // Delete phase
+  const unneededChildrenSet = new Set<Element>(toArray(el.children));
+  for (const kid of targetChildrenList) {
+    unneededChildrenSet.delete(kid);
+  }
+  for (const kid of unneededChildrenSet) {
+    el.removeChild(kid);
+  }
+
+  // Insert the missing children and fix the order.
+  for (let i=0; i < targetChildrenList.length; i++) {
+    if (el.children.length <= i) {
+      el.appendChild(targetChildrenList[i]);
+    } else {
+      if (el.children.item(i) !== targetChildrenList[i]) {
+        el.insertBefore(targetChildrenList[i], el.children.item(i));
+      }
+    }
+  }
+}

@@ -43,10 +43,13 @@ interface TabWidgetInfoNode {
 }
 
 interface TabInfo {
+  type: "tabinfo";
   tab: Tab;
   content: Element;
   container: Element;
 }
+
+type InfoNode = SplitterInfoNode | TabWidgetInfoNode | TabInfo;
 
 type RootInfoNode = SplitterInfoNode | TabWidgetInfoNode;
 
@@ -143,6 +146,13 @@ export class SplitLayout {
     return this._rightSpaceDefaultElementFactory;
   }
 
+  /**
+   * Add a new tab to a Tab widget.
+   * 
+   * @param tabWidget the tab widget which receives the new tab.
+   * @param tab the new tab object.
+   * @param tabContent the contents of the new tab.
+   */
   appendTab(tabWidget: TabWidget, tab: Tab, tabContent: Element): void {
     const info = findTabWidgetInfoByTabWidget(this._rootInfoNode, tabWidget);
     if (info == null) {
@@ -150,9 +160,14 @@ export class SplitLayout {
       return;
     }
 
-    info.children.push({tab: tab, content: tabContent, container: null});
+    info.children.push({type: "tabinfo", tab: tab, content: tabContent, container: null});
   }
 
+  /**
+   * Remove a tab and its contents.
+   * 
+   * @param tabContent the tab content which is used to find the tab to remove.
+   */
   removeTabContent(tabContent: Element): void {
     const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
     if (info == null) {
@@ -168,41 +183,73 @@ export class SplitLayout {
     return getAllTabContents(this._rootInfoNode);
   }
 
+  /**
+   * Get the tab which matches the tab content.
+   * 
+   * @param tabContent the tab content to search by.
+   * @return the tab which holds the given tab content or null if it could
+   *        not be found.
+   */
   getTabByTabContent(tabContent: Element): Tab {
     const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
     if (info == null) {
       this._log.severe("Unable to find the info for TabWidget ", tabContent);
-      return;
+      return null;
     }
     return info.tabInfo.tab;
   }
 
+  /**
+   * Get the Tab widget which holds the tab content.
+   * 
+   * @param tabContent the tab content used to find the Tab widget.
+   * @return the Tab widget which holds the given tab content, or null if
+   *          it could not be found.
+   */
   getTabWidgetByTabContent(tabContent: Element): TabWidget {
     const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
     if (info == null) {
       this._log.severe("Unable to find the info for TabWidget ", tabContent);
-      return;
+      return null;
     }
     return info.tabWidgetInfo.tabWidget;
   }
 
+  /**
+   * Get the tab content element which is paired with the tab.
+   * 
+   * @param tab the tab object to search by.
+   * @return the tab content element or null if it could not be found.
+   */
   getTabContentByTab(tab: Tab): Element {
     const info = findTabWidgetInfoByTab(this._rootInfoNode, tab);
     if (info == null) {
       this._log.severe("Unable to find the info for Tab ", tab);
-      return;
+      return null;
     }
     return info.tabInfo.content;
   }
 
+  /**
+   * Get the first tab widget.
+   * 
+   * @return the first tab widget.
+   */
   firstTabWidget(): TabWidget {
     return firstTabWidget(this._rootInfoNode);
   }
 
+  /**
+   * Show a tab identified by the given tab content.
+   * 
+   * Selects the tab which is identified by the given tab content.
+   * 
+   * @param tabContent the tab content which identifies the tab to select.
+   */
   showTabByTabContent(tabContent: Element): void {
     const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
     if (info == null) {
-      this._log.severe("Unable to find the info for TabWidget ", tabContent);
+      this._log.severe("Unable to find the info for tab contents ", tabContent);
       return;
     }
 
@@ -210,39 +257,110 @@ export class SplitLayout {
     tabWidgetInfo.tabWidget.setCurrentIndex(tabWidgetInfo.children.indexOf(tabInfo));
   }
 
+  splitAfterTabContent(tabContent: Element): void {
+    const path = findPathToTabContent(this._rootInfoNode, tabContent);
+    if (path == null) {
+      this._log.severe("Unable to find the info for tab contents ", tabContent);
+      return;
+    }
+    
+    if (path.length === 2) {
+      // Path must be ;TabWidget, TabInfo].
+      const path0 = path[0];
+      if (path0.type === "tabwidget") {
+        const tabWidgetInfo = path0;
+        const path1 = path[1];
+        if (path1.type === "tabinfo") {
+          const tabInfo = path1;
+
+          // Create a new TabWidget
+          const newTabWidgetInfo: TabWidgetInfoNode = {
+            type: "tabwidget",
+            children: [],
+            tabWidget: null,
+            emptyTab: null,
+            emptyTabContent: null,
+            leftSpaceDefaultElement: null,
+            rightSpaceDefaultElement: null
+          };
+
+          // Insert a Splitter at the root.
+          const newRoot: SplitterInfoNode = {
+            type: "splitter",
+            children: [tabWidgetInfo, newTabWidgetInfo],
+            orientation: SplitterOrientation.VERTICAL,
+            splitter: null
+          };
+
+          this._rootInfoNode = newRoot;
+        }
+
+
+      }
+
+    } else {
+
+    }
+
+  }
+
+  /**
+   * Update the DOM to match the desired new state.
+   * 
+   * This should be called after mutation methods to update the DOM with the new changes.
+   */
   update(): void {
     this._update(this._rootContainer, this._rootInfoNode, RelativePosition.TOP_WIDE);
   }
 
   private _update(container: Element, infoNode: RootInfoNode, position: RelativePosition): void {
     if (infoNode.type === "splitter") {
-      // Remove the unneeded children.
-      removeAllChildrenExceptOne(container, infoNode.splitter);
+      this._updateSplitter(infoNode, position);
 
+      // Remove the unneeded children, and insert the Splitter.
+      removeAllChildrenExceptOne(container, infoNode.splitter);
       if (container.children.length === 0) {
-        if (infoNode.splitter  == null) {
-          infoNode.splitter = <Splitter> document.createElement(Splitter.TAG_NAME);
-          // FIXME set the orientation
-        }
         container.appendChild(infoNode.splitter);
       }
+
     } else {
+      this._updateTabWidget(infoNode, position);
 
       // TabWidget
       removeAllChildrenExceptOne(container, infoNode.tabWidget);
       if (container.children.length === 0) {
-        if (infoNode.tabWidget  == null) {
-          infoNode.tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
-          infoNode.tabWidget.setShowFrame(false);
-        }
         container.appendChild(infoNode.tabWidget);
       }
-      this._updateTabWidget(infoNode, position);
 
     }
   }
 
+  private _updateSplitter(infoNode: SplitterInfoNode, position: RelativePosition): void {
+    if (infoNode.splitter  == null) {
+      infoNode.splitter = <Splitter> document.createElement(Splitter.TAG_NAME);
+      // FIXME set the orientation
+    }
+
+    const targetChildrenList: Element[] = [];
+    for (const kidInfo of infoNode.children) {
+      if (kidInfo.type === "splitter") {
+        this._updateSplitter(kidInfo, position);
+        targetChildrenList.push(kidInfo.splitter);
+      } else {
+        // Tab widget
+        this._updateTabWidget(kidInfo, position);
+        targetChildrenList.push(kidInfo.tabWidget);
+      } 
+    }
+
+    DomUtils.setElementChildren(infoNode.splitter, targetChildrenList);
+  }
+
   private _updateTabWidget(infoNode: TabWidgetInfoNode, position: RelativePosition): void {
+    if (infoNode.tabWidget  == null) {
+      infoNode.tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+      infoNode.tabWidget.setShowFrame(false);
+    }
     const tabWidget = infoNode.tabWidget;
 
     // Compute the correct thing to place on the left side.
@@ -267,23 +385,6 @@ export class SplitLayout {
       }
     }
 
-    // Figure out which current children we definitely don't need.
-    const unneededChildrenSet = new Set<Element>(DomUtils.toArray(tabWidget.children));
-    if (leftSpaceElement != null) {
-      unneededChildrenSet.delete(leftSpaceElement);
-    }
-    for (const kid of infoNode.children) {
-      unneededChildrenSet.delete(kid.tab);
-      unneededChildrenSet.delete(kid.container);
-    }
-    if (rightSpaceElement != null) {
-      unneededChildrenSet.delete(rightSpaceElement);
-    }
-
-    for (const kid of unneededChildrenSet) {
-      tabWidget.removeChild(kid);
-    }
-
     // Build the list of desired children nodes in order.
     const targetChildrenList: Element[] = [];
     if (leftSpaceElement != null) {
@@ -303,13 +404,7 @@ export class SplitLayout {
       targetChildrenList.push(rightSpaceElement);
     }
 
-    // Insert the missing children and fix the order.
-    for (let i=0; i < targetChildrenList.length; i++) {
-      if (tabWidget.children.item(i) !== targetChildrenList[i]) {
-        tabWidget.insertBefore(targetChildrenList[i], tabWidget.children.item(i));
-      }
-    }
-
+    DomUtils.setElementChildren(tabWidget, targetChildrenList);
     tabWidget.update();
   }
 }
@@ -388,6 +483,27 @@ function findTabWidgetInfoByTab(infoNode: RootInfoNode, tab: Tab): {tabWidgetInf
     }
   }
   return null;
+}
+
+function findPathToTabContent(infoNode: RootInfoNode, tabContent): InfoNode[] {
+  if (infoNode.type === "splitter") {
+    for (const kid of infoNode.children) {
+      const path = findPathToTabContent(kid, tabContent);
+      if (path != null) {
+        return [infoNode, ...path];
+      }
+    }
+    return null;
+
+  } else {
+    // Tab widget
+    for (const kid of infoNode.children) {
+      if (kid.content === tabContent) {
+        return [infoNode, kid];
+      }
+    }
+    return null;
+  }
 }
 
 function getAllTabContents(infoNode: RootInfoNode): Element[] {

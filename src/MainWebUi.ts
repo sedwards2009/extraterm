@@ -67,7 +67,6 @@ const ID_OSX_MINIMIZE_BUTTON = "ID_OSX_MINIMIZE_BUTTON";
 const ID_OSX_MAXIMIZE_BUTTON = "ID_OSX_MAXIMIZE_BUTTON";
 const ID_OSX_CLOSE_BUTTON = "ID_OSX_CLOSE_BUTTON";
 
-const ID_TAB_CONTAINER_LEFT = "ID_TAB_CONTAINER_LEFT";
 const ID_REST_SLOT = "ID_REST_SLOT";
 const ID_REST_DIV_LEFT = "ID_REST_DIV_LEFT";
 
@@ -88,6 +87,7 @@ const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
 const COMMAND_NEW_TAB = "newTab";
 const COMMAND_CLOSE_TAB = "closeTab";
 const COMMAND_VERTICAL_SPLIT = "COMMAND_VERTICAL_SPLIT";
+const COMMAND_CLOSE_SPLIT = "COMMAND_CLOSE_SPLIT";
 
 let registered = false;
 
@@ -424,7 +424,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _firstTabWidget(): TabWidget {
-    return <TabWidget> this._getById(ID_TAB_CONTAINER_LEFT);
+    return this._splitLayout.firstTabWidget();
   }
 
   private _handleTabSwitch(tabWidget: TabWidget): void {
@@ -531,6 +531,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._sendTabOpenedEvent();
 
     this._internalExtratermApi.addTab(newTerminal);
+    newTerminal.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     return newTerminal;
   }
   
@@ -718,98 +719,25 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //    #####
-  //   #     # #####  #      # #####  ####  
-  //   #       #    # #      #   #   #      
-  //    #####  #    # #      #   #    ####  
-  //         # #####  #      #   #        # 
-  //   #     # #      #      #   #   #    # 
-  //    #####  #      ###### #   #    ####  
-  //
-  //-----------------------------------------------------------------------
-
   private _verticalSplit(tabContentElement: Element): void {
-    const tabWidget = this._tabWidgetFromElement(tabContentElement);
+    this._splitLayout.splitAfterTabContent(tabContentElement);
+    this._splitLayout.update();
+    this._refreshSplitLayout();
+
+    //   setTimeout(()=>{  // FIXME using a time out doesn't feel right, and I don't know why an immediate .focus() doesn't work.
+    //     emptyPaneMenu.focus();
+    //   }, 0);
+  }
+
+  private _refreshSplitLayout(): void {
     const rootContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
-
-    if (tabWidget.parentElement === rootContainer) {
-      // Single tab widget directly inside the container DIV.
-      const splitter = <Splitter> document.createElement(Splitter.TAG_NAME);
-      rootContainer.appendChild(splitter);
-      splitter.appendChild(tabWidget);
-      const newTabWidget = this._newTabWidget();
-      newTabWidget.setShowTabs(false);
-      splitter.appendChild(newTabWidget);
-
-      const emptyPaneMenu = this._insertEmptyPaneMenu(newTabWidget);
-
-      this._repositionParentContent();
-      tabWidget.update();
-      splitter.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
-
-      setTimeout(()=>{  // FIXME using a time out doesn't feel right, and I don't know why an immediate .focus() doesn't work.
-        emptyPaneMenu.focus();
-      }, 0);
-
-    } else {
-
-
-
+    const firstKid = rootContainer.children.item(0);
+    if (firstKid instanceof Splitter || firstKid instanceof TabWidget) {
+      firstKid.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
     }
   }
 
-  private _insertEmptyPaneMenu(tabWidget: TabWidget): EmptyPaneMenu {
-    // Insert an Empty Pane Menu 
-    const emptyPaneMenuTab = <Tab> document.createElement(Tab.TAG_NAME);
-    const emptyPaneMenuDiv = <HTMLDivElement> document.createElement("DIV");
-    emptyPaneMenuDiv.classList.add(CLASS_TAB_CONTENT);
-
-    const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
-
-    emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
-      this._executeCommand(emptyPaneMenu, ev.detail.selected);
-    });
-    emptyPaneMenu.addEventListener('focus', (ev: FocusEvent) => {
-      this._lastFocus = emptyPaneMenu;
-    });
-
-    emptyPaneMenu.setEntries(this._commandPaletteEntries(emptyPaneMenu));
-    emptyPaneMenuDiv.appendChild(emptyPaneMenu);
-
-    if (tabWidget.children.length !== 0) {
-      tabWidget.insertBefore(emptyPaneMenuDiv, tabWidget.children.item(0));
-      tabWidget.insertBefore(emptyPaneMenuTab, emptyPaneMenuDiv);
-    } else {
-      tabWidget.appendChild(emptyPaneMenuTab);
-      tabWidget.appendChild(emptyPaneMenuDiv);
-    }
-    tabWidget.setShowTabs(false);
-    return emptyPaneMenu;
-  }
-
-  private _repositionParentContent(): void {
-    const topRightTabWidget = this._findTopRightTabWidget(DomUtils.getShadowId(this, ID_MAIN_CONTENTS));
-    const restSlot = DomUtils.getShadowId(this, ID_REST_SLOT);
-    const newButtonContainer = topRightTabWidget.querySelector("."  + CLASS_NEW_BUTTON_CONTAINER);
-    newButtonContainer.appendChild(restSlot);
-  }
-
-  private _findTopRightTabWidget(parentEl: HTMLElement): TabWidget {
-    const lastChild = parentEl.children.item(parentEl.children.length-1);
-    if (lastChild instanceof Splitter) {
-      // Check for vertical or horizontal split.
-      // if (vertical) {
-        return this._findTopRightTabWidget(lastChild);
-      // } else {
-      //   return this._findTopLeftTabWidget(lastChild);
-      // }
-    }
-    if (lastChild instanceof TabWidget) {
-      return lastChild;
-    }
-    return null;
+  private _closeSplit(tabContentElement: Element): void {
   }
 
   //-----------------------------------------------------------------------
@@ -966,8 +894,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", target: target },
       { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", target: target },
       { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", target: target },
-      { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target }
+      { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target },
     ];
+// FIXME
+    if (this._tabWidgetFromElement(tabContentElement) !== null && this._tabWidgetFromElement(tabContentElement).parentElement instanceof Splitter ||
+        tabContentElement instanceof EmptyPaneMenu) {
+
+      commandList.push( { id: COMMAND_CLOSE_SPLIT, group: PALETTE_GROUP, label: "Close Split", target: target } );
+    }
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
     if (keyBindings !== null) {
@@ -999,6 +933,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
       case COMMAND_VERTICAL_SPLIT:
         this._verticalSplit(tabElement);
+        break;
+
+      case COMMAND_CLOSE_SPLIT:
+        this._closeSplit(tabElement);
         break;
 
       default:
