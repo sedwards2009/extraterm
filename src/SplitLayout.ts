@@ -273,16 +273,20 @@ export class SplitLayout {
         if (path1.type === "tabinfo") {
           const tabInfo = path1;
 
+          const splitIndex = tabWidgetInfo.children.map(c => c.content).indexOf(tabContent) + 1;
+
           // Create a new TabWidget
           const newTabWidgetInfo: TabWidgetInfoNode = {
             type: "tabwidget",
-            children: [],
+            children: tabWidgetInfo.children.slice(splitIndex),
             tabWidget: null,
             emptyTab: null,
             emptyTabContent: null,
             leftSpaceDefaultElement: null,
             rightSpaceDefaultElement: null
           };
+
+          tabWidgetInfo.children = tabWidgetInfo.children.slice(0, splitIndex);
 
           // Insert a Splitter at the root.
           const newRoot: SplitterInfoNode = {
@@ -302,6 +306,70 @@ export class SplitLayout {
 
     }
 
+  }
+
+  closeSplitAtTabContent(tabContent: Element): void {
+    const path = findPathToTabContent(this._rootInfoNode, tabContent);
+    if (path == null) {
+      this._log.severe("Unable to find the info for tab contents ", tabContent);
+      return;
+    }
+
+    if (path.length >= 3) {
+      const lastPart = path[path.length-1];
+      if (lastPart.type === "tabinfo") {
+        const tabWidgetInfo = <TabWidgetInfoNode> path[path.length-2];
+        const splitterInfo = <SplitterInfoNode> path[path.length-3];
+
+        // We merge two adjacent TabWidgets together by merging the indicated
+        // Tab Widget with its neighbour to the right. If there is nothing to
+        // the right, then merge to the left.
+        let index = splitterInfo.children.indexOf(tabWidgetInfo);
+        if (index === splitterInfo.children.length-1) {
+          index = splitterInfo.children.length-2;
+        }
+
+        const leftTabWidgetInfo = splitterInfo.children[index];
+        const rightTabWidgetInfo = splitterInfo.children[index+1];
+        if (leftTabWidgetInfo.type === "tabwidget" && rightTabWidgetInfo.type === "tabwidget") {
+          leftTabWidgetInfo.children = [...leftTabWidgetInfo.children, ...rightTabWidgetInfo.children];
+          splitterInfo.children = splitterInfo.children.filter( kid => kid !== rightTabWidgetInfo);
+
+          this._removeRedundantSplitters();
+
+          // if (splitterInfo.children.length === 1) {
+
+          // } else {
+
+          // }
+        }
+      }
+    }
+
+  }
+
+  _removeRedundantSplitters(): void {
+    if (this._rootInfoNode.type === "splitter") {
+      if (this._rootInfoNode.children.length === 1) {
+        this._rootInfoNode = this._rootInfoNode.children[0];
+      } else {
+        this._removeRedundantSplittersFromParent(this._rootInfoNode);
+      }
+    }
+  }
+
+  _removeRedundantSplittersFromParent(nodeInfo: RootInfoNode): void {
+    if (nodeInfo.type === "splitter") {
+      for (let i=0; i<nodeInfo.children.length; i++) {
+        const kid = nodeInfo.children[i];
+        if (kid.type === "splitter") {
+          if (kid.children.length === 1) {
+            nodeInfo.children.splice(i, 1, kid.children[0]);
+          }
+          this._removeRedundantSplittersFromParent(kid);
+        }
+      }
+    }
   }
 
   /**

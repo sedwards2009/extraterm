@@ -1,3 +1,9 @@
+/*
+ * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ *
+ * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
+ */
+
 const nodeunit = require('nodeunit');
 const sandbox = nodeunit.utils.sandbox;
 
@@ -37,6 +43,32 @@ class FakeChildrenArray {
   push(kid) {
     this._children.push(kid);
     this.length = this._children.length;
+    this._updateIndex();
+  }
+
+  _remove(kid) {
+    const currentLength = this._children.length;
+
+    this._children = this._children.filter( c => c !== kid );
+    this.length = this._children.length;
+
+    for (let i=0; i<currentLength; i++) {
+      delete this[i];
+    }
+    this._updateIndex();
+  }
+
+  _updateIndex() {
+    const currentLength = this._children.length;
+    for (let i=0; i<currentLength; i++) {
+      this[i] = this._children[i];
+    }
+  }
+
+  _insertAt(index, item) {
+    this._children.splice(index, 0, item);
+    this.length = this._children.length;
+    this._updateIndex();
   }
 }
 
@@ -44,15 +76,35 @@ class FakeElement {
   constructor(name) {
     this.name = name;
     this.children = new FakeChildrenArray();
+    this.parent = null;
   }
+
   appendChild(child) {
+    if (child.parent != null) {
+      child.parent.children._remove(child);
+    }
+
     this.children.push(child);
+    child.parent = this;
   }
 
   insertBefore(child, refChild) {
+    if (child.parent != null) {
+      child.parent.children._remove(child);
+    }
+
     const index = this.children._children.indexOf(refChild);
-    this.children._children.splice(index, 0, child);
-    this.children.length = this.children._children.length;
+    this.children._insertAt(index, child);
+    child.parent = this;
+  }
+
+  removeChild(child) {
+    this.children._remove(child);
+    child.parent = null;
+  }
+
+  _toFlatObject() {
+    return { name: this.name, children: this.children._children.map( c => c._toFlatObject() ) };
   }
 }
 
@@ -95,6 +147,14 @@ class FakeDiv extends FakeElement {
   }  
 }
 
+function setUp(callback) {
+  splitterCounter = 0;
+  tabWidgetCounter = 0;
+  tabCounter = 0;
+  divCounter = 0;
+  callback();
+}
+exports.setUp = setUp;
 
 const context = {
   require: requireWedge,
@@ -150,3 +210,98 @@ function testOneTab(test) {
   test.done();
 }
 exports.testOneTab = testOneTab;
+
+function testTwoTabs(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+
+  splitLayout.update();
+
+  // console.log(JSON.stringify(container,null,2));
+  test.equal(container.children.length, 1);
+  test.equal(container.children.item(0).children.length, 4);
+
+  test.done();
+}
+
+exports.testTwoTabs = testTwoTabs;
+
+function testSplit(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents);
+
+  splitLayout.update();
+
+// console.log(JSON.stringify(splitLayout._rootInfoNode, null, 2));
+
+// console.log(JSON.stringify(container,null,2));
+  test.equal(container.children.length, 1);
+  test.ok(container.children.item(0).name.startsWith("Splitter"));
+  test.equal(container.children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.length, 2);
+
+  test.done();
+}
+
+exports.testSplit = testSplit;
+
+function testCloseSplit(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents);
+
+  splitLayout.closeSplitAtTabContent(tabContents2);
+  splitLayout.update();
+
+// console.log(JSON.stringify(container._toFlatObject(), null, 2));
+  test.equal(container.children.length, 1);
+  test.equal(container.children.item(0).children.length, 4);
+
+  test.done();
+}
+
+exports.testCloseSplit = testCloseSplit;
