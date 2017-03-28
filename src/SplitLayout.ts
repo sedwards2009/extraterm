@@ -336,12 +336,6 @@ export class SplitLayout {
           splitterInfo.children = splitterInfo.children.filter( kid => kid !== rightTabWidgetInfo);
 
           this._removeRedundantSplitters();
-
-          // if (splitterInfo.children.length === 1) {
-
-          // } else {
-
-          // }
         }
       }
     }

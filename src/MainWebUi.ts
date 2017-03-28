@@ -738,6 +738,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _closeSplit(tabContentElement: Element): void {
+    this._splitLayout.closeSplitAtTabContent(tabContentElement);
+    this._splitLayout.update();
+    this._refreshSplitLayout();
   }
 
   //-----------------------------------------------------------------------
