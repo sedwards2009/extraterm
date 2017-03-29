@@ -235,7 +235,6 @@ function testTwoTabs(test) {
 
   test.done();
 }
-
 exports.testTwoTabs = testTwoTabs;
 
 function testSplit(test) {
@@ -271,7 +270,6 @@ function testSplit(test) {
 
   test.done();
 }
-
 exports.testSplit = testSplit;
 
 function testCloseSplit(test) {
@@ -303,5 +301,46 @@ function testCloseSplit(test) {
 
   test.done();
 }
-
 exports.testCloseSplit = testCloseSplit;
+
+function testSplit2(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+
+  const tab3 = new FakeTab();
+  const tabContents3 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
+
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents2);
+  splitLayout.update();
+
+console.log(JSON.stringify(container._toFlatObject(), null, 2));
+// console.log(JSON.stringify(splitLayout._rootInfoNode, null, 2));
+
+  test.equal(container.children.length, 1);
+  test.ok(container.children.item(0).name.startsWith("Splitter"));
+  test.equal(container.children.item(0).children.length, 3);
+  test.equal(container.children.item(0).children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.length, 2);
+  test.equal(container.children.item(0).children.item(2).children.length, 2);
+
+  test.done();
+}
+exports.testSplit2 = testSplit2;

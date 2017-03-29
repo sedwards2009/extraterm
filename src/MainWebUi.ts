@@ -733,7 +733,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const rootContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
     const firstKid = rootContainer.children.item(0);
     if (firstKid instanceof Splitter || firstKid instanceof TabWidget) {
-      firstKid.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
+      firstKid.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     }
   }
 
