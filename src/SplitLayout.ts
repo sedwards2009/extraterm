@@ -421,18 +421,47 @@ export class SplitLayout {
     }
 
     const targetChildrenList: Element[] = [];
-    for (const kidInfo of infoNode.children) {
+    const len = infoNode.children.length;
+    for (let i=0; i<len; i++) {
+      const kidInfo = infoNode.children[i];
+      const newPosition = this._computeNewPosition(position, i, len);
       if (kidInfo.type === "splitter") {
-        this._updateSplitter(kidInfo, position);
+        this._updateSplitter(kidInfo, newPosition);
         targetChildrenList.push(kidInfo.splitter);
       } else {
         // Tab widget
-        this._updateTabWidget(kidInfo, position);
+        this._updateTabWidget(kidInfo, newPosition);
         targetChildrenList.push(kidInfo.tabWidget);
       } 
     }
 
     DomUtils.setElementChildren(infoNode.splitter, targetChildrenList);
+  }
+
+  private _computeNewPosition(oldPosition: RelativePosition, index: number, length: number): RelativePosition {
+    switch (oldPosition) {
+      case RelativePosition.TOP_WIDE:
+        if (length === 1) {
+          return RelativePosition.TOP_WIDE;
+        } else {
+          if (index === 0) {
+            return RelativePosition.TOP_LEFT;
+          } else if (index === length-1) {
+            return RelativePosition.TOP_RIGHT;
+          } else {
+            return RelativePosition.OTHER;
+          }
+        }
+
+      case RelativePosition.TOP_LEFT:
+        return index === 0 ? RelativePosition.TOP_LEFT : RelativePosition.OTHER;
+
+      case RelativePosition.TOP_RIGHT:
+        return index === length-1 ? RelativePosition.TOP_RIGHT : RelativePosition.OTHER;
+
+      default:
+        return RelativePosition.OTHER;
+    }
   }
 
   private _updateTabWidget(infoNode: TabWidgetInfoNode, position: RelativePosition): void {

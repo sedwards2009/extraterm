@@ -488,7 +488,6 @@ function testSplitRemoveContentWithSpace(test) {
   splitLayout.removeTabContent(tabContents);
   splitLayout.update();
 
-// console.log(JSON.stringify(splitLayout._rootInfoNode, null, 2));
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
   test.equal(container.children.length, 1);
@@ -500,3 +499,107 @@ function testSplitRemoveContentWithSpace(test) {
   test.done();
 }
 exports.testSplitRemoveContentWithSpace = testSplitRemoveContentWithSpace;
+
+
+function testOneTabWithTopRight(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+
+  const topRight = new FakeDiv();
+  topRight.name = "top right";
+  splitLayout.setTopRightElement(topRight);
+
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+
+  splitLayout.update();
+
+  test.equal(container.children.length, 1);
+  test.equal(container.children.item(0).children.length, 3);
+
+  test.done();
+}
+exports.testOneTabWithTopRight = testOneTabWithTopRight;
+
+function testOneTabWithTopRightAndSpace(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+  splitLayout.setRightSpaceDefaultElementFactory( () => {
+    const div = new FakeDiv();
+    div.name = "space";
+    return div;
+  } );
+
+  const topRight = new FakeDiv();
+  topRight.name = "top right";
+  splitLayout.setTopRightElement(topRight);
+
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+
+  splitLayout.update();
+
+  test.equal(container.children.length, 1);
+  test.equal(container.children.item(0).children.length, 3);
+  test.equal(container.children.item(0).children.item(2).name, "top right");
+
+  test.done();
+}
+exports.testOneTabWithTopRightAndSpace = testOneTabWithTopRightAndSpace;
+
+function testTwoTabSplitWithTopRightAndSpace(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+  splitLayout.setRightSpaceDefaultElementFactory( () => {
+    const div = new FakeDiv();
+    div.name = "space";
+    return div;
+  } );
+
+  const topRight = new FakeDiv();
+  topRight.name = "top right";
+  splitLayout.setTopRightElement(topRight);
+
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+  splitLayout.update();
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.update();
+
+console.log(JSON.stringify(container._toFlatObject(), null, 2));
+  test.equal(container.children.length, 1);
+  test.equal(container.children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.item(2).name, "top right");
+  test.equal(container.children.item(0).children.item(0).children.length, 3);
+  test.equal(container.children.item(0).children.item(0).children.item(2).name, "space");
+
+  test.done();
+}
+exports.testTwoTabSplitWithTopRightAndSpace = testTwoTabSplitWithTopRightAndSpace;
+
+
+
