@@ -12,13 +12,18 @@ const moduleRemap = {
     Splitter: {
       TAG_NAME: "et-splitter"
     }
-    
   },
+
   "./gui/TabWidget": {
     TabWidget: {
       TAG_NAME: "et-tabwidget"
     }
-    
+  },
+
+  "./gui/Tab": {
+    Tab: {
+      TAG_NAME: "et-tab"
+    }
   }
 }
 
@@ -167,6 +172,8 @@ const context = {
         return new FakeSplitter();
       } else if (elName === "et-tabwidget") {
         return new FakeTabWidget();
+      } else if (elName === "et-tab") {
+        return new FakeTab();
       }
       console.log("Create element "+elName);
       return null;
@@ -590,7 +597,7 @@ function testTwoTabSplitWithTopRightAndSpace(test) {
   splitLayout.splitAfterTabContent(tabContents);
   splitLayout.update();
 
-console.log(JSON.stringify(container._toFlatObject(), null, 2));
+// console.log(JSON.stringify(container._toFlatObject(), null, 2));
   test.equal(container.children.length, 1);
   test.equal(container.children.item(0).children.length, 2);
   test.equal(container.children.item(0).children.item(1).children.item(2).name, "top right");
@@ -601,5 +608,21 @@ console.log(JSON.stringify(container._toFlatObject(), null, 2));
 }
 exports.testTwoTabSplitWithTopRightAndSpace = testTwoTabSplitWithTopRightAndSpace;
 
+function testEmptyWithFallback(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setEmptySplitElementFactory( () => {
+    const div = new FakeDiv();
+    div.name = "fallback";
+    return div;
+  });
+  splitLayout.update();
 
+  test.equal(container.children.length, 1);
+  test.equal(container.children.item(0).children.length, 2);
 
+  // console.log(JSON.stringify(container,null,2));
+  test.done();
+}
+exports.testEmptyWithFallback = testEmptyWithFallback;

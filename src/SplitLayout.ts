@@ -38,6 +38,8 @@ interface TabWidgetInfoNode {
 
   emptyTab: Tab;
   emptyTabContent: Element
+  emptyContainer: Element;
+
   leftSpaceDefaultElement: Element;
   rightSpaceDefaultElement: Element;
 }
@@ -86,7 +88,7 @@ export class SplitLayout {
     const tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
     tabWidget.setShowFrame(false);
     this._rootInfoNode = {type: "tabwidget", children: [], tabWidget: tabWidget, emptyTab: null,
-      emptyTabContent: null, leftSpaceDefaultElement: null, rightSpaceDefaultElement: null};
+      emptyTabContent: null, emptyContainer: null, leftSpaceDefaultElement: null, rightSpaceDefaultElement: null};
   }
 
   setRootContainer(el: Element): void {
@@ -278,6 +280,7 @@ export class SplitLayout {
           tabWidget: null,
           emptyTab: null,
           emptyTabContent: null,
+          emptyContainer: null,
           leftSpaceDefaultElement: null,
           rightSpaceDefaultElement: null
         };
@@ -311,6 +314,7 @@ export class SplitLayout {
             tabWidget: null,
             emptyTab: null,
             emptyTabContent: null,
+            emptyContainer: null,
             leftSpaceDefaultElement: null,
             rightSpaceDefaultElement: null
           };
@@ -332,28 +336,39 @@ export class SplitLayout {
       return;
     }
 
-    if (path.length >= 3) {
+    let tabInfo: TabInfo = null;
+    let tabWidgetInfo: TabWidgetInfoNode = null;
+    let splitterInfo: SplitterInfoNode = null;
+
+    if (path.length >= 2) {
       const lastPart = path[path.length-1];
       if (lastPart.type === "tabinfo") {
-        const tabWidgetInfo = <TabWidgetInfoNode> path[path.length-2];
-        const splitterInfo = <SplitterInfoNode> path[path.length-3];
+        tabInfo = lastPart;
+        tabWidgetInfo = <TabWidgetInfoNode> path[path.length-2];
+        splitterInfo = <SplitterInfoNode> path[path.length-3];
 
-        // We merge two adjacent TabWidgets together by merging the indicated
-        // Tab Widget with its neighbour to the right. If there is nothing to
-        // the right, then merge to the left.
-        let index = splitterInfo.children.indexOf(tabWidgetInfo);
-        if (index === splitterInfo.children.length-1) {
-          index = splitterInfo.children.length-2;
-        }
+      } else if (lastPart.type === "tabwidget") {
+        tabWidgetInfo = lastPart;
+        splitterInfo = <SplitterInfoNode> path[path.length-2];
+      }
+    }
 
-        const leftTabWidgetInfo = splitterInfo.children[index];
-        const rightTabWidgetInfo = splitterInfo.children[index+1];
-        if (leftTabWidgetInfo.type === "tabwidget" && rightTabWidgetInfo.type === "tabwidget") {
-          leftTabWidgetInfo.children = [...leftTabWidgetInfo.children, ...rightTabWidgetInfo.children];
-          splitterInfo.children = splitterInfo.children.filter( kid => kid !== rightTabWidgetInfo);
+    if (tabWidgetInfo != null) {
+      // We merge two adjacent TabWidgets together by merging the indicated
+      // Tab Widget with its neighbour to the right. If there is nothing to
+      // the right, then merge to the left.
+      let index = splitterInfo.children.indexOf(tabWidgetInfo);
+      if (index === splitterInfo.children.length-1) {
+        index = splitterInfo.children.length-2;
+      }
 
-          this._removeRedundantSplitters();
-        }
+      const leftTabWidgetInfo = splitterInfo.children[index];
+      const rightTabWidgetInfo = splitterInfo.children[index+1];
+      if (leftTabWidgetInfo.type === "tabwidget" && rightTabWidgetInfo.type === "tabwidget") {
+        leftTabWidgetInfo.children = [...leftTabWidgetInfo.children, ...rightTabWidgetInfo.children];
+        splitterInfo.children = splitterInfo.children.filter( kid => kid !== rightTabWidgetInfo);
+
+        this._removeRedundantSplitters();
       }
     }
 
@@ -498,14 +513,29 @@ export class SplitLayout {
     if (leftSpaceElement != null) {
       targetChildrenList.push(leftSpaceElement);
     }
-    for (const kidInfo of infoNode.children) {
-      targetChildrenList.push(kidInfo.tab);
 
-      if (kidInfo.container == null) {
-        kidInfo.container = this._tabContainerFactory(tabWidget, kidInfo.tab, kidInfo.content);
-        kidInfo.container.appendChild(kidInfo.content);
+    if (infoNode.children.length !== 0) {
+      for (const kidInfo of infoNode.children) {
+        targetChildrenList.push(kidInfo.tab);
+
+        if (kidInfo.container == null) {
+          kidInfo.container = this._tabContainerFactory(tabWidget, kidInfo.tab, kidInfo.content);
+          kidInfo.container.appendChild(kidInfo.content);
+        }
+        targetChildrenList.push(kidInfo.container);
       }
-      targetChildrenList.push(kidInfo.container);
+    } else if (this._emptySplitFactory != null) {
+      if (infoNode.emptyTab == null) {
+        infoNode.emptyTab = <Tab> document.createElement(Tab.TAG_NAME);
+      }
+      if (infoNode.emptyTabContent == null) {
+        infoNode.emptyTabContent = this._emptySplitFactory();
+        infoNode.emptyContainer = this._tabContainerFactory(tabWidget, infoNode.emptyTab, infoNode.emptyTabContent);
+        infoNode.emptyContainer.appendChild(infoNode.emptyTabContent);
+      }
+
+      targetChildrenList.push(infoNode.emptyTab);
+      targetChildrenList.push(infoNode.emptyContainer);
     }
 
     if (rightSpaceElement != null) {
@@ -565,6 +595,10 @@ function findTabWidgetInfoByTabContent(infoNode: RootInfoNode, tabContent: Eleme
     }
   } else {
     // Tab widget
+    if (infoNode.emptyTabContent === tabContent) {
+      return { tabWidgetInfo: infoNode, tabInfo: null };
+    }
+
     for (const tabInfo of infoNode.children) {
       if (tabInfo.content === tabContent) {
         return { tabWidgetInfo: infoNode, tabInfo };
@@ -604,6 +638,10 @@ function findPathToTabContent(infoNode: RootInfoNode, tabContent): InfoNode[] {
     return null;
 
   } else {
+    if (infoNode.emptyTabContent === tabContent) {
+      return [infoNode];
+    }
+
     // Tab widget
     for (const kid of infoNode.children) {
       if (kid.content === tabContent) {

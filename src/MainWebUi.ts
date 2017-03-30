@@ -266,6 +266,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     });
     this._splitLayout.setTopLeftElement(this._leftControls());
     this._splitLayout.setTopRightElement(this._menuControls());
+    this._splitLayout.setEmptySplitElementFactory( () => {
+      const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
+      emptyPaneMenu.setEntries(this._commandPaletteEntries(emptyPaneMenu));
+      emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
+        this._executeCommand(emptyPaneMenu, ev.detail.selected);
+      });
+      return emptyPaneMenu;
+    });
 
     mainContainer.addEventListener('click', (ev) => {
       for (const part of ev.path) {
