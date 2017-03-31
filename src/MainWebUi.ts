@@ -268,7 +268,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._splitLayout.setTopRightElement(this._menuControls());
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
-      emptyPaneMenu.setEntries(this._commandPaletteEntries(emptyPaneMenu));
+      emptyPaneMenu.setEntries(this._commandPaletteEntriesWithTarget(emptyPaneMenu, null, null));
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
         this._executeCommand(emptyPaneMenu, ev.detail.selected);
       });
@@ -436,7 +436,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _handleTabSwitch(tabWidget: TabWidget): void {
-    const el = this._splitLayout.getTabContentByTab(tabWidget.getCurrentTab());
+    const el = this._splitLayout.getTabContentByTab(tabWidget.getSelectedTab());
     let title = "";
     if (el instanceof EtTerminal) {
       title = el.getTerminalTitle();
@@ -692,14 +692,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       return;
     }
     
-    let i = tabWidget.getCurrentIndex();
+    let i = tabWidget.getSelectedIndex();
     i = i + direction;
     if (i < 0) {
       i = len - 1;
     } else if (i >= len) {
       i = 0;
     }
-    tabWidget.setCurrentIndex(i);
+    tabWidget.setSelectedIndex(i);
     this._focusTabContent(tabElementList[i]);
   }
 
@@ -728,9 +728,16 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _verticalSplit(tabContentElement: Element): void {
-    this._splitLayout.splitAfterTabContent(tabContentElement);
+    const newTabWidget = this._splitLayout.splitAfterTabContent(tabContentElement);
     this._splitLayout.update();
     this._refreshSplitLayout();
+    if (newTabWidget != null) {
+      const element = this._splitLayout.getEmptyContentByTabWidget(newTabWidget);
+      newTabWidget.focus();
+      if (element instanceof EmptyPaneMenu) {
+        element.focus();
+      }
+    }
 
     //   setTimeout(()=>{  // FIXME using a time out doesn't feel right, and I don't know why an immediate .focus() doesn't work.
     //     emptyPaneMenu.focus();
@@ -899,7 +906,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const target: CommandPaletteRequestTypes.Commandable = {
       executeCommand: this._executeCommand.bind(this, tabContentElement)
     }
-    
+
+    return this._commandPaletteEntriesWithTarget(tabContentElement, this._tabWidgetFromElement(tabContentElement), target);
+  }
+
+  private _commandPaletteEntriesWithTarget(tabContentElement: Element, tabWidget: TabWidget, target: CommandPaletteRequestTypes.Commandable):
+      CommandPaletteRequestTypes.CommandEntry[] {
+
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_NEW_TAB, group: PALETTE_GROUP, iconRight: "plus", label: "New Tab", target: target },
       { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", target: target },
@@ -908,7 +921,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target },
     ];
 // FIXME
-    if (this._tabWidgetFromElement(tabContentElement) !== null && this._tabWidgetFromElement(tabContentElement).parentElement instanceof Splitter ||
+    if (tabWidget != null && tabWidget.parentElement instanceof Splitter ||
         tabContentElement instanceof EmptyPaneMenu) {
 
       commandList.push( { id: COMMAND_CLOSE_SPLIT, group: PALETTE_GROUP, label: "Close Split", target: target } );

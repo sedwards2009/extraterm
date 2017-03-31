@@ -105,7 +105,7 @@ export class TabWidget extends ThemeableElementBase {
     this.updateThemeCss();
     
     this.createTabHolders();
-    this.setCurrentIndex(0);
+    this.setSelectedIndex(0);
     this._showFrame(this.getShowFrame());
     
     this._mutationObserver = new MutationObserver( (mutations) => {
@@ -308,19 +308,19 @@ export class TabWidget extends ThemeableElementBase {
       }
     }
     
-    if (selectTab === -1) {
-      selectTab = Math.min(this.getCurrentIndex(), tabCount-1);
+    if (tabCount > 0) {
+      selectTab = selectTab === -1 ? 0 : selectTab;
+      
+      this.setSelectedIndex(selectTab);
+      this._showTab(selectTab);
     }
-    
-    this.setCurrentIndex(selectTab);
-    this._showTab(selectTab);
   }
   
   private _tabClickHandler(tabElement: HTMLElement, index: number) {
     // This handler may fire when a tab is removed during the click event bubble procedure. This check
     // supresses the event if the tab has been removed already.
     if (tabElement.parentNode !== null) {
-      this.setCurrentIndex(index);
+      this.setSelectedIndex(index);
       DomUtils.doLater(this._sendSwitchEvent.bind(this));
     }
   }
@@ -337,7 +337,11 @@ export class TabWidget extends ThemeableElementBase {
   //
   //-----------------------------------------------------------------------
 
-  setCurrentIndex(index: number) {
+  setSelectedIndex(index: number) {
+    if (this._getContentsStack().children.length === 0) {
+      return;
+    }
+
     if (index < 0 || this._getContentsStack().children.length <= index) {
       this._log.warn("Out of range index given to the 'currentIndex' property.");
       return;
@@ -350,24 +354,24 @@ export class TabWidget extends ThemeableElementBase {
     this._showTab(index);
   }
   
-  getCurrentIndex(): number {
+  getSelectedIndex(): number {
     return this._getContentsStack().getCurrentIndex();
   }
   
   private _getTabs(): Tab[] {
     return <Tab[]> DomUtils.toArray<Element>(this.children).filter( element => element.nodeName === Tab.TAG_NAME );
   }
-  
-  setCurrentTab(selectTab: Tab): void {
+
+  setSelectedTab(selectTab: Tab): void {
     const index = _.findIndex(this._getTabs(), tab => tab === selectTab );
     if (index === -1) {
       return;
     }
-    this.setCurrentIndex(index);
+    this.setSelectedIndex(index);
   }
   
-  getCurrentTab(): Tab {
-    const currentIndex = this.getCurrentIndex();
+  getSelectedTab(): Tab {
+    const currentIndex = this.getSelectedIndex();
     if (currentIndex === -1) {
       return null;
     }

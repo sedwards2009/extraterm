@@ -211,7 +211,7 @@ export class SplitLayout {
   getTabWidgetByTabContent(tabContent: Element): TabWidget {
     const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
     if (info == null) {
-      this._log.severe("Unable to find the info for TabWidget ", tabContent);
+      this._log.severe("Unable to find the info for tab content ", tabContent);
       return null;
     }
     return info.tabWidgetInfo.tabWidget;
@@ -230,6 +230,15 @@ export class SplitLayout {
       return null;
     }
     return info.tabInfo.content;
+  }
+
+  getEmptyContentByTabWidget(tabWidget: TabWidget): Element {
+    const info = findTabWidgetInfoByTabWidget(this._rootInfoNode, tabWidget);
+    if (info == null) {
+      this._log.severe("Unable to find the info for TabWidget ", tabWidget);
+      return null;
+    }
+    return info.children.length === 0 ? info.emptyTabContent : null;
   }
 
   /**
@@ -256,14 +265,14 @@ export class SplitLayout {
     }
 
     const {tabWidgetInfo, tabInfo} = info;
-    tabWidgetInfo.tabWidget.setCurrentIndex(tabWidgetInfo.children.indexOf(tabInfo));
+    tabWidgetInfo.tabWidget.setSelectedIndex(tabWidgetInfo.children.indexOf(tabInfo));
   }
 
-  splitAfterTabContent(tabContent: Element): void {
+  splitAfterTabContent(tabContent: Element): TabWidget {
     const path = findPathToTabContent(this._rootInfoNode, tabContent);
     if (path == null) {
       this._log.severe("Unable to find the info for tab contents ", tabContent);
-      return;
+      return null;
     }
     
     if (path.length === 2) {
@@ -274,10 +283,11 @@ export class SplitLayout {
         const splitIndex = tabWidgetInfo.children.map(c => c.content).indexOf(tabContent) + 1;
 
         // Create a new TabWidget
+        const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
         const newTabWidgetInfo: TabWidgetInfoNode = {
           type: "tabwidget",
           children: tabWidgetInfo.children.slice(splitIndex),
-          tabWidget: null,
+          tabWidget: newTabWidget,
           emptyTab: null,
           emptyTabContent: null,
           emptyContainer: null,
@@ -296,6 +306,7 @@ export class SplitLayout {
         };
 
         this._rootInfoNode = newRoot;
+        return newTabWidget;
       }
 
     } else {
@@ -307,11 +318,13 @@ export class SplitLayout {
         if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget" && tabInfo.type === "tabinfo") {
           const splitIndex = tabWidgetInfo.children.map(c => c.content).indexOf(tabContent) + 1;
 
+
           // Create a new TabWidget
+          const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
           const newTabWidgetInfo: TabWidgetInfoNode = {
             type: "tabwidget",
             children: tabWidgetInfo.children.slice(splitIndex),
-            tabWidget: null,
+            tabWidget: newTabWidget,
             emptyTab: null,
             emptyTabContent: null,
             emptyContainer: null,
@@ -322,7 +335,8 @@ export class SplitLayout {
           tabWidgetInfo.children = tabWidgetInfo.children.slice(0, splitIndex);
 
           const tabWidgetIndex = splitterInfo.children.indexOf(tabWidgetInfo);
-          splitterInfo.children.splice(tabWidgetIndex+1,0, newTabWidgetInfo);
+          splitterInfo.children.splice(tabWidgetIndex+1,0, newTabWidgetInfo);          
+          return newTabWidget;
         }
       }
     }
