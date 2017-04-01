@@ -3,7 +3,7 @@
   "main-ui": {
     "Cmd-ArrowLeft": "selectTabLeft",
     "Cmd-ArrowRight": "selectTabRight",
-    "Cmd-t": "newTab",
+    "Cmd-t": "newTerminal",
     "Shift-Cmd-W": "closeTab",
     "Ctrl-Tab": "selectOtherPane",
     "Cmd-s": "toggleSplit",

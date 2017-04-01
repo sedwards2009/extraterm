@@ -84,7 +84,7 @@ const KEYBINDINGS_MAIN_UI = "main-ui";
 const PALETTE_GROUP = "mainwebui";
 const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
 const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
-const COMMAND_NEW_TAB = "newTab";
+const COMMAND_NEW_TERMINAL = "newTerminal";
 const COMMAND_CLOSE_TAB = "closeTab";
 const COMMAND_VERTICAL_SPLIT = "COMMAND_VERTICAL_SPLIT";
 const COMMAND_CLOSE_SPLIT = "COMMAND_CLOSE_SPLIT";
@@ -738,10 +738,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         element.focus();
       }
     }
-
-    //   setTimeout(()=>{  // FIXME using a time out doesn't feel right, and I don't know why an immediate .focus() doesn't work.
-    //     emptyPaneMenu.focus();
-    //   }, 0);
   }
 
   private _refreshSplitLayout(): void {
@@ -914,7 +910,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       CommandPaletteRequestTypes.CommandEntry[] {
 
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-      { id: COMMAND_NEW_TAB, group: PALETTE_GROUP, iconRight: "plus", label: "New Tab", target: target },
+      { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", target: target },
       { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", target: target },
       { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", target: target },
       { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", target: target },
@@ -947,7 +943,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         this._shiftTab(this._tabWidgetFromElement(tabElement), 1);
         break;
         
-      case COMMAND_NEW_TAB:
+      case COMMAND_NEW_TERMINAL:
         this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement)));
         break;
         

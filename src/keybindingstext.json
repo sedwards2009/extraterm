@@ -52,7 +52,7 @@
     "unescapeShellChars": "Unescape special shell characters in selection",
     "selectTabLeft": "Focus the tab to the left",
     "selectTabRight": "Focus the tab to the right",
-    "newTab": "Open a new tab",
+    "newTerminal": "Open a new terminal",
     "closeTab": "Close tab",
     "selectOtherPane": "Focus the other pane",
     "toggleSplit": "Toggle split panes",

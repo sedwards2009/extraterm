@@ -3,7 +3,7 @@
   "main-ui": {
     "Ctrl-,": "selectTabLeft",
     "Ctrl-.": "selectTabRight",
-    "Ctrl-Shift-T": "newTab",
+    "Ctrl-Shift-T": "newTerminal",
     "Ctrl-Shift-Q": "closeTab",
     "Ctrl-Tab": "selectOtherPane",
     "Ctrl-Shift-S": "toggleSplit",
