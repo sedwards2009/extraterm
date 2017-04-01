@@ -268,6 +268,67 @@ export class SplitLayout {
     tabWidgetInfo.tabWidget.setSelectedIndex(tabWidgetInfo.children.indexOf(tabInfo));
   }
 
+  splitAfterTabWidget(tabWidget: TabWidget): TabWidget {
+    const path = findPathToTabWidget(this._rootInfoNode, tabWidget);
+    if (path == null) {
+      this._log.severe("Unable to find the info for tab widget ", tabWidget);
+      return null;
+    }
+
+    const len = path.length;
+    if (len === 1) {
+      // Path must be TabWidget only.
+      const tabWidgetInfo = path[0];
+      if (tabWidgetInfo.type === "tabwidget") {
+        
+        // Create a new TabWidget
+        const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+        const newTabWidgetInfo: TabWidgetInfoNode = {
+          type: "tabwidget",
+          children: [],
+          tabWidget: newTabWidget,
+          emptyTab: null,
+          emptyTabContent: null,
+          emptyContainer: null,
+          leftSpaceDefaultElement: null,
+          rightSpaceDefaultElement: null
+        };
+
+        // Insert a Splitter at the root.
+        const newRoot: SplitterInfoNode = {
+          type: "splitter",
+          children: [tabWidgetInfo, newTabWidgetInfo],
+          orientation: SplitterOrientation.VERTICAL,
+          splitter: null
+        };
+
+        this._rootInfoNode = newRoot;
+        return newTabWidget;
+      }
+    } else {
+
+      const splitterInfo = path[len-2];
+      const tabWidgetInfo = path[len-1];
+      if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
+        // Create a new TabWidget
+        const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+        const newTabWidgetInfo: TabWidgetInfoNode = {
+          type: "tabwidget",
+          children: [],
+          tabWidget: newTabWidget,
+          emptyTab: null,
+          emptyTabContent: null,
+          emptyContainer: null,
+          leftSpaceDefaultElement: null,
+          rightSpaceDefaultElement: null
+        };
+
+        splitterInfo.children.splice(splitterInfo.children.indexOf(tabWidgetInfo)+1,0, newTabWidgetInfo);
+        return newTabWidget;
+      }
+    }
+  }
+
   splitAfterTabContent(tabContent: Element): TabWidget {
     const path = findPathToTabContent(this._rootInfoNode, tabContent);
     if (path == null) {
@@ -275,8 +336,16 @@ export class SplitLayout {
       return null;
     }
     
+    if (path.length === 1) {
+      const tabWidgetInfo = path[0];
+      if (tabWidgetInfo.type === "tabwidget") {
+        return this.splitAfterTabWidget(tabWidgetInfo.tabWidget);
+      }
+    }
+
     if (path.length === 2) {
-      // Path must be ;TabWidget, TabInfo].
+
+      // Path could be ;TabWidget, TabInfo].
       const tabWidgetInfo = path[0];
       const tabInfo = path[1];
       if (tabWidgetInfo.type === "tabwidget" && tabInfo.type === "tabinfo") {
@@ -307,6 +376,13 @@ export class SplitLayout {
 
         this._rootInfoNode = newRoot;
         return newTabWidget;
+      } else {
+
+        const splitterInfo = path[0];
+        const tabWidgetInfo = path[1];
+        if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
+          return this.splitAfterTabWidget(tabWidgetInfo.tabWidget);
+        }
       }
 
     } else {
@@ -641,7 +717,7 @@ function findTabWidgetInfoByTab(infoNode: RootInfoNode, tab: Tab): {tabWidgetInf
   return null;
 }
 
-function findPathToTabContent(infoNode: RootInfoNode, tabContent): InfoNode[] {
+function findPathToTabContent(infoNode: RootInfoNode, tabContent: Element): InfoNode[] {
   if (infoNode.type === "splitter") {
     for (const kid of infoNode.children) {
       const path = findPathToTabContent(kid, tabContent);
@@ -665,6 +741,25 @@ function findPathToTabContent(infoNode: RootInfoNode, tabContent): InfoNode[] {
     return null;
   }
 }
+
+function findPathToTabWidget(infoNode: RootInfoNode, tabWidget: TabWidget): InfoNode[] {
+  if (infoNode.type === "splitter") {
+    for (const kid of infoNode.children) {
+      const path = findPathToTabWidget(kid, tabWidget);
+      if (path != null) {
+        return [infoNode, ...path];
+      }
+    }
+    return null;
+
+  } else {
+    if (infoNode.tabWidget === tabWidget) {
+      return [infoNode];
+    }
+    return null;
+  }
+}
+
 
 function getAllTabContents(infoNode: RootInfoNode): Element[] {
   if (infoNode.type === "splitter") {

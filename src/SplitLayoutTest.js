@@ -174,6 +174,8 @@ const context = {
         return new FakeTabWidget();
       } else if (elName === "et-tab") {
         return new FakeTab();
+      } else if (elName === "DIV") {
+        return new FakeDiv();
       }
       console.log("Create element "+elName);
       return null;
@@ -626,3 +628,42 @@ function testEmptyWithFallback(test) {
   test.done();
 }
 exports.testEmptyWithFallback = testEmptyWithFallback;
+
+function testSplit2WithFallback(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+  splitLayout.setEmptySplitElementFactory( () => {
+    const div = new FakeDiv();
+    div.name = "fallback";
+    return div;
+  });
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+
+  splitLayout.update();
+
+  const { tabWidget } = splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.update();
+ 
+  splitLayout.splitAfterTabWidget(tabWidget);
+  splitLayout.update();
+
+// console.log(JSON.stringify(container._toFlatObject(), null, 2));
+// console.log(JSON.stringify(splitLayout._rootInfoNode, null, 2));
+
+  test.equal(container.children.length, 1);
+  test.ok(container.children.item(0).name.startsWith("Splitter"));
+  test.equal(container.children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.item(1).children.item(0).name, "fallback");
+
+  test.done();
+}
+exports.testSplit2WithFallback = testSplit2WithFallback;
