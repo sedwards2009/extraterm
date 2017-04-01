@@ -266,9 +266,17 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     });
     this._splitLayout.setTopLeftElement(this._leftControls());
     this._splitLayout.setTopRightElement(this._menuControls());
+
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
-      emptyPaneMenu.setEntries(this._commandPaletteEntriesWithTarget(emptyPaneMenu, null, null));
+      const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
+        { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", target: null },
+        { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: null },
+        { id: COMMAND_CLOSE_SPLIT, group: PALETTE_GROUP, label: "Close Split", target: null }
+      ];
+      this._insertCommandKeyBindings(commandList);
+
+      emptyPaneMenu.setEntries(commandList);
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
         this._executeCommand(emptyPaneMenu, ev.detail.selected);
       });
@@ -923,6 +931,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       commandList.push( { id: COMMAND_CLOSE_SPLIT, group: PALETTE_GROUP, label: "Close Split", target: target } );
     }
 
+    this._insertCommandKeyBindings(commandList);
+    return commandList;
+  }
+
+  private _insertCommandKeyBindings(commandList: CommandPaletteRequestTypes.CommandEntry[]): void {
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
@@ -930,7 +943,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }    
-    return commandList;
   }
   
   private _executeCommand(tabElement: Element, command: string): boolean {
