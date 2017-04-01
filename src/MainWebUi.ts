@@ -87,7 +87,7 @@ const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
 const COMMAND_NEW_TERMINAL = "newTerminal";
 const COMMAND_CLOSE_TAB = "closeTab";
 const COMMAND_VERTICAL_SPLIT = "COMMAND_VERTICAL_SPLIT";
-const COMMAND_CLOSE_SPLIT = "COMMAND_CLOSE_SPLIT";
+const COMMAND_CLOSE_PANE = "COMMAND_CLOSE_PANE";
 
 let registered = false;
 
@@ -272,7 +272,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
         { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", target: null },
         { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: null },
-        { id: COMMAND_CLOSE_SPLIT, group: PALETTE_GROUP, label: "Close Split", target: null }
+        { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", target: null }
       ];
       this._insertCommandKeyBindings(commandList);
 
@@ -928,7 +928,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     if (tabWidget != null && tabWidget.parentElement instanceof Splitter ||
         tabContentElement instanceof EmptyPaneMenu) {
 
-      commandList.push( { id: COMMAND_CLOSE_SPLIT, group: PALETTE_GROUP, label: "Close Split", target: target } );
+      commandList.push( { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", target: target } );
     }
 
     this._insertCommandKeyBindings(commandList);
@@ -967,7 +967,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         this._verticalSplit(tabElement);
         break;
 
-      case COMMAND_CLOSE_SPLIT:
+      case COMMAND_CLOSE_PANE:
         this._closeSplit(tabElement);
         break;
 
