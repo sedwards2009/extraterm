@@ -283,6 +283,7 @@ export class SplitLayout {
         
         // Create a new TabWidget
         const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+        newTabWidget.setShowFrame(false);
         const newTabWidgetInfo: TabWidgetInfoNode = {
           type: "tabwidget",
           children: [],
@@ -312,6 +313,7 @@ export class SplitLayout {
       if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
         // Create a new TabWidget
         const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+        newTabWidget.setShowFrame(false);
         const newTabWidgetInfo: TabWidgetInfoNode = {
           type: "tabwidget",
           children: [],
@@ -353,6 +355,7 @@ export class SplitLayout {
 
         // Create a new TabWidget
         const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+        newTabWidget.setShowFrame(false);
         const newTabWidgetInfo: TabWidgetInfoNode = {
           type: "tabwidget",
           children: tabWidgetInfo.children.slice(splitIndex),
@@ -397,6 +400,7 @@ export class SplitLayout {
 
           // Create a new TabWidget
           const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+          newTabWidget.setShowFrame(false);
           const newTabWidgetInfo: TabWidgetInfoNode = {
             type: "tabwidget",
             children: tabWidgetInfo.children.slice(splitIndex),
