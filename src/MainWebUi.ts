@@ -719,7 +719,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     // FIXME
   }
 
-  private _selectPaneLeft(tabElement: Element): void {
+  private _selectPaneLeft(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
     const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
     const leftTabWidget = this._splitLayout.getTabWidgetToLeft(currentTabWidget);
     if (leftTabWidget != null) {
@@ -727,11 +727,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const content = this._splitLayout.getTabContentByTab(leftTabWidget.getSelectedTab());
       if (content instanceof EtTerminal || content instanceof EmptyPaneMenu) {
         content.focus();
+        return { tabWidget: leftTabWidget, tabContent: content };
       }
+      return { tabWidget: leftTabWidget, tabContent: null };
     }
+    return { tabWidget: null, tabContent: null };
   }
 
-  private _selectPaneRight(tabElement: Element): void {
+  private _selectPaneRight(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
     const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
     const rightTabWidget = this._splitLayout.getTabWidgetToRight(currentTabWidget);
     if (rightTabWidget != null) {
@@ -739,8 +742,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const content = this._splitLayout.getTabContentByTab(rightTabWidget.getSelectedTab());
       if (content instanceof EtTerminal || content instanceof EmptyPaneMenu) {
         content.focus();
+        return { tabWidget: rightTabWidget, tabContent: content };
       }
+      return { tabWidget: rightTabWidget, tabContent: null };
     }
+    return { tabWidget: null, tabContent: null };
   }
 
   private _getTabElementWithFocus(): Element {
@@ -785,9 +791,26 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _closeSplit(tabContentElement: Element): void {
+    let focusInfo: { tabWidget: TabWidget, tabContent: Element} = null;
+    if (tabContentElement instanceof EmptyPaneMenu) {
+      focusInfo = this._selectPaneLeft(tabContentElement);
+      if (focusInfo.tabWidget == null) {
+        focusInfo = this._selectPaneRight(tabContentElement);
+      }
+    }
+
     this._splitLayout.closeSplitAtTabContent(tabContentElement);
     this._splitLayout.update();
     this._refreshSplitLayout();
+
+    if (focusInfo.tabWidget != null) {
+      focusInfo.tabWidget.focus();
+      if (focusInfo.tabContent != null) {
+        if (focusInfo.tabContent instanceof EtTerminal || focusInfo.tabContent instanceof EmptyPaneMenu) {
+          focusInfo.tabContent.focus();
+        }
+      }
+    }
   }
 
   //-----------------------------------------------------------------------
