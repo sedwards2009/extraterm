@@ -84,6 +84,10 @@ const KEYBINDINGS_MAIN_UI = "main-ui";
 const PALETTE_GROUP = "mainwebui";
 const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
 const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
+const COMMAND_SELECT_PANE_LEFT = "selectPaneLeft";
+const COMMAND_SELECT_PANE_RIGHT = "selectPaneRight";
+const COMMAND_SELECT_PANE_UP = "selectPaneUp";
+const COMMAND_SELECT_PANE_DOWN = "selectPaneDown";
 const COMMAND_NEW_TERMINAL = "newTerminal";
 const COMMAND_CLOSE_TAB = "closeTab";
 const COMMAND_VERTICAL_SPLIT = "COMMAND_VERTICAL_SPLIT";
@@ -715,6 +719,30 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     // FIXME
   }
 
+  private _selectPaneLeft(tabElement: Element): void {
+    const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
+    const leftTabWidget = this._splitLayout.getTabWidgetToLeft(currentTabWidget);
+    if (leftTabWidget != null) {
+      leftTabWidget.focus();
+      const content = this._splitLayout.getTabContentByTab(leftTabWidget.getSelectedTab());
+      if (content instanceof EtTerminal || content instanceof EmptyPaneMenu) {
+        content.focus();
+      }
+    }
+  }
+
+  private _selectPaneRight(tabElement: Element): void {
+    const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
+    const rightTabWidget = this._splitLayout.getTabWidgetToRight(currentTabWidget);
+    if (rightTabWidget != null) {
+      rightTabWidget.focus();
+      const content = this._splitLayout.getTabContentByTab(rightTabWidget.getSelectedTab());
+      if (content instanceof EtTerminal || content instanceof EmptyPaneMenu) {
+        content.focus();
+      }
+    }
+  }
+
   private _getTabElementWithFocus(): Element {
     for (const el of this._splitLayout.getAllTabContents()) {
       if (el instanceof EtViewerTab || el instanceof EtTerminal) {
@@ -922,6 +950,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", target: target },
       { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", target: target },
       { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", target: target },
+
+      { id: COMMAND_SELECT_PANE_LEFT, group: PALETTE_GROUP, label: " Select pane left", target: target },
+      { id: COMMAND_SELECT_PANE_RIGHT, group: PALETTE_GROUP, label: " Select pane right", target: target },
+
       { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target },
     ];
 // FIXME
@@ -954,7 +986,15 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       case COMMAND_SELECT_TAB_RIGHT:
         this._shiftTab(this._tabWidgetFromElement(tabElement), 1);
         break;
-        
+
+      case COMMAND_SELECT_PANE_LEFT:
+        this._selectPaneLeft(tabElement);
+        break;
+
+      case COMMAND_SELECT_PANE_RIGHT:
+        this._selectPaneRight(tabElement);
+        break;
+
       case COMMAND_NEW_TERMINAL:
         this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement)));
         break;

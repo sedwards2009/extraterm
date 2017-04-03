@@ -6,7 +6,10 @@
     "Ctrl-Shift-T": "newTerminal",
     "Ctrl-Shift-Q": "closeTab",
     "Ctrl-Tab": "selectOtherPane",
-    "Ctrl-Shift-S": "toggleSplit",
+    "Ctrl-Shift-<": "selectPaneLeft",
+    "Ctrl-Shift->": "selectPaneRight",
+    "Ctrl-Shift-:": "selectPaneUp",
+    "Ctrl-Shift-?": "selectPaneDown",
     "Ctrl-Shift-P": "openCommandPalette"
   },
   "terminal-default-mode": {

@@ -229,7 +229,7 @@ export class SplitLayout {
       this._log.severe("Unable to find the info for Tab ", tab);
       return null;
     }
-    return info.tabInfo.content;
+    return info.tabInfo != null ? info.tabInfo.content : info.tabWidgetInfo.emptyTabContent;
   }
 
   getEmptyContentByTabWidget(tabWidget: TabWidget): Element {
@@ -492,6 +492,38 @@ export class SplitLayout {
     }
   }
 
+  getTabWidgetToLeft(tabWidget: TabWidget): TabWidget {
+    return this._getTabWidgetSibling(tabWidget, -1);
+  }
+
+  getTabWidgetToRight(tabWidget: TabWidget): TabWidget {
+    return this._getTabWidgetSibling(tabWidget, 1);
+  }
+
+  private _getTabWidgetSibling(tabWidget: TabWidget, direction: 1 | -1) : TabWidget {
+    const path = findPathToTabWidget(this._rootInfoNode, tabWidget);
+    if (path == null) {
+      this._log.severe("Unable to find the info for tab widget ", tabWidget);
+      return;
+    }
+    const len = path.length;
+    if (len >=2 ) {
+      const tabWidgetInfo = path[len-1];
+      const splitterInfo = path[len-2];
+
+      if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
+        const index = splitterInfo.children.indexOf(tabWidgetInfo) + direction;
+        if (index >= 0 && index < splitterInfo.children.length) {
+          const sibling = splitterInfo.children[index];
+          if (sibling.type === "tabwidget") {
+            return sibling.tabWidget;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   /**
    * Update the DOM to match the desired new state.
    * 
@@ -637,6 +669,7 @@ export class SplitLayout {
     }
 
     DomUtils.setElementChildren(tabWidget, targetChildrenList);
+    tabWidget.setShowTabs(infoNode.children.length !== 0);
     tabWidget.update();
   }
 }
@@ -711,10 +744,18 @@ function findTabWidgetInfoByTab(infoNode: RootInfoNode, tab: Tab): {tabWidgetInf
       }
     }
   } else {
-    // Tab widget
-    for (const tabInfo of infoNode.children) {
-      if (tabInfo.tab === tab) {
-        return { tabWidgetInfo: infoNode, tabInfo };
+
+    if (infoNode.children.length === 0) {
+      if (infoNode.emptyTab === tab) {
+        return { tabWidgetInfo: infoNode, tabInfo: null };
+      }
+    } else {
+
+      // Tab widget
+      for (const tabInfo of infoNode.children) {
+        if (tabInfo.tab === tab) {
+          return { tabWidgetInfo: infoNode, tabInfo };
+        }
       }
     }
   }

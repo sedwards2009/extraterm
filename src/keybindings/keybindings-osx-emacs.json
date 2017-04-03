@@ -5,7 +5,10 @@
     "Cmd-ArrowRight": "selectTabRight",
     "Cmd-t": "newTerminal",
     "Shift-Cmd-W": "closeTab",
-    "Ctrl-Tab": "selectOtherPane",
+    "Cmd-Shift-<": "selectPaneLeft",
+    "Cmd-Shift->": "selectPaneRight",
+    "Cmd-Shift-:": "selectPaneUp",
+    "Cmd-Shift-?": "selectPaneDown",
     "Cmd-s": "toggleSplit",
     "Cmd-Shift-P": "openCommandPalette"
   },
