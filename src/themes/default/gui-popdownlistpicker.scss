@@ -15,33 +15,3 @@
 :host:focus {
   outline: none;
 }
-
-#ID_FILTER {
-  box-sizing: border-box;
-  width: 100%;
-}
-
-#ID_RESULTS {
-  overflow: auto;
-  cursor: default;
-}
-
-.CLASS_RESULT_ENTRY {
-  display: flex;
-  width: 100%;
-
-  padding-left: $padding-xs-horizontal;
-  padding-right: $padding-xs-horizontal;
-
-  &:hover {
-    cursor: pointer;
-    outline: 1px solid $btn-primary-bg;
-    outline-offset: -1px;
-  }
-
-  &.CLASS_RESULT_SELECTED {
-    outline: none;
-    color: $btn-primary-color;
-    background-color: $btn-primary-bg;
-  }
-}

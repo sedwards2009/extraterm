@@ -190,7 +190,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME,
-      ThemeTypes.CssFile.GUI_POP_DOWN_LIST_PICKER, ...this._extraCssFiles]; // FIXME
+      ThemeTypes.CssFile.GUI_LIST_PICKER, ...this._extraCssFiles]; // FIXME
   }
 
   private _updateEntries(): void {
@@ -304,9 +304,6 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     filterInput.value = "";
     this._updateEntries();
     filterInput.focus();
-
-    // const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
-    // dialog.open(x, y, width, height);
 
     this._scrollToSelected();      
   }

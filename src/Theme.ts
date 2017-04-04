@@ -39,6 +39,7 @@ export enum CssFile {
   GUI_COMMANDPALETTE,
   GUI_POP_DOWN_DIALOG,
   GUI_POP_DOWN_LIST_PICKER,
+  GUI_LIST_PICKER,
   TIP_VIEWER,
   FONT_AWESOME,
   TERMINAL_VARS,
@@ -67,6 +68,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.GUI_COMMANDPALETTE,
   CssFile.GUI_POP_DOWN_DIALOG,
   CssFile.GUI_POP_DOWN_LIST_PICKER,
+  CssFile.GUI_LIST_PICKER,
   CssFile.TIP_VIEWER,
   CssFile.FONT_AWESOME,
   CssFile.TERMINAL_VARS,
@@ -95,6 +97,7 @@ const _CssFileNameMapping = {
   [CssFile.GUI_COMMANDPALETTE]: "gui-commandpalette",
   [CssFile.GUI_POP_DOWN_DIALOG]: "gui-popdowndialog",
   [CssFile.GUI_POP_DOWN_LIST_PICKER]: "gui-popdownlistpicker",
+  [CssFile.GUI_LIST_PICKER]: "gui-listpicker",
   [CssFile.TIP_VIEWER]: "tip-viewer",
   [CssFile.FONT_AWESOME]: "font-awesome",
   [CssFile.TERMINAL_VARS]: "terminal-vars",
@@ -138,6 +141,7 @@ export const UiCssFiles: CssFile[] = [
   CssFile.VIEWER_TAB,
   CssFile.GUI_POP_DOWN_DIALOG,
   CssFile.GUI_POP_DOWN_LIST_PICKER,
+  CssFile.GUI_LIST_PICKER,
   CssFile.GUI_SPLITTER,
   CssFile.EMPTY_PANE_MENU
 ];
