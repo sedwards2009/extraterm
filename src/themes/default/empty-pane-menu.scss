@@ -25,10 +25,12 @@
   --empty-pane-menu-container-width: 400px;
 
   display: block;
-  width: var(--empty-pane-menu-container-width);
-  margin-left: calc((100% - var(--empty-pane-menu-container-width) )/2);
-  margin-right: calc((100% - var(--empty-pane-menu-container-width) )/2);
 
+  width: 100%;
+  max-width: var(--empty-pane-menu-container-width);
+
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #ID_TITLE {
