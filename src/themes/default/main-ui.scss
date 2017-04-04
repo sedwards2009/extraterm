@@ -57,6 +57,13 @@
   display: flex;
   flex-grow: 1;
 
+  & > div.CLASS_SPACE {
+    flex-grow: 1;
+    @if $extraterm-titlebar-visible == false {
+      -webkit-app-region: drag;
+    }
+  }
+
   & > button {
     flex-grow: 0;
   }

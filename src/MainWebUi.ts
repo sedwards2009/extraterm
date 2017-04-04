@@ -79,6 +79,7 @@ const CLASS_TAB_HEADER_CLOSE = "tab_header_close";
 const CLASS_TAB_CONTENT = "tab_content";
 const CLASS_NEW_BUTTON_CONTAINER = "CLASS_NEW_BUTTON_CONTAINER";
 const CLASS_NEW_TAB_BUTTON = "CLASS_NEW_TAB_BUTTON";
+const CLASS_SPACE = "CLASS_SPACE";
 
 const KEYBINDINGS_MAIN_UI = "main-ui";
 const PALETTE_GROUP = "mainwebui";
@@ -383,7 +384,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _newTabRestAreaHtml(extraContents = ""): string {
-    return `<div class="${CLASS_NEW_BUTTON_CONTAINER}"><button class="btn btn-quiet ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>${extraContents}</div>`;
+    return `<div class="${CLASS_NEW_BUTTON_CONTAINER}"><button class="btn btn-quiet ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>
+    <div class="${CLASS_SPACE}"></div>${extraContents}</div>`;
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
