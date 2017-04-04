@@ -294,21 +294,22 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
    */
   attachedCallback(): void {
     super.attachedCallback();
-
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-    const themeStyle = document.createElement('style');
-    themeStyle.id = ThemeableElementBase.ID_THEME;
-
-    const divContainer = document.createElement('div');
-
-    shadow.appendChild(themeStyle);
-    shadow.appendChild(divContainer);
     
-    this.updateThemeCss();
-    
-    this._vm = new Vue({
-      data: this._data,
-      template: 
+    if (DomUtils.getShadowRoot(this) == null) {
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+      const themeStyle = document.createElement('style');
+      themeStyle.id = ThemeableElementBase.ID_THEME;
+
+      const divContainer = document.createElement('div');
+
+      shadow.appendChild(themeStyle);
+      shadow.appendChild(divContainer);
+      
+      this.updateThemeCss();
+      
+      this._vm = new Vue({
+        data: this._data,
+        template: 
 `<div id='${ID_SETTINGS}'>
   <section>
     <h2>Settings</h2>
@@ -464,50 +465,51 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
   </section>
 </div>
 `,
-      methods: {
-        addCommandLineAction: (): void => {
-          const emptyAction: IdentifiableCommandLineAction = { match: "", matchType: 'name', frame: true, id: nextId() };
-          this._data.commandLineActions.push(emptyAction);
-        },
-        deleteCommandLineAction: (id: string): void => {
-          const index = this._data.commandLineActions.findIndex( (cla) => cla.id === id);
-          if (index !== -1) {
-            this._data.commandLineActions.splice(index, 1);
+        methods: {
+          addCommandLineAction: (): void => {
+            const emptyAction: IdentifiableCommandLineAction = { match: "", matchType: 'name', frame: true, id: nextId() };
+            this._data.commandLineActions.push(emptyAction);
+          },
+          deleteCommandLineAction: (id: string): void => {
+            const index = this._data.commandLineActions.findIndex( (cla) => cla.id === id);
+            if (index !== -1) {
+              this._data.commandLineActions.splice(index, 1);
+            }
           }
+        },
+        computed: {
+          themeTerminalComment: function() {
+            const model = <ModelData> this;
+            for (let option of model.themeTerminalOptions) {
+              if (option.id === model.themeTerminal) {
+                return option.comment;
+              }
+            }
+            return "";
+          },
+          themeSyntaxComment: function() {
+            const model = <ModelData> this;
+            for (let option of model.themeSyntaxOptions) {
+              if (option.id === model.themeSyntax) {
+                return option.comment;
+              }
+            }
+            return "";
+          },
+          themeGUIComment: function() {
+            const model = <ModelData> this;
+            for (let option of model.themeGUIOptions) {
+              if (option.id === model.themeGUI) {
+                return option.comment;
+              }
+            }
+            return "";
+          },
         }
-      },
-      computed: {
-        themeTerminalComment: function() {
-          const model = <ModelData> this;
-          for (let option of model.themeTerminalOptions) {
-            if (option.id === model.themeTerminal) {
-              return option.comment;
-            }
-          }
-          return "";
-        },
-        themeSyntaxComment: function() {
-          const model = <ModelData> this;
-          for (let option of model.themeSyntaxOptions) {
-            if (option.id === model.themeSyntax) {
-              return option.comment;
-            }
-          }
-          return "";
-        },
-        themeGUIComment: function() {
-          const model = <ModelData> this;
-          for (let option of model.themeGUIOptions) {
-            if (option.id === model.themeGUI) {
-              return option.comment;
-            }
-          }
-          return "";
-        },
-      }
-    });
-    this._vm.$mount(divContainer);
-    this._vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false, sync: false } );
+      });
+      this._vm.$mount(divContainer);
+      this._vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false, sync: false } );
+    }
   }
   
   /**

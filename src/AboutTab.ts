@@ -117,13 +117,14 @@ export class AboutTab extends ViewerElement {
    */
   attachedCallback(): void {
     super.attachedCallback();
-    
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-    const themeStyle = document.createElement('style');
-    themeStyle.id = ThemeableElementBase.ID_THEME;
-    
-    const divContainer = document.createElement('div');
-    divContainer.innerHTML = `<div id='${ID_ABOUT}'>
+
+    if (DomUtils.getShadowRoot(this) == null) {
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+      const themeStyle = document.createElement('style');
+      themeStyle.id = ThemeableElementBase.ID_THEME;
+      
+      const divContainer = document.createElement('div');
+      divContainer.innerHTML = `<div id='${ID_ABOUT}'>
   <h1>Extraterm</h1>
   <p>Copyright &copy; 2015-2017 Simon Edwards &lt;simon@simonzone.com&gt;</p>
   <p>Published under the MIT license</p>
@@ -133,10 +134,11 @@ export class AboutTab extends ViewerElement {
 </div>
 `;
 
-    shadow.appendChild(themeStyle);
-    shadow.appendChild(divContainer);    
-    
-    this.updateThemeCss();
+      shadow.appendChild(themeStyle);
+      shadow.appendChild(divContainer);    
+      
+      this.updateThemeCss();
+    }
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

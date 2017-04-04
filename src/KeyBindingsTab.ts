@@ -207,22 +207,24 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
    */
   attachedCallback(): void {
     super.attachedCallback();
-    
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-    const themeStyle = document.createElement('style');
-    themeStyle.id = ThemeableElementBase.ID_THEME;
-    shadow.appendChild(themeStyle);
-    
-    const vueDivContainer = document.createElement('div');
-    vueDivContainer.id = ID_KEY_BINDINGS;
-    shadow.appendChild(vueDivContainer);
-    
-    Vue.config.debug = true;
-    
-    const elementThis = this;
-    this._vm = new Vue({
-      data: this._data,
-      template: 
+
+    if (DomUtils.getShadowRoot(this) == null) {
+
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+      const themeStyle = document.createElement('style');
+      themeStyle.id = ThemeableElementBase.ID_THEME;
+      shadow.appendChild(themeStyle);
+      
+      const vueDivContainer = document.createElement('div');
+      vueDivContainer.id = ID_KEY_BINDINGS;
+      shadow.appendChild(vueDivContainer);
+      
+      Vue.config.debug = true;
+      
+      const elementThis = this;
+      this._vm = new Vue({
+        data: this._data,
+        template: 
 `<div className=''>
   <h1>Key Bindings</h1>
   
@@ -243,17 +245,18 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
   {{{ summary }}}
 </div>
 `,
-      computed: {
-        summary: function() {
-          const foo = this.keyBindingsContextsStamp;
-          return formatKeyBindingsPage(elementThis._keyBindingManager.getKeyBindingContexts());
+        computed: {
+          summary: function() {
+            const foo = this.keyBindingsContextsStamp;
+            return formatKeyBindingsPage(elementThis._keyBindingManager.getKeyBindingContexts());
+          }
         }
-      }
-    });
-    this._vm.$mount(vueDivContainer);
-    this._vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false, sync: false } );
-    
-    this.updateThemeCss();
+      });
+      this._vm.$mount(vueDivContainer);
+      this._vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false, sync: false } );
+      
+      this.updateThemeCss();
+    }
   }
 
   /**
