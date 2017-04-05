@@ -979,7 +979,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
         return -1;
       }
       const position = marker.find();
-      return position !== undefined ? position.from.line : -1;
+      return position !== undefined && position.from !== undefined ? position.from.line : -1;
     }
   }
 
