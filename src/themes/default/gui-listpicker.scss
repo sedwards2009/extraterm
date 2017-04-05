@@ -6,13 +6,7 @@
 @import "bootstrap/variables";
 @import "extraterm-scrollbars";
 
-/*
-:host {
-  visibility: hidden;
-}
-*/
-
-:host:focus {
+:host(:focus) {
   outline: none;
 }
 
