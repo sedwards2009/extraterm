@@ -185,6 +185,20 @@ export class SplitLayout {
     return getAllTabContents(this._rootInfoNode);
   }
 
+  getTabContentsByTabWidget(tabWidget: TabWidget): Element[] {
+    const info = findTabWidgetInfoByTabWidget(this._rootInfoNode, tabWidget)
+    if (info == null) {
+      this._log.severe("Unable to find the info for TabWidget ", TabWidget);
+      return null;
+    }
+
+    if (info.children.length === 0) {
+      return info.emptyTabContent != null ? [info.emptyTabContent] : [];
+    }
+
+    return info.children.map(kid => kid.content);
+  }
+
   /**
    * Get the tab which matches the tab content.
    * 
@@ -195,7 +209,7 @@ export class SplitLayout {
   getTabByTabContent(tabContent: Element): Tab {
     const info = findTabWidgetInfoByTabContent(this._rootInfoNode, tabContent);
     if (info == null) {
-      this._log.severe("Unable to find the info for TabWidget ", tabContent);
+      this._log.severe("Unable to find the info for tab content ", tabContent);
       return null;
     }
     return info.tabInfo.tab;

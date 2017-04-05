@@ -669,7 +669,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
    *
    */
   closeTab(tabContentElement: Element): void {
-    const allTabContents = this._splitLayout.getAllTabContents();
+    const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
+    const tabWidgetContents = this._splitLayout.getTabContentsByTabWidget(tabWidget);
 
     this._splitLayout.removeTabContent(tabContentElement);
     this._splitLayout.update();
@@ -684,11 +685,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._ptyIdTerminalMap.delete(ptyId);
     }
     
-    const newIndex = Math.min(allTabContents.indexOf(tabContentElement)-1, allTabContents.length-1);
-    if (newIndex < 0) {
-      this.focusPane();
+    const oldIndex = tabWidgetContents.indexOf(tabContentElement);
+    if (tabWidgetContents.length >= 2) {
+      this._switchToTab(tabWidgetContents[oldIndex === 0 ? 1 : oldIndex-1]);
     } else {
-      this._switchToTab(allTabContents[newIndex]);
+      this._switchToTab(this._splitLayout.getTabContentsByTabWidget(tabWidget)[0]);
     }
 
     this._sendTabClosedEvent();
@@ -766,7 +767,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     if (el instanceof EtTerminal) {
       el.resizeToContainer();
       el.focus();
-    } else if (el instanceof ViewerElement) {
+    } else if (el instanceof ViewerElement || el instanceof EmptyPaneMenu) {
       el.focus();
     }
   }
