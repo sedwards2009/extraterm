@@ -274,9 +274,7 @@ export class TabWidget extends ThemeableElementBase {
     } else {
       // Delete all tab tags. We don't need to show them.
       const tabElements = DomUtils.toArray(tabbar.querySelectorAll("." + CLASS_TAB));
-      if (tabElements.length > tabCount) {
-        tabElements.slice(tabCount).forEach( el => tabbar.removeChild(el));
-      }
+      tabElements.forEach( el => tabbar.removeChild(el));
     }
 
     // Create content holders
