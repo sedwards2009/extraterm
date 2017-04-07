@@ -22,6 +22,11 @@ export interface BulkDOMOperation {
   runPhase(phase: GeneratorPhase): BulkDOMOperation;
 }
 
+let defaultContextFunc = (f) => f();
+export function registerContextFunction(newContextFunc: (f: () => void) => void): void {
+  defaultContextFunc = newContextFunc;
+}
+
 /**
  * Create a single BulkDOMOperation which calls an array of BulkDOMOperations in parallel.
  * 
@@ -275,8 +280,8 @@ export function execute(operation: BulkDOMOperation, contextFunc?: (f: () => voi
   let topOperation = operation;
   let lastPhase = GeneratorPhase.BEGIN_DOM_READ;
 
-  if (contextFunc === undefined) {
-    contextFunc = (f) => f();
+  if (contextFunc == null) {
+    contextFunc = defaultContextFunc;
   }
 
   let done = false;

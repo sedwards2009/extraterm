@@ -978,7 +978,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
     const allOperations = BulkDomOperation.parallel([...modeOperations, ...visualStateOperations]);
 
-    CodeMirrorOperation.executeBulkDOMOperation(allOperations);
+    BulkDomOperation.execute(allOperations);
   }
 
   private _childElementListIndexOf(element: HTMLElement & VirtualScrollable): number {
@@ -1079,7 +1079,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   }
 
   private _makeVisible(element: HTMLElement & VirtualScrollable): void {
-    CodeMirrorOperation.executeBulkDOMOperation(this._bulkMarkVisible(element, true));
+    BulkDomOperation.execute(this._bulkMarkVisible(element, true));
   }
 
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): BulkDomOperation.BulkDOMOperation {
@@ -1599,11 +1599,11 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
 
           if (stashedList.length !== 0) {
             const markVisibleOperations = stashedList.map( (el) => this._bulkMarkVisible(el, true) );
-            CodeMirrorOperation.executeBulkDOMOperation(BulkDomOperation.parallel(markVisibleOperations));
+            BulkDomOperation.execute(BulkDomOperation.parallel(markVisibleOperations));
           }
 
           if (refreshOperations.length !==0) {
-            CodeMirrorOperation.executeBulkDOMOperation(BulkDomOperation.parallel(refreshOperations));
+            BulkDomOperation.execute(BulkDomOperation.parallel(refreshOperations));
           }
 
           this._virtualScrollArea.updateScrollableSizes(processList);
@@ -1611,7 +1611,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
           if (stashedList.length !== 0) {
             const markVisibleOperations = stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))
               .map( (el) => this._bulkMarkVisible(el, false) );
-            CodeMirrorOperation.executeBulkDOMOperation(BulkDomOperation.parallel(markVisibleOperations));
+            BulkDomOperation.execute(BulkDomOperation.parallel(markVisibleOperations));
           }
 
           this._scheduleStashedChildResizeTask();

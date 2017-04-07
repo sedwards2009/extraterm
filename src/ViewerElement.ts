@@ -73,7 +73,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   abstract getVisualState(): VisualState;
 
   setVisualState(state: VisualState): void {
-    CodeMirrorOperation.executeBulkDOMOperation(this.bulkSetVisualState(state));
+    BulkDomOperation.execute(this.bulkSetVisualState(state));
   }
 
   abstract bulkSetVisualState(state: VisualState): BulkDomOperation.BulkDOMOperation;
@@ -81,7 +81,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   abstract getMode(): Mode;
   
   setMode(mode: Mode): void {
-    CodeMirrorOperation.executeBulkDOMOperation(this.bulkSetMode(mode));
+    BulkDomOperation.execute(this.bulkSetMode(mode));
   }
 
   abstract bulkSetMode(mode: Mode): BulkDomOperation.BulkDOMOperation;

@@ -94,6 +94,8 @@ const COMMAND_CLOSE_TAB = "closeTab";
 const COMMAND_VERTICAL_SPLIT = "COMMAND_VERTICAL_SPLIT";
 const COMMAND_CLOSE_PANE = "COMMAND_CLOSE_PANE";
 
+CodeMirrorOperation.init();
+
 let registered = false;
 
 const LAST_FOCUS = "last_focus";
@@ -860,7 +862,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       DomUtils.getShadowId(this, ID_MAIN_CONTENTS), level);
 
     // Do the heavy code mirror stuff first.
-    CodeMirrorOperation.executeBulkDOMOperation(operation);
+    BulkDomOperation.execute(operation);
   }
 
   private _sendTabOpenedEvent(): void {

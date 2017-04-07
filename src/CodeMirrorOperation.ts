@@ -12,7 +12,7 @@ import * as BulkDomOperation from './BulkDomOperation';
 
 let codeMirrorInstance: CodeMirror.Editor = null;
 
-export function bulkOperation(func: ()=>void): void {
+function bulkOperation(func: ()=>void): void {
   if (codeMirrorInstance === null) {
     const holderDiv = window.document.createElement('div');
     holderDiv.style.width = "0px";
@@ -41,6 +41,6 @@ export function bulkOperation(func: ()=>void): void {
   codeMirrorInstance.operation(func);
 }
 
-export function executeBulkDOMOperation(operation: BulkDomOperation.BulkDOMOperation): void {
-  BulkDomOperation.execute(operation, bulkOperation);
+export function init(): void {
+  BulkDomOperation.registerContextFunction(bulkOperation);
 }

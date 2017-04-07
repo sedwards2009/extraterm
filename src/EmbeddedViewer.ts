@@ -579,7 +579,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       containerHeightChanged: true
     };
 
-    CodeMirrorOperation.executeBulkDOMOperation(this.bulkSetDimensionsAndScroll(setterState));
+    BulkDomOperation.execute(this.bulkSetDimensionsAndScroll(setterState));
 
     // Remove the anti-flicker style.
     this._getById(ID_CONTAINER).setAttribute('style', '');
