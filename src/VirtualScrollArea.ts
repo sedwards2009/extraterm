@@ -789,7 +789,7 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
     }
   });
 
-  CodeMirrorOperation.executeBulkDOMOperation(BulkDomOperation.parallel(operationsList));
+  BulkDomOperation.execute(BulkDomOperation.parallel(operationsList));
   
   // Update the Y offset for the container.
   if (oldState.containerScrollYOffset !== newState.containerScrollYOffset) {
