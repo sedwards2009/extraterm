@@ -171,7 +171,7 @@ export class ImageViewer extends ViewerElement {
   }
   
   setBytes(buffer: Buffer, mimeType: string): void {
-    this.mimeType = mimeType;
+    this.setMimeType(mimeType);
     if (DomUtils.getShadowRoot(this) === null) {
       this._buffer = buffer;
     } else {

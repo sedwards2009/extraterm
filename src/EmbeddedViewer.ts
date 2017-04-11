@@ -343,7 +343,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     if (viewerElement === null) {
       return "";
     }
-    return viewerElement.text;
+    return viewerElement.getText();
   }
   
   setTag(tag: string): void {

@@ -292,8 +292,8 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     
     const decodedString = buffer.toString(charset);
     
-    this.text = decodedString;
-    this.mimeType = cleanMimeType;
+    this.setText(decodedString);
+    this.setMimeType(cleanMimeType);
   }
   
   

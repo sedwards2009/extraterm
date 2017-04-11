@@ -86,11 +86,26 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
 
   abstract bulkSetMode(mode: Mode): BulkDomOperation.BulkDOMOperation;
 
-  public text: string;
+  getText(): string {
+    return null;
+  }
+
+  setText(text: string): void {
+  }
+
+  getMimeType(): string {
+    return null;
+  }
   
-  public mimeType: string;
-  
-  public editable: boolean;
+  setMimeType(mimetype: string): void {
+  }
+
+  getEditable(): boolean {
+    return false;
+  }
+
+  setEditable(editable: boolean): void {
+  }
     
   // VirtualScrollable
   getMinHeight(): number {

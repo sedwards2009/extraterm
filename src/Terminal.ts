@@ -465,7 +465,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     if (embeddedViewer === null) {
       return null;
     }
-    const text = embeddedViewer.text;
+    const text = embeddedViewer.getText();
     return text === undefined ? null : text;
   }
 
@@ -1938,7 +1938,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       const restoreFocus = DomUtils.getShadowRoot(this).activeElement === activeTerminalViewer;
       
       embeddedViewerElement.setViewerElement(activeTerminalViewer);
-      activeTerminalViewer.editable = true;
+      activeTerminalViewer.setEditable(true);
 
       this._removeScrollable(activeTerminalViewer);
 
@@ -1997,7 +1997,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       if (moveText !== null) {
         outputTerminalViewer.setDecoratedLines(moveText.text, moveText.decorations);
       }
-      outputTerminalViewer.editable = true;
+      outputTerminalViewer.setEditable(true);
       
       this._appendNewTerminalViewer();
       this._refocus();
@@ -2143,7 +2143,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     if (data !== null) {
       dataViewer.setBytes(data, charset !== null ? mimeType + ";" + charset : mimeType);
     }
-    dataViewer.editable = true;
+    dataViewer.setEditable(true);
     return dataViewer;
   }
 

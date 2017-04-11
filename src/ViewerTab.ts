@@ -239,7 +239,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
       return null;
     }
     if (this._tag === frameId) {
-      return viewerElement.text;
+      return viewerElement.getText();
     } else {
       return null;
     }

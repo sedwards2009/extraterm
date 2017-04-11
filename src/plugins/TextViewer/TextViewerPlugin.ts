@@ -89,7 +89,7 @@ class TextViewerPlugin implements PluginApi.ExtratermPlugin {
 
       this._syntaxDialog.addEventListener("selected", (ev: CustomEvent): void => {
         if (ev.detail.selected != null) {
-          srcElement.mimeType = ev.detail.selected;
+          srcElement.setMimeType(ev.detail.selected);
         }
         srcElement.focus();
       });
@@ -100,7 +100,7 @@ class TextViewerPlugin implements PluginApi.ExtratermPlugin {
       return { id: info.mime, name: info.name};
     });
     this._syntaxDialog.setEntries(mimeList);
-    this._syntaxDialog.setSelected(srcElement.mimeType);
+    this._syntaxDialog.setSelected(srcElement.getMimeType());
 
     const rect = (<HTMLElement> ev.target).getBoundingClientRect();
     this._syntaxDialog.open(rect.left, rect.top, rect.width, rect.height);
