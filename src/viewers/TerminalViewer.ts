@@ -13,6 +13,7 @@ import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as CodeMirror from 'codemirror';
 import * as CodeMirrorCommands from '../CodeMirrorCommands';
+import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
@@ -254,7 +255,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     if ( ! this.canPaste()) {
       return;
     }
-    this._codeMirror.getDoc().replaceSelection(text);
+    CodeMirrorUtils.pasteText(this._codeMirror.getDoc(), text);
   }
 
   focus(): void {

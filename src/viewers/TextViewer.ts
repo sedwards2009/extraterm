@@ -19,6 +19,7 @@ type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import * as CodeMirror from 'codemirror';
 import * as CodeMirrorCommands from '../CodeMirrorCommands';
+import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as EtTextViewerTypes from './TerminalViewerTypes';
@@ -253,7 +254,7 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     if ( ! this.canPaste()) {
       return;
     }
-    this._codeMirror.getDoc().replaceSelection(text);
+    CodeMirrorUtils.pasteText(this._codeMirror.getDoc(), text);
   }
 
   setMimeType(mimeType: string): void {
