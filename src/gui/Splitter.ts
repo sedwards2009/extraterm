@@ -199,8 +199,6 @@ export class Splitter extends ThemeableElementBase {
 
   private _handleMouseDown(ev: MouseEvent): void {
     const target = <HTMLElement> ev.target;
-    this._log.debug("target: ", target);
-    this._log.debug("has divider: ", target.classList.contains(CLASS_DIVIDER));
 
     if ( ! target.classList.contains(CLASS_DIVIDER)) {
       return;
@@ -225,10 +223,6 @@ export class Splitter extends ThemeableElementBase {
 
     this._dividerDrag = dividerIndex;
     this._dividerDragOffsetX = ev.offsetX;
-    this._log.debug("this._dividerDrag: ", this._dividerDrag);
-
-    this._log.debug("ev.offsetX: ", ev.offsetX);
-    this._log.debug("ev.offsetY: ", ev.offsetY);
 
     const topDiv = DomUtils.getShadowId(this, ID_TOP);
     topDiv.classList.add(CLASS_DRAG);
@@ -245,8 +239,6 @@ export class Splitter extends ThemeableElementBase {
     }
     
     const target = <HTMLElement> ev.target;
-    this._log.debug("target: ", target);
-    this._log.debug("has divider: ", target.classList.contains(CLASS_DIVIDER));
 
     ev.preventDefault();
     ev.stopPropagation();
@@ -296,7 +288,6 @@ export class Splitter extends ThemeableElementBase {
   }
 
   private _handleMouseLeave(ev: MouseEvent): void {
-    this._log.debug("_handleMouseLeave",ev.target);
     this._stopDrag();
   }
 
