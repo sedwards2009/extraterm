@@ -143,6 +143,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
 
   // The current element height. This is a cached value used to prevent touching the DOM.  
   private _currentElementHeight: number;
+  private _currentVPad: boolean;
   private _renderEventListener: Term.RenderEventHandler = this._handleRenderEvent.bind(this);
 
   private _bookmarkCounter: number;
@@ -162,6 +163,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this.document = document;
     this._useVPad = true;
+    this._currentVPad = true;
     this._visualState = VisualState.AUTO;
     
     this._currentElementHeight = -1;
@@ -1522,8 +1524,9 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
       return;
     }
     const elementHeight = this.getHeight();
-    if (elementHeight !== this._currentElementHeight) {
+    if (elementHeight !== this._currentElementHeight || this._useVPad !== this._currentVPad) {
       this._currentElementHeight = elementHeight;
+      this._currentVPad = this._useVPad;
       this.style.height = "" + elementHeight + "px";
       
       const totalTextHeight = this.getVirtualTextHeight();

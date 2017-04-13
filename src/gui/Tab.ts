@@ -74,7 +74,6 @@ export class Tab extends HTMLElement {
   }
 
   private _applyDraggable(): void {
-this._log.debug("_applyDraggable");
     for (const kid of this.childNodes) {
       if (kid instanceof HTMLElement) {
         kid.setAttribute("draggable", "true");

@@ -14,11 +14,9 @@ class TerminalViewerExtra implements PluginApi.ExtratermPlugin {
 
     this._log = new Logger("TerminalViewerExtra", this);
     api.addNewTopLevelEventListener( (el: HTMLElement): void => {
-      this._log.debug("Saw a new top level");
     });
 
     api.addNewTabEventListener( (el: HTMLElement): void => {
-      this._log.debug("Saw a new tab level");
     });
   }
 
