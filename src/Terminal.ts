@@ -597,6 +597,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       // This was already attached at least once.
       this._scheduleResize();
     }
+
+    this._setFontSizeInCss(this._fontSizeAdjustment);
   }
   
   /**
@@ -1303,17 +1305,20 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     }
     this._removeScrollable(kidNode);
   }
-
+  
   private _adjustFontSize(delta: number): void {
     const newAdjustment = Math.min(Math.max(this._fontSizeAdjustment + delta, MINIMUM_FONT_SIZE), MAXIMUM_FONT_SIZE);
     if (newAdjustment !== this._fontSizeAdjustment) {
       this._fontSizeAdjustment = newAdjustment;
-
-      const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
-      (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(newAdjustment);  // Type stubs are missing cssRules.
-      this._armResizeCanary = true;
-      // Don't refresh. Let the Resize Canary detect the real change in the DOM when it arrives.
+      this._setFontSizeInCss(newAdjustment);
     }
+  }
+
+  private _setFontSizeInCss(size: number): void {
+    const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
+    (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(size);  // Type stubs are missing cssRules.
+    this._armResizeCanary = true;
+    // Don't refresh. Let the Resize Canary detect the real change in the DOM when it arrives.
   }
 
   private _resetFontSize(): void {
