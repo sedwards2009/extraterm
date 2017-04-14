@@ -75,6 +75,7 @@ const CLASS_SPLIT = "split";
 const CLASS_TAB_HEADER_CONTAINER = "tab_header_container";
 const CLASS_TAB_HEADER_ICON = "tab_header_icon";
 const CLASS_TAB_HEADER_MIDDLE = "tab_header_middle";
+const CLASS_TAB_HEADER_TAG = "tab_header_tag";
 const CLASS_TAB_HEADER_CLOSE = "tab_header_close";
 const CLASS_TAB_CONTENT = "tab_content";
 const CLASS_NEW_BUTTON_CONTAINER = "CLASS_NEW_BUTTON_CONTAINER";
@@ -418,11 +419,12 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const newId = this._tabIdCounter;
     this._tabIdCounter++;
     const newTab = <Tab> document.createElement(Tab.TAG_NAME);
-    newTab.setAttribute('id', "tab_id_"+newId);
+    newTab.setAttribute('id', "tab_id_" + newId);
     newTab.innerHTML =
       `<div class="${CLASS_TAB_HEADER_CONTAINER}">` +
         `<div class="${CLASS_TAB_HEADER_ICON}"></div>` +
         `<div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>` +
+        `<div class="${CLASS_TAB_HEADER_TAG}"></div>` +
         `<div class="${CLASS_TAB_HEADER_CLOSE}">` +
           `<button id="close_tag_id_${newId}"><i class="fa fa-times"></i></button>` +
         `</div>` +
@@ -593,6 +595,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     let title = "";
     let htmlTitle = "";
     let icon = null;
+    let tag = "";
 
     if (el instanceof EtTerminal) {
       title = el.getTerminalTitle();
@@ -601,12 +604,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     } else if (el instanceof EtViewerTab) {
       title = el.getTitle();
-      if (el.getTag() !== null) {
-        htmlTitle = he.escape(title) + " &nbsp;&nbsp;&nbsp;<i class='fa fa-tag'></i>" + el.getTag();
-      } else {
-        htmlTitle = he.escape(title);
-      }
+      htmlTitle = he.escape(title);
       icon = el.getAwesomeIcon();
+      if (el.getTag() !== null) {
+        tag = "<i class='fa fa-tag'></i>" + el.getTag();
+      }
 
     } else if (el instanceof ViewerElement) {
       title = el.getTitle();
@@ -621,9 +623,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     iconDiv.innerHTML = icon !== null ? '<i class="fa fa-' + icon + '"></i>' : "";
     
     const middleDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
-
     middleDiv.title = title;
     middleDiv.innerHTML = htmlTitle;
+
+    const tabDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_TAG}`);
+    tabDiv.innerHTML = tag;
   }
 
   openSettingsTab(): void {
