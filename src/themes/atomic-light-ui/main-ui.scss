@@ -67,8 +67,9 @@
 DIV.tab_content {
   height: 100%;
   width: 100%;
-
+  position: relative;
 }
+
 DIV.tab_content > * {
   position: absolute;
   width: 100%;
