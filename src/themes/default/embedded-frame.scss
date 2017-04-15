@@ -22,8 +22,6 @@ $FOREGROUND_COLOR: #d6dfe9;
 
 $FAIL_BACKGROUND_COLOR: #a75b5b;
 
-$FADE_DURATION: 0.5s;
-
 $RUNNING_COLOR: #d6dfe9;
 $SUCCESS_COLOR: #54ff54;
 $FAIL_COLOR: #ff5454;
@@ -86,9 +84,6 @@ $FAIL_COLOR: #ff5454;
   
   border-bottom-left-radius: $CORNER_RADIUS;
   border-bottom-right-radius: $CORNER_RADIUS;
-
-  transition-property: border-left-color, border-right-color;
-  transition-duration: $FADE_DURATION, $FADE_DURATION;
 }
 
 // #ID_OUTPUT.closed {
@@ -105,9 +100,6 @@ $FAIL_COLOR: #ff5454;
   padding-left: 0.5em;
   padding-right: 0.5em;
   padding-bottom: 1px;
-  
-  transition-property: border-color;
-  transition-duration: $FADE_DURATION;
 }
 
 /* Eliminate any outline around the button when it is clicked. */
@@ -135,8 +127,6 @@ $FAIL_COLOR: #ff5454;
   padding-right: 0.5em;
   padding-bottom: 1px;
 
-  transition-property: border-color;
-  transition-duration: $FADE_DURATION;
   color: $FOREGROUND_COLOR;
 
   font-size: 80%;
@@ -187,11 +177,6 @@ $FAIL_COLOR: #ff5454;
 #ID_CONTAINER.running > #ID_HEADER {
   border-bottom-left-radius: $CORNER_RADIUS;
   border-bottom-right-radius: $CORNER_RADIUS;
-}
-
-#ID_HEADER > .header_spacer {
-  transition-property: border-top-color;
-  transition-duration: $FADE_DURATION;
 }
 
 #ID_CONTAINER.fail > #ID_HEADER > .header_spacer {
