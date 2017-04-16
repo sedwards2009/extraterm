@@ -530,8 +530,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     });
     
     newTerminal.addEventListener(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT, (ev: CustomEvent): void => {
-      this.openViewerTab(ev.detail.embeddedViewer, ev.detail.terminal.getFontAdjust());
-      this._switchToTab(ev.detail.embeddedViewer);
+      const viewerTab = this.openViewerTab(ev.detail.embeddedViewer, ev.detail.terminal.getFontAdjust());
+      this._switchToTab(viewerTab);
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
     
@@ -561,7 +561,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return newTerminal;
   }
   
-  openViewerTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): void {
+  openViewerTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
@@ -575,6 +575,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     viewerTab.setViewerElement(viewerElement);
 
     this._updateTabTitle(viewerTab);
+    return viewerTab;
   }
   
   private _openViewerTab(tabWidget: TabWidget, viewerElement: ViewerElement): void {
