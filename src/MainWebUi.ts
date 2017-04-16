@@ -800,7 +800,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _closeSplit(tabContentElement: Element): void {
-    let focusInfo: { tabWidget: TabWidget, tabContent: Element} = null;
+    let focusInfo: {tabWidget: TabWidget, tabContent: Element} = null;
     if (tabContentElement instanceof EmptyPaneMenu) {
       focusInfo = this._selectPaneLeft(tabContentElement);
       if (focusInfo.tabWidget == null) {
@@ -812,10 +812,15 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._splitLayout.update();
     this._refreshSplitLayout();
 
+    if (focusInfo == null) {
+      const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
+      focusInfo = {tabWidget, tabContent: tabContentElement};
+    }
+
     if (focusInfo.tabWidget != null) {
       focusInfo.tabWidget.focus();
       if (focusInfo.tabContent != null) {
-        if (focusInfo.tabContent instanceof EtTerminal || focusInfo.tabContent instanceof EmptyPaneMenu) {
+        if (focusInfo.tabContent instanceof EtTerminal || focusInfo.tabContent instanceof EmptyPaneMenu || focusInfo.tabContent instanceof EtViewerTab) {
           focusInfo.tabContent.focus();
         }
       }
