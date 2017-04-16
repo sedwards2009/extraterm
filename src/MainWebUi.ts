@@ -459,9 +459,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     if (el instanceof EtTerminal) {
       title = el.getTerminalTitle();
     } else if (el instanceof EtViewerTab) {        
-      title = el.title;
+      title = el.getTitle();
     } else if (el instanceof ViewerElement) {
-      title = el.title;
+      title = el.getTitle();
     }
 
     this._sendTitleEvent(title);
