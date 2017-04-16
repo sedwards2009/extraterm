@@ -708,8 +708,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _shiftTab(tabWidget: TabWidget, direction: number): void {
-    const tabElementList = this._splitLayout.getAllTabContents();
-    const len = tabElementList.length;
+    const contents = this._splitLayout.getTabContentsByTabWidget(tabWidget);
+    const len = contents.length;
     if (len === 0) {
       return;
     }
@@ -722,7 +722,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       i = 0;
     }
     tabWidget.setSelectedIndex(i);
-    this._focusTabContent(tabElementList[i]);
+    this._focusTabContent(contents[i]);
   }
 
   focusPane(): void {
