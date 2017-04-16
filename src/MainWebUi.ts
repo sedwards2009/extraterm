@@ -785,9 +785,17 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._refreshSplitLayout();
     if (newTabWidget != null) {
       const element = this._splitLayout.getEmptyContentByTabWidget(newTabWidget);
-      newTabWidget.focus();
-      if (element instanceof EmptyPaneMenu) {
-        element.focus();
+      if (element != null) {
+        newTabWidget.focus();
+        if (element instanceof EmptyPaneMenu) {
+          element.focus();
+        }
+      } else {
+        const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
+        tabWidget.focus();
+        if (tabContentElement instanceof EtTerminal || tabContentElement instanceof EtViewerTab) {
+          tabContentElement.focus();
+        }
       }
     }
   }
