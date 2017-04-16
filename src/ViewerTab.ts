@@ -321,12 +321,13 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
       scrollerArea.scrollTop = offset;
     });
     this._virtualScrollArea.setScrollbar(scrollbar);
-    
+
     scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
     scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
       if (ev.target === scrollerArea) {
         ev.preventDefault();
         ev.stopPropagation();
+        this.focus();
       }
     });
     
