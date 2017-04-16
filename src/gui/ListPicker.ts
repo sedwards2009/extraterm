@@ -84,6 +84,17 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     }
   }
 
+  getFilter(): string {
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+    return filterInput.value;
+  }
+
+  setFilter(text: string): void {
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+    filterInput.value = text;
+    this._updateEntries();
+  }
+
   getSelected(): string {
     return this._selectedId;
   }

@@ -286,6 +286,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
       emptyPaneMenu.setEntries(commandList);
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
+        emptyPaneMenu.setFilter("");
         this._executeCommand(emptyPaneMenu, ev.detail.selected);
       });
       return emptyPaneMenu;

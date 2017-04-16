@@ -101,6 +101,16 @@ export class EmptyPaneMenu extends ThemeableElementBase {
     return this._entries;
   }
 
+  getFilter(): string {
+    const listPicker = <ListPicker<CommandPaletteTypes.CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+    return listPicker.getFilter();
+  }
+
+  setFilter(text: string): void {
+    const listPicker = <ListPicker<CommandPaletteTypes.CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+    listPicker.setFilter(text);
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
