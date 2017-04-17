@@ -68,6 +68,14 @@
     "deleteLastFrame": "Delete the last frame",
     "openLastFrame": "Open the last frame in a tab",
     "typeSelection": "Type the selection in the terminal",
-    "typeSelectionAndCr": "Type the selection in the terminal then press enter"
+    "typeSelectionAndCr": "Type the selection in the terminal then press enter",
+    "openCommandPalette": "Open command palette",
+    "goToNextFrame": "Go to next frame",
+    "goToPreviousFrame": "Go to previous frame",
+    "decreaseFontSize": "Decrease font size",
+    "increaseFontSize": "Increase font size",
+    "resetFontSize": "Reset font size",
+    "goDown": "Move down",
+    "goUp": "Move up"
   }
 }
