@@ -118,6 +118,8 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
   private _armResizeCanary: boolean;  // Controls when the resize canary is allowed to chirp.
 
   private _initProperties(): void {
+    this._log = new Logger(EtViewerTab.TAG_NAME, this);
+
     this._virtualScrollArea = null;
     this._elementAttached = false;
     this._blinkingCursor = false;

@@ -123,6 +123,7 @@
     "Ctrl-v": "pasteFromClipboard",
     "Ctrl-Plus": "increaseFontSize",
     "Ctrl-Minus": "decreaseFontSize",
-    "Ctrl-=": "resetFontSize"
+    "Ctrl-=": "resetFontSize",
+    "Ctrl-Shift-P": "openCommandPalette"
   }
 }

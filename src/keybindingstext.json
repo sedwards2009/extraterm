@@ -5,7 +5,8 @@
     "terminal-cursor-mode",
     "terminal-viewer",
     "text-viewer",
-    "image-viewer"    
+    "image-viewer",
+    "viewer-tab"
   ],
   "contextNames": {
     "image-viewer": "Image viewer",
@@ -13,7 +14,8 @@
     "terminal-default-mode": "Terminal Tab: Normal mode",
     "terminal-cursor-mode": "Terminal Tab: Cursor mode",
     "terminal-viewer": "Terminal Frame",
-    "text-viewer": "Text Frame"
+    "text-viewer": "Text Frame",
+    "viewer-tab": "Viewer Tab"
   },
   "commands": {
     "goCharLeft": "Move cursor left",
