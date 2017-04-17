@@ -736,7 +736,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     if (leftTabWidget != null) {
       leftTabWidget.focus();
       const content = this._splitLayout.getTabContentByTab(leftTabWidget.getSelectedTab());
-      if (content instanceof EtTerminal || content instanceof EmptyPaneMenu) {
+      if (elementSupportsFocus(content)) {
         content.focus();
         return { tabWidget: leftTabWidget, tabContent: content };
       }
@@ -751,7 +751,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     if (rightTabWidget != null) {
       rightTabWidget.focus();
       const content = this._splitLayout.getTabContentByTab(rightTabWidget.getSelectedTab());
-      if (content instanceof EtTerminal || content instanceof EmptyPaneMenu) {
+      if (elementSupportsFocus(content)) {
         content.focus();
         return { tabWidget: rightTabWidget, tabContent: content };
       }
@@ -762,7 +762,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _getTabElementWithFocus(): Element {
     for (const el of this._splitLayout.getAllTabContents()) {
-      if (el instanceof EtViewerTab || el instanceof EtTerminal) {
+      if (elementSupportsFocus(el)) {
         if (el.hasFocus()) {
           return el;
         }
@@ -775,7 +775,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     if (el instanceof EtTerminal) {
       el.resizeToContainer();
       el.focus();
-    } else if (el instanceof ViewerElement || el instanceof EmptyPaneMenu) {
+    } else if (elementSupportsFocus(el)) {
       el.focus();
     }
   }
@@ -794,7 +794,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       } else {
         const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
         tabWidget.focus();
-        if (tabContentElement instanceof EtTerminal || tabContentElement instanceof EtViewerTab) {
+        if (elementSupportsFocus(tabContentElement)) {
           tabContentElement.focus();
         }
       }
@@ -830,7 +830,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     if (focusInfo.tabWidget != null) {
       focusInfo.tabWidget.focus();
       if (focusInfo.tabContent != null) {
-        if (focusInfo.tabContent instanceof EtTerminal || focusInfo.tabContent instanceof EmptyPaneMenu || focusInfo.tabContent instanceof EtViewerTab) {
+        if (elementSupportsFocus(focusInfo.tabContent)) {
           focusInfo.tabContent.focus();
         }
       }
@@ -1107,4 +1107,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   private _getById(id: string): HTMLElement {
     return <HTMLElement>DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
+}
+
+interface Focusable {
+  focus(): void;
+  hasFocus(): boolean;
+}
+
+function elementSupportsFocus(content: Element | Focusable): content is Focusable {
+  return content instanceof EtTerminal || content instanceof EmptyPaneMenu || content instanceof EtViewerTab
 }
