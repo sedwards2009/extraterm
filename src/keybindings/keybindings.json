@@ -9,8 +9,7 @@
     "Ctrl-Shift->": "selectPaneRight",
     "Ctrl-Shift-:": "selectPaneUp",
     "Ctrl-Shift-?": "selectPaneDown",
-    "Ctrl-Shift-S": "toggleSplit",
-    "Ctrl-Shift-P": "openCommandPalette"
+    "Ctrl-Shift-S": "toggleSplit"
   },
   "terminal-default-mode": {
     "Ctrl-Shift-Space": "enterCursorMode",
@@ -106,7 +105,6 @@
     "Ctrl-v": "pasteFromClipboard",
     "Ctrl-Plus": "increaseFontSize",
     "Ctrl-Minus": "decreaseFontSize",
-    "Ctrl-=": "resetFontSize",
-    "Ctrl-Shift-P": "openCommandPalette"
+    "Ctrl-=": "resetFontSize"
   }
 }

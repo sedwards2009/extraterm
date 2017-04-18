@@ -9,8 +9,7 @@
     "Cmd-Shift->": "selectPaneRight",
     "Cmd-Shift-:": "selectPaneUp",
     "Cmd-Shift-?": "selectPaneDown",
-    "Cmd-s": "toggleSplit",
-    "Cmd-Shift-P": "openCommandPalette"
+    "Cmd-s": "toggleSplit"
   },
   "terminal-default-mode": {
     "Alt-Space": "enterCursorMode",
@@ -126,7 +125,6 @@
     "Cmd-Shift-V": "pasteFromClipboard",
     "Ctrl-Plus": "increaseFontSize",
     "Ctrl-Minus": "decreaseFontSize",
-    "Ctrl-=": "resetFontSize",
-    "Cmd-Shift-P": "openCommandPalette"
+    "Ctrl-=": "resetFontSize"
   }
 }

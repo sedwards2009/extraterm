@@ -94,7 +94,6 @@ const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
 const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
 const COMMAND_DELETE_LAST_FRAME = "deleteLastFrame";
 const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
-const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 const COMMAND_RESET_VT = "resetVT";
 const COMMAND_CLEAR_SCROLLBACK = "clearScrollback";
 const COMMAND_FONT_SIZE_INCREASE = "increaseFontSize";
@@ -1495,19 +1494,6 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
             this._embeddedViewerPopOutEvent(viewer);
           }
           break;
-
-      case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequest = {
-            srcElement: this,
-            commandEntries: this._commandPaletteEntries(),
-            contextElement: null
-          };
-        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
-          { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
-          commandPaletteRequestDetail);
-        this.dispatchEvent(commandPaletteRequestEvent);
-        break;
 
       case COMMAND_RESET_VT:
         this._emulator.reset();

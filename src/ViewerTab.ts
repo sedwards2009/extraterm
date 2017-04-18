@@ -50,7 +50,6 @@ const ID_CSS_VARS = "ID_CSS_VARS";
 const KEYBINDINGS_VIEWER_TAB = "viewer-tab";
 
 const PALETTE_GROUP = "viewertab";
-const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
 const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
 const COMMAND_FONT_SIZE_INCREASE = "increaseFontSize";
@@ -318,7 +317,14 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
 
     const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    
+
+    const scrollContainer = DomUtils.getShadowId(this, ID_CONTAINER);
+    DomUtils.preventScroll(scrollContainer);
+
+    scrollContainer.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+        this._handleCommandPaletteRequest(ev);
+      });
+
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
       scrollerArea.scrollTop = offset;
     });
@@ -565,6 +571,26 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     }
   }
 
+  private _handleCommandPaletteRequest(ev: CustomEvent): void {
+    if (ev.path[0] === this) { // Don't process our own messages.
+      return;
+    }
+    
+    ev.stopPropagation();
+    
+    const request: CommandPaletteRequestTypes.CommandPaletteRequest = ev.detail;
+    const commandPaletteRequestDetail: CommandPaletteRequest = {
+        srcElement: request.srcElement === null ? this : request.srcElement,
+        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries()],
+        contextElement: this
+      };
+    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
+      { detail: commandPaletteRequestDetail });
+    commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+      commandPaletteRequestDetail);
+    this.dispatchEvent(commandPaletteRequestEvent);
+  }
+
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
 
@@ -595,19 +621,6 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
 
       case COMMAND_PASTE_FROM_CLIPBOARD:
         this._pasteFromClipboard();
-        break;
-
-      case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequest = {
-            srcElement: this,
-            commandEntries: this._commandPaletteEntries(),
-            contextElement: null
-          };
-        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
-          { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
-          commandPaletteRequestDetail);
-        this.dispatchEvent(commandPaletteRequestEvent);
         break;
 
       case COMMAND_FONT_SIZE_INCREASE:
