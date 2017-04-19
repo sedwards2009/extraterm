@@ -109,7 +109,8 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
   private _themeStyleLoaded: boolean;
   private _resizePollHandle: DomUtils.LaterHandle;
   private _elementAttached: boolean;
-  
+  private _needsCompleteRefresh: boolean;
+
   private _scheduleLaterHandle: DomUtils.LaterHandle;
   private _scheduledResize: boolean;
 
@@ -121,6 +122,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
 
     this._virtualScrollArea = null;
     this._elementAttached = false;
+    this._needsCompleteRefresh = true;
     this._blinkingCursor = false;
 
     this._title = "New Tab";
@@ -369,12 +371,51 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     DomUtils.doLater(this._processResize.bind(this));
   }
 
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
+  /**
+   * Custom Element 'detached' life cycle hook.
+   */
+  detachedCallback(): void {
+    super.detachedCallback();
+    this._needsCompleteRefresh = true;
+  }
+
+  bulkRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
+    let level = requestedLevel;
+    if (this._needsCompleteRefresh) {
+      level = ResizeRefreshElementBase.RefreshLevel.COMPLETE;
+      this._needsCompleteRefresh = false;
+    }
+
     const viewerElement = this._getViewerElement();
     if (viewerElement == null) {
       return BulkDomOperation.nullOperation();
     } else {
-      return viewerElement.bulkRefresh(level);
+
+      const generator = function* generator(this: EtViewerTab): IterableIterator<BulkDomOperation.GeneratorResult> {
+
+        // --- DOM Write ---
+        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
+        
+        const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+        const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+        const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level);
+        const scrollbarOperation = scrollbar.bulkRefresh(level);
+
+        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: scrollAreaOperation, waitOperation: scrollAreaOperation};
+
+        const scrollContainer = DomUtils.getShadowId(this, ID_CONTAINER);
+        this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
+
+        const viewerOp = viewerElement.bulkRefresh(level);
+        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: viewerOp, waitOperation: viewerOp};
+
+        this._virtualScrollArea.updateScrollableSizes([viewerElement]);
+        this._virtualScrollArea.reapplyState();
+
+        return BulkDomOperation.GeneratorPhase.DONE;
+      };
+
+      return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
     }
   }
 
