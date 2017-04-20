@@ -576,6 +576,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     viewerTab.setViewerElement(viewerElement);
 
     this._updateTabTitle(viewerTab);
+    this._internalExtratermApi.addTab(viewerTab);
     return viewerTab;
   }
   
