@@ -2,7 +2,7 @@ Extraterm
 =========
 *The terminal emulator with a lot extra...*
 
-* *Reuse command output as new command input*
+* *Capture and reuse command output as new command input*
 * *Manipulate and copy text without leaving the keyboard*
 * *Slice and dice command output like a text editor*
 * *Display images directly*
@@ -11,7 +11,8 @@ Extraterm
 ![Directly edit and execute command output](docs/edit_direct.gif)
 
 ### :star: **See the [Visual Tour and Screenshots](docs/tour.md)**
-### :star: **[Try it out yourself (Linux, Windows and OS X supported)](https://github.com/sedwards2009/extraterm/releases)**
+### :star: **[Download and try it out on Linux, Windows+Cygwin and macOS](https://github.com/sedwards2009/extraterm/releases)**
+:loudspeaker: :bird: Follow development on [Twitter @ ExtratermDev](https://twitter.com/ExtratermDev)
 
 About
 -----
@@ -19,7 +20,28 @@ Extraterm is an open source project to build a modern terminal emulator with rad
 
 The primary developer is [Simon Edwards](mailto:simon@simonzone.com).
 
-:loudspeaker: :bird: Follow development on [Twitter @ ExtratermDev](https://twitter.com/ExtratermDev)
+Current features:
+
+* Supports Linux, macOS and Cygwin on Windows
+* xterm compatible
+* Multiple tabs/terminals
+* Vertical split panes
+* Keyboard based selection
+* Show images in the terminal
+* Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
+* Previous command output can be used as input for new commands
+* Command output is editable in place. multi-cursor editing
+* Keyboard friendly "command palette" for searching menus
+* Text zoom
+* Unicode support
+* Color emoji
+* [MIT license](LICENSE.txt)
+* [...much more to come](https://github.com/sedwards2009/extraterm/issues/30)
+
+:warning: Extraterm is in development and roughly 'beta' in quality. It is generally stable, but don't be too surprised if you encounter a few bugs. Use at your own risk. :warning:
+
+With that out of the way, the primary author does use it as their main terminal emulator on a daily basis. The basics are in place and it will run most common terminal applications such as vi, emacs and joe without problems and even more demanding applications such as midnight commander.
+
 
 Further Information
 -------------------
@@ -29,25 +51,4 @@ Further Information
 * [How to Create Themes](docs/theming.md)
 * [Development and Contributing](docs/development.md)
 * [Current Development Roadmap](https://github.com/sedwards2009/extraterm/issues/30)
-
-Status
-------
-:warning: Extraterm is in development and roughly 'beta' in quality. It is generally stable, but don't be too surprised if you encounter a few bugs. Use at your own risk. :warning:
-
-With that out of the way, the primary author does use it as their main terminal emulator on a daily basis. The basics are in place and it will run most common terminal applications such as vi, emacs and joe without problems and even more demanding applications such as midnight commander.
-
-Current features:
-
-* Supports Linux, Mac OS X and Cygwin on Windows
-* xterm compatible
-* Multiple tabs/terminals
-* Keyboard based selection
-* (Basic) vertical split
-* Show images in the terminal
-* Shell integration; can isolate and 'frame' command output
-* Previous command output can be used as input for new commands
-* Command output is editable in place
-* [MIT license](LICENSE.txt)
-* ...much more to come
-
-:octocat: Github: https://github.com/sedwards2009/extraterm
+* :octocat: Github: https://github.com/sedwards2009/extraterm
