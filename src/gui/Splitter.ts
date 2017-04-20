@@ -26,9 +26,9 @@ const CLASS_PANE = "CLASS_PANE";
 const CLASS_NORMAL = "CLASS_NORMAL";
 const CLASS_DRAG = "CLASS_DRAG";
 
-const DIVIDER_WIDTH = 4;
+const DIVIDER_SIZE = 4;
 const NOT_DRAGGING = -1;
-const MIN_PANE_WIDTH = 32;
+const MIN_PANE_SIZE = 32;
 
 /**
  * A widget to display panes of widgets separated by a moveable gap/bar.
@@ -61,7 +61,7 @@ export class Splitter extends ThemeableElementBase {
   
   private _mutationObserver: MutationObserver;
   
-  private _paneWidths: PaneWidths;
+  private _paneWidths: PaneSizes;
 
   private _dividerDrag: number; // The number of the divider currently being dragged. -1 means not dragging.
 
@@ -69,7 +69,7 @@ export class Splitter extends ThemeableElementBase {
 
   private _initProperties(): void {
     this._log = new Logger(Splitter.TAG_NAME, this);
-    this._paneWidths = new PaneWidths();
+    this._paneWidths = new PaneSizes();
     this._mutationObserver = null;
     this._dividerDrag = NOT_DRAGGING;
     this._dividerDragOffsetX = 0;
@@ -106,11 +106,11 @@ export class Splitter extends ThemeableElementBase {
     coverDiv.addEventListener('mouseleave', this._handleMouseLeave.bind(this));
 
     const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
-    indicatorDiv.style.width = "" + DIVIDER_WIDTH + "px";
+    indicatorDiv.style.width = "" + DIVIDER_SIZE + "px";
 
     const rect = topDiv.getBoundingClientRect();
     const width = rect.width === 0 ? 1024 : rect.width;
-    this._paneWidths = PaneWidths.equalPaneWidths(width, DomUtils.toArray(this.children));
+    this._paneWidths = PaneSizes.equalPaneSizes(width, DomUtils.toArray(this.children));
     this._createLayout(this._paneWidths);
 
     this._mutationObserver = new MutationObserver(this._handleMutations.bind(this));
@@ -151,7 +151,7 @@ export class Splitter extends ThemeableElementBase {
 
         const topDiv = DomUtils.getShadowId(this, ID_TOP);
         const rect = topDiv.getBoundingClientRect();
-        const newPaneWidths = this._paneWidths.updateTotalWidth(rect.width);
+        const newPaneWidths = this._paneWidths.updateTotalSize(rect.width);
 
         yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         this._paneWidths = newPaneWidths;
@@ -248,7 +248,7 @@ export class Splitter extends ThemeableElementBase {
     const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
     const newIndicatorLeft = ev.clientX - topRect.left - this._dividerDragOffsetX;
-    this._paneWidths = this._paneWidths.adjustPaneWidth(this._dividerDrag, newIndicatorLeft);
+    this._paneWidths = this._paneWidths.adjustPaneSize(this._dividerDrag, newIndicatorLeft);
     this._setSizes(this._paneWidths);
 
     this._stopDrag();
@@ -282,9 +282,9 @@ export class Splitter extends ThemeableElementBase {
     const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
     const newIndicatorLeft = ev.clientX - topRect.left - this._dividerDragOffsetX;
-    const newPaneWidths = this._paneWidths.adjustPaneWidth(this._dividerDrag, newIndicatorLeft);
+    const newPaneWidths = this._paneWidths.adjustPaneSize(this._dividerDrag, newIndicatorLeft);
 
-    indicatorDiv.style.left = "" + newPaneWidths.getPaneRight(this._dividerDrag) + "px";
+    indicatorDiv.style.left = "" + newPaneWidths.getPaneNext(this._dividerDrag) + "px";
   }
 
   private _handleMouseLeave(ev: MouseEvent): void {
@@ -309,7 +309,7 @@ export class Splitter extends ThemeableElementBase {
   //
   //-----------------------------------------------------------------------
                                           
-  private _createLayout(paneWidths: PaneWidths): void {
+  private _createLayout(paneWidths: PaneSizes): void {
     const topDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
     topDiv.innerHTML = "";
@@ -336,7 +336,7 @@ export class Splitter extends ThemeableElementBase {
     this._setSizes(paneWidths);
   }
 
-  private _setSizes(paneWidths: PaneWidths): void {
+  private _setSizes(paneWidths: PaneSizes): void {
     const topDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
     let x = 0;
@@ -350,8 +350,8 @@ export class Splitter extends ThemeableElementBase {
       if (i < this.children.length-1) {
         const divider = <HTMLElement> topDiv.children.item(i*2+1);
         divider.style.left = "" + x + "px";
-        divider.style.width = "" + DIVIDER_WIDTH + "px";
-        x += DIVIDER_WIDTH;
+        divider.style.width = "" + DIVIDER_SIZE + "px";
+        x += DIVIDER_SIZE;
       }      
     }
   }
@@ -360,168 +360,169 @@ export class Splitter extends ThemeableElementBase {
 
 //-----------------------------------------------------------------------
 //
-//   ######                       #     #                              
-//   #     #   ##   #    # ###### #  #  # # #####  ##### #    #  ####  
-//   #     #  #  #  ##   # #      #  #  # # #    #   #   #    # #      
-//   ######  #    # # #  # #####  #  #  # # #    #   #   ######  ####  
-//   #       ###### #  # # #      #  #  # # #    #   #   #    #      # 
-//   #       #    # #   ## #      #  #  # # #    #   #   #    # #    # 
-//   #       #    # #    # ######  ## ##  # #####    #   #    #  ####  
+//   ######                        #####
+//   #     #   ##   #    # ###### #     # # ###### ######  ####
+//   #     #  #  #  ##   # #      #       #     #  #      #
+//   ######  #    # # #  # #####   #####  #    #   #####   ####
+//   #       ###### #  # # #            # #   #    #           #
+//   #       #    # #   ## #      #     # #  #     #      #    #
+//   #       #    # #    # ######  #####  # ###### ######  ####
 //
 //-----------------------------------------------------------------------
-class PaneWidths {
 
-  private _paneWidths: number[];
+class PaneSizes {
+
+  private _paneSizes: number[];
 
   private _panes: Object[];
 
-  static equalPaneWidths(totalWidth: number, panes: Object[]) {
+  static equalPaneSizes(totalSize: number, panes: Object[]) {
     // Distribute the panes evenly.
     const paneCount = panes.length;
-    const paneWidth = (totalWidth - (paneCount-1) * DIVIDER_WIDTH) / paneCount;
-    const paneWidths: number[] = [];
+    const paneSize = (totalSize - (paneCount-1) * DIVIDER_SIZE) / paneCount;
+    const paneSizes: number[] = [];
     for (let i=0; i<paneCount; i++) {
-      paneWidths.push(paneWidth);
+      paneSizes.push(paneSize);
     }
-    return new PaneWidths(paneWidths, panes);
+    return new PaneSizes(paneSizes, panes);
   }
 
-  constructor(paneWidthArray: number[] = null, panes: Object[] = null) {
-    if (paneWidthArray == null) {
-      this._paneWidths = [];
+  constructor(paneSizeArray: number[] = null, panes: Object[] = null) {
+    if (paneSizeArray == null) {
+      this._paneSizes = [];
     } else {
-      this._paneWidths = paneWidthArray;
+      this._paneSizes = paneSizeArray;
     }
     this._panes = panes;
   }
 
   get(index: number): number {
-    return this._paneWidths[index];
+    return this._paneSizes[index];
   }
 
   length(): number {
-    return this._paneWidths.length;
+    return this._paneSizes.length;
   }
 
-  adjustPaneWidth(dividerIndex: number, indicatorLeft: number): PaneWidths {
-    let delta = indicatorLeft - this.getPaneRight(dividerIndex);
+  adjustPaneSize(dividerIndex: number, indicatorLeft: number): PaneSizes {
+    let delta = indicatorLeft - this.getPaneNext(dividerIndex);
 
-    const widthLeft = this._paneWidths[dividerIndex];
-    const widthRight = this._paneWidths[dividerIndex+1];
+    const sizeFirst = this._paneSizes[dividerIndex];
+    const sizeSecond = this._paneSizes[dividerIndex+1];
 
-    delta = widthLeft+delta < MIN_PANE_WIDTH ? -widthLeft+MIN_PANE_WIDTH : delta;
-    delta = widthRight-delta < MIN_PANE_WIDTH ? widthRight-MIN_PANE_WIDTH : delta;
+    delta = sizeFirst+delta < MIN_PANE_SIZE ? -sizeFirst+MIN_PANE_SIZE : delta;
+    delta = sizeSecond-delta < MIN_PANE_SIZE ? sizeSecond-MIN_PANE_SIZE : delta;
 
-    const copy = this._paneWidths.slice();
+    const copy = this._paneSizes.slice();
     copy[dividerIndex] += delta;
     copy[dividerIndex+1] -= delta;
     
-    return new PaneWidths(copy, this._panes);
+    return new PaneSizes(copy, this._panes);
   }
 
-  getPaneRight(index: number): number {
-    return this._paneWidths.slice(0, index+1).reduce( (accu, w) => accu+w, 0) + index * DIVIDER_WIDTH;
+  getPaneNext(index: number): number {
+    return this._paneSizes.slice(0, index+1).reduce( (accu, w) => accu+w, 0) + index * DIVIDER_SIZE;
   }
 
-  updateTotalWidth(newTotalWidth: number): PaneWidths {
-    return this._resizeWidths(newTotalWidth);
+  updateTotalSize(newTotalSize: number): PaneSizes {
+    return this._resizeSizes(newTotalSize);
   }
 
-  update(newPanes: Object[]): PaneWidths {
+  update(newPanes: Object[]): PaneSizes {
     return this._updateRemovedPanes(newPanes)._updateAddedPanes(newPanes);
   }
 
-  reverse(): PaneWidths {
-    return new PaneWidths(this._paneWidths.slice().reverse(), this._panes.slice().reverse());
+  reverse(): PaneSizes {
+    return new PaneSizes(this._paneSizes.slice().reverse(), this._panes.slice().reverse());
   }
 
-  private _resizeWidths(newTotalWidth: number): PaneWidths {
-    const effectiveUsableWidth = newTotalWidth - (this._panes.length-1) * DIVIDER_WIDTH;
+  private _resizeSizes(newTotalSize: number): PaneSizes {
+    const effectiveUsableSize = newTotalSize - (this._panes.length-1) * DIVIDER_SIZE;
 
-    const currentTotalWidth = this._paneWidths.reduce( (accu, w) => accu+w, 0);
-    const distributableSpace = effectiveUsableWidth - currentTotalWidth;
+    const currentTotalSize = this._paneSizes.reduce( (accu, s) => accu+s, 0);
+    const distributableSpace = effectiveUsableSize - currentTotalSize;
 
-    const newWidths: number[] = [];
+    const newSizes: number[] = [];
     let usedExtraSpace = 0;
-    for (let i=0; i<this._paneWidths.length; i++) {
-      if (i !== this._paneWidths.length-1) {
-        const delta = Math.round(this._paneWidths[i] / currentTotalWidth * distributableSpace);
+    for (let i=0; i<this._paneSizes.length; i++) {
+      if (i !== this._paneSizes.length-1) {
+        const delta = Math.round(this._paneSizes[i] / currentTotalSize * distributableSpace);
         usedExtraSpace += delta;
-        newWidths.push(this._paneWidths[i] + delta);
+        newSizes.push(this._paneSizes[i] + delta);
       } else {
         // We do it this way to avoid rounding errors and ensure that distribute the exact amount of space.
-        newWidths.push(this._paneWidths[i] + distributableSpace - usedExtraSpace);
+        newSizes.push(this._paneSizes[i] + distributableSpace - usedExtraSpace);
       }
     }
 
-    return new PaneWidths(newWidths, this._panes);
+    return new PaneSizes(newSizes, this._panes);
   }
 
-  private _updateRemovedPanes(newPanes: Object[]): PaneWidths {
+  private _updateRemovedPanes(newPanes: Object[]): PaneSizes {
     // Handle any panes which have been removed.
     let spaceAccount = 0;
-    const newPaneWidths: number[] = [];
+    const newPaneSizes: number[] = [];
     const tempPanes: Object[] = [];
-    for (let i=0; i<this._paneWidths.length; i++) {
+    for (let i=0; i<this._paneSizes.length; i++) {
       if (newPanes.indexOf(this._panes[i]) === -1) {
         // This pane was removed.
-        spaceAccount += this._paneWidths[i];
-        spaceAccount += DIVIDER_WIDTH;
+        spaceAccount += this._paneSizes[i];
+        spaceAccount += DIVIDER_SIZE;
       } else {
         // This pane still exists. Give it the spare space.
-        newPaneWidths.push(this._paneWidths[i] + spaceAccount);
+        newPaneSizes.push(this._paneSizes[i] + spaceAccount);
         tempPanes.push(this._panes[i]);
         spaceAccount = 0;
       }
     }
 
-    if (newPaneWidths.length !== 0) {
-      newPaneWidths[newPaneWidths.length-1] += spaceAccount;
+    if (newPaneSizes.length !== 0) {
+      newPaneSizes[newPaneSizes.length-1] += spaceAccount;
     }
 
-    return new PaneWidths(newPaneWidths, tempPanes);
+    return new PaneSizes(newPaneSizes, tempPanes);
   }
 
-  private _updateAddedPanes(newPanes: Object[]): PaneWidths {
-    if (this._paneWidths.length === 0) {  // Special case for going from 0 panes to >0.
-      return PaneWidths.equalPaneWidths(1024, newPanes);
+  private _updateAddedPanes(newPanes: Object[]): PaneSizes {
+    if (this._paneSizes.length === 0) {  // Special case for going from 0 panes to >0.
+      return PaneSizes.equalPaneSizes(1024, newPanes);
     }
 
-    const tempPaneWidths = this._distributeAddedPanes(newPanes);
-    if (tempPaneWidths._panes.length !== newPanes.length) {
+    const tempPaneSizes = this._distributeAddedPanes(newPanes);
+    if (tempPaneSizes._panes.length !== newPanes.length) {
       const reverseNewPanes = newPanes.slice().reverse();
-      return tempPaneWidths.reverse()._distributeAddedPanes(reverseNewPanes).reverse();
+      return tempPaneSizes.reverse()._distributeAddedPanes(reverseNewPanes).reverse();
 
     } else {
-      return tempPaneWidths;
+      return tempPaneSizes;
     }
   }
 
-  private _distributeAddedPanes(newPanes: Object[]): PaneWidths {
-    const newPaneWidths: number[] = [];
+  private _distributeAddedPanes(newPanes: Object[]): PaneSizes {
+    const newPaneSizes: number[] = [];
     const tempPanes: Object[] = [];
     for (let i=0; i<newPanes.length; i++) {
       const oldIndex = this._panes.indexOf(newPanes[i]);
       if (oldIndex === -1) {
         // New pane.
-        if (newPaneWidths.length === 0) {
+        if (newPaneSizes.length === 0) {
           // Let the reverse step fix this one.
 
         } else {
-          const previousWidth = newPaneWidths[newPaneWidths.length-1];
-          const half = Math.floor((previousWidth - DIVIDER_WIDTH) / 2); // Avoid fractional widths.
-          newPaneWidths[newPaneWidths.length-1] = previousWidth - DIVIDER_WIDTH - half;
-          newPaneWidths.push(half);
+          const previousSize = newPaneSizes[newPaneSizes.length-1];
+          const half = Math.floor((previousSize - DIVIDER_SIZE) / 2); // Avoid fractional widths.
+          newPaneSizes[newPaneSizes.length-1] = previousSize - DIVIDER_SIZE - half;
+          newPaneSizes.push(half);
           tempPanes.push(newPanes[i]);
         }
 
       } else {
         // Old pane.
-        newPaneWidths.push(this._paneWidths[oldIndex]);
+        newPaneSizes.push(this._paneSizes[oldIndex]);
         tempPanes.push(newPanes[i]);
       }
     }
-    return new PaneWidths(newPaneWidths, newPanes);
+    return new PaneSizes(newPaneSizes, newPanes);
   }
   
 }
