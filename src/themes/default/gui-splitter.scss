@@ -20,11 +20,21 @@ $divider-width: 4px;
 
 .CLASS_DIVIDER {
   position: absolute;
-  top: 0px;
-  width: $divider-width;
-  height: 100%;
-  cursor: col-resize;
   background-color: $body-bg;
+
+  #ID_TOP.CLASS_VERTICAL & {
+    cursor: col-resize;
+    top: 0px;
+    width: $divider-width;
+    height: 100%;
+  }
+
+  #ID_TOP.CLASS_HORIZONTAL & {
+    cursor: row-resize;
+    left: 0px;
+    height: $divider-width;
+    width: 100%;
+  }
 }
 
 .CLASS_PANE {
@@ -35,11 +45,17 @@ $divider-width: 4px;
 
 #ID_INDICATOR {
   position: absolute;
-  top: 0px;
-  height: 100%;
-  // z-index: 11;
-
   background-color: $text-color;
+
+  #ID_TOP.CLASS_HORIZONTAL & {
+    left: 0px;
+    width: 100%;
+  }
+
+  #ID_TOP.CLASS_VERTICAL & {
+    top: 0px;
+    height: 100%;
+  }
 }
 
 #ID_COVER {

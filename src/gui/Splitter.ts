@@ -25,10 +25,17 @@ const CLASS_DIVIDER = "CLASS_DIVIDER";
 const CLASS_PANE = "CLASS_PANE";
 const CLASS_NORMAL = "CLASS_NORMAL";
 const CLASS_DRAG = "CLASS_DRAG";
+const CLASS_VERTICAL = "CLASS_VERTICAL";
+const CLASS_HORIZONTAL = "CLASS_HORIZONTAL";
 
 const DIVIDER_SIZE = 4;
 const NOT_DRAGGING = -1;
 const MIN_PANE_SIZE = 32;
+
+export enum SplitOrientation {
+  VERTICAL,
+  HORIZONTAL
+}
 
 /**
  * A widget to display panes of widgets separated by a moveable gap/bar.
@@ -61,20 +68,57 @@ export class Splitter extends ThemeableElementBase {
   
   private _mutationObserver: MutationObserver;
   
-  private _paneWidths: PaneSizes;
+  private _orientation: SplitOrientation;
+
+  private _paneSizes: PaneSizes;
 
   private _dividerDrag: number; // The number of the divider currently being dragged. -1 means not dragging.
 
-  private _dividerDragOffsetX: number;
+  private _dividerDragOffset: number;
 
   private _initProperties(): void {
     this._log = new Logger(Splitter.TAG_NAME, this);
-    this._paneWidths = new PaneSizes();
+    this._paneSizes = new PaneSizes();
     this._mutationObserver = null;
+    this._orientation = SplitOrientation.VERTICAL;
     this._dividerDrag = NOT_DRAGGING;
-    this._dividerDragOffsetX = 0;
+    this._dividerDragOffset = 0;
   }
   
+  getSplitOrientation(): SplitOrientation {
+    return this._orientation;
+  }
+
+  setSplitOrientation(orientation: SplitOrientation): void {
+    if (this._orientation !== orientation) {
+      this._orientation = orientation;
+      const topDiv = DomUtils.getShadowId(this, ID_TOP);
+      const rect = topDiv.getBoundingClientRect();
+
+      const rectSize = this._orientation === SplitOrientation.VERTICAL ? rect.width : rect.height;
+      const size = rectSize === 0 ? 1024 : rectSize;
+this._log.debug("size: ",size);
+      this._paneSizes = PaneSizes.equalPaneSizes(size, DomUtils.toArray(this.children));
+
+      const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
+      if (this._orientation === SplitOrientation.HORIZONTAL) {
+        indicatorDiv.style.width = null;
+        indicatorDiv.style.height = "" + DIVIDER_SIZE + "px";
+
+        topDiv.classList.remove(CLASS_VERTICAL);
+        topDiv.classList.add(CLASS_HORIZONTAL);
+      } else {
+        indicatorDiv.style.width = "" + DIVIDER_SIZE + "px";
+        indicatorDiv.style.height = null;
+
+        topDiv.classList.remove(CLASS_HORIZONTAL);
+        topDiv.classList.add(CLASS_VERTICAL);
+      }
+
+      this._createLayout(this._paneSizes);
+    }
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -110,8 +154,11 @@ export class Splitter extends ThemeableElementBase {
 
     const rect = topDiv.getBoundingClientRect();
     const width = rect.width === 0 ? 1024 : rect.width;
-    this._paneWidths = PaneSizes.equalPaneSizes(width, DomUtils.toArray(this.children));
-    this._createLayout(this._paneWidths);
+    this._paneSizes = PaneSizes.equalPaneSizes(width, DomUtils.toArray(this.children));
+
+    topDiv.classList.add(CLASS_VERTICAL);
+
+    this._createLayout(this._paneSizes);
 
     this._mutationObserver = new MutationObserver(this._handleMutations.bind(this));
     this._mutationObserver.observe(this, { childList: true });
@@ -141,21 +188,22 @@ export class Splitter extends ThemeableElementBase {
         yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
 
         if (level === ResizeRefreshElementBase.RefreshLevel.COMPLETE) {
-          this._paneWidths = this._paneWidths.update(DomUtils.toArray(this.children));
+          this._paneSizes = this._paneSizes.update(DomUtils.toArray(this.children));
 
           yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-          this._createLayout(this._paneWidths);
+          this._createLayout(this._paneSizes);
 
           yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
         }
 
         const topDiv = DomUtils.getShadowId(this, ID_TOP);
         const rect = topDiv.getBoundingClientRect();
-        const newPaneWidths = this._paneWidths.updateTotalSize(rect.width);
+        const size = this._orientation === SplitOrientation.VERTICAL ? rect.width : rect.height;
+        const newPaneSizes = this._paneSizes.updateTotalSize(size);
 
         yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-        this._paneWidths = newPaneWidths;
-        this._setSizes(newPaneWidths);
+        this._paneSizes = newPaneSizes;
+        this._setSizes(newPaneSizes, this._orientation);
 
         yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: superBulkRefresh.call(this, level) };
 
@@ -222,7 +270,11 @@ export class Splitter extends ThemeableElementBase {
     }
 
     this._dividerDrag = dividerIndex;
-    this._dividerDragOffsetX = ev.offsetX;
+    if (this._orientation === SplitOrientation.VERTICAL) {
+      this._dividerDragOffset = ev.offsetX;
+    } else {
+      this._dividerDragOffset = ev.offsetY;
+    }
 
     const topDiv = DomUtils.getShadowId(this, ID_TOP);
     topDiv.classList.add(CLASS_DRAG);
@@ -230,7 +282,12 @@ export class Splitter extends ThemeableElementBase {
 
     const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
-    indicatorDiv.style.left = "" + (ev.clientX - topRect.left - this._dividerDragOffsetX) + "px";
+
+    if (this._orientation === SplitOrientation.VERTICAL) {
+      indicatorDiv.style.left = "" + (ev.clientX - topRect.left - this._dividerDragOffset) + "px";
+    } else {
+      indicatorDiv.style.top = "" + (ev.clientY - topRect.top - this._dividerDragOffset) + "px";
+    }
   }
 
   private _handleMouseUp(ev: MouseEvent): void {
@@ -247,9 +304,16 @@ export class Splitter extends ThemeableElementBase {
     const topDiv = DomUtils.getShadowId(this, ID_TOP);
     const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
-    const newIndicatorLeft = ev.clientX - topRect.left - this._dividerDragOffsetX;
-    this._paneWidths = this._paneWidths.adjustPaneSize(this._dividerDrag, newIndicatorLeft);
-    this._setSizes(this._paneWidths);
+
+    let newIndicatorPosition = 0;
+    if (this._orientation === SplitOrientation.VERTICAL) {
+      newIndicatorPosition = ev.clientX - topRect.left - this._dividerDragOffset;
+    } else {
+      newIndicatorPosition = ev.clientY - topRect.top - this._dividerDragOffset;
+    }
+
+    this._paneSizes = this._paneSizes.adjustPaneSize(this._dividerDrag, newIndicatorPosition);
+    this._setSizes(this._paneSizes, this._orientation);
 
     this._stopDrag();
 
@@ -281,10 +345,21 @@ export class Splitter extends ThemeableElementBase {
     const topDiv = DomUtils.getShadowId(this, ID_TOP);
     const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
-    const newIndicatorLeft = ev.clientX - topRect.left - this._dividerDragOffsetX;
-    const newPaneWidths = this._paneWidths.adjustPaneSize(this._dividerDrag, newIndicatorLeft);
 
-    indicatorDiv.style.left = "" + newPaneWidths.getPaneNext(this._dividerDrag) + "px";
+    let newIndicatorPosition = 0;
+    if (this._orientation === SplitOrientation.VERTICAL) {
+      newIndicatorPosition = ev.clientX - topRect.left - this._dividerDragOffset;
+    } else {
+      newIndicatorPosition = ev.clientY - topRect.top - this._dividerDragOffset;
+    }
+
+    const newPaneSizes = this._paneSizes.adjustPaneSize(this._dividerDrag, newIndicatorPosition);
+
+    if (this._orientation === SplitOrientation.VERTICAL) {
+      indicatorDiv.style.left = "" + newPaneSizes.getPaneNext(this._dividerDrag) + "px";
+    } else {
+      indicatorDiv.style.top = "" + newPaneSizes.getPaneNext(this._dividerDrag) + "px";
+    }
   }
 
   private _handleMouseLeave(ev: MouseEvent): void {
@@ -292,9 +367,9 @@ export class Splitter extends ThemeableElementBase {
   }
 
   private _handleMutations(mutations: MutationRecord[]): void {
-    this._paneWidths = this._paneWidths.update(DomUtils.toArray(this.children));
+    this._paneSizes = this._paneSizes.update(DomUtils.toArray(this.children));
 
-    this._createLayout(this._paneWidths);
+    this._createLayout(this._paneSizes);
   }
 
   //-----------------------------------------------------------------------
@@ -309,7 +384,7 @@ export class Splitter extends ThemeableElementBase {
   //
   //-----------------------------------------------------------------------
                                           
-  private _createLayout(paneWidths: PaneSizes): void {
+  private _createLayout(paneSizes: PaneSizes): void {
     const topDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
     topDiv.innerHTML = "";
@@ -333,25 +408,44 @@ export class Splitter extends ThemeableElementBase {
       }
     }
 
-    this._setSizes(paneWidths);
+    this._setSizes(paneSizes, this._orientation);
   }
 
-  private _setSizes(paneWidths: PaneSizes): void {
+  private _setSizes(paneSizes: PaneSizes, orientation: SplitOrientation): void {
     const topDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
-    let x = 0;
-    for (let i=0; i<paneWidths.length(); i++) {
+    let position = 0;
+    for (let i=0; i<paneSizes.length(); i++) {
       const kid = <HTMLElement> topDiv.children.item(i*2);
-      const width = paneWidths.get(i);
-      kid.style.left = "" + x + "px";
-      kid.style.width = "" + width + "px";
-      x += width;
+      const size = paneSizes.get(i);
+      if (orientation === SplitOrientation.VERTICAL) {
+        kid.style.left = "" + position + "px";
+        kid.style.width = "" + size + "px";
+        kid.style.top = null;
+        kid.style.height = null;
+      } else {
+        kid.style.top = "" + position + "px";
+        kid.style.height = "" + size + "px";
+        kid.style.left = null;
+        kid.style.width = null;
+      }
+
+      position += size;
 
       if (i < this.children.length-1) {
         const divider = <HTMLElement> topDiv.children.item(i*2+1);
-        divider.style.left = "" + x + "px";
-        divider.style.width = "" + DIVIDER_SIZE + "px";
-        x += DIVIDER_SIZE;
+        if (orientation === SplitOrientation.VERTICAL) {
+          divider.style.left = "" + position + "px";
+          divider.style.width = "" + DIVIDER_SIZE + "px";
+          divider.style.top = null;
+          divider.style.height = null;
+        } else {
+          divider.style.top = "" + position + "px";
+          divider.style.height = "" + DIVIDER_SIZE + "px";
+          divider.style.left = null;
+          divider.style.width = null;
+        }
+        position += DIVIDER_SIZE;
       }      
     }
   }
