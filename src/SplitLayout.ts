@@ -382,7 +382,7 @@ export class SplitLayout {
         const newRoot: SplitterInfoNode = {
           type: "splitter",
           children: [tabWidgetInfo, newTabWidgetInfo],
-          orientation: SplitOrientation.VERTICAL,
+          orientation: orientation,
           splitter: null
         };
 

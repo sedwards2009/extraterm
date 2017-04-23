@@ -280,7 +280,7 @@ function testSplit(test) {
 
   splitLayout.update();
 
-  splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
 
   splitLayout.update();
 
@@ -315,7 +315,7 @@ function testCloseSplit(test) {
 
   splitLayout.update();
 
-  splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
 
   splitLayout.closeSplitAtTabContent(tabContents2);
   splitLayout.update();
@@ -350,10 +350,10 @@ function testSplit2(test) {
 
   splitLayout.update();
 
-  splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
   splitLayout.update();
 
-  splitLayout.splitAfterTabContent(tabContents2);
+  splitLayout.splitAfterTabContent(tabContents2, SplitOrientation.VERTICAL);
   splitLayout.update();
 
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
@@ -388,7 +388,7 @@ function testSplitRemoveContent(test) {
 
   splitLayout.update();
 
-  splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
 
   splitLayout.update();
 
@@ -465,7 +465,7 @@ function testSplitWithRestContent(test) {
 
   splitLayout.update();
 
-  splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
 
   splitLayout.update();
 
@@ -506,7 +506,7 @@ function testSplitRemoveContentWithSpace(test) {
 
   splitLayout.update();
 
-  splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
 
   splitLayout.update();
 
@@ -612,7 +612,7 @@ function testTwoTabSplitWithTopRightAndSpace(test) {
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
   splitLayout.update();
 
-  splitLayout.splitAfterTabContent(tabContents);
+  splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
   splitLayout.update();
 
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
@@ -664,10 +664,10 @@ function testSplit2WithFallback(test) {
 
   splitLayout.update();
 
-  const { tabWidget } = splitLayout.splitAfterTabContent(tabContents);
+  const { tabWidget } = splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
   splitLayout.update();
  
-  splitLayout.splitAfterTabWidget(tabWidget);
+  splitLayout.splitAfterTabWidget(tabWidget, SplitOrientation.VERTICAL);
   splitLayout.update();
 
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
@@ -683,3 +683,39 @@ function testSplit2WithFallback(test) {
   test.done();
 }
 exports.testSplit2WithFallback = testSplit2WithFallback;
+
+function testHorizontalSplit(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents, SplitOrientation.HORIZONTAL);
+
+  splitLayout.update();
+
+// console.log(JSON.stringify(splitLayout._rootInfoNode, null, 2));
+
+// console.log(JSON.stringify(container,null,2));
+  test.equal(container.children.length, 1);
+  test.ok(container.children.item(0).name.startsWith("Splitter"));
+  test.equals(container.children.item(0)._orientation, SplitOrientation.HORIZONTAL);
+  test.equal(container.children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.length, 2);
+
+  test.done();
+}
+exports.testHorizontalSplit = testHorizontalSplit;

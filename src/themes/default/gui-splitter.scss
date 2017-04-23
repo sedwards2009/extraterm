@@ -39,8 +39,16 @@ $divider-width: 4px;
 
 .CLASS_PANE {
   position: absolute;
-  height: 100%;
-  top: 0px;
+
+  #ID_TOP.CLASS_HORIZONTAL & {
+    left: 0px;
+    width: 100%;
+  }
+
+  #ID_TOP.CLASS_VERTICAL & {
+    height: 100%;
+    top: 0px;
+  }
 }
 
 #ID_INDICATOR {
