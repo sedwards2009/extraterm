@@ -7,11 +7,17 @@
 const nodeunit = require('nodeunit');
 const sandbox = nodeunit.utils.sandbox;
 
+const SplitOrientation = {
+  VERTICAL: 0,
+  HORIZONTAL: 1
+};
+
 const moduleRemap = {
   "./gui/Splitter": {
     Splitter: {
       TAG_NAME: "et-splitter"
-    }
+    },
+    SplitOrientation: SplitOrientation
   },
 
   "./gui/TabWidget": {
@@ -118,6 +124,11 @@ class FakeSplitter extends FakeElement {
   constructor() {
     super("Splitter " + splitterCounter);
     splitterCounter++;
+    this._orientation = SplitOrientation.VERTICAL;
+  }
+
+  setSplitOrientation(orientation) {
+    this._orientation = orientation;
   }
 }
 
@@ -131,6 +142,11 @@ class FakeTabWidget extends FakeElement {
   setShowFrame(show) {
 
   }
+
+  setShowTabs(show) {
+
+  }
+
   update() {
 
   }

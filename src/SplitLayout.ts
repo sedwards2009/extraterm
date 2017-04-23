@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as DomUtils from './DomUtils';
-import {Splitter} from './gui/Splitter';
+import {Splitter, SplitOrientation} from './gui/Splitter';
 import {TabWidget} from './gui/TabWidget';
 import {Tab} from './gui/Tab';
 import Logger from './Logger';
@@ -17,17 +17,12 @@ interface TabContentContainerElementFactory {
   (tabWidget: TabWidget, tab: Tab, tabContent: Element): Element;
 }
 
-enum SplitterOrientation {
-  VERTICAL,
-  HORIZONTAL
-}
-
 interface SplitterInfoNode {
   type: "splitter";
   children: (TabWidgetInfoNode | SplitterInfoNode)[];
 
   splitter: Splitter;
-  orientation: SplitterOrientation;
+  orientation: SplitOrientation;
 }
 
 interface TabWidgetInfoNode {
@@ -282,7 +277,7 @@ export class SplitLayout {
     tabWidgetInfo.tabWidget.setSelectedIndex(tabWidgetInfo.children.indexOf(tabInfo));
   }
 
-  splitAfterTabWidget(tabWidget: TabWidget): TabWidget {
+  splitAfterTabWidget(tabWidget: TabWidget, orientation: SplitOrientation): TabWidget {
     const path = findPathToTabWidget(this._rootInfoNode, tabWidget);
     if (path == null) {
       this._log.severe("Unable to find the info for tab widget ", tabWidget);
@@ -313,7 +308,7 @@ export class SplitLayout {
         const newRoot: SplitterInfoNode = {
           type: "splitter",
           children: [tabWidgetInfo, newTabWidgetInfo],
-          orientation: SplitterOrientation.VERTICAL,
+          orientation: orientation,
           splitter: null
         };
 
@@ -345,7 +340,7 @@ export class SplitLayout {
     }
   }
 
-  splitAfterTabContent(tabContent: Element): TabWidget {
+  splitAfterTabContent(tabContent: Element, orientation: SplitOrientation): TabWidget {
     const path = findPathToTabContent(this._rootInfoNode, tabContent);
     if (path == null) {
       this._log.severe("Unable to find the info for tab contents ", tabContent);
@@ -355,7 +350,7 @@ export class SplitLayout {
     if (path.length === 1) {
       const tabWidgetInfo = path[0];
       if (tabWidgetInfo.type === "tabwidget") {
-        return this.splitAfterTabWidget(tabWidgetInfo.tabWidget);
+        return this.splitAfterTabWidget(tabWidgetInfo.tabWidget, orientation);
       }
     }
 
@@ -387,7 +382,7 @@ export class SplitLayout {
         const newRoot: SplitterInfoNode = {
           type: "splitter",
           children: [tabWidgetInfo, newTabWidgetInfo],
-          orientation: SplitterOrientation.VERTICAL,
+          orientation: SplitOrientation.VERTICAL,
           splitter: null
         };
 
@@ -398,7 +393,7 @@ export class SplitLayout {
         const splitterInfo = path[0];
         const tabWidgetInfo = path[1];
         if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
-          return this.splitAfterTabWidget(tabWidgetInfo.tabWidget);
+          return this.splitAfterTabWidget(tabWidgetInfo.tabWidget, orientation);
         }
       }
 
@@ -572,7 +567,7 @@ export class SplitLayout {
   private _updateSplitter(infoNode: SplitterInfoNode, position: RelativePosition): void {
     if (infoNode.splitter  == null) {
       infoNode.splitter = <Splitter> document.createElement(Splitter.TAG_NAME);
-      // FIXME set the orientation
+      infoNode.splitter.setSplitOrientation(infoNode.orientation);
     }
 
     const targetChildrenList: Element[] = [];
