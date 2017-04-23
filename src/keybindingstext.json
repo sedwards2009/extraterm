@@ -78,6 +78,9 @@
     "increaseFontSize": "Increase font size",
     "resetFontSize": "Reset font size",
     "goDown": "Move down",
-    "goUp": "Move up"
+    "goUp": "Move up",
+    "closePane": "Close pane",
+    "horizontalSplit": "Horizontal split",
+    "verticalSplit": "Vertical split"
   }
 }
