@@ -302,16 +302,8 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     this.setMimeType(cleanMimeType);
   }
   
-  
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    if (newMode === this._mode) {
-      return BulkDomOperation.nullOperation();
-    }
-
-    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      // --- DOM Write ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-
+  setMode(newMode: ViewerElementTypes.Mode): void {
+    if (newMode !== this._mode) {
       switch (newMode) {
         case ViewerElementTypes.Mode.CURSOR:
           // Enter cursor mode.
@@ -323,11 +315,7 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
           break;
       }
       this._mode = newMode;
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    }
   }
   
   getMode(): ViewerElementTypes.Mode {

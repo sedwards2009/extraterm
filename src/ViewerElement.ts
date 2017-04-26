@@ -75,13 +75,12 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
     
   }
 
-  abstract getMode(): Mode;
+  getMode(): Mode {
+    return Mode.DEFAULT;
+  }
   
   setMode(mode: Mode): void {
-    BulkDomOperation.execute(this.bulkSetMode(mode));
   }
-
-  abstract bulkSetMode(mode: Mode): BulkDomOperation.BulkDOMOperation;
 
   getText(): string {
     return null;

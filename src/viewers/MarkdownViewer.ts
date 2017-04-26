@@ -72,18 +72,6 @@ class EtMarkdownViewer extends ViewerElement {
     this._updateFocusable(value);
   }
 
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.DEFAULT;
-  }
-
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
-  }
-
   createdCallback(): void {
     this._initProperties();
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });

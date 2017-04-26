@@ -112,18 +112,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
     this._tipIndex = 0;
   }
 
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.DEFAULT;
-  }
-
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
-  }
-
   //-----------------------------------------------------------------------
   //
   // ######                                

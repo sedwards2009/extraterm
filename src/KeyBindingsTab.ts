@@ -167,18 +167,6 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
     this._setConfig(configManager.getConfig());
   }
 
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.DEFAULT;
-  }
-
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
-  }
-
   //-----------------------------------------------------------------------
   //
   //   #                                                         

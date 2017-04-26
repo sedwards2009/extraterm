@@ -254,18 +254,6 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
     this._data.themeGUIOptions = getThemesByType('gui');
   }
 
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.DEFAULT;
-  }
-
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
-  }
-
   //-----------------------------------------------------------------------
   //
   //   #                                                         

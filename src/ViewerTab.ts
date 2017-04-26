@@ -256,14 +256,6 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     this._keyBindingManager = keyBindingManager;
   }
 
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-  
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
-  }
-
   getFontAdjust(): number {
     return this._fontSizeAdjustment;
   }

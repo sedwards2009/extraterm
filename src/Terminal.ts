@@ -972,14 +972,9 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
 
   private _setModeAndVisualState(mode: ViewerElementTypes.Mode, visualState: VisualState): void {
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-
     const childNodes = <ViewerElement[]> DomUtils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
-
-    const modeOperations = childNodes.map( (node) => node.bulkSetMode(mode));
-    const visualStateOperations = childNodes.forEach( (node) => node.setVisualState(visualState));
-    const allOperations = BulkDomOperation.parallel(modeOperations);
-
-    BulkDomOperation.execute(allOperations);
+    childNodes.forEach( (node) => node.setMode(mode));
+    childNodes.forEach( (node) => node.setVisualState(visualState));
   }
 
   private _childElementListIndexOf(element: HTMLElement & VirtualScrollable): number {
@@ -1066,11 +1061,10 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
 
           // Set the current mode on the scrollable.
           const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
-          const modeOperation = element.bulkSetMode(this._mode);
+          element.setMode(this._mode);
           element.setVisualState(visualState);
-          const allOperations = BulkDomOperation.parallel([modeOperation]);
 
-          yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: allOperations, waitOperation: allOperations };
+          yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH };
         }
       }
       return BulkDomOperation.GeneratorPhase.DONE;

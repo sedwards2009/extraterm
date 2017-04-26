@@ -414,22 +414,11 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     viewerElement.clearSelection();
   }
 
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: EmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      if (DEBUG_SIZE) {
-        this._log.debug("bulkSetMode() generator: newMode=", newMode);
-      }
-      yield BulkDomOperation.GeneratorPhase.BEGIN_FINISH;
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-    const setModeOperation = BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
-
+  setMode(newMode: ViewerElementTypes.Mode): void {
+    this._mode = newMode;
     const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
-      return BulkDomOperation.parallel([viewerElement.bulkSetMode(newMode), setModeOperation]);
-    } else {
-      return setModeOperation;
+      return viewerElement.setMode(newMode);
     }
   }
 

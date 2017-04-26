@@ -317,13 +317,8 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     return this._emulator;
   }
   
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    if (newMode === this._mode) {
-      return BulkDomOperation.nullOperation();
-    }
-
-    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+  setMode(newMode: ViewerElementTypes.Mode): void {
+    if (newMode !== this._mode) {
       switch (newMode) {
         case ViewerElementTypes.Mode.CURSOR:
           // Enter cursor mode.
@@ -335,11 +330,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
           break;
       }
       this._mode = newMode;
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    }
   }
   
   getMode(): ViewerElementTypes.Mode {

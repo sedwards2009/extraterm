@@ -184,13 +184,8 @@ export class ImageViewer extends ViewerElement {
     }
   }
 
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    if (newMode === this._mode) {
-      return BulkDomOperation.nullOperation();
-    }
+  setMode(newMode: ViewerElementTypes.Mode): void {
     this._mode = newMode;
-
-    return BulkDomOperation.nullOperation();
   }
   
   getMode(): ViewerElementTypes.Mode {
