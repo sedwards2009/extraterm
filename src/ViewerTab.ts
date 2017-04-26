@@ -264,10 +264,6 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  bulkSetVisualState(state: VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
   getFontAdjust(): number {
     return this._fontSizeAdjustment;
   }

@@ -89,10 +89,6 @@ export class AboutTab extends ViewerElement {
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
   //-----------------------------------------------------------------------
   //
   //   #                                                         

@@ -224,8 +224,13 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     return hasFocus;
   }
   
-  bulkSetVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
-    return this._setVisualState(newVisualState);
+  setVisualState(newVisualState: VisualState): void {
+    if (newVisualState !== this._visualState) {
+      if (DomUtils.getShadowRoot(this) !== null) {
+        this._applyVisualState(newVisualState);
+      }    
+      this._visualState = newVisualState;
+    }
   }
   
   getVisualState(): VisualState {
@@ -699,23 +704,6 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     }
     
     return window.document.importNode(template.content, true);
-  }
-  
-  private _setVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
-    if (newVisualState === this._visualState) {
-      return BulkDomOperation.nullOperation();
-    }    
-
-    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (DomUtils.getShadowRoot(this) !== null) {
-        this._applyVisualState(newVisualState);
-      }    
-      this._visualState = newVisualState;
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   private _applyVisualState(visualState: VisualState): void {

@@ -186,13 +186,11 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     return this._getViewerElement();
   }
   
-  bulkSetVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
+  setVisualState(newVisualState: VisualState): void {
     this._visualState = newVisualState;
     const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
-      return viewerElement.bulkSetVisualState(newVisualState);
-    } else {
-      return BulkDomOperation.nullOperation();
+      viewerElement.setVisualState(newVisualState);
     }
   }
   

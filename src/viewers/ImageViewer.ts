@@ -142,8 +142,13 @@ export class ImageViewer extends ViewerElement {
     return hasFocus;
   }
   
-  bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    return this._bulkSetVisualState(newVisualState);
+  setVisualState(newVisualState: ViewerElementTypes.VisualState): void {
+    if (newVisualState !== this._visualState) {
+      if (DomUtils.getShadowRoot(this) !== null) {
+        this._applyVisualState(newVisualState);
+      }    
+      this._visualState = newVisualState;
+    }
   }
   
   getVisualState(): ViewerElementTypes.VisualState {
@@ -366,25 +371,6 @@ export class ImageViewer extends ViewerElement {
     }
     
     return window.document.importNode(template.content, true);
-  }
-  
-  private _bulkSetVisualState(newVisualState: number): BulkDomOperation.BulkDOMOperation {
-    if (newVisualState === this._visualState) {
-      return BulkDomOperation.nullOperation();
-    }
-
-    const generator = function* generator(this: ImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      // --- DOM Write ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (DomUtils.getShadowRoot(this) !== null) {
-        this._applyVisualState(newVisualState);
-      }    
-      this._visualState = newVisualState;
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)());
   }
   
   private _applyVisualState(visualState: VisualState): void {

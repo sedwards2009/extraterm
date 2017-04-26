@@ -7,16 +7,13 @@
 import * as fs from 'fs';
 import * as Util from './gui/Util';
 import * as VirtualScrollArea from './VirtualScrollArea';
-import * as ViewerElementTypes from './ViewerElementTypes';
+import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
-type Mode = ViewerElementTypes.Mode;
-type VisualState = ViewerElementTypes.VisualState;
-type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable {
   
@@ -70,14 +67,14 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   setFocusable(value: boolean) {
   }
   
-  abstract getVisualState(): VisualState;
-
-  setVisualState(state: VisualState): void {
-    BulkDomOperation.execute(this.bulkSetVisualState(state));
+  getVisualState(): VisualState {
+    return VisualState.AUTO;
   }
 
-  abstract bulkSetVisualState(state: VisualState): BulkDomOperation.BulkDOMOperation;
-  
+  setVisualState(state: VisualState): void {
+    
+  }
+
   abstract getMode(): Mode;
   
   setMode(mode: Mode): void {

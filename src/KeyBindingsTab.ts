@@ -179,10 +179,6 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
   //-----------------------------------------------------------------------
   //
   //   #                                                         

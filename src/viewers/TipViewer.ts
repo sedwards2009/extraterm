@@ -124,10 +124,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  bulkSetVisualState(state: VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
   //-----------------------------------------------------------------------
   //
   // ######                                

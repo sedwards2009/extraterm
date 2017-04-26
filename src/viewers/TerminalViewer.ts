@@ -269,8 +269,22 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     return hasFocus;
   }
 
-  bulkSetVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
-    return this._bulkSetVisualState(newVisualState);
+  setVisualState(newVisualState: VisualState): void {
+    if (newVisualState !== this._visualState) {
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+      if (containerDiv !== null) {
+        if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
+            newVisualState === VisualState.FOCUSED) {
+
+          containerDiv.classList.add(CLASS_FOCUSED);
+          containerDiv.classList.remove(CLASS_UNFOCUSED);
+        } else {
+          containerDiv.classList.add(CLASS_UNFOCUSED);
+          containerDiv.classList.remove(CLASS_FOCUSED);
+        }
+      }
+      this._visualState = newVisualState;
+    }
   }
   
   getVisualState(): VisualState {
@@ -888,33 +902,6 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     this._fontUnitHeight = charHeight;
     const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
     styleElement.textContent = this._getCssVarsRules();
-  }
-
-  private _bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    if (newVisualState === this._visualState) {
-      return BulkDomOperation.nullOperation();
-    }
-
-    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      if (containerDiv !== null) {
-        if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
-            newVisualState === VisualState.FOCUSED) {
-
-          containerDiv.classList.add(CLASS_FOCUSED);
-          containerDiv.classList.remove(CLASS_UNFOCUSED);
-        } else {
-          containerDiv.classList.add(CLASS_UNFOCUSED);
-          containerDiv.classList.remove(CLASS_FOCUSED);
-        }
-      }
-      this._visualState = newVisualState;
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 
   private _enterCursorMode(): void {

@@ -266,10 +266,6 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
     return ViewerElementTypes.VisualState.AUTO;
   }
 
-  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
   //-----------------------------------------------------------------------
   //
   //   #                                                         

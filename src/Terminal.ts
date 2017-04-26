@@ -976,8 +976,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     const childNodes = <ViewerElement[]> DomUtils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
 
     const modeOperations = childNodes.map( (node) => node.bulkSetMode(mode));
-    const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
-    const allOperations = BulkDomOperation.parallel([...modeOperations, ...visualStateOperations]);
+    const visualStateOperations = childNodes.forEach( (node) => node.setVisualState(visualState));
+    const allOperations = BulkDomOperation.parallel(modeOperations);
 
     BulkDomOperation.execute(allOperations);
   }
@@ -1067,8 +1067,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
           // Set the current mode on the scrollable.
           const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
           const modeOperation = element.bulkSetMode(this._mode);
-          const visualStateOperation = element.bulkSetVisualState(visualState);
-          const allOperations = BulkDomOperation.parallel([modeOperation, visualStateOperation]);
+          element.setVisualState(visualState);
+          const allOperations = BulkDomOperation.parallel([modeOperation]);
 
           yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: allOperations, waitOperation: allOperations };
         }
