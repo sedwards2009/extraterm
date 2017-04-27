@@ -13,7 +13,6 @@
     "run": "electron src/Main.js --dev-tools",
     "build": "tsc",
     "buildicons": "node src/extra_icons/build.js",
-    "test": "npm run build ; nodeunit src/VirtualScrollAreaTest.js",
     "testbulkdomoperation": "npm run build ; nodeunit src/BulkDomOperationTest.js",
     "testkeybindingmanager": "npm run build ; nodeunit src/KeyBindingManagerTest.js",
     "testmimetypedetector": "npm run build ; nodeunit src/MimeTypeDetectorTest.js",
