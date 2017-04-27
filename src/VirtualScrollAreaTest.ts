@@ -22,6 +22,55 @@ interface VirtualScrollableWithExtra extends VirtualScrollable {
   setReserveViewportHeight(newReserveViewportHeight: number): void;
 }
 
+class FakeScrollable {
+  _offset = null;
+  _height = 10;
+
+  constructor(public minHeight: number, public virtualHeight: number, public reserveViewportHeight: number) {
+  }
+
+  getMinHeight(): number {
+    return this.minHeight;
+  }
+  
+  setMinHeight(newMinHeight: number): void {
+    this.minHeight = newMinHeight;
+  }
+  
+  getVirtualHeight(containerHeight: number): number {
+    return this.virtualHeight;
+  }
+  
+  setVirtualHeight(newVirtualHeight: number): void {
+    this.virtualHeight = newVirtualHeight;
+  }
+  
+  getReserveViewportHeight(containerHeight: number): number {
+    return this.reserveViewportHeight;
+  }
+  
+  setReserveViewportHeight(newReserveViewportHeight: number): void {
+    this.reserveViewportHeight = newReserveViewportHeight;
+  }
+
+  setDimensionsAndScroll(setterState: SetterState): void {
+    this._height = setterState.height;
+    this._offset = setterState.yOffset;
+  }
+  
+  markVisible(visible: boolean): void {
+  }
+
+
+  getScrollOffset(): number {
+    return this._offset;
+  }
+  
+  getHeight(): number {
+    return this._height;
+  }
+}
+
 function SetUpScrollContainer(vsa: VirtualScrollArea.VirtualScrollArea, height: number): HTMLElement {
   const scrollContainer = <HTMLElement> {
     scrollTop: 0,
@@ -40,51 +89,7 @@ function SetUpScrollContainer(vsa: VirtualScrollArea.VirtualScrollArea, height: 
 function SetupScrollable(vsa: VirtualScrollArea.VirtualScrollArea, minHeight: number,
     virtualHeight: number, reserveViewportHeight: number): VirtualScrollableWithExtra {
 
-  const scrollable = {
-    _offset: null,
-    _height: 10,
-    
-    getMinHeight: (): number => {
-      return minHeight;
-    },
-    
-    setMinHeight(newMinHeight: number): void {
-      minHeight = newMinHeight;
-    },
-    
-    getVirtualHeight(containerHeight: number): number {
-      return virtualHeight;
-    },
-    
-    setVirtualHeight(newVirtualHeight: number): void {
-      virtualHeight = newVirtualHeight;
-    },
-    
-    getReserveViewportHeight(containerHeight: number): number {
-      return reserveViewportHeight;
-    },
-    
-    setReserveViewportHeight(newReserveViewportHeight: number): void {
-      reserveViewportHeight = newReserveViewportHeight;
-    },
-
-    setDimensionsAndScroll(setterState: SetterState): void {
-      this._height = setterState.height;
-      this._offset = setterState.yOffset;
-    },
-    
-    markVisible(visible: boolean): void {
-    },
-
-
-    getScrollOffset(): number {
-      return this._offset;
-    },
-    
-    getHeight(): number {
-      return this._height;
-    }
-  };
+  const scrollable = new FakeScrollable(minHeight, virtualHeight, reserveViewportHeight);
   
   vsa.appendScrollable(scrollable);
   return scrollable;

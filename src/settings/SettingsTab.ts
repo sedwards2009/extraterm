@@ -462,28 +462,25 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
           }
         },
         computed: {
-          themeTerminalComment: function() {
-            const model = <ModelData> this;
-            for (let option of model.themeTerminalOptions) {
-              if (option.id === model.themeTerminal) {
+          themeTerminalComment: function(this: ModelData) {
+            for (let option of this.themeTerminalOptions) {
+              if (option.id === this.themeTerminal) {
                 return option.comment;
               }
             }
             return "";
           },
-          themeSyntaxComment: function() {
-            const model = <ModelData> this;
-            for (let option of model.themeSyntaxOptions) {
-              if (option.id === model.themeSyntax) {
+          themeSyntaxComment: function(this: ModelData) {
+            for (let option of this.themeSyntaxOptions) {
+              if (option.id === this.themeSyntax) {
                 return option.comment;
               }
             }
             return "";
           },
-          themeGUIComment: function() {
-            const model = <ModelData> this;
-            for (let option of model.themeGUIOptions) {
-              if (option.id === model.themeGUI) {
+          themeGUIComment: function(this: ModelData) {
+            for (let option of this.themeGUIOptions) {
+              if (option.id === this.themeGUI) {
                 return option.comment;
               }
             }

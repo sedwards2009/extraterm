@@ -382,7 +382,7 @@ export class VirtualScrollArea {
    */  
   scrollToBottom(): number {
     if (this._currentState.scrollableStates.length === 0) {
-      return;
+      return 0;
     }
     return this.scrollTo(TotalVirtualHeight(this._currentState) - this._currentState.containerHeight);
   }
@@ -557,9 +557,9 @@ export class VirtualScrollArea {
  * 
  * @param state the state which needs to be recomputed
  */
-function Compute(state: VirtualAreaState): boolean {
+function Compute(state: VirtualAreaState): void {
   if (state.scrollFunction === null) {
-    return false;
+    return;
   }
 
   // We pretend that the scrollback is one very tall continous column of text etc. But this is fake.

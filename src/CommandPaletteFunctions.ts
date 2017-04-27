@@ -19,7 +19,7 @@ export function commandPaletteFilterEntries(entries: CommandPaletteTypes.Command
 }
 
 export function commandPaletteFormatEntries(entries: CommandPaletteTypes.CommandEntry[], selectedId: string, filterInputValue: string): string {
-    return (filterInputValue.trim() === "" ? commandPaletteFormatEntriesWithGroups : commandPaletteFormatEntriesAsList)(entries, this._selectedId);
+    return (filterInputValue.trim() === "" ? commandPaletteFormatEntriesWithGroups : commandPaletteFormatEntriesAsList)(entries, selectedId);
 }
 
 function commandPaletteFormatEntriesAsList(entries: CommandPaletteTypes.CommandEntry[], selectedId: string): string {

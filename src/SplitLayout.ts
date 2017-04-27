@@ -338,6 +338,7 @@ export class SplitLayout {
         return newTabWidget;
       }
     }
+    return null;
   }
 
   splitAfterTabContent(tabContent: Element, orientation: SplitOrientation): TabWidget {
@@ -411,7 +412,7 @@ export class SplitLayout {
         }
       }
     }
-
+    return null;
   }
 
   private _splitTabWidgetAtTabContent(tabWidgetInfo: TabWidgetInfoNode, tabContent: Element,
@@ -527,7 +528,7 @@ export class SplitLayout {
     const path = findPathToTabWidget(this._rootInfoNode, tabWidget);
     if (path == null) {
       this._log.severe("Unable to find the info for tab widget ", tabWidget);
-      return;
+      return null;
     }
     const len = path.length;
     if (len >=2 ) {

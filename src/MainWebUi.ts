@@ -927,6 +927,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         return text;
       }
     }
+    return null;
   }
 
   // ----------------------------------------------------------------------

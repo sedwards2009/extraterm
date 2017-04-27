@@ -230,7 +230,7 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
 </div>
 `,
         computed: {
-          summary: function() {
+          summary: function(this: ModelData) {
             const foo = this.keyBindingsContextsStamp;
             return formatKeyBindingsPage(elementThis._keyBindingManager.getKeyBindingContexts());
           }
