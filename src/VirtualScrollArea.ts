@@ -6,8 +6,6 @@
 
 import * as Util from './gui/Util';
 import * as _ from 'lodash';
-import * as BulkDomOperation from './BulkDomOperation';
-import * as CodeMirrorOperation from './CodeMirrorOperation';
 import Logger from './Logger';
 import log from './LogDecorator';
 
@@ -76,29 +74,8 @@ export const EVENT_RESIZE = "scrollable-resize";
  * @param el The element and VirtualScrollable object which needs to be resized.
  */
 export function emitResizeEvent(el: VirtualScrollable & HTMLElement): void {
-  BulkDomOperation.execute(bulkEmitResizeEvent(el));
-}
-
-export interface ResizeEventDetail {
-  addOperation(op: BulkDomOperation.BulkDOMOperation): void;
-}
-
-export function bulkEmitResizeEvent(el: VirtualScrollable & HTMLElement): BulkDomOperation.BulkDOMOperation {
-    const operations: BulkDomOperation.BulkDOMOperation[] = [];
-
-    const detail: ResizeEventDetail = {
-      addOperation: (op: BulkDomOperation.BulkDOMOperation): void => {
-        operations.push(op);
-      }
-    };
-
-    const event = new CustomEvent(EVENT_RESIZE, { bubbles: true, detail: detail });
-    el.dispatchEvent(event);
-    if (operations.length === 0) {
-      return BulkDomOperation.nullOperation();
-    } else {
-      return BulkDomOperation.parallel(operations);
-    }
+  const event = new CustomEvent(EVENT_RESIZE, { bubbles: true });
+  el.dispatchEvent(event);
 }
 
 // Describes the state of one Scrollable

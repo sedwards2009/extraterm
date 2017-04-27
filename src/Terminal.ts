@@ -1008,9 +1008,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   }
 
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
-    const operation = this._updateVirtualScrollableSize(<any> ev.target);
-      // ^ We know this event only comes from VirtualScrollable elements.
-    (<VirtualScrollArea.ResizeEventDetail>ev.detail).addOperation(operation);
+    this._updateVirtualScrollableSize(<any> ev.target);
   }
 
   private _markVisible(scrollable: VirtualScrollable, visible: boolean): void {
@@ -1066,18 +1064,9 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     this._markVisible(element, true);
   }
 
-  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): BulkDomOperation.BulkDOMOperation {
-
-    const generator = function* bulkUpdateGenerator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
-
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
-      this._virtualScrollArea.updateScrollableSize(virtualScrollable);
-      this._enforceScrollbackLength(this._scrollbackSize);
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
+    this._virtualScrollArea.updateScrollableSize(virtualScrollable);
+    this._enforceScrollbackLength(this._scrollbackSize);
   }
 
   private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {

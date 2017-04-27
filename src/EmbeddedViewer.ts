@@ -797,22 +797,12 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
 
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
     const scrollable = <any> ev.target;
+    const height = this._virtualScrollArea.getVirtualHeight();
+    this._virtualScrollArea.updateScrollableSize(scrollable);
 
-    const generator = function* bulkUpdateGenerator(this: EmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
-
-      const height = this._virtualScrollArea.getVirtualHeight();
-      this._virtualScrollArea.updateScrollableSize(scrollable);
-
-      const newHeight = this._virtualScrollArea.getVirtualHeight();
-      if (height !== newHeight) {
-        const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
-      }
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    const operation = BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
-    (<VirtualScrollArea.ResizeEventDetail>ev.detail).addOperation(operation);
+    const newHeight = this._virtualScrollArea.getVirtualHeight();
+    if (height !== newHeight) {
+      VirtualScrollArea.emitResizeEvent(this);
+    }
   }
 }

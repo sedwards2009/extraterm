@@ -398,8 +398,8 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
 
         yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
         this._adjustHeight(this._height);
-        const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
+        VirtualScrollArea.emitResizeEvent(this);
+        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH };
         return BulkDomOperation.GeneratorPhase.DONE;
       };
 

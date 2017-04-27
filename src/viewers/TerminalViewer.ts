@@ -419,8 +419,8 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
         }
       }
 
-      const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-      yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
+      VirtualScrollArea.emitResizeEvent(this);
+      yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH };
       this.resizeEmulatorToParentContainer();
 
       return BulkDomOperation.GeneratorPhase.DONE;

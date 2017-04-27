@@ -638,8 +638,8 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
       yield BulkDomOperation.GeneratorPhase.BEGIN_FINISH; // FIXME this line works, the second doesn't but should.
     //  yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;  // Let CodeMirror sort itself out.
 
-      const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-      yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation};
+      VirtualScrollArea.emitResizeEvent(this);
+      yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH};
       
       return BulkDomOperation.GeneratorPhase.DONE;
     };
