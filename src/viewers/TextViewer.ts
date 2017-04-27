@@ -365,32 +365,24 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      // --- DOM Write ---
-      if (setterState.heightChanged || setterState.yOffsetChanged) {
-        if (DEBUG_RESIZE) {
-          this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-            setterState.yOffset, setterState.yOffsetChanged);
-        }
-        
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-
-        // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
-        // const op = () => {
-          this._adjustHeight(setterState.height);
-          this.scrollTo(0, setterState.yOffset);
-        // };
-        // if (this._codeMirror !== null) {
-        //   this._codeMirror.operation(op);
-        // } else {
-        //   op();
-        // }
+  setDimensionsAndScroll(setterState: SetterState): void {
+    if (setterState.heightChanged || setterState.yOffsetChanged) {
+      if (DEBUG_RESIZE) {
+        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+          setterState.yOffset, setterState.yOffsetChanged);
       }
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
 
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+      // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
+      // const op = () => {
+        this._adjustHeight(setterState.height);
+        this.scrollTo(0, setterState.yOffset);
+      // };
+      // if (this._codeMirror !== null) {
+      //   this._codeMirror.operation(op);
+      // } else {
+      //   op();
+      // }
+    }
   }
   
   isFontLoaded(): boolean {

@@ -231,88 +231,64 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
   }
   
   // See VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: EmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
-      if (DEBUG_SIZE) {
-        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-          setterState.yOffset, setterState.yOffsetChanged);
-      }
+  setDimensionsAndScroll(setterState: SetterState): void {
+    if (DEBUG_SIZE) {
+      this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+        setterState.yOffset, setterState.yOffsetChanged);
+    }
 
-      // --- DOM Write ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+    if (setterState.heightChanged) {
+      this.style.height = "" + setterState.height + "px";
+    }
 
-      if (setterState.heightChanged) {
-        this.style.height = "" + setterState.height + "px";
-      }
+    const containerDiv = <HTMLDivElement>this._getById(ID_CONTAINER);
+    if (setterState.yOffset === 0) {
+      containerDiv.classList.remove(CLASS_SCROLLING);
+      containerDiv.classList.add(CLASS_NOT_SCROLLING);
+    } else {
+      containerDiv.classList.add(CLASS_SCROLLING);
+      containerDiv.classList.remove(CLASS_NOT_SCROLLING);
+    }
 
-      const containerDiv = <HTMLDivElement>this._getById(ID_CONTAINER);
-      if (setterState.yOffset === 0) {
-        containerDiv.classList.remove(CLASS_SCROLLING);
-        containerDiv.classList.add(CLASS_NOT_SCROLLING);
-      } else {
-        containerDiv.classList.add(CLASS_SCROLLING);
-        containerDiv.classList.remove(CLASS_NOT_SCROLLING);
-      }
-      
-      // --- DOM Read ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    const rect = headerDiv.getBoundingClientRect();
 
-      const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
-      const rect = headerDiv.getBoundingClientRect();
+    headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
+    const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
+    outputContainerDiv.style.top = "" + rect.height + "px";
+    
+    if (setterState.physicalTop > 0 || setterState.height < setterState.containerHeight) {
+      // Bottom part is visible
+      containerDiv.classList.remove(CLASS_BOTTOM_NOT_VISIBLE);
+      containerDiv.classList.add(CLASS_BOTTOM_VISIBLE);
+    } else {
+      containerDiv.classList.add(CLASS_BOTTOM_NOT_VISIBLE);
+      containerDiv.classList.remove(CLASS_BOTTOM_VISIBLE);
+    }
+    
+    const scrollNameDiv = <HTMLDivElement>this._getById(ID_SCROLL_NAME);
+    const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
+    scrollNameDiv.innerHTML = "" + percent + "%";
+    
+    if (setterState.heightChanged) {
+      this._requestContainerHeight = true;
+    }
+    this._requestContainerScroll = true;
+    this._requestContainerYScroll = setterState.yOffset;
 
-      // --- DOM Write ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-
-      headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
-      const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
-      outputContainerDiv.style.top = "" + rect.height + "px";
-      
-      if (setterState.physicalTop > 0 || setterState.height < setterState.containerHeight) {
-        // Bottom part is visible
-        containerDiv.classList.remove(CLASS_BOTTOM_NOT_VISIBLE);
-        containerDiv.classList.add(CLASS_BOTTOM_VISIBLE);
-      } else {
-        containerDiv.classList.add(CLASS_BOTTOM_NOT_VISIBLE);
-        containerDiv.classList.remove(CLASS_BOTTOM_VISIBLE);
-      }
-      
-      const scrollNameDiv = <HTMLDivElement>this._getById(ID_SCROLL_NAME);
-      const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
-      scrollNameDiv.innerHTML = "" + percent + "%";
-      
-      if (setterState.heightChanged) {
-        this._requestContainerHeight = true;
-      }
-      this._requestContainerScroll = true;
-      this._requestContainerYScroll = setterState.yOffset;
-
-      if (this.parentElement != null) {
-         this._applyContainerChanges();
-      }
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    if (this.parentElement != null) {
+      this._applyContainerChanges();
+    }
   }
 
-  bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
+  markVisible(visible: boolean): void {
     if (visible) {
-      const generator = function* generator(this: EmbeddedViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
-        if (DEBUG_SIZE) {
-          this._log.debug("bulkVisible() generator: ");
-        }
+      if (DEBUG_SIZE) {
+        this._log.debug("markVisible()");
+      }
 
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-        this._applyContainerChanges();
-        this._virtualScrollArea.reapplyState();
-        return BulkDomOperation.GeneratorPhase.DONE;
-      };
-
-      return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
-    } else {
-
-      return BulkDomOperation.nullOperation();
+      this._applyContainerChanges();
+      this._virtualScrollArea.reapplyState();
     }
   }
 
@@ -566,7 +542,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       containerHeightChanged: true
     };
 
-    BulkDomOperation.execute(this.bulkSetDimensionsAndScroll(setterState));
+    this.setDimensionsAndScroll(setterState);
 
     // Remove the anti-flicker style.
     this._getById(ID_CONTAINER).setAttribute('style', '');

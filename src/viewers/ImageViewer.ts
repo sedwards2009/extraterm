@@ -207,25 +207,19 @@ export class ImageViewer extends ViewerElement {
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: ImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      if (setterState.heightChanged || setterState.yOffsetChanged) {
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-        if (DEBUG_SIZE) {
-          this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-            setterState.yOffset, setterState.yOffsetChanged);
-        }
-        this._adjustHeight(setterState.height);
-        
-        const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-        if (containerDiv !== null) {
-          containerDiv.scrollTop = setterState.yOffset;
-        }
+  setDimensionsAndScroll(setterState: SetterState): void {
+    if (setterState.heightChanged || setterState.yOffsetChanged) {
+      if (DEBUG_SIZE) {
+        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+          setterState.yOffset, setterState.yOffsetChanged);
       }
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)());
+      this._adjustHeight(setterState.height);
+      
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+      if (containerDiv !== null) {
+        containerDiv.scrollTop = setterState.yOffset;
+      }
+    }
   }
 
   // VirtualScrollable

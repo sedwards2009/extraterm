@@ -527,8 +527,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
         scrollArea.style.top = "-" + offset + "px";
       });
       this._virtualScrollArea.setScrollbar(scrollbar);
-      this._virtualScrollArea.setBulkSetTopFunction(this._bulkSetTopFunction.bind(this));
-      this._virtualScrollArea.setBulkMarkVisibleFunction(this._bulkMarkVisible.bind(this));
+      this._virtualScrollArea.setSetTopFunction(this._setTopFunction.bind(this));
+      this._virtualScrollArea.setMarkVisibleFunction(this._markVisible.bind(this));
 
       // Set up the emulator
       this._cookie = crypto.randomBytes(10).toString('hex');
@@ -1013,68 +1013,57 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     (<VirtualScrollArea.ResizeEventDetail>ev.detail).addOperation(operation);
   }
 
-  private _bulkMarkVisible(scrollable: VirtualScrollable, visible: boolean): BulkDomOperation.BulkDOMOperation {
+  private _markVisible(scrollable: VirtualScrollable, visible: boolean): void {
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+    const element: ViewerElement = <any> scrollable;
+    if ( ! visible) {
 
-    const generator = function* bulkStashGenerator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
+      if (this._terminalViewer !== element && ! (ViewerElement.isViewerElement(element) && element.hasFocus())) {
+        // Move the scrollable into the stash area.
+        this._stashArea.appendChild(element);
+      }
 
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-    
-      const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-      const element: ViewerElement = <any> scrollable;
-      if ( ! visible) {
+    } else {
 
-        if (this._terminalViewer !== element && ! (ViewerElement.isViewerElement(element) && element.hasFocus())) {
-          // Move the scrollable into the stash area.
-          this._stashArea.appendChild(element);
-        }
+      if (element.parentElement !== scrollerArea) {
+        // Move the element to the scroll area and place it in the correct position relative to the other child elements.
 
-      } else {
+        const scrollerAreaChildrenCount = scrollerArea.children.length;
+        if (scrollerAreaChildrenCount === 0) {
+          scrollerArea.appendChild(element);
+        } else {
 
-        if (element.parentElement !== scrollerArea) {
-          // Move the element to the scroll area and place it in the correct position relative to the other child elements.
+          let scrollerIndex = 0;
+          let childIndex = 0;
+          while (childIndex < this._childElementList.length) {
 
-          const scrollerAreaChildrenCount = scrollerArea.children.length;
-          if (scrollerAreaChildrenCount === 0) {
-            scrollerArea.appendChild(element);
-          } else {
+            const currentElement = this._childElementList[childIndex].element;
+            if (currentElement === element) {
+              scrollerArea.insertBefore(element, scrollerArea.children[scrollerIndex]);
+              break;
+            }
 
-            let scrollerIndex = 0;
-            let childIndex = 0;
-            while (childIndex < this._childElementList.length) {
-
-              const currentElement = this._childElementList[childIndex].element;
-              if (currentElement === element) {
-                scrollerArea.insertBefore(element, scrollerArea.children[scrollerIndex]);
+            if (scrollerArea.children[scrollerIndex] === currentElement) {
+              scrollerIndex++;
+              if (scrollerIndex >= scrollerAreaChildrenCount) {
+                scrollerArea.appendChild(element);
                 break;
               }
-
-              if (scrollerArea.children[scrollerIndex] === currentElement) {
-                scrollerIndex++;
-                if (scrollerIndex >= scrollerAreaChildrenCount) {
-                  scrollerArea.appendChild(element);
-                  break;
-                }
-              }
-              childIndex++;
             }
+            childIndex++;
           }
-
-          // Set the current mode on the scrollable.
-          const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
-          element.setMode(this._mode);
-          element.setVisualState(visualState);
-
-          yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH };
         }
-      }
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
 
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+        // Set the current mode on the scrollable.
+        const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
+        element.setMode(this._mode);
+        element.setVisualState(visualState);
+      }
+    }
   }
 
   private _makeVisible(element: HTMLElement & VirtualScrollable): void {
-    BulkDomOperation.execute(this._bulkMarkVisible(element, true));
+    this._markVisible(element, true);
   }
 
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): BulkDomOperation.BulkDOMOperation {
@@ -1158,14 +1147,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     }
   }
 
-  private _bulkSetTopFunction(scrollable: VirtualScrollable, top: number):  BulkDomOperation.BulkDOMOperation {
-    const generator = function* bulkSetTopGenerator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      (<HTMLElement> (<any> scrollable)).style.top = "" + top + "px";
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+  private _setTopFunction(scrollable: VirtualScrollable, top: number):  void {
+    (<HTMLElement> (<any> scrollable)).style.top = "" + top + "px";
   }
 
   private _handleTerminalViewerCursor(ev: CustomEvent): void {
@@ -1583,8 +1566,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
           }
 
           if (stashedList.length !== 0) {
-            const markVisibleOperations = stashedList.map( (el) => this._bulkMarkVisible(el, true) );
-            BulkDomOperation.execute(BulkDomOperation.parallel(markVisibleOperations));
+            stashedList.forEach( (el) => this._markVisible(el, true) );
           }
 
           if (refreshOperations.length !==0) {
@@ -1594,9 +1576,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
           this._virtualScrollArea.updateScrollableSizes(processList);
 
           if (stashedList.length !== 0) {
-            const markVisibleOperations = stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))
-              .map( (el) => this._bulkMarkVisible(el, false) );
-            BulkDomOperation.execute(BulkDomOperation.parallel(markVisibleOperations));
+            stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))
+              .forEach( (el) => this._markVisible(el, false) );
           }
 
           this._scheduleStashedChildResizeTask();

@@ -68,14 +68,12 @@ function SetupScrollable(vsa: VirtualScrollArea.VirtualScrollArea, minHeight: nu
       reserveViewportHeight = newReserveViewportHeight;
     },
 
-    bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
+    setDimensionsAndScroll(setterState: SetterState): void {
       this._height = setterState.height;
       this._offset = setterState.yOffset;
-      return BulkDomOperation.nullOperation();
     },
     
-    bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
-      return BulkDomOperation.nullOperation();
+    markVisible(visible: boolean): void {
     },
 
 

@@ -176,12 +176,11 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
+  setDimensionsAndScroll(setterState: SetterState): void {
     if (DEBUG_SIZE) {
       this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
         setterState.yOffset, setterState.yOffsetChanged);
     }
-    return BulkDomOperation.nullOperation();
   }
 
   // VirtualScrollable

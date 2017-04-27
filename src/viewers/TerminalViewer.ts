@@ -358,23 +358,14 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
   }
 
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      // --- DOM Write ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-
-      if (setterState.heightChanged || setterState.yOffsetChanged) {
-        if (DEBUG_RESIZE) {
-          this._log.debug(`setDimensionsAndScroll(height=${setterState.height}, heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged})`);
-        }
-        this._adjustHeight(setterState.height);
-        this.scrollTo(0, setterState.yOffset);
+  setDimensionsAndScroll(setterState: SetterState): void {
+    if (setterState.heightChanged || setterState.yOffsetChanged) {
+      if (DEBUG_RESIZE) {
+        this._log.debug(`setDimensionsAndScroll(height=${setterState.height}, heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged})`);
       }
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+      this._adjustHeight(setterState.height);
+      this.scrollTo(0, setterState.yOffset);
+    }
   }
   
   // VirtualScrollable

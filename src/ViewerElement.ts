@@ -119,12 +119,10 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
+  setDimensionsAndScroll(setterState: SetterState): void {
   }
 
-  bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
+  markVisible(visible: boolean): void {
   }
 
   getCursorPosition(): CursorMoveDetail {

@@ -82,11 +82,9 @@ export class CommandPlaceHolder extends HTMLElement implements VirtualScrollable
     return 0;
   }
   
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
+  setDimensionsAndScroll(setterState: SetterState): void {
   }
 
-  bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
+  markVisible(visible: boolean): void {
   }
 }
