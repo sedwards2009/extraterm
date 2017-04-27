@@ -177,39 +177,21 @@ this._log.debug("size: ",size);
   //-----------------------------------------------------------------------
 
   
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    if (DomUtils.getShadowRoot(this) !== null) {
+      // DOM read
+      if (level === ResizeRefreshElementBase.RefreshLevel.COMPLETE) {
+        this._paneSizes = this._paneSizes.update(DomUtils.toArray(this.children));
+        this._createLayout(this._paneSizes);
+      }
 
-    if (DomUtils.getShadowRoot(this) === null) {
-      return BulkDomOperation.nullOperation();
-    } else {
-      const superBulkRefresh = super.bulkRefresh;
+      const topDiv = DomUtils.getShadowId(this, ID_TOP);
+      const rect = topDiv.getBoundingClientRect();
+      const size = this._orientation === SplitOrientation.VERTICAL ? rect.width : rect.height;
+      const newPaneSizes = this._paneSizes.updateTotalSize(size);
 
-      const generator = function* bulkRefreshGenerator(this: Splitter): IterableIterator<BulkDomOperation.GeneratorResult> {
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
-
-        if (level === ResizeRefreshElementBase.RefreshLevel.COMPLETE) {
-          this._paneSizes = this._paneSizes.update(DomUtils.toArray(this.children));
-
-          yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-          this._createLayout(this._paneSizes);
-
-          yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
-        }
-
-        const topDiv = DomUtils.getShadowId(this, ID_TOP);
-        const rect = topDiv.getBoundingClientRect();
-        const size = this._orientation === SplitOrientation.VERTICAL ? rect.width : rect.height;
-        const newPaneSizes = this._paneSizes.updateTotalSize(size);
-
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-        this._paneSizes = newPaneSizes;
-        this._setSizes(newPaneSizes, this._orientation);
-
-        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: superBulkRefresh.call(this, level) };
-
-        return BulkDomOperation.GeneratorPhase.DONE;
-      };
-      return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+      this._paneSizes = newPaneSizes;
+      this._setSizes(newPaneSizes, this._orientation);
     }
   }
 

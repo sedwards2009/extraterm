@@ -8,7 +8,6 @@ import * as ThemeTypes from '../Theme';
 import {StackedWidget} from './StackedWidget';
 import {Tab} from './Tab';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import * as BulkDomOperation from '../BulkDomOperation';
 import * as Util from './Util';
 import * as DomUtils from '../DomUtils';
 import * as _ from 'lodash';
@@ -149,12 +148,12 @@ export class TabWidget extends ThemeableElementBase {
     this.createTabHolders();
   }  
   
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     const contentsStack = this._getContentsStack();
-    if (contentsStack === null) {
-      return BulkDomOperation.nullOperation();
+    if (contentsStack !== null) {
+      super.refresh(level);
+      contentsStack.refresh(level);
     }
-    return BulkDomOperation.parallel([super.bulkRefresh(level), contentsStack.bulkRefresh(level)]);
   }
 
   /**

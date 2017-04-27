@@ -26,7 +26,6 @@ import * as GeneralEvents from '../GeneralEvents';
 import * as ThemeTypes from '../Theme';
 import * as keybindingmanager from '../KeyBindingManager';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import * as BulkDomOperation from '../BulkDomOperation';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -404,29 +403,21 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     }
   }
 
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (this._codeMirror !== null) {
-        if (DEBUG_RESIZE) {
-          this._log.debug("calling codeMirror.refresh()");
-        }
-
-        if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-          this._codeMirror.setSize(null, null);
-        } else {
-          this._codeMirror.refresh();
-        }
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    if (this._codeMirror !== null) {
+      if (DEBUG_RESIZE) {
+        this._log.debug("calling codeMirror.refresh()");
       }
 
-      VirtualScrollArea.emitResizeEvent(this);
-      yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH };
-      this.resizeEmulatorToParentContainer();
+      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+        this._codeMirror.setSize(null, null);
+      } else {
+        this._codeMirror.refresh();
+      }
+    }
 
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    VirtualScrollArea.emitResizeEvent(this);
+    this.resizeEmulatorToParentContainer();
   }
 
   resizeEmulatorToParentContainer(): void {

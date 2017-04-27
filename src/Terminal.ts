@@ -617,8 +617,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     this.resizeToContainer();
   }
   
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    return this._processRefresh(level);
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    this._processRefresh(level);
   }
 
   //-----------------------------------------------------------------------
@@ -1069,70 +1069,50 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     this._enforceScrollbackLength(this._scrollbackSize);
   }
 
-  private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
+  private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): void {
     let level = requestedLevel;
     if (this._needsCompleteRefresh) {
       level = ResizeRefreshElementBase.RefreshLevel.COMPLETE;
       this._needsCompleteRefresh = false;
     }
 
-    // Operations for scroll area contents
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
+      // --- DOM Read ---
+      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
+      scrollbar.refresh(level);
 
-      const generator = function* generator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
+      // --- DOM write ---
+      const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
+      this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 
-        // --- DOM Write ---
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
-        
-        const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-        const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level); // <-
-        const scrollbarOperation = scrollbar.bulkRefresh(level);
-
-        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: scrollAreaOperation, waitOperation: scrollAreaOperation};
-
-        const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-        this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
-
-        // Build the list of elements we will resize right now.
-        const childrenToResize: VirtualScrollable[] = [];
-        const len = scrollerArea.children.length;
-        for (let i=0; i<len; i++) {
-          const child = scrollerArea.children[i];
-          if (ViewerElement.isViewerElement(child)) {
-            childrenToResize.push(child);
-          }
+      // Build the list of elements we will resize right now.
+      const childrenToResize: VirtualScrollable[] = [];
+      const len = scrollerArea.children.length;
+      for (let i=0; i<len; i++) {
+        const child = scrollerArea.children[i];
+        if (ViewerElement.isViewerElement(child)) {
+          childrenToResize.push(child);
         }
+      }
 
-        // Keep track of which children will need a resize later on.
-        const childrenToResizeSet = new Set(childrenToResize);
-        for (let i=0; i<this._childElementList.length; i++) {
-          const childStatus = this._childElementList[i];
-          if ( ! childrenToResizeSet.has(childStatus.element)) {
-            childStatus.needsRefresh = true;
-            childStatus.refreshLevel = level;
-          }
+      // Keep track of which children will need a resize later on.
+      const childrenToResizeSet = new Set(childrenToResize);
+      for (const childStatus of this._childElementList) {
+        if ( ! childrenToResizeSet.has(childStatus.element)) {
+          childStatus.needsRefresh = true;
+          childStatus.refreshLevel = level;
         }
+      }
 
-        if (childrenToResize.length !== this._childElementList.length) {
-          this._scheduleStashedChildResizeTask();
-        }
+      if (childrenToResize.length !== this._childElementList.length) {
+        this._scheduleStashedChildResizeTask();
+      }
 
-        this._virtualScrollArea.updateScrollableSizes(childrenToResize);
-        this._virtualScrollArea.reapplyState();
-        this._enforceScrollbackLength(this._scrollbackSize);
-
-        this.resizeToContainer(); // This will schedule a resize of the terminal PTY itself.
-
-        return BulkDomOperation.GeneratorPhase.DONE;
-      };
-
-      return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
-
-    } else {
-
-      // no-op
-      return BulkDomOperation.nullOperation();
+      this._virtualScrollArea.updateScrollableSizes(childrenToResize);
+      this._virtualScrollArea.reapplyState();
+      this._enforceScrollbackLength(this._scrollbackSize);
     }
   }
 
@@ -1528,18 +1508,12 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     if (this._stashedChildResizeTask == null) {
       this._stashedChildResizeTask = () => {
         // Gather the list of elements/scrollables that need refreshing and updating.
-        const processCounter = 0;
-        const processList: (HTMLElement & VirtualScrollable)[] = [];
-        const refreshOperations: BulkDomOperation.BulkDOMOperation[] = [];
+        const processList: ChildElementStatus[] = [];
         for (let i=this._childElementList.length-1; i>=0 && processList.length < CHILD_RESIZE_BATCH_SIZE; i--) {
           const childStatus = this._childElementList[i];
           if (childStatus.needsRefresh) {
-            processList.push(childStatus.element);
+            processList.push(childStatus);
             childStatus.needsRefresh = false;
-            const el = childStatus.element;
-            if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
-              refreshOperations.push(el.bulkRefresh(childStatus.refreshLevel));
-            }
           }
         }
 
@@ -1547,22 +1521,23 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
           // Find the elements which need to be moved into the scroll area.
           const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
           const stashedList: (HTMLElement & VirtualScrollable)[] = [];
-          for (let i=0; i<processList.length; i++) {
-            const element = processList[i];
+          for (const childStatus of processList) {
+            const element = childStatus.element;
             if (element.parentElement !== scrollerArea) {
               stashedList.push(element);
             }
           }
 
-          if (stashedList.length !== 0) {
-            stashedList.forEach( (el) => this._markVisible(el, true) );
+          stashedList.forEach(el => this._markVisible(el, true));
+
+          for (const childStatus of processList) {
+            const el = childStatus.element;
+            if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
+              el.refresh(childStatus.refreshLevel);
+            }            
           }
 
-          if (refreshOperations.length !==0) {
-            BulkDomOperation.execute(BulkDomOperation.parallel(refreshOperations));
-          }
-
-          this._virtualScrollArea.updateScrollableSizes(processList);
+          this._virtualScrollArea.updateScrollableSizes(processList.map(childStatus => childStatus.element));
 
           if (stashedList.length !== 0) {
             stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))

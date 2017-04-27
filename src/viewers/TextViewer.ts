@@ -14,7 +14,6 @@ import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ThemeTypes from '../Theme';
 import * as keybindingmanager from '../KeyBindingManager';
-import * as BulkDomOperation from '../BulkDomOperation';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import * as CodeMirror from 'codemirror';
@@ -620,31 +619,20 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
 
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (this._codeMirror !== null) {
-        if (DEBUG_RESIZE) {
-          this._log.debug("calling codeMirror.refresh()");
-        }
-
-        if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-          this._codeMirror.setSize(null, null);
-        } else {
-          this._codeMirror.refresh();
-        }
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    if (this._codeMirror !== null) {
+      if (DEBUG_RESIZE) {
+        this._log.debug("calling codeMirror.refresh()");
       }
 
-      yield BulkDomOperation.GeneratorPhase.BEGIN_FINISH; // FIXME this line works, the second doesn't but should.
-    //  yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;  // Let CodeMirror sort itself out.
+      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+        this._codeMirror.setSize(null, null);
+      } else {
+        this._codeMirror.refresh();
+      }
+    }
 
-      VirtualScrollArea.emitResizeEvent(this);
-      yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH};
-      
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    VirtualScrollArea.emitResizeEvent(this);
   }
 
   //-----------------------------------------------------------------------
