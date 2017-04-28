@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as CodeMirror from 'codemirror';
-import * as BulkDomOperation from './BulkDomOperation';
 
 /* This little module encapsulates a way of grouping many updates to
  * CodeMirror instances in one batch which efficiently updates the DOM. 
@@ -12,7 +11,7 @@ import * as BulkDomOperation from './BulkDomOperation';
 
 let codeMirrorInstance: CodeMirror.Editor = null;
 
-function bulkOperation(func: ()=>void): void {
+export function bulkOperation(func: ()=>void): void {
   if (codeMirrorInstance === null) {
     const holderDiv = window.document.createElement('div');
     holderDiv.style.width = "0px";
@@ -39,8 +38,4 @@ function bulkOperation(func: ()=>void): void {
   }
 
   codeMirrorInstance.operation(func);
-}
-
-export function init(): void {
-  BulkDomOperation.registerContextFunction(bulkOperation);
 }

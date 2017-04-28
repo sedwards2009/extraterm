@@ -1079,40 +1079,43 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
       // --- DOM Read ---
-      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
-      scrollbar.refresh(level);
+      CodeMirrorOperation.bulkOperation(() => {
+        ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
 
-      // --- DOM write ---
-      const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-      this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
+        const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+        scrollbar.refresh(level);
 
-      // Build the list of elements we will resize right now.
-      const childrenToResize: VirtualScrollable[] = [];
-      const len = scrollerArea.children.length;
-      for (let i=0; i<len; i++) {
-        const child = scrollerArea.children[i];
-        if (ViewerElement.isViewerElement(child)) {
-          childrenToResize.push(child);
+        // --- DOM write ---
+        const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
+        this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
+
+        // Build the list of elements we will resize right now.
+        const childrenToResize: VirtualScrollable[] = [];
+        const len = scrollerArea.children.length;
+        for (let i=0; i<len; i++) {
+          const child = scrollerArea.children[i];
+          if (ViewerElement.isViewerElement(child)) {
+            childrenToResize.push(child);
+          }
         }
-      }
 
-      // Keep track of which children will need a resize later on.
-      const childrenToResizeSet = new Set(childrenToResize);
-      for (const childStatus of this._childElementList) {
-        if ( ! childrenToResizeSet.has(childStatus.element)) {
-          childStatus.needsRefresh = true;
-          childStatus.refreshLevel = level;
+        // Keep track of which children will need a resize later on.
+        const childrenToResizeSet = new Set(childrenToResize);
+        for (const childStatus of this._childElementList) {
+          if ( ! childrenToResizeSet.has(childStatus.element)) {
+            childStatus.needsRefresh = true;
+            childStatus.refreshLevel = level;
+          }
         }
-      }
 
-      if (childrenToResize.length !== this._childElementList.length) {
-        this._scheduleStashedChildResizeTask();
-      }
+        if (childrenToResize.length !== this._childElementList.length) {
+          this._scheduleStashedChildResizeTask();
+        }
 
-      this._virtualScrollArea.updateScrollableSizes(childrenToResize);
-      this._virtualScrollArea.reapplyState();
-      this._enforceScrollbackLength(this._scrollbackSize);
+        this._virtualScrollArea.updateScrollableSizes(childrenToResize);
+        this._virtualScrollArea.reapplyState();
+        this._enforceScrollbackLength(this._scrollbackSize);
+      });
     }
   }
 
@@ -1528,16 +1531,18 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
             }
           }
 
-          stashedList.forEach(el => this._markVisible(el, true));
+          CodeMirrorOperation.bulkOperation( () => {
+            stashedList.forEach(el => this._markVisible(el, true));
 
-          for (const childStatus of processList) {
-            const el = childStatus.element;
-            if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
-              el.refresh(childStatus.refreshLevel);
-            }            
-          }
+            for (const childStatus of processList) {
+              const el = childStatus.element;
+              if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
+                el.refresh(childStatus.refreshLevel);
+              }
+            }
 
-          this._virtualScrollArea.updateScrollableSizes(processList.map(childStatus => childStatus.element));
+            this._virtualScrollArea.updateScrollableSizes(processList.map(childStatus => childStatus.element));
+          });
 
           if (stashedList.length !== 0) {
             stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))

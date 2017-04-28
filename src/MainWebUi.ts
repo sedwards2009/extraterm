@@ -21,8 +21,6 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import * as CodeMirrorOperation from './CodeMirrorOperation';
-
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
@@ -95,8 +93,6 @@ const COMMAND_CLOSE_TAB = "closeTab";
 const COMMAND_HORIZONTAL_SPLIT = "horizontalSplit";
 const COMMAND_VERTICAL_SPLIT = "verticalSplit";
 const COMMAND_CLOSE_PANE = "closePane";
-
-CodeMirrorOperation.init();
 
 let registered = false;
 
