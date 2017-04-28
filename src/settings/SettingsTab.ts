@@ -20,7 +20,6 @@ import Logger from '../Logger';
 import log from '../LogDecorator';
 import * as GeneralEvents from '../GeneralEvents';
 import * as ViewerElementTypes from '../ViewerElementTypes';
-import * as BulkDomOperation from '../BulkDomOperation';
 
 type CommandLineAction = config.CommandLineAction;
 type FontInfo = config.FontInfo;

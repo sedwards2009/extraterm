@@ -9,7 +9,6 @@ import * as Util from './gui/Util';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;

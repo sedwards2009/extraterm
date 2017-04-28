@@ -14,8 +14,6 @@ import {ThemeableElementBase} from './ThemeableElementBase';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import * as ViewerElementTypes from './ViewerElementTypes';
-import * as BulkDomOperation from './BulkDomOperation';
-
 import * as Vue from 'vue';
 import * as DomUtils from './DomUtils';
 import * as config from './Config';

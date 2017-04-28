@@ -6,7 +6,6 @@
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import * as BulkDomOperation from '../BulkDomOperation';
 import * as Util from './Util';
 import * as DomUtils from '../DomUtils';
 import * as _ from 'lodash';

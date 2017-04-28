@@ -8,7 +8,6 @@ import * as DomUtils from '../DomUtils';
 import * as markdownMod from 'markdown';
 const markdown = markdownMod.markdown;
 import * as ViewerElementTypes from '../ViewerElementTypes';
-import * as BulkDomOperation from '../BulkDomOperation';
 
 const ID = "EtMarkdownViewerTemplate";
 const ID_CONTAINER = "container";

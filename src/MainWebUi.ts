@@ -18,7 +18,6 @@ import {ViewerElement} from './ViewerElement';
 import {Splitter, SplitOrientation} from './gui/Splitter';
 import {EmptyPaneMenu} from './EmptyPaneMenu';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';

@@ -20,7 +20,6 @@ import * as GeneralEvents from './GeneralEvents';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 import Logger from './Logger';
 import log from './LogDecorator';
-import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import * as SupportsClipboardPaste from './SupportsClipboardPaste';
 

@@ -5,7 +5,6 @@
  */
 import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
-import * as BulkDomOperation from './BulkDomOperation';
 import * as VirtualScrollArea from './VirtualScrollArea';
 type SetterState = VirtualScrollArea.SetterState;
 

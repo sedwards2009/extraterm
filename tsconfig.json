@@ -34,7 +34,6 @@
     ],
     "files": [
         "./src/AboutTab.ts",
-        "./src/BulkDomOperation.ts",
         "./src/CodeMirrorCommands.ts",
         "./src/CodeMirrorOperation.ts",
         "./src/CommandPaletteFunctions.ts",

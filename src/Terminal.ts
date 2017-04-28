@@ -12,7 +12,6 @@ import * as utf8 from 'utf8';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import * as BulkDomOperation from './BulkDomOperation';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from './Theme';

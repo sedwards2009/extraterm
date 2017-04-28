@@ -13,7 +13,6 @@ import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
-import * as BulkDomOperation from './BulkDomOperation';
 
 const ID_ABOUT = "ID_ABOUT";
 

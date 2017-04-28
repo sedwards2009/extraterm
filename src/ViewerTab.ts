@@ -29,7 +29,6 @@ const clipboard = Electron.clipboard;
 
 import * as WebIpc from './WebIpc';
 import * as VirtualScrollArea from './VirtualScrollArea';
-import * as BulkDomOperation from './BulkDomOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;

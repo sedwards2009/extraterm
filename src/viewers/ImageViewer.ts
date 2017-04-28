@@ -15,7 +15,6 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 import * as keybindingmanager from '../KeyBindingManager';
-import * as BulkDomOperation from '../BulkDomOperation';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
