@@ -96,7 +96,6 @@ export class Splitter extends ThemeableElementBase {
 
       const rectSize = this._orientation === SplitOrientation.VERTICAL ? rect.width : rect.height;
       const size = rectSize === 0 ? 1024 : rectSize;
-this._log.debug("size: ",size);
       this._paneSizes = PaneSizes.equalPaneSizes(size, DomUtils.toArray(this.children));
 
       const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
@@ -157,16 +156,10 @@ this._log.debug("size: ",size);
 
     topDiv.classList.add(CLASS_VERTICAL);
 
-    this._createLayout(this._paneSizes);
-
     this._mutationObserver = new MutationObserver(this._handleMutations.bind(this));
     this._mutationObserver.observe(this, { childList: true });
 
     this.updateThemeCss();
-  }
-
-  attachedCallback(): void {
-    this._handleMutations([]);
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -174,10 +167,9 @@ this._log.debug("size: ",size);
   }
   
   //-----------------------------------------------------------------------
-
   
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    if (DomUtils.getShadowRoot(this) !== null) {
+    if (DomUtils.getShadowRoot(this) !== null && DomUtils.isNodeInDom(this)) {
       // DOM read
       if (level === ResizeRefreshElementBase.RefreshLevel.COMPLETE) {
         this._paneSizes = this._paneSizes.update(DomUtils.toArray(this.children));
@@ -187,10 +179,13 @@ this._log.debug("size: ",size);
       const topDiv = DomUtils.getShadowId(this, ID_TOP);
       const rect = topDiv.getBoundingClientRect();
       const size = this._orientation === SplitOrientation.VERTICAL ? rect.width : rect.height;
-      const newPaneSizes = this._paneSizes.updateTotalSize(size);
+      if (size !== 0) {
+        const newPaneSizes = this._paneSizes.updateTotalSize(size);
 
-      this._paneSizes = newPaneSizes;
-      this._setSizes(newPaneSizes, this._orientation);
+        this._paneSizes = newPaneSizes;
+        this._setSizes(newPaneSizes, this._orientation);
+      }
+      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(this, level);
     }
   }
 

@@ -785,3 +785,55 @@ function testMixSplit(test) {
   test.done();
 }
 exports.testMixSplit = testMixSplit;
+
+function testMixSplit2(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+
+  const tab1_1 = new FakeTab();
+  const tabContents1_1 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab1_1, tabContents1_1);
+
+  const tab = new FakeTab();
+  const tabContents = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
+
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+
+  const tab3 = new FakeTab();
+  const tabContents3 = new FakeDiv();
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
+
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents2, SplitOrientation.HORIZONTAL);
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents1_1, SplitOrientation.HORIZONTAL);
+  splitLayout.update();
+
+// console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
+console.log(JSON.stringify(container._toFlatObject(), null, 2));
+
+  test.equal(container.children.length, 1);
+  test.ok(container.children.item(0).name.startsWith("Splitter"));
+  test.equal(container.children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.item(1).children.length, 2);
+
+  test.done();
+}
+exports.testMixSplit2 = testMixSplit2;
