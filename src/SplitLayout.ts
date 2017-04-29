@@ -320,21 +320,35 @@ export class SplitLayout {
       const splitterInfo = path[len-2];
       const tabWidgetInfo = path[len-1];
       if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
-        // Create a new TabWidget
-        const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
-        newTabWidget.setShowFrame(false);
-        const newTabWidgetInfo: TabWidgetInfoNode = {
-          type: "tabwidget",
-          children: [],
-          tabWidget: newTabWidget,
-          emptyTab: null,
-          emptyTabContent: null,
-          emptyContainer: null,
-          leftSpaceDefaultElement: null,
-          rightSpaceDefaultElement: null
-        };
 
-        splitterInfo.children.splice(splitterInfo.children.indexOf(tabWidgetInfo)+1,0, newTabWidgetInfo);
+          // Create a new TabWidget
+          const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+          newTabWidget.setShowFrame(false);
+          const newTabWidgetInfo: TabWidgetInfoNode = {
+            type: "tabwidget",
+            children: [],
+            tabWidget: newTabWidget,
+            emptyTab: null,
+            emptyTabContent: null,
+            emptyContainer: null,
+            leftSpaceDefaultElement: null,
+            rightSpaceDefaultElement: null
+          };
+
+        if (splitterInfo.orientation === orientation) {
+          splitterInfo.children.splice(splitterInfo.children.indexOf(tabWidgetInfo)+1,0, newTabWidgetInfo);
+        } else {
+
+          const newSplitter: SplitterInfoNode = {
+            type: "splitter",
+            children: [tabWidgetInfo, newTabWidgetInfo],
+            orientation: orientation,
+            splitter: null
+          };
+
+          const tabWidgetInfoIndex = splitterInfo.children.indexOf(tabWidgetInfo);
+          splitterInfo.children.splice(tabWidgetInfoIndex, 1, newSplitter);
+        }
         return newTabWidget;
       }
     }

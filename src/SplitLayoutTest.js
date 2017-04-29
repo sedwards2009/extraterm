@@ -168,8 +168,12 @@ class FakeTab extends FakeElement {
 
 let divCounter = 0;
 class FakeDiv extends FakeElement {
-  constructor() {
-    super("Div " + divCounter);
+  constructor(name=null) {
+    if (name == null) {
+      super("Div " + divCounter);
+    } else {
+      super(name);
+    }
     divCounter++;
   }  
 }
@@ -796,20 +800,20 @@ function testMixSplit2(test) {
     });
 
   const tab1_1 = new FakeTab();
-  const tabContents1_1 = new FakeDiv();
+  const tabContents1_1 = new FakeDiv("tabContents1_1");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab1_1, tabContents1_1);
 
   const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tabContents = new FakeDiv("tabContents");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
 
   const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tabContents2 = new FakeDiv("tabContents2");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
   const tab3 = new FakeTab();
-  const tabContents3 = new FakeDiv();
+  const tabContents3 = new FakeDiv("tabContents3");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
 
   splitLayout.update();
@@ -824,7 +828,7 @@ function testMixSplit2(test) {
   splitLayout.update();
 
 // console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
-console.log(JSON.stringify(container._toFlatObject(), null, 2));
+// console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
   test.equal(container.children.length, 1);
   test.ok(container.children.item(0).name.startsWith("Splitter"));
@@ -837,3 +841,90 @@ console.log(JSON.stringify(container._toFlatObject(), null, 2));
   test.done();
 }
 exports.testMixSplit2 = testMixSplit2;
+
+function testCloseMixSplit(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+
+  const tab1 = new FakeTab();
+  const tabContents1 = new FakeDiv("tabContents1");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab1, tabContents1);
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv("tabContents2");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+
+
+  const tab3 = new FakeTab();
+  const tabContents3 = new FakeDiv("tabContents3");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
+
+  const tab4 = new FakeTab();
+  const tabContents4 = new FakeDiv("tabContents4");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab4, tabContents4);
+
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents2, SplitOrientation.VERTICAL);
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents3, SplitOrientation.HORIZONTAL);
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents1, SplitOrientation.HORIZONTAL);
+  splitLayout.update();
+
+  splitLayout.closeSplitAtTabContent(tabContents1);
+  splitLayout.update();
+
+// console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
+// console.log(JSON.stringify(container._toFlatObject(), null, 2));
+
+  test.equal(container.children.length, 1);
+  test.ok(container.children.item(0).name.startsWith("Splitter"));
+  test.equal(container.children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(0).children.length, 4);
+  test.equal(container.children.item(0).children.item(1).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.item(1).children.length, 2);
+
+  test.done();
+}
+exports.testCloseMixSplit = testCloseMixSplit;
+
+function testNestedSplits(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+
+  const tab1 = new FakeTab();
+  const tabContents1 = new FakeDiv("tabContents1");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab1, tabContents1);
+
+  const newTabWidget = splitLayout.splitAfterTabContent(tabContents1, SplitOrientation.HORIZONTAL);
+  splitLayout.update();
+
+  splitLayout.splitAfterTabWidget(newTabWidget, SplitOrientation.VERTICAL);
+  splitLayout.update();
+
+console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
+// console.log(JSON.stringify(container._toFlatObject(), null, 2));
+
+  test.equal(container.children.length, 1);
+  test.ok(container.children.item(0).name.startsWith("Splitter"));
+  test.equal(container.children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(1).children.length, 2);
+
+  test.done();
+}
+exports.testCloseMixSplitestNestedSplits = testNestedSplits;
