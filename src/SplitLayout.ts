@@ -362,14 +362,15 @@ export class SplitLayout {
       return null;
     }
     
-    if (path.length === 1) {
+    const pathLen = path.length;
+    if (pathLen === 1) {
       const tabWidgetInfo = path[0];
       if (tabWidgetInfo.type === "tabwidget") {
         return this.splitAfterTabWidget(tabWidgetInfo.tabWidget, orientation);
       }
     }
 
-    if (path.length === 2) {
+    if (pathLen === 2) {
 
       // Path could be ;TabWidget, TabInfo].
       const tabWidgetInfo = path[0];
@@ -388,40 +389,51 @@ export class SplitLayout {
       }
 
     } else {
-      if (path.length >= 3) {
-        const len = path.length;
-        const splitterInfo = path[len-3];
-        const tabWidgetInfo = path[len-2];
-        const tabInfo = path[len-1];
-        if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget" && tabInfo.type === "tabinfo") {
+      if (pathLen >= 3) {
 
-          if (splitterInfo.orientation === orientation) {
-            const splitIndex = tabWidgetInfo.children.map(c => c.content).indexOf(tabContent) + 1;
+        const lastItem = path[pathLen-1];
+        if (lastItem.type === "tabinfo") {
+          const splitterInfo = path[pathLen-3];
+          const tabWidgetInfo = path[pathLen-2];
+          const tabInfo = lastItem;
 
-            // Create a new TabWidget
-            const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
-            newTabWidget.setShowFrame(false);
-            const newTabWidgetInfo: TabWidgetInfoNode = {
-              type: "tabwidget",
-              children: tabWidgetInfo.children.slice(splitIndex),
-              tabWidget: newTabWidget,
-              emptyTab: null,
-              emptyTabContent: null,
-              emptyContainer: null,
-              leftSpaceDefaultElement: null,
-              rightSpaceDefaultElement: null
-            };
+          if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
+            if (splitterInfo.orientation === orientation) {
+              const splitIndex = tabWidgetInfo.children.map(c => c.content).indexOf(tabContent) + 1;
 
-            tabWidgetInfo.children = tabWidgetInfo.children.slice(0, splitIndex);
+              // Create a new TabWidget
+              const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+              newTabWidget.setShowFrame(false);
+              const newTabWidgetInfo: TabWidgetInfoNode = {
+                type: "tabwidget",
+                children: tabWidgetInfo.children.slice(splitIndex),
+                tabWidget: newTabWidget,
+                emptyTab: null,
+                emptyTabContent: null,
+                emptyContainer: null,
+                leftSpaceDefaultElement: null,
+                rightSpaceDefaultElement: null
+              };
 
-            const tabWidgetIndex = splitterInfo.children.indexOf(tabWidgetInfo);
-            splitterInfo.children.splice(tabWidgetIndex+1,0, newTabWidgetInfo);          
-            return newTabWidget;
-          } else {
-            // Different orientation needed
-            const newSplitterNode = this._splitTabWidgetAtTabContent(tabWidgetInfo, tabContent, orientation);
-            splitterInfo.children.splice(splitterInfo.children.indexOf(tabWidgetInfo), 1, newSplitterNode);
-            return (<TabWidgetInfoNode> newSplitterNode.children[1]).tabWidget;
+              tabWidgetInfo.children = tabWidgetInfo.children.slice(0, splitIndex);
+
+              const tabWidgetIndex = splitterInfo.children.indexOf(tabWidgetInfo);
+              splitterInfo.children.splice(tabWidgetIndex+1,0, newTabWidgetInfo);          
+              return newTabWidget;
+            } else {
+              // Different orientation needed
+              const newSplitterNode = this._splitTabWidgetAtTabContent(tabWidgetInfo, tabContent, orientation);
+              splitterInfo.children.splice(splitterInfo.children.indexOf(tabWidgetInfo), 1, newSplitterNode);
+              return (<TabWidgetInfoNode> newSplitterNode.children[1]).tabWidget;
+            }
+          }
+
+        } else {
+
+          const splitterInfo = path[pathLen-2];
+          const tabWidgetInfo = path[pathLen-1];
+          if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
+            return this.splitAfterTabWidget(tabWidgetInfo.tabWidget, orientation);
           }
         }
       }
