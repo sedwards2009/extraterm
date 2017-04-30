@@ -916,7 +916,7 @@ function testNestedSplits(test) {
   splitLayout.splitAfterTabWidget(newTabWidget, SplitOrientation.VERTICAL);
   splitLayout.update();
 
-console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
+// console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
   test.equal(container.children.length, 1);

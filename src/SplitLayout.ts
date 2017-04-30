@@ -289,67 +289,26 @@ export class SplitLayout {
       // Path must be TabWidget only.
       const tabWidgetInfo = path[0];
       if (tabWidgetInfo.type === "tabwidget") {
-        
-        // Create a new TabWidget
-        const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
-        newTabWidget.setShowFrame(false);
-        const newTabWidgetInfo: TabWidgetInfoNode = {
-          type: "tabwidget",
-          children: [],
-          tabWidget: newTabWidget,
-          emptyTab: null,
-          emptyTabContent: null,
-          emptyContainer: null,
-          leftSpaceDefaultElement: null,
-          rightSpaceDefaultElement: null
-        };
-
-        // Insert a Splitter at the root.
-        const newRoot: SplitterInfoNode = {
-          type: "splitter",
-          children: [tabWidgetInfo, newTabWidgetInfo],
-          orientation: orientation,
-          splitter: null
-        };
-
+        const newRoot = this._splitAfterTabWidgetIntoSplitter(tabWidgetInfo, orientation);
         this._rootInfoNode = newRoot;
-        return newTabWidget;
+        return (<TabWidgetInfoNode> newRoot.children[1]).tabWidget;
       }
     } else {
 
       const splitterInfo = path[len-2];
       const tabWidgetInfo = path[len-1];
       if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
-
-          // Create a new TabWidget
-          const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
-          newTabWidget.setShowFrame(false);
-          const newTabWidgetInfo: TabWidgetInfoNode = {
-            type: "tabwidget",
-            children: [],
-            tabWidget: newTabWidget,
-            emptyTab: null,
-            emptyTabContent: null,
-            emptyContainer: null,
-            leftSpaceDefaultElement: null,
-            rightSpaceDefaultElement: null
-          };
-
         if (splitterInfo.orientation === orientation) {
+          const newTabWidgetInfo = this._createTabWidgetInfo([]);
           splitterInfo.children.splice(splitterInfo.children.indexOf(tabWidgetInfo)+1,0, newTabWidgetInfo);
+          return newTabWidgetInfo.tabWidget;
         } else {
 
-          const newSplitter: SplitterInfoNode = {
-            type: "splitter",
-            children: [tabWidgetInfo, newTabWidgetInfo],
-            orientation: orientation,
-            splitter: null
-          };
-
+          const newSplitter = this._splitAfterTabWidgetIntoSplitter(tabWidgetInfo, orientation);
           const tabWidgetInfoIndex = splitterInfo.children.indexOf(tabWidgetInfo);
           splitterInfo.children.splice(tabWidgetInfoIndex, 1, newSplitter);
+          return (<TabWidgetInfoNode> newSplitter.children[1]).tabWidget;
         }
-        return newTabWidget;
       }
     }
     return null;
@@ -376,7 +335,7 @@ export class SplitLayout {
       const tabWidgetInfo = path[0];
       const tabInfo = path[1];
       if (tabWidgetInfo.type === "tabwidget" && tabInfo.type === "tabinfo") {
-        const newSplitterNode = this._splitTabWidgetAtTabContent(tabWidgetInfo, tabContent, orientation);
+        const newSplitterNode = this._splitTabWidgetAtTabContentIntoSplitter(tabWidgetInfo, tabContent, orientation);
         this._rootInfoNode = newSplitterNode;
         return (<TabWidgetInfoNode> newSplitterNode.children[1]).tabWidget;
       } else {
@@ -399,30 +358,13 @@ export class SplitLayout {
 
           if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
             if (splitterInfo.orientation === orientation) {
-              const splitIndex = tabWidgetInfo.children.map(c => c.content).indexOf(tabContent) + 1;
-
-              // Create a new TabWidget
-              const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
-              newTabWidget.setShowFrame(false);
-              const newTabWidgetInfo: TabWidgetInfoNode = {
-                type: "tabwidget",
-                children: tabWidgetInfo.children.slice(splitIndex),
-                tabWidget: newTabWidget,
-                emptyTab: null,
-                emptyTabContent: null,
-                emptyContainer: null,
-                leftSpaceDefaultElement: null,
-                rightSpaceDefaultElement: null
-              };
-
-              tabWidgetInfo.children = tabWidgetInfo.children.slice(0, splitIndex);
-
+              const newTabWidgetInfo = this._splitTabWidgetAtTabContent(tabWidgetInfo, tabContent)[1];
               const tabWidgetIndex = splitterInfo.children.indexOf(tabWidgetInfo);
               splitterInfo.children.splice(tabWidgetIndex+1,0, newTabWidgetInfo);          
-              return newTabWidget;
+              return newTabWidgetInfo.tabWidget;
             } else {
               // Different orientation needed
-              const newSplitterNode = this._splitTabWidgetAtTabContent(tabWidgetInfo, tabContent, orientation);
+              const newSplitterNode = this._splitTabWidgetAtTabContentIntoSplitter(tabWidgetInfo, tabContent, orientation);
               splitterInfo.children.splice(splitterInfo.children.indexOf(tabWidgetInfo), 1, newSplitterNode);
               return (<TabWidgetInfoNode> newSplitterNode.children[1]).tabWidget;
             }
@@ -441,26 +383,34 @@ export class SplitLayout {
     return null;
   }
 
-  private _splitTabWidgetAtTabContent(tabWidgetInfo: TabWidgetInfoNode, tabContent: Element,
+  private _splitTabWidgetAtTabContentIntoSplitter(tabWidgetInfo: TabWidgetInfoNode, tabContent: Element,
       orientation: SplitOrientation): SplitterInfoNode {
 
-    const splitIndex = tabWidgetInfo.children.map(c => c.content).indexOf(tabContent) + 1;
+    const tabWidgetPair = this._splitTabWidgetAtTabContent(tabWidgetInfo, tabContent);
 
-    // Create a new TabWidget
-    const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
-    newTabWidget.setShowFrame(false);
-    const newTabWidgetInfo: TabWidgetInfoNode = {
-      type: "tabwidget",
-      children: tabWidgetInfo.children.slice(splitIndex),
-      tabWidget: newTabWidget,
-      emptyTab: null,
-      emptyTabContent: null,
-      emptyContainer: null,
-      leftSpaceDefaultElement: null,
-      rightSpaceDefaultElement: null
+    // Insert a Splitter at the root.
+    const newRoot: SplitterInfoNode = {
+      type: "splitter",
+      children: tabWidgetPair,
+      orientation: orientation,
+      splitter: null
     };
 
+    return newRoot;
+  }
+
+  private _splitTabWidgetAtTabContent(tabWidgetInfo: TabWidgetInfoNode, tabContent: Element):
+      [TabWidgetInfoNode, TabWidgetInfoNode] {
+
+    const splitIndex = tabWidgetInfo.children.map(c => c.content).indexOf(tabContent) + 1;
+    const newTabWidgetInfo = this._createTabWidgetInfo(tabWidgetInfo.children.slice(splitIndex));
+
     tabWidgetInfo.children = tabWidgetInfo.children.slice(0, splitIndex);
+    return [tabWidgetInfo, newTabWidgetInfo];
+  }
+
+  private _splitAfterTabWidgetIntoSplitter(tabWidgetInfo: TabWidgetInfoNode, orientation: SplitOrientation): SplitterInfoNode {
+    const newTabWidgetInfo = this._createTabWidgetInfo([]);
 
     // Insert a Splitter at the root.
     const newRoot: SplitterInfoNode = {
@@ -469,8 +419,24 @@ export class SplitLayout {
       orientation: orientation,
       splitter: null
     };
-
     return newRoot;
+  }
+
+  private _createTabWidgetInfo(children: TabInfo[]): TabWidgetInfoNode {
+    // Create a new TabWidget
+    const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+    newTabWidget.setShowFrame(false);
+    const newTabWidgetInfo: TabWidgetInfoNode = {
+      type: "tabwidget",
+      children: children,
+      tabWidget: newTabWidget,
+      emptyTab: null,
+      emptyTabContent: null,
+      emptyContainer: null,
+      leftSpaceDefaultElement: null,
+      rightSpaceDefaultElement: null
+    };
+    return newTabWidgetInfo;
   }
 
   closeSplitAtTabContent(tabContent: Element): void {
