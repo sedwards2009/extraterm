@@ -9,7 +9,9 @@ $divider-width: 4px;
 
 #ID_TOP {
   position: relative;
-
+  overflow: hidden;
+  contain: strict;
+  
   height: 100%;
 }
 
@@ -39,6 +41,7 @@ $divider-width: 4px;
 
 .CLASS_PANE {
   position: absolute;
+  overflow: hidden;
 
   #ID_TOP.CLASS_HORIZONTAL & {
     left: 0px;
