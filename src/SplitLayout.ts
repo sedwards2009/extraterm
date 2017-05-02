@@ -57,6 +57,13 @@ enum RelativePosition {
   OTHER
 }
 
+interface TabWidgetPosition extends ClientRect {
+  tabWidgetInfo: TabWidgetInfoNode;
+}
+
+type Point2D = [number, number];
+type Matrix2D = [number, number, number, number];
+
 export class SplitLayout {
 
   private _log: Logger = new Logger("SplitLayout");
@@ -509,36 +516,70 @@ export class SplitLayout {
   }
 
   getTabWidgetToLeft(tabWidget: TabWidget): TabWidget {
-    return this._getTabWidgetSibling(tabWidget, -1);
+    return this._getTabWidgetInDirection(tabWidget, [-1,0,0,1]);
   }
 
   getTabWidgetToRight(tabWidget: TabWidget): TabWidget {
-    return this._getTabWidgetSibling(tabWidget, 1);
+    return this._getTabWidgetInDirection(tabWidget, [1,0,0,1]);
   }
 
-  private _getTabWidgetSibling(tabWidget: TabWidget, direction: 1 | -1) : TabWidget {
-    const path = findPathToTabWidget(this._rootInfoNode, tabWidget);
-    if (path == null) {
-      this._log.severe("Unable to find the info for tab widget ", tabWidget);
-      return null;
-    }
-    const len = path.length;
-    if (len >=2 ) {
-      const tabWidgetInfo = path[len-1];
-      const splitterInfo = path[len-2];
+  getTabWidgetAbove(tabWidget: TabWidget): TabWidget {
+    return this._getTabWidgetInDirection(tabWidget, [0,1,-1,0]);
+  }
 
-      if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
-        const index = splitterInfo.children.indexOf(tabWidgetInfo) + direction;
-        if (index >= 0 && index < splitterInfo.children.length) {
-          const sibling = splitterInfo.children[index];
-          if (sibling.type === "tabwidget") {
-            return sibling.tabWidget;
-          }
-        }
+  getTabWidgetBelow(tabWidget: TabWidget): TabWidget {
+    return this._getTabWidgetInDirection(tabWidget, [0,-1,1,0]);
+  }
+
+  private _getTabWidgetInDirection(tabWidget: TabWidget, transformMatrix: Matrix2D): TabWidget {
+    const rawPositions = getPanePositions(this._rootInfoNode);
+    const positions = rawPositions.map(pos => transformTabWidgetPosition(pos, transformMatrix));
+
+    const startPosition = positions.filter(pos => pos.tabWidgetInfo.tabWidget === tabWidget)[0];
+    const startCenterX = (startPosition.left + startPosition.right) / 2;
+    const startCenterY = (startPosition.top + startPosition.bottom) / 2;
+
+    const hitPositions = positions.filter(pos => {
+      return pos.left > startCenterX && pos.bottom > startCenterY && pos.top <= startCenterY;
+    });
+
+    hitPositions.sort( (a,b) => {
+      if (a.left < b.left) {
+        return -1;
       }
+      return a.left === b.left ? 0 : 1;
+    });
+
+    if (hitPositions.length !== 0) {
+      return hitPositions[0].tabWidgetInfo.tabWidget;
+    } else {
+      return tabWidget;
     }
-    return null;
   }
+
+  // private _getTabWidgetSibling(tabWidget: TabWidget, direction: 1 | -1) : TabWidget {
+  //   const path = findPathToTabWidget(this._rootInfoNode, tabWidget);
+  //   if (path == null) {
+  //     this._log.severe("Unable to find the info for tab widget ", tabWidget);
+  //     return null;
+  //   }
+  //   const len = path.length;
+  //   if (len >=2 ) {
+  //     const tabWidgetInfo = path[len-1];
+  //     const splitterInfo = path[len-2];
+
+  //     if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
+  //       const index = splitterInfo.children.indexOf(tabWidgetInfo) + direction;
+  //       if (index >= 0 && index < splitterInfo.children.length) {
+  //         const sibling = splitterInfo.children[index];
+  //         if (sibling.type === "tabwidget") {
+  //           return sibling.tabWidget;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   return null;
+  // }
 
   /**
    * Update the DOM to match the desired new state.
@@ -828,4 +869,95 @@ function getAllTabContents(infoNode: RootInfoNode): Element[] {
   } else {
     return infoNode.children.map(kidInfo => kidInfo.content);
   }
+}
+
+function getPanePositions(rootNode: RootInfoNode): TabWidgetPosition[] {
+  if (rootNode.type === "tabwidget") {
+    const bounds = rootNode.tabWidget.getBoundingClientRect();
+    return [{
+      tabWidgetInfo: rootNode,
+      top: bounds.top,
+      bottom: bounds.bottom,
+      left: bounds.left,
+      right: bounds.right,
+      width: bounds.width,
+      height: bounds.height,
+    }];
+  } else {
+    const bounds = rootNode.splitter.getBoundingClientRect();
+    return getSplitterPanePositions(rootNode, bounds);
+  }
+}
+
+function getSplitterPanePositions(splitterNode: SplitterInfoNode, bounds: ClientRect): TabWidgetPosition[] {
+  let result: TabWidgetPosition[] = [];
+
+  const splitter = splitterNode.splitter;
+  const dividerSize = splitter.getDividerSize();
+  const sizes = splitter.getPaneSizes();
+
+  let edgePosition = 0;
+  for (let i=0; i<splitterNode.children.length; i++) {
+    const size = sizes[i] + (i !== splitterNode.children.length-1 ? dividerSize : 0);
+
+    let childBounds: TabWidgetPosition;
+    if (splitterNode.orientation === SplitOrientation.VERTICAL) {
+      childBounds = {
+        top: bounds.top,
+        bottom: bounds.bottom,
+        height: bounds.height,
+        left: bounds.left + edgePosition,
+        right: bounds.left + edgePosition + size,
+        width: size,
+        tabWidgetInfo: null
+      };
+    } else {
+      childBounds = {
+        left: bounds.left,
+        right: bounds.right,
+        width: bounds.width,
+
+        top: bounds.top + edgePosition,
+        bottom: bounds.top + edgePosition + size,
+        height: size,
+        tabWidgetInfo: null
+      };
+    }
+
+    const childInfo = splitterNode.children[i];
+    if (childInfo.type === "splitter") {
+      result = [...result, ...getSplitterPanePositions(childInfo, childBounds)];
+    } else {
+      childBounds.tabWidgetInfo = childInfo;
+      result.push(childBounds);
+    }
+    edgePosition += size;
+  }
+
+  return result;
+}
+
+function transformTabWidgetPosition(position: TabWidgetPosition, matrix: Matrix2D): TabWidgetPosition {
+  const topLeft = transform2dPoint([position.left, position.top], matrix);
+  const bottomRight = transform2dPoint([position.right, position.bottom], matrix);
+  const left = Math.min(topLeft[0], bottomRight[0]);
+  const top = Math.min(topLeft[1], bottomRight[1]);
+  const bottom = Math.max(topLeft[1], bottomRight[1]);
+  const right = Math.max(topLeft[0], bottomRight[0]);
+
+  return {
+    left,
+    top,
+    bottom,
+    right,
+    width: right-left,
+    height: bottom-top,
+    tabWidgetInfo: position.tabWidgetInfo
+  };
+}
+
+function transform2dPoint(point: Point2D, matrix: Matrix2D): Point2D {
+  const x = point[0] * matrix[0] + point[1] * matrix[2];
+  const y = point[0] * matrix[1] + point[1] * matrix[3];
+  return [x ,y];
 }

@@ -8,8 +8,8 @@
     "Ctrl-Tab": "selectOtherPane",
     "Ctrl-Shift-<": "selectPaneLeft",
     "Ctrl-Shift->": "selectPaneRight",
-    "Ctrl-Shift-:": "selectPaneUp",
-    "Ctrl-Shift-?": "selectPaneDown"
+    "Ctrl-Shift-:": "selectPaneAbove",
+    "Ctrl-Shift-?": "selectPaneBelow"
   },
   "terminal-default-mode": {
     "Ctrl-Shift-Space": "enterCursorMode",

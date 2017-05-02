@@ -7,8 +7,8 @@
     "Ctrl-Shift-Q": "closeTab",
     "Ctrl-Shift-<": "selectPaneLeft",
     "Ctrl-Shift->": "selectPaneRight",
-    "Ctrl-Shift-:": "selectPaneUp",
-    "Ctrl-Shift-?": "selectPaneDown",
+    "Ctrl-Shift-:": "selectPaneAbove",
+    "Ctrl-Shift-?": "selectPaneBelow",
     "Ctrl-Shift-S": "toggleSplit"
   },
   "terminal-default-mode": {

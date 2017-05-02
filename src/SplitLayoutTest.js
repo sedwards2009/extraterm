@@ -125,16 +125,46 @@ class FakeSplitter extends FakeElement {
     super("Splitter " + splitterCounter);
     splitterCounter++;
     this._orientation = SplitOrientation.VERTICAL;
+
+    this._dividerSize = 4;
+    this._width = 100;
+    this._height = 200;
+  }
+
+  getDividerSize() {
+    return this._dividerSize;
   }
 
   setSplitOrientation(orientation) {
     this._orientation = orientation;
   }
 
+  getPaneSizes() {
+    const equalSize = ((this._orientation === SplitOrientation.VERTICAL ? this._width : this._height)
+      - (this.children.length-1) * this._dividerSize) / this.children.length;
+
+    let result = [];
+    for (let i=0; i<this.children.length; i++) {
+      result.push(equalSize);
+    }
+    return result;
+  }
+
   _toFlatObject() {
     const flat = super._toFlatObject();
     flat.orientation = this._orientation;
     return flat;
+  }
+
+  getBoundingClientRect() {
+    return {
+      left: 100,
+      right: 100 + this._width,
+      width: this._width,
+      top: 300,
+      bottom: 300 + this._height,
+      height:  + this._height
+    };
   }
 }
 
@@ -928,3 +958,51 @@ function testNestedSplits(test) {
   test.done();
 }
 exports.testCloseMixSplitestNestedSplits = testNestedSplits;
+
+
+function testNavigation(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+
+  const tab1 = new FakeTab();
+  const tabContents1 = new FakeDiv("tabContents1");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab1, tabContents1);
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv("tabContents2");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+
+  const tab3 = new FakeTab();
+  const tabContents3 = new FakeDiv("tabContents3");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
+
+  const tab4 = new FakeTab();
+  const tabContents4 = new FakeDiv("tabContents4");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab4, tabContents4);
+
+  splitLayout.splitAfterTabContent(tabContents2, SplitOrientation.VERTICAL);
+  splitLayout.splitAfterTabContent(tabContents3, SplitOrientation.HORIZONTAL);
+  splitLayout.splitAfterTabContent(tabContents1, SplitOrientation.HORIZONTAL);
+  splitLayout.update();
+
+  const tabWidget1 = splitLayout.getTabWidgetByTabContent(tabContents1);
+  const tabWidget2 = splitLayout.getTabWidgetByTabContent(tabContents2);
+  const tabWidget3 = splitLayout.getTabWidgetByTabContent(tabContents3);
+  const tabWidget4 = splitLayout.getTabWidgetByTabContent(tabContents4);
+
+// console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
+// console.log(JSON.stringify(container._toFlatObject(), null, 2));
+
+  test.equal(splitLayout.getTabWidgetBelow(tabWidget1).name, tabWidget2.name);
+  test.equal(splitLayout.getTabWidgetAbove(tabWidget2).name, tabWidget1.name);
+  test.equal(splitLayout.getTabWidgetBelow(tabWidget3).name, tabWidget4.name);
+  test.equal(splitLayout.getTabWidgetAbove(tabWidget4).name, tabWidget3.name);
+
+  test.done();
+}
+exports.testNavigation = testNavigation;

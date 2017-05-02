@@ -117,6 +117,18 @@ export class Splitter extends ThemeableElementBase {
     }
   }
 
+  getDividerSize(): number {
+    return DIVIDER_SIZE;
+  }
+
+  getPaneSizes(): number[] {
+    const result: number[] = [];
+    for (let i=0; i<this._paneSizes.length(); i++) {
+      result.push(this._paneSizes.get(i));
+    }
+    return result;
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         

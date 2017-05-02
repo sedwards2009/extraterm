@@ -85,8 +85,8 @@ const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
 const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
 const COMMAND_SELECT_PANE_LEFT = "selectPaneLeft";
 const COMMAND_SELECT_PANE_RIGHT = "selectPaneRight";
-const COMMAND_SELECT_PANE_UP = "selectPaneUp";
-const COMMAND_SELECT_PANE_DOWN = "selectPaneDown";
+const COMMAND_SELECT_PANE_ABOVE = "selectPaneAbove";
+const COMMAND_SELECT_PANE_BELOW = "selectPaneBelow";
 const COMMAND_NEW_TERMINAL = "newTerminal";
 const COMMAND_CLOSE_TAB = "closeTab";
 const COMMAND_HORIZONTAL_SPLIT = "horizontalSplit";
@@ -729,31 +729,34 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _selectPaneLeft(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
-    const leftTabWidget = this._splitLayout.getTabWidgetToLeft(currentTabWidget);
-    if (leftTabWidget != null) {
-      leftTabWidget.focus();
-      const content = this._splitLayout.getTabContentByTab(leftTabWidget.getSelectedTab());
-      if (elementSupportsFocus(content)) {
-        content.focus();
-        return { tabWidget: leftTabWidget, tabContent: content };
-      }
-      return { tabWidget: leftTabWidget, tabContent: null };
-    }
-    return { tabWidget: null, tabContent: null };
+    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
   }
 
   private _selectPaneRight(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
+  }
+
+  private _selectPaneAbove(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
+  }
+
+  private _selectPaneBelow(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
+  }
+
+  private _selectPaneInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget):
+      { tabWidget: TabWidget, tabContent: Element} {
+
     const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
-    const rightTabWidget = this._splitLayout.getTabWidgetToRight(currentTabWidget);
-    if (rightTabWidget != null) {
-      rightTabWidget.focus();
-      const content = this._splitLayout.getTabContentByTab(rightTabWidget.getSelectedTab());
+    const targetTabWidget = directionFunc.call(this._splitLayout, currentTabWidget);
+    if (targetTabWidget != null) {
+      targetTabWidget.focus();
+      const content = this._splitLayout.getTabContentByTab(targetTabWidget.getSelectedTab());
       if (elementSupportsFocus(content)) {
         content.focus();
-        return { tabWidget: rightTabWidget, tabContent: content };
+        return { tabWidget: targetTabWidget, tabContent: content };
       }
-      return { tabWidget: rightTabWidget, tabContent: null };
+      return { tabWidget: targetTabWidget, tabContent: null };
     }
     return { tabWidget: null, tabContent: null };
   }
@@ -1004,6 +1007,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
       { id: COMMAND_SELECT_PANE_LEFT, group: PALETTE_GROUP, label: " Select pane left", target: target },
       { id: COMMAND_SELECT_PANE_RIGHT, group: PALETTE_GROUP, label: " Select pane right", target: target },
+      { id: COMMAND_SELECT_PANE_ABOVE, group: PALETTE_GROUP, label: " Select pane above", target: target },
+      { id: COMMAND_SELECT_PANE_BELOW, group: PALETTE_GROUP, label: " Select pane below", target: target },
 
       { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, label: "Horizontal Split", target: target },
       { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target },
@@ -1045,6 +1050,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
       case COMMAND_SELECT_PANE_RIGHT:
         this._selectPaneRight(tabElement);
+        break;
+
+      case COMMAND_SELECT_PANE_ABOVE:
+        this._selectPaneAbove(tabElement);
+        break;
+
+      case COMMAND_SELECT_PANE_BELOW:
+        this._selectPaneBelow(tabElement);
         break;
 
       case COMMAND_NEW_TERMINAL:
