@@ -604,7 +604,7 @@ class PaneSizes {
         tempPanes.push(newPanes[i]);
       }
     }
-    return new PaneSizes(newPaneSizes, newPanes);
+    return new PaneSizes(newPaneSizes, tempPanes);
   }
   
 }
