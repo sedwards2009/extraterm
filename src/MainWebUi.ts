@@ -824,6 +824,12 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       focusInfo = this._selectPaneLeft(tabContentElement);
       if (focusInfo.tabWidget == null) {
         focusInfo = this._selectPaneRight(tabContentElement);
+        if (focusInfo.tabWidget == null) {
+          focusInfo = this._selectPaneAbove(tabContentElement);
+          if (focusInfo.tabWidget == null) {
+            focusInfo = this._selectPaneBelow(tabContentElement);
+          }
+        }
       }
     }
 

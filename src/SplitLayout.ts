@@ -553,7 +553,7 @@ export class SplitLayout {
     if (hitPositions.length !== 0) {
       return hitPositions[0].tabWidgetInfo.tabWidget;
     } else {
-      return tabWidget;
+      return null;
     }
   }
 
