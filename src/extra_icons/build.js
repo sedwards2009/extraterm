@@ -19,13 +19,14 @@ const fs = require('fs');
 function main() {
   webfont({
     files: [
-      'src/extra_icons/maximize.svg',
-      'src/extra_icons/minimize.svg',
-      'src/extra_icons/osx_close.svg',
-      'src/extra_icons/osx_maximize.svg',
-      'src/extra_icons/osx_minimize.svg',
-      'src/extra_icons/triangle_down.svg',
-      'src/extra_icons/triangle_up.svg'
+      'src/extra_icons/1_maximize.svg',
+      'src/extra_icons/2_minimize.svg',
+      'src/extra_icons/3_osx_close.svg',
+      'src/extra_icons/4_osx_maximize.svg',
+      'src/extra_icons/5_osx_minimize.svg',
+      'src/extra_icons/6_triangle_down.svg',
+      'src/extra_icons/7_triangle_up.svg',
+      'src/extra_icons/8_rows.svg'
     ],
     fontName: 'extraicons',
     formats: ['ttf']
