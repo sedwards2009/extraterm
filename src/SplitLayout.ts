@@ -479,19 +479,35 @@ export class SplitLayout {
         index = splitterInfo.children.length-2;
       }
 
-      const leftTabWidgetInfo = splitterInfo.children[index];
-      const rightTabWidgetInfo = splitterInfo.children[index+1];
-      if (leftTabWidgetInfo.type === "tabwidget" && rightTabWidgetInfo.type === "tabwidget") {
-        leftTabWidgetInfo.children = [...leftTabWidgetInfo.children, ...rightTabWidgetInfo.children];
-        splitterInfo.children = splitterInfo.children.filter( kid => kid !== rightTabWidgetInfo);
+      const leftInfo = splitterInfo.children[index];
+      const rightInfo = splitterInfo.children[index+1];
+      if (leftInfo.type === "tabwidget" && rightInfo.type === "tabwidget") {
+        leftInfo.children = [...leftInfo.children, ...rightInfo.children];
+        splitterInfo.children = splitterInfo.children.filter( kid => kid !== rightInfo);
 
         this._removeRedundantSplitters();
+      } else {
+        // It is a mix of tab widgets and splitters.
+        if (leftInfo.type === "tabwidget" && rightInfo.type === "splitter") {
+          this._closeTabWidgetSplitterSplit(splitterInfo, leftInfo, rightInfo);
+        } else if (leftInfo.type === "splitter" && rightInfo.type === "tabwidget") {
+          this._closeTabWidgetSplitterSplit(splitterInfo, rightInfo, leftInfo);
+        }
       }
     }
-
   }
 
-  _removeRedundantSplitters(): void {
+  private _closeTabWidgetSplitterSplit(parentSplitterInfo: SplitterInfoNode, tabWidgetInfo: TabWidgetInfoNode,
+      splitterInfo: SplitterInfoNode): void {
+
+    const destinationTabWidgetInfo = firstTabWidgetInfo(splitterInfo);
+    destinationTabWidgetInfo.children = [...destinationTabWidgetInfo.children, ...tabWidgetInfo.children];
+
+    parentSplitterInfo.children = parentSplitterInfo.children.filter( kid => kid !== tabWidgetInfo);
+    this._removeRedundantSplitters();
+  }
+
+  private _removeRedundantSplitters(): void {
     if (this._rootInfoNode.type === "splitter") {
       if (this._rootInfoNode.children.length === 1) {
         this._rootInfoNode = this._rootInfoNode.children[0];
@@ -756,13 +772,18 @@ function removeAllChildrenExceptOne(container: Element, chosenOne: Element): voi
 }
 
 function firstTabWidget(infoNode: RootInfoNode): TabWidget {
+  const tabWidgetInfo = firstTabWidgetInfo(infoNode);
+  return tabWidgetInfo == null ? null : tabWidgetInfo.tabWidget;
+}
+
+function firstTabWidgetInfo(infoNode: RootInfoNode): TabWidgetInfoNode {
   if (infoNode.type === "tabwidget") {
-    return infoNode.tabWidget;
+    return infoNode;
   } else {
     for (const kidInfo of infoNode.children) {
-      const tabWidget = firstTabWidget(kidInfo);
-      if (tabWidget != null) {
-        return tabWidget;
+      const tabWidgetInfo = firstTabWidgetInfo(kidInfo);
+      if (tabWidgetInfo != null) {
+        return tabWidgetInfo;
       }
     }
     return null;

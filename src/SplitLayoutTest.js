@@ -1006,3 +1006,49 @@ function testNavigation(test) {
   test.done();
 }
 exports.testNavigation = testNavigation;
+
+function testClose3MixSplit(test) {
+  const splitLayout = new SplitLayout();
+  const container = new FakeElement("Root");
+  splitLayout.setRootContainer(container);
+  splitLayout.setTabContainerFactory(
+    (tabWidget, tab, tabContent) => {
+      return new FakeDiv();
+    });
+
+  const tab1 = new FakeTab();
+  const tabContents1 = new FakeDiv("tabContents1");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab1, tabContents1);
+
+  const tab2 = new FakeTab();
+  const tabContents2 = new FakeDiv("tabContents2");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
+
+
+  const tab3 = new FakeTab();
+  const tabContents3 = new FakeDiv("tabContents3");
+  splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
+
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents2, SplitOrientation.VERTICAL);
+  splitLayout.update();
+
+  splitLayout.splitAfterTabContent(tabContents1, SplitOrientation.HORIZONTAL);
+  splitLayout.update();
+
+  splitLayout.closeSplitAtTabContent(tabContents3);
+  splitLayout.update();
+
+// console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
+// console.log(JSON.stringify(container._toFlatObject(), null, 2));
+
+  test.equal(container.children.length, 1);
+  test.ok(container.children.item(0).name.startsWith("Splitter"));
+  test.equal(container.children.item(0).children.length, 2);
+  test.equal(container.children.item(0).children.item(0).children.length, 4);
+  test.equal(container.children.item(0).children.item(1).children.length, 2);
+
+  test.done();
+}
+exports.testClose3MixSplit = testClose3MixSplit;
