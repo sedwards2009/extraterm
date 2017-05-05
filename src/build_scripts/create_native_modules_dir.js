@@ -81,7 +81,8 @@ Exiting.
     exec("npm config set msvs_version 2015");
     exec(path.join(__dirname, "rebuild_mods_windows.bat"));
   } else {
-    exec("node node_modules/electron-rebuild/lib/cli.js -f");
+    exec("node node_modules/electron-rebuild/lib/cli.js -s -f -v " + getPackageVersion(packageData, "electron") +
+      " -t prod,optional,dev");
   }
   
   // Rebuilding pty.js on OSX doesn't seem to work correctly. The normal
@@ -92,7 +93,8 @@ Exiting.
 
   exec("npm uninstall electron-rebuild");
   exec("npm uninstall electron");
-  
+  exec("npm prune");
+
   cd(currentDir);
   mv(path.join(BUILD_DIR, "node_modules"), target);
   

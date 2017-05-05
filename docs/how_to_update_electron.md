@@ -57,7 +57,7 @@ Updating the native modules in `src/build_scripts`
 This has to be done on each of the supported platforms.
 
 * `cd src/build_scripts`
-* `git rm node_modules-linux-x64`  -- remove the module directory which matches your platform.
+* `git rm -r node_modules-linux-x64`  -- remove the module directory which matches your platform.
 * `node create_native_modules_dir.js`
 * `git add node_modules-linux-x64`
 * Commit the newly update modules to git.
