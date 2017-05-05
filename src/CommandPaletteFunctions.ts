@@ -52,5 +52,9 @@ function commandPaletteFormatEntry(entry: CommandPaletteTypes.CommandEntry, sele
 }
 
 function commandPaletteFormatIcon(iconName?: string): string {
-  return `<i class='fa fa-fw ${iconName !== undefined && iconName !== null ? "fa-" + iconName : ""}'></i>`;
+  if (iconName != null && iconName.startsWith('extraicon-')) {
+    return `<span class='fa fa-fw CLASS_EXTRAICON'>&${iconName.substr('extraicon-'.length)};</span>`;
+  } else {
+    return `<i class='fa fa-fw ${iconName !== undefined && iconName !== null ? "fa-" + iconName : ""}'></i>`;
+  }
 }

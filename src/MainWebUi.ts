@@ -275,7 +275,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
       const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
         { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", target: null },
-        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, label: "Horizontal Split", target: null },        
+        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", target: null },        
         { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: null },
         { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", target: null }
       ];
@@ -1016,7 +1016,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       { id: COMMAND_SELECT_PANE_ABOVE, group: PALETTE_GROUP, label: " Select pane above", target: target },
       { id: COMMAND_SELECT_PANE_BELOW, group: PALETTE_GROUP, label: " Select pane below", target: target },
 
-      { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, label: "Horizontal Split", target: target },
+      { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", target: target },
       { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target },
     ];
 // FIXME

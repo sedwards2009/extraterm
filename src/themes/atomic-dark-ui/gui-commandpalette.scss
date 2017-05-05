@@ -4,6 +4,7 @@
 
 /* Command Palette */
 @import "bootstrap/variables";
+@import "extraicons-fontface";
 
 .CLASS_RESULT_ENTRY {
   &.CLASS_RESULT_GROUP_HEAD {
@@ -27,3 +28,6 @@
   flex: auto 0 0;
 }
 
+span.fa.fa-fw.CLASS_EXTRAICON {
+  font-family: 'extraicons';
+}
