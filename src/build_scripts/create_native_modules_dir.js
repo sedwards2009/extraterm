@@ -84,12 +84,6 @@ Exiting.
     exec("node node_modules/electron-rebuild/lib/cli.js -s -f -v " + getPackageVersion(packageData, "electron") +
       " -t prod,optional,dev");
   }
-  
-  // Rebuilding pty.js on OSX doesn't seem to work correctly. The normal
-  // installed build does though. Grab it.
-  // if (process.platform === 'darwin') {
-  //   exec("npm install --save pty.js@" + getPackageVersion(packageData, "pty.js"));    
-  // }
 
   exec("npm uninstall electron-rebuild");
   exec("npm uninstall electron");
