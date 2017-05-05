@@ -7,16 +7,12 @@
 import * as fs from 'fs';
 import * as Util from './gui/Util';
 import * as VirtualScrollArea from './VirtualScrollArea';
-import * as ViewerElementTypes from './ViewerElementTypes';
+import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import * as BulkDomOperation from './BulkDomOperation';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
-type Mode = ViewerElementTypes.Mode;
-type VisualState = ViewerElementTypes.VisualState;
-type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable {
   
@@ -70,21 +66,20 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   setFocusable(value: boolean) {
   }
   
-  abstract getVisualState(): VisualState;
+  getVisualState(): VisualState {
+    return VisualState.AUTO;
+  }
 
   setVisualState(state: VisualState): void {
-    BulkDomOperation.execute(this.bulkSetVisualState(state));
+    
   }
 
-  abstract bulkSetVisualState(state: VisualState): BulkDomOperation.BulkDOMOperation;
-  
-  abstract getMode(): Mode;
+  getMode(): Mode {
+    return Mode.DEFAULT;
+  }
   
   setMode(mode: Mode): void {
-    BulkDomOperation.execute(this.bulkSetMode(mode));
   }
-
-  abstract bulkSetMode(mode: Mode): BulkDomOperation.BulkDOMOperation;
 
   getText(): string {
     return null;
@@ -123,12 +118,10 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
+  setDimensionsAndScroll(setterState: SetterState): void {
   }
 
-  bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
+  markVisible(visible: boolean): void {
   }
 
   getCursorPosition(): CursorMoveDetail {

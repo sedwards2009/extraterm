@@ -99,6 +99,9 @@ function start() {
       cssMapping.set(key, style[key]);
     }
 
+    const splitterEl = document.getElementById("splitter");
+    splitterEl.setSplitOrientation(SplitterModule.SplitOrientation.HORIZONTAL);
+
     const contentDiv = document.getElementById("content");
     contentDiv.appendChild(makeTabBar());
   });

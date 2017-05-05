@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as VirtualScrollArea from './VirtualScrollArea';
-import * as BulkDomOperation from './BulkDomOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -82,11 +81,9 @@ export class CommandPlaceHolder extends HTMLElement implements VirtualScrollable
     return 0;
   }
   
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
+  setDimensionsAndScroll(setterState: SetterState): void {
   }
 
-  bulkVisible(visible: boolean): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
+  markVisible(visible: boolean): void {
   }
 }

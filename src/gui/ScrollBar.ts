@@ -7,7 +7,6 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
-import * as BulkDomOperation from '../BulkDomOperation';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import Logger from '../Logger';
 import log from '../LogDecorator';
@@ -245,14 +244,7 @@ export class ScrollBar extends ThemeableElementBase {
     return 7734;  // FIXME bogus.
   }
 
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: ScrollBar): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      // --- DOM Write ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      this._updatePositionNumber(this._position);
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)());
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    this._updatePositionNumber(this._position);
   }
 }

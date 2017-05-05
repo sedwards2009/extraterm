@@ -27,7 +27,6 @@ import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
-import * as BulkDomOperation from '../BulkDomOperation';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -112,22 +111,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
     this._tipIndex = 0;
   }
 
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.DEFAULT;
-  }
-
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
-  }
-
-  bulkSetVisualState(state: VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
   //-----------------------------------------------------------------------
   //
   // ######                                
@@ -192,12 +175,11 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
+  setDimensionsAndScroll(setterState: SetterState): void {
     if (DEBUG_SIZE) {
       this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
         setterState.yOffset, setterState.yOffsetChanged);
     }
-    return BulkDomOperation.nullOperation();
   }
 
   // VirtualScrollable
@@ -304,8 +286,8 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
     return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
   }
   
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    return this._processRefresh(level);
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    this._processRefresh(level);
   }
 
   //-----------------------------------------------------------------------
@@ -369,7 +351,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
     this._substituteKeycaps(contentDiv);
     this._fixImgRelativeUrls(contentDiv);
     
-    BulkDomOperation.execute(this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE));
+    this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
   }
 
   private _substituteKeycaps(contentDiv: HTMLElement): void {
@@ -401,28 +383,15 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
     });
   }
 
-  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-
+  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     if (containerDiv !== null) {
+      // --- DOM Read ---
+      const rect = containerDiv.getBoundingClientRect();
+      this._height = rect.height;
 
-      const generator = function* generator(this: TipViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
-        // --- DOM Read ---
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
-
-        const rect = containerDiv.getBoundingClientRect();
-        this._height = rect.height;
-
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-        this._adjustHeight(this._height);
-        const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
-        return BulkDomOperation.GeneratorPhase.DONE;
-      };
-
-      return BulkDomOperation.fromGenerator(generator.bind(this)());
-    } else {
-      return BulkDomOperation.nullOperation();
+      this._adjustHeight(this._height);
+      VirtualScrollArea.emitResizeEvent(this);
     }
   }
 

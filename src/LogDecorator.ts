@@ -17,7 +17,7 @@ import Logger from './Logger';
 export default function log(target: Object, key: string, descriptor: any) {
   const originalMethod = descriptor.value; 
 
-  descriptor.value =  function (...args: any[]) {
+  descriptor.value =  function (this: any, ...args: any[]) {
       var formatArgs = args.map(repr).join(", ");
 
       if ("_log" in this) {

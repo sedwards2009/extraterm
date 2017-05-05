@@ -706,7 +706,7 @@ function scanKeyBindingFiles(keyBindingsDir: string): config_.KeyBindingInfo[] {
             _log.warn(`Unable to get 'name' from JSON file '${item}'`);
           }
         } catch(err) {
-          this._log.warn("Warning: Unable to read file ", infoPath, err);
+          _log.warn("Warning: Unable to read file ", infoPath, err);
         }
       }
     });

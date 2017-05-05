@@ -58,8 +58,8 @@
     "closeTab": "Close tab",
     "selectPaneLeft": "Focus the pane to the left",
     "selectPaneRight": "Focus the pane to the left",
-    "selectPaneUp": "Focus the pane above",
-    "selectPaneDown": "Focus the pane below",
+    "selectPaneAbove": "Focus the pane above",
+    "selectPaneBelow": "Focus the pane below",
     "toggleSplit": "Toggle split panes",
     "enterCursorMode": "Go to cursor mode",
     "enterNormalMode": "Go to normal mode",
@@ -78,6 +78,9 @@
     "increaseFontSize": "Increase font size",
     "resetFontSize": "Reset font size",
     "goDown": "Move down",
-    "goUp": "Move up"
+    "goUp": "Move up",
+    "closePane": "Close pane",
+    "horizontalSplit": "Horizontal split",
+    "verticalSplit": "Vertical split"
   }
 }

@@ -475,3 +475,27 @@ export function setElementChildren(el: Element, targetChildrenList: Element[]): 
     }
   }
 }
+
+/**
+ * Test if a node is in the DOM tree.
+ * 
+ * @param node the node to test
+ * @return true if the node is attached somewhere inside its DOM tree.
+ */
+export function isNodeInDom(node: Node): boolean {
+  let currentNode = node;
+  let nextNode = node;
+
+  while (true) {
+    currentNode = nextNode;
+    if (currentNode.parentNode != null) {
+      nextNode = currentNode.parentNode;
+    } else if (currentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE && (<ShadowRoot> currentNode).host != null) {
+      nextNode = (<ShadowRoot> currentNode).host;
+    } else {
+      break;
+    }
+  }
+
+  return currentNode.nodeType === Node.DOCUMENT_NODE;
+}

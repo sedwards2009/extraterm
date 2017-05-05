@@ -34,7 +34,7 @@ $FAIL_COLOR: #ff5454;
 
 #ID_CONTAINER {
   contain: content;
-  width: calc(100% - $TERMINAL_MARGIN_LEFT + $BLOCK_BORDER_LEFT - $TERMINAL_MARGIN_RIGHT + $BLOCK_BORDER_RIGHT);
+  width: calc(100% - #{$TERMINAL_MARGIN_LEFT + $BLOCK_BORDER_LEFT - $TERMINAL_MARGIN_RIGHT + $BLOCK_BORDER_RIGHT});
   height: 100%;
   box-sizing: border-box;
   

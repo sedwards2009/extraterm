@@ -3,8 +3,6 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as BulkDomOperation from './BulkDomOperation';
-import * as CodeMirrorOperation from './CodeMirrorOperation';
 import log from './LogDecorator';
 
 export enum RefreshLevel {
@@ -17,19 +15,16 @@ export enum RefreshLevel {
  */
 export class ResizeRefreshElementBase extends HTMLElement {
   
-  static bulkRefreshChildNodes(node: Node, level: RefreshLevel): BulkDomOperation.BulkDOMOperation {
+  static refreshChildNodes(node: Node, level: RefreshLevel): void {
     const kids = node.childNodes;
-    const operations: BulkDomOperation.BulkDOMOperation[] = [];
     for (let i=0; i<kids.length; i++) {
       const kid = kids[i];
       if (ResizeRefreshElementBase.is(kid)) {
-        operations.push(kid.bulkRefresh(level));
+        kid.refresh(level);
       } else {
-        operations.push(ResizeRefreshElementBase.bulkRefreshChildNodes(kid, level));
+        ResizeRefreshElementBase.refreshChildNodes(kid, level);
       }
     }
-
-    return BulkDomOperation.parallel(operations);
   }
   
   static is(node: Node): node is ResizeRefreshElementBase {
@@ -37,10 +32,6 @@ export class ResizeRefreshElementBase extends HTMLElement {
   }
 
   refresh(level: RefreshLevel): void {
-    BulkDomOperation.execute(this.bulkRefresh(level));
-  }
-
-  bulkRefresh(level: RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    return ResizeRefreshElementBase.bulkRefreshChildNodes(this, level);
+    ResizeRefreshElementBase.refreshChildNodes(this, level);
   }
 }

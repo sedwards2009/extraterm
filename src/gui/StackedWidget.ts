@@ -5,7 +5,6 @@
  */
 
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import * as BulkDomOperation from '../BulkDomOperation';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';

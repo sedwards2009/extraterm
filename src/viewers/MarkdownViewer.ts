@@ -8,7 +8,6 @@ import * as DomUtils from '../DomUtils';
 import * as markdownMod from 'markdown';
 const markdown = markdownMod.markdown;
 import * as ViewerElementTypes from '../ViewerElementTypes';
-import * as BulkDomOperation from '../BulkDomOperation';
 
 const ID = "EtMarkdownViewerTemplate";
 const ID_CONTAINER = "container";
@@ -70,22 +69,6 @@ class EtMarkdownViewer extends ViewerElement {
   setFocusable(value: boolean) {
     this._focusable = value;
     this._updateFocusable(value);
-  }
-
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.DEFAULT;
-  }
-
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
-  bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-  
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
   }
 
   createdCallback(): void {

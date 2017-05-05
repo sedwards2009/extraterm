@@ -20,7 +20,6 @@ import Logger from '../Logger';
 import log from '../LogDecorator';
 import * as GeneralEvents from '../GeneralEvents';
 import * as ViewerElementTypes from '../ViewerElementTypes';
-import * as BulkDomOperation from '../BulkDomOperation';
 
 type CommandLineAction = config.CommandLineAction;
 type FontInfo = config.FontInfo;
@@ -254,22 +253,6 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
     this._data.themeGUIOptions = getThemesByType('gui');
   }
 
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.DEFAULT;
-  }
-
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
-  }
-
-  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -478,28 +461,25 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
           }
         },
         computed: {
-          themeTerminalComment: function() {
-            const model = <ModelData> this;
-            for (let option of model.themeTerminalOptions) {
-              if (option.id === model.themeTerminal) {
+          themeTerminalComment: function(this: ModelData) {
+            for (let option of this.themeTerminalOptions) {
+              if (option.id === this.themeTerminal) {
                 return option.comment;
               }
             }
             return "";
           },
-          themeSyntaxComment: function() {
-            const model = <ModelData> this;
-            for (let option of model.themeSyntaxOptions) {
-              if (option.id === model.themeSyntax) {
+          themeSyntaxComment: function(this: ModelData) {
+            for (let option of this.themeSyntaxOptions) {
+              if (option.id === this.themeSyntax) {
                 return option.comment;
               }
             }
             return "";
           },
-          themeGUIComment: function() {
-            const model = <ModelData> this;
-            for (let option of model.themeGUIOptions) {
-              if (option.id === model.themeGUI) {
+          themeGUIComment: function(this: ModelData) {
+            for (let option of this.themeGUIOptions) {
+              if (option.id === this.themeGUI) {
                 return option.comment;
               }
             }

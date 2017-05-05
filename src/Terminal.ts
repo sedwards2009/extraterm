@@ -12,7 +12,6 @@ import * as utf8 from 'utf8';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import * as BulkDomOperation from './BulkDomOperation';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from './Theme';
@@ -527,8 +526,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
         scrollArea.style.top = "-" + offset + "px";
       });
       this._virtualScrollArea.setScrollbar(scrollbar);
-      this._virtualScrollArea.setBulkSetTopFunction(this._bulkSetTopFunction.bind(this));
-      this._virtualScrollArea.setBulkMarkVisibleFunction(this._bulkMarkVisible.bind(this));
+      this._virtualScrollArea.setSetTopFunction(this._setTopFunction.bind(this));
+      this._virtualScrollArea.setMarkVisibleFunction(this._markVisible.bind(this));
 
       // Set up the emulator
       this._cookie = crypto.randomBytes(10).toString('hex');
@@ -617,8 +616,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     this.resizeToContainer();
   }
   
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    return this._processRefresh(level);
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    this._processRefresh(level);
   }
 
   //-----------------------------------------------------------------------
@@ -972,14 +971,9 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
 
   private _setModeAndVisualState(mode: ViewerElementTypes.Mode, visualState: VisualState): void {
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-
     const childNodes = <ViewerElement[]> DomUtils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
-
-    const modeOperations = childNodes.map( (node) => node.bulkSetMode(mode));
-    const visualStateOperations = childNodes.map( (node) => node.bulkSetVisualState(visualState));
-    const allOperations = BulkDomOperation.parallel([...modeOperations, ...visualStateOperations]);
-
-    BulkDomOperation.execute(allOperations);
+    childNodes.forEach( (node) => node.setMode(mode));
+    childNodes.forEach( (node) => node.setVisualState(visualState));
   }
 
   private _childElementListIndexOf(element: HTMLElement & VirtualScrollable): number {
@@ -1013,112 +1007,84 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   }
 
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
-    const operation = this._updateVirtualScrollableSize(<any> ev.target);
-      // ^ We know this event only comes from VirtualScrollable elements.
-    (<VirtualScrollArea.ResizeEventDetail>ev.detail).addOperation(operation);
+    this._updateVirtualScrollableSize(<any> ev.target);
   }
 
-  private _bulkMarkVisible(scrollable: VirtualScrollable, visible: boolean): BulkDomOperation.BulkDOMOperation {
+  private _markVisible(scrollable: VirtualScrollable, visible: boolean): void {
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+    const element: ViewerElement = <any> scrollable;
+    if ( ! visible) {
 
-    const generator = function* bulkStashGenerator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
+      if (this._terminalViewer !== element && ! (ViewerElement.isViewerElement(element) && element.hasFocus())) {
+        // Move the scrollable into the stash area.
+        this._stashArea.appendChild(element);
+      }
 
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-    
-      const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-      const element: ViewerElement = <any> scrollable;
-      if ( ! visible) {
+    } else {
 
-        if (this._terminalViewer !== element && ! (ViewerElement.isViewerElement(element) && element.hasFocus())) {
-          // Move the scrollable into the stash area.
-          this._stashArea.appendChild(element);
-        }
+      if (element.parentElement !== scrollerArea) {
+        // Move the element to the scroll area and place it in the correct position relative to the other child elements.
 
-      } else {
+        const scrollerAreaChildrenCount = scrollerArea.children.length;
+        if (scrollerAreaChildrenCount === 0) {
+          scrollerArea.appendChild(element);
+        } else {
 
-        if (element.parentElement !== scrollerArea) {
-          // Move the element to the scroll area and place it in the correct position relative to the other child elements.
+          let scrollerIndex = 0;
+          let childIndex = 0;
+          while (childIndex < this._childElementList.length) {
 
-          const scrollerAreaChildrenCount = scrollerArea.children.length;
-          if (scrollerAreaChildrenCount === 0) {
-            scrollerArea.appendChild(element);
-          } else {
+            const currentElement = this._childElementList[childIndex].element;
+            if (currentElement === element) {
+              scrollerArea.insertBefore(element, scrollerArea.children[scrollerIndex]);
+              break;
+            }
 
-            let scrollerIndex = 0;
-            let childIndex = 0;
-            while (childIndex < this._childElementList.length) {
-
-              const currentElement = this._childElementList[childIndex].element;
-              if (currentElement === element) {
-                scrollerArea.insertBefore(element, scrollerArea.children[scrollerIndex]);
+            if (scrollerArea.children[scrollerIndex] === currentElement) {
+              scrollerIndex++;
+              if (scrollerIndex >= scrollerAreaChildrenCount) {
+                scrollerArea.appendChild(element);
                 break;
               }
-
-              if (scrollerArea.children[scrollerIndex] === currentElement) {
-                scrollerIndex++;
-                if (scrollerIndex >= scrollerAreaChildrenCount) {
-                  scrollerArea.appendChild(element);
-                  break;
-                }
-              }
-              childIndex++;
             }
+            childIndex++;
           }
-
-          // Set the current mode on the scrollable.
-          const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
-          const modeOperation = element.bulkSetMode(this._mode);
-          const visualStateOperation = element.bulkSetVisualState(visualState);
-          const allOperations = BulkDomOperation.parallel([modeOperation, visualStateOperation]);
-
-          yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: allOperations, waitOperation: allOperations };
         }
-      }
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
 
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+        // Set the current mode on the scrollable.
+        const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
+        element.setMode(this._mode);
+        element.setVisualState(visualState);
+      }
+    }
   }
 
   private _makeVisible(element: HTMLElement & VirtualScrollable): void {
-    BulkDomOperation.execute(this._bulkMarkVisible(element, true));
+    this._markVisible(element, true);
   }
 
-  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): BulkDomOperation.BulkDOMOperation {
-
-    const generator = function* bulkUpdateGenerator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
-
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
-      this._virtualScrollArea.updateScrollableSize(virtualScrollable);
-      this._enforceScrollbackLength(this._scrollbackSize);
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
+    this._virtualScrollArea.updateScrollableSize(virtualScrollable);
+    this._enforceScrollbackLength(this._scrollbackSize);
   }
 
-  private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
+  private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): void {
     let level = requestedLevel;
     if (this._needsCompleteRefresh) {
       level = ResizeRefreshElementBase.RefreshLevel.COMPLETE;
       this._needsCompleteRefresh = false;
     }
 
-    // Operations for scroll area contents
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
+      // --- DOM Read ---
+      CodeMirrorOperation.bulkOperation(() => {
+        ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
 
-      const generator = function* generator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
-
-        // --- DOM Write ---
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_READ;
-        
         const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-        const scrollAreaOperation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(scrollerArea, level); // <-
-        const scrollbarOperation = scrollbar.bulkRefresh(level);
+        scrollbar.refresh(level);
 
-        yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE, extraOperation: scrollAreaOperation, waitOperation: scrollAreaOperation};
-
+        // --- DOM write ---
         const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
         this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 
@@ -1134,8 +1100,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
 
         // Keep track of which children will need a resize later on.
         const childrenToResizeSet = new Set(childrenToResize);
-        for (let i=0; i<this._childElementList.length; i++) {
-          const childStatus = this._childElementList[i];
+        for (const childStatus of this._childElementList) {
           if ( ! childrenToResizeSet.has(childStatus.element)) {
             childStatus.needsRefresh = true;
             childStatus.refreshLevel = level;
@@ -1149,29 +1114,12 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
         this._virtualScrollArea.updateScrollableSizes(childrenToResize);
         this._virtualScrollArea.reapplyState();
         this._enforceScrollbackLength(this._scrollbackSize);
-
-        this.resizeToContainer(); // This will schedule a resize of the terminal PTY itself.
-
-        return BulkDomOperation.GeneratorPhase.DONE;
-      };
-
-      return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
-
-    } else {
-
-      // no-op
-      return BulkDomOperation.nullOperation();
+      });
     }
   }
 
-  private _bulkSetTopFunction(scrollable: VirtualScrollable, top: number):  BulkDomOperation.BulkDOMOperation {
-    const generator = function* bulkSetTopGenerator(this: EtTerminal): IterableIterator<BulkDomOperation.GeneratorResult> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      (<HTMLElement> (<any> scrollable)).style.top = "" + top + "px";
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName()); 
+  private _setTopFunction(scrollable: VirtualScrollable, top: number):  void {
+    (<HTMLElement> (<any> scrollable)).style.top = "" + top + "px";
   }
 
   private _handleTerminalViewerCursor(ev: CustomEvent): void {
@@ -1562,18 +1510,12 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     if (this._stashedChildResizeTask == null) {
       this._stashedChildResizeTask = () => {
         // Gather the list of elements/scrollables that need refreshing and updating.
-        const processCounter = 0;
-        const processList: (HTMLElement & VirtualScrollable)[] = [];
-        const refreshOperations: BulkDomOperation.BulkDOMOperation[] = [];
+        const processList: ChildElementStatus[] = [];
         for (let i=this._childElementList.length-1; i>=0 && processList.length < CHILD_RESIZE_BATCH_SIZE; i--) {
           const childStatus = this._childElementList[i];
           if (childStatus.needsRefresh) {
-            processList.push(childStatus.element);
+            processList.push(childStatus);
             childStatus.needsRefresh = false;
-            const el = childStatus.element;
-            if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
-              refreshOperations.push(el.bulkRefresh(childStatus.refreshLevel));
-            }
           }
         }
 
@@ -1581,28 +1523,29 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
           // Find the elements which need to be moved into the scroll area.
           const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
           const stashedList: (HTMLElement & VirtualScrollable)[] = [];
-          for (let i=0; i<processList.length; i++) {
-            const element = processList[i];
+          for (const childStatus of processList) {
+            const element = childStatus.element;
             if (element.parentElement !== scrollerArea) {
               stashedList.push(element);
             }
           }
 
+          CodeMirrorOperation.bulkOperation( () => {
+            stashedList.forEach(el => this._markVisible(el, true));
+
+            for (const childStatus of processList) {
+              const el = childStatus.element;
+              if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
+                el.refresh(childStatus.refreshLevel);
+              }
+            }
+
+            this._virtualScrollArea.updateScrollableSizes(processList.map(childStatus => childStatus.element));
+          });
+
           if (stashedList.length !== 0) {
-            const markVisibleOperations = stashedList.map( (el) => this._bulkMarkVisible(el, true) );
-            BulkDomOperation.execute(BulkDomOperation.parallel(markVisibleOperations));
-          }
-
-          if (refreshOperations.length !==0) {
-            BulkDomOperation.execute(BulkDomOperation.parallel(refreshOperations));
-          }
-
-          this._virtualScrollArea.updateScrollableSizes(processList);
-
-          if (stashedList.length !== 0) {
-            const markVisibleOperations = stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))
-              .map( (el) => this._bulkMarkVisible(el, false) );
-            BulkDomOperation.execute(BulkDomOperation.parallel(markVisibleOperations));
+            stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))
+              .forEach( (el) => this._markVisible(el, false) );
           }
 
           this._scheduleStashedChildResizeTask();

@@ -15,14 +15,11 @@ import {EtViewerTab} from './ViewerTab';
 import {EmbeddedViewer} from './EmbeddedViewer';
 import {Tab} from './gui/Tab';
 import {ViewerElement} from './ViewerElement';
-import {Splitter} from './gui/Splitter';
+import {Splitter, SplitOrientation} from './gui/Splitter';
 import {EmptyPaneMenu} from './EmptyPaneMenu';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import * as BulkDomOperation from './BulkDomOperation';
 import * as ThemeTypes from './Theme';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import * as CodeMirrorOperation from './CodeMirrorOperation';
-
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
@@ -88,14 +85,13 @@ const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
 const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
 const COMMAND_SELECT_PANE_LEFT = "selectPaneLeft";
 const COMMAND_SELECT_PANE_RIGHT = "selectPaneRight";
-const COMMAND_SELECT_PANE_UP = "selectPaneUp";
-const COMMAND_SELECT_PANE_DOWN = "selectPaneDown";
+const COMMAND_SELECT_PANE_ABOVE = "selectPaneAbove";
+const COMMAND_SELECT_PANE_BELOW = "selectPaneBelow";
 const COMMAND_NEW_TERMINAL = "newTerminal";
 const COMMAND_CLOSE_TAB = "closeTab";
-const COMMAND_VERTICAL_SPLIT = "COMMAND_VERTICAL_SPLIT";
-const COMMAND_CLOSE_PANE = "COMMAND_CLOSE_PANE";
-
-CodeMirrorOperation.init();
+const COMMAND_HORIZONTAL_SPLIT = "horizontalSplit";
+const COMMAND_VERTICAL_SPLIT = "verticalSplit";
+const COMMAND_CLOSE_PANE = "closePane";
 
 let registered = false;
 
@@ -279,6 +275,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
       const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
         { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", target: null },
+        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", target: null },        
         { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: null },
         { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", target: null }
       ];
@@ -732,31 +729,34 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _selectPaneLeft(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
-    const leftTabWidget = this._splitLayout.getTabWidgetToLeft(currentTabWidget);
-    if (leftTabWidget != null) {
-      leftTabWidget.focus();
-      const content = this._splitLayout.getTabContentByTab(leftTabWidget.getSelectedTab());
-      if (elementSupportsFocus(content)) {
-        content.focus();
-        return { tabWidget: leftTabWidget, tabContent: content };
-      }
-      return { tabWidget: leftTabWidget, tabContent: null };
-    }
-    return { tabWidget: null, tabContent: null };
+    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
   }
 
   private _selectPaneRight(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
+  }
+
+  private _selectPaneAbove(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
+  }
+
+  private _selectPaneBelow(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
+  }
+
+  private _selectPaneInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget):
+      { tabWidget: TabWidget, tabContent: Element} {
+
     const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
-    const rightTabWidget = this._splitLayout.getTabWidgetToRight(currentTabWidget);
-    if (rightTabWidget != null) {
-      rightTabWidget.focus();
-      const content = this._splitLayout.getTabContentByTab(rightTabWidget.getSelectedTab());
+    const targetTabWidget = directionFunc.call(this._splitLayout, currentTabWidget);
+    if (targetTabWidget != null) {
+      targetTabWidget.focus();
+      const content = this._splitLayout.getTabContentByTab(targetTabWidget.getSelectedTab());
       if (elementSupportsFocus(content)) {
         content.focus();
-        return { tabWidget: rightTabWidget, tabContent: content };
+        return { tabWidget: targetTabWidget, tabContent: content };
       }
-      return { tabWidget: rightTabWidget, tabContent: null };
+      return { tabWidget: targetTabWidget, tabContent: null };
     }
     return { tabWidget: null, tabContent: null };
   }
@@ -781,8 +781,16 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
 
+  private _horizontalSplit(tabContentElement: Element): void {
+    this._split(tabContentElement, SplitOrientation.HORIZONTAL);
+  }
+
   private _verticalSplit(tabContentElement: Element): void {
-    const newTabWidget = this._splitLayout.splitAfterTabContent(tabContentElement);
+    this._split(tabContentElement, SplitOrientation.VERTICAL);
+  }
+
+  private _split(tabContentElement: Element, orientation: SplitOrientation): void {
+    const newTabWidget = this._splitLayout.splitAfterTabContent(tabContentElement, orientation);
     this._splitLayout.update();
     this._refreshSplitLayout();
     if (newTabWidget != null) {
@@ -816,6 +824,12 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       focusInfo = this._selectPaneLeft(tabContentElement);
       if (focusInfo.tabWidget == null) {
         focusInfo = this._selectPaneRight(tabContentElement);
+        if (focusInfo.tabWidget == null) {
+          focusInfo = this._selectPaneAbove(tabContentElement);
+          if (focusInfo.tabWidget == null) {
+            focusInfo = this._selectPaneBelow(tabContentElement);
+          }
+        }
       }
     }
 
@@ -878,11 +892,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   //-----------------------------------------------------------------------
   private _refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    const operation = ResizeRefreshElementBase.ResizeRefreshElementBase.bulkRefreshChildNodes(
+    ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(
       DomUtils.getShadowId(this, ID_MAIN_CONTENTS), level);
-
-    // Do the heavy code mirror stuff first.
-    BulkDomOperation.execute(operation);
   }
 
   private _sendTabOpenedEvent(): void {
@@ -917,6 +928,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         return text;
       }
     }
+    return null;
   }
 
   // ----------------------------------------------------------------------
@@ -1001,7 +1013,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
       { id: COMMAND_SELECT_PANE_LEFT, group: PALETTE_GROUP, label: " Select pane left", target: target },
       { id: COMMAND_SELECT_PANE_RIGHT, group: PALETTE_GROUP, label: " Select pane right", target: target },
+      { id: COMMAND_SELECT_PANE_ABOVE, group: PALETTE_GROUP, label: " Select pane above", target: target },
+      { id: COMMAND_SELECT_PANE_BELOW, group: PALETTE_GROUP, label: " Select pane below", target: target },
 
+      { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", target: target },
       { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target },
     ];
 // FIXME
@@ -1043,12 +1058,24 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         this._selectPaneRight(tabElement);
         break;
 
+      case COMMAND_SELECT_PANE_ABOVE:
+        this._selectPaneAbove(tabElement);
+        break;
+
+      case COMMAND_SELECT_PANE_BELOW:
+        this._selectPaneBelow(tabElement);
+        break;
+
       case COMMAND_NEW_TERMINAL:
         this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement)));
         break;
         
       case COMMAND_CLOSE_TAB:
         this.closeTab(tabElement);
+        break;
+
+      case COMMAND_HORIZONTAL_SPLIT:
+        this._horizontalSplit(tabElement);
         break;
 
       case COMMAND_VERTICAL_SPLIT:

@@ -14,7 +14,6 @@ import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ThemeTypes from '../Theme';
 import * as keybindingmanager from '../KeyBindingManager';
-import * as BulkDomOperation from '../BulkDomOperation';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import * as CodeMirror from 'codemirror';
@@ -224,8 +223,13 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     return hasFocus;
   }
   
-  bulkSetVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
-    return this._setVisualState(newVisualState);
+  setVisualState(newVisualState: VisualState): void {
+    if (newVisualState !== this._visualState) {
+      if (DomUtils.getShadowRoot(this) !== null) {
+        this._applyVisualState(newVisualState);
+      }    
+      this._visualState = newVisualState;
+    }
   }
   
   getVisualState(): VisualState {
@@ -297,16 +301,8 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     this.setMimeType(cleanMimeType);
   }
   
-  
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    if (newMode === this._mode) {
-      return BulkDomOperation.nullOperation();
-    }
-
-    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      // --- DOM Write ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-
+  setMode(newMode: ViewerElementTypes.Mode): void {
+    if (newMode !== this._mode) {
       switch (newMode) {
         case ViewerElementTypes.Mode.CURSOR:
           // Enter cursor mode.
@@ -318,11 +314,7 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
           break;
       }
       this._mode = newMode;
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    }
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -372,32 +364,24 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      // --- DOM Write ---
-      if (setterState.heightChanged || setterState.yOffsetChanged) {
-        if (DEBUG_RESIZE) {
-          this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-            setterState.yOffset, setterState.yOffsetChanged);
-        }
-        
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-
-        // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
-        // const op = () => {
-          this._adjustHeight(setterState.height);
-          this.scrollTo(0, setterState.yOffset);
-        // };
-        // if (this._codeMirror !== null) {
-        //   this._codeMirror.operation(op);
-        // } else {
-        //   op();
-        // }
+  setDimensionsAndScroll(setterState: SetterState): void {
+    if (setterState.heightChanged || setterState.yOffsetChanged) {
+      if (DEBUG_RESIZE) {
+        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+          setterState.yOffset, setterState.yOffsetChanged);
       }
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
 
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+      // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
+      // const op = () => {
+        this._adjustHeight(setterState.height);
+        this.scrollTo(0, setterState.yOffset);
+      // };
+      // if (this._codeMirror !== null) {
+      //   this._codeMirror.operation(op);
+      // } else {
+      //   op();
+      // }
+    }
   }
   
   isFontLoaded(): boolean {
@@ -635,31 +619,20 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
 
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (this._codeMirror !== null) {
-        if (DEBUG_RESIZE) {
-          this._log.debug("calling codeMirror.refresh()");
-        }
-
-        if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-          this._codeMirror.setSize(null, null);
-        } else {
-          this._codeMirror.refresh();
-        }
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    if (this._codeMirror !== null) {
+      if (DEBUG_RESIZE) {
+        this._log.debug("calling codeMirror.refresh()");
       }
 
-      yield BulkDomOperation.GeneratorPhase.BEGIN_FINISH; // FIXME this line works, the second doesn't but should.
-    //  yield BulkDOMOperation.GeneratorPhase.FLUSH_DOM;  // Let CodeMirror sort itself out.
+      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+        this._codeMirror.setSize(null, null);
+      } else {
+        this._codeMirror.refresh();
+      }
+    }
 
-      const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-      yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation};
-      
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    VirtualScrollArea.emitResizeEvent(this);
   }
 
   //-----------------------------------------------------------------------
@@ -699,23 +672,6 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     }
     
     return window.document.importNode(template.content, true);
-  }
-  
-  private _setVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
-    if (newVisualState === this._visualState) {
-      return BulkDomOperation.nullOperation();
-    }    
-
-    const generator = function* generator(this: TextViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (DomUtils.getShadowRoot(this) !== null) {
-        this._applyVisualState(newVisualState);
-      }    
-      this._visualState = newVisualState;
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
   
   private _applyVisualState(visualState: VisualState): void {

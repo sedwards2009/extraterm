@@ -406,10 +406,10 @@ export class Terminal {
   bindKeys(): void {
     // We should only need to check `target === body` below,
     // but we can check everything for good measure.
-    this.element.addEventListener('keydown', (ev: KeyboardEvent) => {
+    this.element.addEventListener('keydown', (ev: KeyboardEvent): boolean => {
       const target = ev.target || ev.srcElement;
       if (!target) {
-        return;
+        return false;
       }
       if (target === this.element ||
           target === this.context ||
@@ -419,12 +419,13 @@ export class Terminal {
           target === this.parent) {
         return this.emulator.keyDown(ev);
       }
+      return false;
     }, true);
 
-    this.element.addEventListener('keypress', (ev: KeyboardEvent) => {
+    this.element.addEventListener('keypress', (ev: KeyboardEvent): boolean => {
       const target = ev.target || ev.srcElement;
       if (!target) {
-        return;
+        return false;
       }
       if (target === this.element ||
           target === this.context ||
@@ -434,6 +435,7 @@ export class Terminal {
           target === this.parent) {
         return this.emulator.keyPress(ev);
       }
+      return false;
     }, true);
   }
 
@@ -1484,7 +1486,7 @@ export class Emulator implements EmulatorAPI {
   
   mouseMove(ev: MouseEventOptions): boolean {
     if ( ! this.mouseEvents) {
-      return;
+      return false;
     }
 
     if ( ! this._mouseButtonDown) {

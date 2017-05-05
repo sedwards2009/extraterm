@@ -14,8 +14,6 @@ import {ThemeableElementBase} from './ThemeableElementBase';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import * as ViewerElementTypes from './ViewerElementTypes';
-import * as BulkDomOperation from './BulkDomOperation';
-
 import * as Vue from 'vue';
 import * as DomUtils from './DomUtils';
 import * as config from './Config';
@@ -167,22 +165,6 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
     this._setConfig(configManager.getConfig());
   }
 
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.DEFAULT;
-  }
-
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
-  }
-
-  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -246,7 +228,7 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
 </div>
 `,
         computed: {
-          summary: function() {
+          summary: function(this: ModelData) {
             const foo = this.keyBindingsContextsStamp;
             return formatKeyBindingsPage(elementThis._keyBindingManager.getKeyBindingContexts());
           }

@@ -15,7 +15,6 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
 import * as keybindingmanager from '../KeyBindingManager';
-import * as BulkDomOperation from '../BulkDomOperation';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -142,8 +141,13 @@ export class ImageViewer extends ViewerElement {
     return hasFocus;
   }
   
-  bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    return this._bulkSetVisualState(newVisualState);
+  setVisualState(newVisualState: ViewerElementTypes.VisualState): void {
+    if (newVisualState !== this._visualState) {
+      if (DomUtils.getShadowRoot(this) !== null) {
+        this._applyVisualState(newVisualState);
+      }    
+      this._visualState = newVisualState;
+    }
   }
   
   getVisualState(): ViewerElementTypes.VisualState {
@@ -179,13 +183,8 @@ export class ImageViewer extends ViewerElement {
     }
   }
 
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    if (newMode === this._mode) {
-      return BulkDomOperation.nullOperation();
-    }
+  setMode(newMode: ViewerElementTypes.Mode): void {
     this._mode = newMode;
-
-    return BulkDomOperation.nullOperation();
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -207,25 +206,19 @@ export class ImageViewer extends ViewerElement {
   }
   
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: ImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      if (setterState.heightChanged || setterState.yOffsetChanged) {
-        yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-        if (DEBUG_SIZE) {
-          this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-            setterState.yOffset, setterState.yOffsetChanged);
-        }
-        this._adjustHeight(setterState.height);
-        
-        const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-        if (containerDiv !== null) {
-          containerDiv.scrollTop = setterState.yOffset;
-        }
+  setDimensionsAndScroll(setterState: SetterState): void {
+    if (setterState.heightChanged || setterState.yOffsetChanged) {
+      if (DEBUG_SIZE) {
+        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+          setterState.yOffset, setterState.yOffsetChanged);
       }
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)());
+      this._adjustHeight(setterState.height);
+      
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+      if (containerDiv !== null) {
+        containerDiv.scrollTop = setterState.yOffset;
+      }
+    }
   }
 
   // VirtualScrollable
@@ -366,25 +359,6 @@ export class ImageViewer extends ViewerElement {
     }
     
     return window.document.importNode(template.content, true);
-  }
-  
-  private _bulkSetVisualState(newVisualState: number): BulkDomOperation.BulkDOMOperation {
-    if (newVisualState === this._visualState) {
-      return BulkDomOperation.nullOperation();
-    }
-
-    const generator = function* generator(this: ImageViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      // --- DOM Write ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (DomUtils.getShadowRoot(this) !== null) {
-        this._applyVisualState(newVisualState);
-      }    
-      this._visualState = newVisualState;
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)());
   }
   
   private _applyVisualState(visualState: VisualState): void {

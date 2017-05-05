@@ -13,7 +13,6 @@ import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
-import * as BulkDomOperation from './BulkDomOperation';
 
 const ID_ABOUT = "ID_ABOUT";
 
@@ -75,22 +74,6 @@ export class AboutTab extends ViewerElement {
 
   hasFocus(): boolean {
     return false;
-  }
-
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.DEFAULT;
-  }
-
-  bulkSetMode(mode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
-  }
-
-  getVisualState(): ViewerElementTypes.VisualState {
-    return ViewerElementTypes.VisualState.AUTO;
-  }
-
-  bulkSetVisualState(state: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    return BulkDomOperation.nullOperation();
   }
 
   //-----------------------------------------------------------------------

@@ -26,7 +26,6 @@ import * as GeneralEvents from '../GeneralEvents';
 import * as ThemeTypes from '../Theme';
 import * as keybindingmanager from '../KeyBindingManager';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import * as BulkDomOperation from '../BulkDomOperation';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -269,8 +268,22 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     return hasFocus;
   }
 
-  bulkSetVisualState(newVisualState: VisualState): BulkDomOperation.BulkDOMOperation {
-    return this._bulkSetVisualState(newVisualState);
+  setVisualState(newVisualState: VisualState): void {
+    if (newVisualState !== this._visualState) {
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+      if (containerDiv !== null) {
+        if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
+            newVisualState === VisualState.FOCUSED) {
+
+          containerDiv.classList.add(CLASS_FOCUSED);
+          containerDiv.classList.remove(CLASS_UNFOCUSED);
+        } else {
+          containerDiv.classList.add(CLASS_UNFOCUSED);
+          containerDiv.classList.remove(CLASS_FOCUSED);
+        }
+      }
+      this._visualState = newVisualState;
+    }
   }
   
   getVisualState(): VisualState {
@@ -303,13 +316,8 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     return this._emulator;
   }
   
-  bulkSetMode(newMode: ViewerElementTypes.Mode): BulkDomOperation.BulkDOMOperation {
-    if (newMode === this._mode) {
-      return BulkDomOperation.nullOperation();
-    }
-
-    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
+  setMode(newMode: ViewerElementTypes.Mode): void {
+    if (newMode !== this._mode) {
       switch (newMode) {
         case ViewerElementTypes.Mode.CURSOR:
           // Enter cursor mode.
@@ -321,11 +329,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
           break;
       }
       this._mode = newMode;
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    }
   }
   
   getMode(): ViewerElementTypes.Mode {
@@ -353,23 +357,14 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
   }
 
   // VirtualScrollable
-  bulkSetDimensionsAndScroll(setterState: SetterState): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      // --- DOM Write ---
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-
-      if (setterState.heightChanged || setterState.yOffsetChanged) {
-        if (DEBUG_RESIZE) {
-          this._log.debug(`setDimensionsAndScroll(height=${setterState.height}, heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged})`);
-        }
-        this._adjustHeight(setterState.height);
-        this.scrollTo(0, setterState.yOffset);
+  setDimensionsAndScroll(setterState: SetterState): void {
+    if (setterState.heightChanged || setterState.yOffsetChanged) {
+      if (DEBUG_RESIZE) {
+        this._log.debug(`setDimensionsAndScroll(height=${setterState.height}, heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged})`);
       }
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+      this._adjustHeight(setterState.height);
+      this.scrollTo(0, setterState.yOffset);
+    }
   }
   
   // VirtualScrollable
@@ -408,29 +403,21 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     }
   }
 
-  bulkRefresh(level: ResizeRefreshElementBase.RefreshLevel): BulkDomOperation.BulkDOMOperation {
-    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorResult> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      if (this._codeMirror !== null) {
-        if (DEBUG_RESIZE) {
-          this._log.debug("calling codeMirror.refresh()");
-        }
-
-        if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-          this._codeMirror.setSize(null, null);
-        } else {
-          this._codeMirror.refresh();
-        }
+  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    if (this._codeMirror !== null) {
+      if (DEBUG_RESIZE) {
+        this._log.debug("calling codeMirror.refresh()");
       }
 
-      const resizeOperation = VirtualScrollArea.bulkEmitResizeEvent(this);
-      yield { phase: BulkDomOperation.GeneratorPhase.BEGIN_FINISH, extraOperation: resizeOperation, waitOperation: resizeOperation };
-      this.resizeEmulatorToParentContainer();
+      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+        this._codeMirror.setSize(null, null);
+      } else {
+        this._codeMirror.refresh();
+      }
+    }
 
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
+    VirtualScrollArea.emitResizeEvent(this);
+    this.resizeEmulatorToParentContainer();
   }
 
   resizeEmulatorToParentContainer(): void {
@@ -888,33 +875,6 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     this._fontUnitHeight = charHeight;
     const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
     styleElement.textContent = this._getCssVarsRules();
-  }
-
-  private _bulkSetVisualState(newVisualState: ViewerElementTypes.VisualState): BulkDomOperation.BulkDOMOperation {
-    if (newVisualState === this._visualState) {
-      return BulkDomOperation.nullOperation();
-    }
-
-    const generator = function* generator(this: TerminalViewer): IterableIterator<BulkDomOperation.GeneratorPhase> {
-      yield BulkDomOperation.GeneratorPhase.BEGIN_DOM_WRITE;
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      if (containerDiv !== null) {
-        if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
-            newVisualState === VisualState.FOCUSED) {
-
-          containerDiv.classList.add(CLASS_FOCUSED);
-          containerDiv.classList.remove(CLASS_UNFOCUSED);
-        } else {
-          containerDiv.classList.add(CLASS_UNFOCUSED);
-          containerDiv.classList.remove(CLASS_FOCUSED);
-        }
-      }
-      this._visualState = newVisualState;
-
-      return BulkDomOperation.GeneratorPhase.DONE;
-    };
-
-    return BulkDomOperation.fromGenerator(generator.bind(this)(), this._log.getName());
   }
 
   private _enterCursorMode(): void {
