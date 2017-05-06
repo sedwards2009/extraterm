@@ -37,6 +37,7 @@ Outside the Extraterm source tree, find some space and do:
 
 * `git clone --recursive https://github.com/sass/node-sass.git`
 * `cd node-sass`
+* `git checkout v4.1.0` -- this should match the desired version of node-sass
 * `git submodule update --init --recursive`
 * `npm install`
 * `./node_modules/node-gyp/bin/node-gyp.js rebuild --target=1.6.6 --arch=x64 --dist-url=https://atom.io/download/atom-shell --verbose --libsass_ext= --libsass_cflags= --libsass_ldflags= --libsass_library=` -- target should match the new Electron version!
