@@ -9,11 +9,9 @@ import * as path from 'path';
 
 import * as SourceDir from './SourceDir';
 const MODULE_VERSION = "53";  // This version number also appears in build_package.js
-if (process.versions.modules === MODULE_VERSION && process.platform !== "win32") {  // <- win32 with node v6.5 has a bug which breaks this trick.
-  // Patch in our special node-sass binary for V8 module verion 50 as used by Electron.
-  process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
-    `node-sass-binary/${process.platform}-${process.arch}-${MODULE_VERSION}/binding.node`);
-}
+// Patch in our special node-sass binary for the V8 module version used by Electron.
+process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
+  `node-sass-binary/${process.platform}-${process.arch}-${MODULE_VERSION}/binding.node`);
 import * as NodeSass from 'node-sass';
 
 import * as _ from 'lodash';

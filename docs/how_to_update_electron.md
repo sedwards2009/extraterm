@@ -39,7 +39,7 @@ Outside the Extraterm source tree, find some space and do:
 * `cd node-sass`
 * `git submodule update --init --recursive`
 * `npm install`
-* `./node_modules/node-gyp/bin/node-gyp.js rebuild --target=1.3.4 --arch=x64 --dist-url=https://atom.io/download/atom-shell --verbose --libsass_ext= --libsass_cflags= --libsass_ldflags= --libsass_library=` -- target should match the new Electron version!
+* `./node_modules/node-gyp/bin/node-gyp.js rebuild --target=1.6.6 --arch=x64 --dist-url=https://atom.io/download/atom-shell --verbose --libsass_ext= --libsass_cflags= --libsass_ldflags= --libsass_library=` -- target should match the new Electron version!
 
 Now that it has been built it needs to be moved to the right location in the source tree.
 
