@@ -802,7 +802,6 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
         repeat: ev.repeat,
         keyCode: ev.keyCode,
         charCode: ev.charCode,
-        keyIdentifier: ev.keyIdentifier,
         which: ev.which,
         ctrlKey: ev.ctrlKey,
         shiftKey: ev.shiftKey,
@@ -842,8 +841,7 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
               altKey: ev.altKey,
               ctrlKey: ev.ctrlKey,
               key: ev.key,
-              keyCode: ev.keyCode,
-              keyIdentifier: ev.keyIdentifier
+              keyCode: ev.keyCode
             };
             command = keyBindings.mapEventToCommand(evWithoutShift);
             if (command !== null && command.startsWith("go")) {

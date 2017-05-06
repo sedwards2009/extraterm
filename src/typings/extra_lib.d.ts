@@ -94,13 +94,8 @@ interface Document {
   registerElement(tagName:string, props:any): any;
 }
 
-interface KeyboardEvent {
-  readonly keyIdentifier: string;
-}
-
 interface KeyboardEventInit {
   code?: string;
-  keyIdentifier?: string;
   charCode?: number;
   keyCode?: number;
   which?: number;

@@ -228,7 +228,6 @@ export function newKeyboardEvent(eventName: string, initMap: {
       repeat?: boolean;
       keyCode?: number;
       charCode?: number;
-      keyIdentifier?: string;
       which?: number;
       ctrlKey?: boolean;
       shiftKey?: boolean;

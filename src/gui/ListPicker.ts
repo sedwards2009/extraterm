@@ -231,18 +231,17 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
    * 
    */
   private handleKeyDown(ev: KeyboardEvent) {
-    // Escape.
-    if (ev.keyIdentifier === "U+001B") {
+    if (ev.key === "Escape") {
       this._okId(null);
       ev.preventDefault();
       ev.stopPropagation();
       return;
     }
     
-    const isPageKey = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "PageDown";
-    const isUp = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "Up" || ev.keyIdentifier === "Home";
+    const isPageKey = ev.key === "PageUp" || ev.key === "PageDown";
+    const isUp = ev.key === "PageUp" || ev.key === "ArrowUp" || ev.key === "Home";
     
-    if (isPageKey || isUp || ev.keyIdentifier === "Down" || ev.keyIdentifier === "End" || ev.keyIdentifier === "Enter") {
+    if (isPageKey || isUp || ev.key === "ArrowDown" || ev.key === "End" || ev.key === "Enter") {
       ev.preventDefault();
       ev.stopPropagation();
       
@@ -254,8 +253,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   
       const selectedIndex = filteredEntries.findIndex( (entry) => entry.id === this._selectedId);
       
-      if (ev.keyIdentifier === "Enter") {
-        // Enter
+      if (ev.key === "Enter") {
         if (this._selectedId !== null) {
           this._okId(this._selectedId);
         }
@@ -273,13 +271,13 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
         }
         
         if (isUp) {
-          if (ev.keyIdentifier === "Home") {
+          if (ev.key === "Home") {
             this._selectedId = filteredEntries[0].id;
           } else {
             this._selectedId = filteredEntries[Math.max(0, selectedIndex-stepSize)].id;
           }
         } else {
-          if (ev.keyIdentifier === "End") {
+          if (ev.key === "End") {
             this._selectedId = filteredEntries[filteredEntries.length-1].id;
           } else {
             this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+stepSize)].id;

@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+import Logger from '../Logger';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
@@ -48,6 +49,8 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   }
 
   // WARNING: Fields like this will not be initialised automatically.
+  private _log: Logger = null;
+  
   private _entries: T[];
 
   private _selectedId: string;
@@ -65,6 +68,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   private _extraCssFiles: ThemeTypes.CssFile[];
 
   private _initProperties(): void {
+    this._log = new Logger(PopDownListPicker.TAG_NAME, this);
     this._entries = [];
     this._selectedId = null;
     this._titlePrimary = "";
@@ -243,18 +247,17 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
    * 
    */
   private handleKeyDown(ev: KeyboardEvent) {
-    // Escape.
-    if (ev.keyIdentifier === "U+001B") {
+    if (ev.key === "Escape") {
       this._okId(null);
       ev.preventDefault();
       ev.stopPropagation();
       return;
     }
     
-    const isPageKey = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "PageDown";
-    const isUp = ev.keyIdentifier === "PageUp" || ev.keyIdentifier === "Up" || ev.keyIdentifier === "Home";
+    const isPageKey = ev.key === "PageUp" || ev.key === "PageDown";
+    const isUp = ev.key === "PageUp" || ev.key === "ArrowUp" || ev.key === "Home";
     
-    if (isPageKey || isUp || ev.keyIdentifier === "Down" || ev.keyIdentifier === "End" || ev.keyIdentifier === "Enter") {
+    if (isPageKey || isUp || ev.key === "ArrowDown" || ev.key === "End" || ev.key === "Enter") {
       ev.preventDefault();
       ev.stopPropagation();
       
@@ -266,7 +269,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   
       const selectedIndex = filteredEntries.findIndex( (entry) => entry.id === this._selectedId);
       
-      if (ev.keyIdentifier === "Enter") {
+      if (ev.key === "Enter") {
         // Enter
         if (this._selectedId !== null) {
           this._okId(this._selectedId);
@@ -285,13 +288,13 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
         }
         
         if (isUp) {
-          if (ev.keyIdentifier === "Home") {
+          if (ev.key === "Home") {
             this._selectedId = filteredEntries[0].id;
           } else {
             this._selectedId = filteredEntries[Math.max(0, selectedIndex-stepSize)].id;
           }
         } else {
-          if (ev.keyIdentifier === "End") {
+          if (ev.key === "End") {
             this._selectedId = filteredEntries[filteredEntries.length-1].id;
           } else {
             this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+stepSize)].id;

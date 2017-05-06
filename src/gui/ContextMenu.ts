@@ -173,14 +173,14 @@ export class ContextMenu extends ThemeableElementBase {
    */
   private handleKeyDown(ev: KeyboardEvent) {
     // Escape.
-    if (ev.keyIdentifier === "U+001B") {
+    if (ev.key === "Escape") {
       this.close();
       ev.preventDefault();
       ev.stopPropagation();
       return;
     }
 
-    if (ev.keyIdentifier === "Up" || ev.keyIdentifier === "Down" || ev.keyIdentifier === "Enter") {
+    if (ev.key === "ArrowUp" || ev.key === "ArrowDown" || ev.key === "Enter") {
       const menuitems = this.fetchMenuItems(this.childNodes);
       if (menuitems.length === 0) {
         return;
@@ -188,7 +188,7 @@ export class ContextMenu extends ThemeableElementBase {
 
       const keyboardselected = menuitems.filter( (item:MenuItem) => Util.htmlValueToBool(item.getAttribute("selected")));
 
-      if (ev.keyIdentifier === "Up") {
+      if (ev.key === "ArrowUp") {
         if (keyboardselected.length === 0) {
           this.selectMenuItem(this.childNodes, menuitems[menuitems.length-1]);
         } else {
@@ -196,7 +196,7 @@ export class ContextMenu extends ThemeableElementBase {
           i = i === 0 ? menuitems.length-1 : i-1;
           this.selectMenuItem(this.childNodes, menuitems[i]);
         }
-      } else if (ev.keyIdentifier === "Down") {
+      } else if (ev.key === "ArrowDown") {
         if (keyboardselected.length === 0) {
           this.selectMenuItem(this.childNodes, menuitems[0]);
         } else {
@@ -237,7 +237,7 @@ export class ContextMenu extends ThemeableElementBase {
     ev.preventDefault();
     ev.stopPropagation();
 
-    if (ev.keyIdentifier === "Enter") {
+    if (ev.key === "Enter") {
       const menuitems = this.fetchMenuItems(this.childNodes);
       if (menuitems.length === 0) {
         return;

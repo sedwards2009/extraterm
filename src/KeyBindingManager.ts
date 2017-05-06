@@ -17,7 +17,6 @@ export interface MinimalKeyboardEvent {
   shiftKey: boolean;  
   key: string;
   keyCode: number;
-  keyIdentifier: string;
 }
 
 // Internal data structure for pairing a key binding with a command.
@@ -178,24 +177,8 @@ export class KeyBindingMapping {
     } else {
       if (ev.key.charCodeAt(0) === 160) { // nbsp to space on the Mac
         key = " ";
-      } else {
-        
-        key = ev.key; // use ev.key until proven otherwise.
-        if (this._platform === "linux") {
-          // FIXME The key handling on Linux is broken a bit in Chrome 52. This code is a work around.
-          //       It is mostly needed to make Dvorak work ok.
-          if (ev.keyIdentifier.startsWith("U+")) {
-            const keyValue = Number.parseInt(ev.keyIdentifier.slice(2), 16);
-            const keyStr = String.fromCodePoint(keyValue);
-            if ((keyStr >= 'a' && keyStr <= 'z') || (keyStr >= 'A' && keyStr <= 'Z')) {
-              if ( ! ev.shiftKey) {
-                key = keyStr.toLowerCase();
-              } else {
-                key = keyStr;
-              }
-            }
-          }
-        }
+      } else {        
+        key = ev.key;
       }
     }
 

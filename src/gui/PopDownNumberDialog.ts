@@ -170,25 +170,19 @@ export class PopDownNumberDialog extends ThemeableElementBase {
    * 
    */
   private handleKeyDown(ev: KeyboardEvent) {
-    // Escape.
-    if (ev.keyIdentifier === "U+001B") {
+    if (ev.key === "Escape") {
       this._okId(null);
       ev.preventDefault();
       ev.stopPropagation();
       return;
     }
     
-    
-    if (ev.keyIdentifier === "Enter") {
+    if (ev.key === "Enter") {
       ev.preventDefault();
       ev.stopPropagation();
       
       const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_INPUT);
-  
-      if (ev.keyIdentifier === "Enter") {
-        // Enter
-        this._okId(this.getValue());
-      }
+      this._okId(this.getValue());
     }
   }
 

@@ -1070,7 +1070,6 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
         repeat: ev.repeat,
         keyCode: ev.keyCode,
         charCode: ev.charCode,
-        keyIdentifier: ev.keyIdentifier,
         which: ev.which,
         ctrlKey: ev.ctrlKey,
         shiftKey: ev.shiftKey,
@@ -1119,8 +1118,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
                 altKey: ev.altKey,
                 ctrlKey: ev.ctrlKey,
                 key: ev.key,
-                keyCode: ev.keyCode,
-                keyIdentifier: ev.keyIdentifier
+                keyCode: ev.keyCode
               };
               command = keyBindings.mapEventToCommand(evWithoutShift);
               if (command !== null && command.startsWith("go")) {
