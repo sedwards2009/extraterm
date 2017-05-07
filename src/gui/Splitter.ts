@@ -56,7 +56,7 @@ export class Splitter extends ThemeableElementBase {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(Splitter.TAG_NAME, {prototype: Splitter.prototype});
+      window.customElements.define(Splitter.TAG_NAME.toLowerCase(), Splitter);
       registered = true;
     }
   }
@@ -141,10 +141,9 @@ export class Splitter extends ThemeableElementBase {
   //
   //-----------------------------------------------------------------------
                                                            
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback() {
+  constructor() {
+    super();
+
     this._initProperties();
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();

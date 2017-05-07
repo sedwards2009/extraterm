@@ -56,9 +56,6 @@ export class Tab extends HTMLElement {
   //
   //-----------------------------------------------------------------------
 
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
   constructor() {
     super();
     this._initProperties();

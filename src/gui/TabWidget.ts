@@ -93,9 +93,6 @@ export class TabWidget extends ThemeableElementBase {
   //
   //-----------------------------------------------------------------------
                                                            
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
   constructor() {
     super();
 
