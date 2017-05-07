@@ -42,7 +42,7 @@ export class ScrollBar extends ThemeableElementBase {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(ScrollBar.TAG_NAME, {prototype: ScrollBar.prototype});
+      window.customElements.define(ScrollBar.TAG_NAME.toLowerCase(), ScrollBar);
       registered = true;
     }
   }
@@ -71,18 +71,15 @@ export class ScrollBar extends ThemeableElementBase {
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-  
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties(); // Initialise our properties. The constructor was not called.
   }
   
   /**
-   * Custom Element 'attached' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  attachedCallback(): void {
+  connectedCallback(): void {
     super.attachedCallback();
 
     if (DomUtils.getShadowRoot(this) === null) {
@@ -114,10 +111,6 @@ export class ScrollBar extends ThemeableElementBase {
       // Being reattached.
       this._updatePositionNumber(this._position);
     }
-  }
-
-  detachedCallback(): void {
-    super.detachedCallback();
   }
 
   /**
@@ -159,12 +152,7 @@ export class ScrollBar extends ThemeableElementBase {
     return <HTMLElement>DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
 
-  // --- Length attribute ---
   setLength(value: number): void {
-    this._setLength(value);
-  }
-
-  private _setLength(value) {
     if (value !== this._length) {
       this._length = Math.max(0, value);
       this._updateLengthNumber(this._length);
