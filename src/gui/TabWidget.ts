@@ -60,7 +60,7 @@ export class TabWidget extends ThemeableElementBase {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(TabWidget.TAG_NAME, {prototype: TabWidget.prototype});
+      window.customElements.define(TabWidget.TAG_NAME.toLowerCase(), TabWidget);
       registered = true;
     }
   }
@@ -96,7 +96,9 @@ export class TabWidget extends ThemeableElementBase {
   /**
    * Custom Element 'created' life cycle hook.
    */
-  createdCallback() {
+  constructor() {
+    super();
+
     this._initProperties();
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
