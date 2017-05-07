@@ -28,7 +28,7 @@ export class Tab extends HTMLElement {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(Tab.TAG_NAME, {prototype: Tab.prototype});
+      window.customElements.define(Tab.TAG_NAME.toLowerCase(), Tab);
       registered = true;
     }
   }
@@ -59,7 +59,8 @@ export class Tab extends HTMLElement {
   /**
    * Custom Element 'created' life cycle hook.
    */
-  createdCallback() {
+  constructor() {
+    super();
     this._initProperties();
 
     this._mutationObserver = new MutationObserver( (mutations) => {
@@ -69,7 +70,7 @@ export class Tab extends HTMLElement {
   }
   
 
-  attachedCallback(): void {
+  connectedCallback(): void {
     this._applyDraggable();
   }
 
