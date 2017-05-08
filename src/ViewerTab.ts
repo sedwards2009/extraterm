@@ -83,7 +83,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
       ScrollBar.init();
       EmbeddedViewer.init();
       ResizeCanary.init();
-      window.document.registerElement(EtViewerTab.TAG_NAME, {prototype: EtViewerTab.prototype});
+      window.customElements.define(EtViewerTab.TAG_NAME.toLowerCase(), EtViewerTab);
       registered = true;
     }
   }
@@ -279,17 +279,16 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
   //
   //-----------------------------------------------------------------------
 
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
   }
    
   /**
-   * Custom Element 'attached' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  attachedCallback(): void {
+  connectedCallback(): void {
+    super.connectedCallback();
     if (this._elementAttached) {
       return;
     }
@@ -359,10 +358,10 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
   }
 
   /**
-   * Custom Element 'detached' life cycle hook.
+   * Custom Element 'disconnected' life cycle hook.
    */
-  detachedCallback(): void {
-    super.detachedCallback();
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
     this._needsCompleteRefresh = true;
   }
 

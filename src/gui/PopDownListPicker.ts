@@ -43,7 +43,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   static init(): void {
     PopDownDialog.init();
     if (registered === false) {
-      window.document.registerElement(PopDownListPicker.TAG_NAME, {prototype: PopDownListPicker.prototype});
+      window.customElements.define(PopDownListPicker.TAG_NAME.toLowerCase(), PopDownListPicker);
       registered = true;
     }
   }
@@ -158,10 +158,8 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback() {
+  constructor() {
+    super();
     this._initProperties(); // Initialise our properties. The constructor was not called.
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this.createClone();

@@ -100,7 +100,7 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
       cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
         + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
 
-      window.document.registerElement(TextViewer.TAG_NAME, {prototype: TextViewer.prototype});
+      window.customElements.define(TextViewer.TAG_NAME.toLowerCase(), TextViewer);
       registered = true;
     }
   }
@@ -451,13 +451,13 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
   }
   
-  attachedCallback(): void {
-    super.attachedCallback();
-
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }
@@ -606,13 +606,6 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     }
 
     this._adjustHeight(this._height);
-  }
-
-  /**
-   * Custom Element 'detached' life cycle hook.
-   */
-  detachedCallback(): void {
-    super.detachedCallback();
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

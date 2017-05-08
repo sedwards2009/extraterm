@@ -80,7 +80,7 @@ export class ScrollBar extends ThemeableElementBase {
    * Custom Element 'connected' life cycle hook.
    */
   connectedCallback(): void {
-    super.attachedCallback();
+    super.connectedCallback();
 
     if (DomUtils.getShadowRoot(this) === null) {
       // Set up the structure in the shadow DOM.

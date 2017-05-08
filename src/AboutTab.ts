@@ -37,15 +37,9 @@ export class AboutTab extends ViewerElement {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(AboutTab.TAG_NAME, {prototype: AboutTab.prototype});
+      window.customElements.define(AboutTab.TAG_NAME.toLowerCase(), AboutTab);
       registered = true;
     }
-  }
-  
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically.
-  
-  private _initProperties(): void {
   }
   
   //-----------------------------------------------------------------------
@@ -87,20 +81,12 @@ export class AboutTab extends ViewerElement {
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-
+ 
   /**
-   * Custom Element 'created' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  createdCallback(): void {
-    this._initProperties();
-  }
-  
-  /**
-   * Custom Element 'attached' life cycle hook.
-   */
-  attachedCallback(): void {
-    super.attachedCallback();
-
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
       const themeStyle = document.createElement('style');
@@ -127,16 +113,4 @@ export class AboutTab extends ViewerElement {
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.ABOUT_TAB];
   }
-  
-  //-----------------------------------------------------------------------
-  //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
 }

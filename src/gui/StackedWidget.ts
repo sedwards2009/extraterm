@@ -35,7 +35,7 @@ export class StackedWidget extends ThemeableElementBase {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(StackedWidget.TAG_NAME, {prototype: StackedWidget.prototype});
+      window.customElements.define(StackedWidget.TAG_NAME.toLowerCase(), StackedWidget);
       registered = true;
     }
   }
@@ -60,16 +60,13 @@ export class StackedWidget extends ThemeableElementBase {
   //
   //-----------------------------------------------------------------------
   
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback() {
+  constructor() {
+    super();
     this._initProperties();
   }
   
-  attachedCallback(): void {
-    super.attachedCallback();
-
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }

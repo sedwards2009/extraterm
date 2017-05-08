@@ -25,7 +25,7 @@ class EtMarkdownViewer extends ViewerElement {
   
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EtMarkdownViewer.TAG_NAME, {prototype: EtMarkdownViewer.prototype});
+      window.customElements.define(EtMarkdownViewer.TAG_NAME.toLowerCase(), EtMarkdownViewer);
       registered = true;
     }
   }
@@ -71,7 +71,8 @@ class EtMarkdownViewer extends ViewerElement {
     this._updateFocusable(value);
   }
 
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
@@ -87,7 +88,8 @@ class EtMarkdownViewer extends ViewerElement {
     });
   }
 
-  attachedCallback(): void {
+  connectedCallback(): void {
+    super.connectedCallback();
     const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     const kids = this.childNodes;
     

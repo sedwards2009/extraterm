@@ -76,7 +76,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
   
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(TipViewer.TAG_NAME, {prototype: TipViewer.prototype});
+      window.customElements.define(TipViewer.TAG_NAME.toLowerCase(), TipViewer);
       registered = true;
     }
   }
@@ -220,13 +220,13 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
   //
   //-----------------------------------------------------------------------
   
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
   }
   
-  attachedCallback(): void {
-    super.attachedCallback();
-    
+  connectedCallback(): void {
+    super.connectedCallback();
     this._tipIndex = this._configManager.getConfig().tipCounter % this._getTipCount();
     
     if (DomUtils.getShadowRoot(this) !== null) {
@@ -273,13 +273,13 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
   }
   
   /**
-   * Custom Element 'detached' life cycle hook.
+   * Custom Element 'disconnected' life cycle hook.
    */
-  detachedCallback(): void {
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
     if (this._configManager !== null) {
       this._configManager.unregisterChangeListener(this);
     }
-    super.detachedCallback();
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

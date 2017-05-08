@@ -19,7 +19,7 @@ export class ResizeCanary extends HTMLElement {
 
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(ResizeCanary.TAG_NAME, {prototype: ResizeCanary.prototype});
+      window.customElements.define(ResizeCanary.TAG_NAME.toLowerCase(), ResizeCanary);
       registered = true;
     }
   }
@@ -57,14 +57,12 @@ export class ResizeCanary extends HTMLElement {
   //
   //-----------------------------------------------------------------------
   
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
   }
 
-  attachedCallback(): void {
+  connectedCallback(): void {
     if (DomUtils.getShadowRoot(this) != null) {
       return;
     }

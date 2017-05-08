@@ -178,7 +178,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       ResizeCanary.init();
 
       // EtMarkdownViewer.init();
-      window.document.registerElement(EtTerminal.TAG_NAME, {prototype: EtTerminal.prototype});
+      window.customElements.define(EtTerminal.TAG_NAME.toLowerCase(), EtTerminal);
       registered = true;
     }
   }
@@ -487,20 +487,17 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   //
   //-----------------------------------------------------------------------
 
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
     this._fetchNextTag();
   }
    
   /**
-   * Custom Element 'attached' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  attachedCallback(): void {
-    super.attachedCallback();
-    
+  connectedCallback(): void {
+    super.connectedCallback();
     if ( ! this._elementAttached) {
       this._elementAttached = true;
 
@@ -600,10 +597,10 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   }
   
   /**
-   * Custom Element 'detached' life cycle hook.
+   * Custom Element 'disconnected' life cycle hook.
    */
-  detachedCallback(): void {
-    super.detachedCallback();
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
     this._needsCompleteRefresh = true;
   }
   

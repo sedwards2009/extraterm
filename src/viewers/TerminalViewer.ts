@@ -85,7 +85,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
       cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
         + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
 
-      window.document.registerElement(TerminalViewer.TAG_NAME, {prototype: TerminalViewer.prototype});
+      window.customElements.define(TerminalViewer.TAG_NAME.toLowerCase(), TerminalViewer);
       registered = true;
     }
   }
@@ -616,22 +616,19 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
   //
   //-----------------------------------------------------------------------
   
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
     this._renderEventListener = this._handleRenderEvent.bind(this);
-    this.tabIndex = 0;
   }
   
   /**
-   * Custom Element 'attached' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  attachedCallback(): void {
-    super.attachedCallback();
-    
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) === null) {
+      this.tabIndex = 0;
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
       const clone = this.createClone();
       shadow.appendChild(clone);
@@ -785,13 +782,6 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
       this._needEmulatorResize = false;
       this._resizePoll();
     }
-  }
-  
-  /**
-   * Custom Element 'detached' life cycle hook.
-   */
-  detachedCallback(): void {
-    super.detachedCallback();
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

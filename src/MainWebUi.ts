@@ -125,7 +125,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     EmptyPaneMenu.init();
 
     if (registered === false) {
-      window.document.registerElement(MainWebUi.TAG_NAME, {prototype: MainWebUi.prototype});
+      window.customElements.define(MainWebUi.TAG_NAME.toLowerCase(), MainWebUi);
       registered = true;
     }
   }
@@ -228,16 +228,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   //
   //-----------------------------------------------------------------------
   
-  /**
-   * Custom element API call back.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties(); // Initialise our properties. The constructor was not called.
   }
   
-  attachedCallback(): void {
-    super.attachedCallback();
-
+  connectedCallback(): void {
+    super.connectedCallback();
+    
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this._createClone();
     shadow.appendChild(clone);

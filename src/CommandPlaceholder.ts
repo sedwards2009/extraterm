@@ -33,7 +33,7 @@ export class CommandPlaceHolder extends HTMLElement implements VirtualScrollable
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(CommandPlaceHolder.TAG_NAME, {prototype: CommandPlaceHolder.prototype});
+      window.customElements.define(CommandPlaceHolder.TAG_NAME.toLowerCase(), CommandPlaceHolder);
       registered = true;
     }
   }
@@ -48,25 +48,6 @@ export class CommandPlaceHolder extends HTMLElement implements VirtualScrollable
     return node !== null && node !== undefined && node instanceof CommandPlaceHolder;
   }
   
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
-    
-  }
-
   //-----------------------------------------------------------------------
 
   getMinHeight(): number {

@@ -38,7 +38,7 @@ export class ContextMenu extends ThemeableElementBase {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(ContextMenu.TAG_NAME, {prototype: ContextMenu.prototype});
+      window.customElements.define(ContextMenu.TAG_NAME.toLowerCase(), ContextMenu);
       registered = true;
     }
   }
@@ -83,10 +83,9 @@ export class ContextMenu extends ThemeableElementBase {
   //
   //-----------------------------------------------------------------------
 
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback() {
+  constructor() {
+    super();
+    
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);

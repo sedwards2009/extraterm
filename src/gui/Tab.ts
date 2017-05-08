@@ -65,7 +65,6 @@ export class Tab extends HTMLElement {
     });
     this._mutationObserver.observe(this, { childList: true });
   }
-  
 
   connectedCallback(): void {
     this._applyDraggable();

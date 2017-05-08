@@ -44,7 +44,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   static init(): void {
     PopDownDialog.init();
     if (registered === false) {
-      window.document.registerElement(ListPicker.TAG_NAME, {prototype: ListPicker.prototype});
+      window.customElements.define(ListPicker.TAG_NAME.toLowerCase(), ListPicker);
       registered = true;
     }
   }
@@ -149,10 +149,8 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback() {
+  constructor() {
+    super();
     this._initProperties(); // Initialise our properties. The constructor was not called.
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this.createClone();

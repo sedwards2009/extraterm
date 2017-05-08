@@ -33,16 +33,16 @@ export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefresh
   }
 
   /**
-   * Custom Element 'attached' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  protected attachedCallback(): void {
+  protected connectedCallback(): void {
     ThemeConsumer.registerThemeable(this);
   }
   
   /**
    * Custom Element 'detached' life cycle hook.
    */
-  protected detachedCallback(): void {
+  protected disconnectedCallback(): void {
     ThemeConsumer.unregisterThemeable(this);
   }
 

@@ -103,7 +103,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
   
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(SettingsTab.TAG_NAME, {prototype: SettingsTab.prototype});
+      window.customElements.define(SettingsTab.TAG_NAME.toLowerCase(), SettingsTab);
       registered = true;
     }
   }
@@ -265,19 +265,16 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
   //
   //-----------------------------------------------------------------------
 
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
   }
   
   /**
-   * Custom Element 'attached' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  attachedCallback(): void {
-    super.attachedCallback();
-    
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
       const themeStyle = document.createElement('style');
@@ -493,13 +490,13 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
   }
   
   /**
-   * Custom Element 'detached' life cycle hook.
+   * Custom Element 'disconnected' life cycle hook.
    */
-  detachedCallback(): void {
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
     if (this._configManager !== null) {
       this._configManager.unregisterChangeListener(this);
     }
-    super.detachedCallback();
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

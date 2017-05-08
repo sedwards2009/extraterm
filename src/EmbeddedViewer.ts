@@ -101,7 +101,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EmbeddedViewer.TAG_NAME, {prototype: EmbeddedViewer.prototype});
+      window.customElements.define(EmbeddedViewer.TAG_NAME.toLowerCase(), EmbeddedViewer);
       registered = true;
     }
   }
@@ -452,25 +452,21 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
-    this.tabIndex = 0;
   }
   
   /**
-   * Custom Element 'attached' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  attachedCallback(): void {
-    super.attachedCallback();
-    
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }
 
+    this.tabIndex = 0;
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
 
     const clone = this._createClone();
@@ -546,12 +542,16 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     // Remove the anti-flicker style.
     this._getById(ID_CONTAINER).setAttribute('style', '');
   }
-  
-  /**
-   * Custom Element 'detached' life cycle hook.
-   */
-  detachedCallback(): void {
-    super.detachedCallback();
+
+  static get observedAttributes(): string[] {
+    return [
+      EmbeddedViewer.ATTR_FRAME_TITLE,
+      EmbeddedViewer.ATTR_RETURN_CODE,
+      EmbeddedViewer.ATTR_EXPAND,
+      EmbeddedViewer.ATTR_TAG,
+      EmbeddedViewer.ATTR_TOOL_TIP,
+      EmbeddedViewer.ATTR_AWESOME_ICON
+    ];
   }
   
   /**

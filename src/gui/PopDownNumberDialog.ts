@@ -35,7 +35,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
   static init(): void {
     PopDownDialog.init();
     if (registered === false) {
-      window.document.registerElement(PopDownNumberDialog.TAG_NAME, {prototype: PopDownNumberDialog.prototype});
+      window.customElements.define(PopDownNumberDialog.TAG_NAME.toLowerCase(), PopDownNumberDialog);
       registered = true;
     }
   }
@@ -121,10 +121,8 @@ export class PopDownNumberDialog extends ThemeableElementBase {
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback() {
+  constructor() {
+    super();
     this._initProperties(); // Initialise our properties. The constructor was not called.
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this.createClone();

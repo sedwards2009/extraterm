@@ -39,7 +39,7 @@ export class MenuItem extends ThemeableElementBase {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(MenuItem.TAG_NAME, {prototype: MenuItem.prototype});
+      window.customElements.define(MenuItem.TAG_NAME.toLowerCase(), MenuItem);
       registered = true;
     }
   }
@@ -57,16 +57,10 @@ export class MenuItem extends ThemeableElementBase {
   //-----------------------------------------------------------------------
 
   /**
-   * Custom Element 'created' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  createdCallback(): void {
-  }
-  
-  /**
-   * Custom Element 'attached' life cycle hook.
-   */
-  attachedCallback(): void {
-    super.attachedCallback();
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }
@@ -86,13 +80,6 @@ export class MenuItem extends ThemeableElementBase {
     (<HTMLElement>shadow.querySelector("#" + ID_ICON2)).innerHTML = iconhtml;
     
     this.updateKeyboardSelected(this.getAttribute(MenuItem.ATTR_SELECTED));
-  }
-
-  /**
-   * Custom Element 'detached' life cycle hook.
-   */
-  detachedCallback(): void {
-    super.detachedCallback();
   }
   
   /**

@@ -91,7 +91,6 @@ interface HTMLDialogElement extends HTMLElement {
 
 interface Document {
   createElement(tagName: "template"): HTMLTemplateElement;
-  registerElement(tagName:string, props:any): any;
 }
 
 interface KeyboardEventInit {

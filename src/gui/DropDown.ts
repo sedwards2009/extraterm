@@ -37,7 +37,7 @@ export class DropDown extends HTMLElement {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(DropDown.TAG_NAME, {prototype: DropDown.prototype});
+      window.customElements.define(DropDown.TAG_NAME.toLowerCase(), DropDown);
       registered = true;
     }
   }
@@ -66,10 +66,8 @@ export class DropDown extends HTMLElement {
   //
   //-----------------------------------------------------------------------
 
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback() {
+  constructor() {
+    super();
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);

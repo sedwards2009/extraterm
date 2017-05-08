@@ -47,7 +47,7 @@ export class ImageViewer extends ViewerElement {
   
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(ImageViewer.TAG_NAME, {prototype: ImageViewer.prototype});
+      window.customElements.define(ImageViewer.TAG_NAME.toLowerCase(), ImageViewer);
       registered = true;
     }
   }
@@ -292,13 +292,13 @@ export class ImageViewer extends ViewerElement {
   //
   //-----------------------------------------------------------------------
   
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
   }
   
-  attachedCallback(): void {
-    super.attachedCallback();
-    
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) !== null) {
       return;
     }

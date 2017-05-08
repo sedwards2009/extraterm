@@ -93,7 +93,7 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EtKeyBindingsTab.TAG_NAME, {prototype: EtKeyBindingsTab.prototype});
+      window.customElements.define(EtKeyBindingsTab.TAG_NAME.toLowerCase(), EtKeyBindingsTab);
       registered = true;
     }
   }
@@ -177,19 +177,16 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
   //
   //-----------------------------------------------------------------------
 
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
   }
   
   /**
-   * Custom Element 'attached' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  attachedCallback(): void {
-    super.attachedCallback();
-
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
 
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
@@ -242,16 +239,16 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
   }
 
   /**
-   * Custom Element 'detached' life cycle hook.
+   * Custom Element 'disconnected' life cycle hook.
    */
-  detachedCallback(): void {
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
     if (this._configManager !== null) {
       this._configManager.unregisterChangeListener(this);
     }
     if (this._keyBindingManager !== null) {
       this._keyBindingManager.unregisterChangeListener(this);
     }
-    super.detachedCallback();
   }
 
   //-----------------------------------------------------------------------

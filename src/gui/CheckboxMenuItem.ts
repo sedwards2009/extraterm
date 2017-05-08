@@ -32,7 +32,7 @@ export class CheckboxMenuItem extends MenuItem {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(CheckboxMenuItem.TAG_NAME, {prototype: CheckboxMenuItem.prototype});
+      window.customElements.define(CheckboxMenuItem.TAG_NAME.toLowerCase(), CheckboxMenuItem);
       registered = true;
     }
   }
@@ -49,15 +49,8 @@ export class CheckboxMenuItem extends MenuItem {
   //
   //-----------------------------------------------------------------------
   
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback() {
-    super.createdCallback();
-  }
-  
-  attachedCallback(): void {
-    super.attachedCallback();
+  connectedCallback(): void {
+    super.connectedCallback();
     this._updateChecked(this.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
   }
 

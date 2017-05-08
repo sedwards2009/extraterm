@@ -45,7 +45,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
    */
   static init(): void {
     if (registered === false) {
-      window.document.registerElement(EmptyPaneMenu.TAG_NAME, {prototype: EmptyPaneMenu.prototype});
+      window.customElements.define(EmptyPaneMenu.TAG_NAME.toLowerCase(), EmptyPaneMenu);
       registered = true;
     }
   }
@@ -123,19 +123,16 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   //
   //-----------------------------------------------------------------------
 
-  /**
-   * Custom Element 'created' life cycle hook.
-   */
-  createdCallback(): void {
+  constructor() {
+    super();
     this._initProperties();
   }
   
   /**
-   * Custom Element 'attached' life cycle hook.
+   * Custom Element 'connected' life cycle hook.
    */
-  attachedCallback(): void {
-    super.attachedCallback();
-    
+  connectedCallback(): void {
+    super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
       const themeStyle = document.createElement('style');
@@ -171,16 +168,4 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.EMPTY_PANE_MENU];
   }
-  
-  //-----------------------------------------------------------------------
-  //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
 }
