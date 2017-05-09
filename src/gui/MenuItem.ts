@@ -82,6 +82,11 @@ export class MenuItem extends ThemeableElementBase {
     this.updateKeyboardSelected(this.getAttribute(MenuItem.ATTR_SELECTED));
   }
   
+
+  static get observedAttributes(): string[] {
+    return [MenuItem.ATTR_SELECTED];
+  }
+
   /**
    * Custom Element 'attribute changed' hook.
    */

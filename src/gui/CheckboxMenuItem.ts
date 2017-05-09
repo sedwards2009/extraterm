@@ -54,6 +54,10 @@ export class CheckboxMenuItem extends MenuItem {
     this._updateChecked(this.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
   }
 
+  static get observedAttributes(): string[] {
+    return [CheckboxMenuItem.ATTR_CHECKED, MenuItem.ATTR_SELECTED];
+  }
+
   /**
    * Custom Element 'attribute changed' hook.
    */

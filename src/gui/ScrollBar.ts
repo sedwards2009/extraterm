@@ -113,6 +113,10 @@ export class ScrollBar extends ThemeableElementBase {
     }
   }
 
+  static get observedAttributes(): string[] {
+    return [ScrollBar.ATTR_LENGTH, ScrollBar.ATTR_POSITION];
+  }
+
   /**
    * Custom Element 'attribute changed' hook.
    */

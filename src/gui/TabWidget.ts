@@ -122,6 +122,10 @@ export class TabWidget extends ThemeableElementBase {
     tabBar.addEventListener("dragleave", this._handleDragLeave.bind(this));
     tabBar.addEventListener("dragend", this._handleDragEnd.bind(this));
   }
+
+  static get observedAttributes(): string[] {
+    return [ATTR_SHOW_FRAME];
+  }
   
   /**
    * Custom Element 'attribute changed' hook.
