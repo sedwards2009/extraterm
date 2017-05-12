@@ -235,20 +235,52 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   
   connectedCallback(): void {
     super.connectedCallback();
-    
+    this._setUpShadowDom();   
+    this._setUpMainContainerEvents();
+    this._setUpSplitLayout();
+    this._setUpWindowControls();
+    this._setupIpc();
+  }
+
+  private _setUpShadowDom(): void {
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this._createClone();
     shadow.appendChild(clone);
     this.updateThemeCss();
-    
+  }
+
+  private _setUpMainContainerEvents(): void {
     const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
 
     // Update the window title when the selected tab changes and resize the terminal.
-    mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, (ev) => {
+    mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, ev => {
       if (ev.target instanceof TabWidget) {
         this._handleTabSwitch(ev.target);
       }
     });
+
+    mainContainer.addEventListener(TabWidget.EVENT_TAB_DROPPED, ev => {
+this._log.debug("Saw tab dropped event!");
+    });
+
+    mainContainer.addEventListener('click', (ev) => {
+      for (const part of ev.path) {
+        if (part instanceof HTMLButtonElement) {
+          if (part.classList.contains(CLASS_NEW_TAB_BUTTON)) {
+            let el: HTMLElement = part;
+            while (el != null && ! (el instanceof TabWidget)) {
+              el = el.parentElement;
+            }
+            const  newTerminal = this.newTerminalTab(<TabWidget> el);
+            this._switchToTab(newTerminal);
+          }
+        } 
+      }
+    });
+  }
+
+  private _setUpSplitLayout(): void {
+    const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
 
     this._splitLayout.setRootContainer(mainContainer);
     this._splitLayout.setTabContainerFactory( (tabWidget: TabWidget, tab: Tab, tabContent: Element): Element => {
@@ -286,22 +318,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       });
       return emptyPaneMenu;
     });
+  }
 
-    mainContainer.addEventListener('click', (ev) => {
-      for (const part of ev.path) {
-        if (part instanceof HTMLButtonElement) {
-          if (part.classList.contains(CLASS_NEW_TAB_BUTTON)) {
-            let el: HTMLElement = part;
-            while (el != null && ! (el instanceof TabWidget)) {
-              el = el.parentElement;
-            }
-            const  newTerminal = this.newTerminalTab(<TabWidget> el);
-            this._switchToTab(newTerminal);
-          }
-        } 
-      }
-    });
-
+  private _setUpWindowControls(): void {
     DomUtils.getShadowId(this, ID_MINIMIZE_BUTTON).addEventListener('click', () => {
       this.focus();
       this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
@@ -316,8 +335,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this.focus();
       this._sendWindowRequestEvent(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST);
     });
-
-    this._setupIpc();
   }
 
   private _menuControls(): Element {
@@ -416,7 +433,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._tabIdCounter++;
     const newTab = <Tab> document.createElement(Tab.TAG_NAME);
     newTab.setAttribute('id', "tab_id_" + newId);
-    newTab.innerHTML =
+    newTab.tabIndex = -1;
+    newTab.innerHTML = 
       `<div class="${CLASS_TAB_HEADER_CONTAINER}">` +
         `<div class="${CLASS_TAB_HEADER_ICON}"></div>` +
         `<div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>` +
