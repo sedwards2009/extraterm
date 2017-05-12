@@ -6,6 +6,7 @@
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 import Logger from '../Logger';
+import log from "../LogDecorator";
 
 let registered = false;
 

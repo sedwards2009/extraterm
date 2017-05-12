@@ -27,6 +27,7 @@ let registered = false;
 
 const ID_TOP = "ID_TOP";
 const ID_TABBAR = "ID_TABBAR";
+const ID_TABBAR_CONTAINER = "ID_TABBAR_CONTAINER";
 const ID_CONTENTSTACK = "ID_CONTENTSTACK";
 const ID_CONTENTS = "ID_CONTENTS";
 const ID_DRAG_INDICATOR_CONTAINER = "ID_DRAG_INDICATOR_CONTAINER";
@@ -38,6 +39,14 @@ const CLASS_REMAINDER_LEFT = "remainder-left";
 const CLASS_REMAINDER_RIGHT = "remainder";
 const CLASS_ACTIVE = "active";
 const CLASS_TAB = "tab";
+const MIMETYPE_ELEMENT = "application/x-element";
+
+
+interface TabDroppedEventDetail {
+  tabId: string;
+  targetTabWidget: TabWidget;
+  tabIndex: number;
+}
 
 /**
  * A widget to display a stack of tabs.
@@ -67,6 +76,8 @@ export class TabWidget extends ThemeableElementBase {
   
   static EVENT_TAB_SWITCH = "tab-switch";
   
+  static EVENT_TAB_DROPPED = "tabwidget-tab-dropped";
+
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
@@ -114,13 +125,7 @@ export class TabWidget extends ThemeableElementBase {
     const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
 
-    const tabBar = this._getTabbar();
-    tabBar.addEventListener("dragstart", this._handleDragStart.bind(this));
-    tabBar.addEventListener("dragover", this._handleDragOver.bind(this));
-    tabBar.addEventListener("dragenter", this._handleDragEnter.bind(this));
-    tabBar.addEventListener("dragexit", this._handleDragExit.bind(this));
-    tabBar.addEventListener("dragleave", this._handleDragLeave.bind(this));
-    tabBar.addEventListener("dragend", this._handleDragEnd.bind(this));
+    this._setupDragAndDrop();
   }
 
   static get observedAttributes(): string[] {
@@ -169,9 +174,11 @@ export class TabWidget extends ThemeableElementBase {
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
 <div id='${ID_TOP}'>
+<div id='${ID_TABBAR_CONTAINER}'>
 <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
-<div id='${ID_CONTENTS}'><${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></${StackedWidget.TAG_NAME}></div>
 <div id='${ID_DRAG_INDICATOR_CONTAINER}'><div id='${ID_DRAG_INDICATOR}'></div></div>
+</div>
+<div id='${ID_CONTENTS}'><${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></${StackedWidget.TAG_NAME}></div>
 </div>
 `;
       window.document.body.appendChild(template);
@@ -445,61 +452,55 @@ export class TabWidget extends ThemeableElementBase {
   //  ######  #    # #    #  ####      ###  #    ######  #    #  ####  #      
   //                                                                         
   //-----------------------------------------------------------------------
+  private _setupDragAndDrop(): void {
+    const tabBar = this._getTabbar();
+    tabBar.addEventListener("dragstart", this._handleDragStart.bind(this));
+    tabBar.addEventListener("dragover", this._handleDragOver.bind(this));
+    tabBar.addEventListener("dragenter", this._handleDragEnter.bind(this));
+    tabBar.addEventListener("dragexit", this._hideDragIndicator.bind(this));
+    tabBar.addEventListener("dragleave", this._hideDragIndicator.bind(this));
+    tabBar.addEventListener("dragend", this._hideDragIndicator.bind(this));
+    tabBar.addEventListener("drop", this._handleDrop.bind(this));
+  }
 
   private _handleDragStart(ev: DragEvent): void {
-    this._log.debug("tabbar dragstart", ev.target);
+    ev.stopPropagation();
 
     // Only let the 'tab' elements be dragged and not our LIs.
-    if ((<HTMLElement>ev.target).getAttribute("draggable") === null) {
+    const target = <HTMLElement>ev.target;
+    const parentElement = target.parentElement;
+    if (target.getAttribute("draggable") === null || ! (parentElement instanceof Tab)) {
       ev.preventDefault();
-      ev.stopPropagation();
       return;
     }
 
-    ev.stopPropagation();
-    ev.dataTransfer.setData("text/plain", "Hello");
+    ev.dataTransfer.setData(MIMETYPE_ELEMENT, parentElement.id);
   }
 
   private _handleDragEnter(ev: DragEvent): void {
-    this._log.debug(`_getTabbar() dragenter`);
     ev.preventDefault();
   }
 
   private  _handleDragOver(ev: DragEvent): void {
-    const rect = this.getBoundingClientRect();
-    const elementX = ev.pageX - rect.left;
-    const elementY = ev.pageY - rect.top;
-
-    // this._log.debug(`_getTabbar() dragover: offsetX=${ev.pageX} offsetY=${ev.pageY} left=${rect.left} top=${rect.top} elementX=${elementX} elementY=${elementY}`);
-    
-    // Figure out which tabs the drop indicator should appear in between.
-    const tabBar = this._getTabbar();
-    let index = 0;
-    const childElements = DomUtils.toArray(tabBar.children).filter( kid => kid.classList.contains(CLASS_TAB));
-    for (const kid of childElements) {
-      const rect = kid.getBoundingClientRect();
-      // this._log.debug(`kid left=${rect.left} width=${rect.width}`);
-
-      if (elementX <= rect.left + rect.width/2) {
-        break;
-      }
-      index++;
-    }
+    const pointerTabIndex = this._pointToTabIndex(ev);
 
     // Position the drop indicator.
     const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     let indicatorX = 0;
 
-    if (index === 0) {
+    const tabBar = this._getTabbar();
+    const childElements = DomUtils.toArray(tabBar.children).filter(kid => kid.classList.contains(CLASS_TAB));
+    const rect = this.getBoundingClientRect();
+    if (pointerTabIndex === 0) {
       // Left end of the tab bar.
-      const kid = childElements[index];
+      const kid = childElements[pointerTabIndex];
       const kidRect = kid.getBoundingClientRect();
       indicatorX = Math.floor((kidRect.left + rect.left ) / 2);
 
-    } else if (index < childElements.length) {
+    } else if (pointerTabIndex < childElements.length) {
       // Somewhere in the middle.
-      const kidLeft = childElements[index-1];
-      const kidRight = childElements[index];
+      const kidLeft = childElements[pointerTabIndex-1];
+      const kidRight = childElements[pointerTabIndex];
 
       const rectLeft = kidLeft.getBoundingClientRect();
       const rectRight = kidRight.getBoundingClientRect();
@@ -521,28 +522,48 @@ export class TabWidget extends ThemeableElementBase {
     ev.stopPropagation();
   }
 
-  private _handleDragLeave(ev: DragEvent): void {
-    this._log.debug(`_getTabbar() dragleave`);
+  private _pointToTabIndex(ev: DragEvent): number {
+    // Figure out which tabs the drop indicator should appear in between.
+    const rect = this.getBoundingClientRect();
+    const pointXInPageCoords = ev.pageX - rect.left;
 
+    const tabBar = this._getTabbar();
+    let index = 0;
+    const childElements = DomUtils.toArray(tabBar.children).filter(kid => kid.classList.contains(CLASS_TAB));
+    for (const kid of childElements) {
+      const rect = kid.getBoundingClientRect();
+      if (pointXInPageCoords <= rect.left + rect.width/2) {
+        break;
+      }
+      index++;
+    }
+    return index;
+  }
+
+  private _handleDrop(ev: DragEvent): void {
+    this._hideDragIndicator();
+
+    const data = ev.dataTransfer.getData(MIMETYPE_ELEMENT);
+    if (data != null && data !== "") {
+      if (this.id == null || this.id === "") {
+        this._log.warn("A drop occurred on a TabWidget with no ID set.");
+        return;
+      }
+      const pointerTabIndex = this._pointToTabIndex(ev);
+
+      const detail: TabDroppedEventDetail = {
+        targetTabWidget: this,
+        tabIndex: pointerTabIndex,
+        tabId: data
+      };
+      const tabDropEvent = new CustomEvent(TabWidget.EVENT_TAB_DROPPED, { bubbles: true, detail: detail });
+      this.dispatchEvent(tabDropEvent);
+    }
+  }
+
+  private _hideDragIndicator(): void {
     const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
   }
-
-  private _handleDragExit(ev: DragEvent): void {
-    this._log.debug(`_getTabbar() dragexit`);
-    const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
-    dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
-    dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
-    // ev.preventDefault();
-  }
-
-  private _handleDragEnd(ev: DragEvent): void {
-    this._log.debug(`_getTabbar() dragend`);
-
-    const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
-    dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
-    dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
-  }
-
 }
