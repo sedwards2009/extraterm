@@ -64,6 +64,10 @@ interface TabWidgetPosition extends ClientRect {
 type Point2D = [number, number];
 type Matrix2D = [number, number, number, number];
 
+// Used to create new element IDs.
+let tabWidgetIdCounter = 0;
+let tabIdCounter = 0;
+
 export class SplitLayout {
 
   private _log: Logger = new Logger("SplitLayout");
@@ -88,6 +92,7 @@ export class SplitLayout {
     this._tabContainerFactory = () => document.createElement("DIV");
 
     const tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+    tabWidget.id = this._nextTabWidgetId();
     tabWidget.setShowFrame(false);
     this._rootInfoNode = {type: "tabwidget", children: [], tabWidget: tabWidget, emptyTab: null,
       emptyTabContent: null, emptyContainer: null, leftSpaceDefaultElement: null, rightSpaceDefaultElement: null};
@@ -432,6 +437,7 @@ export class SplitLayout {
   private _createTabWidgetInfo(children: TabInfo[]): TabWidgetInfoNode {
     // Create a new TabWidget
     const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+    newTabWidget.id = this._nextTabWidgetId();
     newTabWidget.setShowFrame(false);
     const newTabWidgetInfo: TabWidgetInfoNode = {
       type: "tabwidget",
@@ -444,6 +450,16 @@ export class SplitLayout {
       rightSpaceDefaultElement: null
     };
     return newTabWidgetInfo;
+  }
+
+  private _nextTabWidgetId(): string {
+    tabWidgetIdCounter++;
+    return "tabwidget_" + tabWidgetIdCounter;
+  }
+
+  private _nextTabId(): string {
+    tabIdCounter++;
+    return "tab_" + tabIdCounter;
   }
 
   closeSplitAtTabContent(tabContent: Element): void {
@@ -681,6 +697,7 @@ export class SplitLayout {
   private _updateTabWidget(infoNode: TabWidgetInfoNode, position: RelativePosition): void {
     if (infoNode.tabWidget  == null) {
       infoNode.tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
+      infoNode.tabWidget.id = this._nextTabWidgetId();
       infoNode.tabWidget.setShowFrame(false);
     }
     const tabWidget = infoNode.tabWidget;
@@ -726,6 +743,7 @@ export class SplitLayout {
     } else if (this._emptySplitFactory != null) {
       if (infoNode.emptyTab == null) {
         infoNode.emptyTab = <Tab> document.createElement(Tab.TAG_NAME);
+        infoNode.emptyTab.id = this._nextTabId();
       }
       if (infoNode.emptyTabContent == null) {
         infoNode.emptyTabContent = this._emptySplitFactory();
