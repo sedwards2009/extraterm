@@ -6,7 +6,7 @@
 import * as DomUtils from './DomUtils';
 import * as util from './gui/Util';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import {TabWidget as TabWidget} from './gui/TabWidget';
+import {TabWidget, TabDroppedEventDetail} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
 import {SettingsTab} from './settings/SettingsTab';
 import {AboutTab} from './AboutTab';
@@ -259,11 +259,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       }
     });
 
-    mainContainer.addEventListener(TabWidget.EVENT_TAB_DROPPED, ev => {
-this._log.debug("Saw tab dropped event!");
+    mainContainer.addEventListener(TabWidget.EVENT_TAB_DROPPED, (ev: CustomEvent): void => {
+      const detail = <TabDroppedEventDetail> ev.detail;
+      const tabElement = DomUtils.getShadowId(this, detail.tabId);
+      this._splitLayout.moveTabToTabWidget(<Tab> tabElement, detail.targetTabWidget, detail.tabIndex);
+      this._splitLayout.update();
     });
 
-    mainContainer.addEventListener('click', (ev) => {
+    mainContainer.addEventListener('click', ev => {
       for (const part of ev.path) {
         if (part instanceof HTMLButtonElement) {
           if (part.classList.contains(CLASS_NEW_TAB_BUTTON)) {

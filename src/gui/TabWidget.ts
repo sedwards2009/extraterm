@@ -42,7 +42,7 @@ const CLASS_TAB = "tab";
 const MIMETYPE_ELEMENT = "application/x-element";
 
 
-interface TabDroppedEventDetail {
+export interface TabDroppedEventDetail {
   tabId: string;
   targetTabWidget: TabWidget;
   tabIndex: number;

@@ -10,8 +10,10 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+}
 
-  position: relative; // Needed for the drop indicator.
+#ID_TABBAR_CONTAINER {
+  position: relative;
 }
 
 #ID_TABBAR {

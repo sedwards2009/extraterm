@@ -395,6 +395,26 @@ export class SplitLayout {
     return null;
   }
 
+  moveTabToTabWidget(tabElement: Tab, targetTabWidget: TabWidget, tabIndex: number): void {
+    const {tabWidgetInfo: sourceTabWidgetInfo, tabInfo} = findTabWidgetInfoByTab(this._rootInfoNode, tabElement);
+    const targetTabWidgetInfo = findTabWidgetInfoByTabWidget(this._rootInfoNode, targetTabWidget);
+    
+    if (tabIndex > targetTabWidgetInfo.children.length) {
+      return;
+    }
+
+    if (sourceTabWidgetInfo === targetTabWidgetInfo) {
+      const frontList = sourceTabWidgetInfo.children.slice(0, tabIndex).filter(kid => kid !== tabInfo);
+      const tailList = sourceTabWidgetInfo.children.slice(tabIndex).filter(kid => kid !== tabInfo);
+      sourceTabWidgetInfo.children = [...frontList, tabInfo, ...tailList];
+    } else {
+      sourceTabWidgetInfo.children = sourceTabWidgetInfo.children.filter(kid => kid !== tabInfo);
+      const frontList = targetTabWidgetInfo.children.slice(0, tabIndex);
+      const tailList = targetTabWidgetInfo.children.slice(tabIndex);
+      targetTabWidgetInfo.children = [...frontList, tabInfo, ...tailList];
+    }
+  }
+
   private _splitTabWidgetAtTabContentIntoSplitter(tabWidgetInfo: TabWidgetInfoNode, tabContent: Element,
       orientation: SplitOrientation): SplitterInfoNode {
 
