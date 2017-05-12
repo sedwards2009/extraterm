@@ -524,15 +524,16 @@ export class TabWidget extends ThemeableElementBase {
 
   private _pointToTabIndex(ev: DragEvent): number {
     // Figure out which tabs the drop indicator should appear in between.
-    const rect = this.getBoundingClientRect();
-    const pointXInPageCoords = ev.pageX - rect.left;
-
+    const widgetRect = this.getBoundingClientRect();
+    const pointXInPageCoords = ev.pageX - widgetRect.left;
     const tabBar = this._getTabbar();
-    let index = 0;
     const childElements = DomUtils.toArray(tabBar.children).filter(kid => kid.classList.contains(CLASS_TAB));
+
+    let index = 0;
     for (const kid of childElements) {
-      const rect = kid.getBoundingClientRect();
-      if (pointXInPageCoords <= rect.left + rect.width/2) {
+      const kidRect = kid.getBoundingClientRect();
+      const midPoint = kidRect.left - widgetRect.left + kidRect.width/2;
+      if (pointXInPageCoords <= midPoint) {
         break;
       }
       index++;
