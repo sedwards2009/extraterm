@@ -70,6 +70,10 @@ DIV.tab_content {
   position: relative;
 }
 
+ET-TAB:focus {
+  outline: none;
+}
+
 DIV.tab_content > * {
   position: absolute;
   width: 100%;

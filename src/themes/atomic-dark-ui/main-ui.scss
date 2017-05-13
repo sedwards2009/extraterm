@@ -80,6 +80,10 @@ DIV.tab_content > * {
   right: 0;
 }
 
+ET-TAB:focus {
+  outline: none;
+}
+
 DIV.tab_header_container {
   display: flex;
   width: 100%;
