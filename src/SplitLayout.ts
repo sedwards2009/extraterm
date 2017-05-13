@@ -609,30 +609,6 @@ export class SplitLayout {
     }
   }
 
-  // private _getTabWidgetSibling(tabWidget: TabWidget, direction: 1 | -1) : TabWidget {
-  //   const path = findPathToTabWidget(this._rootInfoNode, tabWidget);
-  //   if (path == null) {
-  //     this._log.severe("Unable to find the info for tab widget ", tabWidget);
-  //     return null;
-  //   }
-  //   const len = path.length;
-  //   if (len >=2 ) {
-  //     const tabWidgetInfo = path[len-1];
-  //     const splitterInfo = path[len-2];
-
-  //     if (splitterInfo.type === "splitter" && tabWidgetInfo.type === "tabwidget") {
-  //       const index = splitterInfo.children.indexOf(tabWidgetInfo) + direction;
-  //       if (index >= 0 && index < splitterInfo.children.length) {
-  //         const sibling = splitterInfo.children[index];
-  //         if (sibling.type === "tabwidget") {
-  //           return sibling.tabWidget;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   return null;
-  // }
-
   /**
    * Update the DOM to match the desired new state.
    * 
@@ -674,7 +650,10 @@ export class SplitLayout {
     const len = infoNode.children.length;
     for (let i=0; i<len; i++) {
       const kidInfo = infoNode.children[i];
-      const newPosition = this._computeNewPosition(position, i, len);
+      let newPosition = infoNode.orientation === SplitOrientation.VERTICAL ?
+                          this._computeNewPositionForVerticalSplits(position, i, len) :
+                          this._computeNewPositionForHorizontalSplits(position, i, len);
+
       if (kidInfo.type === "splitter") {
         this._updateSplitter(kidInfo, newPosition);
         targetChildrenList.push(kidInfo.splitter);
@@ -688,7 +667,7 @@ export class SplitLayout {
     DomUtils.setElementChildren(infoNode.splitter, targetChildrenList);
   }
 
-  private _computeNewPosition(oldPosition: RelativePosition, index: number, length: number): RelativePosition {
+  private _computeNewPositionForVerticalSplits(oldPosition: RelativePosition, index: number, length: number): RelativePosition {
     switch (oldPosition) {
       case RelativePosition.TOP_WIDE:
         if (length === 1) {
@@ -708,6 +687,30 @@ export class SplitLayout {
 
       case RelativePosition.TOP_RIGHT:
         return index === length-1 ? RelativePosition.TOP_RIGHT : RelativePosition.OTHER;
+
+      default:
+        return RelativePosition.OTHER;
+    }
+  }
+
+  private _computeNewPositionForHorizontalSplits(oldPosition: RelativePosition, index: number, length: number): RelativePosition {
+    switch (oldPosition) {
+      case RelativePosition.TOP_WIDE:
+        if (length === 1) {
+          return RelativePosition.TOP_WIDE;
+        } else {
+          if (index === 0) {
+            return RelativePosition.TOP_WIDE;
+          } else {
+            return RelativePosition.OTHER;
+          }
+        }
+
+      case RelativePosition.TOP_LEFT:
+        return index === 0 ? RelativePosition.TOP_LEFT : RelativePosition.OTHER;
+
+      case RelativePosition.TOP_RIGHT:
+        return index === 0 ? RelativePosition.TOP_RIGHT : RelativePosition.OTHER;
 
       default:
         return RelativePosition.OTHER;
