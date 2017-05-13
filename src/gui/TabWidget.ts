@@ -475,6 +475,9 @@ export class TabWidget extends ThemeableElementBase {
     }
 
     ev.dataTransfer.setData(MIMETYPE_ELEMENT, parentElement.id);
+    ev.dataTransfer.setDragImage(parentElement, -10, -10);
+    ev.dataTransfer.effectAllowed = 'move';
+    ev.dataTransfer.dropEffect = 'move';
   }
 
   private _handleDragEnter(ev: DragEvent): void {
