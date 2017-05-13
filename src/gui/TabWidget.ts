@@ -490,30 +490,35 @@ export class TabWidget extends ThemeableElementBase {
 
     const tabBar = this._getTabbar();
     const childElements = DomUtils.toArray(tabBar.children).filter(kid => kid.classList.contains(CLASS_TAB));
-    const rect = this.getBoundingClientRect();
-    if (pointerTabIndex === 0) {
-      // Left end of the tab bar.
-      const kid = childElements[pointerTabIndex];
-      const kidRect = kid.getBoundingClientRect();
-      indicatorX = Math.floor((kidRect.left + rect.left ) / 2);
+    const wholeWidgetRect = this.getBoundingClientRect();
 
-    } else if (pointerTabIndex < childElements.length) {
-      // Somewhere in the middle.
-      const kidLeft = childElements[pointerTabIndex-1];
-      const kidRight = childElements[pointerTabIndex];
+    if (this._showTabs) {
+      if (pointerTabIndex === 0) {
+        // Left end of the tab bar.
+        const kid = childElements[pointerTabIndex];
+        const kidRect = kid.getBoundingClientRect();
+        indicatorX = Math.floor((kidRect.left + wholeWidgetRect.left ) / 2);
 
-      const rectLeft = kidLeft.getBoundingClientRect();
-      const rectRight = kidRight.getBoundingClientRect();
-      indicatorX = Math.floor((rectLeft.right + rectRight.left) / 2);
+      } else if (pointerTabIndex < childElements.length) {
+        // Somewhere in the middle.
+        const kidLeft = childElements[pointerTabIndex-1];
+        const kidRight = childElements[pointerTabIndex];
 
+        const rectLeft = kidLeft.getBoundingClientRect();
+        const rectRight = kidRight.getBoundingClientRect();
+        indicatorX = Math.floor((rectLeft.right + rectRight.left) / 2);
+
+      } else {
+        // Right of the tab bar.
+        const kid = childElements[childElements.length-1];
+        const kidRect = kid.getBoundingClientRect();
+        indicatorX = Math.floor((kidRect.right + wholeWidgetRect.right) /2);
+      }
     } else {
-      // Right of the tab bar.
-      const kid = childElements[childElements.length-1];
-      const kidRect = kid.getBoundingClientRect();
-      indicatorX = Math.floor((kidRect.right + rect.right) /2);
+      indicatorX = Math.floor((wholeWidgetRect.left + wholeWidgetRect.right) /2);
     }
 
-    indicatorX -= rect.left;
+    indicatorX -= wholeWidgetRect.left;
     dragIndicatorContainer.style.left = "" + indicatorX + "px";
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_SHOW);
     dragIndicatorContainer.classList.remove(CLASS_INDICATOR_HIDE);
