@@ -21,19 +21,17 @@
 #ID_CONTAINER:focus {
     outline: none;
 }
-.container_closed {
+
+.CLASS_CONTAINER_CLOSED {
     display: none;
 }
 
-.container_open {
 
-}
-
-.cover_closed {
+.CLASS_COVER_CLOSED {
     visibility: hidden;
 }
 
-.cover_open {
+.CLASS_COVER_OPEN {
     visibility: visible;
     position: fixed;
     left: 0px;
