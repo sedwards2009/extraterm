@@ -18,6 +18,7 @@ import {MenuItem} from './gui/MenuItem';
 import {DropDown} from './gui/DropDown';
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {PopDownListPicker} from './gui/PopDownListPicker';
+import {TabWidget} from './gui/TabWidget';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
@@ -64,6 +65,8 @@ const MENU_ITEM_ABOUT = 'about';
 const MENU_ITEM_RELOAD_CSS = 'reload_css';
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
 const ID_MENU_BUTTON = "ID_MENU_BUTTON";
+const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
+const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
 
 const _log = new Logger("mainweb");
 
@@ -175,6 +178,7 @@ export function startUp(): void {
       
     doc.body.classList.remove("preparing");
     doc.body.innerHTML = "";  // Remove the old contents.
+    doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
     
     doc.body.appendChild(mainWebUi);
     
@@ -222,6 +226,16 @@ export function startUp(): void {
 
     mainWebUi.addEventListener(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST, () => {
       WebIpc.windowCloseRequest();
+    });
+
+    mainWebUi.addEventListener(TabWidget.EVENT_DRAG_STARTED, (ev: CustomEvent): void => {
+      window.document.body.classList.add(CLASS_MAIN_DRAGGING);
+      window.document.body.classList.remove(CLASS_MAIN_NOT_DRAGGING);
+    });
+
+    mainWebUi.addEventListener(TabWidget.EVENT_DRAG_ENDED, (ev: CustomEvent): void => {
+      window.document.body.classList.remove(CLASS_MAIN_DRAGGING);
+      window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
     });
 
     const mainMenu = doc.getElementById('main_menu');

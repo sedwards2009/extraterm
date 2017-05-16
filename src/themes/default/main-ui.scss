@@ -32,16 +32,6 @@
   }
 }
 
-@if $extraterm-titlebar-visible != true {
-  #ID_REST_DIV_SECONDARY {
-    -webkit-app-region: drag;
-
-    > button {
-      -webkit-app-region: no-drag;  
-    }
-  }
-}
-
 #ID_MAIN_CONTENTS {
   flex-grow: 1;  
   position: relative;
@@ -59,13 +49,16 @@
 
   & > div.CLASS_SPACE {
     flex-grow: 1;
-    @if $extraterm-titlebar-visible == false {
-      -webkit-app-region: drag;
-    }
   }
 
   & > button {
     flex-grow: 0;
+  }
+}
+
+#ID_MAIN_CONTENTS.CLASS_MAIN_NOT_DRAGGING div.CLASS_SPACE {
+  @if $extraterm-titlebar-visible == false {
+    -webkit-app-region: drag;
   }
 }
 

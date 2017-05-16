@@ -15,9 +15,6 @@ DIV.tab_bar_rest {
 
 DIV.tab_bar_rest > DIV.space {
   flex-grow: 1;
-  @if $extraterm-titlebar-visible == false {
-    -webkit-app-region: drag;
-  }
 }
 
 BODY {
@@ -26,6 +23,12 @@ BODY {
   bottom: 0;
   left: 0;
   right: 0;
+
+  &.CLASS_MAIN_NOT_DRAGGING DIV.space {
+    @if $extraterm-titlebar-visible == false {
+      -webkit-app-region: drag;
+    }
+  }
 }
 
 EXTRATERM-MAINWEBUI {

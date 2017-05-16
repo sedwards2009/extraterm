@@ -78,6 +78,10 @@ export class TabWidget extends ThemeableElementBase {
   
   static EVENT_TAB_DROPPED = "tabwidget-tab-dropped";
 
+  static EVENT_DRAG_STARTED = "tabwidget-drag-started";
+
+  static EVENT_DRAG_ENDED = "tabwidget-drag-ended";
+
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
@@ -459,7 +463,7 @@ export class TabWidget extends ThemeableElementBase {
     tabBar.addEventListener("dragenter", this._handleDragEnter.bind(this));
     tabBar.addEventListener("dragexit", this._hideDragIndicator.bind(this));
     tabBar.addEventListener("dragleave", this._hideDragIndicator.bind(this));
-    tabBar.addEventListener("dragend", this._hideDragIndicator.bind(this));
+    tabBar.addEventListener("dragend", this._handleDragEnd.bind(this));
     tabBar.addEventListener("drop", this._handleDrop.bind(this));
   }
 
@@ -478,6 +482,9 @@ export class TabWidget extends ThemeableElementBase {
     ev.dataTransfer.setDragImage(parentElement, -10, -10);
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';
+
+    const dragStartedEvent = new CustomEvent(TabWidget.EVENT_DRAG_STARTED, { bubbles: true });
+    this.dispatchEvent(dragStartedEvent);
   }
 
   private _handleDragEnter(ev: DragEvent): void {
@@ -560,6 +567,9 @@ export class TabWidget extends ThemeableElementBase {
       }
       const pointerTabIndex = this._pointToTabIndex(ev);
 
+      const dragEndedEvent = new CustomEvent(TabWidget.EVENT_DRAG_ENDED, { bubbles: true });
+      this.dispatchEvent(dragEndedEvent);
+
       const detail: TabDroppedEventDetail = {
         targetTabWidget: this,
         tabIndex: pointerTabIndex,
@@ -574,5 +584,12 @@ export class TabWidget extends ThemeableElementBase {
     const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     dragIndicatorContainer.classList.remove(CLASS_INDICATOR_SHOW);
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_HIDE);
+  }
+
+  private _handleDragEnd(ev: DragEvent): void {
+    this._hideDragIndicator();
+
+    const dragEndedEvent = new CustomEvent(TabWidget.EVENT_DRAG_ENDED, { bubbles: true });
+    this.dispatchEvent(dragEndedEvent);
   }
 }

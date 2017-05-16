@@ -267,23 +267,25 @@ export function newKeyboardEvent(eventName: string, initMap: {
 /**
  * Add an event listener which blocks an event and retransmits it.
  * 
- * @param {EventTarget} target    the object on which to intercept the custom event
- * @param {string}      eventName the name of the Custom Event to intercept and retransmit
+ * @param listenTarget    the object on which to intercept the custom event
+ * @param eventName the name of the Custom Event to intercept and retransmit
+ * @param retransmitTarget (Optional) the element on which to retransmit the event
  */
-export function addCustomEventResender(target: EventTarget, eventName: string): void {
-    target.addEventListener(eventName, (ev: CustomEvent) => {
-      if (ev.target === target) {
-        return;
-      }
-      ev.stopPropagation();
-      
-      const detail = ev.detail;
-      const bubbles = ev.bubbles;
-      
-      // Send our own event. It will appear to have originated from the embedded viewer.
-      const event = new CustomEvent(eventName, { bubbles: bubbles, detail: detail });
-      target.dispatchEvent(event);
-    });
+export function addCustomEventResender(listenTarget: EventTarget, eventName: string,
+      retransmitTarget: EventTarget=null): void {
+
+  listenTarget.addEventListener(eventName, (ev: CustomEvent) => {
+    if (ev.target === listenTarget) {
+      return;
+    }
+    ev.stopPropagation();
+    
+    const detail = ev.detail;
+    const bubbles = ev.bubbles;
+    
+    const event = new CustomEvent(eventName, { bubbles: bubbles, detail: detail });
+    (retransmitTarget === null ? listenTarget : retransmitTarget).dispatchEvent(event);
+  });
 }
 
 //-------------------------------------------------------------------------

@@ -78,6 +78,8 @@ const CLASS_TAB_CONTENT = "tab_content";
 const CLASS_NEW_BUTTON_CONTAINER = "CLASS_NEW_BUTTON_CONTAINER";
 const CLASS_NEW_TAB_BUTTON = "CLASS_NEW_TAB_BUTTON";
 const CLASS_SPACE = "CLASS_SPACE";
+const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
+const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
 
 const KEYBINDINGS_MAIN_UI = "main-ui";
 const PALETTE_GROUP = "mainwebui";
@@ -236,7 +238,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   connectedCallback(): void {
     super.connectedCallback();
     this._setUpShadowDom();   
-    this._setUpMainContainerEvents();
+    this._setUpMainContainer();
     this._setUpSplitLayout();
     this._setUpWindowControls();
     this._setupIpc();
@@ -249,8 +251,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this.updateThemeCss();
   }
 
-  private _setUpMainContainerEvents(): void {
+  private _setUpMainContainer(): void {
     const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
+    mainContainer.classList.add(CLASS_MAIN_NOT_DRAGGING);
 
     // Update the window title when the selected tab changes and resize the terminal.
     mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, ev => {
@@ -264,6 +267,19 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const tabElement = DomUtils.getShadowId(this, detail.tabId);
       this._splitLayout.moveTabToTabWidget(<Tab> tabElement, detail.targetTabWidget, detail.tabIndex);
       this._splitLayout.update();
+    });
+
+    DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_STARTED, this);
+    DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_ENDED, this);
+
+    mainContainer.addEventListener(TabWidget.EVENT_DRAG_STARTED, (ev: CustomEvent): void => {
+      mainContainer.classList.add(CLASS_MAIN_DRAGGING);
+      mainContainer.classList.remove(CLASS_MAIN_NOT_DRAGGING);
+    });
+
+    mainContainer.addEventListener(TabWidget.EVENT_DRAG_ENDED, (ev: CustomEvent): void => {
+      mainContainer.classList.remove(CLASS_MAIN_DRAGGING);
+      mainContainer.classList.add(CLASS_MAIN_NOT_DRAGGING);
     });
 
     mainContainer.addEventListener('click', ev => {
