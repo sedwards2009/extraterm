@@ -64,6 +64,7 @@ const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
 const MENU_ITEM_ABOUT = 'about';
 const MENU_ITEM_RELOAD_CSS = 'reload_css';
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
+const ID_MAIN_MENU = "ID_MAIN_MENU";
 const ID_MENU_BUTTON = "ID_MENU_BUTTON";
 const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
 const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
@@ -91,6 +92,46 @@ export function startUp(): void {
     setupOSXEmptyMenus();
   }
   
+  startUpTheming();
+  startUpWebIpc();
+
+  // Get the Config working.
+  configManager = new ConfigManagerImpl();
+  keyBindingManager = new KeyBindingManagerImpl();  // depends on the config.
+  const themePromise = WebIpc.requestConfig().then( (msg: Messages.ConfigMessage) => {
+    return handleConfigMessage(msg);
+  });
+  
+  // Get the config and theme info in and then continue starting up.
+  const allPromise = Promise.all<void>( [themePromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
+  allPromise.then(loadFontFaces)
+            .then( () => {
+
+    startUpComponents();
+    startUpPlugins();
+
+    const doc = window.document;
+    doc.body.classList.remove("preparing");
+    doc.body.innerHTML = "";  // Remove the old contents.
+    doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
+
+    startUpMainWebUi();
+    startUpMainMenu();
+    startUpResizeCanary();
+    startUpCommandPalette();
+    startUpWindowEvents();
+
+    if (process.platform === "darwin") {
+      setupOSXMenus(mainWebUi);
+    }
+
+    mainWebUi.newTerminalTab();
+    mainWebUi.focus();
+    window.focus();
+  });
+}
+
+function startUpTheming(): void {
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
     setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {      
@@ -102,10 +143,10 @@ export function startUp(): void {
     }
   };
   ThemeConsumer.registerThemeable(topThemeable);
+}
 
+function startUpWebIpc(): void {
   WebIpc.start();
-  
-  const doc = window.document;
   
   // Default handling for config messages.
   WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, handleConfigMessage);
@@ -117,160 +158,147 @@ export function startUp(): void {
   WebIpc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
   
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
-  
-  // Get the Config working.
-  configManager = new ConfigManagerImpl();
-  keyBindingManager = new KeyBindingManagerImpl();  // depends on the config.
-  const themePromise = WebIpc.requestConfig().then( (msg: Messages.ConfigMessage) => {
-    return handleConfigMessage(msg);
+}  
+
+function loadFontFaces(): Promise<FontFace[]> {
+  // Next phase is wait for the fonts to load.
+  const fontPromises: Promise<FontFace>[] = [];
+  window.document.fonts.forEach( (font: FontFace) => {
+    if (font.status !== 'loaded' && font.status !== 'loading') {
+      fontPromises.push(font.load());
+    }
+  });
+  return Promise.all<FontFace>( fontPromises );
+}
+
+function startUpComponents(): void {
+  // Fonts are loaded, continue.
+  ContextMenu.init();
+  MenuItem.init();
+  DropDown.init();
+  MainWebUi.init();
+  CheckboxMenuItem.init();
+  PopDownListPicker.init();
+  ResizeCanary.init();
+}
+
+function startUpPlugins(): void {
+  // Get the plugins loaded.
+  pluginManager = new PluginManager.PluginManager(path.join(__dirname, PLUGINS_DIRECTORY));
+  internalExtratermApi = new InternalExtratermApiImpl();
+  pluginManager.load(internalExtratermApi);
+}
+
+function startUpMainWebUi(): void {
+  mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
+  mainWebUi.setInternalExtratermApi(internalExtratermApi);
+  config.injectConfigManager(mainWebUi, configManager);
+  keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
+  mainWebUi.innerHTML = `<div class="tab_bar_rest">
+    <div class="space"></div>
+    <button id="${ID_MENU_BUTTON}" class="btn btn-quiet"><i class="fa fa-bars"></i></button>
+    </div>`;
+
+  mainWebUi.setThemes(themes);
+  window.document.body.appendChild(mainWebUi);
+
+  // Detect when the last tab has closed.
+  mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
+    if (mainWebUi.getTabCount() === 0) {
+      WebIpc.windowCloseRequest();
+    }
   });
   
-  // Get the config and theme info in and then continue starting up.
-  const allPromise = Promise.all<void>( [themePromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
-  allPromise.then( (): Promise<FontFace[]> => {
-    // Next phase is wait for the fonts to load.
-    const fontPromises: Promise<FontFace>[] = [];
-    window.document.fonts.forEach( (font: FontFace) => {
-      if (font.status !== 'loaded' && font.status !== 'loading') {
-        fontPromises.push(font.load());
-      }
-    });
-    return Promise.all<FontFace>( fontPromises );
-  }).then( () => {
-    // Fonts are loaded, continue.
-    ContextMenu.init();
-    MenuItem.init();
-    DropDown.init();
-    MainWebUi.init();
-    CheckboxMenuItem.init();
-    PopDownListPicker.init();
-    ResizeCanary.init();
+  // Update the window title on request.
+  mainWebUi.addEventListener(MainWebUi.EVENT_TITLE, (ev: CustomEvent) => {
+    window.document.title = "Extraterm - " + ev.detail.title;
+  });
 
-    window.addEventListener('resize', () => {
-      if (mainWebUi !== null) {
-        mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
-      }
-    });
+  mainWebUi.addEventListener(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST, () => {
+    WebIpc.windowMinimizeRequest();
+  });
 
-    // Get the plugins loaded.
-    pluginManager = new PluginManager.PluginManager(path.join(__dirname, PLUGINS_DIRECTORY));
-    internalExtratermApi = new InternalExtratermApiImpl();
-    pluginManager.load(internalExtratermApi);
+  mainWebUi.addEventListener(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST, () => {
+    WebIpc.windowMaximizeRequest();
+  });
 
-    mainWebUi = <MainWebUi>doc.createElement(MainWebUi.TAG_NAME);
-    mainWebUi.setInternalExtratermApi(internalExtratermApi);
-    config.injectConfigManager(mainWebUi, configManager);
-    keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
-    mainWebUi.innerHTML = `<div class="tab_bar_rest">
-      <div class="space"></div>
-      <button id="${ID_MENU_BUTTON}" class="btn btn-quiet"><i class="fa fa-bars"></i></button>
-      </div>`;
+  mainWebUi.addEventListener(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST, () => {
+    WebIpc.windowCloseRequest();
+  });
 
-    mainWebUi.setThemes(themes);
-    
-    const contextMenuFragment = DomUtils.htmlToFragment(`
-    <${ContextMenu.TAG_NAME} id="main_menu">
+  mainWebUi.addEventListener(TabWidget.EVENT_DRAG_STARTED, (ev: CustomEvent): void => {
+    window.document.body.classList.add(CLASS_MAIN_DRAGGING);
+    window.document.body.classList.remove(CLASS_MAIN_NOT_DRAGGING);
+  });
+
+  mainWebUi.addEventListener(TabWidget.EVENT_DRAG_ENDED, (ev: CustomEvent): void => {
+    window.document.body.classList.remove(CLASS_MAIN_DRAGGING);
+    window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
+  });
+
+  mainWebUi.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+    handleCommandPaletteRequest(ev.detail);
+  });
+}
+
+function startUpMainMenu(): void {
+  const contextMenuFragment = DomUtils.htmlToFragment(`
+    <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
         <${MenuItem.TAG_NAME} icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
         <${MenuItem.TAG_NAME} icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</${MenuItem.TAG_NAME}>
         <${CheckboxMenuItem.TAG_NAME} icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
         <${MenuItem.TAG_NAME} icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
-`);
+  `);
+  window.document.body.appendChild(contextMenuFragment)
 
-    doc.body.classList.remove("preparing");
-    doc.body.innerHTML = "";  // Remove the old contents.
-    doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
-    
-    doc.body.appendChild(mainWebUi);
-    doc.body.appendChild(contextMenuFragment)
+  const mainMenu = window.document.getElementById(ID_MAIN_MENU);
+  mainMenu.addEventListener('selected', (ev: CustomEvent) => {
+    executeMenuCommand(ev.detail.name);
+  });
 
-    const menuButton = document.getElementById(ID_MENU_BUTTON);
-    menuButton.addEventListener('click', () => {
-      const contextMenu = <ContextMenu> document.getElementById("main_menu");
-      contextMenu.openAround(menuButton);
-    });
-
-    // A special element for tracking when terminal fonts are effectively changed in the DOM.
-    const resizeCanary = <ResizeCanary> doc.createElement(ResizeCanary.TAG_NAME);
-    resizeCanary.setCss(`
-    font-family: var(--terminal-font);
-    font-size: var(--default-terminal-font-size);
-`);
-    doc.body.appendChild(resizeCanary);
-    resizeCanary.addEventListener('resize', () => {
-      mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
-    });
-    
-    setUpCommandPalette();
-
-    // Make sure something sensible is focussed if the window gets the focus.
-    window.addEventListener('focus', () => {
-      mainWebUi.focus();
-    });
-    
-    if (process.platform === "darwin") {
-      setupOSXMenus(mainWebUi);
-    }
-    
-    // Detect when the last tab has closed.
-    mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
-      if (mainWebUi.getTabCount() === 0) {
-        WebIpc.windowCloseRequest();
-      }
-    });
-    
-    // Update the window title on request.
-    mainWebUi.addEventListener(MainWebUi.EVENT_TITLE, (ev: CustomEvent) => {
-      window.document.title = "Extraterm - " + ev.detail.title;
-    });
-
-    mainWebUi.addEventListener(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST, () => {
-      WebIpc.windowMinimizeRequest();
-    });
-
-    mainWebUi.addEventListener(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST, () => {
-      WebIpc.windowMaximizeRequest();
-    });
-
-    mainWebUi.addEventListener(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST, () => {
-      WebIpc.windowCloseRequest();
-    });
-
-    mainWebUi.addEventListener(TabWidget.EVENT_DRAG_STARTED, (ev: CustomEvent): void => {
-      window.document.body.classList.add(CLASS_MAIN_DRAGGING);
-      window.document.body.classList.remove(CLASS_MAIN_NOT_DRAGGING);
-    });
-
-    mainWebUi.addEventListener(TabWidget.EVENT_DRAG_ENDED, (ev: CustomEvent): void => {
-      window.document.body.classList.remove(CLASS_MAIN_DRAGGING);
-      window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
-    });
-
-    const mainMenu = doc.getElementById('main_menu');
-    mainMenu.addEventListener('selected', (ev: CustomEvent) => {
-      executeMenuCommand(ev.detail.name);
-    });
-    
-    mainWebUi.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-        handleCommandPaletteRequest(ev.detail);
-      });
-      
-    doc.addEventListener('mousedown', (ev: MouseEvent) => {
-      if (ev.which === 2) {
-        WebIpc.clipboardReadRequest();
-        
-        // This is needed to stop the autoscroll blob from appearing on Windows.
-        ev.preventDefault();
-        ev.stopPropagation();
-      }
-    });
-    
-    mainWebUi.newTerminalTab();
-    mainWebUi.focus();
-    window.focus();
+  const menuButton = document.getElementById(ID_MENU_BUTTON);
+  menuButton.addEventListener('click', () => {
+    const contextMenu = <ContextMenu> document.getElementById(ID_MAIN_MENU);
+    contextMenu.openAround(menuButton);
   });
 }
 
+function startUpResizeCanary(): void {
+  // A special element for tracking when terminal fonts are effectively changed in the DOM.
+  const resizeCanary = <ResizeCanary> window.document.createElement(ResizeCanary.TAG_NAME);
+  resizeCanary.setCss(`
+  font-family: var(--terminal-font);
+  font-size: var(--default-terminal-font-size);
+`);
+  window.document.body.appendChild(resizeCanary);
+  resizeCanary.addEventListener('resize', () => {
+    mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+  });
+}    
+
+function startUpWindowEvents(): void {
+  // Make sure something sensible is focussed if the window gets the focus.
+  window.addEventListener('focus', () => {
+    mainWebUi.focus();
+  });
+
+  window.addEventListener('resize', () => {
+    if (mainWebUi !== null) {
+      mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
+    }
+  });
+  
+  window.document.addEventListener('mousedown', (ev: MouseEvent) => {
+    if (ev.which === 2) {
+      WebIpc.clipboardReadRequest();
+      
+      // This is needed to stop the autoscroll blob from appearing on Windows.
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+  });
+}
 
 function executeMenuCommand(command: string): boolean {
   if (command === MENU_ITEM_DEVELOPER_TOOLS) {
@@ -530,7 +558,7 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
 let commandPaletteRequestSource: HTMLElement = null;
 let commandPaletteRequestEntries: CommandPaletteRequestTypes.CommandEntry[] = null;
 
-function setUpCommandPalette(): void {
+function startUpCommandPalette(): void {
   const doc = window.document;
 
   // Command palette
