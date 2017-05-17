@@ -163,25 +163,33 @@ export function startUp(): void {
     keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
     mainWebUi.innerHTML = `<div class="tab_bar_rest">
       <div class="space"></div>
-      <${DropDown.TAG_NAME}>
-          <button id="${ID_MENU_BUTTON}" class="btn btn-quiet"><i class="fa fa-bars"></i></button>
-          <${ContextMenu.TAG_NAME} id="main_menu">
-              <${MenuItem.TAG_NAME} icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
-              <${MenuItem.TAG_NAME} icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</${MenuItem.TAG_NAME}>
-              <${CheckboxMenuItem.TAG_NAME} icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
-              <${MenuItem.TAG_NAME} icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
-          </${ContextMenu.TAG_NAME}>
-      </${DropDown.TAG_NAME}>
-    </div>`;
+      <button id="${ID_MENU_BUTTON}" class="btn btn-quiet"><i class="fa fa-bars"></i></button>
+      </div>`;
 
     mainWebUi.setThemes(themes);
-      
+    
+    const contextMenuFragment = DomUtils.htmlToFragment(`
+    <${ContextMenu.TAG_NAME} id="main_menu">
+        <${MenuItem.TAG_NAME} icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</${MenuItem.TAG_NAME}>
+        <${CheckboxMenuItem.TAG_NAME} icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
+    </${ContextMenu.TAG_NAME}>
+`);
+
     doc.body.classList.remove("preparing");
     doc.body.innerHTML = "";  // Remove the old contents.
     doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
     
     doc.body.appendChild(mainWebUi);
-    
+    doc.body.appendChild(contextMenuFragment)
+
+    const menuButton = document.getElementById(ID_MENU_BUTTON);
+    menuButton.addEventListener('click', () => {
+      const contextMenu = <ContextMenu> document.getElementById("main_menu");
+      contextMenu.openAround(menuButton);
+    });
+
     // A special element for tracking when terminal fonts are effectively changed in the DOM.
     const resizeCanary = <ResizeCanary> doc.createElement(ResizeCanary.TAG_NAME);
     resizeCanary.setCss(`
