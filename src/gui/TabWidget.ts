@@ -491,7 +491,7 @@ export class TabWidget extends ThemeableElementBase {
     ev.preventDefault();
   }
 
-  private  _handleDragOver(ev: DragEvent): void {
+  private _handleDragOver(ev: DragEvent): void {
     const pointerTabIndex = this._pointToTabIndex(ev);
 
     // Position the drop indicator.
@@ -522,7 +522,8 @@ export class TabWidget extends ThemeableElementBase {
         // Right of the tab bar.
         const kid = childElements[childElements.length-1];
         const kidRect = kid.getBoundingClientRect();
-        indicatorX = Math.floor((kidRect.right + wholeWidgetRect.right) /2);
+        const style = window.getComputedStyle(kid);
+        indicatorX = Math.floor(kidRect.right) + DomUtils.pixelLengthToInt(style.marginRight);
       }
     } else {
       indicatorX = Math.floor((wholeWidgetRect.left + wholeWidgetRect.right) /2);
