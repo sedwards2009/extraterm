@@ -493,7 +493,32 @@ export class TabWidget extends ThemeableElementBase {
 
   private _handleDragOver(ev: DragEvent): void {
     const pointerTabIndex = this._pointToTabIndex(ev);
+    this._showDropIndicator(pointerTabIndex);
+    
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
 
+  private _pointToTabIndex(ev: DragEvent): number {
+    // Figure out which tabs the drop indicator should appear in between.
+    const widgetRect = this.getBoundingClientRect();
+    const pointXInPageCoords = ev.pageX - widgetRect.left;
+    const tabBar = this._getTabbar();
+    const childElements = DomUtils.toArray(tabBar.children).filter(kid => kid.classList.contains(CLASS_TAB));
+
+    let index = 0;
+    for (const kid of childElements) {
+      const kidRect = kid.getBoundingClientRect();
+      const midPoint = kidRect.left - widgetRect.left + kidRect.width/2;
+      if (pointXInPageCoords <= midPoint) {
+        break;
+      }
+      index++;
+    }
+    return index;
+  }
+
+  private _showDropIndicator(pointerTabIndex: number): void {
     // Position the drop indicator.
     const dragIndicatorContainer = DomUtils.getShadowId(this, ID_DRAG_INDICATOR_CONTAINER);
     let indicatorX = 0;
@@ -533,28 +558,6 @@ export class TabWidget extends ThemeableElementBase {
     dragIndicatorContainer.style.left = "" + indicatorX + "px";
     dragIndicatorContainer.classList.add(CLASS_INDICATOR_SHOW);
     dragIndicatorContainer.classList.remove(CLASS_INDICATOR_HIDE);
-
-    ev.preventDefault();
-    ev.stopPropagation();
-  }
-
-  private _pointToTabIndex(ev: DragEvent): number {
-    // Figure out which tabs the drop indicator should appear in between.
-    const widgetRect = this.getBoundingClientRect();
-    const pointXInPageCoords = ev.pageX - widgetRect.left;
-    const tabBar = this._getTabbar();
-    const childElements = DomUtils.toArray(tabBar.children).filter(kid => kid.classList.contains(CLASS_TAB));
-
-    let index = 0;
-    for (const kid of childElements) {
-      const kidRect = kid.getBoundingClientRect();
-      const midPoint = kidRect.left - widgetRect.left + kidRect.width/2;
-      if (pointXInPageCoords <= midPoint) {
-        break;
-      }
-      index++;
-    }
-    return index;
   }
 
   private _handleDrop(ev: DragEvent): void {
