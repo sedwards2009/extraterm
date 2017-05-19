@@ -1,8 +1,9 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016-2017 Simon Edwards <simon@simonzone.com>
  */
 
 /* gui-tabwidget */
+@import "bootstrap/variables";
 
 #ID_TOP {
   display: flex;
@@ -61,4 +62,41 @@ DIV.show_frame > #ID_CONTENTSTACK {
 DIV.show_frame > #ID_TABBAR {
   position: relative;
   top: 1px;
+}
+
+#ID_DROP_INDICATOR {
+  position: relative;
+  width: 0px;
+  z-index: 2;
+
+  padding: 0px;
+  margin: 0px;
+  border: 0px;
+
+  overflow-x: visible !important;
+
+  color: $input-border-focus;
+
+  pointer-events: none;
+
+  &:before, &:after {
+    position: absolute;
+    width: 1em;
+    left: -0.5em;
+
+    pointer-events: none;
+
+    font-family: extraicons;
+    text-align: center;
+  }
+
+  &:before {
+    top: -4px;
+    content: "\ea06";
+  }
+
+  &:after {
+    bottom: -4px;
+    content: "\ea07";
+  }
 }
