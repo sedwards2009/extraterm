@@ -81,7 +81,7 @@ DIV.show_frame > #ID_TABBAR {
   &:before, &:after {
     position: absolute;
     width: 1em;
-    left: -0.5em;
+    left: calc(-0.5em - 7px);
 
     pointer-events: none;
 
@@ -90,12 +90,12 @@ DIV.show_frame > #ID_TABBAR {
   }
 
   &:before {
-    top: 0px;
+    top: -4px;
     content: "\ea06";
   }
 
   &:after {
-    bottom: 0px;
+    bottom: 2px;
     content: "\ea07";
   }
 }

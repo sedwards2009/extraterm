@@ -62,3 +62,35 @@ DIV.show_frame > #ID_TABBAR {
   position: relative;
   top: 1px;
 }
+
+#ID_DROP_INDICATOR {
+  position: relative;
+  width: 0px;
+  height: 100%;
+  z-index: 2;
+
+  color: $background-color-selected;
+
+  pointer-events: none;
+
+  &:before, &:after {
+    position: absolute;
+    width: 1em;
+    left: calc(-0.5em - 7px);
+
+    pointer-events: none;
+
+    font-family: extraicons;
+    text-align: center;
+  }
+
+  &:before {
+    top: -4px;
+    content: "\ea06";
+  }
+
+  &:after {
+    bottom: 2px;
+    content: "\ea07";
+  }
+}
