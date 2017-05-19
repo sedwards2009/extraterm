@@ -27,3 +27,11 @@ The “from” command lets you use previous command output as input for termina
 Or you can edit the command output directly in place and execute the selection with `Ctrl+Shift+Enter`.
 
 ![Directly edit and execute command output](edit_direct.gif)
+
+Extraterm also supports tiling and panes, text size scaling per terminal session and color emoji on all operating systems.
+
+![Panes and tiling, emoji, text scaling and images](nested_panes.png)
+
+Extraterm is designed for keyboard use first. The Command Palette makes it easy to find and execute any command without leaving the keyboard.
+
+![Command palette](command_palette.png)
