@@ -91,6 +91,11 @@ function main(): void {
 
   app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
 
+  // Turn off the HiDPI automatic UI scaling. It actually causes a rendering glitch in the
+  // tab in the atomic light theme.
+  app.commandLine.appendSwitch('high-dpi-support', 'true');
+  app.commandLine.appendSwitch('force-device-scale-factor', '1');
+
   if (process.platform === "darwin") {
     setupOSX();
   }
