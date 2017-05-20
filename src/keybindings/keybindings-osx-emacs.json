@@ -8,8 +8,7 @@
     "Cmd-Shift-<": "selectPaneLeft",
     "Cmd-Shift->": "selectPaneRight",
     "Cmd-Shift-:": "selectPaneAbove",
-    "Cmd-Shift-?": "selectPaneBelow",
-    "Cmd-s": "toggleSplit"
+    "Cmd-Shift-?": "selectPaneBelow"
   },
   "terminal-default-mode": {
     "Alt-Space": "enterCursorMode",

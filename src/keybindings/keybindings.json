@@ -8,8 +8,7 @@
     "Ctrl-Shift-<": "selectPaneLeft",
     "Ctrl-Shift->": "selectPaneRight",
     "Ctrl-Shift-:": "selectPaneAbove",
-    "Ctrl-Shift-?": "selectPaneBelow",
-    "Ctrl-Shift-S": "toggleSplit"
+    "Ctrl-Shift-?": "selectPaneBelow"
   },
   "terminal-default-mode": {
     "Ctrl-Shift-Space": "enterCursorMode",

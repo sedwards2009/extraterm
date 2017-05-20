@@ -60,7 +60,6 @@
     "selectPaneRight": "Focus the pane to the left",
     "selectPaneAbove": "Focus the pane above",
     "selectPaneBelow": "Focus the pane below",
-    "toggleSplit": "Toggle split panes",
     "enterCursorMode": "Go to cursor mode",
     "enterNormalMode": "Go to normal mode",
     "scrollPageUp": "Scroll page up",
