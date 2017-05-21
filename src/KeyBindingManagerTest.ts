@@ -30,7 +30,8 @@ const keyBindingsMap = {
     "F2": "rename",
     "Alt-ArrowLeft": "select-left",
     "Ctrl-c": "break",
-    "Ctrl-Shift-C": "bigbreak"
+    "Ctrl-Shift-C": "bigbreak",
+    "Ctrl-Alt-.": "moveTabRight"
   }
 };
 
@@ -75,6 +76,7 @@ export function testMapEventToCommand(test: nodeunit.Test): void {
   test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "Tab", keyCode: 9 }), "otherpane");
   test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "c", keyCode: 67 }), "break");
   test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: true, key: "C", keyCode: 67 }), "bigbreak");
+  test.equal(editorKeyBindings.mapEventToCommand({ altKey: true, ctrlKey: true, metaKey: false, shiftKey: false, key: ".", keyCode: 190 }), "moveTabRight");
   
   test.done();
 }

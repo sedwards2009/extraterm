@@ -9,7 +9,10 @@
     "Ctrl-Shift->": "selectPaneRight",
     "Ctrl-Shift-:": "selectPaneAbove",
     "Ctrl-Shift-?": "selectPaneBelow",
-    "Ctrl-Shift-S": "toggleSplit"
+    "Ctrl-Alt-,": "moveTabLeft",
+    "Ctrl-Alt-.": "moveTabRight",
+    "Ctrl-Alt-;": "moveTabUp",
+    "Ctrl-Alt-/": "moveTabDown"
   },
   "terminal-default-mode": {
     "Ctrl-Shift-Space": "enterCursorMode",

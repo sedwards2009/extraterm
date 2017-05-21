@@ -89,6 +89,10 @@ const COMMAND_SELECT_PANE_LEFT = "selectPaneLeft";
 const COMMAND_SELECT_PANE_RIGHT = "selectPaneRight";
 const COMMAND_SELECT_PANE_ABOVE = "selectPaneAbove";
 const COMMAND_SELECT_PANE_BELOW = "selectPaneBelow";
+const COMMAND_MOVE_TAB_LEFT = "moveTabLeft";
+const COMMAND_MOVE_TAB_RIGHT = "moveTabRight";
+const COMMAND_MOVE_TAB_UP = "moveTabUp";
+const COMMAND_MOVE_TAB_DOWN = "moveTabDown";
 const COMMAND_NEW_TERMINAL = "newTerminal";
 const COMMAND_CLOSE_TAB = "closeTab";
 const COMMAND_HORIZONTAL_SPLIT = "horizontalSplit";
@@ -796,6 +800,36 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return { tabWidget: null, tabContent: null };
   }
 
+  private _moveTabElementLeft(tabElement: Element): void {
+    this._moveTabElementInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
+  }
+
+  private _moveTabElementRight(tabElement: Element): void {
+    this._moveTabElementInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
+  }
+
+  private _moveTabElementUp(tabElement: Element): void {
+    this._moveTabElementInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
+  }
+
+  private _moveTabElementDown(tabElement: Element): void {
+    this._moveTabElementInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
+  }
+
+  private _moveTabElementInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget): void {
+    const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
+    const targetTabWidget = directionFunc.call(this._splitLayout, currentTabWidget);
+    this._log.debug("targetTabWidget: ", targetTabWidget);
+    if (targetTabWidget != null) {
+      this._splitLayout.moveTabToTabWidget(this._splitLayout.getTabByTabContent(tabElement), targetTabWidget, 0);
+      this._splitLayout.update();
+      targetTabWidget.focus();
+      if (elementSupportsFocus(tabElement)) {
+        tabElement.focus();
+      }      
+    }
+  }
+
   private _getTabElementWithFocus(): Element {
     for (const el of this._splitLayout.getAllTabContents()) {
       if (elementSupportsFocus(el)) {
@@ -1053,6 +1087,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
       { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", target: target },
       { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target },
+
+      { id: COMMAND_MOVE_TAB_LEFT, group: PALETTE_GROUP, label: "Move Tab Left", target: target },
+      { id: COMMAND_MOVE_TAB_RIGHT, group: PALETTE_GROUP, label: "Move Tab Right", target: target },
+      { id: COMMAND_MOVE_TAB_UP, group: PALETTE_GROUP, label: "Move Tab Up", target: target },
+      { id: COMMAND_MOVE_TAB_DOWN, group: PALETTE_GROUP, label: "Move Tab Down", target: target },
     ];
 // FIXME
     if (tabWidget != null && tabWidget.parentElement instanceof Splitter ||
@@ -1119,6 +1158,22 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
       case COMMAND_CLOSE_PANE:
         this._closeSplit(tabElement);
+        break;
+
+      case COMMAND_MOVE_TAB_LEFT:
+        this._moveTabElementLeft(tabElement);
+        break;
+
+      case COMMAND_MOVE_TAB_RIGHT:
+        this._moveTabElementRight(tabElement);
+        break;
+
+      case COMMAND_MOVE_TAB_UP:
+        this._moveTabElementUp(tabElement);
+        break;
+
+      case COMMAND_MOVE_TAB_DOWN:
+        this._moveTabElementDown(tabElement);
         break;
 
       default:
