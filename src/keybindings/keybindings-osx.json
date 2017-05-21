@@ -8,7 +8,11 @@
     "Cmd-Shift-<": "selectPaneLeft",
     "Cmd-Shift->": "selectPaneRight",
     "Cmd-Shift-:": "selectPaneAbove",
-    "Cmd-Shift-?": "selectPaneBelow"
+    "Cmd-Shift-?": "selectPaneBelow",
+    "Cmd-Alt-,": "moveTabLeft",
+    "Cmd-Alt-.": "moveTabRight",
+    "Cmd-Alt-;": "moveTabUp",
+    "Cmd-Alt-/": "moveTabDown"
   },
   "terminal-default-mode": {
     "Alt-Space": "enterCursorMode",
