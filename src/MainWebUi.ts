@@ -268,9 +268,13 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     mainContainer.addEventListener(TabWidget.EVENT_TAB_DROPPED, (ev: CustomEvent): void => {
       const detail = <TabDroppedEventDetail> ev.detail;
-      const tabElement = DomUtils.getShadowId(this, detail.tabId);
-      this._splitLayout.moveTabToTabWidget(<Tab> tabElement, detail.targetTabWidget, detail.tabIndex);
+      const tabElement = <Tab> DomUtils.getShadowId(this, detail.tabId);
+      this._splitLayout.moveTabToTabWidget(tabElement, detail.targetTabWidget, detail.tabIndex);
       this._splitLayout.update();
+
+      const tabContent = this._splitLayout.getTabContentByTab(tabElement);
+      detail.targetTabWidget.setSelectedIndex(detail.tabIndex);
+      this._focusTabContent(tabContent);
     });
 
     DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_STARTED, this);
