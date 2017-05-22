@@ -819,7 +819,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   private _moveTabElementInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget): void {
     const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
     const targetTabWidget = directionFunc.call(this._splitLayout, currentTabWidget);
-    this._log.debug("targetTabWidget: ", targetTabWidget);
     if (targetTabWidget != null) {
       this._splitLayout.moveTabToTabWidget(this._splitLayout.getTabByTabContent(tabElement), targetTabWidget, 0);
       this._splitLayout.update();

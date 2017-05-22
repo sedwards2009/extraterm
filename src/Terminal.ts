@@ -536,9 +536,12 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
 
       scrollContainer.addEventListener('mousedown', (ev: MouseEvent): void => {
         if (ev.target === scrollContainer) {
-          this._terminalViewer.focus();
           ev.preventDefault();
           ev.stopPropagation();
+          this._terminalViewer.focus();
+          if (ev.buttons & 2) { // Right Mouse Button
+            this._handleContextMenu();
+          }
         }
       });
       
