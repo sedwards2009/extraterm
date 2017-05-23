@@ -466,51 +466,53 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       return;
     }
 
+    this._setUpShadowDom();
+    this._setUpDefaultAttributes();
+
+    this.installThemeCss();
+
+    this._setUpEventHandlers();
+    this._setUpVirtualScrollArea();
+
+    // Remove the anti-flicker style.
+    DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
+  }
+
+  private _setUpShadowDom(): void {
     this.tabIndex = 0;
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-
     const clone = this._createClone();
     shadow.appendChild(clone);
+  }
 
+  private _setUpDefaultAttributes(): void {
     this._setAttr(EmbeddedViewer.ATTR_FRAME_TITLE, this.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE));
     this._setAttr(EmbeddedViewer.ATTR_RETURN_CODE, this.getAttribute(EmbeddedViewer.ATTR_RETURN_CODE));
     this._setAttr(EmbeddedViewer.ATTR_EXPAND, this.getAttribute(EmbeddedViewer.ATTR_EXPAND));
     this._setAttr(EmbeddedViewer.ATTR_TAG, this.getAttribute(EmbeddedViewer.ATTR_TAG));
     this._setAttr(EmbeddedViewer.ATTR_TOOL_TIP, this.getAttribute(EmbeddedViewer.ATTR_TOOL_TIP));
     this._setAttr(EmbeddedViewer.ATTR_AWESOME_ICON, this.getAttribute(EmbeddedViewer.ATTR_AWESOME_ICON));
+  }
 
-    this.installThemeCss();
-
-    this._getById(ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
-    this._getById(ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
+  private _setUpEventHandlers(): void {
+    DomUtils.getShadowId(this, ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
+    DomUtils.getShadowId(this, ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
+    
     const headerDiv = DomUtils.getShadowId(this, ID_HEADER);
     headerDiv.addEventListener('focus', this.focus.bind(this));
     
-    const outputDiv = <HTMLDivElement>this._getById(ID_OUTPUT);    
+    const outputDiv = DomUtils.getShadowId(this, ID_OUTPUT);    
     outputDiv.addEventListener('mousedown', this.focus.bind(this));
     outputDiv.addEventListener('click', this.focus.bind(this));
     outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
-    
-    const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
-    DomUtils.preventScroll(outputContainerDiv);
-    this._virtualScrollArea.setScrollFunction( (offset: number): void => {
-      outputDiv.style.top = "-" + offset +"px";
-    });
-
     outputDiv.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     
-    // const expandbutton = this._getById(ID_EXPAND_BUTTON);
-    // expandbutton.addEventListener('click', (): void => {
-    //   const expanded = util.htmlValueToBool(this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND), true);
-    //   this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, "" + !expanded);
-    // });
-
     DomUtils.addCustomEventResender(this, ViewerElement.EVENT_BEFORE_SELECTION_CHANGE);
     DomUtils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
     DomUtils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
 
     // Right mouse button click opens up the command palette.
-    this._getById(ID_CONTAINER).addEventListener('contextmenu', (ev: MouseEvent): void => {
+    DomUtils.getShadowId(this, ID_CONTAINER).addEventListener('contextmenu', (ev: MouseEvent): void => {
       ev.stopPropagation();
       ev.preventDefault();
 
@@ -525,6 +527,21 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
         this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
       }
     });
+  }
+
+  private _setUpVirtualScrollArea(): void {
+    const outputContainerDiv = DomUtils.getShadowId(this, ID_OUTPUT_CONTAINER);
+    DomUtils.preventScroll(outputContainerDiv);
+    this._virtualScrollArea.setScrollFunction( (offset: number): void => {
+      const outputDiv = DomUtils.getShadowId(this, ID_OUTPUT);    
+      outputDiv.style.top = "-" + offset +"px";
+    });
+    
+    // const expandbutton = this._getById(ID_EXPAND_BUTTON);
+    // expandbutton.addEventListener('click', (): void => {
+    //   const expanded = util.htmlValueToBool(this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND), true);
+    //   this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, "" + !expanded);
+    // });
 
     const setterState: VirtualScrollArea.SetterState = {
       height: this.getMinHeight(),
@@ -538,10 +555,8 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     };
 
     this.setDimensionsAndScroll(setterState);
-
-    // Remove the anti-flicker style.
-    this._getById(ID_CONTAINER).setAttribute('style', '');
   }
+
 
   static get observedAttributes(): string[] {
     return [
