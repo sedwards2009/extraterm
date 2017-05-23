@@ -54,6 +54,9 @@ const CLASS_SCROLLING = "scrolling";
 const CLASS_NOT_SCROLLING = "not-scrolling";
 const CLASS_BOTTOM_VISIBLE = "bottom-visible";
 const CLASS_BOTTOM_NOT_VISIBLE = "bottom-not-visible";
+const CLASS_COMMAND_RUNNING = "running";
+const CLASS_COMMAND_FAILED = "fail";
+const CLASS_COMMAND_SUCCEEDED = "success";
 
 const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 
@@ -308,9 +311,6 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     return viewerElement === null ? null : viewerElement.getSelectionText();
   }
   
-  /**
-   * 
-   */
   getText(): string {
     const viewerElement = this.getViewerElement();
     if (viewerElement === null) {
@@ -581,9 +581,6 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
   //
   //-----------------------------------------------------------------------
 
-  /**
-   * 
-   */
   private _createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -592,7 +589,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       
       template.innerHTML = `
         <style id=${ThemeableElementBase.ID_THEME}></style>
-        <div id='${ID_CONTAINER}' style='display: none;' class='running'>
+        <div id='${ID_CONTAINER}' style='display: none;' class='${CLASS_COMMAND_RUNNING}'>
           <div id='${ID_HEADER}' tabindex='-1'>
             <div class='left_block'>
               <div id='${ID_ICON_DIV}'><i id='${ID_ICON}'></i></div>
@@ -620,9 +617,6 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     return window.document.importNode(template.content, true);
   }
 
-  /**
-   * 
-   */
   private _getById(id: string): Element {
     return DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
@@ -644,18 +638,17 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       const container = <HTMLDivElement>this._getById(ID_CONTAINER);
 
       if (newValue === null || newValue === undefined || newValue === "") {
-        container.classList.add('running');
-        container.classList.remove('success');
-        container.classList.remove('fail');
+        container.classList.add(CLASS_COMMAND_RUNNING);
+        container.classList.remove(CLASS_COMMAND_SUCCEEDED);
+        container.classList.remove(CLASS_COMMAND_FAILED);
       } else {
 
         const rc = parseInt(newValue, 10);
-        container.classList.remove('running');
-        container.classList.remove('running');
+        container.classList.remove(CLASS_COMMAND_RUNNING);
         if (rc === 0) {
-          container.classList.add('success');
+          container.classList.add(CLASS_COMMAND_SUCCEEDED);
         } else {
-          container.classList.add('fail');
+          container.classList.add(CLASS_COMMAND_FAILED);
         }
       }
 
@@ -773,9 +766,6 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     return [];
   }
 
-  /**
-   * 
-   */
   private _emitManualScroll(): void {
     const event = new CustomEvent(EmbeddedViewer.EVENT_SCROLL_MOVE);
     event.initCustomEvent(EmbeddedViewer.EVENT_SCROLL_MOVE, true, true, null);
