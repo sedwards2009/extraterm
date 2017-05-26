@@ -511,8 +511,9 @@ export class VirtualScrollArea {
     const newState = _.clone(this._currentState);
     newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
 
-    const virtualHeight = TotalVirtualHeight(this._currentState);
-    const isAtBottom = this._currentState.virtualScrollYOffset >= virtualHeight - this._currentState.containerHeight;
+    const virtualHeight = TotalVirtualHeight(this._currentState);   
+    const TOLERANCE = 4;
+    const isAtBottom = (this._currentState.virtualScrollYOffset + TOLERANCE) >= virtualHeight - this._currentState.containerHeight;
     
     for (let i=0; i<mutator.length; i++) {
       mutator[i](newState);
