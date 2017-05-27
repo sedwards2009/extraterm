@@ -259,54 +259,54 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
     mainContainer.classList.add(CLASS_MAIN_NOT_DRAGGING);
 
-    // Update the window title when the selected tab changes and resize the terminal.
-    mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, ev => {
-      if (ev.target instanceof TabWidget) {
-        this._handleTabSwitch(ev.target);
-      }
-    });
-
-    mainContainer.addEventListener(TabWidget.EVENT_ELEMENT_DROPPED, (ev: CustomEvent): void => {
-      const detail = <ElementDroppedEventDetail> ev.detail;
-      if (detail.elementTagName === Tab.TAG_NAME) {
-        const tabElement = <Tab> DomUtils.getShadowId(this, detail.elementId);
-        
-        this._splitLayout.moveTabToTabWidget(tabElement, detail.targetTabWidget, detail.tabIndex);
-        this._splitLayout.update();
-
-        const tabContent = this._splitLayout.getTabContentByTab(tabElement);
-        detail.targetTabWidget.setSelectedIndex(detail.tabIndex);
-        this._focusTabContent(tabContent);
-      }
-    });
-
+    mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, this._handleTabSwitchEvent.bind(this));
+    mainContainer.addEventListener(TabWidget.EVENT_ELEMENT_DROPPED, this._handleElementDroppedEvent.bind(this));
     DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_STARTED, this);
     DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_ENDED, this);
+    mainContainer.addEventListener(TabWidget.EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
+    mainContainer.addEventListener(TabWidget.EVENT_DRAG_ENDED, this._handleDragEndedEvent.bind(this));
+    mainContainer.addEventListener('click', this._handleMainContainerClickEvent.bind(this));
+  }
 
-    mainContainer.addEventListener(TabWidget.EVENT_DRAG_STARTED, (ev: CustomEvent): void => {
-      mainContainer.classList.add(CLASS_MAIN_DRAGGING);
-      mainContainer.classList.remove(CLASS_MAIN_NOT_DRAGGING);
-    });
+  private _handleElementDroppedEvent(ev: CustomEvent): void {
+    const detail = <ElementDroppedEventDetail> ev.detail;
+    if (detail.elementTagName === Tab.TAG_NAME) {
+      const tabElement = <Tab> DomUtils.getShadowId(this, detail.elementId);
+      
+      this._splitLayout.moveTabToTabWidget(tabElement, detail.targetTabWidget, detail.tabIndex);
+      this._splitLayout.update();
 
-    mainContainer.addEventListener(TabWidget.EVENT_DRAG_ENDED, (ev: CustomEvent): void => {
-      mainContainer.classList.remove(CLASS_MAIN_DRAGGING);
-      mainContainer.classList.add(CLASS_MAIN_NOT_DRAGGING);
-    });
+      const tabContent = this._splitLayout.getTabContentByTab(tabElement);
+      detail.targetTabWidget.setSelectedIndex(detail.tabIndex);
+      this._focusTabContent(tabContent);
+    }
+  }
 
-    mainContainer.addEventListener('click', ev => {
-      for (const part of ev.path) {
-        if (part instanceof HTMLButtonElement) {
-          if (part.classList.contains(CLASS_NEW_TAB_BUTTON)) {
-            let el: HTMLElement = part;
-            while (el != null && ! (el instanceof TabWidget)) {
-              el = el.parentElement;
-            }
-            const  newTerminal = this.newTerminalTab(<TabWidget> el);
-            this._switchToTab(newTerminal);
+  private _handleDragStartedEvent(ev: CustomEvent): void {
+    const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
+    mainContainer.classList.add(CLASS_MAIN_DRAGGING);
+    mainContainer.classList.remove(CLASS_MAIN_NOT_DRAGGING);
+  }
+
+  private _handleDragEndedEvent(ev: CustomEvent): void {
+    const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
+    mainContainer.classList.remove(CLASS_MAIN_DRAGGING);
+    mainContainer.classList.add(CLASS_MAIN_NOT_DRAGGING);
+  }
+
+  private _handleMainContainerClickEvent(ev): void {
+    for (const part of ev.path) {
+      if (part instanceof HTMLButtonElement) {
+        if (part.classList.contains(CLASS_NEW_TAB_BUTTON)) {
+          let el: HTMLElement = part;
+          while (el != null && ! (el instanceof TabWidget)) {
+            el = el.parentElement;
           }
-        } 
-      }
-    });
+          const  newTerminal = this.newTerminalTab(<TabWidget> el);
+          this._switchToTab(newTerminal);
+        }
+      } 
+    }
   }
 
   private _setUpSplitLayout(): void {
@@ -497,19 +497,21 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return this._splitLayout.firstTabWidget();
   }
 
-  private _handleTabSwitch(tabWidget: TabWidget): void {
-    const el = this._splitLayout.getTabContentByTab(tabWidget.getSelectedTab());
-    let title = "";
-    if (el instanceof EtTerminal) {
-      title = el.getTerminalTitle();
-    } else if (el instanceof EtViewerTab) {        
-      title = el.getTitle();
-    } else if (el instanceof ViewerElement) {
-      title = el.getTitle();
-    }
+  private _handleTabSwitchEvent(ev: CustomEvent): void {
+    if (ev.target instanceof TabWidget) {
+      const el = this._splitLayout.getTabContentByTab(ev.target.getSelectedTab());
+      let title = "";
+      if (el instanceof EtTerminal) {
+        title = el.getTerminalTitle();
+      } else if (el instanceof EtViewerTab) {        
+        title = el.getTitle();
+      } else if (el instanceof ViewerElement) {
+        title = el.getTitle();
+      }
 
-    this._sendTitleEvent(title);
-    this._focusTabContent(el);
+      this._sendTitleEvent(title);
+      this._focusTabContent(el);
+    }
   }
   
   /**
