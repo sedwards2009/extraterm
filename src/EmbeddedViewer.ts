@@ -22,6 +22,7 @@ import Logger from './Logger';
 import log from './LogDecorator';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import * as SupportsClipboardPaste from './SupportsClipboardPaste';
+import * as ElementMimeType from './ElementMimeType';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -49,8 +50,6 @@ const ID_SCROLL_NAME = "ID_SCROLL_NAME";
 const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
 const ID_POP_OUT_BUTTON = "ID_POP_OUT_BUTTON";
 const ID_TAG_ICON = "ID_TAG_ICON";
-
-const MIMETYPE_TAG = "application/x-tag";
 
 const CLASS_SCROLLING = "scrolling";
 const CLASS_NOT_SCROLLING = "not-scrolling";
@@ -580,7 +579,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       return;
     }
 
-    ev.dataTransfer.setData(MIMETYPE_TAG, this.getTag());
+    ev.dataTransfer.setData(ElementMimeType. MIMETYPE_ELEMENT, ElementMimeType.elementToData(this));
     ev.dataTransfer.setDragImage(target, -10, -10);
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';

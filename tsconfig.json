@@ -44,6 +44,7 @@
         "./src/EmbeddedViewer.ts",
         "./src/typings/extra_commander.d.ts",
         "./src/typings/extra_lib.d.ts",
+        "./src/ElementMimeType.ts",
         "./src/EmptyPaneMenu.ts",
         "./src/FrameFinderType.ts",
         "./src/GeneralEvents.ts",

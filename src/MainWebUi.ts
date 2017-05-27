@@ -6,7 +6,7 @@
 import * as DomUtils from './DomUtils';
 import * as util from './gui/Util';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import {TabWidget, TabDroppedEventDetail} from './gui/TabWidget';
+import {TabWidget, ElementDroppedEventDetail} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
 import {SettingsTab} from './settings/SettingsTab';
 import {AboutTab} from './AboutTab';
@@ -266,15 +266,18 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       }
     });
 
-    mainContainer.addEventListener(TabWidget.EVENT_TAB_DROPPED, (ev: CustomEvent): void => {
-      const detail = <TabDroppedEventDetail> ev.detail;
-      const tabElement = <Tab> DomUtils.getShadowId(this, detail.tabId);
-      this._splitLayout.moveTabToTabWidget(tabElement, detail.targetTabWidget, detail.tabIndex);
-      this._splitLayout.update();
+    mainContainer.addEventListener(TabWidget.EVENT_ELEMENT_DROPPED, (ev: CustomEvent): void => {
+      const detail = <ElementDroppedEventDetail> ev.detail;
+      if (detail.elementTagName === Tab.TAG_NAME) {
+        const tabElement = <Tab> DomUtils.getShadowId(this, detail.elementId);
+        
+        this._splitLayout.moveTabToTabWidget(tabElement, detail.targetTabWidget, detail.tabIndex);
+        this._splitLayout.update();
 
-      const tabContent = this._splitLayout.getTabContentByTab(tabElement);
-      detail.targetTabWidget.setSelectedIndex(detail.tabIndex);
-      this._focusTabContent(tabContent);
+        const tabContent = this._splitLayout.getTabContentByTab(tabElement);
+        detail.targetTabWidget.setSelectedIndex(detail.tabIndex);
+        this._focusTabContent(tabContent);
+      }
     });
 
     DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_STARTED, this);
