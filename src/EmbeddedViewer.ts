@@ -50,6 +50,8 @@ const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
 const ID_POP_OUT_BUTTON = "ID_POP_OUT_BUTTON";
 const ID_TAG_ICON = "ID_TAG_ICON";
 
+const MIMETYPE_TAG = "application/x-tag";
+
 const CLASS_SCROLLING = "scrolling";
 const CLASS_NOT_SCROLLING = "not-scrolling";
 const CLASS_BOTTOM_VISIBLE = "bottom-visible";
@@ -479,7 +481,6 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
   }
 
   private _setUpShadowDom(): void {
-    this.tabIndex = 0;
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this._createClone();
     shadow.appendChild(clone);
@@ -499,8 +500,9 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     DomUtils.getShadowId(this, ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
     
     const headerDiv = DomUtils.getShadowId(this, ID_HEADER);
-    headerDiv.addEventListener('focus', this.focus.bind(this));
-    
+    headerDiv.addEventListener('dragstart', this._handleDragStart.bind(this), false);
+    headerDiv.addEventListener('dragend', this._handleDragEnd.bind(this), false);
+
     const outputDiv = DomUtils.getShadowId(this, ID_OUTPUT);    
     outputDiv.addEventListener('mousedown', this.focus.bind(this));
     outputDiv.addEventListener('click', this.focus.bind(this));
@@ -568,7 +570,29 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       EmbeddedViewer.ATTR_AWESOME_ICON
     ];
   }
-  
+
+  private _handleDragStart(ev: DragEvent): void {
+    ev.stopPropagation();
+
+    const target = <HTMLElement>ev.target;
+    if (target.getAttribute("draggable") === null) {
+      ev.preventDefault();
+      return;
+    }
+
+    ev.dataTransfer.setData(MIMETYPE_TAG, this.getTag());
+    ev.dataTransfer.setDragImage(target, -10, -10);
+    ev.dataTransfer.effectAllowed = 'move';
+    ev.dataTransfer.dropEffect = 'move';
+
+    // const dragStartedEvent = new CustomEvent(TabWidget.EVENT_DRAG_STARTED, { bubbles: true });
+    // this.dispatchEvent(dragStartedEvent);
+  }
+
+  private _handleDragEnd(ev: DragEvent): void {
+    
+  }
+
   /**
    * Custom Element 'attribute changed' hook.
    */
@@ -605,7 +629,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       template.innerHTML = `
         <style id=${ThemeableElementBase.ID_THEME}></style>
         <div id='${ID_CONTAINER}' style='display: none;' class='${CLASS_COMMAND_RUNNING}'>
-          <div id='${ID_HEADER}' tabindex='-1'>
+          <div id='${ID_HEADER}' tabindex='0' draggable='true'>
             <div class='left_block'>
               <div id='${ID_ICON_DIV}'><i id='${ID_ICON}'></i></div>
               <div id='${ID_COMMAND_LINE}'></div>

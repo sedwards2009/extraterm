@@ -739,9 +739,14 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   }
 
   private _handleChildFocus(ev: FocusEvent): void {
-    if (this._mode === Mode.DEFAULT) {
-      this.focus();
-    }
+    // This needs to be done later otherwise it tickles a bug in
+    // Chrome/Blink and prevents drag and drop from working.
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=726248
+    DomUtils.doLater( () => {
+      if (this._mode === Mode.DEFAULT) {
+        this.focus();
+      }
+    });
   }
 
   // ----------------------------------------------------------------------
