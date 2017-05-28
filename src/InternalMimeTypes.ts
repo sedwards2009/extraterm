@@ -4,18 +4,26 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-export const MIMETYPE_ELEMENT = "application/x-extraterm-element";
 
-export function elementToData(el: Element): string {
-  return el.tagName + " " + el.id;
-}
+export const ElementMimeType = {
+  MIMETYPE: "application/x-extraterm-element",
 
-export function elementIdFromData(data: string): string {
-  const parts = data.split(" ");
-  return parts[1];
-}
+  elementToData(el: Element): string {
+    return el.tagName + " " + el.id;
+  },
 
-export function tagNameFromData(data: string): string {
-  const parts = data.split(" ");
-  return parts[0];
-}
+  elementIdFromData(data: string): string {
+    const parts = data.split(" ");
+    return parts[1];
+  },
+
+  tagNameFromData(data: string): string {
+    const parts = data.split(" ");
+    return parts[0];
+  }
+};
+
+
+export const FrameMimeType = {
+  MIMETYPE: "application/x-extraterm-frame",  
+};

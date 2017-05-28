@@ -6,7 +6,7 @@
 import * as DomUtils from './DomUtils';
 import * as util from './gui/Util';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import {TabWidget, ElementDroppedEventDetail} from './gui/TabWidget';
+import {TabWidget, DroppedEventDetail} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
 import {SettingsTab} from './settings/SettingsTab';
 import {AboutTab} from './AboutTab';
@@ -44,6 +44,8 @@ import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import * as GeneralEvents from './GeneralEvents';
+import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
+
 import Logger from './Logger';
 import log from './LogDecorator';
 
@@ -260,7 +262,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     mainContainer.classList.add(CLASS_MAIN_NOT_DRAGGING);
 
     mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, this._handleTabSwitchEvent.bind(this));
-    mainContainer.addEventListener(TabWidget.EVENT_ELEMENT_DROPPED, this._handleElementDroppedEvent.bind(this));
+    mainContainer.addEventListener(TabWidget.EVENT_DROPPED, this._handleTabWidgetDroppedEvent.bind(this));
     DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_STARTED, this);
     DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_ENDED, this);
     mainContainer.addEventListener(TabWidget.EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
@@ -268,10 +270,19 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     mainContainer.addEventListener('click', this._handleMainContainerClickEvent.bind(this));
   }
 
-  private _handleElementDroppedEvent(ev: CustomEvent): void {
-    const detail = <ElementDroppedEventDetail> ev.detail;
-    if (detail.elementTagName === Tab.TAG_NAME) {
-      const tabElement = <Tab> DomUtils.getShadowId(this, detail.elementId);
+  private _handleTabWidgetDroppedEvent(ev: CustomEvent): void {
+    const detail = <DroppedEventDetail> ev.detail;
+
+    if (detail.mimeType === ElementMimeType.MIMETYPE) {
+      this._handleElementDroppedEvent(detail);
+    } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
+      this._handleFrameDroppedEvent(detail);
+    }
+  }
+
+  private _handleElementDroppedEvent(detail: DroppedEventDetail): void {
+    if (ElementMimeType.tagNameFromData(detail.dropData) === Tab.TAG_NAME) {
+      const tabElement = <Tab> DomUtils.getShadowId(this, ElementMimeType.elementIdFromData(detail.dropData));
       
       this._splitLayout.moveTabToTabWidget(tabElement, detail.targetTabWidget, detail.tabIndex);
       this._splitLayout.update();
@@ -280,6 +291,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       detail.targetTabWidget.setSelectedIndex(detail.tabIndex);
       this._focusTabContent(tabContent);
     }
+  }
+
+  private _handleFrameDroppedEvent(detail: DroppedEventDetail): void {
+    
   }
 
   private _handleDragStartedEvent(ev: CustomEvent): void {
