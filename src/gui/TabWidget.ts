@@ -7,7 +7,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import {StackedWidget} from './StackedWidget';
 import {Tab} from './Tab';
-import * as ElementMimeType from '../ElementMimeType';
+import * as InternalMimeTypes from '../InternalMimeTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as Util from './Util';
 import * as DomUtils from '../DomUtils';
@@ -468,7 +468,7 @@ export class TabWidget extends ThemeableElementBase {
       return;
     }
 
-    ev.dataTransfer.setData(ElementMimeType.MIMETYPE_ELEMENT, ElementMimeType.elementToData(parentElement));
+    ev.dataTransfer.setData(InternalMimeTypes.MIMETYPE_ELEMENT, InternalMimeTypes.elementToData(parentElement));
     ev.dataTransfer.setDragImage(parentElement, -10, -10);
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';
@@ -537,7 +537,7 @@ export class TabWidget extends ThemeableElementBase {
   private _handleDrop(ev: DragEvent): void {
     this._removeDropIndicator();
 
-    const data = ev.dataTransfer.getData(ElementMimeType.MIMETYPE_ELEMENT);
+    const data = ev.dataTransfer.getData(InternalMimeTypes.MIMETYPE_ELEMENT);
     if (data != null && data !== "") {
       if (this.id == null || this.id === "") {
         this._log.warn("A drop occurred on a TabWidget with no ID set.");
@@ -551,8 +551,8 @@ export class TabWidget extends ThemeableElementBase {
       const detail: ElementDroppedEventDetail = {
         targetTabWidget: this,
         tabIndex: pointerTabIndex,
-        elementId: ElementMimeType.elementIdFromData(data),
-        elementTagName: ElementMimeType.tagNameFromData(data)
+        elementId: InternalMimeTypes.elementIdFromData(data),
+        elementTagName: InternalMimeTypes.tagNameFromData(data)
       };
       const tabDropEvent = new CustomEvent(TabWidget.EVENT_ELEMENT_DROPPED, { bubbles: true, detail: detail });
       this.dispatchEvent(tabDropEvent);

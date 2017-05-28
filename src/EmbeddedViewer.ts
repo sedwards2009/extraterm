@@ -22,7 +22,7 @@ import Logger from './Logger';
 import log from './LogDecorator';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import * as SupportsClipboardPaste from './SupportsClipboardPaste';
-import * as ElementMimeType from './ElementMimeType';
+import * as InternalMimeTypes from './InternalMimeTypes';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -579,7 +579,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       return;
     }
 
-    ev.dataTransfer.setData(ElementMimeType. MIMETYPE_ELEMENT, ElementMimeType.elementToData(this));
+    ev.dataTransfer.setData(InternalMimeTypes. MIMETYPE_ELEMENT, InternalMimeTypes.elementToData(this));
     ev.dataTransfer.setDragImage(target, -10, -10);
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';
