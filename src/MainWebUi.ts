@@ -529,11 +529,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  /**
-   * Create a new terminal tab
-   *
-   * @return ID of the new terminal.
-   */
   newTerminalTab(tabWidget: TabWidget = null): EtTerminal {
     if (tabWidget == null) {
       tabWidget = this._splitLayout.firstTabWidget();
@@ -545,17 +540,49 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
     this._terminalPtyIdMap.set(newTerminal, null);
-    const currentConfig = this._configManager.getConfig();
-    newTerminal.setBlinkingCursor(currentConfig.blinkingCursor);
-    newTerminal.setScrollbackSize(currentConfig.scrollbackLines);
 
+    this._applyNewTerminalConfig(newTerminal, this._configManager.getConfig());
     this._addTab(tabWidget, newTerminal);
-    
+    this._setUpNewTerminalEventHandlers(newTerminal);
+    this._createPtyForTerminal(newTerminal);
+    this._updateTabTitle(newTerminal);
+    this._sendTabOpenedEvent();
+
+    this._internalExtratermApi.addTab(newTerminal);
+    newTerminal.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+    return newTerminal;
+  }
+
+  private _applyNewTerminalConfig(newTerminal: EtTerminal, config: config.Config): void {
+    newTerminal.setBlinkingCursor(config.blinkingCursor);
+    newTerminal.setScrollbackSize(config.scrollbackLines);
+  }
+
+  private _createPtyForTerminal(newTerminal: EtTerminal): void {
+    const sessionProfile = this._configManager.getConfig().expandedProfiles[0];
+    const newEnv = _.cloneDeep(process.env);
+    const expandedExtra = sessionProfile.extraEnv;
+
+    let prop: string;
+    for (prop in expandedExtra) {
+      newEnv[prop] = expandedExtra[prop];
+    }
+
+    WebIpc.requestPtyCreate(sessionProfile.command, sessionProfile.arguments,
+        newTerminal.getColumns(), newTerminal.getRows(), newEnv)
+      .then( (msg: Messages.CreatedPtyMessage) => {
+        this._terminalPtyIdMap.set(newTerminal, msg.id);
+        this._ptyIdTerminalMap.set(msg.id, newTerminal);
+        WebIpc.ptyResize(msg.id, newTerminal.getColumns(), newTerminal.getRows());
+        WebIpc.ptyOutputBufferSize(msg.id, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
+      });
+  }
+
+  private _setUpNewTerminalEventHandlers(newTerminal: EtTerminal): void {
     newTerminal.addEventListener('focus', (ev: FocusEvent) => {
       this._lastFocus = newTerminal;
     });
     
-    // User input event
     newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (ev: CustomEvent): void => {
       const ptyId = this._terminalPtyIdMap.get(newTerminal);
       if (ptyId != null) {
@@ -563,13 +590,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       }
     });
     
-    let currentColumns = newTerminal.getColumns();
-    let currentRows = newTerminal.getRows();
-
-    // Terminal resize event
     newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_RESIZE, (ev: CustomEvent): void => {
-      currentColumns = (<any> ev).detail.columns;
-      currentRows = (<any> ev).detail.rows;
+      const currentColumns = (<any> ev).detail.columns;
+      const currentRows = (<any> ev).detail.rows;
       const ptyId = this._terminalPtyIdMap.get(newTerminal);
       if (ptyId != null) {
         WebIpc.ptyResize(ptyId, currentColumns, currentRows);
@@ -584,7 +607,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       }
     });
 
-    // Terminal title event
     newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (ev: CustomEvent): void => {
       this._updateTabTitle(newTerminal);
       this._sendTitleEvent(ev.detail.title);
@@ -595,33 +617,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._switchToTab(viewerTab);
       ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
     });
-    
-    const sessionProfile = this._configManager.getConfig().expandedProfiles[0];
-    const newEnv = _.cloneDeep(process.env);
-    const expandedExtra = sessionProfile.extraEnv;
-
-    let prop: string;
-    for (prop in expandedExtra) {
-      newEnv[prop] = expandedExtra[prop];
-    }
-    
-    WebIpc.requestPtyCreate(sessionProfile.command, sessionProfile.arguments,
-        currentColumns, currentRows, newEnv)
-      .then( (msg: Messages.CreatedPtyMessage) => {
-        this._terminalPtyIdMap.set(newTerminal, msg.id);
-        this._ptyIdTerminalMap.set(msg.id, newTerminal);
-        WebIpc.ptyResize(msg.id, currentColumns, currentRows);
-        WebIpc.ptyOutputBufferSize(msg.id, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
-      });
-
-    this._updateTabTitle(newTerminal);
-    this._sendTabOpenedEvent();
-
-    this._internalExtratermApi.addTab(newTerminal);
-    newTerminal.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
-    return newTerminal;
   }
-  
+    
   openViewerTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
