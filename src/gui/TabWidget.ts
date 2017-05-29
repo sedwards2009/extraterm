@@ -561,7 +561,7 @@ export class TabWidget extends ThemeableElementBase {
 
   private _getSupportedDropMimeTypeData(ev: DragEvent): {mimeType: string; data: string;} {
     for (const mimeType of [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE]) {
-      const data = ev.dataTransfer.getData(ElementMimeType.MIMETYPE);
+      const data = ev.dataTransfer.getData(mimeType);
       if (data != null && data !== "") {
         return {mimeType, data};
       }

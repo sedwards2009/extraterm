@@ -459,12 +459,26 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   }
   
   getFrameContents(frameId: string): string {
-    const embeddedViewer = this._findFrame(frameId);
+    const embeddedViewer = this.getEmbeddedViewerByFrameId(frameId);
     if (embeddedViewer === null) {
       return null;
     }
     const text = embeddedViewer.getText();
     return text === undefined ? null : text;
+  }
+
+  getEmbeddedViewerByFrameId(frameId: string): EmbeddedViewer {
+    if (/[^0-9]/.test(frameId)) {
+      return null;
+    }
+    
+    for (const elementStat of this._childElementList) {
+      const element = elementStat.element;
+      if (EmbeddedViewer.is(element) && element.getAttribute('tag') === frameId) {
+        return element;
+      }
+    }
+    return null;
   }
 
   getFontAdjust(): number {
@@ -2086,23 +2100,6 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     return dataViewer;
   }
 
-  /**
-   * Find a command frame by ID.
-   */
-  private _findFrame(frameId: string): EmbeddedViewer {
-    if (/[^0-9]/.test(frameId)) {
-      return null;
-    }
-    
-    for (const elementStat of this._childElementList) {
-      const element = elementStat.element;
-      if (EmbeddedViewer.is(element) && element.getAttribute('tag') === frameId) {
-        return element;
-      }
-    }
-    return null;
-  }
-  
   private _getNextTag(): string {
     let tag  = this._nextTag;
     if (tag === null) {

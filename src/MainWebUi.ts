@@ -294,7 +294,19 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _handleFrameDroppedEvent(detail: DroppedEventDetail): void {
-    
+    for (const el of this._splitLayout.getAllTabContents()) {
+      if (el instanceof EtTerminal) {
+        const embeddedViewer = el.getEmbeddedViewerByFrameId(detail.dropData);
+        if (embeddedViewer != null) {
+          const viewerTab = this._popOutEmbeddedViewer(embeddedViewer, el);
+          const tab = this._splitLayout.getTabByTabContent(viewerTab);
+          this._splitLayout.moveTabToTabWidget(tab, detail.targetTabWidget, detail.tabIndex);
+          this._splitLayout.update();
+          this._switchToTab(viewerTab);
+          return;
+        }
+      }
+    }
   }
 
   private _handleDragStartedEvent(ev: CustomEvent): void {
@@ -612,13 +624,21 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._sendTitleEvent(ev.detail.title);
     });
     
-    newTerminal.addEventListener(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT, (ev: CustomEvent): void => {
-      const viewerTab = this.openViewerTab(ev.detail.embeddedViewer, ev.detail.terminal.getFontAdjust());
-      this._switchToTab(viewerTab);
-      ev.detail.terminal.deleteEmbeddedViewer(ev.detail.embeddedViewer);
-    });
+    newTerminal.addEventListener(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT,
+      this._handleEmbeddedViewerPopOutEvent.bind(this));
   }
-    
+  
+  private _handleEmbeddedViewerPopOutEvent(ev: CustomEvent): void {
+    this._popOutEmbeddedViewer(ev.detail.embeddedViewer, ev.detail.terminal);
+  }
+
+  private _popOutEmbeddedViewer(embeddedViewer: EmbeddedViewer, terminal: EtTerminal): EtViewerTab {
+    const viewerTab = this.openViewerTab(embeddedViewer, terminal.getFontAdjust());
+    this._switchToTab(viewerTab);
+    terminal.deleteEmbeddedViewer(embeddedViewer);
+    return viewerTab;
+  }
+
   openViewerTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
