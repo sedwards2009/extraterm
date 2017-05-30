@@ -43,7 +43,7 @@ import {FrameFinder} from './FrameFinderType';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import * as GeneralEvents from './GeneralEvents';
+import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
 
 import Logger from './Logger';
@@ -263,10 +263,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, this._handleTabSwitchEvent.bind(this));
     mainContainer.addEventListener(TabWidget.EVENT_DROPPED, this._handleTabWidgetDroppedEvent.bind(this));
-    DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_STARTED, this);
-    DomUtils.addCustomEventResender(mainContainer, TabWidget.EVENT_DRAG_ENDED, this);
-    mainContainer.addEventListener(TabWidget.EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
-    mainContainer.addEventListener(TabWidget.EVENT_DRAG_ENDED, this._handleDragEndedEvent.bind(this));
+    DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_STARTED, this);
+    DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_ENDED, this);
+    mainContainer.addEventListener(EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
+    mainContainer.addEventListener(EVENT_DRAG_ENDED, this._handleDragEndedEvent.bind(this));
     mainContainer.addEventListener('click', this._handleMainContainerClickEvent.bind(this));
   }
 

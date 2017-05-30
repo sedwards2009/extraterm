@@ -7,6 +7,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import {StackedWidget} from './StackedWidget';
 import {Tab} from './Tab';
+import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as Util from './Util';
@@ -77,10 +78,6 @@ export class TabWidget extends ThemeableElementBase {
   static EVENT_TAB_SWITCH = "tab-switch";
   
   static EVENT_DROPPED = "tabwidget-dropped";
-
-  static EVENT_DRAG_STARTED = "tabwidget-drag-started";
-
-  static EVENT_DRAG_ENDED = "tabwidget-drag-ended";
 
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
@@ -473,7 +470,7 @@ export class TabWidget extends ThemeableElementBase {
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';
 
-    const dragStartedEvent = new CustomEvent(TabWidget.EVENT_DRAG_STARTED, { bubbles: true });
+    const dragStartedEvent = new CustomEvent(EVENT_DRAG_STARTED, { bubbles: true });
     this.dispatchEvent(dragStartedEvent);
   }
 
@@ -545,7 +542,7 @@ export class TabWidget extends ThemeableElementBase {
       }
       const pointerTabIndex = this._pointToTabIndex(ev);
 
-      const dragEndedEvent = new CustomEvent(TabWidget.EVENT_DRAG_ENDED, { bubbles: true });
+      const dragEndedEvent = new CustomEvent(EVENT_DRAG_ENDED, { bubbles: true });
       this.dispatchEvent(dragEndedEvent);
 
       const detail: DroppedEventDetail = {
@@ -579,7 +576,7 @@ export class TabWidget extends ThemeableElementBase {
   private _handleDragEnd(ev: DragEvent): void {
     this._removeDropIndicator();
 
-    const dragEndedEvent = new CustomEvent(TabWidget.EVENT_DRAG_ENDED, { bubbles: true });
+    const dragEndedEvent = new CustomEvent(EVENT_DRAG_ENDED, { bubbles: true });
     this.dispatchEvent(dragEndedEvent);
   }
 }

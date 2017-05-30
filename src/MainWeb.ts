@@ -23,6 +23,7 @@ import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 import * as CommandPaletteFunctions from './CommandPaletteFunctions';
+import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 
 import * as PluginApi from './PluginApi';
 import * as PluginManager from './PluginManager';
@@ -226,12 +227,12 @@ function startUpMainWebUi(): void {
     WebIpc.windowCloseRequest();
   });
 
-  mainWebUi.addEventListener(TabWidget.EVENT_DRAG_STARTED, (ev: CustomEvent): void => {
+  mainWebUi.addEventListener(EVENT_DRAG_STARTED, (ev: CustomEvent): void => {
     window.document.body.classList.add(CLASS_MAIN_DRAGGING);
     window.document.body.classList.remove(CLASS_MAIN_NOT_DRAGGING);
   });
 
-  mainWebUi.addEventListener(TabWidget.EVENT_DRAG_ENDED, (ev: CustomEvent): void => {
+  mainWebUi.addEventListener(EVENT_DRAG_ENDED, (ev: CustomEvent): void => {
     window.document.body.classList.remove(CLASS_MAIN_DRAGGING);
     window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
   });
