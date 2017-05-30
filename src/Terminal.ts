@@ -528,6 +528,9 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
       DomUtils.preventScroll(scrollContainer);
 
+      DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
+      DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
+
       scrollContainer.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
           this._handleCommandPaletteRequest(ev);
         });

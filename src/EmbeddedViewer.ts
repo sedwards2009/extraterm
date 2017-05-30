@@ -23,6 +23,7 @@ import log from './LogDecorator';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import * as SupportsClipboardPaste from './SupportsClipboardPaste';
 import {FrameMimeType} from './InternalMimeTypes';
+import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -584,12 +585,13 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';
 
-    // const dragStartedEvent = new CustomEvent(TabWidget.EVENT_DRAG_STARTED, { bubbles: true });
-    // this.dispatchEvent(dragStartedEvent);
+    const dragStartedEvent = new CustomEvent(EVENT_DRAG_STARTED, { bubbles: true });
+    this.dispatchEvent(dragStartedEvent);
   }
 
   private _handleDragEnd(ev: DragEvent): void {
-    
+    const dragEndedEvent = new CustomEvent(EVENT_DRAG_ENDED, { bubbles: true });
+    this.dispatchEvent(dragEndedEvent);
   }
 
   /**
