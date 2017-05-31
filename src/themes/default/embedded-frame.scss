@@ -160,6 +160,10 @@ $FAIL_COLOR: #ff5454;
   background-color: $LITE_BACKGROUND_COLOR;
   border-top-left-radius: $CORNER_RADIUS;
   border-top-right-radius: $CORNER_RADIUS;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 #ID_CONTAINER.not-scrolling > #ID_HEADER {
