@@ -581,6 +581,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     }
 
     ev.dataTransfer.setData(FrameMimeType.MIMETYPE, "" + this.getTag());
+    ev.dataTransfer.setData("text/plain", this.getText());
     ev.dataTransfer.setDragImage(target, -10, -10);
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';
