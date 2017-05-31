@@ -575,7 +575,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     ev.stopPropagation();
 
     const target = <HTMLElement>ev.target;
-    if (target.getAttribute("draggable") === null) {
+    if (target.getAttribute("draggable") == null || this.getViewerElement() == null) {
       ev.preventDefault();
       return;
     }
