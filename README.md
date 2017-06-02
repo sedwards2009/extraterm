@@ -1,6 +1,6 @@
 Extraterm
 =========
-*The terminal emulator with a lot extra...*
+* The swiss army chainsaw of terminal emulators...*
 
 * *Capture and reuse command output as new command input*
 * *Manipulate and copy text without leaving the keyboard*
@@ -26,13 +26,12 @@ Current features:
 
 * Supports Linux, macOS and Cygwin on Windows
 * xterm compatible
-* Multiple tabs/terminals
-* Vertical split panes
+* Multiple tabs and panes, split and tiled any way you like
 * Keyboard based selection
 * Show images in the terminal
 * Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
 * Previous command output can be used as input for new commands
-* Command output is editable in place. multi-cursor editing
+* Command output is editable in place. Multi-cursor editing
 * Keyboard friendly "command palette" for searching menus
 * Text zoom
 * Unicode support
