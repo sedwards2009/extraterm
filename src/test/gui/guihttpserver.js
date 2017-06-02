@@ -39,6 +39,13 @@ const server = http.createServer(function(req, res){
     "/codemirror.js": "../../../node_modules/codemirror/lib/codemirror.js"
   };
 
+  const direct_files = [
+    "/test.html",
+    "/test.js",
+    "/snapdropcontainertest.html",
+    "/snapdropcontainertest.js"
+  ];
+
   if (req.url in remap) {
     res.writeHead(200, {"Content-Type": "text/javascript"});
     const fullPath = path.join(__dirname, remap[req.url]);
@@ -64,7 +71,7 @@ const server = http.createServer(function(req, res){
 
   } else if (req.url.startsWith("/css/")) {
     cssServe(req, res, done);
-  } else if (req.url === "/test.html" || req.url === "/test.js") {
+  } else if (direct_files.includes(req.url)) {
     testServe(req, res, done);
   } else if (req.url.startsWith("/node_modules/")) {
     moduleServe(req, res, done);

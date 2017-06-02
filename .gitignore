@@ -98,3 +98,4 @@ src/ViewerElementTypes.js
 src/settings/SettingsTab.js
 src/utils/SetUtils.js
 src/utils/CodeMirrorUtils.js
+src/gui/SnapDropContainer.js

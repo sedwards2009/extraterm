@@ -97,6 +97,7 @@
         "./src/gui/PopDownListPicker.ts",
         "./src/gui/PopDownNumberDialog.ts",
         "./src/gui/ScrollBar.ts",
+        "./src/gui/SnapDropContainer.ts",
         "./src/gui/Splitter.ts",
         "./src/gui/StackedWidget.ts",
         "./src/gui/Tab.ts",

@@ -1,0 +1,26 @@
+/**
+ * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ */
+
+#ID_TOP {
+  position: relative;
+}
+
+#ID_CONTENTS {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+#ID_DRAG_COVER {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+
+  display: hidden;
+
+}
