@@ -1,6 +1,6 @@
 Extraterm
 =========
-* The swiss army chainsaw of terminal emulators...*
+*The swiss army chainsaw of terminal emulators...*
 
 * *Capture and reuse command output as new command input*
 * *Manipulate and copy text without leaving the keyboard*
