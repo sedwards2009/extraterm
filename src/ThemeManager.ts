@@ -8,10 +8,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import * as SourceDir from './SourceDir';
-const MODULE_VERSION = "53";  // This version number also appears in build_package.js
-// Patch in our special node-sass binary for the V8 module version used by Electron.
-process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
-  `node-sass-binary/${process.platform}-${process.arch}-${MODULE_VERSION}/binding.node`);
+
+const PATCH_MODULE_VERSION = "53";  // This version number also appears in build_package.js
+if (process.versions.modules === PATCH_MODULE_VERSION) {
+  // Patch in our special node-sass binary for the V8 module version used by Electron.
+  process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
+    `node-sass-binary/${process.platform}-${process.arch}-${PATCH_MODULE_VERSION}/binding.node`);
+}
 import * as NodeSass from 'node-sass';
 
 import * as _ from 'lodash';
