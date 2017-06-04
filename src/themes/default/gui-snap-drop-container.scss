@@ -36,7 +36,10 @@ $indicator_margin: 8px;
   }
 
   &.CLASS_DROP_TARGET_MIDDLE:before {
-    border: 0;
+    left: #{$indicator_margin};
+    right: #{$indicator_margin};
+    top: #{$indicator_margin};
+    bottom: #{$indicator_margin};
   }
 
   &.CLASS_DROP_TARGET_NORTH:before, &.CLASS_DROP_TARGET_SOUTH:before {
