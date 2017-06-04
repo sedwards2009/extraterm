@@ -4,6 +4,8 @@
 
 #ID_TOP {
   position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 #ID_CONTENTS {
@@ -14,6 +16,8 @@
   right: 0;
 }
 
+$indicator_margin: 8px;
+
 #ID_DRAG_COVER {
   position: absolute;
   top: 0;
@@ -21,6 +25,52 @@
   bottom: 0;
   right: 0;
 
-  display: hidden;
+  display: none;
 
+  &:before {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    border: 3px solid blue;
+  }
+
+  &.CLASS_DROP_TARGET_MIDDLE:before {
+    border: 0;
+  }
+
+  &.CLASS_DROP_TARGET_NORTH:before, &.CLASS_DROP_TARGET_SOUTH:before {
+    left: #{$indicator_margin};
+    right: #{$indicator_margin};
+  }
+
+  &.CLASS_DROP_TARGET_NORTH:before {
+    top: #{$indicator_margin};
+    bottom: 50%;
+  }
+
+  &.CLASS_DROP_TARGET_SOUTH:before {
+    top: 50%;
+    bottom: #{$indicator_margin};
+  }
+
+  &.CLASS_DROP_TARGET_EAST:before, &.CLASS_DROP_TARGET_WEST:before {
+    top: #{$indicator_margin};
+    bottom: #{$indicator_margin};
+  }
+
+  &.CLASS_DROP_TARGET_EAST:before {
+    left: 50%;
+    right: #{$indicator_margin};
+  }
+
+  &.CLASS_DROP_TARGET_WEST:before {
+    left: #{$indicator_margin};
+    right: 50%;
+  }
+}
+
+#ID_TOP.CLASS_DRAGGING > #ID_DRAG_COVER {
+  display: block;
+  z-index: 1;
 }

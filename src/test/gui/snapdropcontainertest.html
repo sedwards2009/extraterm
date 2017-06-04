@@ -16,16 +16,31 @@
   }
   #snapdropcontainer {
     border: 1px solid red;
-    width: 100px;
+    width: 200px;
     height: 100px;
     display: block;
   }
+
+  #content {
+    border: 1px solid green;
+    background-color: #80ff80;
+  }
+
+  #drag_box {
+    display: inline-block;
+    border: 1px solid blue;
+  }
+
   </style>
 </head>
 <body onload="start();">
 
+<div id="drag_box" draggable="true">
+  Draggable 
+</div>
+
 <et-snapdropcontainer id="snapdropcontainer">
-  
+  <div id="content">An inner div.</div>
 </et-snapdropcontainer>
 
 </body>

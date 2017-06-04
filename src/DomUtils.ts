@@ -500,3 +500,12 @@ export function isNodeInDom(node: Node): boolean {
 
   return currentNode.nodeType === Node.DOCUMENT_NODE;
 }
+
+/**
+ * Remove all CSS classes from an element.
+ */
+export function removeAllClasses(el: Element): void {
+  while (el.classList.length !== 0) {
+    el.classList.remove(el.classList[0]);
+  }
+}
