@@ -7,6 +7,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import {StackedWidget} from './StackedWidget';
 import {Tab} from './Tab';
+import {SnapDropContainer} from './SnapDropContainer';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -17,6 +18,7 @@ import Logger from '../Logger';
 import log from '../LogDecorator';
 
 StackedWidget.init();
+SnapDropContainer.init();
 
 const ID = "EtTabWidgetTemplate";
 const ATTR_TAG = 'data-et-tag';
@@ -31,6 +33,7 @@ const ID_TOP = "ID_TOP";
 const ID_TABBAR = "ID_TABBAR";
 const ID_TABBAR_CONTAINER = "ID_TABBAR_CONTAINER";
 const ID_CONTENTSTACK = "ID_CONTENTSTACK";
+const ID_SNAP_DROP_CONTAINER = "ID_SNAP_DROP_CONTAINER";
 const ID_CONTENTS = "ID_CONTENTS";
 const ID_DROP_INDICATOR = "ID_DROP_INDICATOR";
 
@@ -172,7 +175,7 @@ export class TabWidget extends ThemeableElementBase {
   <div id='${ID_TABBAR_CONTAINER}'>
     <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
   </div>
-  <div id='${ID_CONTENTS}'><${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></${StackedWidget.TAG_NAME}></div>
+  <div id='${ID_CONTENTS}'><${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}'><${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></$ {StackedWidget.TAG_NAME}></${SnapDropContainer.TAG_NAME}></div>
 </div>
 `;
       window.document.body.appendChild(template);
