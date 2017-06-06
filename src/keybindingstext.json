@@ -80,6 +80,10 @@
     "goUp": "Move up",
     "closePane": "Close pane",
     "horizontalSplit": "Horizontal split",
-    "verticalSplit": "Vertical split"
+    "verticalSplit": "Vertical split",
+    "moveTabUp": "Move tab up",
+    "moveTabDown": "Move tab down",
+    "moveTabLeft": "Move tab left",
+    "moveTabRight": "Move tab right"
   }
 }
