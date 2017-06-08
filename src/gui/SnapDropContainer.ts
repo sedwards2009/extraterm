@@ -140,7 +140,9 @@ export class SnapDropContainer extends ThemeableElementBase {
   }
 
   private _handleDragOver(ev: DragEvent): void {
+    ev.preventDefault();
     ev.stopPropagation();
+
     this._showDragCover(ev);
   }
 
@@ -214,8 +216,8 @@ export class SnapDropContainer extends ThemeableElementBase {
         mimeType: mimeType,
         dropData: data
       };
-      const tabDropEvent = new CustomEvent(SnapDropContainer.EVENT_DROPPED, { bubbles: true, detail: detail });
-      this.dispatchEvent(tabDropEvent);
+      const customDropEvent = new CustomEvent(SnapDropContainer.EVENT_DROPPED, { bubbles: true, detail: detail });
+      this.dispatchEvent(customDropEvent);
     }
   }
 
