@@ -16,6 +16,7 @@ import {EmbeddedViewer} from './EmbeddedViewer';
 import {Tab} from './gui/Tab';
 import {ViewerElement} from './ViewerElement';
 import {Splitter, SplitOrientation} from './gui/Splitter';
+import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation} from './gui/SnapDropContainer';
 import {EmptyPaneMenu} from './EmptyPaneMenu';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ThemeTypes from './Theme';
@@ -263,6 +264,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, this._handleTabSwitchEvent.bind(this));
     mainContainer.addEventListener(TabWidget.EVENT_DROPPED, this._handleTabWidgetDroppedEvent.bind(this));
+    mainContainer.addEventListener(SnapDropContainer.EVENT_DROPPED, this._handleTabWidgetSnapDroppedEvent.bind(this));
     DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_STARTED, this);
     DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_ENDED, this);
     mainContainer.addEventListener(EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
@@ -274,37 +276,62 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const detail = <DroppedEventDetail> ev.detail;
 
     if (detail.mimeType === ElementMimeType.MIMETYPE) {
-      this._handleElementDroppedEvent(detail);
+      this._handleElementDroppedEvent(detail.targetTabWidget, detail.tabIndex, detail.dropData);
     } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
-      this._handleFrameDroppedEvent(detail);
+      this._handleFrameDroppedEvent(detail.targetTabWidget, detail.tabIndex, detail.dropData);
     }
   }
 
-  private _handleElementDroppedEvent(detail: DroppedEventDetail): void {
-    if (ElementMimeType.tagNameFromData(detail.dropData) === Tab.TAG_NAME) {
-      const tabElement = <Tab> DomUtils.getShadowId(this, ElementMimeType.elementIdFromData(detail.dropData));
+  private _handleElementDroppedEvent(targetTabWidget: TabWidget, tabIndex: number, dropData: string): void {
+    if (ElementMimeType.tagNameFromData(dropData) === Tab.TAG_NAME) {
+      const tabElement = <Tab> DomUtils.getShadowId(this, ElementMimeType.elementIdFromData(dropData));
       
-      this._splitLayout.moveTabToTabWidget(tabElement, detail.targetTabWidget, detail.tabIndex);
+      this._splitLayout.moveTabToTabWidget(tabElement, targetTabWidget, tabIndex);
       this._splitLayout.update();
 
       const tabContent = this._splitLayout.getTabContentByTab(tabElement);
-      detail.targetTabWidget.setSelectedIndex(detail.tabIndex);
+      targetTabWidget.setSelectedIndex(tabIndex);
       this._focusTabContent(tabContent);
     }
   }
 
-  private _handleFrameDroppedEvent(detail: DroppedEventDetail): void {
+  private _handleFrameDroppedEvent(targetTabWidget: TabWidget, tabIndex: number, dropData: string): void {
     for (const el of this._splitLayout.getAllTabContents()) {
       if (el instanceof EtTerminal) {
-        const embeddedViewer = el.getEmbeddedViewerByFrameId(detail.dropData);
+        const embeddedViewer = el.getEmbeddedViewerByFrameId(dropData);
         if (embeddedViewer != null) {
           const viewerTab = this._popOutEmbeddedViewer(embeddedViewer, el);
           const tab = this._splitLayout.getTabByTabContent(viewerTab);
-          this._splitLayout.moveTabToTabWidget(tab, detail.targetTabWidget, detail.tabIndex);
+          this._splitLayout.moveTabToTabWidget(tab, targetTabWidget, tabIndex);
           this._splitLayout.update();
           this._switchToTab(viewerTab);
           return;
         }
+      }
+    }
+  }
+
+  private _handleTabWidgetSnapDroppedEvent(ev: CustomEvent): void {
+    const detail = <SnapDroppedEventDetail> ev.detail;
+    if (detail.mimeType === ElementMimeType.MIMETYPE) {
+      this._handleTabWidgetSnapDroppedElementEvent(ev.target, detail);
+    } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
+      this._handleTabWidgetSnapDroppedFrameEvent(ev.target, detail);
+    }
+  }
+
+  private _handleTabWidgetSnapDroppedElementEvent(target: EventTarget, detail: SnapDroppedEventDetail): void {
+    if (detail.dropLocation === DropLocation.MIDDLE) {
+      if (target instanceof TabWidget) {        
+        this._handleElementDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
+      }
+    }
+  }
+
+  private _handleTabWidgetSnapDroppedFrameEvent(target: EventTarget, detail: SnapDroppedEventDetail): void {
+    if (detail.dropLocation === DropLocation.MIDDLE) {
+      if (target instanceof TabWidget) {
+        this._handleFrameDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
       }
     }
   }

@@ -7,7 +7,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import {StackedWidget} from './StackedWidget';
 import {Tab} from './Tab';
-import {SnapDropContainer} from './SnapDropContainer';
+import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail} from './SnapDropContainer';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -175,7 +175,11 @@ export class TabWidget extends ThemeableElementBase {
   <div id='${ID_TABBAR_CONTAINER}'>
     <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
   </div>
-  <div id='${ID_CONTENTS}'><${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}'><${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></$ {StackedWidget.TAG_NAME}></${SnapDropContainer.TAG_NAME}></div>
+  <div id='${ID_CONTENTS}'>
+    <${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}'>
+      <${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></$ {StackedWidget.TAG_NAME}>
+    </${SnapDropContainer.TAG_NAME}>
+  </div>
 </div>
 `;
       window.document.body.appendChild(template);
@@ -455,6 +459,9 @@ export class TabWidget extends ThemeableElementBase {
     tabBar.addEventListener("dragleave", this._removeDropIndicator.bind(this));
     tabBar.addEventListener("dragend", this._handleDragEnd.bind(this));
     tabBar.addEventListener("drop", this._handleDrop.bind(this));
+
+    const snapDropContainer = DomUtils.getShadowId(this, ID_SNAP_DROP_CONTAINER);
+    DomUtils.addCustomEventResender(snapDropContainer, SnapDropContainer.EVENT_DROPPED, this);
   }
 
   private _handleDragStart(ev: DragEvent): void {
