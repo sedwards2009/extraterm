@@ -275,18 +275,22 @@ export function addCustomEventResender(listenTarget: EventTarget, eventName: str
       retransmitTarget: EventTarget=null): void {
 
   listenTarget.addEventListener(eventName, (ev: CustomEvent) => {
-    if (ev.target === listenTarget) {
+    const inflightResentEvent = inflightResentEvents.get(ev.target);
+    if (inflightResentEvent === ev && inflightResentEvent.type === eventName) {
       return;
     }
     ev.stopPropagation();
-    
     const detail = ev.detail;
     const bubbles = ev.bubbles;
     
     const event = new CustomEvent(eventName, { bubbles: bubbles, detail: detail });
+    inflightResentEvents.set(listenTarget, event);
     (retransmitTarget === null ? listenTarget : retransmitTarget).dispatchEvent(event);
+    inflightResentEvents.delete(listenTarget);
   });
 }
+
+const inflightResentEvents = new Map<EventTarget, CustomEvent>();
 
 //-------------------------------------------------------------------------
 
