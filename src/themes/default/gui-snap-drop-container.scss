@@ -2,6 +2,8 @@
  * Copyright 2017 Simon Edwards <simon@simonzone.com>
  */
 
+@import "extraterm-scrollbars";
+
 #ID_TOP {
   position: relative;
   width: 100%;
@@ -16,7 +18,8 @@
   right: 0;
 }
 
-$indicator_margin: 8px;
+$indicator_margin: 16px;
+$inner_shadow: 32px;
 
 #ID_DRAG_COVER {
   position: absolute;
@@ -32,19 +35,22 @@ $indicator_margin: 8px;
     display: block;
     box-sizing: border-box;
     position: absolute;
-    border: 3px solid blue;
+
+    background-color: rgba(255,255,255, 0.25);
+    box-shadow: 0px 0px #{$indicator_margin} 0px black, inset 0px 0px #{$inner_shadow} 0px white;
+    border-radius: 4px;
   }
 
   &.CLASS_DROP_TARGET_MIDDLE:before {
     left: #{$indicator_margin};
-    right: #{$indicator_margin};
+    right: #{$indicator_margin + $scrollbar-size + 2 * $scrollbar-pad};
     top: #{$indicator_margin};
     bottom: #{$indicator_margin};
   }
 
   &.CLASS_DROP_TARGET_NORTH:before, &.CLASS_DROP_TARGET_SOUTH:before {
     left: #{$indicator_margin};
-    right: #{$indicator_margin};
+    right: #{$indicator_margin + $scrollbar-size + 2 * $scrollbar-pad};
   }
 
   &.CLASS_DROP_TARGET_NORTH:before {
@@ -64,7 +70,7 @@ $indicator_margin: 8px;
 
   &.CLASS_DROP_TARGET_EAST:before {
     left: 50%;
-    right: #{$indicator_margin};
+    right: #{$indicator_margin + $scrollbar-size + 2 * $scrollbar-pad};
   }
 
   &.CLASS_DROP_TARGET_WEST:before {
