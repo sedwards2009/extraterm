@@ -326,6 +326,24 @@ export class SplitLayout {
     return null;
   }
 
+  splitBeforeTabWidget(tabWidget: TabWidget, orientation: SplitOrientation): TabWidget {
+    const newTabWidget = this.splitAfterTabWidget(tabWidget, orientation);
+
+    const newTabWidgetPath = findPathToTabWidget(this._rootInfoNode, newTabWidget);
+    const splitterInfo = newTabWidgetPath[newTabWidgetPath.length-2];
+    const newTabWidgetInfo = newTabWidgetPath[newTabWidgetPath.length-1];
+    
+    if (splitterInfo.type === "splitter" && newTabWidgetInfo.type === "tabwidget") {
+
+      const tabWidgetPath = findPathToTabWidget(splitterInfo, tabWidget);
+      const tabWidgetInfo = tabWidgetPath[tabWidgetPath.length-1];
+      if (tabWidgetInfo.type === "tabwidget") {
+        splitterInfo.children = swapArrayItems(splitterInfo.children, newTabWidgetInfo, tabWidgetInfo);
+      }
+    }
+    return newTabWidget;
+  }
+
   splitAfterTabContent(tabContent: Element, orientation: SplitOrientation): TabWidget {
     const path = findPathToTabContent(this._rootInfoNode, tabContent);
     if (path == null) {
@@ -1022,4 +1040,20 @@ function transform2dPoint(point: Point2D, matrix: Matrix2D): Point2D {
   const x = point[0] * matrix[0] + point[1] * matrix[2];
   const y = point[0] * matrix[1] + point[1] * matrix[3];
   return [x ,y];
+}
+
+function swapArrayItems<T>(array: Array<T>, item1: T, item2: T): Array<T> {
+  const newArray: Array<T> = [];
+
+  for (const item of array) {
+    if (item === item1) {
+      newArray.push(item2);
+    } else if (item === item2) {
+      newArray.push(item1);
+    } else {
+      newArray.push(item);
+    }
+  }
+
+  return newArray;
 }

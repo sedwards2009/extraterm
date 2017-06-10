@@ -313,27 +313,60 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _handleTabWidgetSnapDroppedEvent(ev: CustomEvent): void {
     const detail = <SnapDroppedEventDetail> ev.detail;
-    if (detail.mimeType === ElementMimeType.MIMETYPE) {
-      this._handleTabWidgetSnapDroppedElementEvent(ev.target, detail);
-    } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
-      this._handleTabWidgetSnapDroppedFrameEvent(ev.target, detail);
+    const target = ev.target;
+    if (target instanceof TabWidget) {
+      switch (detail.dropLocation) {
+        case DropLocation.MIDDLE:
+          this._handleTabWidgetSnapDroppedMiddleEvent(ev);
+          break;
+
+        case DropLocation.NORTH:
+          this._handleTabWidgetSnapDroppedDirectionEvent(ev, SplitOrientation.HORIZONTAL, true);
+          break;
+
+        case DropLocation.SOUTH:
+          this._handleTabWidgetSnapDroppedDirectionEvent(ev, SplitOrientation.HORIZONTAL, false);
+          break;
+
+        case DropLocation.WEST:
+          this._handleTabWidgetSnapDroppedDirectionEvent(ev, SplitOrientation.VERTICAL, true);
+          break;
+
+        case DropLocation.EAST:
+          this._handleTabWidgetSnapDroppedDirectionEvent(ev, SplitOrientation.VERTICAL, false);
+          break;
+      }
     }
   }
 
-  private _handleTabWidgetSnapDroppedElementEvent(target: EventTarget, detail: SnapDroppedEventDetail): void {
-    if (detail.dropLocation === DropLocation.MIDDLE) {
-      if (target instanceof TabWidget) {        
+  private _handleTabWidgetSnapDroppedMiddleEvent(ev: CustomEvent): void {
+    const detail = <SnapDroppedEventDetail> ev.detail;
+    const target = ev.target;
+    if (target instanceof TabWidget) {
+      if (detail.mimeType === ElementMimeType.MIMETYPE) {
+        this._handleElementDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
+      } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
         this._handleElementDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
       }
     }
   }
 
-  private _handleTabWidgetSnapDroppedFrameEvent(target: EventTarget, detail: SnapDroppedEventDetail): void {
-    if (detail.dropLocation === DropLocation.MIDDLE) {
-      if (target instanceof TabWidget) {
-        this._handleFrameDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
+  private _handleTabWidgetSnapDroppedDirectionEvent(ev: CustomEvent, orientation: SplitOrientation,
+                                                    splitBefore: boolean): void {
+    const detail = <SnapDroppedEventDetail> ev.detail;
+    const target = ev.target;
+    if (target instanceof TabWidget) {
+
+      const newTabWidget = splitBefore ? this._splitLayout.splitBeforeTabWidget(target, orientation) : this._splitLayout.splitAfterTabWidget(target, orientation);
+      this._splitLayout.update();
+
+      if (detail.mimeType === ElementMimeType.MIMETYPE) {
+        this._handleElementDroppedEvent(newTabWidget, 0, detail.dropData);
+      } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
+        this._handleFrameDroppedEvent(newTabWidget, 0, detail.dropData);
       }
-    }
+      this._refreshSplitLayout();
+    }    
   }
 
   private _handleDragStartedEvent(ev: CustomEvent): void {
