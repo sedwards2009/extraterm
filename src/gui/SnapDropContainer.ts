@@ -48,6 +48,7 @@ dropLocationToCss.set(DropLocation.EAST, CLASS_DROP_TARGET_EAST);
 dropLocationToCss.set(DropLocation.WEST, CLASS_DROP_TARGET_WEST);
 dropLocationToCss.set(DropLocation.MIDDLE, CLASS_DROP_TARGET_MIDDLE);
 
+const SUPPORTED_MIMETYPES = [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE];
 
 /**
  * A container which supports splitting and snapping for dragged items.
@@ -135,21 +136,27 @@ export class SnapDropContainer extends ThemeableElementBase {
   }
 
   private _handleDragEnter(ev: DragEvent): void {
-    ev.stopPropagation();
-    this._showDragCover(ev);
+    if (this._isSupportedDropMimeType(ev)) {
+      ev.stopPropagation();
+      this._showDragCover(ev);
+    }
   }
 
   private _handleDragOver(ev: DragEvent): void {
-    ev.preventDefault();
-    ev.stopPropagation();
+    if (this._isSupportedDropMimeType(ev)) {
+      ev.preventDefault();
+      ev.stopPropagation();
 
-    this._showDragCover(ev);
+      this._showDragCover(ev);
+    }
   }
 
   private _handleDragLeave(ev: DragEvent): void {
-    ev.stopPropagation();
-    if (ev.target == DomUtils.getShadowId(this, ID_DRAG_COVER)) {
-      this._hideDragCover();
+    if (this._isSupportedDropMimeType(ev)) {
+      ev.stopPropagation();
+      if (ev.target == DomUtils.getShadowId(this, ID_DRAG_COVER)) {
+        this._hideDragCover();
+      }
     }
   }
 
@@ -221,8 +228,18 @@ export class SnapDropContainer extends ThemeableElementBase {
     }
   }
 
+  private _isSupportedDropMimeType(ev: DragEvent): boolean {
+    for (let i=0; i < ev.dataTransfer.items.length; i++) {
+      const item = ev.dataTransfer.items[i];
+      if (SUPPORTED_MIMETYPES.indexOf(item.type) !== -1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private _getSupportedDropMimeTypeData(ev: DragEvent): {mimeType: string; data: string;} {
-    for (const mimeType of [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE]) {
+    for (const mimeType of SUPPORTED_MIMETYPES) {
       const data = ev.dataTransfer.getData(mimeType);
       if (data != null && data !== "") {
         return {mimeType, data};
