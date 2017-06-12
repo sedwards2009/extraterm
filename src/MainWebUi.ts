@@ -346,7 +346,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       if (detail.mimeType === ElementMimeType.MIMETYPE) {
         this._handleElementDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
       } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
-        this._handleElementDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
+        this._handleFrameDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
       }
     }
   }
