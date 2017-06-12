@@ -108,10 +108,10 @@ export class SnapDropContainer extends ThemeableElementBase {
     const topDiv = DomUtils.getShadowId(this, ID_TOP);
     topDiv.classList.add(CLASS_NOT_DRAGGING);
 
-    topDiv.addEventListener("dragenter", this._handleDragEnter.bind(this));
-    topDiv.addEventListener("dragover", this._handleDragOver.bind(this));
-    topDiv.addEventListener("dragleave", this._handleDragLeave.bind(this));
-    topDiv.addEventListener("drop", this._handleDrop.bind(this));
+    topDiv.addEventListener("dragenter", this._handleDragEnter.bind(this), true);
+    topDiv.addEventListener("dragover", this._handleDragOver.bind(this), true);
+    topDiv.addEventListener("dragleave", this._handleDragLeave.bind(this), true);
+    topDiv.addEventListener("drop", this._handleDrop.bind(this), true);
   }
 
   private createClone() {
