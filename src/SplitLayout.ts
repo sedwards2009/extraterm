@@ -417,9 +417,7 @@ export class SplitLayout {
     const {tabWidgetInfo: sourceTabWidgetInfo, tabInfo} = findTabWidgetInfoByTab(this._rootInfoNode, tabElement);
     const targetTabWidgetInfo = findTabWidgetInfoByTabWidget(this._rootInfoNode, targetTabWidget);
     
-    if (tabIndex > targetTabWidgetInfo.children.length) {
-      return;
-    }
+    tabIndex = Math.min(tabIndex, targetTabWidgetInfo.children.length);
 
     if (sourceTabWidgetInfo === targetTabWidgetInfo) {
       const frontList = sourceTabWidgetInfo.children.slice(0, tabIndex).filter(kid => kid !== tabInfo);

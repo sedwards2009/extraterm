@@ -344,9 +344,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const target = ev.target;
     if (target instanceof TabWidget) {
       if (detail.mimeType === ElementMimeType.MIMETYPE) {
-        this._handleElementDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
+        this._handleElementDroppedEvent(target, target.getSelectedIndex() + 1, detail.dropData);
       } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
-        this._handleFrameDroppedEvent(target, target.getSelectedIndex(), detail.dropData);
+        this._handleFrameDroppedEvent(target, target.getSelectedIndex() + 1, detail.dropData);
       }
     }
   }
