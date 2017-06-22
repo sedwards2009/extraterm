@@ -99,3 +99,6 @@ src/settings/SettingsTab.js
 src/utils/SetUtils.js
 src/utils/CodeMirrorUtils.js
 src/gui/SnapDropContainer.js
+src/InternalMimeTypes.js
+__pycache__/
+build_tmp
