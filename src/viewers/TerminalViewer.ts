@@ -68,6 +68,8 @@ let cssText: string = null;
 
 CodeMirrorCommands.init();
 
+const simpleScrollBars = require('codemirror/addon/scroll/simplescrollbars');
+
 function getCssText(): string {
   return cssText;
 }
@@ -365,6 +367,14 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
       this._adjustHeight(setterState.height);
       this.scrollTo(0, setterState.yOffset);
     }
+
+    if (setterState.visibleBottomOffsetChanged) {
+      const shadowRoot = DomUtils.getShadowRoot(this);
+      if (shadowRoot !== null) {
+        const horizontalScrollbar = <HTMLDivElement> shadowRoot.querySelector("DIV.CodeMirror-overlayscroll-horizontal");
+        horizontalScrollbar.style.bottom = "" + (Math.max(0,-1*setterState.visibleBottomOffset)) + "px";
+      }
+    }
   }
   
   // VirtualScrollable
@@ -645,7 +655,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
       const options = {
         value: "",
         readOnly: true,
-        scrollbarStyle: "null",
+        scrollbarStyle: "overlay",
         cursorScrollMargin: 0,
         showCursorWhenSelecting: true,
         mode: null,

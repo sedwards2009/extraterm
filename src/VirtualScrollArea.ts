@@ -61,6 +61,8 @@ export interface SetterState {
   physicalTopChanged: boolean;
   containerHeight: number;
   containerHeightChanged: boolean;
+  visibleBottomOffset: number;
+  visibleBottomOffsetChanged: boolean;
 }
 
 // The name of a custom event that VirtualScrollables should emit when they need to be resized.
@@ -100,6 +102,7 @@ interface VirtualAreaState {
   scrollFunction: (offset: number) => void;
   setTopFunction: (scrollable: VirtualScrollable, top: number) => void;
   markVisibleFunction: (scrollable: VirtualScrollable, visible: boolean) => void;
+  visibleBottomOffset: number;
 
   // Output - 
   containerScrollYOffset: number;
@@ -131,6 +134,7 @@ const emptyState: VirtualAreaState = {
   scrollFunction: null,
   setTopFunction: null,
   markVisibleFunction: null,
+  visibleBottomOffset: 0,
 
   containerScrollYOffset: 0,
   scrollableStates: [],
@@ -313,6 +317,15 @@ export class VirtualScrollArea {
     });
   }
 
+  /**
+   * Set the offset from the bottom of the viewport to the visible bottom of the window on screen.
+   */
+  setViewportBottomOffset(offset: number): void {
+    this._update( (newState) => {
+      newState.visibleBottomOffset = offset;
+    });
+  }
+
   //-----------------------------------------------------------------------
   //
   //    #                                        
@@ -458,6 +471,7 @@ export class VirtualScrollArea {
       setTopFunction: null,
       markVisibleFunction: null,
 
+      visibleBottomOffset: 0,
       containerScrollYOffset: -1,
       scrollableStates: [],
       
@@ -698,6 +712,8 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
     oldMap.set(scrollableState.scrollable, scrollableState);
   });
 
+  const visibleBottomOffsetChanged = oldState.visibleBottomOffset !== newState.visibleBottomOffset;
+
   // Update each Scrollable if needed.
   newState.scrollableStates.forEach( (newScrollableState: VirtualScrollableState): void => {
     const oldScrollableState = oldMap.get(newScrollableState.scrollable);
@@ -723,7 +739,7 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
       newScrollableState.scrollable.markVisible(true);
     }
 
-    if (heightChanged || yOffsetChanged || physicalTopChanged || containerHeightChanged) {
+    if (heightChanged || yOffsetChanged || physicalTopChanged || containerHeightChanged || visibleBottomOffsetChanged) {
       const setterState: SetterState = {
         height: newScrollableState.realHeight,
         heightChanged,
@@ -732,7 +748,9 @@ function ApplyState(oldState: VirtualAreaState, newState: VirtualAreaState, log:
         physicalTop: newPhysicalTop,
         physicalTopChanged,
         containerHeight: newState.containerHeight,
-        containerHeightChanged
+        containerHeightChanged,
+        visibleBottomOffset: newState.visibleBottomOffset,
+        visibleBottomOffsetChanged
       };
       newScrollableState.scrollable.setDimensionsAndScroll(setterState);
     }

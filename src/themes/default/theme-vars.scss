@@ -1,0 +1,16 @@
+/**
+ * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ */
+
+/*
+  CSS variables which are made available globally available.
+*/
+
+@import "bootstrap/variables";
+
+BODY {
+  --scrollbar-background-color: $body-bg;
+  --scrollbar-track-background-color: $gray-lighter;
+  --scrollbar-thumb-background-color: $gray;
+  --scrollbar-thumb-hover-background-color: $link-hover-color;
+}

@@ -94,6 +94,34 @@
 .CodeMirror-guttermarker-subtle { @include text-guttermarker-subtle; }
 .CodeMirror-linenumber { @include text-linenumber; }
 
+
+.CodeMirror-overlayscroll-vertical {
+  visibility: hidden;
+}
+
+.CodeMirror-scrollbar-filler {
+  background-color: transparent;
+}
+
+.CodeMirror-overlayscroll-horizontal {
+  height: 8px;
+
+  & DIV {
+    opacity: 0.5;
+    background-color: var(--scrollbar-thumb-background-color);
+
+    &:hover {
+      opacity: 1;
+      background-color: var(--scrollbar-thumb-hover-background-color);
+    }
+  }
+}
+
+.CodeMirror-overlayscroll-horizontal:hover DIV {
+  opacity: 1;
+}
+
+
 /* Character styles */
 
 SPAN.terminal-bold {

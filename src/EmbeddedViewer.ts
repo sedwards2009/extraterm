@@ -237,8 +237,10 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
   // See VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
     if (DEBUG_SIZE) {
-      this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-        setterState.yOffset, setterState.yOffsetChanged);
+        this._log.debug(`setDimensionsAndScroll(): height=${setterState.height}, ` +
+        `heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, ` +
+        `yOffsetChanged=${setterState.yOffsetChanged}, physicalTop=${setterState.physicalTop}, ` +
+        `containerHeight=${setterState.containerHeight}`);
     }
 
     if (setterState.heightChanged) {
@@ -282,6 +284,11 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
 
     if (this.parentElement != null) {
       this._applyContainerChanges();
+    }
+
+    if (setterState.physicalTopChanged || setterState.containerHeight || setterState.heightChanged) {
+      const viewportBottomOffset = setterState.physicalTop + setterState.containerHeight - setterState.height;
+      this._virtualScrollArea.setViewportBottomOffset(viewportBottomOffset);
     }
   }
 
@@ -553,7 +560,9 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
       physicalTop: 0,
       physicalTopChanged: true,
       containerHeight: this.getMinHeight(),
-      containerHeightChanged: true
+      containerHeightChanged: true,
+      visibleBottomOffset: 0,
+      visibleBottomOffsetChanged: true
     };
 
     this.setDimensionsAndScroll(setterState);

@@ -96,3 +96,29 @@
 
 .cm-s-text .CodeMirror-activeline-background { @include text-activeline; }
 .cm-s-text .CodeMirror-matchingbracket { @include text-matchingbracket; }
+
+.CodeMirror-overlayscroll-vertical {
+  visibility: hidden;
+}
+
+.CodeMirror-scrollbar-filler {
+  background-color: transparent;
+}
+
+.CodeMirror-overlayscroll-horizontal {
+  height: 8px;
+
+  & DIV {
+    opacity: 0.5;
+    background-color: var(--scrollbar-thumb-background-color);
+
+    &:hover {
+      opacity: 1;
+      background-color: var(--scrollbar-thumb-hover-background-color);
+    }
+  }
+}
+
+.CodeMirror-overlayscroll-horizontal:hover DIV {
+  opacity: 1;
+}

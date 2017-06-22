@@ -46,7 +46,8 @@ export enum CssFile {
   VIEWER_TAB,
   GUI_SPLITTER,
   EMPTY_PANE_MENU,
-  GUI_SNAP_DROP_CONTAINER
+  GUI_SNAP_DROP_CONTAINER,
+  THEME_VARS
 }
 
 export const cssFileEnumItems: CssFile[] = [
@@ -76,7 +77,8 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.VIEWER_TAB,
   CssFile.GUI_SPLITTER,
   CssFile.EMPTY_PANE_MENU,
-  CssFile.GUI_SNAP_DROP_CONTAINER
+  CssFile.GUI_SNAP_DROP_CONTAINER,
+  CssFile.THEME_VARS
 ];
 
 const _CssFileNameMapping = {
@@ -106,7 +108,8 @@ const _CssFileNameMapping = {
   [CssFile.VIEWER_TAB]: "viewer-tab",
   [CssFile.GUI_SPLITTER]: "gui-splitter",
   [CssFile.EMPTY_PANE_MENU]: "empty-pane-menu",
-  [CssFile.GUI_SNAP_DROP_CONTAINER]: "gui-snap-drop-container"
+  [CssFile.GUI_SNAP_DROP_CONTAINER]: "gui-snap-drop-container",
+  [CssFile.THEME_VARS]: "theme-vars"
 };
 
 export function cssFileNameBase(cssFile: CssFile): string {
@@ -147,5 +150,6 @@ export const UiCssFiles: CssFile[] = [
   CssFile.GUI_LIST_PICKER,
   CssFile.GUI_SPLITTER,
   CssFile.EMPTY_PANE_MENU,
-  CssFile.GUI_SNAP_DROP_CONTAINER
+  CssFile.GUI_SNAP_DROP_CONTAINER,
+  CssFile.THEME_VARS
 ];

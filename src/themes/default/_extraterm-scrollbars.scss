@@ -11,19 +11,19 @@ $scrollbar-pad: 2px;
 ::-webkit-scrollbar {
   width: $scrollbar-size;
   height: $scrollbar-size;
-  background-color: $body-bg;
+  background-color: var(--scrollbar-background-color);
 }
 
 ::-webkit-scrollbar-track {
-  background-color: $gray-lighter;
+  background-color: var(--scrollbar-track-background-color);
   border-radius: $scrollbar-radius;  
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: $gray;
+  background-color: var(--scrollbar-thumb-background-color);
   border-radius: $scrollbar-radius;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: $link-hover-color;
+  background-color: var(--scrollbar-thumb-hover-background-color);
 }

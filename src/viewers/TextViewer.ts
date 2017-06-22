@@ -76,6 +76,9 @@ function getCssText(): string {
   return cssText;
 }
 
+
+const simpleScrollBars = require('codemirror/addon/scroll/simplescrollbars');
+
 // CodeMirror mode management.
 const meta = require('codemirror/mode/meta');
 const loadedCodeMirrorModes = new Set<string>();
@@ -367,8 +370,14 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
   setDimensionsAndScroll(setterState: SetterState): void {
     if (setterState.heightChanged || setterState.yOffsetChanged) {
       if (DEBUG_RESIZE) {
-        this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-          setterState.yOffset, setterState.yOffsetChanged);
+        this._log.debug(`setDimensionsAndScroll(): ` +
+        `height=${setterState.height}, heightChanged=${setterState.heightChanged}, ` +
+        `yOffset=${setterState.yOffset}, yOffsetChanged=${setterState.yOffsetChanged}, ` +
+        `physicalTop=${setterState.physicalTop}, physicalTopChanged=${setterState.physicalTopChanged}, ` +
+        `containerHeight=${setterState.containerHeight}, ` +
+        `containerHeightChanged=${setterState.containerHeightChanged}, ` +
+        `visibleBottomOffset=${setterState.visibleBottomOffset}, ` +
+        `visibleBottomOffsetChanged=${setterState.visibleBottomOffsetChanged}`);
       }
 
       // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
@@ -381,6 +390,15 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
       // } else {
       //   op();
       // }
+    }
+    
+    if (setterState.visibleBottomOffsetChanged) {
+      const shadowRoot = DomUtils.getShadowRoot(this);
+      if (shadowRoot !== null) {
+        const horizontalScrollbar = <HTMLDivElement> shadowRoot.querySelector("DIV.CodeMirror-overlayscroll-horizontal");
+        const offsetFromBottom = Math.max(0,-1*setterState.visibleBottomOffset);
+        horizontalScrollbar.style.bottom = "" + offsetFromBottom + "px";
+      }
     }
   }
   
@@ -479,7 +497,7 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
       value: "",
       readOnly: true,
       lineNumbers: true,
-      scrollbarStyle: "null",
+      scrollbarStyle: "overlay",
       cursorScrollMargin: 0,
       showCursorWhenSelecting: true,
       theme: "text",

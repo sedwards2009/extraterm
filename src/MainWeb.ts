@@ -140,7 +140,9 @@ function startUpTheming(): void {
         cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + 
         cssMap.get(ThemeTypes.CssFile.FONT_AWESOME) + "\n" + 
         cssMap.get(ThemeTypes.CssFile.TOP_WINDOW) + "\n" +
-        cssMap.get(ThemeTypes.CssFile.TERMINAL_VARS);
+        cssMap.get(ThemeTypes.CssFile.TERMINAL_VARS) + "\n" +
+        cssMap.get(ThemeTypes.CssFile.THEME_VARS)
+        ;
     }
   };
   ThemeConsumer.registerThemeable(topThemeable);
