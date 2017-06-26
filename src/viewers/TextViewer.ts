@@ -608,7 +608,8 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
     containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
     containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
-    
+    containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
+
     const codeMirrorElement = this._codeMirror.getWrapperElement();
     
     this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
@@ -876,6 +877,14 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
       ev.stopPropagation();
       ev.preventDefault();
     }
+  }
+
+  private _handleContextMenuCapture(ev: MouseEvent): void {
+    // Prevent CodeMirror from seeing this event and messing with the hidden textarea and the focus.
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+
+    this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
   }
   
   private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {

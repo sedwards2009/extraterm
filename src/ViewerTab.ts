@@ -324,6 +324,12 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
         ev.preventDefault();
         ev.stopPropagation();
         this.focus();
+        if (ev.buttons & 2) { // Right Mouse Button
+          const viewerElement = this._getViewerElement();
+          if (viewerElement !== null && CommandPaletteRequestTypes.isCommandable(viewerElement)) {
+            viewerElement.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+          }
+        }
       }
     });
     
