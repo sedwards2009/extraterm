@@ -439,7 +439,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
       while (window.getComputedStyle(viewportElement).position === 'absolute') {
         viewportElement = viewportElement.parentElement;
       }
-      this.resizeEmulatorToBox(viewportElement.clientWidth, viewportElement.clientHeight);
+      this.resizeEmulatorToBox(this.clientWidth, viewportElement.clientHeight);
     }
     this._updateCssVars();
   }
@@ -469,7 +469,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     const charWidth = this.__applyRoundingErrorCompensation(this._codeMirror.defaultCharWidth());
 
     const computedStyle = window.getComputedStyle(this);
-    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
+    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight) - 4;
     const newCols = Math.floor(width / charWidth);
     const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
     
@@ -490,7 +490,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
   }
 
   private __applyRoundingErrorCompensation(width: number): number {
-    return Math.floor(width) !== width ? width * (1.01): width;
+    return Math.floor(width) !== width ? width * (1.005): width;
   }
   
   isFontLoaded(): boolean {
