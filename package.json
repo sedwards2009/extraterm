@@ -22,7 +22,7 @@
     "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
-    "codemirror": "5.21.0",
+    "codemirror": "5.27.4",
     "commander": "2.9.0",
     "element-resize-detector": "1.1.3",
     "font-manager": "0.2.2",
