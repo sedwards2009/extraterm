@@ -120,6 +120,9 @@
   opacity: 1;
 }
 
+.CLASS_HAS_TERMINAL .CodeMirror-overlayscroll-horizontal, .CLASS_HAS_TERMINAL .CodeMirror-overlayscroll-vertical {
+  display: none !important;
+}
 
 /* Character styles */
 

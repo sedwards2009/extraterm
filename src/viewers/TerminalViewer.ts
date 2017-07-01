@@ -46,6 +46,8 @@ const ID_CSS_VARS = "ID_CSS_VARS";
 const CLASS_HIDE_CURSOR = "hide-cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
+const CLASS_HAS_TERMINAL = "CLASS_HAS_TERMINAL";
+
 const OVERSIZE_CLASS_LIST = ["oversize"];
 
 const KEYBINDINGS_CURSOR_MODE = "terminal-viewer";
@@ -301,6 +303,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
   }
     
   setEmulator(emulator: Term.Emulator): void {
+    
     if (this._emulator !== null) {
       // Disconnect the last emulator.
       this._emulator.removeRenderEventListener(this._renderEventListener);
@@ -310,8 +313,9 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     if (emulator !== null) {
       emulator.addRenderEventListener(this._renderEventListener);
     }
-    
+
     this._emulator = emulator;
+    this.__updateHasTerminalClass();
   }
 
   getEmulator(): Term.Emulator {
@@ -671,7 +675,8 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
       this._codeMirror = CodeMirror( (el: HTMLElement): void => {
         containerDiv.appendChild(el);
       }, <any>options);
-
+      this.__updateHasTerminalClass();
+      
       this._codeMirror.on("cursorActivity", () => {
         const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
                                 (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
@@ -801,6 +806,17 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TERMINAL_VIEWER];
   }
+
+  private __updateHasTerminalClass(): void {
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    if (containerDiv != null) {
+      if (this._emulator == null) {
+        containerDiv.classList.remove(CLASS_HAS_TERMINAL);
+      } else {
+        containerDiv.classList.add(CLASS_HAS_TERMINAL);
+      }
+    }
+  }    
 
   /**
    * Quickly execute a function without intermediate on-screen updates.
