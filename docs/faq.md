@@ -2,8 +2,8 @@ FAQ
 ===
 
 
-Extraterm won't start on my cygwin
-----------------------------------
+Extraterm won't start on my cygwin/babun
+----------------------------------------
 
 ### Make sure Python 3 is installed
 
@@ -16,6 +16,24 @@ If you are Babun you can install Python 3 from a shell using:
 ```
 pact install python3
 ```
+
+You can verify that python3 has been installed and is working correctly by
+opening the normal babun shell and running `python3 -V`. This should print
+the version number of your Python 3.
+
+
+### Extraterm still not starting on Babun
+
+At the time of writing this (July 2017) a fresh install of Babun will have
+a broken Python 3 installation. This can be tested for by opening the normal
+babun shell and running `python3 -V`. If nothing is printed then your
+`python3` is most likely broken.
+
+* Open up the Windows Explorer.
+* Navigate to your Babun installation directory. This is typically in `C:\Users\YourName\.babun\`.
+* Double click to run `update.bat` in that directory.
+
+This will update the cygwin parts of Babun and fix your installation.
 
 
 ### Problems finding the cygwin installation directory
