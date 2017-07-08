@@ -575,9 +575,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       });
 
       scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
-      scrollArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+      scrollContainer.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
       scrollArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
-      scrollArea.addEventListener('contextmenu', this._handleContextMenu.bind(this));
 
       scrollArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
       scrollArea.addEventListener(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
