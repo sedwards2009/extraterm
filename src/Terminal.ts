@@ -516,6 +516,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       this._elementAttached = true;
 
       this._stashArea = window.document.createDocumentFragment();
+      this._stashArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const clone = this._createClone();
       shadow.appendChild(clone);
@@ -1028,7 +1029,12 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   }
 
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
-    this._updateVirtualScrollableSize(<any> ev.target);
+    const el = <HTMLElement & VirtualScrollable> ev.target;
+    if (el.parentNode === this._stashArea) {
+      this._scheduleStashedChildResize(el);
+    } else {
+      this._updateVirtualScrollableSize(el);
+    }
   }
 
   private _markVisible(scrollable: VirtualScrollable, visible: boolean): void {
