@@ -163,8 +163,9 @@ function main(): void {
     mainWindow.setMenu(null);
 
     // Emitted when the window is closed.
+    const mainWindowId = mainWindow.id;
     mainWindow.on('closed', function() {
-      cleanUpPtyWindow(mainWindow);
+      cleanUpPtyWindow(mainWindowId);
       mainWindow = null;
     });
     
@@ -1000,17 +1001,20 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
       log("pty process got data for ptyID="+ptyId);
       logJSData(data);
     }
-    const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: ptyId, data: data };
-    sender.send(Messages.CHANNEL_NAME, msg);
+    if ( ! sender.isDestroyed()) {
+      const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: ptyId, data: data };
+      sender.send(Messages.CHANNEL_NAME, msg);
+    }
   });
 
   term.onExit( () => {
     if (LOG_FINE) {
       log("pty process exited.");
     }
-    const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
-    sender.send(Messages.CHANNEL_NAME, msg);
-    
+    if ( ! sender.isDestroyed()) {
+      const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
+      sender.send(Messages.CHANNEL_NAME, msg);
+    }
     term.destroy();
     ptyMap.delete(ptyId);
   });
@@ -1062,16 +1066,24 @@ function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
     log("handlePtyCloseRequest() WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
-  ptyTerminalTuple.ptyTerm.destroy();
-  ptyMap.delete(msg.id);
+  closePty(msg.id);
 }
 
-function cleanUpPtyWindow(window: Electron.BrowserWindow): void {
+function closePty(id: number): void {
+  const ptyTerminalTuple = ptyMap.get(id);
+  if (ptyTerminalTuple === undefined) {
+    return;
+  }
+  ptyTerminalTuple.ptyTerm.destroy();
+  ptyMap.delete(id);
+}
+
+function cleanUpPtyWindow(windowId: number): void {
   const keys = [...ptyMap.keys()];
-  for (const tup of keys) {
-    if (tup[1].windowId === window.id) {
-      tup[1].ptyTerm.destroy();
-      ptyMap.delete(tup[0]);
+  for (const key of keys) {
+    const tup = ptyMap.get(key);
+    if (tup.windowId === windowId) {
+      closePty(key);
     }
   }
 }
