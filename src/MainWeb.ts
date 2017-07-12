@@ -301,6 +301,15 @@ function startUpWindowEvents(): void {
       ev.stopPropagation();
     }
   });
+  
+  window.document.addEventListener('dragover', (ev: DragEvent) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+  });
+  window.document.addEventListener('drop', (ev: DragEvent) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+  });
 }
 
 function executeMenuCommand(command: string): boolean {
