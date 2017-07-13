@@ -342,6 +342,8 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
 
     scrollerArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
+    scrollerArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
+        this._handleBeforeSelectionChange.bind(this));
 
         // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
@@ -672,6 +674,12 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
   //
   // ********************************************************************
 
+  private _handleBeforeSelectionChange(ev: CustomEvent): void {
+    if (ev.detail.originMouse) {
+      DomUtils.doLater( () => { this.copyToClipboard() } );
+    }
+  }
+  
   /**
    * Copy the selection to the clipboard.
    */

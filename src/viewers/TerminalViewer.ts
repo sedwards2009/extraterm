@@ -726,7 +726,6 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
       });
       
       this._codeMirror.on("beforeSelectionChange", (instance: CodeMirror.Editor, obj): void => {
-          // obj: { ranges: {anchor: CodeMirror.Position; head: CodeMirror.Position; }[]; }
         if (obj.ranges.length === 0) {
           return;
         }
