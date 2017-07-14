@@ -49,8 +49,6 @@ function main() {
   echo("Removing development dependencies");
   exec("npm prune --production");
 
-  cleanNodeModules();
-
   // Create the commands zip
   echo("Creating commands.zip");
   const commandsDir = packageData.name + "-commands-" + packageData.version;
@@ -76,9 +74,13 @@ function main() {
     const result = ignoreRegExp.some( (exp) => exp.test(filePath));
     return result;
   };
-  
+
+  function appDir(platform) {
+    return platform === "darwin" ? "extraterm.app/Contents/Resources/app" : "resources/app";
+  }
+
   function pruneNodeSass(versionedOutputDir, arch, platform) {
-    const gutsDir = platform === "darwin" ? "extraterm.app/Contents/Resources/app" : "resources/app";
+    const gutsDir = appDir(platform);
     const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node_modules/node-sass/vendor");
 
     rm('-rf', nodeSassVendorDir);
@@ -93,10 +95,46 @@ function main() {
 
   function pruneEmojiOne(versionedOutputDir, platform) {
     if (platform !== "linux") {
-      const gutsDir = platform === "darwin" ? "extraterm.app/Contents/Resources/app" : "resources/app";
-      const emojiOnePath = path.join(versionedOutputDir, gutsDir, "src/themes/default/emojione-android.ttf");
+      const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "src/themes/default/emojione-android.ttf");
       rm(emojiOnePath);
     }
+  }
+
+  function pruneNodeModules(versionedOutputDir, platform) {
+    const prevDir = pwd();
+    
+    cd(path.join(versionedOutputDir, appDir(platform)));
+    exec("modclean -n default:safe -r");
+    pruneSpecificNodeModules();
+
+    cd(prevDir);
+  }
+
+  function pruneSpecificNodeModules() {
+    [
+      "codemirror/src",
+      "ptyw.js/vendor",
+      "ptyw.js/src",
+      "ptyw.js/node_modules/nan",
+      "node-sass/src",
+      "node-sass/node_modules/nan",
+      "node-gyp",
+      "ajv",
+      "globule"
+    ].forEach( (subpath) => {
+      const fullPath = path.join("node_modules", subpath);
+
+      echo("Deleting " + fullPath);
+
+  if (test('-d', fullPath)) {
+      rm('-rf', fullPath);
+
+  } else {
+    echo("----------- Unable to find path "+ fullPath);
+  }
+
+    });
+
   }
 
   function makePackage(arch, platform) {
@@ -131,6 +169,7 @@ function main() {
           cd(buildTmpPath);
 
           // Prune any unneeded node-sass binaries.
+          pruneNodeModules(versionedOutputDir, platform);
           pruneNodeSass(versionedOutputDir, arch, platform);
           pruneEmojiOne(versionedOutputDir, platform);
 
@@ -180,26 +219,6 @@ function main() {
       return makePackage('x64', 'darwin'); })
       
     .then( () => { log("Done"); } );
-}
-
-function cleanNodeModules() {
-  exec("modclean -n default:safe -r");
-  cleanSpecificNodeModules();
-}
-
-function cleanSpecificNodeModules() {
-  [
-    "codemirror/src",
-    "ptyw.js/vendor",
-    "ptyw.js/build",
-    "node-sass/src",
-  ].forEach( (subpath) => {
-    const fullPath = path.join("node_modules", subpath);
-
-    echo("Deleting " + fullPath);
-    rm('-rf', fullPath);
-  });
-
 }
 
 main();
