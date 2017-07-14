@@ -588,6 +588,11 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
       scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
       
+      scrollArea.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
+        const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
+        this._sendDataToPtyEvent(ev.detail.text);
+      });
+
       // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
@@ -1819,11 +1824,6 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
       this.focus();
-    });
-
-    el.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
-      const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
-      this._sendDataToPtyEvent(ev.detail.text);
     });
 
     el.addEventListener(GeneralEvents.EVENT_SET_MODE, (ev: CustomEvent) => {
