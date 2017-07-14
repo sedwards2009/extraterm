@@ -49,6 +49,8 @@ function main() {
   echo("Removing development dependencies");
   exec("npm prune --production");
 
+  exec("modclean -n default:safe,default:caution");
+
   // Create the commands zip
   echo("Creating commands.zip");
   const commandsDir = packageData.name + "-commands-" + packageData.version;
