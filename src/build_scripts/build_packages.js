@@ -49,7 +49,7 @@ function main() {
   echo("Removing development dependencies");
   exec("npm prune --production");
 
-  exec("modclean -n default:safe,default:caution -r");
+  cleanNodeModules();
 
   // Create the commands zip
   echo("Creating commands.zip");
@@ -181,4 +181,25 @@ function main() {
       
     .then( () => { log("Done"); } );
 }
+
+function cleanNodeModules() {
+  exec("modclean -n default:safe -r");
+  cleanSpecificNodeModules();
+}
+
+function cleanSpecificNodeModules() {
+  [
+    "codemirror/src",
+    "ptyw.js/vendor",
+    "ptyw.js/build",
+    "node-sass/src",
+  ].forEach( (subpath) => {
+    const fullPath = path.join("node_modules", subpath);
+
+    echo("Deleting " + fullPath);
+    rm('-rf', fullPath);
+  });
+
+}
+
 main();
