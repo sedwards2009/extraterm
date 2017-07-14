@@ -49,7 +49,7 @@ function main() {
   echo("Removing development dependencies");
   exec("npm prune --production");
 
-  exec("modclean -n default:safe,default:caution");
+  exec("modclean -n default:safe,default:caution -r");
 
   // Create the commands zip
   echo("Creating commands.zip");
