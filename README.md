@@ -1,5 +1,5 @@
-Extraterm
-=========
+![Extraterm logo](docs/extraterm_main_logo_512x367.png)
+
 *The swiss army chainsaw of terminal emulators...*
 
 * *Capture and reuse command output as new command input*
