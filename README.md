@@ -20,7 +20,7 @@ About
 -----
 Extraterm is an open source project to build a modern terminal emulator with radical new features to make it more than just a dumb viewer for text output. The aim is to drag the terminal emulator kicking and screaming out of the 80s and into modern computing. More background information is in the [Why document](docs/why.md).
 
-The primary developer is [Simon Edwards](mailto:simon@simonzone.com).
+The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm logos were designed and provided by [Gabriel Harel](https://github.com/g-harel).
 
 Current features:
 
