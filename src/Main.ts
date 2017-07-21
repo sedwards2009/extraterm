@@ -79,6 +79,9 @@ const DEFAULT_TERMINAL_THEME = "default-terminal";
 const DEFAULT_SYNTAX_THEME = "default-syntax";
 const DEFAULT_UI_THEME = "atomic-dark-ui";
 
+const PNG_ICON_PATH = "logo/extraterm_small_logo_256x256.png";
+const ICO_ICON_PATH = "logo/extraterm_small_logo.ico";
+
 let themeManager: ThemeManager.ThemeManager;
 let config: Config;
 let ptyConnector: PtyConnector;
@@ -151,8 +154,14 @@ function main(): void {
     startIpc();
     
     // Create the browser window.
-    const options = {width: 1200, height: 600, "web-preferences": { "experimental-features": true },
-      frame: config.showTitleBar};
+    const options = <Electron.BrowserWindowOptions> {width: 1200, height: 600, "web-preferences": { "experimental-features": true },
+      frame: config.showTitleBar, title: "Extraterm"};
+    if (process.platform === "win32") {
+      options.icon = path.join(__dirname, ICO_ICON_PATH);
+    } else if (process.platform === "linux") {
+      options.icon = path.join(__dirname, PNG_ICON_PATH);
+    }
+
     titleBarVisible = config.showTitleBar;
     mainWindow = new BrowserWindow(options);
 
