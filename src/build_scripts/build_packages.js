@@ -158,9 +158,13 @@ function main() {
         overwrite: true,
         out: buildTmpPath
       };
-
-      if (platform == "win32") {
-        packagerOptions.icon = path.join(versionedOutputDir, "src/logo/extraterm_small_logo.ico");
+      if (platform === "win32") {
+        packagerOptions.icon = "src/logo/extraterm_small_logo.ico";
+        packagerOptions.win32metadata = {
+          FileDescription: "Extraterm",
+          ProductName: "Extraterm",
+          LegalCopyright: "(C) 2017 Simon Edwards"
+        };
       }
 
       packager(packagerOptions, function done(err, appPath) {
