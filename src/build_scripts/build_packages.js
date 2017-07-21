@@ -149,7 +149,7 @@ function main() {
       
       const outputZip = path.join(buildTmpPath, versionedOutputDir + ".zip");
 
-      packager({
+      const packagerOptions = {
         arch: arch,
         dir: ".",
         platform: platform,
@@ -157,7 +157,13 @@ function main() {
         ignore: ignoreFunc,
         overwrite: true,
         out: buildTmpPath
-      }, function done(err, appPath) {
+      };
+
+      if (platform == "win32") {
+        packagerOptions.icon = path.join(versionedOutputDir, "src/logo/extraterm_small_logo.ico");
+      }
+
+      packager(packagerOptions, function done(err, appPath) {
         if (err !== null) {
           log(err);
           reject();
