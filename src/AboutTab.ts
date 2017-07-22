@@ -13,6 +13,8 @@ import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
+import {shell} from 'electron';
+import Logger from './Logger';
 
 const ID_ABOUT = "ID_ABOUT";
 
@@ -41,7 +43,13 @@ export class AboutTab extends ViewerElement {
       registered = true;
     }
   }
-  
+
+  private _log: Logger;
+
+  private _initProperties(): void {
+    this._log = new Logger(AboutTab.TAG_NAME, this);
+  }
+
   //-----------------------------------------------------------------------
   //
   // ######                                
@@ -81,7 +89,11 @@ export class AboutTab extends ViewerElement {
   //   ####### # #      ######  ####    #    ####  ###### ###### 
   //
   //-----------------------------------------------------------------------
- 
+   constructor() {
+     super();
+     this._initProperties();
+   }
+
   /**
    * Custom Element 'connected' life cycle hook.
    */
@@ -97,16 +109,25 @@ export class AboutTab extends ViewerElement {
   <h1>Extraterm</h1>
   <p>Copyright &copy; 2015-2017 Simon Edwards &lt;simon@simonzone.com&gt;</p>
   <p>Published under the MIT license</p>
-  <p>See https://github.com/sedwards2009/extraterm</p>
+  <p>See <a href="https://github.com/sedwards2009/extraterm">https://github.com/sedwards2009/extraterm</a></p>
   <hr>
-  <p>This software uses EmojiOne for color emoji under the Creative Commons Attribution 4.0 International (CC BY 4.0) license. http://emojione.com</p>
+  <p>This software uses EmojiOne for color emoji under the Creative Commons Attribution 4.0 International (CC BY 4.0) license. <a href="http://emojione.com">http://emojione.com</a></p>
 </div>
 `;
 
       shadow.appendChild(themeStyle);
-      shadow.appendChild(divContainer);    
-      
+      shadow.appendChild(divContainer);
+      divContainer.addEventListener('click', this._handleClick.bind(this));
+
       this.updateThemeCss();
+    }
+  }
+
+  private _handleClick(ev: MouseEvent): void {
+    ev.preventDefault();
+    if ((<HTMLElement> ev.target).tagName === "A") {
+      const href = (<HTMLAnchorElement> ev.target).href;
+      shell.openExternal(href);
     }
   }
   
