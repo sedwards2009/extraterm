@@ -16,3 +16,17 @@
   overflow: auto;
   padding: $panel-body-padding;
 }
+
+#ID_ABOUT:before {
+  display: block;
+  float: left;
+  content: " ";
+  background-image: url($--source-dir-default + '/extraterm_logo_256x184.png');
+  width: 256px;
+  height: 184px;
+  margin-right: 15px;
+}
+
+A:focus {
+  outline: none;
+}
