@@ -165,6 +165,8 @@ function main() {
           ProductName: "Extraterm",
           LegalCopyright: "(C) 2017 Simon Edwards"
         };
+      } else if (platform === "darwin") {
+        packagerOptions.icon = "src/logo/extraterm_small_logo.icns";
       }
 
       packager(packagerOptions, function done(err, appPath) {
