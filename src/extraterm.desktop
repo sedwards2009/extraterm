@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+TryExec=extraterm
+Exec=extraterm
+Icon=extraterm
+Terminal=false
+Categories=System;TerminalEmulator;
+Name=Extratern
+GenericName=Terminal
+Comment=Command line access
