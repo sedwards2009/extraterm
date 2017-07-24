@@ -1,0 +1,8 @@
+{
+  "name": "hellodependency",
+  "description": "Test extension for extraterm",
+  "version": "1.0.0",
+  "dependencies": {
+    "left-pad": "^1.1.3"
+  }
+}

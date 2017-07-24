@@ -30,3 +30,24 @@ export function testHelloWorld(test: nodeunit.Test): void {
   test.equal(context.activated, true);
   test.done();
 }
+
+export function testHelloDependency(test: nodeunit.Test): void {
+  const manager = new ExtensionManager([path.join(__dirname, "test/extensions")]);
+  manager.scan();
+
+  const extensions = manager.getExtensions();
+
+  test.ok(extensions.length >= 1, "Found extensions");
+
+  const helloDependencyList = extensions.filter(extension => extension.name === "hellodependency");
+  test.equal(helloDependencyList.length, 1);
+
+  test.ok(manager.load(helloDependencyList[0]), "Load module");
+  const helloDependencyModule = helloDependencyList[0].module;
+
+  const context = {activated: false};
+  helloDependencyModule.activate(context);
+
+  test.equal(context.activated, true);
+  test.done();
+}
