@@ -566,7 +566,7 @@ function initConfig(): void {
   config = readConfigurationFile();
   config.systemConfig = systemConfiguration(config);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
-  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, Commander);
+  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, <any> Commander);
   
   if (config.terminalFontSize === undefined || typeof config.terminalFontSize !== 'number') {
     config.terminalFontSize = 12;

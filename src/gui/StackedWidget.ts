@@ -110,7 +110,7 @@ export class StackedWidget extends ThemeableElementBase {
   //-----------------------------------------------------------------------
 
   // Override
-  appendChild(newNode: Node): Node {
+  appendChild<T extends Node>(newNode: T): T {
     const result = super.appendChild(newNode);
 
     if (DomUtils.getShadowRoot(this) === null) {
@@ -126,7 +126,7 @@ export class StackedWidget extends ThemeableElementBase {
   }
   
   // Override
-  removeChild(oldNode: Node): Node {
+  removeChild<T extends Node>(oldNode: T): T {
     const result = super.removeChild(oldNode);
     this.createPageHolders();
     if (this._currentIndex >= this.childElementCount) {

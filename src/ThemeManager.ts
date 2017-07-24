@@ -243,7 +243,7 @@ class ThemeManagerImpl implements ThemeManager {
         this._log.debug("Processing " + sassFileName);
       }
       try {
-        const importer: NodeSass.Importer = (url: string, prev: string, done: (data: { file?: string; contents?: string; })=> void) => {
+        const importer: NodeSass.Importer = (url: string, prev: string, done: (data: NodeSass.ImporterReturnType)=> void) => {
           
           const basePath = url;
           const contextBaseDir = path.dirname(prev);

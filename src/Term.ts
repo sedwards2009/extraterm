@@ -5538,7 +5538,7 @@ export class Emulator implements EmulatorAPI {
     this.addListener(APPLICATIONMODESTART_EVENT, eventHandler);
   }
 
-  addApplicationModeDataEventListener(eventHandler: ApplicationModeEventListener): void {
+  addApplicationModeDataEventListener(eventHandler: ApplicationModeDataEventListener): void {
     this.addListener(APPLICATIONMODEDATA_EVENT, eventHandler);
   }
 

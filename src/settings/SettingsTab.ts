@@ -233,7 +233,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
     this._data.currentTitleBar = config.systemConfig.titleBarVisible ? "native" : "theme";
 
     if ( ! _.isEqual(cleanCommandLineAction, config.commandLineActions)) {
-      const updateCLA = _.cloneDeep(config.commandLineActions);
+      const updateCLA = <IdentifiableCommandLineAction[]> _.cloneDeep(config.commandLineActions);
       setIds(updateCLA);
       this._data.commandLineActions = updateCLA;
     }
