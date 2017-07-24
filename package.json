@@ -60,7 +60,7 @@
     "modclean": "2.1.0",
     "nodeunit": "0.11.0",
     "serve-static": "1.10.0",
-    "shelljs": "0.6.0",
+    "shelljs": "0.7.8",
     "typedoc": "0.3.12",
     "typescript": "2.4.2",
     "webfont": "^4.0.0"
