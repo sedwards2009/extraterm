@@ -13,6 +13,7 @@
     "run": "electron src/Main.js --dev-tools",
     "build": "tsc",
     "buildicons": "node src/extra_icons/build.js",
+    "npm-install-extensions": "node src/build_scripts/npm_install_extensions.js",
     "testbulkdomoperation": "npm run build ; nodeunit src/BulkDomOperationTest.js",
     "testextensionmanager": "npm run build ; nodeunit src/ExtensionManagerTest.js",
     "testkeybindingmanager": "npm run build ; nodeunit src/KeyBindingManagerTest.js",
