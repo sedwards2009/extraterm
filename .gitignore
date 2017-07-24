@@ -100,5 +100,7 @@ src/utils/SetUtils.js
 src/utils/CodeMirrorUtils.js
 src/gui/SnapDropContainer.js
 src/InternalMimeTypes.js
+src/ExtensionManager.js
+src/ExtensionManagerTest.js
 __pycache__/
 build_tmp
