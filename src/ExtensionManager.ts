@@ -43,7 +43,19 @@ export class ExtensionManager {
   }
 
   load(extension: ExtensionInfo): boolean {
-    return true;
+    if (extension.module !== null) {
+      return true;
+    }
+    
+    const mainJsPath = path.join(extension.path, extension.main);
+    try {
+      const module = require(mainJsPath);
+      extension.module = module;
+      return true;
+    } catch(ex) {
+      this._log.warn(`Unable to load ${mainJsPath}. ${ex}`);
+      return false;
+    }
   }
 
   private _scanPath(extensionPath: string): ExtensionInfo[] {

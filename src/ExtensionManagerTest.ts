@@ -21,6 +21,12 @@ export function testHelloWorld(test: nodeunit.Test): void {
   test.equal(helloWorldList.length, 1);
   test.equal(helloWorldList[0].main, "main.js");
   test.equal(helloWorldList[0].version, "1.0.0");
-  
+
+  test.ok(manager.load(helloWorldList[0]), "Load module");
+  const helloWorldModule = helloWorldList[0].module;
+
+  const context = {activated: false};
+  helloWorldModule.activate(context);
+  test.equal(context.activated, true);
   test.done();
 }
