@@ -7,7 +7,7 @@
 import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
 import * as path from 'path';
-import {ExtensionManager} from './ExtensionManager';
+import {ExtensionManager} from './ExtensionLoader';
 
 export function testHelloWorld(test: nodeunit.Test): void {
   const manager = new ExtensionManager([path.join(__dirname, "test/extensions")]);
