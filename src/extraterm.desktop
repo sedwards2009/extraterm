@@ -5,6 +5,6 @@ Exec=extraterm
 Icon=extraterm
 Terminal=false
 Categories=System;TerminalEmulator;
-Name=Extratern
+Name=Extraterm
 GenericName=Terminal
 Comment=Command line access
