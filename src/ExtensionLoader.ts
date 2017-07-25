@@ -24,14 +24,14 @@ interface ExtensionPackageData {
   main?: string;
 }
 
-export class ExtensionManager {
+export class ExtensionLoader {
 
   private _log: Logger = null;
 
   private _extensions: ExtensionInfo[] = [];
 
   constructor(private extensionPaths: string[]) {
-    this._log = new Logger("ExtensionManager", this);
+    this._log = new Logger("ExtensionLoader", this);
   }
 
   scan(): void {

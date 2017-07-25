@@ -7,13 +7,13 @@
 import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
 import * as path from 'path';
-import {ExtensionManager} from './ExtensionLoader';
+import {ExtensionLoader} from './ExtensionLoader';
 
 export function testHelloWorld(test: nodeunit.Test): void {
-  const manager = new ExtensionManager([path.join(__dirname, "test/extensions")]);
-  manager.scan();
+  const loader = new ExtensionLoader([path.join(__dirname, "test/extensions")]);
+  loader.scan();
 
-  const extensions = manager.getExtensions();
+  const extensions = loader.getExtensions();
 
   test.ok(extensions.length >= 1, "Found extensions");
 
@@ -22,7 +22,7 @@ export function testHelloWorld(test: nodeunit.Test): void {
   test.equal(helloWorldList[0].main, "main.js");
   test.equal(helloWorldList[0].version, "1.0.0");
 
-  test.ok(manager.load(helloWorldList[0]), "Load module");
+  test.ok(loader.load(helloWorldList[0]), "Load module");
   const helloWorldModule = helloWorldList[0].module;
 
   const context = {activated: false};
@@ -32,17 +32,17 @@ export function testHelloWorld(test: nodeunit.Test): void {
 }
 
 export function testHelloDependency(test: nodeunit.Test): void {
-  const manager = new ExtensionManager([path.join(__dirname, "test/extensions")]);
-  manager.scan();
+  const loader = new ExtensionLoader([path.join(__dirname, "test/extensions")]);
+  loader.scan();
 
-  const extensions = manager.getExtensions();
+  const extensions = loader.getExtensions();
 
   test.ok(extensions.length >= 1, "Found extensions");
 
   const helloDependencyList = extensions.filter(extension => extension.name === "hellodependency");
   test.equal(helloDependencyList.length, 1);
 
-  test.ok(manager.load(helloDependencyList[0]), "Load module");
+  test.ok(loader.load(helloDependencyList[0]), "Load module");
   const helloDependencyModule = helloDependencyList[0].module;
 
   const context = {activated: false};
