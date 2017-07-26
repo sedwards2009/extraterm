@@ -5,12 +5,13 @@
  */
 import * as path from 'path';
 import Logger from './Logger';
-import {ExtensionLoader, ExtensionInfo} from './ExtensionLoader';
+import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
 import * as ExtensionApi from 'extraterm-extension-api';
 
 interface ActiveExtension {
-  extensionInfo: ExtensionInfo;
-  extensionApi: any;
+  extensionMetadata: ExtensionMetadata;
+  extensionContextImpl: ExtensionContextImpl;
+  extensionPublicApi: any;
 }
 
 
@@ -22,76 +23,97 @@ export class ExtensionManager {
 
   private _activeExtensions: ActiveExtension[] = [];
 
-  private _extensionContext: ExtensionContextImpl = null;
-
   constructor() {
     this._log = new Logger("ExtensionManager", this);
     this._extensionLoader = new ExtensionLoader([path.join(__dirname, "test/extensions" )]); //"../extensions"
-    this._extensionContext = new ExtensionContextImpl();
   }
 
   startUp(): void {
     this._extensionLoader.scan();
 
     for (const extensionInfo of this._extensionLoader.getExtensions()) {
-      if (this._extensionLoader.load(extensionInfo)) {
-        try {
-          const extensionApi = (<ExtensionApi.ExtensionModule> extensionInfo.module).activate(this._extensionContext);
-          this._activeExtensions.push({extensionInfo, extensionApi});
-        } catch(ex) {
-          this._log.warn(`Exception occurred while starting extensions ${extensionInfo.name}. ${ex}`);
-        }
+      this._startExtension(extensionInfo);
+    }
+  }
+
+  private _startExtension(extensionMetadata: ExtensionMetadata): void {
+    if (this._extensionLoader.load(extensionMetadata)) {
+      try {
+        const extensionContextImpl = new ExtensionContextImpl(this);
+        const extensionPublicApi = (<ExtensionApi.ExtensionModule> extensionMetadata.module).activate(extensionContextImpl);
+        this._activeExtensions.push({extensionMetadata, extensionPublicApi, extensionContextImpl});
+      } catch(ex) {
+        this._log.warn(`Exception occurred while starting extensions ${extensionMetadata.name}. ${ex}`);
       }
     }
   }
-}
 
-class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
-
-  workspace: WorkspaceImpl = null;
-
-  constructor() {
-    this.workspace = new WorkspaceImpl();
-  }
-}
-
-class WorkspaceImpl implements ExtensionApi.Workspace {
-
-  private _terminals: TerminalImpl[] = [];
-
-  getTerminals(): TerminalImpl[] {
-    return this._terminals;
+  workspaceGetTerminals(): TerminalImpl[] {
+    return [];
   }
 
-  private _onDidCreateTerminal = new EventListenerList<ExtensionApi.Terminal>();
-
-  onDidCreateTerminal(listener: (e: ExtensionApi.Terminal) => any): ExtensionApi.Disposable {
-    return this._onDidCreateTerminal.add(listener);
-  }
+  workspaceOnDidCreateTerminal = new OwnerTrackingEventListenerList<ExtensionApi.Terminal>();
 
 }
 
 
-class EventListenerList<E> {
+interface EventListenerOwnerPair<E> {
+  ownerExtensionContext: ExtensionContextImpl;
+  listener: (e: E) => any;
+}
 
-  private _listeners: ((e: E) => any)[] = [];
 
-  add(listener: (e: E) => any): ExtensionApi.Disposable {
-    this._listeners.push(listener);
-    return { dispose: () => this._remove(listener)};
+class OwnerTrackingEventListenerList<E> {
+
+  private _listeners: EventListenerOwnerPair<E>[] = [];
+
+  add(ownerExtensionContext: ExtensionContextImpl, listener: (e: E) => any): ExtensionApi.Disposable {
+    const pair = {ownerExtensionContext, listener};
+    this._listeners.push(pair);
+    return { dispose: () => this._remove(pair)};
   }
 
-  private _remove(listener: (e: E) => any): void {
-    const index = this._listeners.indexOf(listener);
+  private _remove(pair: EventListenerOwnerPair<E>): void {
+    const index = this._listeners.indexOf(pair);
     if (index !== -1) {
       this._listeners.splice(index, 1);
     }
   }
 
+  removeAllByOwner(ownerExtensionContext: ExtensionContextImpl): void {
+    this._listeners = this._listeners.filter(pair => pair.ownerExtensionContext !== ownerExtensionContext);
+  }
+
   emit(e: E): void {
-    this._listeners.forEach(listener => listener(e));
+    this._listeners.forEach(pair => pair.listener(e));
   }
 }
+
+
+class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
+
+  workspace: WorkspaceImpl = null;
+
+  constructor(private _extensionManager: ExtensionManager) {
+    this.workspace = new WorkspaceImpl(_extensionManager, this);
+  }
+}
+
+
+class WorkspaceImpl implements ExtensionApi.Workspace {
+
+  constructor(private _extensionManager: ExtensionManager, private _extensionContextImpl: ExtensionContextImpl) {
+  }
+
+  getTerminals(): TerminalImpl[] {
+    return this._extensionManager.workspaceGetTerminals();
+  }
+
+  onDidCreateTerminal(listener: (e: ExtensionApi.Terminal) => any): ExtensionApi.Disposable {
+    return this._extensionManager.workspaceOnDidCreateTerminal.add(this._extensionContextImpl, listener);
+  }
+}
+
 
 class TerminalImpl implements ExtensionApi.Terminal {
 

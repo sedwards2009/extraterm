@@ -30,7 +30,6 @@ import * as PluginManager from './PluginManager';
 import * as InternalExtratermApi from './InternalExtratermApi';
 
 import {ExtensionManager} from './ExtensionManager';
-import * as ExtensionApi from './ExtensionApi/ExtensionContext';
 
 import {MainWebUi} from './MainWebUi';
 import {EtTerminal} from './Terminal';

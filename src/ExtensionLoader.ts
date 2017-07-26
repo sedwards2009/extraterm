@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import Logger from './Logger';
 
-export interface ExtensionInfo {
+export interface ExtensionMetadata {
   name: string;
   path: string;
   main: string;
@@ -28,7 +28,7 @@ export class ExtensionLoader {
 
   private _log: Logger = null;
 
-  private _extensions: ExtensionInfo[] = [];
+  private _extensions: ExtensionMetadata[] = [];
 
   constructor(private extensionPaths: string[]) {
     this._log = new Logger("ExtensionLoader", this);
@@ -38,11 +38,11 @@ export class ExtensionLoader {
     this._extensions = _.flatten(this.extensionPaths.map(p => this._scanPath(p)));
   }
 
-  getExtensions(): ExtensionInfo[] {
+  getExtensions(): ExtensionMetadata[] {
     return this._extensions;
   }
 
-  load(extension: ExtensionInfo): boolean {
+  load(extension: ExtensionMetadata): boolean {
     if (extension.module !== null) {
       return true;
     }
@@ -58,9 +58,9 @@ export class ExtensionLoader {
     }
   }
 
-  private _scanPath(extensionPath: string): ExtensionInfo[] {
+  private _scanPath(extensionPath: string): ExtensionMetadata[] {
     if (fs.existsSync(extensionPath)) {
-      const result: ExtensionInfo[] = [];
+      const result: ExtensionMetadata[] = [];
       const contents = fs.readdirSync(extensionPath);
       for (const item of contents) {
         const packageJsonPath = path.join(extensionPath, item, "package.json");
@@ -82,7 +82,7 @@ export class ExtensionLoader {
     }
   }
 
-  private _loadPackageJson(extensionPath: string): ExtensionInfo {
+  private _loadPackageJson(extensionPath: string): ExtensionMetadata {
     const packageJsonPath = path.join(extensionPath, "package.json");
     const packageJsonString = fs.readFileSync(packageJsonPath, "UTF8");
     try {
@@ -93,7 +93,7 @@ export class ExtensionLoader {
         return null;
       }
 
-      const result: ExtensionInfo = {
+      const result: ExtensionMetadata = {
         name: packageJson.name,
         path: extensionPath,
         main: packageJson.main !== undefined ? packageJson.main : "main.js",
