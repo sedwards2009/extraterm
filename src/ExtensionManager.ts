@@ -6,7 +6,7 @@
 import * as path from 'path';
 import Logger from './Logger';
 import {ExtensionLoader, ExtensionInfo} from './ExtensionLoader';
-import * as ExtensionApi from './ExtensionApi/ExtensionContext';
+import * as ExtensionApi from 'extraterm-extension-api';
 
 interface ActiveExtension {
   extensionInfo: ExtensionInfo;

@@ -1,0 +1,13 @@
+{
+  "name": "extraterm-extension-api",
+  "version": "0.1.0",
+  "description": "Extension API for the Extraterm terminal",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "main.js",
+  "types": "main.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  }
+}

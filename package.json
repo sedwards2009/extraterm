@@ -64,7 +64,8 @@
     "shelljs": "0.7.8",
     "typedoc": "0.3.12",
     "typescript": "2.4.2",
-    "webfont": "^4.0.0"
+    "webfont": "^4.0.0",
+    "extraterm-extension-api": "file:./extraterm-extension-api/"
   },
   "jshintConfig": {
     "esversion": 6
