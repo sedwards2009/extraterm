@@ -102,5 +102,7 @@ src/gui/SnapDropContainer.js
 src/InternalMimeTypes.js
 src/ExtensionLoader.js
 src/ExtensionLoaderTest.js
+src/ExtensionManager.js
 __pycache__/
 build_tmp
+src/ExtensionApi/ExtensionContext.js

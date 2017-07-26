@@ -29,6 +29,9 @@ import * as PluginApi from './PluginApi';
 import * as PluginManager from './PluginManager';
 import * as InternalExtratermApi from './InternalExtratermApi';
 
+import {ExtensionManager} from './ExtensionManager';
+import * as ExtensionApi from './ExtensionApi/ExtensionContext';
+
 import {MainWebUi} from './MainWebUi';
 import {EtTerminal} from './Terminal';
 import * as DomUtils from './DomUtils';
@@ -84,6 +87,7 @@ let mainWebUi: MainWebUi = null;
 let configManager: ConfigManagerImpl = null;
 let pluginManager: PluginManager.PluginManager = null;
 let internalExtratermApi: InternalExtratermApiImpl = null;
+let extensionManager: ExtensionManager = null;
 
 /**
  * 
@@ -125,6 +129,8 @@ export function startUp(): void {
     if (process.platform === "darwin") {
       setupOSXMenus(mainWebUi);
     }
+
+    startUpExtensions();
 
     mainWebUi.newTerminalTab();
     mainWebUi.focus();
@@ -310,6 +316,11 @@ function startUpWindowEvents(): void {
     ev.preventDefault();
     ev.stopPropagation();
   });
+}
+
+function startUpExtensions() {
+  extensionManager = new ExtensionManager();
+  extensionManager.startUp();
 }
 
 function executeMenuCommand(command: string): boolean {

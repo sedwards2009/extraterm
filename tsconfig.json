@@ -48,6 +48,7 @@
         "./src/EmptyPaneMenu.ts",
         "./src/ExtensionLoader.ts",
         "./src/ExtensionLoaderTest.ts",
+        "./src/ExtensionManager.ts",
         "./src/FrameFinderType.ts",
         "./src/GeneralEvents.ts",
         "./src/InternalExtratermApi.ts",

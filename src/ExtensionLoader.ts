@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import Logger from './Logger';
 
-interface ExtensionInfo {
+export interface ExtensionInfo {
   name: string;
   path: string;
   main: string;
