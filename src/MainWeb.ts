@@ -334,8 +334,8 @@ function executeMenuCommand(command: string): boolean {
   return executeCommand(command);
 }
 
-function executeCommand(command: string): boolean {
-  switch(command) {
+function executeCommand(commandId: string, options?: object): boolean {
+  switch(commandId) {
     case MENU_ITEM_SETTINGS:
       mainWebUi.openSettingsTab();
       break;
@@ -600,11 +600,12 @@ function startUpCommandPalette(): void {
 function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.CommandPaletteRequest): void {
   
   DomUtils.doLater( () => {
-    commandPaletteRequestSource = request.srcElement;
-    
-    const entries = [...request.commandEntries, ...commandPaletteEntries()];
-    commandPaletteRequestEntries = entries;
-    const paletteEntries = entries.map( (entry, index): CommandPaletteTypes.CommandEntry => {
+
+    const commandableStack: CommandPaletteRequestTypes.Commandable[] = [...request.commandableStack,
+                                                                        { executeCommand, getCommandPaletteEntries}];
+    commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => commandable.getCommandPaletteEntries(commandableStack)));
+
+    const paletteEntries = commandPaletteRequestEntries.map( (entry, index): CommandPaletteTypes.CommandEntry => {
       return {
         id: "" + index,
         group: entry.group,
@@ -618,34 +619,31 @@ function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.Command
     const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> document.getElementById(ID_COMMAND_PALETTE);
     const shortcut = keyBindingManager.getKeyBindingContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
     commandPalette.setTitleSecondary(shortcut !== null ? shortcut : "");
-
     commandPalette.setEntries(paletteEntries);
     
-    let rect: ClientRect = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500 };
-    if (request.contextElement !== null && request.contextElement !== undefined) {
-      rect = request.contextElement.getBoundingClientRect();
+    const contextElement = request.commandableStack[request.commandableStack.length-2];
+    if (contextElement instanceof HTMLElement) {
+      let rect: ClientRect = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500 };
+      if (contextElement != null) {
+        rect = contextElement.getBoundingClientRect();
+      }
+      
+      commandPalette.open(rect.left, rect.top, rect.width, rect.height);
+      commandPalette.focus();
     }
-    
-    commandPalette.open(rect.left, rect.top, rect.width, rect.height);
-    commandPalette.focus();
   });
 }
 
-function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
-  // Create a command target object which includes the tabInfo var.
-  const target: CommandPaletteRequestTypes.Commandable = {
-    executeCommand: executeCommand
-  }
-
+function getCommandPaletteEntries(commandableStack: CommandPaletteRequestTypes.Commandable[]): CommandPaletteRequestTypes.CommandEntry[] {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
-
+  const target: CommandPaletteRequestTypes.Commandable = { executeCommand, getCommandPaletteEntries };
   const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", target: target },
-    { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", target: target },
-    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", target: target },
-    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", target: target },
-    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", target: target },
+    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", target },
+    { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", target },
+    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", target },
+    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", target },
+    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", target },
   ];
   return commandList;
 }
@@ -662,7 +660,7 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
     const commandIndex = Number.parseInt(selectedId);
     const commandEntry = commandPaletteRequestEntries[commandIndex];
     DomUtils.doLater( () => {
-      commandEntry.target.executeCommand(commandEntry.id);
+      commandEntry.target.executeCommand(commandEntry.id, commandEntry.targetOptions);
       commandPaletteRequestSource = null;
       commandPaletteRequestEntries = null;
     });

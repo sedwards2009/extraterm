@@ -1373,11 +1373,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     ev.stopPropagation();
     
     const request: CommandPaletteRequestTypes.CommandPaletteRequest = ev.detail;
-    const commandPaletteRequestDetail: CommandPaletteRequest = {
-        srcElement: request.srcElement === null ? this : request.srcElement,
-        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries()],
-        contextElement: this
-      };
+    const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [...request.commandableStack, this] };
     const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
       { detail: commandPaletteRequestDetail });
     commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
@@ -1385,7 +1381,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     this.dispatchEvent(commandPaletteRequestEvent);
   }
 
-  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+  getCommandPaletteEntries(commandableStack): CommandPaletteRequestTypes.CommandEntry[] {
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
     if (this._mode === Mode.DEFAULT) {
       commandList.push( { id: COMMAND_ENTER_CURSOR_MODE, group: PALETTE_GROUP, iconRight: "i-cursor", label: "Enter cursor mode", target: this } );

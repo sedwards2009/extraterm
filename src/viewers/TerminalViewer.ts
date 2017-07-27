@@ -1177,7 +1177,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
   }
 
-  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+  getCommandPaletteEntries(commandableStack: CommandPaletteRequestTypes.Commandable[]): CommandPaletteRequestTypes.CommandEntry[] {
     let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this }
@@ -1233,11 +1233,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
         break;
         
       case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequest = {
-            srcElement: this,
-            commandEntries: this._commandPaletteEntries(),
-            contextElement: null
-          };
+        const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [this] };
         const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
           { detail: commandPaletteRequestDetail });
         commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,

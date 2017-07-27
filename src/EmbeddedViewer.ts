@@ -794,11 +794,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
   private _executeCommand(command): boolean {
     switch (command) {
       case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequestTypes.CommandPaletteRequest = {
-            srcElement: this,
-            commandEntries: this._commandPaletteEntries(),
-            contextElement: this
-          };
+        const commandPaletteRequestDetail: CommandPaletteRequestTypes.CommandPaletteRequest = { commandableStack: [this] };
         const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
           { detail: commandPaletteRequestDetail });
         commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
@@ -812,7 +808,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     return true;
   }
 
-  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+  getCommandPaletteEntries(commandableStack: CommandPaletteRequestTypes.Commandable[]): CommandPaletteRequestTypes.CommandEntry[] {
     return [];
   }
 

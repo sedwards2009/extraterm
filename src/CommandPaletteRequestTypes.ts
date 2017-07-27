@@ -6,7 +6,8 @@
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 
 export interface Commandable {
-  executeCommand(commandId: string): void;
+  executeCommand(commandId: string, options?: object): void;
+  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[];
 }
 
 export function isCommandable(instance: any): instance is Commandable {
@@ -18,18 +19,13 @@ export function isCommandable(instance: any): instance is Commandable {
 
 export interface CommandEntry extends CommandPaletteTypes.CommandEntry {
   id: string;
-  iconLeft?: string;
-  iconRight?: string;
-  label: string;
-  shortcut?: string;
   target: Commandable;
+  targetOptions?: object;
 }
 
 export const EVENT_COMMAND_PALETTE_REQUEST = "EVENT_COMMAND_PALETTE_REQUEST";
 export const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
 
 export interface CommandPaletteRequest {
-  commandEntries: CommandEntry[];
-  srcElement: HTMLElement;
-  contextElement: HTMLElement;
+  commandableStack: Commandable[];
 }

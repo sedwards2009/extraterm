@@ -600,11 +600,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     ev.stopPropagation();
     
     const request: CommandPaletteRequestTypes.CommandPaletteRequest = ev.detail;
-    const commandPaletteRequestDetail: CommandPaletteRequest = {
-        srcElement: request.srcElement === null ? this : request.srcElement,
-        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries()],
-        contextElement: this
-      };
+    const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [...request.commandableStack, this] };
     const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
       { detail: commandPaletteRequestDetail });
     commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
@@ -612,7 +608,7 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     this.dispatchEvent(commandPaletteRequestEvent);
   }
 
-  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+  getCommandPaletteEntries(commandableStack: CommandPaletteRequestTypes.Commandable[]): CommandPaletteRequestTypes.CommandEntry[] {
     const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
 
     commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", target: this } );
