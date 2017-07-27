@@ -601,9 +601,13 @@ function startUpCommandPalette(): void {
 function handleCommandPaletteRequest(request: CommandPaletteRequest): void {
   
   DomUtils.doLater( () => {
+    const commandableStack: Commandable[] = [...request.commandableStack, {executeCommand, getCommandPaletteEntries}];
+    
+    const firstCommandable = commandableStack[0];
+    if (firstCommandable instanceof HTMLElement) {
+      commandPaletteRequestSource = firstCommandable;
+    }
 
-    const commandableStack: Commandable[] = [...request.commandableStack,
-                                                                        { executeCommand, getCommandPaletteEntries}];
     commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => commandable.getCommandPaletteEntries(commandableStack)));
 
     const paletteEntries = commandPaletteRequestEntries.map( (entry, index): CommandPaletteTypes.CommandEntry => {
