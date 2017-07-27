@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016-2017 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -18,11 +18,8 @@ export function isCommandable(instance: any): instance is Commandable {
 }
 
 export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement): void {
-  const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [element] };
-  const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
-    { detail: commandPaletteRequestDetail });
-  commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
-    commandPaletteRequestDetail);
+  const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST, {bubbles: true, composed: true});
+  commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true, null);
   element.dispatchEvent(commandPaletteRequestEvent);
 }
 
@@ -34,7 +31,3 @@ export interface CommandEntry extends CommandPaletteTypes.CommandEntry {
 
 export const EVENT_COMMAND_PALETTE_REQUEST = "EVENT_COMMAND_PALETTE_REQUEST";
 export const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
-
-export interface CommandPaletteRequest {
-  commandableStack: Commandable[];
-}

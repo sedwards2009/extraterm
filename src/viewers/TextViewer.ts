@@ -22,7 +22,7 @@ import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as EtTextViewerTypes from './TerminalViewerTypes';
-import {CommandPaletteRequest, Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
+import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
   from '../CommandPaletteRequestTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';

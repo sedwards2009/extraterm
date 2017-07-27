@@ -17,8 +17,8 @@ import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ThemeTypes from './Theme';
 import * as GeneralEvents from './GeneralEvents';
-import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandPaletteRequest, CommandEntry, Commandable,
-  isCommandable} from './CommandPaletteRequestTypes';
+import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
+  from './CommandPaletteRequestTypes';
 import Logger from './Logger';
 import log from './LogDecorator';
 import * as CodeMirrorOperation from './CodeMirrorOperation';

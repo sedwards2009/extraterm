@@ -21,7 +21,7 @@ import * as ThemeTypes from './Theme';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import {CommandPaletteRequest, EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
+import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
   Commandable, CommandEntry} from './CommandPaletteRequestTypes';
 
 import * as Electron from 'electron';
@@ -309,10 +309,6 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     const scrollContainer = DomUtils.getShadowId(this, ID_CONTAINER);
     DomUtils.preventScroll(scrollContainer);
 
-    scrollContainer.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-        this._handleCommandPaletteRequest(ev);
-      });
-
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
       scrollerArea.scrollTop = offset;
     });
@@ -590,22 +586,6 @@ export class EtViewerTab extends ViewerElement implements Commandable,
       ev.stopPropagation();
       ev.preventDefault();
     }
-  }
-
-  private _handleCommandPaletteRequest(ev: CustomEvent): void {
-    if (ev.path[0] === this) { // Don't process our own messages.
-      return;
-    }
-    
-    ev.stopPropagation();
-    
-    const request: CommandPaletteRequest = ev.detail;
-    const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [...request.commandableStack, this] };
-    const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
-      { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
-      commandPaletteRequestDetail);
-    this.dispatchEvent(commandPaletteRequestEvent);
   }
 
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {

@@ -16,7 +16,7 @@ import * as CodeMirrorCommands from '../CodeMirrorCommands';
 import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
-import {CommandPaletteRequest, Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
+import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
   from '../CommandPaletteRequestTypes';
 import * as Term from '../Term';
 import * as VirtualScrollArea from '../VirtualScrollArea';

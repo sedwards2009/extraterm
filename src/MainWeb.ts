@@ -21,7 +21,7 @@ import {PopDownListPicker} from './gui/PopDownListPicker';
 import {TabWidget} from './gui/TabWidget';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
-import {CommandEntry, CommandPaletteRequest, Commandable, EVENT_COMMAND_PALETTE_REQUEST}
+import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable}
   from './CommandPaletteRequestTypes';
 import * as CommandPaletteFunctions from './CommandPaletteFunctions';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
@@ -245,9 +245,7 @@ function startUpMainWebUi(): void {
     window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
   });
 
-  mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-    handleCommandPaletteRequest(ev.detail);
-  });
+  mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, handleCommandPaletteRequest);
 }
 
 function startUpMainMenu(): void {
@@ -598,10 +596,12 @@ function startUpCommandPalette(): void {
   commandPalette.addEventListener('selected', handleCommandPaletteSelected);
 }    
 
-function handleCommandPaletteRequest(request: CommandPaletteRequest): void {
-  
+function handleCommandPaletteRequest(ev: CustomEvent): void {
+  const path = ev.composedPath();
+  const requestCommandableStack: Commandable[] = <any> path.filter(el => isCommandable(el));
+
   DomUtils.doLater( () => {
-    const commandableStack: Commandable[] = [...request.commandableStack, {executeCommand, getCommandPaletteEntries}];
+    const commandableStack: Commandable[] = [...requestCommandableStack, {executeCommand, getCommandPaletteEntries}];
     
     const firstCommandable = commandableStack[0];
     if (firstCommandable instanceof HTMLElement) {
@@ -626,7 +626,7 @@ function handleCommandPaletteRequest(request: CommandPaletteRequest): void {
     commandPalette.setTitleSecondary(shortcut !== null ? shortcut : "");
     commandPalette.setEntries(paletteEntries);
     
-    const contextElement = request.commandableStack[request.commandableStack.length-2];
+    const contextElement = requestCommandableStack[requestCommandableStack.length-2];
     if (contextElement instanceof HTMLElement) {
       let rect: ClientRect = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500 };
       if (contextElement != null) {

@@ -26,7 +26,7 @@ import * as GeneralEvents from './GeneralEvents';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import {CommandPaletteRequest, Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry,COMMAND_OPEN_COMMAND_PALETTE}
+import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
@@ -531,10 +531,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable,
 
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
-
-      scrollContainer.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-          this._handleCommandPaletteRequest(ev);
-        });
 
       this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
@@ -1363,22 +1359,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable,
     if (this._terminalViewer !== null) {
       this._terminalViewer.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
     }
-  }
-
-  private _handleCommandPaletteRequest(ev: CustomEvent): void {
-    if (ev.path[0] === this) { // Don't process our own messages.
-      return;
-    }
-    
-    ev.stopPropagation();
-    
-    const request: CommandPaletteRequest = ev.detail;
-    const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [...request.commandableStack, this] };
-    const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
-      { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
-      commandPaletteRequestDetail);
-    this.dispatchEvent(commandPaletteRequestEvent);
   }
 
   getCommandPaletteEntries(commandableStack): CommandEntry[] {

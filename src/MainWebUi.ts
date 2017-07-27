@@ -21,7 +21,7 @@ import {EmptyPaneMenu} from './EmptyPaneMenu';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ThemeTypes from './Theme';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import {CommandPaletteRequest, Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
+import {Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
 
 import * as InternalExtratermApi from './InternalExtratermApi';
 
@@ -402,9 +402,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const divContainer = document.createElement("DIV");
       divContainer.classList.add(CLASS_TAB_CONTENT);
       divContainer.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabContent), true);
-      divContainer.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-        this._handleCommandPaletteRequest(tabContent, ev);
-      });
       return divContainer;
     });
 
@@ -1139,22 +1136,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   //
   //-----------------------------------------------------------------------
 
-  private _handleCommandPaletteRequest(tabContentElement: Element, ev: CustomEvent): void {
-    if (ev.path[0] === this) { // Don't process our own messages.
-      return;
-    }
-
-    ev.stopPropagation();
-    
-    const request: CommandPaletteRequest = ev.detail;
-    const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [...request.commandableStack, this] };
-    const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
-      { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
-      commandPaletteRequestDetail);
-    this.dispatchEvent(commandPaletteRequestEvent);
-  }
-  
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     
     const thisIndex = commandableStack.indexOf(this);
