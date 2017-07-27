@@ -17,7 +17,7 @@ import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ThemeTypes from './Theme';
 import * as GeneralEvents from './GeneralEvents';
-import {COMMAND_OPEN_COMMAND_PALETTE, EVENT_COMMAND_PALETTE_REQUEST, CommandPaletteRequest, CommandEntry, Commandable,
+import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandPaletteRequest, CommandEntry, Commandable,
   isCommandable} from './CommandPaletteRequestTypes';
 import Logger from './Logger';
 import log from './LogDecorator';
@@ -793,12 +793,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _executeCommand(command): boolean {
     switch (command) {
       case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [this] };
-        const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
-          { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
-          commandPaletteRequestDetail);
-        this.dispatchEvent(commandPaletteRequestEvent);
+        dispatchCommandPaletteRequest(this);
         break;
         
       default:

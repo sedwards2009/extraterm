@@ -22,7 +22,7 @@ import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as EtTextViewerTypes from './TerminalViewerTypes';
-import {CommandPaletteRequest, Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, EVENT_COMMAND_PALETTE_REQUEST}
+import {CommandPaletteRequest, Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
   from '../CommandPaletteRequestTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
@@ -944,12 +944,7 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
         break;
         
       case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [this] };
-        const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
-          { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
-          commandPaletteRequestDetail);
-        this.dispatchEvent(commandPaletteRequestEvent);
+        dispatchCommandPaletteRequest(this);
         break;
 
       case COMMAND_SYNTAX_HIGHLIGHTING:

@@ -16,7 +16,7 @@ import * as CodeMirrorCommands from '../CodeMirrorCommands';
 import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
-import {CommandPaletteRequest, Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, EVENT_COMMAND_PALETTE_REQUEST}
+import {CommandPaletteRequest, Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
   from '../CommandPaletteRequestTypes';
 import * as Term from '../Term';
 import * as VirtualScrollArea from '../VirtualScrollArea';
@@ -1232,12 +1232,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         break;
         
       case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [this] };
-        const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
-          { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
-          commandPaletteRequestDetail);
-        this.dispatchEvent(commandPaletteRequestEvent);
+        dispatchCommandPaletteRequest(this);
         break;
         
       default:
