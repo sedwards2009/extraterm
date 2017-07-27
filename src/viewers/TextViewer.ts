@@ -22,7 +22,8 @@ import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as EtTextViewerTypes from './TerminalViewerTypes';
-import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
+import {CommandPaletteRequest, Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, EVENT_COMMAND_PALETTE_REQUEST}
+  from '../CommandPaletteRequestTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
@@ -35,7 +36,6 @@ const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 type TextDecoration = EtTextViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
-type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 const ID = "EtTextViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -48,7 +48,6 @@ const KEYBINDINGS_CURSOR_MODE = "text-viewer";
 const PALETTE_GROUP = "textviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
-const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 
 const COMMAND_SYNTAX_HIGHLIGHTING = "syntaxHighlighting";
 const EVENT_COMMAND_SYNTAX_HIGHLIGHTING = "TEXTVIEWER_EVENT_COMMAND_SYNTAX_HIGHLIGHTING";
@@ -91,8 +90,8 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-export class TextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
-    keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
+export class TextViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
+    SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
   
@@ -884,11 +883,11 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     ev.stopImmediatePropagation();
     ev.preventDefault();
 
-    this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+    this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
   }
   
-  getCommandPaletteEntries(commandableStack: CommandPaletteRequestTypes.Commandable[]): CommandPaletteRequestTypes.CommandEntry[] {
-    let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
+  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
+    let commandList: CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this },
       { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax: " + this._getMimeTypeName(), target: this },
@@ -896,7 +895,7 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     ];
     
     if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
-      const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
+      const cmCommandList: CommandEntry[] =
         CodeMirrorCommands.commandDescriptions(this._codeMirror).map( (desc) => {
           return { id: desc.command,
             group: PALETTE_GROUP,
@@ -946,9 +945,9 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
         
       case COMMAND_OPEN_COMMAND_PALETTE:
         const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [this] };
-        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
+        const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
           { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+        commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
           commandPaletteRequestDetail);
         this.dispatchEvent(commandPaletteRequestEvent);
         break;

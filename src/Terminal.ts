@@ -26,8 +26,8 @@ import * as GeneralEvents from './GeneralEvents';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
-type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
+import {CommandPaletteRequest, Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry,COMMAND_OPEN_COMMAND_PALETTE}
+  from './CommandPaletteRequestTypes';
 
 // import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger from './Logger';
@@ -141,7 +141,7 @@ interface WriteBufferStatus {
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-export class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTypes.Commandable,
+export class EtTerminal extends ThemeableElementBase implements Commandable,
     keybindingmanager.AcceptsKeyBindingManager, config.AcceptsConfigManager {
   
   /**
@@ -532,7 +532,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
 
-      scrollContainer.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+      scrollContainer.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
           this._handleCommandPaletteRequest(ev);
         });
 
@@ -1361,7 +1361,7 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   
   private _handleContextMenu(): void {
     if (this._terminalViewer !== null) {
-      this._terminalViewer.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+      this._terminalViewer.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
     }
   }
 
@@ -1372,17 +1372,17 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     
     ev.stopPropagation();
     
-    const request: CommandPaletteRequestTypes.CommandPaletteRequest = ev.detail;
+    const request: CommandPaletteRequest = ev.detail;
     const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [...request.commandableStack, this] };
-    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
+    const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
       { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+    commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
       commandPaletteRequestDetail);
     this.dispatchEvent(commandPaletteRequestEvent);
   }
 
-  getCommandPaletteEntries(commandableStack): CommandPaletteRequestTypes.CommandEntry[] {
-    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
+  getCommandPaletteEntries(commandableStack): CommandEntry[] {
+    const commandList: CommandEntry[] = [];
     if (this._mode === Mode.DEFAULT) {
       commandList.push( { id: COMMAND_ENTER_CURSOR_MODE, group: PALETTE_GROUP, iconRight: "i-cursor", label: "Enter cursor mode", target: this } );
     } else {

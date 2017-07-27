@@ -21,7 +21,8 @@ import {PopDownListPicker} from './gui/PopDownListPicker';
 import {TabWidget} from './gui/TabWidget';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
-import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
+import {CommandEntry, CommandPaletteRequest, Commandable, EVENT_COMMAND_PALETTE_REQUEST}
+  from './CommandPaletteRequestTypes';
 import * as CommandPaletteFunctions from './CommandPaletteFunctions';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 
@@ -244,7 +245,7 @@ function startUpMainWebUi(): void {
     window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
   });
 
-  mainWebUi.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+  mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
     handleCommandPaletteRequest(ev.detail);
   });
 }
@@ -578,7 +579,7 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
 //                                                                                                      
 //-----------------------------------------------------------------------
 let commandPaletteRequestSource: HTMLElement = null;
-let commandPaletteRequestEntries: CommandPaletteRequestTypes.CommandEntry[] = null;
+let commandPaletteRequestEntries: CommandEntry[] = null;
 
 function startUpCommandPalette(): void {
   const doc = window.document;
@@ -597,11 +598,11 @@ function startUpCommandPalette(): void {
   commandPalette.addEventListener('selected', handleCommandPaletteSelected);
 }    
 
-function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.CommandPaletteRequest): void {
+function handleCommandPaletteRequest(request: CommandPaletteRequest): void {
   
   DomUtils.doLater( () => {
 
-    const commandableStack: CommandPaletteRequestTypes.Commandable[] = [...request.commandableStack,
+    const commandableStack: Commandable[] = [...request.commandableStack,
                                                                         { executeCommand, getCommandPaletteEntries}];
     commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => commandable.getCommandPaletteEntries(commandableStack)));
 
@@ -634,11 +635,11 @@ function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.Command
   });
 }
 
-function getCommandPaletteEntries(commandableStack: CommandPaletteRequestTypes.Commandable[]): CommandPaletteRequestTypes.CommandEntry[] {
+function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
-  const target: CommandPaletteRequestTypes.Commandable = { executeCommand, getCommandPaletteEntries };
-  const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
+  const target: Commandable = { executeCommand, getCommandPaletteEntries };
+  const commandList: CommandEntry[] = [
     { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", target },
     { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", target },
     { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", target },

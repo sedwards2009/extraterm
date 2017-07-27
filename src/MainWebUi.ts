@@ -21,9 +21,7 @@ import {EmptyPaneMenu} from './EmptyPaneMenu';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ThemeTypes from './Theme';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
-import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
-type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
+import {CommandPaletteRequest, Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
 
 import * as InternalExtratermApi from './InternalExtratermApi';
 
@@ -117,7 +115,7 @@ let themeCss = "";
  *
  */
 export class MainWebUi extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
-    config.AcceptsConfigManager, CommandPaletteRequestTypes.Commandable {
+    config.AcceptsConfigManager, Commandable {
   
   //-----------------------------------------------------------------------
   // Statics
@@ -404,7 +402,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const divContainer = document.createElement("DIV");
       divContainer.classList.add(CLASS_TAB_CONTENT);
       divContainer.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabContent), true);
-      divContainer.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+      divContainer.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
         this._handleCommandPaletteRequest(tabContent, ev);
       });
       return divContainer;
@@ -420,7 +418,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
-      const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
+      const commandList: CommandEntry[] = [
         { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", target: null },
         { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", target: null },        
         { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: null },
@@ -1150,14 +1148,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     
     const request: CommandPaletteRequest = ev.detail;
     const commandPaletteRequestDetail: CommandPaletteRequest = { commandableStack: [...request.commandableStack, this] };
-    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
+    const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST,
       { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
+    commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true,
       commandPaletteRequestDetail);
     this.dispatchEvent(commandPaletteRequestEvent);
   }
   
-  getCommandPaletteEntries(commandableStack: CommandPaletteRequestTypes.Commandable[]): CommandPaletteRequestTypes.CommandEntry[] {
+  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     
     const thisIndex = commandableStack.indexOf(this);
     const tabContentElement = commandableStack[thisIndex-1];
@@ -1169,11 +1167,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
 
-  private _commandPaletteEntriesWithTarget(tabContentElement: Element, tabWidget: TabWidget): CommandPaletteRequestTypes.CommandEntry[] {
+  private _commandPaletteEntriesWithTarget(tabContentElement: Element, tabWidget: TabWidget): CommandEntry[] {
 
     const target = this;
     const targetOptions = {tabElement: tabContentElement};
-    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
+    const commandList: CommandEntry[] = [
       { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", target, targetOptions},
       { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", target, targetOptions },
       { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", target, targetOptions },
@@ -1203,7 +1201,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return commandList;
   }
 
-  private _insertCommandKeyBindings(commandList: CommandPaletteRequestTypes.CommandEntry[]): void {
+  private _insertCommandKeyBindings(commandList: CommandEntry[]): void {
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {

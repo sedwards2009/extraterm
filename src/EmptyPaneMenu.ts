@@ -12,8 +12,8 @@ import * as ThemeTypes from './Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import {ListPicker} from './gui/ListPicker';
 import * as DomUtils from './DomUtils';
-import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
-import * as CommandPaletteFunctions from './CommandPaletteFunctions';
+import {CommandEntry} from './gui/CommandPaletteTypes';
+import {commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import Logger from './Logger';
 import log from './LogDecorator';
 
@@ -54,7 +54,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   // WARNING: Fields like this will not be initialised automatically.
   private _log: Logger;
   
-  private _entries: CommandPaletteTypes.CommandEntry[];
+  private _entries: CommandEntry[];
 
   private _selectedId: string;
 
@@ -87,27 +87,27 @@ export class EmptyPaneMenu extends ThemeableElementBase {
     return false;
   }
 
-  setEntries(entries: CommandPaletteTypes.CommandEntry[]): void {
+  setEntries(entries: CommandEntry[]): void {
     this._entries = entries;
     this._selectedId = null;
     
     if (DomUtils.getShadowRoot(this) != null) {
-      const listPicker = <ListPicker<CommandPaletteTypes.CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+      const listPicker = <ListPicker<CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
       listPicker.setEntries(entries);
     }
   }
 
-  getEntries(): CommandPaletteTypes.CommandEntry[] {
+  getEntries(): CommandEntry[] {
     return this._entries;
   }
 
   getFilter(): string {
-    const listPicker = <ListPicker<CommandPaletteTypes.CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+    const listPicker = <ListPicker<CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
     return listPicker.getFilter();
   }
 
   setFilter(text: string): void {
-    const listPicker = <ListPicker<CommandPaletteTypes.CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+    const listPicker = <ListPicker<CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
     listPicker.setFilter(text);
   }
 
@@ -149,14 +149,14 @@ export class EmptyPaneMenu extends ThemeableElementBase {
       shadow.appendChild(themeStyle);
       shadow.appendChild(divContainer);    
 
-      const listPicker = <ListPicker<CommandPaletteTypes.CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+      const listPicker = <ListPicker<CommandEntry>> DomUtils.getShadowId(this, ID_LIST_PICKER);
       listPicker.addEventListener("selected", (ev: CustomEvent): void => {
         const event = new CustomEvent("selected", { detail: {selected: ev.detail.selected } });
         this.dispatchEvent(event);
       });
 
-      listPicker.setFilterAndRankEntriesFunc(CommandPaletteFunctions.commandPaletteFilterEntries);
-      listPicker.setFormatEntriesFunc(CommandPaletteFunctions.commandPaletteFormatEntries);
+      listPicker.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
+      listPicker.setFormatEntriesFunc(commandPaletteFormatEntries);
       listPicker.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
       
       listPicker.setEntries(this._entries);
