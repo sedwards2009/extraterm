@@ -12,7 +12,7 @@
   "scripts": {
     "run": "electron src/Main.js --dev-tools",
 
-    "build-all": "npm run install-extension-api ; npm run build ; npm run build-extensions ; npm run build-icons",
+    "build-all": "npm run npm-install-extension-api ; npm run build ; npm run build-extensions",
     "build": "npm install extraterm-extension-api ; tsc",
     "build-extensions": "npm run npm-install-extension-api ; node src/build_scripts/npm_extensions.js build",
     "build-icons": "node src/extra_icons/build.js",
