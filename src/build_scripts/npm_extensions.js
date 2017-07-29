@@ -18,7 +18,7 @@ switch(process.argv[2]) {
     break;
 
   case 'build':
-    npmCommandExtensions('build');
+    npmCommandExtensions('run build');
     break;
 
   case 'install':

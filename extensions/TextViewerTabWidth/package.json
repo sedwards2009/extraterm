@@ -1,0 +1,13 @@
+{
+  "name": "text-viewer-tab-width",
+  "description": "Text Viewer tab width extension for extraterm",
+  "version": "1.0.0",
+  "devDependencies": {
+    "typescript": "2.4.2",
+    "extraterm-extension-api": "file:../../extraterm-extension-api/"
+  },
+  "main": "src/TextViewerTabWidthExtension.js",
+  "scripts": {
+    "build": "tsc"
+  }
+}

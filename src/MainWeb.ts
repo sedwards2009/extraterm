@@ -608,7 +608,14 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
       commandPaletteRequestSource = firstCommandable;
     }
 
-    commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => commandable.getCommandPaletteEntries(commandableStack)));
+
+    commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => {
+      let result: CommandEntry[] = commandable.getCommandPaletteEntries(commandableStack);
+      if (commandable instanceof TextViewer) {
+        result = [...result, ...extensionManager.getWorkspaceTextViewerCommands(commandable)];
+      }
+      return result;
+    }));
 
     const paletteEntries = commandPaletteRequestEntries.map( (entry, index): CommandPaletteTypes.CommandEntry => {
       return {

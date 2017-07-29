@@ -5,8 +5,11 @@
  */
 import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 
-export interface Commandable {
+export interface CommandExecutor {
   executeCommand(commandId: string, options?: object): void;
+}
+
+export interface Commandable extends CommandExecutor {
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[];
 }
 
@@ -14,7 +17,7 @@ export function isCommandable(instance: any): instance is Commandable {
   if (instance === null || instance === undefined) {
     return false;
   }
-  return (<Commandable> instance).executeCommand !== undefined;
+  return (<Commandable> instance).executeCommand !== undefined && (<Commandable> instance).getCommandPaletteEntries !== undefined;
 }
 
 export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement): void {
@@ -25,7 +28,7 @@ export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement
 
 export interface CommandEntry extends CommandPaletteTypes.CommandEntry {
   id: string;
-  target: Commandable;
+  target: CommandExecutor;
   targetOptions?: object;
 }
 

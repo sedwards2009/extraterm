@@ -6,6 +6,6 @@
     "left-pad": "^1.1.3"
   },
   "scripts": {
-    "build": ""
+    "build": "node -e 'process.exit(0)'"
   }
 }
