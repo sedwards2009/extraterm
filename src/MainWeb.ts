@@ -7,9 +7,9 @@ import * as path from 'path';
 import * as Electron from 'electron';
 const ElectronMenu = Electron.remote.Menu;
 const ElectronMenuItem = Electron.remote.MenuItem;
-
 import * as SourceMapSupport from 'source-map-support';
 import * as _ from 'lodash';
+
 import Logger from './Logger';
 import * as Messages from './WindowMessages';
 import * as WebIpc from './WebIpc';
@@ -20,23 +20,18 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {PopDownListPicker} from './gui/PopDownListPicker';
 import {TabWidget} from './gui/TabWidget';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable}
   from './CommandPaletteRequestTypes';
-import * as CommandPaletteFunctions from './CommandPaletteFunctions';
+import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-
 import * as PluginApi from './PluginApi';
 import * as PluginManager from './PluginManager';
 import * as InternalExtratermApi from './InternalExtratermApi';
-
 import {ExtensionManager} from './ExtensionManager';
-
 import {MainWebUi} from './MainWebUi';
 import {EtTerminal} from './Terminal';
 import * as DomUtils from './DomUtils';
 import * as Util from './gui/Util';
-
 import {EmbeddedViewer} from './EmbeddedViewer';
 import {AboutTab} from './AboutTab';
 import {SettingsTab} from './settings/SettingsTab';
@@ -583,13 +578,13 @@ function startUpCommandPalette(): void {
   const doc = window.document;
 
   // Command palette
-  const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> doc.createElement(PopDownListPicker.TAG_NAME);
+  const commandPalette = <PopDownListPicker<CommandMenuItem>> doc.createElement(PopDownListPicker.TAG_NAME);
   commandPalette.id = ID_COMMAND_PALETTE;
   commandPalette.setTitlePrimary("Command Palette");
   commandPalette.setTitleSecondary("Ctrl+Shift+P");
 
-  commandPalette.setFilterAndRankEntriesFunc(CommandPaletteFunctions.commandPaletteFilterEntries);
-  commandPalette.setFormatEntriesFunc(CommandPaletteFunctions.commandPaletteFormatEntries);
+  commandPalette.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
+  commandPalette.setFormatEntriesFunc(commandPaletteFormatEntries);
   commandPalette.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
 
   doc.body.appendChild(commandPalette);
@@ -617,7 +612,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
       return result;
     }));
 
-    const paletteEntries = commandPaletteRequestEntries.map( (entry, index): CommandPaletteTypes.CommandEntry => {
+    const paletteEntries = commandPaletteRequestEntries.map( (entry, index): CommandMenuItem => {
       return {
         id: "" + index,
         group: entry.group,
@@ -628,7 +623,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
       };
     });
     
-    const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> document.getElementById(ID_COMMAND_PALETTE);
+    const commandPalette = <PopDownListPicker<CommandMenuItem>> document.getElementById(ID_COMMAND_PALETTE);
     const shortcut = keyBindingManager.getKeyBindingContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
     commandPalette.setTitleSecondary(shortcut !== null ? shortcut : "");
     commandPalette.setEntries(paletteEntries);
@@ -661,7 +656,7 @@ function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry
 }
 
 function handleCommandPaletteSelected(ev: CustomEvent): void {
-  const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> document.getElementById(ID_COMMAND_PALETTE);
+  const commandPalette = <PopDownListPicker<CommandMenuItem>> document.getElementById(ID_COMMAND_PALETTE);
   commandPalette.close();
   if (commandPaletteRequestSource !== null) {
     commandPaletteRequestSource.focus();

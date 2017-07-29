@@ -7,7 +7,6 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import Logger from './Logger';
 import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
-import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 import * as ExtensionApi from 'extraterm-extension-api';
 import {TextViewer} from'./viewers/TextViewer';
@@ -75,7 +74,7 @@ export class ExtensionManager {
         const commands: CommandPaletteRequestTypes.CommandEntry[] = [];
         for (const rawCommand of rawCommands) {
           commands.push({
-            id: ownerExtensionContext.extensionMetadata.name + '.' + rawCommand.commandId,
+            id: ownerExtensionContext.extensionMetadata.name + '.' + rawCommand.id,
             group: rawCommand.group,
             iconLeft: rawCommand.iconLeft,
             iconRight: rawCommand.iconRight,

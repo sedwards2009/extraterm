@@ -6,9 +6,6 @@ src/resourceloader.js
 src/utf8encoding.js
 src/typedocs/
 src/sourceDir.js
-src/gui/commandentrytype.js
-src/gui/commandpalettetypes.js
-src/commandpaletterequesttypes.js
 src/AboutTab.js
 src/BulkDomOperation.js
 src/BulkDomOperationTest.js

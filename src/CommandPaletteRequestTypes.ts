@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
+import * as CommandPaletteFunctons from './CommandPaletteFunctions';
 
 export interface CommandExecutor {
   executeCommand(commandId: string, options?: object): void;
@@ -26,7 +26,7 @@ export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement
   element.dispatchEvent(commandPaletteRequestEvent);
 }
 
-export interface CommandEntry extends CommandPaletteTypes.CommandEntry {
+export interface CommandEntry extends CommandPaletteFunctons.CommandMenuItem {
   id: string;
   target: CommandExecutor;
   targetOptions?: object;

@@ -33,11 +33,11 @@ export interface TextViewer {
  */
 export interface CommandEntry {
   /**
-   * Name of this command. This name is used internally and should only
+   * Identifier for this command. This ID is used internally and should only
    * consist of alphanumeric characters ([A-Z0-9]+). It must be unique
    * to this extension and stable between calls.
    */
-  commandId: string;
+  id: string;
 
   group: string;
   iconLeft?: string;

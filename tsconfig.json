@@ -91,7 +91,6 @@
         "./src/WebResourceLoader.ts",
         "./src/WindowMessages.ts",
         "./src/gui/CheckboxMenuItem.ts",
-        "./src/gui/CommandPaletteTypes.ts",
         "./src/gui/ContextMenu.ts",
         "./src/gui/DropDown.ts",
         "./src/gui/ListPicker.ts",
