@@ -65,7 +65,7 @@
     "cajon": "0.2.10",
     "electron": "1.6.8",
     "electron-packager": "8.7.0",
-    "electron-rebuild": "file:../electron-rebuild/",
+    "electron-rebuild": "1.6.0",
     "finalhandler": "0.4.0",
     "modclean": "2.1.0",
     "nodeunit": "0.11.0",
