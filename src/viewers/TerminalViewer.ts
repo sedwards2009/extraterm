@@ -1178,8 +1178,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     let commandList: CommandEntry[] = [
-      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this }
+      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", commandExecutor: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
     if (this._mode === ViewerElementTypes.Mode.CURSOR) {
@@ -1190,7 +1190,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
             iconLeft: desc.iconLeft,
             iconRight: desc.iconRight,
             label: desc.label,
-            target: this };
+            commandExecutor: this };
         });
       commandList = [...commandList, ...cmCommandList];
     }

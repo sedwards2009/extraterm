@@ -80,8 +80,8 @@ export class ExtensionManager {
             iconRight: rawCommand.iconRight,
             label: rawCommand.label,
             shortcut: '',
-            target: target,
-            targetOptions: rawCommand.commandArguments
+            commandExecutor: target,
+            commandArguments: rawCommand.commandArguments
           });
         }
 

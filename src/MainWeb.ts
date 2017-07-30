@@ -20,7 +20,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {PopDownListPicker} from './gui/PopDownListPicker';
 import {TabWidget} from './gui/TabWidget';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable}
+import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
   from './CommandPaletteRequestTypes';
 import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
@@ -644,13 +644,13 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
 function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
-  const target: Commandable = { executeCommand, getCommandPaletteEntries };
+  const commandExecutor: CommandExecutor = {executeCommand};
   const commandList: CommandEntry[] = [
-    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", target },
-    { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", target },
-    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", target },
-    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", target },
-    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", target },
+    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", commandExecutor },
+    { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", commandExecutor },
+    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", commandExecutor },
+    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", commandExecutor },
+    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", commandExecutor },
   ];
   return commandList;
 }
@@ -667,7 +667,7 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
     const commandIndex = Number.parseInt(selectedId);
     const commandEntry = commandPaletteRequestEntries[commandIndex];
     DomUtils.doLater( () => {
-      commandEntry.target.executeCommand(commandEntry.id, commandEntry.targetOptions);
+      commandEntry.commandExecutor.executeCommand(commandEntry.id, commandEntry.commandArguments);
       commandPaletteRequestSource = null;
       commandPaletteRequestEntries = null;
     });

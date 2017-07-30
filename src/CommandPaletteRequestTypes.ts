@@ -6,7 +6,7 @@
 import * as CommandPaletteFunctons from './CommandPaletteFunctions';
 
 export interface CommandExecutor {
-  executeCommand(commandId: string, options?: object): void;
+  executeCommand(commandId: string, commandArguments?: object): void;
 }
 
 export interface Commandable extends CommandExecutor {
@@ -27,9 +27,8 @@ export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement
 }
 
 export interface CommandEntry extends CommandPaletteFunctons.CommandMenuItem {
-  id: string;
-  target: CommandExecutor;
-  targetOptions?: object;
+  commandExecutor: CommandExecutor;
+  commandArguments?: object;
 }
 
 export const EVENT_COMMAND_PALETTE_REQUEST = "EVENT_COMMAND_PALETTE_REQUEST";

@@ -888,10 +888,10 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
   
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     let commandList: CommandEntry[] = [
-      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this },
-      { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax: " + this._getMimeTypeName(), target: this },
-      { id: COMMAND_TAB_SIZE, group: PALETTE_GROUP, iconRight: "", label: "Tab Size: " + this.getTabSize(), target: this }
+      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", commandExecutor: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this },
+      { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax: " + this._getMimeTypeName(), commandExecutor: this },
+      { id: COMMAND_TAB_SIZE, group: PALETTE_GROUP, iconRight: "", label: "Tab Size: " + this.getTabSize(), commandExecutor: this }
     ];
     
     if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
@@ -902,7 +902,7 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
             iconLeft:desc.iconLeft,
             iconRight: desc.iconRight,
             label: desc.label,
-            target: this };
+            commandExecutor: this };
         });
       commandList = [...commandList, ...cmCommandList];
     }
