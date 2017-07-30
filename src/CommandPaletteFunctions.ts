@@ -38,7 +38,7 @@ function commandPaletteFormatEntriesWithGroups(entries: CommandMenuItem[], selec
 
   for (let entry of entries) {
     let extraClass = "";
-    if (entry.group !== currentGroup && currentGroup !== null) {
+    if (entry.group !== undefined && entry.group !== currentGroup && currentGroup !== null) {
       extraClass = CLASS_RESULT_GROUP_HEAD;
     }
     currentGroup = entry.group;

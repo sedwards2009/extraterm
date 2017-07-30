@@ -39,7 +39,15 @@ export interface CommandEntry {
    */
   id: string;
 
-  group: string;
+  /**
+   * Optional identifier used to grouping related commands in the command
+   * palette.
+   * 
+   * Commands with the same group name are visually separated from the
+   * surrounding commands.
+   */
+  group?: string;
+
   iconLeft?: string;
   iconRight?: string;
 
