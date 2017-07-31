@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+import * as CodeMirror from 'codemirror';
+
 /**
  * A resource which can later be freed by calling `dispose()`.
  */
@@ -79,7 +81,7 @@ export interface Workspace {
 
 export interface ExtensionContext {
   workspace: Workspace;
-
+  codeMirrorModule: typeof CodeMirror;
 }
 
 /**

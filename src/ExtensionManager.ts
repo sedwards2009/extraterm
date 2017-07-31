@@ -6,6 +6,7 @@
 import * as path from 'path';
 import * as _ from 'lodash';
 import Logger from './Logger';
+import * as CodeMirror from 'codemirror';
 import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 import * as ExtensionApi from 'extraterm-extension-api';
@@ -142,6 +143,8 @@ class OwnerTrackingEventListenerList<E> extends OwnerTrackingList<(e: E) => any>
 class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
 
   workspace: WorkspaceImpl = null;
+
+  codeMirrorModule: typeof CodeMirror = CodeMirror;
 
   constructor(private _extensionManager: ExtensionManager, public extensionMetadata: ExtensionMetadata) {
     this.workspace = new WorkspaceImpl(_extensionManager, this);
