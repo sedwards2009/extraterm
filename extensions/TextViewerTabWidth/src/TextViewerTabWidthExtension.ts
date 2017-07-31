@@ -14,7 +14,7 @@ const COMMAND_SET_TAB_WIDTH = "setTabWidth";
 function textViewerCommandLister(textViewer: TextViewer): CommandEntry[] {
   return [{
     id: COMMAND_SET_TAB_WIDTH,
-    label: "Set tab width XXXX"
+    label: "Tab Size: " + textViewer.getTabSize()
   }];
 }
 

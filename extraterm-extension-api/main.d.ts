@@ -26,7 +26,8 @@ export interface Terminal {
 
 
 export interface TextViewer {
-  // getCodeMirror();
+  getTabSize(): number;
+  setTabSize(size: number): void;
 }
 
 

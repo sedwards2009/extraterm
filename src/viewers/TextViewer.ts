@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as SourceDir from '../SourceDir';
 import {ViewerElement} from '../ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
+import * as ExtensionApi from 'extraterm-extension-api';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ThemeTypes from '../Theme';
@@ -90,7 +91,7 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-export class TextViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
+export class TextViewer extends ViewerElement implements ExtensionApi.TextViewer, Commandable, keybindingmanager.AcceptsKeyBindingManager,
     SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
