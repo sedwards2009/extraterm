@@ -513,3 +513,32 @@ export function removeAllClasses(el: Element): void {
     el.classList.remove(el.classList[0]);
   }
 }
+
+/**
+ * Get the path from the node through its parents, to the root.
+ * 
+ * This function will also traverse shadow DOM boundaries.
+ * 
+ * @param node the node
+ * @return the path from the node to its root parent with nodes closer to the
+ *         start node first and the ultimate parent node last.
+ */
+export function nodePathToRoot(node: Node): Node[] {
+  let currentNode = node;
+  let nextNode = node;
+  const path: Node[] = [];
+
+  while (true) {
+    currentNode = nextNode;
+    if (currentNode.parentNode != null) {
+      nextNode = currentNode.parentNode;
+      path.push(nextNode);
+    } else if (currentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE && (<ShadowRoot> currentNode).host != null) {
+      nextNode = (<ShadowRoot> currentNode).host;
+      path.push(nextNode);
+    } else {
+      break;
+    }
+  }
+  return path;
+}

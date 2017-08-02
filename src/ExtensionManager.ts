@@ -6,6 +6,7 @@
 import * as path from 'path';
 import * as _ from 'lodash';
 import Logger from './Logger';
+import * as DomUtils from './DomUtils';
 import * as CodeMirror from 'codemirror';
 import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
@@ -203,11 +204,17 @@ return null;
 
 
 class ViewerProxy implements ExtensionApi.Viewer {
-  constructor(public _extensionContextImpl: ExtensionContextImpl, viewer: ViewerElement) {
+  constructor(public _extensionContextImpl: ExtensionContextImpl, public _viewer: ViewerElement) {
   }
 
   getOwningTerminal(): ExtensionApi.Terminal {
-return null;
+    const path = DomUtils.nodePathToRoot(this._viewer);
+    for (const node of path) {
+      if (node instanceof EtTerminal) {
+        return this._extensionContextImpl.getTerminalProxy(node);
+      }
+    }
+    return null;
   }
 }
 
