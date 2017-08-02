@@ -104,3 +104,4 @@ extensions/TextViewerTabWidth/src/TextViewerTabWidthExtension.js
 __pycache__/
 build_tmp
 src/ExtensionApi/ExtensionContext.js
+src/utils/OwnerTrackingList.js

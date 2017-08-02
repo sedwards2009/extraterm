@@ -13,6 +13,8 @@ import * as ExtensionApi from 'extraterm-extension-api';
 import {EtTerminal} from './Terminal';
 import {ViewerElement} from './ViewerElement';
 import {TextViewer} from'./viewers/TextViewer';
+import OwnerTrackingList from './utils/OwnerTrackingList';
+
 
 interface ActiveExtension {
   extensionMetadata: ExtensionMetadata;
@@ -81,7 +83,7 @@ return [];
 
   workspaceOnDidCreateTerminal = new OwnerTrackingEventListenerList<ExtensionApi.Terminal>();
 
-  workspaceRegisterCommandsOnTextViewer = new OwnerTrackingList<CommandRegistration<ExtensionApi.TextViewer>>();
+  workspaceRegisterCommandsOnTextViewer = new OwnerTrackingList<ExtensionContextImpl, CommandRegistration<ExtensionApi.TextViewer>>();
 
   getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
     return _.flatten(this.workspaceRegisterCommandsOnTextViewer.mapWithOwner(
@@ -117,48 +119,7 @@ return [];
 }
 
 
-interface OwnerTrackedPair<T> {
-  ownerExtensionContext: ExtensionContextImpl;
-  thing: T;
-}
-
-
-export class OwnerTrackingList<T> {
-
-  private _things: OwnerTrackedPair<T>[] = [];
-
-  add(ownerExtensionContext: ExtensionContextImpl, thing: T): ExtensionApi.Disposable {
-    const pair = {ownerExtensionContext, thing};
-    this._things.push(pair);
-    return { dispose: () => this._remove(pair)};
-  }
-
-  private _remove(pair: OwnerTrackedPair<T>): void {
-    const index = this._things.indexOf(pair);
-    if (index !== -1) {
-      this._things.splice(index, 1);
-    }
-  }
-
-  removeAllByOwner(ownerExtensionContext: ExtensionContextImpl): void {
-    this._things = this._things.filter(pair => pair.ownerExtensionContext !== ownerExtensionContext);
-  }
-
-  forEach(func: (t: T) => void): void {
-    this._things.forEach(pair => func(pair.thing));
-  }
-
-  map<R>(func: (t: T) => R): R[] {
-    return this._things.map<R>(pair => func(pair.thing));
-  }
-
-  mapWithOwner<R>(func: (owner: ExtensionContextImpl, t: T) => R): R[] {
-    return this._things.map<R>(pair => func(pair.ownerExtensionContext, pair.thing));
-  }
-}
-
-
-class OwnerTrackingEventListenerList<E> extends OwnerTrackingList<(e: E) => any> {
+class OwnerTrackingEventListenerList<E> extends OwnerTrackingList<ExtensionContextImpl, (e: E) => any> {
   emit(e: E): void {
     this.forEach(thing => thing(e));
   }
