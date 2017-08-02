@@ -18,6 +18,14 @@ function textViewerCommandLister(textViewer: TextViewer): CommandEntry[] {
   }];
 }
 
-function textViewerCommandExecutor(textViewer: TextViewer, commandId: string, commandArguments?: object): void {
-  console.log("TextViewerTabWidthExtension.textViewerCommandExecutor");
+async function textViewerCommandExecutor(textViewer: TextViewer, commandId: string, commandArguments?: object): Promise<any> {
+  const selectedTabSize = await textViewer.getOwningTerminal().showNumberInput({
+    title: "Tab Size",
+    value: textViewer.getTabSize(),
+    minimum: 0,
+    maximum: 32
+  });
+  if (selectedTabSize !== undefined) {
+    textViewer.setTabSize(selectedTabSize);
+  }
 }
