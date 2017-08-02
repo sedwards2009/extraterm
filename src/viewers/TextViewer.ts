@@ -91,7 +91,7 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-export class TextViewer extends ViewerElement implements ExtensionApi.TextViewer, Commandable, keybindingmanager.AcceptsKeyBindingManager,
+export class TextViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
     SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "ET-TEXT-VIEWER";

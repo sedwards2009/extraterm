@@ -10,6 +10,8 @@ import * as CodeMirror from 'codemirror';
 import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 import * as ExtensionApi from 'extraterm-extension-api';
+import {EtTerminal} from './Terminal';
+import {ViewerElement} from './ViewerElement';
 import {TextViewer} from'./viewers/TextViewer';
 
 interface ActiveExtension {
@@ -27,9 +29,12 @@ export class ExtensionManager {
 
   private _activeExtensions: ActiveExtension[] = [];
 
+  private _extensionBridge: ExtensionBridge = null;
+
   constructor() {
     this._log = new Logger("ExtensionManager", this);
     this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../extensions" )]);
+    this._extensionBridge = new ExtensionBridge();
   }
 
   startUp(): void {
@@ -40,10 +45,14 @@ export class ExtensionManager {
     }
   }
 
+  getExtensionBridge(): ExtensionBridge {
+    return this._extensionBridge;
+  }
+
   private _startExtension(extensionMetadata: ExtensionMetadata): void {
     if (this._extensionLoader.load(extensionMetadata)) {
       try {
-        const extensionContextImpl = new ExtensionContextImpl(this, extensionMetadata);
+        const extensionContextImpl = this._extensionBridge.createExtensionSpecificContext(extensionMetadata);
         const extensionPublicApi = (<ExtensionApi.ExtensionModule> extensionMetadata.module).activate(extensionContextImpl);
         this._activeExtensions.push({extensionMetadata, extensionPublicApi, extensionContextImpl});
       } catch(ex) {
@@ -51,9 +60,23 @@ export class ExtensionManager {
       }
     }
   }
+}
 
-  workspaceGetTerminals(): TerminalImpl[] {
-    return [];
+
+export class ExtensionBridge {
+
+  private _log: Logger = null;
+
+  constructor() {
+    this._log = new Logger("ExtensionBridge", this);
+  }
+
+  createExtensionSpecificContext(extensionMetadata: ExtensionMetadata): ExtensionContextImpl {
+    return new ExtensionContextImpl(this, extensionMetadata);
+  }
+
+  workspaceGetTerminals(): EtTerminal[] {
+return [];
   }
 
   workspaceOnDidCreateTerminal = new OwnerTrackingEventListenerList<ExtensionApi.Terminal>();
@@ -63,12 +86,13 @@ export class ExtensionManager {
   getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
     return _.flatten(this.workspaceRegisterCommandsOnTextViewer.mapWithOwner(
       (ownerExtensionContext, registration): CommandPaletteRequestTypes.CommandEntry[] => {
-        const rawCommands = registration.commandLister(textViewer);
+        const textViewerImpl = ownerExtensionContext.getTextViewerProxy(textViewer);
+        const rawCommands = registration.commandLister(textViewerImpl);
         
         const target: CommandPaletteRequestTypes.CommandExecutor = {
           executeCommand(commandId: string, options?: object): void {
             const commandIdWithoutPrefix = commandId.slice(ownerExtensionContext.extensionMetadata.name.length+1);
-            registration.commandExecutor(textViewer, commandIdWithoutPrefix, options);
+            registration.commandExecutor(textViewerImpl, commandIdWithoutPrefix, options);
           }
         };
         
@@ -89,6 +113,7 @@ export class ExtensionManager {
         return commands;
       }));
   }
+
 }
 
 
@@ -142,12 +167,30 @@ class OwnerTrackingEventListenerList<E> extends OwnerTrackingList<(e: E) => any>
 
 class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
 
-  workspace: WorkspaceImpl = null;
+  workspace: WorkspaceProxy = null;
 
   codeMirrorModule: typeof CodeMirror = CodeMirror;
 
-  constructor(private _extensionManager: ExtensionManager, public extensionMetadata: ExtensionMetadata) {
-    this.workspace = new WorkspaceImpl(_extensionManager, this);
+  private _terminalProxyMap = new WeakMap<EtTerminal, ExtensionApi.Terminal>();
+  
+  private _textViewerProxyMap = new WeakMap<TextViewer, ExtensionApi.TextViewer>();
+
+  constructor(public extensionBridge: ExtensionBridge, public extensionMetadata: ExtensionMetadata) {
+    this.workspace = new WorkspaceProxy(this);
+  }
+
+  getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal {
+    if ( ! this._terminalProxyMap.has(terminal)) {
+      this._terminalProxyMap.set(terminal, new TerminalProxy(this, terminal));
+    }
+    return this._terminalProxyMap.get(terminal);
+  }
+
+  getTextViewerProxy(textViewer: TextViewer): ExtensionApi.TextViewer {
+    if ( ! this._textViewerProxyMap.has(textViewer)) {
+      this._textViewerProxyMap.set(textViewer, new TextViewerProxy(this, textViewer));
+    }
+    return this._textViewerProxyMap.get(textViewer);
   }
 }
 
@@ -158,17 +201,18 @@ export interface CommandRegistration<V> {
 }
 
 
-class WorkspaceImpl implements ExtensionApi.Workspace {
+class WorkspaceProxy implements ExtensionApi.Workspace {
 
-  constructor(private _extensionManager: ExtensionManager, private _extensionContextImpl: ExtensionContextImpl) {
+  constructor(private _extensionContextImpl: ExtensionContextImpl) {
   }
 
-  getTerminals(): TerminalImpl[] {
-    return this._extensionManager.workspaceGetTerminals();
+  getTerminals(): ExtensionApi.Terminal[] {
+    return this._extensionContextImpl.extensionBridge.workspaceGetTerminals()
+      .map(terminal => this._extensionContextImpl.getTerminalProxy(terminal));
   }
 
   onDidCreateTerminal(listener: (e: ExtensionApi.Terminal) => any): ExtensionApi.Disposable {
-    return this._extensionManager.workspaceOnDidCreateTerminal.add(this._extensionContextImpl, listener);
+    return this._extensionContextImpl.extensionBridge.workspaceOnDidCreateTerminal.add(this._extensionContextImpl, listener);
   }
 
   registerCommandsOnTextViewer(
@@ -176,15 +220,47 @@ class WorkspaceImpl implements ExtensionApi.Workspace {
       commandExecutor: (textViewer: ExtensionApi.TextViewer, commandId: string, commandArguments?: object) => void
     ): ExtensionApi.Disposable {
 
-    return this._extensionManager.workspaceRegisterCommandsOnTextViewer.add(this._extensionContextImpl,
+    return this._extensionContextImpl.extensionBridge.workspaceRegisterCommandsOnTextViewer.add(this._extensionContextImpl,
       {commandLister, commandExecutor});
   }
 }
 
 
-class TerminalImpl implements ExtensionApi.Terminal {
+class TerminalProxy implements ExtensionApi.Terminal {
 
-  write(text: string): void {
+  constructor(private _extensionContextImpl: ExtensionContextImpl, private _terminal: EtTerminal) {
+  }
 
+  type(text: string): void {
+    this._terminal.send(text);
+  }
+
+  showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
+return null;
+  }
+}
+
+
+class ViewerProxy implements ExtensionApi.Viewer {
+  constructor(public _extensionContextImpl: ExtensionContextImpl, viewer: ViewerElement) {
+  }
+
+  getOwningTerminal(): ExtensionApi.Terminal {
+return null;
+  }
+}
+
+
+class TextViewerProxy extends ViewerProxy implements ExtensionApi.TextViewer {
+  constructor(_extensionContextImpl: ExtensionContextImpl, private _textViewer: TextViewer) {
+    super(_extensionContextImpl, _textViewer);
+  }
+  
+  getTabSize(): number {
+    return this._textViewer.getTabSize();
+  }
+
+  setTabSize(size: number): void {
+    this._textViewer.setTabSize(size);
   }
 }

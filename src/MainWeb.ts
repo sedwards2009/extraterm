@@ -607,7 +607,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
     commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => {
       let result: CommandEntry[] = commandable.getCommandPaletteEntries(commandableStack);
       if (commandable instanceof TextViewer) {
-        result = [...result, ...extensionManager.getWorkspaceTextViewerCommands(commandable)];
+        result = [...result, ...extensionManager.getExtensionBridge().getWorkspaceTextViewerCommands(commandable)];
       }
       return result;
     }));

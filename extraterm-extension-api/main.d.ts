@@ -21,11 +21,43 @@ export interface Event<T> {
 }
 
 export interface Terminal {
-  write(text: string): void;
+  type(text: string): void;
+
+  /**
+   * Show an input box requesting a number.
+   * 
+   */
+  showNumberInput(options: NumberInputOptions): Promise<number | undefined>;
+}
+
+export interface NumberInputOptions {
+  /**
+   * The title of the input box.
+   */
+  title: string;
+
+  /**
+   * The default value of the input box.
+   */
+  value: number;
+
+  /**
+   * The minimum acceptable value.
+   */
+  minimum?: number;
+
+  /**
+   * The maximum acceptable value.
+   */
+  maximum?: number;
+}
+
+export interface Viewer {
+  getOwningTerminal(): Terminal;
 }
 
 
-export interface TextViewer {
+export interface TextViewer extends Viewer {
   getTabSize(): number;
   setTabSize(size: number): void;
 }
