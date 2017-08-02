@@ -36,6 +36,8 @@ export class ExtensionManager {
   private _extensionBridge: ExtensionBridge = null;
 
   constructor() {
+    PopDownNumberDialog.init();
+
     this._log = new Logger("ExtensionManager", this);
     this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../extensions" )]);
     this._extensionBridge = new ExtensionBridge();
@@ -70,6 +72,8 @@ export class ExtensionManager {
 export class ExtensionBridge {
 
   private _log: Logger = null;
+
+  private _numberInputDialog: PopDownNumberDialog = null;
 
   constructor() {
     this._log = new Logger("ExtensionBridge", this);
@@ -116,6 +120,31 @@ return [];
 
         return commands;
       }));
+  }
+
+  showNumberInput(terminal: EtTerminal, options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
+    if (this._numberInputDialog == null) {
+      this._numberInputDialog = <PopDownNumberDialog> window.document.createElement(PopDownNumberDialog.TAG_NAME);
+      window.document.body.appendChild(this._numberInputDialog);
+    }
+    this._numberInputDialog.setTitlePrimary(options.title);
+    this._numberInputDialog.setMinimum(options.minimum !== undefined ? options.minimum : Number.MIN_SAFE_INTEGER);
+    this._numberInputDialog.setMaximum(options.maximum !== undefined ? options.maximum : Number.MAX_SAFE_INTEGER);
+    this._numberInputDialog.setValue(options.value);
+
+    const rect = terminal.getBoundingClientRect();
+    this._numberInputDialog.open(rect.left, rect.top, rect.width, rect.height);
+    this._numberInputDialog.focus();
+
+    return new Promise((resolve, reject) => {
+      const selectedHandler = (ev: CustomEvent): void => {
+        this._numberInputDialog.removeEventListener('selected', selectedHandler);
+        resolve(ev.detail.value == null ? undefined : ev.detail.value);
+        terminal.focus();
+      };
+
+      this._numberInputDialog.addEventListener('selected', selectedHandler);
+    });
   }
 
 }
@@ -191,8 +220,6 @@ class WorkspaceProxy implements ExtensionApi.Workspace {
 
 class TerminalProxy implements ExtensionApi.Terminal {
 
-  private _numberInputDialog: PopDownNumberDialog = null;
-
   constructor(private _extensionContextImpl: ExtensionContextImpl, private _terminal: EtTerminal) {
   }
 
@@ -200,30 +227,8 @@ class TerminalProxy implements ExtensionApi.Terminal {
     this._terminal.send(text);
   }
 
-// FIXME move this the bridge
   showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
-    if (this._numberInputDialog == null) {
-      this._numberInputDialog = <PopDownNumberDialog> window.document.createElement(PopDownNumberDialog.TAG_NAME);
-      window.document.body.appendChild(this._numberInputDialog);
-    }
-    this._numberInputDialog.setTitlePrimary(options.title);
-    this._numberInputDialog.setMinimum(options.minimum !== undefined ? options.minimum : Number.MIN_SAFE_INTEGER);
-    this._numberInputDialog.setMaximum(options.maximum !== undefined ? options.maximum : Number.MAX_SAFE_INTEGER);
-    this._numberInputDialog.setValue(options.value);
-
-    const rect = this._terminal.getBoundingClientRect();
-    this._numberInputDialog.open(rect.left, rect.top, rect.width, rect.height);
-    this._numberInputDialog.focus();
-
-    return new Promise((resolve, reject) => {
-      const selectedHandler = (ev: CustomEvent): void => {
-        this._numberInputDialog.removeEventListener('selected', selectedHandler);
-        resolve(ev.detail.value == null ? undefined : ev.detail.value);
-        this._terminal.focus();
-      };
-
-      this._numberInputDialog.addEventListener('selected', selectedHandler);
-    });
+    return this._extensionContextImpl.extensionBridge.showNumberInput(this._terminal, options);
   }
 }
 
