@@ -50,12 +50,6 @@ const PALETTE_GROUP = "textviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
 
-const COMMAND_SYNTAX_HIGHLIGHTING = "syntaxHighlighting";
-const EVENT_COMMAND_SYNTAX_HIGHLIGHTING = "TEXTVIEWER_EVENT_COMMAND_SYNTAX_HIGHLIGHTING";
-
-const COMMAND_TAB_SIZE = "tabSize";
-const EVENT_COMMAND_TAB_SIZE = "TEXTVIEWER_EVENT_COMMAND_TAB_WIDTH";
-
 const COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,
   COMMAND_TYPE_SELECTION,
@@ -890,9 +884,7 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     let commandList: CommandEntry[] = [
       { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", commandExecutor: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this },
-      { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax: " + this._getMimeTypeName(), commandExecutor: this },
-      { id: COMMAND_TAB_SIZE, group: PALETTE_GROUP, iconRight: "", label: "Tab Size: " + this.getTabSize(), commandExecutor: this }
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
     if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
@@ -946,14 +938,6 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
         
       case COMMAND_OPEN_COMMAND_PALETTE:
         dispatchCommandPaletteRequest(this);
-        break;
-
-      case COMMAND_SYNTAX_HIGHLIGHTING:
-        this.dispatchEvent(new CustomEvent(EVENT_COMMAND_SYNTAX_HIGHLIGHTING, {bubbles: true, composed: true, detail: { srcElement: this } } ));
-        break;
-
-      case COMMAND_TAB_SIZE:
-        this.dispatchEvent(new CustomEvent(EVENT_COMMAND_TAB_SIZE, {bubbles: true, composed: true, detail: { srcElement: this } } ));
         break;
 
       default:

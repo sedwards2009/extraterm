@@ -22,9 +22,6 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ThemeTypes from './Theme';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
-
-import * as InternalExtratermApi from './InternalExtratermApi';
-
 import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
 import * as path from 'path';
@@ -167,8 +164,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _themes: ThemeTypes.ThemeInfo[];
 
-  private _internalExtratermApi: InternalExtratermApi.InternalExtratermApi;
-
   private _lastFocus: Element;
 
   private _splitLayout: SplitLayout;
@@ -182,7 +177,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._configManager = null;
     this._keyBindingManager = null;
     this._themes = [];
-    this._internalExtratermApi = null;
     this._splitLayout = new SplitLayout();
   }
   
@@ -198,11 +192,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  setInternalExtratermApi(api: InternalExtratermApi.InternalExtratermApi): void {
-    this._internalExtratermApi = api;
-    api.setTopLevel(this);
-  }
-
   setConfigManager(configManager: ConfigManager): void {
     this._configManager = configManager;
   }
@@ -615,7 +604,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
-    this._internalExtratermApi.addTab(newTerminal);
     newTerminal.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     return newTerminal;
   }
@@ -708,7 +696,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     viewerTab.setViewerElement(viewerElement);
 
     this._updateTabTitle(viewerTab);
-    this._internalExtratermApi.addTab(viewerTab);
     return viewerTab;
   }
   

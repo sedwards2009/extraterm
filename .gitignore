@@ -31,8 +31,6 @@ src/MainWeb.js
 src/MainWebUi.js
 src/MimeTypeDetector.js
 src/MimeTypeDetectorTest.js
-src/PluginApi.js
-src/PluginManager.js
 src/PtyConnector.js
 src/PtyDirect.js
 src/PtyProxy.js
@@ -56,7 +54,6 @@ src/WebIpc.js
 src/WebResourceLoader.js
 src/WindowMessages.js
 src/bootstrap.js
-src/plugins/TerminalViewerExtra/TerminalViewerExtra.js
 src/ptyconnectorfactory.js
 src/test/admzip_test.js
 src/test/charattr_test.js
@@ -89,7 +86,6 @@ src/gui/Splitter.js
 src/gui/Tab.js
 src/gui/TabWidget.js
 src/gui/Util.js
-src/plugins/TextViewer/TextViewerPlugin.js
 src/ThemeableElementBase.js
 src/ViewerElementTypes.js
 src/settings/SettingsTab.js

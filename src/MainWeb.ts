@@ -24,9 +24,6 @@ import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable,
   from './CommandPaletteRequestTypes';
 import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-import * as PluginApi from './PluginApi';
-import * as PluginManager from './PluginManager';
-import * as InternalExtratermApi from './InternalExtratermApi';
 import {ExtensionManager} from './ExtensionManager';
 import {MainWebUi} from './MainWebUi';
 import {EtTerminal} from './Terminal';
@@ -80,8 +77,6 @@ let keyBindingManager: KeyBindingManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configManager: ConfigManagerImpl = null;
-let pluginManager: PluginManager.PluginManager = null;
-let internalExtratermApi: InternalExtratermApiImpl = null;
 let extensionManager: ExtensionManager = null;
 
 /**
@@ -108,7 +103,6 @@ export function startUp(): void {
             .then( () => {
 
     startUpComponents();
-    startUpPlugins();
 
     const doc = window.document;
     doc.body.classList.remove("preparing");
@@ -186,16 +180,8 @@ function startUpComponents(): void {
   ResizeCanary.init();
 }
 
-function startUpPlugins(): void {
-  // Get the plugins loaded.
-  pluginManager = new PluginManager.PluginManager(path.join(__dirname, PLUGINS_DIRECTORY));
-  internalExtratermApi = new InternalExtratermApiImpl();
-  pluginManager.load(internalExtratermApi);
-}
-
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
-  mainWebUi.setInternalExtratermApi(internalExtratermApi);
   config.injectConfigManager(mainWebUi, configManager);
   keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
@@ -745,39 +731,5 @@ class KeyBindingManagerImpl {
    */
   unregisterChangeListener(key: any): void {
     this._listenerList = this._listenerList.filter( (tup) => tup.key !== key);
-  }
-}
-
-class InternalExtratermApiImpl implements InternalExtratermApi.InternalExtratermApi {
-
-  private _topLevelElement: HTMLElement = null;
-
-  private _topLevelEventListeners: PluginApi.ElementListener[] = [];
-
-  private _tabElements: HTMLElement[] = [];
-
-  private _tabEventListeners: PluginApi.ElementListener[] = [];
- 
-
-  addNewTopLevelEventListener(callback: PluginApi.ElementListener): void {
-    this._topLevelEventListeners.push(callback);
-  }
-
-  setTopLevel(el: HTMLElement): void {
-    this._topLevelElement = el;
-    this._topLevelEventListeners.forEach( listener => listener(el) );
-  }
-
-  addNewTabEventListener(callback: PluginApi.ElementListener): void {
-    this._tabEventListeners.push(callback);
-  }
-
-  addTab(el: HTMLElement): void {
-    this._tabElements.push(el);
-    this._tabEventListeners.forEach( listener => listener(el) );
-  }
-
-  removeTab(el: HTMLElement): void {
-    this._tabElements = this._tabElements.filter( listEl => listEl !== el );
   }
 }
