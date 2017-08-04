@@ -6,6 +6,7 @@
 import * as path from 'path';
 import * as _ from 'lodash';
 import Logger from './Logger';
+import * as he from 'he';
 import * as DomUtils from './DomUtils';
 import * as CodeMirror from 'codemirror';
 import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
@@ -15,6 +16,7 @@ import {EtTerminal} from './Terminal';
 import {ViewerElement} from './ViewerElement';
 import {TextViewer} from'./viewers/TextViewer';
 import OwnerTrackingList from './utils/OwnerTrackingList';
+import {PopDownListPicker} from './gui/PopDownListPicker';
 import {PopDownNumberDialog} from './gui/PopDownNumberDialog';
 
 
@@ -74,6 +76,8 @@ export class ExtensionBridge {
   private _log: Logger = null;
 
   private _numberInputDialog: PopDownNumberDialog = null;
+
+  private _listPicker: PopDownListPicker<IdLabelPair> = null;
 
   constructor() {
     this._log = new Logger("ExtensionBridge", this);
@@ -147,6 +151,73 @@ return [];
     });
   }
 
+  showListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
+    if (this._listPicker == null) {
+      this._listPicker = <PopDownListPicker<IdLabelPair>> window.document.createElement(PopDownListPicker.TAG_NAME);
+      this._listPicker.setFormatEntriesFunc( (filteredEntries: IdLabelPair[], selectedId: string, filterInputValue: string): string => {
+        return filteredEntries.map( (entry): string => {
+          return `<div class='CLASS_RESULT_ENTRY ${entry.id === selectedId ? PopDownListPicker.CLASS_RESULT_SELECTED : ""}' ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>
+            ${he.encode(entry.label)}
+          </div>`;
+        }).join("");
+      });
+
+      this._listPicker.setFilterAndRankEntriesFunc(this._listPickerFilterAndRankEntries.bind(this));
+
+      window.document.body.appendChild(this._listPicker);
+    }
+
+    this._listPicker.setTitlePrimary(options.title);
+
+    const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item}));
+    this._listPicker.setEntries(convertedItems);
+    this._listPicker.setSelected("" + options.selectedItemIndex);
+
+    const rect = terminal.getBoundingClientRect();
+    this._listPicker.open(rect.left, rect.top, rect.width, rect.height);
+    this._listPicker.focus();
+
+    return new Promise((resolve, reject) => {
+      const selectedHandler = (ev: CustomEvent): void => {
+        this._listPicker.removeEventListener('selected', selectedHandler);
+        resolve(ev.detail.selected == null ? undefined : parseInt(ev.detail.selected, 10));
+        terminal.focus();
+      };
+
+      this._listPicker.addEventListener('selected', selectedHandler);
+    });
+  }
+      
+  _listPickerFilterAndRankEntries(entries: IdLabelPair[], filterText: string): IdLabelPair[] {
+    const lowerFilterText = filterText.toLowerCase().trim();
+    const filtered = entries.filter( (entry: IdLabelPair): boolean => {
+      return entry.label.toLowerCase().indexOf(lowerFilterText) !== -1;
+    });
+
+    const rankFunc = (entry: IdLabelPair, lowerFilterText: string): number => {
+      const lowerName = entry.label.toLowerCase();
+      if (lowerName === lowerFilterText) {
+        return 1000;
+      }
+
+      const pos = lowerName.indexOf(lowerFilterText);
+      if (pos !== -1) {
+        return 500 - pos; // Bias it for matches at the front of  the text.
+      }
+
+      return 0;
+    };
+
+    filtered.sort( (a: IdLabelPair,b: IdLabelPair): number => rankFunc(b, lowerFilterText) - rankFunc(a, lowerFilterText));
+
+    return filtered;
+  }
+}
+
+
+interface IdLabelPair {
+  id: string;
+  label: string;
 }
 
 
@@ -230,6 +301,11 @@ class TerminalProxy implements ExtensionApi.Terminal {
   showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
     return this._extensionContextImpl.extensionBridge.showNumberInput(this._terminal, options);
   }
+
+  showListPicker(options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
+    return this._extensionContextImpl.extensionBridge.showListPicker(this._terminal, options);
+  }
+
 }
 
 
@@ -260,5 +336,13 @@ class TextViewerProxy extends ViewerProxy implements ExtensionApi.TextViewer {
 
   setTabSize(size: number): void {
     this._textViewer.setTabSize(size);
+  }
+
+  getMimeType():string {
+    return this._textViewer.getMimeType();
+  }
+
+  setMimeType(mimeType: string): void {
+    this._textViewer.setMimeType(mimeType);
   }
 }

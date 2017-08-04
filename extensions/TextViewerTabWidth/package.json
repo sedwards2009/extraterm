@@ -1,6 +1,6 @@
 {
   "name": "text-viewer-tab-width",
-  "description": "Text Viewer tab width extension for extraterm",
+  "description": "Text Viewer tab width selector extension for extraterm",
   "version": "1.0.0",
   "devDependencies": {
     "typescript": "2.4.2",

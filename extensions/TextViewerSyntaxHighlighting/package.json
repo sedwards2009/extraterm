@@ -1,0 +1,14 @@
+{
+  "name": "text-viewer-syntax_highlighting",
+  "description": "Text Viewer syntax highlighting selector extension for extraterm",
+  "version": "1.0.0",
+  "devDependencies": {
+    "typescript": "2.4.2",
+    "extraterm-extension-api": "file:../../extraterm-extension-api/"
+  },
+  "main": "src/TextViewerSyntaxHighlightingExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {}
+}

@@ -28,6 +28,8 @@ export interface Terminal {
    * 
    */
   showNumberInput(options: NumberInputOptions): Promise<number | undefined>;
+
+  showListPicker(options: ListPickerOptions): Promise<number | undefined>;
 }
 
 export interface NumberInputOptions {
@@ -52,6 +54,12 @@ export interface NumberInputOptions {
   maximum?: number;
 }
 
+export interface ListPickerOptions {
+  title: string;
+  items: string[];
+  selectedItemIndex: number;
+}
+
 export interface Viewer {
   getOwningTerminal(): Terminal;
 }
@@ -60,6 +68,8 @@ export interface Viewer {
 export interface TextViewer extends Viewer {
   getTabSize(): number;
   setTabSize(size: number): void;
+  getMimeType(): string;
+  setMimeType(mimeType: string): void;
 }
 
 
