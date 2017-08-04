@@ -182,8 +182,8 @@ function nextDocumentOrderNodeUp(currentNode: Node): Node {
   }
   return nextDocumentOrderNodeUp(currentNode.parentNode);
 }
-  
-export function getShadowRoot(self: HTMLElement): ShadowRoot {
+
+export function getShadowRoot(self: Element): ShadowRoot {
     return self.webkitShadowRoot ? self.webkitShadowRoot : self.shadowRoot;
 }
 
@@ -541,4 +541,34 @@ export function nodePathToRoot(node: Node): Node[] {
     }
   }
   return path;
+}
+
+/**
+ * Get the list of active/focused elements and their nested active elements.
+ * 
+ * This function traverses Shadow DOM boundaries to find nested
+ * active/focused elements starting from the top window.
+ * 
+ * @returns list of active elements
+ */
+export function activeNestedElements(): Element[] {
+  const result: Element[] = [];
+
+  let activeElement = window.document.activeElement;
+  if (activeElement != null) {
+
+    while (true) {
+      result.push(activeElement);
+      const shadowRoot = getShadowRoot(<HTMLElement> activeElement);
+      if (shadowRoot == null) {
+        break;
+      }
+      const nextActiveElement = shadowRoot.activeElement;
+      if (nextActiveElement == null) {
+        break;
+      }
+      activeElement = nextActiveElement;
+    }
+  }
+  return result;
 }

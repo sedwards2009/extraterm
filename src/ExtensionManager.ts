@@ -127,6 +127,11 @@ return [];
   }
 
   showNumberInput(terminal: EtTerminal, options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
+    let lastFocus: HTMLElement = currentDeepFocusedViewerElement();
+    if (lastFocus == null) {
+      lastFocus = terminal;
+    }
+
     if (this._numberInputDialog == null) {
       this._numberInputDialog = <PopDownNumberDialog> window.document.createElement(PopDownNumberDialog.TAG_NAME);
       window.document.body.appendChild(this._numberInputDialog);
@@ -144,7 +149,7 @@ return [];
       const selectedHandler = (ev: CustomEvent): void => {
         this._numberInputDialog.removeEventListener('selected', selectedHandler);
         resolve(ev.detail.value == null ? undefined : ev.detail.value);
-        terminal.focus();
+        lastFocus.focus();
       };
 
       this._numberInputDialog.addEventListener('selected', selectedHandler);
@@ -152,6 +157,11 @@ return [];
   }
 
   showListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
+    let lastFocus: HTMLElement = currentDeepFocusedViewerElement();
+    if (lastFocus == null) {
+      lastFocus = terminal;
+    }
+
     if (this._listPicker == null) {
       this._listPicker = <PopDownListPicker<IdLabelPair>> window.document.createElement(PopDownListPicker.TAG_NAME);
       this._listPicker.setFormatEntriesFunc( (filteredEntries: IdLabelPair[], selectedId: string, filterInputValue: string): string => {
@@ -181,7 +191,7 @@ return [];
       const selectedHandler = (ev: CustomEvent): void => {
         this._listPicker.removeEventListener('selected', selectedHandler);
         resolve(ev.detail.selected == null ? undefined : parseInt(ev.detail.selected, 10));
-        terminal.focus();
+        lastFocus.focus();
       };
 
       this._listPicker.addEventListener('selected', selectedHandler);
@@ -214,6 +224,11 @@ return [];
   }
 }
 
+function currentDeepFocusedViewerElement(): ViewerElement {
+  const elements = DomUtils.activeNestedElements();
+  const viewerElements = <ViewerElement[]> elements.filter(el => el instanceof ViewerElement);
+  return viewerElements.length === 0 ? null : viewerElements[0];
+}
 
 interface IdLabelPair {
   id: string;
