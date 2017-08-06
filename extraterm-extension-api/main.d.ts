@@ -80,8 +80,15 @@ export interface FrameViewer extends Viewer {
 }
 
 export interface TerminalOutputViewer extends Viewer {
+
   viewerType: 'terminal-output';
 
+  /**
+   * Returns true if this output viewer is connected to a live PTY and emulator.
+   * 
+   * @return true if this output viewer is connected to a live PTY and emulator.
+   */
+  isLive(): boolean;
 }
 
 export interface TextViewer extends Viewer {

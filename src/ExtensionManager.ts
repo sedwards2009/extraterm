@@ -451,6 +451,10 @@ class TerminalOutputProxy extends ViewerProxy implements ExtensionApi.TerminalOu
   constructor(public _extensionContextImpl: ExtensionContextImpl, private _terminalViewer: TerminalViewer) {
     super(_extensionContextImpl, _terminalViewer);
   }
+
+  isLive(): boolean {
+    return this._terminalViewer.getEmulator() != null;
+  }
 }
 
 
