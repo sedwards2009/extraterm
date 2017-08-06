@@ -117,6 +117,10 @@ export interface Workspace {
   onDidCreateTerminal: Event<Terminal>;
 
   // onWillDestroyTerminal: Event<Terminal>;
+  registerCommandsOnTerminal(
+    commandLister: (terminal: Terminal) => CommandEntry[],
+    commandExecutor: (terminal: Terminal, commandId: string, commandArguments?: object) => void): Disposable;
+
   registerCommandsOnTextViewer(
     commandLister: (textViewer: TextViewer) => CommandEntry[],
     commandExecutor: (textViewer: TextViewer, commandId: string, commandArguments?: object) => void): Disposable;

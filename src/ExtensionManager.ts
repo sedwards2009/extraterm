@@ -93,37 +93,63 @@ return [];
 
   workspaceOnDidCreateTerminal = new OwnerTrackingEventListenerList<ExtensionApi.Terminal>();
 
+  workspaceRegisterCommandsOnTerminal = new OwnerTrackingList<ExtensionContextImpl, CommandRegistration<ExtensionApi.Terminal>>();
+
   workspaceRegisterCommandsOnTextViewer = new OwnerTrackingList<ExtensionContextImpl, CommandRegistration<ExtensionApi.TextViewer>>();
 
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
-    return _.flatten(this.workspaceRegisterCommandsOnTextViewer.mapWithOwner(
+  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[] {
+    return _.flatten(this.workspaceRegisterCommandsOnTerminal.mapWithOwner(
       (ownerExtensionContext, registration): CommandPaletteRequestTypes.CommandEntry[] => {
-        const textViewerImpl = ownerExtensionContext.getTextViewerProxy(textViewer);
-        const rawCommands = registration.commandLister(textViewerImpl);
+        const terminalProxy = ownerExtensionContext.getTerminalProxy(terminal);
+        const rawCommands = registration.commandLister(terminalProxy);
         
         const target: CommandPaletteRequestTypes.CommandExecutor = {
           executeCommand(commandId: string, options?: object): void {
             const commandIdWithoutPrefix = commandId.slice(ownerExtensionContext.extensionMetadata.name.length+1);
-            registration.commandExecutor(textViewerImpl, commandIdWithoutPrefix, options);
+            registration.commandExecutor(terminalProxy, commandIdWithoutPrefix, options);
           }
         };
         
-        const commands: CommandPaletteRequestTypes.CommandEntry[] = [];
-        for (const rawCommand of rawCommands) {
-          commands.push({
-            id: ownerExtensionContext.extensionMetadata.name + '.' + rawCommand.id,
-            group: rawCommand.group,
-            iconLeft: rawCommand.iconLeft,
-            iconRight: rawCommand.iconRight,
-            label: rawCommand.label,
-            shortcut: '',
-            commandExecutor: target,
-            commandArguments: rawCommand.commandArguments
-          });
-        }
-
-        return commands;
+        return this._formatCommands(rawCommands, target, ownerExtensionContext.extensionMetadata.name);
       }));
+  }
+
+  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
+    return _.flatten(this.workspaceRegisterCommandsOnTextViewer.mapWithOwner(
+      (ownerExtensionContext, registration): CommandPaletteRequestTypes.CommandEntry[] => {
+        const textViewerProxy = ownerExtensionContext.getTextViewerProxy(textViewer);
+        const rawCommands = registration.commandLister(textViewerProxy);
+        
+        const target: CommandPaletteRequestTypes.CommandExecutor = {
+          executeCommand(commandId: string, options?: object): void {
+            const commandIdWithoutPrefix = commandId.slice(ownerExtensionContext.extensionMetadata.name.length+1);
+            registration.commandExecutor(textViewerProxy, commandIdWithoutPrefix, options);
+          }
+        };
+        
+        return this._formatCommands(rawCommands, target, ownerExtensionContext.extensionMetadata.name);
+      }));
+  }
+
+  private _formatCommands(
+      rawCommands: ExtensionApi.CommandEntry[],
+      commandExecutor: CommandPaletteRequestTypes.CommandExecutor,
+      commandPrefix: string): CommandPaletteRequestTypes.CommandEntry[] {
+
+    const commands: CommandPaletteRequestTypes.CommandEntry[] = [];
+    for (const rawCommand of rawCommands) {
+      commands.push({
+        id: commandPrefix + '.' + rawCommand.id,
+        group: rawCommand.group,
+        iconLeft: rawCommand.iconLeft,
+        iconRight: rawCommand.iconRight,
+        label: rawCommand.label,
+        shortcut: '',
+        commandExecutor,
+        commandArguments: rawCommand.commandArguments
+      });
+    }
+    return commands;
   }
 
   showNumberInput(terminal: EtTerminal, options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
@@ -291,6 +317,15 @@ class WorkspaceProxy implements ExtensionApi.Workspace {
 
   onDidCreateTerminal(listener: (e: ExtensionApi.Terminal) => any): ExtensionApi.Disposable {
     return this._extensionContextImpl.extensionBridge.workspaceOnDidCreateTerminal.add(this._extensionContextImpl, listener);
+  }
+
+  registerCommandsOnTerminal(
+      commandLister: (terminal: ExtensionApi.Terminal) => ExtensionApi.CommandEntry[],
+      commandExecutor: (terminal: ExtensionApi.Terminal, commandId: string, commandArguments?: object) => void
+    ): ExtensionApi.Disposable {
+
+    return this._extensionContextImpl.extensionBridge.workspaceRegisterCommandsOnTerminal.add(this._extensionContextImpl,
+      {commandLister, commandExecutor});
   }
 
   registerCommandsOnTextViewer(

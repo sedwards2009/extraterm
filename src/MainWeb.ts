@@ -592,7 +592,9 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
 
     commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => {
       let result: CommandEntry[] = commandable.getCommandPaletteEntries(commandableStack);
-      if (commandable instanceof TextViewer) {
+      if (commandable instanceof EtTerminal) {
+        result = [...result, ...extensionManager.getExtensionBridge().getWorkspaceTerminalCommands(commandable)];
+      } else if (commandable instanceof TextViewer) {
         result = [...result, ...extensionManager.getExtensionBridge().getWorkspaceTextViewerCommands(commandable)];
       }
       return result;
