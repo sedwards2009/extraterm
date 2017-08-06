@@ -18,6 +18,8 @@ import {TextViewer} from'./viewers/TextViewer';
 import OwnerTrackingList from './utils/OwnerTrackingList';
 import {PopDownListPicker} from './gui/PopDownListPicker';
 import {PopDownNumberDialog} from './gui/PopDownNumberDialog';
+import {EmbeddedViewer} from './EmbeddedViewer';
+import {TerminalViewer} from './viewers/TerminalViewer';
 
 
 interface ActiveExtension {
@@ -117,7 +119,7 @@ return [];
   getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
     return _.flatten(this.workspaceRegisterCommandsOnTextViewer.mapWithOwner(
       (ownerExtensionContext, registration): CommandPaletteRequestTypes.CommandEntry[] => {
-        const textViewerProxy = ownerExtensionContext.getTextViewerProxy(textViewer);
+        const textViewerProxy = <TextViewerProxy> ownerExtensionContext.getViewerProxy(textViewer);
         const rawCommands = registration.commandLister(textViewerProxy);
         
         const target: CommandPaletteRequestTypes.CommandExecutor = {
@@ -279,7 +281,7 @@ class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
 
   private _terminalProxyMap = new WeakMap<EtTerminal, ExtensionApi.Terminal>();
   
-  private _textViewerProxyMap = new WeakMap<TextViewer, ExtensionApi.TextViewer>();
+  private _viewerProxyMap = new WeakMap<ViewerElement, ExtensionApi.Viewer>();
 
   constructor(public extensionBridge: ExtensionBridge, public extensionMetadata: ExtensionMetadata) {
     this.workspace = new WorkspaceProxy(this);
@@ -299,11 +301,28 @@ class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
     return this._terminalProxyMap.get(terminal);
   }
 
-  getTextViewerProxy(textViewer: TextViewer): ExtensionApi.TextViewer {
-    if ( ! this._textViewerProxyMap.has(textViewer)) {
-      this._textViewerProxyMap.set(textViewer, new TextViewerProxy(this, textViewer));
+  getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer {
+    if ( ! this._viewerProxyMap.has(viewer)) {
+      const proxy = this._createViewerProxy(viewer);
+      if (proxy === null) {
+        return null;
+      }
+      this._viewerProxyMap.set(viewer, proxy);
     }
-    return this._textViewerProxyMap.get(textViewer);
+    return this._viewerProxyMap.get(viewer);
+  }
+
+  private _createViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer {
+      if (viewer instanceof TerminalViewer) {
+        return new TerminalOutputProxy(this, viewer);
+      }
+      if (viewer instanceof TextViewer) {
+        return new TextViewerProxy(this, viewer);
+      }
+      if (viewer instanceof EmbeddedViewer) {
+        return new FrameViewerProxy(this, viewer);
+      }
+      return null;
   }
 }
 
@@ -368,6 +387,8 @@ class TerminalTabProxy implements ExtensionApi.Tab {
 
 
 class TerminalProxy implements ExtensionApi.Terminal {
+  
+  viewerType: 'terminal-output';
 
   constructor(private _extensionContextImpl: ExtensionContextImpl, private _terminal: EtTerminal) {
   }
@@ -379,10 +400,26 @@ class TerminalProxy implements ExtensionApi.Terminal {
   type(text: string): void {
     this._terminal.send(text);
   }
+
+  getViewers(): ExtensionApi.Viewer[] {
+    return this._terminal.getViewerElements().map(viewer => {
+      
+      if (viewer instanceof TerminalViewer) {
+
+      } else if (viewer instanceof EmbeddedViewer) {
+
+      } else {
+        return null;
+      }
+    });
+  }
 }
 
 
-class ViewerProxy implements ExtensionApi.Viewer {
+abstract class ViewerProxy implements ExtensionApi.Viewer {
+
+  viewerType: string;
+
   constructor(public _extensionContextImpl: ExtensionContextImpl, public _viewer: ViewerElement) {
   }
 
@@ -407,8 +444,37 @@ class ViewerProxy implements ExtensionApi.Viewer {
   }
 }
 
+class TerminalOutputProxy extends ViewerProxy implements ExtensionApi.TerminalOutputViewer {
+
+  viewerType: 'terminal-output';
+
+  constructor(public _extensionContextImpl: ExtensionContextImpl, private _terminalViewer: TerminalViewer) {
+    super(_extensionContextImpl, _terminalViewer);
+  }
+}
+
+
+class FrameViewerProxy extends ViewerProxy implements ExtensionApi.FrameViewer {
+
+  viewerType: 'frame';
+
+  constructor(public _extensionContextImpl: ExtensionContextImpl, private _embeddedViewer: EmbeddedViewer) {
+    super(_extensionContextImpl, _embeddedViewer);
+  }
+
+  getContents(): ExtensionApi.Viewer {
+    const viewerElement = this._embeddedViewer.getViewerElement();
+    if (viewerElement !== null) {
+      return this._extensionContextImpl.getViewerProxy(viewerElement);
+    }
+    return null; 
+  }
+}
 
 class TextViewerProxy extends ViewerProxy implements ExtensionApi.TextViewer {
+
+  viewerType: 'text';
+
   constructor(_extensionContextImpl: ExtensionContextImpl, private _textViewer: TextViewer) {
     super(_extensionContextImpl, _textViewer);
   }

@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import * as utf8 from 'utf8';
+import {clipboard} from 'electron';
 
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
@@ -18,28 +19,20 @@ import * as ThemeTypes from './Theme';
 import {EmbeddedViewer} from './EmbeddedViewer';
 import {CommandPlaceHolder} from './CommandPlaceholder';
 import {TerminalViewer} from './viewers/TerminalViewer';
-import * as TerminalViewerTypes from './viewers/TerminalViewerTypes';
+import {TextDecoration, BookmarkRef} from './viewers/TerminalViewerTypes';
 import {TextViewer} from './viewers/TextViewer';
 import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
-import * as keybindingmanager from './KeyBindingManager';
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
-
+import {KeyBindingManager, injectKeyBindingManager, AcceptsKeyBindingManager} from './KeyBindingManager';
 import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
-
-// import EtMarkdownViewer = require('./viewers/markdownviewer');
 import Logger from './Logger';
 import LogDecorator from './LogDecorator';
 import * as DomUtils from './DomUtils';
 import * as Term from './Term';
 import {ScrollBar} from './gui/ScrollBar';
 import * as util from './gui/Util';
-
-import * as Electron from 'electron';
-const clipboard = Electron.clipboard;
-
 import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
@@ -47,15 +40,8 @@ import {FrameFinder} from './FrameFinderType';
 import * as MmeTypeDetector from './MimeTypeDetector';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import * as SupportsClipboardPaste from './SupportsClipboardPaste';
+import {Config, ConfigManager, CommandLineAction, injectConfigManager, AcceptsConfigManager} from './Config';
 
-import * as config from './Config';
-type Config = config.Config;
-type ConfigManager = config.ConfigManager;
-
-type CommandLineAction = config.CommandLineAction;
-
-type TextDecoration = TerminalViewerTypes.TextDecoration;
-type BookmarkRef = TerminalViewerTypes.BookmarkRef;
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
 const VisualState = ViewerElementTypes.VisualState;
@@ -141,8 +127,8 @@ interface WriteBufferStatus {
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-export class EtTerminal extends ThemeableElementBase implements Commandable,
-    keybindingmanager.AcceptsKeyBindingManager, config.AcceptsConfigManager {
+export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingManager,
+    AcceptsConfigManager {
   
   /**
    * The HTML tag name of this element.
@@ -489,6 +475,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable,
     this._adjustFontSize(delta)
   }
 
+  getViewerElements(): ViewerElement[] {
+    return <ViewerElement[]> this._childElementList
+      .map(status => status.element)
+      .filter(el => el instanceof ViewerElement);
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -803,8 +795,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable,
   private _appendNewTerminalViewer(): void {
     // Create the TerminalViewer
     const terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
-    keybindingmanager.injectKeyBindingManager(terminalViewer, this._keyBindingManager);
-    config.injectConfigManager(terminalViewer, this._configManager);
+    injectKeyBindingManager(terminalViewer, this._keyBindingManager);
+    injectConfigManager(terminalViewer, this._configManager);
     
     terminalViewer.setEmulator(this._emulator);
     this._appendScrollable(terminalViewer)
@@ -1794,8 +1786,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable,
   private _createEmbeddedViewerElement(title: string): EmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
-    keybindingmanager.injectKeyBindingManager(el, this._keyBindingManager);
-    config.injectConfigManager(el, this._configManager);
+    injectKeyBindingManager(el, this._keyBindingManager);
+    injectConfigManager(el, this._configManager);
     el.setAwesomeIcon('cog');
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
@@ -1921,8 +1913,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable,
       
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
-      keybindingmanager.injectKeyBindingManager(outputTerminalViewer, this._keyBindingManager);
-      config.injectConfigManager(outputTerminalViewer, this._configManager);
+      injectKeyBindingManager(outputTerminalViewer, this._keyBindingManager);
+      injectConfigManager(outputTerminalViewer, this._configManager);
       newViewerElement.setViewerElement(outputTerminalViewer);
       
       outputTerminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
@@ -2075,8 +2067,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable,
     }
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
-    keybindingmanager.injectKeyBindingManager(dataViewer, this._keyBindingManager);
-    config.injectConfigManager(dataViewer, this._configManager);
+    injectKeyBindingManager(dataViewer, this._keyBindingManager);
+    injectConfigManager(dataViewer, this._configManager);
     if (data !== null) {
       dataViewer.setBytes(data, charset !== null ? mimeType + ";" + charset : mimeType);
     }

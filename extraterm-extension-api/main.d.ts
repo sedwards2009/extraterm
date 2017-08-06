@@ -35,13 +35,10 @@ export interface Tab {
 
 export interface Terminal {
   type(text: string): void;
-//   getSections(): Section[];
+  getViewers(): Viewer[];
   getTab(): Tab;
 }
 
-// export interface Section {
-
-// }
 
 export interface NumberInputOptions {
   /**
@@ -72,19 +69,23 @@ export interface ListPickerOptions {
 }
 
 export interface Viewer {
+  viewerType: string;
   getTab(): Tab;
   getOwningTerminal(): Terminal;
 }
 
-export interface Frame {
-  contents: Viewer;
+export interface FrameViewer extends Viewer {
+  viewerType: 'frame';
+  getContents(): Viewer;
 }
 
 export interface TerminalOutputViewer extends Viewer {
+  viewerType: 'terminal-output';
 
 }
 
 export interface TextViewer extends Viewer {
+  viewerType: 'text';
   getTabSize(): number;
   setTabSize(size: number): void;
   getMimeType(): string;
