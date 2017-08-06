@@ -20,8 +20,8 @@ export interface Event<T> {
   (listener: (e: T) => any): Disposable;
 }
 
-export interface Terminal {
-  type(text: string): void;
+export interface Tab {
+  getTerminal(): Terminal;
 
   /**
    * Show an input box requesting a number.
@@ -31,6 +31,17 @@ export interface Terminal {
 
   showListPicker(options: ListPickerOptions): Promise<number | undefined>;
 }
+
+
+export interface Terminal {
+  type(text: string): void;
+//   getSections(): Section[];
+  getTab(): Tab;
+}
+
+// export interface Section {
+
+// }
 
 export interface NumberInputOptions {
   /**
@@ -61,9 +72,17 @@ export interface ListPickerOptions {
 }
 
 export interface Viewer {
+  getTab(): Tab;
   getOwningTerminal(): Terminal;
 }
 
+export interface Frame {
+  contents: Viewer;
+}
+
+export interface TerminalOutputViewer extends Viewer {
+
+}
 
 export interface TextViewer extends Viewer {
   getTabSize(): number;

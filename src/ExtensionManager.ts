@@ -275,12 +275,21 @@ class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
 
   codeMirrorModule: typeof CodeMirror = CodeMirror;
 
+  private _tabProxyMap = new WeakMap<EtTerminal, ExtensionApi.Tab>();
+
   private _terminalProxyMap = new WeakMap<EtTerminal, ExtensionApi.Terminal>();
   
   private _textViewerProxyMap = new WeakMap<TextViewer, ExtensionApi.TextViewer>();
 
   constructor(public extensionBridge: ExtensionBridge, public extensionMetadata: ExtensionMetadata) {
     this.workspace = new WorkspaceProxy(this);
+  }
+
+  getTabProxy(terminal: EtTerminal): ExtensionApi.Tab {
+    if ( ! this._tabProxyMap.has(terminal)) {
+      this._tabProxyMap.set(terminal, new TerminalTabProxy(this, terminal));
+    }
+    return this._tabProxyMap.get(terminal);
   }
 
   getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal {
@@ -339,13 +348,13 @@ class WorkspaceProxy implements ExtensionApi.Workspace {
 }
 
 
-class TerminalProxy implements ExtensionApi.Terminal {
+class TerminalTabProxy implements ExtensionApi.Tab {
 
   constructor(private _extensionContextImpl: ExtensionContextImpl, private _terminal: EtTerminal) {
   }
 
-  type(text: string): void {
-    this._terminal.send(text);
+  getTerminal(): ExtensionApi.Terminal {
+    return this._extensionContextImpl.getTerminalProxy(this._terminal);
   }
 
   showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
@@ -355,7 +364,21 @@ class TerminalProxy implements ExtensionApi.Terminal {
   showListPicker(options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
     return this._extensionContextImpl.extensionBridge.showListPicker(this._terminal, options);
   }
+}
 
+
+class TerminalProxy implements ExtensionApi.Terminal {
+
+  constructor(private _extensionContextImpl: ExtensionContextImpl, private _terminal: EtTerminal) {
+  }
+
+  getTab(): ExtensionApi.Tab {
+    return this._extensionContextImpl.getTabProxy(this._terminal);
+  }
+
+  type(text: string): void {
+    this._terminal.send(text);
+  }
 }
 
 
@@ -363,14 +386,24 @@ class ViewerProxy implements ExtensionApi.Viewer {
   constructor(public _extensionContextImpl: ExtensionContextImpl, public _viewer: ViewerElement) {
   }
 
-  getOwningTerminal(): ExtensionApi.Terminal {
+  getTab(): ExtensionApi.Tab {
+    const terminal = this._getOwningEtTerminal();
+    return terminal == null ? null : this._extensionContextImpl.getTabProxy(terminal);
+  }
+
+  private _getOwningEtTerminal(): EtTerminal {
     const path = DomUtils.nodePathToRoot(this._viewer);
     for (const node of path) {
       if (node instanceof EtTerminal) {
-        return this._extensionContextImpl.getTerminalProxy(node);
+        return node;
       }
     }
     return null;
+  }
+
+  getOwningTerminal(): ExtensionApi.Terminal {
+    const terminal = this._getOwningEtTerminal();
+    return terminal == null ? null : this._extensionContextImpl.getTerminalProxy(terminal);
   }
 }
 

@@ -19,7 +19,7 @@ function textViewerCommandLister(textViewer: TextViewer): CommandEntry[] {
 }
 
 async function textViewerCommandExecutor(textViewer: TextViewer, commandId: string, commandArguments?: object): Promise<any> {
-  const selectedTabSize = await textViewer.getOwningTerminal().showNumberInput({
+  const selectedTabSize = await textViewer.getTab().showNumberInput({
     title: "Tab Size",
     value: textViewer.getTabSize(),
     minimum: 0,

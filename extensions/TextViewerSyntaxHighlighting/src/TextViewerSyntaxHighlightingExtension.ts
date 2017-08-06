@@ -36,7 +36,7 @@ async function textViewerCommandExecutor(textViewer: TextViewer, commandId: stri
   const mimeTypeNames = mimeList.map(item => item.name);
   const selectedItemIndex = mimeTypeNames.indexOf(getMimeTypeName(textViewer));
 
-  const newSelectedItemIndex = await textViewer.getOwningTerminal().showListPicker({
+  const newSelectedItemIndex = await textViewer.getTab().showListPicker({
     title: "Syntax Highlighting",
     items: items,
     selectedItemIndex
