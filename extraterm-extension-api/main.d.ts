@@ -68,18 +68,17 @@ export interface ListPickerOptions {
   selectedItemIndex: number;
 }
 
-export interface Viewer {
-  viewerType: string;
+export interface ViewerBase {
   getTab(): Tab;
   getOwningTerminal(): Terminal;
 }
 
-export interface FrameViewer extends Viewer {
+export interface FrameViewer extends ViewerBase {
   viewerType: 'frame';
   getContents(): Viewer;
 }
 
-export interface TerminalOutputViewer extends Viewer {
+export interface TerminalOutputViewer extends ViewerBase {
 
   viewerType: 'terminal-output';
 
@@ -91,13 +90,15 @@ export interface TerminalOutputViewer extends Viewer {
   isLive(): boolean;
 }
 
-export interface TextViewer extends Viewer {
+export interface TextViewer extends ViewerBase {
   viewerType: 'text';
   getTabSize(): number;
   setTabSize(size: number): void;
   getMimeType(): string;
   setMimeType(mimeType: string): void;
 }
+
+export type Viewer = FrameViewer | TerminalOutputViewer | TextViewer;
 
 
 /**
@@ -156,6 +157,60 @@ export interface Workspace {
 export interface ExtensionContext {
   workspace: Workspace;
   codeMirrorModule: typeof CodeMirror;
+  logger: Logger;
+}
+
+
+export interface Logger {
+  /**
+   * Log a debug message.
+   * 
+   * @param msg     the log message
+   * @param ...opts extra values to log with the message
+   */
+  debug(msg: any, ...opts: any[]): void;
+  
+  /**
+   * Log an info message.
+   * 
+   * @param msg     the log message
+   * @param ...opts extra values to log with the message
+   */
+  info(msg: any, ...opts: any[]): void;
+  
+  /**
+   * Log a warning message.
+   * 
+   * @param msg     the log message
+   * @param ...opts extra values to log with the message
+   */
+  warn(msg: any, ...opts: any[]): void;
+
+  /**
+   * Log a severe message.
+   * 
+   * @param msg     the log message
+   * @param ...opts extra values to log with the message
+   */
+  severe(msg: any, ...opts: any[]): void;
+    
+  /**
+   * Starts timing.
+   *
+   * See endTime().
+   *
+   * @param label identifying label for this timer
+   */
+  startTime(label: string): void;
+  
+  /**
+   * Ends timing.
+   *
+   * Prints the timing result to the log. Label should be the same as the label given to startTime().
+   *
+   * @param label identifying label for the timer to end
+   */
+  endTime(label: string): void;
 }
 
 /**

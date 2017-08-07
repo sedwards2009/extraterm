@@ -277,6 +277,8 @@ class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
 
   codeMirrorModule: typeof CodeMirror = CodeMirror;
 
+  logger: ExtensionApi.Logger;
+
   private _tabProxyMap = new WeakMap<EtTerminal, ExtensionApi.Tab>();
 
   private _terminalProxyMap = new WeakMap<EtTerminal, ExtensionApi.Terminal>();
@@ -285,6 +287,7 @@ class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
 
   constructor(public extensionBridge: ExtensionBridge, public extensionMetadata: ExtensionMetadata) {
     this.workspace = new WorkspaceProxy(this);
+    this.logger = new Logger(extensionMetadata.name);
   }
 
   getTabProxy(terminal: EtTerminal): ExtensionApi.Tab {
@@ -402,21 +405,12 @@ class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   getViewers(): ExtensionApi.Viewer[] {
-    return this._terminal.getViewerElements().map(viewer => {
-      
-      if (viewer instanceof TerminalViewer) {
-
-      } else if (viewer instanceof EmbeddedViewer) {
-
-      } else {
-        return null;
-      }
-    });
+    return this._terminal.getViewerElements().map(viewer => this._extensionContextImpl.getViewerProxy(viewer));
   }
 }
 
 
-abstract class ViewerProxy implements ExtensionApi.Viewer {
+abstract class ViewerProxy implements ExtensionApi.ViewerBase {
 
   viewerType: string;
 
@@ -446,7 +440,7 @@ abstract class ViewerProxy implements ExtensionApi.Viewer {
 
 class TerminalOutputProxy extends ViewerProxy implements ExtensionApi.TerminalOutputViewer {
 
-  viewerType: 'terminal-output';
+  viewerType: 'terminal-output' = 'terminal-output';
 
   constructor(public _extensionContextImpl: ExtensionContextImpl, private _terminalViewer: TerminalViewer) {
     super(_extensionContextImpl, _terminalViewer);
@@ -460,7 +454,7 @@ class TerminalOutputProxy extends ViewerProxy implements ExtensionApi.TerminalOu
 
 class FrameViewerProxy extends ViewerProxy implements ExtensionApi.FrameViewer {
 
-  viewerType: 'frame';
+  viewerType: 'frame' = 'frame';
 
   constructor(public _extensionContextImpl: ExtensionContextImpl, private _embeddedViewer: EmbeddedViewer) {
     super(_extensionContextImpl, _embeddedViewer);
@@ -477,7 +471,7 @@ class FrameViewerProxy extends ViewerProxy implements ExtensionApi.FrameViewer {
 
 class TextViewerProxy extends ViewerProxy implements ExtensionApi.TextViewer {
 
-  viewerType: 'text';
+  viewerType: 'text' = 'text';
 
   constructor(_extensionContextImpl: ExtensionContextImpl, private _textViewer: TextViewer) {
     super(_extensionContextImpl, _textViewer);
