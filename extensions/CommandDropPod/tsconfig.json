@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "declaration": false,
+        "noImplicitAny": false,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "removeComments": false,
+        "sourceMap": true,
+        "noLib": false,
+        "outDir": "src",
+        "jsx": "react",
+        "experimentalDecorators": true,
+        "typeRoots" : ["./src/typings"],
+        "paths": {
+         "*": ["./src/typings/*"]
+        },
+        "baseUrl": "."
+      
+    },
+    "filesGlob": [
+        "./src/*.ts",
+        "./src/*.tsx"
+    ],
+    "files": [
+        "./src/DropPodExtension.ts"
+    ],
+    "exclude": []
+}
