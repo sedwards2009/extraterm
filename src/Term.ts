@@ -2086,22 +2086,12 @@ export class Emulator implements EmulatorAPI {
             case '\n':
             case '\x0b':
             case '\x0c':
-              if (this.convertEol) {
-                this.x = 0;
-              }
-              // TODO: Implement eat_newline_glitch.
-              // if (this.realX >= this.cols) break;
-              // this.realX = 0;
-              if (this.y+1 > this.scrollBottom) {
-                this.scroll();
-              } else {
-                this._setCursorY(this.y+1);
-              }
+              this.newLine();
               break;
 
             // '\r'
             case '\r':
-              this.x = 0;
+              this.carriageReturn();
               break;
 
             // '\b'
@@ -3439,6 +3429,23 @@ export class Emulator implements EmulatorAPI {
     this._emit(BELL_EVENT, this);
   }
 
+  private newLine(): void {
+    if (this.convertEol) {
+      this.x = 0;
+    }
+    // TODO: Implement eat_newline_glitch.
+    // if (this.realX >= this.cols) break;
+    // this.realX = 0;
+    if (this.y+1 > this.scrollBottom) {
+      this.scroll();
+    } else {
+      this._setCursorY(this.y+1);
+    }
+  }
+
+  private carriageReturn(): void {
+    this.x = 0;
+  }
 
   log(...args: any[]): void {
     if (!this.debug) {
