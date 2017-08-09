@@ -13,7 +13,7 @@ import * as DropPodExtension from './DropPodExtension';
 
 export function testContext(test: nodeunit.Test): void {
   
-  const flattener = new DropPodExtension.PythonFileFlattener(path.join(__dirname, 'test_data'), ['library']);
+  const flattener = new DropPodExtension.PythonFileFlattener(path.join(__dirname, 'test_data'));
   const result = flattener.readAndInlineCommand('command');
 
   test.ok(result.length !== 0, 'Test for anything');
