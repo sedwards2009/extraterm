@@ -12,19 +12,15 @@
         "outDir": "src",
         "jsx": "react",
         "experimentalDecorators": true,
-        "typeRoots" : ["./src/typings"],
-        "paths": {
-         "*": ["./src/typings/*"]
-        },
         "baseUrl": "."
-      
     },
     "filesGlob": [
         "./src/*.ts",
         "./src/*.tsx"
     ],
     "files": [
-        "./src/DropPodExtension.ts"
+        "./src/DropPodExtension.ts",
+        "./src/DropPodExtensionTest.ts"
     ],
     "exclude": []
 }

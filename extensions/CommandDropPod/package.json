@@ -1,14 +1,19 @@
 {
-  "name": "text-viewer-syntax_highlighting",
-  "description": "Text Viewer syntax highlighting selector extension for extraterm",
+  "name": "command-drop-pod",
+  "description": "Command Drop Pod extension for Extraterm",
   "version": "1.0.0",
-  "devDependencies": {
-    "typescript": "2.4.2",
-    "extraterm-extension-api": "file:../../extraterm-extension-api/"
-  },
   "main": "src/DropPodExtension.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "npm run build ; nodeunit src/DropPodExtensionTest.js"
   },
-  "dependencies": {}
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "@types/nodeunit": "0.0.30",
+    "extraterm-extension-api": "file:../../extraterm-extension-api/",
+    "nodeunit": "0.11.0",
+    "typescript": "2.4.2"
+  }
 }
