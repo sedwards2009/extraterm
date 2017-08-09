@@ -15,7 +15,9 @@ import base64
 import tempfile
 from signal import signal, SIGPIPE, SIG_DFL 
 
-import extratermclient
+##@inline
+from extratermclient import extratermclient
+
 
 def requestFrame(frame_name):
     """Returns a generator which outputs the frame contents as blocks of binary data.
