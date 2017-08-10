@@ -35,6 +35,26 @@ async function terminalCommandExecutor(terminal: Terminal, commandId: string, co
 
   terminal.type('ps -o pid,ppid,command\n');
   // echo $BASH $SHELL
+
+  const script = buildCommandPodFishScript();
+  log.info(script);
+}
+
+function buildCommandPodFishScript(): string {
+  return buildScriptForCommand('from', 'exfrom') + buildScriptForCommand('show', 'exshow');
+}
+
+function buildScriptForCommand(commandName: string, commandPyFile: string): string {
+  const flattener = new PythonFileFlattener(path.join(__dirname, '../../../src/commands/'));
+  const script = flattener.readAndInlineCommand(commandPyFile);
+  return `function ${commandName}
+  python3 -c '${escapeShellChars(script)}' $argv
+end
+`;
+}
+
+function escapeShellChars(source): string {
+  return source.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 }
 
 
