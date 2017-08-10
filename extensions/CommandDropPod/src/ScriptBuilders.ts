@@ -35,7 +35,15 @@ abstract class ScriptBuilder {
   }
 }
 
+const EOT = '\x04';
+
 export class FishScriptBuilder extends ScriptBuilder {
+
+  build(): string {
+    return `source
+${super.build()}
+${EOT}`;
+  }
 
   protected _buildCookie(): string {
     return `set -x ${this._extratermCookieName} ${this._extratermCookieValue}`;
