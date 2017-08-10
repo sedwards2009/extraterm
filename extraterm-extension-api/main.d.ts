@@ -37,6 +37,8 @@ export interface Terminal {
   type(text: string): void;
   getViewers(): Viewer[];
   getTab(): Tab;
+  getExtratermCookieValue(): string;
+  getExtratermCookieName(): string;
 }
 
 

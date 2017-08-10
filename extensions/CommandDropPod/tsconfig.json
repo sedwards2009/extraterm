@@ -20,7 +20,8 @@
     ],
     "files": [
         "./src/DropPodExtension.ts",
-        "./src/DropPodExtensionTest.ts"
+        "./src/DropPodExtensionTest.ts",
+        "./src/ScriptBuilders.ts"
     ],
     "exclude": []
 }

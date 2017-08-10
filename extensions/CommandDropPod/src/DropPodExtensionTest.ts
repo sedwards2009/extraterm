@@ -7,13 +7,13 @@
 //import * as SourceMapSupport from 'source-map-support';
 import * as path from 'path';
 import * as nodeunit from 'nodeunit';
-import * as DropPodExtension from './DropPodExtension';
+import {PythonFileFlattener} from './ScriptBuilders';
 
 //SourceMapSupport.install();
 
 export function testContext(test: nodeunit.Test): void {
   
-  const flattener = new DropPodExtension.PythonFileFlattener(path.join(__dirname, 'test_data'));
+  const flattener = new PythonFileFlattener(path.join(__dirname, 'test_data'));
   const result = flattener.readAndInlineCommand('command');
 
   test.ok(result.length !== 0, 'Test for anything');

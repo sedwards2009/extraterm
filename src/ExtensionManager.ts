@@ -12,7 +12,7 @@ import * as CodeMirror from 'codemirror';
 import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
 import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
 import * as ExtensionApi from 'extraterm-extension-api';
-import {EtTerminal} from './Terminal';
+import {EtTerminal, EXTRATERM_COOKIE_ENV} from './Terminal';
 import {ViewerElement} from './ViewerElement';
 import {TextViewer} from'./viewers/TextViewer';
 import OwnerTrackingList from './utils/OwnerTrackingList';
@@ -406,6 +406,14 @@ class TerminalProxy implements ExtensionApi.Terminal {
 
   getViewers(): ExtensionApi.Viewer[] {
     return this._terminal.getViewerElements().map(viewer => this._extensionContextImpl.getViewerProxy(viewer));
+  }
+
+  getExtratermCookieValue(): string {
+    return this._terminal.getExtratermCookieValue();
+  }
+
+  getExtratermCookieName(): string{
+    return EXTRATERM_COOKIE_ENV;
   }
 }
 

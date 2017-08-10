@@ -104,3 +104,4 @@ src/utils/OwnerTrackingList.js
 extensions/TextViewerSyntaxHighlighting/src/TextViewerSyntaxHighlightingExtension.js
 extensions/CommandDropPod/src/DropPodExtension.js
 extensions/CommandDropPod/src/DropPodExtensionTest.js
+extensions/CommandDropPod/src/ScriptBuilders.js
