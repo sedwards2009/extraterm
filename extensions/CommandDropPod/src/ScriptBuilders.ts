@@ -11,15 +11,17 @@ abstract class ScriptBuilder {
   constructor(protected _extratermCookieName: string, protected _extratermCookieValue: string) {}
 
   build(): string {
-    return this._buildCookie() + this._buildCommands();
+    return this._buildCookie() + '\n' + this._buildCommands() + '\n' + this._buildShellReporting();
   }
 
   protected abstract _buildCookie(): string;
 
+  protected abstract _buildShellReporting(): string;
+
   protected _buildCommands(): string {
     return this._buildScriptForCommand('from', 'exfrom') + this._buildScriptForCommand('show', 'exshow');
   }
-  
+    
   protected _buildScriptForCommand(commandName: string, commandPyFile: string): string {
     const flattener = new PythonFileFlattener(path.join(__dirname, '../../../src/commands/'));
     const script = flattener.readAndInlineCommand(commandPyFile);
@@ -37,6 +39,23 @@ export class FishScriptBuilder extends ScriptBuilder {
 
   protected _buildCookie(): string {
     return `set -x ${this._extratermCookieName} ${this._extratermCookieValue}`;
+  }
+
+  protected _buildShellReporting(): string {
+    return `
+function extraterm_preexec -e fish_preexec
+  echo -n -e -s "\\033&" $${this._extratermCookieName} ";2;fish\\007"
+  echo -n $argv[1]
+  echo -n -e "\\000"
+end
+
+function extraterm_postexec -e fish_postexec
+  set -l status_backup $status
+  echo -n -e -s "\\033" "&" $${this._extratermCookieName} ";3\\007"
+  echo -n $status_backup
+  echo -n -e "\\000"
+end
+`;
   }
 
   protected _formatCommand(commandName: string, commandSource: string): string {

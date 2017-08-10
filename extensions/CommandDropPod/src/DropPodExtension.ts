@@ -14,26 +14,24 @@ export function activate(context: ExtensionContext): any {
   context.workspace.registerCommandsOnTerminal(terminalCommandLister, terminalCommandExecutor);
 }
 
-const COMMAND_DROP_COMMAND_POD = "dropCommandPod";
+const COMMAND_DROP_FISH_COMMAND_POD = "dropFishCommandPod";
 
 function terminalCommandLister(terminal: Terminal): CommandEntry[] {
   return [{
-    id: COMMAND_DROP_COMMAND_POD,
-    label: "Drop Command Pod"
+    id: COMMAND_DROP_FISH_COMMAND_POD,
+    label: "Drop Command Pod (fish)"
   }];
 }
 
 async function terminalCommandExecutor(terminal: Terminal, commandId: string, commandArguments?: object): Promise<any> {
+  let script = "";
+  switch(commandId) {
+    case COMMAND_DROP_FISH_COMMAND_POD:
+      script = new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
+      break;
 
-  for (const viewer of terminal.getViewers()) {
-    if (viewer.viewerType === 'terminal-output') {
-      log.info('Viewer',viewer,'is live=',viewer.isLive());
-    }
+    default:
+      return;
   }
-
-  terminal.type('ps -o pid,ppid,command\n');
-  // echo $BASH $SHELL
-
-  const script = new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-  log.info(script);
+  terminal.type(script);
 }
