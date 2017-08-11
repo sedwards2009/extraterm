@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {ExtensionContext, CommandEntry, Terminal, Logger} from 'extraterm-extension-api';
-import {FishScriptBuilder} from './ScriptBuilders';
+import {CommandEntry, ExtensionContext, Logger, Terminal} from 'extraterm-extension-api';
+import {BashScriptBuilder, FishScriptBuilder} from './ScriptBuilders';
 
 
 let log: Logger = null;
@@ -14,10 +14,15 @@ export function activate(context: ExtensionContext): any {
   context.workspace.registerCommandsOnTerminal(terminalCommandLister, terminalCommandExecutor);
 }
 
+const COMMAND_DROP_BASH_COMMAND_POD = "dropBashCommandPod";
 const COMMAND_DROP_FISH_COMMAND_POD = "dropFishCommandPod";
 
 function terminalCommandLister(terminal: Terminal): CommandEntry[] {
   return [{
+    id: COMMAND_DROP_BASH_COMMAND_POD,
+    label: "Drop Command Pod (bash)"
+  },
+  {
     id: COMMAND_DROP_FISH_COMMAND_POD,
     label: "Drop Command Pod (fish)"
   }];
@@ -26,6 +31,10 @@ function terminalCommandLister(terminal: Terminal): CommandEntry[] {
 async function terminalCommandExecutor(terminal: Terminal, commandId: string, commandArguments?: object): Promise<any> {
   let script = "";
   switch(commandId) {
+    case COMMAND_DROP_BASH_COMMAND_POD:
+      script = new BashScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
+      break;
+
     case COMMAND_DROP_FISH_COMMAND_POD:
       script = new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
       break;

@@ -11,7 +11,7 @@ abstract class ScriptBuilder {
   constructor(protected _extratermCookieName: string, protected _extratermCookieValue: string) {}
 
   build(): string {
-    return this._buildCookie() + '\n' + this._buildCommands() + '\n' + this._buildShellReporting();
+    return this._buildCookie() + '\n' + this._buildCommands() + '\n' + this._buildShellReporting() + '\n';
   }
 
   protected abstract _buildCookie(): string;
@@ -31,7 +31,7 @@ abstract class ScriptBuilder {
   protected abstract _formatCommand(commandName: string, commandSource: string): string;
 
   protected _escapeShellChars(source): string {
-    return source.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return source.replace(/'/g,"'\\''");
   }
 }
 
@@ -72,9 +72,55 @@ end
 end
 `;
   }
+
+  protected _escapeShellChars(source): string {
+    return source.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  }
 }
 
+export class BashScriptBuilder extends ScriptBuilder {
+  
+  build(): string {
+    return 'source `tty`\n' + super.build() + EOT;
+  }
 
+  protected _buildCookie(): string {
+    return `export ${this._extratermCookieName}=${this._extratermCookieValue}`;
+  }
+
+  protected _buildShellReporting(): string {
+    return `
+postexec () {
+  echo -n -e "\\033&$\{EXTRATERM_COOKIE\};3\\007"
+  echo -n $1
+  echo -n -e "\\000"
+}
+export PROMPT_COMMAND="postexec \\$?"
+
+preexec () {
+    echo -n -e "\\033&$\{EXTRATERM_COOKIE\};2;bash\\007"
+    echo -n $1
+    echo -n -e "\\000"
+}
+
+preexec_invoke_exec () {
+    [ -n "$COMP_LINE" ] && return                     # do nothing if completing
+    [ "$BASH_COMMAND" = "$PROMPT_COMMAND" ] && return # don't cause a preexec for $PROMPT_COMMAND
+    local this_command=\`history 1\`; # obtain the command from the history
+    preexec "$this_command"
+}
+trap 'preexec_invoke_exec' DEBUG
+`;
+  }
+
+  protected _formatCommand(commandName: string, commandSource: string): string {
+    return `${commandName} () {
+    python3 -c '${this._escapeShellChars(commandSource)}' "$@"
+}
+`;
+  }
+}
+  
 export class PythonFileFlattener {
   constructor(private _baseDir: string) {}
 
