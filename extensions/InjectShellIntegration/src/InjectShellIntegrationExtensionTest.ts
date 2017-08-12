@@ -4,12 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-//import * as SourceMapSupport from 'source-map-support';
 import * as path from 'path';
 import * as nodeunit from 'nodeunit';
 import {PythonFileFlattener} from './ScriptBuilders';
 
-//SourceMapSupport.install();
 
 export function testContext(test: nodeunit.Test): void {
   

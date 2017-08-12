@@ -14,37 +14,37 @@ export function activate(context: ExtensionContext): any {
   context.workspace.registerCommandsOnTerminal(terminalCommandLister, terminalCommandExecutor);
 }
 
-const COMMAND_DROP_BASH_COMMAND_POD = "dropBashCommandPod";
-const COMMAND_DROP_FISH_COMMAND_POD = "dropFishCommandPod";
-const COMMAND_DROP_ZSH_COMMAND_POD = "dropZshCommandPod";
+const COMMAND_INJECT_BASH_INTEGRATION = "injectBashIntegration";
+const COMMAND_INJECT_FISH_INTEGRATION = "injectFishIntegration";
+const COMMAND_INJECT_ZSH_INTEGRATION = "injectZshIntegration";
 
 function terminalCommandLister(terminal: Terminal): CommandEntry[] {
   return [{
-    id: COMMAND_DROP_BASH_COMMAND_POD,
-    label: "Drop Command Pod (bash)"
+    id: COMMAND_INJECT_BASH_INTEGRATION,
+    label: "Inject Bash Shell Integration"
   },
   {
-    id: COMMAND_DROP_FISH_COMMAND_POD,
-    label: "Drop Command Pod (fish)"
+    id: COMMAND_INJECT_FISH_INTEGRATION,
+    label: "Inject Fish Shell Integration"
   },
   {
-    id: COMMAND_DROP_ZSH_COMMAND_POD,
-    label: "Drop Command Pod (zsh)"
+    id: COMMAND_INJECT_ZSH_INTEGRATION,
+    label: "Inject Zsh Shell Integration"
   }];
 }
 
 async function terminalCommandExecutor(terminal: Terminal, commandId: string, commandArguments?: object): Promise<any> {
   let script = "";
   switch(commandId) {
-    case COMMAND_DROP_BASH_COMMAND_POD:
+    case COMMAND_INJECT_BASH_INTEGRATION:
       script = new BashScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
       break;
 
-    case COMMAND_DROP_FISH_COMMAND_POD:
+    case COMMAND_INJECT_FISH_INTEGRATION:
       script = new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
       break;
 
-    case COMMAND_DROP_ZSH_COMMAND_POD:
+    case COMMAND_INJECT_ZSH_INTEGRATION:
       script = new ZshScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
       break;
 
