@@ -78,6 +78,7 @@ end
   }
 }
 
+
 export class BashScriptBuilder extends ScriptBuilder {
   
   build(): string {
@@ -118,6 +119,42 @@ trap 'preexec_invoke_exec' DEBUG
     python3 -c '${this._escapeShellChars(commandSource)}' "$@"
 }
 `;
+  }
+}
+
+
+export class ZshScriptBuilder extends ScriptBuilder {
+  build(): string {
+    return `source =(cat </dev/stdin)
+${super.build()}
+${EOT}`
+  }
+
+  protected _buildCookie(): string {
+    return `export ${this._extratermCookieName}=${this._extratermCookieValue}`;
+  }
+
+  protected _buildShellReporting(): string {
+    return `
+export PS1=\`echo -n -e "\\033&\${EXTRATERM_COOKIE};3\\007%?\\000\${PS1}"\`
+
+preexec () {
+    echo -n -e "\\033&\${EXTRATERM_COOKIE};2;zsh\\007"
+    echo -n $1
+    echo -n -e "\\000"
+}
+`;
+  }
+
+  protected _formatCommand(commandName: string, commandSource: string): string {
+    return `${commandName} () {
+    python3 -c '${this._escapeShellChars(commandSource)}' "$@"
+}
+`;
+  }
+
+  protected _escapeShellChars(source): string {
+    return source.replace(/'/g,"'\\''");
   }
 }
   

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {CommandEntry, ExtensionContext, Logger, Terminal} from 'extraterm-extension-api';
-import {BashScriptBuilder, FishScriptBuilder} from './ScriptBuilders';
+import {BashScriptBuilder, FishScriptBuilder, ZshScriptBuilder} from './ScriptBuilders';
 
 
 let log: Logger = null;
@@ -16,6 +16,7 @@ export function activate(context: ExtensionContext): any {
 
 const COMMAND_DROP_BASH_COMMAND_POD = "dropBashCommandPod";
 const COMMAND_DROP_FISH_COMMAND_POD = "dropFishCommandPod";
+const COMMAND_DROP_ZSH_COMMAND_POD = "dropZshCommandPod";
 
 function terminalCommandLister(terminal: Terminal): CommandEntry[] {
   return [{
@@ -25,6 +26,10 @@ function terminalCommandLister(terminal: Terminal): CommandEntry[] {
   {
     id: COMMAND_DROP_FISH_COMMAND_POD,
     label: "Drop Command Pod (fish)"
+  },
+  {
+    id: COMMAND_DROP_ZSH_COMMAND_POD,
+    label: "Drop Command Pod (zsh)"
   }];
 }
 
@@ -39,8 +44,16 @@ async function terminalCommandExecutor(terminal: Terminal, commandId: string, co
       script = new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
       break;
 
+    case COMMAND_DROP_ZSH_COMMAND_POD:
+      script = new ZshScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
+      break;
+
     default:
       return;
   }
-  terminal.type(script);
+  terminal.type(normalizeCarriageReturns(script));
+}
+
+function normalizeCarriageReturns(text: string): string {
+  return text.replace(/\n/g, '\r');
 }
