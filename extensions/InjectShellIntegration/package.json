@@ -1,11 +1,11 @@
 {
-  "name": "command-drop-pod",
-  "description": "Command Drop Pod extension for Extraterm",
+  "name": "inject-shell-integration",
+  "description": "Inject Shell Integration extension for Extraterm",
   "version": "1.0.0",
-  "main": "src/DropPodExtension.js",
+  "main": "src/InjectShellIntegrationExtension.js",
   "scripts": {
     "build": "tsc",
-    "test": "npm run build ; nodeunit src/DropPodExtensionTest.js"
+    "test": "npm run build ; nodeunit src/InjectShellIntegrationTest.js"
   },
   "dependencies": {
   },

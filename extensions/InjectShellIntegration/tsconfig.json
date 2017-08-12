@@ -19,8 +19,8 @@
         "./src/*.tsx"
     ],
     "files": [
-        "./src/DropPodExtension.ts",
-        "./src/DropPodExtensionTest.ts",
+        "./src/InjectShellIntegrationExtension.ts",
+        "./src/InjectShellIntegrationExtensionTest.ts",
         "./src/ScriptBuilders.ts"
     ],
     "exclude": []

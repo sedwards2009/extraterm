@@ -102,6 +102,6 @@ build_tmp
 src/ExtensionApi/ExtensionContext.js
 src/utils/OwnerTrackingList.js
 extensions/TextViewerSyntaxHighlighting/src/TextViewerSyntaxHighlightingExtension.js
-extensions/CommandDropPod/src/DropPodExtension.js
-extensions/CommandDropPod/src/DropPodExtensionTest.js
-extensions/CommandDropPod/src/ScriptBuilders.js
+extensions/InjectShellIntegration/src/DropPodExtension.js
+extensions/InjectShellIntegration/src/DropPodExtensionTest.js
+extensions/InjectShellIntegration/src/ScriptBuilders.js
