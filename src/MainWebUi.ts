@@ -21,12 +21,7 @@ import {EmptyPaneMenu} from './EmptyPaneMenu';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ThemeTypes from './Theme';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
-import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
-type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
-
-import * as InternalExtratermApi from './InternalExtratermApi';
-
+import {Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
 import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
 import * as path from 'path';
@@ -117,7 +112,7 @@ let themeCss = "";
  *
  */
 export class MainWebUi extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
-    config.AcceptsConfigManager {
+    config.AcceptsConfigManager, Commandable {
   
   //-----------------------------------------------------------------------
   // Statics
@@ -169,8 +164,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _themes: ThemeTypes.ThemeInfo[];
 
-  private _internalExtratermApi: InternalExtratermApi.InternalExtratermApi;
-
   private _lastFocus: Element;
 
   private _splitLayout: SplitLayout;
@@ -184,7 +177,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._configManager = null;
     this._keyBindingManager = null;
     this._themes = [];
-    this._internalExtratermApi = null;
     this._splitLayout = new SplitLayout();
   }
   
@@ -200,11 +192,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  setInternalExtratermApi(api: InternalExtratermApi.InternalExtratermApi): void {
-    this._internalExtratermApi = api;
-    api.setTopLevel(this);
-  }
-
   setConfigManager(configManager: ConfigManager): void {
     this._configManager = configManager;
   }
@@ -404,9 +391,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const divContainer = document.createElement("DIV");
       divContainer.classList.add(CLASS_TAB_CONTENT);
       divContainer.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabContent), true);
-      divContainer.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-        this._handleCommandPaletteRequest(tabContent, ev);
-      });
       return divContainer;
     });
 
@@ -420,18 +404,18 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
-      const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-        { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", target: null },
-        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", target: null },        
-        { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: null },
-        { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", target: null }
+      const commandList: CommandEntry[] = [
+        { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", commandExecutor: null },
+        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", commandExecutor: null },        
+        { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", commandExecutor: null },
+        { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor: null }
       ];
       this._insertCommandKeyBindings(commandList);
 
       emptyPaneMenu.setEntries(commandList);
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
         emptyPaneMenu.setFilter("");
-        this._executeCommand(emptyPaneMenu, ev.detail.selected);
+        this.executeCommand(ev.detail.selected, {tabElement: emptyPaneMenu});
       });
       return emptyPaneMenu;
     });
@@ -620,7 +604,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
-    this._internalExtratermApi.addTab(newTerminal);
     newTerminal.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     return newTerminal;
   }
@@ -713,7 +696,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     viewerTab.setViewerElement(viewerElement);
 
     this._updateTabTitle(viewerTab);
-    this._internalExtratermApi.addTab(viewerTab);
     return viewerTab;
   }
   
@@ -1123,7 +1105,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
     
     const command = bindings.mapEventToCommand(ev);
-    if (this._executeCommand(tabContentElement, command)) {
+    if (this.executeCommand(command, {tabElement: tabContentElement})) {
       ev.stopPropagation();
       ev.preventDefault();
     }
@@ -1141,70 +1123,53 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   //
   //-----------------------------------------------------------------------
 
-  private _handleCommandPaletteRequest(tabContentElement: Element, ev: CustomEvent): void {
-    if (ev.path[0] === this) { // Don't process our own messages.
-      return;
-    }
-
-    ev.stopPropagation();
+  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     
-    const request: CommandPaletteRequest = ev.detail;
-    const commandPaletteRequestDetail: CommandPaletteRequest = {
-        srcElement: request.srcElement === null ? this : request.srcElement,
-        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries(tabContentElement)],
-        contextElement: request.contextElement
-      };
-    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
-      { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
-      commandPaletteRequestDetail);
-    this.dispatchEvent(commandPaletteRequestEvent);
-  }
-  
-  private _commandPaletteEntries(tabContentElement: Element): CommandPaletteRequestTypes.CommandEntry[] {
-    
-    // Create a command target object which includes the tabContentElement var.
-    const target: CommandPaletteRequestTypes.Commandable = {
-      executeCommand: this._executeCommand.bind(this, tabContentElement)
+    const thisIndex = commandableStack.indexOf(this);
+    const tabContentElement = commandableStack[thisIndex-1];
+    if (tabContentElement instanceof Element) {
+      return this._commandPaletteEntriesWithTarget(tabContentElement, this._tabWidgetFromElement(tabContentElement));
+    } else {
+      this._log.severe("commandableStack[thisIndex-1] wasn't an Element");
+      return [];
     }
-
-    return this._commandPaletteEntriesWithTarget(tabContentElement, this._tabWidgetFromElement(tabContentElement), target);
   }
 
-  private _commandPaletteEntriesWithTarget(tabContentElement: Element, tabWidget: TabWidget, target: CommandPaletteRequestTypes.Commandable):
-      CommandPaletteRequestTypes.CommandEntry[] {
+  private _commandPaletteEntriesWithTarget(tabContentElement: Element, tabWidget: TabWidget): CommandEntry[] {
 
-    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-      { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", target: target },
-      { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", target: target },
-      { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", target: target },
-      { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", target: target },
+    const commandExecutor = this;
+    const commandArguments = {tabElement: tabContentElement};
+    const commandList: CommandEntry[] = [
+      { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", commandExecutor, commandArguments},
+      { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", commandExecutor, commandArguments },
+      { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", commandExecutor, commandArguments },
+      { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", commandExecutor, commandArguments },
 
-      { id: COMMAND_SELECT_PANE_LEFT, group: PALETTE_GROUP, label: " Select pane left", target: target },
-      { id: COMMAND_SELECT_PANE_RIGHT, group: PALETTE_GROUP, label: " Select pane right", target: target },
-      { id: COMMAND_SELECT_PANE_ABOVE, group: PALETTE_GROUP, label: " Select pane above", target: target },
-      { id: COMMAND_SELECT_PANE_BELOW, group: PALETTE_GROUP, label: " Select pane below", target: target },
+      { id: COMMAND_SELECT_PANE_LEFT, group: PALETTE_GROUP, label: " Select pane left", commandExecutor, commandArguments },
+      { id: COMMAND_SELECT_PANE_RIGHT, group: PALETTE_GROUP, label: " Select pane right", commandExecutor, commandArguments },
+      { id: COMMAND_SELECT_PANE_ABOVE, group: PALETTE_GROUP, label: " Select pane above", commandExecutor, commandArguments },
+      { id: COMMAND_SELECT_PANE_BELOW, group: PALETTE_GROUP, label: " Select pane below", commandExecutor, commandArguments },
 
-      { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", target: target },
-      { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", target: target },
+      { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", commandExecutor, commandArguments },
+      { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", commandExecutor, commandArguments },
 
-      { id: COMMAND_MOVE_TAB_LEFT, group: PALETTE_GROUP, label: "Move Tab Left", target: target },
-      { id: COMMAND_MOVE_TAB_RIGHT, group: PALETTE_GROUP, label: "Move Tab Right", target: target },
-      { id: COMMAND_MOVE_TAB_UP, group: PALETTE_GROUP, label: "Move Tab Up", target: target },
-      { id: COMMAND_MOVE_TAB_DOWN, group: PALETTE_GROUP, label: "Move Tab Down", target: target },
+      { id: COMMAND_MOVE_TAB_LEFT, group: PALETTE_GROUP, label: "Move Tab Left", commandExecutor, commandArguments },
+      { id: COMMAND_MOVE_TAB_RIGHT, group: PALETTE_GROUP, label: "Move Tab Right", commandExecutor, commandArguments },
+      { id: COMMAND_MOVE_TAB_UP, group: PALETTE_GROUP, label: "Move Tab Up", commandExecutor, commandArguments },
+      { id: COMMAND_MOVE_TAB_DOWN, group: PALETTE_GROUP, label: "Move Tab Down", commandExecutor, commandArguments },
     ];
 // FIXME
     if (tabWidget != null && tabWidget.parentElement instanceof Splitter ||
         tabContentElement instanceof EmptyPaneMenu) {
 
-      commandList.push( { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", target: target } );
+      commandList.push( { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor, commandArguments } );
     }
 
     this._insertCommandKeyBindings(commandList);
     return commandList;
   }
 
-  private _insertCommandKeyBindings(commandList: CommandPaletteRequestTypes.CommandEntry[]): void {
+  private _insertCommandKeyBindings(commandList: CommandEntry[]): void {
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
@@ -1214,8 +1179,16 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }    
   }
   
-  private _executeCommand(tabElement: Element, command: string): boolean {
-    switch (command) {
+  executeCommand(commandId: string, options?: object): boolean {
+    if (options == null) {
+      return false;
+    }
+    const tabElement = <Element> options["tabElement"];
+    if (tabElement == null) {
+      return false;
+    }
+
+    switch (commandId) {
       case COMMAND_SELECT_TAB_LEFT:
         this._shiftTab(this._tabWidgetFromElement(tabElement), -1);
         break;

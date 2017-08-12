@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as SourceDir from '../SourceDir';
 import {ViewerElement} from '../ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
+import * as ExtensionApi from 'extraterm-extension-api';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ThemeTypes from '../Theme';
@@ -22,7 +23,8 @@ import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as EtTextViewerTypes from './TerminalViewerTypes';
-import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
+import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
+  from '../CommandPaletteRequestTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';
@@ -35,7 +37,6 @@ const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 type TextDecoration = EtTextViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
-type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 const ID = "EtTextViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -48,13 +49,6 @@ const KEYBINDINGS_CURSOR_MODE = "text-viewer";
 const PALETTE_GROUP = "textviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
-const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
-
-const COMMAND_SYNTAX_HIGHLIGHTING = "syntaxHighlighting";
-const EVENT_COMMAND_SYNTAX_HIGHLIGHTING = "TEXTVIEWER_EVENT_COMMAND_SYNTAX_HIGHLIGHTING";
-
-const COMMAND_TAB_SIZE = "tabSize";
-const EVENT_COMMAND_TAB_SIZE = "TEXTVIEWER_EVENT_COMMAND_TAB_WIDTH";
 
 const COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,
@@ -91,8 +85,8 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-export class TextViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
-    keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
+export class TextViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
+    SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
   
@@ -884,26 +878,24 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
     ev.stopImmediatePropagation();
     ev.preventDefault();
 
-    this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+    this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
   }
   
-  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
-    let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this },
-      { id: COMMAND_SYNTAX_HIGHLIGHTING, group: PALETTE_GROUP, iconRight: "", label: "Syntax: " + this._getMimeTypeName(), target: this },
-      { id: COMMAND_TAB_SIZE, group: PALETTE_GROUP, iconRight: "", label: "Tab Size: " + this.getTabSize(), target: this }
+  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
+    let commandList: CommandEntry[] = [
+      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", commandExecutor: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
     if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
-      const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
+      const cmCommandList: CommandEntry[] =
         CodeMirrorCommands.commandDescriptions(this._codeMirror).map( (desc) => {
           return { id: desc.command,
             group: PALETTE_GROUP,
             iconLeft:desc.iconLeft,
             iconRight: desc.iconRight,
             label: desc.label,
-            target: this };
+            commandExecutor: this };
         });
       commandList = [...commandList, ...cmCommandList];
     }
@@ -945,24 +937,7 @@ export class TextViewer extends ViewerElement implements CommandPaletteRequestTy
         break;
         
       case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequest = {
-            srcElement: this,
-            commandEntries: this._commandPaletteEntries(),
-            contextElement: this
-          };
-        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
-          { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
-          commandPaletteRequestDetail);
-        this.dispatchEvent(commandPaletteRequestEvent);
-        break;
-
-      case COMMAND_SYNTAX_HIGHLIGHTING:
-        this.dispatchEvent(new CustomEvent(EVENT_COMMAND_SYNTAX_HIGHLIGHTING, {bubbles: true, composed: true, detail: { srcElement: this } } ));
-        break;
-
-      case COMMAND_TAB_SIZE:
-        this.dispatchEvent(new CustomEvent(EVENT_COMMAND_TAB_SIZE, {bubbles: true, composed: true, detail: { srcElement: this } } ));
+        dispatchCommandPaletteRequest(this);
         break;
 
       default:

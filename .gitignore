@@ -6,9 +6,6 @@ src/resourceloader.js
 src/utf8encoding.js
 src/typedocs/
 src/sourceDir.js
-src/gui/commandentrytype.js
-src/gui/commandpalettetypes.js
-src/commandpaletterequesttypes.js
 src/AboutTab.js
 src/BulkDomOperation.js
 src/BulkDomOperationTest.js
@@ -34,8 +31,6 @@ src/MainWeb.js
 src/MainWebUi.js
 src/MimeTypeDetector.js
 src/MimeTypeDetectorTest.js
-src/PluginApi.js
-src/PluginManager.js
 src/PtyConnector.js
 src/PtyDirect.js
 src/PtyProxy.js
@@ -59,7 +54,6 @@ src/WebIpc.js
 src/WebResourceLoader.js
 src/WindowMessages.js
 src/bootstrap.js
-src/plugins/TerminalViewerExtra/TerminalViewerExtra.js
 src/ptyconnectorfactory.js
 src/test/admzip_test.js
 src/test/charattr_test.js
@@ -92,7 +86,6 @@ src/gui/Splitter.js
 src/gui/Tab.js
 src/gui/TabWidget.js
 src/gui/Util.js
-src/plugins/TextViewer/TextViewerPlugin.js
 src/ThemeableElementBase.js
 src/ViewerElementTypes.js
 src/settings/SettingsTab.js
@@ -100,5 +93,15 @@ src/utils/SetUtils.js
 src/utils/CodeMirrorUtils.js
 src/gui/SnapDropContainer.js
 src/InternalMimeTypes.js
+src/ExtensionLoader.js
+src/ExtensionLoaderTest.js
+src/ExtensionManager.js
+extensions/TextViewerTabWidth/src/TextViewerTabWidthExtension.js
 __pycache__/
 build_tmp
+src/ExtensionApi/ExtensionContext.js
+src/utils/OwnerTrackingList.js
+extensions/TextViewerSyntaxHighlighting/src/TextViewerSyntaxHighlightingExtension.js
+extensions/InjectShellIntegration/src/DropPodExtension.js
+extensions/InjectShellIntegration/src/DropPodExtensionTest.js
+extensions/InjectShellIntegration/src/ScriptBuilders.js

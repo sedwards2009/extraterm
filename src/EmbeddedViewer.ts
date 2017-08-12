@@ -17,7 +17,8 @@ import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ThemeTypes from './Theme';
 import * as GeneralEvents from './GeneralEvents';
-import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
+import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
+  from './CommandPaletteRequestTypes';
 import Logger from './Logger';
 import log from './LogDecorator';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
@@ -60,8 +61,6 @@ const CLASS_COMMAND_RUNNING = "running";
 const CLASS_COMMAND_FAILED = "fail";
 const CLASS_COMMAND_SUCCEEDED = "success";
 
-const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
-
 let registered = false;
 
 const DEBUG_SIZE = false;
@@ -69,7 +68,7 @@ const DEBUG_SIZE = false;
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
-export class EmbeddedViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export class EmbeddedViewer extends ViewerElement implements Commandable,
     SupportsClipboardPaste.SupportsClipboardPaste {
   
   /**
@@ -530,10 +529,10 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
         return;
       }
 
-      if (CommandPaletteRequestTypes.isCommandable(viewerElement)) {
-        viewerElement.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+      if (isCommandable(viewerElement)) {
+        viewerElement.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
       } else {
-        this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+        this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
       }
     });
   }
@@ -794,16 +793,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
   private _executeCommand(command): boolean {
     switch (command) {
       case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequestTypes.CommandPaletteRequest = {
-            srcElement: this,
-            commandEntries: this._commandPaletteEntries(),
-            contextElement: this
-          };
-        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
-          { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
-          commandPaletteRequestDetail);
-        this.dispatchEvent(commandPaletteRequestEvent);
+        dispatchCommandPaletteRequest(this);
         break;
         
       default:
@@ -812,7 +802,7 @@ export class EmbeddedViewer extends ViewerElement implements CommandPaletteReque
     return true;
   }
 
-  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
+  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     return [];
   }
 

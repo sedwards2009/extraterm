@@ -9,7 +9,9 @@ import os.path
 import argparse
 import base64
 
-import extratermclient
+##@inline
+from extratermclient import extratermclient
+
 
 def SendMimeTypeDataFromFile(filename, mimeType, charset, filenameMeta=None):
     with open(filename,'rb') as fhandle:

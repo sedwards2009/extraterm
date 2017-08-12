@@ -1,0 +1,19 @@
+{
+  "name": "inject-shell-integration",
+  "description": "Inject Shell Integration extension for Extraterm",
+  "version": "1.0.0",
+  "main": "src/InjectShellIntegrationExtension.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build ; nodeunit src/InjectShellIntegrationExtensionTest.js"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "@types/nodeunit": "0.0.30",
+    "extraterm-extension-api": "file:../../extraterm-extension-api/",
+    "nodeunit": "0.11.0",
+    "typescript": "2.4.2"
+  }
+}

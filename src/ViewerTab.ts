@@ -21,8 +21,8 @@ import * as ThemeTypes from './Theme';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
-type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
+import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
+  Commandable, CommandEntry} from './CommandPaletteRequestTypes';
 
 import * as Electron from 'electron';
 const clipboard = Electron.clipboard;
@@ -63,7 +63,7 @@ const SCROLL_STEP = 1;
 /**
  * A viewer tab which can contain any ViewerElement.
  */
-export class EtViewerTab extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
+export class EtViewerTab extends ViewerElement implements Commandable,
     keybindingmanager.AcceptsKeyBindingManager {
 
   /**
@@ -309,10 +309,6 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     const scrollContainer = DomUtils.getShadowId(this, ID_CONTAINER);
     DomUtils.preventScroll(scrollContainer);
 
-    scrollContainer.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-        this._handleCommandPaletteRequest(ev);
-      });
-
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
       scrollerArea.scrollTop = offset;
     });
@@ -326,8 +322,8 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
         this.focus();
         if (ev.buttons & 2) { // Right Mouse Button
           const viewerElement = this._getViewerElement();
-          if (viewerElement !== null && CommandPaletteRequestTypes.isCommandable(viewerElement)) {
-            viewerElement.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+          if (viewerElement !== null && isCommandable(viewerElement)) {
+            viewerElement.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
           }
         }
       }
@@ -592,32 +588,12 @@ export class EtViewerTab extends ViewerElement implements CommandPaletteRequestT
     }
   }
 
-  private _handleCommandPaletteRequest(ev: CustomEvent): void {
-    if (ev.path[0] === this) { // Don't process our own messages.
-      return;
-    }
-    
-    ev.stopPropagation();
-    
-    const request: CommandPaletteRequestTypes.CommandPaletteRequest = ev.detail;
-    const commandPaletteRequestDetail: CommandPaletteRequest = {
-        srcElement: request.srcElement === null ? this : request.srcElement,
-        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries()],
-        contextElement: this
-      };
-    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
-      { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
-      commandPaletteRequestDetail);
-    this.dispatchEvent(commandPaletteRequestEvent);
-  }
+  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
+    const commandList: CommandEntry[] = [];
 
-  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
-    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
-
-    commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", target: this } );
-    commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", target: this } );
-    commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", target: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", commandExecutor: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", commandExecutor: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", commandExecutor: this } );
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_VIEWER_TAB);
     if (keyBindings !== null) {

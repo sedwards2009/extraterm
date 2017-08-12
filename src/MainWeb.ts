@@ -7,9 +7,9 @@ import * as path from 'path';
 import * as Electron from 'electron';
 const ElectronMenu = Electron.remote.Menu;
 const ElectronMenuItem = Electron.remote.MenuItem;
-
 import * as SourceMapSupport from 'source-map-support';
 import * as _ from 'lodash';
+
 import Logger from './Logger';
 import * as Messages from './WindowMessages';
 import * as WebIpc from './WebIpc';
@@ -20,20 +20,15 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {PopDownListPicker} from './gui/PopDownListPicker';
 import {TabWidget} from './gui/TabWidget';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import * as CommandPaletteTypes from './gui/CommandPaletteTypes';
-import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
-import * as CommandPaletteFunctions from './CommandPaletteFunctions';
+import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
+  from './CommandPaletteRequestTypes';
+import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-
-import * as PluginApi from './PluginApi';
-import * as PluginManager from './PluginManager';
-import * as InternalExtratermApi from './InternalExtratermApi';
-
+import {ExtensionManager} from './ExtensionManager';
 import {MainWebUi} from './MainWebUi';
 import {EtTerminal} from './Terminal';
 import * as DomUtils from './DomUtils';
 import * as Util from './gui/Util';
-
 import {EmbeddedViewer} from './EmbeddedViewer';
 import {AboutTab} from './AboutTab';
 import {SettingsTab} from './settings/SettingsTab';
@@ -82,8 +77,7 @@ let keyBindingManager: KeyBindingManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configManager: ConfigManagerImpl = null;
-let pluginManager: PluginManager.PluginManager = null;
-let internalExtratermApi: InternalExtratermApiImpl = null;
+let extensionManager: ExtensionManager = null;
 
 /**
  * 
@@ -109,7 +103,6 @@ export function startUp(): void {
             .then( () => {
 
     startUpComponents();
-    startUpPlugins();
 
     const doc = window.document;
     doc.body.classList.remove("preparing");
@@ -125,6 +118,8 @@ export function startUp(): void {
     if (process.platform === "darwin") {
       setupOSXMenus(mainWebUi);
     }
+
+    startUpExtensions();
 
     mainWebUi.newTerminalTab();
     mainWebUi.focus();
@@ -185,16 +180,8 @@ function startUpComponents(): void {
   ResizeCanary.init();
 }
 
-function startUpPlugins(): void {
-  // Get the plugins loaded.
-  pluginManager = new PluginManager.PluginManager(path.join(__dirname, PLUGINS_DIRECTORY));
-  internalExtratermApi = new InternalExtratermApiImpl();
-  pluginManager.load(internalExtratermApi);
-}
-
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
-  mainWebUi.setInternalExtratermApi(internalExtratermApi);
   config.injectConfigManager(mainWebUi, configManager);
   keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
@@ -239,9 +226,7 @@ function startUpMainWebUi(): void {
     window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
   });
 
-  mainWebUi.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-    handleCommandPaletteRequest(ev.detail);
-  });
+  mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, handleCommandPaletteRequest);
 }
 
 function startUpMainMenu(): void {
@@ -312,6 +297,11 @@ function startUpWindowEvents(): void {
   });
 }
 
+function startUpExtensions() {
+  extensionManager = new ExtensionManager();
+  extensionManager.startUp();
+}
+
 function executeMenuCommand(command: string): boolean {
   if (command === MENU_ITEM_DEVELOPER_TOOLS) {
     // Unflip what the user did to the state of the developer tools check box for a moment.
@@ -324,8 +314,8 @@ function executeMenuCommand(command: string): boolean {
   return executeCommand(command);
 }
 
-function executeCommand(command: string): boolean {
-  switch(command) {
+function executeCommand(commandId: string, options?: object): boolean {
+  switch(commandId) {
     case MENU_ITEM_SETTINGS:
       mainWebUi.openSettingsTab();
       break;
@@ -568,33 +558,49 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
 //                                                                                                      
 //-----------------------------------------------------------------------
 let commandPaletteRequestSource: HTMLElement = null;
-let commandPaletteRequestEntries: CommandPaletteRequestTypes.CommandEntry[] = null;
+let commandPaletteRequestEntries: CommandEntry[] = null;
 
 function startUpCommandPalette(): void {
   const doc = window.document;
 
   // Command palette
-  const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> doc.createElement(PopDownListPicker.TAG_NAME);
+  const commandPalette = <PopDownListPicker<CommandMenuItem>> doc.createElement(PopDownListPicker.TAG_NAME);
   commandPalette.id = ID_COMMAND_PALETTE;
   commandPalette.setTitlePrimary("Command Palette");
   commandPalette.setTitleSecondary("Ctrl+Shift+P");
 
-  commandPalette.setFilterAndRankEntriesFunc(CommandPaletteFunctions.commandPaletteFilterEntries);
-  commandPalette.setFormatEntriesFunc(CommandPaletteFunctions.commandPaletteFormatEntries);
+  commandPalette.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
+  commandPalette.setFormatEntriesFunc(commandPaletteFormatEntries);
   commandPalette.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
 
   doc.body.appendChild(commandPalette);
   commandPalette.addEventListener('selected', handleCommandPaletteSelected);
 }    
 
-function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.CommandPaletteRequest): void {
-  
+function handleCommandPaletteRequest(ev: CustomEvent): void {
+  const path = ev.composedPath();
+  const requestCommandableStack: Commandable[] = <any> path.filter(el => isCommandable(el));
+
   DomUtils.doLater( () => {
-    commandPaletteRequestSource = request.srcElement;
+    const commandableStack: Commandable[] = [...requestCommandableStack, {executeCommand, getCommandPaletteEntries}];
     
-    const entries = [...request.commandEntries, ...commandPaletteEntries()];
-    commandPaletteRequestEntries = entries;
-    const paletteEntries = entries.map( (entry, index): CommandPaletteTypes.CommandEntry => {
+    const firstCommandable = commandableStack[0];
+    if (firstCommandable instanceof HTMLElement) {
+      commandPaletteRequestSource = firstCommandable;
+    }
+
+
+    commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => {
+      let result: CommandEntry[] = commandable.getCommandPaletteEntries(commandableStack);
+      if (commandable instanceof EtTerminal) {
+        result = [...result, ...extensionManager.getExtensionBridge().getWorkspaceTerminalCommands(commandable)];
+      } else if (commandable instanceof TextViewer) {
+        result = [...result, ...extensionManager.getExtensionBridge().getWorkspaceTextViewerCommands(commandable)];
+      }
+      return result;
+    }));
+
+    const paletteEntries = commandPaletteRequestEntries.map( (entry, index): CommandMenuItem => {
       return {
         id: "" + index,
         group: entry.group,
@@ -605,43 +611,40 @@ function handleCommandPaletteRequest(request: CommandPaletteRequestTypes.Command
       };
     });
     
-    const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> document.getElementById(ID_COMMAND_PALETTE);
+    const commandPalette = <PopDownListPicker<CommandMenuItem>> document.getElementById(ID_COMMAND_PALETTE);
     const shortcut = keyBindingManager.getKeyBindingContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
     commandPalette.setTitleSecondary(shortcut !== null ? shortcut : "");
-
     commandPalette.setEntries(paletteEntries);
     
-    let rect: ClientRect = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500 };
-    if (request.contextElement !== null && request.contextElement !== undefined) {
-      rect = request.contextElement.getBoundingClientRect();
+    const contextElement = requestCommandableStack[requestCommandableStack.length-2];
+    if (contextElement instanceof HTMLElement) {
+      let rect: ClientRect = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500 };
+      if (contextElement != null) {
+        rect = contextElement.getBoundingClientRect();
+      }
+      
+      commandPalette.open(rect.left, rect.top, rect.width, rect.height);
+      commandPalette.focus();
     }
-    
-    commandPalette.open(rect.left, rect.top, rect.width, rect.height);
-    commandPalette.focus();
   });
 }
 
-function commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
-  // Create a command target object which includes the tabInfo var.
-  const target: CommandPaletteRequestTypes.Commandable = {
-    executeCommand: executeCommand
-  }
-
+function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
-
-  const commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", target: target },
-    { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", target: target },
-    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", target: target },
-    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", target: target },
-    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", target: target },
+  const commandExecutor: CommandExecutor = {executeCommand};
+  const commandList: CommandEntry[] = [
+    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", commandExecutor },
+    { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", commandExecutor },
+    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", commandExecutor },
+    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", commandExecutor },
+    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", commandExecutor },
   ];
   return commandList;
 }
 
 function handleCommandPaletteSelected(ev: CustomEvent): void {
-  const commandPalette = <PopDownListPicker<CommandPaletteTypes.CommandEntry>> document.getElementById(ID_COMMAND_PALETTE);
+  const commandPalette = <PopDownListPicker<CommandMenuItem>> document.getElementById(ID_COMMAND_PALETTE);
   commandPalette.close();
   if (commandPaletteRequestSource !== null) {
     commandPaletteRequestSource.focus();
@@ -652,7 +655,7 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
     const commandIndex = Number.parseInt(selectedId);
     const commandEntry = commandPaletteRequestEntries[commandIndex];
     DomUtils.doLater( () => {
-      commandEntry.target.executeCommand(commandEntry.id);
+      commandEntry.commandExecutor.executeCommand(commandEntry.id, commandEntry.commandArguments);
       commandPaletteRequestSource = null;
       commandPaletteRequestEntries = null;
     });
@@ -730,39 +733,5 @@ class KeyBindingManagerImpl {
    */
   unregisterChangeListener(key: any): void {
     this._listenerList = this._listenerList.filter( (tup) => tup.key !== key);
-  }
-}
-
-class InternalExtratermApiImpl implements InternalExtratermApi.InternalExtratermApi {
-
-  private _topLevelElement: HTMLElement = null;
-
-  private _topLevelEventListeners: PluginApi.ElementListener[] = [];
-
-  private _tabElements: HTMLElement[] = [];
-
-  private _tabEventListeners: PluginApi.ElementListener[] = [];
- 
-
-  addNewTopLevelEventListener(callback: PluginApi.ElementListener): void {
-    this._topLevelEventListeners.push(callback);
-  }
-
-  setTopLevel(el: HTMLElement): void {
-    this._topLevelElement = el;
-    this._topLevelEventListeners.forEach( listener => listener(el) );
-  }
-
-  addNewTabEventListener(callback: PluginApi.ElementListener): void {
-    this._tabEventListeners.push(callback);
-  }
-
-  addTab(el: HTMLElement): void {
-    this._tabElements.push(el);
-    this._tabEventListeners.forEach( listener => listener(el) );
-  }
-
-  removeTab(el: HTMLElement): void {
-    this._tabElements = this._tabElements.filter( listEl => listEl !== el );
   }
 }

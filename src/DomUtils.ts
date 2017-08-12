@@ -182,8 +182,8 @@ function nextDocumentOrderNodeUp(currentNode: Node): Node {
   }
   return nextDocumentOrderNodeUp(currentNode.parentNode);
 }
-  
-export function getShadowRoot(self: HTMLElement): ShadowRoot {
+
+export function getShadowRoot(self: Element): ShadowRoot {
     return self.webkitShadowRoot ? self.webkitShadowRoot : self.shadowRoot;
 }
 
@@ -512,4 +512,63 @@ export function removeAllClasses(el: Element): void {
   while (el.classList.length !== 0) {
     el.classList.remove(el.classList[0]);
   }
+}
+
+/**
+ * Get the path from the node through its parents, to the root.
+ * 
+ * This function will also traverse shadow DOM boundaries.
+ * 
+ * @param node the node
+ * @return the path from the node to its root parent with nodes closer to the
+ *         start node first and the ultimate parent node last.
+ */
+export function nodePathToRoot(node: Node): Node[] {
+  let currentNode = node;
+  let nextNode = node;
+  const path: Node[] = [];
+
+  while (true) {
+    currentNode = nextNode;
+    if (currentNode.parentNode != null) {
+      nextNode = currentNode.parentNode;
+      path.push(nextNode);
+    } else if (currentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE && (<ShadowRoot> currentNode).host != null) {
+      nextNode = (<ShadowRoot> currentNode).host;
+      path.push(nextNode);
+    } else {
+      break;
+    }
+  }
+  return path;
+}
+
+/**
+ * Get the list of active/focused elements and their nested active elements.
+ * 
+ * This function traverses Shadow DOM boundaries to find nested
+ * active/focused elements starting from the top window.
+ * 
+ * @returns list of active elements
+ */
+export function activeNestedElements(): Element[] {
+  const result: Element[] = [];
+
+  let activeElement = window.document.activeElement;
+  if (activeElement != null) {
+
+    while (true) {
+      result.push(activeElement);
+      const shadowRoot = getShadowRoot(<HTMLElement> activeElement);
+      if (shadowRoot == null) {
+        break;
+      }
+      const nextActiveElement = shadowRoot.activeElement;
+      if (nextActiveElement == null) {
+        break;
+      }
+      activeElement = nextActiveElement;
+    }
+  }
+  return result;
 }

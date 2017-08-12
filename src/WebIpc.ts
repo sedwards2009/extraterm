@@ -77,12 +77,12 @@ function request(msg: Messages.Message, replyType: Messages.MessageType): Promis
 
 export function requestConfig(): Promise<Messages.ConfigMessage> {
   const msg: Messages.ConfigRequestMessage = {type: Messages.MessageType.CONFIG_REQUEST};
-  return request(msg, Messages.MessageType.CONFIG);
+  return <Promise<Messages.ConfigMessage>> request(msg, Messages.MessageType.CONFIG);
 }
 
 export function requestThemeList(): Promise<Messages.ThemeListMessage> {
   const msg: Messages.ThemeListRequestMessage = {type: Messages.MessageType.THEME_LIST_REQUEST};
-  return request(msg, Messages.MessageType.THEME_LIST);
+  return <Promise<Messages.ThemeListMessage>> request(msg, Messages.MessageType.THEME_LIST);
 }
 
 export function requestThemeContents(themeIdList: string[], cssFileList: ThemeTypes.CssFile[]): Promise<Messages.ThemeContentsMessage> {
@@ -92,7 +92,7 @@ export function requestThemeContents(themeIdList: string[], cssFileList: ThemeTy
   const msg: Messages.ThemeContentsRequestMessage = {type: Messages.MessageType.THEME_CONTENTS_REQUEST,
     themeIdList: themeIdList,
     cssFileList: cssFileList};
-  return request(msg, Messages.MessageType.THEME_CONTENTS);
+  return <Promise<Messages.ThemeContentsMessage>> request(msg, Messages.MessageType.THEME_CONTENTS);
 }
 
 export function requestPtyCreate(command: string, args: string[], columns: number, rows: number,
@@ -110,7 +110,7 @@ export function requestPtyCreate(command: string, args: string[], columns: numbe
     rows: rows,
     env: env
   };
-  return request(msg, Messages.MessageType.PTY_CREATED);
+  return <Promise<Messages.CreatedPtyMessage>> request(msg, Messages.MessageType.PTY_CREATED);
 }
 
 export function ptyInput(id: number, data: string): void {
@@ -160,7 +160,7 @@ export function sendConfig(config: config.Config): void {
 
 export function requestNewTag(): Promise<Messages.NewTagMessage> {
   const msg: Messages.NewTagRequestMessage = {type: Messages.MessageType.NEW_TAG_REQUEST, async: true};
-  return request(msg, Messages.MessageType.NEW_TAG);
+  return <Promise<Messages.NewTagMessage>> request(msg, Messages.MessageType.NEW_TAG);
 }
 
 export function requestNewTagSync(): string {

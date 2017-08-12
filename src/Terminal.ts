@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import * as utf8 from 'utf8';
+import {clipboard} from 'electron';
 
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
@@ -18,28 +19,20 @@ import * as ThemeTypes from './Theme';
 import {EmbeddedViewer} from './EmbeddedViewer';
 import {CommandPlaceHolder} from './CommandPlaceholder';
 import {TerminalViewer} from './viewers/TerminalViewer';
-import * as TerminalViewerTypes from './viewers/TerminalViewerTypes';
+import {TextDecoration, BookmarkRef} from './viewers/TerminalViewerTypes';
 import {TextViewer} from './viewers/TextViewer';
 import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
-import * as keybindingmanager from './KeyBindingManager';
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
-
-import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
-type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
-
-// import EtMarkdownViewer = require('./viewers/markdownviewer');
+import {KeyBindingManager, injectKeyBindingManager, AcceptsKeyBindingManager} from './KeyBindingManager';
+import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
+  from './CommandPaletteRequestTypes';
 import Logger from './Logger';
 import LogDecorator from './LogDecorator';
 import * as DomUtils from './DomUtils';
 import * as Term from './Term';
 import {ScrollBar} from './gui/ScrollBar';
 import * as util from './gui/Util';
-
-import * as Electron from 'electron';
-const clipboard = Electron.clipboard;
-
 import * as WebIpc from './WebIpc';
 import * as Messages from './WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
@@ -47,15 +40,8 @@ import {FrameFinder} from './FrameFinderType';
 import * as MmeTypeDetector from './MimeTypeDetector';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import * as SupportsClipboardPaste from './SupportsClipboardPaste';
+import {Config, ConfigManager, CommandLineAction, injectConfigManager, AcceptsConfigManager} from './Config';
 
-import * as config from './Config';
-type Config = config.Config;
-type ConfigManager = config.ConfigManager;
-
-type CommandLineAction = config.CommandLineAction;
-
-type TextDecoration = TerminalViewerTypes.TextDecoration;
-type BookmarkRef = TerminalViewerTypes.BookmarkRef;
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
 const VisualState = ViewerElementTypes.VisualState;
@@ -75,7 +61,7 @@ let startTime: number = window.performance.now();
 let registered = false;
 
 const ID = "EtTerminalTemplate";
-const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
+export const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
 const ID_SCROLL_CONTAINER = "ID_SCROLL_CONTAINER";
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
@@ -141,8 +127,8 @@ interface WriteBufferStatus {
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-export class EtTerminal extends ThemeableElementBase implements CommandPaletteRequestTypes.Commandable,
-    keybindingmanager.AcceptsKeyBindingManager, config.AcceptsConfigManager {
+export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingManager,
+    AcceptsConfigManager {
   
   /**
    * The HTML tag name of this element.
@@ -489,6 +475,16 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     this._adjustFontSize(delta)
   }
 
+  getViewerElements(): ViewerElement[] {
+    return <ViewerElement[]> this._childElementList
+      .map(status => status.element)
+      .filter(el => el instanceof ViewerElement);
+  }
+    
+  getExtratermCookieValue(): string {
+    return this._cookie;
+  }
+
   //-----------------------------------------------------------------------
   //
   //   #                                                         
@@ -531,10 +527,6 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
 
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
-
-      scrollContainer.addEventListener(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-          this._handleCommandPaletteRequest(ev);
-        });
 
       this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
@@ -807,8 +799,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   private _appendNewTerminalViewer(): void {
     // Create the TerminalViewer
     const terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
-    keybindingmanager.injectKeyBindingManager(terminalViewer, this._keyBindingManager);
-    config.injectConfigManager(terminalViewer, this._configManager);
+    injectKeyBindingManager(terminalViewer, this._keyBindingManager);
+    injectConfigManager(terminalViewer, this._configManager);
     
     terminalViewer.setEmulator(this._emulator);
     this._appendScrollable(terminalViewer)
@@ -1361,57 +1353,37 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   
   private _handleContextMenu(): void {
     if (this._terminalViewer !== null) {
-      this._terminalViewer.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+      this._terminalViewer.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
     }
   }
 
-  private _handleCommandPaletteRequest(ev: CustomEvent): void {
-    if (ev.path[0] === this) { // Don't process our own messages.
-      return;
-    }
-    
-    ev.stopPropagation();
-    
-    const request: CommandPaletteRequestTypes.CommandPaletteRequest = ev.detail;
-    const commandPaletteRequestDetail: CommandPaletteRequest = {
-        srcElement: request.srcElement === null ? this : request.srcElement,
-        commandEntries: [...request.commandEntries, ...this._commandPaletteEntries()],
-        contextElement: this
-      };
-    const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
-      { detail: commandPaletteRequestDetail });
-    commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
-      commandPaletteRequestDetail);
-    this.dispatchEvent(commandPaletteRequestEvent);
-  }
-
-  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
-    const commandList: CommandPaletteRequestTypes.CommandEntry[] = [];
+  getCommandPaletteEntries(commandableStack): CommandEntry[] {
+    const commandList: CommandEntry[] = [];
     if (this._mode === Mode.DEFAULT) {
-      commandList.push( { id: COMMAND_ENTER_CURSOR_MODE, group: PALETTE_GROUP, iconRight: "i-cursor", label: "Enter cursor mode", target: this } );
+      commandList.push( { id: COMMAND_ENTER_CURSOR_MODE, group: PALETTE_GROUP, iconRight: "i-cursor", label: "Enter cursor mode", commandExecutor: this } );
     } else {
-      commandList.push( { id: COMMAND_ENTER_NORMAL_MODE, group: PALETTE_GROUP, label: "Enter normal mode", target: this } );
+      commandList.push( { id: COMMAND_ENTER_NORMAL_MODE, group: PALETTE_GROUP, label: "Enter normal mode", commandExecutor: this } );
     }
-    commandList.push( { id: COMMAND_SCROLL_PAGE_UP, group: PALETTE_GROUP, iconRight: "angle-double-up", label: "Scroll Page Up", target: this } );
-    commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, group: PALETTE_GROUP, iconRight: "angle-double-down", label: "Scroll Page Down", target: this } );
+    commandList.push( { id: COMMAND_SCROLL_PAGE_UP, group: PALETTE_GROUP, iconRight: "angle-double-up", label: "Scroll Page Up", commandExecutor: this } );
+    commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, group: PALETTE_GROUP, iconRight: "angle-double-down", label: "Scroll Page Down", commandExecutor: this } );
 
-    commandList.push( { id: COMMAND_GO_TO_PREVIOUS_FRAME, group: PALETTE_GROUP, label: "Go to Previous Frame", target: this } );
-    commandList.push( { id: COMMAND_GO_TO_NEXT_FRAME, group: PALETTE_GROUP, label: "Go to Next Frame", target: this } );
+    commandList.push( { id: COMMAND_GO_TO_PREVIOUS_FRAME, group: PALETTE_GROUP, label: "Go to Previous Frame", commandExecutor: this } );
+    commandList.push( { id: COMMAND_GO_TO_NEXT_FRAME, group: PALETTE_GROUP, label: "Go to Next Frame", commandExecutor: this } );
     
-    commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "copy", label: "Copy to Clipboard", target: this } );
+    commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "copy", label: "Copy to Clipboard", commandExecutor: this } );
     if (this._mode === Mode.CURSOR) {
-      commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "clipboard", label: "Paste from Clipboard", target: this } );
+      commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "clipboard", label: "Paste from Clipboard", commandExecutor: this } );
     }
-    commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "external-link", label: "Open Last Frame", target: this } );
-    commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "times-circle", label: "Delete Last Frame", target: this } );
+    commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "external-link", label: "Open Last Frame", commandExecutor: this } );
+    commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "times-circle", label: "Delete Last Frame", commandExecutor: this } );
 
-    commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", target: this } );
-    commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", target: this } );
-    commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", target: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", commandExecutor: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", commandExecutor: this } );
+    commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", commandExecutor: this } );
 
 
-    commandList.push( { id: COMMAND_CLEAR_SCROLLBACK, group: PALETTE_GROUP, iconRight: "eraser", label: "Clear Scrollback", target: this } );
-    commandList.push( { id: COMMAND_RESET_VT, group: PALETTE_GROUP, iconRight: "refresh", label: "Reset VT", target: this } );
+    commandList.push( { id: COMMAND_CLEAR_SCROLLBACK, group: PALETTE_GROUP, iconRight: "eraser", label: "Clear Scrollback", commandExecutor: this } );
+    commandList.push( { id: COMMAND_RESET_VT, group: PALETTE_GROUP, iconRight: "refresh", label: "Reset VT", commandExecutor: this } );
 
     const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
@@ -1818,8 +1790,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
   private _createEmbeddedViewerElement(title: string): EmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
-    keybindingmanager.injectKeyBindingManager(el, this._keyBindingManager);
-    config.injectConfigManager(el, this._configManager);
+    injectKeyBindingManager(el, this._keyBindingManager);
+    injectConfigManager(el, this._configManager);
     el.setAwesomeIcon('cog');
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
@@ -1945,8 +1917,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
       
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
-      keybindingmanager.injectKeyBindingManager(outputTerminalViewer, this._keyBindingManager);
-      config.injectConfigManager(outputTerminalViewer, this._configManager);
+      injectKeyBindingManager(outputTerminalViewer, this._keyBindingManager);
+      injectConfigManager(outputTerminalViewer, this._configManager);
       newViewerElement.setViewerElement(outputTerminalViewer);
       
       outputTerminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
@@ -2099,8 +2071,8 @@ export class EtTerminal extends ThemeableElementBase implements CommandPaletteRe
     }
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
-    keybindingmanager.injectKeyBindingManager(dataViewer, this._keyBindingManager);
-    config.injectConfigManager(dataViewer, this._configManager);
+    injectKeyBindingManager(dataViewer, this._keyBindingManager);
+    injectConfigManager(dataViewer, this._configManager);
     if (data !== null) {
       dataViewer.setBytes(data, charset !== null ? mimeType + ";" + charset : mimeType);
     }

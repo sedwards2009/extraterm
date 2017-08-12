@@ -11,9 +11,20 @@
   },
   "scripts": {
     "run": "electron src/Main.js --dev-tools",
-    "build": "tsc",
-    "buildicons": "node src/extra_icons/build.js",
+
+    "build-all": "npm run npm-install-extension-api ; npm run build ; npm run build-extensions",
+    "build": "npm install extraterm-extension-api ; tsc",
+    "build-extensions": "npm run npm-install-extension-api ; node src/build_scripts/npm_extensions.js build",
+    "build-icons": "node src/extra_icons/build.js",
+
+    "npm-install-all": "npm install ; npm run npm-install-extensions ; npm run electron-rebuild",
+    "npm-install-extension-api": "npm install extraterm-extension-api ; node src/build_scripts/npm_extensions.js install-extension-api",
+    "npm-install-extensions": "node src/build_scripts/npm_extensions.js install",
+
+    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o ptyw.js,font-manager -f -v 1.6.8",
+
     "testbulkdomoperation": "npm run build ; nodeunit src/BulkDomOperationTest.js",
+    "testextensionloader": "npm run build ; nodeunit src/ExtensionLoaderTest.js",
     "testkeybindingmanager": "npm run build ; nodeunit src/KeyBindingManagerTest.js",
     "testmimetypedetector": "npm run build ; nodeunit src/MimeTypeDetectorTest.js",
     "testsplitlayout": "npm run build ; nodeunit src/SplitLayoutTest.js",
@@ -54,15 +65,16 @@
     "cajon": "0.2.10",
     "electron": "1.6.8",
     "electron-packager": "8.7.0",
-    "electron-rebuild": "1.5.7",
+    "electron-rebuild": "1.6.0",
     "finalhandler": "0.4.0",
     "modclean": "2.1.0",
     "nodeunit": "0.11.0",
     "serve-static": "1.10.0",
-    "shelljs": "0.6.0",
+    "shelljs": "0.7.8",
     "typedoc": "0.3.12",
-    "typescript": "2.3.2",
-    "webfont": "^4.0.0"
+    "typescript": "2.4.2",
+    "webfont": "^4.0.0",
+    "extraterm-extension-api": "file:./extraterm-extension-api/"
   },
   "jshintConfig": {
     "esversion": 6

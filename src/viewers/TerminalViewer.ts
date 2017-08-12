@@ -16,7 +16,8 @@ import * as CodeMirrorCommands from '../CodeMirrorCommands';
 import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
-import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
+import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
+  from '../CommandPaletteRequestTypes';
 import * as Term from '../Term';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
@@ -37,7 +38,6 @@ type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
 type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
-type CommandPaletteRequest = CommandPaletteRequestTypes.CommandPaletteRequest;
 
 const ID = "EtTerminalViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -54,7 +54,6 @@ const KEYBINDINGS_CURSOR_MODE = "terminal-viewer";
 const PALETTE_GROUP = "terminalviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
-const COMMAND_OPEN_COMMAND_PALETTE = CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE;
 
 const NON_CODEMIRROR_COMMANDS = [
   COMMAND_TYPE_AND_CR_SELECTION,
@@ -76,8 +75,8 @@ function getCssText(): string {
   return cssText;
 }
 
-export class TerminalViewer extends ViewerElement implements CommandPaletteRequestTypes.Commandable,
-    keybindingmanager.AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
+export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
+    SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "ET-TERMINAL-VIEWER";
   
@@ -1174,24 +1173,24 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
     ev.stopImmediatePropagation();
     ev.preventDefault();
 
-    this.executeCommand(CommandPaletteRequestTypes.COMMAND_OPEN_COMMAND_PALETTE);
+    this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
   }
 
-  private _commandPaletteEntries(): CommandPaletteRequestTypes.CommandEntry[] {
-    let commandList: CommandPaletteRequestTypes.CommandEntry[] = [
-      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", target: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", target: this }
+  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
+    let commandList: CommandEntry[] = [
+      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", commandExecutor: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
     if (this._mode === ViewerElementTypes.Mode.CURSOR) {
-      const cmCommandList: CommandPaletteRequestTypes.CommandEntry[] =
+      const cmCommandList: CommandEntry[] =
         CodeMirrorCommands.commandDescriptions(this._codeMirror).map( (desc) => {
           return { id: desc.command,
             group: PALETTE_GROUP,
             iconLeft: desc.iconLeft,
             iconRight: desc.iconRight,
             label: desc.label,
-            target: this };
+            commandExecutor: this };
         });
       commandList = [...commandList, ...cmCommandList];
     }
@@ -1233,16 +1232,7 @@ export class TerminalViewer extends ViewerElement implements CommandPaletteReque
         break;
         
       case COMMAND_OPEN_COMMAND_PALETTE:
-        const commandPaletteRequestDetail: CommandPaletteRequest = {
-            srcElement: this,
-            commandEntries: this._commandPaletteEntries(),
-            contextElement: null
-          };
-        const commandPaletteRequestEvent = new CustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST,
-          { detail: commandPaletteRequestDetail });
-        commandPaletteRequestEvent.initCustomEvent(CommandPaletteRequestTypes.EVENT_COMMAND_PALETTE_REQUEST, true, true,
-          commandPaletteRequestDetail);
-        this.dispatchEvent(commandPaletteRequestEvent);
+        dispatchCommandPaletteRequest(this);
         break;
         
       default:
