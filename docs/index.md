@@ -27,5 +27,8 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 {% include news_list_short.ext %}
 [More news](news.html)
 
+Follow [{% include twitter_logo.ext %}@ExtratermDev](https://twitter.com/ExtratermDev) to receive news updates as they happen.
+
+
 ## Development
 
