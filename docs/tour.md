@@ -1,6 +1,7 @@
-Extraterm Tour
-==============
-
+---
+title: Tour
+description: 
+---
 Extraterm is a open source terminal emulator which aims to add many new features to bring the traditional terminal into the modern era.
 
 It is currently in heavy development and not ready for production use, although this has failed to stop the main developer from using it as their main terminal emulator.

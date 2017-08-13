@@ -1,0 +1,163 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+.inner.inner {
+  width: 800px;
+}
+
+header.homepage {
+  display: flex;
+
+  & > * {
+    width: 400px;
+  }
+}
+
+#main-title {
+  align-self: center;
+}
+
+.navigation-bar {
+  width: 100%;
+  text-align: right;
+  & A {
+    display: inline-block;
+    color: #6d6d6d;
+    padding-right: 1em;
+    padding-top: 4px;
+    vertical-align: top;
+  }
+}
+
+@function blend($color, $background-color) {
+  $red: ((1 - alpha($color)) * red($background-color) ) + (alpha($color) * red($color));
+  $green: ((1 - alpha($color)) * green($background-color) ) + (alpha($color) * green($color));
+  $blue: ((1 - alpha($color)) * blue($background-color) ) + (alpha($color) * blue($color));
+  @return rgb($red, $green, $blue);
+}
+
+
+$color: #24292e;
+
+$btn-background-color-start: #fafbfc;
+$btn-background-color-stop: #e4ebf0;
+$btn-background-color: mix($btn-background-color-start, $btn-background-color-stop);
+$btn-border-color: blend(rgba(27, 31, 35, 0.2), white);
+
+$btn-active-background-color: #e9ecef;
+$btn-active-border-color: blend(rgba(27, 31, 35, 0.35), white);
+$btn-active-box-shadow-color: rgba(27, 31, 35, 0.15);
+
+$btn-focus-border-color: #c8e1ff;
+
+$btn-hover-background-color-start: #f0f3f6;
+$btn-hover-background-color-stop: #dce3ec;
+$btn-hover-background-color: mix($btn-hover-background-color-start, $btn-hover-background-color-stop);
+$btn-hover-border-color: blend(rgba(27, 31, 35, 0.35), white);
+
+$social-count-hover-color: #0366d6;
+$social-count-background-color: white;
+
+
+@mixin linear-gradient($color-start, $color-stop) {
+  background-image: -webkit-linear-gradient(top, $color-start, $color-stop);
+  background-image: -moz-linear-gradient(top, $color-start, $color-stop);
+  background-image: linear-gradient(to bottom, $color-start, $color-stop);
+}
+
+@mixin -ms-linear-gradient($color-start, $color-stop) {
+  -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#{ie-hex-str($color-start)}', endColorstr='#{ie-hex-str($color-stop)}')";
+  *filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#{ie-hex-str($color-start)}', endColorstr='#{ie-hex-str($color-stop)}');
+}
+
+
+.github-btn {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  margin: 0;
+  font-size: 0;
+  white-space: nowrap;
+
+  a {
+    color: $color;
+    text-decoration: none;
+    outline: 0;
+  }
+
+  .btn {
+    display: inline-block;
+    font-weight: 600;
+    vertical-align: middle;
+    cursor: pointer;
+    border: 1px solid $btn-border-color;
+    border-radius: 0.25em;
+
+    &:focus {
+      border-color: $btn-focus-border-color;
+    }
+
+    background-color: $btn-background-color;
+    @include linear-gradient($btn-background-color-start, $btn-background-color-stop);
+    background-repeat: repeat-x;
+    background-size: 110% 110%;
+    @include -ms-linear-gradient($btn-background-color-start, $btn-background-color-stop);
+
+    &:active {
+      background-color: $btn-active-background-color;
+      background-image: none;
+      border-color: $btn-active-border-color;
+      box-shadow: inset 0 0.15em 0.3em $btn-active-box-shadow-color;
+    }
+
+    &:hover {
+      background-color: $btn-hover-background-color;
+      @include linear-gradient($btn-hover-background-color-start, $btn-hover-background-color-stop);
+      border-color: $btn-hover-border-color;
+      @include -ms-linear-gradient($btn-hover-background-color-start, $btn-hover-background-color-stop);
+    }
+
+    height: 18px;
+    padding: 0 5px;
+    line-height: 18px;
+
+    span {
+      vertical-align: 1px;
+    }
+
+    font-size: 11px;
+  }
+
+  .octicon {
+    position: relative;
+    display: inline-block;
+    fill: currentColor;
+    height: 14px;
+    top: 2px;
+  }
+}
+
+.large {
+  .btn {
+    height: 26px;
+    line-height: 26px;
+
+    span {
+      vertical-align: 0;
+    }
+  }
+
+  .btn {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .octicon {
+    height: 16px;
+    top: 4px;
+  }
+}

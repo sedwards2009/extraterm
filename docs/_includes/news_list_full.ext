@@ -1,0 +1,7 @@
+<ul>
+{% for post in site.posts %}
+  <li>
+    {{ post.date | date_to_string }} - <a href="{{ post.url }}">{{ post.title }}</a> - {{post.excerpt | remove: '<p>' | remove: '</p>'}} <a href="{{ post.url }}">Read more</a>
+  </li>
+{% endfor %}
+</ul>
