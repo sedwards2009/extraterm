@@ -31,6 +31,13 @@ header.homepage {
   }
 }
 
+A, A:hover {
+  color: #19853b;
+}
+A:hover {
+  text-decoration: dashed underline;
+}
+
 @function blend($color, $background-color) {
   $red: ((1 - alpha($color)) * red($background-color) ) + (alpha($color) * red($color));
   $green: ((1 - alpha($color)) * green($background-color) ) + (alpha($color) * green($color));
