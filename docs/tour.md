@@ -31,7 +31,7 @@ Or you can edit the command output directly in place and execute the selection w
 
 Extraterm also supports tiling and panes, text size scaling per terminal session and color emoji on all operating systems.
 
-![Panes and tiling, emoji, text scaling and images](nested_panes.png)
+![Panes and tiling](splits_and_panes.png)
 
 Extraterm is designed for keyboard use first. The Command Palette makes it easy to find and execute any command without leaving the keyboard.
 

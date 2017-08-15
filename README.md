@@ -10,7 +10,6 @@
 
 ![Directly edit and execute command output](docs/edit_direct.gif)
 
-![Panes and tiling, emoji, text scaling and images](docs/nested_panes.png)
 
 ### :star: **See the [Visual Tour and Screenshots](docs/tour.md)**
 ### :star: **[Download and try it out on Linux, Windows+Cygwin and macOS](https://github.com/sedwards2009/extraterm/releases)**
