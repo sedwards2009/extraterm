@@ -6,12 +6,23 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+export interface ScriptText {
+  type: 'text';
+  text: string;
+}
+
+export interface ScriptWait {
+  type: 'wait';
+  durationMilliseconds: number;
+}
+
+export type ScriptCommand = ScriptText | ScriptWait;
 
 abstract class ScriptBuilder {
   constructor(protected _extratermCookieName: string, protected _extratermCookieValue: string) {}
 
-  build(): string {
-    return this._buildCookie() + '\n' + this._buildCommands() + '\n' + this._buildShellReporting() + '\n';
+  build(): ScriptCommand[] {
+    return [{type: 'text', text: this._buildCookie() + '\n' + this._buildCommands() + '\n' + this._buildShellReporting() + '\n'}];
   }
 
   protected abstract _buildCookie(): string;
@@ -39,10 +50,10 @@ const EOT = '\x04';
 
 export class FishScriptBuilder extends ScriptBuilder {
 
-  build(): string {
-    return `source
+  build(): ScriptCommand[] {
+    return [{type: 'text', text: `source
 ${super.build()}
-${EOT}`;
+${EOT}`}];
   }
 
   protected _buildCookie(): string {
@@ -81,8 +92,13 @@ end
 
 export class BashScriptBuilder extends ScriptBuilder {
   
-  build(): string {
-    return 'source `tty`\n' + super.build() + EOT;
+  build(): ScriptCommand[] {
+    return [
+      {type: 'text', text: 'source /dev/stdin\n'},
+      {type: 'wait', durationMilliseconds: 300},
+      ...super.build(),
+      {type: 'text', text: EOT},
+    ];
   }
 
   protected _buildCookie(): string {
@@ -124,10 +140,14 @@ trap 'preexec_invoke_exec' DEBUG
 
 
 export class ZshScriptBuilder extends ScriptBuilder {
-  build(): string {
-    return `source =(cat </dev/stdin)
-${super.build()}
-${EOT}`
+
+  build(): ScriptCommand[] {
+    return [
+      {type: 'text', text: 'source =(cat </dev/stdin)\n'},
+      {type: 'wait', durationMilliseconds: 300},
+      ...super.build(),
+      {type: 'text', text: EOT},
+    ];
   }
 
   protected _buildCookie(): string {

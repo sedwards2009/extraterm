@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {CommandEntry, ExtensionContext, Logger, Terminal} from 'extraterm-extension-api';
-import {BashScriptBuilder, FishScriptBuilder, ZshScriptBuilder} from './ScriptBuilders';
+import {BashScriptBuilder, FishScriptBuilder, ScriptCommand, ZshScriptBuilder} from './ScriptBuilders';
 
 
 let log: Logger = null;
@@ -34,26 +34,42 @@ function terminalCommandLister(terminal: Terminal): CommandEntry[] {
 }
 
 async function terminalCommandExecutor(terminal: Terminal, commandId: string, commandArguments?: object): Promise<any> {
-  let script = "";
+  const scriptCommands = getScriptCommands(terminal, commandId);
+  executeScriptCommands(terminal, scriptCommands);
+}
+
+function getScriptCommands(terminal: Terminal, commandId: string): ScriptCommand[] {
   switch(commandId) {
     case COMMAND_INJECT_BASH_INTEGRATION:
-      script = new BashScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-      break;
+      return new BashScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
 
     case COMMAND_INJECT_FISH_INTEGRATION:
-      script = new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-      break;
+      return new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
 
     case COMMAND_INJECT_ZSH_INTEGRATION:
-      script = new ZshScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-      break;
+      return new ZshScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
 
     default:
-      return;
+      return [];
   }
-  terminal.type(normalizeCarriageReturns(script));
+}
+
+async function executeScriptCommands(terminal: Terminal, scriptCommands: ScriptCommand[]): Promise<void> {
+  for (const command of scriptCommands) {
+    if (command.type === 'text') {
+      terminal.type(normalizeCarriageReturns(command.text));
+    } else {
+      await sleepMilliseconds(command.durationMilliseconds);
+    }
+  }
 }
 
 function normalizeCarriageReturns(text: string): string {
   return text.replace(/\n/g, '\r');
+}
+
+function sleepMilliseconds(durationMilliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMilliseconds);    
+  });
 }
