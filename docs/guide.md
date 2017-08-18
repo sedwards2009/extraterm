@@ -1,52 +1,88 @@
 ---
-title: Getting Started Guide
+title: User Guide
 ---
 
-Getting Started
-===============
+<!-- TOC -->
 
-Installation
-------------
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+- [Basics](#basics)
+  - [Cursor Mode](#cursor-mode)
+  - [Command Palette](#command-palette)
+- [Shell Integration](#shell-integration)
+  - [The 'show' Command](#the-show-command)
+  - [The 'from' Command](#the-from-command)
+  - [Executing Commands from Cursor Mode](#executing-commands-from-cursor-mode)
+- [Splits and Panes](#splits-and-panes)
+  - [Drag and Drop](#drag-and-drop)
+- [Editing in Cursor Mode](#editing-in-cursor-mode)
+- [Viewing content with the Show Command](#viewing-content-with-the-show-command)
+  - [Frames viewing Text](#frames-viewing-text)
+- [Tips](#tips)
+  - [Keyboard Shortcuts](#keyboard-shortcuts)
+  - [Mouse selections when an app grabs the mouse](#mouse-selections-when-an-app-grabs-the-mouse)
+
+<!-- /TOC -->
+
+Note: Keyboard shortcuts given in the documentation apply to the default Windows/Linux shortcuts.
+
+
+# Getting Started
+
+## Installation
+
 Extraterm support Linux, Mac OS X and Cygwin on Windows. Download the zip file for your operating system on the [github releases page](https://github.com/sedwards2009/extraterm/releases).
 
 Unzip the file somewhere convenient.
 
 Start Extraterm:
 
-* **Linux** - Run the `extraterm` file inside the unzip directory.
+* **Linux** - Click to run the `extraterm` file inside the unzip directory.
 * **Mac OS X** - Just start the application via the Finder.
 * **Cygwin and Babun** - Double click to run the Extraterm application inside the unzip directory, or using the shell, execute the `extraterm` file inside the unzip directory. Note you must have Python 3 installed inside cygwin for Extraterm to run (see the [FAQ](faq.md) ). If you have trouble starting Extraterm on cygwin also consult the [FAQ](faq.md).
 
 Extraterm doesn't need any further installation.
 
-
-Basics
-------
-When Extraterm starts it opens one tab and runs your default shell inside it. The basic functioning of the terminal should feel quite familiar. You a non-blinking block cursor.
-
-The plus sign next to the tab at the top of the window opens a new tab (shortcut `Ctrl+Shift+T`). Close a tab by using the little cross icon/button on the right side of the tab, or just exist the shell. `Ctrl+Shift+Q` is the shortcut for closing a tab directly.
-
-Use the `Ctrl+,` and `Ctrl+.` shortcuts to move between tabs.
-
-Selections can be made with the mouse and are automatically copied to the system clipboard. `Ctrl+Shift+C` will also copy a selection. `Ctrl+Shift+V` or the middle mouse button pastes the contents of the clipboard.
-
-With `Shift+PageUp` and `Shift+PageDown` you can scroll through and view previous output which has scrolled out of view.
-
-
-Cursor mode
 -----------
+
+# Basics
+
+When Extraterm starts it opens one tab and runs your default shell inside it. The basic functioning of the terminal should feel quite familiar.
+
+Multiple terminals can be open at the same time in different tabs. The plus sign next to the tab at the top of the window opens a new tab (shortcut `Ctrl+Shift+T`). Close a tab by using the little cross icon/button on the right side of the tab, or just exist the shell. `Ctrl+Shift+Q` is the shortcut for closing a tab directly.
+
+Use the `Ctrl+,` and `Ctrl+.` shortcuts to move left and right between tabs.
+
+Selections can be made with the mouse and are automatically copied to the system clipboard. `Ctrl+Shift+C` will also copy a selection. `Ctrl+Shift+V`, `Ctrl+Insert` or the middle mouse button pastes the contents of the clipboard into the terminal.
+
+The scrollbar on the right or `Shift+PageUp` and `Shift+PageDown` let you can scroll through and view previous output.
+
+The "hamburger" menu is in the top right corner of the window.
+
+
+## Cursor Mode
+
 Extraterm features a cursor mode where you can navigate the screen and scrollback contents and select text in the terminal without having to reach for the mouse.
 
-To go into cursor mode press `Ctrl+Shift+Space`. The block cursor will remain in place but there will also be a blinking vertical bar cursor. This is Extraterm's cursor mode cursor. It works the same as the cursor in a typical desktop text editor. Cursor keys work the same and `shift` + cursor creates selections. 
+To go into cursor mode press `Ctrl+Shift+Space`. The block cursor will remain in place but there will also be a blinking vertical bar cursor. This is Extraterm's cursor mode cursor. It works the same as the cursor in a typical desktop text editor. Cursor keys work the same and `shift` + cursor creates selections.
+
 `Ctrl+Shift+C` (or just `Ctrl+C`) copies the selection to the clipboard. The cursor can be placed using the mouse. When in cursor mode no keyboard input is sent to your shell.
 
 The `Ctrl+Shift+Space` shortcut acts as a toggle between cursor mode and normal terminal mode. Press it again to go back to terminal mode.
 
 See [Executing Commands from Cursor Mode](#executing-commands-from-cursor-mode) also.
 
+## Command Palette
 
-Shell Integration
------------------
+The Command Palette is a pop up menu of commands which can be easily searched and selected from via the keyboard. It grants direct access to all of Extraterm's commands and actions. Open it using `Ctrl+Shift+P`. Commands which are specific to the current context appear at the top of the menu. Cursor up/down and PageUp/PageDown keys move the selection. The `Enter` key executes the selected command, while the escape key closes the palette. The items in the menu can be filtered by entering search text.
+
+![Command palette](command_palette.png)
+
+
+-----------
+
+# Shell Integration
+
 Extraterm becomes a lot more useful once the shell integration has been set up. Currently the three major shells, bash, zshell and fish are supported.
 
 Go to the [github releases page](https://github.com/sedwards2009/extraterm/releases) and download the `extraterms-commands` zip file. Unzip this file somewhere. Inside are a number of scripts called `setup_extraterm...`. Use your shell's source command to read the script which matches your shell.
@@ -76,15 +112,17 @@ The framing behaviour can be configured in the Setting tab, accessible from the 
 In the future more shortcuts and features will be added to make more use of this framing and shell integration.
 
 
-The 'show' Command
-------------------
+## The 'show' Command
+
 The shell integration adds a pair of new Extraterm specific commands to your shell. The `show` command is a general tool for showing the contents of a file inside the terminal. Currently it supports showing and highlighting many programming languages and mark up languages. It can also show the most common image formats directly in the terminal.
 
 In the future this tool and the support needed in Extraterm itself will be expanded to support other file formats.
 
+![Showing an image with the 'show' command](show_image.png)
 
-The 'from' Command
-------------------
+
+## The 'from' Command
+
 The `from` command is lets you use previous command output as input to a new command. Each command frame has a little tag icon in the title bar with a number. By running the `from` command with the number of the frame you want as its argument you can get the contents of that frame.
 
 For example:
@@ -108,41 +146,58 @@ Now I can go into selection mode and cut away the parts of the text I don't need
 With a shell pipe and `xargs` I can give the list of documents to the `wc` (word count) command:
 
 
-Executing Commands from Cursor Mode
------------------------------------
+## Executing Commands from Cursor Mode
+
 Command output in a frame can be edited directly. Extraterm also has some shortcuts to make this capability even more useful.
 
 * `Ctrl+Enter` will type the currently selected text into the shell.
 * `Ctrl+Shift+Enter` will type the currently select text into the shell and press the enter key. Effectively it executes the selection in the shell. Use with care.
 
+-----------
+
+# Splits and Panes
+
+Each terminal is contained in its own tab. New tabs can be opened by clicking on the new tab button '+' up in the tab bar, or using `Ctrl+Shift+T`. Tabs can be 'split' half horizontally or vertically using the `Horizontal Split` and `Vertical Split` commands which can be found in the [Command Palette](#command-palette). When a tab is split, it is moved to the side and the Pane Menu appears in the remaining space or 'pane'. The menu allows you to create a new terminal, more splits or to close the pane.
+
+![Tiling and panes](splits_and_panes.png)
+
+## Drag and Drop
+
+Extraterm supports mouse based gestures for rearranging tabs in the tab bar, moving them between groups of tabs, and splitting tabs to create extra panes.
+
+* Tabs can be moved between groups of tabs by dragging them from one group to the other.
+* Frames can be dragged by their title bars up into a group of tabs to move them out of their terminal and into their own tab.
+* The main content area of every tab can be split different ways depending on where a tab or frame is dropped. Drops towwards the top or bottom will split it horizontally, while drops to the far left or right will split it vertically. A drop in the center of the content will simply move the tab or frame up into the tab group.
+* Frames can also be dragged right out of Extraterm and dropped on other applications which will accept text.
+
+-----------
+
+# Editing in Cursor Mode
 
 
-Tips
-====
+-----------
+
+# Viewing content with the Show Command
+
+
+
+## Frames viewing Text
+
+
+
+
+# Tips
+
 
 See the [FAQ](faq.md) too
 
-Keyboard Shortcuts
-------------------
+## Keyboard Shortcuts
+
 The list of available keyboard short cuts can be seen on the 'Key Bindings' tab which is accessible via the "hamburger
 menu" in the top right corner of the window.
 
 
-Terminal Tabs
--------------
-Terminals are shown inside tabs. New tabs can be created by clicking on the + (plus) icon at the top.
+## Mouse selections when an app grabs the mouse
 
-The "Split" option on the application menu can be selected to split the window into to two groups of side-by-side tabs.
-
-Shortcuts:
-
-* `Ctrl+Tab` to switch between panes.
-* `Ctrl+Shift+S` Split/unsplit the view into 2 side-by-side panes.
-
-Tip: Turning off split view is a fast way of giving a terminal tab more space. When you split the view again, Extraterm will remember and restore the previous configuration.
-
-
-Mouse selections when an app grabs the mouse
---------------------------------------------
 Some applications use the mouse input themselves and prevent normal mouse selection from working. In these cases it is possible to hold the Control key and then make a selection with the mouse.
 

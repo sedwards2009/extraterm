@@ -1,5 +1,9 @@
-Project Goals, or Why Bother at all?
-------------------------------------
+---
+title: Project Goals
+description: or "Why bother at all?"
+---
+
+
 This project didn't start out as some big plan to build a new cross platform terminal emulator with some crazy features. It initially grew out of two things: 1) a desire to mess around with node-webkit and all of the new web APIs, and 2) a need for a better terminal emulator which worked on cygwin, something that was even half as good as KDE's Konsole on Linux.
 
 As the code started to move along and began to work, I also started to look closer at how I was using the command line and what kind of new features I would find useful. A lot of common repetitive tasks we all do in a terminal seemed to me to be needlessly difficult, and the terminal does little to help. It is far too busy pretending to be an old green screen complete with attached dot matrix printer and spool of paper. It is a system that deals in text but doesn't let you actually do anything with the text. (No, being able to select text and copy it to the clipboard is not enough.) Terminals are terrible at doing text.
@@ -12,8 +16,8 @@ These are the two main goals now:
 It should do the standard features that we all expect well, and secondly it should try out new ways of doing things. Yes, a lot of these new features will be failed experiments. If something doesn't work then we can rip it out again. At the time of writing this text there are already a bunch of failed experiments buried deep in the git history.
 
 
-Some (rough) Design Principles
-------------------------------
+# Some (rough) Design Principles
+
 
 These are some of the basic principles and guidelines governing the design of Extraterm:
 
