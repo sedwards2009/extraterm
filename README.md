@@ -2,6 +2,8 @@
 
 *The swiss army chainsaw of terminal emulators*
 
+Main website: [extraterm.org](extraterm.org)
+
 # About
 
 Extraterm is an open source project to build a terminal emulator and expand it with new features to support modern workflows and do more than just act like a glorified teletype.
