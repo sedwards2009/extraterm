@@ -1,4 +1,4 @@
-<img src="docs/extraterm_main_logo_tight.svg" width="50%" height="50%" />
+![Logo](docs/extraterm_main_logo_tight.svg)
 
 *The swiss army chainsaw of terminal emulators*
 
@@ -38,6 +38,10 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 * [...much more to come](https://github.com/sedwards2009/extraterm/issues/30)
 
 See the more detailed [features list](docs/features.md).
+
+# News
+
+[News is here](http://sedwards2009.github.io/extraterm/news.html)
 
 # Download
 
