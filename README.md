@@ -2,7 +2,7 @@
 
 *The swiss army chainsaw of terminal emulators*
 
-Main website: [extraterm.org](extraterm.org)
+Main website: [extraterm.org](http://extraterm.org)
 
 # About
 
