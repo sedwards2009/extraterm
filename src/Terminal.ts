@@ -601,7 +601,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       });
 
       this._showTip();
-      this._emulator.write('\x1b[31mWelcome to Extraterm!\x1b[m\r\n');
       
       this._scheduleResize();
     } else {
