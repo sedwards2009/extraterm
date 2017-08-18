@@ -174,12 +174,13 @@ Extraterm supports mouse based gestures for rearranging tabs in the tab bar, mov
 
 # Editing in Cursor Mode
 
+TODO
 
 -----------
 
 # Viewing content with the Show Command
 
-
+TODO
 
 ## Frames viewing Text
 
@@ -187,7 +188,6 @@ Extraterm supports mouse based gestures for rearranging tabs in the tab bar, mov
 
 
 # Tips
-
 
 See the [FAQ](faq.md) too
 

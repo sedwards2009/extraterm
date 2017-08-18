@@ -1,16 +1,18 @@
-Development and Contributing
-============================
+---
+title: Development and Contributing
+---
+
 
 Read the [Why document](why.md) to get an idea as to how I'm approaching this project.
 
 
-First: One Simple Rule
-----------------------
+# First: One Simple Rule
+
 A simple ground rule: Extraterm is intended to be an open source *project*, and not just open source *code*. This means that all contributors need to be able get along together and cooperate on a basic level in a productive and civil way. If you can stick to this rule then you are welcome to this project.
 
 
-Technology
-----------
+# Technology
+
 Extraterm is built on the following technologies:
 
 * [Electron](http://electron.atom.io/) - A platform for running desktop applications made using web technologies.
@@ -23,8 +25,8 @@ Extraterm is built on the following technologies:
 Thanks go out to the people and organisations responsible for the great software and tools I've been able to build on.
 
 
-Running from Source
--------------------
+# Running from Source
+
 Getting started from source:
 
 * Clone the repository from github to your local machine.
@@ -36,8 +38,8 @@ Getting started from source:
 If you are using Atom as your editor, then it will quickly and automatically compile the TS files for you. You can usually skip the manual build step during most development.
 
 
-Submitting Changes
-------------------
+# Submitting Changes
+
 * Bugs and features requests go in the github issue tracker.
 * Use Pull Requests to submit changes.
 * Discuss large changes via an issue in the tracker before hand.
@@ -45,8 +47,8 @@ Submitting Changes
 Regular good contributors will be given direct access to the repo. I want to get the bus factor for this project above 1.
 
 
-Code Formatting
----------------
+# Code Formatting
+
 The basic rule is just follow the formatting already being used in existing code. Sorry, it is not as consistent as it should be.
 
 * Indents are 2 spaces.
@@ -55,18 +57,18 @@ The basic rule is just follow the formatting already being used in existing code
 * Prefer `null` over `undefined`.
 * Be explicit about showing what the code means. No cute shortcuts.
 
-Updating the Version of Electron used
--------------------------------------
+# Updating the Version of Electron used
+
 [See this document](how_to_update_electron.md)
 
-Road Map
---------
+# Road Map
+
 
 These are the features which are with in the scope of this project. (Shown in no particular order)
 
 * General text handling
   * [x] Editable in-place text
-  * [ ] Zoom
+  * [x] Zoom
   * [ ] Find functionality and highlighting
     * [ ] Multiple highlights
   * [ ] Snapshot the contents of the current terminal into a new tab
@@ -87,9 +89,9 @@ These are the features which are with in the scope of this project. (Shown in no
 * Tab management
   * [x] Vertical split
   * [ ] Tab renaming
-  * [ ] Reorder tabs
-  * [ ] Move tabs between splits
-  * [ ] Multiple vertical and horizontal splits
+  * [x] Reorder tabs
+  * [x] Move tabs between splits
+  * [x] Multiple vertical and horizontal splits
   * [ ] Hide the tab bar
 * Scrollbar Mini-map
   * [ ] Displays different command output areas
@@ -103,21 +105,21 @@ These are the features which are with in the scope of this project. (Shown in no
     * [ ] escape HTML
     * [ ] escape XML
 * `show` command:
-  * [ ] Option to manually specify the mime type
-  * [ ] Can read data from stdin
-  * [ ] Can guess the mimetype from the input stream data
+  * [x] Option to manually specify the mime type
+  * [x] Can read data from stdin
+  * [x] Can guess the mimetype from the input stream data
 * Data viewers / frames
   * [ ] Open content in external program
   * [ ] Save to file
   * [ ] Show timestamp info
   * Text / terminal output viewer
-    * [ ] Line numbers
-    * [ ] Configurable syntax highlighting
+    * [x] Line numbers
+    * [x] Configurable syntax highlighting
     * [ ] Pull in content after editing it in an external editor
     * [ ] Sorting
     * [ ] Easier column selections and editing
     * Command to apply encoding / decoding
-      * [ ] Shell character escaping
+      * [x] Shell character escaping
   * Image viewer
     * [ ] Zoom control
     * [ ] Image info
