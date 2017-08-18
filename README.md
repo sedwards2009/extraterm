@@ -8,17 +8,17 @@ Main website: [extraterm.org](http://extraterm.org)
 
 Extraterm is an open source project to build a terminal emulator and expand it with new features to support modern workflows and do more than just act like a glorified teletype.
 
-More background information is in the [Why document](docs/why.md).
+More background information is in the [Why document](http://extraterm.org/why.html).
 
 * *Capture and reuse command output as new command input*
 * *Manipulate and copy text without leaving the keyboard*
 * *Slice and dice command output like a text editor*
 * *Display images directly*
-* *See the [Visual Tour](docs/tour.md) for more*
+* *See the [Features list](http://extraterm.org/features.html) for more*
 
 ![Directly edit and execute command output](docs/edit_direct.gif)
 
-See the [Features and Screenshots](docs/features.md)
+See the [Features and Screenshots](http://extraterm.org/features.html)
 
 The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm logos were designed and provided by [Gabriel Harel](https://github.com/g-harel).
 
@@ -39,11 +39,11 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 * [MIT license](LICENSE.txt)
 * [...much more to come](https://github.com/sedwards2009/extraterm/issues/30)
 
-See the more detailed [features list](docs/features.md).
+See the more detailed [features list](http://extraterm.org/features.html).
 
 # News
 
-[News is here](http://sedwards2009.github.io/extraterm/news.html)
+[News is here](http://extraterm.org/news.html)
 
 # Download
 
@@ -56,10 +56,10 @@ With that out of the way, the primary author does use it as their main terminal 
 # Further Information
 
 * :loudspeaker: :bird: Follow development on [Twitter @ ExtratermDev](https://twitter.com/ExtratermDev)
-* [User Guide](docs/guide.md)
+* [User Guide](http://extraterm.org/guide.html)
 * [Downloads and Releases](https://github.com/sedwards2009/extraterm/releases) (Linux, Windows and OS X supported)
-* [FAQ](docs/faq.md)
-* [How to Create Themes](docs/theming.md)
-* [Development and Contributing](docs/development.md)
+* [FAQ](http://extraterm.org/faq.html)
+* [How to Create Themes](http://extraterm.org/theming.html)
+* [Development and Contributing](http://extraterm.org/development.html)
 * [Current Development Roadmap](https://github.com/sedwards2009/extraterm/issues/30)
 * :octocat: Github: https://github.com/sedwards2009/extraterm
