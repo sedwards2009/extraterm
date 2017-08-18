@@ -6,12 +6,14 @@
 
 import * as CodeMirror from 'codemirror';
 
+
 /**
  * A resource which can later be freed by calling `dispose()`.
  */
 export interface Disposable {
   dispose(): void;
 }
+
 
 /**
  * Function which represents a specific event which you can subscribe to.
@@ -20,24 +22,59 @@ export interface Event<T> {
   (listener: (e: T) => any): Disposable;
 }
 
+
 export interface Tab {
+  /**
+   * Get any terminal contained inside this tab.
+   */
   getTerminal(): Terminal;
 
   /**
    * Show an input box requesting a number.
    * 
+   * @return a promise which resolves to the entered number or undefined if
+   *          it was canceled.
    */
   showNumberInput(options: NumberInputOptions): Promise<number | undefined>;
 
+  /**
+   * Show a list picker requesting an item from the list.
+   * 
+   * @return a promise which resolves to the selected item index or
+   *          undefined if it was canceled.
+   */
   showListPicker(options: ListPickerOptions): Promise<number | undefined>;
 }
 
 
 export interface Terminal {
+  /**
+   * Type a string of text into the terminal.
+   * 
+   * This is effectively the same as though the user typed into the terminal.
+   * Note that the enter key should be represented as \r.
+   */
   type(text: string): void;
+
+  /**
+   * Get a list of viewers inside this terminal.
+   */
   getViewers(): Viewer[];
+
+  /**
+   * Get the tab which holds this terminal.
+   */
   getTab(): Tab;
+
+  /**
+   * Get the values of the Extraterm terminal integration cookie specific to
+   * this terminal.
+   */
   getExtratermCookieValue(): string;
+
+  /**
+   * Get the name of the Extraterm terminal integration cookie.
+   */
   getExtratermCookieName(): string;
 }
 
@@ -64,21 +101,49 @@ export interface NumberInputOptions {
   maximum?: number;
 }
 
+
 export interface ListPickerOptions {
+  /**
+   * The title to display in the list picker.
+   */
   title: string;
+
+  /**
+   * The list of text items to display.
+   */
   items: string[];
+
+  /**
+   * The index of the item to select by default.
+   */
   selectedItemIndex: number;
 }
 
+
 export interface ViewerBase {
+  /**
+   * Get the tab which contains this viewer.
+   */
   getTab(): Tab;
+
+  /**
+   * Get the terminal which contains this viewer.
+   * 
+   * This may be null if the viewer is not inside a terminal.
+   */
   getOwningTerminal(): Terminal;
 }
 
+
 export interface FrameViewer extends ViewerBase {
   viewerType: 'frame';
+
+  /**
+   * Get the viewer inside this frame.
+   */
   getContents(): Viewer;
 }
+
 
 export interface TerminalOutputViewer extends ViewerBase {
 
@@ -92,13 +157,31 @@ export interface TerminalOutputViewer extends ViewerBase {
   isLive(): boolean;
 }
 
+
 export interface TextViewer extends ViewerBase {
   viewerType: 'text';
+
+  /**
+   * Get the configured tab size.
+   */
   getTabSize(): number;
+
+  /**
+   * Set the tab size.
+   */
   setTabSize(size: number): void;
+
+  /**
+   * Get the mimetype of the contents of this text viewer.
+   */
   getMimeType(): string;
+
+  /**
+   * Set the mimetype of the cotnent of this text viewer.
+   */
   setMimeType(mimeType: string): void;
 }
+
 
 export type Viewer = FrameViewer | TerminalOutputViewer | TextViewer;
 
@@ -155,6 +238,7 @@ export interface Workspace {
     commandLister: (textViewer: TextViewer) => CommandEntry[],
     commandExecutor: (textViewer: TextViewer, commandId: string, commandArguments?: object) => void): Disposable;
 }
+
 
 export interface ExtensionContext {
   workspace: Workspace;
@@ -214,6 +298,7 @@ export interface Logger {
    */
   endTime(label: string): void;
 }
+
 
 /**
  * An extension module as viewed from Extraterm.
