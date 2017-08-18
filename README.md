@@ -1,4 +1,4 @@
-![Logo](docs/extraterm_main_logo_tight.svg)
+![Extraterm logo](docs/extraterm_main_logo_512x367.png)
 
 *The swiss army chainsaw of terminal emulators*
 
