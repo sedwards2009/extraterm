@@ -25,6 +25,10 @@ switch(process.argv[2]) {
     npmCommandExtensions('install');
     break;
 
+  case 'prune':
+    npmCommandExtensions('prune --production');
+    break;
+
   default:
     echo("Bad argument to npm_extensions.js");
     process.exit(1);

@@ -23,6 +23,8 @@
 
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o ptyw.js,font-manager -f -v 1.6.8",
 
+    "npm-prune-extensions": "node src/build_scripts/npm_extensions.js prune",
+
     "testbulkdomoperation": "npm run build && nodeunit src/BulkDomOperationTest.js",
     "testextensionloader": "npm run build && nodeunit src/ExtensionLoaderTest.js",
     "testkeybindingmanager": "npm run build && nodeunit src/KeyBindingManagerTest.js",

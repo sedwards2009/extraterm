@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2017 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -33,7 +33,9 @@ function main() {
   
   echo("Fetching a clean copy of the source code from " + gitUrl);
   cd(BUILD_TMP);
-  const buildTmpPath = pwd();
+
+  // For some reason pwd() is returning "not quite strings" which path.join() doesn't like. Thus "" + ...
+  const buildTmpPath = "" + pwd();
   
   exec("git clone --depth 1 " + gitUrl);
   
@@ -42,12 +44,15 @@ function main() {
   cd("extraterm");
   echo("Downloading dependencies.");
   exec("npm install");
+  exec("npm run npm-install-extensions");
   
   echo("Building");
   exec("npm run build");
-  
+  exec("npm run build-extensions");
+
   echo("Removing development dependencies");
   exec("npm prune --production");
+  exec("npm run npm-prune-extensions");
 
   // Create the commands zip
   echo("Creating commands.zip");
