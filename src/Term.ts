@@ -101,6 +101,7 @@ interface Options {
   debug?: boolean;
   useStyle?: boolean;
   applicationModeCookie?: string;
+  userAgent?: string;
 };
 
 interface CharSet {
@@ -1225,9 +1226,8 @@ export class Emulator implements EmulatorAPI {
     this.useStyle = options.useStyle === undefined ? false : options.useStyle;
     this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
 
-
-    if (window.navigator && window.navigator.userAgent) {
-      this.isMac = !!~window.navigator.userAgent.indexOf('Mac');
+    if (options.userAgent !== undefined) {
+      this.isMac = options.userAgent.indexOf('Mac') !== -1;
     }
 
     // this.options = options;
