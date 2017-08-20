@@ -93,7 +93,8 @@ const MAX_PROCESS_WRITE_SIZE = 4096;
 interface Options {
   convertEol?: boolean;
   termName?: string;
-  geometry?: [number, number];
+  rows?: number;
+  columns?: number;
   cursorBlink?: boolean;
   visualBell?: boolean;
   popOnBell?: boolean;
@@ -1222,7 +1223,8 @@ export class Emulator implements EmulatorAPI {
     
     this.convertEol = options.convertEol === undefined ? false : options.convertEol;
     this.termName = options.termName === undefined ? 'xterm' : options.termName;
-    this.geometry = options.geometry === undefined ? [80, 24] : options.geometry;
+    this.rows = options.rows === undefined ? 24 : options.rows;
+    this.cols = options.columns === undefined ? 80 : options.columns;
     this.cursorBlink = options.cursorBlink === undefined ? false : options.cursorBlink;
     this.scrollback = options.scrollback === undefined ? 1000 : options.scrollback;
     this.debug = options.debug === undefined ? false : options.debug;

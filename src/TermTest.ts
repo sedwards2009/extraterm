@@ -9,13 +9,29 @@ import * as nodeunit from 'nodeunit';
 import {Emulator} from './Term';
 const performanceNow = require('performance-now');
 
-export function testBasic(test: nodeunit.Test): void {
+function waitOnEmulator(emulator: Emulator): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 100);
+  });
+}
 
+export async function testBasic(test: nodeunit.Test): Promise<void> {
   const emulator = new Emulator({performanceNowFunc: performanceNow});
   emulator.write('Hello');
 
-  setTimeout(() => {
-    test.equals(emulator.getLineText(0).trim(), 'Hello');
-    test.done();
-  }, 100);
+  await waitOnEmulator(emulator);
+
+  test.equals(emulator.getLineText(0).trim(), 'Hello');
+  test.done();
+}
+
+export async function testWrap(test: nodeunit.Test): Promise<void> {
+  const emulator = new Emulator({rows: 10, columns: 20, performanceNowFunc: performanceNow});
+  emulator.write('abcdefghijklmnopqrstuvwxyz');
+
+  await waitOnEmulator(emulator);
+
+  test.equals(emulator.getLineText(0).trim(), 'abcdefghijklmnopqrst');
+  test.equals(emulator.getLineText(1).trim(), 'uvwxyz');
+  test.done();
 }
