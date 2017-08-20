@@ -102,6 +102,7 @@ interface Options {
   useStyle?: boolean;
   applicationModeCookie?: string;
   userAgent?: string;
+  performanceNowFunc?: () => number;
 };
 
 interface CharSet {
@@ -1172,9 +1173,10 @@ export class Emulator implements EmulatorAPI {
   private applicationModeCookie: string;
   private isMac = false;
   
-  private _writeBuffers: string[] = [];  // Buffer for incoming data waiting to be processed.
-  private _processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.  
-  private _refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
+  private _writeBuffers: string[] = [];                 // Buffer for incoming data waiting to be processed.
+  private _processWriteChunkTimer: NodeJS.Timer = null; // Timer ID for our write chunk timer.  
+  private _refreshTimer: NodeJS.Timer = null;           // Timer ID for triggering an on scren refresh.
+  private _performanceNow: () => number = null;
 
   private _scrollbackLineQueue: Line[] = [];  // Queue of scrollback lines which need to sent via an event.
   private _refreshStart = -1;
@@ -1214,7 +1216,8 @@ export class Emulator implements EmulatorAPI {
       debug: false,
       useStyle: false,
       physicalScroll: false,
-      applicationModeCookie: null
+      applicationModeCookie: null,
+      performanceNow: () => window.performance.now()
     };
     
     this.convertEol = options.convertEol === undefined ? false : options.convertEol;
@@ -1225,6 +1228,7 @@ export class Emulator implements EmulatorAPI {
     this.debug = options.debug === undefined ? false : options.debug;
     this.useStyle = options.useStyle === undefined ? false : options.useStyle;
     this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
+    this._performanceNow = options.performanceNowFunc;
 
     if (options.userAgent !== undefined) {
       this.isMac = options.userAgent.indexOf('Mac') !== -1;
@@ -1240,19 +1244,19 @@ export class Emulator implements EmulatorAPI {
     this._hasFocus = false;
 
     this._writeBuffers = [];  // Buffer for incoming data waiting to be processed.
-    this._processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.
+    this._processWriteChunkTimer = null;  // Timer ID for our write chunk timer.
     
-    this._refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
+    this._refreshTimer = null;  // Timer ID for triggering an on scren refresh.
   }
   
   destroy(): void {
-    if (this._processWriteChunkTimer !== -1) {
-      window.clearTimeout(this._processWriteChunkTimer);
-      this._processWriteChunkTimer = -1;
+    if (this._processWriteChunkTimer !== null) {
+      clearTimeout(this._processWriteChunkTimer);
+      this._processWriteChunkTimer = null;
     }
     
-    if (this._refreshTimer !== -1) {
-      window.clearTimeout(this._refreshTimer);
+    if (this._refreshTimer !== null) {
+      clearTimeout(this._refreshTimer);
     }
     
     this._events = {};
@@ -1768,9 +1772,9 @@ export class Emulator implements EmulatorAPI {
    * @param {boolean} immediate True if the refresh should occur as soon as possible. False if a slight delay is permitted.
    */
   private _scheduleRefresh(immediate: boolean): void {
-    if (this._refreshTimer === -1) {
-      this._refreshTimer = window.setTimeout(() => {
-        this._refreshTimer = -1;
+    if (this._refreshTimer === null) {
+      this._refreshTimer = setTimeout(() => {
+        this._refreshTimer = null;
         this._refreshFrame();
       }, immediate ? 0 : REFRESH_DELAY);
     }
@@ -1965,9 +1969,9 @@ export class Emulator implements EmulatorAPI {
    * Schedule the write chunk process to run the next time the event loop is entered.
    */
   private _scheduleProcessWriteChunk(): void {
-    if (this._processWriteChunkTimer === -1) {
-      this._processWriteChunkTimer = window.setTimeout(() => {
-        this._processWriteChunkTimer = -1;
+    if (this._processWriteChunkTimer === null) {
+      this._processWriteChunkTimer = setTimeout(() => {
+        this._processWriteChunkTimer = null;
         this._processWriteChunkRealTime();
       }, 0);
     }
@@ -1977,7 +1981,7 @@ export class Emulator implements EmulatorAPI {
    * Process the next chunk of data to written into a the line array.
    */
   private _processWriteChunkRealTime(): void {
-    const starttime = window.performance.now();
+    const starttime = this._performanceNow();
   //console.log("++++++++ _processWriteChunk() start time: " + starttime);
     
     // Schedule a call back just in case. setTimeout(.., 0) still carries a ~4ms delay. 
@@ -1985,22 +1989,22 @@ export class Emulator implements EmulatorAPI {
 
     while (true) {
       if (this._processOneWriteChunk() === false) {
-        window.clearTimeout(this._processWriteChunkTimer);
-        this._processWriteChunkTimer = -1;
+        clearTimeout(this._processWriteChunkTimer);
+        this._processWriteChunkTimer = null;
         
         this._scheduleRefresh(true);
         this._emitWriteBufferSizeEvent();
         break;
       }
       
-      const nowtime = window.performance.now();
+      const nowtime = this._performanceNow();
       if ((nowtime - starttime) > MAX_BATCH_TIME) {
         this._scheduleRefresh(false);
         this._emitWriteBufferSizeEvent();
         break;
       }
     }
-  //  console.log("---------- _processWriteChunk() end time: " + window.performance.now());
+  //  console.log("---------- _processWriteChunk() end time: " + this._performanceNow());
   }
 
   /**
