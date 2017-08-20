@@ -1439,7 +1439,7 @@ export class Emulator implements EmulatorAPI {
       return;
     }
 
-    this.refresh(this.y, this.y);
+    this.markRowRangeForRefresh(this.y, this.y);
     if (this.sendFocus) {
       this.send('\x1b[O');
     }
@@ -1578,7 +1578,7 @@ export class Emulator implements EmulatorAPI {
   }
   
   refreshScreen(): void {
-    this.refresh(0, this.lines.length);
+    this.markRowRangeForRefresh(0, this.lines.length);
     this._dispatchEvents();
   }
 
@@ -1782,7 +1782,7 @@ export class Emulator implements EmulatorAPI {
    * Usually call via a timer.
    */
   private _refreshFrame(): void {
-    this.refresh(this.refreshStart, this.refreshEnd);
+    this.markRowRangeForRefresh(this.refreshStart, this.refreshEnd);
     this._dispatchEvents();
     this.refreshStart = REFRESH_START_NULL;
     this.refreshEnd = REFRESH_END_NULL;
@@ -1804,7 +1804,7 @@ export class Emulator implements EmulatorAPI {
    * @param {number} start start row to refresh
    * @param {number} end   end row (INCLUSIVE!) to refresh
    */
-  private refresh(start: number, end: number): void {
+  private markRowRangeForRefresh(start: number, end: number): void {
     this._refreshStart = this._refreshStart < 0 ? start : Math.min(start, this._refreshStart);
     this._refreshEnd = this._refreshEnd < 0 ? end+1 : Math.max(end+1, this._refreshEnd);
   }
@@ -1860,14 +1860,14 @@ export class Emulator implements EmulatorAPI {
       return;
     }
     this.cursorState = !this.cursorState;
-    this.refresh(this.y, this.y);
+    this.markRowRangeForRefresh(this.y, this.y);
   }
 
   showCursor(): void {
     if (!this.cursorState) {
       this.cursorState = true;
       this._getRow(this.y);
-      this.refresh(this.y, this.y);
+      this.markRowRangeForRefresh(this.y, this.y);
     } else {
       // Temporarily disabled:
       this.refreshBlink();
@@ -1930,8 +1930,8 @@ export class Emulator implements EmulatorAPI {
     // add our new line
     this.lines.splice(insertRow, 0, this.blankLine());
 
-    this.updateRange(this.scrollTop);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.scrollTop);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
   private scrollDisp(disp) {
@@ -1943,7 +1943,7 @@ export class Emulator implements EmulatorAPI {
       this.ydisp = 0;
     }
 
-    this.refresh(0, this.rows - 1);
+    this.markRowRangeForRefresh(0, this.rows - 1);
   }
 
   write(data: string): WriteBufferStatus {
@@ -2045,7 +2045,7 @@ export class Emulator implements EmulatorAPI {
 
     if (this.ybase !== this.ydisp) {
       this.ydisp = this.ybase;
-      this.maxRange();
+      this.markAllRowsForRefresh();
     }
     
     this.oldy = this.y;
@@ -2131,7 +2131,7 @@ export class Emulator implements EmulatorAPI {
 
                 if (this.x >= this.cols) {
                   this.x = 0;
-                  this.updateRange(this.y);                  
+                  this.markRowForRefresh(this.y);                  
                   if (this.y+1 > this.scrollBottom) {
                     this.scroll();
                   } else {
@@ -2163,7 +2163,7 @@ export class Emulator implements EmulatorAPI {
                 attrs[this.x] = this.curAttr;
 
                 this.x++;
-                this.updateRange(this.y);
+                this.markRowForRefresh(this.y);
 
                 if (isWide(ch)) {
                   const j = this.y + this.ybase;
@@ -2220,12 +2220,12 @@ export class Emulator implements EmulatorAPI {
       }
       
       if (this.y !== this.oldy) {
-        this.updateRange(this.oldy);
-        this.updateRange(this.y);
+        this.markRowForRefresh(this.oldy);
+        this.markRowForRefresh(this.y);
         this.oldy = this.y;
       }
     }
-    this.updateRange(this.y);
+    this.markRowForRefresh(this.y);
       
   //  endtime = window.performance.now();
   //console.log("write() end time: " + endtime);
@@ -3531,7 +3531,7 @@ export class Emulator implements EmulatorAPI {
     this.normal = null;
     
     this.lastReportedPhysicalHeight = this.lines.length;
-    this.refresh(0, this.lines.length-1);
+    this.markRowRangeForRefresh(0, this.lines.length-1);
     
     this._dispatchEvents();
   }
@@ -3563,18 +3563,22 @@ export class Emulator implements EmulatorAPI {
     this._emit(RENDER_EVENT, this, event);    
   }
   
-  private updateRange(y: number): void {
-    if (y < this.refreshStart) this.refreshStart = y;
-    if (y > this.refreshEnd) this.refreshEnd = y;
+  private markRowForRefresh(y: number): void {
+    if (y < this.refreshStart) {
+      this.refreshStart = y;
+    }
+    if (y > this.refreshEnd) {
+      this.refreshEnd = y;
+    }
   }
   
   private _setCursorY(newY: number): void {
     this._getRow(newY);
     this.y = newY;
-    this.refresh(newY, newY);
+    this.markRowRangeForRefresh(newY, newY);
   }
   
-  private maxRange(): void {
+  private markAllRowsForRefresh(): void {
     this.refreshStart = 0;
     this.refreshEnd = this.rows - 1;
   }
@@ -3617,7 +3621,7 @@ export class Emulator implements EmulatorAPI {
       attrs[x] = attr;
     }
 
-    this.updateRange(y);
+    this.markRowForRefresh(y);
   }
 
   private fillScreen(fillChar: string = ' '): void {
@@ -3640,7 +3644,7 @@ export class Emulator implements EmulatorAPI {
       attrs[x] = attr;
     }
 
-    this.updateRange(y);
+    this.markRowForRefresh(y);
   }
 
   private eraseLine(y: number): void {
@@ -3695,8 +3699,8 @@ export class Emulator implements EmulatorAPI {
       const j = this.rows - 1 - this.scrollBottom;
       this.lines.splice(this.rows - 1 + this.ybase - j + 1, 1);
 
-      this.updateRange(this.scrollTop);
-      this.updateRange(this.scrollBottom);
+      this.markRowForRefresh(this.scrollTop);
+      this.markRowForRefresh(this.scrollBottom);
     } else {
       this._setCursorY(this.y-1);
     }
@@ -4230,8 +4234,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(this.y);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.y);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps M
@@ -4253,8 +4257,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(this.y);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.y);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps P
@@ -4826,7 +4830,7 @@ export class Emulator implements EmulatorAPI {
             //   this._setCursorY(this.savedY);
             // }
             this.resize( { rows: currentrows, columns: currentcols } );
-            this.refresh(0, this.rows - 1);
+            this.markRowRangeForRefresh(0, this.rows - 1);
             this.showCursor();
           }
           break;
@@ -4891,8 +4895,8 @@ export class Emulator implements EmulatorAPI {
       this.lines.splice(this.ybase + this.scrollBottom, 0, this.blankLine());
     }
     // this.maxRange();
-    this.updateRange(this.scrollTop);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.scrollTop);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
@@ -4903,8 +4907,8 @@ export class Emulator implements EmulatorAPI {
       this.lines.splice(this.ybase + this.scrollTop, 0, this.blankLine());
     }
     // this.maxRange();
-    this.updateRange(this.scrollTop);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.scrollTop);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps ; Ps ; Ps ; Ps ; Ps T
@@ -5133,8 +5137,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(params[0]);
-    this.updateRange(params[2]);
+    this.markRowForRefresh(params[0]);
+    this.markRowForRefresh(params[2]);
   }
 
   // CSI ? Pm s
@@ -5294,8 +5298,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(params[1]);
-    this.updateRange(params[3]);
+    this.markRowForRefresh(params[1]);
+    this.markRowForRefresh(params[3]);
   }
 
   // CSI Ps ; Pu ' z
@@ -5338,8 +5342,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(params[0]);
-    this.updateRange(params[2]);
+    this.markRowForRefresh(params[0]);
+    this.markRowForRefresh(params[2]);
   }
 
   // CSI Pm ' {
@@ -5426,7 +5430,7 @@ export class Emulator implements EmulatorAPI {
       }
     }
 
-    this.maxRange();
+    this.markAllRowsForRefresh();
   }
 
   // CSI P m SP ~
@@ -5451,7 +5455,7 @@ export class Emulator implements EmulatorAPI {
       }
     }
 
-    this.maxRange();
+    this.markAllRowsForRefresh();
   }
 
   /**
