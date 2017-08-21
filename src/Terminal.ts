@@ -849,7 +849,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _disconnectActiveTerminalViewer(): void {
+    this._moveCursorToFreshLine();
     this._emulator.moveRowsAboveCursorToScrollback();
+    this._emulator.flushRenderQueue();
     if (this._terminalViewer !== null) {
       this._terminalViewer.setEmulator(null);
       this._terminalViewer.deleteScreen();
@@ -861,6 +863,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _appendScrollableElement(el: ScrollableElement): void {
     this._emulator.moveRowsAboveCursorToScrollback();
+    this._emulator.flushRenderQueue();
     let currentTerminalViewer = this._terminalViewer;
     
     if (currentTerminalViewer !== null) {
@@ -1741,18 +1744,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const el = this._createEmbeddedViewerElement(cleancommand);
       this._appendScrollableElement(el);
     } else {
-      
-      let currentTerminalViewer = this._terminalViewer;
-      
-      if (currentTerminalViewer !== null) {
-        currentTerminalViewer.operation( () => {
-          this._emulator.moveRowsAboveCursorToScrollback();  // The order of these two operations is important because it can
-          currentTerminalViewer.deleteScreen();   // cause the CodeMirror instance to scroll around by itself.
-        });
-      } else {
-        this._emulator.moveRowsAboveCursorToScrollback();  
-      }
-      
+
+      this._moveCursorToFreshLine();
+      this._emulator.moveRowsAboveCursorToScrollback();
+      this._emulator.flushRenderQueue();
+
       this._lastCommandTerminalLine = this._terminalViewer.bookmarkLine(this._terminalViewer.lineCount() -1);
       this._lastCommandLine = cleancommand;
       this._lastCommandTerminalViewer = this._terminalViewer;
@@ -1762,6 +1758,13 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
   }
   
+  private _moveCursorToFreshLine(): void {
+    const dims = this._emulator.getDimensions();
+    if (dims.cursorX !== 0 && this._emulator.getLineText(dims.cursorY).trim() !== '') {
+      this._emulator.newLine();
+    }
+  }
+
   public deleteEmbeddedViewer(viewer: EmbeddedViewer): void {
     this._removeScrollable(viewer);
   }

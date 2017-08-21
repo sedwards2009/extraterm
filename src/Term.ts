@@ -263,7 +263,10 @@ export interface EmulatorAPI {
 
   startBlink(); // FIXME remove
   setCursorBlink(blink: boolean): void;
-  
+  flushRenderQueue(): void;
+
+  newLine(): void;
+
   // Events
   addRenderEventListener(eventHandler: RenderEventHandler): void;
   addBellEventListener(eventHandler: BellEventListener): void;
@@ -1586,35 +1589,24 @@ export class Emulator implements EmulatorAPI {
   }
 
   /**
-   * Moves all of the rendered rows above the cursor to the physical scrollback area.
-   * 
-   * The rows on the terminal screen are moved into the scrollback area but
-   * the new terminal rows are not rendered. Visually this does nothing as 
-   * the result looks the same. If the last row contains the cursor and is
-   * empty, then it is not moved.
-   * 
-   * Future terminal rows will appear below the old last row in the window
-   * once something is printed there.
+   * Moves all of the rows above the cursor into the physical scrollback area.
    */
   moveRowsAboveCursorToScrollback(): void {
-    let lines = this.lines;
-    let newLines = [];
-  
-    if (this.x === 0 && this.lines.length > this.y && this.getLineText(this.y).trim() === '') {
-      lines = this.lines.slice(0, this.y);
-      newLines = this.lines.slice(this.y);
-    }
+    const lines = this.lines.slice(0, this.y);
+    const newLines = this.lines.slice(this.y);
 
-    lines.forEach( (line) => this._scrollbackLineQueue.push(line) );
+    lines.forEach(line => this._scrollbackLineQueue.push(line));
 
     this.lines = newLines;
 
-    this._refreshStart = REFRESH_START_NULL;
-    this._refreshEnd = REFRESH_END_NULL;
-    this.x = 0;
+    this.markAllRowsForRefresh();
     this._setCursorY(0);
     this.oldy = 0;
-    
+
+    this._scheduleRefresh(true);
+  }
+
+  flushRenderQueue(): void {
     this._dispatchEvents();
   }
 
@@ -3431,7 +3423,7 @@ export class Emulator implements EmulatorAPI {
     this._emit(BELL_EVENT, this);
   }
 
-  private newLine(): void {
+  newLine(): void {
     if (this.convertEol) {
       this.x = 0;
     }
