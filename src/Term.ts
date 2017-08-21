@@ -1227,7 +1227,11 @@ export class Emulator implements EmulatorAPI {
     this.debug = options.debug === undefined ? false : options.debug;
     this.useStyle = options.useStyle === undefined ? false : options.useStyle;
     this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
-    this._performanceNow = options.performanceNowFunc;
+    if (options.performanceNowFunc == null) {
+      this._performanceNow = window.performance.now.bind(window.performance);
+    } else {
+      this._performanceNow = options.performanceNowFunc;
+    }
 
     if (options.userAgent !== undefined) {
       this.isMac = options.userAgent.indexOf('Mac') !== -1;
