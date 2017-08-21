@@ -1108,9 +1108,6 @@ export class Emulator implements EmulatorAPI {
   private lastReportedPhysicalHeight = 0;
   
   private state = 0; // Escape code parsing state.
-  private refreshStart = REFRESH_START_NULL;
-  private refreshEnd = REFRESH_END_NULL;
-
   private ybase = 0;  // Index of row 1 in our (logn) list of lines+scroll back.
   private ydisp = 0;  // Index of the row 1 which is displayed on the screen at the moment.
                       // (only applies when physical scrolling is not used)
@@ -1180,8 +1177,8 @@ export class Emulator implements EmulatorAPI {
   private _performanceNow: () => number = null;
 
   private _scrollbackLineQueue: Line[] = [];  // Queue of scrollback lines which need to sent via an event.
-  private _refreshStart = -1;
-  private _refreshEnd = -1;
+  private _refreshStart = REFRESH_START_NULL;
+  private _refreshEnd = REFRESH_END_NULL;
 
   private tabs: { [key: number]: boolean };
   private sendFocus = false;
@@ -1235,12 +1232,8 @@ export class Emulator implements EmulatorAPI {
     if (options.userAgent !== undefined) {
       this.isMac = options.userAgent.indexOf('Mac') !== -1;
     }
-
-    // this.options = options;
-
+    
     this.state = 0; // Escape code parsing state.
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
 
     this._resetVariables();
     this._hasFocus = false;
@@ -1612,8 +1605,8 @@ export class Emulator implements EmulatorAPI {
 
     this.lines = newLines;
 
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
+    this._refreshStart = REFRESH_START_NULL;
+    this._refreshEnd = REFRESH_END_NULL;
     this.x = 0;
     this._setCursorY(0);
     this.oldy = 0;
@@ -1788,10 +1781,9 @@ export class Emulator implements EmulatorAPI {
    * Usually call via a timer.
    */
   private _refreshFrame(): void {
-    this.markRowRangeForRefresh(this.refreshStart, this.refreshEnd);
     this._dispatchEvents();
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
+    this._refreshStart = REFRESH_START_NULL;
+    this._refreshEnd = REFRESH_END_NULL;
   }
 
   // In the screen buffer, each character
@@ -1811,8 +1803,8 @@ export class Emulator implements EmulatorAPI {
    * @param {number} end   end row (INCLUSIVE!) to refresh
    */
   private markRowRangeForRefresh(start: number, end: number): void {
-    this._refreshStart = this._refreshStart < 0 ? start : Math.min(start, this._refreshStart);
-    this._refreshEnd = this._refreshEnd < 0 ? end+1 : Math.max(end+1, this._refreshEnd);
+    this._refreshStart = Math.min(start, this._refreshStart);
+    this._refreshEnd = Math.max(end + 1, this._refreshEnd);
   }
   
   lineAtRow(row: number): Line {
@@ -3546,7 +3538,7 @@ export class Emulator implements EmulatorAPI {
     let checkedRefreshEnd = Math.min(this._refreshEnd, this.lines.length);
     let checkedRefreshStart = this._refreshStart;
     
-    if (checkedRefreshEnd === checkedRefreshStart) {
+    if (checkedRefreshEnd === REFRESH_END_NULL || checkedRefreshStart === checkedRefreshEnd) {
       // Don't signal to refresh anything. This can happen when there are no realized rows yet.
       checkedRefreshEnd = -1;
       checkedRefreshStart = -1;
@@ -3562,20 +3554,15 @@ export class Emulator implements EmulatorAPI {
       scrollbackLines: this._scrollbackLineQueue
     };
     
-    this._refreshStart = -1;
-    this._refreshEnd = -1;
+    this._refreshStart = REFRESH_START_NULL;
+    this._refreshEnd = REFRESH_END_NULL;
     this._scrollbackLineQueue = [];
     
     this._emit(RENDER_EVENT, this, event);    
   }
   
   private markRowForRefresh(y: number): void {
-    if (y < this.refreshStart) {
-      this.refreshStart = y;
-    }
-    if (y > this.refreshEnd) {
-      this.refreshEnd = y;
-    }
+    this.markRowRangeForRefresh(y, y);
   }
   
   private _setCursorY(newY: number): void {
@@ -3585,8 +3572,7 @@ export class Emulator implements EmulatorAPI {
   }
   
   private markAllRowsForRefresh(): void {
-    this.refreshStart = 0;
-    this.refreshEnd = this.rows - 1;
+    this.markRowRangeForRefresh(0, this.rows-1);
   }
 
   private setupStops(maxCols?: number): void {
