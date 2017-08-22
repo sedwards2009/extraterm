@@ -1629,7 +1629,7 @@ export class Emulator implements EmulatorAPI {
       materializedRows: this.lines.length,
       cursorX: this.x,
       cursorY: this.y
-      };  
+      };
   }
 
   getLineText(y: number): string {
@@ -1824,29 +1824,6 @@ export class Emulator implements EmulatorAPI {
       return newLine;
     }
     return line;
-  }
-  
-  /**
-   * Get a shallow copy of the lines currently being shown on the terminal screen.
-   * 
-   * @return {Line[]} the lines information. Do not change this data!
-   */
-  getScreenLines(renderCursor:boolean=false): Line[] {
-    const linesCopy = [...this.lines];
-    
-    if (renderCursor) {
-      if (this.cursorState &&
-          (this.ydisp === this.ybase) &&
-          !this.cursorHidden &&
-          this.x < this.cols &&
-          this.y < linesCopy.length) {
-
-        const cursorLine = {chars: new Uint32Array(linesCopy[this.y].chars), attrs: new Uint32Array(linesCopy[this.y].attrs)};
-        cursorLine.attrs[this.x] = -1;
-        linesCopy[this.y] = cursorLine;
-      }
-    }
-    return linesCopy;
   }
   
   private _cursorBlink(): void {
