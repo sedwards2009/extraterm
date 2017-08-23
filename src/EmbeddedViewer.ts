@@ -305,7 +305,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _applyContainerChanges(): void {
     if (this._requestContainerHeight) {
       this._requestContainerHeight = false;
-      const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
+      const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT);
       this._virtualScrollArea.updateContainerHeight(outputContainerDiv.getBoundingClientRect().height);
     }
     if (this._requestContainerScroll) {
