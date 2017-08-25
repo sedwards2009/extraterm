@@ -18,15 +18,10 @@ import * as Util from './gui/Util';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from './Theme';
-import * as keybindingmanager from './KeyBindingManager';
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
-
+import {AcceptsKeyBindingManager, KeyBindingManager} from './KeyBindingManager';
+import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
   Commandable, CommandEntry} from './CommandPaletteRequestTypes';
-
-import * as Electron from 'electron';
-const clipboard = Electron.clipboard;
-
 import * as WebIpc from './WebIpc';
 import * as VirtualScrollArea from './VirtualScrollArea';
 
@@ -64,7 +59,7 @@ const SCROLL_STEP = 1;
  * A viewer tab which can contain any ViewerElement.
  */
 export class EtViewerTab extends ViewerElement implements Commandable,
-    keybindingmanager.AcceptsKeyBindingManager {
+    AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
 
   /**
    * The HTML tag name of this element.
@@ -655,7 +650,25 @@ export class EtViewerTab extends ViewerElement implements Commandable,
       DomUtils.doLater( () => { this.copyToClipboard() } );
     }
   }
-  
+
+  canPaste(): boolean {
+    const viewerElement = this.getViewerElement();
+    if (viewerElement === null) {
+      return false;
+    }
+    if (SupportsClipboardPaste.isSupportsClipboardPaste(viewerElement)) {
+      return viewerElement.canPaste();
+    }
+    return false;
+  }
+
+  pasteText(text: string): void {
+    const viewerElement = this.getViewerElement();
+    if (viewerElement != null && SupportsClipboardPaste.isSupportsClipboardPaste(viewerElement)) {
+      viewerElement.pasteText(text);
+    }
+  }  
+
   /**
    * Copy the selection to the clipboard.
    */

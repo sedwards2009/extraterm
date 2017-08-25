@@ -76,8 +76,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
    */
   static TAG_NAME = 'ET-EMBEDDEDVIEWER';
   
-  static EVENT_COPY_CLIPBOARD_REQUST = 'copy-clipboard-request';
-  
   static EVENT_CLOSE_REQUEST = 'close-request';
   
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';

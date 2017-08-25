@@ -39,8 +39,8 @@ import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
 import * as MmeTypeDetector from './MimeTypeDetector';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
-import * as SupportsClipboardPaste from './SupportsClipboardPaste';
 import {Config, ConfigManager, CommandLineAction, injectConfigManager, AcceptsConfigManager} from './Config';
+import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -128,7 +128,7 @@ interface WriteBufferStatus {
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
 export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingManager,
-    AcceptsConfigManager {
+  AcceptsConfigManager, SupportsClipboardPaste.SupportsClipboardPaste {
   
   /**
    * The HTML tag name of this element.
@@ -1971,6 +1971,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
   
+  canPaste(): boolean {
+    return true;
+  }
+
   pasteText(text: string): void {
     if (this._mode === Mode.CURSOR) {
       const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);

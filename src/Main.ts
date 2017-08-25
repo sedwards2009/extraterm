@@ -11,14 +11,7 @@
  */
 import * as SourceMapSupport from 'source-map-support';
 
-import * as Electron from 'electron';
-const app = Electron.app;
-const BrowserWindow = Electron.BrowserWindow;
-const crashReporter = Electron.crashReporter;
-const ipc = Electron.ipcMain;
-const clipboard = Electron.clipboard;
-const dialog = Electron.dialog;
-
+import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen} from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as _ from 'lodash';
