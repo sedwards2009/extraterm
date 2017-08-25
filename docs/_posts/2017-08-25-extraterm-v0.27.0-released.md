@@ -10,3 +10,4 @@ Download it from [Github](https://github.com/sedwards2009/extraterm/releases/tag
 *Changes:*
 
 * Adds "Inject Bash Shell Integration", "Inject Fish Shell Integration" and "Inject Zsh Shell Integration" commands.
+* Updates to the docs and the addition of a website for the project.
