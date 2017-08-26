@@ -98,8 +98,6 @@ interface SavedState {
   lines: Line[];
   cols: number;
   rows: number;
-  ybase: number;
-  ydisp: number;
   x: number;
   y: number;
   scrollTop: number;
@@ -313,9 +311,6 @@ export class Emulator implements EmulatorAPI {
   private lastReportedPhysicalHeight = 0;
   
   private state = 0; // Escape code parsing state.
-  private ybase = 0;  // Index of row 1 in our (logn) list of lines+scroll back.
-  private ydisp = 0;  // Index of the row 1 which is displayed on the screen at the moment.
-                      // (only applies when physical scrolling is not used)
 
   private mouseEvents = false;
 
@@ -414,7 +409,6 @@ export class Emulator implements EmulatorAPI {
       scrollback: 1000,
       debug: false,
       useStyle: false,
-      physicalScroll: false,
       applicationModeCookie: null,
       performanceNow: () => window.performance.now()
     };
@@ -465,8 +459,6 @@ export class Emulator implements EmulatorAPI {
   }
 
   private _resetVariables(): void {
-    this.ybase = 0;
-    this.ydisp = 0;
     this.x = 0;
     this._setCursorY(0);
     this.oldy = 0;
@@ -1003,12 +995,11 @@ export class Emulator implements EmulatorAPI {
       return null;
     }
     
-    let line = this._getRow(row + this.ydisp);
+    let line = this._getRow(row);
 
     // Place the cursor in the row.
     if (row === this.y &&
         this.cursorState &&
-        (this.ydisp === this.ybase) &&
         !this.cursorHidden &&
         this.x < this.cols) {
 
@@ -1035,21 +1026,13 @@ export class Emulator implements EmulatorAPI {
       this._scrollbackLineQueue.push(this.lines[0]);        
     }
 
-    this.ydisp = this.ybase;
-
     // last line
-    const lastline = this.ybase + this.rows - 1;
+    const lastline = this.rows - 1;
 
     // subtract the bottom scroll region
     const insertRow = lastline - this.rows + 1 + this.scrollBottom;
 
-    if (this.scrollTop !== 0) {
-      if (this.ybase !== 0) {
-        this.ybase--;
-        this.ydisp = this.ybase;
-      }
-    }
-    this.lines.splice(this.ybase + this.scrollTop, 1);
+    this.lines.splice(this.scrollTop, 1);
     
     // add our new line
     this.lines.splice(insertRow, 0, this.blankLine());
@@ -1058,17 +1041,17 @@ export class Emulator implements EmulatorAPI {
     this.markRowForRefresh(this.scrollBottom);
   }
 
-  private scrollDisp(disp) {
-    this.ydisp += disp;
+  // private scrollDisp(disp) {
+  //   this.ydisp += disp;
 
-    if (this.ydisp > this.ybase) {
-      this.ydisp = this.ybase;
-    } else if (this.ydisp < 0) {
-      this.ydisp = 0;
-    }
+  //   if (this.ydisp > this.ybase) {
+  //     this.ydisp = this.ybase;
+  //   } else if (this.ydisp < 0) {
+  //     this.ydisp = 0;
+  //   }
 
-    this.markRowRangeForRefresh(0, this.rows - 1);
-  }
+  //   this.markRowRangeForRefresh(0, this.rows - 1);
+  // }
 
   write(data: string): WriteBufferStatus {
     this._writeBuffers.push(data);
@@ -1167,11 +1150,6 @@ export class Emulator implements EmulatorAPI {
   //var endtime;
   //console.log("write() start time: " + starttime);
 
-    if (this.ybase !== this.ydisp) {
-      this.ydisp = this.ybase;
-      this.markAllRowsForRefresh();
-    }
-    
     this.oldy = this.y;
     
     const len = data.length;
@@ -1263,7 +1241,7 @@ export class Emulator implements EmulatorAPI {
                   }
                 }
 
-                const {chars, attrs} = this._getRow(this.y + this.ybase);
+                const {chars, attrs} = this._getRow(this.y);
                 if (this.insertMode) {
                   // Push the characters out of the way to make space.
 
@@ -1290,7 +1268,7 @@ export class Emulator implements EmulatorAPI {
                 this.markRowForRefresh(this.y);
 
                 if (isWide(ch)) {
-                  const j = this.y + this.ybase;
+                  const j = this.y;
                   const line = this._getRow(j);
                   if (this.cols < 2 || this.x >= this.cols) {
                     line.chars[this.x - 1] = ' '.codePointAt(0);
@@ -2629,7 +2607,7 @@ export class Emulator implements EmulatorAPI {
     } else if (this.rows > newrows) {
       
       // Remove rows to match the new smaller rows value.
-      while (this.lines.length > newrows + this.ybase) {
+      while (this.lines.length > newrows) {
         this._scrollbackLineQueue.push(this.lines.shift());
       }      
     }
@@ -2724,7 +2702,7 @@ export class Emulator implements EmulatorAPI {
   }
 
   private fillRight(x: number, y: number, ch: string = ' '): void {
-    const line = this._tryGetRow(this.ybase + y);
+    const line = this._tryGetRow(y);
     if (line === null) {
       return;
     }
@@ -2748,7 +2726,7 @@ export class Emulator implements EmulatorAPI {
   }
   
   private eraseLeft(x: number, y: number): void {
-    const line = this._getRow(this.ybase + y);
+    const line = this._getRow(y);
     const {chars, attrs} = line;
     const attr = this.eraseAttr();
     const space = ' '.codePointAt(0);
@@ -2811,9 +2789,9 @@ export class Emulator implements EmulatorAPI {
       // possibly move the code below to term.reverseScroll();
       // test: echo -ne '\e[1;1H\e[44m\eM\e[0m'
       // blankLine(true) is xterm/linux behavior
-      this.lines.splice(this.y + this.ybase, 0, this.blankLine(true));
+      this.lines.splice(this.y, 0, this.blankLine(true));
       const j = this.rows - 1 - this.scrollBottom;
-      this.lines.splice(this.rows - 1 + this.ybase - j + 1, 1);
+      this.lines.splice(this.rows - 1 - j + 1, 1);
 
       this.markRowForRefresh(this.scrollTop);
       this.markRowForRefresh(this.scrollBottom);
@@ -3272,7 +3250,7 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;}
 
-    const row = this.y + this.ybase;
+    const row = this.y;
     let j = this.x;
 
     const attr = this.eraseAttr();
@@ -3339,8 +3317,8 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;
     }
-    const row = this.y + this.ybase;
-    const j = this.ybase + this.scrollBottom + 1;
+    const row = this.y;
+    const j = this.scrollBottom + 1;
     while (param--) {
       // test: echo -e '\e[44m\e[1L\e[0m'
       // blankLine(true) - xterm/linux behavior
@@ -3361,8 +3339,8 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;
     }
-    const row = this.y + this.ybase;
-    const j = this.ybase + this.scrollBottom;
+    const row = this.y;
+    const j = this.scrollBottom;
 
     while (param--) {
       // test: echo -e '\e[44m\e[1M\e[0m'
@@ -3385,7 +3363,7 @@ export class Emulator implements EmulatorAPI {
       param = 1;
     }
 
-    const row = this.y + this.ybase;
+    const row = this.y;
     const attr = this.eraseAttr();
     const chCodePoint = ' '.codePointAt(0);
 
@@ -3407,7 +3385,7 @@ export class Emulator implements EmulatorAPI {
       param = 1;
     }
 
-    const row = this.y + this.ybase;
+    const row = this.y;
     let j = this.x;
     const attr = this.eraseAttr();
     const spaceCodePoint = ' '.codePointAt(0);
@@ -3733,8 +3711,6 @@ export class Emulator implements EmulatorAPI {
               cols: this.cols,
               rows: this.rows,
               lines: this.lines,
-              ybase: this.ybase,
-              ydisp: this.ydisp,
               x: this.x,
               y: this.y,
               scrollTop: this.scrollTop,
@@ -3931,8 +3907,6 @@ export class Emulator implements EmulatorAPI {
             this.lines = this.normal.lines;
             this.cols = this.normal.cols;
             this.rows = this.normal.rows;
-            this.ybase = this.normal.ybase;
-            this.ydisp = this.normal.ydisp;
             this.x = this.normal.x;
             this._setCursorY(this.normal.y);
             this.scrollTop = this.normal.scrollTop;
@@ -4005,8 +3979,8 @@ export class Emulator implements EmulatorAPI {
   private scrollUp(params: number[]): void {
     let param = params[0] || 1;
     while (param--) {
-      this.lines.splice(this.ybase + this.scrollTop, 1);
-      this.lines.splice(this.ybase + this.scrollBottom, 0, this.blankLine());
+      this.lines.splice(this.scrollTop, 1);
+      this.lines.splice(this.scrollBottom, 0, this.blankLine());
     }
     // this.maxRange();
     this.markRowForRefresh(this.scrollTop);
@@ -4017,8 +3991,8 @@ export class Emulator implements EmulatorAPI {
   private scrollDown(params: number[]): void {
     let param = params[0] || 1;
     while (param--) {
-      this.lines.splice(this.ybase + this.scrollBottom, 1);
-      this.lines.splice(this.ybase + this.scrollTop, 0, this.blankLine());
+      this.lines.splice(this.scrollBottom, 1);
+      this.lines.splice(this.scrollTop, 0, this.blankLine());
     }
     // this.maxRange();
     this.markRowForRefresh(this.scrollTop);
@@ -4058,7 +4032,7 @@ export class Emulator implements EmulatorAPI {
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
   private repeatPrecedingCharacter(params: number[]): void {
     let param = params[0] || 1;
-    const {chars, attrs} = this._getRow(this.ybase + this.y);
+    const {chars, attrs} = this._getRow(this.y);
 
     const attr = this.x == 0 ? Emulator.defAttr : attrs[this.x-1];
     const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : chars[this.x-1];
@@ -4243,7 +4217,7 @@ export class Emulator implements EmulatorAPI {
     const attr = params[4];
 
     for (; t < b + 1; t++) {
-      const line = this._getRow(this.ybase + t);
+      const line = this._getRow(t);
       const attrs = line.attrs;
       for (let i = l; i < r; i++) {
         attrs[i] = attr;
@@ -4404,7 +4378,7 @@ export class Emulator implements EmulatorAPI {
     const r = params[4];
 
     for (; t < b + 1; t++) {
-      const chars = this._getRow(this.ybase + t).chars;
+      const chars = this._getRow(t).chars;
 
       for (let i = l; i < r; i++) {
         chars[i] = ch;
@@ -4448,7 +4422,7 @@ export class Emulator implements EmulatorAPI {
     const chCodePoint = ' '.codePointAt(0);
 
     for (; t < b + 1; t++) {
-      const {chars, attrs} = this._getRow(this.ybase + t);
+      const {chars, attrs} = this._getRow(t);
       for (let i = l; i < r; i++) {
         chars[i] = chCodePoint;
         attrs[i] = attr;
@@ -4528,13 +4502,13 @@ export class Emulator implements EmulatorAPI {
   // NOTE: xterm doesn't enable this code by default.
   private insertColumns(params: number[]): void {
     let param = params[0];
-    const l = this.ybase + this.rows;
+    const l = this.rows;
 
     const chCodePoint = ' '.codePointAt(0);
     const attr = this.eraseAttr();
 
     while (param--) {
-      for (let i = this.ybase; i < l; i++) {
+      for (let i = 0; i < l; i++) {
         const {chars, attrs} = this._getRow(i);
         chars.copyWithin(this.x+2, this.x+1);
         chars[this.x+1] = chCodePoint;
@@ -4552,13 +4526,13 @@ export class Emulator implements EmulatorAPI {
   // NOTE: xterm doesn't enable this code by default.
   private deleteColumns(params: number[]): void {
     let param = params[0];
-    const l = this.ybase + this.rows;
+    const l = this.rows;
     
     const chCodePoint = ' '.codePointAt(0);
     const attr = this.eraseAttr();
 
     while (param--) {
-      for (let i = this.ybase; i < l; i++) {
+      for (let i = 0; i < l; i++) {
         const {chars, attrs} = this._getRow(i);
 
         chars.copyWithin(this.x, this.x+1);
