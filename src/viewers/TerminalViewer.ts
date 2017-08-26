@@ -18,7 +18,7 @@ import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
   from '../CommandPaletteRequestTypes';
-import * as Term from '../Term';
+import * as Term from '../emulator/Term';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import Logger from '../Logger';
 import log from '../LogDecorator';

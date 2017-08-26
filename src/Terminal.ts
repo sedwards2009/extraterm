@@ -30,7 +30,7 @@ import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_C
 import Logger from './Logger';
 import LogDecorator from './LogDecorator';
 import * as DomUtils from './DomUtils';
-import * as Term from './Term';
+import * as Term from './emulator/Term';
 import {ScrollBar} from './gui/ScrollBar';
 import * as util from './gui/Util';
 import * as WebIpc from './WebIpc';
