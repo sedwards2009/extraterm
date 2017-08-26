@@ -245,8 +245,6 @@ export interface EmulatorAPI {
   blur(): void;
   hasFocus(): boolean;
 
-  startBlink(); // FIXME remove
-  setCursorBlink(blink: boolean): void;
   flushRenderQueue(): void;
 
   newLine(): void;
@@ -364,8 +362,6 @@ export class Emulator implements EmulatorAPI {
   private prefix = '';
   private postfix = '';
   
-  private _blink = null;
-    
   private lines: Line[] = [];
   
   private convertEol: boolean;
@@ -529,8 +525,6 @@ export class Emulator implements EmulatorAPI {
     this.prefix = '';
     this.postfix = '';
     
-    this._blink = null;
-
     this.lines = [];
   //  this.tabs;
     this.setupStops();
@@ -629,7 +623,6 @@ export class Emulator implements EmulatorAPI {
       this.send('\x1b[I');
     }
     this._hasFocus = true;    
-    this.showCursor();
     this._dispatchEvents();
   }
   
@@ -1034,48 +1027,6 @@ export class Emulator implements EmulatorAPI {
     }
     this.cursorState = !this.cursorState;
     this.markRowRangeForRefresh(this.y, this.y);
-  }
-
-  showCursor(): void {
-    if (!this.cursorState) {
-      this.cursorState = true;
-      this._getRow(this.y);
-      this.markRowRangeForRefresh(this.y, this.y);
-    } else {
-      // Temporarily disabled:
-      this.refreshBlink();
-    }
-  }
-
-  /**
-   * Set cursor blinking on or off.
-   * 
-   * @param {boolean} blink True if the cursor should blink.
-   */
-  setCursorBlink(blink: boolean): void {
-    if (this._blink !== null) {
-      clearInterval(this._blink);
-      this._blink = null;
-    }
-    this.cursorBlink = blink;
-    
-    this.showCursor();
-    this.startBlink();
-  }
-
-  startBlink(): void {
-    if (!this.cursorBlink) return;
-    var self = this;
-    this._blinker = function() {
-      self._cursorBlink();
-    };
-    this._blink = setInterval(this._blinker, 500);
-  }
-
-  private refreshBlink(): void {
-    if (!this.cursorBlink) return;
-    clearInterval(this._blink);
-    this._blink = setInterval(this._blinker, 500);
   }
 
   private scroll(): void {
@@ -2555,7 +2506,6 @@ export class Emulator implements EmulatorAPI {
       return false;
     }
     
-    this.showCursor();
     this.handler(key);
 
     cancelEvent(ev);
@@ -2580,7 +2530,6 @@ export class Emulator implements EmulatorAPI {
       return false;
     }
 
-    this.showCursor();
     this.handler(key);
     
     cancelEvent(ev);
@@ -3811,7 +3760,6 @@ export class Emulator implements EmulatorAPI {
             }
             
             this.normal = normal;
-            this.showCursor();
           }
           break;
       }
@@ -3998,7 +3946,6 @@ export class Emulator implements EmulatorAPI {
             // }
             this.resize( { rows: currentrows, columns: currentcols } );
             this.markRowRangeForRefresh(0, this.rows - 1);
-            this.showCursor();
           }
           break;
       }
