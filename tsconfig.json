@@ -72,6 +72,7 @@
         "./src/SplitLayout.ts",
         "./src/SupportsClipboardPaste.ts",
         "./src/emulator/Term.ts",
+        "./src/emulator/TermApi.ts",
         "./src/emulator/TermTest.ts",
         "./src/Terminal.ts",
         "./src/Theme.ts",

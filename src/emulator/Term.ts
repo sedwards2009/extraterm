@@ -32,7 +32,35 @@
  * Forked again from Christopher Jeffrey's work by Simon Edwards in 2014 and
  * converted over to TypeScript.
  */
-  
+import {
+  ApplicationModeEventListener,
+  ApplicationModeDataEventListener,
+  BellEventListener,
+  backgroundFromCharAttr,
+  BLINK_ATTR_FLAG,
+  BOLD_ATTR_FLAG,
+  CharAttr,
+  DataEventListener,
+  EmulatorApi,
+  FAINT_ATTR_FLAG,
+  flagsFromCharAttr,
+  foregroundFromCharAttr,
+  INVERSE_ATTR_FLAG,
+  INVISIBLE_ATTR_FLAG,
+  ITALIC_ATTR_FLAG,
+  Line,
+  TerminalCoord,
+  TerminalSize,
+  TitleChangeEventListener,
+  MouseEventOptions,
+  RenderEvent,
+  RenderEventHandler,
+  STRIKE_THROUGH_ATTR_FLAG,
+  UNDERLINE_ATTR_FLAG,
+  WriteBufferStatus,
+  WriteBufferSizeEventListener
+} from './TermApi';
+
 const DEBUG_RESIZE = false;
   
 const REFRESH_START_NULL = 100000000;
@@ -105,35 +133,6 @@ interface SavedState {
   tabs: { [i: number]: boolean;  };
 }
 
-// ------------------------------------------------------------------------
-//
-//        #    ######  ### 
-//       # #   #     #  #  
-//      #   #  #     #  #  
-//     #     # ######   #  
-//     ####### #        #  
-//     #     # #        #  
-//     #     # #       ### 
-//                     
-// ------------------------------------------------------------------------
-
-export type CharAttr = number;
-
-export interface Line {
-  chars: Uint32Array;
-  attrs: Uint32Array;
-}
-
-export interface TerminalCoord {
-  x: number;
-  y: number;
-}
-
-export interface TerminalSize {
-  rows: number;
-  columns: number;
-}
-
 const RENDER_EVENT = "RENDER_EVENT";
 const BELL_EVENT = "BELL_EVENT";
 const DATA_EVENT = "DATA_EVENT";
@@ -143,159 +142,8 @@ const APPLICATIONMODEDATA_EVENT = "APPLICATIONMODEDATA_EVENT";
 const APPLICATIONMODEEND_EVENT = "APPLICATIONMODEEND_EVENT";
 const WRITEBUFFERSIZE_EVENT = "WRITEBUFFERSIZE_EVENT";
 
-export interface RenderEvent {
-  rows: number;         // the current number of rows in the emulator screen.
-  columns: number;      // the current number of columns comprising the emulator screen.
-  realizedRows: number; // the current number of realised rows which have been touched.
-  
-  refreshStartRow: number;  // The start row of a range on the screen which needs to be refreshed.
-                            // -1 indicates no refresh needed.
-  refreshEndRow: number;    // The end row of a range on the screen which needds to be refreshed.
-  
-  scrollbackLines: Line[];  // List of lines which have reached the scrollback. Can be null.
-}
-
-export interface RenderEventHandler {
-  // Range of row to render from startRow to endRow exclusive.
-  (instance: Emulator, event: RenderEvent): void;
-}
-
-export interface BellEventListener {
-  (instance: Emulator): void;
-}
-
-export interface DataEventListener {
-  (instance: Emulator, data: string): void;
-}
-
-export interface TitleChangeEventListener {
-  (instance: Emulator, title: string): void;
-}
-
-export interface ApplicationModeEventListener {
-  (instance: Emulator): void;
-}
-
-export interface ApplicationModeDataEventListener {
-  (instance: Emulator, data: string): void;
-}
-
-export interface WriteBufferSizeEventListener {
-  (instance: Emulator, status: WriteBufferStatus): void;
-}
-
-export interface MouseEventOptions {
-  row: number;    // 0 based.
-  column: number; // 0 based.
-  leftButton: boolean;
-  middleButton: boolean;
-  rightButton: boolean;
-  shiftKey: boolean;
-  metaKey: boolean;
-  ctrlKey : boolean;
-}
-
-export interface WriteBufferStatus {
-  bufferSize: number;
-}
-
-export interface EmulatorAPI {
-  
-  size(): TerminalSize;
-  
-  lineAtRow(row: number, showCursor?: boolean): Line;
-  
-  refreshScreen(): void;
-  
-  resize(newSize: TerminalSize): void;
-
-  /**
-   * Reset the virtual terminal.
-   */
-  reset(): void;
-
-  // Sending input events into the emulator
-  keyDown(ev: KeyboardEvent): boolean;
-  keyPress(ev: KeyboardEvent): boolean;
-  destroy();
-  
-  /**
-   *
-   * @return true if the event has been fully handled.
-   */
-  mouseDown(ev: MouseEventOptions): boolean;
-  
-  /**
-   *
-   * @return true if the event has been fully handled.
-   */
-  mouseUp(ev: MouseEventOptions): boolean;
-  
-  /**
-   *
-   * @return true if the event has been fully handled.
-   */
-  mouseMove(ev: MouseEventOptions): boolean;
-  
-  write(data: string): WriteBufferStatus;
-  
-  focus(): void;
-  blur(): void;
-  hasFocus(): boolean;
-
-  flushRenderQueue(): void;
-
-  newLine(): void;
-
-  // Events
-  addRenderEventListener(eventHandler: RenderEventHandler): void;
-  addBellEventListener(eventHandler: BellEventListener): void;
-  addDataEventListener(eventHandler: DataEventListener): void;
-  addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void;
-  
-  addApplicationModeStartEventListener(eventHandler: ApplicationModeEventListener): void;
-  addApplicationModeDataEventListener(eventHandler: ApplicationModeDataEventListener): void;
-  addApplicationModeEndEventListener(eventHandler: ApplicationModeEventListener): void;  
-
-  addWriteBufferSizeEventListener(eventHandler: WriteBufferSizeEventListener): void;
-}
-
-
-// ------------------------------------------------------------------------
-//
-// #######                                                 
-// #       #    # #    # #        ##   #####  ####  #####  
-// #       ##  ## #    # #       #  #    #   #    # #    # 
-// #####   # ## # #    # #      #    #   #   #    # #    # 
-// #       #    # #    # #      ######   #   #    # #####  
-// #       #    # #    # #      #    #   #   #    # #   #  
-// ####### #    #  ####  ###### #    #   #    ####  #    # 
-//                                                         
-// ------------------------------------------------------------------------
-
-// Character rendering attributes packed inside a CharAttr.
-export const BOLD_ATTR_FLAG = 1;
-export const UNDERLINE_ATTR_FLAG = 2;
-export const BLINK_ATTR_FLAG = 4;
-export const INVERSE_ATTR_FLAG = 8;
-export const INVISIBLE_ATTR_FLAG = 16;
-export const ITALIC_ATTR_FLAG = 32;
-export const STRIKE_THROUGH_ATTR_FLAG = 64;
-export const FAINT_ATTR_FLAG = 128;
-
 const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
-export function flagsFromCharAttr(attr: CharAttr): number {
-  return attr >> 18;
-}
-
-export function foregroundFromCharAttr(attr: CharAttr): number {
-  return (attr >> 9) & 0x1ff;
-}
-
-export function backgroundFromCharAttr(attr: CharAttr): number {
-  return attr & 0x1ff;
-}
 
 function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
   return (flags << 18) | (fg << 9) | bg;
@@ -305,7 +153,7 @@ function isCharAttrCursor(attr: CharAttr): boolean {
   return attr === -1;
 }
 
-export class Emulator implements EmulatorAPI {
+export class Emulator implements EmulatorApi {
   private cols = 80;
   private rows = 24
   private lastReportedPhysicalHeight = 0;

@@ -31,6 +31,7 @@ import Logger from './Logger';
 import LogDecorator from './LogDecorator';
 import * as DomUtils from './DomUtils';
 import * as Term from './emulator/Term';
+import * as TermApi from './emulator/TermApi';
 import {ScrollBar} from './gui/ScrollBar';
 import * as util from './gui/Util';
 import * as WebIpc from './WebIpc';
@@ -909,7 +910,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  private _handleWriteBufferSize(emulator: Term.Emulator, status: Term.WriteBufferStatus): void {
+  private _handleWriteBufferSize(emulator: Term.Emulator, status: TermApi.WriteBufferStatus): void {
     const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, { detail: status });
     this.dispatchEvent(event);
   }
@@ -943,7 +944,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._sendDataToPtyEvent(data);
   }
   
-  private _handleTermSize(emulator: Term.Emulator, event: Term.RenderEvent): void {
+  private _handleTermSize(emulator: Term.Emulator, event: TermApi.RenderEvent): void {
     const newColumns = event.columns;
     const newRows = event.rows;
     if (this._columns === newColumns && this._rows === newRows) {

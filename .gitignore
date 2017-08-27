@@ -41,6 +41,7 @@ src/SupportClipboardPaste.js
 src/SourceDir.js
 src/SplitLayout.js
 src/emulator/Term.js
+src/emulator/TermApi.js
 src/emulator/TermTest.js
 src/Terminal.js
 src/Theme.js
