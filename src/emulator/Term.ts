@@ -103,16 +103,10 @@ const MAX_PROCESS_WRITE_SIZE = 4096;
  * Options
  */
 interface Options {
-  convertEol?: boolean;
   termName?: string;
   rows?: number;
   columns?: number;
-  cursorBlink?: boolean;
-  visualBell?: boolean;
-  popOnBell?: boolean;
-  scrollback?: number;
   debug?: boolean;
-  useStyle?: boolean;
   applicationModeCookie?: string;
   userAgent?: string;
   performanceNowFunc?: () => number;
@@ -186,9 +180,6 @@ export class Emulator implements EmulatorApi {
   private wraparoundMode = false;
   private normal: SavedState = null;
 
-  private entry = '';
-  private entryPrefix = 'Search: ';
-
   // charset
   private charset: CharSet = null;
   private savedCharset: CharSet = null;
@@ -207,13 +198,9 @@ export class Emulator implements EmulatorApi {
   
   private lines: Line[] = [];
   
-  private convertEol: boolean;
   private termName: string;
   private geometry: [number, number];
-  private cursorBlink: boolean;
-  private scrollback: number;
   public debug: boolean;
-  private useStyle: boolean;
   private applicationModeCookie: string;
   private isMac = false;
   
@@ -248,27 +235,17 @@ export class Emulator implements EmulatorApi {
   
   constructor(options: Options) {
     const defaults = {
-      convertEol: false,
       termName: 'xterm',
       geometry: [80, 24],
-      cursorBlink: false,
-      visualBell: false,
-      popOnBell: false,
-      scrollback: 1000,
       debug: false,
-      useStyle: false,
       applicationModeCookie: null,
       performanceNow: () => window.performance.now()
     };
     
-    this.convertEol = options.convertEol === undefined ? false : options.convertEol;
     this.termName = options.termName === undefined ? 'xterm' : options.termName;
     this.rows = options.rows === undefined ? 24 : options.rows;
     this.cols = options.columns === undefined ? 80 : options.columns;
-    this.cursorBlink = options.cursorBlink === undefined ? false : options.cursorBlink;
-    this.scrollback = options.scrollback === undefined ? 1000 : options.scrollback;
     this.debug = options.debug === undefined ? false : options.debug;
-    this.useStyle = options.useStyle === undefined ? false : options.useStyle;
     this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
     if (options.performanceNowFunc == null) {
       this._performanceNow = window.performance.now.bind(window.performance);
@@ -329,9 +306,6 @@ export class Emulator implements EmulatorApi {
     this.insertMode = false;
     this.wraparoundMode = false;
     this.normal = null;
-
-    this.entry = '';
-    this.entryPrefix = 'Search: ';
 
     // charset
     this.charset = null;
@@ -860,14 +834,6 @@ export class Emulator implements EmulatorApi {
     return line;
   }
   
-  private _cursorBlink(): void {
-    if ( ! this._hasFocus) {
-      return;
-    }
-    this.cursorState = !this.cursorState;
-    this.markRowRangeForRefresh(this.y, this.y);
-  }
-
   private scroll(): void {
     // Drop the oldest line into the scrollback buffer.
     if (this.scrollTop === 0) {
@@ -2378,9 +2344,6 @@ export class Emulator implements EmulatorApi {
   }
 
   newLine(): void {
-    if (this.convertEol) {
-      this.x = 0;
-    }
     // TODO: Implement eat_newline_glitch.
     // if (this.realX >= this.cols) break;
     // this.realX = 0;

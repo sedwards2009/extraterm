@@ -207,7 +207,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _configManager: ConfigManager;
   private _keyBindingManager: KeyBindingManager;
   
-  private _blinkingCursor: boolean;
   private _title: string;
   private _frameFinder: FrameFinder;
   private _scrollbackSize: number;
@@ -259,8 +258,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     
     this._configManager = null;
     this._keyBindingManager = null;
-    this._blinkingCursor = false;
-    this._scrollbackSize = 10000;
     this._frameFinder = null;
     this._title = "New Tab";
     this._nextTag = null;
@@ -778,8 +775,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _initEmulator(cookie: string): void {
     const emulator = new Term.Emulator({
       userAgent: window.navigator.userAgent,
-      scrollback: 1000,
-      cursorBlink: this._blinkingCursor,
       applicationModeCookie: cookie,
       debug: true
     });
