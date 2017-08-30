@@ -46,14 +46,20 @@ abstract class ScriptBuilder {
   }
 }
 
+const CTRL_C = '\x03';
 const EOT = '\x04';
 
 export class FishScriptBuilder extends ScriptBuilder {
 
   build(): ScriptCommand[] {
-    return [{type: 'text', text: `source
-${super.build()}
-${EOT}`}];
+    return [
+        {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
+        {type: 'wait', durationMilliseconds: 300},
+        {type: 'text', text: 'source\n'},
+        {type: 'wait', durationMilliseconds: 300},
+        ...super.build(),
+        {type: 'text', text: EOT}
+    ];
   }
 
   protected _buildCookie(): string {
