@@ -13,7 +13,7 @@ if [ -n "$EXTRATERM_COOKIE" ]; then
     export PATH="$PWD/$filedir:$PATH"
 
     # Insert our special code to communicate to Extraterm the status of the last command.
-    export PS1=`echo -n -e "\033&${EXTRATERM_COOKIE};3\007%?\000${PS1}"`
+    export PS1=`echo -n -e "%{\033&${EXTRATERM_COOKIE};3\007%}%?%{\000%}${PS1}"`
     
     preexec () {
         echo -n -e "\033&${EXTRATERM_COOKIE};2;zsh\007"
