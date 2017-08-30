@@ -100,6 +100,8 @@ export class BashScriptBuilder extends ScriptBuilder {
   
   build(): ScriptCommand[] {
     return [
+      {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
+      {type: 'wait', durationMilliseconds: 300},
       {type: 'text', text: 'source /dev/stdin\n'},
       {type: 'wait', durationMilliseconds: 300},
       ...super.build(),
@@ -149,6 +151,8 @@ export class ZshScriptBuilder extends ScriptBuilder {
 
   build(): ScriptCommand[] {
     return [
+      {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
+      {type: 'wait', durationMilliseconds: 300},
       {type: 'text', text: 'source =(cat </dev/stdin)\n'},
       {type: 'wait', durationMilliseconds: 300},
       ...super.build(),
