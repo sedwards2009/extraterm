@@ -5,7 +5,7 @@
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 # 
 
-if [ -n "$EXTRATERM_COOKIE" ]; then
+if [ -n "$LC_EXTRATERM_COOKIE" ]; then
     echo "Setting up Extraterm support."
 
     # Put our enhanced commands at the start of the PATH.
@@ -13,10 +13,10 @@ if [ -n "$EXTRATERM_COOKIE" ]; then
     export PATH="$PWD/$filedir:$PATH"
 
     # Insert our special code to communicate to Extraterm the status of the last command.
-    export PS1=`echo -n -e "%{\033&${EXTRATERM_COOKIE};3\007%}%?%{\000%}${PS1}"`
+    export PS1=`echo -n -e "%{\033&${LC_EXTRATERM_COOKIE};3\007%}%?%{\000%}${PS1}"`
     
     preexec () {
-        echo -n -e "\033&${EXTRATERM_COOKIE};2;zsh\007"
+        echo -n -e "\033&${LC_EXTRATERM_COOKIE};2;zsh\007"
         echo -n $1
         echo -n -e "\000"
     }

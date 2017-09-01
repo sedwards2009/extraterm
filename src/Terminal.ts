@@ -62,7 +62,7 @@ let startTime: number = window.performance.now();
 let registered = false;
 
 const ID = "EtTerminalTemplate";
-export const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
+export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 const ID_SCROLL_CONTAINER = "ID_SCROLL_CONTAINER";
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
