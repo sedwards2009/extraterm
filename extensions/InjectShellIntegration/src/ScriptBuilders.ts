@@ -58,9 +58,10 @@ export class FishScriptBuilder extends ScriptBuilder {
         {type: 'text', text: 'stty -echo; source\n'},
         {type: 'wait', durationMilliseconds: 300},
         ...super.build(),
+        {type: 'text', text: 'echo "Shell integration is configured"\n'},
         {type: 'text', text: EOT},
         {type: 'wait', durationMilliseconds: 300},
-        {type: 'text', text: 'echo "Shell integration is configured" ; stty echo\n'},
+        {type: 'text', text: 'stty echo\n'},
     ];
   }
 
@@ -107,9 +108,10 @@ export class BashScriptBuilder extends ScriptBuilder {
       {type: 'text', text: 'stty -echo; source /dev/stdin\n'},
       {type: 'wait', durationMilliseconds: 300},
       ...super.build(),
+      {type: 'text', text: 'echo "Shell integration is configured"\n'},
       {type: 'text', text: EOT},
       {type: 'wait', durationMilliseconds: 300},
-      {type: 'text', text: 'echo "Shell integration is configured" ; stty echo\n'},
+      {type: 'text', text: 'stty echo\n'},
   ];
   }
 
@@ -160,9 +162,10 @@ export class ZshScriptBuilder extends ScriptBuilder {
       {type: 'text', text: 'stty -echo; source =(cat </dev/stdin)\n'},
       {type: 'wait', durationMilliseconds: 300},
       ...super.build(),
+      {type: 'text', text: 'echo "Shell integration is configured"\n'},
       {type: 'text', text: EOT},
       {type: 'wait', durationMilliseconds: 300},
-      {type: 'text', text: 'echo "Shell integration is configured" ; stty echo\n'},
+      {type: 'text', text: 'stty echo\n'},
     ];
   }
 
