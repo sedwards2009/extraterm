@@ -175,7 +175,9 @@ export class ZshScriptBuilder extends ScriptBuilder {
 
   protected _buildShellReporting(): string {
     return `
-export PS1=\`echo -n -e "%{\\033&\${${this._extratermCookieName}};3\\007%}%?%{\\000%}\${PS1}"\`
+if [[ ! "$PS1" =~ "${this._extratermCookieValue}" ]] ; then
+    export PS1=\`echo -n -e "%{\\033&${this._extratermCookieValue};3\\007%}%?%{\\000%}\${PS1}"\`
+fi
 
 preexec () {
     echo -n -e "\\033&\${${this._extratermCookieName}};2;zsh\\007"
