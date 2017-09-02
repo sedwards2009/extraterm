@@ -30,7 +30,8 @@ import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_C
 import Logger from './Logger';
 import LogDecorator from './LogDecorator';
 import * as DomUtils from './DomUtils';
-import * as Term from './Term';
+import * as Term from './emulator/Term';
+import * as TermApi from './emulator/TermApi';
 import {ScrollBar} from './gui/ScrollBar';
 import * as util from './gui/Util';
 import * as WebIpc from './WebIpc';
@@ -39,8 +40,8 @@ import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
 import * as MmeTypeDetector from './MimeTypeDetector';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
-import * as SupportsClipboardPaste from './SupportsClipboardPaste';
 import {Config, ConfigManager, CommandLineAction, injectConfigManager, AcceptsConfigManager} from './Config';
+import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -61,7 +62,7 @@ let startTime: number = window.performance.now();
 let registered = false;
 
 const ID = "EtTerminalTemplate";
-export const EXTRATERM_COOKIE_ENV = "EXTRATERM_COOKIE";
+export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 const ID_SCROLL_CONTAINER = "ID_SCROLL_CONTAINER";
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
@@ -128,7 +129,7 @@ interface WriteBufferStatus {
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
 export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingManager,
-    AcceptsConfigManager {
+  AcceptsConfigManager, SupportsClipboardPaste.SupportsClipboardPaste {
   
   /**
    * The HTML tag name of this element.
@@ -206,7 +207,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _configManager: ConfigManager;
   private _keyBindingManager: KeyBindingManager;
   
-  private _blinkingCursor: boolean;
   private _title: string;
   private _frameFinder: FrameFinder;
   private _scrollbackSize: number;
@@ -258,8 +258,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     
     this._configManager = null;
     this._keyBindingManager = null;
-    this._blinkingCursor = false;
-    this._scrollbackSize = 10000;
     this._frameFinder = null;
     this._title = "New Tab";
     this._nextTag = null;
@@ -776,8 +774,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _initEmulator(cookie: string): void {
     const emulator = new Term.Emulator({
-      scrollback: 1000,
-      cursorBlink: this._blinkingCursor,
+      userAgent: window.navigator.userAgent,
       applicationModeCookie: cookie,
       debug: true
     });
@@ -848,7 +845,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _disconnectActiveTerminalViewer(): void {
+    this._moveCursorToFreshLine();
     this._emulator.moveRowsAboveCursorToScrollback();
+    this._emulator.flushRenderQueue();
     if (this._terminalViewer !== null) {
       this._terminalViewer.setEmulator(null);
       this._terminalViewer.deleteScreen();
@@ -860,6 +859,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _appendScrollableElement(el: ScrollableElement): void {
     this._emulator.moveRowsAboveCursorToScrollback();
+    this._emulator.flushRenderQueue();
     let currentTerminalViewer = this._terminalViewer;
     
     if (currentTerminalViewer !== null) {
@@ -905,7 +905,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  private _handleWriteBufferSize(emulator: Term.Emulator, status: Term.WriteBufferStatus): void {
+  private _handleWriteBufferSize(emulator: Term.Emulator, status: TermApi.WriteBufferStatus): void {
     const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, { detail: status });
     this.dispatchEvent(event);
   }
@@ -939,7 +939,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._sendDataToPtyEvent(data);
   }
   
-  private _handleTermSize(emulator: Term.Emulator, event: Term.RenderEvent): void {
+  private _handleTermSize(emulator: Term.Emulator, event: TermApi.RenderEvent): void {
     const newColumns = event.columns;
     const newRows = event.rows;
     if (this._columns === newColumns && this._rows === newRows) {
@@ -1740,18 +1740,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const el = this._createEmbeddedViewerElement(cleancommand);
       this._appendScrollableElement(el);
     } else {
-      
-      let currentTerminalViewer = this._terminalViewer;
-      
-      if (currentTerminalViewer !== null) {
-        currentTerminalViewer.operation( () => {
-          this._emulator.moveRowsAboveCursorToScrollback();  // The order of these two operations is important because it can
-          currentTerminalViewer.deleteScreen();   // cause the CodeMirror instance to scroll around by itself.
-        });
-      } else {
-        this._emulator.moveRowsAboveCursorToScrollback();  
-      }
-      
+
+      this._moveCursorToFreshLine();
+      this._emulator.moveRowsAboveCursorToScrollback();
+      this._emulator.flushRenderQueue();
+
       this._lastCommandTerminalLine = this._terminalViewer.bookmarkLine(this._terminalViewer.lineCount() -1);
       this._lastCommandLine = cleancommand;
       this._lastCommandTerminalViewer = this._terminalViewer;
@@ -1761,6 +1754,13 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
   }
   
+  private _moveCursorToFreshLine(): void {
+    const dims = this._emulator.getDimensions();
+    if (dims.cursorX !== 0 && this._emulator.getLineText(dims.cursorY).trim() !== '') {
+      this._emulator.newLine();
+    }
+  }
+
   public deleteEmbeddedViewer(viewer: EmbeddedViewer): void {
     this._removeScrollable(viewer);
   }
@@ -1967,6 +1967,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
   
+  canPaste(): boolean {
+    return true;
+  }
+
   pasteText(text: string): void {
     if (this._mode === Mode.CURSOR) {
       const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);

@@ -10,8 +10,8 @@ class extratermclient:
     INTRO = "\x1b&"
 
     def cookie():
-        if "EXTRATERM_COOKIE" in os.environ:
-            return os.environ["EXTRATERM_COOKIE"]
+        if "LC_EXTRATERM_COOKIE" in os.environ:
+            return os.environ["LC_EXTRATERM_COOKIE"]
         else:
             return None
 

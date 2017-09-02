@@ -57,33 +57,24 @@ $FAIL_COLOR: #ff5454;
   bottom: 0px;
   left: 0px;
   right: 0px;
-
+  
   overflow: hidden;
 
-  &:after {
-    content: "";
-    position: absolute;
-    bottom: 0px;
-    height: $BLOCK_BORDER_BOTTOM;
-    width: 100%;
-
-    border-bottom: $BLOCK_BORDER_BOTTOM solid rgba(0,0,0,0);
+  border-left: $BLOCK_BORDER_LEFT solid rgba(0,0,0,0);
+  border-right: $BLOCK_BORDER_RIGHT solid rgba(0,0,0,0);
   
-    border-bottom-left-radius: $CORNER_RADIUS;
-    border-bottom-right-radius: $CORNER_RADIUS;
-  }
+  padding-bottom: -1*$BLOCK_BORDER_BOTTOM;
+  border-bottom: $BLOCK_BORDER_BOTTOM solid rgba(0,0,0,0);
+  
+  border-bottom-left-radius: $CORNER_RADIUS;
+  border-bottom-right-radius: $CORNER_RADIUS;
 }
 
 /* *** Output DIV *** */
 #ID_OUTPUT {
   position: absolute;
   width: 100%;
-
-  border-left: $BLOCK_BORDER_LEFT solid rgba(0,0,0,0);
-  border-right: $BLOCK_BORDER_RIGHT solid rgba(0,0,0,0);
-  
-  border-bottom-left-radius: $CORNER_RADIUS;
-  border-bottom-right-radius: $CORNER_RADIUS;
+  height: 100%;
 }
 
 // #ID_OUTPUT.closed {
@@ -187,24 +178,16 @@ $FAIL_COLOR: #ff5454;
   border-color: rgba($FAIL_COLOR, 0.5);
 }
 
-#ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT_CONTAINER > #ID_OUTPUT {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-#ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT_CONTAINER:after {
+#ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT_CONTAINER {
   border-bottom-color: rgba(0, 0, 0, 0);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
 
 // Success mode
-#ID_CONTAINER.success > #ID_OUTPUT_CONTAINER > #ID_OUTPUT {
+#ID_CONTAINER.success > #ID_OUTPUT_CONTAINER {
   border-left-color: $LITE_BACKGROUND_COLOR;
   border-right-color: $LITE_BACKGROUND_COLOR;
-}
-
-#ID_CONTAINER.success > #ID_OUTPUT_CONTAINER:after {
   border-bottom-color: $LITE_BACKGROUND_COLOR;
 }
 
@@ -213,12 +196,9 @@ $FAIL_COLOR: #ff5454;
   background-color: $FAIL_BACKGROUND_COLOR;
 }
 
-#ID_CONTAINER.fail > #ID_OUTPUT_CONTAINER > #ID_OUTPUT {
+#ID_CONTAINER.fail > #ID_OUTPUT_CONTAINER {
   border-left-color: $FAIL_BACKGROUND_COLOR;
   border-right-color: $FAIL_BACKGROUND_COLOR;
-}
-
-#ID_CONTAINER.fail > #ID_OUTPUT_CONTAINER:after {
   border-bottom-color: $FAIL_BACKGROUND_COLOR;
 }
 

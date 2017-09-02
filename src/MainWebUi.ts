@@ -27,6 +27,7 @@ import * as Messages from './WindowMessages';
 import * as path from 'path';
 import * as _ from 'lodash';
 import {SplitLayout} from './SplitLayout';
+import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 
 import * as config from './Config';
 type Config = config.Config;
@@ -1034,10 +1035,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
    */
   pasteText(text: string): void {
     const elWithFocus = this._getTabElementWithFocus();
-    if (elWithFocus != null) {
-      if (elWithFocus instanceof EtTerminal) {
-        elWithFocus.pasteText(text);
-      }
+    if (elWithFocus != null && SupportsClipboardPaste.isSupportsClipboardPaste(elWithFocus)) {
+      elWithFocus.pasteText(text);
     }
   }
 

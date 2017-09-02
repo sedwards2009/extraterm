@@ -76,8 +76,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
    */
   static TAG_NAME = 'ET-EMBEDDEDVIEWER';
   
-  static EVENT_COPY_CLIPBOARD_REQUST = 'copy-clipboard-request';
-  
   static EVENT_CLOSE_REQUEST = 'close-request';
   
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';
@@ -305,7 +303,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _applyContainerChanges(): void {
     if (this._requestContainerHeight) {
       this._requestContainerHeight = false;
-      const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
+      const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT);
       this._virtualScrollArea.updateContainerHeight(outputContainerDiv.getBoundingClientRect().height);
     }
     if (this._requestContainerScroll) {

@@ -46,14 +46,22 @@ abstract class ScriptBuilder {
   }
 }
 
+const CTRL_C = '\x03';
 const EOT = '\x04';
 
 export class FishScriptBuilder extends ScriptBuilder {
 
   build(): ScriptCommand[] {
-    return [{type: 'text', text: `source
-${super.build()}
-${EOT}`}];
+    return [
+        {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
+        {type: 'wait', durationMilliseconds: 300},
+        {type: 'text', text: 'stty -echo; source\n'},
+        {type: 'wait', durationMilliseconds: 300},
+        ...super.build(),
+        {type: 'text', text: EOT},
+        {type: 'wait', durationMilliseconds: 300},
+        {type: 'text', text: 'echo "Shell integration is configured" ; stty echo\n'},
+    ];
   }
 
   protected _buildCookie(): string {
@@ -94,11 +102,15 @@ export class BashScriptBuilder extends ScriptBuilder {
   
   build(): ScriptCommand[] {
     return [
-      {type: 'text', text: 'source /dev/stdin\n'},
+      {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
+      {type: 'wait', durationMilliseconds: 300},
+      {type: 'text', text: 'stty -echo; source /dev/stdin\n'},
       {type: 'wait', durationMilliseconds: 300},
       ...super.build(),
       {type: 'text', text: EOT},
-    ];
+      {type: 'wait', durationMilliseconds: 300},
+      {type: 'text', text: 'echo "Shell integration is configured" ; stty echo\n'},
+  ];
   }
 
   protected _buildCookie(): string {
@@ -108,14 +120,14 @@ export class BashScriptBuilder extends ScriptBuilder {
   protected _buildShellReporting(): string {
     return `
 postexec () {
-  echo -n -e "\\033&$\{EXTRATERM_COOKIE\};3\\007"
+  echo -n -e "\\033&$\{${this._extratermCookieName}\};3\\007"
   echo -n $1
   echo -n -e "\\000"
 }
 export PROMPT_COMMAND="postexec \\$?"
 
 preexec () {
-    echo -n -e "\\033&$\{EXTRATERM_COOKIE\};2;bash\\007"
+    echo -n -e "\\033&$\{${this._extratermCookieName}\};2;bash\\007"
     echo -n $1
     echo -n -e "\\000"
 }
@@ -143,10 +155,14 @@ export class ZshScriptBuilder extends ScriptBuilder {
 
   build(): ScriptCommand[] {
     return [
-      {type: 'text', text: 'source =(cat </dev/stdin)\n'},
+      {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
+      {type: 'wait', durationMilliseconds: 300},
+      {type: 'text', text: 'stty -echo; source =(cat </dev/stdin)\n'},
       {type: 'wait', durationMilliseconds: 300},
       ...super.build(),
       {type: 'text', text: EOT},
+      {type: 'wait', durationMilliseconds: 300},
+      {type: 'text', text: 'echo "Shell integration is configured" ; stty echo\n'},
     ];
   }
 
@@ -156,10 +172,10 @@ export class ZshScriptBuilder extends ScriptBuilder {
 
   protected _buildShellReporting(): string {
     return `
-export PS1=\`echo -n -e "\\033&\${EXTRATERM_COOKIE};3\\007%?\\000\${PS1}"\`
+export PS1=\`echo -n -e "%{\\033&\${${this._extratermCookieName}};3\\007%}%?%{\\000%}\${PS1}"\`
 
 preexec () {
-    echo -n -e "\\033&\${EXTRATERM_COOKIE};2;zsh\\007"
+    echo -n -e "\\033&\${${this._extratermCookieName}};2;zsh\\007"
     echo -n $1
     echo -n -e "\\000"
 }

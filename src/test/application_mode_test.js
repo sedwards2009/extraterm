@@ -6,7 +6,7 @@ function write(msg) {
 }
 write("Starting HTML mode\n");
 write("\x1b&");
-write(process.env["EXTRATERM_COOKIE"]);
+write(process.env["LC_EXTRATERM_COOKIE"]);
 write("\x07");
 write("this is HTML or something else!");
 write("\x00");

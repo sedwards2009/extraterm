@@ -1,7 +1,7 @@
 /**
  * term.js - an xterm emulator
  * Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
- * Copyright (c) 2014-2015, Simon Edwards <simon@simonzone.com>
+ * Copyright (c) 2014-2017, Simon Edwards <simon@simonzone.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,15 +32,43 @@
  * Forked again from Christopher Jeffrey's work by Simon Edwards in 2014 and
  * converted over to TypeScript.
  */
-  
+import {
+  ApplicationModeEventListener,
+  ApplicationModeDataEventListener,
+  BellEventListener,
+  backgroundFromCharAttr,
+  BLINK_ATTR_FLAG,
+  BOLD_ATTR_FLAG,
+  CharAttr,
+  DataEventListener,
+  EmulatorApi,
+  FAINT_ATTR_FLAG,
+  flagsFromCharAttr,
+  foregroundFromCharAttr,
+  INVERSE_ATTR_FLAG,
+  INVISIBLE_ATTR_FLAG,
+  ITALIC_ATTR_FLAG,
+  Line,
+  TerminalCoord,
+  TerminalSize,
+  TitleChangeEventListener,
+  MouseEventOptions,
+  RenderEvent,
+  RenderEventHandler,
+  STRIKE_THROUGH_ATTR_FLAG,
+  UNDERLINE_ATTR_FLAG,
+  WriteBufferStatus,
+  WriteBufferSizeEventListener
+} from './TermApi';
+
 const DEBUG_RESIZE = false;
   
 const REFRESH_START_NULL = 100000000;
 const REFRESH_END_NULL = -100000000;
 const MAX_BATCH_TIME = 16;  // 16 ms = 60Hz
 const REFRESH_DELAY = 100;  // ms. How long to wait before doing a screen refresh during busy times.
-const WHEELSCROLL_CHARS = 3;
-  
+
+
 /**
  * Terminal Emulation References:
  *   http://vt100.net/
@@ -52,25 +80,10 @@ const WHEELSCROLL_CHARS = 3;
  *   http://linux.die.net/man/7/urxvt
  */
 
-'use strict';
-function trace(): void {
-    try {
-      throw new Error("");
-    } catch (e) {
-      console.log(e);
-    }
-}
-/**
- * Shared
- */
-
-let idCounter = 1;
-
 
 /**
  * States
  */
-
 const STATE_NORMAL = 0;
 const STATE_ESCAPE = 1;
 const STATE_CSI = 2;
@@ -82,7 +95,6 @@ const STATE_APPLICATION_START = 7;
 const STATE_APPLICATION_END = 8;
 const STATE_DEC_HASH = 9;
 
-const TERMINAL_ACTIVE_CLASS = "terminal-active";
 const MAX_PROCESS_WRITE_SIZE = 4096;
 
 /*************************************************************************/
@@ -91,16 +103,13 @@ const MAX_PROCESS_WRITE_SIZE = 4096;
  * Options
  */
 interface Options {
-  convertEol?: boolean;
   termName?: string;
-  geometry?: [number, number];
-  cursorBlink?: boolean;
-  visualBell?: boolean;
-  popOnBell?: boolean;
-  scrollback?: number;
+  rows?: number;
+  columns?: number;
   debug?: boolean;
-  useStyle?: boolean;
   applicationModeCookie?: string;
+  userAgent?: string;
+  performanceNowFunc?: () => number;
 };
 
 interface CharSet {
@@ -111,42 +120,11 @@ interface SavedState {
   lines: Line[];
   cols: number;
   rows: number;
-  ybase: number;
-  ydisp: number;
   x: number;
   y: number;
   scrollTop: number;
   scrollBottom: number;
   tabs: { [i: number]: boolean;  };
-}
-
-// ------------------------------------------------------------------------
-//
-//        #    ######  ### 
-//       # #   #     #  #  
-//      #   #  #     #  #  
-//     #     # ######   #  
-//     ####### #        #  
-//     #     # #        #  
-//     #     # #       ### 
-//                     
-// ------------------------------------------------------------------------
-
-export type CharAttr = number;
-
-export interface Line {
-  chars: Uint32Array;
-  attrs: Uint32Array;
-}
-
-export interface TerminalCoord {
-  x: number;
-  y: number;
-}
-
-export interface TerminalSize {
-  rows: number;
-  columns: number;
 }
 
 const RENDER_EVENT = "RENDER_EVENT";
@@ -158,938 +136,8 @@ const APPLICATIONMODEDATA_EVENT = "APPLICATIONMODEDATA_EVENT";
 const APPLICATIONMODEEND_EVENT = "APPLICATIONMODEEND_EVENT";
 const WRITEBUFFERSIZE_EVENT = "WRITEBUFFERSIZE_EVENT";
 
-export interface RenderEvent {
-  rows: number;         // the current number of rows in the emulator screen.
-  columns: number;      // the current number of columns comprising the emulator screen.
-  realizedRows: number; // the current number of realised rows which have been touched.
-  
-  refreshStartRow: number;  // The start row of a range on the screen which needs to be refreshed.
-                            // -1 indicates no refresh needed.
-  refreshEndRow: number;    // The end row of a range on the screen which needds to be refreshed.
-  
-  scrollbackLines: Line[];  // List of lines which have reached the scrollback. Can be null.
-}
-
-export interface RenderEventHandler {
-  // Range of row to render from startRow to endRow exclusive.
-  (instance: Emulator, event: RenderEvent): void;
-}
-
-export interface BellEventListener {
-  (instance: Emulator): void;
-}
-
-export interface DataEventListener {
-  (instance: Emulator, data: string): void;
-}
-
-export interface TitleChangeEventListener {
-  (instance: Emulator, title: string): void;
-}
-
-export interface ApplicationModeEventListener {
-  (instance: Emulator): void;
-}
-
-export interface ApplicationModeDataEventListener {
-  (instance: Emulator, data: string): void;
-}
-
-export interface WriteBufferSizeEventListener {
-  (instance: Emulator, status: WriteBufferStatus): void;
-}
-
-export interface MouseEventOptions {
-  row: number;    // 0 based.
-  column: number; // 0 based.
-  leftButton: boolean;
-  middleButton: boolean;
-  rightButton: boolean;
-  shiftKey: boolean;
-  metaKey: boolean;
-  ctrlKey : boolean;
-}
-
-export interface WriteBufferStatus {
-  bufferSize: number;
-}
-
-export interface EmulatorAPI {
-  
-  size(): TerminalSize;
-  
-  lineAtRow(row: number, showCursor?: boolean): Line;
-  
-  refreshScreen(): void;
-  
-  resize(newSize: TerminalSize): void;
-
-  /**
-   * Reset the virtual terminal.
-   */
-  reset(): void;
-
-  // Sending input events into the emulator
-  keyDown(ev: KeyboardEvent): boolean;
-  keyPress(ev: KeyboardEvent): boolean;
-  destroy();
-  
-  /**
-   *
-   * @return true if the event has been fully handled.
-   */
-  mouseDown(ev: MouseEventOptions): boolean;
-  
-  /**
-   *
-   * @return true if the event has been fully handled.
-   */
-  mouseUp(ev: MouseEventOptions): boolean;
-  
-  /**
-   *
-   * @return true if the event has been fully handled.
-   */
-  mouseMove(ev: MouseEventOptions): boolean;
-  
-  write(data: string): WriteBufferStatus;
-  
-  focus(): void;
-  blur(): void;
-  hasFocus(): boolean;
-
-  startBlink(); // FIXME remove
-  setCursorBlink(blink: boolean): void;
-  
-  // Events
-  addRenderEventListener(eventHandler: RenderEventHandler): void;
-  addBellEventListener(eventHandler: BellEventListener): void;
-  addDataEventListener(eventHandler: DataEventListener): void;
-  addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void;
-  
-  addApplicationModeStartEventListener(eventHandler: ApplicationModeEventListener): void;
-  addApplicationModeDataEventListener(eventHandler: ApplicationModeDataEventListener): void;
-  addApplicationModeEndEventListener(eventHandler: ApplicationModeEventListener): void;  
-
-  addWriteBufferSizeEventListener(eventHandler: WriteBufferSizeEventListener): void;
-}
-
-export interface TerminalDataEventListener {
-  (instance: Terminal, data: string): void;
-}
-
-// ------------------------------------------------------------------------
-//
-//   #######                                             
-//      #    ###### #####  #    # # #    #   ##   #      
-//      #    #      #    # ##  ## # ##   #  #  #  #      
-//      #    #####  #    # # ## # # # #  # #    # #      
-//      #    #      #####  #    # # #  # # ###### #      
-//      #    #      #   #  #    # # #   ## #    # #      
-//      #    ###### #    # #    # # #    # #    # ###### 
-//                     
-// ------------------------------------------------------------------------
-
-export class Terminal {
-  
-  static NO_STYLE_HACK = "NO_STYLE_HACK";
-  
-  static EVENT_SCROLLBACK_AVAILABLE = "scrollback-available";
-  
-  static EVENT_MANUAL_SCROLL = "manual-scroll";
-  
-  static EVENT_WHEEL = "wheel";
-  
-  private parent: HTMLElement = null;
-  public element: HTMLElement = null;
-  private context: Window = null;
-  private document: Document = null;
-  private body: HTMLElement = null;
-  private _scrollbackBuffer: Line[] = [];  // Array of lines which have not been rendered to the browser.
-  private children: HTMLDivElement[] = [];
-  private emulator: EmulatorAPI = null;
-  
-  private _events: { [type: string]: EventListener[]; } = {};
-  private _termId: number;
-  private isMac = false;
-  private vpad = 0;
-  private charHeight = 12; // resizeToContainer() will fix this for us.
-  private visualBell: boolean;
-  private popOnBell: boolean;
-  debug: boolean = false;
-
-  private dataEventListeners: TerminalDataEventListener[] = [];
-
-  constructor(options: Options) {
-    // Every term gets a unique ID.
-    this._termId = idCounter;
-    idCounter++;
-
-    this.emulator = new Emulator(options);
-    this._scrollbackBuffer = [];  // Array of lines which have not been rendered to the browser.
-    
-    this.charHeight = 12; // resizeToContainer() will fix this for us.
-    this.visualBell = options.visualBell === undefined ? false : options.visualBell;
-    this.popOnBell = options.popOnBell === undefined ? false : options.popOnBell;
-    this.debug = options.debug === undefined ? false : options.debug;
-  }
-
-  focus(): void {
-    this.emulator.focus();
-    this.element.focus();
-  }
-  
-  hasFocus(): boolean {
-    return this.emulator.hasFocus();
-  }
-  
-  blur(): void {
-    this.emulator.blur();
-    this.element.blur();
-  }
-  
-  /**
-   * Initialize global behavior
-   */
-  initGlobal(): void {
-    const document = this.document;
-  }
-
-  /**
-   * Insert an extra style of adding extra padding to the last row in the terminal.
-   * 
-   * This is only relevant when physical scrolling is used. It is desirable
-   * that the first row of the terminal align with the visible top of the
-   * containing element. When using curses based programs like editors you don't want to 
-   * see part of the scrollback cut off and just above the top row of your editor.
-   */
-  _initLastLinePadding(): void {
-    const style = this.document.createElement('style');
-    style.id = 'term-padding-style' + this._termId;
-
-    style.innerHTML = '';
-
-    const domRoot = getDOMRoot(this.element);
-    if (domRoot.nodeName === "#document") {
-      const head = this.document.getElementsByTagName('head')[0];
-      if (!head) {
-        return;
-      }
-      head.insertBefore(style, head.firstChild);
-      
-    } else {
-      // Shadow DOM.
-      domRoot.appendChild(style);
-    }
-  }
-
-  /**
-   * Set the size of the extra padding for the last row.
-   * 
-   * @param {number} padh The size of the pad in pixels
-   */
-  _setLastLinePadding(padh: number): void {
-    const style = <HTMLStyleElement> getDOMRoot(this.element).getElementById('term-padding-style' + this._termId);
-    const cssStyleSheet = <CSSStyleSheet> style.sheet;
-    while (cssStyleSheet.cssRules.length !== 0) {
-      cssStyleSheet.deleteRule(0);
-    }
-    cssStyleSheet.insertRule(`DIV.${TERMINAL_ACTIVE_CLASS}:last-child{padding-bottom:${padh}px}`, 0);
-  }
- 
-  /**
-   * Global Events for key handling
-   */
-  /**
-   * Set up key event handlers
-   */
-  bindKeys(): void {
-    // We should only need to check `target === body` below,
-    // but we can check everything for good measure.
-    this.element.addEventListener('keydown', (ev: KeyboardEvent): boolean => {
-      const target = ev.target || ev.srcElement;
-      if (!target) {
-        return false;
-      }
-      if (target === this.element ||
-          target === this.context ||
-          target === this.document ||
-          target === this.body ||
-          // target === self._textarea ||
-          target === this.parent) {
-        return this.emulator.keyDown(ev);
-      }
-      return false;
-    }, true);
-
-    this.element.addEventListener('keypress', (ev: KeyboardEvent): boolean => {
-      const target = ev.target || ev.srcElement;
-      if (!target) {
-        return false;
-      }
-      if (target === this.element ||
-          target === this.context ||
-          target === this.document ||
-          target === this.body ||
-          // target === self._textarea ||
-          target === this.parent) {
-        return this.emulator.keyPress(ev);
-      }
-      return false;
-    }, true);
-  }
-
-  /**
-   * Insert a default style
-   */
-  static insertStyle(document, bg, fg) {
-    var style = document.getElementById('term-style');
-    if (style) return;
-
-    var head = document.getElementsByTagName('head')[0];
-    if (!head) return;
-
-    style = document.createElement('style');
-    style.id = 'term-style';
-
-    // textContent doesn't work well with IE for <style> elements.
-    style.innerHTML = '' +
-      '.terminal {\n' +
-      '  float: left;\n' +
-      '  border: ' + bg + ' solid 5px;\n' +
-      '  font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;\n' +
-      '  font-size: 11px;\n' +
-      '  color: ' + fg + ';\n' +
-      '  background: ' + bg + ';\n' +
-      '}\n' +
-      '\n' +
-      '.terminal-cursor {\n' +
-      '  color: ' + bg + ';\n' +
-      '  background: ' + fg + ';\n' +
-      '}\n';
-
-    head.insertBefore(style, head.firstChild);
-  }
-  
-  /**
-   * Append a DOM element to the bottom of the terminal.
-   * 
-   * The existing rows in the terminal pushed into the scrollback area and
-   * any new term rendering occurs below the placed element.
-   * 
-   * @param {Element} element The DOM element to append.
-   */
-  // appendElement(element: HTMLElement): void {
-  //   this.moveRowsToScrollback();
-  //   if (this.children.length !== 0) {
-  //     this.element.insertBefore(element, this.children[0]);
-  //   } else {
-  //     this.element.appendChild(element);
-  //   }
-  // }
-
-  private _getChildDiv(y: number): HTMLDivElement {
-    while (y >= this.children.length) {
-        const div = this.document.createElement('div');
-        div.className = TERMINAL_ACTIVE_CLASS;
-        this.element.appendChild(div);
-        this.children.push(div);
-    }
-    return this.children[y];
-  }
-  
-  /**
-   * Open Terminal
-   */
-  open(parent: HTMLDivElement): void {
-    this.parent = parent;
-
-    this.emulator.addDataEventListener( (instance, data) => {
-      this.emitDataEvent(data);
-    });
-
-    this.emulator.addRenderEventListener(this._handleRenderLine.bind(this));
-    this.emulator.addBellEventListener(this._handleBellEvent.bind(this));
-
-    if (!this.parent) {
-      throw new Error('Terminal requires a parent element.');
-    }
-
-    // Grab global elements.
-    this.context = this.parent.ownerDocument.defaultView;
-    this.document = this.parent.ownerDocument;
-    this.body = this.document.getElementsByTagName('body')[0];
-
-    // Parse user-agent strings.
-    if (this.context.navigator && this.context.navigator.userAgent) {
-      this.isMac = !!~this.context.navigator.userAgent.indexOf('Mac');
-    }
-
-    // Create our main terminal element.
-    this.element = this.document.createElement('div');
-    this.element.className = 'terminal';
-    this.element.setAttribute('tabindex', "0");
-
-    // Create the lines for our terminal.
-    this.children = [];
-    // if ( !this.physicalScroll) {
-    //   for (let i=0; i < this.rows; i++) {
-    //     this._getChildDiv(i);
-    //   }
-    // }
-    this.parent.appendChild(this.element);
-
-    // Initialize global actions that
-    // need to be taken on the document.
-    this.initGlobal();
-
-    this._initLastLinePadding();
-
-    // Ensure there is a Terminal.focus.
-    this.focus();
-
-    // Start blinking the cursor.
-    this.emulator.startBlink();
-
-    this.element.addEventListener('mousedown', this._handleMouseDown.bind(this));
-    this.element.addEventListener('mousemove', this._handleMouseMove.bind(this));
-    this.element.addEventListener('mouseup', this._handleMouseUp.bind(this));
-    this.element.addEventListener('mouseleave', this._handleMouseLeave.bind(this));
-    this.bindKeys();
-
-    // Bind to DOM events related
-    // to focus and paste behavior.
-    on(this.element, 'focus', () => {
-      this.focus();
-    });
-
-    on(this.element, 'blur', () => {
-      this.blur();
-    });
-
-    on(this.element, 'mousedown', (ev: MouseEvent) => {
-      this.focus();
-    });
-
-    // This can be useful for pasting,
-    // as well as the iPad fix.
-    setTimeout(() => {
-      this.element.focus();
-    }, 100);
-  }
-  
-  write(data: string): void {
-    this.emulator.write(data);
-  }
-  
-  addDataEventListener(eventHandler: TerminalDataEventListener): void {
-    this.dataEventListeners.push(eventHandler);
-  }
-
-  private emitDataEvent(data: string): void {
-    this.dataEventListeners.forEach( (listener) => {
-      listener(this, data);
-    });
-  }
-  
-
-  private _handleMouseDown(ev: MouseEvent): void {
-    // Ctrl click prevents the mouse being taken over by
-    // the application and allows the user to select stuff.
-    if (ev.ctrlKey) { 
-      return;
-    }
-    
-    const pos = this.getTerminalCoordsFromEvent(ev);
-    if (pos === null) {
-      this.focus();
-      return;
-    }
-    
-    const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
-
-    // send the button
-    const options: MouseEventOptions = {
-      leftButton: button === 0,
-      middleButton: button === 1,
-      rightButton: button === 2,
-      ctrlKey: ev.ctrlKey,
-      shiftKey: ev.shiftKey,
-      metaKey: ev.metaKey,
-      row: pos.y,
-      column: pos.x
-    };
-    
-    if (this.emulator.mouseDown(options)) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
-  }
-  
-  private _handleMouseMove(ev: MouseEvent): void {
-    const pos = this.getTerminalCoordsFromEvent(ev);
-    if (pos === null) {
-      return;
-    }
-    
-    const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
-    
-    // send the button
-    const options: MouseEventOptions = {
-      leftButton: button === 0,
-      middleButton: button === 1,
-      rightButton: button === 2,
-      ctrlKey: ev.ctrlKey,
-      shiftKey: ev.shiftKey,
-      metaKey: ev.metaKey,
-      row: pos.y,
-      column: pos.x
-    };
-    
-    if (this.emulator.mouseMove(options)) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
-  }
-  
-  private _handleMouseUp(ev: MouseEvent): void {
-    const pos = this.getTerminalCoordsFromEvent(ev);
-    if (pos === null) {
-      return;
-    }
-    
-    const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
-
-    // send the button
-    const options: MouseEventOptions = {
-      leftButton: button === 0,
-      middleButton: button === 1,
-      rightButton: button === 2,
-      ctrlKey: ev.ctrlKey,
-      shiftKey: ev.shiftKey,
-      metaKey: ev.metaKey,
-      row: pos.y,
-      column: pos.x
-    };
-    
-    if (this.emulator.mouseUp(options)) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
-  }
-  
-  private _handleMouseLeave(ev: MouseEvent): void {
-    if (this.emulator.mouseUp(null)) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }    
-  }
-
-  // mouse coordinates measured in cols/rows
-  getTerminalCoordsFromEvent(ev: MouseEvent): TerminalCoord {
-    // Identify the row DIV that was clicked.
-    let rowElement = null;
-    if (getDOMRoot(this.element).nodeName === "#document") {
-      let target: HTMLElement = <HTMLElement> ev.target;
-      while (target !== this.element) {
-        if (target.className === TERMINAL_ACTIVE_CLASS) {
-          rowElement = target;
-          break;
-        }
-        target = <HTMLElement> target.parentNode;
-      }
-    } else {
-      // Inside a Shadow DOM.
-      const matches = ev.path.filter(
-        (pathEl) => (<HTMLElement> pathEl).className === TERMINAL_ACTIVE_CLASS );
-      if (matches.length === 0) {
-        return null;
-      }
-      rowElement = matches[0];
-    }
-    
-    if (rowElement === null) {
-      return null;
-    }
-    
-    let row = this.children.indexOf(rowElement);
-    
-    let x = ev.pageX;
-    let el = rowElement;
-    while (el && el !== self.document.documentElement) {
-      x -= el.offsetLeft;
-      el = 'offsetParent' in el ? el.offsetParent : el.parentNode;
-    }
-
-    const emulatorSize = this.emulator.size();
-
-    // convert to cols
-    const w = rowElement.clientWidth;
-    let col = Math.floor((x / w) * emulatorSize.columns);
-
-    // be sure to avoid sending
-    // bad positions to the program
-    if (col < 0) {
-      col = 0;
-    }
-    if (col > emulatorSize.columns) {
-      col = emulatorSize.columns;
-    }
-    if (row < 0) {
-      row = 0;
-    }
-    if (row > emulatorSize.rows) {
-      row = emulatorSize.rows;
-    }
-
-    return { x: col, y: row };
-  }
-
-  /**
-   * Destroy Terminal
-   */
-  destroy(): void {
-    // if (this.physicalScroll) {
-      const domRoot = getDOMRoot(this.element);
-      const style = domRoot.getElementById('term-padding-style' + this._termId);
-      style.parentNode.removeChild(style);
-    // }
-    this._events = {};
-    
-    if (this.element.parentNode) {
-      this.element.parentNode.removeChild(this.element);
-    }
-  }
-
-  setCursorBlink(blink: boolean): void {
-    this.emulator.setCursorBlink(blink);
-  }
-
-  private _handleBellEvent(instance: Emulator): void {
-    this._domBell();
-  }
- 
-  private _handleRenderLine(instance: Emulator, event: RenderEvent): void {
-    while (this.children.length > event.rows) {
-      const el = this.children.pop();
-      el.parentNode.removeChild(el);
-    }
-    
-    // Fill up the scroll back "TODO" (=to be rendered) buffer.
-    if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
-      event.scrollbackLines.forEach( (line) => {
-        this._scrollbackBuffer.push(line);
-      });
-      this._emit(Terminal.EVENT_SCROLLBACK_AVAILABLE, this);
-    }
-
-    for (let row=event.refreshStartRow; row < event.refreshEndRow; row++) {
-      const line = this.emulator.lineAtRow(row);
-      this._getChildDiv(row).innerHTML = Terminal.lineToHTML(line);
-    }
-  }
-
-  /**
-   * Render a line to a HTML string.
-   * 
-   * @param {Array} line Array describing a line of characters and attributes.
-   * @returns {string} A HTML rendering of the line as a HTML string.
-   */
-  static lineToHTML(line: Line): string {
-    let attr = Emulator.defAttr;
-    const width = line.chars.length;
-    let out = '';
-    
-    for (let i = 0; i < width; i++) {
-      const data: number = <number> line.attrs[i];
-      const ch: string = <string> String.fromCodePoint(line.chars[i]);
-
-      if (data !== attr) {
-        if (attr !== Emulator.defAttr) {
-          out += '</span>';
-        }
-        if (data !== Emulator.defAttr) {
-          if (data === -1) {
-            out += '<span class="reverse-video terminal-cursor">';
-          } else {
-            out += '<span ';
-
-            let bg = backgroundFromCharAttr(data);
-            let fg = foregroundFromCharAttr(data);
-            const flags = flagsFromCharAttr(data);
-            
-            let clazz: string = "";
-            
-            // bold
-            if (flags & BOLD_ATTR_FLAG) {
-              clazz += ' terminal-bold';
-
-              // See: XTerm*boldColors
-              if (fg < 8) {
-                fg += 8;  // Use the bright version of the color.
-              }
-            }
-
-            // italic
-            if (flags & ITALIC_ATTR_FLAG) {
-              clazz += ' terminal-italic';
-            }
-            
-            // underline
-            if (flags & UNDERLINE_ATTR_FLAG) {
-              clazz += ' terminal-underline';
-            }
-
-            // strike through
-            if (flags & STRIKE_THROUGH_ATTR_FLAG) { 
-              clazz += ' terminal-strikethrough';
-            }
-            
-            // inverse
-            if (flags & INVERSE_ATTR_FLAG) {
-              let tmp = fg;
-              fg = bg;
-              bg = tmp;
-              
-              // Should inverse just be before the
-              // above boldColors effect instead?
-              if ((flags & BOLD_ATTR_FLAG) && fg < 8) {
-                fg += 8;  // Use the bright version of the color.
-              }
-            }
-
-            // invisible
-            if (flags & INVISIBLE_ATTR_FLAG) {
-              clazz += ' terminal-invisible';
-            }
-
-            if (bg !== 256) {
-              clazz += ' terminal-background-' + bg;
-            }
-
-            if (flags & FAINT_ATTR_FLAG) {
-              clazz += ' terminal-faint-' + fg;
-            } else {
-              if (fg !== 257) {
-                clazz += ' terminal-foreground-' + fg;
-              }
-            }
-            
-            if (flags & BLINK_ATTR_FLAG) {
-              clazz += " terminal-blink";
-            }
-            
-            if (clazz !== "") {
-              out += " class='" + clazz + "'";
-            }
-            
-            out += '>';
-          }
-        }
-      }
-
-      switch (ch) {
-        case '&':
-          out += '&amp;';
-          break;
-        case '<':
-          out += '&lt;';
-          break;
-        case '>':
-          out += '&gt;';
-          break;
-        default:
-          if (ch <= ' ') {
-            out += '&nbsp;';
-          } else {
-            if (isWide(ch)) i++;
-            out += ch;
-          }
-          break;
-      }
-
-      attr = data;
-    }
-
-    if (attr !== Emulator.defAttr) {
-      out += '</span>';
-    }
-    return out;
-  }
-
-  // Physical scroll to the bottom.
-  scrollToBottom() {
-    var newScrollPosition = this.element.scrollHeight - this.element.clientHeight;
-    this.element.scrollTop = newScrollPosition;
-    this._emit(Terminal.EVENT_MANUAL_SCROLL, { position: newScrollPosition, isBottom: true });
-  }
-
-  isScrollAtBottom() {
-    return this.element.scrollTop === this.element.scrollHeight - this.element.clientHeight;
-  }
-  
-  _domBell(): void {
-    if (!this.visualBell) return;
-    var self = this;
-    this.element.style.borderColor = 'white';
-    setTimeout(function() {
-      self.element.style.borderColor = '';
-    }, 10);
-    if (this.popOnBell) this.focus();
-  }
-  
-  effectiveFontFamily(): string {
-    const lineEl = this.children[0];    
-    const cs = window.getComputedStyle(lineEl,null);
-    return cs.getPropertyValue("font-family");
-  }
-
-  /**
-   * Resize the terminal to fill its containing element.
-   * 
-   * @returns Object with the new colums (cols field) and rows (rows field) information.
-   */
-  resizeToContainer(): {cols: number; rows: number; vpad: number; } {
-    const {columns: cols, rows: rows} = this.emulator.size();
-    
-    if (DEBUG_RESIZE) {
-      this.log("resizeToContainer() this.effectiveFontFamily(): " + this.effectiveFontFamily());
-    }
-    
-    if (this.effectiveFontFamily().indexOf(Terminal.NO_STYLE_HACK) !== -1) {
-      // Styles have not been applied yet.
-      if (DEBUG_RESIZE) {
-        this.log("resizeToContainer() styles have not been applied yet.");
-      }
-      return {cols: cols, rows: rows, vpad: this.vpad };
-    }
-    
-    const lineEl = this.children[0];
-    const range = this.document.createRange();
-    range.setStart(lineEl, 0);
-    range.setEnd(lineEl, lineEl.childNodes.length);
-    
-    const rect = range.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
-      // The containing element has an invalid size.
-      return {cols: cols, rows: rows, vpad: this.vpad};
-    }
-    
-    const charWidth = rect.width / cols;    
-    const charHeight = rect.height;
-    this.charHeight = charHeight;
-    
-    const computedStyle = window.getComputedStyle(lineEl);
-    const width = this.element.clientWidth - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
-    const newCols = Math.floor(width / charWidth);
-    const newRows = Math.max(2, Math.floor(this.element.clientHeight / charHeight));
-    
-    if (newCols !== cols || newRows !== rows) {
-      this.emulator.resize( { rows: newRows, columns: newCols } );
-    }
-    
-    const newVpad =  Math.floor(this.element.clientHeight % charHeight);
-    if (newVpad !== this.vpad) {
-      this.vpad = newVpad;
-      this._setLastLinePadding(this.vpad);
-    }
-    
-    if (DEBUG_RESIZE) {
-      this.log("resizeToContainer() char line rect width: ",rect.width);
-      this.log("resizeToContainer() char line rect height: ",rect.height);
-      this.log("resizeToContainer() char line rect height: ",rect.height);
-      this.log("resizeToContainer() old cols: ",cols);
-      this.log("resizeToContainer() calculated charWidth: ",charWidth);    
-      this.log("resizeToContainer() calculated charHeight: ",charHeight);
-      this.log("resizeToContainer() element width: ",width);
-      this.log("resizeToContainer() element height: ",this.element.clientHeight);
-      this.log("resizeToContainer() new cols: ",newCols);
-      this.log("resizeToContainer() new rows: ",newRows);
-    }
-    return {cols: newCols, rows: newRows, vpad: this.vpad};
-  }
-  
-  /**
-   * Return true if there are lines waiting in the scrollback buffer.
-   *
-   * @return true if there are lines waiting to be rendered in the scrollback buffer.
-   */
-  isScrollbackAvailable(): boolean {
-    return this._scrollbackBuffer.length !== 0;
-  }
-  
-  /**
-   * Fetch all of the bending scrollback lines from the buffer.
-   * 
-   * @return all of the scrollback lines which need to rendered.
-   */
-  fetchScrollbackLines(): Line[] {
-    const lines = this._scrollbackBuffer;
-    this._scrollbackBuffer = [];
-    return lines;
-  }
-
-  private _emit(type, ...args: any[]): void {
-    if (!this._events[type]) return;
-
-    var obj = this._events[type];
-    var l = obj.length;
-    var i = 0;
-
-    for (; i < l; i++) {
-      obj[i].apply(this, args);
-    }
-  }
-  
-  private log(...args: any[]): void {
-    if (!this.debug) {
-      return;
-    }
-    if (!this.context.console || !this.context.console.log) {
-      return;
-    }
-    
-    this.context.console.log.apply(this.context.console, ["[TERM=",this._termId,"] ", ...args]);
-    this.context.console.log.apply(this.context.console, ["[TERM="+this._termId+"] "+ args]);
-  }
-
-}
-
-// ------------------------------------------------------------------------
-//
-// #######                                                 
-// #       #    # #    # #        ##   #####  ####  #####  
-// #       ##  ## #    # #       #  #    #   #    # #    # 
-// #####   # ## # #    # #      #    #   #   #    # #    # 
-// #       #    # #    # #      ######   #   #    # #####  
-// #       #    # #    # #      #    #   #   #    # #   #  
-// ####### #    #  ####  ###### #    #   #    ####  #    # 
-//                                                         
-// ------------------------------------------------------------------------
-
-// Character rendering attributes packed inside a CharAttr.
-export const BOLD_ATTR_FLAG = 1;
-export const UNDERLINE_ATTR_FLAG = 2;
-export const BLINK_ATTR_FLAG = 4;
-export const INVERSE_ATTR_FLAG = 8;
-export const INVISIBLE_ATTR_FLAG = 16;
-export const ITALIC_ATTR_FLAG = 32;
-export const STRIKE_THROUGH_ATTR_FLAG = 64;
-export const FAINT_ATTR_FLAG = 128;
-
 const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
-export function flagsFromCharAttr(attr: CharAttr): number {
-  return attr >> 18;
-}
-
-export function foregroundFromCharAttr(attr: CharAttr): number {
-  return (attr >> 9) & 0x1ff;
-}
-
-export function backgroundFromCharAttr(attr: CharAttr): number {
-  return attr & 0x1ff;
-}
 
 function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
   return (flags << 18) | (fg << 9) | bg;
@@ -1099,18 +147,12 @@ function isCharAttrCursor(attr: CharAttr): boolean {
   return attr === -1;
 }
 
-export class Emulator implements EmulatorAPI {
+export class Emulator implements EmulatorApi {
   private cols = 80;
   private rows = 24
   private lastReportedPhysicalHeight = 0;
   
   private state = 0; // Escape code parsing state.
-  private refreshStart = REFRESH_START_NULL;
-  private refreshEnd = REFRESH_END_NULL;
-
-  private ybase = 0;  // Index of row 1 in our (logn) list of lines+scroll back.
-  private ydisp = 0;  // Index of the row 1 which is displayed on the screen at the moment.
-                      // (only applies when physical scrolling is not used)
 
   private mouseEvents = false;
 
@@ -1138,9 +180,6 @@ export class Emulator implements EmulatorAPI {
   private wraparoundMode = false;
   private normal: SavedState = null;
 
-  private entry = '';
-  private entryPrefix = 'Search: ';
-
   // charset
   private charset: CharSet = null;
   private savedCharset: CharSet = null;
@@ -1157,27 +196,22 @@ export class Emulator implements EmulatorAPI {
   private prefix = '';
   private postfix = '';
   
-  private _blink = null;
-    
   private lines: Line[] = [];
   
-  private convertEol: boolean;
   private termName: string;
   private geometry: [number, number];
-  private cursorBlink: boolean;
-  private scrollback: number;
   public debug: boolean;
-  private useStyle: boolean;
   private applicationModeCookie: string;
   private isMac = false;
   
-  private _writeBuffers: string[] = [];  // Buffer for incoming data waiting to be processed.
-  private _processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.  
-  private _refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
+  private _writeBuffers: string[] = [];                 // Buffer for incoming data waiting to be processed.
+  private _processWriteChunkTimer: NodeJS.Timer = null; // Timer ID for our write chunk timer.  
+  private _refreshTimer: NodeJS.Timer = null;           // Timer ID for triggering an on scren refresh.
+  private _performanceNow: () => number = null;
 
   private _scrollbackLineQueue: Line[] = [];  // Queue of scrollback lines which need to sent via an event.
-  private _refreshStart = -1;
-  private _refreshEnd = -1;
+  private _refreshStart = REFRESH_START_NULL;
+  private _refreshEnd = REFRESH_END_NULL;
 
   private tabs: { [key: number]: boolean };
   private sendFocus = false;
@@ -1200,59 +234,48 @@ export class Emulator implements EmulatorAPI {
   private title: string = "";
   
   constructor(options: Options) {
-    var self = this;
-
     const defaults = {
-      convertEol: false,
       termName: 'xterm',
       geometry: [80, 24],
-      cursorBlink: false,
-      visualBell: false,
-      popOnBell: false,
-      scrollback: 1000,
       debug: false,
-      useStyle: false,
-      physicalScroll: false,
-      applicationModeCookie: null
+      applicationModeCookie: null,
+      performanceNow: () => window.performance.now()
     };
     
-    this.convertEol = options.convertEol === undefined ? false : options.convertEol;
     this.termName = options.termName === undefined ? 'xterm' : options.termName;
-    this.geometry = options.geometry === undefined ? [80, 24] : options.geometry;
-    this.cursorBlink = options.cursorBlink === undefined ? false : options.cursorBlink;
-    this.scrollback = options.scrollback === undefined ? 1000 : options.scrollback;
+    this.rows = options.rows === undefined ? 24 : options.rows;
+    this.cols = options.columns === undefined ? 80 : options.columns;
     this.debug = options.debug === undefined ? false : options.debug;
-    this.useStyle = options.useStyle === undefined ? false : options.useStyle;
     this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
-
-
-    if (window.navigator && window.navigator.userAgent) {
-      this.isMac = !!~window.navigator.userAgent.indexOf('Mac');
+    if (options.performanceNowFunc == null) {
+      this._performanceNow = window.performance.now.bind(window.performance);
+    } else {
+      this._performanceNow = options.performanceNowFunc;
     }
 
-    // this.options = options;
-
+    if (options.userAgent !== undefined) {
+      this.isMac = options.userAgent.indexOf('Mac') !== -1;
+    }
+    
     this.state = 0; // Escape code parsing state.
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
 
     this._resetVariables();
     this._hasFocus = false;
 
     this._writeBuffers = [];  // Buffer for incoming data waiting to be processed.
-    this._processWriteChunkTimer = -1;  // Timer ID for our write chunk timer.
+    this._processWriteChunkTimer = null;  // Timer ID for our write chunk timer.
     
-    this._refreshTimer = -1;  // Timer ID for triggering an on scren refresh.
+    this._refreshTimer = null;  // Timer ID for triggering an on scren refresh.
   }
   
   destroy(): void {
-    if (this._processWriteChunkTimer !== -1) {
-      window.clearTimeout(this._processWriteChunkTimer);
-      this._processWriteChunkTimer = -1;
+    if (this._processWriteChunkTimer !== null) {
+      clearTimeout(this._processWriteChunkTimer);
+      this._processWriteChunkTimer = null;
     }
     
-    if (this._refreshTimer !== -1) {
-      window.clearTimeout(this._refreshTimer);
+    if (this._refreshTimer !== null) {
+      clearTimeout(this._refreshTimer);
     }
     
     this._events = {};
@@ -1261,8 +284,6 @@ export class Emulator implements EmulatorAPI {
   }
 
   private _resetVariables(): void {
-    this.ybase = 0;
-    this.ydisp = 0;
     this.x = 0;
     this._setCursorY(0);
     this.oldy = 0;
@@ -1285,9 +306,6 @@ export class Emulator implements EmulatorAPI {
     this.insertMode = false;
     this.wraparoundMode = false;
     this.normal = null;
-
-    this.entry = '';
-    this.entryPrefix = 'Search: ';
 
     // charset
     this.charset = null;
@@ -1321,8 +339,6 @@ export class Emulator implements EmulatorAPI {
     this.prefix = '';
     this.postfix = '';
     
-    this._blink = null;
-
     this.lines = [];
   //  this.tabs;
     this.setupStops();
@@ -1421,7 +437,6 @@ export class Emulator implements EmulatorAPI {
       this.send('\x1b[I');
     }
     this._hasFocus = true;    
-    this.showCursor();
     this._dispatchEvents();
   }
   
@@ -1439,7 +454,7 @@ export class Emulator implements EmulatorAPI {
       return;
     }
 
-    this.refresh(this.y, this.y);
+    this.markRowRangeForRefresh(this.y, this.y);
     if (this.sendFocus) {
       this.send('\x1b[O');
     }
@@ -1578,40 +593,29 @@ export class Emulator implements EmulatorAPI {
   }
   
   refreshScreen(): void {
-    this.refresh(0, this.lines.length);
+    this.markRowRangeForRefresh(0, this.lines.length);
     this._dispatchEvents();
   }
 
   /**
-   * Moves all of the rendered rows above the cursor to the physical scrollback area.
-   * 
-   * The rows on the terminal screen are moved into the scrollback area but
-   * the new terminal rows are not rendered. Visually this does nothing as 
-   * the result looks the same. If the last row contains the cursor and is
-   * empty, then it is not moved.
-   * 
-   * Future terminal rows will appear below the old last row in the window
-   * once something is printed there.
+   * Moves all of the rows above the cursor into the physical scrollback area.
    */
   moveRowsAboveCursorToScrollback(): void {
-    let lines = this.lines;
-    let newLines = [];
-  
-    if (this.x === 0 && this.lines.length > this.y && this.getLineText(this.y).trim() === '') {
-      lines = this.lines.slice(0, this.y);
-      newLines = this.lines.slice(this.y);
-    }
+    const lines = this.lines.slice(0, this.y);
+    const newLines = this.lines.slice(this.y);
 
-    lines.forEach( (line) => this._scrollbackLineQueue.push(line) );
+    lines.forEach(line => this._scrollbackLineQueue.push(line));
 
     this.lines = newLines;
 
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
-    this.x = 0;
+    this.markAllRowsForRefresh();
     this._setCursorY(0);
     this.oldy = 0;
-    
+
+    this._scheduleRefresh(true);
+  }
+
+  flushRenderQueue(): void {
     this._dispatchEvents();
   }
 
@@ -1634,7 +638,7 @@ export class Emulator implements EmulatorAPI {
       materializedRows: this.lines.length,
       cursorX: this.x,
       cursorY: this.y
-      };  
+      };
   }
 
   getLineText(y: number): string {
@@ -1768,9 +772,9 @@ export class Emulator implements EmulatorAPI {
    * @param {boolean} immediate True if the refresh should occur as soon as possible. False if a slight delay is permitted.
    */
   private _scheduleRefresh(immediate: boolean): void {
-    if (this._refreshTimer === -1) {
-      this._refreshTimer = window.setTimeout(() => {
-        this._refreshTimer = -1;
+    if (this._refreshTimer === null) {
+      this._refreshTimer = setTimeout(() => {
+        this._refreshTimer = null;
         this._refreshFrame();
       }, immediate ? 0 : REFRESH_DELAY);
     }
@@ -1782,10 +786,9 @@ export class Emulator implements EmulatorAPI {
    * Usually call via a timer.
    */
   private _refreshFrame(): void {
-    this.refresh(this.refreshStart, this.refreshEnd);
     this._dispatchEvents();
-    this.refreshStart = REFRESH_START_NULL;
-    this.refreshEnd = REFRESH_END_NULL;
+    this._refreshStart = REFRESH_START_NULL;
+    this._refreshEnd = REFRESH_END_NULL;
   }
 
   // In the screen buffer, each character
@@ -1804,9 +807,9 @@ export class Emulator implements EmulatorAPI {
    * @param {number} start start row to refresh
    * @param {number} end   end row (INCLUSIVE!) to refresh
    */
-  private refresh(start: number, end: number): void {
-    this._refreshStart = this._refreshStart < 0 ? start : Math.min(start, this._refreshStart);
-    this._refreshEnd = this._refreshEnd < 0 ? end+1 : Math.max(end+1, this._refreshEnd);
+  private markRowRangeForRefresh(start: number, end: number): void {
+    this._refreshStart = Math.min(start, this._refreshStart);
+    this._refreshEnd = Math.max(end + 1, this._refreshEnd);
   }
   
   lineAtRow(row: number): Line {
@@ -1814,12 +817,11 @@ export class Emulator implements EmulatorAPI {
       return null;
     }
     
-    let line = this._getRow(row + this.ydisp);
+    let line = this._getRow(row);
 
     // Place the cursor in the row.
     if (row === this.y &&
         this.cursorState &&
-        (this.ydisp === this.ybase) &&
         !this.cursorHidden &&
         this.x < this.cols) {
 
@@ -1832,119 +834,38 @@ export class Emulator implements EmulatorAPI {
     return line;
   }
   
-  /**
-   * Get a shallow copy of the lines currently being shown on the terminal screen.
-   * 
-   * @return {Line[]} the lines information. Do not change this data!
-   */
-  getScreenLines(renderCursor:boolean=false): Line[] {
-    const linesCopy = [...this.lines];
-    
-    if (renderCursor) {
-      if (this.cursorState &&
-          (this.ydisp === this.ybase) &&
-          !this.cursorHidden &&
-          this.x < this.cols &&
-          this.y < linesCopy.length) {
-
-        const cursorLine = {chars: new Uint32Array(linesCopy[this.y].chars), attrs: new Uint32Array(linesCopy[this.y].attrs)};
-        cursorLine.attrs[this.x] = -1;
-        linesCopy[this.y] = cursorLine;
-      }
-    }
-    return linesCopy;
-  }
-  
-  private _cursorBlink(): void {
-    if ( ! this._hasFocus) {
-      return;
-    }
-    this.cursorState = !this.cursorState;
-    this.refresh(this.y, this.y);
-  }
-
-  showCursor(): void {
-    if (!this.cursorState) {
-      this.cursorState = true;
-      this._getRow(this.y);
-      this.refresh(this.y, this.y);
-    } else {
-      // Temporarily disabled:
-      this.refreshBlink();
-    }
-  }
-
-  /**
-   * Set cursor blinking on or off.
-   * 
-   * @param {boolean} blink True if the cursor should blink.
-   */
-  setCursorBlink(blink: boolean): void {
-    if (this._blink !== null) {
-      clearInterval(this._blink);
-      this._blink = null;
-    }
-    this.cursorBlink = blink;
-    
-    this.showCursor();
-    this.startBlink();
-  }
-
-  startBlink(): void {
-    if (!this.cursorBlink) return;
-    var self = this;
-    this._blinker = function() {
-      self._cursorBlink();
-    };
-    this._blink = setInterval(this._blinker, 500);
-  }
-
-  private refreshBlink(): void {
-    if (!this.cursorBlink) return;
-    clearInterval(this._blink);
-    this._blink = setInterval(this._blinker, 500);
-  }
-
   private scroll(): void {
     // Drop the oldest line into the scrollback buffer.
     if (this.scrollTop === 0) {
       this._scrollbackLineQueue.push(this.lines[0]);        
     }
 
-    this.ydisp = this.ybase;
-
     // last line
-    const lastline = this.ybase + this.rows - 1;
+    const lastline = this.rows - 1;
 
     // subtract the bottom scroll region
     const insertRow = lastline - this.rows + 1 + this.scrollBottom;
 
-    if (this.scrollTop !== 0) {
-      if (this.ybase !== 0) {
-        this.ybase--;
-        this.ydisp = this.ybase;
-      }
-    }
-    this.lines.splice(this.ybase + this.scrollTop, 1);
+    this.lines.splice(this.scrollTop, 1);
     
     // add our new line
     this.lines.splice(insertRow, 0, this.blankLine());
 
-    this.updateRange(this.scrollTop);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.scrollTop);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
-  private scrollDisp(disp) {
-    this.ydisp += disp;
+  // private scrollDisp(disp) {
+  //   this.ydisp += disp;
 
-    if (this.ydisp > this.ybase) {
-      this.ydisp = this.ybase;
-    } else if (this.ydisp < 0) {
-      this.ydisp = 0;
-    }
+  //   if (this.ydisp > this.ybase) {
+  //     this.ydisp = this.ybase;
+  //   } else if (this.ydisp < 0) {
+  //     this.ydisp = 0;
+  //   }
 
-    this.refresh(0, this.rows - 1);
-  }
+  //   this.markRowRangeForRefresh(0, this.rows - 1);
+  // }
 
   write(data: string): WriteBufferStatus {
     this._writeBuffers.push(data);
@@ -1965,9 +886,9 @@ export class Emulator implements EmulatorAPI {
    * Schedule the write chunk process to run the next time the event loop is entered.
    */
   private _scheduleProcessWriteChunk(): void {
-    if (this._processWriteChunkTimer === -1) {
-      this._processWriteChunkTimer = window.setTimeout(() => {
-        this._processWriteChunkTimer = -1;
+    if (this._processWriteChunkTimer === null) {
+      this._processWriteChunkTimer = setTimeout(() => {
+        this._processWriteChunkTimer = null;
         this._processWriteChunkRealTime();
       }, 0);
     }
@@ -1977,7 +898,7 @@ export class Emulator implements EmulatorAPI {
    * Process the next chunk of data to written into a the line array.
    */
   private _processWriteChunkRealTime(): void {
-    const starttime = window.performance.now();
+    const starttime = this._performanceNow();
   //console.log("++++++++ _processWriteChunk() start time: " + starttime);
     
     // Schedule a call back just in case. setTimeout(.., 0) still carries a ~4ms delay. 
@@ -1985,22 +906,22 @@ export class Emulator implements EmulatorAPI {
 
     while (true) {
       if (this._processOneWriteChunk() === false) {
-        window.clearTimeout(this._processWriteChunkTimer);
-        this._processWriteChunkTimer = -1;
+        clearTimeout(this._processWriteChunkTimer);
+        this._processWriteChunkTimer = null;
         
         this._scheduleRefresh(true);
         this._emitWriteBufferSizeEvent();
         break;
       }
       
-      const nowtime = window.performance.now();
+      const nowtime = this._performanceNow();
       if ((nowtime - starttime) > MAX_BATCH_TIME) {
         this._scheduleRefresh(false);
         this._emitWriteBufferSizeEvent();
         break;
       }
     }
-  //  console.log("---------- _processWriteChunk() end time: " + window.performance.now());
+  //  console.log("---------- _processWriteChunk() end time: " + this._performanceNow());
   }
 
   /**
@@ -2043,11 +964,6 @@ export class Emulator implements EmulatorAPI {
   //var endtime;
   //console.log("write() start time: " + starttime);
 
-    if (this.ybase !== this.ydisp) {
-      this.ydisp = this.ybase;
-      this.maxRange();
-    }
-    
     this.oldy = this.y;
     
     const len = data.length;
@@ -2131,7 +1047,7 @@ export class Emulator implements EmulatorAPI {
 
                 if (this.x >= this.cols) {
                   this.x = 0;
-                  this.updateRange(this.y);                  
+                  this.markRowForRefresh(this.y);                  
                   if (this.y+1 > this.scrollBottom) {
                     this.scroll();
                   } else {
@@ -2139,7 +1055,7 @@ export class Emulator implements EmulatorAPI {
                   }
                 }
 
-                const {chars, attrs} = this._getRow(this.y + this.ybase);
+                const {chars, attrs} = this._getRow(this.y);
                 if (this.insertMode) {
                   // Push the characters out of the way to make space.
 
@@ -2163,10 +1079,10 @@ export class Emulator implements EmulatorAPI {
                 attrs[this.x] = this.curAttr;
 
                 this.x++;
-                this.updateRange(this.y);
+                this.markRowForRefresh(this.y);
 
                 if (isWide(ch)) {
-                  const j = this.y + this.ybase;
+                  const j = this.y;
                   const line = this._getRow(j);
                   if (this.cols < 2 || this.x >= this.cols) {
                     line.chars[this.x - 1] = ' '.codePointAt(0);
@@ -2220,12 +1136,12 @@ export class Emulator implements EmulatorAPI {
       }
       
       if (this.y !== this.oldy) {
-        this.updateRange(this.oldy);
-        this.updateRange(this.y);
+        this.markRowForRefresh(this.oldy);
+        this.markRowForRefresh(this.y);
         this.oldy = this.y;
       }
     }
-    this.updateRange(this.y);
+    this.markRowForRefresh(this.y);
       
   //  endtime = window.performance.now();
   //console.log("write() end time: " + endtime);
@@ -3382,7 +2298,6 @@ export class Emulator implements EmulatorAPI {
       return false;
     }
     
-    this.showCursor();
     this.handler(key);
 
     cancelEvent(ev);
@@ -3407,7 +2322,6 @@ export class Emulator implements EmulatorAPI {
       return false;
     }
 
-    this.showCursor();
     this.handler(key);
     
     cancelEvent(ev);
@@ -3429,10 +2343,7 @@ export class Emulator implements EmulatorAPI {
     this._emit(BELL_EVENT, this);
   }
 
-  private newLine(): void {
-    if (this.convertEol) {
-      this.x = 0;
-    }
+  newLine(): void {
     // TODO: Implement eat_newline_glitch.
     // if (this.realX >= this.cols) break;
     // this.realX = 0;
@@ -3507,7 +2418,7 @@ export class Emulator implements EmulatorAPI {
     } else if (this.rows > newrows) {
       
       // Remove rows to match the new smaller rows value.
-      while (this.lines.length > newrows + this.ybase) {
+      while (this.lines.length > newrows) {
         this._scrollbackLineQueue.push(this.lines.shift());
       }      
     }
@@ -3531,7 +2442,7 @@ export class Emulator implements EmulatorAPI {
     this.normal = null;
     
     this.lastReportedPhysicalHeight = this.lines.length;
-    this.refresh(0, this.lines.length-1);
+    this.markRowRangeForRefresh(0, this.lines.length-1);
     
     this._dispatchEvents();
   }
@@ -3540,7 +2451,7 @@ export class Emulator implements EmulatorAPI {
     let checkedRefreshEnd = Math.min(this._refreshEnd, this.lines.length);
     let checkedRefreshStart = this._refreshStart;
     
-    if (checkedRefreshEnd === checkedRefreshStart) {
+    if (checkedRefreshEnd === REFRESH_END_NULL || checkedRefreshStart === checkedRefreshEnd) {
       // Don't signal to refresh anything. This can happen when there are no realized rows yet.
       checkedRefreshEnd = -1;
       checkedRefreshStart = -1;
@@ -3556,27 +2467,25 @@ export class Emulator implements EmulatorAPI {
       scrollbackLines: this._scrollbackLineQueue
     };
     
-    this._refreshStart = -1;
-    this._refreshEnd = -1;
+    this._refreshStart = REFRESH_START_NULL;
+    this._refreshEnd = REFRESH_END_NULL;
     this._scrollbackLineQueue = [];
     
     this._emit(RENDER_EVENT, this, event);    
   }
   
-  private updateRange(y: number): void {
-    if (y < this.refreshStart) this.refreshStart = y;
-    if (y > this.refreshEnd) this.refreshEnd = y;
+  private markRowForRefresh(y: number): void {
+    this.markRowRangeForRefresh(y, y);
   }
   
   private _setCursorY(newY: number): void {
     this._getRow(newY);
     this.y = newY;
-    this.refresh(newY, newY);
+    this.markRowRangeForRefresh(newY, newY);
   }
   
-  private maxRange(): void {
-    this.refreshStart = 0;
-    this.refreshEnd = this.rows - 1;
+  private markAllRowsForRefresh(): void {
+    this.markRowRangeForRefresh(0, this.rows-1);
   }
 
   private setupStops(maxCols?: number): void {
@@ -3604,7 +2513,7 @@ export class Emulator implements EmulatorAPI {
   }
 
   private fillRight(x: number, y: number, ch: string = ' '): void {
-    const line = this._tryGetRow(this.ybase + y);
+    const line = this._tryGetRow(y);
     if (line === null) {
       return;
     }
@@ -3617,7 +2526,7 @@ export class Emulator implements EmulatorAPI {
       attrs[x] = attr;
     }
 
-    this.updateRange(y);
+    this.markRowForRefresh(y);
   }
 
   private fillScreen(fillChar: string = ' '): void {
@@ -3628,7 +2537,7 @@ export class Emulator implements EmulatorAPI {
   }
   
   private eraseLeft(x: number, y: number): void {
-    const line = this._getRow(this.ybase + y);
+    const line = this._getRow(y);
     const {chars, attrs} = line;
     const attr = this.eraseAttr();
     const space = ' '.codePointAt(0);
@@ -3640,7 +2549,7 @@ export class Emulator implements EmulatorAPI {
       attrs[x] = attr;
     }
 
-    this.updateRange(y);
+    this.markRowForRefresh(y);
   }
 
   private eraseLine(y: number): void {
@@ -3691,12 +2600,12 @@ export class Emulator implements EmulatorAPI {
       // possibly move the code below to term.reverseScroll();
       // test: echo -ne '\e[1;1H\e[44m\eM\e[0m'
       // blankLine(true) is xterm/linux behavior
-      this.lines.splice(this.y + this.ybase, 0, this.blankLine(true));
+      this.lines.splice(this.y, 0, this.blankLine(true));
       const j = this.rows - 1 - this.scrollBottom;
-      this.lines.splice(this.rows - 1 + this.ybase - j + 1, 1);
+      this.lines.splice(this.rows - 1 - j + 1, 1);
 
-      this.updateRange(this.scrollTop);
-      this.updateRange(this.scrollBottom);
+      this.markRowForRefresh(this.scrollTop);
+      this.markRowForRefresh(this.scrollBottom);
     } else {
       this._setCursorY(this.y-1);
     }
@@ -4152,7 +3061,7 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;}
 
-    const row = this.y + this.ybase;
+    const row = this.y;
     let j = this.x;
 
     const attr = this.eraseAttr();
@@ -4219,8 +3128,8 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;
     }
-    const row = this.y + this.ybase;
-    const j = this.ybase + this.scrollBottom + 1;
+    const row = this.y;
+    const j = this.scrollBottom + 1;
     while (param--) {
       // test: echo -e '\e[44m\e[1L\e[0m'
       // blankLine(true) - xterm/linux behavior
@@ -4230,8 +3139,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(this.y);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.y);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps M
@@ -4241,8 +3150,8 @@ export class Emulator implements EmulatorAPI {
     if (param < 1) {
       param = 1;
     }
-    const row = this.y + this.ybase;
-    const j = this.ybase + this.scrollBottom;
+    const row = this.y;
+    const j = this.scrollBottom;
 
     while (param--) {
       // test: echo -e '\e[44m\e[1M\e[0m'
@@ -4253,8 +3162,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(this.y);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.y);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps P
@@ -4265,7 +3174,7 @@ export class Emulator implements EmulatorAPI {
       param = 1;
     }
 
-    const row = this.y + this.ybase;
+    const row = this.y;
     const attr = this.eraseAttr();
     const chCodePoint = ' '.codePointAt(0);
 
@@ -4287,7 +3196,7 @@ export class Emulator implements EmulatorAPI {
       param = 1;
     }
 
-    const row = this.y + this.ybase;
+    const row = this.y;
     let j = this.x;
     const attr = this.eraseAttr();
     const spaceCodePoint = ' '.codePointAt(0);
@@ -4613,8 +3522,6 @@ export class Emulator implements EmulatorAPI {
               cols: this.cols,
               rows: this.rows,
               lines: this.lines,
-              ybase: this.ybase,
-              ydisp: this.ydisp,
               x: this.x,
               y: this.y,
               scrollTop: this.scrollTop,
@@ -4640,7 +3547,6 @@ export class Emulator implements EmulatorAPI {
             }
             
             this.normal = normal;
-            this.showCursor();
           }
           break;
       }
@@ -4812,8 +3718,6 @@ export class Emulator implements EmulatorAPI {
             this.lines = this.normal.lines;
             this.cols = this.normal.cols;
             this.rows = this.normal.rows;
-            this.ybase = this.normal.ybase;
-            this.ydisp = this.normal.ydisp;
             this.x = this.normal.x;
             this._setCursorY(this.normal.y);
             this.scrollTop = this.normal.scrollTop;
@@ -4826,8 +3730,7 @@ export class Emulator implements EmulatorAPI {
             //   this._setCursorY(this.savedY);
             // }
             this.resize( { rows: currentrows, columns: currentcols } );
-            this.refresh(0, this.rows - 1);
-            this.showCursor();
+            this.markRowRangeForRefresh(0, this.rows - 1);
           }
           break;
       }
@@ -4887,24 +3790,24 @@ export class Emulator implements EmulatorAPI {
   private scrollUp(params: number[]): void {
     let param = params[0] || 1;
     while (param--) {
-      this.lines.splice(this.ybase + this.scrollTop, 1);
-      this.lines.splice(this.ybase + this.scrollBottom, 0, this.blankLine());
+      this.lines.splice(this.scrollTop, 1);
+      this.lines.splice(this.scrollBottom, 0, this.blankLine());
     }
     // this.maxRange();
-    this.updateRange(this.scrollTop);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.scrollTop);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
   private scrollDown(params: number[]): void {
     let param = params[0] || 1;
     while (param--) {
-      this.lines.splice(this.ybase + this.scrollBottom, 1);
-      this.lines.splice(this.ybase + this.scrollTop, 0, this.blankLine());
+      this.lines.splice(this.scrollBottom, 1);
+      this.lines.splice(this.scrollTop, 0, this.blankLine());
     }
     // this.maxRange();
-    this.updateRange(this.scrollTop);
-    this.updateRange(this.scrollBottom);
+    this.markRowForRefresh(this.scrollTop);
+    this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps ; Ps ; Ps ; Ps ; Ps T
@@ -4940,7 +3843,7 @@ export class Emulator implements EmulatorAPI {
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
   private repeatPrecedingCharacter(params: number[]): void {
     let param = params[0] || 1;
-    const {chars, attrs} = this._getRow(this.ybase + this.y);
+    const {chars, attrs} = this._getRow(this.y);
 
     const attr = this.x == 0 ? Emulator.defAttr : attrs[this.x-1];
     const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : chars[this.x-1];
@@ -5125,7 +4028,7 @@ export class Emulator implements EmulatorAPI {
     const attr = params[4];
 
     for (; t < b + 1; t++) {
-      const line = this._getRow(this.ybase + t);
+      const line = this._getRow(t);
       const attrs = line.attrs;
       for (let i = l; i < r; i++) {
         attrs[i] = attr;
@@ -5133,8 +4036,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(params[0]);
-    this.updateRange(params[2]);
+    this.markRowForRefresh(params[0]);
+    this.markRowForRefresh(params[2]);
   }
 
   // CSI ? Pm s
@@ -5286,7 +4189,7 @@ export class Emulator implements EmulatorAPI {
     const r = params[4];
 
     for (; t < b + 1; t++) {
-      const chars = this._getRow(this.ybase + t).chars;
+      const chars = this._getRow(t).chars;
 
       for (let i = l; i < r; i++) {
         chars[i] = ch;
@@ -5294,8 +4197,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(params[1]);
-    this.updateRange(params[3]);
+    this.markRowForRefresh(params[1]);
+    this.markRowForRefresh(params[3]);
   }
 
   // CSI Ps ; Pu ' z
@@ -5330,7 +4233,7 @@ export class Emulator implements EmulatorAPI {
     const chCodePoint = ' '.codePointAt(0);
 
     for (; t < b + 1; t++) {
-      const {chars, attrs} = this._getRow(this.ybase + t);
+      const {chars, attrs} = this._getRow(t);
       for (let i = l; i < r; i++) {
         chars[i] = chCodePoint;
         attrs[i] = attr;
@@ -5338,8 +4241,8 @@ export class Emulator implements EmulatorAPI {
     }
 
     // this.maxRange();
-    this.updateRange(params[0]);
-    this.updateRange(params[2]);
+    this.markRowForRefresh(params[0]);
+    this.markRowForRefresh(params[2]);
   }
 
   // CSI Pm ' {
@@ -5410,13 +4313,13 @@ export class Emulator implements EmulatorAPI {
   // NOTE: xterm doesn't enable this code by default.
   private insertColumns(params: number[]): void {
     let param = params[0];
-    const l = this.ybase + this.rows;
+    const l = this.rows;
 
     const chCodePoint = ' '.codePointAt(0);
     const attr = this.eraseAttr();
 
     while (param--) {
-      for (let i = this.ybase; i < l; i++) {
+      for (let i = 0; i < l; i++) {
         const {chars, attrs} = this._getRow(i);
         chars.copyWithin(this.x+2, this.x+1);
         chars[this.x+1] = chCodePoint;
@@ -5426,7 +4329,7 @@ export class Emulator implements EmulatorAPI {
       }
     }
 
-    this.maxRange();
+    this.markAllRowsForRefresh();
   }
 
   // CSI P m SP ~
@@ -5434,13 +4337,13 @@ export class Emulator implements EmulatorAPI {
   // NOTE: xterm doesn't enable this code by default.
   private deleteColumns(params: number[]): void {
     let param = params[0];
-    const l = this.ybase + this.rows;
+    const l = this.rows;
     
     const chCodePoint = ' '.codePointAt(0);
     const attr = this.eraseAttr();
 
     while (param--) {
-      for (let i = this.ybase; i < l; i++) {
+      for (let i = 0; i < l; i++) {
         const {chars, attrs} = this._getRow(i);
 
         chars.copyWithin(this.x, this.x+1);
@@ -5451,7 +4354,7 @@ export class Emulator implements EmulatorAPI {
       }
     }
 
-    this.maxRange();
+    this.markAllRowsForRefresh();
   }
 
   /**
@@ -5580,12 +4483,6 @@ export class Emulator implements EmulatorAPI {
     }
   }
 
-  // private removeAllListeners(type): void {
-  //   if (this._events[type]) {
-  //     delete this._events[type];
-  //   }
-  // }
-
   private _emit(type, ...args: any[]): void {
     if (!this._events[type]) return;
 
@@ -5597,10 +4494,6 @@ export class Emulator implements EmulatorAPI {
       obj[i].apply(this, args);
     }
   }
-
-  // listeners(type) {
-  //   return this._events[type] !== undefined ? this._events[type] : [];
-  // }
   
   dumpLines(): void {
     for (let y=0; y<this.lines.length; y++) {
@@ -5614,28 +4507,12 @@ export class Emulator implements EmulatorAPI {
  * Helpers
  */
 
-function on(el: EventTarget, type: string, handler: EventListener, capture = false): void {
-  el.addEventListener(type, handler, capture);
-}
-
-function off(el: EventTarget, type: string, handler: EventListener, capture = false): void {
-  el.removeEventListener(type, handler, capture || false);
-}
-
 function cancelEvent(ev) {
   if (ev.preventDefault) ev.preventDefault();
   ev.returnValue = false;
   if (ev.stopPropagation) ev.stopPropagation();
   ev.cancelBubble = true;
   return false;
-}
-
-function indexOf(obj, el) {
-  var i = obj.length;
-  while (i--) {
-    if (obj[i] === el) return i;
-  }
-  return -1;
 }
 
 function isWide(ch: string): boolean {
@@ -5696,32 +4573,3 @@ function matchColorDistance(r1, g1, b1, r2, g2, b2) {
     Math.pow(59 * (g1 - g2), 2) +
     Math.pow(11 * (b1 - b2), 2);
 }
-
-export interface ScrollDetail {
-  position: number;
-  isBottom: boolean;
-}
-
-/**
- * Get the root of the DOM tree or Shadow DOM holding a node.
- * 
- * @param  startElement the element to search from.
- * @return The root of the DOM tree containing the node.
- */
-function getDOMRoot(startElement: Node): Document | ShadowRoot {
-  let el: Node = startElement;
-  do {
-    if (el.nodeName === "#document-fragment" || el.nodeName === "#document") {
-      return <Document | ShadowRoot> el;
-    }
-    el = el.parentNode;
-  } while (el !== null);
-  return null;
-}
-
-function px(value) {
-  if (value === null || value === undefined || value === "") {
-    return 0;
-  }
-  return parseInt(value.slice(0,-2),10);
-}  
