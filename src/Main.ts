@@ -143,7 +143,10 @@ function main(): void {
   // This method will be called when Electron has done everything
   // initialization and ready for creating browser windows.
   app.on('ready', function() {
-    
+    if (setScaleFactor()) {
+      return;
+    }
+
     startIpc();
     
     // Create the browser window.
@@ -183,6 +186,19 @@ function main(): void {
     });
 
   });
+}
+
+function setScaleFactor(): boolean {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  log("Display scale factor is ", primaryDisplay.scaleFactor);
+  if (primaryDisplay.scaleFactor !== 1 && primaryDisplay.scaleFactor !== 2) {
+    const scaleFactor = primaryDisplay.scaleFactor < 1.5 ? 1 : 2;
+    app.relaunch({args: process.argv.slice(1).concat(['--relaunch', '--force-device-scale-factor=' + scaleFactor])});
+    log("Restarting with scale factor ", scaleFactor);
+    app.exit(0);
+    return true;  // true means a restart is coming.
+  }
+  return false;
 }
 
 const _log = new Logger("main");
