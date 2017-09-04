@@ -190,6 +190,8 @@ function log(msg: any, ...opts: any[]): void {
   _log.debug(msg, ...opts);
 }
 
+const _log = new Logger("main");
+
 function mapBadChar(m: string): string {
   const c = m.charCodeAt(0);
   switch (c) {
@@ -217,7 +219,7 @@ function substituteBadChars(data: string): string {
 }
 
 function logData(data: string): void {
-  log(substituteBadChars(data));
+  _log.debug(substituteBadChars(data));
 }
 // Format a string as a series of JavaScript string literals.
 function formatJSData(data: string, maxLen: number = 60): string {
@@ -238,7 +240,7 @@ function formatJSData(data: string, maxLen: number = 60): string {
 }
 
 function logJSData(data: string): void {
-  log(formatJSData(data));
+  _log.debug(formatJSData(data));
 }
 
 //-------------------------------------------------------------------------
@@ -295,7 +297,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
               };
               expandedProfiles.push(expandedProfile);
             } else {
-              log(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
+              _log.info(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
                 `The cygwin installation couldn't be found.`);
             }
           
@@ -305,7 +307,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
             break;
             
           default:
-            log(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
+          _log.info(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
               `It is neither ${config_.SESSION_TYPE_CYGWIN} nor ${config_.SESSION_TYPE_BABUN}.`);
             break;
         }
@@ -337,7 +339,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
             break;
             
           default:
-            log(`Ignoring session profile '${profile.name}' with type '${profile.type}'.`);
+          _log.info(`Ignoring session profile '${profile.name}' with type '${profile.type}'.`);
             break;
         }
       });
@@ -429,10 +431,10 @@ function findOptionCygwinInstallation(cygwinDir: string): string {
     return null;
   }
   if (fs.existsSync(cygwinDir)) {
-    log("Found user specified cygwin installation at " + cygwinDir);
+    _log.info("Found user specified cygwin installation at " + cygwinDir);
     return cygwinDir;
   } else {
-    log("Couldn't find the user specified cygwin installation at " + cygwinDir);
+    _log.info("Couldn't find the user specified cygwin installation at " + cygwinDir);
     return null;
   }
 }
@@ -447,15 +449,15 @@ function findCygwinInstallation(): string {
     const cygwinDir = parts[2].slice(regsz+6).trim();
     
     if (fs.existsSync(cygwinDir)) {
-      log("Found cygwin installation at " + cygwinDir);
+      _log.info("Found cygwin installation at " + cygwinDir);
       return cygwinDir;
     } else {
-      log("The registry reported the cygwin installation directory at '" + cygwinDir +
+      _log.info("The registry reported the cygwin installation directory at '" + cygwinDir +
         "', but the directory does not exist.");
       return null;
     }
   } catch(e) {
-    log("Couldn't find a cygwin installation.");
+    _log.info("Couldn't find a cygwin installation.");
     return null;
   }
 }
@@ -463,10 +465,10 @@ function findCygwinInstallation(): string {
 function findBabunCygwinInstallation(): string {
   const cygwinDir = path.join(app.getPath('home'), ".babun/cygwin");
   if (fs.existsSync(cygwinDir)) {
-    log("Found babun cygwin installation at " + cygwinDir);
+    _log.info("Found babun cygwin installation at " + cygwinDir);
     return cygwinDir;
   } else {
-    log("Couldn't find a Babun cygwin installation.");
+    _log.info("Couldn't find a Babun cygwin installation.");
     return null;
   }
 }
@@ -605,11 +607,11 @@ function readConfigurationFile(): Config {
   let config: Config = { systemConfig: null, expandedProfiles: null };
 
   if (fs.existsSync(filename)) {
-    log("Reading user configuration from " + filename);
+    _log.info("Reading user configuration from " + filename);
     const configJson = fs.readFileSync(filename, {encoding: "utf8"});
     config = <Config>JSON.parse(configJson);
   } else {
-    log("Couldn't find user configuration file at " + filename);
+    _log.info("Couldn't find user configuration file at " + filename);
   }
   setConfigDefaults(config);
   // FIXME freeze this.
@@ -786,7 +788,7 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
   let reply: Messages.Message = null;
   
   if (LOG_FINE) {
-    log("Main IPC incoming: ",msg);
+    _log.debug("Main IPC incoming: ",msg);
   }
   
   switch(msg.type) {
@@ -795,7 +797,7 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       break;
       
     case Messages.MessageType.FRAME_DATA_REQUEST:
-      log('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
+      _log.debug('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
       break;
       
     case Messages.MessageType.THEME_LIST_REQUEST:
@@ -874,7 +876,7 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
   
   if (reply !== null) {
     if (LOG_FINE) {
-      log("Replying: ", reply);
+      _log.debug("Replying: ", reply);
     }
     event.sender.send(Messages.CHANNEL_NAME, reply);
   }
@@ -887,7 +889,7 @@ function handleConfigRequest(msg: Messages.ConfigRequestMessage): Messages.Confi
 
 function handleConfig(msg: Messages.ConfigMessage): void {
   if (LOG_FINE) {
-    log("Incoming new config: ",msg);
+    _log.debug("Incoming new config: ",msg);
   }
   
   // Copy in the updated fields.
@@ -916,7 +918,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   
   BrowserWindow.getAllWindows().forEach( (window) => {
     if (LOG_FINE) {
-      log("Transmitting new config to window ", window.id);
+      _log.debug("Transmitting new config to window ", window.id);
     }
     window.webContents.send(Messages.CHANNEL_NAME, newConfigMsg);
   });
@@ -1000,7 +1002,7 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
   
   term.onData( (data: string) => {
     if (LOG_FINE) {
-      log("pty process got data for ptyID="+ptyId);
+      _log.debug("pty process got data for ptyID="+ptyId);
       logJSData(data);
     }
     if ( ! sender.isDestroyed()) {
@@ -1011,7 +1013,7 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
 
   term.onExit( () => {
     if (LOG_FINE) {
-      log("pty process exited.");
+      _log.debug("pty process exited.");
     }
     if ( ! sender.isDestroyed()) {
       const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
@@ -1033,7 +1035,7 @@ function handlePtyCreate(sender: Electron.WebContents, msg: Messages.CreatePtyRe
 function handlePtyInput(msg: Messages.PtyInput): void {
   const ptyTerminalTuple = ptyMap.get(msg.id);
   if (ptyTerminalTuple === undefined) {
-    log("handlePtyInput() WARNING: Input arrived for a terminal which doesn't exist.");
+    _log.debug("handlePtyInput() WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
 
@@ -1043,12 +1045,12 @@ function handlePtyInput(msg: Messages.PtyInput): void {
 function handlePtyOutputBufferSize(msg: Messages.PtyOutputBufferSize): void {
   const ptyTerminalTuple = ptyMap.get(msg.id);
   if (ptyTerminalTuple === undefined) {
-    log("handlePtyOutputBufferSize() WARNING: Input arrived for a terminal which doesn't exist.");
+    _log.debug("handlePtyOutputBufferSize() WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
 
   if (LOG_FINE) {
-    log("Received Output Buffer Size message. Resuming PTY output for ptyID=" + msg.id);
+    _log.debug("Received Output Buffer Size message. Resuming PTY output for ptyID=" + msg.id);
   }
   ptyTerminalTuple.ptyTerm.permittedDataSize(msg.size);
 }
@@ -1056,7 +1058,7 @@ function handlePtyOutputBufferSize(msg: Messages.PtyOutputBufferSize): void {
 function handlePtyResize(msg: Messages.PtyResize): void {
   const ptyTerminalTuple = ptyMap.get(msg.id);
   if (ptyTerminalTuple === undefined) {
-    log("handlePtyResize() WARNING: Input arrived for a terminal which doesn't exist.");
+    _log.debug("handlePtyResize() WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
   ptyTerminalTuple.ptyTerm.resize(msg.columns, msg.rows);  
@@ -1065,7 +1067,7 @@ function handlePtyResize(msg: Messages.PtyResize): void {
 function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
   const ptyTerminalTuple = ptyMap.get(msg.id);
   if (ptyTerminalTuple === undefined) {
-    log("handlePtyCloseRequest() WARNING: Input arrived for a terminal which doesn't exist.");
+    _log.debug("handlePtyCloseRequest() WARNING: Input arrived for a terminal which doesn't exist.");
     return;
   }
   closePty(msg.id);
