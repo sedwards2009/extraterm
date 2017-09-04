@@ -19,7 +19,7 @@ import * as NodeSass from 'node-sass';
 
 import * as _ from 'lodash';
 
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import log from './LogDecorator';
 import * as ThemeTypes from './Theme';
 
@@ -76,7 +76,7 @@ class ThemeManagerImpl implements ThemeManager {
   private _themes: Map<string, ThemeInfo> = null;
   
   constructor(directories: string[]) {
-    this._log = new Logger("ThemeManagerImpl", this);
+    this._log = getLogger("ThemeManagerImpl", this);
     this._directories = directories;
 
     const allThemes = new Map<string, ThemeInfo>();

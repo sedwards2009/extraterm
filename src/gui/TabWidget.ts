@@ -14,7 +14,7 @@ import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as Util from './Util';
 import * as DomUtils from '../DomUtils';
 import * as _ from 'lodash';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
 
 StackedWidget.init();
@@ -91,7 +91,7 @@ export class TabWidget extends ThemeableElementBase {
   private _showTabs: boolean;
 
   private _initProperties(): void {
-    this._log = new Logger(TabWidget.TAG_NAME, this);
+    this._log = getLogger(TabWidget.TAG_NAME, this);
     this._mutationObserver = null;
     this._showTabs = true;
   }

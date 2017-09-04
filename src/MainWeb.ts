@@ -10,7 +10,7 @@ const ElectronMenuItem = Electron.remote.MenuItem;
 import * as SourceMapSupport from 'source-map-support';
 import * as _ from 'lodash';
 
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import * as Messages from './WindowMessages';
 import * as WebIpc from './WebIpc';
 import {ContextMenu} from './gui/ContextMenu';
@@ -65,7 +65,7 @@ const ID_MENU_BUTTON = "ID_MENU_BUTTON";
 const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
 const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
 
-const _log = new Logger("mainweb");
+const _log = getLogger("mainweb");
 
 /**
  * This module has control of the window and is responsible for

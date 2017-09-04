@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import * as _ from 'lodash';
 import * as SetUtils from './utils/SetUtils';
 
@@ -100,7 +100,7 @@ export class KeyBindingMapping {
   private _platform: string;
   
   constructor(mappingName: string, allMappingsJson: Object, platform: string) {
-    this._log = new Logger("KeyBindingMapping", this);
+    this._log = getLogger("KeyBindingMapping", this);
     this._platform = platform;
     this._gatherPairs(mappingName, allMappingsJson).forEach( (pair) => {
       const parsedKeyBinding = parseKeyBinding(pair.key, pair.value);
@@ -315,7 +315,7 @@ export class KeyBindingContexts {
   public contextNames = [];
   
   constructor(obj: Object, platform: string) {
-    this._log = new Logger("KeyBindingContexts", this);
+    this._log = getLogger("KeyBindingContexts", this);
     for (let key in obj) {
       if (key !== NAME) {
         const mapper = new KeyBindingMapping(key, obj, platform);

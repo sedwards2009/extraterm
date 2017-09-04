@@ -29,7 +29,7 @@ import * as ThemeManager from './ThemeManager';
 
 import * as child_process from 'child_process';
 import * as Util from './gui/Util';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 
 type PtyConnector  = PtyConnector.PtyConnector;
 type Pty = PtyConnector.Pty;
@@ -190,7 +190,7 @@ function log(msg: any, ...opts: any[]): void {
   _log.debug(msg, ...opts);
 }
 
-const _log = new Logger("main");
+const _log = getLogger("main");
 
 function mapBadChar(m: string): string {
   const c = m.charCodeAt(0);

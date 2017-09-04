@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import Logger from './Logger';
+import {Logger, getLogger, objectName} from './Logger';
 
 /**
  * Decorator to log method calls.
@@ -44,7 +44,7 @@ function repr(obj: any): string {
     return "null";
   }
 
-  const name = Logger.objectName(obj);
+  const name = objectName(obj);
   if (name != null) {
     return name;
   }
