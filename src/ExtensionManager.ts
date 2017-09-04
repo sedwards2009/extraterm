@@ -5,7 +5,7 @@
  */
 import * as path from 'path';
 import * as _ from 'lodash';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import * as he from 'he';
 import * as DomUtils from './DomUtils';
 import * as CodeMirror from 'codemirror';
@@ -42,7 +42,7 @@ export class ExtensionManager {
   constructor() {
     PopDownNumberDialog.init();
 
-    this._log = new Logger("ExtensionManager", this);
+    this._log = getLogger("ExtensionManager", this);
     this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../extensions" )]);
     this._extensionBridge = new ExtensionBridge();
   }
@@ -82,7 +82,7 @@ export class ExtensionBridge {
   private _listPicker: PopDownListPicker<IdLabelPair> = null;
 
   constructor() {
-    this._log = new Logger("ExtensionBridge", this);
+    this._log = getLogger("ExtensionBridge", this);
   }
 
   createExtensionSpecificContext(extensionMetadata: ExtensionMetadata): ExtensionContextImpl {
@@ -287,7 +287,7 @@ class ExtensionContextImpl implements ExtensionApi.ExtensionContext {
 
   constructor(public extensionBridge: ExtensionBridge, public extensionMetadata: ExtensionMetadata) {
     this.workspace = new WorkspaceProxy(this);
-    this.logger = new Logger(extensionMetadata.name);
+    this.logger = getLogger(extensionMetadata.name);
   }
 
   getTabProxy(terminal: EtTerminal): ExtensionApi.Tab {

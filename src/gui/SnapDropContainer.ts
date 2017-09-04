@@ -8,7 +8,7 @@ import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
 
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
 
 
@@ -81,7 +81,7 @@ export class SnapDropContainer extends ThemeableElementBase {
   private _log: Logger;
 
   private _initProperties(): void {
-    this._log = new Logger(SnapDropContainer.TAG_NAME, this);
+    this._log = getLogger(SnapDropContainer.TAG_NAME, this);
   }
 
   //-----------------------------------------------------------------------

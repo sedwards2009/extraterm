@@ -26,7 +26,7 @@ import * as EtTextViewerTypes from './TerminalViewerTypes';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
   from '../CommandPaletteRequestTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
 import * as GeneralEvents from '../GeneralEvents';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
@@ -143,7 +143,7 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
     this._keyBindingManager = null;
     this._text = null;
     this._mimeType = null;
-    this._log = new Logger(TextViewer.TAG_NAME, this);
+    this._log = getLogger(TextViewer.TAG_NAME, this);
     this._commandLine = null;
     this._returnCode = null;
     this._editable = false;

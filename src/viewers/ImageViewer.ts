@@ -12,7 +12,7 @@ import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
 import * as keybindingmanager from '../KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -85,7 +85,7 @@ export class ImageViewer extends ViewerElement {
   private _currentElementHeight: number;
 
   private _initProperties(): void {
-    this._log = new Logger(ImageViewer.TAG_NAME, this);
+    this._log = getLogger(ImageViewer.TAG_NAME, this);
     this._keyBindingManager = null;
     this._text = null;
     this._buffer = null;

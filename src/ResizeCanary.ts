@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as DomUtils from './DomUtils';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import ElementResizeDetectorMaker = require('element-resize-detector');
 
 let registered = false;
@@ -35,7 +35,7 @@ export class ResizeCanary extends HTMLElement {
   private _css: string; 
 
   private _initProperties(): void {
-    this._log = new Logger(ResizeCanary.TAG_NAME, this);
+    this._log = getLogger(ResizeCanary.TAG_NAME, this);
     this._erd = null;
     this._laterHandle = null;
     this._css = "";

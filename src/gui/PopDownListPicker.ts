@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
@@ -68,7 +68,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   private _extraCssFiles: ThemeTypes.CssFile[];
 
   private _initProperties(): void {
-    this._log = new Logger(PopDownListPicker.TAG_NAME, this);
+    this._log = getLogger(PopDownListPicker.TAG_NAME, this);
     this._entries = [];
     this._selectedId = null;
     this._titlePrimary = "";

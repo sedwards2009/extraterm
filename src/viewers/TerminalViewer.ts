@@ -21,7 +21,7 @@ import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommand
 import * as Term from '../emulator/Term';
 import * as TermApi from '../emulator/TermApi';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
 import * as SourceDir from '../SourceDir';
 import * as GeneralEvents from '../GeneralEvents';
@@ -153,7 +153,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _bookmarkIndex: Map<BookmarkRef, CodeMirror.TextMarker>;
 
   private _initProperties(): void {
-    this._log = new Logger(TerminalViewer.TAG_NAME, this);
+    this._log = getLogger(TerminalViewer.TAG_NAME, this);
     this._keyBindingManager = null;
     this._emulator = null;
     this._terminalFirstRow = 0;

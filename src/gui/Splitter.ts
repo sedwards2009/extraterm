@@ -9,7 +9,7 @@ import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as Util from './Util';
 import * as DomUtils from '../DomUtils';
 import * as _ from 'lodash';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
 
 const ID = "EtSplitterTemplate";
@@ -76,7 +76,7 @@ export class Splitter extends ThemeableElementBase {
   private _dividerDragOffset: number;
 
   private _initProperties(): void {
-    this._log = new Logger(Splitter.TAG_NAME, this);
+    this._log = getLogger(Splitter.TAG_NAME, this);
     this._paneSizes = new PaneSizes();
     this._mutationObserver = null;
     this._orientation = SplitOrientation.VERTICAL;

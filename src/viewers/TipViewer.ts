@@ -25,7 +25,7 @@ import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -104,7 +104,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
   private _tipIndex: number;
   
   private _initProperties(): void {
-    this._log = new Logger(TipViewer.TAG_NAME, this);
+    this._log = getLogger(TipViewer.TAG_NAME, this);
     this._configManager = null;
     this._keyBindingManager = null;
     this._height = 0;

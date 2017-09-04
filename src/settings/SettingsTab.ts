@@ -16,7 +16,7 @@ type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 
 import * as ThemeTypes from '../Theme';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
 import * as GeneralEvents from '../GeneralEvents';
 import * as ViewerElementTypes from '../ViewerElementTypes';
@@ -123,7 +123,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
   private _fontOptions: FontInfo[];
 
   private _initProperties(): void {
-    this._log = new Logger(SettingsTab.TAG_NAME, this);
+    this._log = getLogger(SettingsTab.TAG_NAME, this);
     this._vm = null;
     this._themes = [];
     this._configManager = null;
