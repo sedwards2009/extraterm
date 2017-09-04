@@ -10,7 +10,7 @@ import {ViewerElement} from "./ViewerElement";
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {EmbeddedViewer} from './EmbeddedViewer';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import log from './LogDecorator';
 import * as DomUtils from './DomUtils';
 import {ScrollBar} from'./gui/ScrollBar';
@@ -112,7 +112,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   private _armResizeCanary: boolean;  // Controls when the resize canary is allowed to chirp.
 
   private _initProperties(): void {
-    this._log = new Logger(EtViewerTab.TAG_NAME, this);
+    this._log = getLogger(EtViewerTab.TAG_NAME, this);
 
     this._virtualScrollArea = null;
     this._elementAttached = false;

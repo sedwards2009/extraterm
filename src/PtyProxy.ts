@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import * as configInterfaces from './Config';
 import * as fs from 'fs';
 import * as path from 'path';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import * as SourceDir from './SourceDir';
 
 type Config = configInterfaces.Config;
@@ -20,7 +20,7 @@ type PtyOptions = PtyConnector.PtyOptions;
 
 const DEBUG_FINE = false;
 
-const _log = new Logger("ptyproxy");
+const _log = getLogger("ptyproxy");
 
 const TYPE_CREATE = "create";
 const TYPE_CREATED = "created";

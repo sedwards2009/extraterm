@@ -7,7 +7,7 @@ import * as DomUtils from './DomUtils';
 import {Splitter, SplitOrientation} from './gui/Splitter';
 import {TabWidget} from './gui/TabWidget';
 import {Tab} from './gui/Tab';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 
 interface ElementFactory {
   (): Element;
@@ -70,7 +70,7 @@ let tabIdCounter = 0;
 
 export class SplitLayout {
 
-  private _log: Logger = new Logger("SplitLayout");
+  private _log: Logger = getLogger("SplitLayout");
 
   private _rootContainer: Element = null;
 

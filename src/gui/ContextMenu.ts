@@ -10,7 +10,7 @@ import {MenuItem} from './MenuItem';
 import {CheckboxMenuItem} from './CheckboxMenuItem';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 
 MenuItem.init();
 
@@ -68,7 +68,7 @@ export class ContextMenu extends ThemeableElementBase {
 
   constructor() {
     super();
-    this._log = new Logger(ContextMenu.TAG_NAME, this);
+    this._log = getLogger(ContextMenu.TAG_NAME, this);
     
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();

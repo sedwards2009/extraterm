@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 
 export interface ExtensionMetadata {
   name: string;
@@ -31,7 +31,7 @@ export class ExtensionLoader {
   private _extensions: ExtensionMetadata[] = [];
 
   constructor(private extensionPaths: string[]) {
-    this._log = new Logger("ExtensionLoader", this);
+    this._log = getLogger("ExtensionLoader", this);
   }
 
   scan(): void {

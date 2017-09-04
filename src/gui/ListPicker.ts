@@ -8,7 +8,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import {PopDownDialog} from './PopDownDialog';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
 
 const ID = "EtListPickerTemplate";
@@ -67,7 +67,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   private _extraCssFiles: ThemeTypes.CssFile[];
 
   private _initProperties(): void {
-    this._log = new Logger(ListPicker.TAG_NAME, this);
+    this._log = getLogger(ListPicker.TAG_NAME, this);
     this._entries = [];
     this._selectedId = null;
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;

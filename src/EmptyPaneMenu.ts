@@ -13,7 +13,7 @@ import {ThemeableElementBase} from './ThemeableElementBase';
 import {ListPicker} from './gui/ListPicker';
 import * as DomUtils from './DomUtils';
 import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandMenuItem} from './CommandPaletteFunctions';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import log from './LogDecorator';
 
 const ID_EMPTY_PANE_MENU = "ID_EMPTY_PANE_MENU";
@@ -58,7 +58,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   private _selectedId: string;
 
   private _initProperties(): void {
-    this._log = new Logger(EmptyPaneMenu.TAG_NAME, this);
+    this._log = getLogger(EmptyPaneMenu.TAG_NAME, this);
     this._entries = [];
     this._selectedId = null;
   }

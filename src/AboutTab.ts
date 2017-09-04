@@ -14,7 +14,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
 import {shell} from 'electron';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 
 const ID_ABOUT = "ID_ABOUT";
 
@@ -47,7 +47,7 @@ export class AboutTab extends ViewerElement {
   private _log: Logger;
 
   private _initProperties(): void {
-    this._log = new Logger(AboutTab.TAG_NAME, this);
+    this._log = getLogger(AboutTab.TAG_NAME, this);
   }
 
   //-----------------------------------------------------------------------

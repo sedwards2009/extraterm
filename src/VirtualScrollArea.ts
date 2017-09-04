@@ -6,10 +6,10 @@
 
 import * as Util from './gui/Util';
 import * as _ from 'lodash';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import log from './LogDecorator';
 
-const _log = new Logger("VirtualScrollableArea");
+const _log = getLogger("VirtualScrollableArea");
 
 export interface VirtualScrollable {
   /**
@@ -153,7 +153,7 @@ export class VirtualScrollArea {
   private _log: Logger = null;
   
   constructor() {
-    this._log = new Logger("VirtualScrollArea", this);
+    this._log = getLogger("VirtualScrollArea", this);
     this._currentState = emptyState;
   }
   

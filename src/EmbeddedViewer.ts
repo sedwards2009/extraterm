@@ -19,7 +19,7 @@ import * as ThemeTypes from './Theme';
 import * as GeneralEvents from './GeneralEvents';
 import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
   from './CommandPaletteRequestTypes';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import log from './LogDecorator';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import * as SupportsClipboardPaste from './SupportsClipboardPaste';
@@ -138,7 +138,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _headerBottom: number;
 
   private _initProperties(): void {
-    this._log = new Logger(EmbeddedViewer.TAG_NAME, this);
+    this._log = getLogger(EmbeddedViewer.TAG_NAME, this);
     this._visualState = ViewerElementTypes.VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();

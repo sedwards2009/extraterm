@@ -5,7 +5,7 @@
  */
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
-import Logger from '../Logger';
+import {Logger, getLogger} from '../Logger';
 import log from "../LogDecorator";
 
 let registered = false;
@@ -42,7 +42,7 @@ export class Tab extends HTMLElement {
 
   private _initProperties(): void {
     this._mutationObserver = null;
-    this._log = new Logger(Tab.TAG_NAME, this);
+    this._log = getLogger(Tab.TAG_NAME, this);
   }
 
   //-----------------------------------------------------------------------

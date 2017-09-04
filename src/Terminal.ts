@@ -27,7 +27,7 @@ import * as GeneralEvents from './GeneralEvents';
 import {KeyBindingManager, injectKeyBindingManager, AcceptsKeyBindingManager} from './KeyBindingManager';
 import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import LogDecorator from './LogDecorator';
 import * as DomUtils from './DomUtils';
 import * as Term from './emulator/Term';
@@ -238,7 +238,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
 
   private _initProperties(): void {
-    this._log = new Logger(EtTerminal.TAG_NAME, this);
+    this._log = getLogger(EtTerminal.TAG_NAME, this);
     this._virtualScrollArea = null;
     this._stashArea = null;
     this._childElementList = [];

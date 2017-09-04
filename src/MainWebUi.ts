@@ -43,7 +43,7 @@ type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
 
-import Logger from './Logger';
+import {Logger, getLogger} from './Logger';
 import log from './LogDecorator';
 
 const VisualState = ViewerElementTypes.VisualState;
@@ -102,7 +102,7 @@ let registered = false;
 
 const LAST_FOCUS = "last_focus";
 
-const staticLog = new Logger("Static ExtratermMainWebUI");
+const staticLog = getLogger("Static ExtratermMainWebUI");
 
 // Theme management
 const activeInstances: Set<MainWebUi> = new Set();
@@ -170,7 +170,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   private _splitLayout: SplitLayout;
 
   private _initProperties(): void {
-    this._log = new Logger("ExtratermMainWebUI", this);
+    this._log = getLogger("ExtratermMainWebUI", this);
     this._terminalPtyIdMap = new Map<EtTerminal, number>();
     this._ptyIdTerminalMap = new Map<number, EtTerminal>();
     this._lastFocus = null;
