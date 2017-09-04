@@ -185,11 +185,6 @@ function main(): void {
   });
 }
 
-const _log = new Logger("main");
-function log(msg: any, ...opts: any[]): void {
-  _log.debug(msg, ...opts);
-}
-
 const _log = getLogger("main");
 
 function mapBadChar(m: string): string {
