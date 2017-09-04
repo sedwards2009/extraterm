@@ -25,7 +25,7 @@ interface LogMessage {
 
 
 interface LogWriter {
-  write(level: Level, msg: string): void;
+  write(level: Level, msg: string, ...opts: any[]): void;
 }
 
 
@@ -128,6 +128,13 @@ export function objectName(obj: any): string {
 }
 
 
+const logWriters: LogWriter[] = [];
+
+export function addLogWriter(writer: LogWriter): void {
+  logWriters.push(writer);
+}
+
+
 class LoggerImpl implements Logger {
   
   private _name: string;
@@ -158,19 +165,19 @@ class LoggerImpl implements Logger {
   }
 
   debug(msg: any, ...opts: any[]): void {
-    console.log(this._log("DEBUG", msg, opts), ...opts);
+    this._logMessage("DEBUG", msg, opts);
   }
   
   info(msg: any, ...opts: any[]): void {
-    console.log(this._log("INFO", msg, opts), ...opts);
+    this._logMessage("INFO", msg, opts);
   }
   
   warn(msg: any, ...opts: any[]): void {
-    console.warn(this._log("WARN", msg, opts), ...opts);
+    this._logMessage("WARN", msg, opts);
   }
   
   severe(msg: any, ...opts: any[]): void {
-    console.error(this._log("SEVERE", msg, opts), ...opts);
+    this._logMessage("SEVERE", msg, opts);
   }
   
   startRecording(): void {
@@ -193,16 +200,37 @@ class LoggerImpl implements Logger {
     return this._messageLog.reduce( (accu, logMessage) => accu + "\n" + logMessage.msg, "");
   }
   
-  private _log(level: Level, msg: string, opts: any[]): string {
+  private _logMessage(level: Level, msg: string, opts: any[]): void {
     const formatted = this._format(level, msg);
     if (this._recording) {
       this._messageLog.push( { level, msg: formatted + opts.reduce( (x, accu) => accu + x + ", ", "") } );
     }
 
-    return formatted;
+    for (let i = 0; i < logWriters.length; i++) {
+      logWriters[i].write(level, formatted, ...opts);
+    }
   }
   
   private _format(level: string, msg: string): string {
     return `${(new Date()).toISOString().replace(/(T|Z)/g," ").trim()} ${level} [${this._name}] ${msg}`;
   }
 }
+
+
+class ConsoleLogWriter implements LogWriter {
+  write(level: Level, msg: string, ...opts: any[]): void {
+    switch (level) {
+      case "DEBUG":
+      case "INFO":
+        console.log(msg, ...opts);
+        break;
+      case "WARN":
+        console.warn(msg, ...opts);
+        break;
+      case "SEVERE":
+        console.error(msg, ...opts);
+        break;
+    }
+  }
+}
+addLogWriter(new ConsoleLogWriter());
