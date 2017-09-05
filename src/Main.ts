@@ -29,7 +29,8 @@ import * as ThemeManager from './ThemeManager';
 
 import * as child_process from 'child_process';
 import * as Util from './gui/Util';
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger, addLogWriter} from './Logger';
+import {FileLogWriter} from './FileLogWriter';
 
 type PtyConnector  = PtyConnector.PtyConnector;
 type Pty = PtyConnector.Pty;
@@ -57,6 +58,7 @@ SourceMapSupport.install();
 // be closed automatically when the javascript object is GCed.
 let mainWindow: Electron.BrowserWindow = null;
 
+const LOG_FILENAME = "extraterm.log";
 const EXTRATERM_CONFIG_DIR = "extraterm";
 const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
@@ -84,6 +86,8 @@ let titleBarVisible = false;
 
 function main(): void {
   let failed = false;
+
+  setUpLogging();
 
   app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
   app.commandLine.appendSwitch('high-dpi-support', 'true');
@@ -186,6 +190,13 @@ function main(): void {
     });
 
   });
+}
+
+function setUpLogging(): void {
+  const logFilePath = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
+  const logWriter = new FileLogWriter(logFilePath);
+  addLogWriter(logWriter);
+  _log.info("Recording logs to ", logFilePath);
 }
 
 function setScaleFactor(): boolean {
