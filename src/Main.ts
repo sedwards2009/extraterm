@@ -194,6 +194,13 @@ function main(): void {
 
 function setUpLogging(): void {
   const logFilePath = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
+
+  if ( ! process.argv.find(item => item.startsWith('--force-device-scale-factor='))) {
+    if (fs.existsSync(logFilePath)) {
+      fs.unlinkSync(logFilePath);
+    }
+  }
+
   const logWriter = new FileLogWriter(logFilePath);
   addLogWriter(logWriter);
   _log.info("Recording logs to ", logFilePath);
