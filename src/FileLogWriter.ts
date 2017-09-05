@@ -11,8 +11,11 @@ export class FileLogWriter implements LogWriter {
 
   write(level: Level, msg: string, ...opts: any[]): void {
     fs.writeSync(this._fhandle, Buffer.from(msg));
+    fs.writeSync(this._fhandle, Buffer.from(' '));
+    
+    const strOpts = opts.map(opt => typeof opt === 'string' ? opt : JSON.stringify(opt, null, 4));
 
-    fs.writeSync(this._fhandle, Buffer.from(opts.join(', ')));
+    fs.writeSync(this._fhandle, Buffer.from(strOpts.join(', ')));
     fs.writeSync(this._fhandle, Buffer.from('\n'));
   }
 }
