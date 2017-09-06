@@ -147,9 +147,12 @@ function main(): void {
   // This method will be called when Electron has done everything
   // initialization and ready for creating browser windows.
   app.on('ready', function() {
-    if (setScaleFactor()) {
+    const {restartNeeded, originalScaleFactor, currentScaleFactor} = setScaleFactor();
+    if (restartNeeded) {
       return;
     }
+    config.systemConfig.currentScaleFactor = currentScaleFactor;
+    config.systemConfig.originalScaleFactor = originalScaleFactor;
 
     startIpc();
     
@@ -195,7 +198,7 @@ function main(): void {
 function setUpLogging(): void {
   const logFilePath = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
 
-  if ( ! process.argv.find(item => item.startsWith('--force-device-scale-factor='))) {
+  if ( ! process.argv.find(item => item.startsWith(EXTRATERM_DEVICE_SCALE_FACTOR))) {
     if (fs.existsSync(logFilePath)) {
       fs.unlinkSync(logFilePath);
     }
@@ -206,17 +209,35 @@ function setUpLogging(): void {
   _log.info("Recording logs to ", logFilePath);
 }
 
-function setScaleFactor(): boolean {
+const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor=";
+
+function setScaleFactor(): {restartNeeded: boolean, currentScaleFactor: number, originalScaleFactor: number} {
+  _log.info("args", process.argv);
   const primaryDisplay = screen.getPrimaryDisplay();
   _log.info("Display scale factor is ", primaryDisplay.scaleFactor);
   if (primaryDisplay.scaleFactor !== 1 && primaryDisplay.scaleFactor !== 2) {
     const scaleFactor = primaryDisplay.scaleFactor < 1.5 ? 1 : 2;
-    app.relaunch({args: process.argv.slice(1).concat(['--relaunch', '--force-device-scale-factor=' + scaleFactor])});
+    app.relaunch({args: process.argv.slice(1).concat([
+      '--relaunch',
+      '--force-device-scale-factor=' + scaleFactor,
+      EXTRATERM_DEVICE_SCALE_FACTOR + primaryDisplay.scaleFactor
+    ])});
     _log.info("Restarting with scale factor ", scaleFactor);
     app.exit(0);
-    return true;  // true means a restart is coming.
+    return {restartNeeded: true, currentScaleFactor: primaryDisplay.scaleFactor,
+      originalScaleFactor: primaryDisplay.scaleFactor};
   }
-  return false;
+
+  let originalScaleFactor: number;
+  const originalFactorArg = process.argv.find(arg => arg.startsWith(EXTRATERM_DEVICE_SCALE_FACTOR));
+  _log.info("originalFactorArg:", originalFactorArg);
+  if (originalFactorArg != null) {
+    originalScaleFactor = Number.parseFloat(originalFactorArg.slice(EXTRATERM_DEVICE_SCALE_FACTOR.length));
+  } else {
+    originalScaleFactor = primaryDisplay.scaleFactor;
+  }
+  _log.info("originalScaleFactor:", originalScaleFactor);
+  return {restartNeeded: false, currentScaleFactor: primaryDisplay.scaleFactor, originalScaleFactor};
 }
 
 const _log = getLogger("main");
@@ -534,7 +555,9 @@ function systemConfiguration(config: Config): SystemConfig {
     keyBindingsContexts: keyBindingsJSON,
     keyBindingsFiles: keyBindingFiles,
     availableFonts: getFonts(),
-    titleBarVisible: titleBarVisible
+    titleBarVisible: titleBarVisible,
+    currentScaleFactor: config.systemConfig == null ? 1 : config.systemConfig.currentScaleFactor,
+    originalScaleFactor: config.systemConfig == null ? 1 : config.systemConfig.originalScaleFactor
   };
 }
 

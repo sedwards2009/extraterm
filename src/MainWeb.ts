@@ -467,6 +467,12 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
     keyBindingManager.setKeyBindingContexts(keyBindingContexts);
   }
 
+  if (oldConfig === null ||
+      oldConfig.systemConfig.originalScaleFactor !== newConfig.systemConfig.originalScaleFactor ||
+      oldConfig.systemConfig.currentScaleFactor !== newConfig.systemConfig.currentScaleFactor) {
+    setRootFontScaleFactor(newConfig.systemConfig.originalScaleFactor, newConfig.systemConfig.currentScaleFactor);
+  }
+
   if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize ||
       oldConfig.terminalFont !== newConfig.terminalFont) {
         
@@ -544,6 +550,13 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
       --terminal-font: "${fontCssName}";
     }
     `;
+}
+
+function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor: number): void {
+  // Scale factor 1 = 9pt = 12px
+  const rootFontSize = Math.floor(12 * originalScaleFactor / currentScaleFactor) + "px";
+  _log.debug("scaleFactor:", originalScaleFactor, " rootFontSize: ",rootFontSize);
+  window.document.documentElement.style.fontSize = rootFontSize;
 }
 
 //-----------------------------------------------------------------------

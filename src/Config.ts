@@ -51,6 +51,8 @@ export interface SystemConfig {
   
   availableFonts: FontInfo[];
   titleBarVisible: boolean;
+  currentScaleFactor: number;
+  originalScaleFactor: number;
 }
 
 export interface FontInfo {
