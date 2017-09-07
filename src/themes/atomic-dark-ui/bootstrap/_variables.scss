@@ -1,3 +1,5 @@
+@import "./px-to-rem";
+
 $bootstrap-sass-asset-helper: false !default;
 //
 // Variables
@@ -64,11 +66,11 @@ $font-family-serif:       Georgia, "Times New Roman", Times, serif !default;
 $font-family-monospace:   Menlo, Monaco, Consolas, "Courier New", monospace !default;
 $font-family-base:        $font-family-sans-serif !default;
 
-$font-size-base:          11px !default;
+$font-size-base:          9pt !default;
 $font-size-large:         ceil(($font-size-base * 1.25)) !default; // ~18px
 $font-size-small:         ceil(($font-size-base * 0.85)) !default; // ~12px
 
-$input-font-size: 14px;
+$input-font-size: 11pt; // 14px
 $input-font-size-small:         ceil(($input-font-size * 0.85)) !default;
 
 $font-size-h1:            2em !default;
@@ -216,7 +218,7 @@ $tab-background-color: #333333;
 $tab-background-color-active: $base-background-color;
 $tab-border-color: #484848;
 $tab-bar-border-color: darken($tab-background-color-active, 10%);
-$tab-height: 26px;
+$tab-height: pxToRem(26px);
 
 //== Forms
 //

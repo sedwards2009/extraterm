@@ -1,15 +1,17 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
+@import "bootstrap/px-to-rem";
 
-$tab-radius: 3px;
-$modified-icon-width: 8px;
+ 
+$tab-radius: pxToRem(3px);
+$modified-icon-width: pxToRem(8px);
 $tab-skew: 30deg;
-$tab-top-padding: 0px;
-$tab-bottom-border-height: 5px;
+$tab-top-padding: 0;
+$tab-bottom-border-height: pxToRem(5px);
 $tab-border: 1px solid $tab-border-color;
 $tab-bar-bottom-border-color: #111111;
-$tab-max-width: 160px;
+$tab-max-width: 20rem;
 
 .extraterm-tabs {
   display: flex;
@@ -100,7 +102,7 @@ $tab-max-width: 160px;
 
     &.modified:not(:hover) .close-icon {
       right: 0;
-      top: $tab-height/2 - $modified-icon-width/2 + 1px;
+      top: $tab-height/2 - $modified-icon-width/2 + pxToRem(1px);
       width: $modified-icon-width;
       height: $modified-icon-width;
     }
@@ -125,13 +127,13 @@ $tab-max-width: 160px;
     width: -webkit-fit-content;
     flex: 2;
     .close-icon {
-      line-height: $tab-height - 1px;
+      line-height: $tab-height - pxToRem(1px);
       color: $text-color;
     }
 
     &, &:before, &:after {
       background-image: -webkit-linear-gradient(top, lighten($tab-background-color-active, 7%), $tab-background-color-active);
-      height: $tab-height + 1px;
+      height: $tab-height + pxToRem(1px);
     }
 
     &:before {
@@ -164,7 +166,7 @@ $tab-max-width: 160px;
     margin-left: -9px; // center between tabs
     pointer-events: none;
     &:after {
-      top: $tab-height + $tab-top-padding + $tab-bottom-border-height - 2px;
+      top: $tab-height + $tab-top-padding + $tab-bottom-border-height - pxToRem(2px);
     }
   }
 }

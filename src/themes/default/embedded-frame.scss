@@ -120,7 +120,7 @@ $FAIL_COLOR: #ff5454;
 
   color: $FOREGROUND_COLOR;
 
-  font-size: 80%;
+  font-size: 1rem;
 }
 
 #ID_CONTAINER.running > #ID_HEADER > #ID_COMMANDLINE {
@@ -132,7 +132,7 @@ $FAIL_COLOR: #ff5454;
 }
 
 .right_block, #ID_POP_OUT_BUTTON, #ID_CLOSE_BUTTON {
-  font-size: 80%;
+  font-size: 1rem;
   color: $FOREGROUND_COLOR;
 }
 
