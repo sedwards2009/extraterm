@@ -862,9 +862,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._emulator.flushRenderQueue();
     let currentTerminalViewer = this._terminalViewer;
     
+    let currentTerminalViewerHadFocus = false;
     if (currentTerminalViewer !== null) {
       currentTerminalViewer.deleteScreen();
-      
+      currentTerminalViewerHadFocus = currentTerminalViewer.hasFocus();
+
       if (currentTerminalViewer.isEmpty()) {
         // Keep this terminal viewer and re-use it later in the new position.
         this._removeScrollable(currentTerminalViewer);
@@ -877,12 +879,13 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         currentTerminalViewer = null;
       }
     }
-  
     this._appendScrollable(el);
-
+      
     if (currentTerminalViewer !== null) {
-      // Move it into the DOM.
       this._appendScrollable(currentTerminalViewer);
+      if (currentTerminalViewerHadFocus) {
+        currentTerminalViewer.focus();
+      }
     } else {
       this._appendNewTerminalViewer();
       this._refocus();
