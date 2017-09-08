@@ -249,6 +249,13 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
       }
     });
     
+    containerDiv.addEventListener('focus', (ev: FocusEvent) => {
+      if (ev.target instanceof HTMLSelectElement) {
+        ev.stopPropagation();
+        return;
+      }
+    }, true);
+
     this._setTipHTML(this._getTipHTML(this._tipIndex));
     
     const nextButton = DomUtils.getShadowId(this, ID_NEXT_BUTTON);
@@ -311,7 +318,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}">
         </style>
-        <div id="${ID_CONTAINER}" tabindex="-1" class="container-fluid">
+        <div id="${ID_CONTAINER}" class="container-fluid">
           <div id="${ID_CONTENT}"></div>
           <div id="${ID_CONTROLS}" class="form-inline">
             <div class="btn-group">
