@@ -478,7 +478,10 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
         
     const matchingFonts = newConfig.systemConfig.availableFonts.filter(
       (font) => font.postscriptName === newConfig.terminalFont);
-    setCssVars(newConfig.terminalFont, matchingFonts[0].path, newConfig.terminalFontSize);
+
+    const scaleFactor = newConfig.systemConfig.originalScaleFactor / newConfig.systemConfig.currentScaleFactor;
+    const fontSize = Math.round(newConfig.terminalFontSize * scaleFactor);
+    setCssVars(newConfig.terminalFont, matchingFonts[0].path, fontSize);
   }
 
   if (oldConfig === null || oldConfig.themeTerminal !== newConfig.themeTerminal ||
