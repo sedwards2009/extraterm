@@ -741,18 +741,18 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   private _borderSize(): {top: number; bottom: number;} {
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
-    const outputDiv =  <HTMLDivElement>this._getById(ID_OUTPUT);
-    const outputStyle = window.getComputedStyle(outputDiv);
+    const outputContainerDiv =  <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
+    const outputContainerStyle = window.getComputedStyle(outputContainerDiv);
 
-    const rect = headerDiv.getBoundingClientRect();
+    const headerRect = headerDiv.getBoundingClientRect();
 
-    if (rect.width === 0) {
+    if (headerRect.width === 0) {
       // Bogus info. This element most likely isn't in the DOM tree proper. Fall back to the last good read.
       return { top: this._headerTop, bottom: this._headerBottom };
     }
 
-    const top = rect.height + DomUtils.pixelLengthToInt(outputStyle.borderTopWidth);
-    const bottom = DomUtils.pixelLengthToInt(outputStyle.borderBottomWidth);
+    const top = headerRect.height + DomUtils.pixelLengthToInt(outputContainerStyle.borderTopWidth);
+    const bottom = DomUtils.pixelLengthToInt(outputContainerStyle.borderBottomWidth);
 
     this._headerTop = top;
     this._headerBottom = bottom;
