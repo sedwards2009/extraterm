@@ -53,10 +53,10 @@ $FAIL_COLOR: #ff5454;
 
 #ID_OUTPUT_CONTAINER {
   position: absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
+  top: pxToRem(0px);
+  bottom: pxToRem(0px);
+  left: pxToRem(0px);
+  right: pxToRem(0px);
   
   overflow: hidden;
 
@@ -79,7 +79,7 @@ $FAIL_COLOR: #ff5454;
 
 // #ID_OUTPUT.closed {
 //   display: none;
-//   height: 1px;
+//   height: pxToRem(1px);
 //   overflow: hidden;
 // }
 
@@ -138,9 +138,9 @@ $FAIL_COLOR: #ff5454;
 
 #ID_EXPAND_BUTTON, #ID_CLOSE_BUTTON, #ID_POP_OUT_BUTTON {
   flex: 0 0 auto;
-  padding: 0px;
+  padding: pxToRem(0px);
   background-color: transparent;
-  border: 0px;
+  border: pxToRem(0px);
 }
 
 #ID_CLOSE_BUTTON:hover {

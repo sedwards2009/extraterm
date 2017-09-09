@@ -27,7 +27,7 @@ $resize-bar-height: 4px;
 
   #ID_TOP_RESIZE_BAR {
     position: absolute;
-    top: 0px;
+    top: pxToRem(0px);
     bottom: $resize-bar-height;
     width: 100%;
   }
@@ -35,7 +35,7 @@ $resize-bar-height: 4px;
   #ID_DRAG_BAR {
     position: absolute;
     top: $resize-bar-height;
-    bottom: 0px;
+    bottom: pxToRem(0px);
     width: 100%;
 
     -webkit-app-region: drag;
@@ -48,14 +48,14 @@ $resize-bar-height: 4px;
     flex-shrink: 0;
 
     background-color: transparent;
-    border: 0px;
+    border: pxToRem(0px);
 
     &:hover {
       background-color: $input-group-addon-bg;
     }
 
     &:focus {
-      outline: 0px solid transparent;
+      outline: pxToRem(0px) solid transparent;
     }
   }
 

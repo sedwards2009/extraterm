@@ -18,15 +18,15 @@
   padding: $panel-body-padding;
   
   &:focus {
-    outline: 0px solid black;
+    outline: 0 solid black;
   }
 }
 
 #ID_CONTENT {
   flex-grow: 10;
   & > h1, & > h2, & > h3 {
-    margin-top: 0px;
-    margin-bottom: 0px;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 }
 

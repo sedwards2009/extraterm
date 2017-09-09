@@ -5,7 +5,7 @@
 
 
 :host(:focus) {
-  outline: 0px solid transparent;
+  outline: pxToRem(0px) solid transparent;
 }
 
 #ID_EMPTY_PANE_MENU {

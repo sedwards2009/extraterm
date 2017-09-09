@@ -12,15 +12,15 @@
 }
 
 :host(:focus) {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
 
 #ID_TOP_LAYOUT {
   position: absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 
   display: flex;
   flex-direction: column;
@@ -124,9 +124,9 @@ DIV.tab_header_close:hover > BUTTON {
 }
 
 DIV.tab_header_close > BUTTON:focus {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
 
 BUTTON.CLASS_NEW_TAB_BUTTON.CLASS_NEW_TAB_BUTTON.CLASS_NEW_TAB_BUTTON {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
