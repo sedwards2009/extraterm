@@ -34,16 +34,16 @@ BODY {
 EXTRATERM-MAINWEBUI {
   position: absolute; // or relative
   left: 0;
-  top: if($extraterm-titlebar-visible or $extraterm-platform == darwin, 5px, 0px);
+  top: if($extraterm-titlebar-visible or $extraterm-platform == darwin, pxToRem(5px), 0);
   right: 0;
   bottom: 0;
 }
 
 *:unresolved {
   background-color: red;
-  border: 1px dashed red;
+  border: pxToRem(1px) dashed red;
 }
 
 #ID_MENU_BUTTON:focus {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }

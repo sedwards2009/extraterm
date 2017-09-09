@@ -19,7 +19,7 @@
     line-height: $line-height-base;
     color: $dropdown-link-color;
     background-color: $dropdown-bg;
-    padding: 1px;
+    padding: pxToRem(1px);
     white-space: nowrap;
 }
 

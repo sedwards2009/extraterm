@@ -250,12 +250,12 @@ $input-border-focus:             #66afe9 !default;
 $input-color-placeholder:        #999 !default;
 
 //** Default `.form-control` height
-$input-height-base:              ($line-height-computed + ($padding-base-vertical * 2) + 2) !default;
-$select-input-height-base:       ($input-line-height-computed + ($padding-base-vertical * 2) + 2) !default;
+$input-height-base:              ($line-height-computed + ($padding-base-vertical * 2) + pxToRem(2)) !default;
+$select-input-height-base:       ($input-line-height-computed + ($padding-base-vertical * 2) + pxToRem(2)) !default;
 //** Large `.form-control` height
-$input-height-large:             (ceil($font-size-large * $line-height-large) + ($padding-large-vertical * 2) + 2) !default;
+$input-height-large:             (ceil($font-size-large * $line-height-large) + ($padding-large-vertical * 2) + pxToRem(2px)) !default;
 //** Small `.form-control` height
-$input-height-small:             (floor($input-font-size-small * $line-height-small) + ($padding-small-vertical * 2) + 2) !default;
+$input-height-small:             (($input-font-size-small * $line-height-small) + ($padding-small-vertical * 2) + pxToRem(2px)) !default;
 
 //** `.form-group` margin
 $form-group-margin-bottom:       pxToRem(15px) !default;

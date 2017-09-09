@@ -9,7 +9,7 @@ $modified-icon-width: pxToRem(8px);
 $tab-skew: 30deg;
 $tab-top-padding: 0;
 $tab-bottom-border-height: pxToRem(5px);
-$tab-border: 1px solid $tab-border-color;
+$tab-border: pxToRem(1px) solid $tab-border-color;
 $tab-bar-bottom-border-color: #111111;
 $tab-max-width: 20rem;
 
@@ -21,8 +21,8 @@ $tab-max-width: 20rem;
   margin: 0;
   height: $tab-height + $tab-top-padding + $tab-bottom-border-height;
   background: #222222;
-  box-shadow: inset 0 -8px 8px -4px rgba(0,0,0, .15);
-  padding: 0px 0px 0px 0px;
+  box-shadow: inset 0 pxToRem(-8px) pxToRem(8px) pxToRem(-4px) rgba(0,0,0, .15);
+  padding: 0 0 0 0;
   overflow-x: auto;
   overflow-y: hidden;
 
@@ -38,7 +38,7 @@ $tab-max-width: 20rem;
     left: 0;
     right: 0;
     background-color: $tab-background-color-active;
-    border-top: 1px solid $tab-border-color;
+    border-top: pxToRem(1px) solid $tab-border-color;
     pointer-events: none;
   }
 
@@ -53,10 +53,10 @@ $tab-max-width: 20rem;
     line-height: $tab-height;
     color: $text-color;
     padding: 0;
-    margin: 0 20px 0 5px;
+    margin: 0 pxToRem(20px) 0 pxToRem(5px);
     border: none;
     
-    box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
+    box-shadow: inset pxToRem(-1px) pxToRem(-1px) pxToRem(1px) rgba(0,0,0, .05);
     transition: color .1s ease-in;
 
     &, &:before, &:after {
@@ -67,24 +67,24 @@ $tab-max-width: 20rem;
     &:before, &:after {
       content: '';
       position: absolute;
-      top: 0px;
-      width: 25px;
+      top: 0;
+      width: pxToRem(25px);
       height: $tab-height;
     }
 
     // left angled edge
     &:before {
-      left: -14px;
+      left: pxToRem(-14px);
       border-top-left-radius: $tab-radius;
-      box-shadow: inset 1px 1px 0 $tab-border-color, -4px 0px 4px rgba(0,0,0,.1);
+      box-shadow: inset pxToRem(1px) pxToRem(1px) 0 $tab-border-color, pxToRem(-4px) pxToRem(0px) pxToRem(4px) rgba(0,0,0,.1);
       -webkit-transform: skewX(-$tab-skew);
     }
 
     // right angled edge
     &:after {
-      right: -14px;
+      right: pxToRem(-14px);
       border-top-right-radius: $tab-radius;
-      box-shadow: inset -1px 1px 0 $tab-border-color, 4px 0px 4px rgba(0,0,0,.1);
+      box-shadow: inset pxToRem(-1px) pxToRem(1px) 0 $tab-border-color, pxToRem(4px) pxToRem(0px) pxToRem(4px) rgba(0,0,0,.1);
       -webkit-transform: skewX($tab-skew);
     }
 
@@ -114,16 +114,16 @@ $tab-max-width: 20rem;
     & > * {
       position: relative;
       z-index: 1;
-      margin-top: -$tab-top-padding - 1px;
-      padding-top: $tab-top-padding + 1px;
-      padding-right: 10px;
+      margin-top: -$tab-top-padding - pxToRem(1px);
+      padding-top: $tab-top-padding + pxToRem(1px);
+      padding-right: pxToRem(10px);
     }
   }
 
   & > LI.tab.active {
     z-index: 1;
     color: $text-color-highlight;
-    box-shadow: inset -1px 1px 0 $tab-border-color, 4px -4px 4px rgba(0,0,0, 0.1);
+    box-shadow: inset pxToRem(-1px) pxToRem(1px) 0 $tab-border-color, pxToRem(4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0, 0.1);
     width: -webkit-fit-content;
     flex: 2;
     .close-icon {
@@ -137,11 +137,11 @@ $tab-max-width: 20rem;
     }
 
     &:before {
-      box-shadow: inset 1px 1px 0 $tab-border-color, -4px -4px 4px rgba(0,0,0,.1);
+      box-shadow: inset pxToRem(1px) pxToRem(1px) 0 $tab-border-color, pxToRem(-4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0,.1);
     }
 
     &:after {
-      box-shadow: inset -1px 1px 0 $tab-border-color, 4px -4px 4px rgba(0,0,0,.1);
+      box-shadow: inset pxToRem(-1px) pxToRem(1px) 0 $tab-border-color, pxToRem(4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0,.1);
     }
   }
 
@@ -158,12 +158,12 @@ $tab-max-width: 20rem;
   }
 
   & > LI.remainder-left {
-    margin: 0 20px 0 5px;
+    margin: 0 pxToRem(20px) 0 pxToRem(5px);
   }
 
   .placeholder {
     height: $tab-height + $tab-top-padding + $tab-bottom-border-height;
-    margin-left: -9px; // center between tabs
+    margin-left: pxToRem(-9px); // center between tabs
     pointer-events: none;
     &:after {
       top: $tab-height + $tab-top-padding + $tab-bottom-border-height - pxToRem(2px);

@@ -8,7 +8,7 @@
 @import "bootstrap/_variables";
 
 :host(:focus) {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
 
 #ID_SETTINGS {
@@ -18,11 +18,11 @@
 }
 
 section {
-  border-top: 1px solid $base-border-color;
+  border-top: pxToRem(1px) solid $base-border-color;
   padding: $panel-body-padding;
 }
 section:first-child {
-  border-top: 0px;
+  border-top: 0;
 }
 
 #ID_COMMAND_OUTPUT_HANDLING > table td.CLASS_FRAME {
