@@ -9,7 +9,7 @@ $modified-icon-width: pxToRem(8px);
 $tab-skew: 30deg;
 $tab-top-padding: 0;
 $tab-bottom-border-height: pxToRem(5px);
-$tab-border: pxToRem(1px) solid $tab-border-color;
+$tab-border: 1px solid $tab-border-color;
 $tab-bar-bottom-border-color: #111111;
 $tab-max-width: 20rem;
 
@@ -38,7 +38,7 @@ $tab-max-width: 20rem;
     left: 0;
     right: 0;
     background-color: $tab-background-color-active;
-    border-top: pxToRem(1px) solid $tab-border-color;
+    border-top: 1px solid $tab-border-color;
     pointer-events: none;
   }
 
@@ -56,7 +56,7 @@ $tab-max-width: 20rem;
     margin: 0 pxToRem(20px) 0 pxToRem(5px);
     border: none;
     
-    box-shadow: inset pxToRem(-1px) pxToRem(-1px) pxToRem(1px) rgba(0,0,0, .05);
+    box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
     transition: color .1s ease-in;
 
     &, &:before, &:after {
@@ -76,7 +76,7 @@ $tab-max-width: 20rem;
     &:before {
       left: pxToRem(-14px);
       border-top-left-radius: $tab-radius;
-      box-shadow: inset pxToRem(1px) pxToRem(1px) 0 $tab-border-color, pxToRem(-4px) pxToRem(0px) pxToRem(4px) rgba(0,0,0,.1);
+      box-shadow: inset 1px 1px 0 $tab-border-color, pxToRem(-4px) 0 pxToRem(4px) rgba(0,0,0,.1);
       -webkit-transform: skewX(-$tab-skew);
     }
 
@@ -84,7 +84,7 @@ $tab-max-width: 20rem;
     &:after {
       right: pxToRem(-14px);
       border-top-right-radius: $tab-radius;
-      box-shadow: inset pxToRem(-1px) pxToRem(1px) 0 $tab-border-color, pxToRem(4px) pxToRem(0px) pxToRem(4px) rgba(0,0,0,.1);
+      box-shadow: inset -1px 1px 0 $tab-border-color, pxToRem(4px) 0 pxToRem(4px) rgba(0,0,0,.1);
       -webkit-transform: skewX($tab-skew);
     }
 
@@ -123,7 +123,7 @@ $tab-max-width: 20rem;
   & > LI.tab.active {
     z-index: 1;
     color: $text-color-highlight;
-    box-shadow: inset pxToRem(-1px) pxToRem(1px) 0 $tab-border-color, pxToRem(4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0, 0.1);
+    box-shadow: inset -1px 1px 0 $tab-border-color, pxToRem(4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0, 0.1);
     width: -webkit-fit-content;
     flex: 2;
     .close-icon {
@@ -137,11 +137,11 @@ $tab-max-width: 20rem;
     }
 
     &:before {
-      box-shadow: inset pxToRem(1px) pxToRem(1px) 0 $tab-border-color, pxToRem(-4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0,.1);
+      box-shadow: inset 1px 1px 0 $tab-border-color, pxToRem(-4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0,.1);
     }
 
     &:after {
-      box-shadow: inset pxToRem(-1px) pxToRem(1px) 0 $tab-border-color, pxToRem(4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0,.1);
+      box-shadow: inset -1px 1px 0 $tab-border-color, pxToRem(4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0,.1);
     }
   }
 

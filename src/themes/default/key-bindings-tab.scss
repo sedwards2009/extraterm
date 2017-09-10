@@ -16,6 +16,10 @@
   height: 100%;
   overflow: auto;
   padding: $panel-body-padding;
+  
+  & > * {
+    max-width: calc(100% - 1rem);
+  }
 }
 
 .CLASS_KEYCAP {

@@ -60,12 +60,12 @@ DIV.catch_all {
 }
 
 DIV.show_frame > #ID_CONTENTSTACK {
-  border: pxToRem(1px) solid #9daca9;
+  border: 1px solid #9daca9;
 }
 
 DIV.show_frame > #ID_TABBAR {
   position: relative;
-  top: pxToRem(1px);
+  top: 1px;
 }
 
 #ID_DROP_INDICATOR {

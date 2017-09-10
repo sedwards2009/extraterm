@@ -91,12 +91,12 @@ DIV.show_frame > #ID_TABBAR {
   }
 
   &:before {
-    top: -4px;
+    top: pxToRem(-4px);
     content: "\ea06";
   }
 
   &:after {
-    bottom: -4px;
+    bottom: pxToRem(-4px);
     content: "\ea07";
   }
 }

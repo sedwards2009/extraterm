@@ -41,7 +41,7 @@
   padding-left: 1em;
 
   & > div {
-    // border: 1px solid red;
+    // border: pxToRem(1px) solid red;
     justify-content: flex-end;
     flex-grow: 1;
   }

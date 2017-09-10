@@ -5,7 +5,7 @@
 /* gui-splitter styles */
 @import "bootstrap/variables";
 
-$divider-width: 4px;
+$divider-width: pxToRem(4px);
 
 #ID_TOP {
   position: relative;

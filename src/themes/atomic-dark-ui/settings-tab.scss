@@ -14,11 +14,14 @@
 #ID_SETTINGS {
   height: 100%;
   overflow: auto;
-  
+
+  & > * {
+    max-width: calc(100% - 1rem);
+  }
 }
 
 section {
-  border-top: pxToRem(1px) solid $base-border-color;
+  border-top: 1px solid $base-border-color;
   padding: $panel-body-padding;
 }
 section:first-child {

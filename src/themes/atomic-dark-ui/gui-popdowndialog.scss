@@ -81,9 +81,9 @@
   color: $dropdown-link-color;
   background-color: $dropdown-bg;
 
-  border: pxToRem(1px) solid $dropdown-border;
+  border: 1px solid $dropdown-border;
   border-radius: $border-radius-base;
-  box-shadow: pxToRem(0px) pxToRem(6px) pxToRem(12px) rgba(0,0,0,.175);
+  box-shadow: 0 pxToRem(6px) pxToRem(12px) rgba(0,0,0,.175);
   background-clip: padding-box;
 
   z-index: 101;  

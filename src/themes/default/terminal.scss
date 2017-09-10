@@ -2,6 +2,7 @@
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
 /* terminal styles */
+@import 'bootstrap/px-to-rem';
 
 :host {
   display: block;
@@ -43,7 +44,7 @@
     position: absolute;
   }
   & > et-terminal-viewer {
-   left: 4px;
-   right: 4px;
+   left: pxToRem(4px);
+   right: pxToRem(4px);
   }
 }

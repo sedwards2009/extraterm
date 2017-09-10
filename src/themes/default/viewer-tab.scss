@@ -3,6 +3,7 @@
  */
 
 /* viewer-tab styles */
+@import 'bootstrap/px-to-rem';
 
 :host {
   display: block;
@@ -21,7 +22,7 @@
 
 #ID_SCROLLBAR {
     flex: 0;
-    min-width: 15px;
+    min-width: pxToRem(15px);
     height: 100%;
 }
 

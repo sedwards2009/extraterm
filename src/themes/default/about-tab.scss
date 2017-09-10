@@ -8,7 +8,7 @@
 @import "bootstrap/_variables";
 
 :host(:focus) {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
 
 #ID_ABOUT {
@@ -22,9 +22,9 @@
   float: left;
   content: " ";
   background-image: url($--source-dir-default + '/extraterm_logo_256x184.png');
-  width: 256px;
-  height: 184px;
-  margin-right: 15px;
+  width: pxToRem(256px);
+  height: pxToRem(184px);
+  margin-right: pxToRem(15px);
 }
 
 A:focus {

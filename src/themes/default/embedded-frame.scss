@@ -1,19 +1,20 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
-
+@import "bootstrap/px-to-rem";
+ 
 /* embedded-frame styles */
 
-$TERMINAL_MARGIN_LEFT: 4px;
-$TERMINAL_MARGIN_RIGHT: 4px;
+$TERMINAL_MARGIN_LEFT: pxToRem(4px);
+$TERMINAL_MARGIN_RIGHT: pxToRem(4px);
 
-$BLOCK_BORDER_LEFT: 2px;
-$BLOCK_BORDER_RIGHT: 2px;
-$BLOCK_BORDER_BOTTOM: 2px;
+$BLOCK_BORDER_LEFT: pxToRem(2px);
+$BLOCK_BORDER_RIGHT: pxToRem(2px);
+$BLOCK_BORDER_BOTTOM: pxToRem(2px);
 
-$CORNER_RADIUS: 3px;
+$CORNER_RADIUS: pxToRem(3px);
 
-$TEAR_BORDER_HEIGHT: 2px;
+$TEAR_BORDER_HEIGHT: pxToRem(2px);
 
 $LITE_BACKGROUND_COLOR: #5b82a7;
 $DARK_BACKGROUND_COLOR: #567089;
@@ -87,15 +88,15 @@ $FAIL_COLOR: #ff5454;
 .left_block, .right_block {
   flex: 0 0 auto;
   display: flex;
-  padding-top: 1px;
+  padding-top: pxToRem(1px);
   padding-left: 0.5em;
   padding-right: 0.5em;
-  padding-bottom: 1px;
+  padding-bottom: pxToRem(1px);
 }
 
 /* Eliminate any outline around the button when it is clicked. */
 .right_block BUTTON:focus {
-  outline: 0px;
+  outline: pxToRem(0px);
 }
 
 /* *** Icon Div *** */
@@ -113,10 +114,10 @@ $FAIL_COLOR: #ff5454;
 #ID_COMMAND_LINE {
   flex: auto 0 1;
   border-bottom-right-radius: 0.5em;
-  padding-top: 1px;
+  padding-top: pxToRem(1px);
   padding-left: 0.5em;
   padding-right: 0.5em;
-  padding-bottom: 1px;
+  padding-bottom: pxToRem(1px);
 
   color: $FOREGROUND_COLOR;
 
@@ -124,7 +125,7 @@ $FAIL_COLOR: #ff5454;
 }
 
 #ID_CONTAINER.running > #ID_HEADER > #ID_COMMANDLINE {
-  border: 1px solid $RUNNING_COLOR;
+  border: pxToRem(1px) solid $RUNNING_COLOR;
 }
 
 #ID_CONTAINER.running > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {

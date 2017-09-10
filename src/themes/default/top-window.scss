@@ -3,6 +3,7 @@
  */
 
 /* top-window */
+@import 'bootstrap/px-to-rem';
 @import "fontawesome-fontface";
 @import "extraicons-fontface";
 @import "emoji-fontface";
@@ -10,7 +11,7 @@
 DIV.tab_bar_rest {
   display: flex;
   flex-grow: 1;
-  height: 36px;
+  height: pxToRem(36px);
 }
 
 DIV.tab_bar_rest > DIV.space {
@@ -34,7 +35,7 @@ BODY {
 EXTRATERM-MAINWEBUI {
   position: absolute; // or relative
   left: 0;
-  top: if($extraterm-titlebar-visible == true, 4px, 0px);
+  top: if($extraterm-titlebar-visible == true, pxToRem(4px), 0);
   right: 0;
   bottom: 0;
 }

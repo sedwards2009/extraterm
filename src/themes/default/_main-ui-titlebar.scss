@@ -3,8 +3,8 @@
  */
 @import "extraicons-fontface";
 
-$drag-bar-height: 16px;
-$resize-bar-height: 4px;
+$drag-bar-height: pxToRem(16px);
+$resize-bar-height: pxToRem(4px);
 
 @if($extraterm-titlebar-visible == true or $extraterm-platform == "darwin") {
   #ID_TITLE_BAR {
@@ -78,7 +78,7 @@ $resize-bar-height: 4px;
   #ID_DRAG_BAR {
     width: 100%;
     -webkit-app-region: drag;
-    height: 16px;
+    height: pxToRem(16px);
     cursor: move;
   }
 }
@@ -91,33 +91,33 @@ $resize-bar-height: 4px;
     & > button {
       display: inline-block;
 
-      width: 12px;
-      height: 12px;
-      padding: 0px;
-      // margin-top: 12px;
-      margin-left: 4px;
-      margin-right: 4px;
+      width: pxToRem(12px);
+      height: pxToRem(12px);
+      padding: 0;
+      // margin-top: pxToRem(12px);
+      margin-left: pxToRem(4px);
+      margin-right: pxToRem(4px);
 
       box-sizing: border-box;
-      border-radius: 6px;
+      border-radius: pxToRem(6px);
       border: 1px solid rgba(0, 0, 0, 0.06);
       outline: none;
 
       color: transparent;
       position: relative;
 
-      font-size: 11px;
+      font-size: pxToRem(11px);
 
       &:before {
         position: relative;
-        left: 0px;
+        left: 0;
         top: -2px;
-        font-size: 10px;
+        font-size: pxToRem(10px);
         font-family: extraicons;
       }
 
       &:focus {
-        outline: 0px solid transparent;
+        outline: 0 solid transparent;
       }
     }
 
@@ -128,7 +128,7 @@ $resize-bar-height: 4px;
 
   #ID_OSX_CLOSE_BUTTON {
     background-color: #fc5753;
-    margin-left: 3px !important;
+    margin-left: pxToRem(3px) !important;
     &:before {
       content: "\ea03";
     }

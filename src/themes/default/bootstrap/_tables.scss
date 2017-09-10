@@ -165,7 +165,7 @@ table {
 // Responsive tables
 //
 // Wrap your tables in `.table-responsive` and we'll make them mobile friendly
-// by enabling horizontal scrolling. Only applies <768px. Everything above that
+// by enabling horizontal scrolling. Only applies <pxToRem(768px). Everything above that
 // will display normally.
 
 .table-responsive {
