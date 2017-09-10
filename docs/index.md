@@ -23,7 +23,7 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 * Open source [MIT license](https://github.com/sedwards2009/extraterm/blob/master/LICENSE.txt)
 * [...much more to come](https://github.com/sedwards2009/extraterm/issues/30)
 
-Don't forget to {% include star.ext %} Star us on [GitHub](https://github.com/sedwards2009/extraterm).
+Don't forget to {% include star.ext %} *Star* us on [GitHub](https://github.com/sedwards2009/extraterm).
 
 
 ## News
