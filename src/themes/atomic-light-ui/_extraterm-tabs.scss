@@ -2,13 +2,13 @@
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
 
-$tab-radius: 3px;
-$modified-icon-width: 8px;
+$tab-radius: pxToRem(3px);
+$modified-icon-width: pxToRem(8px);
 $tab-skew: 30deg;
-$tab-top-padding: 0px;
-$tab-bottom-border-height: 5px;
+$tab-top-padding: 0;
+$tab-bottom-border-height: pxToRem(5px);
 $tab-border: 1px solid $tab-border-color;
-$tab-max-width: 160px;
+$tab-max-width: 20rem;
 
 .extraterm-tabs {
   display: flex;
@@ -18,8 +18,8 @@ $tab-max-width: 160px;
   margin: 0;
   height: $tab-height + $tab-top-padding + $tab-bottom-border-height;
   background-image: -webkit-linear-gradient(top, $tab-bar-background-color, lighten($tab-bar-background-color, 9%));
-  box-shadow: inset 0 -8px 8px -4px rgba(0,0,0, .15);
-  padding: 0px 0px 0px 0px;
+  box-shadow: inset 0 pxToRem(-8px) pxToRem(8px) pxToRem(-4px) rgba(0,0,0, .15);
+  padding: 0 0 0 0;
   overflow-x: auto;
   overflow-y: hidden;
 
@@ -50,7 +50,7 @@ $tab-max-width: 160px;
     line-height: $tab-height;
     color: $text-color;
     padding: 0;
-    margin: 0 20px 0 5px;
+    margin: 0 pxToRem(20px) 0 pxToRem(5px);
 
     box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
     transition: color .1s ease-in;
@@ -64,13 +64,13 @@ $tab-max-width: 160px;
       content: '';
       position: absolute;
       top: -1px;
-      width: 25px;
+      width: pxToRem(25px);
       height: $tab-height;
     }
 
     // left angled edge
     &:before {
-      left: -14px;
+      left: pxToRem(-14px);
       border-top-left-radius: $tab-radius;
       border-left: $tab-border;
       box-shadow: inset 1px -1px 1px rgba(0,0,0, .05);
@@ -79,10 +79,10 @@ $tab-max-width: 160px;
 
     // right angled edge
     &:after {
-      right: -14px;
+      right: pxToRem(-14px);
       border-top-right-radius: $tab-radius;
       border-right: $tab-border;
-      box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
+      box-shadow: inset pxToRem(-1px) pxToRem(-1px) pxToRem(1px) rgba(0,0,0, .05);
       -webkit-transform: skewX($tab-skew);
     }
 
@@ -100,7 +100,7 @@ $tab-max-width: 160px;
 
     &.modified:not(:hover) .close-icon {
       right: 0;
-      top: $tab-height/2 - $modified-icon-width/2 + 1px;
+      top: $tab-height/2 - $modified-icon-width/2 + pxToRem(1px);
       width: $modified-icon-width;
       height: $modified-icon-width;
     }
@@ -112,9 +112,9 @@ $tab-max-width: 160px;
     & > * {
       position: relative;
       z-index: 1;
-      margin-top: -$tab-top-padding - 1px;
-      padding-top: $tab-top-padding + 1px;
-      padding-right: 10px;
+      margin-top: -$tab-top-padding - pxToRem(1px);
+      padding-top: $tab-top-padding + pxToRem(1px);
+      padding-right: pxToRem(10px);
     }
   }
 
@@ -124,13 +124,13 @@ $tab-max-width: 160px;
     width: -webkit-fit-content;
     flex: 2;
     .close-icon {
-      line-height: $tab-height - 1px;
+      line-height: $tab-height - pxToRem(1px);
       color: $text-color;
     }
 
     &, &:before, &:after {
       background: $tab-background-color-active;
-      height: $tab-height + 1px;
+      height: $tab-height + pxToRem(1px);
       box-shadow: none;
     }
   }
@@ -148,15 +148,15 @@ $tab-max-width: 160px;
   }
   
   & > LI.remainder-left {
-    margin: 0 20px 0 5px;
+    margin: 0 pxToRem(20px) 0 pxToRem(5px);
   }
 
   .placeholder {
     height: $tab-height + $tab-top-padding + $tab-bottom-border-height;
-    margin-left: -9px; // center between tabs
+    margin-left: pxToRem(-9px); // center between tabs
     pointer-events: none;
     &:after {
-      top: $tab-height + $tab-top-padding + $tab-bottom-border-height - 2px;
+      top: $tab-height + $tab-top-padding + $tab-bottom-border-height - pxToRem(2px);
     }
   }
 }

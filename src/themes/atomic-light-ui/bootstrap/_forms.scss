@@ -32,7 +32,7 @@ legend {
 label {
   display: inline-block;
   max-width: 100%; // Force IE8 to wrap long content (see https://github.com/twbs/bootstrap/issues/13141)
-  margin-bottom: 5px;
+  margin-bottom: pxToRem(5px);
   font-weight: bold;
 }
 
@@ -51,8 +51,8 @@ input[type="search"] {
 // Position radios and checkboxes better
 input[type="radio"],
 input[type="checkbox"] {
-  margin: 4px 0 0;
-  margin-top: 1px \9; // IE8-9
+  margin: pxToRem(4px) 0 0;
+  margin-top: pxToRem(1px) \9; // IE8-9
   line-height: normal;
 }
 
@@ -109,8 +109,8 @@ input[type="checkbox"] {
     top: 1.1em;
     left: .6em;
     height: .16em;
-    min-height: 2px;
-    border-radius: 1px;
+    min-height: pxToRem(2px);
+    border-radius: pxToRem(1px);
     background-color: $base-background-color;
     transform-origin: 0% 0%;
     opacity: 0;
@@ -182,7 +182,7 @@ output {
 .form-control {
   display: block;
   width: 100%;
-  padding: 6px 5px;
+  padding: pxToRem(6px) pxToRem(5px);
   font-size: $input-font-size;
   line-height: $line-height-base;
   color: $input-color;
@@ -190,7 +190,7 @@ output {
   background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
   border: 1px solid $input-border;
   border-radius: $input-border-radius; // Note: This has no effect on <select>s in some browsers, due to the limited stylability of <select>s in CSS.
-  @include box-shadow(inset 0 1px 1px rgba(0,0,0,.075));
+  @include box-shadow(inset 0 pxToRem(1px) pxToRem(1px) rgba(0,0,0,.075));
   @include transition(border-color ease-in-out .15s, box-shadow ease-in-out .15s);
 
   // Customize the `:focus` state to imitate native WebKit styles.
@@ -288,13 +288,13 @@ input[type="search"] {
 //
 // Indent the labels to position radios/checkboxes as hanging controls.
 
-$checkbox-space: 27px;
+$checkbox-space: pxToRem(27px);
 .radio,
 .checkbox {
   position: relative;
   display: block;
-  margin-top: 6px;
-  margin-bottom: 10px;
+  margin-top: pxToRem(6px);
+  margin-bottom: pxToRem(10px);
 
   label {
     min-height: $line-height-computed; // Ensure the input doesn't jump when there is no text
@@ -311,12 +311,12 @@ $checkbox-space: 27px;
 .checkbox-inline input[type="checkbox"] {
   position: absolute;
   margin-left: -$checkbox-space;
-  margin-top: 4px \9;
+  margin-top: pxToRem(4px) \9;
 }
 
 .radio + .radio,
 .checkbox + .checkbox {
-  margin-top: -5px; // Move up sibling radios or checkboxes for tighter spacing
+  margin-top: pxToRem(-5px); // Move up sibling radios or checkboxes for tighter spacing
 }
 
 // Radios and checkboxes on same line
@@ -324,7 +324,7 @@ $checkbox-space: 27px;
 .checkbox-inline {
   position: relative;
   display: inline-block;
-  padding-left: 20px;
+  padding-left: pxToRem(20px);
   margin-bottom: 0;
   vertical-align: middle;
   font-weight: normal;
@@ -333,7 +333,7 @@ $checkbox-space: 27px;
 .radio-inline + .radio-inline,
 .checkbox-inline + .checkbox-inline {
   margin-top: 0;
-  margin-left: 10px; // space out consecutive inline controls
+  margin-left: pxToRem(10px); // space out consecutive inline controls
 }
 
 // Apply same disabled cursor tweak as for inputs
@@ -368,7 +368,7 @@ input[type="checkbox"] {
 }
 
 input[type="text"].form-control, input[type="number"].form-control {
-  padding: 5px 9px;
+  padding: pxToRem(5px) pxToRem(9px);
 }
 
 select.form-control:focus, input[type="text"]:focus, input[type="number"]:focus {
@@ -531,8 +531,8 @@ select.form-control:focus, input[type="text"]:focus, input[type="number"]:focus 
 
 .help-block {
   display: block; // account for any element using help-block
-  margin-top: 5px;
-  margin-bottom: 10px;
+  margin-top: pxToRem(5px);
+  margin-bottom: pxToRem(10px);
   color: lighten($text-color, 25%); // lighten the text some for contrast
 }
 
@@ -541,7 +541,7 @@ select.form-control:focus, input[type="text"]:focus, input[type="number"]:focus 
 //
 // Make forms appear inline(-block) by adding the `.form-inline` class. Inline
 // forms begin stacked on extra small (mobile) devices and then go inline when
-// viewports reach <768px.
+// viewports reach <pxToRem(768px).
 //
 // Requires wrapping inputs and labels with `.form-group` for proper display of
 // default HTML form controls and our custom form controls (e.g., input groups).
