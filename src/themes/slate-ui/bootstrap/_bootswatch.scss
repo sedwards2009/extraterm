@@ -1,3 +1,5 @@
+@import "./px-to-rem";
+
 // Slate 3.3.5
 // Bootswatch
 // -----------------------------------------------------
@@ -54,8 +56,8 @@
   }
 
   &-form {
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-left: pxToRem(5px);
+    margin-right: pxToRem(5px);
   }
 }
 
