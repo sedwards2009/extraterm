@@ -82,7 +82,7 @@ input[type="checkbox"]:focus {
 // Adjust output element
 output {
   display: block;
-  padding-top: ($padding-base-vertical + 1);
+  padding-top: ($padding-base-vertical + pxToRem(1px));
   font-size: $font-size-base;
   line-height: $line-height-base;
   color: $input-color;
@@ -306,8 +306,8 @@ input[type="checkbox"] {
 
 .form-control-static {
   // Size it appropriately next to real form controls
-  padding-top: ($padding-base-vertical + 1);
-  padding-bottom: ($padding-base-vertical + 1);
+  padding-top: ($padding-base-vertical + pxToRem(1px));
+  padding-bottom: ($padding-base-vertical + pxToRem(1px));
   // Remove default margin from `p`
   margin-bottom: 0;
   min-height: ($line-height-computed + $font-size-base);
@@ -348,7 +348,7 @@ input[type="checkbox"] {
   .form-control-static {
     height: $input-height-small;
     min-height: ($line-height-computed + $font-size-small);
-    padding: ($padding-small-vertical + 1) $padding-small-horizontal;
+    padding: ($padding-small-vertical + pxToRem(1px)) $padding-small-horizontal;
     font-size: $font-size-small;
     line-height: $line-height-small;
   }
@@ -374,7 +374,7 @@ input[type="checkbox"] {
   .form-control-static {
     height: $input-height-large;
     min-height: ($line-height-computed + $font-size-large);
-    padding: ($padding-large-vertical + 1) $padding-large-horizontal;
+    padding: ($padding-large-vertical + pxToRem(1px)) $padding-large-horizontal;
     font-size: $font-size-large;
     line-height: $line-height-large;
   }
@@ -562,13 +562,13 @@ input[type="checkbox"] {
   .checkbox-inline {
     margin-top: 0;
     margin-bottom: 0;
-    padding-top: ($padding-base-vertical + 1); // Default padding plus a border
+    padding-top: ($padding-base-vertical + pxToRem(1px)); // Default padding plus a border
   }
   // Account for padding we're adding to ensure the alignment and of help text
   // and other content below items
   .radio,
   .checkbox {
-    min-height: ($line-height-computed + ($padding-base-vertical + 1));
+    min-height: ($line-height-computed + ($padding-base-vertical + pxToRem(1px)));
   }
 
   // Make form groups behave like rows
@@ -582,7 +582,7 @@ input[type="checkbox"] {
     .control-label {
       text-align: right;
       margin-bottom: 0;
-      padding-top: ($padding-base-vertical + 1); // Default padding plus a border
+      padding-top: ($padding-base-vertical + pxToRem(1px)); // Default padding plus a border
     }
   }
 
@@ -601,7 +601,7 @@ input[type="checkbox"] {
   .form-group-lg {
     @media (min-width: $screen-sm-min) {
       .control-label {
-        padding-top: ($padding-large-vertical + 1);
+        padding-top: ($padding-large-vertical + pxToRem(1px));
         font-size: $font-size-large;
       }
     }
@@ -609,7 +609,7 @@ input[type="checkbox"] {
   .form-group-sm {
     @media (min-width: $screen-sm-min) {
       .control-label {
-        padding-top: ($padding-small-vertical + 1);
+        padding-top: ($padding-small-vertical + pxToRem(1px));
         font-size: $font-size-small;
       }
     }
