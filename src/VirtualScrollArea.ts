@@ -345,7 +345,7 @@ export class VirtualScrollArea {
    */
   updateContainerHeight(containerHeight: number): void {
     this._updateAutoscrollBottom( (newState) => {
-      newState.containerHeight = Math.floor(containerHeight);
+      newState.containerHeight = Math.round(containerHeight);
     });
   }
 
