@@ -50,6 +50,7 @@ $FAIL_COLOR: #ff5454;
   display: flex;
   width: 100%;
   z-index: 5;
+  font-size: 0.8rem;
 }
 
 #ID_OUTPUT_CONTAINER {
@@ -92,6 +93,7 @@ $FAIL_COLOR: #ff5454;
   padding-left: 0.5em;
   padding-right: 0.5em;
   padding-bottom: pxToRem(1px);
+  align-items: center;
 }
 
 /* Eliminate any outline around the button when it is clicked. */
@@ -102,8 +104,6 @@ $FAIL_COLOR: #ff5454;
 /* *** Icon Div *** */
 #ID_ICON_DIV {
   display: inline-block;
-  width: 1em;
-  height: 1em;
 }
 
 #ID_CONTAINER.success > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
@@ -120,8 +120,6 @@ $FAIL_COLOR: #ff5454;
   padding-bottom: pxToRem(1px);
 
   color: $FOREGROUND_COLOR;
-
-  font-size: 1rem;
 }
 
 #ID_CONTAINER.running > #ID_HEADER > #ID_COMMANDLINE {
@@ -133,7 +131,6 @@ $FAIL_COLOR: #ff5454;
 }
 
 .right_block, #ID_POP_OUT_BUTTON, #ID_CLOSE_BUTTON {
-  font-size: 1rem;
   color: $FOREGROUND_COLOR;
 }
 
@@ -223,5 +220,5 @@ $FAIL_COLOR: #ff5454;
 #ID_SCROLL_NAME {
   text-align: right;
   min-width: 2.5em;
-  padding-right: 1.5em;
+  padding-left: 0.5em;
 }
