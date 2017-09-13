@@ -149,7 +149,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
   }
   
   getAwesomeIcon(): string {
-    return "idea";
+    return "lightbulb-o";
   }
   
   getSelectionText(): string {    
