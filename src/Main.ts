@@ -11,42 +11,30 @@
  */
 import * as SourceMapSupport from 'source-map-support';
 
-import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen} from 'electron';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as _ from 'lodash';
+import * as child_process from 'child_process';
 import * as Commander from 'commander';
+import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen} from 'electron';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
-import * as PtyConnector from './PtyConnector';
-import * as ResourceLoader from './ResourceLoader';
-import * as Messages from './WindowMessages';
+import * as fs from 'fs';
+import * as _ from 'lodash';
+import * as path from 'path';
 
+import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
+  SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from './Config';
+import {FileLogWriter} from './FileLogWriter';
+import {Logger, getLogger, addLogWriter} from './Logger';
+import {PtyConnector, Pty, PtyOptions, EnvironmentMap} from './PtyConnector';
+// Our special 'fake' module which selects the correct pty connector factory implementation.
+const PtyConnectorFactory = require("./PtyConnectorFactory");
+import * as ResourceLoader from './ResourceLoader';
 import * as ThemeTypes from './Theme';
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
 import * as ThemeManager from './ThemeManager';
-
-import * as child_process from 'child_process';
+import * as Messages from './WindowMessages';
 import * as Util from './gui/Util';
-import {Logger, getLogger, addLogWriter} from './Logger';
-import {FileLogWriter} from './FileLogWriter';
 
-type PtyConnector  = PtyConnector.PtyConnector;
-type Pty = PtyConnector.Pty;
-type PtyOptions = PtyConnector.PtyOptions;
-type EnvironmentMap = PtyConnector.EnvironmentMap;
-
-// Our special 'fake' module which selects the correct pty connector factory implementation.
-const PtyConnectorFactory = require("./PtyConnectorFactory");
-
-// Interfaces.
-import * as config_ from './Config';
-type Config = config_.Config;
-type CommandLineAction = config_.CommandLineAction;
-type SessionProfile = config_.SessionProfile;
-type SystemConfig = config_.SystemConfig;
-type FontInfo = config_.FontInfo;
 
 const LOG_FINE = false;
 
@@ -328,7 +316,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
     if (profiles !== undefined && profiles !== null) {
       profiles.forEach( profile => {
         switch (profile.type) {
-          case config_.SESSION_TYPE_CYGWIN:
+          case SESSION_TYPE_CYGWIN:
             let templateProfile = canonicalCygwinProfile;
             
             if (profile.cygwinDir !== undefined && profile.cygwinDir !== null) {
@@ -339,7 +327,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
             if (templateProfile !== null) {
               const expandedProfile: SessionProfile = {
                 name: profile.name,
-                type: config_.SESSION_TYPE_CYGWIN,
+                type: SESSION_TYPE_CYGWIN,
                 command: profile.command !== undefined ? profile.command : templateProfile.command,
                 arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
                 extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv,
@@ -353,12 +341,12 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
           
             break;
             
-          case config_.SESSION_TYPE_BABUN:
+          case SESSION_TYPE_BABUN:
             break;
             
           default:
           _log.info(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
-              `It is neither ${config_.SESSION_TYPE_CYGWIN} nor ${config_.SESSION_TYPE_BABUN}.`);
+              `It is neither ${SESSION_TYPE_CYGWIN} nor ${SESSION_TYPE_BABUN}.`);
             break;
         }
 
@@ -376,11 +364,11 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
         switch (profile.type) {
           case undefined:
           case null:
-          case config_.SESSION_TYPE_UNIX:
+          case SESSION_TYPE_UNIX:
             let templateProfile = canonicalProfile;
             const expandedProfile: SessionProfile = {
               name: profile.name,
-              type: config_.SESSION_TYPE_UNIX,
+              type: SESSION_TYPE_UNIX,
               command: profile.command !== undefined ? profile.command : templateProfile.command,
               arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
               extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv
@@ -404,7 +392,7 @@ function defaultProfile(): SessionProfile {
   const shell = readDefaultUserShell(process.env.USER);
   return {
     name: "Default",
-    type: config_.SESSION_TYPE_UNIX,
+    type: SESSION_TYPE_UNIX,
     command: shell,
     arguments: process.platform === "darwin" ? ["-l"] : [], // OSX expects shells to be login shells. Linux etc doesn't
     extraEnv: { }
@@ -468,7 +456,7 @@ function defaultCygwinProfile(cygwinDir: string): SessionProfile {
   
   return {
     name: "Cygwin",
-    type: config_.SESSION_TYPE_CYGWIN,
+    type: SESSION_TYPE_CYGWIN,
     command: defaultShell,
     arguments: ["-l"],
     extraEnv: { HOME: homeDir },
@@ -679,7 +667,7 @@ function setConfigDefaults(config: Config): void {
   config.expandedProfiles = defaultValue(config.expandedProfiles, null);
   config.blinkingCursor = defaultValue(config.blinkingCursor, false);
   config.scrollbackLines = defaultValue(config.scrollbackLines, 500000);
-  config.showTips = defaultValue<config_.ShowTipsStrEnum>(config.showTips, 'always');
+  config.showTips = defaultValue<ShowTipsStrEnum>(config.showTips, 'always');
   config.tipTimestamp = defaultValue(config.tipTimestamp, 0);
   config.tipCounter = defaultValue(config.tipCounter, 0);
   
@@ -743,8 +731,8 @@ function getThemes(): ThemeInfo[] {
   return themeManager.getAllThemes();
 }
 
-function scanKeyBindingFiles(keyBindingsDir: string): config_.KeyBindingInfo[] {
-  const result: config_.KeyBindingInfo[] = [];
+function scanKeyBindingFiles(keyBindingsDir: string): KeyBindingInfo[] {
+  const result: KeyBindingInfo[] = [];
   if (fs.existsSync(keyBindingsDir)) {
     const contents = fs.readdirSync(keyBindingsDir);
     contents.forEach( (item) => {
@@ -755,7 +743,7 @@ function scanKeyBindingFiles(keyBindingsDir: string): config_.KeyBindingInfo[] {
           const keyBindingJSON = JSON.parse(infoStr);
           const name = keyBindingJSON.name;
           if (name !== undefined) {
-            const info: config_.KeyBindingInfo = {
+            const info: KeyBindingInfo = {
               name: name,
               filename: item
             };
