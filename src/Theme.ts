@@ -122,7 +122,7 @@ export interface Themeable {
 
 export const FALLBACK_TERMINAL_THEME = "default-terminal";
 export const FALLBACK_SYNTAX_THEME = "default-syntax";
-export const FALLBACK_UI_THEME = "atomic-dark-ui";
+export const FALLBACK_UI_THEME = "default";
 
 export const TerminalCssFiles: CssFile[] = [CssFile.TERMINAL_VARS, CssFile.TERMINAL_VIEWER];
 export const SyntaxCssFiles: CssFile[] = [CssFile.TEXT_VIEWER];

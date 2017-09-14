@@ -579,7 +579,7 @@ function initConfig(): void {
     config.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
   }
   if ( ! isThemeType(themeManager.getTheme(config.themeGUI), 'gui')) {
-    config.themeGUI = ThemeTypes.FALLBACK_UI_THEME;
+    config.themeGUI = "atomic-dark-ui";
   }
 
   if (config.showTitleBar !== true && config.showTitleBar !== false) {
@@ -628,7 +628,7 @@ function setConfigDefaults(config: Config): void {
   
   config.themeTerminal = defaultValue(config.themeTerminal, "default");
   config.themeSyntax = defaultValue(config.themeSyntax, "default");
-  config.themeGUI = defaultValue(config.themeGUI, "default");
+  config.themeGUI = defaultValue(config.themeGUI, "atomic-dark-ui");
   config.showTitleBar = defaultValue(config.showTitleBar, false);
 
   if (config.commandLineActions === undefined) {
