@@ -799,13 +799,15 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     injectConfigManager(terminalViewer, this._configManager);
     
     terminalViewer.setEmulator(this._emulator);
+
+    this._terminalViewer = terminalViewer;  // Putting this in _terminalViewer now prevents the VirtualScrollArea 
+                                            // removing it from the DOM in the next method call.
     this._appendScrollable(terminalViewer)
     
     terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
 
-    this._terminalViewer = terminalViewer;
     this._emulator.refreshScreen();
   }
 
