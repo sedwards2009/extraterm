@@ -394,14 +394,18 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
             </option>
           </select>
         </div>
-        <div class="col-sm-7">
-          <p v-if="themeTerminalComment != ''" class="help-block">
+      </div>
+
+      <div v-if="themeTerminalComment != ''" class="form-group">
+        <div class="col-sm-3"></div>
+        <div class="input-group col-sm-3">
+          <p class="help-block">
             <i class="fa fa-info-circle"></i>
             {{themeTerminalComment}}
           </p>
         </div>
       </div>
-        
+      
       <div class="form-group">
         <label for="theme-terminal" class="col-sm-3 control-label">Text &amp; Syntax Theme:</label>
         <div class="input-group col-sm-3">
@@ -411,8 +415,12 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
             </option>
           </select>
         </div>
-        <div class="col-sm-7">
-          <p v-if="themeSyntaxComment != ''" class="help-block">
+      </div>
+
+      <div v-if="themeSyntaxComment != ''" class="form-group">
+        <div class="col-sm-3"></div>
+        <div class="input-group col-sm-3">
+          <p class="help-block">
             <i class="fa fa-info-circle"></i>
             {{themeSyntaxComment}}
           </p>
@@ -428,8 +436,12 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
             </option>
           </select>
         </div>
-        <div class="col-sm-7">
-          <p v-if="themeGUIComment != ''" class="help-block">
+      </div>
+
+      <div v-if="themeGUIComment != ''" class="form-group">
+        <div class="col-sm-3"></div>
+        <div class="input-group col-sm-3">
+          <p class="help-block">
             <i class="fa fa-info-circle"></i>
             {{themeGUIComment}}
           </p>
@@ -445,8 +457,12 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
             </option>
           </select>
         </div>
-        <div class="col-sm-7">
-          <p v-if="titleBar != currentTitleBar" class="help-block">
+      </div>
+      
+      <div v-if="titleBar != currentTitleBar" class="form-group">
+        <div class="col-sm-3"></div>
+        <div class="input-group col-sm-3">
+          <p class="help-block">
             <i class="fa fa-info-circle"></i>
             A restart is requred before this change takes effect.
           </p>
