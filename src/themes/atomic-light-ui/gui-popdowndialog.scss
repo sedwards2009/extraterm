@@ -40,7 +40,7 @@
   font-size: $input-font-size;
   line-height: $line-height-base;
   color: $text-color;
-  margin-bottom: 5px;
+  margin-bottom: pxToRem(5px);
 }
 
 #ID_TITLE_PRIMARY {
@@ -70,7 +70,7 @@
 #ID_CONTAINER {
   position: absolute;
 
-  $width: 400px;
+  $width: pxToRem(400px);
   width: $width;
   left: calc(50% - #{$width} / 2);
   
@@ -83,7 +83,7 @@
 
   border: 1px solid $dropdown-border;
   border-radius: $border-radius-base;
-  box-shadow: 0px 6px 12px rgba(0,0,0,.175);
+  box-shadow: 0 pxToRem(6px) pxToRem(12px) rgba(0,0,0,.175);
   background-clip: padding-box;
 
   z-index: 101;  

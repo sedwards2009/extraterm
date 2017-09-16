@@ -646,6 +646,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
             <div class='right_block'>
               <div id='${ID_SCROLL_ICON}'><i class='fa fa-arrows-v'></i></div>
               <div id='${ID_SCROLL_NAME}'></div>
+              <div class='spacer'></div>
               <div id='${ID_TAG_ICON}'><i class='fa fa-tag'></i></div>
               <div id='${ID_TAG_NAME}'></div>
               <div class='spacer'></div>

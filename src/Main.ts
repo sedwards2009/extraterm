@@ -11,41 +11,30 @@
  */
 import * as SourceMapSupport from 'source-map-support';
 
-import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen} from 'electron';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as _ from 'lodash';
+import * as child_process from 'child_process';
 import * as Commander from 'commander';
+import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen} from 'electron';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
-import * as PtyConnector from './PtyConnector';
-import * as ResourceLoader from './ResourceLoader';
-import * as Messages from './WindowMessages';
+import * as fs from 'fs';
+import * as _ from 'lodash';
+import * as path from 'path';
 
-import * as ThemeTypes from './Theme';
-type ThemeInfo = ThemeTypes.ThemeInfo;
-type ThemeType = ThemeTypes.ThemeType;
-import * as ThemeManager from './ThemeManager';
-
-import * as child_process from 'child_process';
-import * as Util from './gui/Util';
-import {Logger, getLogger} from './Logger';
-
-type PtyConnector  = PtyConnector.PtyConnector;
-type Pty = PtyConnector.Pty;
-type PtyOptions = PtyConnector.PtyOptions;
-type EnvironmentMap = PtyConnector.EnvironmentMap;
-
+import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
+  SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from './Config';
+import {FileLogWriter} from './FileLogWriter';
+import {Logger, getLogger, addLogWriter} from './Logger';
+import {PtyConnector, Pty, PtyOptions, EnvironmentMap} from './PtyConnector';
 // Our special 'fake' module which selects the correct pty connector factory implementation.
 const PtyConnectorFactory = require("./PtyConnectorFactory");
+import * as ResourceLoader from './ResourceLoader';
+import * as ThemeTypes from './Theme';
+import * as ThemeManager from './ThemeManager';
+import * as Messages from './WindowMessages';
+import * as Util from './gui/Util';
 
-// Interfaces.
-import * as config_ from './Config';
-type Config = config_.Config;
-type CommandLineAction = config_.CommandLineAction;
-type SessionProfile = config_.SessionProfile;
-type SystemConfig = config_.SystemConfig;
-type FontInfo = config_.FontInfo;
+type ThemeInfo = ThemeTypes.ThemeInfo;
+type ThemeType = ThemeTypes.ThemeType;
 
 const LOG_FINE = false;
 
@@ -57,6 +46,7 @@ SourceMapSupport.install();
 // be closed automatically when the javascript object is GCed.
 let mainWindow: Electron.BrowserWindow = null;
 
+const LOG_FILENAME = "extraterm.log";
 const EXTRATERM_CONFIG_DIR = "extraterm";
 const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
@@ -84,6 +74,8 @@ let titleBarVisible = false;
 
 function main(): void {
   let failed = false;
+
+  setUpLogging();
 
   app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
   app.commandLine.appendSwitch('high-dpi-support', 'true');
@@ -143,7 +135,13 @@ function main(): void {
   // This method will be called when Electron has done everything
   // initialization and ready for creating browser windows.
   app.on('ready', function() {
-    
+    const {restartNeeded, originalScaleFactor, currentScaleFactor} = setScaleFactor();
+    if (restartNeeded) {
+      return;
+    }
+    config.systemConfig.currentScaleFactor = currentScaleFactor;
+    config.systemConfig.originalScaleFactor = originalScaleFactor;
+
     startIpc();
     
     // Create the browser window.
@@ -183,6 +181,51 @@ function main(): void {
     });
 
   });
+}
+
+function setUpLogging(): void {
+  const logFilePath = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
+
+  if ( ! process.argv.find(item => item.startsWith(EXTRATERM_DEVICE_SCALE_FACTOR))) {
+    if (fs.existsSync(logFilePath)) {
+      fs.unlinkSync(logFilePath);
+    }
+  }
+
+  const logWriter = new FileLogWriter(logFilePath);
+  addLogWriter(logWriter);
+  _log.info("Recording logs to ", logFilePath);
+}
+
+const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor=";
+
+function setScaleFactor(): {restartNeeded: boolean, currentScaleFactor: number, originalScaleFactor: number} {
+  _log.info("args", process.argv);
+  const primaryDisplay = screen.getPrimaryDisplay();
+  _log.info("Display scale factor is ", primaryDisplay.scaleFactor);
+  if (primaryDisplay.scaleFactor !== 1 && primaryDisplay.scaleFactor !== 2) {
+    const scaleFactor = primaryDisplay.scaleFactor < 1.5 ? 1 : 2;
+    app.relaunch({args: process.argv.slice(1).concat([
+      '--relaunch',
+      '--force-device-scale-factor=' + scaleFactor,
+      EXTRATERM_DEVICE_SCALE_FACTOR + primaryDisplay.scaleFactor
+    ])});
+    _log.info("Restarting with scale factor ", scaleFactor);
+    app.exit(0);
+    return {restartNeeded: true, currentScaleFactor: primaryDisplay.scaleFactor,
+      originalScaleFactor: primaryDisplay.scaleFactor};
+  }
+
+  let originalScaleFactor: number;
+  const originalFactorArg = process.argv.find(arg => arg.startsWith(EXTRATERM_DEVICE_SCALE_FACTOR));
+  _log.info("originalFactorArg:", originalFactorArg);
+  if (originalFactorArg != null) {
+    originalScaleFactor = Number.parseFloat(originalFactorArg.slice(EXTRATERM_DEVICE_SCALE_FACTOR.length));
+  } else {
+    originalScaleFactor = primaryDisplay.scaleFactor;
+  }
+  _log.info("originalScaleFactor:", originalScaleFactor);
+  return {restartNeeded: false, currentScaleFactor: primaryDisplay.scaleFactor, originalScaleFactor};
 }
 
 const _log = getLogger("main");
@@ -273,7 +316,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
     if (profiles !== undefined && profiles !== null) {
       profiles.forEach( profile => {
         switch (profile.type) {
-          case config_.SESSION_TYPE_CYGWIN:
+          case SESSION_TYPE_CYGWIN:
             let templateProfile = canonicalCygwinProfile;
             
             if (profile.cygwinDir !== undefined && profile.cygwinDir !== null) {
@@ -284,7 +327,7 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
             if (templateProfile !== null) {
               const expandedProfile: SessionProfile = {
                 name: profile.name,
-                type: config_.SESSION_TYPE_CYGWIN,
+                type: SESSION_TYPE_CYGWIN,
                 command: profile.command !== undefined ? profile.command : templateProfile.command,
                 arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
                 extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv,
@@ -298,12 +341,12 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
           
             break;
             
-          case config_.SESSION_TYPE_BABUN:
+          case SESSION_TYPE_BABUN:
             break;
             
           default:
           _log.info(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
-              `It is neither ${config_.SESSION_TYPE_CYGWIN} nor ${config_.SESSION_TYPE_BABUN}.`);
+              `It is neither ${SESSION_TYPE_CYGWIN} nor ${SESSION_TYPE_BABUN}.`);
             break;
         }
 
@@ -321,11 +364,11 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
         switch (profile.type) {
           case undefined:
           case null:
-          case config_.SESSION_TYPE_UNIX:
+          case SESSION_TYPE_UNIX:
             let templateProfile = canonicalProfile;
             const expandedProfile: SessionProfile = {
               name: profile.name,
-              type: config_.SESSION_TYPE_UNIX,
+              type: SESSION_TYPE_UNIX,
               command: profile.command !== undefined ? profile.command : templateProfile.command,
               arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
               extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv
@@ -349,7 +392,7 @@ function defaultProfile(): SessionProfile {
   const shell = readDefaultUserShell(process.env.USER);
   return {
     name: "Default",
-    type: config_.SESSION_TYPE_UNIX,
+    type: SESSION_TYPE_UNIX,
     command: shell,
     arguments: process.platform === "darwin" ? ["-l"] : [], // OSX expects shells to be login shells. Linux etc doesn't
     extraEnv: { }
@@ -413,7 +456,7 @@ function defaultCygwinProfile(cygwinDir: string): SessionProfile {
   
   return {
     name: "Cygwin",
-    type: config_.SESSION_TYPE_CYGWIN,
+    type: SESSION_TYPE_CYGWIN,
     command: defaultShell,
     arguments: ["-l"],
     extraEnv: { HOME: homeDir },
@@ -500,7 +543,9 @@ function systemConfiguration(config: Config): SystemConfig {
     keyBindingsContexts: keyBindingsJSON,
     keyBindingsFiles: keyBindingFiles,
     availableFonts: getFonts(),
-    titleBarVisible: titleBarVisible
+    titleBarVisible: titleBarVisible,
+    currentScaleFactor: config.systemConfig == null ? 1 : config.systemConfig.currentScaleFactor,
+    originalScaleFactor: config.systemConfig == null ? 1 : config.systemConfig.originalScaleFactor
   };
 }
 
@@ -582,6 +627,8 @@ function initConfig(): void {
     config.themeGUI = "atomic-dark-ui";
   }
 
+  config.uiScalePercent = Math.min(500, Math.max(5, config.uiScalePercent));
+
   if (config.showTitleBar !== true && config.showTitleBar !== false) {
     config.showTitleBar = false;
   }
@@ -622,7 +669,7 @@ function setConfigDefaults(config: Config): void {
   config.expandedProfiles = defaultValue(config.expandedProfiles, null);
   config.blinkingCursor = defaultValue(config.blinkingCursor, false);
   config.scrollbackLines = defaultValue(config.scrollbackLines, 500000);
-  config.showTips = defaultValue<config_.ShowTipsStrEnum>(config.showTips, 'always');
+  config.showTips = defaultValue<ShowTipsStrEnum>(config.showTips, 'always');
   config.tipTimestamp = defaultValue(config.tipTimestamp, 0);
   config.tipCounter = defaultValue(config.tipCounter, 0);
   
@@ -686,8 +733,8 @@ function getThemes(): ThemeInfo[] {
   return themeManager.getAllThemes();
 }
 
-function scanKeyBindingFiles(keyBindingsDir: string): config_.KeyBindingInfo[] {
-  const result: config_.KeyBindingInfo[] = [];
+function scanKeyBindingFiles(keyBindingsDir: string): KeyBindingInfo[] {
+  const result: KeyBindingInfo[] = [];
   if (fs.existsSync(keyBindingsDir)) {
     const contents = fs.readdirSync(keyBindingsDir);
     contents.forEach( (item) => {
@@ -698,7 +745,7 @@ function scanKeyBindingFiles(keyBindingsDir: string): config_.KeyBindingInfo[] {
           const keyBindingJSON = JSON.parse(infoStr);
           const name = keyBindingJSON.name;
           if (name !== undefined) {
-            const info: config_.KeyBindingInfo = {
+            const info: KeyBindingInfo = {
               name: name,
               filename: item
             };
@@ -903,6 +950,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.themeGUI = incomingConfig.themeGUI;
   newConfig.keyBindingsFilename = incomingConfig.keyBindingsFilename;
   newConfig.showTitleBar = incomingConfig.showTitleBar;
+  newConfig.uiScalePercent = incomingConfig.uiScalePercent;
 
   setConfig(newConfig);
 

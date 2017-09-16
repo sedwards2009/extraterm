@@ -12,15 +12,15 @@
 }
 
 :host(:focus) {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
 
 #ID_TOP_LAYOUT {
   position: absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 
   display: flex;
   flex-direction: column;
@@ -28,7 +28,7 @@
 
 #ID_REST_DIV_LEFT {
   & > button {
-    margin-top: 13px;
+    margin-top: pxToRem(13px);
   }
 }
 
@@ -73,7 +73,7 @@ DIV.tab_content > * {
   position: absolute;
   width: 100%;
   
-  top: 6px;
+  top: pxToRem(6px);
   bottom: 0;
   left: 0;
   right: 0;
@@ -86,6 +86,7 @@ ET-TAB:focus {
 DIV.tab_header_container {
   display: flex;
   width: 100%;
+  font-size: 1rem;
 }
 
 DIV.tab_header_icon {
@@ -96,8 +97,8 @@ DIV.tab_header_middle {
   flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-left: 8px;
-  margin-right: 8px;
+  margin-left: pxToRem(8px);
+  margin-right: pxToRem(8px);
 }
 
 DIV.tab_header_tag {
@@ -111,10 +112,10 @@ DIV.tab_header_close {
 
 DIV.tab_header_close > BUTTON {
   vertical-align: text-bottom;
-  border: 0px;
+  border: 0;
   display: inline-block;
   background-color: transparent;
-  border-radius: 2px;
+  border-radius: pxToRem(2px);
 }
 
 DIV.tab_header_close:hover > BUTTON {
@@ -123,9 +124,9 @@ DIV.tab_header_close:hover > BUTTON {
 }
 
 DIV.tab_header_close > BUTTON:focus {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
 
 BUTTON.CLASS_NEW_TAB_BUTTON.CLASS_NEW_TAB_BUTTON.CLASS_NEW_TAB_BUTTON {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }

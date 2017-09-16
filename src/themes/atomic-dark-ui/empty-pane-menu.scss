@@ -5,7 +5,7 @@
 
 
 :host(:focus) {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
 
 #ID_EMPTY_PANE_MENU {
@@ -22,7 +22,7 @@
 }
 
 #ID_CONTAINER {
-  --empty-pane-menu-container-width: 400px;
+  --empty-pane-menu-container-width: pxToRem(400px);
 
   display: block;
 
@@ -36,5 +36,5 @@
 #ID_TITLE {
   width: 100%;
 
-  margin-bottom: 5px;
+  margin-bottom: pxToRem(5px);
 }

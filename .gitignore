@@ -18,6 +18,7 @@ src/Config.js
 src/DomUtils.js
 src/EmbeddedViewer.js
 src/EmptyPaneMenu.js
+src/FileLogWriter.js
 src/FrameFinderType.js
 src/GeneralEvents.js
 src/InternalExtratermApi.js

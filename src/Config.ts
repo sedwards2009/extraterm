@@ -16,6 +16,7 @@ export interface Config {
   themeGUI?: string;
   terminalFont?: string;
   terminalFontSize?: number;  // px
+  uiScalePercent?: number;
 
   commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;
@@ -51,6 +52,8 @@ export interface SystemConfig {
   
   availableFonts: FontInfo[];
   titleBarVisible: boolean;
+  currentScaleFactor: number;
+  originalScaleFactor: number;
 }
 
 export interface FontInfo {

@@ -20,7 +20,8 @@
 // Body reset
 
 html {
-  font-size: 10px;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
   -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 

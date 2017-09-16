@@ -9,13 +9,17 @@
 @import "extraterm-keycaps";
 
 :host(:focus) {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
 
 #ID_KEY_BINDINGS {
   height: 100%;
   overflow: auto;
   padding: $panel-body-padding;
+  
+  & > * {
+    max-width: calc(100% - 1rem);
+  }
 }
 
 .CLASS_KEYCAP {

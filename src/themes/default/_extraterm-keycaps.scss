@@ -13,13 +13,13 @@
   color: #333333;
   border: 1px solid #cccccc;
   border-bottom: 2px solid #cccccc;
-  border-radius: 4px;
-  padding: 0px 2px;
+  border-radius: pxToRem(4px);
+  padding: 0 2px;
   background-color: #ffffff;
   
   & > SPAN {
     font-size: 80%;
     background-color: #f7f7f7;
-    padding: 0px 5px;
+    padding: 0 pxToRem(5px);
   }
 }

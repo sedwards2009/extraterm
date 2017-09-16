@@ -31,7 +31,7 @@
   }
 
   > p + p {
-    margin-top: 5px;
+    margin-top: pxToRem(5px);
   }
 }
 
@@ -46,8 +46,8 @@
   // Adjust close link position
   .close {
     position: relative;
-    top: -2px;
-    right: -21px;
+    top: pxToRem(-2px);
+    right: pxToRem(-21px);
     color: inherit;
   }
 }

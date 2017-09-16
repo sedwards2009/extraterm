@@ -66,12 +66,12 @@ DIV.show_frame > #ID_TABBAR {
 
 #ID_DROP_INDICATOR {
   position: relative;
-  width: 0px;
+  width: 0;
   z-index: 2;
 
-  padding: 0px;
-  margin: 0px;
-  border: 0px;
+  padding: 0;
+  margin: 0;
+  border: 0;
 
   overflow-x: visible !important;
 
@@ -91,12 +91,12 @@ DIV.show_frame > #ID_TABBAR {
   }
 
   &:before {
-    top: -4px;
+    top: pxToRem(-4px);
     content: "\ea06";
   }
 
   &:after {
-    bottom: -4px;
+    bottom: pxToRem(-4px);
     content: "\ea07";
   }
 }

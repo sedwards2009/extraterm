@@ -17,7 +17,7 @@
 }
 
 #ID_CONTAINER:focus {
-  outline: 0px;
+  outline: 0;
 }
 
 /* Note that Blink currently makes these definitions global and now limited to the Shadow DOM! */
@@ -32,7 +32,7 @@
   position: absolute;
   width: 2px;
   border-left: 2px solid rgba(255,255,255,0);
-  top: 0px;
+  top: 0;
   mix-blend-mode: difference;  
 }
 

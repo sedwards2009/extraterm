@@ -65,7 +65,7 @@ DIV.show_frame > #ID_TABBAR {
 
 #ID_DROP_INDICATOR {
   position: relative;
-  width: 0px;
+  width: 0;
   height: 100%;
   z-index: 2;
 
@@ -76,7 +76,7 @@ DIV.show_frame > #ID_TABBAR {
   &:before, &:after {
     position: absolute;
     width: 1em;
-    left: calc(-0.5em - 7.5px);
+    left: calc(-0.5em - pxToRem(7.5px));
 
     pointer-events: none;
 
@@ -85,12 +85,12 @@ DIV.show_frame > #ID_TABBAR {
   }
 
   &:before {
-    top: -3px;
+    top: pxToRem(-3px);
     content: "\ea06";
   }
 
   &:after {
-    bottom: 2px;
+    bottom: pxToRem(2px);
     content: "\ea07";
   }
 }

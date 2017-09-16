@@ -2064,7 +2064,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       viewerElement.setViewerElement(mimeViewerElement);
       viewerElement.setAttribute(EmbeddedViewer.ATTR_FRAME_TITLE, filename);
       viewerElement.setAwesomeIcon(mimeViewerElement.getAwesomeIcon());
-      viewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
+      viewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, "0");
       this._appendScrollableElement(viewerElement);
       this._enforceScrollbackLength(this._scrollbackSize);
     }

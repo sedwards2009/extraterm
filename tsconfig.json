@@ -49,6 +49,7 @@
         "./src/ExtensionLoader.ts",
         "./src/ExtensionLoaderTest.ts",
         "./src/ExtensionManager.ts",
+        "./src/FileLogWriter.ts",
         "./src/FrameFinderType.ts",
         "./src/GeneralEvents.ts",
         "./src/KeyBindingManager.ts",

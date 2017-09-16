@@ -23,12 +23,12 @@
     flex-shrink: 0;
     margin-bottom: 0;
     
-    margin-right: 2px;
+    margin-right: pxToRem(2px);
     line-height: $line-height-base;
     border: 1px solid transparent;
     border-bottom-width: 0;
     border-radius: $border-radius-base $border-radius-base 0 0;
-    padding: 7px 7px 4px 7px;
+    padding: pxToRem(7px) pxToRem(7px) pxToRem(4px) pxToRem(7px);
 
     &:hover, &:focus {
       color: $link-hover-color;
@@ -45,14 +45,14 @@
       border: 1px solid $nav-tabs-active-link-hover-border-color;
       border-bottom-color: transparent;
       cursor: default;      
-      box-shadow: 0px 2px 0px -1px $nav-tabs-active-link-hover-bg;
+      box-shadow: 0 pxToRem(2px) 0 pxToRem(-1px) $nav-tabs-active-link-hover-bg;
     }
   }
 
   > li.remainder {
     flex-grow: 1;
     color: $text-color;
-    padding: 0 0 3px 0;
+    padding: 0 0 pxToRem(3px) 0;
     
     &:hover, &:focus {
       background-color: inherit;
@@ -65,7 +65,7 @@
     flex-grow: 0;
     color: $text-color;
     padding: 0 0 0 0;
-    margin-bottom: 3px;
+    margin-bottom: pxToRem(3px);
     min-width: 0.25em;
 
     &:hover, &:focus {

@@ -18,8 +18,8 @@
   right: 0;
 }
 
-$indicator_margin: 8px;
-$inner_shadow: 32px;
+$indicator_margin: pxToRem(8px);
+$inner_shadow: pxToRem(32px);
 
 #ID_DRAG_COVER {
   position: absolute;
@@ -37,8 +37,8 @@ $inner_shadow: 32px;
     position: absolute;
 
     background-color: rgba(255,255,255, 0.25);
-    box-shadow: 0px 0px #{$indicator_margin} 0px black, inset 0px 0px #{$inner_shadow} 0px white;
-    border-radius: 4px;
+    box-shadow: 0 0 #{$indicator_margin} 0 black, inset 0 0 #{$inner_shadow} 0 white;
+    border-radius: pxToRem(4px);
   }
 
   &.CLASS_DROP_TARGET_MIDDLE:before {

@@ -3,49 +3,50 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as path from 'path';
 import * as Electron from 'electron';
+import * as _ from 'lodash';
+import * as path from 'path';
+import * as SourceMapSupport from 'source-map-support';
+
 const ElectronMenu = Electron.remote.Menu;
 const ElectronMenuItem = Electron.remote.MenuItem;
-import * as SourceMapSupport from 'source-map-support';
-import * as _ from 'lodash';
 
-import {Logger, getLogger} from './Logger';
-import * as Messages from './WindowMessages';
-import * as WebIpc from './WebIpc';
-import {ContextMenu} from './gui/ContextMenu';
-import {MenuItem} from './gui/MenuItem';
-import {DropDown} from './gui/DropDown';
-import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
-import {PopDownListPicker} from './gui/PopDownListPicker';
-import {TabWidget} from './gui/TabWidget';
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
-  from './CommandPaletteRequestTypes';
-import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
-import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-import {ExtensionManager} from './ExtensionManager';
-import {MainWebUi} from './MainWebUi';
-import {EtTerminal} from './Terminal';
-import * as DomUtils from './DomUtils';
-import * as Util from './gui/Util';
-import {EmbeddedViewer} from './EmbeddedViewer';
 import {AboutTab} from './AboutTab';
+import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
+import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
+import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
+    from './CommandPaletteRequestTypes';
+import * as config from './Config';
+import {ContextMenu} from './gui/ContextMenu';
+import * as DomUtils from './DomUtils';
+import {DropDown} from './gui/DropDown';
+import {EmbeddedViewer} from './EmbeddedViewer';
+import {ExtensionManager} from './ExtensionManager';
+import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
+import * as keybindingmanager from './KeyBindingManager';
+import {Logger, getLogger} from './Logger';
+import {MainWebUi} from './MainWebUi';
+import {MenuItem} from './gui/MenuItem';
+import {PopDownListPicker} from './gui/PopDownListPicker';
+import {ResizeCanary} from './ResizeCanary';
+import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {SettingsTab} from './settings/SettingsTab';
+import {TabWidget} from './gui/TabWidget';
+import {EtTerminal} from './Terminal';
 import {TerminalViewer} from './viewers/TerminalViewer';
 import {TextViewer} from'./viewers/TextViewer';
-import {ResizeCanary} from './ResizeCanary';
+import * as ThemeTypes from './Theme';
+import * as ThemeConsumer from './ThemeConsumer';
+import * as Util from './gui/Util';
+import * as WebIpc from './WebIpc';
+import * as Messages from './WindowMessages';
 
-import * as config from './Config';
+type ThemeInfo = ThemeTypes.ThemeInfo;
+
 type Config = config.Config;
 type ConfigManager = config.ConfigManager;
 type SessionProfile = config.SessionProfile;
 
-import * as ThemeTypes from './Theme';
-import * as ThemeConsumer from './ThemeConsumer';
-type ThemeInfo = ThemeTypes.ThemeInfo;
-
-import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 type KeyBindingContexts = keybindingmanager.KeyBindingContexts;
 
@@ -467,12 +468,22 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
     keyBindingManager.setKeyBindingContexts(keyBindingContexts);
   }
 
+  if (oldConfig === null ||
+      oldConfig.systemConfig.originalScaleFactor !== newConfig.systemConfig.originalScaleFactor ||
+      oldConfig.systemConfig.currentScaleFactor !== newConfig.systemConfig.currentScaleFactor ||
+      oldConfig.uiScalePercent !== newConfig.uiScalePercent) {
+    setRootFontScaleFactor(newConfig.systemConfig.originalScaleFactor, newConfig.systemConfig.currentScaleFactor, newConfig.uiScalePercent);
+  }
+
   if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize ||
       oldConfig.terminalFont !== newConfig.terminalFont) {
         
     const matchingFonts = newConfig.systemConfig.availableFonts.filter(
       (font) => font.postscriptName === newConfig.terminalFont);
-    setCssVars(newConfig.terminalFont, matchingFonts[0].path, newConfig.terminalFontSize);
+
+    const scaleFactor = newConfig.systemConfig.originalScaleFactor / newConfig.systemConfig.currentScaleFactor;
+    const fontSize = Math.round(newConfig.terminalFontSize * scaleFactor);
+    setCssVars(newConfig.terminalFont, matchingFonts[0].path, fontSize);
   }
 
   if (oldConfig === null || oldConfig.themeTerminal !== newConfig.themeTerminal ||
@@ -544,6 +555,15 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
       --terminal-font: "${fontCssName}";
     }
     `;
+}
+
+function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor: number, uiScalePercent: number): void {
+  const dpiScaleFactor = originalScaleFactor / currentScaleFactor;
+  const unitHeightPx = 12;
+
+  const rootFontSize = Math.floor(unitHeightPx * uiScalePercent * dpiScaleFactor / 100) + "px";
+  _log.debug("dpiScaleFactor:", dpiScaleFactor, "* uiScalePercent: ", uiScalePercent, " = rootFontSize: ",rootFontSize);
+  window.document.documentElement.style.fontSize = rootFontSize;
 }
 
 //-----------------------------------------------------------------------
