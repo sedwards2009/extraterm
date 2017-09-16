@@ -9,31 +9,34 @@
 import * as _ from 'lodash';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../ViewerElement';
-import * as DomUtils from '../DomUtils';
 import * as Vue from 'vue';
-import * as config from '../Config';
-type Config = config.Config;
-type ConfigManager = config.ConfigManager;
 
-import * as ThemeTypes from '../Theme';
+import * as config from '../Config';
+import * as DomUtils from '../DomUtils';
+import * as GeneralEvents from '../GeneralEvents';
 import {Logger, getLogger} from '../Logger';
 import log from '../LogDecorator';
-import * as GeneralEvents from '../GeneralEvents';
+import * as ThemeTypes from '../Theme';
 import * as ViewerElementTypes from '../ViewerElementTypes';
+
+type Config = config.Config;
+type ConfigManager = config.ConfigManager;
 
 type CommandLineAction = config.CommandLineAction;
 type FontInfo = config.FontInfo;
 
 let registered = false;
 
-const ID_SETTINGS = "ID_SETTINGS";
-const ID_SCROLLBACK = "ID_SCROLLBACK";
-const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
 const ID_COMMAND_OUTPUT_HANDLING = "ID_COMMAND_OUTPUT_HANDLING";
-const CLASS_MATCH_TYPE = "CLASS_MATCH_TYPE";
-const CLASS_MATCH = "CLASS_MATCH";
-const CLASS_FRAME = "CLASS_FRAME";
+const ID_SCROLLBACK = "ID_SCROLLBACK";
+const ID_SETTINGS = "ID_SETTINGS";
+const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
+const ID_UI_ZOOM = "ID_UI_ZOOM";
+
 const CLASS_DELETE = "CLASS_DELETE";
+const CLASS_FRAME = "CLASS_FRAME";
+const CLASS_MATCH = "CLASS_MATCH";
+const CLASS_MATCH_TYPE = "CLASS_MATCH_TYPE";
 
 type TitleBarType = 'native' | 'theme';
 
@@ -47,6 +50,11 @@ interface IdentifiableCommandLineAction extends CommandLineAction, Identifiable 
 
 interface TitleBarOption {
   id: TitleBarType;
+  name: string;
+}
+
+interface UiScalePercentOption {
+  id: number;
   name: string;
 }
 
@@ -69,6 +77,9 @@ interface ModelData {
   
   terminalFont: string;
   terminalFontOptions: FontInfo[];
+
+  uiScalePercent: number;
+  uiScalePercentOptions: UiScalePercentOption[];
 
   titleBar: TitleBarType;
   currentTitleBar: TitleBarType;
@@ -146,6 +157,23 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
       terminalFont: "",
       terminalFontOptions: [],
 
+      uiScalePercent: 100,
+      uiScalePercentOptions: [
+        { id: 25, name: "25%"},
+        { id: 50, name: "50%"},
+        { id: 65, name: "65%"},
+        { id: 80, name: "80%"},
+        { id: 90, name: "90%"},
+        { id: 100, name: "100%"},
+        { id: 110, name: "110%"},
+        { id: 120, name: "120%"},
+        { id: 150, name: "150%"},
+        { id: 175, name: "175%"},
+        { id: 200, name: "200%"},
+        { id: 250, name: "250%"},
+        { id: 300, name: "300%"},
+      ],
+
       titleBar: "theme",
       currentTitleBar: "theme",
       titleBarOptions: [
@@ -210,6 +238,10 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
       this._data.terminalFont = config.terminalFont;
     }
     
+    if (this._data.uiScalePercent !== config.uiScalePercent) {
+      this._data.uiScalePercent = config.uiScalePercent;
+    }
+
     const newFontOptions = [...config.systemConfig.availableFonts];
     newFontOptions.sort( (a,b) => {
       if (a.name === b.name) {
@@ -324,6 +356,17 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
             <input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="form-control" number v-model="terminalFontSize" min='1'
               max='1024' debounce="100" />
             <div class="input-group-addon">pixels</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="${ID_UI_ZOOM}" class="col-sm-2 control-label">Interface Zoom:</label>
+          <div class="col-sm-3">
+            <select class="form-control" id="${ID_UI_ZOOM}" v-model="uiScalePercent">
+              <option v-for="option in uiScalePercentOptions" v-bind:value="option.id">
+                {{ option.name }}
+              </option>          
+            </select>            
           </div>
         </div>
 
@@ -528,6 +571,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
     newConfig.themeSyntax = model.themeSyntax;
     newConfig.themeGUI = model.themeGUI;
     newConfig.showTitleBar = model.titleBar === "native";
+    newConfig.uiScalePercent = model.uiScalePercent;
     this._configManager.setConfig(newConfig);
   }
 }

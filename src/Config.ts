@@ -16,6 +16,7 @@ export interface Config {
   themeGUI?: string;
   terminalFont?: string;
   terminalFontSize?: number;  // px
+  uiScalePercent?: number;
 
   commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;

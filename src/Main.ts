@@ -29,12 +29,12 @@ import {PtyConnector, Pty, PtyOptions, EnvironmentMap} from './PtyConnector';
 const PtyConnectorFactory = require("./PtyConnectorFactory");
 import * as ResourceLoader from './ResourceLoader';
 import * as ThemeTypes from './Theme';
-type ThemeInfo = ThemeTypes.ThemeInfo;
-type ThemeType = ThemeTypes.ThemeType;
 import * as ThemeManager from './ThemeManager';
 import * as Messages from './WindowMessages';
 import * as Util from './gui/Util';
 
+type ThemeInfo = ThemeTypes.ThemeInfo;
+type ThemeType = ThemeTypes.ThemeType;
 
 const LOG_FINE = false;
 
@@ -627,6 +627,8 @@ function initConfig(): void {
     config.themeGUI = ThemeTypes.FALLBACK_UI_THEME;
   }
 
+  config.uiScalePercent = Math.min(500, Math.max(5, config.uiScalePercent));
+
   if (config.showTitleBar !== true && config.showTitleBar !== false) {
     config.showTitleBar = false;
   }
@@ -948,6 +950,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.themeGUI = incomingConfig.themeGUI;
   newConfig.keyBindingsFilename = incomingConfig.keyBindingsFilename;
   newConfig.showTitleBar = incomingConfig.showTitleBar;
+  newConfig.uiScalePercent = incomingConfig.uiScalePercent;
 
   setConfig(newConfig);
 
