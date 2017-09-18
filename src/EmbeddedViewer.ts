@@ -65,6 +65,13 @@ let registered = false;
 
 const DEBUG_SIZE = false;
 
+export enum EmbeddedViewerPosture {
+  RUNNING,
+  SUCCESS,
+  FAILURE,
+}
+
+
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
@@ -107,6 +114,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
+  private _posture: EmbeddedViewerPosture;  
   private _returnCode: string;
   private _title: string;
   private _tag: string;
@@ -128,6 +136,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._tag = "";
     this._title = "";
     this._toolTip = null;
+    this._posture = EmbeddedViewerPosture.RUNNING;
     this._awesomeIcon = null;
     this._visualState = ViewerElementTypes.VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
@@ -302,6 +311,29 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
   }
 
+  getPosture(): EmbeddedViewerPosture {
+    return this._posture;
+  }
+
+  setPosture(posture: EmbeddedViewerPosture): void {
+    this._posture = posture;
+
+    if (DomUtils.getShadowRoot(this) === null) {
+      return;
+    }
+    const container = <HTMLDivElement>this._getById(ID_CONTAINER);
+    
+    container.classList.remove(CLASS_COMMAND_RUNNING);
+    container.classList.remove(CLASS_COMMAND_SUCCEEDED);
+    container.classList.remove(CLASS_COMMAND_FAILED);
+
+    container.classList.add({
+        [EmbeddedViewerPosture.RUNNING]: CLASS_COMMAND_RUNNING,
+        [EmbeddedViewerPosture.SUCCESS]: CLASS_COMMAND_SUCCEEDED,
+        [EmbeddedViewerPosture.FAILURE]: CLASS_COMMAND_FAILED
+      }[posture]);
+  }
+
   getSelectionText(): string {
     const viewerElement = this.getViewerElement();
     return viewerElement === null ? null : viewerElement.getSelectionText();
@@ -344,23 +376,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._returnCode = returnCode;
     if (DomUtils.getShadowRoot(this) === null) {
       return;
-    }
-
-    const container = <HTMLDivElement>this._getById(ID_CONTAINER);
-
-    if (returnCode === null || returnCode === undefined || returnCode === "") {
-      container.classList.add(CLASS_COMMAND_RUNNING);
-      container.classList.remove(CLASS_COMMAND_SUCCEEDED);
-      container.classList.remove(CLASS_COMMAND_FAILED);
-    } else {
-
-      const rc = parseInt(returnCode, 10);
-      container.classList.remove(CLASS_COMMAND_RUNNING);
-      if (rc === 0) {
-        container.classList.add(CLASS_COMMAND_SUCCEEDED);
-      } else {
-        container.classList.add(CLASS_COMMAND_FAILED);
-      }
     }
   }
 
@@ -530,6 +545,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   private _setUpDefaultAttributes(): void {
     this.setTitle(this._title);
+    this.setPosture(this._posture);
     this.setReturnCode(this._returnCode);
     this.setTag(this._tag);
     this.setToolTip(this._toolTip);

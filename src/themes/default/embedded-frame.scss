@@ -23,9 +23,10 @@ $FOREGROUND_COLOR: #d6dfe9;
 
 $FAIL_BACKGROUND_COLOR: #a75b5b;
 
-$RUNNING_COLOR: #d6dfe9;
-$SUCCESS_COLOR: #54ff54;
-$FAIL_COLOR: #ff5454;
+$ICON_RUNNING_COLOR: #d6dfe9;
+$ICON_NEUTRAL_COLOR: $ICON_RUNNING_COLOR;
+$ICON_SUCCESS_COLOR: #54ff54;
+$ICON_FAIL_COLOR: #ff5454;
 
 :host {
   display: block;
@@ -107,7 +108,7 @@ $FAIL_COLOR: #ff5454;
 }
 
 #ID_CONTAINER.success > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
-  color: $SUCCESS_COLOR;          
+  color: $ICON_SUCCESS_COLOR;          
 }
 
 /* *** Comand line DIV *** */
@@ -123,11 +124,11 @@ $FAIL_COLOR: #ff5454;
 }
 
 #ID_CONTAINER.running > #ID_HEADER > #ID_COMMANDLINE {
-  border: pxToRem(1px) solid $RUNNING_COLOR;
+  border: pxToRem(1px) solid $ICON_RUNNING_COLOR;
 }
 
 #ID_CONTAINER.running > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
-  color: $RUNNING_COLOR;
+  color: $ICON_RUNNING_COLOR;
 }
 
 .right_block, #ID_POP_OUT_BUTTON, #ID_CLOSE_BUTTON {
@@ -173,7 +174,7 @@ $FAIL_COLOR: #ff5454;
 }
 
 #ID_CONTAINER.fail > #ID_HEADER > .header_spacer {
-  border-color: rgba($FAIL_COLOR, 0.5);
+  border-color: rgba($ICON_FAIL_COLOR, 0.5);
 }
 
 #ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT_CONTAINER {

@@ -16,7 +16,7 @@ import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from './Theme';
-import {EmbeddedViewer} from './EmbeddedViewer';
+import {EmbeddedViewer, EmbeddedViewerPosture} from './EmbeddedViewer';
 import {CommandPlaceHolder} from './CommandPlaceholder';
 import {TerminalViewer} from './viewers/TerminalViewer';
 import {TextDecoration, BookmarkRef} from './viewers/TerminalViewerTypes';
@@ -1866,6 +1866,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
       // Hang the terminal viewer under the Embedded viewer.
       embeddedViewerElement.setReturnCode(returnCode);
+      embeddedViewerElement.setPosture(returnCode ==='0' ? EmbeddedViewerPosture.SUCCESS : EmbeddedViewerPosture.FAILURE);
       embeddedViewerElement.setAwesomeIcon(returnCode === '0' ? 'check' : 'times');
       embeddedViewerElement.setToolTip("Return code: " + returnCode);
       embeddedViewerElement.className = "extraterm_output";
@@ -1913,6 +1914,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const newViewerElement = this._createEmbeddedViewerElement(this._lastCommandLine);
       // Hang the terminal viewer under the Embedded viewer.
       newViewerElement.setReturnCode(returnCode);
+      newViewerElement.setPosture(returnCode ==='0' ? EmbeddedViewerPosture.SUCCESS : EmbeddedViewerPosture.FAILURE);      
       newViewerElement.setAwesomeIcon('times');
       newViewerElement.setToolTip("Return code: " + returnCode);
       newViewerElement.className = "extraterm_output";
@@ -2065,6 +2067,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       viewerElement.setTitle(filename);
       viewerElement.setAwesomeIcon(mimeViewerElement.getAwesomeIcon());
       viewerElement.setReturnCode("0");
+      viewerElement.setPosture(EmbeddedViewerPosture.SUCCESS);
       this._appendScrollableElement(viewerElement);
       this._enforceScrollbackLength(this._scrollbackSize);
     }
