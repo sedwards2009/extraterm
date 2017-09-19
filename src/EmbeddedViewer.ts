@@ -57,15 +57,17 @@ const CLASS_SCROLLING = "scrolling";
 const CLASS_NOT_SCROLLING = "not-scrolling";
 const CLASS_BOTTOM_VISIBLE = "bottom-visible";
 const CLASS_BOTTOM_NOT_VISIBLE = "bottom-not-visible";
-const CLASS_COMMAND_RUNNING = "running";
-const CLASS_COMMAND_FAILED = "fail";
-const CLASS_COMMAND_SUCCEEDED = "success";
+const CLASS_RUNNING = "CLASS_RUNNING";
+const CLASS_FAILED = "CLASS_FAILED";
+const CLASS_SUCCEEDED = "CLASS_SUCCEEDED";
+const CLASS_NEUTRAL = "CLASS_NEUTRAL";
 
 let registered = false;
 
 const DEBUG_SIZE = false;
 
 export enum EmbeddedViewerPosture {
+  NEUTRAL,
   RUNNING,
   SUCCESS,
   FAILURE,
@@ -323,14 +325,15 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
     const container = <HTMLDivElement>this._getById(ID_CONTAINER);
     
-    container.classList.remove(CLASS_COMMAND_RUNNING);
-    container.classList.remove(CLASS_COMMAND_SUCCEEDED);
-    container.classList.remove(CLASS_COMMAND_FAILED);
+    container.classList.remove(CLASS_RUNNING);
+    container.classList.remove(CLASS_SUCCEEDED);
+    container.classList.remove(CLASS_FAILED);
 
     container.classList.add({
-        [EmbeddedViewerPosture.RUNNING]: CLASS_COMMAND_RUNNING,
-        [EmbeddedViewerPosture.SUCCESS]: CLASS_COMMAND_SUCCEEDED,
-        [EmbeddedViewerPosture.FAILURE]: CLASS_COMMAND_FAILED
+        [EmbeddedViewerPosture.RUNNING]: CLASS_RUNNING,
+        [EmbeddedViewerPosture.SUCCESS]: CLASS_SUCCEEDED,
+        [EmbeddedViewerPosture.FAILURE]: CLASS_FAILED,
+        [EmbeddedViewerPosture.NEUTRAL]: CLASS_NEUTRAL,
       }[posture]);
   }
 
@@ -408,10 +411,10 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   setAwesomeIcon(iconName: string): void {
+    this._awesomeIcon = iconName;
     if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
-    this._awesomeIcon = iconName;
     const icon = <HTMLDivElement>this._getById(ID_ICON);
     icon.className = "fa " + (iconName !== null && iconName !== undefined && iconName !== "" ? "fa-" : "") + iconName;
   }
@@ -670,7 +673,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       
       template.innerHTML = `
         <style id=${ThemeableElementBase.ID_THEME}></style>
-        <div id='${ID_CONTAINER}' style='display: none;' class='${CLASS_COMMAND_RUNNING}'>
+        <div id='${ID_CONTAINER}' style='display: none;' class='${CLASS_RUNNING}'>
           <div id='${ID_HEADER}' tabindex='0' draggable='true'>
             <div class='left_block'>
               <div id='${ID_ICON_DIV}'><i id='${ID_ICON}'></i></div>

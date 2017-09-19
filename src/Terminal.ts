@@ -1866,6 +1866,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
       // Hang the terminal viewer under the Embedded viewer.
       embeddedViewerElement.setReturnCode(returnCode);
+      embeddedViewerElement.setToolTip(`Return code: %{returnCode}`);
       embeddedViewerElement.setPosture(returnCode ==='0' ? EmbeddedViewerPosture.SUCCESS : EmbeddedViewerPosture.FAILURE);
       embeddedViewerElement.setAwesomeIcon(returnCode === '0' ? 'check' : 'times');
       embeddedViewerElement.setToolTip("Return code: " + returnCode);
@@ -1914,7 +1915,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const newViewerElement = this._createEmbeddedViewerElement(this._lastCommandLine);
       // Hang the terminal viewer under the Embedded viewer.
       newViewerElement.setReturnCode(returnCode);
-      newViewerElement.setPosture(returnCode ==='0' ? EmbeddedViewerPosture.SUCCESS : EmbeddedViewerPosture.FAILURE);      
+      newViewerElement.setToolTip(`Return code: %{returnCode}`);
+      newViewerElement.setPosture(returnCode ==='0' ? EmbeddedViewerPosture.SUCCESS : EmbeddedViewerPosture.FAILURE);
       newViewerElement.setAwesomeIcon('times');
       newViewerElement.setToolTip("Return code: " + returnCode);
       newViewerElement.className = "extraterm_output";
@@ -2058,7 +2060,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  private _appendMimeViewer(mimeType:string, filename: string, charset: string, data: Buffer): void {
+  private _appendMimeViewer(mimeType: string, filename: string, charset: string, data: Buffer): void {
     const mimeViewerElement = this._createMimeViewer(mimeType, charset, data);
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
@@ -2067,7 +2069,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       viewerElement.setTitle(filename);
       viewerElement.setAwesomeIcon(mimeViewerElement.getAwesomeIcon());
       viewerElement.setReturnCode("0");
-      viewerElement.setPosture(EmbeddedViewerPosture.SUCCESS);
+      viewerElement.setPosture(EmbeddedViewerPosture.NEUTRAL);
       this._appendScrollableElement(viewerElement);
       this._enforceScrollbackLength(this._scrollbackSize);
     }

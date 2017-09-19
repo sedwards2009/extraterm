@@ -107,8 +107,12 @@ $ICON_FAIL_COLOR: #ff5454;
   display: inline-block;
 }
 
-#ID_CONTAINER.success > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
+#ID_CONTAINER.CLASS_SUCCEEDED > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
   color: $ICON_SUCCESS_COLOR;          
+}
+
+#ID_CONTAINER.CLASS_NEUTRAL > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
+  color: $ICON_NEUTRAL_COLOR;
 }
 
 /* *** Comand line DIV *** */
@@ -123,12 +127,18 @@ $ICON_FAIL_COLOR: #ff5454;
   color: $FOREGROUND_COLOR;
 }
 
-#ID_CONTAINER.running > #ID_HEADER > #ID_COMMANDLINE {
-  border: pxToRem(1px) solid $ICON_RUNNING_COLOR;
-}
 
-#ID_CONTAINER.running > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
-  color: $ICON_RUNNING_COLOR;
+#ID_CONTAINER.CLASS_RUNNING > #ID_HEADER {
+  border-bottom-left-radius: $CORNER_RADIUS;
+  border-bottom-right-radius: $CORNER_RADIUS;
+
+  & > #ID_COMMANDLINE {
+    border: pxToRem(1px) solid $ICON_RUNNING_COLOR;
+  }
+
+  & > DIV.left_block > #ID_ICON_DIV {
+    color: $ICON_RUNNING_COLOR;
+  }
 }
 
 .right_block, #ID_POP_OUT_BUTTON, #ID_CLOSE_BUTTON {
@@ -160,21 +170,12 @@ $ICON_FAIL_COLOR: #ff5454;
   border-bottom: $TEAR_BORDER_HEIGHT solid $LITE_BACKGROUND_COLOR;
 }
 
-#ID_CONTAINER.not-scrolling.fail > #ID_HEADER {
+#ID_CONTAINER.not-scrolling.CLASS_FAILED > #ID_HEADER {
   border-bottom: $TEAR_BORDER_HEIGHT solid $FAIL_BACKGROUND_COLOR;
 }
 
 #ID_CONTAINER.scrolling > #ID_HEADER {
   border-bottom: $TEAR_BORDER_HEIGHT dashed var(--terminal-background-color);
-}
-
-#ID_CONTAINER.running > #ID_HEADER {
-  border-bottom-left-radius: $CORNER_RADIUS;
-  border-bottom-right-radius: $CORNER_RADIUS;
-}
-
-#ID_CONTAINER.fail > #ID_HEADER > .header_spacer {
-  border-color: rgba($ICON_FAIL_COLOR, 0.5);
 }
 
 #ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT_CONTAINER {
@@ -184,22 +185,30 @@ $ICON_FAIL_COLOR: #ff5454;
 }
 
 // Success mode
-#ID_CONTAINER.success > #ID_OUTPUT_CONTAINER {
+#ID_CONTAINER.CLASS_SUCCEEDED > #ID_OUTPUT_CONTAINER, #ID_CONTAINER.CLASS_NEUTRAL > #ID_OUTPUT_CONTAINER {
   border-left-color: $LITE_BACKGROUND_COLOR;
   border-right-color: $LITE_BACKGROUND_COLOR;
   border-bottom-color: $LITE_BACKGROUND_COLOR;
 }
 
 // Fail mode
-#ID_CONTAINER.fail > #ID_HEADER {
-  background-color: $FAIL_BACKGROUND_COLOR;
+#ID_CONTAINER.CLASS_FAILED {
+
+  & > #ID_HEADER {
+    background-color: $FAIL_BACKGROUND_COLOR;
+
+    & > .header_spacer {
+      border-color: rgba($ICON_FAIL_COLOR, 0.5);      
+    }
+  }
+
+  & > #ID_OUTPUT_CONTAINER {
+    border-left-color: $FAIL_BACKGROUND_COLOR;
+    border-right-color: $FAIL_BACKGROUND_COLOR;
+    border-bottom-color: $FAIL_BACKGROUND_COLOR;
+  }
 }
 
-#ID_CONTAINER.fail > #ID_OUTPUT_CONTAINER {
-  border-left-color: $FAIL_BACKGROUND_COLOR;
-  border-right-color: $FAIL_BACKGROUND_COLOR;
-  border-bottom-color: $FAIL_BACKGROUND_COLOR;
-}
 
 .header_spacer {
   flex: 0em 1 1;
