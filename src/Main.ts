@@ -627,7 +627,7 @@ function initConfig(): void {
     config.themeGUI = "atomic-dark-ui";
   }
 
-  config.uiScalePercent = Math.min(500, Math.max(5, config.uiScalePercent));
+  config.uiScalePercent = Math.min(500, Math.max(5, config.uiScalePercent || 100));
 
   if (config.showTitleBar !== true && config.showTitleBar !== false) {
     config.showTitleBar = false;
