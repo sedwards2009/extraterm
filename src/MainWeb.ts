@@ -561,7 +561,7 @@ function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor:
   const dpiScaleFactor = originalScaleFactor / currentScaleFactor;
   const unitHeightPx = 12;
 
-  const rootFontSize = Math.floor(unitHeightPx * uiScalePercent * dpiScaleFactor / 100) + "px";
+  const rootFontSize = Math.max(Math.floor(unitHeightPx * uiScalePercent * dpiScaleFactor / 100), 5) + "px";
   _log.debug("dpiScaleFactor:", dpiScaleFactor, "* uiScalePercent: ", uiScalePercent, " = rootFontSize: ",rootFontSize);
   window.document.documentElement.style.fontSize = rootFontSize;
 }
