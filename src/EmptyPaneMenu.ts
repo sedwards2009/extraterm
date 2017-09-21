@@ -16,9 +16,10 @@ import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandMenuIte
 import {Logger, getLogger} from './Logger';
 import log from './LogDecorator';
 
+const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
+const ID_CONTAINER = "ID_CONTAINER";
 const ID_EMPTY_PANE_MENU = "ID_EMPTY_PANE_MENU";
 const ID_LIST_PICKER = "ID_LIST_PICKER";
-const ID_CONTAINER = "ID_CONTAINER";
 const ID_TITLE = "ID_TITLE";
 
 let registered = false;
@@ -140,10 +141,11 @@ export class EmptyPaneMenu extends ThemeableElementBase {
       const divContainer = document.createElement('div');
       divContainer.id = ID_EMPTY_PANE_MENU;
       divContainer.innerHTML = `<div id="${ID_CONTAINER}">
-        <div id="${ID_TITLE}">Pane Menu</div>
+        <div id="${ID_TITLE}">Pane Menu<button id=${ID_CLOSE_BUTTON}><i class="fa fa-times"></i></button></div>
         <${ListPicker.TAG_NAME} id="${ID_LIST_PICKER}"></${ListPicker.TAG_NAME}>
+        
       </div>
-  `;
+      `;
 
       shadow.appendChild(themeStyle);
       shadow.appendChild(divContainer);    
@@ -160,6 +162,12 @@ export class EmptyPaneMenu extends ThemeableElementBase {
       
       listPicker.setEntries(this._entries);
       
+      const closeButton = DomUtils.getShadowId(this, ID_CLOSE_BUTTON);
+      closeButton.addEventListener('click', () => {
+        const event = new CustomEvent("selected", { detail: {selected: 'closePane' } });
+        this.dispatchEvent(event);
+      });
+
       this.updateThemeCss();
     }
   }
