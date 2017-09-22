@@ -267,9 +267,11 @@ function startUpResizeCanary(): void {
 }    
 
 function startUpWindowEvents(): void {
-  // Make sure something sensible is focussed if the window gets the focus.
-  window.addEventListener('focus', () => {
-    mainWebUi.focus();
+  // Make sure something sensible is focussed if only the window gets the focus.
+  window.addEventListener('focus', (ev: FocusEvent) => {
+    if (ev.target === window) {
+      mainWebUi.focus();
+    }
   });
 
   window.addEventListener('resize', () => {
