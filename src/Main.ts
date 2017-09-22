@@ -205,7 +205,8 @@ function setScaleFactor(): {restartNeeded: boolean, currentScaleFactor: number, 
   _log.info("Display scale factor is ", primaryDisplay.scaleFactor);
   if (primaryDisplay.scaleFactor !== 1 && primaryDisplay.scaleFactor !== 2) {
     const scaleFactor = primaryDisplay.scaleFactor < 1.5 ? 1 : 2;
-    app.relaunch({args: process.argv.slice(1).concat([
+    _log.info("argv[0]: ",process.argv[0]);
+    app.relaunch({execPath: process.argv[0], args: process.argv.slice(1).concat([
       '--relaunch',
       '--force-device-scale-factor=' + scaleFactor,
       EXTRATERM_DEVICE_SCALE_FACTOR + primaryDisplay.scaleFactor
