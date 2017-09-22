@@ -4,9 +4,9 @@
 
 @import "bootstrap/variables";
 
-$scrollbar-size: 12px;
-$scrollbar-radius: 6px;
-$scrollbar-pad: 2px;
+$scrollbar-size: pxToRem(12px);
+$scrollbar-radius: pxToRem(6px);
+$scrollbar-pad: pxToRem(2px);
 
 ::-webkit-scrollbar {
   width: $scrollbar-size;

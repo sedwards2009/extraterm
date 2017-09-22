@@ -57,13 +57,22 @@ const CLASS_SCROLLING = "scrolling";
 const CLASS_NOT_SCROLLING = "not-scrolling";
 const CLASS_BOTTOM_VISIBLE = "bottom-visible";
 const CLASS_BOTTOM_NOT_VISIBLE = "bottom-not-visible";
-const CLASS_COMMAND_RUNNING = "running";
-const CLASS_COMMAND_FAILED = "fail";
-const CLASS_COMMAND_SUCCEEDED = "success";
+const CLASS_RUNNING = "CLASS_RUNNING";
+const CLASS_FAILED = "CLASS_FAILED";
+const CLASS_SUCCEEDED = "CLASS_SUCCEEDED";
+const CLASS_NEUTRAL = "CLASS_NEUTRAL";
 
 let registered = false;
 
 const DEBUG_SIZE = false;
+
+export enum EmbeddedViewerPosture {
+  NEUTRAL,
+  RUNNING,
+  SUCCESS,
+  FAILURE,
+}
+
 
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
@@ -75,24 +84,10 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
    * The HTML tag name of this element.
    */
   static TAG_NAME = 'ET-EMBEDDEDVIEWER';
-  
+
   static EVENT_CLOSE_REQUEST = 'close-request';
-  
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';
-  
   static EVENT_SCROLL_MOVE = 'scroll-move';
-  
-  static ATTR_FRAME_TITLE = 'frame-title';
-
-  static ATTR_RETURN_CODE = "return-code";
-
-  static ATTR_EXPAND = 'expand';
-
-  static ATTR_TAG = 'tag';
-  
-  static ATTR_TOOL_TIP = 'tool-tip';
-
-  static ATTR_AWESOME_ICON = 'awesome-icon';
 
   /**
    * Initialize the EtEmbeddedViewer class and resources.
@@ -121,24 +116,30 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-
+  private _posture: EmbeddedViewerPosture;  
+  private _returnCode: string;
+  private _title: string;
+  private _tag: string;
+  private _toolTip: string;
+  private _awesomeIcon: string;
   private _visualState: VisualState;
-
   private _mode: ViewerElementTypes.Mode;
-
   private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
-
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
-
   private _requestContainerHeight: boolean; // true if the container needs a height update.
   private _requestContainerScroll: boolean; // true if the container needs scroll to be set.
   private _requestContainerYScroll: number; // the new scroll Y to use during update.
-
   private _headerTop: number;
   private _headerBottom: number;
 
   private _initProperties(): void {
     this._log = getLogger(EmbeddedViewer.TAG_NAME, this);
+    this._returnCode = null;
+    this._tag = "";
+    this._title = "";
+    this._toolTip = null;
+    this._posture = EmbeddedViewerPosture.RUNNING;
+    this._awesomeIcon = null;
     this._visualState = ViewerElementTypes.VisualState.AUTO;
     this._mode = ViewerElementTypes.Mode.DEFAULT;
     this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
@@ -312,6 +313,30 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
   }
 
+  getPosture(): EmbeddedViewerPosture {
+    return this._posture;
+  }
+
+  setPosture(posture: EmbeddedViewerPosture): void {
+    this._posture = posture;
+
+    if (DomUtils.getShadowRoot(this) === null) {
+      return;
+    }
+    const container = <HTMLDivElement>this._getById(ID_CONTAINER);
+    
+    container.classList.remove(CLASS_RUNNING);
+    container.classList.remove(CLASS_SUCCEEDED);
+    container.classList.remove(CLASS_FAILED);
+
+    container.classList.add({
+        [EmbeddedViewerPosture.RUNNING]: CLASS_RUNNING,
+        [EmbeddedViewerPosture.SUCCESS]: CLASS_SUCCEEDED,
+        [EmbeddedViewerPosture.FAILURE]: CLASS_FAILED,
+        [EmbeddedViewerPosture.NEUTRAL]: CLASS_NEUTRAL,
+      }[posture]);
+  }
+
   getSelectionText(): string {
     const viewerElement = this.getViewerElement();
     return viewerElement === null ? null : viewerElement.getSelectionText();
@@ -326,19 +351,55 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
   
   setTag(tag: string): void {
-    this.setAttribute(EmbeddedViewer.ATTR_TAG, tag);
+    this._tag = tag;
+    if (DomUtils.getShadowRoot(this) === null) {
+      return;
+    }
+    const tagName = <HTMLDivElement>this._getById(ID_TAG_NAME);
+    tagName.innerText = tag;
   }
   
   getTag(): string {
-    return this.getAttribute(EmbeddedViewer.ATTR_TAG);
+    return this._tag;
   }
 
   setTitle(newTitle: string): void {
-    this.setAttribute(EmbeddedViewer.ATTR_FRAME_TITLE, newTitle);
+    this._title = newTitle;
+    if (DomUtils.getShadowRoot(this) === null) {
+      return;
+    }
+    (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).innerText = newTitle;
   }
 
   getTitle(): string {
-    return this.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE);
+    return this._title;
+  }
+
+  setReturnCode(returnCode: string): void {
+    this._returnCode = returnCode;
+    if (DomUtils.getShadowRoot(this) === null) {
+      return;
+    }
+  }
+
+  getReturnCode(): string {
+    return this._returnCode;
+  }
+
+  setToolTip(toolTip: string): void {
+    this._toolTip = toolTip;
+    if (DomUtils.getShadowRoot(this) === null) {
+      return;
+    }
+    
+    const iconDiv = <HTMLDivElement>this._getById(ID_ICON_DIV);
+    if (toolTip !== null) {
+      iconDiv.setAttribute('title', toolTip);
+    }
+  }
+
+  getToolTip(): string {
+    return this._toolTip;
   }
 
   hasFocus(): boolean {
@@ -349,22 +410,17 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     return el.hasFocus();
   }
 
-  setReturnCode(returnCode: number): void {
-    this.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE,
-      returnCode === null || returnCode === undefined ? null : "" + returnCode);
-  }
-
-  getReturnCode(): number {
-    const rcString = this.getAttribute(EmbeddedViewer.ATTR_RETURN_CODE);
-    return rcString === null || rcString === undefined ? null : parseInt(rcString, 10);
-  }
-
   setAwesomeIcon(iconName: string): void {
-    this.setAttribute(EmbeddedViewer.ATTR_AWESOME_ICON, iconName);
+    this._awesomeIcon = iconName;
+    if (DomUtils.getShadowRoot(this) === null) {
+      return;
+    }
+    const icon = <HTMLDivElement>this._getById(ID_ICON);
+    icon.className = "fa " + (iconName !== null && iconName !== undefined && iconName !== "" ? "fa-" : "") + iconName;
   }
 
   getAwesomeIcon(): string {
-    return this.getAttribute(EmbeddedViewer.ATTR_AWESOME_ICON);
+    return this._awesomeIcon;
   }
 
   canPaste(): boolean {
@@ -491,12 +547,12 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   private _setUpDefaultAttributes(): void {
-    this._setAttr(EmbeddedViewer.ATTR_FRAME_TITLE, this.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE));
-    this._setAttr(EmbeddedViewer.ATTR_RETURN_CODE, this.getAttribute(EmbeddedViewer.ATTR_RETURN_CODE));
-    this._setAttr(EmbeddedViewer.ATTR_EXPAND, this.getAttribute(EmbeddedViewer.ATTR_EXPAND));
-    this._setAttr(EmbeddedViewer.ATTR_TAG, this.getAttribute(EmbeddedViewer.ATTR_TAG));
-    this._setAttr(EmbeddedViewer.ATTR_TOOL_TIP, this.getAttribute(EmbeddedViewer.ATTR_TOOL_TIP));
-    this._setAttr(EmbeddedViewer.ATTR_AWESOME_ICON, this.getAttribute(EmbeddedViewer.ATTR_AWESOME_ICON));
+    this.setTitle(this._title);
+    this.setPosture(this._posture);
+    this.setReturnCode(this._returnCode);
+    this.setTag(this._tag);
+    this.setToolTip(this._toolTip);
+    this.setAwesomeIcon(this._awesomeIcon);
   }
 
   private _setUpEventHandlers(): void {
@@ -565,18 +621,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this.setDimensionsAndScroll(setterState);
   }
 
-
-  static get observedAttributes(): string[] {
-    return [
-      EmbeddedViewer.ATTR_FRAME_TITLE,
-      EmbeddedViewer.ATTR_RETURN_CODE,
-      EmbeddedViewer.ATTR_EXPAND,
-      EmbeddedViewer.ATTR_TAG,
-      EmbeddedViewer.ATTR_TOOL_TIP,
-      EmbeddedViewer.ATTR_AWESOME_ICON
-    ];
-  }
-
   private _handleDragStart(ev: DragEvent): void {
     ev.stopPropagation();
 
@@ -599,13 +643,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _handleDragEnd(ev: DragEvent): void {
     const dragEndedEvent = new CustomEvent(EVENT_DRAG_ENDED, { bubbles: true });
     this.dispatchEvent(dragEndedEvent);
-  }
-
-  /**
-   * Custom Element 'attribute changed' hook.
-   */
-  attributeChangedCallback(attrName: string, oldValue: string, newValue: string) {
-    this._setAttr(attrName, newValue);
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -636,7 +673,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       
       template.innerHTML = `
         <style id=${ThemeableElementBase.ID_THEME}></style>
-        <div id='${ID_CONTAINER}' style='display: none;' class='${CLASS_COMMAND_RUNNING}'>
+        <div id='${ID_CONTAINER}' style='display: none;' class='${CLASS_RUNNING}'>
           <div id='${ID_HEADER}' tabindex='0' draggable='true'>
             <div class='left_block'>
               <div id='${ID_ICON_DIV}'><i id='${ID_ICON}'></i></div>
@@ -646,6 +683,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
             <div class='right_block'>
               <div id='${ID_SCROLL_ICON}'><i class='fa fa-arrows-v'></i></div>
               <div id='${ID_SCROLL_NAME}'></div>
+              <div class='spacer'></div>
               <div id='${ID_TAG_ICON}'><i class='fa fa-tag'></i></div>
               <div id='${ID_TAG_NAME}'></div>
               <div class='spacer'></div>
@@ -666,77 +704,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   private _getById(id: string): Element {
     return DomUtils.getShadowRoot(this).querySelector('#'+id);
-  }
-
-  /**
-   * Process an attribute value change.
-   */
-  private _setAttr(attrName: string, newValue: string): void {
-    if (DomUtils.getShadowRoot(this) === null) {
-      return;
-    }
-
-    if (attrName === EmbeddedViewer.ATTR_FRAME_TITLE) {
-      (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).innerText = newValue;
-      return;
-    }
-
-    if (attrName === EmbeddedViewer.ATTR_RETURN_CODE) {
-      const container = <HTMLDivElement>this._getById(ID_CONTAINER);
-
-      if (newValue === null || newValue === undefined || newValue === "") {
-        container.classList.add(CLASS_COMMAND_RUNNING);
-        container.classList.remove(CLASS_COMMAND_SUCCEEDED);
-        container.classList.remove(CLASS_COMMAND_FAILED);
-      } else {
-
-        const rc = parseInt(newValue, 10);
-        container.classList.remove(CLASS_COMMAND_RUNNING);
-        if (rc === 0) {
-          container.classList.add(CLASS_COMMAND_SUCCEEDED);
-        } else {
-          container.classList.add(CLASS_COMMAND_FAILED);
-        }
-      }
-
-      return;
-    }
-
-    if (attrName === EmbeddedViewer.ATTR_EXPAND) {
-      const output = <HTMLDivElement>this._getById(ID_OUTPUT);
-      // const expandicon = <HTMLDivElement>this._getById(ID_EXPAND_ICON);
-      if (Util.htmlValueToBool(newValue, true)) {
-        // Expanded.
-        output.classList.remove('closed');
-        // expandicon.classList.remove('fa-plus-square-o');
-        // expandicon.classList.add('fa-minus-square-o');
-        // (<checkboxmenuitem>this._getById(ID_EXPAND_MENU_ITEM)).setAttribute('checked', "true");
-      } else {
-        // Collapsed.
-        output.classList.add('closed');
-        // expandicon.classList.add('fa-plus-square-o');
-        // expandicon.classList.remove('fa-minus-square-o');
-        // (<checkboxmenuitem>this._getById(ID_EXPAND_MENU_ITEM)).setAttribute('checked', "false");
-      }
-      return;
-    }
-
-    if (attrName === EmbeddedViewer.ATTR_TAG) {
-      const tagName = <HTMLDivElement>this._getById(ID_TAG_NAME);
-      tagName.innerText = newValue;
-    }
-    
-    if (attrName === EmbeddedViewer.ATTR_TOOL_TIP) {
-      const iconDiv = <HTMLDivElement>this._getById(ID_ICON_DIV);
-      if (newValue !== null) {
-        iconDiv.setAttribute('title', newValue);
-      }
-    }
-    
-    if (attrName === EmbeddedViewer.ATTR_AWESOME_ICON) {
-      const icon = <HTMLDivElement>this._getById(ID_ICON);
-      icon.className = "fa " + (newValue !== null && newValue !== undefined && newValue !== "" ? "fa-" : "") + newValue;
-    }
   }
 
   private _borderSize(): {top: number; bottom: number;} {

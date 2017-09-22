@@ -1,0 +1,7 @@
+@function pxToRem($pixels) {
+  @if (unitless($pixels)) {
+    $pixels: $pixels * 1px;
+  }
+
+  @return $pixels / 12px * 1rem;  // 12px ~= 9pt root font size
+}

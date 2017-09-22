@@ -1,3 +1,5 @@
+@import "./px-to-rem";
+
 // Spacelab 3.3.5
 // Bootswatch
 // -----------------------------------------------------
@@ -59,8 +61,8 @@
 
   &-nav > li > a,
   &-nav > li > a:hover {
-    padding-top: ($navbar-padding-vertical + 2px);
-    padding-bottom: ($navbar-padding-vertical - 2px);
+    padding-top: ($navbar-padding-vertical + pxToRem(2px));
+    padding-bottom: ($navbar-padding-vertical - pxToRem(2px));
     @include transition(color ease-in-out .2s);
   }
   
@@ -139,7 +141,7 @@
   &:active,
   &.active {
     background-image: none;
-    @include box-shadow(inset 0 3px 5px rgba(0,0,0,.125));
+    @include box-shadow(inset 0 pxToRem(3px) pxToRem(5px) rgba(0,0,0,.125));
   }
 }
 

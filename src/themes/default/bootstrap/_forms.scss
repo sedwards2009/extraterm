@@ -32,7 +32,7 @@ legend {
 label {
   display: inline-block;
   max-width: 100%; // Force IE8 to wrap long content (see https://github.com/twbs/bootstrap/issues/13141)
-  margin-bottom: 5px;
+  margin-bottom: pxToRem(5px);
   font-weight: bold;
 }
 
@@ -51,8 +51,8 @@ input[type="search"] {
 // Position radios and checkboxes better
 input[type="radio"],
 input[type="checkbox"] {
-  margin: 4px 0 0;
-  margin-top: 1px \9; // IE8-9
+  margin: pxToRem(4px) 0 0;
+  margin-top: pxToRem(1px) \9; // IE8-9
   line-height: normal;
 }
 
@@ -82,7 +82,7 @@ input[type="checkbox"]:focus {
 // Adjust output element
 output {
   display: block;
-  padding-top: ($padding-base-vertical + 1);
+  padding-top: ($padding-base-vertical + pxToRem(1px));
   font-size: $font-size-base;
   line-height: $line-height-base;
   color: $input-color;
@@ -123,7 +123,7 @@ output {
   background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
   border: 1px solid $input-border;
   border-radius: $input-border-radius; // Note: This has no effect on <select>s in some browsers, due to the limited stylability of <select>s in CSS.
-  @include box-shadow(inset 0 1px 1px rgba(0,0,0,.075));
+  @include box-shadow(inset 0 pxToRem(1px) pxToRem(1px) rgba(0,0,0,.075));
   @include transition(border-color ease-in-out .15s, box-shadow ease-in-out .15s);
 
   // Customize the `:focus` state to imitate native WebKit styles.
@@ -225,12 +225,12 @@ input[type="search"] {
 .checkbox {
   position: relative;
   display: block;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: pxToRem(10px);
+  margin-bottom: pxToRem(10px);
 
   label {
     min-height: $line-height-computed; // Ensure the input doesn't jump when there is no text
-    padding-left: 20px;
+    padding-left: pxToRem(20px);
     margin-bottom: 0;
     font-weight: normal;
     cursor: pointer;
@@ -241,13 +241,13 @@ input[type="search"] {
 .checkbox input[type="checkbox"],
 .checkbox-inline input[type="checkbox"] {
   position: absolute;
-  margin-left: -20px;
-  margin-top: 4px \9;
+  margin-left: pxToRem(-20px);
+  margin-top: pxToRem(4px) \9;
 }
 
 .radio + .radio,
 .checkbox + .checkbox {
-  margin-top: -5px; // Move up sibling radios or checkboxes for tighter spacing
+  margin-top: pxToRem(-5px); // Move up sibling radios or checkboxes for tighter spacing
 }
 
 // Radios and checkboxes on same line
@@ -255,7 +255,7 @@ input[type="search"] {
 .checkbox-inline {
   position: relative;
   display: inline-block;
-  padding-left: 20px;
+  padding-left: pxToRem(20px);
   margin-bottom: 0;
   vertical-align: middle;
   font-weight: normal;
@@ -264,7 +264,7 @@ input[type="search"] {
 .radio-inline + .radio-inline,
 .checkbox-inline + .checkbox-inline {
   margin-top: 0;
-  margin-left: 10px; // space out consecutive inline controls
+  margin-left: pxToRem(10px); // space out consecutive inline controls
 }
 
 // Apply same disabled cursor tweak as for inputs
@@ -306,8 +306,8 @@ input[type="checkbox"] {
 
 .form-control-static {
   // Size it appropriately next to real form controls
-  padding-top: ($padding-base-vertical + 1);
-  padding-bottom: ($padding-base-vertical + 1);
+  padding-top: ($padding-base-vertical + pxToRem(1px));
+  padding-bottom: ($padding-base-vertical + pxToRem(1px));
   // Remove default margin from `p`
   margin-bottom: 0;
   min-height: ($line-height-computed + $font-size-base);
@@ -348,7 +348,7 @@ input[type="checkbox"] {
   .form-control-static {
     height: $input-height-small;
     min-height: ($line-height-computed + $font-size-small);
-    padding: ($padding-small-vertical + 1) $padding-small-horizontal;
+    padding: ($padding-small-vertical + pxToRem(1px)) $padding-small-horizontal;
     font-size: $font-size-small;
     line-height: $line-height-small;
   }
@@ -374,7 +374,7 @@ input[type="checkbox"] {
   .form-control-static {
     height: $input-height-large;
     min-height: ($line-height-computed + $font-size-large);
-    padding: ($padding-large-vertical + 1) $padding-large-horizontal;
+    padding: ($padding-large-vertical + pxToRem(1px)) $padding-large-horizontal;
     font-size: $font-size-large;
     line-height: $line-height-large;
   }
@@ -452,8 +452,8 @@ input[type="checkbox"] {
 
 .help-block {
   display: block; // account for any element using help-block
-  margin-top: 5px;
-  margin-bottom: 10px;
+  margin-top: pxToRem(5px);
+  margin-bottom: pxToRem(10px);
   color: lighten($text-color, 25%); // lighten the text some for contrast
 }
 
@@ -462,7 +462,7 @@ input[type="checkbox"] {
 //
 // Make forms appear inline(-block) by adding the `.form-inline` class. Inline
 // forms begin stacked on extra small (mobile) devices and then go inline when
-// viewports reach <768px.
+// viewports reach <pxToRem(768px).
 //
 // Requires wrapping inputs and labels with `.form-group` for proper display of
 // default HTML form controls and our custom form controls (e.g., input groups).
@@ -562,13 +562,13 @@ input[type="checkbox"] {
   .checkbox-inline {
     margin-top: 0;
     margin-bottom: 0;
-    padding-top: ($padding-base-vertical + 1); // Default padding plus a border
+    padding-top: ($padding-base-vertical + pxToRem(1px)); // Default padding plus a border
   }
   // Account for padding we're adding to ensure the alignment and of help text
   // and other content below items
   .radio,
   .checkbox {
-    min-height: ($line-height-computed + ($padding-base-vertical + 1));
+    min-height: ($line-height-computed + ($padding-base-vertical + pxToRem(1px)));
   }
 
   // Make form groups behave like rows
@@ -582,7 +582,7 @@ input[type="checkbox"] {
     .control-label {
       text-align: right;
       margin-bottom: 0;
-      padding-top: ($padding-base-vertical + 1); // Default padding plus a border
+      padding-top: ($padding-base-vertical + pxToRem(1px)); // Default padding plus a border
     }
   }
 
@@ -601,7 +601,7 @@ input[type="checkbox"] {
   .form-group-lg {
     @media (min-width: $screen-sm-min) {
       .control-label {
-        padding-top: ($padding-large-vertical + 1);
+        padding-top: ($padding-large-vertical + pxToRem(1px));
         font-size: $font-size-large;
       }
     }
@@ -609,7 +609,7 @@ input[type="checkbox"] {
   .form-group-sm {
     @media (min-width: $screen-sm-min) {
       .control-label {
-        padding-top: ($padding-small-vertical + 1);
+        padding-top: ($padding-small-vertical + pxToRem(1px));
         font-size: $font-size-small;
       }
     }

@@ -12,10 +12,10 @@
  */
 
 const instanceCounter = new Map<string, number>();
-
 const instanceNames = new WeakMap<any, string>(); // Maps objects to the names used by their loggers.
+const loggersMap = new WeakMap<any, Logger>();
 
-type Level = 'DEBUG' | 'INFO' | 'WARN' | 'SEVERE';
+export type Level = 'DEBUG' | 'INFO' | 'WARN' | 'SEVERE';
 
 
 interface LogMessage {
@@ -24,7 +24,7 @@ interface LogMessage {
 }
 
 
-interface LogWriter {
+export interface LogWriter {
   write(level: Level, msg: string, ...opts: any[]): void;
 }
 
@@ -112,6 +112,15 @@ export interface Logger {
 
 
 export function getLogger(name?: string, instance?: any): Logger {
+  if (instance != null) {
+    if (loggersMap.has(instance)) {
+      return loggersMap.get(instance);
+    }
+    const logger = new LoggerImpl(name, instance);
+    loggersMap.set(instance, logger);
+    return logger;
+  }
+  
   return new LoggerImpl(name, instance);
 }
 

@@ -2,16 +2,17 @@
  * Copyright 2017 Simon Edwards <simon@simonzone.com>
  */
 @import "bootstrap/variables";
+@import "bootstrap/px-to-rem";
+@import "font-awesome";
 
 
 :host(:focus) {
-  outline: 0px solid transparent;
+  outline: 0 solid transparent;
 }
 
 #ID_EMPTY_PANE_MENU {
   font-family: $font-family-base;
   font-size: $input-font-size;
-  line-height: $line-height-base;
   color: $text-color;
 
   background-color: $dropdown-bg;
@@ -22,7 +23,7 @@
 }
 
 #ID_CONTAINER {
-  --empty-pane-menu-container-width: 400px;
+  --empty-pane-menu-container-width: pxToRem(400px);
 
   display: block;
 
@@ -36,5 +37,39 @@
 #ID_TITLE {
   width: 100%;
 
-  margin-bottom: 5px;
+  margin-bottom: pxToRem(5px);
+}
+
+#ID_CLOSE_BUTTON {
+  float: right;
+
+  display: block;
+  width: pxToRem(16px);
+  height: pxToRem(16px);
+  border: 0;
+  padding: 0;
+
+  font-size: 1rem;
+  line-height: $tab-height;
+  
+  border-radius: pxToRem(8px);
+  background-color: transparent;
+  text-align: center;
+
+  z-index: 1;
+  
+  & > i {
+    position: relative;
+    top: pxToRem(-5px);
+    font-size: 1rem;
+  }
+
+  &:focus {
+    outline: 0 solid transparent;
+  }
+
+  &:hover {
+    background-color: $btn-danger-bg;
+    color: $dropdown-bg;
+  }  
 }

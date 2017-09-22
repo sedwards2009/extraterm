@@ -5,7 +5,7 @@
 /* gui-splitter styles */
 @import "bootstrap/variables";
 
-$divider-width: 4px;
+$divider-width: pxToRem(4px);
 
 #ID_TOP {
   position: relative;
@@ -26,14 +26,14 @@ $divider-width: 4px;
 
   #ID_TOP.CLASS_VERTICAL & {
     cursor: col-resize;
-    top: 0px;
+    top: 0;
     width: $divider-width;
     height: 100%;
   }
 
   #ID_TOP.CLASS_HORIZONTAL & {
     cursor: row-resize;
-    left: 0px;
+    left: 0;
     height: $divider-width;
     width: 100%;
   }
@@ -44,13 +44,13 @@ $divider-width: 4px;
   overflow: hidden;
 
   #ID_TOP.CLASS_HORIZONTAL & {
-    left: 0px;
+    left: 0;
     width: 100%;
   }
 
   #ID_TOP.CLASS_VERTICAL & {
     height: 100%;
-    top: 0px;
+    top: 0;
   }
 }
 
@@ -59,22 +59,22 @@ $divider-width: 4px;
   background-color: $text-color;
 
   #ID_TOP.CLASS_HORIZONTAL & {
-    left: 0px;
+    left: 0;
     width: 100%;
   }
 
   #ID_TOP.CLASS_VERTICAL & {
-    top: 0px;
+    top: 0;
     height: 100%;
   }
 }
 
 #ID_COVER {
   position: absolute;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 10;
 }
 

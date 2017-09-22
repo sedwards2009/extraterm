@@ -5,9 +5,9 @@
 
 // Base class
 .well {
-  min-height: 20px;
-  padding: 19px;
-  margin-bottom: 20px;
+  min-height: pxToRem(20px);
+  padding: pxToRem(19px);
+  margin-bottom: pxToRem(20px);
   background-color: $well-bg;
   border: 1px solid $well-border;
   border-radius: $border-radius-base;
@@ -20,10 +20,10 @@
 
 // Sizes
 .well-lg {
-  padding: 24px;
+  padding: pxToRem(24px);
   border-radius: $border-radius-large;
 }
 .well-sm {
-  padding: 9px;
+  padding: pxToRem(9px);
   border-radius: $border-radius-small;
 }

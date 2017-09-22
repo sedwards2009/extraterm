@@ -16,7 +16,7 @@ import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from './Theme';
-import {EmbeddedViewer} from './EmbeddedViewer';
+import {EmbeddedViewer, EmbeddedViewerPosture} from './EmbeddedViewer';
 import {CommandPlaceHolder} from './CommandPlaceholder';
 import {TerminalViewer} from './viewers/TerminalViewer';
 import {TextDecoration, BookmarkRef} from './viewers/TerminalViewerTypes';
@@ -799,13 +799,15 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     injectConfigManager(terminalViewer, this._configManager);
     
     terminalViewer.setEmulator(this._emulator);
+
+    this._terminalViewer = terminalViewer;  // Putting this in _terminalViewer now prevents the VirtualScrollArea 
+                                            // removing it from the DOM in the next method call.
     this._appendScrollable(terminalViewer)
     
     terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
 
-    this._terminalViewer = terminalViewer;
     this._emulator.refreshScreen();
   }
 
@@ -1829,8 +1831,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     el.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
-    el.setAttribute(EmbeddedViewer.ATTR_FRAME_TITLE, title);
-    el.setAttribute(EmbeddedViewer.ATTR_TAG, "" + this._getNextTag());
+    el.setTitle(title);
+    el.setTag("" + this._getNextTag());
     return el;
   }
   
@@ -1845,7 +1847,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     let startElement: HTMLElement & VirtualScrollable = null;
     for (let i=this._childElementList.length-1; i>=0; i--) {
       const el = this._childElementList[i].element;
-      if (el.tagName === EmbeddedViewer.TAG_NAME && el.getAttribute(EmbeddedViewer.ATTR_RETURN_CODE) == null) {
+      if (el instanceof EmbeddedViewer && el.getReturnCode() == null) {
         startElement = el;
         break;
       }
@@ -1859,13 +1861,15 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._disconnectActiveTerminalViewer();
       
       activeTerminalViewer.setReturnCode(returnCode);
-      activeTerminalViewer.setCommandLine(embeddedViewerElement.getAttribute(EmbeddedViewer.ATTR_FRAME_TITLE));
+      activeTerminalViewer.setCommandLine(embeddedViewerElement.getTitle());
       activeTerminalViewer.setUseVPad(false);
       
       // Hang the terminal viewer under the Embedded viewer.
-      embeddedViewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, returnCode);
+      embeddedViewerElement.setReturnCode(returnCode);
+      embeddedViewerElement.setToolTip(`Return code: %{returnCode}`);
+      embeddedViewerElement.setPosture(returnCode ==='0' ? EmbeddedViewerPosture.SUCCESS : EmbeddedViewerPosture.FAILURE);
       embeddedViewerElement.setAwesomeIcon(returnCode === '0' ? 'check' : 'times');
-      embeddedViewerElement.setAttribute(EmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
+      embeddedViewerElement.setToolTip("Return code: " + returnCode);
       embeddedViewerElement.className = "extraterm_output";
       
       // Some focus management to make sure that activeTerminalViewer still keeps
@@ -1910,9 +1914,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       // Append our new embedded viewer.
       const newViewerElement = this._createEmbeddedViewerElement(this._lastCommandLine);
       // Hang the terminal viewer under the Embedded viewer.
-      newViewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, returnCode);
+      newViewerElement.setReturnCode(returnCode);
+      newViewerElement.setToolTip(`Return code: %{returnCode}`);
+      newViewerElement.setPosture(returnCode ==='0' ? EmbeddedViewerPosture.SUCCESS : EmbeddedViewerPosture.FAILURE);
       newViewerElement.setAwesomeIcon('times');
-      newViewerElement.setAttribute(EmbeddedViewer.ATTR_TOOL_TIP, "Return code: " + returnCode);
+      newViewerElement.setToolTip("Return code: " + returnCode);
       newViewerElement.className = "extraterm_output";
 
       this._appendScrollable(newViewerElement);
@@ -2054,15 +2060,16 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  private _appendMimeViewer(mimeType:string, filename: string, charset: string, data: Buffer): void {
+  private _appendMimeViewer(mimeType: string, filename: string, charset: string, data: Buffer): void {
     const mimeViewerElement = this._createMimeViewer(mimeType, charset, data);
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
       viewerElement.setViewerElement(mimeViewerElement);
-      viewerElement.setAttribute(EmbeddedViewer.ATTR_FRAME_TITLE, filename);
+      viewerElement.setTitle(filename);
       viewerElement.setAwesomeIcon(mimeViewerElement.getAwesomeIcon());
-      viewerElement.setAttribute(EmbeddedViewer.ATTR_RETURN_CODE, "0"); // FIXME
+      viewerElement.setReturnCode("0");
+      viewerElement.setPosture(EmbeddedViewerPosture.NEUTRAL);
       this._appendScrollableElement(viewerElement);
       this._enforceScrollbackLength(this._scrollbackSize);
     }

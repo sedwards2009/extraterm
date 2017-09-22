@@ -2,10 +2,12 @@
  * Copyright 2017 Simon Edwards <simon@simonzone.com>
  */
 @import "bootstrap/variables";
+@import "bootstrap/px-to-rem";
+@import "font-awesome";
 
 
 :host(:focus) {
-  outline: 0px solid transparent;
+  outline: pxToRem(0px) solid transparent;
 }
 
 #ID_EMPTY_PANE_MENU {
@@ -22,7 +24,7 @@
 }
 
 #ID_CONTAINER {
-  --empty-pane-menu-container-width: 400px;
+  --empty-pane-menu-container-width: pxToRem(400px);
 
   display: block;
 
@@ -36,5 +38,27 @@
 #ID_TITLE {
   width: 100%;
 
-  margin-bottom: 5px;
+  margin-bottom: pxToRem(5px);
+}
+
+#ID_CLOSE_BUTTON {
+  display: block;
+  float: right;
+
+  display: block;
+
+
+  border: 0;
+  background-color: transparent;
+  border-radius: pxToRem(2px);
+
+
+  &:hover {
+    background-color: $btn-danger-bg;
+    color: $btn-danger-color;
+  }
+
+  &:focus {
+    outline: 0 solid transparent;
+  }
 }
