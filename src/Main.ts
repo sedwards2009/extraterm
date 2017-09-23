@@ -206,11 +206,16 @@ function setScaleFactor(): {restartNeeded: boolean, currentScaleFactor: number, 
   if (primaryDisplay.scaleFactor !== 1 && primaryDisplay.scaleFactor !== 2) {
     const scaleFactor = primaryDisplay.scaleFactor < 1.5 ? 1 : 2;
     _log.info("argv[0]: ",process.argv[0]);
-    app.relaunch({execPath: process.argv[0], args: process.argv.slice(1).concat([
-      '--relaunch',
-      '--force-device-scale-factor=' + scaleFactor,
-      EXTRATERM_DEVICE_SCALE_FACTOR + primaryDisplay.scaleFactor
-    ])});
+
+    const newArgs = process.argv.slice(1).concat(['--force-device-scale-factor=' + scaleFactor,
+                      EXTRATERM_DEVICE_SCALE_FACTOR + primaryDisplay.scaleFactor]);
+    // Electron's app.relaunch() doesn't work on packaged builds of Extraterm. So use spawn
+    child_process.spawn(process.argv[0], newArgs, {
+      cwd: process.cwd(),
+      detached: true,
+      env: process.env,
+      stdio: [process.stdin, process.stdout, process.stderr]});
+
     _log.info("Restarting with scale factor ", scaleFactor);
     app.exit(0);
     return {restartNeeded: true, currentScaleFactor: primaryDisplay.scaleFactor,
