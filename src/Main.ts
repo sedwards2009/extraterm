@@ -65,6 +65,9 @@ const DEFAULT_UI_THEME = "atomic-dark-ui";
 const PNG_ICON_PATH = "logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "logo/extraterm_small_logo.ico";
 
+const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
+
+
 let themeManager: ThemeManager.ThemeManager;
 let config: Config;
 let ptyConnector: PtyConnector;
@@ -94,6 +97,8 @@ function main(): void {
   // The extra fields which appear on the command object are declared in extra_commander.d.ts.
   Commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []')
     .option('-d, --dev-tools [devTools]', 'Open the dev tools on start up')
+    .option('--force-device-scale-factor []', '(This option is used by Electron)')
+    .option(EXTRATERM_DEVICE_SCALE_FACTOR + ' []', '(Internal Extraterm option. Ignore)')
     .parse(normalizedArgv);
 
   prepareAppData();  
@@ -135,7 +140,8 @@ function main(): void {
   // This method will be called when Electron has done everything
   // initialization and ready for creating browser windows.
   app.on('ready', function() {
-    const {restartNeeded, originalScaleFactor, currentScaleFactor} = setScaleFactor();
+    const deviceScaleFactor = <any>Commander.extratermDeviceScaleFactor;
+    const {restartNeeded, originalScaleFactor, currentScaleFactor} = setScaleFactor(deviceScaleFactor);
     if (restartNeeded) {
       return;
     }
@@ -197,9 +203,7 @@ function setUpLogging(): void {
   _log.info("Recording logs to ", logFilePath);
 }
 
-const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor=";
-
-function setScaleFactor(): {restartNeeded: boolean, currentScaleFactor: number, originalScaleFactor: number} {
+function setScaleFactor(originalFactorArg?: string): {restartNeeded: boolean, currentScaleFactor: number, originalScaleFactor: number} {
   _log.info("args", process.argv);
   const primaryDisplay = screen.getPrimaryDisplay();
   _log.info("Display scale factor is ", primaryDisplay.scaleFactor);
@@ -208,7 +212,7 @@ function setScaleFactor(): {restartNeeded: boolean, currentScaleFactor: number, 
     _log.info("argv[0]: ",process.argv[0]);
 
     const newArgs = process.argv.slice(1).concat(['--force-device-scale-factor=' + scaleFactor,
-                      EXTRATERM_DEVICE_SCALE_FACTOR + primaryDisplay.scaleFactor]);
+                      EXTRATERM_DEVICE_SCALE_FACTOR + '=' + primaryDisplay.scaleFactor]);
     // Electron's app.relaunch() doesn't work on packaged builds of Extraterm. So use spawn
     child_process.spawn(process.argv[0], newArgs, {
       cwd: process.cwd(),
@@ -223,10 +227,9 @@ function setScaleFactor(): {restartNeeded: boolean, currentScaleFactor: number, 
   }
 
   let originalScaleFactor: number;
-  const originalFactorArg = process.argv.find(arg => arg.startsWith(EXTRATERM_DEVICE_SCALE_FACTOR));
   _log.info("originalFactorArg:", originalFactorArg);
   if (originalFactorArg != null) {
-    originalScaleFactor = Number.parseFloat(originalFactorArg.slice(EXTRATERM_DEVICE_SCALE_FACTOR.length));
+    originalScaleFactor = Number.parseFloat(originalFactorArg);
   } else {
     originalScaleFactor = primaryDisplay.scaleFactor;
   }
