@@ -484,8 +484,8 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
       (font) => font.postscriptName === newConfig.terminalFont);
 
     const scaleFactor = newConfig.systemConfig.originalScaleFactor / newConfig.systemConfig.currentScaleFactor;
-    const fontSize = Math.round(newConfig.terminalFontSize * scaleFactor);
-    setCssVars(newConfig.terminalFont, matchingFonts[0].path, fontSize);
+    const fontSizePx = Math.max(5, Math.round(newConfig.terminalFontSize * scaleFactor));
+    setCssVars(newConfig.terminalFont, matchingFonts[0].path, fontSizePx);
   }
 
   if (oldConfig === null || oldConfig.themeTerminal !== newConfig.themeTerminal ||
@@ -543,7 +543,7 @@ function reloadThemeContents(): void {
   requestThemeContents(config.themeTerminal, config.themeSyntax, config.themeGUI);
 }
 
-function setCssVars(fontName: string, fontPath: string, terminalFontSize: number): void {
+function setCssVars(fontName: string, fontPath: string, terminalFontSizePx: number): void {
   const fontCssName = fontName.replace(/\W/g, "_");
   (<HTMLStyleElement> document.getElementById('CSS_VARS')).textContent =
     `
@@ -553,7 +553,7 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSize: number
     }
 
     :root {
-      --default-terminal-font-size: ${terminalFontSize}px;
+      --default-terminal-font-size: ${terminalFontSizePx}px;
       --terminal-font: "${fontCssName}";
     }
     `;
