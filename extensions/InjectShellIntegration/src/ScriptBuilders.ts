@@ -175,14 +175,22 @@ export class ZshScriptBuilder extends ScriptBuilder {
 
   protected _buildShellReporting(): string {
     return `
-if [[ ! "$PS1" =~ "${this._extratermCookieValue}" ]] ; then
-    export PS1=\`echo -n -e "%{\\033&${this._extratermCookieValue};3\\007%}%?%{\\000%}\${PS1}"\`
-fi
+autoload -Uz add-zsh-hook
+extraterm_install_prompt_integration () {
+    local prefix
+    if [[ ! "$PS1" =~ "${this._extratermCookieValue}" ]] ; then
+        prefix=\`echo -n -e "%{\\0033&${this._extratermCookieValue};3\\0007%}%?%{\\0000%}"\`
+        export PS1="\${prefix}\${PS1}"
+    fi
+}
+extraterm_install_prompt_integration
+add-zsh-hook precmd extraterm_install_prompt_integration
+
 
 preexec () {
-    echo -n -e "\\033&\${${this._extratermCookieName}};2;zsh\\007"
+    echo -n -e "\\0033&\${${this._extratermCookieName}};2;zsh\\0007"
     echo -n $1
-    echo -n -e "\\000"
+    echo -n -e "\\0000"
 }
 `;
   }
