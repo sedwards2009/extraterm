@@ -12,8 +12,8 @@ import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import {Logger, getLogger} from '../Logger';
-import log from '../LogDecorator';
+import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
 import * as keybindingmanager from '../KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 

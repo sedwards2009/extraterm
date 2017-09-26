@@ -19,8 +19,8 @@ import * as ThemeTypes from './Theme';
 import * as GeneralEvents from './GeneralEvents';
 import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
   from './CommandPaletteRequestTypes';
-import {Logger, getLogger} from './Logger';
-import log from './LogDecorator';
+import {Logger, getLogger} from './logging/Logger';
+import log from './logging/LogDecorator';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import * as SupportsClipboardPaste from './SupportsClipboardPaste';
 import {FrameMimeType} from './InternalMimeTypes';

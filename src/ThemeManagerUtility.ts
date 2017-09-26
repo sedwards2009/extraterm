@@ -15,7 +15,7 @@ import * as ThemeTypes from './Theme';
 import * as SourceDir from './SourceDir';
 import * as Commander from 'commander';
 
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger} from './logging/Logger';
 
 const print = console.log.bind(console);
 

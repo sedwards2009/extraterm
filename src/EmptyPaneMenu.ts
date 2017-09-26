@@ -13,8 +13,8 @@ import {ThemeableElementBase} from './ThemeableElementBase';
 import {ListPicker} from './gui/ListPicker';
 import * as DomUtils from './DomUtils';
 import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandMenuItem} from './CommandPaletteFunctions';
-import {Logger, getLogger} from './Logger';
-import log from './LogDecorator';
+import {Logger, getLogger} from './logging/Logger';
+import log from './logging/LogDecorator';
 
 const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
 const ID_CONTAINER = "ID_CONTAINER";

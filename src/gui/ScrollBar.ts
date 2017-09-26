@@ -8,8 +8,8 @@ import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import {Logger, getLogger} from '../Logger';
-import log from '../LogDecorator';
+import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
 
 const ID = "EtScrollbarTemplate";
 const ID_AREA = "ID_AREA";

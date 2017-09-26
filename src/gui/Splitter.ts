@@ -9,8 +9,8 @@ import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as Util from './Util';
 import * as DomUtils from '../DomUtils';
 import * as _ from 'lodash';
-import {Logger, getLogger} from '../Logger';
-import log from '../LogDecorator';
+import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
 
 const ID = "EtSplitterTemplate";
 let registered = false;

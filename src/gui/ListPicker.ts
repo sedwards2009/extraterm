@@ -8,8 +8,8 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../Theme';
 import * as DomUtils from '../DomUtils';
 import {PopDownDialog} from './PopDownDialog';
-import {Logger, getLogger} from '../Logger';
-import log from '../LogDecorator';
+import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
 
 const ID = "EtListPickerTemplate";
 const ID_DIALOG = "ID_DIALOG";

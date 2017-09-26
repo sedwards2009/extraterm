@@ -5,7 +5,7 @@
  */
 import * as path from 'path';
 import * as _ from 'lodash';
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger} from './logging/Logger';
 import * as he from 'he';
 import * as DomUtils from './DomUtils';
 import * as CodeMirror from 'codemirror';

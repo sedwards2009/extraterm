@@ -14,8 +14,8 @@ import * as Vue from 'vue';
 import * as config from '../Config';
 import * as DomUtils from '../DomUtils';
 import * as GeneralEvents from '../GeneralEvents';
-import {Logger, getLogger} from '../Logger';
-import log from '../LogDecorator';
+import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
 import * as ThemeTypes from '../Theme';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 

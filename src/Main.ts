@@ -22,8 +22,8 @@ import * as path from 'path';
 
 import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
   SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from './Config';
-import {FileLogWriter} from './FileLogWriter';
-import {Logger, getLogger, addLogWriter} from './Logger';
+import {FileLogWriter} from './logging/FileLogWriter';
+import {Logger, getLogger, addLogWriter} from './logging/Logger';
 import {PtyConnector, Pty, PtyOptions, EnvironmentMap} from './PtyConnector';
 // Our special 'fake' module which selects the correct pty connector factory implementation.
 const PtyConnectorFactory = require("./PtyConnectorFactory");

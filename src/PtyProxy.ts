@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import * as configInterfaces from './Config';
 import * as fs from 'fs';
 import * as path from 'path';
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger} from './logging/Logger';
 import * as SourceDir from './SourceDir';
 
 type Config = configInterfaces.Config;

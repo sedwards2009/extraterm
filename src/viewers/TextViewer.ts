@@ -26,8 +26,8 @@ import * as EtTextViewerTypes from './TerminalViewerTypes';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
   from '../CommandPaletteRequestTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import {Logger, getLogger} from '../Logger';
-import log from '../LogDecorator';
+import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
 import * as GeneralEvents from '../GeneralEvents';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 

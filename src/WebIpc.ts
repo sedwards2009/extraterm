@@ -9,7 +9,7 @@ const ipc = Electron.ipcRenderer;
 
 import * as Messages from './WindowMessages';
 import * as config from './Config';
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger} from './logging/Logger';
 import * as ThemeTypes from './Theme';
 
 const _log = getLogger("WebIPC");

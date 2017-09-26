@@ -14,7 +14,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
 import {shell} from 'electron';
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger} from './logging/Logger';
 
 const ID_ABOUT = "ID_ABOUT";
 

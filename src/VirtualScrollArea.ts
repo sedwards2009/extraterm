@@ -6,8 +6,8 @@
 
 import * as Util from './gui/Util';
 import * as _ from 'lodash';
-import {Logger, getLogger} from './Logger';
-import log from './LogDecorator';
+import {Logger, getLogger} from './logging/Logger';
+import log from './logging/LogDecorator';
 
 const _log = getLogger("VirtualScrollableArea");
 

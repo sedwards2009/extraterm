@@ -21,8 +21,8 @@ import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommand
 import * as Term from '../emulator/Term';
 import * as TermApi from '../emulator/TermApi';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import {Logger, getLogger} from '../Logger';
-import log from '../LogDecorator';
+import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
 import * as SourceDir from '../SourceDir';
 import * as GeneralEvents from '../GeneralEvents';
 import * as ThemeTypes from '../Theme';

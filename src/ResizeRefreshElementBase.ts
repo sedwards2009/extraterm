@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import log from './LogDecorator';
+import log from './logging/LogDecorator';
 
 export enum RefreshLevel {
   RESIZE = 1,

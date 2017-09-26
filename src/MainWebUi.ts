@@ -43,8 +43,8 @@ type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
 
-import {Logger, getLogger} from './Logger';
-import log from './LogDecorator';
+import {Logger, getLogger} from './logging/Logger';
+import log from './logging/LogDecorator';
 
 const VisualState = ViewerElementTypes.VisualState;
 

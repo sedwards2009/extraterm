@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as DomUtils from './DomUtils';
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger} from './logging/Logger';
 import ElementResizeDetectorMaker = require('element-resize-detector');
 
 let registered = false;

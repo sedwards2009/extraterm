@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger} from './logging/Logger';
 import * as _ from 'lodash';
 import * as SetUtils from './utils/SetUtils';
 

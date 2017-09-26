@@ -21,7 +21,7 @@ type Config = config.Config;
 type ConfigManager = config.ConfigDistributor;
 
 import * as GeneralEvents from './GeneralEvents';
-import log from './LogDecorator';
+import log from './logging/LogDecorator';
 
 const humanText = require('./keybindingstext.json');
 

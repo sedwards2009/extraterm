@@ -19,8 +19,8 @@ import * as NodeSass from 'node-sass';
 
 import * as _ from 'lodash';
 
-import {Logger, getLogger} from './Logger';
-import log from './LogDecorator';
+import {Logger, getLogger} from './logging/Logger';
+import log from './logging/LogDecorator';
 import * as ThemeTypes from './Theme';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;

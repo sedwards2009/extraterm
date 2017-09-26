@@ -7,7 +7,7 @@ import * as DomUtils from './DomUtils';
 import {Splitter, SplitOrientation} from './gui/Splitter';
 import {TabWidget} from './gui/TabWidget';
 import {Tab} from './gui/Tab';
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger} from './logging/Logger';
 
 interface ElementFactory {
   (): Element;

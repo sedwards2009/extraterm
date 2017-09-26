@@ -24,7 +24,7 @@ import {EmbeddedViewer} from './EmbeddedViewer';
 import {ExtensionManager} from './ExtensionManager';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import * as keybindingmanager from './KeyBindingManager';
-import {Logger, getLogger} from './Logger';
+import {Logger, getLogger} from './logging/Logger';
 import {MainWebUi} from './MainWebUi';
 import {MenuItem} from './gui/MenuItem';
 import {PopDownListPicker} from './gui/PopDownListPicker';
