@@ -20,7 +20,7 @@ import * as ThemeTypes from '../Theme';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 
 type Config = config.Config;
-type ConfigManager = config.ConfigManager;
+type ConfigManager = config.ConfigDistributor;
 
 type CommandLineAction = config.CommandLineAction;
 type FontInfo = config.FontInfo;
@@ -108,7 +108,7 @@ function stripIds(list: Identifiable[]): void {
   });  
 }
 
-export class SettingsTab extends ViewerElement implements config.AcceptsConfigManager {
+export class SettingsTab extends ViewerElement implements config.AcceptsConfigDistributor {
   
   static TAG_NAME = "ET-SETTINGS-TAB";
   
@@ -211,7 +211,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigMa
     return false;
   }
   
-  setConfigManager(configManager: ConfigManager): void {
+  setConfigDistributor(configManager: ConfigManager): void {
     this._configManager = configManager;
     configManager.registerChangeListener(this, () => {
       this._setConfig(configManager.getConfig());

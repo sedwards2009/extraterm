@@ -40,7 +40,7 @@ import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
 import * as MmeTypeDetector from './MimeTypeDetector';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
-import {Config, ConfigManager, CommandLineAction, injectConfigManager, AcceptsConfigManager} from './Config';
+import {Config, ConfigDistributor, CommandLineAction, injectConfigDistributor, AcceptsConfigDistributor} from './Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -129,7 +129,7 @@ interface WriteBufferStatus {
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
 export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingManager,
-  AcceptsConfigManager, SupportsClipboardPaste.SupportsClipboardPaste {
+  AcceptsConfigDistributor, SupportsClipboardPaste.SupportsClipboardPaste {
   
   /**
    * The HTML tag name of this element.
@@ -204,7 +204,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _mode: Mode;
   private _selectionPreviousLineCount: number;
   
-  private _configManager: ConfigManager;
+  private _configManager: ConfigDistributor;
   private _keyBindingManager: KeyBindingManager;
   
   private _title: string;
@@ -319,7 +319,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     return this._rows;
   }
 
-  setConfigManager(configManager: ConfigManager): void {
+  setConfigDistributor(configManager: ConfigDistributor): void {
     this._configManager = configManager;
   }
   
@@ -796,7 +796,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     // Create the TerminalViewer
     const terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
     injectKeyBindingManager(terminalViewer, this._keyBindingManager);
-    injectConfigManager(terminalViewer, this._configManager);
+    injectConfigDistributor(terminalViewer, this._configManager);
     
     terminalViewer.setEmulator(this._emulator);
 
@@ -1795,7 +1795,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     // Create and set up a new command-frame.
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
     injectKeyBindingManager(el, this._keyBindingManager);
-    injectConfigManager(el, this._configManager);
+    injectConfigDistributor(el, this._configManager);
     el.setAwesomeIcon('cog');
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
@@ -1926,7 +1926,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
       injectKeyBindingManager(outputTerminalViewer, this._keyBindingManager);
-      injectConfigManager(outputTerminalViewer, this._configManager);
+      injectConfigDistributor(outputTerminalViewer, this._configManager);
       newViewerElement.setViewerElement(outputTerminalViewer);
       
       outputTerminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
@@ -2085,7 +2085,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
     injectKeyBindingManager(dataViewer, this._keyBindingManager);
-    injectConfigManager(dataViewer, this._configManager);
+    injectConfigDistributor(dataViewer, this._configManager);
     if (data !== null) {
       dataViewer.setBytes(data, charset !== null ? mimeType + ";" + charset : mimeType);
     }

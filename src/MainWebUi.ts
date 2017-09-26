@@ -31,7 +31,7 @@ import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 
 import * as config from './Config';
 type Config = config.Config;
-type ConfigManager =config.ConfigManager;
+type ConfigManager =config.ConfigDistributor;
 type SessionProfile = config.SessionProfile;
 
 import * as he from 'he';
@@ -113,7 +113,7 @@ let themeCss = "";
  *
  */
 export class MainWebUi extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
-    config.AcceptsConfigManager, Commandable {
+    config.AcceptsConfigDistributor, Commandable {
   
   //-----------------------------------------------------------------------
   // Statics
@@ -193,7 +193,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  setConfigManager(configManager: ConfigManager): void {
+  setConfigDistributor(configManager: ConfigManager): void {
     this._configManager = configManager;
   }
   
@@ -592,7 +592,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
 
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
-    config.injectConfigManager(newTerminal, this._configManager);
+    config.injectConfigDistributor(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
@@ -759,7 +759,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._switchToTab(settingsTabs[0]);
     } else {
       const viewerElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
-      config.injectConfigManager(viewerElement, this._configManager);
+      config.injectConfigDistributor(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
       viewerElement.setThemes(this._themes);
@@ -774,7 +774,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._switchToTab(keyBindingsTabs[0]);
     } else {
       const viewerElement = <EtKeyBindingsTab> document.createElement(EtKeyBindingsTab.TAG_NAME);
-      config.injectConfigManager(viewerElement, this._configManager);
+      config.injectConfigDistributor(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
 
       this._openViewerTab(this._firstTabWidget(), viewerElement);

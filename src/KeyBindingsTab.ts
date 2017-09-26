@@ -18,7 +18,7 @@ import * as Vue from 'vue';
 import * as DomUtils from './DomUtils';
 import * as config from './Config';
 type Config = config.Config;
-type ConfigManager = config.ConfigManager;
+type ConfigManager = config.ConfigDistributor;
 
 import * as GeneralEvents from './GeneralEvents';
 import log from './LogDecorator';
@@ -76,7 +76,7 @@ interface ModelData {
 /**
  * The Extraterm Key Bindings tab.
  */
-export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigManager,
+export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigDistributor,
     keybindingmanager.AcceptsKeyBindingManager {
   
   /**
@@ -157,7 +157,7 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
     return false;
   }
   
-  setConfigManager(configManager: ConfigManager): void {
+  setConfigDistributor(configManager: ConfigManager): void {
     this._configManager = configManager;
     this._configManager.registerChangeListener(this, () => {
       this._setConfig(configManager.getConfig());

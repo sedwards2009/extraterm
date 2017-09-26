@@ -44,7 +44,7 @@ import * as Messages from './WindowMessages';
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
 type Config = config.Config;
-type ConfigManager = config.ConfigManager;
+type ConfigManager = config.ConfigDistributor;
 type SessionProfile = config.SessionProfile;
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -183,7 +183,7 @@ function startUpComponents(): void {
 
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
-  config.injectConfigManager(mainWebUi, configManager);
+  config.injectConfigDistributor(mainWebUi, configManager);
   keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
     <div class="space"></div>

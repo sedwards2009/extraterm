@@ -12,7 +12,7 @@ import * as he from 'he';
 import * as SourceDir from '../SourceDir';
 
 import * as config from '../Config';
-type ConfigManager = config.ConfigManager;
+type ConfigManager = config.ConfigDistributor;
 
 import * as keybindingmanager from '../KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -68,7 +68,7 @@ function loadTipFile(): string[] {
 
 const tipData = loadTipFile();
 
-export class TipViewer extends ViewerElement implements config.AcceptsConfigManager, keybindingmanager.AcceptsKeyBindingManager {
+export class TipViewer extends ViewerElement implements config.AcceptsConfigDistributor, keybindingmanager.AcceptsKeyBindingManager {
 
   static TAG_NAME = "ET-TIP-VIEWER";
   
@@ -122,7 +122,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigMana
   // #        ####  #####  ###### #  ####  
   //
   //-----------------------------------------------------------------------
-  setConfigManager(newConfigManager: ConfigManager): void {
+  setConfigDistributor(newConfigManager: ConfigManager): void {
     if (this._configManager !== null) {
       this._configManager.unregisterChangeListener(this);
     }

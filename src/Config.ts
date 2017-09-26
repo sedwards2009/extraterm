@@ -104,9 +104,9 @@ export function expandEnvVariable(value: string, context: Map<string, string>): 
 }
 
 /**
- * Interface for managing changes and updates to the Configuration.
+ * Interface for distributing configuration changes.
  */
-export interface ConfigManager {
+export interface ConfigDistributor {
   /**
    * Get the current config object.
    *
@@ -138,16 +138,16 @@ export interface ConfigManager {
   setConfig(newConfig: Config): void;
 }
 
-export interface AcceptsConfigManager {
-  setConfigManager(newConfigManager: ConfigManager): void;
+export interface AcceptsConfigDistributor {
+  setConfigDistributor(newConfigDistributor: ConfigDistributor): void;
 }
 
-export function isAcceptsConfigManager(instance: any): instance is AcceptsConfigManager {
-  return (<AcceptsConfigManager> instance).setConfigManager !== undefined;
+export function isAcceptsConfigManager(instance: any): instance is AcceptsConfigDistributor {
+  return (<AcceptsConfigDistributor> instance).setConfigDistributor !== undefined;
 }
 
-export function injectConfigManager(instance: any, configManager: ConfigManager): void {
+export function injectConfigDistributor(instance: any, configDistributor: ConfigDistributor): void {
   if (isAcceptsConfigManager(instance)) {
-    instance.setConfigManager(configManager);
+    instance.setConfigDistributor(configDistributor);
   }
 }
