@@ -13,7 +13,7 @@ const PATCH_MODULE_VERSION = "53";  // This version number also appears in build
 if (process.versions.modules === PATCH_MODULE_VERSION) {
   // Patch in our special node-sass binary for the V8 module version used by Electron.
   process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
-    `node-sass-binary/${process.platform}-${process.arch}-${PATCH_MODULE_VERSION}/binding.node`);
+    `../resources/node-sass-binary/${process.platform}-${process.arch}-${PATCH_MODULE_VERSION}/binding.node`);
 }
 import * as NodeSass from 'node-sass';
 
