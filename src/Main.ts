@@ -55,7 +55,7 @@ const KEYBINDINGS_DIRECTORY = "../resources/keybindings";
 const DEFAULT_KEYBINDING = "keybindings.json";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
 const KEYBINDINGS_PC = "keybindings.json";
-const TERMINAL_FONTS_DIRECTORY = "terminal_fonts";
+const TERMINAL_FONTS_DIRECTORY = "../resources/terminal_fonts";
 const DEFAULT_TERMINALFONT = "DejaVuSansMono";
 
 const DEFAULT_TERMINAL_THEME = "default-terminal";
