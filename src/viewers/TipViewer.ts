@@ -57,7 +57,7 @@ let instanceIdCounter = 0;
  * @return the array of tip HTMLs.
  */
 function loadTipFile(): string[] {
-  const tipPath = path.join(SourceDir.path, "tips/tips.html");
+  const tipPath = path.join(SourceDir.path, "../resources/tips/tips.html");
   const tipHtml = fs.readFileSync(tipPath, {encoding: 'utf8'});
   
   const parts = tipHtml.split(/<article>([^]*?)<\/article>/m);
