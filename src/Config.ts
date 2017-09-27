@@ -3,7 +3,6 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as Util from './gui/Util';
 import * as os from 'os';
 import * as _ from 'lodash';
 

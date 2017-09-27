@@ -31,7 +31,7 @@ import * as ResourceLoader from './ResourceLoader';
 import * as ThemeTypes from './Theme';
 import * as ThemeManager from './ThemeManager';
 import * as Messages from './WindowMessages';
-import * as Util from './gui/Util';
+import * as Util from './render_process/gui/Util';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
@@ -176,7 +176,7 @@ function main(): void {
     });
     
     // and load the index.html of the app.
-    mainWindow.loadURL(ResourceLoader.toUrl('main.html'));
+    mainWindow.loadURL(ResourceLoader.toUrl('render_process/main.html'));
 
     mainWindow.on('devtools-closed', function() {
       sendDevToolStatus(mainWindow, false);
