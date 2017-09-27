@@ -62,8 +62,8 @@ const DEFAULT_TERMINAL_THEME = "default-terminal";
 const DEFAULT_SYNTAX_THEME = "default-syntax";
 const DEFAULT_UI_THEME = "atomic-dark-ui";
 
-const PNG_ICON_PATH = "logo/extraterm_small_logo_256x256.png";
-const ICO_ICON_PATH = "logo/extraterm_small_logo.ico";
+const PNG_ICON_PATH = "../resources/logo/extraterm_small_logo_256x256.png";
+const ICO_ICON_PATH = "../resources/logo/extraterm_small_logo.ico";
 
 const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
 

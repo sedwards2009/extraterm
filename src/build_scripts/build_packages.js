@@ -164,14 +164,14 @@ function main() {
         out: buildTmpPath
       };
       if (platform === "win32") {
-        packagerOptions.icon = "src/logo/extraterm_small_logo.ico";
+        packagerOptions.icon = "resources/logo/extraterm_small_logo.ico";
         packagerOptions.win32metadata = {
           FileDescription: "Extraterm",
           ProductName: "Extraterm",
           LegalCopyright: "(C) 2017 Simon Edwards"
         };
       } else if (platform === "darwin") {
-        packagerOptions.icon = "src/logo/extraterm_small_logo.icns";
+        packagerOptions.icon = "resources/logo/extraterm_small_logo.icns";
       }
 
       packager(packagerOptions, function done(err, appPath) {
