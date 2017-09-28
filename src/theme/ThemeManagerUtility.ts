@@ -12,10 +12,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as ThemeManager from './ThemeManager';
 import * as ThemeTypes from './Theme';
-import * as SourceDir from './SourceDir';
+import * as SourceDir from '../SourceDir';
 import * as Commander from 'commander';
 
-import {Logger, getLogger} from './logging/Logger';
+import {Logger, getLogger} from '../logging/Logger';
 
 const print = console.log.bind(console);
 

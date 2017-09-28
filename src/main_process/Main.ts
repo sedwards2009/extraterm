@@ -28,8 +28,8 @@ import {PtyConnector, Pty, PtyOptions, EnvironmentMap} from './pty/PtyConnector'
 // Our special 'fake' module which selects the correct pty connector factory implementation.
 const PtyConnectorFactory = require("./pty/PtyConnectorFactory");
 import * as ResourceLoader from '../ResourceLoader';
-import * as ThemeTypes from '../Theme';
-import * as ThemeManager from '../ThemeManager';
+import * as ThemeTypes from '../theme/Theme';
+import * as ThemeManager from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import * as Util from '../render_process/gui/Util';
 

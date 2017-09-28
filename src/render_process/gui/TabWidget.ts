@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as ThemeTypes from '../../Theme';
+import * as ThemeTypes from '../../theme/Theme';
 import {StackedWidget} from './StackedWidget';
 import {Tab} from './Tab';
 import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail} from './SnapDropContainer';

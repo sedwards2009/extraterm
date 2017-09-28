@@ -19,7 +19,7 @@ import {Splitter, SplitOrientation} from './gui/Splitter';
 import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation} from './gui/SnapDropContainer';
 import {EmptyPaneMenu} from './EmptyPaneMenu';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import * as ThemeTypes from '../Theme';
+import * as ThemeTypes from '../theme/Theme';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
 import * as WebIpc from './WebIpc';

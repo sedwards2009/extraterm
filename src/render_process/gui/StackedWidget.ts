@@ -6,7 +6,7 @@
 
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as ThemeTypes from '../../Theme';
+import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 

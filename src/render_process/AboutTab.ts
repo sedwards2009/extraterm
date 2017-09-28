@@ -8,7 +8,7 @@
 
 "use strict";
 
-import * as ThemeTypes from '../Theme';
+import * as ThemeTypes from '../theme/Theme';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';

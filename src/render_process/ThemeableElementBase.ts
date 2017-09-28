@@ -4,9 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as ThemeTypes from '../Theme';
+import * as ThemeTypes from '../theme/Theme';
 import * as DomUtils from './DomUtils';
-import * as ThemeConsumer from '../ThemeConsumer';
+import * as ThemeConsumer from '../theme/ThemeConsumer';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 
 /**

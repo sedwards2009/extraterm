@@ -16,7 +16,7 @@ import * as DomUtils from '../DomUtils';
 import * as GeneralEvents from '../GeneralEvents';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
-import * as ThemeTypes from '../../Theme';
+import * as ThemeTypes from '../../theme/Theme';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 
 type Config = config.Config;

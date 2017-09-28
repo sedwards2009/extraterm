@@ -6,7 +6,7 @@
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
-import * as ThemeTypes from '../../Theme';
+import * as ThemeTypes from '../../theme/Theme';
 
 const ID = "EtbMenuItemTemplate";
 const ID_CONTAINER = "ID_CONTAINER";

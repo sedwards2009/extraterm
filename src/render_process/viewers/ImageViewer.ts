@@ -7,7 +7,7 @@ import * as _ from 'lodash';
 import * as fs from 'fs';
 import {ViewerElement} from '../ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as ThemeTypes from '../../Theme';
+import * as ThemeTypes from '../../theme/Theme';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';

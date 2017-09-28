@@ -13,7 +13,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
-import * as ThemeTypes from '../../Theme';
+import * as ThemeTypes from '../../theme/Theme';
 import * as keybindingmanager from '../KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 

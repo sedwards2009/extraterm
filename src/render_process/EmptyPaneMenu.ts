@@ -8,7 +8,7 @@
 
 "use strict";
 
-import * as ThemeTypes from '../Theme';
+import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import {ListPicker} from './gui/ListPicker';
 import * as DomUtils from './DomUtils';

@@ -7,7 +7,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import * as SourceDir from './SourceDir';
+import * as SourceDir from '../SourceDir';
 
 const PATCH_MODULE_VERSION = "53";  // This version number also appears in build_package.js
 if (process.versions.modules === PATCH_MODULE_VERSION) {
@@ -19,8 +19,8 @@ import * as NodeSass from 'node-sass';
 
 import * as _ from 'lodash';
 
-import {Logger, getLogger} from './logging/Logger';
-import log from './logging/LogDecorator';
+import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
 import * as ThemeTypes from './Theme';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;

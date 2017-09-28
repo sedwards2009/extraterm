@@ -15,7 +15,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import * as ThemeTypes from '../Theme';
+import * as ThemeTypes from '../theme/Theme';
 import {EmbeddedViewer, EmbeddedViewerPosture} from './EmbeddedViewer';
 import {CommandPlaceHolder} from './CommandPlaceholder';
 import {TerminalViewer} from './viewers/TerminalViewer';

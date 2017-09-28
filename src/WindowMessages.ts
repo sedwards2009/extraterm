@@ -9,7 +9,7 @@
  */
 
 import * as Config from './Config';
-import * as ThemeTypes from './Theme';
+import * as ThemeTypes from './theme/Theme';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeContents = ThemeTypes.ThemeContents;

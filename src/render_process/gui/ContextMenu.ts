@@ -5,7 +5,7 @@
  */
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as ThemeTypes from '../../Theme';
+import * as ThemeTypes from '../../theme/Theme';
 import {MenuItem} from './MenuItem';
 import {CheckboxMenuItem} from './CheckboxMenuItem';
 import * as DomUtils from '../DomUtils';

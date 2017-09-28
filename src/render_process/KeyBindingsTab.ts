@@ -8,7 +8,7 @@
 
 "use strict";
 import * as _ from 'lodash';
-import * as ThemeTypes from '../Theme';
+import * as ThemeTypes from '../theme/Theme';
 import {ViewerElement} from './ViewerElement';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as keybindingmanager from './KeyBindingManager';

@@ -25,7 +25,7 @@ import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as SourceDir from '../../SourceDir';
 import * as GeneralEvents from '../GeneralEvents';
-import * as ThemeTypes from '../../Theme';
+import * as ThemeTypes from '../../theme/Theme';
 import * as keybindingmanager from '../KeyBindingManager';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';

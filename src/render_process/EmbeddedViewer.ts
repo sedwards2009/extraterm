@@ -15,7 +15,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as KeyBindingManager from './KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
-import * as ThemeTypes from '../Theme';
+import * as ThemeTypes from '../theme/Theme';
 import * as GeneralEvents from './GeneralEvents';
 import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
   from './CommandPaletteRequestTypes';
