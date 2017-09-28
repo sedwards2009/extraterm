@@ -42,9 +42,9 @@ src/render_process/ExtensionManager.js
 src/render_process/FrameFinderType.js
 src/render_process/GeneralEvents.js
 src/render_process/InternalMimeTypes.js
-src/render_process/KeyBindingManager.js
-src/render_process/KeyBindingManagerTest.js
-src/render_process/KeyBindingsTab.js
+src/render_process/keybindings/KeyBindingManager.js
+src/render_process/keybindings/KeyBindingManagerTest.js
+src/render_process/keybindings/KeyBindingsTab.js
 src/render_process/MainWeb.js
 src/render_process/MainWebUi.js
 src/render_process/ResizeCanary.js
@@ -89,6 +89,7 @@ src/render_process/viewers/TerminalViewer.js
 src/render_process/viewers/TerminalViewerTypes.js
 src/render_process/viewers/TextViewer.js
 src/render_process/viewers/TipViewer.js
+src/utils/SetUtils.js
 extensions/TextViewerTabWidth/src/TextViewerTabWidthExtension.js
 __pycache__/
 build_tmp

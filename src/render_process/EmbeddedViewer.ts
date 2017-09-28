@@ -13,7 +13,7 @@ import * as Util from './gui/Util';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import * as KeyBindingManager from './KeyBindingManager';
+import * as KeyBindingManager from './keybindings/KeyBindingManager';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as ThemeTypes from '../theme/Theme';
 import * as GeneralEvents from './GeneralEvents';

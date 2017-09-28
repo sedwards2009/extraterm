@@ -14,7 +14,7 @@ import * as SourceDir from '../../SourceDir';
 import * as config from '../../Config';
 type ConfigManager = config.ConfigDistributor;
 
-import * as keybindingmanager from '../KeyBindingManager';
+import * as keybindingmanager from '../keybindings/KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import {ViewerElement} from '../ViewerElement';

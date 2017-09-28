@@ -23,7 +23,7 @@ import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './EmbeddedViewer';
 import {ExtensionManager} from './ExtensionManager';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-import * as keybindingmanager from './KeyBindingManager';
+import * as keybindingmanager from './keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../logging/Logger';
 import {MainWebUi} from './MainWebUi';
 import {MenuItem} from './gui/MenuItem';

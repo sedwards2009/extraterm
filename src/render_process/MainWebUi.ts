@@ -10,7 +10,7 @@ import {TabWidget, DroppedEventDetail} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
 import {SettingsTab} from './settings/SettingsTab';
 import {AboutTab} from './AboutTab';
-import {EtKeyBindingsTab} from './KeyBindingsTab';
+import {EtKeyBindingsTab} from './keybindings/KeyBindingsTab';
 import {EtViewerTab} from './ViewerTab';
 import {EmbeddedViewer} from './EmbeddedViewer';
 import {Tab} from './gui/Tab';
@@ -37,7 +37,7 @@ type SessionProfile = config.SessionProfile;
 import * as he from 'he';
 import {FrameFinder} from './FrameFinderType';
 
-import * as keybindingmanager from './KeyBindingManager';
+import * as keybindingmanager from './keybindings/KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';

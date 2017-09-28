@@ -18,7 +18,7 @@ import * as Util from './gui/Util';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from '../theme/Theme';
-import {AcceptsKeyBindingManager, KeyBindingManager} from './KeyBindingManager';
+import {AcceptsKeyBindingManager, KeyBindingManager} from './keybindings/KeyBindingManager';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
   Commandable, CommandEntry} from './CommandPaletteRequestTypes';

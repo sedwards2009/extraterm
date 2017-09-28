@@ -24,7 +24,7 @@ import {TextViewer} from './viewers/TextViewer';
 import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
-import {KeyBindingManager, injectKeyBindingManager, AcceptsKeyBindingManager} from './KeyBindingManager';
+import {KeyBindingManager, injectKeyBindingManager, AcceptsKeyBindingManager} from './keybindings/KeyBindingManager';
 import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
 import {Logger, getLogger} from '../logging/Logger';
