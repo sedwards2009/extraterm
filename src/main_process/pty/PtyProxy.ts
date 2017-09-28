@@ -6,11 +6,11 @@
 import * as child_process from 'child_process';
 import * as PtyConnector from './PtyConnector';
 import * as _ from 'lodash';
-import * as configInterfaces from './Config';
+import * as configInterfaces from '../../Config';
 import * as fs from 'fs';
 import * as path from 'path';
-import {Logger, getLogger} from './logging/Logger';
-import * as SourceDir from './SourceDir';
+import {Logger, getLogger} from '../../logging/Logger';
+import * as SourceDir from '../../SourceDir';
 
 type Config = configInterfaces.Config;
 

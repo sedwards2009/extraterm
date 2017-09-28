@@ -21,17 +21,17 @@ import * as _ from 'lodash';
 import * as path from 'path';
 
 import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
-  SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from './Config';
-import {FileLogWriter} from './logging/FileLogWriter';
-import {Logger, getLogger, addLogWriter} from './logging/Logger';
-import {PtyConnector, Pty, PtyOptions, EnvironmentMap} from './PtyConnector';
+  SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from '../Config';
+import {FileLogWriter} from '../logging/FileLogWriter';
+import {Logger, getLogger, addLogWriter} from '../logging/Logger';
+import {PtyConnector, Pty, PtyOptions, EnvironmentMap} from './pty/PtyConnector';
 // Our special 'fake' module which selects the correct pty connector factory implementation.
-const PtyConnectorFactory = require("./PtyConnectorFactory");
-import * as ResourceLoader from './ResourceLoader';
-import * as ThemeTypes from './Theme';
-import * as ThemeManager from './ThemeManager';
-import * as Messages from './WindowMessages';
-import * as Util from './render_process/gui/Util';
+const PtyConnectorFactory = require("./pty/PtyConnectorFactory");
+import * as ResourceLoader from '../ResourceLoader';
+import * as ThemeTypes from '../Theme';
+import * as ThemeManager from '../ThemeManager';
+import * as Messages from '../WindowMessages';
+import * as Util from '../render_process/gui/Util';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
@@ -51,19 +51,19 @@ const EXTRATERM_CONFIG_DIR = "extraterm";
 const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
-const KEYBINDINGS_DIRECTORY = "../resources/keybindings";
+const KEYBINDINGS_DIRECTORY = "../../resources/keybindings";
 const DEFAULT_KEYBINDING = "keybindings.json";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
 const KEYBINDINGS_PC = "keybindings.json";
-const TERMINAL_FONTS_DIRECTORY = "../resources/terminal_fonts";
+const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
 const DEFAULT_TERMINALFONT = "DejaVuSansMono";
 
 const DEFAULT_TERMINAL_THEME = "default-terminal";
 const DEFAULT_SYNTAX_THEME = "default-syntax";
 const DEFAULT_UI_THEME = "atomic-dark-ui";
 
-const PNG_ICON_PATH = "../resources/logo/extraterm_small_logo_256x256.png";
-const ICO_ICON_PATH = "../resources/logo/extraterm_small_logo.ico";
+const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
+const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
 
 const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
 
@@ -104,7 +104,7 @@ function main(): void {
   prepareAppData();  
 
   // Themes
-  const themesdir = path.join(__dirname, THEMES_DIRECTORY);
+  const themesdir = path.join(__dirname, '..', THEMES_DIRECTORY);
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
   
   themeManager = ThemeManager.makeThemeManager([themesdir, userThemesDir]);

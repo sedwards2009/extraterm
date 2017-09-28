@@ -43,7 +43,7 @@ export class ExtensionManager {
     PopDownNumberDialog.init();
 
     this._log = getLogger("ExtensionManager", this);
-    this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../extensions" )]);
+    this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../../extensions" )]);
     this._extensionBridge = new ExtensionBridge();
   }
 

@@ -6,7 +6,7 @@
 
 import * as pty from 'ptyw.js';
 import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions} from './PtyConnector';
-import * as configInterfaces from './Config';
+import * as configInterfaces from '../../Config';
 type Config = configInterfaces.Config;
 
 class DirectPty implements Pty {
