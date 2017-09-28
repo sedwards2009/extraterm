@@ -104,7 +104,7 @@ function main(): void {
   prepareAppData();  
 
   // Themes
-  const themesdir = path.join(__dirname, '..', THEMES_DIRECTORY);
+  const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
   
   themeManager = ThemeManager.makeThemeManager([themesdir, userThemesDir]);
