@@ -5,4 +5,4 @@
  */
 
 // The real action starts in src/
-require('./src/Main');
+require('./src/main_process/Main');
