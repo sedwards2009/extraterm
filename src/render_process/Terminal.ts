@@ -38,7 +38,7 @@ import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
-import * as MmeTypeDetector from '../MimeTypeDetector';
+import * as MmeTypeDetector from '../mimetype_detector/MimeTypeDetector';
 import * as CodeMirrorOperation from './CodeMirrorOperation';
 import {Config, ConfigDistributor, CommandLineAction, injectConfigDistributor, AcceptsConfigDistributor} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
