@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
-import {Logger, getLogger} from '../logging/Logger';
+import {Logger, getLogger} from '../../logging/Logger';
 
 export interface ExtensionMetadata {
   name: string;

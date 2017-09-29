@@ -5,21 +5,21 @@
  */
 import * as path from 'path';
 import * as _ from 'lodash';
-import {Logger, getLogger} from '../logging/Logger';
+import {Logger, getLogger} from '../../logging/Logger';
 import * as he from 'he';
-import * as DomUtils from './DomUtils';
+import * as DomUtils from '../DomUtils';
 import * as CodeMirror from 'codemirror';
 import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
-import * as CommandPaletteRequestTypes from './CommandPaletteRequestTypes';
+import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import * as ExtensionApi from 'extraterm-extension-api';
-import {EtTerminal, EXTRATERM_COOKIE_ENV} from './Terminal';
-import {ViewerElement} from './ViewerElement';
-import {TextViewer} from'./viewers/TextViewer';
-import OwnerTrackingList from '../utils/OwnerTrackingList';
-import {PopDownListPicker} from './gui/PopDownListPicker';
-import {PopDownNumberDialog} from './gui/PopDownNumberDialog';
-import {EmbeddedViewer} from './EmbeddedViewer';
-import {TerminalViewer} from './viewers/TerminalViewer';
+import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
+import {ViewerElement} from '../ViewerElement';
+import {TextViewer} from'../viewers/TextViewer';
+import OwnerTrackingList from '../../utils/OwnerTrackingList';
+import {PopDownListPicker} from '../gui/PopDownListPicker';
+import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';
+import {EmbeddedViewer} from '../EmbeddedViewer';
+import {TerminalViewer} from '../viewers/TerminalViewer';
 
 
 interface ActiveExtension {
@@ -43,7 +43,7 @@ export class ExtensionManager {
     PopDownNumberDialog.init();
 
     this._log = getLogger("ExtensionManager", this);
-    this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../../extensions" )]);
+    this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../../../extensions" )]);
     this._extensionBridge = new ExtensionBridge();
   }
 
