@@ -18,8 +18,8 @@ import * as keybindingmanager from '../keybindings/KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
 import * as CodeMirror from 'codemirror';
-import * as CodeMirrorCommands from '../CodeMirrorCommands';
-import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
+import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
+import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as EtTextViewerTypes from './TerminalViewerTypes';

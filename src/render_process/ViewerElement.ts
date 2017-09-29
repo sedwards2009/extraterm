@@ -6,7 +6,7 @@
 
 import * as fs from 'fs';
 import * as Util from './gui/Util';
-import * as CodeMirrorOperation from './CodeMirrorOperation';
+import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import {VirtualScrollable, SetterState} from './VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';

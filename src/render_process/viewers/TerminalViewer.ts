@@ -12,8 +12,8 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as CodeMirror from 'codemirror';
-import * as CodeMirrorCommands from '../CodeMirrorCommands';
-import * as CodeMirrorUtils from '../utils/CodeMirrorUtils';
+import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
+import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
 import * as ViewerElementTypes from '../ViewerElementTypes';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}

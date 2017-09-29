@@ -21,7 +21,7 @@ import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntr
   from './CommandPaletteRequestTypes';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
-import * as CodeMirrorOperation from './CodeMirrorOperation';
+import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import * as SupportsClipboardPaste from './SupportsClipboardPaste';
 import {FrameMimeType} from './InternalMimeTypes';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';

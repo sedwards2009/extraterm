@@ -33,8 +33,9 @@
     ],
     "files": [
         "./src/render_process/AboutTab.ts",
-        "./src/render_process/CodeMirrorCommands.ts",
-        "./src/render_process/CodeMirrorOperation.ts",
+        "./src/render_process/codemirror/CodeMirrorCommands.ts",
+        "./src/render_process/codemirror/CodeMirrorOperation.ts",
+        "./src/render_process/codemirror/CodeMirrorUtils.ts",
         "./src/render_process/CommandPaletteFunctions.ts",
         "./src/render_process/CommandPaletteRequestTypes.ts",
         "./src/render_process/CommandPlaceholder.ts",
