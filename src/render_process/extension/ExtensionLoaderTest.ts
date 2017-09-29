@@ -10,7 +10,7 @@ import * as path from 'path';
 import {ExtensionLoader} from './ExtensionLoader';
 
 export function testHelloWorld(test: nodeunit.Test): void {
-  const loader = new ExtensionLoader([path.join(__dirname, "test/extensions")]);
+  const loader = new ExtensionLoader([path.join(__dirname, "../../test/extensions")]);
   loader.scan();
 
   const extensions = loader.getExtensions();
@@ -32,7 +32,7 @@ export function testHelloWorld(test: nodeunit.Test): void {
 }
 
 export function testHelloDependency(test: nodeunit.Test): void {
-  const loader = new ExtensionLoader([path.join(__dirname, "test/extensions")]);
+  const loader = new ExtensionLoader([path.join(__dirname, "../../test/extensions")]);
   loader.scan();
 
   const extensions = loader.getExtensions();
