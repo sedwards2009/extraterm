@@ -3,11 +3,11 @@
  */
 
 "use strict";
-import {ViewerElement} from '../ViewerElement';
+import {ViewerElement} from '../viewers/ViewerElement';
 import * as DomUtils from '../DomUtils';
 import * as markdownMod from 'markdown';
 const markdown = markdownMod.markdown;
-import * as ViewerElementTypes from '../ViewerElementTypes';
+import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 
 const ID = "EtMarkdownViewerTemplate";
 const ID_CONTAINER = "container";

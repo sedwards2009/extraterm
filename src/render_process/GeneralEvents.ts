@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as ViewerElementTypes from './ViewerElementTypes';
+import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 
 export const EVENT_TYPE_TEXT = 'type-text';
 

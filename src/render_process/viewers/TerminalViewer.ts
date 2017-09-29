@@ -7,14 +7,14 @@ import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ViewerElement} from '../ViewerElement';
+import {ViewerElement} from './ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as CodeMirror from 'codemirror';
 import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
 import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
-import * as ViewerElementTypes from '../ViewerElementTypes';
+import * as ViewerElementTypes from './ViewerElementTypes';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
   from '../CommandPaletteRequestTypes';

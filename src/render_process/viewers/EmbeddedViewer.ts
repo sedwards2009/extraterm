@@ -5,26 +5,26 @@
  */
 
 import * as _ from 'lodash';
-import * as ResourceLoader from '../ResourceLoader';
-import {MenuItem} from './gui/MenuItem';
-import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
-import * as DomUtils from './DomUtils';
-import * as Util from './gui/Util';
+import * as ResourceLoader from '../../ResourceLoader';
+import {MenuItem} from '../gui/MenuItem';
+import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
+import * as DomUtils from '../DomUtils';
+import * as Util from '../gui/Util';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import {ThemeableElementBase} from './ThemeableElementBase';
-import * as KeyBindingManager from './keybindings/KeyBindingManager';
-import * as VirtualScrollArea from './VirtualScrollArea';
-import * as ThemeTypes from '../theme/Theme';
-import * as GeneralEvents from './GeneralEvents';
+import {ThemeableElementBase} from '../ThemeableElementBase';
+import * as KeyBindingManager from '../keybindings/KeyBindingManager';
+import * as VirtualScrollArea from '../VirtualScrollArea';
+import * as ThemeTypes from '../../theme/Theme';
+import * as GeneralEvents from '../GeneralEvents';
 import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
-  from './CommandPaletteRequestTypes';
-import {Logger, getLogger} from '../logging/Logger';
-import log from '../logging/LogDecorator';
-import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
-import * as SupportsClipboardPaste from './SupportsClipboardPaste';
-import {FrameMimeType} from './InternalMimeTypes';
-import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
+  from '../CommandPaletteRequestTypes';
+import {Logger, getLogger} from '../../logging/Logger';
+import log from '../../logging/LogDecorator';
+import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
+import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
+import {FrameMimeType} from '../InternalMimeTypes';
+import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;

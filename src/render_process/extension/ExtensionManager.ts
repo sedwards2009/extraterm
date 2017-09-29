@@ -13,12 +13,12 @@ import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import * as ExtensionApi from 'extraterm-extension-api';
 import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
-import {ViewerElement} from '../ViewerElement';
+import {ViewerElement} from '../viewers/ViewerElement';
 import {TextViewer} from'../viewers/TextViewer';
 import OwnerTrackingList from '../../utils/OwnerTrackingList';
 import {PopDownListPicker} from '../gui/PopDownListPicker';
 import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';
-import {EmbeddedViewer} from '../EmbeddedViewer';
+import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
 import {TerminalViewer} from '../viewers/TerminalViewer';
 
 

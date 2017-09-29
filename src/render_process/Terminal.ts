@@ -10,13 +10,13 @@ import * as _ from 'lodash';
 import * as utf8 from 'utf8';
 import {clipboard} from 'electron';
 
-import {ViewerElement} from './ViewerElement';
-import * as ViewerElementTypes from './ViewerElementTypes';
+import {ViewerElement} from './viewers/ViewerElement';
+import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from '../theme/Theme';
-import {EmbeddedViewer, EmbeddedViewerPosture} from './EmbeddedViewer';
+import {EmbeddedViewer, EmbeddedViewerPosture} from './viewers/EmbeddedViewer';
 import {CommandPlaceHolder} from './CommandPlaceholder';
 import {TerminalViewer} from './viewers/TerminalViewer';
 import {TextDecoration, BookmarkRef} from './viewers/TerminalViewerTypes';

@@ -5,11 +5,11 @@
  */
 
 import * as fs from 'fs';
-import * as Util from './gui/Util';
-import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
-import {VirtualScrollable, SetterState} from './VirtualScrollArea';
+import * as Util from '../gui/Util';
+import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
+import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
-import {ThemeableElementBase} from './ThemeableElementBase';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable {

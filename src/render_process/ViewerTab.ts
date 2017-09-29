@@ -6,10 +6,10 @@
 
 import * as fs from 'fs';
 
-import {ViewerElement} from "./ViewerElement";
-import * as ViewerElementTypes from './ViewerElementTypes';
+import {ViewerElement} from "./viewers/ViewerElement";
+import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import {EmbeddedViewer} from './EmbeddedViewer';
+import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
 import * as DomUtils from './DomUtils';

@@ -8,7 +8,7 @@
 
 import * as _ from 'lodash';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import {ViewerElement} from '../ViewerElement';
+import {ViewerElement} from '../viewers/ViewerElement';
 import * as Vue from 'vue';
 
 import * as config from '../../Config';
@@ -17,7 +17,7 @@ import * as GeneralEvents from '../GeneralEvents';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ThemeTypes from '../../theme/Theme';
-import * as ViewerElementTypes from '../ViewerElementTypes';
+import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 
 type Config = config.Config;
 type ConfigManager = config.ConfigDistributor;

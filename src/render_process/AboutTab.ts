@@ -9,8 +9,8 @@
 "use strict";
 
 import * as ThemeTypes from '../theme/Theme';
-import {ViewerElement} from './ViewerElement';
-import * as ViewerElementTypes from './ViewerElementTypes';
+import {ViewerElement} from './viewers/ViewerElement';
+import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
 import {shell} from 'electron';
