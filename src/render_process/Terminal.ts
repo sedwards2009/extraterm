@@ -458,7 +458,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     
     for (const elementStat of this._childElementList) {
       const element = elementStat.element;
-      if (EmbeddedViewer.is(element) && element.getAttribute('tag') === frameId) {
+      if (EmbeddedViewer.is(element) && element.getTag() === frameId) {
         return element;
       }
     }
