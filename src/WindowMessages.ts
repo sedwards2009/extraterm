@@ -10,6 +10,7 @@
 
 import * as Config from './Config';
 import * as ThemeTypes from './theme/Theme';
+import {BulkFileIdentifier, Metadata} from './main_process/bulk_file_handling/BulkFileStorage';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeContents = ThemeTypes.ThemeContents;
@@ -48,7 +49,12 @@ export const enum MessageType {
   WINDOW_MAXIMIZE_REQUEST,
   NEW_TAG_REQUEST,
   NEW_TAG,
-  PTY_OUTPUT_BUFFER_SIZE
+  PTY_OUTPUT_BUFFER_SIZE,
+
+  CREATE_BULK_FILE,
+  CREATED_BULK_FILE,
+  WRITE_BULK_FILE,
+  CLOSE_BULK_FILE
 }
 
 /**
@@ -392,4 +398,23 @@ export interface NewTagRequestMessage extends Message {
  */
 export interface NewTagMessage extends Message {
   tag: string;
+}
+
+export interface CreateBulkFileMessage extends Message {
+  metadata: Metadata;
+  size: number;
+}
+
+export interface CreatedBulkFileResponseMessage extends Message {
+  identifier: BulkFileIdentifier;
+}
+
+export interface WriteBulkFileMessage extends Message {
+  identifier: BulkFileIdentifier;
+  // sequenceNumber: number;
+  data: Buffer;
+}
+
+export interface CloseBulkFileMessage extends Message {
+  identifier: BulkFileIdentifier;
 }

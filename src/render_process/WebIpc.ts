@@ -7,6 +7,7 @@
 import * as Electron from 'electron';
 const ipc = Electron.ipcRenderer;
 
+import {BulkFileIdentifier, Metadata} from '../main_process/bulk_file_handling/BulkFileStorage';
 import * as Messages from '../WindowMessages';
 import * as config from '../Config';
 import {Logger, getLogger} from '../logging/Logger';
@@ -178,4 +179,21 @@ export function windowMinimizeRequest(): void {
 export function windowMaximizeRequest(): void {
   const msg: Messages.WindowMaximizeRequestMessage = { type: Messages.MessageType.WINDOW_MAXIMIZE_REQUEST };
   ipc.send(Messages.CHANNEL_NAME, msg);  
+}
+
+export function createBulkFileSync(metadata: Metadata, size: number): BulkFileIdentifier {
+  const msg: Messages.CreateBulkFileMessage = {type: Messages.MessageType.CREATE_BULK_FILE, metadata, size};
+  const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
+  const createdBulkFileMessage = <Messages.CreatedBulkFileResponseMessage> event;
+  return createdBulkFileMessage.identifier;
+}
+
+export function writeBulkFile(identifier: BulkFileIdentifier, data: Buffer): void {
+  const msg: Messages.WriteBulkFileMessage = {type: Messages.MessageType.WRITE_BULK_FILE, identifier, data};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function closeBulkFile(identifier: BulkFileIdentifier): void {
+  const msg: Messages.CloseBulkFileMessage = {type: Messages.MessageType.CLOSE_BULK_FILE, identifier};
+  ipc.send(Messages.CHANNEL_NAME, msg);
 }

@@ -41,6 +41,7 @@
     "markdown": "0.5.0",
     "node-sass": "4.5.3",
     "qs": "6.3.1",
+    "smart-buffer": "^3.0.3",
     "source-map-support": "0.3.2",
     "utf8": "2.1.2",
     "vue": "1.0.10"

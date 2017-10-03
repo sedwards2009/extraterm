@@ -89,7 +89,10 @@ src/render_process/viewers/TerminalViewer.js
 src/render_process/viewers/TerminalViewerTypes.js
 src/render_process/viewers/TextViewer.js
 src/render_process/viewers/TipViewer.js
-src/utils/SetUtils.js
+src/main_process/bulk_file_handling/BulkFileStorage.js
+src/main_process/bulk_file_handling/BulkFileWebProtocol.js
+src/render_process/bulk_file_handling/BulkFileBroker.js
+src/render_process/bulk_file_handling/BulkFileHandle.js
 extensions/TextViewerTabWidth/src/TextViewerTabWidthExtension.js
 __pycache__/
 build_tmp

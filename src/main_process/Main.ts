@@ -20,6 +20,7 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 
+import {BulkFileStorage} from './bulk_file_handling/BulkFileStorage';
 import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
   SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
@@ -74,6 +75,7 @@ let ptyConnector: PtyConnector;
 let tagCounter = 1;
 let fonts: FontInfo[] = null;
 let titleBarVisible = false;
+let bulkFileStorage: BulkFileStorage = null;
 
 function main(): void {
   let failed = false;
@@ -130,6 +132,9 @@ function main(): void {
   }
   
   _log.stopRecording();
+
+  bulkFileStorage = new BulkFileStorage("");
+
 
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
@@ -920,7 +925,20 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
         return;
       }
       break;
-    
+
+    case Messages.MessageType.CREATE_BULK_FILE:
+      const createBulkFileReply = handleCreateBulkFile(<Messages.CreateBulkFileMessage> msg);
+      event.returnValue = createBulkFileReply;
+      break;
+
+    case Messages.MessageType.WRITE_BULK_FILE:
+      handleWriteBulkFile(<Messages.WriteBulkFileMessage> msg);
+      break;
+
+    case Messages.MessageType.CLOSE_BULK_FILE:
+      handleCloseBulkFile(<Messages.CloseBulkFileMessage> msg);
+      break;
+
     default:
       break;
   }
@@ -1176,6 +1194,23 @@ function handleNewTagRequest(msg: Messages.NewTagRequestMessage): Messages.NewTa
   const reply: Messages.NewTagMessage = { type: Messages.MessageType.NEW_TAG, tag: "" + tagCounter };
   tagCounter++;
   return reply;
+}
+
+//-------------------------------------------------------------------------
+
+function handleCreateBulkFile(msg: Messages.CreateBulkFileMessage): Messages.CreatedBulkFileResponseMessage {
+  _log.debug("handleCreateBulkFile: ", msg.metadata, msg.size);
+  const identifier = bulkFileStorage.createBulkFile(msg.metadata, msg.size);
+  const reply: Messages.CreatedBulkFileResponseMessage = {type: Messages.MessageType.CREATED_BULK_FILE, identifier};
+  return reply;
+}
+
+function handleWriteBulkFile(msg: Messages.WriteBulkFileMessage): void {
+  bulkFileStorage.write(msg.identifier, msg.data);
+}
+
+function handleCloseBulkFile(msg: Messages.CloseBulkFileMessage): void {
+  bulkFileStorage.close(msg.identifier);
 }
 
 main();
