@@ -10,8 +10,9 @@ import * as _ from 'lodash';
 import * as utf8 from 'utf8';
 import {clipboard} from 'electron';
 
-import {BulkFileIdentifier} from '../main_process/bulk_file_handling/BulkFileStorage';
-import {BulkFileBroker, WriteableBulkFileHandle} from './bulk_file_handling/BulkFileBroker';
+import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
+import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
+import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 
 import {ViewerElement} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
@@ -191,6 +192,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _showPayloadSize: string;
   private _showData: string;
+  private _fileBroker: BulkFileBroker;
   private _downloadHandler: DownloadApplicationModeHandler;
   
   private _applicationMode: ApplicationMode;
@@ -255,7 +257,13 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._htmlData = null;
     this._showPayloadSize = null;
     this._showData = null;
-    this._downloadHandler = new DownloadApplicationModeHandler();
+    this._fileBroker = new BulkFileBroker();
+    this._downloadHandler = new DownloadApplicationModeHandler(this._fileBroker);
+    this._downloadHandler.onCreatedBulkFile( (newBulkFile: BulkFileHandle) => {
+      newBulkFile.onAvailableSizeChange( (newSize) => {
+        this._log.debug(`Bulk file read ${newSize} of ${newBulkFile.getTotalSize()}`);
+      });
+    });
 
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
     this._bracketStyle = null;
@@ -2126,110 +2134,3 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 //   handleData(data: string): void;
 //   handleEnd(): void;
 // }
-
-
-
-const DOWNLOAD_HANDLER_BUFFER_SIZE = 3*1024;
-
-enum DownloadHandlerState {
-  IDLE,
-  READING_METADATA,
-  READING,
-  ERROR
-}
-
-class DownloadApplicationModeHandler /* implements ApplicationModeHandler */ {
-  private _log: Logger;
-  private _state = DownloadHandlerState.IDLE;
-  private _encodedDataBuffer: string;
-  private _buffer: Buffer = null;
-  private _metadataSize: number;
-
-  private _fileHandle : WriteableBulkFileHandle = null;
-  private _broker = new BulkFileBroker();
-
-  constructor() {
-    this._log = getLogger("DownloadHandler", this);
-    this._resetVariables();
-  }
-
-  private _resetVariables(): void {
-    this._state = DownloadHandlerState.IDLE;
-    this._encodedDataBuffer = "";
-    this._buffer = null;
-    this._metadataSize = -1;
-    this._fileHandle = null;
-  }
-
-  handleStart(parameters: string[]): void {
-
-    const metadataSize = parseInt(parameters[0], 10);
-
-    this._metadataSize = metadataSize;
-    this._state = DownloadHandlerState.READING_METADATA;
-  }
-
-  /**
-   * 
-   * @param data base64 data
-   */
-  handleData(data: string): void {
-    switch (this._state) {
-      case DownloadHandlerState.READING_METADATA:
-      this._handleDataReadingMetadata(data);
-      break;
-  
-    case DownloadHandlerState.READING:
-      this._handleDataRead(data);
-      break;
-      
-    case DownloadHandlerState.ERROR:
-      break;
-      
-    default:
-      this._log.warn("handleDownloadData called while in state ", DownloadHandlerState[this._state]);
-      break;
-    }
-  }
-
-  private _handleDataReadingMetadata(encodedData: string): void {
-    this._encodedDataBuffer += encodedData;
-    if (this._encodedDataBuffer.length >= this._metadataSize) {
-      let metadata = null;
-      try {
-        metadata = JSON.parse(encodedData.substr(0, this._metadataSize));
-      } catch(ex) {
-        this._log.warn("Unable to parse JSON metadata.", ex);
-        this._state = DownloadHandlerState.ERROR;
-        return;
-      }
-      this._encodedDataBuffer = this._encodedDataBuffer.slice(this._metadataSize);
-
-      this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, -1);
-
-      this._state = DownloadHandlerState.READING;
-
-      this._handleDataRead("");
-    }
-  }
-
-  private _handleDataRead(encodedData: string): void {
-    this._encodedDataBuffer += encodedData;
-
-    if (this._encodedDataBuffer.length >= DOWNLOAD_HANDLER_BUFFER_SIZE) {
-      this._flushBuffer();
-    }
-
-  }
-
-  private _flushBuffer(): void {
-    const buf = Buffer.from(this._encodedDataBuffer, 'base64');
-    this._fileHandle.write(buf);
-  }
-
-  handleStop(): void {
-    this._flushBuffer();
-    this._fileHandle.close();
-    this._resetVariables();
-  }
-}

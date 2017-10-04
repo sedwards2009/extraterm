@@ -34,6 +34,7 @@ src/render_process/CommandPaletteFunctions.js
 src/render_process/CommandPaletteRequestTypes.js
 src/render_process/CommandPlaceholder.js
 src/render_process/DomUtils.js
+src/render_process/DownloadApplicationModeHandler.js
 src/render_process/viewers/EmbeddedViewer.js
 src/render_process/EmptyPaneMenu.js
 src/render_process/extension/ExtensionLoader.js

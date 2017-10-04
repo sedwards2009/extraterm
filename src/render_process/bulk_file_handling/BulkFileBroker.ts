@@ -8,6 +8,9 @@ import {BulkFileHandle} from './BulkFileHandle';
 import {BulkFileIdentifier, Metadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {getLogger, Logger} from '../../logging/Logger';
 import * as WebIpc from '../WebIpc';
+import {Event} from 'extraterm-extension-api';
+import {EventEmitter} from '../../utils/EventEmitter';
+
 
 export class BulkFileBroker {
 
@@ -39,18 +42,31 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   private _refCount = 0;
   private _fileIdentifier: BulkFileIdentifier;
   private _isOpen = true;
+  private _onAvailableSizeChangeEventEmitter = new EventEmitter<number>();
+  private _availableSize = 0;
+  private _onFinishedEventEmitter = new EventEmitter<void>();
 
-  constructor(private _disposable: Disposable, private _metadata: Metadata, private _size: number) {
+  constructor(private _disposable: Disposable, private _metadata: Metadata, private _totalSize: number) {
     this._log = getLogger("WriteableBulkFileHandle", this);
-    this._fileIdentifier = WebIpc.createBulkFileSync(_metadata, _size);
+
+    this.onAvailableSizeChange = this._onAvailableSizeChangeEventEmitter.event.bind(this._onAvailableSizeChangeEventEmitter);
+    this.onFinished = this._onFinishedEventEmitter.event.bind(this._onFinishedEventEmitter);
+
+    this._fileIdentifier = WebIpc.createBulkFileSync(_metadata, _totalSize);
   }
 
   getUrl(): string {
     return "";
   }
 
-  getSize(): number {
-    return this._size;
+  onAvailableSizeChange: Event<number>;
+
+  getAvailableSize(): number {
+    return this._availableSize;
+  }
+
+  getTotalSize(): number {
+    return this._totalSize;
   }
 
   getMetadata(): Metadata {
@@ -74,6 +90,8 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
       return;
     }
     WebIpc.writeBulkFile(this._fileIdentifier, data);
+    this._availableSize += data.length;
+    this._onAvailableSizeChangeEventEmitter.fire(this._availableSize);
   }
 
   close(): void {
@@ -85,4 +103,6 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     WebIpc.closeBulkFile(this._fileIdentifier);
     this._isOpen = false;
   }
+
+  onFinished: Event<void>;
 }
