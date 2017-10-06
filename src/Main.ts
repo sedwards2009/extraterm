@@ -78,6 +78,7 @@ let titleBarVisible = false;
 function main(): void {
   let failed = false;
 
+  prepareAppData();
   setUpLogging();
 
   app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
@@ -101,7 +102,6 @@ function main(): void {
     .option(EXTRATERM_DEVICE_SCALE_FACTOR + ' []', '(Internal Extraterm option. Ignore)')
     .parse(normalizedArgv);
 
-  prepareAppData();  
 
   // Themes
   const themesdir = path.join(__dirname, THEMES_DIRECTORY);
