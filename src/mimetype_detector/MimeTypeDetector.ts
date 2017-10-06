@@ -287,7 +287,7 @@ const magic: MagicTest[] = [
 /**
  * Try to match a buffer of bytes to a mimetype.
  * 
- * @param buffer the buffer off bytes to examine.
+ * @param buffer the buffer of bytes to examine.
  * @return the matching mimetype or null if one could not be identified.
  */
 function magicToMimeType(buffer: Buffer): string {

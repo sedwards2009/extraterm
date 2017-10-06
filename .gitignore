@@ -104,3 +104,6 @@ extensions/InjectShellIntegration/src/InjectShellIntegrationExtension.js
 extensions/InjectShellIntegration/src/InjectShellIntegrationExtensionTest.js
 extensions/InjectShellIntegration/src/ScriptBuilders.js
 docs/_site
+src/render_process/bulk_file_handling/BulkFileUtils.js
+src/utils/EventEmitter.js
+src/utils/SetUtils.js

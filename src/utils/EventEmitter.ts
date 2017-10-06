@@ -6,6 +6,7 @@
 
 import {Disposable, Event} from 'extraterm-extension-api';
 
+// FIXME docs
 
 export class EventEmitter<T> {
 

@@ -10,7 +10,10 @@ import {getLogger, Logger} from '../../logging/Logger';
 import * as WebIpc from '../WebIpc';
 import {Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
+import {SmartBuffer, SmartBufferOptions} from 'smart-buffer';
 
+
+const ONE_KILOBYTE = 1024;
 
 export class BulkFileBroker {
 
@@ -45,6 +48,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   private _onAvailableSizeChangeEventEmitter = new EventEmitter<number>();
   private _availableSize = 0;
   private _onFinishedEventEmitter = new EventEmitter<void>();
+  private _peekBuffer: SmartBuffer = new SmartBuffer();
 
   constructor(private _disposable: Disposable, private _metadata: Metadata, private _totalSize: number) {
     this._log = getLogger("WriteableBulkFileHandle", this);
@@ -56,7 +60,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   }
 
   getUrl(): string {
-    return "";
+    return "bulk://" + this._fileIdentifier;
   }
 
   onAvailableSizeChange: Event<number>;
@@ -71,6 +75,10 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
 
   getMetadata(): Metadata {
     return this._metadata;
+  }
+
+  peek1KB(): Buffer {
+    return this._peekBuffer.toBuffer();
   }
 
   ref(): void {
@@ -89,9 +97,24 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
       this._log.warn("Write attempted on a closed WriteableBulkFileHandle! ", this._fileIdentifier);
       return;
     }
+
+    this._writePeekBuffer(data);
+
     WebIpc.writeBulkFile(this._fileIdentifier, data);
     this._availableSize += data.length;
     this._onAvailableSizeChangeEventEmitter.fire(this._availableSize);
+  }
+
+  private _writePeekBuffer(data: Buffer): void {
+    if (this._peekBuffer.length < ONE_KILOBYTE) {
+      if (this._peekBuffer.length + data.length > ONE_KILOBYTE) {
+        const tmpBuffer = Buffer.alloc(ONE_KILOBYTE - this._peekBuffer.length);
+        data.copy(tmpBuffer, 0, 0, tmpBuffer.length);
+        this._peekBuffer.writeBuffer(tmpBuffer);
+      } else {
+        this._peekBuffer.writeBuffer(data);
+      }
+    }
   }
 
   close(): void {

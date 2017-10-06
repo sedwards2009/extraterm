@@ -284,6 +284,7 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
     this._codeMirror.setOption("tabSize", size);
   }
 
+  // FIXME upgrade to BulkFileHandle
   setBytes(buffer: Buffer, mimeType: string): void {
     let charset = "utf-8";
     let cleanMimeType = mimeType;

@@ -46,6 +46,11 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
     this._fileHandle = null;
   }
 
+  // FIXME this is temporary.
+  getBulkFileHandle(): BulkFileHandle {
+    return this._fileHandle;
+  }
+
   handleStart(parameters: string[]): void {
 
     const metadataSize = parseInt(parameters[0], 10);

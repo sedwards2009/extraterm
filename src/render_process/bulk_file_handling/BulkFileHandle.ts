@@ -12,6 +12,7 @@ export interface BulkFileHandle {
   getAvailableSize(): number;
   getTotalSize(): number;
   getMetadata(): Metadata;
+  peek1KB(): Buffer;
   ref(): void;
   deref(): void;
   onAvailableSizeChange: Event<number>;

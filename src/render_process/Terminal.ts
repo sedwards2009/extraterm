@@ -12,6 +12,7 @@ import {clipboard} from 'electron';
 
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
+import * as BulkFileUtils from './bulk_file_handling/BulkFileUtils';
 import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 
 import {ViewerElement} from './viewers/ViewerElement';
@@ -42,7 +43,6 @@ import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
-import * as MmeTypeDetector from '../mimetype_detector/MimeTypeDetector';
 import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import {Config, ConfigDistributor, CommandLineAction, injectConfigDistributor, AcceptsConfigDistributor} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
@@ -190,8 +190,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _cookie: string;
   private _htmlData: string;
   
-  private _showPayloadSize: string;
-  private _showData: string;
   private _fileBroker: BulkFileBroker;
   private _downloadHandler: DownloadApplicationModeHandler;
   
@@ -255,8 +253,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._cookie = null;
     this._terminalViewer = null;
     this._htmlData = null;
-    this._showPayloadSize = null;
-    this._showData = null;
     this._fileBroker = new BulkFileBroker();
     this._downloadHandler = new DownloadApplicationModeHandler(this._fileBroker);
     this._downloadHandler.onCreatedBulkFile( (newBulkFile: BulkFileHandle) => {
@@ -716,7 +712,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         }
     }
 
-    this._appendMimeViewer(TipViewer.MIME_TYPE, "Tip", "utf8", null);
+    this._appendMimeViewer(TipViewer.MIME_TYPE, "Tip", null);
     const newConfig = _.cloneDeep(config);
     newConfig.tipTimestamp = Date.now();
     newConfig.tipCounter = newConfig.tipCounter + 1;
@@ -1659,8 +1655,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
             this._log.debug("Starting APPLICATION_MODE_SHOW_FILE");
           }
           this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_FILE;
-          this._showData = "";
-          this._showPayloadSize = params[2];
           this._downloadHandler.handleStart(params.slice(2));
           break;
         
@@ -1688,7 +1682,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         break;
         
       case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
-        this._showData = this._showData + data;
         this._downloadHandler.handleData(data);
         break;
         
@@ -1724,9 +1717,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         break;
         
       case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
-        this._handleShowFile(this._showPayloadSize, this._showData);
-        this._showPayloadSize = "";
-        this._showData = "";
+        const bfh = this._downloadHandler.getBulkFileHandle();  // FIXME
+
+        this._handleShowFile(bfh);
         this._downloadHandler.handleStop();
         break;
         
@@ -2048,37 +2041,16 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._sendDataToPtyEvent("#;0\n");  // Terminating char
   }
 
-  private _handleShowFile(metadataSizeStr: string, encodedData: string): void {
-    const metadataSize = parseInt(metadataSizeStr,10);
-    if (metadataSize > encodedData.length) {
-      this._log.warn("Received corrupt data for a 'show' control sequence.");
-      return;
-    }
-    
-    const buffer = Buffer.from(encodedData.slice(metadataSize), 'base64');
-    const metadata = JSON.parse(encodedData.substr(0, metadataSize));
-    const filename = metadata.filename;
-
-    let mimeType: string = metadata.mimeType || null;
-    let charset: string = metadata.charset || null;
-    if (mimeType === null) {
-      // Try to determine a mimetype by inspecting the file name first.
-      const detectionResult = MmeTypeDetector.detect(filename, buffer);
-      if (detectionResult !== null) {
-        mimeType = detectionResult.mimeType;
-        if (charset === null) {
-          charset = detectionResult.charset;
-        }
-      }
-    }
-
+  private _handleShowFile(bulkFileHandle: BulkFileHandle): void {
+    const filename = "" + bulkFileHandle.getMetadata().filename;
+    const {mimeType, charset} = BulkFileUtils.guessMimetype(bulkFileHandle);
     if (mimeType !== null) {
-      this._appendMimeViewer(mimeType, filename, charset, buffer);
+      this._appendMimeViewer(mimeType, filename, bulkFileHandle);
     }
   }
 
-  private _appendMimeViewer(mimeType: string, filename: string, charset: string, data: Buffer): void {
-    const mimeViewerElement = this._createMimeViewer(mimeType, charset, data);
+  private _appendMimeViewer(mimeType: string, filename: string, bulkFileHandle: BulkFileHandle): void {
+    const mimeViewerElement = this._createMimeViewer(mimeType, bulkFileHandle);
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement("viewer");
@@ -2092,7 +2064,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  private _createMimeViewer(mimeType: string, charset: string, data: Buffer): ViewerElement {
+  private _createMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): ViewerElement {
     const candidates = viewerClasses.filter( (viewerClass) => viewerClass.supportsMimeType(mimeType) );
     
     if (candidates.length === 0) {
@@ -2103,8 +2075,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
     injectKeyBindingManager(dataViewer, this._keyBindingManager);
     injectConfigDistributor(dataViewer, this._configManager);
-    if (data !== null) {
-      dataViewer.setBytes(data, charset !== null ? mimeType + ";" + charset : mimeType);
+    if (bulkFileHandle !== null) {
+      dataViewer.setBulkFileHandle(bulkFileHandle);
     }
     dataViewer.setEditable(true);
     return dataViewer;

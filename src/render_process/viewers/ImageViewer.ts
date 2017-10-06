@@ -5,6 +5,9 @@
 "use strict";
 import * as _ from 'lodash';
 import * as fs from 'fs';
+
+import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
+import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import {ViewerElement} from './ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -66,6 +69,9 @@ export class ImageViewer extends ViewerElement {
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
   private _keyBindingManager: KeyBindingManager;
+
+  private _bulkFileHandle: BulkFileHandle;
+
   private _text: string;
   private _buffer: Buffer;
   private _mimeType: string;
@@ -87,6 +93,7 @@ export class ImageViewer extends ViewerElement {
   private _initProperties(): void {
     this._log = getLogger(ImageViewer.TAG_NAME, this);
     this._keyBindingManager = null;
+    this._bulkFileHandle = null;
     this._text = null;
     this._buffer = null;
     this._mimeType = null;
@@ -154,18 +161,6 @@ export class ImageViewer extends ViewerElement {
     return this._visualState;
   }
   
-  // getText(): string {
-  //   return null;
-  // }
-  // 
-  // setText(newText: string): void {
-  //   if (this._codeMirror === null) {
-  //     this._text = newText;
-  //   } else {
-  //     this._codeMirror.getDoc().setValue(newText);
-  //   }
-  // }
-  
   setMimeType(mimeType: string): void {
     this._mimeType = mimeType;
   }
@@ -174,12 +169,14 @@ export class ImageViewer extends ViewerElement {
     return this._mimeType;
   }
   
-  setBytes(buffer: Buffer, mimeType: string): void {
+  setBulkFileHandle(handle: BulkFileHandle): void {
+    const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     this.setMimeType(mimeType);
-    if (DomUtils.getShadowRoot(this) === null) {
-      this._buffer = buffer;
-    } else {
-      this._setImage(buffer, mimeType);
+    this._bulkFileHandle = handle;
+    handle.ref();
+
+    if (DomUtils.getShadowRoot(this) !== null) {
+      this._setImageUrl(handle.getUrl());
     }
   }
 
@@ -321,8 +318,8 @@ export class ImageViewer extends ViewerElement {
     imgElement.addEventListener('load', this._handleImageLoad.bind(this));
     this._applyVisualState(this._visualState);
 
-    if (this._buffer !== null) {
-      this._setImage(this._buffer, this._mimeType);
+    if (this._bulkFileHandle !== null) {
+      this._setImageUrl(this._bulkFileHandle.getUrl());
     }
     
     this._adjustHeight(this._height);
@@ -395,10 +392,9 @@ export class ImageViewer extends ViewerElement {
     this.dispatchEvent(event);
   }
   
-  private _setImage(buffer: Buffer, mimeType: string): void {
-    const dataUrl = DomUtils.CreateDataUrl(buffer, mimeType);
+  private _setImageUrl(url: string): void {
     const imageEl = DomUtils.getShadowId(this, ID_IMAGE);
-    imageEl.setAttribute("src", dataUrl);
+    imageEl.setAttribute("src", url);
   }
   private _handleImageLoad(): void {
     const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);

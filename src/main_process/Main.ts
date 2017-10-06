@@ -133,9 +133,6 @@ function main(): void {
   
   _log.stopRecording();
 
-  bulkFileStorage = new BulkFileStorage("");
-
-
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
     ptyConnector.destroy();
@@ -153,6 +150,8 @@ function main(): void {
     config.systemConfig.currentScaleFactor = currentScaleFactor;
     config.systemConfig.originalScaleFactor = originalScaleFactor;
 
+    bulkFileStorage = new BulkFileStorage("");
+    
     startIpc();
     
     // Create the browser window.
