@@ -38,6 +38,7 @@
         "./src/logging/Logger.ts",
         "./src/main_process/bulk_file_handling/BulkFileStorage.ts",
         "./src/main_process/bulk_file_handling/BulkFileWebProtocol.ts",
+        "./src/main_process/bulk_file_handling/WriterReaderFile.ts",
         "./src/main_process/Main.ts",
         "./src/main_process/pty/PtyConnector.ts",
         "./src/main_process/pty/PtyDirect.ts",
