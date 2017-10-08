@@ -19,7 +19,7 @@ function main() {
       return;
     }
 
-    console.log("write stuff");
+    console.log("Writing stuff");
     if (line < 100) {
       const data = "Line: " + line + "------------------------------------------------------------------------------------------\n";
       line++;
@@ -30,15 +30,16 @@ function main() {
       return;
     }
     writerStream.end();
+    setTimeout(() => {console.log('bye bye')}, 1000);
   };
 
   writerStream.on('open', () => {
-    console.log("open event!");
+    console.log("Writer recevied 'open' event.");
     startReading2();
   });
 
   writerStream.on('drain', () => {
-    console.log("drained!");
+    console.log("Writer received 'drain' event.");
     wait = false;
     writeStuff();
   });
@@ -48,34 +49,22 @@ function main() {
   startReading2();
 }
 
-function startReading() {
-  const readerStream = fs.createReadStream(filename);
-  readerStream.on('data', (chunk) => {
-    console.log("Read: " + chunk.toString());
-  });
-  readerStream.on('end', () => {
-    console.log("Reader end event!");
-  });
-  readerStream.on('close', () => {
-    console.log("Reader close event!");
-  });
-}
-
 function startReading2() {
   const readerStream = writerReaderFile.createReadStream();
 
-  // const readerStream = fs.createReadStream(filename);
   readerStream.on('readable', () => {
     const chunk = readerStream.read();
     if (chunk != null) {
-      console.log("Read: " + chunk.toString());
+      console.log("Client reader got: " + chunk.toString());
+    } else {
+      console.log("Client reader got: null");
     }
   });
   readerStream.on('end', () => {
-    console.log("Reader end event!");
+    console.log("Client reader received 'end' event.");
   });
   readerStream.on('close', () => {
-    console.log("Reader close event!");
+    console.log("Client reader received 'close' event.");
   });
 }
 
