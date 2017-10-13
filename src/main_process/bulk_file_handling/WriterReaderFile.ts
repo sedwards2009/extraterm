@@ -5,6 +5,7 @@
 */
 import * as fs from 'fs';
 import {Readable, ReadableOptions, Transform, Writable} from 'stream';
+import {getLogger, Logger} from '../../logging/Logger';
 
 
 export class WriterReaderFile {
@@ -58,16 +59,19 @@ class CounterTransform extends Transform {
   }
 }
 
-class TailingFileReader extends Readable {
+const TRAILING_FILE_READER_BUFFER_SIZE = 256 * 1024;
 
+class TailingFileReader extends Readable {
+  private _log: Logger;
   private _fhandle = -1;
   private _readPointer = 0;
   private _buffer: Buffer = null;
 
   constructor(filename: string, private _counterTransformer: CounterTransform, options?: ReadableOptions) {
     super(options);
-
+    this._log = getLogger("TailingFileReader", this);
     this._fhandle = fs.openSync(filename, 'r');
+    this._buffer = Buffer.alloc(TRAILING_FILE_READER_BUFFER_SIZE);
   }
 
   protected _read(size: number): void {
@@ -80,13 +84,12 @@ class TailingFileReader extends Readable {
     const effectiveReadSize = Math.min(size, this._counterTransformer.getCount() - this._readPointer);
 
     if (effectiveReadSize !== 0) {
-      if (this._buffer == null || this._buffer.length !== effectiveReadSize) {
-        this._buffer = Buffer.alloc(effectiveReadSize);
-      }
-      fs.read(this._fhandle, this._buffer, 0, effectiveReadSize, this._readPointer,
+      fs.read(this._fhandle, this._buffer, 0, Math.min(this._buffer.length, effectiveReadSize), this._readPointer,
         (err: any, bytesRead: number, buffer: Buffer): void => {
+          const correctSizeBuffer = Buffer.alloc(bytesRead);
+          this._buffer.copy(correctSizeBuffer, 0, 0, bytesRead);
           this._readPointer += bytesRead;
-          this.push(buffer);
+          this.push(correctSizeBuffer);
         }
       );
     } else {
