@@ -49,10 +49,14 @@ function repr(obj: any): string {
     return name;
   }
   
-  if (HTMLElement !== undefined) {
-    if (obj instanceof HTMLElement) {
-      return "<" + (<HTMLElement> obj).tagName + ">";
+  try {
+    if (HTMLElement !== undefined) {
+      if (obj instanceof HTMLElement) {
+        return "<" + (<HTMLElement> obj).tagName + ">";
+      }
     }
+  } catch(e) {
+    // Ignore. This blows up outside the browser environment.
   }
 
   switch (typeof obj) {
