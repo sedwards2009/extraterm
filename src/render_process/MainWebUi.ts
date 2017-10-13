@@ -28,6 +28,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import {SplitLayout} from './SplitLayout';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
+import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 
 import * as config from '../Config';
 type Config = config.Config;
@@ -136,38 +137,25 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
   
   static TAG_NAME = 'EXTRATERM-MAINWEBUI';
-  
   static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
-  
   static EVENT_TAB_CLOSED = 'mainwebui-tab-closed';
-  
   static EVENT_TITLE = 'mainwebui-title';
-
   static EVENT_MINIMIZE_WINDOW_REQUEST = "mainwebui-minimize-window-request";
-
   static EVENT_MAXIMIZE_WINDOW_REQUEST = "mainwebui-maximize-window-request";
-
   static EVENT_CLOSE_WINDOW_REQUEST = "mainwebui-close-window-request";
 
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  
   private _terminalPtyIdMap: Map<EtTerminal,number>;
-
   private _ptyIdTerminalMap: Map<number, EtTerminal>;
-
   private _tabIdCounter: number;
-  
-  private _configManager: ConfigManager;
-  
+  private _configManager: ConfigManager; 
   private _keyBindingManager: KeyBindingManager;
-
   private _themes: ThemeTypes.ThemeInfo[];
-
   private _lastFocus: Element;
-
   private _splitLayout: SplitLayout;
+  private _fileBroker: BulkFileBroker;
 
   private _initProperties(): void {
     this._log = getLogger("ExtratermMainWebUI", this);
@@ -178,6 +166,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._configManager = null;
     this._keyBindingManager = null;
     this._themes = [];
+    this._fileBroker = new BulkFileBroker();
     this._splitLayout = new SplitLayout();
   }
   
@@ -592,6 +581,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
 
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
+    newTerminal.setBulkFileBroker(this._fileBroker);
     config.injectConfigDistributor(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
@@ -1290,7 +1280,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     this.closeTab(terminal);
   }
-  
+
   //-----------------------------------------------------------------------
   
   

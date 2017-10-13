@@ -5,71 +5,172 @@
  */
 import * as crypto from 'crypto';
 import * as http from 'http';
-import {SmartBuffer, SmartBufferOptions} from 'smart-buffer';
+import * as path from 'path';
 import {protocol} from 'electron';
+import {Event} from 'extraterm-extension-api';
 
 import {getLogger, Logger} from '../../logging/Logger';
+import log from '../../logging/LogDecorator';
+
 import * as MimeTypeDetector from '../../mimetype_detector/MimeTypeDetector';
+import {WriterReaderFile} from './WriterReaderFile';
+import {EventEmitter} from '../../utils/EventEmitter';
 
 
 export type BulkFileIdentifier = string;
-
 
 export interface Metadata {
   readonly [index: string]: (string | number);
 }
 
-
-export interface BulkFile {
-  readonly metadata: Metadata;
-  readonly smartBuffer: SmartBuffer;
-}
-
+export type BufferSizeEvent = {identifier: BulkFileIdentifier, bufferSize: number};
 
 export class BulkFileStorage {
 
   private _log: Logger; 
-  private _fakeStorage = new Map<BulkFileIdentifier, BulkFile>();
+  private _storageMap = new Map<BulkFileIdentifier, BulkFile>();
   private _server: BulkFileProtocolConnector = null;
 
-  constructor(private _tmpDirectory: string) {
+  private _onWriteBufferSizeEventEmitter = new EventEmitter<BufferSizeEvent>();
+
+  constructor(private _storageDirectory: string) {
     this._log = getLogger("BulkFileStorage", this);
     this._server = new BulkFileProtocolConnector(this);
+    this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
   }
 
+  onWriteBufferSize: Event<BufferSizeEvent>;
+  
   createBulkFile(metadata: Metadata, size: number): BulkFileIdentifier {
     const identifier = crypto.randomBytes(16).toString('hex');
     this._log.debug("Creating bulk file with identifier: ", identifier);
-    this._fakeStorage.set(identifier, {metadata, smartBuffer: new SmartBuffer()});
 
+    const fullPath = path.join(this._storageDirectory, identifier);
+
+    
+    const bulkFile = new BulkFile(metadata, fullPath);
+    bulkFile.onWriteBufferSize((size): void => {
+      this._onWriteBufferSizeEventEmitter.fire({identifier, bufferSize: size});
+    });
+    this._storageMap.set(identifier, bulkFile);
     return identifier;
   }
 
   write(identifier: BulkFileIdentifier, data: Buffer): void {
-    if ( ! this._fakeStorage.has(identifier)) {
+    if ( ! this._storageMap.has(identifier)) {
       this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
       return;
     }
 
     this._log.debug(`Writing ${data.length} bytes to identifier ${identifier}`);
 
-    const buf = this._fakeStorage.get(identifier).smartBuffer;
-    buf.writeBuffer(data);
+    this._storageMap.get(identifier).write(data);
   }
 
   close(identifier: BulkFileIdentifier): void {
+    if ( ! this._storageMap.has(identifier)) {
+      this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
+      return;
+    }
+    
     this._log.debug(`Closing identifier ${identifier}`);
-    // this._log.debug(this._fakeStorage.get(identifier).toString());
+    this._storageMap.get(identifier).close();
   }
 
+
   getBulkFileByIdentifier(identifier: BulkFileIdentifier): BulkFile {
-    if ( ! this._fakeStorage.has(identifier)) {
+    if ( ! this._storageMap.has(identifier)) {
       return null;
     }
-    return this._fakeStorage.get(identifier);
+    return this._storageMap.get(identifier);
   }
 }
 
+
+export class BulkFile {
+
+  private _log: Logger; 
+  private _writeStreamOpen = true;
+
+  private _wrFile: WriterReaderFile = null;
+  private _writeBuffers: Buffer[] = [];
+  private _writeBlocked = false;
+
+  private _maximumBufferedSize = 1024;  // FIXME make bigger
+  private _closePending = false;
+  private _onWriteBufferSizeEventEmitter = new EventEmitter<number>();
+
+  constructor(private  _metadata: Metadata, fullPath: string) {
+    this._log = getLogger("BulkFile", this);
+    this._wrFile = new WriterReaderFile(fullPath);
+    this._wrFile.getWriteStream().on('drain', this._handleDrain.bind(this));
+    this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
+  }
+
+  @log
+  write(data: Buffer): void {
+    if ( ! this._writeStreamOpen) {
+      this._log.warn("Write attempted to closed bulk file!");
+      return;
+    }
+
+    this._writeBuffers.push(data);
+    this._sendWriteBuffers();
+  }
+
+  private _sendWriteBuffers(): void {
+    const stream = this._wrFile.getWriteStream();
+    while ( ! this._writeBlocked && this._writeBuffers.length !== 0) {
+      const nextBuffer = this._writeBuffers[0];
+      this._writeBuffers.splice(0 ,1);
+      this._writeBlocked = ! stream.write(nextBuffer);
+    }
+
+    if (this._writeBuffers.length === 0 && this._closePending) {
+      stream.end();
+      this._writeStreamOpen = false;
+      this._closePending = false;
+    }
+
+    this._emitWriteBufferSize();
+  }
+
+  private _emitWriteBufferSize(): void {
+    const remainingSize = this._maximumBufferedSize - this._pendingBufferSize();
+    this._log.debug(`_emitWriteBufferSize -> ${remainingSize}`);
+    this._onWriteBufferSizeEventEmitter.fire(remainingSize);
+  }
+
+  private _pendingBufferSize(): number {
+    let total = 0;
+    for (const buf of this._writeBuffers) {
+      total += buf.length;
+    }
+    return total;
+  }
+  
+  onWriteBufferSize: Event<number>;
+
+  @log
+  close(): void {
+    if ( ! this._writeStreamOpen) {
+      this._log.warn("Write attempted to closed bulk file!");
+      return;
+    }
+    this._closePending = true;
+    this._sendWriteBuffers();
+  }
+
+  @log
+  private _handleDrain(): void {
+    this._writeBlocked = false;
+    this._sendWriteBuffers();
+  }
+
+  createReadStream(): NodeJS.ReadableStream {
+    return this._wrFile.createReadStream();
+  }
+}
 
 const PROTOCOL_SCHEME = "bulk";
 
@@ -99,23 +200,26 @@ class BulkFileProtocolConnector {
   private _handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
     this._log.debug("req.url.slice(1): ", );
     const identifier = req.url.slice(1);
-    const buf = this._storage.getBulkFileByIdentifier(identifier);
-    if (buf == null) {
+    const bulkFile = this._storage.getBulkFileByIdentifier(identifier);
+    if (bulkFile == null) {
       res.statusCode = 404;
       res.setHeader('Content-Type', 'text/plain');
       res.end('Not found\n');
       return;
     }
 
-    const rawData = buf.smartBuffer.toBuffer();
-    const metadata = buf.metadata;
-    const filename = metadata.filename != null ? ""+ metadata.filename : null;
-    const {mimeType, charset} = this._guessMimetype(rawData, metadata, filename);
+    // const rawData = bulkFile.smartBuffer.toBuffer();
+    // const metadata = bulkFile.metadata;
+    // const filename = metadata.filename != null ? ""+ metadata.filename : null;
+    // const {mimeType, charset} = this._guessMimetype(rawData, metadata, filename);
+
+    const mimeType = "image/png";
 
     res.statusCode = 200;
     res.setHeader('Content-Type', mimeType);
-
-    res.end(rawData);
+    bulkFile.createReadStream().pipe(res);
+    
+    // res.end(rawData);
   }
 
   private _guessMimetype(buffer: Buffer, metadata: Metadata, filename: string): {mimeType: string, charset:string} {

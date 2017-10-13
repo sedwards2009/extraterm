@@ -611,7 +611,6 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
       commandPaletteRequestSource = firstCommandable;
     }
 
-
     commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => {
       let result: CommandEntry[] = commandable.getCommandPaletteEntries(commandableStack);
       if (commandable instanceof EtTerminal) {

@@ -11,7 +11,7 @@ import {BulkFileBroker, WriteableBulkFileHandle} from './bulk_file_handling/Bulk
 import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 
 
-const DOWNLOAD_HANDLER_BUFFER_SIZE = 3*1024;
+const DOWNLOAD_HANDLER_BUFFER_SIZE = 4*1024;
 
 enum DownloadHandlerState {
   IDLE,
@@ -66,19 +66,19 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
   handleData(data: string): void {
     switch (this._state) {
       case DownloadHandlerState.READING_METADATA:
-      this._handleDataReadingMetadata(data);
-      break;
-  
-    case DownloadHandlerState.READING:
-      this._handleDataRead(data);
-      break;
-      
-    case DownloadHandlerState.ERROR:
-      break;
-      
-    default:
-      this._log.warn("handleDownloadData called while in state ", DownloadHandlerState[this._state]);
-      break;
+        this._handleDataReadingMetadata(data);
+        break;
+    
+      case DownloadHandlerState.READING:
+        this._handleDataRead(data);
+        break;
+        
+      case DownloadHandlerState.ERROR:
+        break;
+        
+      default:
+        this._log.warn("handleDownloadData called while in state ", DownloadHandlerState[this._state]);
+        break;
     }
   }
 
@@ -96,6 +96,7 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
       this._encodedDataBuffer = this._encodedDataBuffer.slice(this._metadataSize);
 
       this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, -1);
+      this._fileHandle.onWriteBufferSize(this._handleWriteBufferAvailable.bind(this));
       this._state = DownloadHandlerState.READING;
       this._handleDataRead("");
 
@@ -112,9 +113,26 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
 
   }
 
+  private _handleWriteBufferAvailable(bufferSize: number): void {
+    this._log.debug(`Write buffer size ${bufferSize}`);
+
+
+  }
+
   private _flushBuffer(): void {
-    const buf = Buffer.from(this._encodedDataBuffer, 'base64');
-    this._fileHandle.write(buf);
+    // base64 data must be decoded in blocks of 4 chars, otherwise bytes will be lost.
+    let workingBuffer: string;
+    if ((this._encodedDataBuffer.length % 4) === 0) {
+      workingBuffer = this._encodedDataBuffer;
+      this._encodedDataBuffer = "";
+    } else {
+      const splitIndex = this._encodedDataBuffer.length - (this._encodedDataBuffer.length % 4);
+      workingBuffer = this._encodedDataBuffer.slice(0, splitIndex);
+      this._encodedDataBuffer = this._encodedDataBuffer.slice(splitIndex);
+    }
+
+    const decodedBytes = Buffer.from(workingBuffer, 'base64');
+    this._fileHandle.write(decodedBytes);
   }
 
   handleStop(): void {

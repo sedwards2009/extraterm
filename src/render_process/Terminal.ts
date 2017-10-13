@@ -253,13 +253,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._cookie = null;
     this._terminalViewer = null;
     this._htmlData = null;
-    this._fileBroker = new BulkFileBroker();
-    this._downloadHandler = new DownloadApplicationModeHandler(this._fileBroker);
-    this._downloadHandler.onCreatedBulkFile( (newBulkFile: BulkFileHandle) => {
-      newBulkFile.onAvailableSizeChange( (newSize) => {
-        this._log.debug(`Bulk file read ${newSize} of ${newBulkFile.getTotalSize()}`);
-      });
-    });
+    this._fileBroker = null;
+    this._downloadHandler = null;
 
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
     this._bracketStyle = null;
@@ -337,6 +332,17 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._keyBindingManager = keyBindingManager;
   }
   
+  setBulkFileBroker(fileBroker: BulkFileBroker): void {
+    this._fileBroker = fileBroker;
+    this._downloadHandler = new DownloadApplicationModeHandler(this._fileBroker);
+    this._downloadHandler.onCreatedBulkFile( (newBulkFile: BulkFileHandle) => {
+      newBulkFile.onAvailableSizeChange( (newSize) => {
+        this._log.debug(`Bulk file read ${newSize} of ${newBulkFile.getTotalSize()}`);
+      });
+    });
+
+  }
+
   setScrollbackSize(scrollbackSize: number): void {
     this._scrollbackSize = scrollbackSize;
   }

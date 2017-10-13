@@ -9,7 +9,7 @@ import {Readable, ReadableOptions, Transform, Writable} from 'stream';
 
 export class WriterReaderFile {
 
-  private _writeStream: Writable = null;
+  private _writeStream: fs.WriteStream = null;
   private _counterTransform: CounterTransform = null;
 
   constructor(private _filename: string) {

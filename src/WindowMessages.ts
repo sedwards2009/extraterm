@@ -51,10 +51,11 @@ export const enum MessageType {
   NEW_TAG,
   PTY_OUTPUT_BUFFER_SIZE,
 
-  CREATE_BULK_FILE,
-  CREATED_BULK_FILE,
-  WRITE_BULK_FILE,
-  CLOSE_BULK_FILE
+  BULK_FILE_CREATE,
+  BULK_FILE_CREATED,
+  BULK_FILE_WRITE,
+  BULK_FILE_BUFFER_SIZE,
+  BULK_FILE_CLOSE
 }
 
 /**
@@ -400,21 +401,26 @@ export interface NewTagMessage extends Message {
   tag: string;
 }
 
-export interface CreateBulkFileMessage extends Message {
+export interface BulkFileCreateMessage extends Message {
   metadata: Metadata;
   size: number;
 }
 
-export interface CreatedBulkFileResponseMessage extends Message {
+export interface BulkFileCreatedResponseMessage extends Message {
   identifier: BulkFileIdentifier;
 }
 
-export interface WriteBulkFileMessage extends Message {
+export interface BulkFileWriteMessage extends Message {
   identifier: BulkFileIdentifier;
   // sequenceNumber: number;
   data: Buffer;
 }
 
-export interface CloseBulkFileMessage extends Message {
+export interface BulkFileCloseMessage extends Message {
   identifier: BulkFileIdentifier;
+}
+
+export interface BulkFileBufferSize extends Message {
+  identifier: BulkFileIdentifier;
+  bufferSize: number;
 }

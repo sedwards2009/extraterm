@@ -20,7 +20,7 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 
-import {BulkFileStorage} from './bulk_file_handling/BulkFileStorage';
+import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent} from './bulk_file_handling/BulkFileStorage';
 import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
   SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
@@ -151,7 +151,7 @@ function main(): void {
     config.systemConfig.originalScaleFactor = originalScaleFactor;
 
     bulkFileStorage = new BulkFileStorage("");
-    
+    bulkFileStorage.onWriteBufferSize(sendBulkFileWriteBufferSizeEvent);
     startIpc();
     
     // Create the browser window.
@@ -925,17 +925,17 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       }
       break;
 
-    case Messages.MessageType.CREATE_BULK_FILE:
-      const createBulkFileReply = handleCreateBulkFile(<Messages.CreateBulkFileMessage> msg);
+    case Messages.MessageType.BULK_FILE_CREATE:
+      const createBulkFileReply = handleCreateBulkFile(<Messages.BulkFileCreateMessage> msg);
       event.returnValue = createBulkFileReply;
       break;
 
-    case Messages.MessageType.WRITE_BULK_FILE:
-      handleWriteBulkFile(<Messages.WriteBulkFileMessage> msg);
+    case Messages.MessageType.BULK_FILE_WRITE:
+      handleWriteBulkFile(<Messages.BulkFileWriteMessage> msg);
       break;
 
-    case Messages.MessageType.CLOSE_BULK_FILE:
-      handleCloseBulkFile(<Messages.CloseBulkFileMessage> msg);
+    case Messages.MessageType.BULK_FILE_CLOSE:
+      handleCloseBulkFile(<Messages.BulkFileCloseMessage> msg);
       break;
 
     default:
@@ -984,12 +984,15 @@ function handleConfig(msg: Messages.ConfigMessage): void {
     type: Messages.MessageType.CONFIG,
     config: getFullConfig()
   };
-  
+  sendMessageToAllWindows(newConfigMsg);  
+}
+
+function sendMessageToAllWindows(msg: Messages.Message): void {
   BrowserWindow.getAllWindows().forEach( (window) => {
     if (LOG_FINE) {
       _log.debug("Transmitting new config to window ", window.id);
     }
-    window.webContents.send(Messages.CHANNEL_NAME, newConfigMsg);
+    window.webContents.send(Messages.CHANNEL_NAME, msg);
   });
 }
 
@@ -1197,18 +1200,27 @@ function handleNewTagRequest(msg: Messages.NewTagRequestMessage): Messages.NewTa
 
 //-------------------------------------------------------------------------
 
-function handleCreateBulkFile(msg: Messages.CreateBulkFileMessage): Messages.CreatedBulkFileResponseMessage {
+function handleCreateBulkFile(msg: Messages.BulkFileCreateMessage): Messages.BulkFileCreatedResponseMessage {
   _log.debug("handleCreateBulkFile: ", msg.metadata, msg.size);
   const identifier = bulkFileStorage.createBulkFile(msg.metadata, msg.size);
-  const reply: Messages.CreatedBulkFileResponseMessage = {type: Messages.MessageType.CREATED_BULK_FILE, identifier};
+  const reply: Messages.BulkFileCreatedResponseMessage = {type: Messages.MessageType.BULK_FILE_CREATED, identifier};
   return reply;
 }
 
-function handleWriteBulkFile(msg: Messages.WriteBulkFileMessage): void {
+function handleWriteBulkFile(msg: Messages.BulkFileWriteMessage): void {
   bulkFileStorage.write(msg.identifier, msg.data);
 }
 
-function handleCloseBulkFile(msg: Messages.CloseBulkFileMessage): void {
+function sendBulkFileWriteBufferSizeEvent(event: BufferSizeEvent): void {
+  const msg: Messages.BulkFileBufferSize = {
+    type: Messages.MessageType.BULK_FILE_BUFFER_SIZE,
+    identifier: event.identifier,
+    bufferSize: event.bufferSize
+  };
+  sendMessageToAllWindows(msg);
+}
+
+function handleCloseBulkFile(msg: Messages.BulkFileCloseMessage): void {
   bulkFileStorage.close(msg.identifier);
 }
 
