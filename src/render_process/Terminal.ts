@@ -801,9 +801,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     emulator.addRenderEventListener(this._handleTermSize.bind(this));
     
     // Application mode handlers    
-    emulator.addApplicationModeStartEventListener(this._handleApplicationModeStart.bind(this));
-    emulator.addApplicationModeDataEventListener(this._handleApplicationModeData.bind(this));
-    emulator.addApplicationModeEndEventListener(this._handleApplicationModeEnd.bind(this));
+    emulator.registerApplicationModeHandler({
+      start: this._handleApplicationModeStart.bind(this),
+      data: this._handleApplicationModeData.bind(this),
+      end: this._handleApplicationModeEnd.bind(this)
+    });
     emulator.addWriteBufferSizeEventListener(this._handleWriteBufferSize.bind(this));
     this._emulator = emulator;
   }
@@ -1594,7 +1596,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    * @param {array} params The list of parameter which were specified in the
    *     escape sequence.
    */
-  private _handleApplicationModeStart(emulator: Term.Emulator, params: string[]): void {
+  private _handleApplicationModeStart(params: string[]): void {
     if (DEBUG_APPLICATION_MODE) {
       this._log.debug("application-mode started! ",params);
     }

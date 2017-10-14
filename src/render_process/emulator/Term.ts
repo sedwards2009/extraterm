@@ -33,8 +33,7 @@
  * converted over to TypeScript.
  */
 import {
-  ApplicationModeEventListener,
-  ApplicationModeDataEventListener,
+  ApplicationModeHandler,
   BellEventListener,
   backgroundFromCharAttr,
   BLINK_ATTR_FLAG,
@@ -131,9 +130,6 @@ const RENDER_EVENT = "RENDER_EVENT";
 const BELL_EVENT = "BELL_EVENT";
 const DATA_EVENT = "DATA_EVENT";
 const TITLE_EVENT = "TITLE_EVENT";
-const APPLICATION_MODE_START_EVENT = "APPLICATION_MODE_START_EVENT";
-const APPLICATION_MODE_DATA_EVENT = "APPLICATION_MODE_DATA_EVENT";
-const APPLICATION_MODE_END_EVENT = "APPLICATION_MODE_END_EVENT";
 const WRITE_BUFFER_SIZE_EVENT = "WRITE_BUFFER_SIZE_EVENT";
 
 const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
@@ -202,6 +198,9 @@ export class Emulator implements EmulatorApi {
   private geometry: [number, number];
   public debug: boolean;
   private applicationModeCookie: string;
+  
+  private _applicationModeHandler: ApplicationModeHandler = null;
+
   private isMac = false;
   
   private _writeBuffers: string[] = [];                 // Buffer for incoming data waiting to be processed.
@@ -2033,6 +2032,10 @@ export class Emulator implements EmulatorApi {
     return i;
   }
 
+  registerApplicationModeHandler(handler: ApplicationModeHandler): void {
+    this._applicationModeHandler = handler;
+  }
+
   private _processDataApplicationStart(ch: string): void {
     if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch === '-'
         || ch === '/') {
@@ -2051,7 +2054,9 @@ export class Emulator implements EmulatorApi {
       if (this.params[0] === this.applicationModeCookie) {
         this.state = STATE_APPLICATION_END;
         this._dispatchEvents();
-        this._emit(APPLICATION_MODE_START_EVENT, this, this.params);
+        if (this._applicationModeHandler != null) {
+          this._applicationModeHandler.start(this.params);
+        }
       } else {
         this.log("Invalid application mode cookie.");
         this.state = STATE_NORMAL;
@@ -2068,19 +2073,25 @@ export class Emulator implements EmulatorApi {
     const nextzero = data.indexOf('\x00', i);
     if (nextzero === -1) {
       // Send all of the data on right now.
-      this._emit(APPLICATION_MODE_DATA_EVENT, data.slice(i));
+      if (this._applicationModeHandler != null) {
+        this._applicationModeHandler.data(data.slice(i));
+      }
       i = data.length - 1;
       
     } else if (nextzero === i) {
       // We are already at the end-mode character.
       this._dispatchEvents();
-      this._emit(APPLICATION_MODE_END_EVENT, this);
+      if (this._applicationModeHandler != null) {
+        this._applicationModeHandler.end();
+      }
       this.state = STATE_NORMAL;
       
     } else {
       // Incoming end-mode character. Send the last piece of data.
       this._dispatchEvents();      
-      this._emit(APPLICATION_MODE_DATA_EVENT, data.slice(i, nextzero));
+      if (this._applicationModeHandler != null) {
+        this._applicationModeHandler.data(data.slice(i, nextzero));
+      }
       i = nextzero - 1;
     }
     return i;
@@ -4442,18 +4453,6 @@ export class Emulator implements EmulatorApi {
 
   addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void {
     this.addListener(TITLE_EVENT, eventHandler);
-  }
-
-  addApplicationModeStartEventListener(eventHandler: ApplicationModeEventListener): void {
-    this.addListener(APPLICATION_MODE_START_EVENT, eventHandler);
-  }
-
-  addApplicationModeDataEventListener(eventHandler: ApplicationModeDataEventListener): void {
-    this.addListener(APPLICATION_MODE_DATA_EVENT, eventHandler);
-  }
-
-  addApplicationModeEndEventListener(eventHandler: ApplicationModeEventListener): void {
-    this.addListener(APPLICATION_MODE_END_EVENT, eventHandler);
   }
 
   addWriteBufferSizeEventListener(eventHandler: WriteBufferSizeEventListener): void {

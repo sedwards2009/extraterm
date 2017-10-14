@@ -78,14 +78,6 @@ export interface TitleChangeEventListener {
   (instance: EmulatorApi, title: string): void;
 }
 
-export interface ApplicationModeEventListener {
-  (instance: EmulatorApi): void;
-}
-
-export interface ApplicationModeDataEventListener {
-  (instance: EmulatorApi, data: string): void;
-}
-
 export interface WriteBufferSizeEventListener {
   (instance: EmulatorApi, status: WriteBufferStatus): void;
 }
@@ -103,6 +95,12 @@ export interface MouseEventOptions {
 
 export interface WriteBufferStatus {
   bufferSize: number;
+}
+
+export interface ApplicationModeHandler {
+  start(params: any[]): void;
+  data(data: string): void;
+  end(): void;
 }
 
 export interface EmulatorApi {
@@ -158,12 +156,9 @@ export interface EmulatorApi {
   addBellEventListener(eventHandler: BellEventListener): void;
   addDataEventListener(eventHandler: DataEventListener): void;
   addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void;
-  
-  addApplicationModeStartEventListener(eventHandler: ApplicationModeEventListener): void;
-  addApplicationModeDataEventListener(eventHandler: ApplicationModeDataEventListener): void;
-  addApplicationModeEndEventListener(eventHandler: ApplicationModeEventListener): void;  
-
   addWriteBufferSizeEventListener(eventHandler: WriteBufferSizeEventListener): void;
+  
+  registerApplicationModeHandler(handler: ApplicationModeHandler): void;
 }
 
 export function flagsFromCharAttr(attr: CharAttr): number {
