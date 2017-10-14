@@ -932,25 +932,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   /**
-   * Handle new stdout data from the pty.
-   * 
-   * @param {string} data New data.
-   */
-  private _handlePtyStdoutData (data: string): void {
-// log("incoming data:",""+data);
-    this._emulator.write("" + data);
-  }
-
-  /**
-   * Handle new stderr data from the pty.
-   * 
-   * @param {type} data New data.
-   */
-  private _handlePtyStderrData(data: string): void {
-    this._emulator.write(data);
-  }
-
-  /**
    * Handle data coming from the user.
    * 
    * This just pushes the keys from the user through to the pty.

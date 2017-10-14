@@ -1060,7 +1060,7 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
   const ptyEnv = _.clone(env);
   ptyEnv["TERM"] = 'xterm';
 
-  const term = ptyConnector.spawn(file, args, {
+  const ptyTerm = ptyConnector.spawn(file, args, {
       name: 'xterm',
       cols: cols,
       rows: rows,
@@ -1069,10 +1069,10 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
 
   ptyCounter++;
   const ptyId = ptyCounter;
-  const ptyTup = { windowId: BrowserWindow.fromWebContents(sender).id, ptyTerm: term, outputBufferSize: 0, outputPaused: true };
+  const ptyTup = { windowId: BrowserWindow.fromWebContents(sender).id, ptyTerm: ptyTerm, outputBufferSize: 0, outputPaused: true };
   ptyMap.set(ptyId, ptyTup);
   
-  term.onData( (data: string) => {
+  ptyTerm.onData( (data: string) => {
     if (LOG_FINE) {
       _log.debug("pty process got data for ptyID="+ptyId);
       logJSData(data);
@@ -1083,7 +1083,7 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
     }
   });
 
-  term.onExit( () => {
+  ptyTerm.onExit( () => {
     if (LOG_FINE) {
       _log.debug("pty process exited.");
     }
@@ -1091,7 +1091,7 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
       const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
       sender.send(Messages.CHANNEL_NAME, msg);
     }
-    term.destroy();
+    ptyTerm.destroy();
     ptyMap.delete(ptyId);
   });
 

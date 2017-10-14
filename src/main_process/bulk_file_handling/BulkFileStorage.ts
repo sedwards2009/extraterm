@@ -218,7 +218,7 @@ class BulkFileProtocolConnector {
     res.statusCode = 200;
     res.setHeader('Content-Type', mimeType);
     bulkFile.createReadStream().pipe(res);
-    
+
     // res.end(rawData);
   }
 
