@@ -39,7 +39,9 @@ class CounterTransform extends Transform {
 
     this.on('end', () => {
       this._closed = true;
-      this.emit('expanded');
+      process.nextTick(() => {
+        this.emit('expanded');
+      });
     });
   }
 
@@ -47,7 +49,9 @@ class CounterTransform extends Transform {
     this.push(chunk);
     this._counter += chunk.length;
     callback();
-    this.emit('expanded');
+    process.nextTick(() => {
+      this.emit('expanded');
+    });
   }
 
   getCount(): number {
@@ -66,7 +70,9 @@ class TailingFileReader extends Readable {
   private _fhandle = -1;
   private _readPointer = 0;
   private _buffer: Buffer = null;
-
+  private _reading = false;
+  private _readOperationRunning = false;
+  
   constructor(filename: string, private _counterTransformer: CounterTransform, options?: ReadableOptions) {
     super(options);
     this._log = getLogger("TailingFileReader", this);
@@ -79,6 +85,11 @@ class TailingFileReader extends Readable {
       this.push(null);
       return;
     }
+    this._reading = true;
+
+    if (this._readOperationRunning) {
+      return;
+    }
 
     // Don't read past the end of the file.
     const effectiveReadSize = Math.min(size, this._counterTransformer.getCount() - this._readPointer);
@@ -86,15 +97,24 @@ class TailingFileReader extends Readable {
     if (effectiveReadSize !== 0) {
       fs.read(this._fhandle, this._buffer, 0, Math.min(this._buffer.length, effectiveReadSize), this._readPointer,
         (err: any, bytesRead: number, buffer: Buffer): void => {
+          this._readOperationRunning = false;
           const correctSizeBuffer = Buffer.alloc(bytesRead);
           this._buffer.copy(correctSizeBuffer, 0, 0, bytesRead);
           this._readPointer += bytesRead;
-          this.push(correctSizeBuffer);
+
+          if (this.push(correctSizeBuffer)) {
+            this._read(size);
+          } else {
+            this._reading = false;
+          }
         }
       );
+      this._readOperationRunning = true;
     } else {
       this._counterTransformer.once('expanded', () => {
-        this._read(size);
+        if (this._reading && ! this._readOperationRunning) {
+          this._read(size);
+        }
       });
     }
   }
