@@ -98,14 +98,20 @@ class TailingFileReader extends Readable {
       fs.read(this._fhandle, this._buffer, 0, Math.min(this._buffer.length, effectiveReadSize), this._readPointer,
         (err: any, bytesRead: number, buffer: Buffer): void => {
           this._readOperationRunning = false;
-          const correctSizeBuffer = Buffer.alloc(bytesRead);
-          this._buffer.copy(correctSizeBuffer, 0, 0, bytesRead);
-          this._readPointer += bytesRead;
+          
+          if (bytesRead !== 0) {
+            const correctSizeBuffer = Buffer.alloc(bytesRead);
+            this._buffer.copy(correctSizeBuffer, 0, 0, bytesRead);
+            this._readPointer += bytesRead;
 
-          if (this.push(correctSizeBuffer)) {
-            this._read(size);
+            if (this.push(correctSizeBuffer)) {
+              this._read(size);
+            } else {
+              this._reading = false;
+            }
           } else {
-            this._reading = false;
+            // Retry.
+            this._read(size);            
           }
         }
       );
