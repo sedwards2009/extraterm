@@ -41,7 +41,7 @@ export class BulkFileBroker {
 
   private _handleBufferSizeMessage(msg: Messages.BulkFileBufferSize): void {
     if (this._fileHandleMap.has(msg.identifier)) {
-      this._fileHandleMap.get(msg.identifier).setRemoteBufferSize(msg.bufferSize);
+      this._fileHandleMap.get(msg.identifier).updateRemoteBufferSize(msg.totalBufferSize, msg.availableDelta);
     }
   }
 }
@@ -62,7 +62,10 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   private _peekBuffer: SmartBuffer = new SmartBuffer();
   
   private _writeBuffers: Buffer[] = [];
-  private _remoteBufferSize = 1024;
+  private _maximumWriteBufferSize = 1024; // FIXME
+
+  private _remoteBufferTotalSize = 1024;
+  private _removeBufferDelta = 0;
   private _pendingClose = false;
   
   constructor(private _disposable: Disposable, private _metadata: Metadata, private _totalSize: number) {
@@ -70,7 +73,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
 
     this.onAvailableSizeChange = this._onAvailableSizeChangeEventEmitter.event;
     this.onFinished = this._onFinishedEventEmitter.event;
-    this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
+    this.onAvailableWriteBufferSizeChanged = this._onWriteBufferSizeEventEmitter.event;
     
     this._fileIdentifier = WebIpc.createBulkFileSync(_metadata, _totalSize);
   }
@@ -123,24 +126,33 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this._sendBuffers();
   }
 
+  getAvailableWriteBufferSize(): number {
+    return this._maximumWriteBufferSize - this._writeBuffers.reduce((accu, buf): number => accu + buf.length, 0);
+  }
+
+  onAvailableWriteBufferSizeChanged: Event<number>;
+
+  private _getAvailableRemoteBufferSize(): number {
+    return this._remoteBufferTotalSize + this._removeBufferDelta;
+  }
+
   private _sendBuffers(): void {
     let bytesSent = 0;
 
-    while (this._writeBuffers.length !== 0 && this._remoteBufferSize > 0) { // removeBufferSize < 0 means overdrawn
+    while (this._writeBuffers.length !== 0 && this._getAvailableRemoteBufferSize() > 0) {
       const nextBuffer = this._writeBuffers[0];
-      if (nextBuffer.length <= this._remoteBufferSize) {
+      if (nextBuffer.length <= this._getAvailableRemoteBufferSize()) {
         // Send the whole buffer in one go.
         this._writeBuffers.splice(0, 1);
-        this._log.debug(`transmitting ${nextBuffer.length} bytes`);
         WebIpc.writeBulkFile(this._fileIdentifier, nextBuffer);
         bytesSent += nextBuffer.length;
-        this._remoteBufferSize -= nextBuffer.length;
+        this._remoteBufferTotalSize -= nextBuffer.length;
       } else {
         // Cut the buffer into two.
-        const firstPartBuffer = Buffer.alloc(this._remoteBufferSize);
-        nextBuffer.copy(firstPartBuffer, 0, 0, this._remoteBufferSize);
-        const secondPartBuffer = Buffer.alloc(nextBuffer.length-this._remoteBufferSize);
-        nextBuffer.copy(secondPartBuffer, 0, this._remoteBufferSize);
+        const firstPartBuffer = Buffer.alloc(this._getAvailableRemoteBufferSize());
+        nextBuffer.copy(firstPartBuffer, 0, 0, this._getAvailableRemoteBufferSize());
+        const secondPartBuffer = Buffer.alloc(nextBuffer.length - this._getAvailableRemoteBufferSize());
+        nextBuffer.copy(secondPartBuffer, 0, this._getAvailableRemoteBufferSize());
 
         this._writeBuffers.splice(0, 1, firstPartBuffer, secondPartBuffer);
         // Let the next run through the loop do the transmission.
@@ -148,6 +160,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     }
 
     if (bytesSent !== 0) {
+      this._removeBufferDelta -= bytesSent;
       this._availableSize += bytesSent;
       this._onAvailableSizeChangeEventEmitter.fire(this._availableSize);
     }
@@ -171,13 +184,16 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     }
   }
 
-  setRemoteBufferSize(bufferSize: number): void {
-    this._remoteBufferSize = bufferSize;
+  updateRemoteBufferSize(totalBufferSize: number, availableDelta: number): void {
+    this._remoteBufferTotalSize = totalBufferSize;
+    this._removeBufferDelta += availableDelta;
     this._sendBuffers();
+
+    process.nextTick(() => {
+      this._onWriteBufferSizeEventEmitter.fire(this.getAvailableWriteBufferSize());
+    });
   }
 
-  onWriteBufferSize: Event<number>;
-  
   close(): void {
     if ( ! this._isOpen) {
       this._log.warn("Close attempted on a closed WriteableBulkFileHandle! ", this._fileIdentifier);

@@ -1122,7 +1122,7 @@ function handlePtyOutputBufferSize(msg: Messages.PtyOutputBufferSize): void {
   }
 
   if (LOG_FINE) {
-    _log.debug("Received Output Buffer Size message. Resuming PTY output for ptyID=" + msg.id);
+    _log.debug(`Received Output Buffer Size message. id: ${msg.id}, size: ${msg.size}`);
   }
   ptyTerminalTuple.ptyTerm.permittedDataSize(msg.size);
 }
@@ -1215,7 +1215,8 @@ function sendBulkFileWriteBufferSizeEvent(event: BufferSizeEvent): void {
   const msg: Messages.BulkFileBufferSize = {
     type: Messages.MessageType.BULK_FILE_BUFFER_SIZE,
     identifier: event.identifier,
-    bufferSize: event.bufferSize
+    totalBufferSize: event.totalBufferSize,
+    availableDelta: event.availableDelta
   };
   sendMessageToAllWindows(msg);
 }

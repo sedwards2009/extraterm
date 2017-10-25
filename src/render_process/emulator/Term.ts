@@ -34,6 +34,8 @@
  */
 import {
   ApplicationModeHandler,
+  ApplicationModeResponse,
+  ApplicationModeResponseAction,
   BellEventListener,
   backgroundFromCharAttr,
   BLINK_ATTR_FLAG,
@@ -59,6 +61,9 @@ import {
   WriteBufferStatus,
   WriteBufferSizeEventListener
 } from './TermApi';
+
+import log from '../../logging/LogDecorator';
+
 
 const DEBUG_RESIZE = false;
   
@@ -197,14 +202,15 @@ export class Emulator implements EmulatorApi {
   private termName: string;
   private geometry: [number, number];
   public debug: boolean;
+
   private applicationModeCookie: string;
-  
   private _applicationModeHandler: ApplicationModeHandler = null;
 
   private isMac = false;
   
   private _writeBuffers: string[] = [];                 // Buffer for incoming data waiting to be processed.
   private _processWriteChunkTimer: NodeJS.Timer = null; // Timer ID for our write chunk timer.  
+  private _paused = false;
   private _refreshTimer: NodeJS.Timer = null;           // Timer ID for triggering an on scren refresh.
   private _performanceNow: () => number = null;
 
@@ -893,6 +899,32 @@ export class Emulator implements EmulatorApi {
     }
   }
 
+  pauseProcessing(): void {
+    if (this._paused) {
+      return;
+    }
+
+    this._paused = true;
+    if (this._processWriteChunkTimer === null) {
+      clearTimeout(this._processWriteChunkTimer);
+      this._processWriteChunkTimer = null;
+    }    
+  }
+
+  resumeProcessing(): void {
+    if ( ! this._paused) {
+      return;
+    }
+
+    this._paused = false;
+    this._scheduleProcessWriteChunk();
+    this._emitWriteBufferSizeEvent();
+  }
+
+  isProcessingPaused(): boolean {
+    return this._paused;
+  }
+
   /**
    * Process the next chunk of data to written into a the line array.
    */
@@ -903,7 +935,7 @@ export class Emulator implements EmulatorApi {
     // Schedule a call back just in case. setTimeout(.., 0) still carries a ~4ms delay. 
     this._scheduleProcessWriteChunk();
 
-    while (true) {
+    while (! this._paused) {
       if (this._processOneWriteChunk() === false) {
         clearTimeout(this._processWriteChunkTimer);
         this._processWriteChunkTimer = null;
@@ -941,7 +973,10 @@ export class Emulator implements EmulatorApi {
       chunk = chunk.slice(0, MAX_PROCESS_WRITE_SIZE);
     }
 
-    this._processWriteData(chunk);
+    const remainingPartOfChunk = this._processWriteData(chunk);
+    if (remainingPartOfChunk != null && remainingPartOfChunk.length !== 0) {
+      this._writeBuffers.splice(0, 0, remainingPartOfChunk);
+    }
     return this._writeBuffers.length !== 0;
   }
 
@@ -957,7 +992,7 @@ export class Emulator implements EmulatorApi {
    *
    * @param data the string of characters and control sequences to process.
    */
-  private _processWriteData(data: string): void {
+  private _processWriteData(data: string): string {
   //console.log("write() data.length: " + data.length);
   //var starttime = window.performance.now();
   //var endtime;
@@ -965,8 +1000,8 @@ export class Emulator implements EmulatorApi {
 
     this.oldy = this.y;
     
-    const len = data.length;
-    for (let i=0; i < len; i++) {
+    let i = 0;
+    for (i=0; i < data.length && ! this._paused; i++) {
       let ch = data[i];
 
       let codePoint = 0;
@@ -975,7 +1010,7 @@ export class Emulator implements EmulatorApi {
       if ((ch.charCodeAt(0) & 0xFC00) === 0xD800) { // High surrogate.
         const highSurrogate = ch.charCodeAt(0);
         i++;
-        if (i < len) {
+        if (i < data.length) {
           const lowSurrogate = data[i].charCodeAt(0);
           codePoint = ((highSurrogate & 0x03FF) << 10) | (lowSurrogate & 0x03FF) + 0x10000;
         }
@@ -1126,7 +1161,7 @@ export class Emulator implements EmulatorApi {
           break;
 
         case STATE_APPLICATION_END:
-          i = this._processDataApplicationEnd(ch, data, i);          
+          [data, i] = this._processDataApplicationEnd(data, i);
           break;
           
         case STATE_DEC_HASH:
@@ -1141,11 +1176,15 @@ export class Emulator implements EmulatorApi {
       }
     }
     this.markRowForRefresh(this.y);
-      
+  
   //  endtime = window.performance.now();
   //console.log("write() end time: " + endtime);
   //  console.log("duration: " + (endtime - starttime) + "ms");
-  }
+    if (i < data.length) {
+      return data.slice(i);
+    }
+    return null;
+}
         
   private _processDataCSI(ch: string, i: number): number {
     // '?', '>', '!'
@@ -2055,7 +2094,12 @@ export class Emulator implements EmulatorApi {
         this.state = STATE_APPLICATION_END;
         this._dispatchEvents();
         if (this._applicationModeHandler != null) {
-          this._applicationModeHandler.start(this.params);
+          const response = this._applicationModeHandler.start(this.params);
+          if (response.action === ApplicationModeResponseAction.ABORT) {
+            this.state = STATE_NORMAL;
+          } else if (response.action === ApplicationModeResponseAction.PAUSE) {
+            this.pauseProcessing();
+          }
         }
       } else {
         this.log("Invalid application mode cookie.");
@@ -2068,13 +2112,27 @@ export class Emulator implements EmulatorApi {
     }
   }
   
-  private _processDataApplicationEnd(ch: string, data: string, i: number): number {
+  private _processDataApplicationEnd(data: string, i: number): [string, number] {
     // Efficiently look for an end-mode character.
     const nextzero = data.indexOf('\x00', i);
     if (nextzero === -1) {
       // Send all of the data on right now.
       if (this._applicationModeHandler != null) {
-        this._applicationModeHandler.data(data.slice(i));
+        const effectiveString = data.slice(i);
+        const response = this._applicationModeHandler.data(effectiveString);
+        if (response.action === ApplicationModeResponseAction.ABORT) {
+          this.state = STATE_NORMAL;
+
+          if (response.remainingData != null) {
+            return [response.remainingData, 0];
+          }
+
+        } else if (response.action === ApplicationModeResponseAction.PAUSE) {
+          this.pauseProcessing();
+          if (response.remainingData != null) {
+            return [response.remainingData, 0];
+          }
+        }
       }
       i = data.length - 1;
       
@@ -2090,11 +2148,16 @@ export class Emulator implements EmulatorApi {
       // Incoming end-mode character. Send the last piece of data.
       this._dispatchEvents();      
       if (this._applicationModeHandler != null) {
-        this._applicationModeHandler.data(data.slice(i, nextzero));
+        const response = this._applicationModeHandler.data(data.slice(i, nextzero));
+        if (response.action === ApplicationModeResponseAction.ABORT) {
+          this.state = STATE_NORMAL;
+        } else if (response.action === ApplicationModeResponseAction.PAUSE) {
+          this.pauseProcessing();
+        }
       }
       i = nextzero - 1;
     }
-    return i;
+    return [data, i];
   }
   
   // ESC # variations

@@ -97,11 +97,44 @@ export interface WriteBufferStatus {
   bufferSize: number;
 }
 
+/**
+ * Handler for processing the application mode escape code.
+ */
 export interface ApplicationModeHandler {
-  start(params: any[]): void;
-  data(data: string): void;
+  /**
+   * Called once the start of the escape code and its parameters have been received.
+   * 
+   * @param params the parameters to the code.
+   */
+  start(params: any[]): ApplicationModeResponse;
+
+  /**
+   * Called to send the next block of body data.
+   * 
+   * This method is called multiple times.
+   * 
+   * @param data the received data.
+   */
+  data(data: string): ApplicationModeResponse;
+
+  /**
+   * Called once the finishing null char is received.
+   */
   end(): void;
 }
+
+export enum ApplicationModeResponseAction {
+  CONTINUE,
+  ABORT,
+  PAUSE
+}
+
+export interface ApplicationModeResponse {
+  action: ApplicationModeResponseAction,
+  remainingData?: string
+}
+
+
 
 export interface EmulatorApi {
   
@@ -150,6 +183,23 @@ export interface EmulatorApi {
   flushRenderQueue(): void;
 
   newLine(): void;
+
+  /**
+   * Suspend processing of terminal output.
+   * 
+   * This doesn't affect input processing like keystrokes.
+   */
+  pauseProcessing(): void;
+
+  /**
+   * Resume processing of terminal output.
+   */
+  resumeProcessing(): void;
+
+  /**
+   * Return true if terminal output processing is suspended.
+   */
+  isProcessingPaused(): boolean;
 
   // Events
   addRenderEventListener(eventHandler: RenderEventHandler): void;

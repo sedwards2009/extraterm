@@ -7,16 +7,17 @@
 import {Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../utils/EventEmitter';
 import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
+
 import {BulkFileBroker, WriteableBulkFileHandle} from './bulk_file_handling/BulkFileBroker';
 import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
+import * as TermApi from './emulator/TermApi';
 
-
-const DOWNLOAD_HANDLER_BUFFER_SIZE = 4*1024;
 
 enum DownloadHandlerState {
   IDLE,
-  READING_METADATA,
-  READING,
+  METADATA,
+  BODY,
   ERROR
 }
 
@@ -32,8 +33,8 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
   onCreatedBulkFile: Event<BulkFileHandle>;
   private _onCreatedBulkFileEventEmitter = new EventEmitter<BulkFileHandle>();
   
-  constructor(private _broker: BulkFileBroker) {
-    this._log = getLogger("DownloadHandler", this);
+  constructor(private _emulator: TermApi.EmulatorApi, private _broker: BulkFileBroker) {
+    this._log = getLogger("DownloadApplicationModeHandler", this);
     this.onCreatedBulkFile = this._onCreatedBulkFileEventEmitter.event;
     this._resetVariables();
   }
@@ -51,27 +52,27 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
     return this._fileHandle;
   }
 
-  handleStart(parameters: string[]): void {
+  handleStart(parameters: string[]): TermApi.ApplicationModeResponse {
 
     const metadataSize = parseInt(parameters[0], 10);
 
     this._metadataSize = metadataSize;
-    this._state = DownloadHandlerState.READING_METADATA;
+    this._state = DownloadHandlerState.METADATA;
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
   /**
    * 
    * @param data base64 data
    */
-  handleData(data: string): void {
+  handleData(data: string): TermApi.ApplicationModeResponse {
     switch (this._state) {
-      case DownloadHandlerState.READING_METADATA:
-        this._handleDataReadingMetadata(data);
+      case DownloadHandlerState.METADATA:
+        this._handleMetadata(data);
         break;
     
-      case DownloadHandlerState.READING:
-        this._handleDataRead(data);
-        break;
+      case DownloadHandlerState.BODY:
+        return this._handleBody(data);
         
       case DownloadHandlerState.ERROR:
         break;
@@ -80,9 +81,10 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
         this._log.warn("handleDownloadData called while in state ", DownloadHandlerState[this._state]);
         break;
     }
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
-  private _handleDataReadingMetadata(encodedData: string): void {
+  private _handleMetadata(encodedData: string): void {
     this._encodedDataBuffer += encodedData;
     if (this._encodedDataBuffer.length >= this._metadataSize) {
       let metadata = null;
@@ -96,31 +98,48 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
       this._encodedDataBuffer = this._encodedDataBuffer.slice(this._metadataSize);
 
       this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, -1);
-      this._fileHandle.onWriteBufferSize(this._handleWriteBufferAvailable.bind(this));
-      this._state = DownloadHandlerState.READING;
-      this._handleDataRead("");
+      this._fileHandle.onAvailableWriteBufferSizeChanged(this._handleAvailableWriteBufferSizeChanged.bind(this));
+      this._state = DownloadHandlerState.BODY;
+      this._handleBody("");
 
       this._onCreatedBulkFileEventEmitter.fire(this._fileHandle);
     }
   }
 
-  private _handleDataRead(encodedData: string): void {
+  private _handleBody(encodedData: string): TermApi.ApplicationModeResponse {
     this._encodedDataBuffer += encodedData;
 
-    if (this._encodedDataBuffer.length >= DOWNLOAD_HANDLER_BUFFER_SIZE) {
-      this._flushBuffer();
-    }
+    // 4 is the minimum number of bytes we need before we can safely decode base64.
+    if (this._encodedDataBuffer.length >= 4) {
+      if (this._fileHandle.getAvailableWriteBufferSize()) {
+        this._flushBuffer();
+      }
 
+      if (this._fileHandle.getAvailableWriteBufferSize() <= 0) {
+        return {action: TermApi.ApplicationModeResponseAction.PAUSE};
+      }
+    }
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
-  private _handleWriteBufferAvailable(bufferSize: number): void {
-    this._log.debug(`Write buffer size ${bufferSize}`);
+  private _handleAvailableWriteBufferSizeChanged(bufferSize: number): void {
+    // this._log.debug(`Write buffer size ${bufferSize}`);
+    if (this._fileHandle == null) {
+      return;
+    }
 
-
+    if (bufferSize > 0) {
+      this._flushBuffer();
+      this._emulator.resumeProcessing();
+    }
   }
 
   private _flushBuffer(): void {
-    // base64 data must be decoded in blocks of 4 chars, otherwise bytes will be lost.
+    if (this._encodedDataBuffer.length === 0) {
+      return;
+    }
+
+      // base64 data must be decoded in blocks of 4 chars, otherwise bytes will be lost.
     let workingBuffer: string;
     if ((this._encodedDataBuffer.length % 4) === 0) {
       workingBuffer = this._encodedDataBuffer;
@@ -132,7 +151,9 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
     }
 
     const decodedBytes = Buffer.from(workingBuffer, 'base64');
-    this._fileHandle.write(decodedBytes);
+    if (decodedBytes.length !== 0) {
+      this._fileHandle.write(decodedBytes);
+    }
   }
 
   handleStop(): void {

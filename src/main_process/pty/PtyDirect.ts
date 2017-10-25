@@ -56,13 +56,13 @@ class DirectPty implements Pty {
     this._permittedDataSize = size;
     if (size > 0) {
       if (this._paused) {
-        this.realPty.resume();
         this._paused = false;
+        this.realPty.resume();
       }
     } else {
       if ( ! this._paused) {
-        this.realPty.pause();
         this._paused = true;
+        this.realPty.pause();
       }
     }
   }

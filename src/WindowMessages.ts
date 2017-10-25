@@ -422,5 +422,6 @@ export interface BulkFileCloseMessage extends Message {
 
 export interface BulkFileBufferSize extends Message {
   identifier: BulkFileIdentifier;
-  bufferSize: number;
+  totalBufferSize: number;  // The total size of the receiving buffer for the bulk file.
+  availableDelta: number;  // The change in the amount of available buffer.
 }

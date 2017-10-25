@@ -334,13 +334,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   setBulkFileBroker(fileBroker: BulkFileBroker): void {
     this._fileBroker = fileBroker;
-    this._downloadHandler = new DownloadApplicationModeHandler(this._fileBroker);
-    this._downloadHandler.onCreatedBulkFile( (newBulkFile: BulkFileHandle) => {
-      newBulkFile.onAvailableSizeChange( (newSize) => {
-        this._log.debug(`Bulk file read ${newSize} of ${newBulkFile.getTotalSize()}`);
-      });
-    });
 
+    if (this._emulator != null) {
+      this._initDownloadApplicationModeHandler();
+    }
   }
 
   setScrollbackSize(scrollbackSize: number): void {
@@ -800,14 +797,25 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     emulator.addDataEventListener(this._handleTermData.bind(this));
     emulator.addRenderEventListener(this._handleTermSize.bind(this));
     
-    // Application mode handlers    
-    emulator.registerApplicationModeHandler({
+    // Application mode handlers
+    const applicationModeHandler: TermApi.ApplicationModeHandler = {
       start: this._handleApplicationModeStart.bind(this),
       data: this._handleApplicationModeData.bind(this),
       end: this._handleApplicationModeEnd.bind(this)
-    });
+    };
+    emulator.registerApplicationModeHandler(applicationModeHandler);
     emulator.addWriteBufferSizeEventListener(this._handleWriteBufferSize.bind(this));
     this._emulator = emulator;
+    this._initDownloadApplicationModeHandler();
+  }
+
+  private _initDownloadApplicationModeHandler(): void {
+    this._downloadHandler = new DownloadApplicationModeHandler(this._emulator, this._fileBroker);
+    this._downloadHandler.onCreatedBulkFile( (newBulkFile: BulkFileHandle) => {
+      newBulkFile.onAvailableSizeChange( (newSize) => {
+        this._log.debug(`Bulk file read ${newSize} of ${newBulkFile.getTotalSize()}`);
+      });
+    });
   }
 
   private _appendNewTerminalViewer(): void {
@@ -1596,7 +1604,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    * @param {array} params The list of parameter which were specified in the
    *     escape sequence.
    */
-  private _handleApplicationModeStart(params: string[]): void {
+  private _handleApplicationModeStart(params: string[]): TermApi.ApplicationModeResponse {
     if (DEBUG_APPLICATION_MODE) {
       this._log.debug("application-mode started! ",params);
     }
@@ -1606,12 +1614,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     // Check security cookie
     if (params.length === 0) {
       this._log.warn("Received an application mode sequence with no parameters.");
-      return;
+      return {action: TermApi.ApplicationModeResponseAction.ABORT};
     }
     
     if (params[0] !== this._cookie) {
       this._log.warn("Received the wrong cookie at the start of an application mode sequence.");
-      return;
+      return {action: TermApi.ApplicationModeResponseAction.ABORT};
     }
   
     if (params.length === 1) {
@@ -1644,14 +1652,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
             this._log.debug("Starting APPLICATION_MODE_SHOW_FILE");
           }
           this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_FILE;
-          this._downloadHandler.handleStart(params.slice(2));
-          break;
+          return this._downloadHandler.handleStart(params.slice(2));
         
         default:
           this._log.warn("Unrecognized application escape parameters.");
           break;
       }
     }
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
   /**
@@ -1659,7 +1667,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    * 
    * @param {string} data The new data.
    */
-  private _handleApplicationModeData(data: string): void {
+  private _handleApplicationModeData(data: string): TermApi.ApplicationModeResponse {
     if (DEBUG_APPLICATION_MODE) {
       this._log.debug("html-mode data!", data);
     }
@@ -1671,12 +1679,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         break;
         
       case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
-        this._downloadHandler.handleData(data);
-        break;
+        return this._downloadHandler.handleData(data);
         
       default:
         break;
     }
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
   
   /**
@@ -2091,7 +2099,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
 // interface ApplicationModeHandler {
 //   getIdentifier(): string;
-//   handleStart(parameters: string[]): void;
-//   handleData(data: string): void;
+//   handleStart(parameters: string[]): TermApi.ApplicationModeResponse;
+//   handleData(data: string): TermApi.ApplicationModeResponse;
 //   handleEnd(): void;
 // }
