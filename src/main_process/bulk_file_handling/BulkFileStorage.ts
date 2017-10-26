@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as crypto from 'crypto';
+import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
 import {protocol} from 'electron';
@@ -33,30 +34,67 @@ export class BulkFileStorage {
   private _log: Logger; 
   private _storageMap = new Map<BulkFileIdentifier, BulkFile>();
   private _server: BulkFileProtocolConnector = null;
+  private _storageDirectory: string;
 
   private _onWriteBufferSizeEventEmitter = new EventEmitter<BufferSizeEvent>();
 
-  constructor(private _storageDirectory: string) {
+  constructor(private _tempDirectory: string) {
     this._log = getLogger("BulkFileStorage", this);
+    this._storageDirectory = this._createStorageDirectory(this._tempDirectory);
     this._server = new BulkFileProtocolConnector(this);
     this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
+  }
+
+  /**
+   * Create a tmp directory for storing the bulk files.
+   * 
+   * This tries to make the directory in a secure manner because often times
+   * the location is in a shared directory like /tmp which may be vulnerable
+   * to symlink style attacks.
+   */
+  private _createStorageDirectory(tempDirectory: string): string {
+    const identifier = "extraterm-tmp-storage-" + crypto.randomBytes(16).toString('hex');
+    const fullPath = path.join(tempDirectory, identifier);
+    try {
+      fs.mkdirSync(fullPath, 0o700);
+    } catch(e) {
+      this._log.warn(`Unable to create temp directory ${fullPath}`, e);
+      throw new Error(`Unable to create temp directory ${fullPath}. ${e}`);
+    }
+    return fullPath;
+  }
+
+  dispose(): void {
+    for (const [identifier, bulkFile] of this._storageMap) {
+      try {
+        fs.unlinkSync(bulkFile.filePath);
+      } catch(e) {
+        this._log.warn(`Unable to delete file ${bulkFile.filePath}`, e);
+      }
+    }
+
+    try {
+      fs.rmdirSync(this._storageDirectory);
+    } catch (e) {
+      this._log.warn(`Unable to delete directory ${this._storageDirectory}`, e);
+    }
   }
 
   onWriteBufferSize: Event<BufferSizeEvent>;
   
   createBulkFile(metadata: Metadata, size: number): BulkFileIdentifier {
-    const identifier = crypto.randomBytes(16).toString('hex');
-    this._log.debug("Creating bulk file with identifier: ", identifier);
+    const onDiskFileIdentifier = crypto.randomBytes(16).toString('hex');
+    this._log.debug("Creating bulk file with identifier: ", onDiskFileIdentifier);
 
-    const fullPath = path.join(this._storageDirectory, identifier);
-
+    const fullPath = path.join(this._storageDirectory, onDiskFileIdentifier);
     
     const bulkFile = new BulkFile(metadata, fullPath);
+    const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
     bulkFile.onWriteBufferSize(({totalBufferSize, availableDelta}): void => {
-      this._onWriteBufferSizeEventEmitter.fire({identifier, totalBufferSize, availableDelta});
+      this._onWriteBufferSizeEventEmitter.fire({identifier: internalFileIdentifier, totalBufferSize, availableDelta});
     });
-    this._storageMap.set(identifier, bulkFile);
-    return identifier;
+    this._storageMap.set(internalFileIdentifier, bulkFile);
+    return internalFileIdentifier;
   }
 
   write(identifier: BulkFileIdentifier, data: Buffer): void {
@@ -103,9 +141,9 @@ export class BulkFile {
   private _closePending = false;
   private _onWriteBufferSizeEventEmitter = new EventEmitter<{totalBufferSize: number, availableDelta: number}>();
 
-  constructor(private  _metadata: Metadata, fullPath: string) {
+  constructor(private  _metadata: Metadata, public filePath: string) {
     this._log = getLogger("BulkFile", this);
-    this._wrFile = new WriterReaderFile(fullPath);
+    this._wrFile = new WriterReaderFile(filePath);
     this._wrFile.getWriteStream().on('drain', this._handleDrain.bind(this));
     this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
   }

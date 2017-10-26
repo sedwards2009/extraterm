@@ -19,6 +19,7 @@ import fontInfo = require('fontinfo');
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
+import * as os from 'os';
 
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent} from './bulk_file_handling/BulkFileStorage';
 import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
@@ -136,6 +137,9 @@ function main(): void {
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
     ptyConnector.destroy();
+    if (bulkFileStorage !== null) {
+      bulkFileStorage.dispose();
+    }
     app.quit();
   });
 
@@ -150,7 +154,7 @@ function main(): void {
     config.systemConfig.currentScaleFactor = currentScaleFactor;
     config.systemConfig.originalScaleFactor = originalScaleFactor;
 
-    bulkFileStorage = new BulkFileStorage("");
+    bulkFileStorage = new BulkFileStorage(os.tmpdir());
     bulkFileStorage.onWriteBufferSize(sendBulkFileWriteBufferSizeEvent);
     startIpc();
     
