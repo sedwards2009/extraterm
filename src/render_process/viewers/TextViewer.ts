@@ -3,39 +3,35 @@
  */
 
 "use strict";
-import * as _ from 'lodash';
-import * as fs from 'fs';
-import * as path from 'path';
-
-import * as SourceDir from '../../SourceDir';
-import {ViewerElement} from '../viewers/ViewerElement';
-import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as ExtensionApi from 'extraterm-extension-api';
-import * as Util from '../gui/Util';
-import * as DomUtils from '../DomUtils';
-import * as ThemeTypes from '../../theme/Theme';
-import * as keybindingmanager from '../keybindings/KeyBindingManager';
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
-
 import * as CodeMirror from 'codemirror';
+import * as fs from 'fs';
+import * as _ from 'lodash';
+import * as path from 'path';
+import * as SourceDir from '../../SourceDir';
+
+import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
 import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
-import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
-import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import * as EtTextViewerTypes from './TerminalViewerTypes';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
-  from '../CommandPaletteRequestTypes';
-import * as VirtualScrollArea from '../VirtualScrollArea';
+from '../CommandPaletteRequestTypes';
+import * as DomUtils from '../DomUtils';
+import * as ExtensionApi from 'extraterm-extension-api';
+import * as GeneralEvents from '../GeneralEvents';
+import {KeyBindingManager, AcceptsKeyBindingManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
-import * as GeneralEvents from '../GeneralEvents';
+import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
+import {TextDecoration} from './TerminalViewerTypes';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
+import * as ThemeTypes from '../../theme/Theme';
+import {ThemeableElementBase} from '../ThemeableElementBase';
+import * as Util from '../gui/Util';
+import {ViewerElement} from '../viewers/ViewerElement';
+import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
+import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, VirtualScrollable} from '../VirtualScrollArea';
 
-type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
-type SetterState = VirtualScrollArea.SetterState;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
-type TextDecoration = EtTextViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
 const ID = "EtTextViewerTemplate";
@@ -57,7 +53,6 @@ const COMMANDS = [
 ];
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
-
 const DEBUG_RESIZE = false;
 
 let registered = false;
@@ -85,7 +80,7 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
-export class TextViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
+export class TextViewer extends ViewerElement implements Commandable, AcceptsKeyBindingManager,
     SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
@@ -639,7 +634,7 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
       }
     }
 
-    VirtualScrollArea.emitResizeEvent(this);
+    VirtualScrollAreaEmitResizeEvent(this);
   }
 
   //-----------------------------------------------------------------------
@@ -722,7 +717,7 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
       this._log.debug("_emitVirtualResizeEvent");
     }
 
-    VirtualScrollArea.emitResizeEvent(this);
+    VirtualScrollAreaEmitResizeEvent(this);
   }
   
   private _emitBeforeSelectionChangeEvent(originMouse: boolean): void {
@@ -842,7 +837,7 @@ export class TextViewer extends ViewerElement implements Commandable, keybinding
             return;
           }
           if (ev.shiftKey) {
-            const evWithoutShift: keybindingmanager.MinimalKeyboardEvent = {
+            const evWithoutShift: MinimalKeyboardEvent = {
               shiftKey: false,
               metaKey: ev.metaKey,
               altKey: ev.altKey,
