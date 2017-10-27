@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as SourceDir from '../../SourceDir';
 
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
+import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
 import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
@@ -279,19 +280,18 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._codeMirror.setOption("tabSize", size);
   }
 
-  // FIXME upgrade to BulkFileHandle
-  setBytes(buffer: Buffer, mimeType: string): void {
-    let charset = "utf-8";
-    let cleanMimeType = mimeType;
-    if (mimeType.indexOf(';') !== -1) {
-      charset = mimeType.slice(mimeType.indexOf(';') + 1);
-      cleanMimeType = mimeType.slice(0, mimeType.indexOf(';'));
-    }
-    
-    const decodedString = buffer.toString(charset);
-    
-    this.setText(decodedString);
-    this.setMimeType(cleanMimeType);
+
+  setBulkFileHandle(handle: BulkFileHandle): void {
+    this._loadBulkFile(handle);
+  }
+
+  private async _loadBulkFile(handle: BulkFileHandle): Promise<void> {
+    const data = await BulkFileUtils.readDataAsArrayBuffer(handle)
+    const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
+    const decodedText = Buffer.from(data).toString(charset);
+    this.setText(decodedText);
+    this.setMimeType(mimeType);
+    this._emitVirtualResizeEvent();
   }
   
   setMode(newMode: ViewerElementTypes.Mode): void {

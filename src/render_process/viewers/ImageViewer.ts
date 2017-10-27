@@ -189,11 +189,9 @@ export class ImageViewer extends ViewerElement {
   }
   
   setEditable(editable: boolean): void {
-    // this._editable = editable;
   }
   
   getEditable(): boolean {
-    // return this._editable;
     return false;
   }  
 

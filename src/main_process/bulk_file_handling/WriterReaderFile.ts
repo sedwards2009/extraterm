@@ -65,6 +65,9 @@ class CounterTransform extends Transform {
 
 const TRAILING_FILE_READER_BUFFER_SIZE = 256 * 1024;
 
+/**
+ * File reader which can read and follow a file which concurrently being written to.
+ */
 class TailingFileReader extends Readable {
   private _log: Logger;
   private _fhandle = -1;
@@ -111,7 +114,7 @@ class TailingFileReader extends Readable {
             }
           } else {
             // Retry.
-            this._read(size);            
+            this._read(size);
           }
         }
       );

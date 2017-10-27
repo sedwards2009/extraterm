@@ -811,11 +811,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _initDownloadApplicationModeHandler(): void {
     this._downloadHandler = new DownloadApplicationModeHandler(this._emulator, this._fileBroker);
-    this._downloadHandler.onCreatedBulkFile( (newBulkFile: BulkFileHandle) => {
-      newBulkFile.onAvailableSizeChange( (newSize) => {
-        this._log.debug(`Bulk file read ${newSize} of ${newBulkFile.getTotalSize()}`);
-      });
-    });
+    this._downloadHandler.onCreatedBulkFile(this._handleShowFile.bind(this));
   }
 
   private _appendNewTerminalViewer(): void {
@@ -1714,9 +1710,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         break;
         
       case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
-        const bfh = this._downloadHandler.getBulkFileHandle();  // FIXME
-
-        this._handleShowFile(bfh);
         this._downloadHandler.handleStop();
         break;
         

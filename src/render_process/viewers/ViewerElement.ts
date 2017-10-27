@@ -140,10 +140,6 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
     return false;
   }
   
-  setBytes(buffer: Buffer, mimeType: string): void {
-    
-  }
-  
   setBulkFileHandle(handle: BulkFileHandle): void {
 
   }

@@ -28,3 +28,17 @@ export function guessMimetype(bulkFileHandle: BulkFileHandle): {mimeType: string
   }
   return {mimeType, charset};
 }
+
+/**
+ * Async read the contents of a Bulk File Handle.
+ */
+export function readDataAsArrayBuffer(bulkFileHandle: BulkFileHandle): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", bulkFileHandle.getUrl(), true);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = () => resolve(xhr.response);
+    xhr.onerror = () => reject(xhr.statusText);
+    xhr.send();
+  });  
+}

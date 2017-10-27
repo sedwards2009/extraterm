@@ -17,6 +17,10 @@ import * as Messages from '../../WindowMessages';
 
 const ONE_KILOBYTE = 1024;
 
+/**
+ * Render process side class for managing the creation and use of bulk files
+ * which are stored in the main process.
+ */
 export class BulkFileBroker {
 
   private _fileHandleMap = new Map<BulkFileIdentifier, WriteableBulkFileHandle>();
