@@ -181,11 +181,11 @@ export function windowMaximizeRequest(): void {
   ipc.send(Messages.CHANNEL_NAME, msg);  
 }
 
-export function createBulkFileSync(metadata: Metadata, size: number): BulkFileIdentifier {
+export function createBulkFileSync(metadata: Metadata, size: number): {identifier: BulkFileIdentifier, url: string} {
   const msg: Messages.BulkFileCreateMessage = {type: Messages.MessageType.BULK_FILE_CREATE, metadata, size};
   const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
   const createdBulkFileMessage = <Messages.BulkFileCreatedResponseMessage> event;
-  return createdBulkFileMessage.identifier;
+  return {identifier: createdBulkFileMessage.identifier, url: createdBulkFileMessage.url};
 }
 
 export function writeBulkFile(identifier: BulkFileIdentifier, data: Buffer): void {

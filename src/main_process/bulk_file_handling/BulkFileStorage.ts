@@ -33,7 +33,7 @@ export class BulkFileStorage {
 
   private _log: Logger; 
   private _storageMap = new Map<BulkFileIdentifier, BulkFile>();
-  private _server: BulkFileProtocolConnector = null;
+  private _server: BulkFileServer = null;
   private _storageDirectory: string;
 
   private _onWriteBufferSizeEventEmitter = new EventEmitter<BufferSizeEvent>();
@@ -41,7 +41,7 @@ export class BulkFileStorage {
   constructor(private _tempDirectory: string) {
     this._log = getLogger("BulkFileStorage", this);
     this._storageDirectory = this._createStorageDirectory(this._tempDirectory);
-    this._server = new BulkFileProtocolConnector(this);
+    this._server = new BulkFileServer(this);
     this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
   }
 
@@ -82,7 +82,7 @@ export class BulkFileStorage {
 
   onWriteBufferSize: Event<BufferSizeEvent>;
   
-  createBulkFile(metadata: Metadata, size: number): BulkFileIdentifier {
+  createBulkFile(metadata: Metadata, size: number): {identifier: BulkFileIdentifier, url: string} {
     const onDiskFileIdentifier = crypto.randomBytes(16).toString('hex');
     this._log.debug("Creating bulk file with identifier: ", onDiskFileIdentifier);
 
@@ -94,7 +94,8 @@ export class BulkFileStorage {
       this._onWriteBufferSizeEventEmitter.fire({identifier: internalFileIdentifier, totalBufferSize, availableDelta});
     });
     this._storageMap.set(internalFileIdentifier, bulkFile);
-    return internalFileIdentifier;
+
+    return {identifier: internalFileIdentifier, url: this._server.getUrl(internalFileIdentifier)};
   }
 
   write(identifier: BulkFileIdentifier, data: Buffer): void {
@@ -215,8 +216,10 @@ export class BulkFile {
 
 const PROTOCOL_SCHEME = "bulk";
 
-
-class BulkFileProtocolConnector {
+/**
+ * A small local server for exposing bulk files over HTTP.
+ */
+class BulkFileServer {
 
   private _log: Logger = null;
   private _server: http.Server = null;
@@ -225,7 +228,6 @@ class BulkFileProtocolConnector {
   constructor(private _storage: BulkFileStorage) {
     this._log = getLogger("BulkFileProtocolConnector", this);
     this._startServer();
-    this._createWebProtocol();
   }
 
   private _startServer(): void {
@@ -279,19 +281,8 @@ class BulkFileProtocolConnector {
     return {mimeType, charset};
   }
 
-  private _createWebProtocol(): void {
-    protocol.registerHttpProtocol(PROTOCOL_SCHEME, this._handleWebProtocol.bind(this));
-  }
-
-	private _handleWebProtocol(request: Electron.ProtocolRequest, callback: Electron.HttpProtocolCallback): void {
-    this._log.debug("request url:", request.url);
-    const prefix = PROTOCOL_SCHEME + "://";
-    if (request.url.startsWith(prefix)) {
-      const identifier = request.url.slice(prefix.length);
-      callback({method: "GET", url: `http://127.0.0.1:${this._port}/${identifier}`});
-    } else {
-      callback({method: "GET", url: `http://127.0.0.1:${this._port}/`});
-    }
+  getUrl(identifier: BulkFileIdentifier): string {
+    return `http://127.0.0.1:${this._port}/${identifier}`;
   }
 
   dispose(): void {

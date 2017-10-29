@@ -55,7 +55,8 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
 
   private _log: Logger;
   private _refCount = 0;
-  private _fileIdentifier: BulkFileIdentifier;
+  private _fileIdentifier: BulkFileIdentifier = null;
+  private _url: string = null;
   private _isOpen = true;
 
   private _onAvailableSizeChangeEventEmitter = new EventEmitter<number>();
@@ -79,7 +80,9 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this.onFinished = this._onFinishedEventEmitter.event;
     this.onAvailableWriteBufferSizeChanged = this._onWriteBufferSizeEventEmitter.event;
     
-    this._fileIdentifier = WebIpc.createBulkFileSync(_metadata, _totalSize);
+    const {identifier, url} = WebIpc.createBulkFileSync(_metadata, _totalSize);
+    this._fileIdentifier = identifier;
+    this._url = url;
   }
 
   getBulkFileIdentifier(): BulkFileIdentifier {
@@ -87,7 +90,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   }
 
   getUrl(): string {
-    return "bulk://" + this._fileIdentifier;
+    return this._url;
   }
 
   onAvailableSizeChange: Event<number>;

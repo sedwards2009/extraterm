@@ -408,6 +408,7 @@ export interface BulkFileCreateMessage extends Message {
 
 export interface BulkFileCreatedResponseMessage extends Message {
   identifier: BulkFileIdentifier;
+  url: string;
 }
 
 export interface BulkFileWriteMessage extends Message {
