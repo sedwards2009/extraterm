@@ -6,24 +6,26 @@
 
 import * as fs from 'fs';
 
-import {ViewerElement} from "./viewers/ViewerElement";
-import * as ViewerElementTypes from './viewers/ViewerElementTypes';
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
+import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
+import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
+  Commandable, CommandEntry} from './CommandPaletteRequestTypes';
+import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
-import * as DomUtils from './DomUtils';
-import {ScrollBar} from'./gui/ScrollBar';
-import * as Util from './gui/Util';
-import {ResizeCanary} from './ResizeCanary';
-import {ThemeableElementBase} from './ThemeableElementBase';
-import * as ThemeTypes from '../theme/Theme';
 import {AcceptsKeyBindingManager, KeyBindingManager} from './keybindings/KeyBindingManager';
+import {ResizeCanary} from './ResizeCanary';
+import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
+import {ScrollBar} from'./gui/ScrollBar';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
-import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
-  Commandable, CommandEntry} from './CommandPaletteRequestTypes';
-import * as WebIpc from './WebIpc';
+import * as ThemeTypes from '../theme/Theme';
+import {ThemeableElementBase} from './ThemeableElementBase';
+import {ViewerElement} from "./viewers/ViewerElement";
+import * as Util from './gui/Util';
+import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';
+import * as WebIpc from './WebIpc';
+
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -230,16 +232,16 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     return viewerElement === null ? "desktop" : viewerElement.getAwesomeIcon();
   }
   
-  getFrameContents(frameId: string): string {
+  getFrameContents(frameId: string): BulkFileHandle {
+    return this._tag === frameId ? this.getBulkFileHandle() : null;
+  }
+
+  getBulkFileHandle(): BulkFileHandle {
     const viewerElement = this.getViewerElement();
     if (viewerElement === null) {
       return null;
     }
-    if (this._tag === frameId) {
-      return viewerElement.getText();
-    } else {
-      return null;
-    }
+    return viewerElement.getBulkFileHandle();
   }
 
   getMode(): ViewerElementTypes.Mode {

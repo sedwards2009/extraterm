@@ -6,6 +6,7 @@
 
 import * as fs from 'fs';
 import * as crypto from 'crypto';
+import * as http from 'http';
 import * as _ from 'lodash';
 import * as utf8 from 'utf8';
 import {clipboard} from 'electron';
@@ -455,12 +456,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._frameFinder = func;
   }
   
-  getFrameContents(frameId: string): string {
+  getFrameContents(frameId: string): BulkFileHandle {
     const embeddedViewer = this.getEmbeddedViewerByFrameId(frameId);
     if (embeddedViewer === null) {
       return null;
     }
-    const text = embeddedViewer.getText();
+    const text = embeddedViewer.getBulkFileHandle();
     return text === undefined ? null : text;
   }
 
@@ -2013,22 +2014,18 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private handleRequestFrame(frameId: string): void {
-    let data = "";
-    if (this._frameFinder !== null) {
-      data = this._frameFinder(frameId);
-    } else {
-      data = this.getFrameContents(frameId);
+    if (this._frameFinder === null) {
+      return;
     }
-    // FIXME this should be binary safe and send metadata like mimetype and charset.
-    const lines = data == null ? [] : data.split("\n");
-    let encodedData: string = "";
-    lines.forEach( (line: string) => {
-      const utf8line = utf8.encode(line);
-      encodedData = window.btoa(utf8line +"\n");
-      this._sendDataToPtyEvent("#" + encodedData + "\n");
-    });
-      
-    this._sendDataToPtyEvent("#;0\n");  // Terminating char
+
+    const bulkFileHandle = this._frameFinder(frameId);
+    if (bulkFileHandle === null) {
+      this._sendDataToPtyEvent("#error\n");
+      return;
+    }
+
+    const uploader = new BulkFileUploader(this, bulkFileHandle);
+    uploader.upload();
   }
 
   private _handleShowFile(bulkFileHandle: BulkFileHandle): void {
@@ -2096,3 +2093,97 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 //   handleData(data: string): TermApi.ApplicationModeResponse;
 //   handleEnd(): void;
 // }
+
+class BulkFileUploader {
+
+  private _buffer: Buffer = Buffer.alloc(0);
+
+  constructor(private _terminal: EtTerminal, private _bulkFileHandle: BulkFileHandle) {
+  }
+
+  upload(): void {
+    this._sendEncodedLine("metadata");
+    const jsonString = JSON.stringify(this._bulkFileHandle.getMetadata());
+    this._sendEncodedDataToPty(Buffer.from(jsonString, "utf8"));
+
+    this._sendEncodedLine("body");
+
+    const req = http.request(<any> this._bulkFileHandle.getUrl(), (res) => {
+      console.log(`STATUS: ${res.statusCode}`);
+      console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
+
+      res.on('data', this._responseOnData.bind(this));
+      res.on('end', this._responseOnEnd.bind(this));
+    });
+    req.on('error', this._reponseOnError.bind(this));
+    
+    req.end();
+  }
+
+  private _responseOnData(chunk: Buffer): void {
+    console.log(`BODY: ${chunk.length}`);
+    this._appendChunkToBuffer(chunk);
+    this._sendBuffer();
+  }
+
+  private _appendChunkToBuffer(chunk: Buffer): void {
+    if (this._buffer.length !== 0) {
+      const combinedBuffer = Buffer.alloc(this._buffer.length + chunk.length);
+      this._buffer.copy(combinedBuffer);
+      chunk.copy(combinedBuffer, this._buffer.length);
+      this._buffer = combinedBuffer;
+    } else {
+      this._buffer = chunk;
+    }
+  }
+
+  private _sendBuffer(): void {
+    const BYTES_PER_LINE = 90;
+    const lines = Math.floor(this._buffer.length/BYTES_PER_LINE);
+    for (let i = 0; i < lines; i++) {
+      const lineBuffer = this._buffer.slice(i*BYTES_PER_LINE, (i+1) * BYTES_PER_LINE);
+      this._sendEncodedLine(lineBuffer.toString("base64"));
+    }
+
+    const remainder = this._buffer.length % BYTES_PER_LINE;
+    if (remainder !== 0) {
+      const newBuffer = Buffer.alloc(remainder);
+      this._buffer.copy(newBuffer, 0, this._buffer.length-remainder, this._buffer.length);
+      this._buffer = newBuffer;
+    } else {
+      this._buffer = Buffer.alloc(0);
+    }
+  }
+
+  private _responseOnEnd(): void {
+    console.log('No more data in response.');
+    this._sendEncodedDataToPty(this._buffer);
+  }
+
+  private _reponseOnError(e): void {
+    console.error(`problem with request: ${e.message}`);
+  }
+
+  private _sendEncodedLine(line: string): void {
+    this._sendDataToPtyEvent("#");
+    if (line.length !== 0) {
+      this._sendDataToPtyEvent(line);
+    }
+    this._sendDataToPtyEvent("\n");
+  }
+
+  private _sendEncodedDataToPty(buffer: Buffer): void {
+    const BYTES_PER_LINE = 90;
+    let i = 0;
+    for (i = 0; i < buffer.length; i += BYTES_PER_LINE) {
+      const lineBuffer = buffer.slice(i, Math.min(i + BYTES_PER_LINE, buffer.length));
+      this._sendEncodedLine(lineBuffer.toString("base64"));
+    }
+    this._sendEncodedLine("");  // Terminator
+  }
+
+  private _sendDataToPtyEvent(text: string): void {
+    const event = new CustomEvent(EtTerminal.EVENT_USER_INPUT, { detail: {data: text } });
+    this._terminal.dispatchEvent(event);
+  }
+}

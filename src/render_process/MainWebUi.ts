@@ -3,49 +3,47 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as he from 'he';
+import * as _ from 'lodash';
+import * as path from 'path';
+
+import {AboutTab} from './AboutTab';
+import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
+import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
+import {Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
+import * as config from '../Config';
 import * as DomUtils from './DomUtils';
-import * as util from './gui/Util';
-import {ThemeableElementBase} from './ThemeableElementBase';
+import {EmbeddedViewer} from './viewers/EmbeddedViewer';
+import {EmptyPaneMenu} from './EmptyPaneMenu';
+import {FrameFinder} from './FrameFinderType';
+import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
+import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
+import * as keybindingmanager from './keybindings/KeyBindingManager';
+import {EtKeyBindingsTab} from './keybindings/KeyBindingsTab';
+import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
+import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
+import {SettingsTab} from './settings/SettingsTab';
+import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation} from './gui/SnapDropContainer';
+import {SplitLayout} from './SplitLayout';
+import {Splitter, SplitOrientation} from './gui/Splitter';
+import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
+import {Tab} from './gui/Tab';
 import {TabWidget, DroppedEventDetail} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
-import {SettingsTab} from './settings/SettingsTab';
-import {AboutTab} from './AboutTab';
-import {EtKeyBindingsTab} from './keybindings/KeyBindingsTab';
-import {EtViewerTab} from './ViewerTab';
-import {EmbeddedViewer} from './viewers/EmbeddedViewer';
-import {Tab} from './gui/Tab';
-import {ViewerElement} from './viewers/ViewerElement';
-import {Splitter, SplitOrientation} from './gui/Splitter';
-import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation} from './gui/SnapDropContainer';
-import {EmptyPaneMenu} from './EmptyPaneMenu';
-import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as ThemeTypes from '../theme/Theme';
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import {Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
+import {ThemeableElementBase} from './ThemeableElementBase';
+import * as util from './gui/Util';
+import {ViewerElement} from './viewers/ViewerElement';
+import * as ViewerElementTypes from './viewers/ViewerElementTypes';
+import {EtViewerTab} from './ViewerTab';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
-import * as path from 'path';
-import * as _ from 'lodash';
-import {SplitLayout} from './SplitLayout';
-import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
-import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 
-import * as config from '../Config';
 type Config = config.Config;
 type ConfigManager =config.ConfigDistributor;
 type SessionProfile = config.SessionProfile;
-
-import * as he from 'he';
-import {FrameFinder} from './FrameFinderType';
-
-import * as keybindingmanager from './keybindings/KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
-
-import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
-
-import {Logger, getLogger} from '../logging/Logger';
-import log from '../logging/LogDecorator';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -1056,16 +1054,16 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this.dispatchEvent(event);
   }
 
-  private _frameFinder(frameId: string): string {
+  private _frameFinder(frameId: string): BulkFileHandle {
     for (const el of this._splitLayout.getAllTabContents()) {
-      let text = null;
+      let bulkFileHandle: BulkFileHandle = null;
       if (el instanceof EtViewerTab && el.getTag() === frameId) {
-        text = el.getFrameContents(frameId);
+        bulkFileHandle = el.getFrameContents(frameId);
       } else if (el instanceof EtTerminal) {
-        text = el.getFrameContents(frameId);
+        bulkFileHandle = el.getFrameContents(frameId);
       }
-      if (text != null) {
-        return text;
+      if (bulkFileHandle != null) {
+        return bulkFileHandle;
       }
     }
     return null;

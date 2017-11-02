@@ -4,18 +4,17 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as crypto from 'crypto';
+import {protocol} from 'electron';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
-import {protocol} from 'electron';
-import {Event} from 'extraterm-extension-api';
 
+import {Event} from 'extraterm-extension-api';
+import {EventEmitter} from '../../utils/EventEmitter';
 import {getLogger, Logger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
-
 import * as MimeTypeDetector from '../../mimetype_detector/MimeTypeDetector';
 import {WriterReaderFile} from './WriterReaderFile';
-import {EventEmitter} from '../../utils/EventEmitter';
 
 
 export type BulkFileIdentifier = string;

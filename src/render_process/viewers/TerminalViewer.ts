@@ -3,32 +3,34 @@
  */
 
 "use strict";
+import * as CodeMirror from 'codemirror';
 import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ViewerElement} from './ViewerElement';
-import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as Util from '../gui/Util';
-import * as DomUtils from '../DomUtils';
-import * as CodeMirror from 'codemirror';
+import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
 import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
-import * as ViewerElementTypes from './ViewerElementTypes';
-import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
-  from '../CommandPaletteRequestTypes';
-import * as Term from '../emulator/Term';
-import * as TermApi from '../emulator/TermApi';
-import * as VirtualScrollArea from '../VirtualScrollArea';
+from '../CommandPaletteRequestTypes';
+import * as DomUtils from '../DomUtils';
+import * as GeneralEvents from '../GeneralEvents';
+import * as keybindingmanager from '../keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
-import * as SourceDir from '../../SourceDir';
-import * as GeneralEvents from '../GeneralEvents';
-import * as ThemeTypes from '../../theme/Theme';
-import * as keybindingmanager from '../keybindings/KeyBindingManager';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
+import * as SourceDir from '../../SourceDir';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
+import * as Term from '../emulator/Term';
+import * as TermApi from '../emulator/TermApi';
+import * as EtTerminalViewerTypes from './TerminalViewerTypes';
+import * as ThemeTypes from '../../theme/Theme';
+import {ThemeableElementBase} from '../ThemeableElementBase';
+import * as Util from '../gui/Util';
+import {ViewerElement} from './ViewerElement';
+import * as ViewerElementTypes from './ViewerElementTypes';
+import * as VirtualScrollArea from '../VirtualScrollArea';
+
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
@@ -294,8 +296,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return this._visualState;
   }
   
-  getText(): string {
-    return this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
+  // getText(): string {
+  //   return this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
+  // }
+  getBulkFileHandle(): BulkFileHandle {
+    // FIXME
+return null;
   }
   
   isEmpty(): boolean {

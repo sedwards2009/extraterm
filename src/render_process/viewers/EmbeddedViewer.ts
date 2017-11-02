@@ -5,30 +5,31 @@
  */
 
 import * as _ from 'lodash';
-import * as ResourceLoader from '../../ResourceLoader';
-import {MenuItem} from '../gui/MenuItem';
+
+import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
+import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
+import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
+from '../CommandPaletteRequestTypes';
 import * as DomUtils from '../DomUtils';
+import * as GeneralEvents from '../GeneralEvents';
+import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
+import {FrameMimeType} from '../InternalMimeTypes';
+import * as KeyBindingManager from '../keybindings/KeyBindingManager';
+import {Logger, getLogger} from '../../logging/Logger';
+import log from '../../logging/LogDecorator';
+import {MenuItem} from '../gui/MenuItem';
+import * as ResourceLoader from '../../ResourceLoader';
+import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
+import * as ThemeTypes from '../../theme/Theme';
+import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
-import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as KeyBindingManager from '../keybindings/KeyBindingManager';
+import {VisualState} from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import * as ThemeTypes from '../../theme/Theme';
-import * as GeneralEvents from '../GeneralEvents';
-import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
-  from '../CommandPaletteRequestTypes';
-import {Logger, getLogger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
-import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
-import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
-import {FrameMimeType} from '../InternalMimeTypes';
-import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
+import {SetterState, VirtualScrollable} from '../VirtualScrollArea';
 
-type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
-type SetterState = VirtualScrollArea.SetterState;
-type VisualState = ViewerElementTypes.VisualState;
 
 MenuItem.init();
 CheckboxMenuItem.init();
@@ -342,14 +343,11 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     return viewerElement === null ? null : viewerElement.getSelectionText();
   }
   
-  getText(): string {
+  getBulkFileHandle(): BulkFileHandle {
     const viewerElement = this.getViewerElement();
-    if (viewerElement === null) {
-      return "";
-    }
-    return viewerElement.getText();
-  }
-  
+    return viewerElement === null ? null : viewerElement.getBulkFileHandle();    
+  }  
+
   setTag(tag: string): void {
     this._tag = tag;
     if (DomUtils.getShadowRoot(this) === null) {
@@ -631,7 +629,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
 
     ev.dataTransfer.setData(FrameMimeType.MIMETYPE, "" + this.getTag());
-    ev.dataTransfer.setData("text/plain", this.getText());
+    // ev.dataTransfer.setData("text/plain", this.getText());
     ev.dataTransfer.setDragImage(target, -10, -10);
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';

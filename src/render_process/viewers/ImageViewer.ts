@@ -169,6 +169,10 @@ export class ImageViewer extends ViewerElement {
     return this._mimeType;
   }
   
+  getBulkFileHandle(): BulkFileHandle {
+    return this._bulkFileHandle;
+  }
+
   setBulkFileHandle(handle: BulkFileHandle): void {
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     this.setMimeType(mimeType);

@@ -38,18 +38,39 @@ def requestFrame(frame_name):
     # Request the frame contents from the terminal.
     extratermclient.requestFrame(frame_name)
 
+    line = sys.stdin.readline()
+    if line.strip() != "#metadata":
+        return 1
+
+    metadata_buffer = ""
+    b64data = sys.stdin.readline().strip()
+    while len(b64data) != 0:
+        if b64data[0] != '#':
+            return 1    # Something is wrong with the transmission.  FIXME
+        elif len(b64data) == 1:
+            # Decode the metadata.
+            # yield base64.b64decode(metadata_buffer)
+            break
+        else:
+            metadata_buffer += b64data[1:]
+            b64data = sys.stdin.readline().strip()
+    
+    line = sys.stdin.readline().strip()
+    if line != "#body":
+        return 1    # FIXME raise??
+
     # Read stdin until an empty buffer is returned.
     try:
-        b64data = sys.stdin.readline()
+        b64data = sys.stdin.readline().strip()
         while len(b64data) != 0:
             if b64data[0] != '#':
-                return 1    # Something is wrong with the transmission.
-            if '#;' in b64data:  # Terminating chars
-                return 0
+                return 1    # Something is wrong with the transmission. FIXME
+            elif len(b64data) == 1:
+                break   # Reached the end
             else:
                 # Send the input to stdout.
                 yield base64.b64decode(b64data[1:]) # Strip the leading # and decode.
-                b64data = sys.stdin.readline()
+                b64data = sys.stdin.readline().strip()
     except OSError as ex:
         print(ex.strerror, file=sys.stderr)
         
@@ -60,9 +81,8 @@ def outputFrame(frame_name):
     for binary_data in requestFrame(frame_name):
         if len(binary_data) == 0:
             return
-        data = binary_data.decode('utf-8') # FIXME handle utf8 decode errors.
-        sys.stdout.write(data)
-        sys.stdout.flush()
+        sys.stdout.buffer.write(binary_data)
+    sys.stdout.flush()
 
 def xargs(frame_names, command_list):
     temp_files = []

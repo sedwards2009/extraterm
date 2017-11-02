@@ -112,7 +112,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
   private _keyBindingManager: KeyBindingManager;
-  private _text: string;
+  private _bulkFileHandle: BulkFileHandle;
   private _mimeType: string;
   
   private _commandLine: string; // FIXME needed?
@@ -137,7 +137,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
   private _initProperties(): void {
     this._keyBindingManager = null;
-    this._text = null;
+    this._bulkFileHandle = null;
     this._mimeType = null;
     this._log = getLogger(TextViewer.TAG_NAME, this);
     this._commandLine = null;
@@ -229,14 +229,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     return this._visualState;
   }
   
-  getText(): string {
-    return this._codeMirror.getDoc().getValue();
-  }
-  
-  setText(newText: string): void {
-    if (this._codeMirror === null) {
-      this._text = newText;
-    } else {
+  private _setText(newText: string): void {
+    if (this._codeMirror !== null) {
       this._codeMirror.getDoc().setValue(newText);
     }
   }
@@ -280,16 +274,20 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._codeMirror.setOption("tabSize", size);
   }
 
+  getBulkFileHandle(): BulkFileHandle {
+    return this._bulkFileHandle;
+  }
 
   setBulkFileHandle(handle: BulkFileHandle): void {
     this._loadBulkFile(handle);
   }
 
   private async _loadBulkFile(handle: BulkFileHandle): Promise<void> {
+    this._bulkFileHandle = handle;
     const data = await BulkFileUtils.readDataAsArrayBuffer(handle)
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     const decodedText = Buffer.from(data).toString(charset);
-    this.setText(decodedText);
+    this._setText(decodedText);
     this.setMimeType(mimeType);
     this._emitVirtualResizeEvent();
   }
@@ -608,10 +606,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
         
     this._applyVisualState(this._visualState);
 
-    if (this._text !== null) {
-      this._codeMirror.getDoc().setValue(this._text);
-      DomUtils.doLater(this._emitVirtualResizeEvent.bind(this));
-      this._text = null;
+    if (this._bulkFileHandle !== null) {
+      this._loadBulkFile(this._bulkFileHandle);
     }
 
     this._adjustHeight(this._height);

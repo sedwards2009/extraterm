@@ -16,9 +16,7 @@ import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable {
   
   static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
-
   static EVENT_CURSOR_MOVE = "cursor-move";
-
   static EVENT_CURSOR_EDGE = "cursor-edge";
 
   /**
@@ -70,7 +68,6 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
 
   setVisualState(state: VisualState): void {
-    
   }
 
   getMode(): Mode {
@@ -78,13 +75,6 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
   
   setMode(mode: Mode): void {
-  }
-
-  getText(): string {
-    return null;
-  }
-
-  setText(text: string): void {
   }
 
   getMimeType(): string {
@@ -141,6 +131,9 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
   
   setBulkFileHandle(handle: BulkFileHandle): void {
+  }
 
+  getBulkFileHandle(): BulkFileHandle {
+    return null;
   }
 }
