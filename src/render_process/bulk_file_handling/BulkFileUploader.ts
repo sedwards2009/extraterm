@@ -3,21 +3,37 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-
 import * as http from 'http';
 
 import {BulkFileHandle} from './BulkFileHandle';
 import {Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
+import {Logger, getLogger} from '../../logging/Logger';
 
 
+const BYTES_PER_LINE = 90;
+
+/**
+ * Uploads files to a remote process over shell and remote's stdin.
+ * 
+ * Format is:
+ * 
+ * '#metadata\n'
+ * '#' <base64 encoded metadata JSON string, $BYTES_PER_LINE bytes per line> '\n'
+ * '#\n'
+ * '#body\n'
+ * '#' <base64 encoded binary file data, $BYTES_PER_LINE bytes per line> '\n'
+ * '#\n'
+ * 
+ */
 export class BulkFileUploader {
   
+  private _log: Logger;
   private _buffer: Buffer = Buffer.alloc(0);
-
   private _onPtyDataEventEmitter = new EventEmitter<string>();
 
   constructor(private _bulkFileHandle: BulkFileHandle) {
+    this._log = getLogger("BulkFileUploader", this);
     this.onPtyData = this._onPtyDataEventEmitter.event;
   }
 
@@ -31,9 +47,6 @@ export class BulkFileUploader {
     this._sendEncodedLine("body");
 
     const req = http.request(<any> this._bulkFileHandle.getUrl(), (res) => {
-      console.log(`STATUS: ${res.statusCode}`);
-      console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
-
       res.on('data', this._responseOnData.bind(this));
       res.on('end', this._responseOnEnd.bind(this));
     });
@@ -43,7 +56,6 @@ export class BulkFileUploader {
   }
   
   private _responseOnData(chunk: Buffer): void {
-    console.log(`BODY: ${chunk.length}`);
     this._appendChunkToBuffer(chunk);
     this._sendBuffer();
   }
@@ -60,7 +72,6 @@ export class BulkFileUploader {
   }
 
   private _sendBuffer(): void {
-    const BYTES_PER_LINE = 90;
     const lines = Math.floor(this._buffer.length/BYTES_PER_LINE);
     for (let i = 0; i < lines; i++) {
       const lineBuffer = this._buffer.slice(i*BYTES_PER_LINE, (i+1) * BYTES_PER_LINE);
@@ -78,12 +89,11 @@ export class BulkFileUploader {
   }
 
   private _responseOnEnd(): void {
-    console.log('No more data in response.');
     this._sendEncodedDataToPty(this._buffer);
   }
 
   private _reponseOnError(e): void {
-    console.error(`problem with request: ${e.message}`);
+    this._log.warn(`Problem with request: ${e.message}`);
   }
 
   private _sendEncodedLine(line: string): void {
@@ -95,9 +105,7 @@ export class BulkFileUploader {
   }
 
   private _sendEncodedDataToPty(buffer: Buffer): void {
-    const BYTES_PER_LINE = 90;
-    let i = 0;
-    for (i = 0; i < buffer.length; i += BYTES_PER_LINE) {
+    for (let i = 0; i < buffer.length; i += BYTES_PER_LINE) {
       const lineBuffer = buffer.slice(i, Math.min(i + BYTES_PER_LINE, buffer.length));
       this._sendEncodedLine(lineBuffer.toString("base64"));
     }
