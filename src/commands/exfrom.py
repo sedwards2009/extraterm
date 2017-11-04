@@ -5,18 +5,33 @@
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 # 
 
-import sys
-import os
 import argparse
-import tty
-import termios
 import atexit
 import base64
+import json
+import os
+import sys
 import tempfile
+import termios
+import tty
 from signal import signal, SIGPIPE, SIG_DFL 
 
 ##@inline
 from extratermclient import extratermclient
+
+class Metadata:
+    def __init__(self, metadata):
+        self.metadata = metadata
+
+
+class BodyData:
+    def __init__(self, data):
+        self.data = data
+
+
+class FrameReadError:
+    def __init__(self, message):
+        self.message = message
 
 
 def requestFrame(frame_name):
@@ -40,16 +55,16 @@ def requestFrame(frame_name):
 
     line = sys.stdin.readline()
     if line.strip() != "#metadata":
-        return 1
+        return FrameReadError("Error while reading in frame data. Expected '#metadata', but didn't receive it.")
 
     metadata_buffer = ""
     b64data = sys.stdin.readline().strip()
     while len(b64data) != 0:
         if b64data[0] != '#':
-            return 1    # Something is wrong with the transmission.  FIXME
+            return FrameReadError("Error while reading in metadata. Line didn't start with '#'.")
         elif len(b64data) == 1:
             # Decode the metadata.
-            # yield base64.b64decode(metadata_buffer)
+            yield Metadata(json.loads(base64.b64decode(metadata_buffer)))
             break
         else:
             metadata_buffer += b64data[1:]
@@ -57,19 +72,19 @@ def requestFrame(frame_name):
     
     line = sys.stdin.readline().strip()
     if line != "#body":
-        return 1    # FIXME raise??
+        return FrameReadError("Error while reading in frame data. Expected '#body', but didn't receive it.")
 
     # Read stdin until an empty buffer is returned.
     try:
         b64data = sys.stdin.readline().strip()
         while len(b64data) != 0:
             if b64data[0] != '#':
-                return 1    # Something is wrong with the transmission. FIXME
+                return FrameReadError("Error while reading in metadata. Line didn't start with '#'.")
             elif len(b64data) == 1:
                 break   # Reached the end
             else:
                 # Send the input to stdout.
-                yield base64.b64decode(b64data[1:]) # Strip the leading # and decode.
+                yield BodyData(base64.b64decode(b64data[1:])) # Strip the leading # and decode.
                 b64data = sys.stdin.readline().strip()
     except OSError as ex:
         print(ex.strerror, file=sys.stderr)
@@ -78,10 +93,15 @@ def requestFrame(frame_name):
         signal(SIGPIPE,SIG_DFL)
 
 def outputFrame(frame_name):
-    for binary_data in requestFrame(frame_name):
-        if len(binary_data) == 0:
-            return
-        sys.stdout.buffer.write(binary_data)
+    for block in requestFrame(frame_name):
+        if isinstance(block, Metadata):
+            pass
+        elif isinstance(block, BodyData):
+            sys.stdout.buffer.write(block.data)
+        else:
+            # FrameReadError
+            sys.stdout.buffer.write(bytes(block.message, 'utf8'))
+            break
     sys.stdout.flush()
 
 def xargs(frame_names, command_list):
@@ -106,8 +126,15 @@ def xargs(frame_names, command_list):
 
 def readFrameToTempFile(frame_name):
     fhandle = tempfile.NamedTemporaryFile('w+b', delete=False)
-    for binary_data in requestFrame(frame_name):
-        fhandle.write(binary_data)
+    for block in requestFrame(frame_name):
+        if isinstance(block, Metadata):
+            pass
+        elif isinstance(block, BodyData):
+            fhandle.write(block.data)
+        else:
+            # FrameReadError
+            sys.stdout.buffer.write(bytes(block.message, 'utf8'))
+            break
     fhandle.close()
 
     return fhandle 
