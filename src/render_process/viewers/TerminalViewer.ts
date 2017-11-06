@@ -8,6 +8,7 @@ import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
 import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
@@ -296,12 +297,9 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return this._visualState;
   }
   
-  // getText(): string {
-  //   return this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
-  // }
   getBulkFileHandle(): BulkFileHandle {
-    // FIXME
-return null;
+    const text =  this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
+    return new BlobBulkFileHandle(this.getMimeType()+";charset=utf8", {}, Buffer.from(text, 'utf8'));
   }
   
   isEmpty(): boolean {

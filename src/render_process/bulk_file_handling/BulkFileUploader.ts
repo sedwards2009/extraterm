@@ -5,6 +5,7 @@
  */
 import * as http from 'http';
 
+import  getUri = require('get-uri');  // Top level on this import is a callable, have to use other syntax.
 import {BulkFileHandle} from './BulkFileHandle';
 import {Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
@@ -46,13 +47,22 @@ export class BulkFileUploader {
 
     this._sendEncodedLine("body");
 
-    const req = http.request(<any> this._bulkFileHandle.getUrl(), (res) => {
-      res.on('data', this._responseOnData.bind(this));
-      res.on('end', this._responseOnEnd.bind(this));
-    });
-    req.on('error', this._reponseOnError.bind(this));
-    
-    req.end();
+    const url = this._bulkFileHandle.getUrl();
+    if (url.startsWith("data:")) {
+      getUri(url, (err, stream) => {
+        stream.on('data', this._responseOnData.bind(this));
+        stream.on('end', this._responseOnEnd.bind(this));
+        stream.on('error', this._reponseOnError.bind(this));
+      });
+    } else {
+      const req = http.request(<any> url, (res) => {
+        res.on('data', this._responseOnData.bind(this));
+        res.on('end', this._responseOnEnd.bind(this));
+      });
+      req.on('error', this._reponseOnError.bind(this));
+      
+      req.end();
+    }
   }
   
   private _responseOnData(chunk: Buffer): void {
