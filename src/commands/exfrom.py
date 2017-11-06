@@ -64,7 +64,7 @@ def requestFrame(frame_name):
             return FrameReadError("Error while reading in metadata. Line didn't start with '#'.")
         elif len(b64data) == 1:
             # Decode the metadata.
-            yield Metadata(json.loads(base64.b64decode(metadata_buffer)))
+            yield Metadata(json.loads(str(base64.b64decode(metadata_buffer), encoding="utf-8")))
             break
         else:
             metadata_buffer += b64data[1:]
