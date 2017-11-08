@@ -66,10 +66,11 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   private _availableSize = 0;
   private _peekBuffer: SmartBuffer = new SmartBuffer();
   
-  private _writeBuffers: Buffer[] = [];
-  private _maximumWriteBufferSize = 1024; // FIXME
+  private _writeBuffer: SmartBuffer = new SmartBuffer();
+  private _maximumWriteBufferSize = 2048; // FIXME
+  private _writePacketSize = 1024;        // FIXME
 
-  private _remoteBufferTotalSize = 1024;
+  private _remoteBufferTotalSize = 2048;  // FIXME
   private _removeBufferDelta = 0;
   private _pendingClose = false;
   
@@ -129,12 +130,12 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     }
 
     this._writePeekBuffer(data);
-    this._writeBuffers.push(data);
+    this._writeBuffer.writeBuffer(data);
     this._sendBuffers();
   }
 
   getAvailableWriteBufferSize(): number {
-    return this._maximumWriteBufferSize - this._writeBuffers.reduce((accu, buf): number => accu + buf.length, 0);
+    return this._maximumWriteBufferSize - this._writeBuffer.length;
   }
 
   onAvailableWriteBufferSizeChanged: Event<number>;
@@ -144,35 +145,40 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   }
 
   private _sendBuffers(): void {
-    let bytesSent = 0;
+    const packetThreshold = this._pendingClose ? 0 : this._writePacketSize - 1;
 
-    while (this._writeBuffers.length !== 0 && this._getAvailableRemoteBufferSize() > 0) {
-      const nextBuffer = this._writeBuffers[0];
-      if (nextBuffer.length <= this._getAvailableRemoteBufferSize()) {
+    if (this._writeBuffer.length > packetThreshold && this._getAvailableRemoteBufferSize() > packetThreshold) {
+      const plainWriteBuffer = this._writeBuffer.toBuffer();
+      
+      let xferBuffer: Buffer;
+      let remainingBuffer: SmartBuffer;
+      
+      if (plainWriteBuffer.length <= this._getAvailableRemoteBufferSize()) {
         // Send the whole buffer in one go.
-        this._writeBuffers.splice(0, 1);
-        WebIpc.writeBulkFile(this._fileIdentifier, nextBuffer);
-        bytesSent += nextBuffer.length;
-        this._remoteBufferTotalSize -= nextBuffer.length;
+        xferBuffer = plainWriteBuffer;
+        remainingBuffer = new SmartBuffer();
       } else {
+
         // Cut the buffer into two.
-        const firstPartBuffer = Buffer.alloc(this._getAvailableRemoteBufferSize());
-        nextBuffer.copy(firstPartBuffer, 0, 0, this._getAvailableRemoteBufferSize());
-        const secondPartBuffer = Buffer.alloc(nextBuffer.length - this._getAvailableRemoteBufferSize());
-        nextBuffer.copy(secondPartBuffer, 0, this._getAvailableRemoteBufferSize());
+        xferBuffer = Buffer.alloc(this._getAvailableRemoteBufferSize());
+        plainWriteBuffer.copy(xferBuffer, 0, 0, this._getAvailableRemoteBufferSize());
 
-        this._writeBuffers.splice(0, 1, firstPartBuffer, secondPartBuffer);
-        // Let the next run through the loop do the transmission.
+        const secondPartBuffer = Buffer.alloc(plainWriteBuffer.length - this._getAvailableRemoteBufferSize());
+        plainWriteBuffer.copy(secondPartBuffer, 0, this._getAvailableRemoteBufferSize());
+        remainingBuffer = new SmartBuffer();
+        remainingBuffer.writeBuffer(secondPartBuffer);
       }
-    }
 
-    if (bytesSent !== 0) {
-      this._removeBufferDelta -= bytesSent;
-      this._availableSize += bytesSent;
+      WebIpc.writeBulkFile(this._fileIdentifier, xferBuffer);
+
+      this._writeBuffer = remainingBuffer;
+      this._removeBufferDelta -= xferBuffer.length;
+
+      this._availableSize += xferBuffer.length;
       this._onAvailableSizeChangeEventEmitter.fire(this._availableSize);
     }
 
-    if (this._pendingClose && this._writeBuffers.length === 0) {
+    if (this._pendingClose && this._writeBuffer.length === 0) {
       WebIpc.closeBulkFile(this._fileIdentifier);
       this._isOpen = false;
       this._pendingClose = false;
