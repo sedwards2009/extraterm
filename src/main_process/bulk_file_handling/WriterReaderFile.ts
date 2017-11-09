@@ -6,6 +6,7 @@
 import * as fs from 'fs';
 import {Readable, ReadableOptions, Transform, Writable} from 'stream';
 import {getLogger, Logger} from '../../logging/Logger';
+import log from '../../logging/LogDecorator';
 
 
 export class WriterReaderFile {
@@ -48,6 +49,7 @@ class CounterTransform extends Transform {
   protected _transform(chunk: any, encoding: string, callback: Function): void {
     this.push(chunk);
     this._counter += chunk.length;
+
     callback();
     process.nextTick(() => {
       this.emit('expanded');
@@ -85,7 +87,7 @@ class TailingFileReader extends Readable {
 
   protected _read(size: number): void {
     if (this._counterTransformer.isClosed() && this._counterTransformer.getCount() === this._readPointer) {
-      this.push(null);
+      this.push(null);  // Done
       return;
     }
     this._reading = true;
@@ -106,7 +108,6 @@ class TailingFileReader extends Readable {
             const correctSizeBuffer = Buffer.alloc(bytesRead);
             this._buffer.copy(correctSizeBuffer, 0, 0, bytesRead);
             this._readPointer += bytesRead;
-
             if (this.push(correctSizeBuffer)) {
               this._read(size);
             } else {

@@ -1205,7 +1205,6 @@ function handleNewTagRequest(msg: Messages.NewTagRequestMessage): Messages.NewTa
 //-------------------------------------------------------------------------
 
 function handleCreateBulkFile(msg: Messages.BulkFileCreateMessage): Messages.BulkFileCreatedResponseMessage {
-  _log.debug("handleCreateBulkFile: ", msg.metadata, msg.size);
   const {identifier, url}  = bulkFileStorage.createBulkFile(msg.metadata, msg.size);
   const reply: Messages.BulkFileCreatedResponseMessage = {type: Messages.MessageType.BULK_FILE_CREATED, identifier, url};
   return reply;

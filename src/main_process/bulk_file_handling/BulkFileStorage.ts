@@ -25,6 +25,7 @@ export interface Metadata {
 
 export type BufferSizeEvent = {identifier: BulkFileIdentifier, totalBufferSize: number, availableDelta: number};
 
+
 /**
  * Responsible for the temporary storage of large files and serving them via a pseudo web protocol.
  */
@@ -83,8 +84,6 @@ export class BulkFileStorage {
   
   createBulkFile(metadata: Metadata, size: number): {identifier: BulkFileIdentifier, url: string} {
     const onDiskFileIdentifier = crypto.randomBytes(16).toString('hex');
-    this._log.debug("Creating bulk file with identifier: ", onDiskFileIdentifier);
-
     const fullPath = path.join(this._storageDirectory, onDiskFileIdentifier);
     
     const bulkFile = new BulkFile(metadata, fullPath);
@@ -103,8 +102,6 @@ export class BulkFileStorage {
       return;
     }
 
-    this._log.debug(`Writing ${data.length} bytes to identifier ${identifier}`);
-
     this._storageMap.get(identifier).write(data);
   }
 
@@ -114,7 +111,6 @@ export class BulkFileStorage {
       return;
     }
     
-    this._log.debug(`Closing identifier ${identifier}`);
     this._storageMap.get(identifier).close();
   }
 
@@ -128,6 +124,9 @@ export class BulkFileStorage {
 }
 
 
+const BULK_FILE_MAXIMUM_BUFFER_SIZE = 512 * 1024;
+
+
 export class BulkFile {
 
   private _log: Logger; 
@@ -137,7 +136,6 @@ export class BulkFile {
   private _writeBuffers: Buffer[] = [];
   private _writeBlocked = false;
 
-  private _maximumBufferedSize = 1024;  // FIXME make bigger
   private _closePending = false;
   private _onWriteBufferSizeEventEmitter = new EventEmitter<{totalBufferSize: number, availableDelta: number}>();
 
@@ -179,8 +177,7 @@ export class BulkFile {
   }
 
   private _emitWriteBufferSize(availableDelta: number): void {
-    const totalBufferSize = this._maximumBufferedSize;
-    this._log.debug(`_emitWriteBufferSize -> totalBufferSize: ${totalBufferSize} availableDelta: ${availableDelta}`);
+    const totalBufferSize = BULK_FILE_MAXIMUM_BUFFER_SIZE;
     this._onWriteBufferSizeEventEmitter.fire({totalBufferSize, availableDelta});
   }
 
@@ -213,7 +210,6 @@ export class BulkFile {
   }
 }
 
-const PROTOCOL_SCHEME = "bulk";
 
 /**
  * A small local server for exposing bulk files over HTTP.
@@ -230,17 +226,14 @@ class BulkFileServer {
   }
 
   private _startServer(): void {
-    this._log.debug("Starting bulk file server");
-
     this._server = http.createServer(this._handleRequest.bind(this));    
     this._server.listen(0, "127.0.0.1", () => {
       this._port = this._server.address().port;
-      this._log.debug(`Server running on 127.0.0.1 port ${this._port}`);
+      this._log.info(`Bulk file server running on 127.0.0.1 port ${this._port}`);
     });
   }
 
   private _handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
-    this._log.debug("req.url.slice(1): ", );
     const identifier = req.url.slice(1);
     const bulkFile = this._storage.getBulkFileByIdentifier(identifier);
     if (bulkFile == null) {

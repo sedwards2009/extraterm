@@ -51,6 +51,11 @@ export class BulkFileBroker {
 }
 
 
+const MAXIMUM_WRITE_BUFFER_SIZE = 512 * 1024;   // Maximum amount of data WriteableBulkFileHandle will buffer internally.
+const PACKET_MINIMUM_SIZE = 64 * 1024;          // Minimum size of a write packet to send via IPC.
+const INITIAL_REMOTE_BUFFER_SIZE = 256 * 1024;  // Initial (assumed) size of the remote buffer.
+
+
 export class WriteableBulkFileHandle implements BulkFileHandle {
 
   private _log: Logger;
@@ -65,14 +70,14 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
 
   private _availableSize = 0;
   private _peekBuffer: SmartBuffer = new SmartBuffer();
-  
   private _writeBuffer: SmartBuffer = new SmartBuffer();
-  private _maximumWriteBufferSize = 2048; // FIXME
-  private _writePacketSize = 1024;        // FIXME
 
-  private _remoteBufferTotalSize = 2048;  // FIXME
+  // These two are used for flow control and keeping track of the
+  // available size of the buffer on the remote receiving end.
+  private _remoteBufferTotalSize = INITIAL_REMOTE_BUFFER_SIZE;
   private _removeBufferDelta = 0;
-  private _pendingClose = false;
+
+  private _closePending = false;
   
   constructor(private _disposable: Disposable, private _metadata: Metadata, private _totalSize: number) {
     this._log = getLogger("WriteableBulkFileHandle", this);
@@ -135,7 +140,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   }
 
   getAvailableWriteBufferSize(): number {
-    return this._maximumWriteBufferSize - this._writeBuffer.length;
+    return MAXIMUM_WRITE_BUFFER_SIZE - this._writeBuffer.length;
   }
 
   onAvailableWriteBufferSizeChanged: Event<number>;
@@ -145,7 +150,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   }
 
   private _sendBuffers(): void {
-    const packetThreshold = this._pendingClose ? 0 : this._writePacketSize - 1;
+    const packetThreshold = this._closePending ? 0 : PACKET_MINIMUM_SIZE - 1;
 
     if (this._writeBuffer.length > packetThreshold && this._getAvailableRemoteBufferSize() > packetThreshold) {
       const plainWriteBuffer = this._writeBuffer.toBuffer();
@@ -178,10 +183,10 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
       this._onAvailableSizeChangeEventEmitter.fire(this._availableSize);
     }
 
-    if (this._pendingClose && this._writeBuffer.length === 0) {
+    if (this._closePending && this._writeBuffer.length === 0) {
       WebIpc.closeBulkFile(this._fileIdentifier);
       this._isOpen = false;
-      this._pendingClose = false;
+      this._closePending = false;
     }
   }
 
@@ -213,7 +218,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
       return;
     }
 
-    this._pendingClose = true;
+    this._closePending = true;
     this._sendBuffers();
   }
 
