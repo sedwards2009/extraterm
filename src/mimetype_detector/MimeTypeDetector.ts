@@ -351,3 +351,26 @@ function isNotText(buffer: Buffer): boolean {
   }
   return nonTextCharCount > 4;  // Allow a couple of bad chars.
 }
+
+export interface Metadata {
+  readonly [index: string]: (string | number);
+}
+
+
+export function detectWithMetadata(metadata: Metadata, buffer: Buffer=null): DetectionResult {
+  const filename = "" + metadata.filename;
+  
+  let mimeType: string = metadata.mimeType == null ? null : "" + metadata.mimeType;
+  let charset: string = metadata.charset == null ? null : "" + metadata.charset;
+  if (mimeType === null) {
+    // Try to determine a mimetype by inspecting the file name first.
+    const detectionResult = detect(filename, buffer);
+    if (detectionResult !== null) {
+      mimeType = detectionResult.mimeType;
+      if (charset === null) {
+        charset = detectionResult.charset;
+      }
+    }
+  }
+  return {mimeType, charset};
+}

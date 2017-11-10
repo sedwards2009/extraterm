@@ -8,6 +8,7 @@ import {protocol} from 'electron';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
+import {SmartBuffer, SmartBufferOptions} from 'smart-buffer';
 
 import {Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
@@ -125,6 +126,7 @@ export class BulkFileStorage {
 
 
 const BULK_FILE_MAXIMUM_BUFFER_SIZE = 512 * 1024;
+const ONE_KILOBYTE = 1024;
 
 
 export class BulkFile {
@@ -139,11 +141,17 @@ export class BulkFile {
   private _closePending = false;
   private _onWriteBufferSizeEventEmitter = new EventEmitter<{totalBufferSize: number, availableDelta: number}>();
 
+  private _peekBuffer = new SmartBuffer();
+
   constructor(private  _metadata: Metadata, public filePath: string) {
     this._log = getLogger("BulkFile", this);
     this._wrFile = new WriterReaderFile(filePath);
     this._wrFile.getWriteStream().on('drain', this._handleDrain.bind(this));
     this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
+  }
+
+  getMetadata(): Metadata {
+    return this._metadata;
   }
 
   write(data: Buffer): void {
@@ -153,6 +161,12 @@ export class BulkFile {
     }
 
     this._writeBuffers.push(data);
+
+    if (this._peekBuffer.length < ONE_KILOBYTE) {
+      const bufferToAppend = Buffer.alloc(Math.min(ONE_KILOBYTE - this._peekBuffer.length, data.length));
+      this._peekBuffer.writeBuffer(bufferToAppend);
+    }
+
     this._sendWriteBuffers();
   }
 
@@ -205,6 +219,10 @@ export class BulkFile {
     this._sendWriteBuffers();
   }
 
+  peek1KB(): Buffer {
+    return this._peekBuffer.toBuffer();
+  }
+
   createReadStream(): NodeJS.ReadableStream {
     return this._wrFile.createReadStream();
   }
@@ -243,18 +261,12 @@ class BulkFileServer {
       return;
     }
 
-    // const rawData = bulkFile.smartBuffer.toBuffer();
-    // const metadata = bulkFile.metadata;
-    // const filename = metadata.filename != null ? ""+ metadata.filename : null;
-    // const {mimeType, charset} = this._guessMimetype(rawData, metadata, filename);
-
-    const mimeType = "image/png";
+    const {mimeType, charset} = MimeTypeDetector.detectWithMetadata(bulkFile.getMetadata(), bulkFile.peek1KB());
+    const combinedMimeType = charset === null ? mimeType : mimeType + "; charset=" + charset;
 
     res.statusCode = 200;
-    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Type', combinedMimeType);
     bulkFile.createReadStream().pipe(res);
-
-    // res.end(rawData);
   }
 
   private _guessMimetype(buffer: Buffer, metadata: Metadata, filename: string): {mimeType: string, charset:string} {
