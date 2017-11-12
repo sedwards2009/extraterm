@@ -942,6 +942,14 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       handleCloseBulkFile(<Messages.BulkFileCloseMessage> msg);
       break;
 
+    case Messages.MessageType.BULK_FILE_REF:
+      handleRefBulkFile(<Messages.BulkFileRefMessage> msg);
+      break;
+
+    case Messages.MessageType.BULK_FILE_DEREF:
+      handleDerefBulkFile(<Messages.BulkFileDerefMessage> msg);
+      break;
+
     default:
       break;
   }
@@ -1226,6 +1234,14 @@ function sendBulkFileWriteBufferSizeEvent(event: BufferSizeEvent): void {
 
 function handleCloseBulkFile(msg: Messages.BulkFileCloseMessage): void {
   bulkFileStorage.close(msg.identifier);
+}
+
+function handleRefBulkFile(msg: Messages.BulkFileRefMessage): void {
+  bulkFileStorage.ref(msg.identifier);
+}
+
+function handleDerefBulkFile(msg: Messages.BulkFileRefMessage): void {
+  bulkFileStorage.deref(msg.identifier); 
 }
 
 main();

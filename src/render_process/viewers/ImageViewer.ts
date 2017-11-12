@@ -111,6 +111,13 @@ export class ImageViewer extends ViewerElement {
     this._viewportHeight = -1;
   }
 
+  dispose(): void {
+    if (this._bulkFileHandle !== null) {
+      this._bulkFileHandle.deref();
+      this._bulkFileHandle = null;
+    }
+  }
+
   //-----------------------------------------------------------------------
   //
   // ######                                
@@ -176,6 +183,11 @@ export class ImageViewer extends ViewerElement {
   setBulkFileHandle(handle: BulkFileHandle): void {
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     this.setMimeType(mimeType);
+
+    if (this._bulkFileHandle !== null) {
+      this._bulkFileHandle.deref();
+    }
+
     this._bulkFileHandle = handle;
     handle.ref();
 

@@ -40,7 +40,13 @@ export class BulkFileBroker {
   }
 
   private _dispose(fileHandle: WriteableBulkFileHandle): void {
-    
+    process.nextTick(() => {
+      if (fileHandle.getReferenceCount() <= 0) {
+        const identifier = fileHandle.getBulkFileIdentifier();
+        WebIpc.derefBulkFile(identifier);
+        this._fileHandleMap.delete(identifier);
+      }
+    });
   }
 
   private _handleBufferSizeMessage(msg: Messages.BulkFileBufferSize): void {
@@ -126,6 +132,10 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     if (this._refCount <= 0) {
       this._disposable.dispose();
     }
+  }
+
+  getReferenceCount(): number {
+    return this._refCount;
   }
 
   write(data: Buffer): void {

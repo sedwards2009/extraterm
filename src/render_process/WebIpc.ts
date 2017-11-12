@@ -197,3 +197,13 @@ export function closeBulkFile(identifier: BulkFileIdentifier): void {
   const msg: Messages.BulkFileCloseMessage = {type: Messages.MessageType.BULK_FILE_CLOSE, identifier};
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
+
+export function refBulkFile(identifier: BulkFileIdentifier): void {
+  const msg: Messages.BulkFileRefMessage = {type: Messages.MessageType.BULK_FILE_REF, identifier};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function derefBulkFile(identifier: BulkFileIdentifier): void {
+  const msg: Messages.BulkFileDerefMessage = {type: Messages.MessageType.BULK_FILE_DEREF, identifier};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}

@@ -66,12 +66,8 @@ export class BulkFileStorage {
   }
 
   dispose(): void {
-    for (const [identifier, bulkFile] of this._storageMap) {
-      try {
-        fs.unlinkSync(bulkFile.filePath);
-      } catch(e) {
-        this._log.warn(`Unable to delete file ${bulkFile.filePath}`, e);
-      }
+    for (const identifier of this._storageMap.keys()) {
+      this._deleteBulkFile(identifier);
     }
 
     try {
@@ -88,6 +84,7 @@ export class BulkFileStorage {
     const fullPath = path.join(this._storageDirectory, onDiskFileIdentifier);
     
     const bulkFile = new BulkFile(metadata, fullPath);
+    bulkFile.ref();
     const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
     bulkFile.onWriteBufferSize(({totalBufferSize, availableDelta}): void => {
       this._onWriteBufferSizeEventEmitter.fire({identifier: internalFileIdentifier, totalBufferSize, availableDelta});
@@ -115,6 +112,32 @@ export class BulkFileStorage {
     this._storageMap.get(identifier).close();
   }
 
+  ref(identifier: BulkFileIdentifier): void {
+    if ( ! this._storageMap.has(identifier)) {
+      this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
+      return;
+    }
+    this._storageMap.get(identifier).ref();
+  }
+
+  deref(identifier: BulkFileIdentifier): void {
+    if ( ! this._storageMap.has(identifier)) {
+      this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
+      return;
+    }
+    const newReferenceCount = this._storageMap.get(identifier).deref();
+    this._deleteBulkFile(identifier);
+  }
+
+  private _deleteBulkFile(identifier: BulkFileIdentifier): void {
+    const bulkFile = this._storageMap.get(identifier);
+    try {
+      fs.unlinkSync(bulkFile.filePath);
+    } catch(e) {
+      this._log.warn(`Unable to delete file ${bulkFile.filePath}`, e);
+    }
+    this._storageMap.delete(identifier);
+  }
 
   getBulkFileByIdentifier(identifier: BulkFileIdentifier): BulkFile {
     if ( ! this._storageMap.has(identifier)) {
@@ -132,6 +155,7 @@ const ONE_KILOBYTE = 1024;
 export class BulkFile {
 
   private _log: Logger; 
+  private _referenceCount = 0;
   private _writeStreamOpen = true;
 
   private _wrFile: WriterReaderFile = null;
@@ -148,6 +172,16 @@ export class BulkFile {
     this._wrFile = new WriterReaderFile(filePath);
     this._wrFile.getWriteStream().on('drain', this._handleDrain.bind(this));
     this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
+  }
+
+  ref(): number {
+    this._referenceCount++;
+    return this._referenceCount;
+  }
+
+  deref(): number {
+    this._referenceCount--;
+    return this._referenceCount;
   }
 
   getMetadata(): Metadata {

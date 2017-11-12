@@ -14,6 +14,7 @@ import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 import {BulkFileUploader} from './bulk_file_handling/BulkFileUploader';
 import * as BulkFileUtils from './bulk_file_handling/BulkFileUtils';
+import * as DisposableUtils from '../utils/DisposableUtils';
 import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 
 import {ViewerElement} from './viewers/ViewerElement';
@@ -47,6 +48,7 @@ import {FrameFinder} from './FrameFinderType';
 import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import {Config, ConfigDistributor, CommandLineAction, injectConfigDistributor, AcceptsConfigDistributor} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
+import { Disposable } from 'extraterm-extension-api';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -134,7 +136,7 @@ interface WriteBufferStatus {
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
 export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingManager,
-  AcceptsConfigDistributor, SupportsClipboardPaste.SupportsClipboardPaste {
+  AcceptsConfigDistributor, Disposable, SupportsClipboardPaste.SupportsClipboardPaste {
   
   /**
    * The HTML tag name of this element.
@@ -286,7 +288,19 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
   }
-  
+
+  dispose(): void {
+    this._disposeChildren();
+  }
+
+  private _disposeChildren(): void {
+    for (const kid of this._childElementList) {
+      if (DisposableUtils.isDisposable(kid.element)) {
+        kid.element.dispose();
+      }
+    }
+  }
+
   //-----------------------------------------------------------------------
   //
   //   ######                                
@@ -917,14 +931,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
   
-  private _replaceScrollableElement(oldEl: ScrollableElement, newEl: ScrollableElement): void {
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    scrollerArea.insertBefore(newEl, oldEl);
-    scrollerArea.removeChild(oldEl);
-    this._childElementList.splice(this._childElementListIndexOf(oldEl), 1);
-    this._virtualScrollArea.replaceScrollable(oldEl, newEl);
-  }
-
   private _handleMouseDown(ev: MouseEvent): void {
     if (ev.buttons === 4) { // Middle mouse button
       ev.stopPropagation();
@@ -1283,6 +1289,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       }
     }
     this._removeScrollable(kidNode);
+    if (ViewerElement.isViewerElement(kidNode)) {
+      kidNode.dispose();
+    }
   }
   
   private _adjustFontSize(delta: number): void {
@@ -1769,6 +1778,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   public deleteEmbeddedViewer(viewer: EmbeddedViewer): void {
     this._removeScrollable(viewer);
+    viewer.dispose();
   }
   
   private _getLastEmbeddedViewer(): EmbeddedViewer {

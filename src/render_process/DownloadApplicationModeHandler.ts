@@ -44,16 +44,14 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
     this._encodedDataBuffer = "";
     this._buffer = null;
     this._metadataSize = -1;
+
+    if (this._fileHandle !== null) {
+      this._fileHandle.deref();
+    }
     this._fileHandle = null;
   }
 
-  // FIXME this is temporary.
-  getBulkFileHandle(): BulkFileHandle {
-    return this._fileHandle;
-  }
-
   handleStart(parameters: string[]): TermApi.ApplicationModeResponse {
-
     const metadataSize = parseInt(parameters[0], 10);
 
     this._metadataSize = metadataSize;
@@ -98,6 +96,7 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
       this._encodedDataBuffer = this._encodedDataBuffer.slice(this._metadataSize);
 
       this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, -1);
+      this._fileHandle.ref();
       this._fileHandle.onAvailableWriteBufferSizeChanged(this._handleAvailableWriteBufferSizeChanged.bind(this));
       this._state = DownloadHandlerState.BODY;
       this._handleBody("");

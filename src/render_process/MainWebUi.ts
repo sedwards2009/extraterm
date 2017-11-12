@@ -6,12 +6,14 @@
 import * as he from 'he';
 import * as _ from 'lodash';
 import * as path from 'path';
+import {Disposable} from 'extraterm-extension-api';
 
 import {AboutTab} from './AboutTab';
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 import {Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
 import * as config from '../Config';
+import * as DisposableUtils from '../utils/DisposableUtils';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {EmptyPaneMenu} from './EmptyPaneMenu';
@@ -802,6 +804,10 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._ptyIdTerminalMap.delete(ptyId);
     }
     
+    if (DisposableUtils.isDisposable(tabContentElement)) {
+      tabContentElement.dispose();
+    }
+
     const oldIndex = tabWidgetContents.indexOf(tabContentElement);
     if (tabWidgetContents.length >= 2) {
       this._switchToTab(tabWidgetContents[oldIndex === 0 ? 1 : oldIndex-1]);

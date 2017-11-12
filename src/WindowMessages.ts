@@ -55,7 +55,9 @@ export const enum MessageType {
   BULK_FILE_CREATED,
   BULK_FILE_WRITE,
   BULK_FILE_BUFFER_SIZE,
-  BULK_FILE_CLOSE
+  BULK_FILE_CLOSE,
+  BULK_FILE_REF,
+  BULK_FILE_DEREF,
 }
 
 /**
@@ -425,4 +427,12 @@ export interface BulkFileBufferSize extends Message {
   identifier: BulkFileIdentifier;
   totalBufferSize: number;  // The total size of the receiving buffer for the bulk file.
   availableDelta: number;  // The change in the amount of available buffer.
+}
+
+export interface BulkFileRefMessage extends Message {
+  identifier: BulkFileIdentifier;
+}
+
+export interface BulkFileDerefMessage extends Message {
+  identifier: BulkFileIdentifier;  
 }

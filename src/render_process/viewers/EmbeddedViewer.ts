@@ -153,7 +153,14 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._headerTop = 0;
     this._headerBottom = 0;
   }
-  
+
+  dispose(): void {
+    const viewerElement = this._getViewerElement();
+    if (viewerElement !== null) {
+      viewerElement.dispose();
+    }
+  }
+
   //-----------------------------------------------------------------------
   //
   // ######                                

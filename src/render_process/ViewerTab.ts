@@ -138,6 +138,13 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     this._scheduledResize = false;
   }
   
+  dispose(): void {
+    const element = this.getViewerElement();
+    if (element !== null) {
+      element.dispose();
+    }
+  }
+
   //-----------------------------------------------------------------------
   //
   //   ######                                
