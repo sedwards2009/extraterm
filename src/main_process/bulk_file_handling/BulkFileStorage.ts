@@ -159,8 +159,12 @@ export class BulkFile {
   private _writeStreamOpen = true;
 
   private _wrFile: WriterReaderFile = null;
+  private _writeStream: crypto.Cipher = null;
   private _writeBuffers: Buffer[] = [];
   private _writeBlocked = false;
+
+  private _cryptoKey: Buffer = null;
+  private _cryptoIV: Buffer = null;
 
   private _closePending = false;
   private _onWriteBufferSizeEventEmitter = new EventEmitter<{totalBufferSize: number, availableDelta: number}>();
@@ -169,8 +173,15 @@ export class BulkFile {
 
   constructor(private  _metadata: Metadata, public filePath: string) {
     this._log = getLogger("BulkFile", this);
+
+    this._cryptoKey = crypto.randomBytes(32); // 256bit AES, thus 32 bytes
+    this._cryptoIV = crypto.randomBytes(16);  // 128bit block size, thus 16 bytes
+
     this._wrFile = new WriterReaderFile(filePath);
     this._wrFile.getWriteStream().on('drain', this._handleDrain.bind(this));
+    const aesCipher = crypto.createCipheriv("aes256", this._cryptoKey, this._cryptoIV);
+    this._writeStream = aesCipher;
+    aesCipher.pipe(this._wrFile.getWriteStream());
     this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
   }
 
@@ -205,17 +216,16 @@ export class BulkFile {
   }
 
   private _sendWriteBuffers(): void {
-    const stream = this._wrFile.getWriteStream();
     let availableDelta = 0;
     while ( ! this._writeBlocked && this._writeBuffers.length !== 0) {
       const nextBuffer = this._writeBuffers[0];
       this._writeBuffers.splice(0 ,1);
-      this._writeBlocked = ! stream.write(nextBuffer);
+      this._writeBlocked = ! this._writeStream.write(nextBuffer);
       availableDelta += nextBuffer.length;
     }
 
     if (this._writeBuffers.length === 0 && this._closePending) {
-      stream.end();
+      this._writeStream.end();
       this._writeStreamOpen = false;
       this._closePending = false;
     }
@@ -258,7 +268,9 @@ export class BulkFile {
   }
 
   createReadStream(): NodeJS.ReadableStream {
-    return this._wrFile.createReadStream();
+    const aesDecipher = crypto.createDecipheriv("aes256", this._cryptoKey, this._cryptoIV);
+    this._wrFile.createReadStream().pipe(aesDecipher);
+    return aesDecipher;
   }
 }
 
