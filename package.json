@@ -45,7 +45,7 @@
     "smart-buffer": "^3.0.3",
     "source-map-support": "0.3.2",
     "utf8": "2.1.2",
-    "vue": "1.0.10"
+    "vue": "2.0.6"
   },
   "optionalDependencies": {
     "ptyw.js": "0.4.0"
