@@ -13,7 +13,23 @@
     <style id="THEME_STYLE"></style>
     
     <script>
+    function wedgeRequire() {
+      const m = require("module");
+      const originalFindPath = m._findPath;
+      m._findPath = function(request, paths, isMain) {
+        const result = originalFindPath(request, paths, isMain);
+
+        // By default the 'vue' package serves up the version of Vue without the compiler built
+        // in, but we need the build version which does have it. So we do the switcheroo here.
+        if (request === "vue") {
+          return result.substr(0, result.length-"vue.runtime.common.js".length) + "vue.common.js";
+        }
+        return result;
+      };
+    }
+
     function startUp() {
+      wedgeRequire();
       var mainweb = require('./MainWeb');
       mainweb.startUp();
     }

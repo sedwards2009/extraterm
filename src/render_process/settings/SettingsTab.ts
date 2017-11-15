@@ -478,6 +478,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
       <thead v-if="commandLineActions.length !== 0">
         <tr><th>Match</th><th>Command</th><th>Frame</th><th></th></tr>
       </thead>
+      <tbody>
       <tr v-if="commandLineActions.length !== 0" v-for="commandLineAction in commandLineActions" track-by="id">
         <td class='${CLASS_MATCH_TYPE}'><select v-model="commandLineAction.matchType" class="form-control">
           <option value="name">Match command name</option>
@@ -500,6 +501,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
           <button @click="addCommandLineAction" class="btn btn-default">New Rule</button>
         </td>
       </tr>
+      </tbody>
     </table>
   </section>
 </div>

@@ -204,7 +204,7 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
       this._vm = new Vue({
         data: this._data,
         template: 
-`<div className=''>
+`<div id="${ID_KEY_BINDINGS}">
   <h1>Key Bindings</h1>
   
   <div className=''>
@@ -219,9 +219,10 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
           </select>
         </div>
       </div>
+    </div>
   </div>
-  
-  {{{ summary }}}
+    
+  <div v-html="summary"></div>
 </div>
 `,
         computed: {
@@ -304,6 +305,7 @@ function formatKeyBindingsMapping(context: keybindingmanager.KeyBindingMapping):
   });
   
   return `<table class='table'>
+    <tbody>
     <tr>
       <th class="col-md-7">Command</th>
       <th class="col-md-2">Shortcut</th>
@@ -313,5 +315,5 @@ function formatKeyBindingsMapping(context: keybindingmanager.KeyBindingMapping):
         <td class="col-md-7">${commandName(binding.command)}</td>
         <td class="col-md-2"><div class='${CLASS_KEYCAP}'><span>${formatShortcut(binding.shortcut)}</span></div></td>
         <td class="col-md-3">${binding.command}</td></tr>`).join("\n") +
-      "</table>";
+    "</tbody></table>";
 }
