@@ -77,7 +77,6 @@ export class EtViewerTab extends ViewerElement implements Commandable,
    */
   static init(): void {
     if (registered === false) {
-      ScrollBar.init();
       EmbeddedViewer.init();
       ResizeCanary.init();
       window.customElements.define(EtViewerTab.TAG_NAME.toLowerCase(), EtViewerTab);

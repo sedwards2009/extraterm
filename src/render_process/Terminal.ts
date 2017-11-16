@@ -162,7 +162,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    */
   static init(): void {
     if (registered === false) {
-      ScrollBar.init();
       EmbeddedViewer.init();
       CommandPlaceHolder.init();
       TerminalViewer.init();

@@ -1,64 +1,36 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2017 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
-import * as Util from './Util';
-import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
+import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
+import * as ThemeTypes from '../../theme/Theme';
+import {ThemeableElementBase} from '../ThemeableElementBase';
+import * as Util from './Util';
+import {WebComponent} from './web_component_support/WebComponent';
 
 const ID = "EtScrollbarTemplate";
 const ID_AREA = "ID_AREA";
 const ID_CONTAINER = "ID_CONTAINER";
 
-let registered = false;
 
 /**
  * A scrollbar.
  */
+@WebComponent({tag: "et-scrollbar"})
 export class ScrollBar extends ThemeableElementBase {
-  
-  /**
-   * The HTML tag name of this element.
-   */
+
   static TAG_NAME = 'ET-SCROLLBAR';
-  
   static ATTR_LENGTH = "length";
-  
-  static ATTR_POSITION = "position";
-  
+  static ATTR_POSITION = "position";  
   static ATTR_THUMBSIZE = "thumbsize";
   
-  /**
-   * Initialize the Scrollbar class and resources.
-   *
-   * When Scrollbar is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(ScrollBar.TAG_NAME.toLowerCase(), ScrollBar);
-      registered = true;
-    }
-  }
-  
-  // WARNING: Fields like this will not be initialised automatically.
-  private _position: number;
-  
-  private _length: number;
-
+  private _position = 0;
+  private _length = 1;
   private _log: Logger;
-
-  private _initProperties(): void {
-    this._position = 0;
-    this._length = 1;
-    this._log = getLogger(ScrollBar.TAG_NAME, this);
-  }
 
   //-----------------------------------------------------------------------
   //
@@ -73,7 +45,7 @@ export class ScrollBar extends ThemeableElementBase {
   //-----------------------------------------------------------------------
   constructor() {
     super();
-    this._initProperties(); // Initialise our properties. The constructor was not called.
+    this._log = getLogger(ScrollBar.TAG_NAME, this);
   }
   
   /**

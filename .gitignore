@@ -110,3 +110,4 @@ src/render_process/bulk_file_handling/BulkFileUploader.js
 src/render_process/bulk_file_handling/BlobBulkFileHandle.js
 src/main_process/bulk_file_handling/WriterReaderFile.js
 src/utils/DisposableUtils.js
+src/render_process/gui/web_component_support/WebComponent.js
