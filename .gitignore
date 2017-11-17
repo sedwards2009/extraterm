@@ -110,4 +110,11 @@ src/render_process/bulk_file_handling/BulkFileUploader.js
 src/render_process/bulk_file_handling/BlobBulkFileHandle.js
 src/main_process/bulk_file_handling/WriterReaderFile.js
 src/utils/DisposableUtils.js
-src/render_process/gui/web_component_support/WebComponent.js
+src/render_process/gui/web_component_support/Decorators.js
+extraterm-web-component-decorators/test/bundle.js
+extraterm-web-component-decorators/src/Decorators.js
+extraterm-web-component-decorators/src/Decorators.d.ts
+extraterm-web-component-decorators/test/DecoratorsTest.d.ts
+extraterm-web-component-decorators/test/DecoratorsTest.js
+extraterm-web-component-decorators/test/TestCode.js
+extraterm-web-component-decorators/test/TestCode.d.ts

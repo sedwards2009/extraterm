@@ -33,6 +33,7 @@
     "codemirror": "5.27.4",
     "commander": "2.9.0",
     "element-resize-detector": "1.1.3",
+    "extraterm-web-component-decorators": "file:./extraterm-web-component-decorators/",
     "font-manager": "0.2.2",
     "fontinfo": "0.3.0",
     "get-uri": "2.0.1",

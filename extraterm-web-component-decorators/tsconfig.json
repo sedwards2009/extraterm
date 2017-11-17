@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "declaration": true,
+        "noImplicitAny": false,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "removeComments": false,
+        "sourceMap": true,
+        "noLib": false,
+        "outDir": ".",
+        "jsx": "react",
+        "experimentalDecorators": true,
+        "baseUrl": "."
+      
+    },
+    "filesGlob": [
+        "./src/*.ts",
+        "./test/*.ts"
+    ],
+    "files": [
+        "./src/Decorators.ts",
+        "./test/TestCode.ts",
+        "./test/DecoratorsTest.ts"
+    ],
+    "exclude": []
+}
