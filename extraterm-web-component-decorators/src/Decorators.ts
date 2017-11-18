@@ -60,7 +60,7 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
 
           // Apply filters.
           for (const filter of metadata.filters) {
-            const updatedValue = filter.call(this, metadata.name, newValue);
+            const updatedValue = filter.call(this, newValue, metadata.name);
             if (updatedValue === undefined) {
               return;
             }
@@ -119,7 +119,7 @@ export function Attribute(proto: any, key: string): void {
       console.log(`  Set early exit`);
       return;
     }
-    valueMap.set(this, newValue);
+
     this.setAttribute(attributeName, newValue);
     console.log(`Exit Set: ${key} => ${newValue}`);
   };
@@ -149,6 +149,28 @@ export function Attribute(proto: any, key: string): void {
   }
 }
 
+function registerAttributeCallback(type: "observers" | "filters", proto: any, methodName: string, targets: string[]): void {
+  // Register this method as being an attribute observer.
+  if ( ! proto.constructor.hasOwnProperty("_attributes_")) {
+    proto.constructor._attributes_ = {};
+  }
+  const _attributes_: AttributeMetadataMapping = proto.constructor._attributes_;
+
+  for (const target of targets) {
+    if (_attributes_[target] === undefined) {
+      const metadata = {name: target, attributeName: kebabCase(target), directSetter: null, filters: [], observers: []};
+      _attributes_[target] = metadata;
+      _attributes_[metadata.attributeName] = metadata;
+    }
+    const metadata = _attributes_[target];
+    if (type === "observers") {
+      metadata.observers.push(proto[methodName]);
+    } else {
+      metadata.filters.push(proto[methodName]);
+    }
+  }
+}
+
 /**
  * Method decorator for observing changes to a HTML attribute.
  * 
@@ -161,22 +183,9 @@ export function Attribute(proto: any, key: string): void {
 export function Observe(...targets: string[]) {
   return function (proto: any, key: string, descriptor: PropertyDescriptor) {
 
-    // Register this method as being an attribute observer.
-    if ( ! proto.constructor.hasOwnProperty("_attributes_")) {
-      proto.constructor._attributes_ = {};
-    }
-    const _attributes_: AttributeMetadataMapping = proto.constructor._attributes_;
+// FIXME add a check to see that the method has the right number of parameters.
 
-    for (const target of targets) {
-      if (_attributes_[target] === undefined) {
-        const metadata = {name: target, attributeName: kebabCase(target), directSetter: null, filters: [], observers: []};
-        _attributes_[target] = metadata;
-        _attributes_[metadata.attributeName] = metadata;
-      }
-      const metadata = _attributes_[target];
-      metadata.observers.push(proto[key]);
-    }
-
+    registerAttributeCallback("observers", proto, key, targets);
     return descriptor;
   }
 }
@@ -184,9 +193,9 @@ export function Observe(...targets: string[]) {
 /**
  * Method decorator for 
  */
-export function Filter(...target: string[]) {
-  return function(target: any, key: string, descriptor: PropertyDescriptor) {
-
+export function Filter(...targets: string[]) {
+  return function(proto: any, key: string, descriptor: PropertyDescriptor) {
+    registerAttributeCallback("filters", proto, key, targets);
     return descriptor;
   };
 }
