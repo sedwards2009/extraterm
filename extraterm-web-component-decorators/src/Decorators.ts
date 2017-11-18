@@ -55,7 +55,6 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
 
       // New attributeChangedCallback()
       constructor.prototype.attributeChangedCallback = function(attrName: string, oldValue: string, newValue: string): void {
-console.log(`attributeChangedCallback(${attrName})`);        
         if (constructor._attributes_[attrName.toLowerCase()] !== undefined) {
           const metadata = (<AttributeMetadataMapping> constructor._attributes_)[attrName];
 
