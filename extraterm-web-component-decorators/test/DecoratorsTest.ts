@@ -5,7 +5,7 @@
  */
 
 import * as nodeunit from 'nodeunit';
-import {Attribute, Observe, WebComponent} from '../src/Decorators';
+import {Attribute, Filter, Observe, WebComponent} from '../src/Decorators';
 
 @WebComponent({tag: "string-component"})
 class StringComponent extends HTMLElement {
@@ -136,6 +136,89 @@ export function testMultiStringAttributeViaJSWithMultiobserver(test: nodeunit.Te
 
     test.equals(sc.lastSomeStringMulti, "my string");
     test.equals(sc.lastOtherStringMulti, "my other string");
+    test.done();
+  });
+}
+
+@WebComponent({tag: "filter-string-component"})
+class FilterStringComponent extends HTMLElement {
+
+  @Attribute someString: string;
+
+  @Filter("someString")
+  private _toUpperCase(aString: string, target: string): string {
+    return aString.toUpperCase();
+  }
+
+  @Attribute noSimonsString: string
+
+  @Filter("noSimonsString")
+  private _noSimonsFilter(aString: string, target: string): string {
+    return aString.indexOf("Simon") !== -1 ? undefined : aString;
+  }
+
+  @Attribute shortString: string;
+  
+  @Filter("shortString")
+  private _toLowerCase(aString: string): string {
+    return aString.toLowerCase();    
+  }
+
+  @Filter("shortString")
+  private _trimString(aString: string): string {
+    return aString.trim();
+  }  
+}
+
+function filterStringTest(guts: (sc: FilterStringComponent) => void): void {
+  const sc = <FilterStringComponent> document.createElement("filter-string-component");
+  document.body.appendChild(sc);
+  try {
+    guts(sc);
+  } finally {
+    sc.parentElement.removeChild(sc);
+  }
+}
+
+export function testFilterStringAttributeViaJS(test: nodeunit.Test): void {
+  filterStringTest((sc: FilterStringComponent): void => {
+    sc.someString = "my string";
+    test.equals(sc.someString, "MY STRING");
+    test.done();
+  });
+}
+
+export function testFilterStringAttributeViaHTML(test: nodeunit.Test): void {
+  filterStringTest((sc: FilterStringComponent): void => {
+    sc.setAttribute("some-string", "my string");
+    test.equals(sc.someString, "MY STRING");
+    test.done();
+  });
+}
+
+export function testFilterStringAttributeViaJSWithReject(test: nodeunit.Test): void {
+  filterStringTest((sc: FilterStringComponent): void => {
+    sc.noSimonsString = "Paul's string";
+    test.equals(sc.noSimonsString, "Paul's string");
+
+    sc.noSimonsString = "Simon's string";
+    test.equals(sc.noSimonsString, "Paul's string");
+    test.done();
+  });
+}
+
+export function testFilter2StringAttributeViaJS(test: nodeunit.Test): void {
+  filterStringTest((sc: FilterStringComponent): void => {
+    sc.shortString = "     MY String    ";
+    test.equals(sc.shortString, "my string");
+    test.done();
+  });
+}
+
+export function testFilter2StringAttributeViaHTML(test: nodeunit.Test): void {
+  filterStringTest((sc: FilterStringComponent): void => {
+    sc.setAttribute("short-string", "     MY String    ");
+    test.equals(sc.shortString, "my string");
     test.done();
   });
 }

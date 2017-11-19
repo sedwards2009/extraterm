@@ -85,13 +85,18 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
       };
     }
 
+// FIXME check for double registration with the same name.
     window.customElements.define(options.tag.toLowerCase(), constructor);
     return constructor;
   };
 }
 
 /**
- * Mark a property as being a HTML attribute
+ * Mark a property as being a HTML attribute.
+ * 
+ * The property will exposed as an HTML attribute. The name of the attribute
+ * is in kebab-case. i.e. the words of the property lower case and separated
+ * be dashes. For example "someString" become attribute "some-string".
  * 
  * See also `Observer` and `Filter`
  */
@@ -174,24 +179,35 @@ function registerAttributeCallback(type: "observers" | "filters", proto: any, me
 /**
  * Method decorator for observing changes to a HTML attribute.
  * 
- * The decorated method is called with one parameter with the name of the
- * attribute which changed.
+ * The decorated method is called with one parameter; the name of the
+ * attribute which changed. Note: The name is actually that of the
+ * property. i.e. "someString" not "some-string".
  * 
  * @param targets variable number of parameters naming the attributes which
  *          this method observes.
  */
 export function Observe(...targets: string[]) {
   return function (proto: any, key: string, descriptor: PropertyDescriptor) {
-
-// FIXME add a check to see that the method has the right number of parameters.
-
     registerAttributeCallback("observers", proto, key, targets);
     return descriptor;
   }
 }
 
 /**
- * Method decorator for 
+ * Method decorator to apply a filter to the value set on a HTML attribute.
+ * 
+ * The method can have one or two parameters. The first is the value which
+ * needs to be filtered. The second optional parameter is the name of the
+ * attribute the value is for. The method must return the new filtered value,
+ * or `undefined` to indicate that the 
+ * 
+ * Note that the filter doesn't affect the value of the HTML attribute set,
+ * but it does affect the internal value directly accessible via the JS field.
+ * Also these filters can only be used for attributes which have been created
+ * using the `Attribute` decorator.
+ * 
+ * @param targets variable number of parameters naming the attributes which
+ *          this method filters.
  */
 export function Filter(...targets: string[]) {
   return function(proto: any, key: string, descriptor: PropertyDescriptor) {
