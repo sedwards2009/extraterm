@@ -63,13 +63,15 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
         if (originalAttributeChangedCallback !== null) {
           originalAttributeChangedCallback(attrName, oldValue, newStringValue);
         }
-        
+
         if (constructor._attributes_[attrName.toLowerCase()] !== undefined) {
           const metadata = (<AttributeMetadataMapping> constructor._attributes_)[attrName];
 
           let newValue: any = newStringValue;
           if (metadata.dataType === "number") {
             newValue = parseInt(newStringValue, 10);
+          } else if (metadata.dataType === "boolean") {
+            newValue = newStringValue === attrName || newStringValue === "" || newStringValue === "true";
           }
 
           // Apply filters.
@@ -124,8 +126,9 @@ export function Attribute(proto: any, key: string): void {
       propertyType = "string";
     } else if (propertyTypeMetadata.name === "Number") {
       propertyType = "number";
+    } else if (propertyTypeMetadata.name === "Boolean") {
+      propertyType = "boolean";      
     }
-
   }
 
   const getter = function (this: any) {

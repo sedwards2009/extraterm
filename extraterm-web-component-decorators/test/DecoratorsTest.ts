@@ -270,3 +270,51 @@ export function testNumberAttributeViaHTML(test: nodeunit.Test): void {
   
   test.done();
 }
+
+@WebComponent({tag: "boolean-component"})
+class BooleanComponent extends HTMLElement {
+
+  @Attribute someBoolean: boolean;
+
+  @Observe("someBoolean")
+  private _someBooleanObserver(target: string): void {
+    this.lastSomeBoolean = this.someBoolean;
+  }
+
+  public lastSomeBoolean: boolean;
+
+}
+
+function someBooleanTest(guts: (sc: BooleanComponent) => void): void {
+  const sc = <BooleanComponent> document.createElement("boolean-component");
+  document.body.appendChild(sc);
+  try {
+    guts(sc);
+  } finally {
+    sc.parentElement.removeChild(sc);
+  }
+}
+
+export function testBooleanAttributeViaJS(test: nodeunit.Test): void {
+  someBooleanTest((sc: BooleanComponent): void => {
+    sc.someBoolean = false;
+    test.equals(sc.getAttribute("some-boolean"), "false");
+    test.equals(sc.someBoolean, false);
+    test.equals(sc.lastSomeBoolean, false);
+    test.equals(typeof sc.lastSomeBoolean, "boolean");
+    
+    test.done();
+  });
+}
+
+export function testBooleanAttributeViaHTML(test: nodeunit.Test): void {
+  const sc = <BooleanComponent> document.createElement("boolean-component");
+  document.body.appendChild(sc);
+
+  sc.setAttribute("some-boolean", "false");
+  test.equals(sc.getAttribute("some-boolean"), "false");
+  test.equals(sc.lastSomeBoolean, false);
+  test.equals(typeof sc.lastSomeBoolean, "boolean");
+  
+  test.done();
+}
