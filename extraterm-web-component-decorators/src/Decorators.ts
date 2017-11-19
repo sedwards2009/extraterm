@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as reflect from 'reflect-metadata';
 
 export interface WebComponentOptions {
   // The tag name to register this component under. This must conform to the
@@ -14,10 +15,14 @@ export interface WebComponentOptions {
 type FilterMethod = (target: string, value: any) => any;
 type ObserverMethod = (target: string) => void;
 
+type PropertyType = 'any' | 'string' | 'number' | 'boolean';
+
 interface AttributeMetadata {
   name: string;
   directSetter: (newValue: any) => void;
   attributeName: string;
+  dataType: PropertyType;
+
   filters: FilterMethod[];
   observers: ObserverMethod[];
 }
@@ -54,9 +59,18 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
       }
 
       // New attributeChangedCallback()
-      constructor.prototype.attributeChangedCallback = function(attrName: string, oldValue: string, newValue: string): void {
+      constructor.prototype.attributeChangedCallback = function(attrName: string, oldValue: string, newStringValue: string): void {
+        if (originalAttributeChangedCallback !== null) {
+          originalAttributeChangedCallback(attrName, oldValue, newStringValue);
+        }
+        
         if (constructor._attributes_[attrName.toLowerCase()] !== undefined) {
           const metadata = (<AttributeMetadataMapping> constructor._attributes_)[attrName];
+
+          let newValue: any = newStringValue;
+          if (metadata.dataType === "number") {
+            newValue = parseInt(newStringValue, 10);
+          }
 
           // Apply filters.
           for (const filter of metadata.filters) {
@@ -79,9 +93,6 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
           return;
         }
 
-        if (originalAttributeChangedCallback !== null) {
-          originalAttributeChangedCallback(attrName, oldValue, newValue);
-        }
       };
     }
 
@@ -104,6 +115,18 @@ export function Attribute(proto: any, key: string): void {
   let defaultValue = proto[key];
   const valueMap = new WeakMap<any, any>();
   const attributeName = kebabCase(key);
+
+  let propertyType: PropertyType = 'any';
+  const propertyTypeMetadata = Reflect.getMetadata("design:type", proto, key);
+  if (propertyTypeMetadata != null) {
+    console.log(`propertyTypeMetadata.name: ${propertyTypeMetadata.name}`);
+    if (propertyTypeMetadata.name === "String") {
+      propertyType = "string";
+    } else if (propertyTypeMetadata.name === "Number") {
+      propertyType = "number";
+    }
+
+  }
 
   const getter = function (this: any) {
     console.log(`Get: ${key} => ${defaultValue}`);
@@ -148,7 +171,7 @@ export function Attribute(proto: any, key: string): void {
       proto.constructor._attributes_ = {};
     }
     const _attributes_: AttributeMetadataMapping = proto.constructor._attributes_;
-    const metadata = {name: key, attributeName, directSetter, filters: [], observers: []};
+    const metadata = {name: key, attributeName, dataType: propertyType, directSetter, filters: [], observers: []};
     _attributes_[key] = metadata;
     _attributes_[metadata.attributeName] = metadata;
   }
@@ -163,7 +186,7 @@ function registerAttributeCallback(type: "observers" | "filters", proto: any, me
 
   for (const target of targets) {
     if (_attributes_[target] === undefined) {
-      const metadata = {name: target, attributeName: kebabCase(target), directSetter: null, filters: [], observers: []};
+      const metadata: AttributeMetadata = {name: target, attributeName: kebabCase(target), dataType: 'any', directSetter: null, filters: [], observers: []};
       _attributes_[target] = metadata;
       _attributes_[metadata.attributeName] = metadata;
     }

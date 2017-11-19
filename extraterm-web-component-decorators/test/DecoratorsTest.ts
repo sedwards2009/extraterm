@@ -222,3 +222,51 @@ export function testFilter2StringAttributeViaHTML(test: nodeunit.Test): void {
     test.done();
   });
 }
+
+@WebComponent({tag: "number-component"})
+class NumberComponent extends HTMLElement {
+
+  @Attribute someNumber: number;
+
+  @Observe("someNumber")
+  private _someNumberObserver(target: string): void {
+    this.lastSomeNumber = this.someNumber;
+  }
+
+  public lastSomeNumber: number;
+
+}
+
+function someNumberTest(guts: (sc: NumberComponent) => void): void {
+  const sc = <NumberComponent> document.createElement("number-component");
+  document.body.appendChild(sc);
+  try {
+    guts(sc);
+  } finally {
+    sc.parentElement.removeChild(sc);
+  }
+}
+
+export function testNumberAttributeViaJS(test: nodeunit.Test): void {
+  someNumberTest((sc: NumberComponent): void => {
+    sc.someNumber = 123;
+    test.equals(sc.getAttribute("some-number"), "123");
+    test.equals(sc.someNumber, 123);
+    test.equals(sc.lastSomeNumber, 123);
+    test.equals(typeof sc.lastSomeNumber, "number");
+    
+    test.done();
+  });
+}
+
+export function testNumberAttributeViaHTML(test: nodeunit.Test): void {
+  const sc = <NumberComponent> document.createElement("number-component");
+  document.body.appendChild(sc);
+
+  sc.setAttribute("some-number", "321");
+  test.equals(sc.getAttribute("some-number"), "321");
+  test.equals(sc.lastSomeNumber, 321);
+  test.equals(typeof sc.lastSomeNumber, "number");
+  
+  test.done();
+}

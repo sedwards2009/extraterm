@@ -22,6 +22,8 @@
     "build-all": "npm run build",
     "build": "tsc && webpack test/TestCode.js test/bundle.js",
     "server": "http-server ."
+  },
+  "dependencies": {
+    "reflect-metadata": "0.1.10"
   }
 }
-

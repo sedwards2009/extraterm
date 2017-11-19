@@ -12,7 +12,8 @@
         "outDir": ".",
         "jsx": "react",
         "experimentalDecorators": true,
-        "baseUrl": "."
+        "baseUrl": ".",
+        "emitDecoratorMetadata": true
       
     },
     "filesGlob": [
