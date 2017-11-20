@@ -98,8 +98,15 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
       };
     }
 
-// FIXME check for double registration with the same name.
-    window.customElements.define(options.tag.toLowerCase(), constructor);
+    // Check for double registration with the same tag.
+    const tag = options.tag.toLowerCase();
+    const previousRegistration = window.customElements.get(tag);
+    if (previousRegistration !== undefined) {
+      console.warn(`A Custom Element with name '${tag}' is already registered.`);
+      return constructor;
+    }
+
+    window.customElements.define(tag, constructor);
     return constructor;
   };
 }
