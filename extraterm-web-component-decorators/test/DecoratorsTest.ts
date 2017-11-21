@@ -7,6 +7,7 @@
 import * as nodeunit from 'nodeunit';
 import {Attribute, Filter, Observe, WebComponent} from '../src/Decorators';
 
+
 @WebComponent({tag: "string-component"})
 class StringComponent extends HTMLElement {
 

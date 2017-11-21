@@ -12,10 +12,10 @@ export interface WebComponentOptions {
 }
 
 
-type FilterMethod = (target: string, value: any) => any;
-type ObserverMethod = (target: string) => void;
+type FilterMethod = {name: string, method: (value: any, target: string) => any};
+type ObserverMethod = {name: string, method: (target: string) => void};
 
-type PropertyType = 'any' | 'string' | 'number' | 'boolean';
+type PropertyType = 'any' | 'String' | 'Number' | 'Boolean';
 
 interface AttributeMetadata {
   name: string;
@@ -35,6 +35,13 @@ function kebabCase(name: string): string {
   return name.split(/(?=[ABCDEFGHIJKLMNOPQRSTUVWXYZ])/g).map(s => s.toLowerCase()).join("-");
 }
 
+function jsTypeToPropertyType(name: string): PropertyType {
+  if (name === "String" || name === "Number" || name === "Boolean") {
+    return name;
+  }
+  return "any";
+}
+
 /**
  * Class decorator for web components.
  * 
@@ -42,12 +49,15 @@ function kebabCase(name: string): string {
  */
 export function WebComponent(options: WebComponentOptions): (target: any) => any {
   return function(constructor: any): any {
-
     if (constructor.hasOwnProperty("_attributes_")) {
+      const _attributes_: AttributeMetadataMapping = constructor._attributes_;
+
+      validateAllFilters(constructor.prototype, _attributes_);
+
       // Set up `observedAttributes` and `attributeChangedCallback()`
       Object.defineProperty(constructor, "observedAttributes", {
         get: function() {
-          return Object.keys(constructor._attributes_);
+          return Object.keys(_attributes_);
         },
         enumerable: true,
         configurable: true
@@ -64,19 +74,19 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
           originalAttributeChangedCallback(attrName, oldValue, newStringValue);
         }
 
-        if (constructor._attributes_[attrName.toLowerCase()] !== undefined) {
-          const metadata = (<AttributeMetadataMapping> constructor._attributes_)[attrName];
+        if (_attributes_[attrName.toLowerCase()] !== undefined) {
+          const metadata = _attributes_[attrName];
 
           let newValue: any = newStringValue;
-          if (metadata.dataType === "number") {
+          if (metadata.dataType === "Number") {
             newValue = parseInt(newStringValue, 10);
-          } else if (metadata.dataType === "boolean") {
+          } else if (metadata.dataType === "Boolean") {
             newValue = newStringValue === attrName || newStringValue === "" || newStringValue === "true";
           }
 
           // Apply filters.
           for (const filter of metadata.filters) {
-            const updatedValue = filter.call(this, newValue, metadata.name);
+            const updatedValue = filter.method.call(this, newValue, metadata.name);
             if (updatedValue === undefined) {
               return;
             }
@@ -89,7 +99,7 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
 
           // Notify observers
           for (const observer of metadata.observers) {
-            observer.call(this, metadata.name);
+            observer.method.call(this, metadata.name);
           }
 
           return;
@@ -111,6 +121,52 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
   };
 }
 
+function validateAllFilters(prototype: Object, _attributes_: AttributeMetadataMapping): void {
+  for (const attributeMetadata of collectUniqueMetadatas(_attributes_)) {
+    validateFilters(prototype, attributeMetadata);
+  }
+}
+
+function collectUniqueMetadatas(_attributes_: AttributeMetadataMapping): Set<AttributeMetadata> {
+  const uniqueMetadataObjects = new Set<AttributeMetadata>();
+  for (const key in _attributes_) {
+    if (_attributes_.hasOwnProperty(key)) {
+      uniqueMetadataObjects.add(_attributes_[key]);
+    }
+  }
+  return uniqueMetadataObjects;
+}
+
+function validateFilters(prototype: Object, attributeMetadata: AttributeMetadata): void {
+  for (const filter of attributeMetadata.filters) {
+    const methodParameters = Reflect.getMetadata("design:paramtypes", prototype, filter.name);
+    if (methodParameters != null) {
+      if (methodParameters.length !== 1 && methodParameters.length !== 2) {
+        console.warn(`Filter method '${filter.name}' has the wrong number of parameters. It should have 1 or 2 instead of ${methodParameters.length}.`);
+      } else {
+        const firstParameterType = jsTypeToPropertyType(methodParameters[0].name);
+        if (firstParameterType !== "any" && attributeMetadata.dataType !== "any" && firstParameterType !== attributeMetadata.dataType) {
+          console.warn(`Filter method '${filter.name}' has the wrong parameter type. Expected '${attributeMetadata.dataType}', found '${methodParameters[0].name}'.`);
+        }
+        if (methodParameters.length === 2) {
+          if (methodParameters[1].name !== "String") {
+            console.warn(`Filter method '${filter.name}' has the wrong 2nd parameter type. Expected 'String', found '${methodParameters[1].name}'.`);
+          }
+        }
+      }
+    }
+
+    // Check that the return type matches the attribute type.
+    const returnTypeMeta = Reflect.getMetadata("design:returntype", prototype, filter.name);
+    if (returnTypeMeta != null) {
+      const returnType = jsTypeToPropertyType(returnTypeMeta.name);
+      if (returnType !== "any" && attributeMetadata.dataType !== "any" && attributeMetadata.dataType !== returnType) {
+        console.warn(`Filter method '${filter.name}' has the wrong return type. Expected '${attributeMetadata.dataType}', found '${returnType}'.`);
+      }
+    }
+  }
+}
+
 /**
  * Mark a property as being a HTML attribute.
  * 
@@ -125,17 +181,11 @@ export function Attribute(proto: any, key: string): void {
   const valueMap = new WeakMap<any, any>();
   const attributeName = kebabCase(key);
 
-  let propertyType: PropertyType = 'any';
+  let propertyType: PropertyType = "any";
   const propertyTypeMetadata = Reflect.getMetadata("design:type", proto, key);
   if (propertyTypeMetadata != null) {
     console.log(`propertyTypeMetadata.name: ${propertyTypeMetadata.name}`);
-    if (propertyTypeMetadata.name === "String") {
-      propertyType = "string";
-    } else if (propertyTypeMetadata.name === "Number") {
-      propertyType = "number";
-    } else if (propertyTypeMetadata.name === "Boolean") {
-      propertyType = "boolean";      
-    }
+    propertyType = jsTypeToPropertyType(propertyTypeMetadata.name);
   }
 
   const getter = function (this: any) {
@@ -202,9 +252,9 @@ function registerAttributeCallback(type: "observers" | "filters", proto: any, me
     }
     const metadata = _attributes_[target];
     if (type === "observers") {
-      metadata.observers.push(proto[methodName]);
+      metadata.observers.push({name: methodName, method: proto[methodName]});
     } else {
-      metadata.filters.push(proto[methodName]);
+      metadata.filters.push({name: methodName, method: proto[methodName]});
     }
   }
 }
