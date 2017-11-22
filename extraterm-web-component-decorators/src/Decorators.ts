@@ -139,18 +139,22 @@ function collectUniqueMetadatas(_attributes_: AttributeMetadataMapping): Set<Att
 
 function validateFilters(prototype: Object, attributeMetadata: AttributeMetadata): void {
   for (const filter of attributeMetadata.filters) {
+    if (attributeMetadata.attributeName === null) {
+      console.warn(`Filter method '${filter.name}' is attached to undefined property '${attributeMetadata.name}'.`);
+    }
+
     const methodParameters = Reflect.getMetadata("design:paramtypes", prototype, filter.name);
     if (methodParameters != null) {
       if (methodParameters.length !== 1 && methodParameters.length !== 2) {
-        console.warn(`Filter method '${filter.name}' has the wrong number of parameters. It should have 1 or 2 instead of ${methodParameters.length}.`);
+        console.warn(`Filter method '${filter.name}' on property '${attributeMetadata.name}' has the wrong number of parameters. It should have 1 or 2 instead of ${methodParameters.length}.`);
       } else {
         const firstParameterType = jsTypeToPropertyType(methodParameters[0].name);
         if (firstParameterType !== "any" && attributeMetadata.dataType !== "any" && firstParameterType !== attributeMetadata.dataType) {
-          console.warn(`Filter method '${filter.name}' has the wrong parameter type. Expected '${attributeMetadata.dataType}', found '${methodParameters[0].name}'.`);
+          console.warn(`Filter method '${filter.name}' on property '${attributeMetadata.name}' has the wrong parameter type. Expected '${attributeMetadata.dataType}', found '${methodParameters[0].name}'.`);
         }
         if (methodParameters.length === 2) {
           if (methodParameters[1].name !== "String") {
-            console.warn(`Filter method '${filter.name}' has the wrong 2nd parameter type. Expected 'String', found '${methodParameters[1].name}'.`);
+            console.warn(`Filter method '${filter.name}' on property '${attributeMetadata.name}' has the wrong 2nd parameter type. Expected 'String', found '${methodParameters[1].name}'.`);
           }
         }
       }
@@ -161,7 +165,7 @@ function validateFilters(prototype: Object, attributeMetadata: AttributeMetadata
     if (returnTypeMeta != null) {
       const returnType = jsTypeToPropertyType(returnTypeMeta.name);
       if (returnType !== "any" && attributeMetadata.dataType !== "any" && attributeMetadata.dataType !== returnType) {
-        console.warn(`Filter method '${filter.name}' has the wrong return type. Expected '${attributeMetadata.dataType}', found '${returnType}'.`);
+        console.warn(`Filter method '${filter.name}' on property '${attributeMetadata.name}' has the wrong return type. Expected '${attributeMetadata.dataType}', found '${returnType}'.`);
       }
     }
   }
@@ -231,7 +235,14 @@ export function Attribute(proto: any, key: string): void {
       proto.constructor._attributes_ = {};
     }
     const _attributes_: AttributeMetadataMapping = proto.constructor._attributes_;
-    const metadata = {name: key, attributeName, dataType: propertyType, directSetter, filters: [], observers: []};
+
+    let metadata: AttributeMetadata = _attributes_[key];
+    if (metadata === undefined) {
+      metadata = {name: key, attributeName, dataType: propertyType, directSetter, filters: [], observers: []};
+    } else {
+      metadata.attributeName = propertyType;
+    }
+
     _attributes_[key] = metadata;
     _attributes_[metadata.attributeName] = metadata;
   }
@@ -246,7 +257,7 @@ function registerAttributeCallback(type: "observers" | "filters", proto: any, me
 
   for (const target of targets) {
     if (_attributes_[target] === undefined) {
-      const metadata: AttributeMetadata = {name: target, attributeName: kebabCase(target), dataType: 'any', directSetter: null, filters: [], observers: []};
+      const metadata: AttributeMetadata = {name: target, attributeName: null, dataType: 'any', directSetter: null, filters: [], observers: []};
       _attributes_[target] = metadata;
       _attributes_[metadata.attributeName] = metadata;
     }
