@@ -27,9 +27,8 @@ interface AttributeMetadata {
   observers: ObserverMethod[];
 }
 
-interface AttributeMetadataMapping {
-  [key: string]: AttributeMetadata;
-}
+type AttributeMetadataMapping = Map<string, AttributeMetadata>;
+
 
 function kebabCase(name: string): string {
   return name.split(/(?=[ABCDEFGHIJKLMNOPQRSTUVWXYZ])/g).map(s => s.toLowerCase()).join("-");
@@ -57,25 +56,39 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
       // Set up `observedAttributes` and `attributeChangedCallback()`
       Object.defineProperty(constructor, "observedAttributes", {
         get: function() {
-          return Object.keys(_attributes_);
+          let observedAttributes: string[] = [];
+          for (const [key, metadata] of _attributes_.entries()) {
+            if (metadata.attributeName !== null) {
+              observedAttributes.push(metadata.attributeName);
+            }
+          }
+
+          const superObservedAttributes = constructor.prototype.__proto__.constructor.observedAttributes;
+          if (superObservedAttributes !== undefined) {
+            observedAttributes = observedAttributes.concat(superObservedAttributes);
+          }
+          return observedAttributes;
         },
         enumerable: true,
         configurable: true
       });
 
       let originalAttributeChangedCallback = null;
-      if (constructor.prototype.hasOwnProperty("attributeChangedCallback")) {
+      if (constructor.prototype["attributeChangedCallback"] !== undefined) {
         originalAttributeChangedCallback = constructor.prototype.attributeChangedCallback;
       }
 
       // New attributeChangedCallback()
       constructor.prototype.attributeChangedCallback = function(attrName: string, oldValue: string, newStringValue: string): void {
         if (originalAttributeChangedCallback !== null) {
-          originalAttributeChangedCallback(attrName, oldValue, newStringValue);
+          originalAttributeChangedCallback.call(this, attrName, oldValue, newStringValue);
         }
 
-        if (_attributes_[attrName.toLowerCase()] !== undefined) {
-          const metadata = _attributes_[attrName];
+        const attrNameLower = attrName.toLowerCase();
+        for (const [key, metadata] of _attributes_) {
+          if (metadata.attributeName !== attrNameLower) {
+            continue;
+          }
 
           let newValue: any = newStringValue;
           if (metadata.dataType === "Number") {
@@ -104,7 +117,6 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
 
           return;
         }
-
       };
     }
 
@@ -128,13 +140,7 @@ function validateAllFilters(prototype: Object, _attributes_: AttributeMetadataMa
 }
 
 function collectUniqueMetadatas(_attributes_: AttributeMetadataMapping): Set<AttributeMetadata> {
-  const uniqueMetadataObjects = new Set<AttributeMetadata>();
-  for (const key in _attributes_) {
-    if (_attributes_.hasOwnProperty(key)) {
-      uniqueMetadataObjects.add(_attributes_[key]);
-    }
-  }
-  return uniqueMetadataObjects;
+  return new Set<AttributeMetadata>(_attributes_.values());
 }
 
 function validateFilters(prototype: Object, attributeMetadata: AttributeMetadata): void {
@@ -232,36 +238,34 @@ export function Attribute(proto: any, key: string): void {
     });
 
     if ( ! proto.constructor.hasOwnProperty("_attributes_")) {
-      proto.constructor._attributes_ = {};
+      proto.constructor._attributes_ = new Map();
     }
     const _attributes_: AttributeMetadataMapping = proto.constructor._attributes_;
 
-    let metadata: AttributeMetadata = _attributes_[key];
+    let metadata: AttributeMetadata = _attributes_.get(key);
     if (metadata === undefined) {
       metadata = {name: key, attributeName, dataType: propertyType, directSetter, filters: [], observers: []};
     } else {
       metadata.attributeName = propertyType;
     }
 
-    _attributes_[key] = metadata;
-    _attributes_[metadata.attributeName] = metadata;
+    _attributes_.set(key,  metadata);
   }
 }
 
 function registerAttributeCallback(type: "observers" | "filters", proto: any, methodName: string, targets: string[]): void {
   // Register this method as being an attribute observer.
   if ( ! proto.constructor.hasOwnProperty("_attributes_")) {
-    proto.constructor._attributes_ = {};
+    proto.constructor._attributes_ = new Map();
   }
   const _attributes_: AttributeMetadataMapping = proto.constructor._attributes_;
 
   for (const target of targets) {
-    if (_attributes_[target] === undefined) {
+    if ( ! _attributes_.has(target)) {
       const metadata: AttributeMetadata = {name: target, attributeName: null, dataType: 'any', directSetter: null, filters: [], observers: []};
-      _attributes_[target] = metadata;
-      _attributes_[metadata.attributeName] = metadata;
+      _attributes_.set(target, metadata);
     }
-    const metadata = _attributes_[target];
+    const metadata = _attributes_.get(target);
     if (type === "observers") {
       metadata.observers.push({name: methodName, method: proto[methodName]});
     } else {
@@ -284,7 +288,7 @@ export function Observe(...targets: string[]) {
   return function (proto: any, key: string, descriptor: PropertyDescriptor) {
     registerAttributeCallback("observers", proto, key, targets);
     return descriptor;
-  }
+  };
 }
 
 /**
