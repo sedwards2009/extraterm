@@ -82,7 +82,6 @@
         "./src/render_process/gui/Tab.ts",
         "./src/render_process/gui/TabWidget.ts",
         "./src/render_process/gui/Util.ts",
-        "./src/render_process/gui/web_component_support/WebComponent.ts",
         "./src/render_process/InternalMimeTypes.ts",
         "./src/render_process/keybindings/KeyBindingManager.ts",
         "./src/render_process/keybindings/KeyBindingManagerTest.ts",
