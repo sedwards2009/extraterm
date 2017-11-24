@@ -11,25 +11,32 @@ export interface WebComponentOptions {
   tag: string;
 }
 
-const ATTRIBUTES_METADATA_KEY = "_attributes_";
+const ATTRIBUTES_REGISTRATION_KEY = "_attributes_";
+const OBSERVERS_REGISTRATION_KEY = "_observers_";
 
-type FilterMethod = {name: string, method: (value: any, target: string) => any};
-type ObserverMethod = {name: string, method: (target: string) => void};
+type FilterMethod = (value: any, target: string) => any;
+type FilterRegistration = {name: string, method: FilterMethod};
+
 
 type PropertyType = 'any' | 'String' | 'Number' | 'Boolean';
 
-interface AttributeMetadata {
+interface AttributeRegistration {
   name: string;
   directSetter: (newValue: any) => void;
   attributeName: string;
   dataType: PropertyType;
 
-  filters: FilterMethod[];
-  observers: ObserverMethod[];
+  filterRegistrations: FilterRegistration[];
 }
+type AttributeRegistrationsMapping = Map<string, AttributeRegistration>;
 
-type AttributeMetadataMapping = Map<string, AttributeMetadata>;
+type ObserverMethod = (target: string) => void;
 
+interface ObserverRegistration {
+  name: string;
+  attributeName: string;
+  method: ObserverMethod;
+}
 
 function kebabCase(name: string): string {
   return name.split(/(?=[ABCDEFGHIJKLMNOPQRSTUVWXYZ])/g).map(s => s.toLowerCase()).join("-");
@@ -49,26 +56,52 @@ function jsTypeToPropertyType(name: string): PropertyType {
  */
 export function WebComponent(options: WebComponentOptions): (target: any) => any {
   return function(constructor: any): any {
-    if (constructor.hasOwnProperty(ATTRIBUTES_METADATA_KEY)) {
-      const attributes: AttributeMetadataMapping = constructor[ATTRIBUTES_METADATA_KEY];
 
-      validateAllFilters(constructor.prototype, attributes);
+    let attributeRegistrations: AttributeRegistrationsMapping = null;
+    if (constructor.hasOwnProperty(ATTRIBUTES_REGISTRATION_KEY)) {
+      attributeRegistrations = constructor[ATTRIBUTES_REGISTRATION_KEY];
+    }
+
+    let observerRegistrations: ObserverRegistration[] = null;
+    if (constructor.hasOwnProperty(OBSERVERS_REGISTRATION_KEY)) {
+      observerRegistrations = constructor[OBSERVERS_REGISTRATION_KEY];
+    }
+
+    if (attributeRegistrations != null || observerRegistrations != null) {
+      if (attributeRegistrations != null) {
+        validateAllFilters(constructor.prototype, attributeRegistrations);
+      }
 
       // Set up `observedAttributes` and `attributeChangedCallback()`
       Object.defineProperty(constructor, "observedAttributes", {
         get: function() {
-          let observedAttributes: string[] = [];
-          for (const [key, metadata] of attributes.entries()) {
-            if (metadata.attributeName !== null) {
-              observedAttributes.push(metadata.attributeName);
+          let observedAttributeNames = new Set<string>();
+
+          if (attributeRegistrations != null) {
+            // We observe our own attributes for update purposes.
+            for (const [key, registration] of attributeRegistrations.entries()) {
+              if (registration.attributeName !== null) {
+                observedAttributeNames.add(registration.attributeName);
+              }
             }
           }
 
+          // We also observe the attributes targetted by @Observe
+          if (observerRegistrations != null) {
+            for (const observerRegistration of observerRegistrations) {
+              observedAttributeNames.add(observerRegistration.attributeName);
+            }
+          }
+
+          // Don't forget the ones from the superclass.
           const superObservedAttributes = constructor.prototype.__proto__.constructor.observedAttributes;
           if (superObservedAttributes !== undefined) {
-            observedAttributes = observedAttributes.concat(superObservedAttributes);
+            for (const attr of superObservedAttributes) {
+              observedAttributeNames.add(attr);
+            }
           }
-          return observedAttributes;
+          console.log("observedAttributeNames: ", observedAttributeNames);
+          return observedAttributeNames;
         },
         enumerable: true,
         configurable: true
@@ -86,38 +119,45 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
         }
 
         const attrNameLower = attrName.toLowerCase();
-        for (const [key, metadata] of attributes) {
-          if (metadata.attributeName !== attrNameLower) {
-            continue;
-          }
-
-          let newValue: any = newStringValue;
-          if (metadata.dataType === "Number") {
-            newValue = parseInt(newStringValue, 10);
-          } else if (metadata.dataType === "Boolean") {
-            newValue = newStringValue === attrName || newStringValue === "" || newStringValue === "true";
-          }
-
-          // Apply filters.
-          for (const filter of metadata.filters) {
-            const updatedValue = filter.method.call(this, newValue, metadata.name);
-            if (updatedValue === undefined) {
-              return;
+        if (attributeRegistrations != null) {
+          for (const [key, registration] of attributeRegistrations) {
+            if (registration.attributeName !== attrNameLower) {
+              continue;
             }
-            newValue = updatedValue;
-          }
 
-          if (oldValue !== newValue) {
-            metadata.directSetter.call(this, newValue);
-          }
+            let newValue: any = newStringValue;
+            if (registration.dataType === "Number") {
+              newValue = parseInt(newStringValue, 10);
+            } else if (registration.dataType === "Boolean") {
+              newValue = newStringValue === attrName || newStringValue === "" || newStringValue === "true";
+            }
 
-          // Notify observers
-          for (const observer of metadata.observers) {
-            observer.method.call(this, metadata.name);
-          }
+            // Apply filters.
+            for (const filter of registration.filterRegistrations) {
+              const updatedValue = filter.method.call(this, newValue, registration.name);
+              if (updatedValue === undefined) {
+                return;
+              }
+              newValue = updatedValue;
+            }
 
-          return;
+            if (oldValue !== newValue) {
+              registration.directSetter.call(this, newValue);
+            }
+
+            break;
+          }
         }
+
+        // Notify observers
+        if (observerRegistrations != null) {
+          for (const observerRegistration of observerRegistrations) {
+            if (observerRegistration.attributeName === attrNameLower) {
+              observerRegistration.method.call(this, observerRegistration.name);
+            }
+          }
+        }
+
       };
     }
 
@@ -134,18 +174,18 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
   };
 }
 
-function validateAllFilters(prototype: Object, attributes: AttributeMetadataMapping): void {
+function validateAllFilters(prototype: Object, attributes: AttributeRegistrationsMapping): void {
   for (const attributeMetadata of collectUniqueMetadatas(attributes)) {
     validateFilters(prototype, attributeMetadata);
   }
 }
 
-function collectUniqueMetadatas(attributes: AttributeMetadataMapping): Set<AttributeMetadata> {
-  return new Set<AttributeMetadata>(attributes.values());
+function collectUniqueMetadatas(attributes: AttributeRegistrationsMapping): Set<AttributeRegistration> {
+  return new Set<AttributeRegistration>(attributes.values());
 }
 
-function validateFilters(prototype: Object, attributeMetadata: AttributeMetadata): void {
-  for (const filter of attributeMetadata.filters) {
+function validateFilters(prototype: Object, attributeMetadata: AttributeRegistration): void {
+  for (const filter of attributeMetadata.filterRegistrations) {
     if (attributeMetadata.attributeName === null) {
       console.warn(`Filter method '${filter.name}' is attached to undefined property '${attributeMetadata.name}'.`);
     }
@@ -238,14 +278,14 @@ export function Attribute(proto: any, key: string): void {
       configurable: true
     });
 
-    if ( ! proto.constructor.hasOwnProperty(ATTRIBUTES_METADATA_KEY)) {
-      proto.constructor[ATTRIBUTES_METADATA_KEY] = new Map();
+    if ( ! proto.constructor.hasOwnProperty(ATTRIBUTES_REGISTRATION_KEY)) {
+      proto.constructor[ATTRIBUTES_REGISTRATION_KEY] = new Map();
     }
-    const attributes: AttributeMetadataMapping = proto.constructor[ATTRIBUTES_METADATA_KEY];
+    const attributes: AttributeRegistrationsMapping = proto.constructor[ATTRIBUTES_REGISTRATION_KEY];
 
-    let metadata: AttributeMetadata = attributes.get(key);
+    let metadata: AttributeRegistration = attributes.get(key);
     if (metadata === undefined) {
-      metadata = {name: key, attributeName, dataType: propertyType, directSetter, filters: [], observers: []};
+      metadata = {name: key, attributeName, dataType: propertyType, directSetter, filterRegistrations: []};
     } else {
       metadata.attributeName = propertyType;
     }
@@ -254,26 +294,6 @@ export function Attribute(proto: any, key: string): void {
   }
 }
 
-function registerAttributeCallback(type: "observers" | "filters", proto: any, methodName: string, targets: string[]): void {
-  // Register this method as being an attribute observer.
-  if ( ! proto.constructor.hasOwnProperty(ATTRIBUTES_METADATA_KEY)) {
-    proto.constructor[ATTRIBUTES_METADATA_KEY] = new Map();
-  }
-  const attributes: AttributeMetadataMapping = proto.constructor[ATTRIBUTES_METADATA_KEY];
-
-  for (const target of targets) {
-    if ( ! attributes.has(target)) {
-      const metadata: AttributeMetadata = {name: target, attributeName: null, dataType: 'any', directSetter: null, filters: [], observers: []};
-      attributes.set(target, metadata);
-    }
-    const metadata = attributes.get(target);
-    if (type === "observers") {
-      metadata.observers.push({name: methodName, method: proto[methodName]});
-    } else {
-      metadata.filters.push({name: methodName, method: proto[methodName]});
-    }
-  }
-}
 
 /**
  * Method decorator for observing changes to a HTML attribute.
@@ -286,8 +306,18 @@ function registerAttributeCallback(type: "observers" | "filters", proto: any, me
  *          this method observes.
  */
 export function Observe(...targets: string[]) {
-  return function (proto: any, key: string, descriptor: PropertyDescriptor) {
-    registerAttributeCallback("observers", proto, key, targets);
+  return function (proto: any, methodName: string, descriptor: PropertyDescriptor) {
+
+    // Register this method as being an attribute observer.
+    if ( ! proto.constructor.hasOwnProperty(OBSERVERS_REGISTRATION_KEY)) {
+      proto.constructor[OBSERVERS_REGISTRATION_KEY] = [];
+    }
+    const attributes: ObserverRegistration[] = proto.constructor[OBSERVERS_REGISTRATION_KEY];
+  
+    for (const target of targets) {
+      const metadata: ObserverRegistration = {name: target, attributeName: kebabCase(target), method: proto[methodName]};
+      attributes.push(metadata);
+    }
     return descriptor;
   };
 }
@@ -309,8 +339,23 @@ export function Observe(...targets: string[]) {
  *          this method filters.
  */
 export function Filter(...targets: string[]) {
-  return function(proto: any, key: string, descriptor: PropertyDescriptor) {
-    registerAttributeCallback("filters", proto, key, targets);
+  return function(proto: any, methodName: string, descriptor: PropertyDescriptor) {
+
+    // Register this method as being an attribute observer.
+    if ( ! proto.constructor.hasOwnProperty(ATTRIBUTES_REGISTRATION_KEY)) {
+      proto.constructor[ATTRIBUTES_REGISTRATION_KEY] = new Map();
+    }
+    const attributes: AttributeRegistrationsMapping = proto.constructor[ATTRIBUTES_REGISTRATION_KEY];
+  
+    for (const target of targets) {
+      if ( ! attributes.has(target)) {
+        const metadata: AttributeRegistration = {name: target, attributeName: null, dataType: 'any', directSetter: null, filterRegistrations: []};
+        attributes.set(target, metadata);
+      }
+      const metadata = attributes.get(target);
+      metadata.filterRegistrations.push({name: methodName, method: proto[methodName]});
+    }
+
     return descriptor;
   };
 }

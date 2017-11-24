@@ -38,20 +38,17 @@ export function testStringAttributeViaJS(test: nodeunit.Test): void {
     test.equals(sc.getAttribute("some-string"), "my string");
     test.equals(sc.someString, "my string");
     test.equals(sc.lastSomeString, "my string");
-
-    test.done();
   });
+  test.done();
 }
 
 
 export function testStringAttributeViaHTML(test: nodeunit.Test): void {
-  const sc = <StringComponent> document.createElement("string-component");
-  document.body.appendChild(sc);
-
-  sc.setAttribute("some-string", "my string");
-  test.equals(sc.getAttribute("some-string"), "my string");
-  test.equals(sc.lastSomeString, "my string");
-
+  someStringTest((sc: StringComponent): void => {
+    sc.setAttribute("some-string", "my string");
+    test.equals(sc.getAttribute("some-string"), "my string");
+    test.equals(sc.lastSomeString, "my string");
+  });
   test.done();
 }
 
@@ -261,14 +258,12 @@ export function testNumberAttributeViaJS(test: nodeunit.Test): void {
 }
 
 export function testNumberAttributeViaHTML(test: nodeunit.Test): void {
-  const sc = <NumberComponent> document.createElement("number-component");
-  document.body.appendChild(sc);
-
-  sc.setAttribute("some-number", "321");
-  test.equals(sc.getAttribute("some-number"), "321");
-  test.equals(sc.lastSomeNumber, 321);
-  test.equals(typeof sc.lastSomeNumber, "number");
-  
+  someNumberTest((sc: NumberComponent): void => {
+    sc.setAttribute("some-number", "321");
+    test.equals(sc.getAttribute("some-number"), "321");
+    test.equals(sc.lastSomeNumber, 321);
+    test.equals(typeof sc.lastSomeNumber, "number");
+  });
   test.done();
 }
 
@@ -309,13 +304,33 @@ export function testBooleanAttributeViaJS(test: nodeunit.Test): void {
 }
 
 export function testBooleanAttributeViaHTML(test: nodeunit.Test): void {
-  const sc = <BooleanComponent> document.createElement("boolean-component");
-  document.body.appendChild(sc);
+  someBooleanTest((sc: BooleanComponent): void => {
+    sc.setAttribute("some-boolean", "false");
+    test.equals(sc.getAttribute("some-boolean"), "false");
+    test.equals(sc.lastSomeBoolean, false);
+    test.equals(typeof sc.lastSomeBoolean, "boolean");
+  });
+  test.done();
+}
 
-  sc.setAttribute("some-boolean", "false");
-  test.equals(sc.getAttribute("some-boolean"), "false");
-  test.equals(sc.lastSomeBoolean, false);
-  test.equals(typeof sc.lastSomeBoolean, "boolean");
+@WebComponent({tag: "substring-component"})
+class SubStringComponent extends StringComponent {
+
+  @Observe("someString")
+  private _subSomeStringObserver(target: string): void {
+    this.subLastSomeString = this.someString;
+  }
+
+  public subLastSomeString: string;
+}
+
+export function testSubclassObserve(test: nodeunit.Test): void {
+  const sc = <SubStringComponent> document.createElement("substring-component");
+  document.body.appendChild(sc);
+  sc.someString = "blah";
+  console.log("SubStringComponent observedAttributes", (<any>SubStringComponent).observedAttributes);
+  test.equals(sc.lastSomeString, "blah");
+  test.equals(sc.subLastSomeString, "blah");
   
   test.done();
 }
