@@ -35,6 +35,7 @@ type ObserverMethod = (target: string) => void;
 interface ObserverRegistration {
   name: string;
   attributeName: string;
+  methodName: string;
   method: ObserverMethod;
 }
 
@@ -70,6 +71,10 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
     if (attributeRegistrations != null || observerRegistrations != null) {
       if (attributeRegistrations != null) {
         validateAllFilters(constructor.prototype, attributeRegistrations);
+      }
+
+      if (observerRegistrations != null) {
+        validateObservers(observerRegistrations, constructor, attributeRegistrations);
       }
 
       // Set up `observedAttributes` and `attributeChangedCallback()`
@@ -218,6 +223,33 @@ function validateFilters(prototype: Object, attributeMetadata: AttributeRegistra
   }
 }
 
+function validateObservers(observerRegistrations: ObserverRegistration[], constructor: any,
+    attributeRegistrations: AttributeRegistrationsMapping): void {
+
+  const acceptableAttributes = new Set<string>();
+      
+  if (attributeRegistrations != null) {
+    for (const [key, registration] of attributeRegistrations.entries()) {
+      acceptableAttributes.add(registration.attributeName);
+    }
+  }
+
+  const superObservedAttributes = constructor.prototype.__proto__.constructor.observedAttributes;
+  if (superObservedAttributes !== undefined) {
+    for (const attr of superObservedAttributes) {
+      acceptableAttributes.add(attr);
+    }
+  }
+
+  for (const observerRegistration of observerRegistrations) {
+    if ( ! acceptableAttributes.has(observerRegistration.attributeName)) {
+      console.warn(`Observer method '${observerRegistration.methodName}' is attached to undefined property '${observerRegistration.name}'.`);
+    }
+  }
+}
+
+
+
 /**
  * Mark a property as being a HTML attribute.
  * 
@@ -268,7 +300,7 @@ export function Attribute(proto: any, key: string): void {
       valueMap.set(this, defaultValue);
     }
     valueMap.set(this, newValue);
-  }
+  };
   
   if (delete proto[key]) {
     Object.defineProperty(proto, key, {
@@ -315,7 +347,12 @@ export function Observe(...targets: string[]) {
     const attributes: ObserverRegistration[] = proto.constructor[OBSERVERS_REGISTRATION_KEY];
   
     for (const target of targets) {
-      const metadata: ObserverRegistration = {name: target, attributeName: kebabCase(target), method: proto[methodName]};
+      const metadata: ObserverRegistration = {
+        name: target,
+        attributeName: kebabCase(target),
+        method: proto[methodName],
+        methodName: methodName
+      };
       attributes.push(metadata);
     }
     return descriptor;
