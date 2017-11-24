@@ -10,7 +10,7 @@ type SetterState = VirtualScrollArea.SetterState;
 
 SourceMapSupport.install();
 
-type Scrollbar = VirtualScrollArea.Scrollbar;
+type Scrollbar = VirtualScrollArea.ScrollBar;
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 
 interface VirtualScrollableWithExtra extends VirtualScrollable {

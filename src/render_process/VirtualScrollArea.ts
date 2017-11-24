@@ -96,7 +96,7 @@ interface VirtualScrollableState {
 }
 
 interface VirtualAreaState {
-  scrollbar: Scrollbar;
+  scrollbar: ScrollBar;
   virtualScrollYOffset: number;
   containerHeight: number;
   scrollFunction: (offset: number) => void;
@@ -112,7 +112,7 @@ interface VirtualAreaState {
   realScrollYOffset: number;
 }
 
-export interface Scrollbar {
+export interface ScrollBar {
   setLength(length: number): void;       // The size of the complete range.
   setPosition(position: number): void;   // The position of the thumb inside the range.
   setThumbSize(size: number): void;      // The size of the thumb.
@@ -293,7 +293,7 @@ export class VirtualScrollArea {
     });
   }
 
-  setScrollbar(scrollbar: Scrollbar): void {
+  setScrollbar(scrollbar: ScrollBar): void {
     this._update( (newState) => {
       newState.scrollbar = scrollbar;
     });
