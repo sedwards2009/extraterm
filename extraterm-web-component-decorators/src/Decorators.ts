@@ -5,6 +5,8 @@
  */
 import * as reflect from 'reflect-metadata';
 
+require('reflect-metadata');  // Ensure that it is actually imported and not elided by tsc.
+
 export interface WebComponentOptions {
   // The tag name to register this component under. This must conform to the
   // requirements set down in the Custom Element spec and contain a hyphen.
