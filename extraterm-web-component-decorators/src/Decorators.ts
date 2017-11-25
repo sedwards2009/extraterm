@@ -107,7 +107,6 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
               observedAttributeNames.add(attr);
             }
           }
-          console.log("observedAttributeNames: ", observedAttributeNames);
           return observedAttributeNames;
         },
         enumerable: true,
@@ -267,12 +266,10 @@ export function Attribute(proto: any, key: string): void {
   let propertyType: PropertyType = "any";
   const propertyTypeMetadata = Reflect.getMetadata("design:type", proto, key);
   if (propertyTypeMetadata != null) {
-    console.log(`propertyTypeMetadata.name: ${propertyTypeMetadata.name}`);
     propertyType = jsTypeToPropertyType(propertyTypeMetadata.name);
   }
 
   const getter = function (this: any) {
-    console.log(`Get: ${key} => ${defaultValue}`);
     if ( ! valueMap.has(this)) {
       valueMap.set(this, defaultValue);
     }
@@ -281,18 +278,15 @@ export function Attribute(proto: any, key: string): void {
   };
   
   const setter = function (this: any, newValue: any): void {
-    console.log(`Enter Set: ${key} => ${newValue}`);
     if ( ! valueMap.has(this)) {
       valueMap.set(this, defaultValue);
     }
 
     if (newValue === valueMap.get(this)) {
-      console.log(`  Set early exit`);
       return;
     }
 
     this.setAttribute(attributeName, newValue);
-    console.log(`Exit Set: ${key} => ${newValue}`);
   };
 
   const directSetter = function(this: any, newValue: any): void {
