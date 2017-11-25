@@ -248,8 +248,6 @@ function validateObservers(observerRegistrations: ObserverRegistration[], constr
   }
 }
 
-
-
 /**
  * Mark a property as being a HTML attribute.
  * 
@@ -325,7 +323,6 @@ export function Attribute(proto: any, key: string): void {
     attributes.set(key,  metadata);
   }
 }
-
 
 /**
  * Method decorator for observing changes to a HTML attribute.
