@@ -17,7 +17,8 @@
         "paths": {
          "*": ["./src/typings/*"]
         },
-        "baseUrl": "."
+        "baseUrl": ".",
+        "emitDecoratorMetadata": true
       
     },
     "filesGlob": [
