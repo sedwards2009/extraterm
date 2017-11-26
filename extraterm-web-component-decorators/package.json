@@ -14,7 +14,7 @@
     "@types/nodeunit": "0.0.30",
     "http-server": "0.10.0",
     "nodeunit": "0.11.0",
-    "typescript": "2.4.2",
+    "typescript": "2.6.1",
     "webpack": "3.8.1"
   },
   "scripts": {
