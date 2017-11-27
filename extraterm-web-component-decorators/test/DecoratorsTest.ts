@@ -350,7 +350,7 @@ export function testDefaults(test: nodeunit.Test): void {
   test.equals(ic.someString, "foo");
 
   test.equals(typeof ic.someNumber, "number");
-  test.equals(ic.someBoolean, 123);
+  test.equals(ic.someNumber, 123);
   
   test.equals(typeof ic.someBoolean, "boolean");
   test.equals(ic.someBoolean, false);

@@ -26,7 +26,7 @@ Example Code
 @WebComponent({tag: "my-great-component"})
 class MyGreatComponent extends HTMLElement {
 
-  @Attribute greatMessage: string;
+  @Attribute({default: "Awesome!"}) greatMessage: string;
 
   @Filter("greatMessage)
   private _onlyHappyMessages(msg: string): string {
@@ -42,7 +42,7 @@ class MyGreatComponent extends HTMLElement {
   }
 }
 ```
-In this example we can see a custom element being defined. The class decorator at the top also performs the registration of the element under tag `my-great-component`. It defines a `greatMessage` property which is also accessible via the HTML/DOM attribute interface as `great-message`. When a message is set we filter it internally before it reaches the JS property `greatMessage`. Keep in mind that the attribute view of this property `great-message` will reflect the value which the user set, but the JS version will be cleaned up and ready for internal use. Lastly, the `@Observe` decorator makes it possible for a method to be called when a property/attribute is changed.
+In this example we can see a custom element being defined. The class decorator at the top also performs the registration of the element under tag `my-great-component`. It defines a `greatMessage` property which is also accessible via the HTML/DOM attribute interface as `great-message`. The default value for attributes needs to be passed to the decorator. It can't be set using the normal TypeScript syntax unfortunately. When a message is set we filter it internally before it reaches the JS property `greatMessage`. Keep in mind that the attribute view of this property `great-message` will reflect the value which the user set, but the JS version will be cleaned up and ready for internal use. Lastly, the `@Observe` decorator makes it possible for a method to be called when a property/attribute is changed.
 
 
 Reference documentation

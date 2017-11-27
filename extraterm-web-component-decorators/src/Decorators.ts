@@ -290,6 +290,8 @@ export function applyAttribute(proto: any, key: string, defaultValue: any): void
     propertyType = jsTypeToPropertyType(propertyTypeMetadata.name);
   }
 
+  validateAttributeDefaultValue(key, propertyType, defaultValue);
+
   const getter = function (this: any) {
     if ( ! valueMap.has(this)) {
       valueMap.set(this, defaultValue);
@@ -339,6 +341,32 @@ export function applyAttribute(proto: any, key: string, defaultValue: any): void
 
     attributes.set(key,  metadata);
   }
+}
+
+function validateAttributeDefaultValue(key: string, propertyType: PropertyType, defaultValue: any): void {
+  if (propertyType === "any" || defaultValue === undefined) {
+    return;
+  }
+
+  switch (propertyType) {
+    case "String":
+      if (defaultValue === null || (typeof defaultValue) === "string") {
+        return;
+      }
+      break;
+    case "Number":
+      if ((typeof defaultValue) === "number") {
+        return;
+      }
+      break;
+    case "Boolean":
+      if ((typeof defaultValue) === "boolean") {
+        return;
+      }
+      break;
+  }
+
+  console.warn(`Default value for property '${key}' has type '${typeof defaultValue}', expected type '${propertyType}'.`);
 }
 
 /**
