@@ -31,9 +31,6 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import {SetterState, VirtualScrollable} from '../VirtualScrollArea';
 
 
-MenuItem.init();
-CheckboxMenuItem.init();
-
 const ID = "EtEmbeddedViewerTemplate";
 
 const ID_CONTAINER = "ID_CONTAINER";

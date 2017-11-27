@@ -12,7 +12,6 @@ import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 import {Logger, getLogger} from '../../logging/Logger';
 
-MenuItem.init();
 
 const ID = "EtContextMenuTemplate";
 const ID_COVER = "ID_COVER";

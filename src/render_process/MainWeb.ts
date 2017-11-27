@@ -173,10 +173,8 @@ function loadFontFaces(): Promise<FontFace[]> {
 function startUpComponents(): void {
   // Fonts are loaded, continue.
   ContextMenu.init();
-  MenuItem.init();
   DropDown.init();
   MainWebUi.init();
-  CheckboxMenuItem.init();
   PopDownListPicker.init();
   ResizeCanary.init();
 }
@@ -310,8 +308,7 @@ function executeMenuCommand(command: string): boolean {
     // Unflip what the user did to the state of the developer tools check box for a moment.
     // Let executeCommand() toggle the checkbox itself. 
     const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-    const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
-    developerToolMenu.setAttribute(CheckboxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
+    developerToolMenu.checked = ! developerToolMenu.checked;
   }
 
   return executeCommand(command);
@@ -329,9 +326,8 @@ function executeCommand(commandId: string, options?: object): boolean {
       
     case MENU_ITEM_DEVELOPER_TOOLS:
       const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-      const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
-      developerToolMenu.setAttribute(CheckboxMenuItem.ATTR_CHECKED, "" + ( ! devToolsOpen) );
-      WebIpc.devToolsRequest( ! devToolsOpen);
+      developerToolMenu.checked = ! developerToolMenu.checked;
+      WebIpc.devToolsRequest(developerToolMenu.checked);
       break;
 
     case MENU_ITEM_ABOUT:
@@ -449,7 +445,7 @@ function handleDevToolsStatus(msg: Messages.Message): void {
   if (developerToolMenu === null) {
     return;
   }
-  developerToolMenu.setAttribute(CheckboxMenuItem.ATTR_CHECKED, "" + devToolsStatusMessage.open);
+  developerToolMenu.checked = devToolsStatusMessage.open;
 }
 
 function handleClipboardRead(msg: Messages.Message): void {
@@ -652,7 +648,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
 
 function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-  const devToolsOpen = Util.toBoolean(developerToolMenu.getAttribute(CheckboxMenuItem.ATTR_CHECKED));
+  const devToolsOpen = developerToolMenu.checked;
   const commandExecutor: CommandExecutor = {executeCommand};
   const commandList: CommandEntry[] = [
     { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", commandExecutor },
