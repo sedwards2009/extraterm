@@ -74,7 +74,6 @@ class MultiStringComponent extends HTMLElement {
 
   @Observe("someString", "otherString")
   private _stringsObserver(target: string): void {
-    console.log(`_stringsObserver(${target})`);
     if (target === "someString") {
       this.lastSomeStringMulti = this.someString;
     } else if (target === "otherString") {
@@ -328,9 +327,33 @@ export function testSubclassObserve(test: nodeunit.Test): void {
   const sc = <SubStringComponent> document.createElement("substring-component");
   document.body.appendChild(sc);
   sc.someString = "blah";
-  console.log("SubStringComponent observedAttributes", (<any>SubStringComponent).observedAttributes);
   test.equals(sc.lastSomeString, "blah");
   test.equals(sc.subLastSomeString, "blah");
+  
+  test.done();
+}
+
+
+@WebComponent({tag: "defaults-component"})
+class DefaultsComponent extends HTMLElement {
+
+  @Attribute({default: "foo"}) someString: string;
+  @Attribute({default: 123}) someNumber: number;
+  @Attribute({default: false}) someBoolean: boolean;
+}
+
+export function testDefaults(test: nodeunit.Test): void {
+  const ic = <DefaultsComponent> document.createElement("defaults-component");
+  document.body.appendChild(ic);
+
+  test.equals(typeof ic.someString, "string");
+  test.equals(ic.someString, "foo");
+
+  test.equals(typeof ic.someNumber, "number");
+  test.equals(ic.someBoolean, 123);
+  
+  test.equals(typeof ic.someBoolean, "boolean");
+  test.equals(ic.someBoolean, false);
   
   test.done();
 }

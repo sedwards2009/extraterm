@@ -249,6 +249,10 @@ function validateObservers(observerRegistrations: ObserverRegistration[], constr
   }
 }
 
+export interface AttributeOptions {
+  default: string | number | boolean;
+}
+
 /**
  * Mark a property as being a HTML attribute.
  * 
@@ -256,10 +260,27 @@ function validateObservers(observerRegistrations: ObserverRegistration[], constr
  * is in kebab-case. i.e. the words of the property lower case and separated
  * be dashes. For example "someString" become attribute "some-string".
  * 
+ * This decorator can be used in two ways. The direct way is with no
+ * arguements, and the second way is with an options object as a arguement.
+ * The options object can be used to specify a default (internal) value for
+ * the attribute/property.
+ * 
  * See also `Observer` and `Filter`
  */
-export function Attribute(proto: any, key: string): void {
-  let defaultValue = proto[key];
+export function Attribute(protoOrOptions: AttributeOptions | any, key?: string): any {
+  if (arguments.length === 1) {
+    const options = <AttributeOptions> protoOrOptions;
+    const defaultValue = options.default;
+    return (proto: any, key: string): void => {
+      applyAttribute(proto, key, defaultValue);
+    };
+  } else {
+    applyAttribute(<any> protoOrOptions, key, undefined);
+    return undefined;
+  }
+}
+
+export function applyAttribute(proto: any, key: string, defaultValue: any): void {
   const valueMap = new WeakMap<any, any>();
   const attributeName = kebabCase(key);
 
