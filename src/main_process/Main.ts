@@ -186,11 +186,11 @@ function main(): void {
     // and load the index.html of the app.
     mainWindow.loadURL(ResourceLoader.toUrl('render_process/main.html'));
 
-    mainWindow.on('devtools-closed', function() {
+    mainWindow.webContents.on('devtools-closed', function() {
       sendDevToolStatus(mainWindow, false);
     });
     
-    mainWindow.on('devtools-opened', function() {
+    mainWindow.webContents.on('devtools-opened', function() {
       sendDevToolStatus(mainWindow, true);
     });
 
