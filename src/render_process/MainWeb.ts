@@ -172,8 +172,6 @@ function loadFontFaces(): Promise<FontFace[]> {
 
 function startUpComponents(): void {
   // Fonts are loaded, continue.
-  ContextMenu.init();
-  DropDown.init();
   MainWebUi.init();
   PopDownListPicker.init();
   ResizeCanary.init();
