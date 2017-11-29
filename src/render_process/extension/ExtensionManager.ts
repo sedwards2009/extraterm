@@ -40,8 +40,6 @@ export class ExtensionManager {
   private _extensionBridge: ExtensionBridge = null;
 
   constructor() {
-    PopDownNumberDialog.init();
-
     this._log = getLogger("ExtensionManager", this);
     this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../../../extensions" )]);
     this._extensionBridge = new ExtensionBridge();
@@ -164,7 +162,7 @@ return [];
       this._numberInputDialog = <PopDownNumberDialog> window.document.createElement(PopDownNumberDialog.TAG_NAME);
       window.document.body.appendChild(this._numberInputDialog);
     }
-    this._numberInputDialog.setTitlePrimary(options.title);
+    this._numberInputDialog.titlePrimary = options.title;
     this._numberInputDialog.setMinimum(options.minimum !== undefined ? options.minimum : Number.MIN_SAFE_INTEGER);
     this._numberInputDialog.setMaximum(options.maximum !== undefined ? options.maximum : Number.MAX_SAFE_INTEGER);
     this._numberInputDialog.setValue(options.value);
@@ -205,11 +203,11 @@ return [];
       window.document.body.appendChild(this._listPicker);
     }
 
-    this._listPicker.setTitlePrimary(options.title);
+    this._listPicker.titlePrimary = options.title;
 
     const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item}));
     this._listPicker.setEntries(convertedItems);
-    this._listPicker.setSelected("" + options.selectedItemIndex);
+    this._listPicker.selected = "" + options.selectedItemIndex;
 
     const rect = terminal.getBoundingClientRect();
     this._listPicker.open(rect.left, rect.top, rect.width, rect.height);

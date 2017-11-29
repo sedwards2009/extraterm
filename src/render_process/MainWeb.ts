@@ -173,7 +173,6 @@ function loadFontFaces(): Promise<FontFace[]> {
 function startUpComponents(): void {
   // Fonts are loaded, continue.
   MainWebUi.init();
-  PopDownListPicker.init();
   ResizeCanary.init();
 }
 
@@ -582,9 +581,9 @@ function startUpCommandPalette(): void {
   // Command palette
   const commandPalette = <PopDownListPicker<CommandMenuItem>> doc.createElement(PopDownListPicker.TAG_NAME);
   commandPalette.id = ID_COMMAND_PALETTE;
-  commandPalette.setTitlePrimary("Command Palette");
-  commandPalette.setTitleSecondary("Ctrl+Shift+P");
-
+  commandPalette.titlePrimary = "Command Palette";
+  commandPalette.titleSecondary = "Ctrl+Shift+P";
+  
   commandPalette.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
   commandPalette.setFormatEntriesFunc(commandPaletteFormatEntries);
   commandPalette.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
@@ -628,7 +627,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
     
     const commandPalette = <PopDownListPicker<CommandMenuItem>> document.getElementById(ID_COMMAND_PALETTE);
     const shortcut = keyBindingManager.getKeyBindingContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
-    commandPalette.setTitleSecondary(shortcut !== null ? shortcut : "");
+    commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
     commandPalette.setEntries(paletteEntries);
     
     const contextElement = requestCommandableStack[requestCommandableStack.length-2];

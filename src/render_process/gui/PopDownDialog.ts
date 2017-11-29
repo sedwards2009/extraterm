@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -12,7 +13,6 @@ const ID = "EtPopDownDialogTemplate";
 const ID_COVER = "ID_COVER";
 const ID_CONTEXT_COVER = "ID_CONTEXT_COVER";
 const ID_CONTAINER = "ID_CONTAINER";
-
 
 const ID_TITLE_PRIMARY = "ID_TITLE_PRIMARY";
 const ID_TITLE_SECONDARY = "ID_TITLE_SECONDARY";
@@ -25,78 +25,20 @@ const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
 
 const ATTR_DATA_ID = "data-id";
 
-let registered = false;
 
 /**
  * A Pop Down Dialog.
  */
+@WebComponent({tag: "et-popdowndialog"})
 export class PopDownDialog extends ThemeableElementBase {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-POPDOWNDIALOG";
-
   static EVENT_CLOSE_REQUEST = "ET-POPDOWNDIALOG-CLOSE_REQUEST";
-
-  /**
-   * Initialize the PopDownDialog class and resources.
-   *
-   * When PopDownDialog is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(PopDownDialog.TAG_NAME.toLowerCase(), PopDownDialog);
-      registered = true;
-    }
-  }
   
-  private _titlePrimary: string;
+  private _laterHandle: DomUtils.LaterHandle = null;
 
-  private _titleSecondary: string;
-
-  private _laterHandle: DomUtils.LaterHandle;
-  
-  private _initProperties(): void {
-    this._laterHandle = null;
-    this._titlePrimary = "";
-    this._titleSecondary = "";
-  }
-
-  setTitlePrimary(text: string): void {
-    this._titlePrimary = text;
-    this._updateTitle();
-  }
-
-  getTitlePrimary(): string {
-    return this._titlePrimary;
-  }
-
-  setTitleSecondary(text: string): void {
-    this._titleSecondary = text;
-    this._updateTitle();
-  }
-
-  getTitleSecondary(): string {
-    return this._titleSecondary;
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
   constructor() {
     super();
-    this._initProperties(); // Initialise our properties. The constructor was not called.
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this.createClone();
     shadow.appendChild(clone);
@@ -113,9 +55,6 @@ export class PopDownDialog extends ThemeableElementBase {
     });
   }
   
-  /**
-   * 
-   */
   private createClone() {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -138,20 +77,20 @@ export class PopDownDialog extends ThemeableElementBase {
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_POP_DOWN_DIALOG];
   }
-  
-  //-----------------------------------------------------------------------
 
+  @Attribute({default: ""}) titlePrimary: string;
+
+  @Attribute({default: ""}) titleSecondary: string;
+
+  @Observe("titlePrimary", "titleSecondary")
   private _updateTitle(): void {
     const titlePrimaryDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_TITLE_PRIMARY);
     const titleSecondaryDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_TITLE_SECONDARY);
 
-    titlePrimaryDiv.innerText = this._titlePrimary;
-    titleSecondaryDiv.innerText = this._titleSecondary;
+    titlePrimaryDiv.innerText = this.titlePrimary;
+    titleSecondaryDiv.innerText = this.titleSecondary;
   }
 
-  /**
-   * 
-   */
   open(x: number, y: number, width: number, height: number): void {
     // Nuke any style like 'display: none' which can be use to prevent flicker.
     this.setAttribute('style', '');
@@ -170,9 +109,6 @@ export class PopDownDialog extends ThemeableElementBase {
     cover.classList.add(CLASS_COVER_OPEN);
   }
 
-  /**
-   * 
-   */
   close(): void {
     const cover = <HTMLDivElement> DomUtils.getShadowId(this, ID_COVER);
     cover.classList.remove(CLASS_COVER_OPEN);

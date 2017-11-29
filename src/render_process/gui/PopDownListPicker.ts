@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import {Logger, getLogger} from '../../logging/Logger';
 import {ThemeableElementBase} from '../ThemeableElementBase';
@@ -15,160 +16,39 @@ const ID_DIALOG = "ID_DIALOG";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
 
-let registered = false;
-
 /**
  * A Pop Down List Picker.
  */
+@WebComponent({tag: "et-popdownlistpicker"})
 export class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-POPDOWNLISTPICKER";
-
   static ATTR_DATA_ID = "data-id";
-
   static CLASS_RESULT_SELECTED = "CLASS_RESULT_SELECTED";
-  
   static CLASS_RESULT_ENTRY = "CLASS_RESULT_ENTRY";
 
-  /**
-   * Initialize the PopDownListPicker class and resources.
-   *
-   * When PopDownListPicker is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    PopDownDialog.init();
-    if (registered === false) {
-      window.customElements.define(PopDownListPicker.TAG_NAME.toLowerCase(), PopDownListPicker);
-      registered = true;
-    }
-  }
-
-  // WARNING: Fields like this will not be initialised automatically.
   private _log: Logger = null;
-  
-  private _entries: T[];
-
-  private _selectedId: string;
-
-  private _titlePrimary: string;
-
-  private _titleSecondary: string;
-
+  private _entries: T[] = [];
   private _filterEntries: (entries: T[], filterText: string) => T[];
-
   private _formatEntries: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string;
+  private _laterHandle: DomUtils.LaterHandle = null;
+  private _extraCssFiles: ThemeTypes.CssFile[] = [];
 
-  private _laterHandle: DomUtils.LaterHandle;
-
-  private _extraCssFiles: ThemeTypes.CssFile[];
-
-  private _initProperties(): void {
+  constructor() {
+    super();
     this._log = getLogger(PopDownListPicker.TAG_NAME, this);
-    this._entries = [];
-    this._selectedId = null;
-    this._titlePrimary = "";
-    this._titleSecondary = "";
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;
     this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): string => 
       filteredEntries.map(entry => `<div ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
-    this._laterHandle = null;
-    this._extraCssFiles = [];
-  }
 
-  getSelected(): string {
-    return this._selectedId;
-  }
-
-  setSelected(selectedId: string): void {
-    this._selectedId = selectedId;
-    this._updateEntries();
-    this._scrollToSelected();
-  }
-
-  setEntries(entries: T[]): void {
-    this._entries = entries;
-    this._selectedId = null;
-    
-    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
-    if (filterInput !== null) {
-      filterInput.value = "";
-    }
-    this._updateEntries();
-  }
-
-  getEntries(): T[] {
-    return this._entries;
-  }
-
-  setTitlePrimary(text: string): void {
-    this._titlePrimary = text;
-    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
-    if (dialog != null) {
-      dialog.setTitlePrimary(text);
-    }
-  }
-
-  getTitlePrimary(): string {
-    return this._titlePrimary;
-  }
-
-  setTitleSecondary(text: string): void {
-    this._titleSecondary = text;
-    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
-    if (dialog != null) {
-      dialog.setTitleSecondary(text);
-    }
-  }
-
-  getTitleSecondary(): string {
-    return this._titleSecondary;
-  }
-
-  setFilterAndRankEntriesFunc(func: (entries: T[], filterText: string) => T[]): void {
-    this._filterEntries = func;
-  }
-
-  setFormatEntriesFunc(func: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string): void {
-    this._formatEntries = func;
-  }
-
-  /**
-   * Specify extra Css files to load into this element.
-   * 
-   * @param extraCssFiles extra Css files which should be loaded along side the default set.
-   */
-  addExtraCss(extraCssFiles: ThemeTypes.CssFile[]): void {
-    this._extraCssFiles = [...this._extraCssFiles, ...extraCssFiles];
-    this.updateThemeCss();
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-  constructor() {
-    super();
-    this._initProperties(); // Initialise our properties. The constructor was not called.
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this.createClone();
     shadow.appendChild(clone);
-    this.updateThemeCss();
+    this.installThemeCss();
 
     const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
-    dialog.setTitlePrimary(this._titlePrimary);
-    dialog.setTitleSecondary(this._titleSecondary);
+    dialog.titlePrimary = this.titlePrimary;
+    dialog.titleSecondary = this.titleSecondary;
     dialog.addEventListener(PopDownDialog.EVENT_CLOSE_REQUEST, () => {
       dialog.close();
     });
@@ -193,9 +73,6 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     });
   }
   
-  /**
-   * 
-   */
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -218,18 +95,79 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
       ThemeTypes.CssFile.GUI_POP_DOWN_LIST_PICKER, ...this._extraCssFiles];
   }
 
+  @Attribute({default: null}) selected: string;
+
+  @Observe("selected")
+  private _updateSelected(target: string): void {
+    this._updateEntries();
+    this._scrollToSelected();
+  }
+
+  setEntries(entries: T[]): void {
+    this._entries = entries;
+    this.selected = null;
+    
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+    if (filterInput !== null) {
+      filterInput.value = "";
+    }
+    this._updateEntries();
+  }
+
+  getEntries(): T[] {
+    return this._entries;
+  }
+
+  @Attribute({default: ""}) titlePrimary: string;
+
+  @Observe("titlePrimary")
+  private _updateTitlePrimary(target: string): void {
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
+    if (dialog != null) {
+      dialog.titlePrimary = this.titlePrimary;
+    }
+  }
+
+  @Attribute({default: ""}) titleSecondary: string;
+
+  @Observe("titleSecondary")
+  private _updateTitleSecondary(target: string): void {
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
+    if (dialog != null) {
+      dialog.titleSecondary = this.titleSecondary;
+    }
+  }
+
+  setFilterAndRankEntriesFunc(func: (entries: T[], filterText: string) => T[]): void {
+    this._filterEntries = func;
+  }
+
+  setFormatEntriesFunc(func: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string): void {
+    this._formatEntries = func;
+  }
+
+  /**
+   * Specify extra Css files to load into this element.
+   * 
+   * @param extraCssFiles extra Css files which should be loaded along side the default set.
+   */
+  addExtraCss(extraCssFiles: ThemeTypes.CssFile[]): void {
+    this._extraCssFiles = [...this._extraCssFiles, ...extraCssFiles];
+    this.updateThemeCss();
+  }
+
   private _updateEntries(): void {
     const filterInputValue = (<HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER)).value;
     const filteredEntries = this._filterEntries(this._entries, filterInputValue);
     
     if (filteredEntries.length === 0) {
-      this._selectedId = null;
+      this.selected = null;
     } else {
-      const newSelectedIndex = filteredEntries.findIndex( (entry) => entry.id === this._selectedId);
-      this._selectedId = filteredEntries[Math.max(0, newSelectedIndex)].id;
+      const newSelectedIndex = filteredEntries.findIndex( (entry) => entry.id === this.selected);
+      this.selected = filteredEntries[Math.max(0, newSelectedIndex)].id;
     }
     
-    const html = this._formatEntries(filteredEntries, this._selectedId, filterInputValue);
+    const html = this._formatEntries(filteredEntries, this.selected, filterInputValue);
     DomUtils.getShadowId(this, ID_RESULTS).innerHTML = html;
   }
 
@@ -240,10 +178,6 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     resultsDiv.scrollTop = selectedRelativeTop;
   }
 
-  //-----------------------------------------------------------------------
-  /**
-   * 
-   */
   private handleKeyDown(ev: KeyboardEvent) {
     if (ev.key === "Escape") {
       this._okId(null);
@@ -265,12 +199,12 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
         return;
       }
   
-      const selectedIndex = filteredEntries.findIndex( (entry) => entry.id === this._selectedId);
+      const selectedIndex = filteredEntries.findIndex( (entry) => entry.id === this.selected);
       
       if (ev.key === "Enter") {
         // Enter
-        if (this._selectedId !== null) {
-          this._okId(this._selectedId);
+        if (this.selected !== null) {
+          this._okId(this.selected);
         }
       } else {
         
@@ -287,15 +221,15 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
         
         if (isUp) {
           if (ev.key === "Home") {
-            this._selectedId = filteredEntries[0].id;
+            this.selected = filteredEntries[0].id;
           } else {
-            this._selectedId = filteredEntries[Math.max(0, selectedIndex-stepSize)].id;
+            this.selected = filteredEntries[Math.max(0, selectedIndex-stepSize)].id;
           }
         } else {
           if (ev.key === "End") {
-            this._selectedId = filteredEntries[filteredEntries.length-1].id;
+            this.selected = filteredEntries[filteredEntries.length-1].id;
           } else {
-            this._selectedId = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+stepSize)].id;
+            this.selected = filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+stepSize)].id;
           }
         }
         
@@ -317,9 +251,6 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     }
   }
 
-  /**
-   * 
-   */
   open(x: number, y: number, width: number, height: number): void {
     const resultsDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_RESULTS);
     resultsDiv.style.maxHeight = `${height/2}px`;
@@ -335,9 +266,6 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     this._scrollToSelected();      
   }
 
-  /**
-   * 
-   */
   close(): void {
     const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
     dialog.close();
