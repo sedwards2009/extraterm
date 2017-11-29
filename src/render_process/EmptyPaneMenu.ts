@@ -24,8 +24,6 @@ const ID_TITLE = "ID_TITLE";
 
 let registered = false;
 
-ListPicker.init();
-
 /**
  * The Extraterm Empty Pane Menu.
  */

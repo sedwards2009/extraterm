@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -16,65 +17,72 @@ const ID_DIALOG = "ID_DIALOG";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
 
-let registered = false;
-
 /**
  * A List Picker.
  */
-export class ListPicker<T extends { id: string; }> extends ThemeableElementBase {
+@WebComponent({tag: "et-listpicker"})
+ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-LISTPICKER";
-
   static ATTR_DATA_ID = "data-id";
-
   static CLASS_RESULT_SELECTED = "CLASS_RESULT_SELECTED";
-  
   static CLASS_RESULT_ENTRY = "CLASS_RESULT_ENTRY";
 
-  /**
-   * Initialize the PopDownListPicker class and resources.
-   *
-   * When PopDownListPicker is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    PopDownDialog.init();
-    if (registered === false) {
-      window.customElements.define(ListPicker.TAG_NAME.toLowerCase(), ListPicker);
-      registered = true;
-    }
-  }
-
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically.
   private _log: Logger;
-  
-
-  private _entries: T[];
-
-  private _selectedId: string;
-
+  private _entries: T[] = [];
+  private _selectedId: string = null;
   private _filterEntries: (entries: T[], filterText: string) => T[];
-
   private _formatEntries: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string;
+  private _laterHandle: DomUtils.LaterHandle = null;
+  private _extraCssFiles: ThemeTypes.CssFile[] = [];
 
-  private _laterHandle: DomUtils.LaterHandle;
-
-  private _extraCssFiles: ThemeTypes.CssFile[];
-
-  private _initProperties(): void {
+  constructor() {
+    super();
     this._log = getLogger(ListPicker.TAG_NAME, this);
-    this._entries = [];
-    this._selectedId = null;
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;
     this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): string => 
-      filteredEntries.map(entry => `<div ${ListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
-    this._laterHandle = null;
-    this._extraCssFiles = [];
+    filteredEntries.map(entry => `<div ${ListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
+
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+    const clone = this.createClone();
+    shadow.appendChild(clone);
+    this.installThemeCss();
+
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+    filterInput.addEventListener('input', (ev: Event) => {
+      this._updateEntries();
+    });
+    
+    filterInput.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
+    
+    const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
+    resultsDiv.addEventListener('click', (ev: Event) => {
+      for (let node of ev.path) {
+        if (node instanceof HTMLElement) {
+          const dataId = node.attributes.getNamedItem(ListPicker.ATTR_DATA_ID);
+          if (dataId !== undefined && dataId !== null) {
+            this._okId(dataId.value);
+          }
+        }
+      }
+    });
+  }
+
+  private createClone(): Node {
+    let template = <HTMLTemplateElement>window.document.getElementById(ID);
+    if (template === null) {
+      template = <HTMLTemplateElement>window.document.createElement('template');
+      template.id = ID;
+      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
+        <div id="${ID_DIALOG}">
+          <div class="form-group"><input type="text" id="${ID_FILTER}" class="form-control input-sm" /></div>
+          <div id="${ID_RESULTS}"></div>
+        </div>
+        `;
+      window.document.body.appendChild(template);
+    }
+
+    return window.document.importNode(template.content, true);
   }
 
   focus(): void {
@@ -137,65 +145,6 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     this._extraCssFiles = [...this._extraCssFiles, ...extraCssFiles];
     this.updateThemeCss();
   }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-  constructor() {
-    super();
-    this._initProperties(); // Initialise our properties. The constructor was not called.
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.updateThemeCss();
-
-    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
-    filterInput.addEventListener('input', (ev: Event) => {
-      this._updateEntries();
-    });
-    
-    filterInput.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
-    
-    const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
-    resultsDiv.addEventListener('click', (ev: Event) => {
-      for (let node of ev.path) {
-        if (node instanceof HTMLElement) {
-          const dataId = node.attributes.getNamedItem(ListPicker.ATTR_DATA_ID);
-          if (dataId !== undefined && dataId !== null) {
-            this._okId(dataId.value);
-          }
-        }
-      }
-    });
-  }
-  
-  /**
-   * 
-   */
-  private createClone(): Node {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
-        <div id="${ID_DIALOG}">
-          <div class="form-group"><input type="text" id="${ID_FILTER}" class="form-control input-sm" /></div>
-          <div id="${ID_RESULTS}"></div>
-        </div>
-        `;
-      window.document.body.appendChild(template);
-    }
-
-    return window.document.importNode(template.content, true);
-  }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME,
@@ -225,9 +174,6 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   }
 
   //-----------------------------------------------------------------------
-  /**
-   * 
-   */
   private handleKeyDown(ev: KeyboardEvent) {
     if (ev.key === "Escape") {
       this._okId(null);
@@ -300,9 +246,6 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     }
   }
 
-  /**
-   * 
-   */
   open(x: number, y: number, width: number, height: number): void {
     const resultsDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_RESULTS);
     resultsDiv.style.maxHeight = `${height/2}px`;
