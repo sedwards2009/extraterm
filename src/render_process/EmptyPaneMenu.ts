@@ -4,9 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-// Empty Pane Menu tab
-
-"use strict";
+import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
@@ -22,108 +20,22 @@ const ID_EMPTY_PANE_MENU = "ID_EMPTY_PANE_MENU";
 const ID_LIST_PICKER = "ID_LIST_PICKER";
 const ID_TITLE = "ID_TITLE";
 
-let registered = false;
 
 /**
  * The Extraterm Empty Pane Menu.
  */
+@WebComponent({tag: "et-empty-pane-menu"})
 export class EmptyPaneMenu extends ThemeableElementBase {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-EMPTY-PANE-MENU";
 
-  /**
-   * Initialize the EmptyPaneMenu class and resources.
-   *
-   * When EmptyPaneMenu is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(EmptyPaneMenu.TAG_NAME.toLowerCase(), EmptyPaneMenu);
-      registered = true;
-    }
-  }
-  
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically.
   private _log: Logger;
-  
-  private _entries: CommandMenuItem[];
-
-  private _selectedId: string;
-
-  private _initProperties(): void {
-    this._log = getLogger(EmptyPaneMenu.TAG_NAME, this);
-    this._entries = [];
-    this._selectedId = null;
-  }
-  
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
-
-  focus(): void {
-    const listPicker = DomUtils.getShadowId(this, ID_LIST_PICKER);
-    if (listPicker != null) {
-      listPicker.focus();
-    }
-  }
-
-  hasFocus(): boolean {
-    return false;
-  }
-
-  setEntries(entries: CommandMenuItem[]): void {
-    this._entries = entries;
-    this._selectedId = null;
-    
-    if (DomUtils.getShadowRoot(this) != null) {
-      const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
-      listPicker.setEntries(entries);
-    }
-  }
-
-  getEntries(): CommandMenuItem[] {
-    return this._entries;
-  }
-
-  getFilter(): string {
-    const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
-    return listPicker.getFilter();
-  }
-
-  setFilter(text: string): void {
-    const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
-    listPicker.setFilter(text);
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
+  private _entries: CommandMenuItem[] = [];
+  private _selectedId: string = null;
 
   constructor() {
     super();
-    this._initProperties();
+    this._log = getLogger(EmptyPaneMenu.TAG_NAME, this);
   }
   
   /**
@@ -172,5 +84,40 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.EMPTY_PANE_MENU];
+  }
+
+  focus(): void {
+    const listPicker = DomUtils.getShadowId(this, ID_LIST_PICKER);
+    if (listPicker != null) {
+      listPicker.focus();
+    }
+  }
+
+  hasFocus(): boolean {
+    return false;
+  }
+
+  setEntries(entries: CommandMenuItem[]): void {
+    this._entries = entries;
+    this._selectedId = null;
+    
+    if (DomUtils.getShadowRoot(this) != null) {
+      const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+      listPicker.setEntries(entries);
+    }
+  }
+
+  getEntries(): CommandMenuItem[] {
+    return this._entries;
+  }
+
+  getFilter(): string {
+    const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+    return listPicker.getFilter();
+  }
+
+  setFilter(text: string): void {
+    const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+    listPicker.setFilter(text);
   }
 }

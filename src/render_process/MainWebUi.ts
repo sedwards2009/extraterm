@@ -127,7 +127,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     EtKeyBindingsTab.init();
     AboutTab.init();
     EtViewerTab.init();
-    EmptyPaneMenu.init();
 
     if (registered === false) {
       window.customElements.define(MainWebUi.TAG_NAME.toLowerCase(), MainWebUi);
