@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
+
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -13,7 +15,6 @@ import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 
 const ID = "EtSplitterTemplate";
-let registered = false;
 
 const ID_TOP = "ID_TOP";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -40,48 +41,54 @@ export enum SplitOrientation {
  * A widget to display panes of widgets separated by a moveable gap/bar.
  *
  */
+@WebComponent({tag: "et-splitter"})
 export class Splitter extends ThemeableElementBase {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-SPLITTER";
   
-  /**
-   * Initialize the TabWidget class and resources.
-   *
-   * When TabWidget is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(Splitter.TAG_NAME.toLowerCase(), Splitter);
-      registered = true;
-    }
-  }
-  
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  
-  private _mutationObserver: MutationObserver;
-  
-  private _orientation: SplitOrientation;
-
+  private _mutationObserver: MutationObserver = null;
+  private _orientation: SplitOrientation = SplitOrientation.VERTICAL;
   private _paneSizes: PaneSizes;
+  private _dividerDrag: number = NOT_DRAGGING; // The number of the divider currently being dragged. -1 means not dragging.
+  private _dividerDragOffset: number = 0;
 
-  private _dividerDrag: number; // The number of the divider currently being dragged. -1 means not dragging.
+  constructor() {
+    super();
 
-  private _dividerDragOffset: number;
-
-  private _initProperties(): void {
     this._log = getLogger(Splitter.TAG_NAME, this);
     this._paneSizes = new PaneSizes();
-    this._mutationObserver = null;
-    this._orientation = SplitOrientation.VERTICAL;
-    this._dividerDrag = NOT_DRAGGING;
-    this._dividerDragOffset = 0;
+
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+    const clone = this.createClone();
+    shadow.appendChild(clone);
+
+    const topDiv = DomUtils.getShadowId(this, ID_TOP);
+    topDiv.classList.add(CLASS_NORMAL);
+    topDiv.addEventListener('mousedown', this._handleMouseDown.bind(this));
+    topDiv.addEventListener('mouseup', this._handleMouseUp.bind(this));
+    topDiv.addEventListener('mousemove', this._handleMouseMove.bind(this));
+
+    const coverDiv = DomUtils.getShadowId(this, ID_COVER);
+    coverDiv.addEventListener('mouseleave', this._handleMouseLeave.bind(this));
+
+    const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
+    indicatorDiv.style.width = "" + DIVIDER_SIZE + "px";
+
+    const rect = topDiv.getBoundingClientRect();
+    const width = rect.width === 0 ? 1024 : rect.width;
+    this._paneSizes = PaneSizes.equalPaneSizes(width, DomUtils.toArray(this.children));
+
+    topDiv.classList.add(CLASS_VERTICAL);
+
+    this._mutationObserver = new MutationObserver(this._handleMutations.bind(this));
+    this._mutationObserver.observe(this, { childList: true });
+
+    this.updateThemeCss();
+  }
+
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_SPLITTER];
   }
   
   getSplitOrientation(): SplitOrientation {
@@ -128,56 +135,6 @@ export class Splitter extends ThemeableElementBase {
     }
     return result;
   }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-                                                           
-  constructor() {
-    super();
-
-    this._initProperties();
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
-    topDiv.classList.add(CLASS_NORMAL);
-    topDiv.addEventListener('mousedown', this._handleMouseDown.bind(this));
-    topDiv.addEventListener('mouseup', this._handleMouseUp.bind(this));
-    topDiv.addEventListener('mousemove', this._handleMouseMove.bind(this));
-
-    const coverDiv = DomUtils.getShadowId(this, ID_COVER);
-    coverDiv.addEventListener('mouseleave', this._handleMouseLeave.bind(this));
-
-    const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
-    indicatorDiv.style.width = "" + DIVIDER_SIZE + "px";
-
-    const rect = topDiv.getBoundingClientRect();
-    const width = rect.width === 0 ? 1024 : rect.width;
-    this._paneSizes = PaneSizes.equalPaneSizes(width, DomUtils.toArray(this.children));
-
-    topDiv.classList.add(CLASS_VERTICAL);
-
-    this._mutationObserver = new MutationObserver(this._handleMutations.bind(this));
-    this._mutationObserver.observe(this, { childList: true });
-
-    this.updateThemeCss();
-  }
-
-  protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_SPLITTER];
-  }
-  
-  //-----------------------------------------------------------------------
   
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     if (DomUtils.getShadowRoot(this) !== null && DomUtils.isNodeInDom(this)) {
@@ -200,9 +157,6 @@ export class Splitter extends ThemeableElementBase {
     }
   }
 
-  /**
-   * 
-   */
   private createClone() {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -230,7 +184,6 @@ export class Splitter extends ThemeableElementBase {
   //   #######   ##   ###### #    #   #    ####  
   //
   //-----------------------------------------------------------------------
-                                           
 
   private _handleMouseDown(ev: MouseEvent): void {
     const target = <HTMLElement> ev.target;

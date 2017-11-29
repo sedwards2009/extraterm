@@ -127,7 +127,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     EtKeyBindingsTab.init();
     AboutTab.init();
     EtViewerTab.init();
-    Splitter.init();
     EmptyPaneMenu.init();
 
     if (registered === false) {

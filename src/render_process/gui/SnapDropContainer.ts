@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
+
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
@@ -23,8 +25,6 @@ const CLASS_DROP_TARGET_NORTH = "CLASS_DROP_TARGET_NORTH";
 const CLASS_DROP_TARGET_SOUTH = "CLASS_DROP_TARGET_SOUTH";
 const CLASS_DROP_TARGET_EAST = "CLASS_DROP_TARGET_EAST";
 const CLASS_DROP_TARGET_WEST = "CLASS_DROP_TARGET_WEST";
-
-let registered = false;
 
 
 export enum DropLocation {
@@ -53,52 +53,16 @@ const SUPPORTED_MIMETYPES = [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE];
 /**
  * A container which supports splitting and snapping for dragged items.
  */
+@WebComponent({tag: "et-snapdropcontainer"})
 export class SnapDropContainer extends ThemeableElementBase {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-SNAPDROPCONTAINER";
-
   static EVENT_DROPPED = "snapdropcontainer-dropped";
-
-  /**
-   * Initialize the SnapDropContainer class and resources.
-   *
-   * When SnapDropContainer is imported into a render process, this static
-   * method must be called before an instances may be created. This is can
-   * be safely called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(SnapDropContainer.TAG_NAME.toLowerCase(), SnapDropContainer);
-      registered = true;
-    }
-  }
-
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
 
-  private _initProperties(): void {
-    this._log = getLogger(SnapDropContainer.TAG_NAME, this);
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-                                                           
   constructor() {
     super();
-    this._initProperties();
+    this._log = getLogger(SnapDropContainer.TAG_NAME, this);
 
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();

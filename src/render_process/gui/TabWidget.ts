@@ -18,7 +18,6 @@ import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 
 StackedWidget.init();
-SnapDropContainer.init();
 
 const ID = "EtTabWidgetTemplate";
 const ATTR_TAG = 'data-et-tag';
