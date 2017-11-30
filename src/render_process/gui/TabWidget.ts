@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
+
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import {StackedWidget} from './StackedWidget';
@@ -17,16 +19,12 @@ import * as _ from 'lodash';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 
-StackedWidget.init();
-
 const ID = "EtTabWidgetTemplate";
 const ATTR_TAG = 'data-et-tag';
 const ATTR_SHOW_FRAME = "show-frame";
 
 const ATTR_TAG_REST_LEFT = "rest-left";
 const ATTR_TAG_REST_RIGHT = "rest";
-
-let registered = false;
 
 const ID_TOP = "ID_TOP";
 const ID_TABBAR = "ID_TABBAR";
@@ -56,61 +54,21 @@ export interface DroppedEventDetail {
  *
  * See Tab.
  */
+@WebComponent({tag: "et-tabwidget"})
 export class TabWidget extends ThemeableElementBase {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-TABWIDGET";
-  
-  /**
-   * Initialize the TabWidget class and resources.
-   *
-   * When TabWidget is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(TabWidget.TAG_NAME.toLowerCase(), TabWidget);
-      registered = true;
-    }
-  }
-  
   static EVENT_TAB_SWITCH = "tab-switch";
-  
   static EVENT_DROPPED = "tabwidget-dropped";
 
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  
-  private _mutationObserver: MutationObserver;
-  
-  private _showTabs: boolean;
+  private _mutationObserver: MutationObserver = null;
 
-  private _initProperties(): void {
-    this._log = getLogger(TabWidget.TAG_NAME, this);
-    this._mutationObserver = null;
-    this._showTabs = true;
-  }
-  
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-                                                           
   constructor() {
     super();
 
-    this._initProperties();
+    this._log = getLogger(TabWidget.TAG_NAME, this);
+
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);
@@ -118,7 +76,7 @@ export class TabWidget extends ThemeableElementBase {
     
     this.createTabHolders();
     this.setSelectedIndex(0);
-    this._showFrame(this.getShowFrame());
+    this._showFrame(this.showFrame);
     
     this._mutationObserver = new MutationObserver( (mutations) => {
       this.createTabHolders();
@@ -128,30 +86,17 @@ export class TabWidget extends ThemeableElementBase {
     this._setupDragAndDrop();
   }
 
-  static get observedAttributes(): string[] {
-    return [ATTR_SHOW_FRAME];
+  @Attribute({default: true}) showTabs: boolean;
+
+  @Observe("showTabs")
+  private _observeShowTabs(target: string): void {
+    this.update();
   }
-  
-  /**
-   * Custom Element 'attribute changed' hook.
-   */
-  attributeChangedCallback(attrName: string, oldValue: string, newValue: string): void {
-    switch (attrName) {
-      case ATTR_SHOW_FRAME:
-        this._showFrame(Util.toBoolean(newValue));
-        break;
-        
-      default:
-        break;
-    }
-  }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_TABWIDGET];
   }
   
-  //-----------------------------------------------------------------------
-
   update(): void {
     this.createTabHolders();
   }  
@@ -254,7 +199,7 @@ export class TabWidget extends ThemeableElementBase {
     } else {
       catchAllLi = <HTMLLIElement> catchAlls[0];
     }
-    if (this._showTabs) {
+    if (this.showTabs) {
       // Create tabs.
       let tabElementCount = tabbar.querySelectorAll("." + CLASS_TAB).length;
       while (tabElementCount < tabCount) {
@@ -351,15 +296,15 @@ export class TabWidget extends ThemeableElementBase {
       return;
     }
     
-    if (this._getContentsStack().getCurrentIndex() === index) {
+    if (this._getContentsStack().currentIndex === index) {
       return;
     }
-    this._getContentsStack().setCurrentIndex(index);
+    this._getContentsStack().currentIndex = index;
     this._showTab(index);
   }
   
   getSelectedIndex(): number {
-    return this._getContentsStack().getCurrentIndex();
+    return this._getContentsStack().currentIndex;
   }
   
   private _getTabs(): Tab[] {
@@ -383,30 +328,12 @@ export class TabWidget extends ThemeableElementBase {
     return currentTab;
   }
   
-  setShowFrame(value: boolean): void {
-    this.setAttribute(ATTR_SHOW_FRAME, "" + value);
-  }
-  
-  getShowFrame(): boolean {
-    if (this.hasAttribute(ATTR_SHOW_FRAME)) {
-      return Util.toBoolean(this.getAttribute(ATTR_SHOW_FRAME));
-    } else {
-      return true;
-    }
-  }
-  
-  setShowTabs(show: boolean): void {
-    if (show !== this._showTabs) {
-      this._showTabs = show;
-      this.update();
-    }
+  @Attribute({default: true}) showFrame: boolean;
+
+  private _observeShowFrame(target: string): void {
+    this._showFrame(this.showFrame);
   }
 
-  getShowTabs(): boolean {
-    return this._showTabs;
-  }
-
-  //-----------------------------------------------------------------------
   private _showFrame(value: boolean): void {
     if (value) {
       this._getTop().classList.add('show_frame');
@@ -416,7 +343,7 @@ export class TabWidget extends ThemeableElementBase {
   }
   
   private _showTab(index: number): void {
-    if (this._showTabs) {
+    if (this.showTabs) {
       const tabbar = this._getTabbar();
       let tabCounter = 0;
       for (let i=0; i<tabbar.children.length; i++) {

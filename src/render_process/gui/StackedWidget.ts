@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import {ThemeableElementBase} from '../ThemeableElementBase';
@@ -14,55 +15,20 @@ const ID = "EtStackedWidgetTemplate";
 const ID_CONTAINER = 'ID_CONTAINER';
 const ATTR_INDEX = 'data-et-index';
 
-let registered = false;
 
 /**
  * A widget which displays one of its DIV contents at a time.
  */
+@WebComponent({tag: "et-stackedwidget"})
 export class StackedWidget extends ThemeableElementBase {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = 'ET-STACKEDWIDGET';
   
-  /**
-   * Initialize the StackedWidget class and resources.
-   *
-   * When StackedWidget is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(StackedWidget.TAG_NAME.toLowerCase(), StackedWidget);
-      registered = true;
-    }
-  }
-  
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _currentIndex: number;
-
-  private _initProperties(): void {
-    this._currentIndex = -1;
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
   
   constructor() {
     super();
-    this._initProperties();
+    this._currentIndex = -1;
   }
   
   connectedCallback(): void {
@@ -80,9 +46,6 @@ export class StackedWidget extends ThemeableElementBase {
     this.showIndex(0);
   }
   
-  /**
-   * 
-   */
   private createClone() {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -96,9 +59,6 @@ export class StackedWidget extends ThemeableElementBase {
     return window.document.importNode(template.content, true);
   }
 
-  /**
-   * 
-   */
   private __getById(id:string): Element {
     return DomUtils.getShadowRoot(this).querySelector('#'+id);
   }
@@ -136,17 +96,19 @@ export class StackedWidget extends ThemeableElementBase {
     return result;
   }
   
-  setCurrentIndex(index: number): void {
-    if (index < 0 || index >= this.childElementCount) {
-      return;
-    }
+  @Attribute({default: -1}) currentIndex: number;
 
-    this._currentIndex = index;
-    this.showIndex(index);
+  @Filter("currentIndex")
+  private _filterCurrentIndex(index: number): number {
+    if (index < 0 || index >= this.childElementCount) {
+      return undefined;
+    }
+    return index;
   }
-  
-  getCurrentIndex(): number {
-    return this._currentIndex;
+
+  @Observe("currentIndex")
+  private _observeCurrentIndex(target: string): void {
+    this.showIndex(this.currentIndex);
   }
   
   private showIndex(index: number): void {

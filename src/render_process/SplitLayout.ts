@@ -93,7 +93,7 @@ export class SplitLayout {
 
     const tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
     tabWidget.id = this._nextTabWidgetId();
-    tabWidget.setShowFrame(false);
+    tabWidget.showFrame = false;
     this._rootInfoNode = {type: "tabwidget", children: [], tabWidget: tabWidget, emptyTab: null,
       emptyTabContent: null, emptyContainer: null, leftSpaceDefaultElement: null, rightSpaceDefaultElement: null};
   }
@@ -474,7 +474,7 @@ export class SplitLayout {
     // Create a new TabWidget
     const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
     newTabWidget.id = this._nextTabWidgetId();
-    newTabWidget.setShowFrame(false);
+    newTabWidget.showFrame = false;
     const newTabWidgetInfo: TabWidgetInfoNode = {
       type: "tabwidget",
       children: children,
@@ -737,7 +737,7 @@ export class SplitLayout {
     if (infoNode.tabWidget  == null) {
       infoNode.tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
       infoNode.tabWidget.id = this._nextTabWidgetId();
-      infoNode.tabWidget.setShowFrame(false);
+      infoNode.tabWidget.showFrame = false;
     }
     const tabWidget = infoNode.tabWidget;
 
@@ -799,7 +799,7 @@ export class SplitLayout {
     }
 
     DomUtils.setElementChildren(tabWidget, targetChildrenList);
-    tabWidget.setShowTabs(infoNode.children.length !== 0);
+    tabWidget.showTabs = infoNode.children.length !== 0;
     tabWidget.update();
   }
 }

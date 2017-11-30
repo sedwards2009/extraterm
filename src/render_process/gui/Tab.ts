@@ -8,31 +8,12 @@ import * as Util from './Util';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 
-let registered = false;
-
 /**
  * Holds the contents of one tab inside a TabWidget tag.
  */
 export class Tab extends HTMLElement {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-TAB";
-
-  /**
-   * Initialize the Tab class and resources.
-   *
-   * When Tab is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(Tab.TAG_NAME.toLowerCase(), Tab);
-      registered = true;
-    }
-  }
 
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().

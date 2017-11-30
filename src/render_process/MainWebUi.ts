@@ -120,8 +120,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   // Statics
   
   static init(): void {
-    Tab.init();
-    TabWidget.init();
     EtTerminal.init();
     SettingsTab.init();
     EtKeyBindingsTab.init();
