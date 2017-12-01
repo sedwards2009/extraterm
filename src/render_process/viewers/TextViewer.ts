@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as SourceDir from '../../SourceDir';
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
@@ -56,7 +57,7 @@ const COMMANDS = [
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 const DEBUG_RESIZE = false;
 
-let registered = false;
+let classInitialized = false;
 
 CodeMirrorCommands.init();
 
@@ -81,22 +82,23 @@ function LoadCodeMirrorMode(modeName: string): void {
   loadedCodeMirrorModes.add(modeName);
 }
 
+function init(): void {
+  if (classInitialized === false) {
+    
+    // Load the CSS resources now.
+    cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
+      + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
+
+    classInitialized = true;
+  }
+}
+
+
+@WebComponent({tag: "et-text-viewer"})
 export class TextViewer extends ViewerElement implements Commandable, AcceptsKeyBindingManager,
     SupportsClipboardPaste.SupportsClipboardPaste {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
-  
-  static init(): void {
-    if (registered === false) {
-      
-      // Load the CSS resources now.
-      cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
-        + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
-
-      window.customElements.define(TextViewer.TAG_NAME.toLowerCase(), TextViewer);
-      registered = true;
-    }
-  }
   
   /**
    * Type guard for detecting a EtTerminalViewer instance.
@@ -108,56 +110,192 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     return node !== null && node !== undefined && node instanceof TextViewer;
   }
   
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  private _keyBindingManager: KeyBindingManager;
-  private _bulkFileHandle: BulkFileHandle;
-  private _mimeType: string;
+  private _keyBindingManager: KeyBindingManager = null;
+  private _bulkFileHandle: BulkFileHandle = null;
+  private _mimeType: string = null;
   
-  private _commandLine: string; // FIXME needed?
-  private _returnCode: string;  // FIXME needed?
-  private _codeMirror: CodeMirror.Editor;
-  private _height: number;
-  private _isEmpty: boolean;
-  private _mode: ViewerElementTypes.Mode;
-  private _editable: boolean;
+  private _commandLine: string = null; // FIXME needed?
+  private _returnCode: string = null;  // FIXME needed?
+  private _codeMirror: CodeMirror.Editor = null;
+  private _height = 0;
+  private _isEmpty = false;
+  private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
+  private _editable = false;
   private document: Document;
-  private _visualState: VisualState;
+  private _visualState: VisualState = VisualState.AUTO;
 
-  private _mainStyleLoaded: boolean;
-  private _resizePollHandle: DomUtils.LaterHandle;
+  private _mainStyleLoaded = false;
+  private _resizePollHandle: DomUtils.LaterHandle = null;
 
-  private _lastCursorAnchorPosition: CodeMirror.Position;
-  private _lastCursorHeadPosition: CodeMirror.Position;
-  private _viewportHeight: number;  // Used to detect changes in the viewport size when in cursor mode.
+  private _lastCursorAnchorPosition: CodeMirror.Position = null;
+  private _lastCursorHeadPosition: CodeMirror.Position = null;
+  private _viewportHeight = -1;  // Used to detect changes in the viewport size when in cursor mode.
   
   // The current element height. This is a cached value used to prevent touching the DOM.
-  private _currentElementHeight: number;
+  private _currentElementHeight = -1;
 
-  private _initProperties(): void {
-    this._keyBindingManager = null;
-    this._bulkFileHandle = null;
-    this._mimeType = null;
+  constructor() {
+    super();
+    init();
+
     this._log = getLogger(TextViewer.TAG_NAME, this);
-    this._commandLine = null;
-    this._returnCode = null;
-    this._editable = false;
-    this._codeMirror = null;
-    this._height = 0;
-    this._isEmpty = false;
-    this._mode = ViewerElementTypes.Mode.DEFAULT;
     this.document = document;
-    this._visualState = VisualState.AUTO;
+  }
+  
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (DomUtils.getShadowRoot(this) !== null) {
+      return;
+    }
     
-    this._currentElementHeight = -1;
+    const shadow = this.attachShadow( { mode: 'open', delegatesFocus: true } );
+    const clone = this.createClone();
+    shadow.appendChild(clone);
     
-    this._mainStyleLoaded = false;
-    this._resizePollHandle = null;
+    this._initFontLoading();
+    this.installThemeCss();
+
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+
+    this.style.height = "0px";
+    this._exitCursorMode();
+    this._mode = ViewerElementTypes.Mode.DEFAULT;
+
+    const codeMirrorOptions: CodeMirror.EditorConfiguration = {
+      value: "",
+      readOnly: true,
+      lineNumbers: true,
+      scrollbarStyle: "overlay",
+      cursorScrollMargin: 0,
+      showCursorWhenSelecting: true,
+      theme: "text",
+      keyMap: this._codeMirrorKeyMap()
+    };
+
+    if (this._mimeType !== null) {
+      codeMirrorOptions.mode = this._mimeType;
+    }
+
+    // Create the CodeMirror instance
+    this._codeMirror = CodeMirror( (el: HTMLElement): void => {
+      containerDiv.appendChild(el);
+    }, codeMirrorOptions);
+
+    this._codeMirror.on("cursorActivity", () => {
+      const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
+                              (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
+      if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
+        this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
+        this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
+        
+        const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+        this.dispatchEvent(event);
+      }
+    });
     
-    this._lastCursorAnchorPosition = null;
-    this._lastCursorHeadPosition = null;
-    this._viewportHeight = -1;
+    this._codeMirror.on("scroll", () => {
+      // Over-scroll bug/feature fix
+      const scrollInfo = this._codeMirror.getScrollInfo();
+      // this._log.debug("codemirror event scroll:", scrollInfo);
+      
+      const clientYScrollRange = this._getClientYScrollRange();
+      if (scrollInfo.top > clientYScrollRange) {
+        this._codeMirror.scrollTo(0, clientYScrollRange);
+      }
+    });
+    
+    this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
+      if (this._visualState === VisualState.AUTO) {
+        const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+        containerDiv.classList.add(CLASS_FOCUSED);
+        containerDiv.classList.remove(CLASS_UNFOCUSED);
+      }
+    });
+
+    this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
+      if (this._visualState === VisualState.AUTO) {
+        containerDiv.classList.add(CLASS_UNFOCUSED);
+        containerDiv.classList.remove(CLASS_FOCUSED);
+      }
+    });
+    
+    this._codeMirror.on("beforeSelectionChange", (instance: CodeMirror.Editor, obj): void => {
+        // obj: { ranges: {anchor: CodeMirror.Position; head: CodeMirror.Position; }[]; }
+      if (obj.ranges.length === 0) {
+        return;
+      }
+      
+      if (obj.ranges.length === 1) {
+        const pair = obj.ranges[0];
+        if (_.isEqual(pair.anchor, pair.head)) {
+          return;
+        }
+      }
+      this._emitBeforeSelectionChangeEvent(obj.origin === "*mouse");
+    });
+
+    this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
+      const isUp = name === "PageUp" || name === "Up";
+      const isDown = name === "PageDown" || name === "Down";
+      if (isUp || isDown) {
+        const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
+        const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
+        
+        if (this._lastCursorHeadPosition !== null && this._lastCursorAnchorPosition !== null
+            && _.isEqual(this._lastCursorHeadPosition, this._lastCursorAnchorPosition)  // check for no selection
+            && _.isEqual(cursorHeadPos, cursorAnchorPos)  // check for no selection
+            && this._lastCursorHeadPosition.line === cursorHeadPos.line) {
+
+          // The last action didn't move the cursor.
+          const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
+          DomUtils.doLater( () => {
+            const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
+                                                                    ? ViewerElementTypes.Edge.TOP
+                                                                    : ViewerElementTypes.Edge.BOTTOM,
+                                                                  ch: ch };
+            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+            this.dispatchEvent(event);
+          });
+        }
+      }
+    });
+    
+    this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
+      if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
+        return;
+      }
+      
+      const height = to - from;
+      if (height !== this._viewportHeight) {
+        this._viewportHeight = height;
+        DomUtils.doLater(this._emitVirtualResizeEvent.bind(this));
+      }
+    });
+    
+    // Filter the keyboard events before they reach CodeMirror.
+    containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
+    containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
+    containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
+    containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
+
+    const codeMirrorElement = this._codeMirror.getWrapperElement();
+    
+    this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
+      ev.preventDefault();
+    });
+        
+    this._applyVisualState(this._visualState);
+
+    if (this._bulkFileHandle !== null) {
+      this._loadBulkFile(this._bulkFileHandle);
+    }
+
+    this._adjustHeight(this._height);
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
 
   //-----------------------------------------------------------------------
@@ -446,176 +584,6 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._emitVirtualResizeEvent();
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-  constructor() {
-    super();
-    this._initProperties();
-  }
-  
-  connectedCallback(): void {
-    super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) !== null) {
-      return;
-    }
-    
-    const shadow = this.attachShadow( { mode: 'open', delegatesFocus: true } );
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    
-    this._initFontLoading();
-    this.installThemeCss();
-
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-
-    this.style.height = "0px";
-    this._exitCursorMode();
-    this._mode = ViewerElementTypes.Mode.DEFAULT;
-
-    const codeMirrorOptions: CodeMirror.EditorConfiguration = {
-      value: "",
-      readOnly: true,
-      lineNumbers: true,
-      scrollbarStyle: "overlay",
-      cursorScrollMargin: 0,
-      showCursorWhenSelecting: true,
-      theme: "text",
-      keyMap: this._codeMirrorKeyMap()
-    };
-
-    if (this._mimeType !== null) {
-      codeMirrorOptions.mode = this._mimeType;
-    }
-
-    // Create the CodeMirror instance
-    this._codeMirror = CodeMirror( (el: HTMLElement): void => {
-      containerDiv.appendChild(el);
-    }, codeMirrorOptions);
-
-    this._codeMirror.on("cursorActivity", () => {
-      const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
-                              (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
-      if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
-        this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
-        this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
-        
-        const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-        this.dispatchEvent(event);
-      }
-    });
-    
-    this._codeMirror.on("scroll", () => {
-      // Over-scroll bug/feature fix
-      const scrollInfo = this._codeMirror.getScrollInfo();
-      // this._log.debug("codemirror event scroll:", scrollInfo);
-      
-      const clientYScrollRange = this._getClientYScrollRange();
-      if (scrollInfo.top > clientYScrollRange) {
-        this._codeMirror.scrollTo(0, clientYScrollRange);
-      }
-    });
-    
-    this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
-      if (this._visualState === VisualState.AUTO) {
-        const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-        containerDiv.classList.add(CLASS_FOCUSED);
-        containerDiv.classList.remove(CLASS_UNFOCUSED);
-      }
-    });
-
-    this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
-      if (this._visualState === VisualState.AUTO) {
-        containerDiv.classList.add(CLASS_UNFOCUSED);
-        containerDiv.classList.remove(CLASS_FOCUSED);
-      }
-    });
-    
-    this._codeMirror.on("beforeSelectionChange", (instance: CodeMirror.Editor, obj): void => {
-        // obj: { ranges: {anchor: CodeMirror.Position; head: CodeMirror.Position; }[]; }
-      if (obj.ranges.length === 0) {
-        return;
-      }
-      
-      if (obj.ranges.length === 1) {
-        const pair = obj.ranges[0];
-        if (_.isEqual(pair.anchor, pair.head)) {
-          return;
-        }
-      }
-      this._emitBeforeSelectionChangeEvent(obj.origin === "*mouse");
-    });
-
-    this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
-      const isUp = name === "PageUp" || name === "Up";
-      const isDown = name === "PageDown" || name === "Down";
-      if (isUp || isDown) {
-        const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
-        const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
-        
-        if (this._lastCursorHeadPosition !== null && this._lastCursorAnchorPosition !== null
-            && _.isEqual(this._lastCursorHeadPosition, this._lastCursorAnchorPosition)  // check for no selection
-            && _.isEqual(cursorHeadPos, cursorAnchorPos)  // check for no selection
-            && this._lastCursorHeadPosition.line === cursorHeadPos.line) {
-
-          // The last action didn't move the cursor.
-          const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
-          DomUtils.doLater( () => {
-            const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
-                                                                    ? ViewerElementTypes.Edge.TOP
-                                                                    : ViewerElementTypes.Edge.BOTTOM,
-                                                                  ch: ch };
-            const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-            this.dispatchEvent(event);
-          });
-        }
-      }
-    });
-    
-    this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
-      if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
-        return;
-      }
-      
-      const height = to - from;
-      if (height !== this._viewportHeight) {
-        this._viewportHeight = height;
-        DomUtils.doLater(this._emitVirtualResizeEvent.bind(this));
-      }
-    });
-    
-    // Filter the keyboard events before they reach CodeMirror.
-    containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
-    containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
-    containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
-    containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
-
-    const codeMirrorElement = this._codeMirror.getWrapperElement();
-    
-    this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
-      ev.preventDefault();
-    });
-        
-    this._applyVisualState(this._visualState);
-
-    if (this._bulkFileHandle !== null) {
-      this._loadBulkFile(this._bulkFileHandle);
-    }
-
-    this._adjustHeight(this._height);
-  }
-  
-  protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.TEXT_VIEWER];
-  }
 
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     if (this._codeMirror !== null) {

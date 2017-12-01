@@ -3,6 +3,8 @@
  */
 
 "use strict";
+import {WebComponent} from 'extraterm-web-component-decorators';
+
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as DomUtils from '../DomUtils';
 import * as markdownMod from 'markdown';
@@ -17,26 +19,13 @@ const ENCODING_ATTR = "encoding";
 const ENCODING_PLAIN = "plain";
 const ENCODING_BASE64 = "base64";
 
-let registered = false;
 
+@WebComponent({tag: "et-markdown-viewer"})
 class EtMarkdownViewer extends ViewerElement {
   
   static TAG_NAME = "ET-MARKDOWN-VIEWER";
   
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(EtMarkdownViewer.TAG_NAME.toLowerCase(), EtMarkdownViewer);
-      registered = true;
-    }
-  }
-
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically.
-  private _focusable: boolean;
-  
-  private _initProperties(): void {
-    this._focusable = false;
-  }
+  private _focusable = false;
 
   getAwesomeIcon(): string {
     return "file-text-o";
@@ -73,7 +62,6 @@ class EtMarkdownViewer extends ViewerElement {
 
   constructor() {
     super();
-    this._initProperties();
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);

@@ -103,8 +103,6 @@ export function startUp(): void {
   allPromise.then(loadFontFaces)
             .then( () => {
 
-    startUpComponents();
-
     const doc = window.document;
     doc.body.classList.remove("preparing");
     doc.body.innerHTML = "";  // Remove the old contents.
@@ -168,11 +166,6 @@ function loadFontFaces(): Promise<FontFace[]> {
     }
   });
   return Promise.all<FontFace>( fontPromises );
-}
-
-function startUpComponents(): void {
-  // Fonts are loaded, continue.
-  MainWebUi.init();
 }
 
 function startUpMainWebUi(): void {

@@ -5,6 +5,7 @@
 "use strict";
 import * as _ from 'lodash';
 import * as fs from 'fs';
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
@@ -41,19 +42,13 @@ const COMMAND_GO_DOWN = "goDown";
 
 const DEBUG_SIZE = false;
 
-let registered = false;
 let instanceIdCounter = 0;
 
+
+@WebComponent({tag: "et-image-viewer"})
 export class ImageViewer extends ViewerElement {
 
   static TAG_NAME = "ET-IMAGE-VIEWER";
-  
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(ImageViewer.TAG_NAME.toLowerCase(), ImageViewer);
-      registered = true;
-    }
-  }
   
   /**
    * Type guard for detecting a EtTerminalViewer instance.
@@ -65,50 +60,63 @@ export class ImageViewer extends ViewerElement {
     return node !== null && node !== undefined && node instanceof ImageViewer;
   }
   
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  private _keyBindingManager: KeyBindingManager;
-
-  private _bulkFileHandle: BulkFileHandle;
-
-  private _text: string;
-  private _buffer: Buffer;
-  private _mimeType: string;
-  private _imageWidth: number;
-  private _imageHeight: number;
-  
-  private _cursorTop: number;
-  
-  private _height: number;
-  private _mode: ViewerElementTypes.Mode;
-  private document: Document;
-  private _visualState: VisualState;
-
-  private _viewportHeight: number;  // Used to detect changes in the viewport size when in CURSOR mode.
+  private _keyBindingManager: KeyBindingManager = null;
+  private _bulkFileHandle: BulkFileHandle = null;
+  private _text = null;
+  private _buffer: Buffer = null;
+  private _mimeType: string = null;
+  private _imageWidth = -1;
+  private _imageHeight = -1;
+  private _cursorTop = 0;
+  private _height = 0;
+  private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
+  private document: Document = null;
+  private _visualState: VisualState = VisualState.UNFOCUSED;
+  private _viewportHeight = -1;  // Used to detect changes in the viewport size when in CURSOR mode.
   
   // The current element height. This is a cached value used to prevent touching the DOM.
-  private _currentElementHeight: number;
+  private _currentElementHeight = -1;
 
-  private _initProperties(): void {
+  constructor() {
+    super();
     this._log = getLogger(ImageViewer.TAG_NAME, this);
-    this._keyBindingManager = null;
-    this._bulkFileHandle = null;
-    this._text = null;
-    this._buffer = null;
-    this._mimeType = null;
-    this._imageWidth = -1;
-    this._imageHeight = -1;
-    this._cursorTop = 0;
-
-    this._height = 0;
-    this._mode = ViewerElementTypes.Mode.DEFAULT;
     this.document = document;
-    this._visualState = VisualState.UNFOCUSED;
+  }
+  
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (DomUtils.getShadowRoot(this) !== null) {
+      return;
+    }
     
-    this._currentElementHeight = -1;
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+    const clone = this.createClone();
+    shadow.appendChild(clone);
+    this.updateThemeCss();
     
-    this._viewportHeight = -1;
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    this.style.height = "0px";
+    
+    containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
+    containerDiv.addEventListener('focus', (ev) => {
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+      this._cursorTop = containerDiv.scrollTop;
+    } );
+    
+    const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
+    imgElement.addEventListener('load', this._handleImageLoad.bind(this));
+    this._applyVisualState(this._visualState);
+
+    if (this._bulkFileHandle !== null) {
+      this._setImageUrl(this._bulkFileHandle.getUrl());
+    }
+    
+    this._adjustHeight(this._height);
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.IMAGE_VIEWER];
   }
 
   dispose(): void {
@@ -303,45 +311,6 @@ export class ImageViewer extends ViewerElement {
   //
   //-----------------------------------------------------------------------
   
-  constructor() {
-    super();
-    this._initProperties();
-  }
-  
-  connectedCallback(): void {
-    super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) !== null) {
-      return;
-    }
-    
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.updateThemeCss();
-    
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-    this.style.height = "0px";
-    
-    containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
-    containerDiv.addEventListener('focus', (ev) => {
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      this._cursorTop = containerDiv.scrollTop;
-    } );
-    
-    const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
-    imgElement.addEventListener('load', this._handleImageLoad.bind(this));
-    this._applyVisualState(this._visualState);
-
-    if (this._bulkFileHandle !== null) {
-      this._setImageUrl(this._bulkFileHandle.getUrl());
-    }
-    
-    this._adjustHeight(this._height);
-  }
-  
-  protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.IMAGE_VIEWER];
-  }
   
   //-----------------------------------------------------------------------
   //

@@ -7,6 +7,7 @@ import * as CodeMirror from 'codemirror';
 import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
@@ -68,7 +69,7 @@ const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const DEBUG_RESIZE = false;
 
-let registered = false;
+let classInitialized = false;
 let cssText: string = null;
 
 CodeMirrorCommands.init();
@@ -79,6 +80,18 @@ function getCssText(): string {
   return cssText;
 }
 
+function init(): void {
+  if (classInitialized === false) {
+    // Load the CSS resources now.
+    cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
+      + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
+
+    classInitialized = true;
+  }
+}
+
+
+@WebComponent({tag: "et-terminal-viewer"})
 export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
     SupportsClipboardPaste.SupportsClipboardPaste {
 
@@ -86,17 +99,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
 
-  static init(): void {
-    if (registered === false) {
-      // Load the CSS resources now.
-      cssText = fs.readFileSync(require.resolve('codemirror/lib/codemirror.css'), { encoding: 'utf8' })
-        + fs.readFileSync(require.resolve('codemirror/addon/scroll/simplescrollbars.css'), { encoding: 'utf8' });
-
-      window.customElements.define(TerminalViewer.TAG_NAME.toLowerCase(), TerminalViewer);
-      registered = true;
-    }
-  }
-  
   /**
    * Type guard for detecting a EtTerminalViewer instance.
    * 
@@ -107,94 +109,219 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return node !== null && node !== undefined && node instanceof TerminalViewer;
   }
 
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  
-  private _keyBindingManager: KeyBindingManager;
-  
-  private _emulator: Term.Emulator;
+  private _keyBindingManager: KeyBindingManager = null;
+  private _emulator: Term.Emulator = null;
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
-  private _terminalFirstRow: number;
+  private _terminalFirstRow = 0;
   
-  private _commandLine: string;
-  private _returnCode: string;
-  private _codeMirror: CodeMirror.Editor;
-  private _height: number;
-  private _isEmpty: boolean;
-  private _mode: ViewerElementTypes.Mode;
-  private _editable: boolean;
+  private _commandLine: string = null;
+  private _returnCode: string = null;
+  private _codeMirror: CodeMirror.Editor = null;
+  private _height = 0;
+  private _isEmpty = true;
+  private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
+  private _editable = false;
   private document: Document;
-  private _useVPad: boolean;
-  private _visualState: VisualState;
+  private _useVPad = true;
+  private _visualState: VisualState = VisualState.AUTO;
 
-  private _mainStyleLoaded: boolean;
-  private _resizePollHandle: DomUtils.LaterHandle;
-  private _needEmulatorResize: boolean;
+  private _mainStyleLoaded: boolean = false;
+  private _resizePollHandle: DomUtils.LaterHandle = null;
+  private _needEmulatorResize: boolean = false;
   
-  private _operationRunning: boolean; // True if we are currently running an operation with the operation() method.
-  private _operationEmitResize: boolean;  // True if a resize evnet shuld be emitted once the operation is finished.
+  private _operationRunning = false; // True if we are currently running an operation with the operation() method.
+  private _operationEmitResize = false;  // True if a resize evnet shuld be emitted once the operation is finished.
   
   // Emulator dimensions
-  private _rows: number;
-  private _columns: number;
-  private _realizedRows: number;
+  private _rows = -1;
+  private _columns = -1;
+  private _realizedRows = -1;
 
-  private _lastCursorAnchorPosition: CodeMirror.Position;
-  private _lastCursorHeadPosition: CodeMirror.Position;
-  private _viewportHeight: number;  // Used to detect changes in the viewport size when in Cursor mode.
-  private _fontUnitWidth: number;
-  private _fontUnitHeight: number;
+  private _lastCursorAnchorPosition: CodeMirror.Position = null;
+  private _lastCursorHeadPosition: CodeMirror.Position = null;
+  private _viewportHeight= -1;  // Used to detect changes in the viewport size when in Cursor mode.
+  private _fontUnitWidth = 10;  // slightly bogus defaults
+  private _fontUnitHeight = 10;
 
   // The current element height. This is a cached value used to prevent touching the DOM.  
-  private _currentElementHeight: number;
-  private _currentVPad: boolean;
+  private _currentElementHeight = -1;
+  private _currentVPad = true;
   private _renderEventListener: TermApi.RenderEventHandler = this._handleRenderEvent.bind(this);
 
-  private _bookmarkCounter: number;
-  private _bookmarkIndex: Map<BookmarkRef, CodeMirror.TextMarker>;
+  private _bookmarkCounter = 0;
+  private _bookmarkIndex = new Map<BookmarkRef, CodeMirror.TextMarker>();
 
-  private _initProperties(): void {
+  constructor() {
+    super();
+    init();
     this._log = getLogger(TerminalViewer.TAG_NAME, this);
-    this._keyBindingManager = null;
-    this._emulator = null;
-    this._terminalFirstRow = 0;
-    this._commandLine = null;
-    this._returnCode  =null;
-    this._editable = false;
-    this._codeMirror = null;
-    this._height = 0;
-    this._isEmpty = true;
-    this._mode = ViewerElementTypes.Mode.DEFAULT;
     this.document = document;
-    this._useVPad = true;
-    this._currentVPad = true;
-    this._visualState = VisualState.AUTO;
-    
-    this._currentElementHeight = -1;
+    this._renderEventListener = this._handleRenderEvent.bind(this);
+  }
+  
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (DomUtils.getShadowRoot(this) === null) {
+      this.tabIndex = 0;
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+      const clone = this.createClone();
+      shadow.appendChild(clone);
+      
+      this._initFontLoading();
+      this.installThemeCss();
 
-    this._fontUnitWidth = 10; // slightly bogus defaults
-    this._fontUnitHeight = 10;
-    
-    this._mainStyleLoaded = false;
-    this._resizePollHandle = null;
-    this._needEmulatorResize = false;
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
-    this._operationRunning = false;
-    this._operationEmitResize = false;
-    
-    this._rows = -1;
-    this._columns = -1;
-    this._realizedRows = -1;
-    this._lastCursorAnchorPosition = null;
-    this._lastCursorHeadPosition = null;
-    this._viewportHeight = -1;
+      this.style.height = "0px";
+      this._exitCursorMode();
+      this._mode = ViewerElementTypes.Mode.DEFAULT;
 
-    this._renderEventListener = null;
+      const options = {
+        value: "",
+        readOnly: true,
+        scrollbarStyle: "overlay",
+        cursorScrollMargin: 0,
+        showCursorWhenSelecting: true,
+        mode: null,
+        keyMap: this._codeMirrorKeyMap(),
+        resetSelectionOnContextMenu: false
+      };
 
-    this._bookmarkCounter = 0;
-    this._bookmarkIndex = new Map<BookmarkRef, CodeMirror.TextMarker>();
+      // Create the CodeMirror instance
+      this._codeMirror = CodeMirror( (el: HTMLElement): void => {
+        containerDiv.appendChild(el);
+      }, <any>options);
+      this.__updateHasTerminalClass();
+      
+      this._codeMirror.on("cursorActivity", () => {
+        const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
+                                (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
+        if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
+          this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
+          this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
+          
+          const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+          this.dispatchEvent(event);
+        }
+      });
+      
+      this._codeMirror.on("scroll", () => {
+        // Over-scroll bug/feature fix
+        const scrollInfo = this._codeMirror.getScrollInfo();
+        // this._log.debug("codemirror event scroll:", scrollInfo);
+        
+        const clientYScrollRange = this._getClientYScrollRange();
+        if (scrollInfo.top > clientYScrollRange) {
+          this._codeMirror.scrollTo(0, clientYScrollRange);
+        }
+      });
+      
+      this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
+        if (this._emulator !== null) {
+          this._emulator.focus();
+        }
+        
+        if (this._visualState === VisualState.AUTO) {
+          const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+          containerDiv.classList.add(CLASS_FOCUSED);
+          containerDiv.classList.remove(CLASS_UNFOCUSED);
+        }
+
+        super.focus();
+      });
+
+      this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
+        if (this._emulator !== null) {
+          this._emulator.blur();
+        }
+        
+        if (this._visualState === VisualState.AUTO) {
+          containerDiv.classList.add(CLASS_UNFOCUSED);
+          containerDiv.classList.remove(CLASS_FOCUSED);
+        }
+      });
+      
+      this._codeMirror.on("beforeSelectionChange", (instance: CodeMirror.Editor, obj): void => {
+        if (obj.ranges.length === 0) {
+          return;
+        }
+        
+        if (obj.ranges.length === 1) {
+          const pair = obj.ranges[0];
+          if (_.isEqual(pair.anchor, pair.head)) {
+            return;
+          }
+        }
+        this._emitBeforeSelectionChangeEvent(obj.origin === "*mouse");
+      });
+
+      this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
+        const isUp = name === "PageUp" || name === "Up";
+        const isDown = name === "PageDown" || name === "Down";
+        if (isUp || isDown) {
+          const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
+          const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
+          
+          if (this._lastCursorHeadPosition !== null && this._lastCursorAnchorPosition !== null
+              && _.isEqual(this._lastCursorHeadPosition, this._lastCursorAnchorPosition)  // check for no selection
+              && _.isEqual(cursorHeadPos, cursorAnchorPos)  // check for no selection
+              && this._lastCursorHeadPosition.line === cursorHeadPos.line) {
+
+            // The last action didn't move the cursor.
+            const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
+            DomUtils.doLater( () => {
+              const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
+                                                                      ? ViewerElementTypes.Edge.TOP
+                                                                      : ViewerElementTypes.Edge.BOTTOM,
+                                                                    ch: ch };
+              const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+              this.dispatchEvent(event);
+            });
+          }
+        }
+      });
+      
+      this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
+        if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
+          return;
+        }
+        
+        const height = to - from;
+        if (height !== this._viewportHeight) {
+          this._viewportHeight = height;
+          DomUtils.doLater( () => {
+            VirtualScrollArea.emitResizeEvent(this);
+          });
+        }
+      });
+      
+      // Filter the keyboard events before they reach CodeMirror.
+      containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
+      containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
+      containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);
+      containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
+      containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
+
+      const codeMirrorElement = this._codeMirror.getWrapperElement();
+      codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
+      codeMirrorElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
+      codeMirrorElement.addEventListener("mousemove", this._handleMouseMoveEvent.bind(this), true);
+      
+      this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
+        ev.preventDefault();
+      });
+    }
+
+    if (this._needEmulatorResize) {
+      this._needEmulatorResize = false;
+      this._resizePoll();
+    }
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.TERMINAL_VIEWER];
   }
 
   //-----------------------------------------------------------------------
@@ -626,190 +753,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return ref;
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-  
-  constructor() {
-    super();
-    this._initProperties();
-    this._renderEventListener = this._handleRenderEvent.bind(this);
-  }
-  
-  /**
-   * Custom Element 'connected' life cycle hook.
-   */
-  connectedCallback(): void {
-    super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) === null) {
-      this.tabIndex = 0;
-      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-      const clone = this.createClone();
-      shadow.appendChild(clone);
-      
-      this._initFontLoading();
-      this.installThemeCss();
-
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-
-      this.style.height = "0px";
-      this._exitCursorMode();
-      this._mode = ViewerElementTypes.Mode.DEFAULT;
-
-      const options = {
-        value: "",
-        readOnly: true,
-        scrollbarStyle: "overlay",
-        cursorScrollMargin: 0,
-        showCursorWhenSelecting: true,
-        mode: null,
-        keyMap: this._codeMirrorKeyMap(),
-        resetSelectionOnContextMenu: false
-      };
-
-      // Create the CodeMirror instance
-      this._codeMirror = CodeMirror( (el: HTMLElement): void => {
-        containerDiv.appendChild(el);
-      }, <any>options);
-      this.__updateHasTerminalClass();
-      
-      this._codeMirror.on("cursorActivity", () => {
-        const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
-                                (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
-        if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
-          this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
-          this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
-          
-          const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-          this.dispatchEvent(event);
-        }
-      });
-      
-      this._codeMirror.on("scroll", () => {
-        // Over-scroll bug/feature fix
-        const scrollInfo = this._codeMirror.getScrollInfo();
-        // this._log.debug("codemirror event scroll:", scrollInfo);
-        
-        const clientYScrollRange = this._getClientYScrollRange();
-        if (scrollInfo.top > clientYScrollRange) {
-          this._codeMirror.scrollTo(0, clientYScrollRange);
-        }
-      });
-      
-      this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
-        if (this._emulator !== null) {
-          this._emulator.focus();
-        }
-        
-        if (this._visualState === VisualState.AUTO) {
-          const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-          containerDiv.classList.add(CLASS_FOCUSED);
-          containerDiv.classList.remove(CLASS_UNFOCUSED);
-        }
-
-        super.focus();
-      });
-
-      this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
-        if (this._emulator !== null) {
-          this._emulator.blur();
-        }
-        
-        if (this._visualState === VisualState.AUTO) {
-          containerDiv.classList.add(CLASS_UNFOCUSED);
-          containerDiv.classList.remove(CLASS_FOCUSED);
-        }
-      });
-      
-      this._codeMirror.on("beforeSelectionChange", (instance: CodeMirror.Editor, obj): void => {
-        if (obj.ranges.length === 0) {
-          return;
-        }
-        
-        if (obj.ranges.length === 1) {
-          const pair = obj.ranges[0];
-          if (_.isEqual(pair.anchor, pair.head)) {
-            return;
-          }
-        }
-        this._emitBeforeSelectionChangeEvent(obj.origin === "*mouse");
-      });
-
-      this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
-        const isUp = name === "PageUp" || name === "Up";
-        const isDown = name === "PageDown" || name === "Down";
-        if (isUp || isDown) {
-          const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
-          const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
-          
-          if (this._lastCursorHeadPosition !== null && this._lastCursorAnchorPosition !== null
-              && _.isEqual(this._lastCursorHeadPosition, this._lastCursorAnchorPosition)  // check for no selection
-              && _.isEqual(cursorHeadPos, cursorAnchorPos)  // check for no selection
-              && this._lastCursorHeadPosition.line === cursorHeadPos.line) {
-
-            // The last action didn't move the cursor.
-            const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
-            DomUtils.doLater( () => {
-              const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
-                                                                      ? ViewerElementTypes.Edge.TOP
-                                                                      : ViewerElementTypes.Edge.BOTTOM,
-                                                                    ch: ch };
-              const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-              this.dispatchEvent(event);
-            });
-          }
-        }
-      });
-      
-      this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
-        if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
-          return;
-        }
-        
-        const height = to - from;
-        if (height !== this._viewportHeight) {
-          this._viewportHeight = height;
-          DomUtils.doLater( () => {
-            VirtualScrollArea.emitResizeEvent(this);
-          });
-        }
-      });
-      
-      // Filter the keyboard events before they reach CodeMirror.
-      containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
-      containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
-      containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);
-      containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
-      containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
-
-      const codeMirrorElement = this._codeMirror.getWrapperElement();
-      codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
-      codeMirrorElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
-      codeMirrorElement.addEventListener("mousemove", this._handleMouseMoveEvent.bind(this), true);
-      
-      this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
-        ev.preventDefault();
-      });
-    }
-
-    if (this._needEmulatorResize) {
-      this._needEmulatorResize = false;
-      this._resizePoll();
-    }
-  }
-  
-  protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.TERMINAL_VIEWER];
-  }
-
   private __updateHasTerminalClass(): void {
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     if (containerDiv != null) {
@@ -819,7 +762,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         containerDiv.classList.add(CLASS_HAS_TERMINAL);
       }
     }
-  }    
+  }
 
   /**
    * Quickly execute a function without intermediate on-screen updates.

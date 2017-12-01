@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as he from 'he';
 import * as SourceDir from '../../SourceDir';
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as config from '../../Config';
 type ConfigManager = config.ConfigDistributor;
@@ -47,7 +48,6 @@ const KEYBINDINGS_SELECTION_MODE = "image-viewer";
 
 const DEBUG_SIZE = false;
 
-let registered = false;
 let instanceIdCounter = 0;
 
 /**
@@ -68,18 +68,12 @@ function loadTipFile(): string[] {
 
 const tipData = loadTipFile();
 
+@WebComponent({tag: "et-tip-viewer"})
 export class TipViewer extends ViewerElement implements config.AcceptsConfigDistributor, keybindingmanager.AcceptsKeyBindingManager {
 
   static TAG_NAME = "ET-TIP-VIEWER";
   
   static MIME_TYPE = "application/x-extraterm-tip";
-  
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(TipViewer.TAG_NAME.toLowerCase(), TipViewer);
-      registered = true;
-    }
-  }
   
   /**
    * Type guard for detecting a EtTipViewer instance.
@@ -91,24 +85,83 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     return node !== null && node !== undefined && node instanceof TipViewer;
   }
   
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  
-  private _configManager: ConfigManager;
-  
-  private _keyBindingManager: KeyBindingManager;
-  
-  private _height: number;
-  
-  private _tipIndex: number;
-  
-  private _initProperties(): void {
+  private _configManager: ConfigManager = null;
+  private _keyBindingManager: KeyBindingManager = null;
+  private _height = 0;
+  private _tipIndex = 0;
+
+  constructor() {
+    super();
     this._log = getLogger(TipViewer.TAG_NAME, this);
-    this._configManager = null;
-    this._keyBindingManager = null;
-    this._height = 0;
-    this._tipIndex = 0;
+  }
+  
+  connectedCallback(): void {
+    super.connectedCallback();
+    this._tipIndex = this._configManager.getConfig().tipCounter % this._getTipCount();
+    
+    if (DomUtils.getShadowRoot(this) !== null) {
+      return;
+    }
+    
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+    const clone = this.createClone();
+    shadow.appendChild(clone);
+    this.updateThemeCss();
+    
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    
+    // Intercept link clicks and open them in an external browser.
+    containerDiv.addEventListener('click', (ev: MouseEvent) => {
+      const source = <HTMLElement> ev.target;
+      if (source.tagName === "A") {
+        ev.preventDefault();
+        shell.openExternal((<HTMLAnchorElement> source).href);
+      }
+    });
+    
+    containerDiv.addEventListener('focus', (ev: FocusEvent) => {
+      if (ev.target instanceof HTMLSelectElement) {
+        ev.stopPropagation();
+        return;
+      }
+    }, true);
+
+    this._setTipHTML(this._getTipHTML(this._tipIndex));
+    
+    const nextButton = DomUtils.getShadowId(this, ID_NEXT_BUTTON);
+    nextButton.addEventListener('click', () => {
+      this._tipIndex = (this._tipIndex + 1) % this._getTipCount();
+      this._setTipHTML(this._getTipHTML(this._tipIndex));
+    });
+    
+    const previousButton = DomUtils.getShadowId(this, ID_PREVIOUS_BUTTON);
+    previousButton.addEventListener('click', () => {
+      this._tipIndex = (this._tipIndex + this._getTipCount() - 1) % this._getTipCount();
+      this._setTipHTML(this._getTipHTML(this._tipIndex));
+    });
+    
+    const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
+    showTipsSelect.value = this._configManager.getConfig().showTips;
+    showTipsSelect.addEventListener('change', () => {
+      const newConfig = _.cloneDeep(this._configManager.getConfig());
+      newConfig.showTips = <config.ShowTipsStrEnum> showTipsSelect.value;
+      this._configManager.setConfig(newConfig);
+    });
+  }
+  
+  /**
+   * Custom Element 'disconnected' life cycle hook.
+   */
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this._configManager !== null) {
+      this._configManager.unregisterChangeListener(this);
+    }
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
   }
 
   //-----------------------------------------------------------------------
@@ -208,90 +261,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     return [TipViewer.MIME_TYPE].indexOf(mimeType) !== -1;
   }
   
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-  
-  constructor() {
-    super();
-    this._initProperties();
-  }
-  
-  connectedCallback(): void {
-    super.connectedCallback();
-    this._tipIndex = this._configManager.getConfig().tipCounter % this._getTipCount();
-    
-    if (DomUtils.getShadowRoot(this) !== null) {
-      return;
-    }
-    
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.updateThemeCss();
-    
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-    
-    // Intercept link clicks and open them in an external browser.
-    containerDiv.addEventListener('click', (ev: MouseEvent) => {
-      const source = <HTMLElement> ev.target;
-      if (source.tagName === "A") {
-        ev.preventDefault();
-        shell.openExternal((<HTMLAnchorElement> source).href);
-      }
-    });
-    
-    containerDiv.addEventListener('focus', (ev: FocusEvent) => {
-      if (ev.target instanceof HTMLSelectElement) {
-        ev.stopPropagation();
-        return;
-      }
-    }, true);
-
-    this._setTipHTML(this._getTipHTML(this._tipIndex));
-    
-    const nextButton = DomUtils.getShadowId(this, ID_NEXT_BUTTON);
-    nextButton.addEventListener('click', () => {
-      this._tipIndex = (this._tipIndex + 1) % this._getTipCount();
-      this._setTipHTML(this._getTipHTML(this._tipIndex));
-    });
-    
-    const previousButton = DomUtils.getShadowId(this, ID_PREVIOUS_BUTTON);
-    previousButton.addEventListener('click', () => {
-      this._tipIndex = (this._tipIndex + this._getTipCount() - 1) % this._getTipCount();
-      this._setTipHTML(this._getTipHTML(this._tipIndex));
-    });
-    
-    const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
-    showTipsSelect.value = this._configManager.getConfig().showTips;
-    showTipsSelect.addEventListener('change', () => {
-      const newConfig = _.cloneDeep(this._configManager.getConfig());
-      newConfig.showTips = <config.ShowTipsStrEnum> showTipsSelect.value;
-      this._configManager.setConfig(newConfig);
-    });
-  }
-  
-  /**
-   * Custom Element 'disconnected' life cycle hook.
-   */
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    if (this._configManager !== null) {
-      this._configManager.unregisterChangeListener(this);
-    }
-  }
-  
-  protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
-  }
   
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     this._processRefresh(level);
@@ -308,9 +277,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
   // #       #    # #   ##   #    #   #   ###### 
   //
   //-----------------------------------------------------------------------
-  /**
-   * 
-   */
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {

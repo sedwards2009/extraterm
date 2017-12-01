@@ -9,6 +9,7 @@ import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import * as utf8 from 'utf8';
 import {clipboard} from 'electron';
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
@@ -66,7 +67,6 @@ const DEBUG = true;
 const DEBUG_APPLICATION_MODE = false;
 
 let startTime: number = window.performance.now();
-let registered = false;
 
 const ID = "EtTerminalTemplate";
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
@@ -135,6 +135,7 @@ interface WriteBufferStatus {
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
+@WebComponent({tag: "et-terminal"})
 export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingManager,
   AcceptsConfigDistributor, Disposable, SupportsClipboardPaste.SupportsClipboardPaste {
   
@@ -145,136 +146,197 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   static EVENT_TITLE = "title";
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
   
-  /**
-   * Initialize the EtTerminal class and resources.
-   *
-   * When EtTerminal is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      TerminalViewer.init();
-      TextViewer.init();
-      ImageViewer.init();
-      TipViewer.init();
-
-      // EtMarkdownViewer.init();
-      window.customElements.define(EtTerminal.TAG_NAME.toLowerCase(), EtTerminal);
-      registered = true;
-    }
-  }
-  
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically.
   private _log: Logger;
 
-  private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
-  private _stashArea: DocumentFragment;
-  private _childElementList: ChildElementStatus[];
+  private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea = null;
+  private _stashArea: DocumentFragment = null;
+  private _childElementList: ChildElementStatus[] = [];
 
-  private _autoscroll: boolean;
+  private _autoscroll = true;
   
-  private _terminalViewer: TerminalViewer;
+  private _terminalViewer: TerminalViewer = null;
   
-  private _emulator: Term.Emulator;
-  private _cookie: string;
-  private _htmlData: string;
+  private _emulator: Term.Emulator = null;
+  private _cookie = null;
+  private _htmlData: string = null;
   
-  private _fileBroker: BulkFileBroker;
-  private _downloadHandler: DownloadApplicationModeHandler;
+  private _fileBroker: BulkFileBroker = null;
+  private _downloadHandler: DownloadApplicationModeHandler = null;
   
-  private _applicationMode: ApplicationMode;
-  private _bracketStyle: string;
+  private _applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
+  private _bracketStyle: string = null;
 
   // The command line string of the last command started.
-  private _lastCommandLine: string;
+  private _lastCommandLine: string = null;
   
   // The terminal viewer containing the start output of the last command started.
-  private _lastCommandTerminalViewer: TerminalViewer;
+  private _lastCommandTerminalViewer: TerminalViewer = null;
   
   // The line number of the start of output of the last command started.
-  private _lastCommandTerminalLine: BookmarkRef;
+  private _lastCommandTerminalLine: BookmarkRef = null;
   
-  private _mode: Mode;
+  private _mode: Mode = Mode.DEFAULT;
   private _selectionPreviousLineCount: number;
   
-  private _configManager: ConfigDistributor;
-  private _keyBindingManager: KeyBindingManager;
+  private _configManager: ConfigDistributor = null;
+  private _keyBindingManager: KeyBindingManager = null;
   
-  private _title: string;
-  private _frameFinder: FrameFinder;
+  private _title = "New Tab";
+  private _frameFinder: FrameFinder = null;
   private _scrollbackSize: number;
   
-  private _nextTag: string;
+  private _nextTag: string = null;
 
-  private _themeCssPath: string;
-  private _mainStyleLoaded: boolean;
-  private _themeStyleLoaded: boolean;
-  private _resizePollHandle: DomUtils.LaterHandle;
-  private _elementAttached: boolean;
-  private _needsCompleteRefresh: boolean;
+  private _themeCssPath: string = null;
+  private _mainStyleLoaded = false;
+  private _themeStyleLoaded = false;
+  private _resizePollHandle: DomUtils.LaterHandle = null;
+  private _elementAttached = false;
+  private _needsCompleteRefresh = true;
 
   // This flag is needed to prevent the _enforceScrollbackLength() method from being run recursively
-  private _enforceScrollbackLengthGuard: boolean;
+  private _enforceScrollbackLengthGuard= false;
   
-  private _scheduleLaterHandle: DomUtils.LaterHandle;
-  private _scheduleLaterQueue: Function[];
-  private _stashedChildResizeTask: () => void;
+  private _scheduleLaterHandle: DomUtils.LaterHandle = null;
+  private _scheduleLaterQueue: Function[] = [];
+  private _stashedChildResizeTask: () => void = null;
 
   private _scheduleResizeBound: any;
 
   // The current size of the emulator. This is used to detect changes in size.
   private _columns = -1;
   private _rows = -1;
-  private _fontSizeAdjustment: number;
-  private _armResizeCanary: boolean;  // Controls when the resize canary is allowed to chirp.
+  private _fontSizeAdjustment = 0;
+  private _armResizeCanary = false;  // Controls when the resize canary is allowed to chirp.
 
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
 
-  private _initProperties(): void {
+  constructor() {
+    super();
     this._log = getLogger(EtTerminal.TAG_NAME, this);
-    this._virtualScrollArea = null;
-    this._stashArea = null;
-    this._childElementList = [];
-    this._elementAttached = false;
-    this._needsCompleteRefresh = true;
-    this._autoscroll = true;
-    this._emulator = null;
-    this._cookie = null;
-    this._terminalViewer = null;
-    this._htmlData = null;
-    this._fileBroker = null;
-    this._downloadHandler = null;
-
-    this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
-    this._bracketStyle = null;
-    
-    this._mode = Mode.DEFAULT;
-    
-    this._configManager = null;
-    this._keyBindingManager = null;
-    this._frameFinder = null;
-    this._title = "New Tab";
-    this._nextTag = null;
-    this._themeCssPath = null;
-    this._mainStyleLoaded = false;
-    this._themeStyleLoaded = false;
-    this._resizePollHandle = null;
-
-    this._enforceScrollbackLengthGuard = false;
-    this._scheduleLaterHandle = null;
-    this._scheduleLaterQueue = [];
-    this._stashedChildResizeTask = null;
-
-    this._fontSizeAdjustment = 0;
-    this._armResizeCanary = false;
-
-    this._lastCommandLine = null;
-    this._lastCommandTerminalViewer = null;
-    this._lastCommandTerminalLine = null;
-
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
+    this._fetchNextTag();
+  }
+   
+  /**
+   * Custom Element 'connected' life cycle hook.
+   */
+  connectedCallback(): void {
+    super.connectedCallback();
+    if ( ! this._elementAttached) {
+      this._elementAttached = true;
+
+      this._stashArea = window.document.createDocumentFragment();
+      this._stashArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+      const clone = this._createClone();
+      shadow.appendChild(clone);
+      
+      this.addEventListener('focus', this._handleFocus.bind(this));
+      this.addEventListener('blur', this._handleBlur.bind(this));
+
+      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+      const scrollArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
+      const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
+      DomUtils.preventScroll(scrollContainer);
+
+      DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
+      DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
+
+      this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
+      this._virtualScrollArea.setScrollFunction( (offset: number): void => {
+        scrollArea.style.top = "-" + offset + "px";
+      });
+      this._virtualScrollArea.setScrollbar(scrollbar);
+      this._virtualScrollArea.setSetTopFunction(this._setTopFunction.bind(this));
+      this._virtualScrollArea.setMarkVisibleFunction(this._markVisible.bind(this));
+
+      // Set up the emulator
+      this._cookie = crypto.randomBytes(10).toString('hex');
+      process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
+      this._initEmulator(this._cookie);
+      this._appendNewTerminalViewer();
+      
+      this.updateThemeCss();
+
+      scrollContainer.addEventListener('mousedown', (ev: MouseEvent): void => {
+        if (ev.target === scrollContainer) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          this._terminalViewer.focus();
+          if (ev.buttons & 2) { // Right Mouse Button
+            this._handleContextMenu();
+          }
+        }
+      });
+      
+      scrollArea.addEventListener('mousedown', (ev: MouseEvent): void => {
+        if (ev.target === scrollArea) {
+          this._terminalViewer.focus();
+          ev.preventDefault();
+          ev.stopPropagation();
+        }
+      });
+      
+      scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
+        this._virtualScrollArea.scrollTo(scrollbar.getPosition());
+      });
+
+      scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
+      scrollContainer.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+      scrollArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
+
+      scrollArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
+      scrollArea.addEventListener(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
+        this._virtualScrollArea.scrollToBottom();
+      });
+      scrollArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
+        this._handleBeforeSelectionChange.bind(this));
+      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
+      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
+      
+      scrollArea.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
+        const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
+        this._sendDataToPtyEvent(ev.detail.text);
+      });
+
+      // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+      const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
+      resizeCanary.setCss(`
+          font-family: var(--terminal-font);
+          font-size: var(--terminal-font-size);
+      `);
+      containerDiv.appendChild(resizeCanary);
+      resizeCanary.addEventListener('resize', () => {
+        if (this._armResizeCanary) {
+          this._armResizeCanary = false;
+          this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+        }
+      });
+
+      this._showTip();
+      
+      this._scheduleResize();
+    } else {
+
+      // This was already attached at least once.
+      this._scheduleResize();
+    }
+
+    this._setFontSizeInCss(this._fontSizeAdjustment);
+  }
+  
+  /**
+   * Custom Element 'disconnected' life cycle hook.
+   */
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._needsCompleteRefresh = true;
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.TERMINAL];
   }
 
   dispose(): void {
@@ -499,144 +561,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     return this._cookie;
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-
-  constructor() {
-    super();
-    this._initProperties();
-    this._fetchNextTag();
-  }
-   
-  /**
-   * Custom Element 'connected' life cycle hook.
-   */
-  connectedCallback(): void {
-    super.connectedCallback();
-    if ( ! this._elementAttached) {
-      this._elementAttached = true;
-
-      this._stashArea = window.document.createDocumentFragment();
-      this._stashArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-      const clone = this._createClone();
-      shadow.appendChild(clone);
-      
-      this.addEventListener('focus', this._handleFocus.bind(this));
-      this.addEventListener('blur', this._handleBlur.bind(this));
-
-      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-      const scrollArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-      const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-      DomUtils.preventScroll(scrollContainer);
-
-      DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
-      DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
-
-      this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
-      this._virtualScrollArea.setScrollFunction( (offset: number): void => {
-        scrollArea.style.top = "-" + offset + "px";
-      });
-      this._virtualScrollArea.setScrollbar(scrollbar);
-      this._virtualScrollArea.setSetTopFunction(this._setTopFunction.bind(this));
-      this._virtualScrollArea.setMarkVisibleFunction(this._markVisible.bind(this));
-
-      // Set up the emulator
-      this._cookie = crypto.randomBytes(10).toString('hex');
-      process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
-      this._initEmulator(this._cookie);
-      this._appendNewTerminalViewer();
-      
-      this.updateThemeCss();
-
-      scrollContainer.addEventListener('mousedown', (ev: MouseEvent): void => {
-        if (ev.target === scrollContainer) {
-          ev.preventDefault();
-          ev.stopPropagation();
-          this._terminalViewer.focus();
-          if (ev.buttons & 2) { // Right Mouse Button
-            this._handleContextMenu();
-          }
-        }
-      });
-      
-      scrollArea.addEventListener('mousedown', (ev: MouseEvent): void => {
-        if (ev.target === scrollArea) {
-          this._terminalViewer.focus();
-          ev.preventDefault();
-          ev.stopPropagation();
-        }
-      });
-      
-      scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-        this._virtualScrollArea.scrollTo(scrollbar.getPosition());
-      });
-
-      scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
-      scrollContainer.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
-      scrollArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
-
-      scrollArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-      scrollArea.addEventListener(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
-        this._virtualScrollArea.scrollToBottom();
-      });
-      scrollArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
-        this._handleBeforeSelectionChange.bind(this));
-      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
-      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
-      
-      scrollArea.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
-        const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
-        this._sendDataToPtyEvent(ev.detail.text);
-      });
-
-      // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
-      resizeCanary.setCss(`
-          font-family: var(--terminal-font);
-          font-size: var(--terminal-font-size);
-      `);
-      containerDiv.appendChild(resizeCanary);
-      resizeCanary.addEventListener('resize', () => {
-        if (this._armResizeCanary) {
-          this._armResizeCanary = false;
-          this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
-        }
-      });
-
-      this._showTip();
-      
-      this._scheduleResize();
-    } else {
-
-      // This was already attached at least once.
-      this._scheduleResize();
-    }
-
-    this._setFontSizeInCss(this._fontSizeAdjustment);
-  }
-  
-  /**
-   * Custom Element 'disconnected' life cycle hook.
-   */
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this._needsCompleteRefresh = true;
-  }
-  
-  protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.TERMINAL];
-  }
 
   protected updateThemeCss() {
     super.updateThemeCss();

@@ -7,6 +7,7 @@ import * as he from 'he';
 import * as _ from 'lodash';
 import * as path from 'path';
 import {Disposable} from 'extraterm-extension-api';
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {AboutTab} from './AboutTab';
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
@@ -99,8 +100,6 @@ const COMMAND_HORIZONTAL_SPLIT = "horizontalSplit";
 const COMMAND_VERTICAL_SPLIT = "verticalSplit";
 const COMMAND_CLOSE_PANE = "closePane";
 
-let registered = false;
-
 const LAST_FOCUS = "last_focus";
 
 const staticLog = getLogger("Static ExtratermMainWebUI");
@@ -113,22 +112,11 @@ let themeCss = "";
  * Top level UI component for a normal terminal window
  *
  */
+@WebComponent({tag: "extraterm-mainwebui"})
 export class MainWebUi extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
     config.AcceptsConfigDistributor, Commandable {
   
-  //-----------------------------------------------------------------------
-  // Statics
-  
-  static init(): void {
-    EtTerminal.init();
-
-    if (registered === false) {
-      window.customElements.define(MainWebUi.TAG_NAME.toLowerCase(), MainWebUi);
-      registered = true;
-    }
-  }
-  
-  static TAG_NAME = 'EXTRATERM-MAINWEBUI';
+  static TAG_NAME = "EXTRATERM-MAINWEBUI";
   static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
   static EVENT_TAB_CLOSED = 'mainwebui-tab-closed';
   static EVENT_TITLE = 'mainwebui-title';
@@ -139,29 +127,30 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  private _terminalPtyIdMap: Map<EtTerminal,number>;
-  private _ptyIdTerminalMap: Map<number, EtTerminal>;
-  private _tabIdCounter: number;
-  private _configManager: ConfigManager; 
-  private _keyBindingManager: KeyBindingManager;
-  private _themes: ThemeTypes.ThemeInfo[];
-  private _lastFocus: Element;
-  private _splitLayout: SplitLayout;
-  private _fileBroker: BulkFileBroker;
+  private _terminalPtyIdMap: Map<EtTerminal,number> = new Map<EtTerminal, number>();
+  private _ptyIdTerminalMap: Map<number, EtTerminal> = new Map<number, EtTerminal>();
+  private _tabIdCounter = 0;
+  private _configManager: ConfigManager = null;
+  private _keyBindingManager: KeyBindingManager = null;
+  private _themes: ThemeTypes.ThemeInfo[] = [];
+  private _lastFocus: Element = null;
+  private _splitLayout = new SplitLayout();
+  private _fileBroker = new BulkFileBroker();
 
-  private _initProperties(): void {
+  constructor() {
+    super();
     this._log = getLogger("ExtratermMainWebUI", this);
-    this._terminalPtyIdMap = new Map<EtTerminal, number>();
-    this._ptyIdTerminalMap = new Map<number, EtTerminal>();
-    this._lastFocus = null;
-    this._tabIdCounter = 0;
-    this._configManager = null;
-    this._keyBindingManager = null;
-    this._themes = [];
-    this._fileBroker = new BulkFileBroker();
-    this._splitLayout = new SplitLayout();
   }
   
+  connectedCallback(): void {
+    super.connectedCallback();
+    this._setUpShadowDom();   
+    this._setUpMainContainer();
+    this._setUpSplitLayout();
+    this._setUpWindowControls();
+    this._setupIpc();
+  }
+
   focus(): void {
     if (this._lastFocus != null) {
       this._focusTabContent(this._lastFocus);
@@ -193,33 +182,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     this._refresh(level);
   }
-  
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-  
-  constructor() {
-    super();
-    this._initProperties(); // Initialise our properties. The constructor was not called.
-  }
-  
-  connectedCallback(): void {
-    super.connectedCallback();
-    this._setUpShadowDom();   
-    this._setUpMainContainer();
-    this._setUpSplitLayout();
-    this._setUpWindowControls();
-    this._setupIpc();
-  }
-
+ 
   private _setUpShadowDom(): void {
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this._createClone();
