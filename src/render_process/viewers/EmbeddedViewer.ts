@@ -5,6 +5,7 @@
  */
 
 import * as _ from 'lodash';
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
@@ -60,8 +61,6 @@ const CLASS_FAILED = "CLASS_FAILED";
 const CLASS_SUCCEEDED = "CLASS_SUCCEEDED";
 const CLASS_NEUTRAL = "CLASS_NEUTRAL";
 
-let registered = false;
-
 const DEBUG_SIZE = false;
 
 export enum EmbeddedViewerPosture {
@@ -75,32 +74,16 @@ export enum EmbeddedViewerPosture {
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
+@WebComponent({tag: "et-embeddedviewer"})
 export class EmbeddedViewer extends ViewerElement implements Commandable,
     SupportsClipboardPaste.SupportsClipboardPaste {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = 'ET-EMBEDDEDVIEWER';
 
   static EVENT_CLOSE_REQUEST = 'close-request';
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';
   static EVENT_SCROLL_MOVE = 'scroll-move';
 
-  /**
-   * Initialize the EtEmbeddedViewer class and resources.
-   *
-   * When EtEmbeddedViewer is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(EmbeddedViewer.TAG_NAME.toLowerCase(), EmbeddedViewer);
-      registered = true;
-    }
-  }
-  
   /**
    * Type guard for detecting a EtEmbeddedViewer instance.
    * 
@@ -111,44 +94,46 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     return node !== null && node !== undefined && node instanceof EmbeddedViewer;
   }
   
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
-  private _log: Logger;
-  private _posture: EmbeddedViewerPosture;  
-  private _returnCode: string;
-  private _title: string;
-  private _tag: string;
-  private _toolTip: string;
-  private _awesomeIcon: string;
-  private _visualState: VisualState;
-  private _mode: ViewerElementTypes.Mode;
+  private _log: Logger = null;
+  private _posture: EmbeddedViewerPosture = EmbeddedViewerPosture.RUNNING;  
+  private _returnCode: string = null;
+  private _title: string = "";
+  private _tag: string = "";
+  private _toolTip: string = null;
+  private _awesomeIcon: string = null;
+  private _visualState: VisualState = ViewerElementTypes.VisualState.AUTO;
+  private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
   private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
-  private _requestContainerHeight: boolean; // true if the container needs a height update.
-  private _requestContainerScroll: boolean; // true if the container needs scroll to be set.
-  private _requestContainerYScroll: number; // the new scroll Y to use during update.
-  private _headerTop: number;
-  private _headerBottom: number;
+  private _requestContainerHeight = false; // true if the container needs a height update.
+  private _requestContainerScroll = false; // true if the container needs scroll to be set.
+  private _requestContainerYScroll = 0; // the new scroll Y to use during update.
+  private _headerTop = 0;
+  private _headerBottom = 0;
 
-  private _initProperties(): void {
+  constructor() {
+    super();
     this._log = getLogger(EmbeddedViewer.TAG_NAME, this);
-    this._returnCode = null;
-    this._tag = "";
-    this._title = "";
-    this._toolTip = null;
-    this._posture = EmbeddedViewerPosture.RUNNING;
-    this._awesomeIcon = null;
-    this._visualState = ViewerElementTypes.VisualState.AUTO;
-    this._mode = ViewerElementTypes.Mode.DEFAULT;
     this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
+  }
+  
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (DomUtils.getShadowRoot(this) !== null) {
+      return;
+    }
 
-    this._requestContainerHeight = false;
-    this._requestContainerScroll = false;
-    this._requestContainerYScroll = 0;
+    this._setUpShadowDom();
+    this._setUpDefaultAttributes();
 
-    this._headerTop = 0;
-    this._headerBottom = 0;
+    this.installThemeCss();
+
+    this._setUpEventHandlers();
+    this._setUpVirtualScrollArea();
+
+    // Remove the anti-flicker style.
+    DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
   }
 
   dispose(): void {
@@ -158,18 +143,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
   }
 
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
-  
   setViewerElement(element: ViewerElement): void {
     const oldViewer = this._getViewerElement()
     if (oldViewer != null) {
@@ -503,43 +476,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       return viewerElement.setCursorPositionBottom(x);
     }
     return false;
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-  constructor() {
-    super();
-    this._initProperties();
-  }
-  
-  /**
-   * Custom Element 'connected' life cycle hook.
-   */
-  connectedCallback(): void {
-    super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) !== null) {
-      return;
-    }
-
-    this._setUpShadowDom();
-    this._setUpDefaultAttributes();
-
-    this.installThemeCss();
-
-    this._setUpEventHandlers();
-    this._setUpVirtualScrollArea();
-
-    // Remove the anti-flicker style.
-    DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
   }
 
   private _setUpShadowDom(): void {

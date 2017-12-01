@@ -138,19 +138,11 @@ interface WriteBufferStatus {
 export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingManager,
   AcceptsConfigDistributor, Disposable, SupportsClipboardPaste.SupportsClipboardPaste {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-TERMINAL";
-  
   static EVENT_USER_INPUT = "user-input";
-  
   static EVENT_TERMINAL_RESIZE = "terminal-resize";
-
   static EVENT_TERMINAL_BUFFER_SIZE = "temrinal-buffer-size";
-
   static EVENT_TITLE = "title";
-  
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
   
   /**
@@ -162,13 +154,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    */
   static init(): void {
     if (registered === false) {
-      EmbeddedViewer.init();
-      CommandPlaceHolder.init();
       TerminalViewer.init();
       TextViewer.init();
       ImageViewer.init();
       TipViewer.init();
-      ResizeCanary.init();
 
       // EtMarkdownViewer.init();
       window.customElements.define(EtTerminal.TAG_NAME.toLowerCase(), EtTerminal);

@@ -121,10 +121,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   
   static init(): void {
     EtTerminal.init();
-    SettingsTab.init();
-    EtKeyBindingsTab.init();
-    AboutTab.init();
-    EtViewerTab.init();
 
     if (registered === false) {
       window.customElements.define(MainWebUi.TAG_NAME.toLowerCase(), MainWebUi);

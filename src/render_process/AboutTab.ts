@@ -1,12 +1,9 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2017 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-
-// About tab
-
-"use strict";
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as ThemeTypes from '../theme/Theme';
 import {ViewerElement} from './viewers/ViewerElement';
@@ -18,49 +15,16 @@ import {Logger, getLogger} from '../logging/Logger';
 
 const ID_ABOUT = "ID_ABOUT";
 
-let registered = false;
 
 /**
  * The Extraterm About tab.
  */
+@WebComponent({tag: "et-about-tab"})
 export class AboutTab extends ViewerElement {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-ABOUT-TAB";
 
-  /**
-   * Initialize the EtAboutTab class and resources.
-   *
-   * When EtAboutTab is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(AboutTab.TAG_NAME.toLowerCase(), AboutTab);
-      registered = true;
-    }
-  }
-
-  private _log: Logger;
-
-  private _initProperties(): void {
-    this._log = getLogger(AboutTab.TAG_NAME, this);
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
+  private _log: Logger = null;
 
   getAwesomeIcon(): string {
     return "lightbulb-o";
@@ -78,21 +42,10 @@ export class AboutTab extends ViewerElement {
     return false;
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-   constructor() {
-     super();
-     this._initProperties();
-   }
+  constructor() {
+    super();
+    this._log = getLogger(AboutTab.TAG_NAME, this);
+  }
 
   /**
    * Custom Element 'connected' life cycle hook.

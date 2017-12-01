@@ -1,65 +1,35 @@
 /*
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016-2017 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {WebComponent} from 'extraterm-web-component-decorators';
+
 import * as DomUtils from './DomUtils';
 import {Logger, getLogger} from '../logging/Logger';
 import ElementResizeDetectorMaker = require('element-resize-detector');
-
-let registered = false;
 
 const ID = "ExtratermResizeCanaryTemplate";
 const ID_SIZER = "ID_SIZER";
 const ID_CONTAINER = "ID_CONTAINER";
 
+@WebComponent({tag: "et-resize-canary"})
 export class ResizeCanary extends HTMLElement {
   
   static TAG_NAME = "ET-RESIZE-CANARY";
 
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(ResizeCanary.TAG_NAME.toLowerCase(), ResizeCanary);
-      registered = true;
-    }
-  }
-
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
-  private _log: Logger;
-  
+  private _log: Logger = null;
   private _erd: any; //ElementResizeDetector.Detector;
-  
-  private _laterHandle: DomUtils.LaterHandle;
-  
-  private _css: string; 
-
-  private _initProperties(): void {
-    this._log = getLogger(ResizeCanary.TAG_NAME, this);
-    this._erd = null;
-    this._laterHandle = null;
-    this._css = "";
-  }
+  private _laterHandle: DomUtils.LaterHandle = null;
+  private _css: string = "";
 
   setCss(css: string): void {
     this._css = css;
   }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
   
   constructor() {
     super();
-    this._initProperties();
+    this._log = getLogger(ResizeCanary.TAG_NAME, this);
   }
 
   connectedCallback(): void {

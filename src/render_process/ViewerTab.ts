@@ -5,6 +5,7 @@
  */
 
 import * as fs from 'fs';
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
@@ -35,8 +36,6 @@ const VisualState = ViewerElementTypes.VisualState;
 
 const DEBUG = true;
 
-let registered = false;
-
 const ID = "EtTabViewerTemplate";
 
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
@@ -60,231 +59,39 @@ const SCROLL_STEP = 1;
 /**
  * A viewer tab which can contain any ViewerElement.
  */
+@WebComponent({tag: "et-viewer-tab"})
 export class EtViewerTab extends ViewerElement implements Commandable,
     AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
 
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-VIEWER-TAB";
-  
-  /**
-   * Initialize the EtViewerTab class and resources.
-   *
-   * When EtViewerTab is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      EmbeddedViewer.init();
-      ResizeCanary.init();
-      window.customElements.define(EtViewerTab.TAG_NAME.toLowerCase(), EtViewerTab);
-      registered = true;
-    }
-  }
 
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically.
   private _log: Logger;
-
-  private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
+  private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea = null;
+  private _terminalSize: ClientRect = null;
+  private _scrollYOffset = 0; // The Y scroll offset into the virtual height.
+  private _virtualHeight = 0; // The virtual height of the terminal contents in px.
   
-  private _terminalSize: ClientRect;
-  private _scrollYOffset: number; // The Y scroll offset into the virtual height.
-  private _virtualHeight: number; // The virtual height of the terminal contents in px.
-  
-  private _blinkingCursor: boolean;
-  private _title: string;
-  private _tag: string;
+  private _blinkingCursor = false;
+  private _title = "New Tab";
+  private _tag: string = null;
 
-  private _keyBindingManager: KeyBindingManager;
+  private _keyBindingManager: KeyBindingManager = null;
 
-  private _mainStyleLoaded: boolean;
-  private _themeStyleLoaded: boolean;
-  private _resizePollHandle: DomUtils.LaterHandle;
-  private _elementAttached: boolean;
-  private _needsCompleteRefresh: boolean;
+  private _mainStyleLoaded = false;
+  private _themeStyleLoaded = false;
+  private _resizePollHandle: DomUtils.LaterHandle = null;
+  private _elementAttached = false;
+  private _needsCompleteRefresh = true;
 
-  private _scheduleLaterHandle: DomUtils.LaterHandle;
-  private _scheduledResize: boolean;
+  private _scheduleLaterHandle: DomUtils.LaterHandle = null;
+  private _scheduledResize = false;
 
-  private _fontSizeAdjustment: number;
-  private _armResizeCanary: boolean;  // Controls when the resize canary is allowed to chirp.
-
-  private _initProperties(): void {
-    this._log = getLogger(EtViewerTab.TAG_NAME, this);
-
-    this._virtualScrollArea = null;
-    this._elementAttached = false;
-    this._needsCompleteRefresh = true;
-    this._blinkingCursor = false;
-
-    this._title = "New Tab";
-    this._tag = null;
-
-    this._mainStyleLoaded = false;
-    this._themeStyleLoaded = false;
-    this._resizePollHandle = null;
-    this._terminalSize = null;
-    this._scrollYOffset = 0;
-    this._virtualHeight = 0;
-
-    this._fontSizeAdjustment = 0;
-    this._armResizeCanary = false;
-
-    this._scheduleLaterHandle = null;
-    this._scheduledResize = false;
-  }
-  
-  dispose(): void {
-    const element = this.getViewerElement();
-    if (element !== null) {
-      element.dispose();
-    }
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   ######                                
-  //   #     # #    # #####  #      #  ####  
-  //   #     # #    # #    # #      # #    # 
-  //   ######  #    # #####  #      # #      
-  //   #       #    # #    # #      # #      
-  //   #       #    # #    # #      # #    # 
-  //   #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
-  
-  /**
-   * Get this terminal's title.
-   *
-   * This is the window title of the terminal, don't confuse it with more
-   * general HTML title of the element.
-   */
-  getTerminalTitle(): string {
-    return this._title;
-  }
-  
-  getTitle(): string {
-    return this._title;
-  }
-  
-  setTitle(newTitle: string): void {
-    this._title = newTitle;
-  }
-  
-  getTag(): string {
-    return this._tag;
-  }
-  
-  setTag(tag: string): void {
-    this._tag = tag;
-  }
-  
-  /**
-   * Destroy the ViewerTab
-   */
-  destroy(): void {
-    if (this._resizePollHandle !== null) {
-      this._resizePollHandle.cancel();
-      this._resizePollHandle = null;
-    }
-
-    // this._getWindow().removeEventListener('resize', this._scheduleResize.bind(this));
-  }
-
-  /**
-   * Focus on this ViewerTab.
-   */
-  focus(): void {
-    const element = this.getViewerElement();
-    if (element !== null) {
-      element.focus();
-    }
-  }
-  
-  /**
-   * Returns true if this terminal has the input focus.
-   *
-   * @return true if the terminal has the focus.
-   */
-  hasFocus(): boolean {
-    const shadowRoot = DomUtils.getShadowRoot(this);
-    if (shadowRoot === null) {
-      return false;
-    }
-    return shadowRoot.activeElement !== null;
-  }
-  
-  setViewerElement(element: ViewerElement): void {
-    if (this.childNodes.length !== 0) {
-      this.innerHTML = "";
-    }
-    
-    if (element !== null) {
-      // element.visualState = ViewerElementTypes. this._visualState; FIXME
-      element.setMode(ViewerElementTypes.Mode.CURSOR);
-      this._appendScrollableElement(element);
-    }
-  }
-  
-  getViewerElement(): ViewerElement {
-    return this._getViewerElement();
-  }
-  
-  getAwesomeIcon(): string {
-    const viewerElement = this.getViewerElement();
-    return viewerElement === null ? "desktop" : viewerElement.getAwesomeIcon();
-  }
-  
-  getFrameContents(frameId: string): BulkFileHandle {
-    return this._tag === frameId ? this.getBulkFileHandle() : null;
-  }
-
-  getBulkFileHandle(): BulkFileHandle {
-    const viewerElement = this.getViewerElement();
-    if (viewerElement === null) {
-      return null;
-    }
-    return viewerElement.getBulkFileHandle();
-  }
-
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.CURSOR;
-  }
-  
-  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
-    this._keyBindingManager = keyBindingManager;
-  }
-
-  getFontAdjust(): number {
-    return this._fontSizeAdjustment;
-  }
-
-  setFontAdjust(delta: number): void {
-    this._adjustFontSize(delta)
-  }
-
-  protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.VIEWER_TAB];
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
+  private _fontSizeAdjustment = 0;
+  private _armResizeCanary = false;  // Controls when the resize canary is allowed to chirp.
 
   constructor() {
     super();
-    this._initProperties();
+    this._log = getLogger(EtViewerTab.TAG_NAME, this);
   }
    
   /**
@@ -364,13 +171,130 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     DomUtils.doLater(this._processResize.bind(this));
   }
 
-  /**
-   * Custom Element 'disconnected' life cycle hook.
-   */
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this._needsCompleteRefresh = true;
   }
+  
+  dispose(): void {
+    const element = this.getViewerElement();
+    if (element !== null) {
+      element.dispose();
+    }
+  }
+  
+  /**
+   * Get this terminal's title.
+   *
+   * This is the window title of the terminal, don't confuse it with more
+   * general HTML title of the element.
+   */
+  getTerminalTitle(): string {
+    return this._title;
+  }
+  
+  getTitle(): string {
+    return this._title;
+  }
+  
+  setTitle(newTitle: string): void {
+    this._title = newTitle;
+  }
+  
+  getTag(): string {
+    return this._tag;
+  }
+  
+  setTag(tag: string): void {
+    this._tag = tag;
+  }
+  
+  /**
+   * Destroy the ViewerTab
+   */
+  destroy(): void {
+    if (this._resizePollHandle !== null) {
+      this._resizePollHandle.cancel();
+      this._resizePollHandle = null;
+    }
+  }
+
+  /**
+   * Focus on this ViewerTab.
+   */
+  focus(): void {
+    const element = this.getViewerElement();
+    if (element !== null) {
+      element.focus();
+    }
+  }
+  
+  /**
+   * Returns true if this terminal has the input focus.
+   *
+   * @return true if the terminal has the focus.
+   */
+  hasFocus(): boolean {
+    const shadowRoot = DomUtils.getShadowRoot(this);
+    if (shadowRoot === null) {
+      return false;
+    }
+    return shadowRoot.activeElement !== null;
+  }
+  
+  setViewerElement(element: ViewerElement): void {
+    if (this.childNodes.length !== 0) {
+      this.innerHTML = "";
+    }
+    
+    if (element !== null) {
+      // element.visualState = ViewerElementTypes. this._visualState; FIXME
+      element.setMode(ViewerElementTypes.Mode.CURSOR);
+      this._appendScrollableElement(element);
+    }
+  }
+  
+  getViewerElement(): ViewerElement {
+    return this._getViewerElement();
+  }
+  
+  getAwesomeIcon(): string {
+    const viewerElement = this.getViewerElement();
+    return viewerElement === null ? "desktop" : viewerElement.getAwesomeIcon();
+  }
+  
+  getFrameContents(frameId: string): BulkFileHandle {
+    return this._tag === frameId ? this.getBulkFileHandle() : null;
+  }
+
+  getBulkFileHandle(): BulkFileHandle {
+    const viewerElement = this.getViewerElement();
+    if (viewerElement === null) {
+      return null;
+    }
+    return viewerElement.getBulkFileHandle();
+  }
+
+  getMode(): ViewerElementTypes.Mode {
+    return ViewerElementTypes.Mode.CURSOR;
+  }
+  
+  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+    this._keyBindingManager = keyBindingManager;
+  }
+
+  getFontAdjust(): number {
+    return this._fontSizeAdjustment;
+  }
+
+  setFontAdjust(delta: number): void {
+    this._adjustFontSize(delta)
+  }
+
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.VIEWER_TAB];
+  }
+
 
   refresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): void {
     let level = requestedLevel;
@@ -397,18 +321,6 @@ export class EtViewerTab extends ViewerElement implements Commandable,
       this._virtualScrollArea.reapplyState();
     }
   }
-
-  //-----------------------------------------------------------------------
-  //
-  //   ######                                      
-  //   #     # #####  # #    #   ##   ##### ###### 
-  //   #     # #    # # #    #  #  #    #   #      
-  //   ######  #    # # #    # #    #   #   #####  
-  //   #       #####  # #    # ######   #   #      
-  //   #       #   #  #  #  #  #    #   #   #      
-  //   #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
   
   private _createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);

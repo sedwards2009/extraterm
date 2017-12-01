@@ -6,8 +6,9 @@
 
 // Key bindings tab
 
-"use strict";
 import * as _ from 'lodash';
+import {WebComponent} from 'extraterm-web-component-decorators';
+
 import * as ThemeTypes from '../../theme/Theme';
 import {ViewerElement} from '../viewers/ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
@@ -28,8 +29,6 @@ const humanText = require('./keybindingstext.json');
 const ID_SELECTOR = "ID_SELECTOR";
 const ID_KEY_BINDINGS = "ID_KEY_BINDINGS";
 const CLASS_KEYCAP = "CLASS_KEYCAP";
-
-let registered = false;
 
 function contexts(): string[] {
   return humanText.contexts;
@@ -76,42 +75,19 @@ interface ModelData {
 /**
  * The Extraterm Key Bindings tab.
  */
+@WebComponent({tag: "et-keybindings-tab"})
 export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsConfigDistributor,
     keybindingmanager.AcceptsKeyBindingManager {
   
-  /**
-   * The HTML tag name of this element.
-   */
   static TAG_NAME = "ET-KEYBINDINGS-TAB";
-
-  /**
-   * Initialize the EtKeyBindingsTab class and resources.
-   *
-   * When EtKeyBindingsTab is imported into a render process, this static method
-   * must be called before an instances may be created. This is can be safely
-   * called multiple times.
-   */
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(EtKeyBindingsTab.TAG_NAME.toLowerCase(), EtKeyBindingsTab);
-      registered = true;
-    }
-  }
   
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically.
-  private _configManager: ConfigManager;
+  private _configManager: ConfigManager = null;
+  private _keyBindingManager: KeyBindingManager = null;
+  private _vm: VueJSInstance<ModelData> = null;
+  private _data: ModelData = null;
 
-  private _keyBindingManager: KeyBindingManager;
-
-  private _vm: VueJSInstance<ModelData>;
-  
-  private _data: ModelData;
-
-  private _initProperties(): void {
-    this._configManager = null;
-    this._keyBindingManager = null;
-    this._vm = null;
+  constructor() {
+    super();
     this._data = {
       selectedKeyBindings: "",
       keyBindingsFiles: [],
@@ -119,72 +95,6 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
     };
   }
   
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
-    if (this._keyBindingManager !== null) {
-      this._keyBindingManager.unregisterChangeListener(this);
-    }
-    
-    this._keyBindingManager = newKeyBindingManager;
-    if (this._keyBindingManager !== null) {
-      this._keyBindingManager.registerChangeListener(this, this._onKeyBindingChange.bind(this));
-    }
-  }
-  
-  getAwesomeIcon(): string {
-    return "keyboard-o";
-  }
-  
-  getTitle(): string {
-    return "Key Bindings";
-  }
-
-  focus(): void {
-    // util.getShadowId(this, ID_CONTAINER).focus();
-  }
-
-  hasFocus(): boolean {
-    return false;
-  }
-  
-  setConfigDistributor(configManager: ConfigManager): void {
-    this._configManager = configManager;
-    this._configManager.registerChangeListener(this, () => {
-      this._setConfig(configManager.getConfig());
-    });
-    this._setConfig(configManager.getConfig());
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-
-  constructor() {
-    super();
-    this._initProperties();
-  }
-  
-  /**
-   * Custom Element 'connected' life cycle hook.
-   */
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
@@ -239,9 +149,6 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
     }
   }
 
-  /**
-   * Custom Element 'disconnected' life cycle hook.
-   */
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._configManager !== null) {
@@ -252,17 +159,41 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
     }
   }
 
-  //-----------------------------------------------------------------------
-  //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
+  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+    if (this._keyBindingManager !== null) {
+      this._keyBindingManager.unregisterChangeListener(this);
+    }
+    
+    this._keyBindingManager = newKeyBindingManager;
+    if (this._keyBindingManager !== null) {
+      this._keyBindingManager.registerChangeListener(this, this._onKeyBindingChange.bind(this));
+    }
+  }
+  
+  getAwesomeIcon(): string {
+    return "keyboard-o";
+  }
+  
+  getTitle(): string {
+    return "Key Bindings";
+  }
+
+  focus(): void {
+    // util.getShadowId(this, ID_CONTAINER).focus();
+  }
+
+  hasFocus(): boolean {
+    return false;
+  }
+  
+  setConfigDistributor(configManager: ConfigManager): void {
+    this._configManager = configManager;
+    this._configManager.registerChangeListener(this, () => {
+      this._setConfig(configManager.getConfig());
+    });
+    this._setConfig(configManager.getConfig());
+  }
+
   private _onKeyBindingChange(): void {
     this._data.keyBindingsContextsStamp = Date.now();
   }

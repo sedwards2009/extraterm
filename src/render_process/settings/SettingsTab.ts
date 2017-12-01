@@ -3,8 +3,7 @@
  */
 
 // Settings tab using Vue.js
-
-"use strict";
+import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as _ from 'lodash';
 import {ThemeableElementBase} from '../ThemeableElementBase';
@@ -24,8 +23,6 @@ type ConfigManager = config.ConfigDistributor;
 
 type CommandLineAction = config.CommandLineAction;
 type FontInfo = config.FontInfo;
-
-let registered = false;
 
 const ID_COMMAND_OUTPUT_HANDLING = "ID_COMMAND_OUTPUT_HANDLING";
 const ID_SCROLLBACK = "ID_SCROLLBACK";
@@ -108,37 +105,21 @@ function stripIds(list: Identifiable[]): void {
   });  
 }
 
+@WebComponent({tag: "et-settings-tab"})
 export class SettingsTab extends ViewerElement implements config.AcceptsConfigDistributor {
   
   static TAG_NAME = "ET-SETTINGS-TAB";
   
-  static init(): void {
-    if (registered === false) {
-      window.customElements.define(SettingsTab.TAG_NAME.toLowerCase(), SettingsTab);
-      registered = true;
-    }
-  }
-  
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically.
-  private _log: Logger;
-  
-  private _vm: VueJSInstance<ModelData>;
-  
-  private _data: ModelData;
-  
-  private _configManager: ConfigManager;
-  
-  private _themes: ThemeTypes.ThemeInfo[];
+  private _log: Logger = null;
+  private _vm: VueJSInstance<ModelData> = null;
+  private _data: ModelData = null;
+  private _configManager: ConfigManager = null;
+  private _themes: ThemeTypes.ThemeInfo[] = [];
+  private _fontOptions: FontInfo[] = [];
 
-  private _fontOptions: FontInfo[];
-
-  private _initProperties(): void {
+  constructor() {
+    super();
     this._log = getLogger(SettingsTab.TAG_NAME, this);
-    this._vm = null;
-    this._themes = [];
-    this._configManager = null;
-    this._fontOptions = [];
     this._data = {
       showTips: 'always',
       showTipsOptions: [ { id: 'always', name: 'Everytime' }, { id: 'daily', name: 'Daily'}, { id: 'never', name: 'Never'} ],
@@ -182,129 +163,6 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
     };
   }
   
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
-
-  getAwesomeIcon(): string {
-    return "wrench";
-  }
-  
-  getTitle(): string {
-    return "Settings";
-  }
-
-  focus(): void {
-  }
-
-  hasFocus(): boolean {
-    // const root = util.getShadowRoot(this);
-    // return root.activeElement !== null;
-    return false;
-  }
-  
-  setConfigDistributor(configManager: ConfigManager): void {
-    this._configManager = configManager;
-    configManager.registerChangeListener(this, () => {
-      this._setConfig(configManager.getConfig());
-    });
-    this._setConfig(configManager.getConfig());
-  }
-  
-  private _setConfig(config: Config): void {
-    
-    if (this._data.showTips !== config.showTips) {
-      this._data.showTips = config.showTips;
-    }
-    
-    // We take care to only update things which have actually changed.
-    if (this._data.scrollbackLines !== config.scrollbackLines) {
-      this._data.scrollbackLines = config.scrollbackLines;
-    }
-    
-    if (this._data.terminalFontSize !== config.terminalFontSize) {
-      this._data.terminalFontSize = config.terminalFontSize;
-    }
-    
-    if (this._data.terminalFont !== config.terminalFont) {
-      this._data.terminalFont = config.terminalFont;
-    }
-    
-    if (this._data.uiScalePercent !== config.uiScalePercent) {
-      this._data.uiScalePercent = config.uiScalePercent;
-    }
-
-    const newFontOptions = [...config.systemConfig.availableFonts];
-    newFontOptions.sort( (a,b) => {
-      if (a.name === b.name) {
-        return 0;
-      }
-      return a.name < b.name ? -1 : 1;
-    });
-    
-    if ( ! _.isEqual(this._fontOptions, newFontOptions)) {
-      this._fontOptions = newFontOptions;
-      this._data.terminalFontOptions = newFontOptions;
-    }
-  
-    const cleanCommandLineAction = _.cloneDeep(this._data.commandLineActions);
-    stripIds(cleanCommandLineAction);
-    
-    this._data.themeTerminal = config.themeTerminal;
-    this._data.themeSyntax = config.themeSyntax;
-    this._data.themeGUI = config.themeGUI;
-    this._data.titleBar = config.showTitleBar ? "native" : "theme";
-    this._data.currentTitleBar = config.systemConfig.titleBarVisible ? "native" : "theme";
-
-    if ( ! _.isEqual(cleanCommandLineAction, config.commandLineActions)) {
-      const updateCLA = <IdentifiableCommandLineAction[]> _.cloneDeep(config.commandLineActions);
-      setIds(updateCLA);
-      this._data.commandLineActions = updateCLA;
-    }
-  }
-
-  setThemes(themes: ThemeTypes.ThemeInfo[]): void {
-    this._themes = themes;
-
-    const getThemesByType = (type: ThemeTypes.ThemeType): ThemeTypes.ThemeInfo[] => {
-      const themeTerminalOptions = this._themes
-        .filter( (themeInfo) => themeInfo.type.indexOf(type) !== -1 );
-      return _.sortBy(themeTerminalOptions, (themeInfo: ThemeTypes.ThemeInfo): string => themeInfo.name );
-    };
-    
-    this._data.themeTerminalOptions = getThemesByType('terminal');
-    this._data.themeSyntaxOptions = getThemesByType('syntax');
-    this._data.themeGUIOptions = getThemesByType('gui');
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-
-  constructor() {
-    super();
-    this._initProperties();
-  }
-  
-  /**
-   * Custom Element 'connected' life cycle hook.
-   */
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
@@ -550,9 +408,6 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
     }
   }
   
-  /**
-   * Custom Element 'disconnected' life cycle hook.
-   */
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._configManager !== null) {
@@ -564,17 +419,97 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB, ThemeTypes.CssFile.FONT_AWESOME];
   }
 
-  //-----------------------------------------------------------------------
-  //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
+  getAwesomeIcon(): string {
+    return "wrench";
+  }
+  
+  getTitle(): string {
+    return "Settings";
+  }
+
+  focus(): void {
+  }
+
+  hasFocus(): boolean {
+    // const root = util.getShadowRoot(this);
+    // return root.activeElement !== null;
+    return false;
+  }
+  
+  setConfigDistributor(configManager: ConfigManager): void {
+    this._configManager = configManager;
+    configManager.registerChangeListener(this, () => {
+      this._setConfig(configManager.getConfig());
+    });
+    this._setConfig(configManager.getConfig());
+  }
+  
+  private _setConfig(config: Config): void {
+    
+    if (this._data.showTips !== config.showTips) {
+      this._data.showTips = config.showTips;
+    }
+    
+    // We take care to only update things which have actually changed.
+    if (this._data.scrollbackLines !== config.scrollbackLines) {
+      this._data.scrollbackLines = config.scrollbackLines;
+    }
+    
+    if (this._data.terminalFontSize !== config.terminalFontSize) {
+      this._data.terminalFontSize = config.terminalFontSize;
+    }
+    
+    if (this._data.terminalFont !== config.terminalFont) {
+      this._data.terminalFont = config.terminalFont;
+    }
+    
+    if (this._data.uiScalePercent !== config.uiScalePercent) {
+      this._data.uiScalePercent = config.uiScalePercent;
+    }
+
+    const newFontOptions = [...config.systemConfig.availableFonts];
+    newFontOptions.sort( (a,b) => {
+      if (a.name === b.name) {
+        return 0;
+      }
+      return a.name < b.name ? -1 : 1;
+    });
+    
+    if ( ! _.isEqual(this._fontOptions, newFontOptions)) {
+      this._fontOptions = newFontOptions;
+      this._data.terminalFontOptions = newFontOptions;
+    }
+  
+    const cleanCommandLineAction = _.cloneDeep(this._data.commandLineActions);
+    stripIds(cleanCommandLineAction);
+    
+    this._data.themeTerminal = config.themeTerminal;
+    this._data.themeSyntax = config.themeSyntax;
+    this._data.themeGUI = config.themeGUI;
+    this._data.titleBar = config.showTitleBar ? "native" : "theme";
+    this._data.currentTitleBar = config.systemConfig.titleBarVisible ? "native" : "theme";
+
+    if ( ! _.isEqual(cleanCommandLineAction, config.commandLineActions)) {
+      const updateCLA = <IdentifiableCommandLineAction[]> _.cloneDeep(config.commandLineActions);
+      setIds(updateCLA);
+      this._data.commandLineActions = updateCLA;
+    }
+  }
+
+  setThemes(themes: ThemeTypes.ThemeInfo[]): void {
+    this._themes = themes;
+
+    const getThemesByType = (type: ThemeTypes.ThemeType): ThemeTypes.ThemeInfo[] => {
+      const themeTerminalOptions = this._themes
+        .filter( (themeInfo) => themeInfo.type.indexOf(type) !== -1 );
+      return _.sortBy(themeTerminalOptions, (themeInfo: ThemeTypes.ThemeInfo): string => themeInfo.name );
+    };
+    
+    this._data.themeTerminalOptions = getThemesByType('terminal');
+    this._data.themeSyntaxOptions = getThemesByType('syntax');
+    this._data.themeGUIOptions = getThemesByType('gui');
+  }
+
   private _dataChanged(newVal: ModelData): void {
     const newConfig = _.cloneDeep(this._configManager.getConfig());
     const model = _.cloneDeep(newVal);

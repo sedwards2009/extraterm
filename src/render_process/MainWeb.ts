@@ -173,7 +173,6 @@ function loadFontFaces(): Promise<FontFace[]> {
 function startUpComponents(): void {
   // Fonts are loaded, continue.
   MainWebUi.init();
-  ResizeCanary.init();
 }
 
 function startUpMainWebUi(): void {
