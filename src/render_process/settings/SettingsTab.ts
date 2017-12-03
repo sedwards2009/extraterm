@@ -8,7 +8,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
-import * as Vue from 'vue';
+import Vue from 'vue';
 
 import * as config from '../../Config';
 import * as DomUtils from '../DomUtils';
@@ -111,7 +111,6 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
   static TAG_NAME = "ET-SETTINGS-TAB";
   
   private _log: Logger = null;
-  private _vm: VueJSInstance<ModelData> = null;
   private _data: ModelData = null;
   private _configManager: ConfigManager = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
@@ -177,7 +176,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
       
       this.updateThemeCss();
       
-      this._vm = new Vue({
+      const vm = new Vue({
         data: this._data,
         template: 
 `<div id='${ID_SETTINGS}'>
@@ -403,8 +402,8 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
           },
         }
       });
-      this._vm.$mount(divContainer);
-      this._vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false, sync: false } );
+      vm.$mount(divContainer);
+      vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
     }
   }
   

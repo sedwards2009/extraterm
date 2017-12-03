@@ -15,7 +15,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
-import * as Vue from 'vue';
+import Vue from 'vue';
 import * as DomUtils from '../DomUtils';
 import * as config from '../../Config';
 type Config = config.Config;
@@ -83,7 +83,6 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
   
   private _configManager: ConfigManager = null;
   private _keyBindingManager: KeyBindingManager = null;
-  private _vm: VueJSInstance<ModelData> = null;
   private _data: ModelData = null;
 
   constructor() {
@@ -108,10 +107,8 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
       vueDivContainer.id = ID_KEY_BINDINGS;
       shadow.appendChild(vueDivContainer);
       
-      Vue.config.debug = true;
-      
       const elementThis = this;
-      this._vm = new Vue({
+      const vm = new Vue({
         data: this._data,
         template: 
 `<div id="${ID_KEY_BINDINGS}">
@@ -142,8 +139,8 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
           }
         }
       });
-      this._vm.$mount(vueDivContainer);
-      this._vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false, sync: false } );
+      vm.$mount(vueDivContainer);
+      vm.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
       
       this.updateThemeCss();
     }
