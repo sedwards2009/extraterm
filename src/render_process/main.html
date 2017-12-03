@@ -26,8 +26,14 @@
         }
         return result;
       };
-    }
 
+      // Next hack. TypeScript thinks that the Vue stuff is a ES6 style module, but we are loading commonjs
+      // format. This is a problem because default exports in modules work differently between the two formats.
+      // For now we just hack the imported module just enough to make it work as a ES6 module with a default.
+      const vue = require('vue');
+      vue.default = vue;
+    }
+    
     function startUp() {
       wedgeRequire();
       var mainweb = require('./MainWeb');
