@@ -159,8 +159,15 @@ function main(): void {
     startIpc();
     
     // Create the browser window.
-    const options = <Electron.BrowserWindowOptions> {width: 1200, height: 600, "web-preferences": { "experimental-features": true },
-      frame: config.showTitleBar, title: "Extraterm"};
+    const options = <Electron.BrowserWindowOptions> {
+      width: 1200,
+      height: 600,
+      "webPreferences": {
+        "experimentalFeatures": true,
+      },
+      frame: config.showTitleBar,
+      title: "Extraterm"
+    };
     if (process.platform === "win32") {
       options.icon = path.join(__dirname, ICO_ICON_PATH);
     } else if (process.platform === "linux") {
