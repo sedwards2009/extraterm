@@ -17,6 +17,7 @@ import {BulkFileUploader} from './bulk_file_handling/BulkFileUploader';
 import * as BulkFileUtils from './bulk_file_handling/BulkFileUtils';
 import * as DisposableUtils from '../utils/DisposableUtils';
 import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
+import {DownloadViewer} from './viewers/DownloadViewer';
 
 import {ViewerElement} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
@@ -118,6 +119,7 @@ const viewerClasses: ViewerElementTypes.SupportsMimeTypes[] = [];
 viewerClasses.push(ImageViewer);
 viewerClasses.push(TextViewer);
 viewerClasses.push(TipViewer);
+viewerClasses.push(DownloadViewer);
 
 interface ChildElementStatus {
   element: VirtualScrollable & HTMLElement;
@@ -1959,6 +1961,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     const {mimeType, charset} = BulkFileUtils.guessMimetype(bulkFileHandle);
     if (mimeType !== null) {
       this._appendMimeViewer(mimeType, filename, bulkFileHandle);
+    } else {
+      this._appendMimeViewer("application/octet-stream", filename, bulkFileHandle);
     }
   }
 

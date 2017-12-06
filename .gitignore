@@ -118,3 +118,4 @@ extraterm-web-component-decorators/test/DecoratorsTest.d.ts
 extraterm-web-component-decorators/test/DecoratorsTest.js
 extraterm-web-component-decorators/test/TestCode.js
 extraterm-web-component-decorators/test/TestCode.d.ts
+src/render_process/viewers/DownloadViewer.js

@@ -96,6 +96,7 @@
         "./src/render_process/SupportsClipboardPaste.ts",
         "./src/render_process/Terminal.ts",
         "./src/render_process/ThemeableElementBase.ts",
+        "./src/render_process/viewers/DownloadViewer.ts",
         "./src/render_process/viewers/EmbeddedViewer.ts",
         "./src/render_process/viewers/ImageViewer.ts",
         "./src/render_process/viewers/MarkdownViewer.ts",
