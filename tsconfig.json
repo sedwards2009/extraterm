@@ -100,6 +100,7 @@
         "./src/render_process/viewers/EmbeddedViewer.ts",
         "./src/render_process/viewers/ImageViewer.ts",
         "./src/render_process/viewers/MarkdownViewer.ts",
+        "./src/render_process/viewers/SimpleViewerElement.ts",
         "./src/render_process/viewers/TerminalViewer.ts",
         "./src/render_process/viewers/TerminalViewerTypes.ts",
         "./src/render_process/viewers/TextViewer.ts",
