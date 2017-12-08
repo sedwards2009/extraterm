@@ -25,7 +25,7 @@ html {
   -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
-body {
+body, .body {
   font-family: $font-family-base;
   font-size: $font-size-base;
   line-height: $line-height-base;
