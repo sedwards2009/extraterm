@@ -20,7 +20,7 @@ import {SimpleViewerElement} from '../viewers/SimpleViewerElement';
   <div class="row">
     <div v-if="!finished" class="col-sm-6">{{name}}</div>
     <div v-if="finished" class="col-sm-6">Downloading {{name}}</div>
-    <div class="col-sm-6">{{formattedHumanAvailableBytes}} ({{formattedExactAvailableBytes}} bytes)</div>
+    <div class="col-sm-6">{{formattedHumanAvailableBytes}} &nbsp; ({{formattedExactAvailableBytes}} bytes)</div>
   </div>
 </div>`
 })
@@ -47,16 +47,16 @@ function formatHumanBytes(numberBytes: number): string {
   let units = "";
   if (gibibytes > 1) {
     displayNumber = gibibytes;
-    units = "GiB";
+    units = " GiB";
   } else if (mebibytes > 1) {
     displayNumber = mebibytes;
-    units = "MiB";
+    units = " MiB";
   } else if (kibibytes > 1) {
     displayNumber = kibibytes;
-    units = "KiB";
+    units = " KiB";
   } else {
     displayNumber = numberBytes;
-    units = "b";
+    units = " b";
   }
   return displayNumber.toLocaleString("en-US", {maximumFractionDigits: 1}) + units;
 }
