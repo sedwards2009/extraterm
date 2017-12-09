@@ -6,6 +6,7 @@ import { Disposable } from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import * as DomUtils from '../DomUtils';
 
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import {Logger, getLogger} from '../../logging/Logger';
@@ -70,6 +71,7 @@ export class DownloadViewer extends SimpleViewerElement {
   private _ui: DownloadUI = null;
   private _onAvailableSizeChangeDisposable: Disposable = null;
   private _onFinishedDisposable: Disposable = null;
+  private _laterHandle: DomUtils.LaterHandle = null;
 
   constructor() {
     super();
@@ -103,9 +105,8 @@ export class DownloadViewer extends SimpleViewerElement {
     this._bulkFileHandle = handle;
     handle.ref();
 
-    this._onAvailableSizeChangeDisposable = this._bulkFileHandle.onAvailableSizeChange(() => {
-        this._ui.availableSize = handle.getAvailableSize();
-      });
+    this._onAvailableSizeChangeDisposable = this._bulkFileHandle.onAvailableSizeChange(
+      () => this._scheduleAvailableSizeUpdate());
     this._onFinishedDisposable = this._bulkFileHandle.onFinished(() => {
       this._ui.finished = true;
     });
@@ -115,6 +116,15 @@ export class DownloadViewer extends SimpleViewerElement {
     const metadata = handle.getMetadata();
     if (metadata["filename"] !== undefined) {
       this._ui.name = <string> metadata["filename"];
+    }
+  }
+
+  private _scheduleAvailableSizeUpdate(): void {
+    if (this._laterHandle === null) {
+      this._laterHandle = DomUtils.doLater(() => {
+        this._ui.availableSize = this._bulkFileHandle.getAvailableSize();
+        this._laterHandle = null;
+      }, 500);
     }
   }
 
@@ -129,6 +139,10 @@ export class DownloadViewer extends SimpleViewerElement {
 
   dispose(): void {
     this._releaseBulkFileHandle();
+    if (this._laterHandle !== null) {
+      this._laterHandle.cancel();
+      this._laterHandle = null;
+    }
     super.dispose();
   }
 }
