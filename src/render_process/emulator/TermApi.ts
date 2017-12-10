@@ -99,6 +99,37 @@ export interface WriteBufferStatus {
 
 /**
  * Handler for processing the application mode escape code.
+ * 
+ * Application mode is a feature specific to Extraterm. It is a generic
+ * escape code intend for sending large amounts of data from an application
+ * running on the remote end of the pty to the terminal emulator application.
+ * 
+ * The structure of the escape code is:
+ * 
+ *   ESC "&" [parameters separated by semicolon] 0x07 [data] 0x00
+ * 
+ * In english, the escape character followed by ampersand then multiple
+ * parameters separated by semicolons, then the 0x07 character (BEL),
+ * raw data then terminated by a NUL byte.
+ * 
+ * Once the 0x07 (BEL) character is received then the `start()` method is
+ * called with the parameters. Then the `data()` method is called multiple
+ * times as chunks of data are received, finally `end()` is called once the
+ * NUL byte is seen.
+ * 
+ * The `start()` and `data()` methods respond with an
+ * `ApplicationModeResponse` object. This is usually just
+ * `{action: ApplicationModeResponseAction.CONTINUE}` but in the even that
+ * the `ApplicationModeHandler` detects an error or that the remote program
+ * has crashed, then `{action: ApplicationModeResponseAction.ABORT}` can be
+ * returned. This will immediately exit application mode in the emulator
+ * return to normal processing. It is also possible to 'push back' the unused
+ * part of the data buffer in this case by using the `remainingData` field in
+ * the `ApplicationModeResponse` object.
+ * 
+ * `ApplicationModeResponseAction.PAUSE`
+ * can be used to pause processing of the PTY output stream by the emulator.
+ * See `pauseProcessing()` and `resumeProcessing()` in the `EmulatorAPI`. 
  */
 export interface ApplicationModeHandler {
   /**
