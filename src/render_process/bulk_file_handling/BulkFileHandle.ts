@@ -7,10 +7,19 @@
 import {Metadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {Event} from 'extraterm-extension-api';
 
+export enum BulkFileState {
+  DOWNLOADING,
+  COMPLETED,
+  FAILED
+}
+
 /**
  * A handle for accessing a bulk file.
  */
 export interface BulkFileHandle {
+
+  getState(): BulkFileState;
+
   /**
    * Get a URL to the file contents.
    */

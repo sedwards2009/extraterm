@@ -421,6 +421,7 @@ export interface BulkFileWriteMessage extends Message {
 
 export interface BulkFileCloseMessage extends Message {
   identifier: BulkFileIdentifier;
+  succeeded: boolean;
 }
 
 export interface BulkFileBufferSize extends Message {

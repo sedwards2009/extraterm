@@ -157,7 +157,7 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
 
   handleStop(): void {
     this._flushBuffer();
-    this._fileHandle.close();
+    this._fileHandle.close(true);
     this._resetVariables();
   }
 }

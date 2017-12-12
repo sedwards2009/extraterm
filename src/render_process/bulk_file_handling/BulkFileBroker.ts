@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {Disposable} from 'extraterm-extension-api';
-import {BulkFileHandle} from './BulkFileHandle';
+import {BulkFileHandle, BulkFileState} from './BulkFileHandle';
 import {BulkFileIdentifier, Metadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {getLogger, Logger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
@@ -84,7 +84,8 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   private _removeBufferDelta = 0;
 
   private _closePending = false;
-  
+  private _success = true;
+
   constructor(private _disposable: Disposable, private _metadata: Metadata, private _totalSize: number) {
     this._log = getLogger("WriteableBulkFileHandle", this);
 
@@ -95,6 +96,13 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     const {identifier, url} = WebIpc.createBulkFileSync(_metadata, _totalSize);
     this._fileIdentifier = identifier;
     this._url = url;
+  }
+
+  getState(): BulkFileState {
+    if (this._isOpen) {
+      return BulkFileState.DOWNLOADING;
+    }
+    return this._success ? BulkFileState.COMPLETED : BulkFileState.FAILED;
   }
 
   getBulkFileIdentifier(): BulkFileIdentifier {
@@ -194,7 +202,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     }
 
     if (this._closePending && this._writeBuffer.length === 0) {
-      WebIpc.closeBulkFile(this._fileIdentifier);
+      WebIpc.closeBulkFile(this._fileIdentifier, this._success);
       this._isOpen = false;
       this._closePending = false;
     }
@@ -222,13 +230,14 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     });
   }
 
-  close(): void {
+  close(success: boolean): void {
     if ( ! this._isOpen) {
       this._log.warn("Close attempted on a closed WriteableBulkFileHandle! ", this._fileIdentifier);
       return;
     }
 
     this._closePending = true;
+    this._success = success;
     this._sendBuffers();
   }
 

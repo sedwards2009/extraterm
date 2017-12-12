@@ -6,7 +6,7 @@
 
 import {Event} from 'extraterm-extension-api';
 import {Metadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
-import {BulkFileHandle} from './BulkFileHandle';
+import {BulkFileHandle, BulkFileState} from './BulkFileHandle';
 
 
 const ONE_KILOBYTE = 1024;
@@ -20,6 +20,10 @@ export class BlobBulkFileHandle implements BulkFileHandle {
   constructor(private _mimeType: string, private _metadata: Metadata, private _blobBuffer: Buffer) {
   }
 
+  getState(): BulkFileState {
+    return BulkFileState.COMPLETED;
+  }
+  
   getUrl(): string {
     if (this._url == null) {
       return `data:${this._mimeType};base64,${this._blobBuffer.toString("base64")}`;     
