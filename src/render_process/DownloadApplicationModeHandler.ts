@@ -21,11 +21,15 @@ enum DownloadHandlerState {
   ERROR
 }
 
+const MAX_CHUNK_BYTES = 3 * 1024;
+const invalidBodyRegex = /[^\n\rA-Za-z0-9/+:=]/;
+
+
 export class DownloadApplicationModeHandler /* implements ApplicationModeHandler */ {
   private _log: Logger;
   private _state = DownloadHandlerState.IDLE;
   private _encodedDataBuffer: string;
-  private _buffer: Buffer = null;
+  private _decodedDataBuffers: Buffer[] = [];
   private _metadataSize: number;
 
   private _fileHandle : WriteableBulkFileHandle = null;
@@ -42,7 +46,7 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
   private _resetVariables(): void {
     this._state = DownloadHandlerState.IDLE;
     this._encodedDataBuffer = "";
-    this._buffer = null;
+    this._decodedDataBuffers = [];
     this._metadataSize = -1;
 
     if (this._fileHandle !== null) {
@@ -106,19 +110,83 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
   }
 
   private _handleBody(encodedData: string): TermApi.ApplicationModeResponse {
+    const MAX_ENCODED_LENGTH = MAX_CHUNK_BYTES * 4 / 3;
+    
+    // MAX_ENCODED_LENGTH + : + <sha256.length>
+    const HASH_LENGTH = 64;
+    const MAX_ENCODED_LINE_LENGTH = MAX_ENCODED_LENGTH + 1 + HASH_LENGTH;
+
     this._encodedDataBuffer += encodedData;
 
-    // 4 is the minimum number of bytes we need before we can safely decode base64.
-    if (this._encodedDataBuffer.length >= 4) {
-      if (this._fileHandle.getAvailableWriteBufferSize()) {
-        this._flushBuffer();
-      }
-
-      if (this._fileHandle.getAvailableWriteBufferSize() <= 0) {
-        return {action: TermApi.ApplicationModeResponseAction.PAUSE};
-      }
+    // Check for invalid characters which may indicate a crash on the remote side.
+    if (invalidBodyRegex.test(this._encodedDataBuffer)) {
+      this._fileHandle.close(false);
+      this._fileHandle.deref();
+      this._fileHandle = null;
+      return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
     }
+
+    let splitIndex = this._determineBufferSplitPosition();
+    while (splitIndex !== -1) {
+
+      const chunk = this._encodedDataBuffer.slice(0, splitIndex);
+      const tail = this._encodedDataBuffer.slice(splitIndex);
+      if (tail.startsWith("\n") || tail.startsWith("\r")) {
+        this._encodedDataBuffer = tail.slice(1);
+      } else {
+        this._encodedDataBuffer = tail;
+      }
+      
+      if (chunk.length !== 0) {
+        const colonIndex = chunk.length - HASH_LENGTH - 1;
+        const colon = chunk.charAt(colonIndex);
+        if (colon !== ":") {
+          this._fileHandle.close(false);
+          this._fileHandle.deref();
+          this._fileHandle = null;
+          return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
+        }
+        
+        const base64Data = chunk.slice(0, colonIndex);
+        const hashHex = chunk.slice(colonIndex+1);
+
+        const decodedBytes = Buffer.from(base64Data, 'base64');
+
+        // FIXME check the hash.
+
+        this._decodedDataBuffers.push(decodedBytes);
+      }
+      splitIndex = this._determineBufferSplitPosition();
+    }
+
+    this._flushBuffer();
+
+    if (this._fileHandle.getAvailableWriteBufferSize() <= 0) {
+      return {action: TermApi.ApplicationModeResponseAction.PAUSE};
+    }
+
     return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
+  }
+
+  private _determineBufferSplitPosition(): number {
+    const MAX_ENCODED_LENGTH = MAX_CHUNK_BYTES * 4 / 3;
+    
+    // MAX_ENCODED_LENGTH + : + <sha256.length>
+    const MAX_ENCODED_LINE_LENGTH = MAX_ENCODED_LENGTH + 1 + 64;
+    
+    let newLineIndex = this._encodedDataBuffer.indexOf("\n");
+    let crIndex = this._encodedDataBuffer.indexOf("\r");
+
+    newLineIndex = newLineIndex === -1 ? Number.MAX_SAFE_INTEGER : newLineIndex;
+    crIndex = crIndex === -1 ? Number.MAX_SAFE_INTEGER : crIndex;
+
+    let splitIndex = Math.min(newLineIndex, crIndex);
+    if (splitIndex !== Number.MAX_SAFE_INTEGER) {
+      return Math.min(splitIndex, MAX_ENCODED_LINE_LENGTH);
+    } else if (this._encodedDataBuffer.length >= MAX_ENCODED_LINE_LENGTH) {
+      return MAX_ENCODED_LINE_LENGTH;
+    }
+    return -1;
   }
 
   private _handleAvailableWriteBufferSizeChanged(bufferSize: number): void {
@@ -134,24 +202,24 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
   }
 
   private _flushBuffer(): void {
-    if (this._encodedDataBuffer.length === 0) {
-      return;
-    }
+    while (this._decodedDataBuffers.length !== 0 && this._fileHandle.getAvailableWriteBufferSize() > 0) {
+      const availableSize = this._fileHandle.getAvailableWriteBufferSize();
+      
+      const nextBuffer = this._decodedDataBuffers[0];
+      this._decodedDataBuffers.splice(0, 1);
 
-      // base64 data must be decoded in blocks of 4 chars, otherwise bytes will be lost.
-    let workingBuffer: string;
-    if ((this._encodedDataBuffer.length % 4) === 0) {
-      workingBuffer = this._encodedDataBuffer;
-      this._encodedDataBuffer = "";
-    } else {
-      const splitIndex = this._encodedDataBuffer.length - (this._encodedDataBuffer.length % 4);
-      workingBuffer = this._encodedDataBuffer.slice(0, splitIndex);
-      this._encodedDataBuffer = this._encodedDataBuffer.slice(splitIndex);
-    }
+      let xferBuffer: Buffer = nextBuffer;
+      if (nextBuffer.length > availableSize) {
+        // Buffer is bigger than available size. Split it.
+        xferBuffer = Buffer.alloc(availableSize);
+        nextBuffer.copy(xferBuffer, 0, 0, availableSize);
 
-    const decodedBytes = Buffer.from(workingBuffer, 'base64');
-    if (decodedBytes.length !== 0) {
-      this._fileHandle.write(decodedBytes);
+        const secondPartBuffer = Buffer.alloc(xferBuffer.length - availableSize);
+        nextBuffer.copy(secondPartBuffer, 0, availableSize);
+        this._decodedDataBuffers.splice(0, 1, secondPartBuffer);
+      }
+
+      this._fileHandle.write(xferBuffer);
     }
   }
 

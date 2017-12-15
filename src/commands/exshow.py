@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+# Copyright 2014-2017 Simon Edwards <simon@simonzone.com>
 #
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 # 
@@ -8,10 +8,12 @@ import sys
 import os.path
 import argparse
 import base64
+import hashlib
 
 ##@inline
 from extratermclient import extratermclient
 
+MAX_CHUNK_BYTES = 3 * 1024  # This is kept a multiple of 3 to avoid padding in the base64 representation.
 
 def SendMimeTypeDataFromFile(filename, mimeType, charset, filenameMeta=None):
     with open(filename,'rb') as fhandle:
@@ -22,10 +24,14 @@ def SendMimeTypeDataFromStdin(mimeType, charset, filenameMeta=None):
 
 def SendMimeTypeData(fhandle, filename, mimeType, charset):
     extratermclient.startFileTransfer(mimeType, charset, filename)
-    contents = fhandle.read(3*10240)    # This must be a multiple of 3 to keep concatinated base64 working.
+    contents = fhandle.read(MAX_CHUNK_BYTES)
+    hash = hashlib.sha256()
     while len(contents) != 0:
-        print(base64.b64encode(contents).decode(),end='')
-        contents = fhandle.read(3*10240)
+        hash.update(contents)
+        print(base64.b64encode(contents).decode(), end='')
+        print(":", end='')
+        print(hash.hexdigest())
+        contents = fhandle.read(MAX_CHUNK_BYTES)
     extratermclient.endFileTransfer()
 
 def ShowFile(filename, mimeType=None, charset=None, filenameMeta=None):
