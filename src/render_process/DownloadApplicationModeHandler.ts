@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+import * as crypto from 'crypto';
 import {Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../utils/EventEmitter';
 import {Logger, getLogger} from '../logging/Logger';
@@ -31,7 +32,7 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
   private _encodedDataBuffer: string;
   private _decodedDataBuffers: Buffer[] = [];
   private _metadataSize: number;
-
+  private _previousHash: Buffer = null;
   private _fileHandle : WriteableBulkFileHandle = null;
 
   onCreatedBulkFile: Event<BulkFileHandle>;
@@ -109,6 +110,12 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
     }
   }
 
+  private _closeFileHandle(success: boolean): void {
+    this._fileHandle.close(success);
+    this._fileHandle.deref();
+    this._fileHandle = null;
+  }
+
   private _handleBody(encodedData: string): TermApi.ApplicationModeResponse {
     const MAX_ENCODED_LENGTH = MAX_CHUNK_BYTES * 4 / 3;
     
@@ -117,12 +124,10 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
     const MAX_ENCODED_LINE_LENGTH = MAX_ENCODED_LENGTH + 1 + HASH_LENGTH;
 
     this._encodedDataBuffer += encodedData;
-
+    
     // Check for invalid characters which may indicate a crash on the remote side.
     if (invalidBodyRegex.test(this._encodedDataBuffer)) {
-      this._fileHandle.close(false);
-      this._fileHandle.deref();
-      this._fileHandle = null;
+      this._closeFileHandle(false);
       return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
     }
 
@@ -141,9 +146,7 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
         const colonIndex = chunk.length - HASH_LENGTH - 1;
         const colon = chunk.charAt(colonIndex);
         if (colon !== ":") {
-          this._fileHandle.close(false);
-          this._fileHandle.deref();
-          this._fileHandle = null;
+          this._closeFileHandle(false);
           return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
         }
         
@@ -152,7 +155,17 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
 
         const decodedBytes = Buffer.from(base64Data, 'base64');
 
-        // FIXME check the hash.
+        // Check the hash.
+        const hash = crypto.createHash("sha256");
+        if (this._previousHash !== null) {
+          hash.update(this._previousHash);
+        }
+        hash.update(decodedBytes);
+        this._previousHash = hash.digest();
+        if (this._previousHash.toString("hex") !== hashHex) {
+          this._closeFileHandle(false);
+          return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
+        }
 
         this._decodedDataBuffers.push(decodedBytes);
       }
