@@ -70,7 +70,7 @@ export class DownloadViewer extends SimpleViewerElement {
   private _bulkFileHandle: BulkFileHandle = null;
   private _ui: DownloadUI = null;
   private _onAvailableSizeChangeDisposable: Disposable = null;
-  private _onFinishedDisposable: Disposable = null;
+  private _onStateChangeDisposable: Disposable = null;
   private _laterHandle: DomUtils.LaterHandle = null;
 
   constructor() {
@@ -107,7 +107,7 @@ export class DownloadViewer extends SimpleViewerElement {
 
     this._onAvailableSizeChangeDisposable = this._bulkFileHandle.onAvailableSizeChange(
       () => this._scheduleAvailableSizeUpdate());
-    this._onFinishedDisposable = this._bulkFileHandle.onFinished(() => {
+    this._onStateChangeDisposable = this._bulkFileHandle.onStateChange(() => {
       this._ui.finished = true;
     });
     this._ui.availableSize = handle.getAvailableSize();
@@ -131,7 +131,7 @@ export class DownloadViewer extends SimpleViewerElement {
   private _releaseBulkFileHandle(): void {    
     if (this._bulkFileHandle !== null) {
       this._onAvailableSizeChangeDisposable.dispose();
-      this._onFinishedDisposable.dispose();
+      this._onStateChangeDisposable.dispose();
       this._bulkFileHandle.deref();
     }
     this._bulkFileHandle = null;

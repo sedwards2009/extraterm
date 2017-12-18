@@ -77,7 +77,7 @@ export interface BulkFileHandle {
   deref(): void;
 
   /**
-   * This event is fired when the file has been completely downloaded.
+   * This event is fired when the file has been completely downloaded or fails.
    */
-  onFinished: Event<void>;
+  onStateChange: Event<void>;
 }

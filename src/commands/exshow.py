@@ -25,16 +25,25 @@ def SendMimeTypeDataFromStdin(mimeType, charset, filenameMeta=None):
 def SendMimeTypeData(fhandle, filename, mimeType, charset):
     extratermclient.startFileTransfer(mimeType, charset, filename)
     contents = fhandle.read(MAX_CHUNK_BYTES)
-    previousHash = b"";
+
+    previousHash = b""
+    previousHashHex = ""
     while len(contents) != 0:
         hash = hashlib.sha256()
         hash.update(previousHash)
         hash.update(contents)
+        print("D:", end='')
         print(base64.b64encode(contents).decode(), end='')
         print(":", end='')
-        print(hash.hexdigest())
+        previousHashHex = hash.hexdigest()
+        print(previousHashHex)
         previousHash = hash.digest()
         contents = fhandle.read(MAX_CHUNK_BYTES)
+    print("E::", end='')
+    hash = hashlib.sha256()
+    hash.update(previousHash)
+    print(hash.hexdigest())
+
     extratermclient.endFileTransfer()
 
 def ShowFile(filename, mimeType=None, charset=None, filenameMeta=None):

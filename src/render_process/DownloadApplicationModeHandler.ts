@@ -5,7 +5,7 @@
  */
 
 import * as crypto from 'crypto';
-import {Event} from 'extraterm-extension-api';
+import {Event, Disposable} from 'extraterm-extension-api';
 import {EventEmitter} from '../utils/EventEmitter';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
@@ -15,25 +15,9 @@ import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 import * as TermApi from './emulator/TermApi';
 
 
-enum DownloadHandlerState {
-  IDLE,
-  METADATA,
-  BODY,
-  ERROR
-}
-
-const MAX_CHUNK_BYTES = 3 * 1024;
-const invalidBodyRegex = /[^\n\rA-Za-z0-9/+:=]/;
-
-
 export class DownloadApplicationModeHandler /* implements ApplicationModeHandler */ {
   private _log: Logger;
-  private _state = DownloadHandlerState.IDLE;
-  private _encodedDataBuffer: string;
-  private _decodedDataBuffers: Buffer[] = [];
-  private _metadataSize: number;
-  private _previousHash: Buffer = null;
-  private _fileHandle : WriteableBulkFileHandle = null;
+  private _currentDownloadSession: DownloadSession = null;
 
   onCreatedBulkFile: Event<BulkFileHandle>;
   private _onCreatedBulkFileEventEmitter = new EventEmitter<BulkFileHandle>();
@@ -41,19 +25,55 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
   constructor(private _emulator: TermApi.EmulatorApi, private _broker: BulkFileBroker) {
     this._log = getLogger("DownloadApplicationModeHandler", this);
     this.onCreatedBulkFile = this._onCreatedBulkFileEventEmitter.event;
-    this._resetVariables();
   }
 
-  private _resetVariables(): void {
-    this._state = DownloadHandlerState.IDLE;
-    this._encodedDataBuffer = "";
-    this._decodedDataBuffers = [];
-    this._metadataSize = -1;
+  handleStart(parameters: string[]): TermApi.ApplicationModeResponse {
+    this._currentDownloadSession = new DownloadSession(this._emulator, this._broker);
+    this._currentDownloadSession.onCreatedBulkFile((b: BulkFileHandle) => {
+      this._onCreatedBulkFileEventEmitter.fire(b);
+    });
+    return this._currentDownloadSession.handleStart(parameters);
+  }
 
-    if (this._fileHandle !== null) {
-      this._fileHandle.deref();
-    }
-    this._fileHandle = null;
+  handleData(data: string): TermApi.ApplicationModeResponse {
+    return this._currentDownloadSession.handleData(data);
+  }
+
+  handleStop(): TermApi.ApplicationModeResponse {
+    return this._currentDownloadSession.handleStop();
+  }
+}
+
+
+enum DownloadHandlerState {
+  IDLE,
+  METADATA,
+  BODY,
+  COMPLETE,
+  ERROR
+}
+
+const MAX_CHUNK_BYTES = 3 * 1024;
+const invalidBodyRegex = /[^\n\rA-Za-z0-9/+:=]/;
+
+
+class DownloadSession {
+
+  private _log: Logger;
+  private _state = DownloadHandlerState.IDLE;
+  private _encodedDataBuffer = "";
+  private _decodedDataBuffers: Buffer[] = [];
+  private _metadataSize = -1;
+  private _previousHash: Buffer = null;
+  private _fileHandle : WriteableBulkFileHandle = null;
+  private _availableWriteBufferSizeChangedDisposable: Disposable = null;
+
+  onCreatedBulkFile: Event<BulkFileHandle>;
+  private _onCreatedBulkFileEventEmitter = new EventEmitter<BulkFileHandle>();
+
+  constructor(private _emulator: TermApi.EmulatorApi, private _broker: BulkFileBroker) {
+    this._log = getLogger("DownloadApplicationModeHandler DownloadSession", this);
+    this.onCreatedBulkFile = this._onCreatedBulkFileEventEmitter.event;
   }
 
   handleStart(parameters: string[]): TermApi.ApplicationModeResponse {
@@ -64,10 +84,6 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
     return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
-  /**
-   * 
-   * @param data base64 data
-   */
   handleData(data: string): TermApi.ApplicationModeResponse {
     switch (this._state) {
       case DownloadHandlerState.METADATA:
@@ -76,7 +92,11 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
     
       case DownloadHandlerState.BODY:
         return this._handleBody(data);
-        
+
+      case DownloadHandlerState.COMPLETE:
+        this._log.warn("handleDownloadData called after transmission is complete");
+        break;
+
       case DownloadHandlerState.ERROR:
         break;
         
@@ -102,7 +122,7 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
 
       this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, -1);
       this._fileHandle.ref();
-      this._fileHandle.onAvailableWriteBufferSizeChanged(this._handleAvailableWriteBufferSizeChanged.bind(this));
+      this._availableWriteBufferSizeChangedDisposable = this._fileHandle.onAvailableWriteBufferSizeChanged(this._handleAvailableWriteBufferSizeChanged.bind(this));
       this._state = DownloadHandlerState.BODY;
       this._handleBody("");
 
@@ -111,22 +131,22 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
   }
 
   private _closeFileHandle(success: boolean): void {
-    this._fileHandle.close(success);
-    this._fileHandle.deref();
-    this._fileHandle = null;
+     if (this._fileHandle !== null) {
+      this._fileHandle.close(success);
+      this._availableWriteBufferSizeChangedDisposable.dispose();
+      this._fileHandle.deref();
+      this._fileHandle = null;
+    }
   }
 
   private _handleBody(encodedData: string): TermApi.ApplicationModeResponse {
-    const MAX_ENCODED_LENGTH = MAX_CHUNK_BYTES * 4 / 3;
-    
-    // MAX_ENCODED_LENGTH + : + <sha256.length>
     const HASH_LENGTH = 64;
-    const MAX_ENCODED_LINE_LENGTH = MAX_ENCODED_LENGTH + 1 + HASH_LENGTH;
 
     this._encodedDataBuffer += encodedData;
     
     // Check for invalid characters which may indicate a crash on the remote side.
     if (invalidBodyRegex.test(this._encodedDataBuffer)) {
+      this._state = DownloadHandlerState.ERROR;
       this._closeFileHandle(false);
       return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
     }
@@ -143,15 +163,17 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
       }
       
       if (chunk.length !== 0) {
-        const colonIndex = chunk.length - HASH_LENGTH - 1;
-        const colon = chunk.charAt(colonIndex);
-        if (colon !== ":") {
+        const lastColonIndex = chunk.length - HASH_LENGTH - 1;
+        const commandChar = chunk.charAt(0);
+        if (chunk.charAt(1) !== ":" || chunk.charAt(lastColonIndex) !== ":" || (commandChar !== "D" && commandChar !== "E")) {
+          this._log.warn("Data chunk is malformed. Aborting.");
+          this._state = DownloadHandlerState.ERROR;
           this._closeFileHandle(false);
           return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
         }
         
-        const base64Data = chunk.slice(0, colonIndex);
-        const hashHex = chunk.slice(colonIndex+1);
+        const base64Data = chunk.slice(2, lastColonIndex);
+        const hashHex = chunk.slice(lastColonIndex+1);
 
         const decodedBytes = Buffer.from(base64Data, 'base64');
 
@@ -163,21 +185,26 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
         hash.update(decodedBytes);
         this._previousHash = hash.digest();
         if (this._previousHash.toString("hex") !== hashHex) {
+          this._log.warn("Data chunk hash is incorrect.");
+          this._state = DownloadHandlerState.ERROR;
           this._closeFileHandle(false);
           return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
         }
-
-        this._decodedDataBuffers.push(decodedBytes);
+        if (commandChar === "D") {
+          this._decodedDataBuffers.push(decodedBytes);
+        } else {
+          // End chunk.
+          this._state = DownloadHandlerState.COMPLETE;
+        }
       }
       splitIndex = this._determineBufferSplitPosition();
     }
 
     this._flushBuffer();
 
-    if (this._fileHandle.getAvailableWriteBufferSize() <= 0) {
+    if (this._state === DownloadHandlerState.BODY && this._fileHandle.getAvailableWriteBufferSize() <= 0) {
       return {action: TermApi.ApplicationModeResponseAction.PAUSE};
     }
-
     return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
@@ -185,7 +212,7 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
     const MAX_ENCODED_LENGTH = MAX_CHUNK_BYTES * 4 / 3;
     
     // MAX_ENCODED_LENGTH + : + <sha256.length>
-    const MAX_ENCODED_LINE_LENGTH = MAX_ENCODED_LENGTH + 1 + 64;
+    const MAX_ENCODED_LINE_LENGTH = 2 + MAX_ENCODED_LENGTH + 1 + 64;
     
     let newLineIndex = this._encodedDataBuffer.indexOf("\n");
     let crIndex = this._encodedDataBuffer.indexOf("\r");
@@ -234,11 +261,25 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
 
       this._fileHandle.write(xferBuffer);
     }
+
+    if (this._decodedDataBuffers.length === 0 && this._state === DownloadHandlerState.COMPLETE) {
+      this._closeFileHandle(true);
+    }
   }
 
-  handleStop(): void {
+  handleStop(): TermApi.ApplicationModeResponse {
+    let response: TermApi.ApplicationModeResponse = null;
+
     this._flushBuffer();
-    this._fileHandle.close(true);
-    this._resetVariables();
+
+    if (this._state !== DownloadHandlerState.COMPLETE) {
+      this._state = DownloadHandlerState.ERROR;
+      this._closeFileHandle(false);
+      response = {action: TermApi.ApplicationModeResponseAction.ABORT};
+    } else {
+      response = {action: TermApi.ApplicationModeResponseAction.CONTINUE};
+    }
+
+    return response;
   }
 }

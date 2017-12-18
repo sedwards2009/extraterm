@@ -151,7 +151,7 @@ export interface ApplicationModeHandler {
   /**
    * Called once the finishing null char is received.
    */
-  end(): void;
+  end(): ApplicationModeResponse;
 }
 
 export enum ApplicationModeResponseAction {

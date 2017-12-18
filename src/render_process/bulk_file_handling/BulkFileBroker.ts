@@ -90,7 +90,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this._log = getLogger("WriteableBulkFileHandle", this);
 
     this.onAvailableSizeChange = this._onAvailableSizeChangeEventEmitter.event;
-    this.onFinished = this._onFinishedEventEmitter.event;
+    this.onStateChange = this._onFinishedEventEmitter.event;
     this.onAvailableWriteBufferSizeChanged = this._onWriteBufferSizeEventEmitter.event;
     
     const {identifier, url} = WebIpc.createBulkFileSync(_metadata, _totalSize);
@@ -241,5 +241,5 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this._sendBuffers();
   }
 
-  onFinished: Event<void>;
+  onStateChange: Event<void>;
 }

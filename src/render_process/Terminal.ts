@@ -1610,7 +1610,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   /**
    * Handle the exit from application mode.
    */
-  private _handleApplicationModeEnd(): void {
+  private _handleApplicationModeEnd(): TermApi.ApplicationModeResponse {
     let el: HTMLElement;
     let startdivs: NodeList;
     
@@ -1634,8 +1634,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         break;
         
       case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
-        this._downloadHandler.handleStop();
-        break;
+        return this._downloadHandler.handleStop();
         
       default:
         break;
@@ -1646,6 +1645,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._log.debug("html-mode end!",this._htmlData);
     }
     this._htmlData = null;
+
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
   private _handleApplicationModeBracketStart(): void {

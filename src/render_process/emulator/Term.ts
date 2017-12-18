@@ -2140,7 +2140,13 @@ export class Emulator implements EmulatorApi {
       // We are already at the end-mode character.
       this._dispatchEvents();
       if (this._applicationModeHandler != null) {
-        this._applicationModeHandler.end();
+        const response = this._applicationModeHandler.end();
+        if (response.action === ApplicationModeResponseAction.ABORT) {
+          if (response.remainingData != null) {
+            this.state = STATE_NORMAL;
+            return [response.remainingData, 0];
+          }
+        }
       }
       this.state = STATE_NORMAL;
       
