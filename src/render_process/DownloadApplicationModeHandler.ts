@@ -146,6 +146,7 @@ class DownloadSession {
     
     // Check for invalid characters which may indicate a crash on the remote side.
     if (invalidBodyRegex.test(this._encodedDataBuffer)) {
+      this._log.warn("Data buffer contains illegal characters. Aborting.");
       this._state = DownloadHandlerState.ERROR;
       this._closeFileHandle(false);
       return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
