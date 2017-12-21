@@ -10,7 +10,7 @@ import * as _ from 'lodash';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as ThemeTypes from '../../theme/Theme';
-import {ViewerElement} from '../viewers/ViewerElement';
+import {ViewerElement, ViewerElementMetadata} from '../viewers/ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -93,7 +93,14 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
       keyBindingsContextsStamp: Date.now()
     };
   }
-  
+
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = "Key Bindings";
+    metadata.icon = "keyboard-o";
+    return metadata;
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
@@ -167,14 +174,6 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
     }
   }
   
-  getAwesomeIcon(): string {
-    return "keyboard-o";
-  }
-  
-  getTitle(): string {
-    return "Key Bindings";
-  }
-
   focus(): void {
     // util.getShadowId(this, ID_CONTAINER).focus();
   }

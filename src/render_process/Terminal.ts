@@ -1787,7 +1787,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._disconnectActiveTerminalViewer();
       
       activeTerminalViewer.setReturnCode(returnCode);
-      activeTerminalViewer.setCommandLine(embeddedViewerElement.getTitle());
+      activeTerminalViewer.setCommandLine(embeddedViewerElement.getMetadata().title);
       activeTerminalViewer.setUseVPad(false);
       
       // Hang the terminal viewer under the Embedded viewer.
@@ -1974,7 +1974,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const viewerElement = this._createEmbeddedViewerElement("viewer");
       viewerElement.setViewerElement(mimeViewerElement);
       viewerElement.setTitle(filename);
-      viewerElement.setAwesomeIcon(mimeViewerElement.getAwesomeIcon());
+      viewerElement.setAwesomeIcon(mimeViewerElement.getMetadata().icon);
       viewerElement.setReturnCode("0");
       viewerElement.setPosture(EmbeddedViewerPosture.NEUTRAL);
       this._appendScrollableElement(viewerElement);

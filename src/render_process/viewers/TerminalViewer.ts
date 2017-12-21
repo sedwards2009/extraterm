@@ -29,7 +29,7 @@ import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
-import {ViewerElement} from './ViewerElement';
+import {ViewerElement, ViewerElementMetadata} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 
@@ -159,6 +159,21 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     this._log = getLogger(TerminalViewer.TAG_NAME, this);
     this.document = document;
     this._renderEventListener = this._handleRenderEvent.bind(this);
+  }
+
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = this._getTitle();
+    metadata.icon = "terminal";
+    return metadata;
+  }
+  
+  private _getTitle(): string {
+    if (this._commandLine !== null) {
+      return this._commandLine;
+    } else {
+      return "Terminal Command";
+    }
   }
   
   connectedCallback(): void {
@@ -356,19 +371,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   setReturnCode(returnCode: string): void {
     this._returnCode = returnCode;
   }
-  
-  getTitle(): string {
-    if (this._commandLine !== null) {
-      return this._commandLine;
-    } else {
-      return "Terminal Command";
-    }
-  }
-  
-  getAwesomeIcon(): string {
-    return "terminal";
-  }
-  
+    
   getSelectionText(): string {    
     const doc = this._codeMirror.getDoc();
     const cursorAnchorPos = doc.getCursor("anchor");

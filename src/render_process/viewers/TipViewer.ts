@@ -18,7 +18,7 @@ type ConfigManager = config.ConfigDistributor;
 import * as keybindingmanager from '../keybindings/KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import {ViewerElement} from '../viewers/ViewerElement';
+import {ViewerElement, ViewerElementMetadata} from '../viewers/ViewerElement';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -95,6 +95,13 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     super();
     this._log = getLogger(TipViewer.TAG_NAME, this);
   }
+
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = "Tip";
+    metadata.icon = "lightbulb-o";
+    return metadata;
+  }
   
   connectedCallback(): void {
     super.connectedCallback();
@@ -150,9 +157,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     });
   }
   
-  /**
-   * Custom Element 'disconnected' life cycle hook.
-   */
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._configManager !== null) {
@@ -164,17 +168,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
   }
 
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
   setConfigDistributor(newConfigManager: ConfigManager): void {
     if (this._configManager !== null) {
       this._configManager.unregisterChangeListener(this);
@@ -195,14 +188,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     if (this._keyBindingManager !== null) {
       this._keyBindingManager.registerChangeListener(this, this._keyBindingChanged.bind(this));
     }
-  }
-  
-  getTitle(): string {
-    return "Tip";
-  }
-  
-  getAwesomeIcon(): string {
-    return "lightbulb-o";
   }
   
   getSelectionText(): string {    
@@ -266,17 +251,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     this._processRefresh(level);
   }
 
-  //-----------------------------------------------------------------------
-  //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {

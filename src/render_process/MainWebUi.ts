@@ -519,10 +519,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       let title = "";
       if (el instanceof EtTerminal) {
         title = el.getTerminalTitle();
-      } else if (el instanceof EtViewerTab) {        
-        title = el.getTitle();
-      } else if (el instanceof ViewerElement) {
-        title = el.getTitle();
+      } else if (el instanceof EtViewerTab || el instanceof ViewerElement) {
+        title = el.getMetadata().title;
       }
 
       this._sendTitleEvent(title);
@@ -633,7 +631,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
     keybindingmanager.injectKeyBindingManager(viewerTab, this._keyBindingManager);
-    viewerTab.setTitle(embeddedViewer.getTitle());
+    viewerTab.setTitle(embeddedViewer.getMetadata().title);
     viewerTab.setTag(embeddedViewer.getTag());
     
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
@@ -671,17 +669,17 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       icon = "keyboard-o";
 
     } else if (el instanceof EtViewerTab) {
-      title = el.getTitle();
+      title = el.getMetadata().title;
       htmlTitle = he.escape(title);
-      icon = el.getAwesomeIcon();
+      icon = el.getMetadata().icon;
       if (el.getTag() !== null) {
         tag = "<i class='fa fa-tag'></i>" + el.getTag();
       }
 
     } else if (el instanceof ViewerElement) {
-      title = el.getTitle();
+      title = el.getMetadata().title;
       htmlTitle = he.escape(title);
-      icon = el.getAwesomeIcon();
+      icon = el.getMetadata().icon;
 
     } else {
       this._log.warn(`Unrecognized element type in _updateTabTitle(). ${el}`);

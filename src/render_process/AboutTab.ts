@@ -6,7 +6,7 @@
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as ThemeTypes from '../theme/Theme';
-import {ViewerElement} from './viewers/ViewerElement';
+import {ViewerElement, ViewerElementMetadata} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
@@ -26,12 +26,16 @@ export class AboutTab extends ViewerElement {
 
   private _log: Logger = null;
 
-  getAwesomeIcon(): string {
-    return "lightbulb-o";
+  constructor() {
+    super();
+    this._log = getLogger(AboutTab.TAG_NAME, this);
   }
-  
-  getTitle(): string {
-    return "About";
+
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = "About";
+    metadata.icon = "lightbulb-o";
+    return metadata;
   }
 
   focus(): void {
@@ -42,14 +46,6 @@ export class AboutTab extends ViewerElement {
     return false;
   }
 
-  constructor() {
-    super();
-    this._log = getLogger(AboutTab.TAG_NAME, this);
-  }
-
-  /**
-   * Custom Element 'connected' life cycle hook.
-   */
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {

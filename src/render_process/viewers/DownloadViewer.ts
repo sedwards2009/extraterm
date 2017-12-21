@@ -12,6 +12,7 @@ import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import {SimpleViewerElement} from '../viewers/SimpleViewerElement';
+import {ViewerElementMetadata} from './ViewerElement';
 
 
 @Component(
@@ -82,17 +83,16 @@ export class DownloadViewer extends SimpleViewerElement {
     this.getContainerNode().appendChild(component.$el);
   }
 
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = "Download";
+    metadata.icon = "download";
+    return metadata;
+  }
+
   // From viewerelementtypes.SupportsMimeTypes
   static supportsMimeType(mimeType): boolean {
     return ["application/octet-stream"].indexOf(mimeType) !== -1;
-  }
-
-  getTitle(): string {
-    return "Download";
-  }
-  
-  getAwesomeIcon(): string {
-    return "download";
   }
 
   getBulkFileHandle(): BulkFileHandle {

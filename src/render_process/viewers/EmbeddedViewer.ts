@@ -25,7 +25,7 @@ import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
-import {ViewerElement} from './ViewerElement';
+import {ViewerElement, ViewerElementMetadata} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {VisualState} from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
@@ -134,6 +134,13 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
     // Remove the anti-flicker style.
     DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
+  }
+
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = this._title;
+    metadata.icon = this._awesomeIcon;
+    return metadata;
   }
 
   dispose(): void {
@@ -340,10 +347,14 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   setTitle(newTitle: string): void {
     this._title = newTitle;
+    this._updateTitle(newTitle);
+  }
+
+  private _updateTitle(title: string): void {
     if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
-    (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).innerText = newTitle;
+    (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).innerText = title;
   }
 
   getTitle(): string {
@@ -352,9 +363,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   setReturnCode(returnCode: string): void {
     this._returnCode = returnCode;
-    if (DomUtils.getShadowRoot(this) === null) {
-      return;
-    }
   }
 
   getReturnCode(): string {
@@ -392,10 +400,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
     const icon = <HTMLDivElement>this._getById(ID_ICON);
     icon.className = "fa " + (iconName !== null && iconName !== undefined && iconName !== "" ? "fa-" : "") + iconName;
-  }
-
-  getAwesomeIcon(): string {
-    return this._awesomeIcon;
   }
 
   canPaste(): boolean {

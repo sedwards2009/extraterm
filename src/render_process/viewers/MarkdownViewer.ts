@@ -27,10 +27,6 @@ class EtMarkdownViewer extends ViewerElement {
   
   private _focusable = false;
 
-  getAwesomeIcon(): string {
-    return "file-text-o";
-  }
-  
   getSelectionText(): string {
     const root = DomUtils.getShadowRoot(this);
     const selection = root.getSelection();

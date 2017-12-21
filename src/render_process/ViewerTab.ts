@@ -21,7 +21,7 @@ import {ScrollBar} from'./gui/ScrollBar';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import {ViewerElement} from "./viewers/ViewerElement";
+import {ViewerElement, ViewerElementMetadata} from "./viewers/ViewerElement";
 import * as Util from './gui/Util';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';
@@ -94,9 +94,15 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
   }
    
-  /**
-   * Custom Element 'connected' life cycle hook.
-   */
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = this._title;
+
+    const viewerElement = this.getViewerElement();
+    metadata.icon = viewerElement === null ? "desktop" : viewerElement.getMetadata().icon;
+    return metadata;
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
     if (this._elementAttached) {
@@ -182,21 +188,8 @@ export class EtViewerTab extends ViewerElement implements Commandable,
       element.dispose();
     }
   }
-  
-  /**
-   * Get this terminal's title.
-   *
-   * This is the window title of the terminal, don't confuse it with more
-   * general HTML title of the element.
-   */
-  getTerminalTitle(): string {
-    return this._title;
-  }
-  
-  getTitle(): string {
-    return this._title;
-  }
-  
+
+  // FIXME delete
   setTitle(newTitle: string): void {
     this._title = newTitle;
   }
@@ -209,9 +202,6 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     this._tag = tag;
   }
   
-  /**
-   * Destroy the ViewerTab
-   */
   destroy(): void {
     if (this._resizePollHandle !== null) {
       this._resizePollHandle.cancel();
@@ -219,9 +209,6 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     }
   }
 
-  /**
-   * Focus on this ViewerTab.
-   */
   focus(): void {
     const element = this.getViewerElement();
     if (element !== null) {
@@ -256,11 +243,6 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   
   getViewerElement(): ViewerElement {
     return this._getViewerElement();
-  }
-  
-  getAwesomeIcon(): string {
-    const viewerElement = this.getViewerElement();
-    return viewerElement === null ? "desktop" : viewerElement.getAwesomeIcon();
   }
   
   getFrameContents(frameId: string): BulkFileHandle {

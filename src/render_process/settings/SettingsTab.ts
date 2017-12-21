@@ -7,7 +7,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as _ from 'lodash';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import {ViewerElement} from '../viewers/ViewerElement';
+import {ViewerElement, ViewerElementMetadata} from '../viewers/ViewerElement';
 import Vue from 'vue';
 
 import * as config from '../../Config';
@@ -160,6 +160,13 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
         { id: "theme", name: "Theme title bar" },
         { id: "native", name: "Native title bar" }]
     };
+  }
+
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = "Settings";
+    metadata.icon = "wrench";
+    return metadata;
   }
   
   connectedCallback(): void {
@@ -416,14 +423,6 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB, ThemeTypes.CssFile.FONT_AWESOME];
-  }
-
-  getAwesomeIcon(): string {
-    return "wrench";
-  }
-  
-  getTitle(): string {
-    return "Settings";
   }
 
   focus(): void {

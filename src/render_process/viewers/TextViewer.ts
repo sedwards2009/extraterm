@@ -28,7 +28,7 @@ import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
-import {ViewerElement} from '../viewers/ViewerElement';
+import {ViewerElement, ViewerElementMetadata} from '../viewers/ViewerElement';
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, VirtualScrollable} from '../VirtualScrollArea';
 
@@ -115,8 +115,6 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
   
-  private _commandLine: string = null; // FIXME needed?
-  private _returnCode: string = null;  // FIXME needed?
   private _codeMirror: CodeMirror.Editor = null;
   private _height = 0;
   private _isEmpty = false;
@@ -143,6 +141,13 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this.document = document;
   }
   
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = "Text";
+    metadata.icon = "file-text-o";
+    return metadata;
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) !== null) {
@@ -297,41 +302,9 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
-
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
   
   setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
     this._keyBindingManager = newKeyBindingManager;
-  }
-  
-  setCommandLine(commandLine: string): void {
-    this._commandLine = commandLine;
-  }
-  
-  setReturnCode(returnCode: string): void {
-    this._returnCode = returnCode;
-  }
-  
-  getTitle(): string {
-    if (this._commandLine !== null) {
-      return this._commandLine;
-    } else {
-      return "Text";
-    }
-  }
-  
-  getAwesomeIcon(): string {
-    return "file-text-o";
   }
   
   getSelectionText(): string {    
@@ -601,20 +574,6 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     VirtualScrollAreaEmitResizeEvent(this);
   }
 
-  //-----------------------------------------------------------------------
-  //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
-  /**
-   * 
-   */
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {

@@ -14,11 +14,19 @@ import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 
+export interface ViewerElementMetadata {
+  title: string;
+  icon?: string;
+  moveable?: boolean;
+  deleteable?: boolean;
+}
+
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {
   
   static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
   static EVENT_CURSOR_MOVE = "cursor-move";
   static EVENT_CURSOR_EDGE = "cursor-edge";
+  static EVENT_METADATA_CHANGE = "metadata-change";
 
   /**
    * Type guard for detecting a ViewerElement instance.
@@ -29,20 +37,18 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   static isViewerElement(node: Node): node is ViewerElement {
     return node !== null && node !== undefined && node instanceof ViewerElement;
   }
-  
-  getTitle(): string {
-    return "ViewerElement";
+
+  getMetadata(): ViewerElementMetadata {
+    return {
+      title: "ViewerElement",
+      icon: "desktop",
+      moveable: true,
+      deleteable: true
+    };
   }
   
   hasFocus(): boolean {
     return false;
-  }
-  
-  /**
-   * Name of a Font Awesome icon to represent this viewer.
-   */
-  getAwesomeIcon(): string {
-    return "desktop";
   }
   
   /**

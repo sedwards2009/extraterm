@@ -9,7 +9,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
-import {ViewerElement} from './ViewerElement';
+import {ViewerElement, ViewerElementMetadata} from './ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as Util from '../gui/Util';
@@ -83,7 +83,14 @@ export class ImageViewer extends ViewerElement {
     this._log = getLogger(ImageViewer.TAG_NAME, this);
     this.document = document;
   }
-  
+
+  getMetadata(): ViewerElementMetadata {
+    const metadata = super.getMetadata();
+    metadata.title = "Text";
+    metadata.icon = "file-image-o";
+    return metadata;
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) !== null) {
@@ -126,26 +133,6 @@ export class ImageViewer extends ViewerElement {
     }
   }
 
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
-
-  getTitle(): string {
-    return "Text";
-  }
-  
-  getAwesomeIcon(): string {
-    return "file-image-o";
-  }
-  
   getSelectionText(): string {    
     return null;
   }
@@ -298,19 +285,6 @@ export class ImageViewer extends ViewerElement {
   static supportsMimeType(mimeType): boolean {
     return ["image/x-bmp", "image/bmp", "image/png", "image/gif", "image/jpeg",  "image/webp"].indexOf(mimeType) !== -1;
   }
-  
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
-  
   
   //-----------------------------------------------------------------------
   //
