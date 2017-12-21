@@ -116,22 +116,17 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._log = getLogger(EmbeddedViewer.TAG_NAME, this);
     this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
+
+    this._setUpShadowDom();
+    this._setUpDefaultAttributes();
+    this.installThemeCss();
+    this._setUpEventHandlers();
   }
   
   connectedCallback(): void {
     super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) !== null) {
-      return;
-    }
 
-    this._setUpShadowDom();
-    this._setUpDefaultAttributes();
-
-    this.installThemeCss();
-
-    this._setUpEventHandlers();
     this._setUpVirtualScrollArea();
-
     // Remove the anti-flicker style.
     DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
   }
@@ -305,9 +300,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   setPosture(posture: EmbeddedViewerPosture): void {
     this._posture = posture;
 
-    if (DomUtils.getShadowRoot(this) === null) {
-      return;
-    }
     const container = <HTMLDivElement>this._getById(ID_CONTAINER);
     
     container.classList.remove(CLASS_RUNNING);
@@ -334,9 +326,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   setTag(tag: string): void {
     this._tag = tag;
-    if (DomUtils.getShadowRoot(this) === null) {
-      return;
-    }
     const tagName = <HTMLDivElement>this._getById(ID_TAG_NAME);
     tagName.innerText = tag;
   }
@@ -351,9 +340,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   private _updateTitle(title: string): void {
-    if (DomUtils.getShadowRoot(this) === null) {
-      return;
-    }
     (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).innerText = title;
   }
 
@@ -371,10 +357,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   setToolTip(toolTip: string): void {
     this._toolTip = toolTip;
-    if (DomUtils.getShadowRoot(this) === null) {
-      return;
-    }
-    
     const iconDiv = <HTMLDivElement>this._getById(ID_ICON_DIV);
     if (toolTip !== null) {
       iconDiv.setAttribute('title', toolTip);
@@ -395,9 +377,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   setAwesomeIcon(iconName: string): void {
     this._awesomeIcon = iconName;
-    if (DomUtils.getShadowRoot(this) === null) {
-      return;
-    }
     const icon = <HTMLDivElement>this._getById(ID_ICON);
     icon.className = "fa " + (iconName !== null && iconName !== undefined && iconName !== "" ? "fa-" : "") + iconName;
   }
@@ -489,7 +468,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   private _setUpDefaultAttributes(): void {
-    this.setTitle(this._title);
+    this._updateTitle(this._title);
     this.setPosture(this._posture);
     this.setReturnCode(this._returnCode);
     this.setTag(this._tag);
