@@ -352,6 +352,38 @@ export function doLaterFrame(func: Function): LaterHandle {
 }
 
 //-------------------------------------------------------------------------
+/**
+ * Run a function later, and debounce the trigger mechanism. Repeatable too.
+ * 
+ * This is a reusable way of setting up callback to be called later after
+ * being triggered. Like `doLater()` it is possible to specify how long
+ * later, and as the name suggests this can be triggered multiple times
+ * but will only fire the callback once. After the callback has been
+ * run then it can be immediately reused.
+ */
+export class DebouncedDoLater {
+  private _laterHandle: LaterHandle = null;
+
+  constructor(private _callback: () => void, public delayMillis=0) {
+  }
+
+  trigger(): void {
+    if (this._laterHandle === null) {
+      this._laterHandle = doLater( () => {
+        this._laterHandle = null;
+        this._callback();
+      }, this.delayMillis);
+    }
+  }
+
+  cancel(): void {
+    if (this._laterHandle !== null) {
+      this._laterHandle.cancel();
+      this._laterHandle = null;
+    }
+  }
+}
+//-------------------------------------------------------------------------
 
 /**
  * Format a Uint8Array and mimetype as a data url.

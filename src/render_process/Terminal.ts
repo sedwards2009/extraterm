@@ -25,7 +25,7 @@ import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from '../theme/Theme';
-import {EmbeddedViewer, EmbeddedViewerPosture} from './viewers/EmbeddedViewer';
+import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {CommandPlaceHolder} from './CommandPlaceholder';
 import {TerminalViewer} from './viewers/TerminalViewer';
 import {TextDecoration, BookmarkRef} from './viewers/TerminalViewerTypes';
@@ -644,7 +644,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         }
     }
 
-    this._appendMimeViewer(TipViewer.MIME_TYPE, "Tip", null);
+    this._appendMimeViewer(TipViewer.MIME_TYPE, null);
     const newConfig = _.cloneDeep(config);
     newConfig.tipTimestamp = Date.now();
     newConfig.tipCounter = newConfig.tipCounter + 1;
@@ -1652,7 +1652,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _handleApplicationModeBracketStart(): void {
     for (const kidInfo of this._childElementList) {
       const element = kidInfo.element;
-      if ((EmbeddedViewer.is(element) && element.getReturnCode() == null) || CommandPlaceHolder.is(element)) {
+      if ((EmbeddedViewer.is(element) && element.children.length === 0) || CommandPlaceHolder.is(element)) {
         return;  // Don't open a new frame.
       }
     }
@@ -1667,7 +1667,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     
     if ( ! this._isNoFrameCommand(cleancommand)) {
       // Create and set up a new command-frame.
-      const el = this._createEmbeddedViewerElement(cleancommand);
+      const el = this._createEmbeddedViewerElement();
       this._appendScrollableElement(el);
     } else {
 
@@ -1676,9 +1676,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._emulator.flushRenderQueue();
 
       this._lastCommandTerminalLine = this._terminalViewer.bookmarkLine(this._terminalViewer.lineCount() -1);
-      this._lastCommandLine = cleancommand;
       this._lastCommandTerminalViewer = this._terminalViewer;
     }
+    this._lastCommandLine = cleancommand;
 
     const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
     this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
@@ -1717,12 +1717,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this.focus();
   }
   
-  private _createEmbeddedViewerElement(title: string): EmbeddedViewer {
+  private _createEmbeddedViewerElement(): EmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
     injectKeyBindingManager(el, this._keyBindingManager);
     injectConfigDistributor(el, this._configManager);
-    el.setAwesomeIcon('cog');
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
       this.focus();
@@ -1757,7 +1756,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     el.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
-    el.setTitle(title);
     el.setTag("" + this._getNextTag());
     return el;
   }
@@ -1773,7 +1771,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     let startElement: HTMLElement & VirtualScrollable = null;
     for (let i=this._childElementList.length-1; i>=0; i--) {
       const el = this._childElementList[i].element;
-      if (el instanceof EmbeddedViewer && el.getReturnCode() == null) {
+      if (el instanceof EmbeddedViewer && el.children.length === 0) {
         startElement = el;
         break;
       }
@@ -1786,16 +1784,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const activeTerminalViewer = this._terminalViewer;
       this._disconnectActiveTerminalViewer();
       
+      activeTerminalViewer.setCommandLine(this._lastCommandLine);
       activeTerminalViewer.setReturnCode(returnCode);
-      activeTerminalViewer.setCommandLine(embeddedViewerElement.getMetadata().title);
       activeTerminalViewer.setUseVPad(false);
       
       // Hang the terminal viewer under the Embedded viewer.
-      embeddedViewerElement.setReturnCode(returnCode);
-      embeddedViewerElement.setToolTip(`Return code: %{returnCode}`);
-      embeddedViewerElement.setPosture(returnCode ==='0' ? EmbeddedViewerPosture.SUCCESS : EmbeddedViewerPosture.FAILURE);
-      embeddedViewerElement.setAwesomeIcon(returnCode === '0' ? 'check' : 'times');
-      embeddedViewerElement.setToolTip("Return code: " + returnCode);
+      embeddedViewerElement.setToolTip("Return code: " + returnCode); // FIXME
       embeddedViewerElement.className = "extraterm_output";
       
       // Some focus management to make sure that activeTerminalViewer still keeps
@@ -1838,12 +1832,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._lastCommandTerminalViewer = null;
       
       // Append our new embedded viewer.
-      const newViewerElement = this._createEmbeddedViewerElement(this._lastCommandLine);
+      const newViewerElement = this._createEmbeddedViewerElement();
       // Hang the terminal viewer under the Embedded viewer.
-      newViewerElement.setReturnCode(returnCode);
-      newViewerElement.setToolTip(`Return code: %{returnCode}`);
-      newViewerElement.setPosture(returnCode ==='0' ? EmbeddedViewerPosture.SUCCESS : EmbeddedViewerPosture.FAILURE);
-      newViewerElement.setAwesomeIcon('times');
       newViewerElement.setToolTip("Return code: " + returnCode);
       newViewerElement.className = "extraterm_output";
 
@@ -1958,25 +1948,20 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _handleShowFile(bulkFileHandle: BulkFileHandle): void {
-    const filename = "" + bulkFileHandle.getMetadata().filename;
     const {mimeType, charset} = BulkFileUtils.guessMimetype(bulkFileHandle);
     if (mimeType !== null) {
-      this._appendMimeViewer(mimeType, filename, bulkFileHandle);
+      this._appendMimeViewer(mimeType, bulkFileHandle);
     } else {
-      this._appendMimeViewer("application/octet-stream", filename, bulkFileHandle);
+      this._appendMimeViewer("application/octet-stream", bulkFileHandle);
     }
   }
 
-  private _appendMimeViewer(mimeType: string, filename: string, bulkFileHandle: BulkFileHandle): void {
+  private _appendMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): void {
     const mimeViewerElement = this._createMimeViewer(mimeType, bulkFileHandle);
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
-      const viewerElement = this._createEmbeddedViewerElement("viewer");
+      const viewerElement = this._createEmbeddedViewerElement();
       viewerElement.setViewerElement(mimeViewerElement);
-      viewerElement.setTitle(filename);
-      viewerElement.setAwesomeIcon(mimeViewerElement.getMetadata().icon);
-      viewerElement.setReturnCode("0");
-      viewerElement.setPosture(EmbeddedViewerPosture.NEUTRAL);
       this._appendScrollableElement(viewerElement);
       this._enforceScrollbackLength(this._scrollbackSize);
     }

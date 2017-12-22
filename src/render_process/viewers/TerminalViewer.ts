@@ -29,7 +29,7 @@ import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
-import {ViewerElement, ViewerElementMetadata} from './ViewerElement';
+import {ViewerElement, ViewerElementMetadata, ViewerElementPosture} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 
@@ -115,9 +115,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
   private _terminalFirstRow = 0;
-  
+  private _metadataEventDoLater: DomUtils.DebouncedDoLater = null;
   private _commandLine: string = null;
   private _returnCode: string = null;
+
   private _codeMirror: CodeMirror.Editor = null;
   private _height = 0;
   private _isEmpty = true;
@@ -159,21 +160,31 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     this._log = getLogger(TerminalViewer.TAG_NAME, this);
     this.document = document;
     this._renderEventListener = this._handleRenderEvent.bind(this);
+
+    this._metadataEventDoLater = new DomUtils.DebouncedDoLater(() => {
+      const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
+      this.dispatchEvent(event);
+    });
   }
 
   getMetadata(): ViewerElementMetadata {
     const metadata = super.getMetadata();
-    metadata.title = this._getTitle();
-    metadata.icon = "terminal";
-    return metadata;
-  }
-  
-  private _getTitle(): string {
-    if (this._commandLine !== null) {
-      return this._commandLine;
-    } else {
-      return "Terminal Command";
+    metadata.title = this._commandLine !== null ? this._commandLine : "Terminal Command";
+    metadata.icon = this._returnCode === '0' ? 'check' : 'times';
+
+    switch(this._returnCode) {
+      case null:
+        metadata.posture = ViewerElementPosture.RUNNING;
+        break;
+      case "0":
+        metadata.posture = ViewerElementPosture.SUCCESS;
+        break;
+      default:
+        metadata.posture = ViewerElementPosture.FAILURE;
+        break;
     }
+
+    return metadata;
   }
   
   connectedCallback(): void {
@@ -366,10 +377,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   setCommandLine(commandLine: string): void {
     this._commandLine = commandLine;
+    this._metadataEventDoLater.trigger();
   }
   
   setReturnCode(returnCode: string): void {
     this._returnCode = returnCode;
+    this._metadataEventDoLater.trigger();
   }
     
   getSelectionText(): string {    

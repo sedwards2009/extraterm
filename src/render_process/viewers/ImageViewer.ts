@@ -63,6 +63,7 @@ export class ImageViewer extends ViewerElement {
   private _log: Logger;
   private _keyBindingManager: KeyBindingManager = null;
   private _bulkFileHandle: BulkFileHandle = null;
+  private _metadataEventDoLater: DomUtils.DebouncedDoLater = null;
   private _text = null;
   private _buffer: Buffer = null;
   private _mimeType: string = null;
@@ -82,11 +83,22 @@ export class ImageViewer extends ViewerElement {
     super();
     this._log = getLogger(ImageViewer.TAG_NAME, this);
     this.document = document;
+
+    this._metadataEventDoLater = new DomUtils.DebouncedDoLater(() => {
+      const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
+      this.dispatchEvent(event);
+    });
   }
 
   getMetadata(): ViewerElementMetadata {
     const metadata = super.getMetadata();
-    metadata.title = "Text";
+
+    if (this._bulkFileHandle !== null && this._bulkFileHandle.getMetadata()["filename"] != null) {
+      metadata.title = <string> this._bulkFileHandle.getMetadata()["filename"];
+    } else {
+      metadata.title = "Image";
+    }
+
     metadata.icon = "file-image-o";
     return metadata;
   }
@@ -185,6 +197,7 @@ export class ImageViewer extends ViewerElement {
 
     this._bulkFileHandle = handle;
     handle.ref();
+    this._metadataEventDoLater.trigger();
 
     if (DomUtils.getShadowRoot(this) !== null) {
       this._setImageUrl(handle.getUrl());

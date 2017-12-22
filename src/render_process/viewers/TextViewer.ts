@@ -114,6 +114,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _keyBindingManager: KeyBindingManager = null;
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
+  private _metadataEventDoLater: DomUtils.DebouncedDoLater = null;
   
   private _codeMirror: CodeMirror.Editor = null;
   private _height = 0;
@@ -139,11 +140,23 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
     this._log = getLogger(TextViewer.TAG_NAME, this);
     this.document = document;
+
+    this._metadataEventDoLater = new DomUtils.DebouncedDoLater(() => {
+      const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
+      this.dispatchEvent(event);
+    });
+
   }
   
   getMetadata(): ViewerElementMetadata {
     const metadata = super.getMetadata();
-    metadata.title = "Text";
+    
+    if (this._bulkFileHandle !== null && this._bulkFileHandle.getMetadata()["filename"] != null) {
+      metadata.title = <string> this._bulkFileHandle.getMetadata()["filename"];
+    } else {
+      metadata.title = "Text";
+    }
+
     metadata.icon = "file-text-o";
     return metadata;
   }
@@ -395,6 +408,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
   private async _loadBulkFile(handle: BulkFileHandle): Promise<void> {
     this._bulkFileHandle = handle;
+    this._metadataEventDoLater.trigger();
     const data = await BulkFileUtils.readDataAsArrayBuffer(handle)
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     const decodedText = Buffer.from(data).toString(charset);

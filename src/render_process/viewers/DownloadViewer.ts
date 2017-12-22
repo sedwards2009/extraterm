@@ -12,15 +12,15 @@ import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import {SimpleViewerElement} from '../viewers/SimpleViewerElement';
-import {ViewerElementMetadata} from './ViewerElement';
+import {ViewerElementMetadata, ViewerElement} from './ViewerElement';
 
 
 @Component(
 {
   template: `<div class="body container-fluid"">
   <div class="row">
-    <div v-if="!finished" class="col-sm-6">{{name}}</div>
-    <div v-if="finished" class="col-sm-6">Downloading {{name}}</div>
+    <div v-if="finished" class="col-sm-6">{{name}}</div>
+    <div v-if="!finished" class="col-sm-6">Downloading {{name}}</div>
     <div class="col-sm-6">{{formattedHumanAvailableBytes}} &nbsp; ({{formattedExactAvailableBytes}} bytes)</div>
   </div>
 </div>`
@@ -72,11 +72,14 @@ export class DownloadViewer extends SimpleViewerElement {
   private _ui: DownloadUI = null;
   private _onAvailableSizeChangeDisposable: Disposable = null;
   private _onStateChangeDisposable: Disposable = null;
-  private _laterHandle: DomUtils.LaterHandle = null;
+
+  private _updateLater: DomUtils.DebouncedDoLater = null;
 
   constructor() {
     super();
     this._log = getLogger("et-download-viewer", this);
+
+    this._updateLater = new DomUtils.DebouncedDoLater(this._updateLaterCallback.bind(this), 500);
 
     this._ui = new DownloadUI();
     const component = this._ui.$mount();
@@ -88,6 +91,13 @@ export class DownloadViewer extends SimpleViewerElement {
     metadata.title = "Download";
     metadata.icon = "download";
     return metadata;
+  }
+
+  private _updateLaterCallback(): void {
+    this._ui.availableSize = this._bulkFileHandle.getAvailableSize();
+    
+    const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
+    this.dispatchEvent(event);
   }
 
   // From viewerelementtypes.SupportsMimeTypes
@@ -106,8 +116,9 @@ export class DownloadViewer extends SimpleViewerElement {
     handle.ref();
 
     this._onAvailableSizeChangeDisposable = this._bulkFileHandle.onAvailableSizeChange(
-      () => this._scheduleAvailableSizeUpdate());
+      () => this._updateLater.trigger());
     this._onStateChangeDisposable = this._bulkFileHandle.onStateChange(() => {
+      this._log.debug(`onStateChange ${handle.getState()}`);
       this._ui.finished = true;
     });
     this._ui.availableSize = handle.getAvailableSize();
@@ -116,15 +127,6 @@ export class DownloadViewer extends SimpleViewerElement {
     const metadata = handle.getMetadata();
     if (metadata["filename"] !== undefined) {
       this._ui.name = <string> metadata["filename"];
-    }
-  }
-
-  private _scheduleAvailableSizeUpdate(): void {
-    if (this._laterHandle === null) {
-      this._laterHandle = DomUtils.doLater(() => {
-        this._ui.availableSize = this._bulkFileHandle.getAvailableSize();
-        this._laterHandle = null;
-      }, 500);
     }
   }
 
@@ -139,10 +141,7 @@ export class DownloadViewer extends SimpleViewerElement {
 
   dispose(): void {
     this._releaseBulkFileHandle();
-    if (this._laterHandle !== null) {
-      this._laterHandle.cancel();
-      this._laterHandle = null;
-    }
+    this._updateLater.cancel();
     super.dispose();
   }
 }

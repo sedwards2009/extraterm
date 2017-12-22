@@ -14,9 +14,18 @@ import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 
+
+export enum ViewerElementPosture {
+  NEUTRAL,
+  RUNNING,
+  SUCCESS,
+  FAILURE,
+}
+
 export interface ViewerElementMetadata {
   title: string;
   icon?: string;
+  posture: ViewerElementPosture;
   moveable?: boolean;
   deleteable?: boolean;
 }
@@ -42,6 +51,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
     return {
       title: "ViewerElement",
       icon: "desktop",
+      posture: ViewerElementPosture.NEUTRAL,
       moveable: true,
       deleteable: true
     };

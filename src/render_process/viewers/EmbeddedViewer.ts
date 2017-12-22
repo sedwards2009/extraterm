@@ -25,7 +25,7 @@ import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
-import {ViewerElement, ViewerElementMetadata} from './ViewerElement';
+import {ViewerElement, ViewerElementMetadata, ViewerElementPosture} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {VisualState} from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
@@ -63,13 +63,6 @@ const CLASS_NEUTRAL = "CLASS_NEUTRAL";
 
 const DEBUG_SIZE = false;
 
-export enum EmbeddedViewerPosture {
-  NEUTRAL,
-  RUNNING,
-  SUCCESS,
-  FAILURE,
-}
-
 
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
@@ -95,8 +88,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
   
   private _log: Logger = null;
-  private _posture: EmbeddedViewerPosture = EmbeddedViewerPosture.RUNNING;  
-  private _returnCode: string = null;
   private _title: string = "";
   private _tag: string = "";
   private _toolTip: string = null;
@@ -118,7 +109,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
 
     this._setUpShadowDom();
-    this._setUpDefaultAttributes();
+    this._updateMetadata();
+    this.setTag(this._tag);
     this.installThemeCss();
     this._setUpEventHandlers();
   }
@@ -161,6 +153,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       element.addEventListener('focus', this._childFocusHandlerFunc);
       this.appendChild(element);
       this._virtualScrollArea.appendScrollable(element);
+
+      this._updateMetadata();
     }
   }
   
@@ -293,27 +287,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
   }
 
-  getPosture(): EmbeddedViewerPosture {
-    return this._posture;
-  }
-
-  setPosture(posture: EmbeddedViewerPosture): void {
-    this._posture = posture;
-
-    const container = <HTMLDivElement>this._getById(ID_CONTAINER);
-    
-    container.classList.remove(CLASS_RUNNING);
-    container.classList.remove(CLASS_SUCCEEDED);
-    container.classList.remove(CLASS_FAILED);
-
-    container.classList.add({
-        [EmbeddedViewerPosture.RUNNING]: CLASS_RUNNING,
-        [EmbeddedViewerPosture.SUCCESS]: CLASS_SUCCEEDED,
-        [EmbeddedViewerPosture.FAILURE]: CLASS_FAILED,
-        [EmbeddedViewerPosture.NEUTRAL]: CLASS_NEUTRAL,
-      }[posture]);
-  }
-
   getSelectionText(): string {
     const viewerElement = this.getViewerElement();
     return viewerElement === null ? null : viewerElement.getSelectionText();
@@ -334,26 +307,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     return this._tag;
   }
 
-  setTitle(newTitle: string): void {
-    this._title = newTitle;
-    this._updateTitle(newTitle);
-  }
-
-  private _updateTitle(title: string): void {
-    (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).innerText = title;
-  }
-
-  getTitle(): string {
-    return this._title;
-  }
-
-  setReturnCode(returnCode: string): void {
-    this._returnCode = returnCode;
-  }
-
-  getReturnCode(): string {
-    return this._returnCode;
-  }
 
   setToolTip(toolTip: string): void {
     this._toolTip = toolTip;
@@ -373,12 +326,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       return false;
     }
     return el.hasFocus();
-  }
-
-  setAwesomeIcon(iconName: string): void {
-    this._awesomeIcon = iconName;
-    const icon = <HTMLDivElement>this._getById(ID_ICON);
-    icon.className = "fa " + (iconName !== null && iconName !== undefined && iconName !== "" ? "fa-" : "") + iconName;
   }
 
   canPaste(): boolean {
@@ -467,16 +414,51 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     shadow.appendChild(clone);
   }
 
-  private _setUpDefaultAttributes(): void {
-    this._updateTitle(this._title);
-    this.setPosture(this._posture);
-    this.setReturnCode(this._returnCode);
-    this.setTag(this._tag);
-    this.setToolTip(this._toolTip);
-    this.setAwesomeIcon(this._awesomeIcon);
+  private _updateMetadata(): void {
+    const viewerElement = this.getViewerElement();
+    const metadata = viewerElement !== null ? viewerElement.getMetadata() : 
+      {
+        title: "",
+        icon: null,
+        posture: ViewerElementPosture.NEUTRAL
+      };
+
+    this._updateTitle(metadata.title);
+    this._updatePosture(metadata.posture);
+
+    // this.setToolTip(this._toolTip);  // FIXME
+
+    this._updateAwesomeIcon(metadata.icon);
+  }
+  
+  private _updateTitle(title: string): void {
+    (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).innerText = title;
+  }
+
+  private _updateAwesomeIcon(iconName: string): void {
+    this._awesomeIcon = iconName;
+    const icon = <HTMLDivElement>this._getById(ID_ICON);
+    icon.className = "fa " + (iconName !== null && iconName !== undefined && iconName !== "" ? "fa-" : "") + iconName;
+  }
+  
+  private _updatePosture(posture: ViewerElementPosture): void {
+    const container = <HTMLDivElement>this._getById(ID_CONTAINER);
+    
+    container.classList.remove(CLASS_RUNNING);
+    container.classList.remove(CLASS_SUCCEEDED);
+    container.classList.remove(CLASS_FAILED);
+    container.classList.remove(CLASS_NEUTRAL);
+
+    container.classList.add({
+        [ViewerElementPosture.RUNNING]: CLASS_RUNNING,
+        [ViewerElementPosture.SUCCESS]: CLASS_SUCCEEDED,
+        [ViewerElementPosture.FAILURE]: CLASS_FAILED,
+        [ViewerElementPosture.NEUTRAL]: CLASS_NEUTRAL,
+      }[posture]);
   }
 
   private _setUpEventHandlers(): void {
+    this.addEventListener(ViewerElement.EVENT_METADATA_CHANGE, this._handleViewerMetadataChanged.bind(this));
     DomUtils.getShadowId(this, ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
     DomUtils.getShadowId(this, ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
     
@@ -540,6 +522,11 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     };
 
     this.setDimensionsAndScroll(setterState);
+  }
+
+  private _handleViewerMetadataChanged(): void {
+    this._log.debug("Saw MetadataChanged event!");
+    this._updateMetadata();
   }
 
   private _handleDragStart(ev: DragEvent): void {
