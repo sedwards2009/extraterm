@@ -184,6 +184,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         break;
     }
 
+    if (this._returnCode != null) {
+      metadata.toolTip = `Return code: ${this._returnCode}`;
+    }
+
     return metadata;
   }
   

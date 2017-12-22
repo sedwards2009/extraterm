@@ -90,7 +90,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _log: Logger = null;
   private _title: string = "";
   private _tag: string = "";
-  private _toolTip: string = null;
   private _awesomeIcon: string = null;
   private _visualState: VisualState = ViewerElementTypes.VisualState.AUTO;
   private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
@@ -307,19 +306,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     return this._tag;
   }
 
-
-  setToolTip(toolTip: string): void {
-    this._toolTip = toolTip;
-    const iconDiv = <HTMLDivElement>this._getById(ID_ICON_DIV);
-    if (toolTip !== null) {
-      iconDiv.setAttribute('title', toolTip);
-    }
-  }
-
-  getToolTip(): string {
-    return this._toolTip;
-  }
-
   hasFocus(): boolean {
     const el = this.getViewerElement();
     if (el == null) {
@@ -416,19 +402,18 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   private _updateMetadata(): void {
     const viewerElement = this.getViewerElement();
-    const metadata = viewerElement !== null ? viewerElement.getMetadata() : 
+    const metadata: ViewerElementMetadata = viewerElement !== null ? viewerElement.getMetadata() : 
       {
         title: "",
         icon: null,
-        posture: ViewerElementPosture.NEUTRAL
+        posture: ViewerElementPosture.NEUTRAL,
+        toolTip: null
       };
 
     this._updateTitle(metadata.title);
-    this._updatePosture(metadata.posture);
-
-    // this.setToolTip(this._toolTip);  // FIXME
-
     this._updateAwesomeIcon(metadata.icon);
+    this._updatePosture(metadata.posture);
+    this._updateToolTip(metadata.toolTip);
   }
   
   private _updateTitle(title: string): void {
@@ -455,6 +440,13 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
         [ViewerElementPosture.FAILURE]: CLASS_FAILED,
         [ViewerElementPosture.NEUTRAL]: CLASS_NEUTRAL,
       }[posture]);
+  }
+
+  private _updateToolTip(toolTip: string): void {
+    if (toolTip !== null) {
+      (<HTMLDivElement>this._getById(ID_ICON_DIV)).setAttribute('title', toolTip);
+      (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).setAttribute('title', toolTip);
+    }
   }
 
   private _setUpEventHandlers(): void {

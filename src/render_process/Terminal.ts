@@ -1789,7 +1789,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       activeTerminalViewer.setUseVPad(false);
       
       // Hang the terminal viewer under the Embedded viewer.
-      embeddedViewerElement.setToolTip("Return code: " + returnCode); // FIXME
       embeddedViewerElement.className = "extraterm_output";
       
       // Some focus management to make sure that activeTerminalViewer still keeps
@@ -1834,7 +1833,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       // Append our new embedded viewer.
       const newViewerElement = this._createEmbeddedViewerElement();
       // Hang the terminal viewer under the Embedded viewer.
-      newViewerElement.setToolTip("Return code: " + returnCode);
       newViewerElement.className = "extraterm_output";
 
       this._appendScrollable(newViewerElement);

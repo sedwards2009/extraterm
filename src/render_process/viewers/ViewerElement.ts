@@ -28,6 +28,7 @@ export interface ViewerElementMetadata {
   posture: ViewerElementPosture;
   moveable?: boolean;
   deleteable?: boolean;
+  toolTip: string;
 }
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {
@@ -53,7 +54,8 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
       icon: "desktop",
       posture: ViewerElementPosture.NEUTRAL,
       moveable: true,
-      deleteable: true
+      deleteable: true,
+      toolTip: null
     };
   }
   
