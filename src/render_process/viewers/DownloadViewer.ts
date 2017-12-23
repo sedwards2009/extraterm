@@ -8,19 +8,19 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import * as DomUtils from '../DomUtils';
 
-import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
+import {BulkFileHandle, BulkFileState} from '../bulk_file_handling/BulkFileHandle';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import {SimpleViewerElement} from '../viewers/SimpleViewerElement';
-import {ViewerElementMetadata, ViewerElement} from './ViewerElement';
+import * as ThemeTypes from '../../theme/Theme';
+import {ViewerElementMetadata, ViewerElement, ViewerElementPosture} from './ViewerElement';
 
 
 @Component(
 {
   template: `<div class="body container-fluid"">
   <div class="row">
-    <div v-if="finished" class="col-sm-6">{{name}}</div>
-    <div v-if="!finished" class="col-sm-6">Downloading {{name}}</div>
+    <div class="col-sm-6"><i class='fa fa-download'></i> {{name}}</div>
     <div class="col-sm-6">{{formattedHumanAvailableBytes}} &nbsp; ({{formattedExactAvailableBytes}} bytes)</div>
   </div>
 </div>`
@@ -90,6 +90,31 @@ export class DownloadViewer extends SimpleViewerElement {
     const metadata = super.getMetadata();
     metadata.title = "Download";
     metadata.icon = "download";
+    if (this._bulkFileHandle != null) {
+      const fileMetadata = this._bulkFileHandle.getMetadata()
+      const filename = fileMetadata["filename"] != null ? fileMetadata["filename"] : "(unknown)";
+
+      switch (this._bulkFileHandle.getState()) {
+        case BulkFileState.DOWNLOADING:
+          metadata.title = `Downloading ${filename}`;
+          metadata.posture = ViewerElementPosture.NEUTRAL;
+          metadata.icon = "cog";
+          break;
+
+        case BulkFileState.COMPLETED:
+          metadata.title = `Completed downloading ${filename}`;
+          metadata.posture = ViewerElementPosture.SUCCESS;
+          metadata.icon = "check";
+          break;
+
+        case BulkFileState.FAILED:
+          metadata.title = `Failed to download ${filename}`;
+          metadata.posture = ViewerElementPosture.FAILURE;
+          metadata.icon = "times";
+          break;
+      }
+    }
+    
     return metadata;
   }
 
@@ -105,6 +130,12 @@ export class DownloadViewer extends SimpleViewerElement {
     return ["application/octet-stream"].indexOf(mimeType) !== -1;
   }
 
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    const types = super._themeCssFiles();
+    types.push(ThemeTypes.CssFile.FONT_AWESOME);
+    return types;
+  }
+
   getBulkFileHandle(): BulkFileHandle {
     return this._bulkFileHandle;
   }
@@ -118,8 +149,8 @@ export class DownloadViewer extends SimpleViewerElement {
     this._onAvailableSizeChangeDisposable = this._bulkFileHandle.onAvailableSizeChange(
       () => this._updateLater.trigger());
     this._onStateChangeDisposable = this._bulkFileHandle.onStateChange(() => {
-      this._log.debug(`onStateChange ${handle.getState()}`);
       this._ui.finished = true;
+      this._updateLater.trigger()
     });
     this._ui.availableSize = handle.getAvailableSize();
     this._ui.totalSize = handle.getTotalSize()

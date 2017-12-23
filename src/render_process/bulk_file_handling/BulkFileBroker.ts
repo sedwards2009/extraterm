@@ -30,6 +30,8 @@ export class BulkFileBroker {
     this._log = getLogger("BulkFileBroker", this);
     WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_BUFFER_SIZE,
       this._handleBufferSizeMessage.bind(this));
+      WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_STATE,
+        this._handleBufferStateMessage.bind(this));        
   }
 
   createWriteableBulkFileHandle(metadata: Metadata, size: number): WriteableBulkFileHandle {
@@ -49,9 +51,15 @@ export class BulkFileBroker {
     });
   }
 
-  private _handleBufferSizeMessage(msg: Messages.BulkFileBufferSize): void {
+  private _handleBufferSizeMessage(msg: Messages.BulkFileBufferSizeMessage): void {
     if (this._fileHandleMap.has(msg.identifier)) {
       this._fileHandleMap.get(msg.identifier).updateRemoteBufferSize(msg.totalBufferSize, msg.availableDelta);
+    }
+  }
+
+  private _handleBufferStateMessage(msg: Messages.BulkFileStateMessage): void {
+    if (this._fileHandleMap.has(msg.identifier)) {
+      this._fileHandleMap.get(msg.identifier).updateState(msg.state);
     }
   }
 }
@@ -71,7 +79,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   private _isOpen = true;
 
   private _onAvailableSizeChangeEventEmitter = new EventEmitter<number>();
-  private _onFinishedEventEmitter = new EventEmitter<void>();
+  private _onStateChangeEventEmitter = new EventEmitter<BulkFileState>();
   private _onWriteBufferSizeEventEmitter = new EventEmitter<number>();
 
   private _availableSize = 0;
@@ -85,12 +93,17 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
 
   private _closePending = false;
   private _success = true;
+  private _state = BulkFileState.DOWNLOADING;
+
+  onAvailableSizeChange: Event<number>;
+  onAvailableWriteBufferSizeChanged: Event<number>;
+  onStateChange: Event<BulkFileState>;
 
   constructor(private _disposable: Disposable, private _metadata: Metadata, private _totalSize: number) {
     this._log = getLogger("WriteableBulkFileHandle", this);
 
     this.onAvailableSizeChange = this._onAvailableSizeChangeEventEmitter.event;
-    this.onStateChange = this._onFinishedEventEmitter.event;
+    this.onStateChange = this._onStateChangeEventEmitter.event;
     this.onAvailableWriteBufferSizeChanged = this._onWriteBufferSizeEventEmitter.event;
     
     const {identifier, url} = WebIpc.createBulkFileSync(_metadata, _totalSize);
@@ -99,10 +112,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   }
 
   getState(): BulkFileState {
-    if (this._isOpen) {
-      return BulkFileState.DOWNLOADING;
-    }
-    return this._success ? BulkFileState.COMPLETED : BulkFileState.FAILED;
+    return this._state;
   }
 
   getBulkFileIdentifier(): BulkFileIdentifier {
@@ -112,8 +122,6 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   getUrl(): string {
     return this._url;
   }
-
-  onAvailableSizeChange: Event<number>;
 
   getAvailableSize(): number {
     return this._availableSize;
@@ -160,8 +168,6 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   getAvailableWriteBufferSize(): number {
     return MAXIMUM_WRITE_BUFFER_SIZE - this._writeBuffer.length;
   }
-
-  onAvailableWriteBufferSizeChanged: Event<number>;
 
   private _getAvailableRemoteBufferSize(): number {
     return this._remoteBufferTotalSize + this._removeBufferDelta;
@@ -230,6 +236,13 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     });
   }
 
+  updateState(state: BulkFileState): void {
+    this._state = state;
+    process.nextTick(() => {
+      this._onStateChangeEventEmitter.fire(state);
+    });
+  }
+
   close(success: boolean): void {
     if ( ! this._isOpen) {
       this._log.warn("Close attempted on a closed WriteableBulkFileHandle! ", this._fileIdentifier);
@@ -241,5 +254,4 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this._sendBuffers();
   }
 
-  onStateChange: Event<void>;
 }

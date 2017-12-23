@@ -193,8 +193,8 @@ export function writeBulkFile(identifier: BulkFileIdentifier, data: Buffer): voi
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
-export function closeBulkFile(identifier: BulkFileIdentifier, succeeded: boolean): void {
-  const msg: Messages.BulkFileCloseMessage = {type: Messages.MessageType.BULK_FILE_CLOSE, identifier, succeeded};
+export function closeBulkFile(identifier: BulkFileIdentifier, success: boolean): void {
+  const msg: Messages.BulkFileCloseMessage = {type: Messages.MessageType.BULK_FILE_CLOSE, identifier, success};
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 

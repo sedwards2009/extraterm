@@ -10,6 +10,7 @@
 
 import * as Config from './Config';
 import * as ThemeTypes from './theme/Theme';
+import {BulkFileState} from './render_process/bulk_file_handling/BulkFileHandle';
 import {BulkFileIdentifier, Metadata} from './main_process/bulk_file_handling/BulkFileStorage';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
@@ -58,6 +59,7 @@ export const enum MessageType {
   BULK_FILE_CLOSE,
   BULK_FILE_REF,
   BULK_FILE_DEREF,
+  BULK_FILE_STATE,
 }
 
 /**
@@ -421,10 +423,10 @@ export interface BulkFileWriteMessage extends Message {
 
 export interface BulkFileCloseMessage extends Message {
   identifier: BulkFileIdentifier;
-  succeeded: boolean;
+  success: boolean;
 }
 
-export interface BulkFileBufferSize extends Message {
+export interface BulkFileBufferSizeMessage extends Message {
   identifier: BulkFileIdentifier;
   totalBufferSize: number;  // The total size of the receiving buffer for the bulk file.
   availableDelta: number;  // The change in the amount of available buffer.
@@ -436,4 +438,9 @@ export interface BulkFileRefMessage extends Message {
 
 export interface BulkFileDerefMessage extends Message {
   identifier: BulkFileIdentifier;  
+}
+
+export interface BulkFileStateMessage extends Message {
+  identifier: BulkFileIdentifier;
+  state: BulkFileState;
 }

@@ -21,7 +21,8 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as os from 'os';
 
-import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent} from './bulk_file_handling/BulkFileStorage';
+import {BulkFileState} from '../render_process/bulk_file_handling/BulkFileHandle';
+import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
 import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
   SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
@@ -156,6 +157,7 @@ function main(): void {
 
     bulkFileStorage = new BulkFileStorage(os.tmpdir());
     bulkFileStorage.onWriteBufferSize(sendBulkFileWriteBufferSizeEvent);
+    bulkFileStorage.onClose(sendBulkFileStateChangeEvent);
     startIpc();
     
     // Create the browser window.
@@ -1230,7 +1232,7 @@ function handleWriteBulkFile(msg: Messages.BulkFileWriteMessage): void {
 }
 
 function sendBulkFileWriteBufferSizeEvent(event: BufferSizeEvent): void {
-  const msg: Messages.BulkFileBufferSize = {
+  const msg: Messages.BulkFileBufferSizeMessage = {
     type: Messages.MessageType.BULK_FILE_BUFFER_SIZE,
     identifier: event.identifier,
     totalBufferSize: event.totalBufferSize,
@@ -1239,8 +1241,18 @@ function sendBulkFileWriteBufferSizeEvent(event: BufferSizeEvent): void {
   sendMessageToAllWindows(msg);
 }
 
+function sendBulkFileStateChangeEvent(event: CloseEvent): void {
+  const msg: Messages.BulkFileStateMessage = {
+    type: Messages.MessageType.BULK_FILE_STATE,
+    identifier: event.identifier,
+    state: event.success ? BulkFileState.COMPLETED : BulkFileState.FAILED
+  };
+  sendMessageToAllWindows(msg);
+
+}
+
 function handleCloseBulkFile(msg: Messages.BulkFileCloseMessage): void {
-  bulkFileStorage.close(msg.identifier);
+  bulkFileStorage.close(msg.identifier, msg.success);
 }
 
 function handleRefBulkFile(msg: Messages.BulkFileRefMessage): void {

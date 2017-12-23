@@ -25,6 +25,7 @@ export interface Metadata {
 }
 
 export type BufferSizeEvent = {identifier: BulkFileIdentifier, totalBufferSize: number, availableDelta: number};
+export type CloseEvent = {identifier: BulkFileIdentifier, success: boolean};
 
 
 /**
@@ -38,12 +39,17 @@ export class BulkFileStorage {
   private _storageDirectory: string;
 
   private _onWriteBufferSizeEventEmitter = new EventEmitter<BufferSizeEvent>();
+  private _onCloseEventEmitter = new EventEmitter<CloseEvent>();
+
+  onWriteBufferSize: Event<BufferSizeEvent>;
+  onClose: Event<CloseEvent>;
 
   constructor(private _tempDirectory: string) {
     this._log = getLogger("BulkFileStorage", this);
     this._storageDirectory = this._createStorageDirectory(this._tempDirectory);
     this._server = new BulkFileServer(this);
     this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
+    this.onClose = this._onCloseEventEmitter.event;
   }
 
   /**
@@ -77,8 +83,6 @@ export class BulkFileStorage {
     }
   }
 
-  onWriteBufferSize: Event<BufferSizeEvent>;
-  
   createBulkFile(metadata: Metadata, size: number): {identifier: BulkFileIdentifier, url: string} {
     const onDiskFileIdentifier = crypto.randomBytes(16).toString('hex');
     const fullPath = path.join(this._storageDirectory, onDiskFileIdentifier);
@@ -86,9 +90,15 @@ export class BulkFileStorage {
     const bulkFile = new BulkFile(metadata, fullPath);
     bulkFile.ref();
     const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
+
     bulkFile.onWriteBufferSize(({totalBufferSize, availableDelta}): void => {
       this._onWriteBufferSizeEventEmitter.fire({identifier: internalFileIdentifier, totalBufferSize, availableDelta});
     });
+
+    bulkFile.onClose((payload: {success: boolean}): void => {
+      this._onCloseEventEmitter.fire({identifier: internalFileIdentifier, success: payload.success});
+    });
+
     this._storageMap.set(internalFileIdentifier, bulkFile);
 
     return {identifier: internalFileIdentifier, url: this._server.getUrl(internalFileIdentifier)};
@@ -103,13 +113,13 @@ export class BulkFileStorage {
     this._storageMap.get(identifier).write(data);
   }
 
-  close(identifier: BulkFileIdentifier): void {
+  close(identifier: BulkFileIdentifier, success: boolean): void {
     if ( ! this._storageMap.has(identifier)) {
       this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
       return;
     }
     
-    this._storageMap.get(identifier).close();
+    this._storageMap.get(identifier).close(success);
   }
 
   ref(identifier: BulkFileIdentifier): void {
@@ -167,9 +177,14 @@ export class BulkFile {
   private _cryptoIV: Buffer = null;
 
   private _closePending = false;
+  private _succeess = false;
   private _onWriteBufferSizeEventEmitter = new EventEmitter<{totalBufferSize: number, availableDelta: number}>();
+  private _onCloseEventEmitter = new EventEmitter<{success: boolean}>();
 
   private _peekBuffer = new SmartBuffer();
+
+  onWriteBufferSize: Event<{totalBufferSize: number, availableDelta: number}>;
+  onClose: Event<{success: boolean}>;
 
   constructor(private  _metadata: Metadata, public filePath: string) {
     this._log = getLogger("BulkFile", this);
@@ -182,6 +197,7 @@ export class BulkFile {
     const aesCipher = crypto.createCipheriv("aes256", this._cryptoKey, this._cryptoIV);
     this._writeStream = aesCipher;
     aesCipher.pipe(this._wrFile.getWriteStream());
+    this.onClose = this._onCloseEventEmitter.event;
     this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
   }
 
@@ -228,15 +244,12 @@ export class BulkFile {
       this._writeStream.end();
       this._writeStreamOpen = false;
       this._closePending = false;
+      this._onCloseEventEmitter.fire({success: this._succeess});
     }
     if (availableDelta !== 0) {
-      this._emitWriteBufferSize(availableDelta);
-    }
-  }
-
-  private _emitWriteBufferSize(availableDelta: number): void {
-    const totalBufferSize = BULK_FILE_MAXIMUM_BUFFER_SIZE;
-    this._onWriteBufferSizeEventEmitter.fire({totalBufferSize, availableDelta});
+      const totalBufferSize = BULK_FILE_MAXIMUM_BUFFER_SIZE;
+      this._onWriteBufferSizeEventEmitter.fire({totalBufferSize, availableDelta});
+      }
   }
 
   private _pendingBufferSize(): number {
@@ -247,14 +260,13 @@ export class BulkFile {
     return total;
   }
   
-  onWriteBufferSize: Event<{totalBufferSize: number, availableDelta: number}>;
-
-  close(): void {
+  close(success: boolean): void {
     if ( ! this._writeStreamOpen) {
       this._log.warn("Write attempted to closed bulk file!");
       return;
     }
     this._closePending = true;
+    this._succeess = success;
     this._sendWriteBuffers();
   }
 

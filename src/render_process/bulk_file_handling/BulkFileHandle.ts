@@ -79,5 +79,5 @@ export interface BulkFileHandle {
   /**
    * This event is fired when the file has been completely downloaded or fails.
    */
-  onStateChange: Event<void>;
+  onStateChange: Event<BulkFileState>;
 }

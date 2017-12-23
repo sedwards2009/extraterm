@@ -59,5 +59,5 @@ export class BlobBulkFileHandle implements BulkFileHandle {
   }
 
   onAvailableSizeChange: Event<number>;
-  onStateChange: Event<void>;
+  onStateChange: Event<BulkFileState>;
 }
