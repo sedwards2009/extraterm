@@ -101,6 +101,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _headerTop = 0;
   private _headerBottom = 0;
 
+  private _connectSetupDone = false;
+
   constructor() {
     super();
     this._log = getLogger(EmbeddedViewer.TAG_NAME, this);
@@ -117,9 +119,13 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   connectedCallback(): void {
     super.connectedCallback();
 
+    if ( ! this._connectSetupDone) {
     this._setUpVirtualScrollArea();
+
     // Remove the anti-flicker style.
     DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
+      this._connectSetupDone = true;
+  }
   }
 
   getMetadata(): ViewerElementMetadata {
