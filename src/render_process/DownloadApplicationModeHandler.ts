@@ -143,19 +143,19 @@ class DownloadSession {
     const HASH_LENGTH = 64;
 
     this._encodedDataBuffer += encodedData;
-    
-    // Check for invalid characters which may indicate a crash on the remote side.
-    if (invalidBodyRegex.test(this._encodedDataBuffer)) {
-      this._log.warn("Data buffer contains illegal characters. Aborting.");
-      this._state = DownloadHandlerState.ERROR;
-      this._closeFileHandle(false);
-      return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
-    }
 
     let splitIndex = this._determineBufferSplitPosition();
     while (splitIndex !== -1) {
-
       const chunk = this._encodedDataBuffer.slice(0, splitIndex);
+
+      // Check for invalid characters which may indicate a crash on the remote side.
+      if (invalidBodyRegex.test(chunk)) {
+        this._log.warn("Chunk contains illegal characters. Aborting.");
+        this._state = DownloadHandlerState.ERROR;
+        this._closeFileHandle(false);
+        return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
+      }
+
       const tail = this._encodedDataBuffer.slice(splitIndex);
       if (tail.startsWith("\n") || tail.startsWith("\r")) {
         this._encodedDataBuffer = tail.slice(1);
