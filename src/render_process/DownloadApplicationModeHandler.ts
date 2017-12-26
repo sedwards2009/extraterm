@@ -120,7 +120,16 @@ class DownloadSession {
       }
       this._encodedDataBuffer = this._encodedDataBuffer.slice(this._metadataSize);
 
-      this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, -1);
+      let filesize = -1;
+      if (metadata["filesize"] != null) {
+        try {
+          filesize = parseInt(metadata["filesize"], 10);
+        } catch {
+          this._log.warn(`Unable to parse filesize '${metadata["filesize"]}'. Continuing`);
+        }
+      }
+
+      this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, filesize);
       this._fileHandle.ref();
       this._availableWriteBufferSizeChangedDisposable = this._fileHandle.onAvailableWriteBufferSizeChanged(this._handleAvailableWriteBufferSizeChanged.bind(this));
       this._state = DownloadHandlerState.BODY;

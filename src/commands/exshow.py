@@ -16,14 +16,15 @@ from extratermclient import extratermclient
 MAX_CHUNK_BYTES = 3 * 1024  # This is kept a multiple of 3 to avoid padding in the base64 representation.
 
 def SendMimeTypeDataFromFile(filename, mimeType, charset, filenameMeta=None):
+    filesize = os.path.getsize(filename)
     with open(filename,'rb') as fhandle:
-        SendMimeTypeData(fhandle, filename if filenameMeta is None else filenameMeta, mimeType, charset)
+        SendMimeTypeData(fhandle, filename if filenameMeta is None else filenameMeta, mimeType, charset, filesize=filesize)
 
 def SendMimeTypeDataFromStdin(mimeType, charset, filenameMeta=None):
     SendMimeTypeData(sys.stdin.buffer, filenameMeta, mimeType, charset)
 
-def SendMimeTypeData(fhandle, filename, mimeType, charset):
-    extratermclient.startFileTransfer(mimeType, charset, filename)
+def SendMimeTypeData(fhandle, filename, mimeType, charset, filesize=-1):
+    extratermclient.startFileTransfer(mimeType, charset, filename, filesize=filesize)
     contents = fhandle.read(MAX_CHUNK_BYTES)
 
     previousHash = b""

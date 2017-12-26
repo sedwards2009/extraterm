@@ -523,7 +523,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   private _handleViewerMetadataChanged(): void {
-    this._log.debug("Saw MetadataChanged event!");
     this._updateMetadata();
   }
 
