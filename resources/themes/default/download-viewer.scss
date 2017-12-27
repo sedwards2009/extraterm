@@ -1,0 +1,22 @@
+/**
+ * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ */
+@import "bootstrap/_variables";
+
+.body {
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-color;
+  background-color: $body-bg;
+  
+  padding: $panel-body-padding;
+  
+  &:focus {
+    outline: 0 solid black;
+  }
+}
+
+.body .progress {
+  margin: 0;
+}

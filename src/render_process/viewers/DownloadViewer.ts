@@ -18,10 +18,39 @@ import {ViewerElementMetadata, ViewerElement, ViewerElementPosture} from './View
 
 @Component(
 {
-  template: `<div class="body container-fluid"">
+  template: `<div class="body container-fluid" :title="formattedTooltip">
   <div class="row">
-    <div class="col-sm-6"><i class='fa fa-download'></i> {{name}}</div>
-    <div class="col-sm-6">{{formattedHumanAvailableBytes}} &nbsp; ({{formattedExactAvailableBytes}} bytes)</div>
+    <div v-if="finished" class="col-sm-4"><i class='fa fa-download'></i>&nbsp;{{name}}</div>
+    <div v-else class="col-sm-4"><i class='fa fa-download'></i>&nbsp;Downloading {{name}}</div>
+
+    <div v-if="totalSize == -1" class="col-sm-8">
+      {{formattedHumanAvailableBytes}}
+    </div>
+
+    <template v-else>
+      <template v-if="finished">
+        <div class="col-sm-8">
+          {{formattedHumanAvailableBytes}}
+        </div>
+      </template>
+
+      <template v-else>
+        <div class="col-sm-2">
+          {{formattedHumanAvailableBytes}}
+        </div>
+
+        <div class="col-sm-4">
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" :style="progressStyle">
+            {{progressPercent}}%
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-2">
+        <i class='fa fa-hourglass-o'></i>&nbsp;{{formattedEta}}
+        </div>
+      </template>
+    </template>
   </div>
 </div>`
 })
@@ -30,6 +59,8 @@ class DownloadUI extends Vue {
   totalSize: number = 0;
   availableSize: number = 0;
   finished: boolean = false;
+  etaSeconds = 0;
+  speedBytesPerSecond = 0;
 
   get formattedExactAvailableBytes(): string {
     return this.availableSize.toLocaleString("en-US");
@@ -38,28 +69,42 @@ class DownloadUI extends Vue {
   get formattedHumanAvailableBytes(): string {
     return formatHumanBytes(this.availableSize);
   }
-}
 
-function formatHumanBytes(numberBytes: number): string {
-  const kibibytes = numberBytes / 1024;
-  const mebibytes = numberBytes / (1024 * 1024);
-  const gibibytes = numberBytes / (1024 * 1024 * 1024);
-  let displayNumber = 0;
-  let units = "";
-  if (gibibytes > 1) {
-    displayNumber = gibibytes;
-    units = " GiB";
-  } else if (mebibytes > 1) {
-    displayNumber = mebibytes;
-    units = " MiB";
-  } else if (kibibytes > 1) {
-    displayNumber = kibibytes;
-    units = " KiB";
-  } else {
-    displayNumber = numberBytes;
-    units = " b";
+  get formattedHumanTotalBytes(): string {
+    return formatHumanBytes(this.totalSize);
   }
-  return displayNumber.toLocaleString("en-US", {maximumFractionDigits: 1}) + units;
+
+  get progressStyle(): string {
+    return `width: ${this.progressPercent}%;`;
+  }
+
+  get formattedTooltip(): string {
+    return `Downloaded ${this.formattedHumanAvailableBytes} (${this.formattedExactAvailableBytes} bytes)`;
+  }
+
+  get progressPercent(): number {
+    return Math.floor(100 * this.availableSize / this.totalSize);
+  }
+
+  get formattedEta(): string {
+    const ONE_HOUR = 60 * 60;
+    const ONE_MINUTE = 60;
+
+    if (this.etaSeconds >= ONE_HOUR) {
+      const hours = Math.floor(this.etaSeconds / ONE_HOUR);
+      const minutes = Math.floor((this.etaSeconds % ONE_HOUR) / 60);
+      return `${hours}h${minutes}m`;
+
+    } else if (this.etaSeconds >= ONE_MINUTE) {
+      const minutes = Math.floor(this.etaSeconds / ONE_MINUTE);
+      const seconds = Math.floor(this.etaSeconds % ONE_MINUTE);
+      return `${minutes}m${seconds}s`;
+
+    } else {
+      const seconds = Math.floor(this.etaSeconds);
+      return `${seconds}s`;
+    }
+  }
 }
 
 @WebComponent({tag: "et-download-viewer"})
@@ -74,12 +119,13 @@ export class DownloadViewer extends SimpleViewerElement {
   private _onStateChangeDisposable: Disposable = null;
 
   private _updateLater: DomUtils.DebouncedDoLater = null;
+  private _speedTracker: SpeedTracker = null;
 
   constructor() {
     super();
     this._log = getLogger("et-download-viewer", this);
 
-    this._updateLater = new DomUtils.DebouncedDoLater(this._updateLaterCallback.bind(this), 500);
+    this._updateLater = new DomUtils.DebouncedDoLater(this._updateLaterCallback.bind(this), 250);
 
     this._ui = new DownloadUI();
     const component = this._ui.$mount();
@@ -120,7 +166,12 @@ export class DownloadViewer extends SimpleViewerElement {
 
   private _updateLaterCallback(): void {
     this._ui.availableSize = this._bulkFileHandle.getAvailableSize();
-    
+    if (this._speedTracker != null) {
+      this._speedTracker.updateProgress(this._ui.availableSize);
+      this._ui.etaSeconds = this._speedTracker.getETASeconds();
+      this._ui.speedBytesPerSecond = this._speedTracker.getCurrentSpeed();
+    }
+
     const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
     this.dispatchEvent(event);
   }
@@ -133,6 +184,7 @@ export class DownloadViewer extends SimpleViewerElement {
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     const types = super._themeCssFiles();
     types.push(ThemeTypes.CssFile.FONT_AWESOME);
+    types.push(ThemeTypes.CssFile.DOWNLOAD_VIEWER);
     return types;
   }
 
@@ -148,12 +200,16 @@ export class DownloadViewer extends SimpleViewerElement {
 
     this._onAvailableSizeChangeDisposable = this._bulkFileHandle.onAvailableSizeChange(
       () => this._updateLater.trigger());
+      
     this._onStateChangeDisposable = this._bulkFileHandle.onStateChange(() => {
       this._ui.finished = true;
       this._updateLater.trigger()
     });
     this._ui.availableSize = handle.getAvailableSize();
     this._ui.totalSize = handle.getTotalSize()
+    if (this._ui.totalSize !== -1) {
+      this._speedTracker = new SpeedTracker(this._ui.totalSize);
+    }
 
     const metadata = handle.getMetadata();
     if (metadata["filename"] !== undefined) {
@@ -174,5 +230,61 @@ export class DownloadViewer extends SimpleViewerElement {
     this._releaseBulkFileHandle();
     this._updateLater.cancel();
     super.dispose();
+  }
+}
+
+
+function formatHumanBytes(numberBytes: number): string {
+  const kibibytes = numberBytes / 1024;
+  const mebibytes = numberBytes / (1024 * 1024);
+  const gibibytes = numberBytes / (1024 * 1024 * 1024);
+  let displayNumber = 0;
+  let units = "";
+  if (gibibytes > 1) {
+    displayNumber = gibibytes;
+    units = " GiB";
+  } else if (mebibytes > 1) {
+    displayNumber = mebibytes;
+    units = " MiB";
+  } else if (kibibytes > 1) {
+    displayNumber = kibibytes;
+    units = " KiB";
+  } else {
+    displayNumber = numberBytes;
+    units = " b";
+  }
+  return displayNumber.toLocaleString("en-US", {maximumFractionDigits: 1}) + units;
+}
+
+const SAMPLE_PERIOD_MS = 500;
+const SMOOTHING_FACTOR = 0.05;
+
+class SpeedTracker {
+  private _timeStart = 0;
+  private _startReadBytes = 0;
+  private _currentSpeed = 0;
+
+  constructor(private _totalBytes: number) {
+    this._timeStart = performance.now();
+  }
+
+  updateProgress(newReadBytes: number): void {
+    const stamp = performance.now();
+    if ((stamp - this._timeStart) > SAMPLE_PERIOD_MS) {
+      const timePeriodSeconds = (stamp - this._timeStart) / 1000;
+      const recentBytesPerSecond = (newReadBytes - this._startReadBytes) / timePeriodSeconds;
+      this._currentSpeed = SMOOTHING_FACTOR * recentBytesPerSecond + (1-SMOOTHING_FACTOR) * this._currentSpeed;
+
+      this._timeStart = stamp;
+      this._startReadBytes = newReadBytes;
+    }
+  }
+
+  getCurrentSpeed(): number {
+    return this._currentSpeed;
+  }
+
+  getETASeconds(): number {
+    return (this._totalBytes - this._startReadBytes) / this._currentSpeed;
   }
 }

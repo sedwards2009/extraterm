@@ -44,10 +44,11 @@ export class SimpleViewerElement extends ViewerElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    DomUtils.doLater(() => {
-      this._updateRootElementHeight();
-      VirtualScrollAreaEmitResizeEvent(this);
-    });
+    if (this._updateRootElementHeight()) {
+      DomUtils.doLater(() => {
+        VirtualScrollAreaEmitResizeEvent(this);
+      });
+    }
   }
 
   private _styleElement: HTMLStyleElement = null;
