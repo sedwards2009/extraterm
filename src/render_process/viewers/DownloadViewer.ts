@@ -252,7 +252,7 @@ function formatHumanBytes(numberBytes: number): string {
     displayNumber = numberBytes;
     units = " b";
   }
-  return displayNumber.toLocaleString("en-US", {maximumFractionDigits: 1}) + units;
+  return displayNumber.toLocaleString("en-US", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + units;
 }
 
 const SAMPLE_PERIOD_MS = 500;
