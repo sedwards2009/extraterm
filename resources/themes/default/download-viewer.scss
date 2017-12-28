@@ -3,7 +3,10 @@
  */
 @import "bootstrap/_variables";
 
-.body {
+.container {
+  display: flex;
+  width: 100%;
+
   font-family: $font-family-base;
   font-size: $font-size-base;
   line-height: $line-height-base;
@@ -17,6 +20,32 @@
   }
 }
 
-.body .progress {
-  margin: 0;
+.filename {
+  flex-shrink: 0;
+  flex-grow: 2;
+  flex-basis: 0;
+}
+
+.available-bytes-unknown-total, .available-bytes-known-total, .available-bytes-known-total-finished, .eta {
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+.available-bytes-unknown-total, .available-bytes-known-total, .available-bytes-known-total-finished {
+  min-width: 8em;
+  text-align: right;
+  padding-right: 1em;
+}
+
+.eta {
+  padding-left: 1em;
+  min-width: 8em;
+}
+
+.progress-container {
+  flex-grow: 1;
+
+  .progress {
+    margin: 0;
+  }
 }

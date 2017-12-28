@@ -18,35 +18,34 @@ import {ViewerElementMetadata, ViewerElement, ViewerElementPosture} from './View
 
 @Component(
 {
-  template: `<div class="body container-fluid" :title="formattedTooltip">
-  <div class="row">
-    <div v-if="finished" class="col-sm-4"><i class='fa fa-download'></i>&nbsp;{{name}}</div>
-    <div v-else class="col-sm-4"><i class='fa fa-download'></i>&nbsp;Downloading {{name}}</div>
+  template: `<div class="container" :title="formattedTooltip">
+    <div v-if="finished" class="filename"><i class='fa fa-download'></i>&nbsp;{{name}}</div>
+    <div v-else class="filename"><i class='fa fa-download'></i>&nbsp;Downloading {{name}}</div>
 
-    <div v-if="totalSize == -1" class="col-sm-8">
+    <div v-if="totalSize == -1" class="available-bytes-unknown-total">
       {{formattedHumanAvailableBytes}}
     </div>
 
     <template v-else>
       <template v-if="finished">
-        <div class="col-sm-8">
+        <div class="available-bytes-known-total-finished">
           {{formattedHumanAvailableBytes}}
         </div>
       </template>
 
-      <template v-else>
-        <div class="col-sm-2">
+      <template>
+        <div class="available-bytes-known-total">
           {{formattedHumanAvailableBytes}}
         </div>
 
-        <div class="col-sm-4">
+        <div class="progress-container">
           <div class="progress">
             <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" :style="progressStyle">
             {{progressPercent}}%
             </div>
           </div>
         </div>
-        <div class="col-sm-2">
+        <div class="eta">
         <i class='fa fa-hourglass-o'></i>&nbsp;{{formattedEta}}
         </div>
       </template>
