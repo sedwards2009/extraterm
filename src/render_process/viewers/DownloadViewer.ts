@@ -39,11 +39,7 @@ import {ViewerElementMetadata, ViewerElement, ViewerElementPosture} from './View
         </div>
 
         <div class="progress-container">
-          <div class="progress">
-            <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" :style="progressStyle">
-            {{progressPercent}}%
-            </div>
-          </div>
+          <progress min="0" max="100" :value="progressPercent"></progress>
         </div>
         <div class="eta">
         <i class='fa fa-hourglass-o'></i>&nbsp;{{formattedEta}}
@@ -82,7 +78,7 @@ class DownloadUI extends Vue {
   }
 
   get progressPercent(): number {
-    return Math.floor(100 * this.availableSize / this.totalSize);
+    return this.totalSize === 0 ? 0 : Math.floor(100 * this.availableSize / this.totalSize);
   }
 
   get formattedEta(): string {

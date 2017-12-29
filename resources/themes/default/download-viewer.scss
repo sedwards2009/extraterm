@@ -6,6 +6,7 @@
 .container {
   display: flex;
   width: 100%;
+  align-items: baseline;
 
   font-family: $font-family-base;
   font-size: $font-size-base;
@@ -44,8 +45,9 @@
 
 .progress-container {
   flex-grow: 1;
+  align-self: baseline;
 
-  .progress {
-    margin: 0;
+  progress {
+    width: 100%;
   }
 }
