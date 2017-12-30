@@ -4,11 +4,13 @@
 #
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 # 
-import sys
-import os.path
 import argparse
+import atexit
 import base64
 import hashlib
+import os.path
+import sys
+import termios
 
 ##@inline
 from extratermclient import extratermclient
@@ -24,6 +26,8 @@ def SendMimeTypeDataFromStdin(mimeType, charset, filenameMeta=None):
     SendMimeTypeData(sys.stdin.buffer, filenameMeta, mimeType, charset)
 
 def SendMimeTypeData(fhandle, filename, mimeType, charset, filesize=-1):
+    TurnOffEcho()
+    
     extratermclient.startFileTransfer(mimeType, charset, filename, filesize=filesize)
     contents = fhandle.read(MAX_CHUNK_BYTES)
 
@@ -57,6 +61,20 @@ def ShowFile(filename, mimeType=None, charset=None, filenameMeta=None):
 
 def ShowStdin(mimeType=None, charset=None, filenameMeta=None):
     SendMimeTypeDataFromStdin(mimeType, charset, filenameMeta)
+
+def TurnOffEcho():
+    # Turn off echo on the tty.
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    new_settings = termios.tcgetattr(fd)
+    new_settings[3] = new_settings[3] & ~termios.ECHO          # lflags
+    termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
+
+    # Set up a hook to restore the tty settings at exit.
+    def restoreTty():
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        sys.stderr.flush()
+    atexit.register(restoreTty)
 
 def main():
     parser = argparse.ArgumentParser(prog='show', description='Show a file inside Extraterm.')
