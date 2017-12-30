@@ -42,7 +42,9 @@ import {ViewerElementMetadata, ViewerElement, ViewerElementPosture} from './View
           <progress min="0" max="100" :value="progressPercent"></progress>
         </div>
         <div class="eta">
-        <i class='fa fa-hourglass-o'></i>&nbsp;{{formattedEta}}
+          <template v-if="etaSeconds !== -1">
+            <i class='fa fa-hourglass-o'></i>&nbsp;{{formattedEta}}
+          </template>
         </div>
       </template>
     </template>
@@ -54,8 +56,8 @@ class DownloadUI extends Vue {
   totalSize: number = 0;
   availableSize: number = 0;
   finished: boolean = false;
-  etaSeconds = 0;
-  speedBytesPerSecond = 0;
+  etaSeconds = -1;
+  speedBytesPerSecond = -1;
 
   get formattedExactAvailableBytes(): string {
     return this.availableSize.toLocaleString("en-US");
@@ -163,8 +165,10 @@ export class DownloadViewer extends SimpleViewerElement {
     this._ui.availableSize = this._bulkFileHandle.getAvailableSize();
     if (this._speedTracker != null) {
       this._speedTracker.updateProgress(this._ui.availableSize);
-      this._ui.etaSeconds = this._speedTracker.getETASeconds();
-      this._ui.speedBytesPerSecond = this._speedTracker.getCurrentSpeed();
+      if (this._speedTracker.isSpeedAvailable()) {
+        this._ui.etaSeconds = this._speedTracker.getETASeconds();
+        this._ui.speedBytesPerSecond = this._speedTracker.getCurrentSpeed();
+      }
     }
 
     const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
@@ -255,24 +259,46 @@ const SAMPLE_PERIOD_MS = 500;
 const SMOOTHING_FACTOR = 0.05;
 
 class SpeedTracker {
-  private _timeStart = 0;
-  private _startReadBytes = 0;
+  private _creationTime = 0;
+  private _lastUpdateTime = -1;
+  private _lastBytesRead = 0;
   private _currentSpeed = 0;
+  private _updateCounter = 0;
 
   constructor(private _totalBytes: number) {
-    this._timeStart = performance.now();
+    this._creationTime = performance.now();
+    this._lastUpdateTime = 0;
   }
 
   updateProgress(newReadBytes: number): void {
     const stamp = performance.now();
-    if ((stamp - this._timeStart) > SAMPLE_PERIOD_MS) {
-      const timePeriodSeconds = (stamp - this._timeStart) / 1000;
-      const recentBytesPerSecond = (newReadBytes - this._startReadBytes) / timePeriodSeconds;
-      this._currentSpeed = SMOOTHING_FACTOR * recentBytesPerSecond + (1-SMOOTHING_FACTOR) * this._currentSpeed;
 
-      this._timeStart = stamp;
-      this._startReadBytes = newReadBytes;
+    if (this._lastUpdateTime === -1) {
+      const timePeriodSeconds = (stamp - this._creationTime) / 1000;
+
+      if (timePeriodSeconds !== 0) {
+        const recentBytesPerSecond = newReadBytes / timePeriodSeconds;
+        this._currentSpeed = recentBytesPerSecond;;
+
+        this._lastUpdateTime = stamp;
+        this._lastBytesRead = newReadBytes;
+      }
+    } else {
+
+      if ((stamp - this._lastUpdateTime) > SAMPLE_PERIOD_MS) {
+        const timePeriodSeconds = (stamp - this._lastUpdateTime) / 1000;
+        const recentBytesPerSecond = (newReadBytes - this._lastBytesRead) / timePeriodSeconds;
+        this._currentSpeed = SMOOTHING_FACTOR * recentBytesPerSecond + (1-SMOOTHING_FACTOR) * this._currentSpeed;
+
+        this._lastUpdateTime = stamp;
+        this._lastBytesRead = newReadBytes;
+      }
     }
+    this._updateCounter++;
+  }
+
+  isSpeedAvailable(): boolean {
+    return this._updateCounter > 20;
   }
 
   getCurrentSpeed(): number {
@@ -280,6 +306,6 @@ class SpeedTracker {
   }
 
   getETASeconds(): number {
-    return (this._totalBytes - this._startReadBytes) / this._currentSpeed;
+    return (this._totalBytes - this._lastBytesRead) / this._currentSpeed;
   }
 }
