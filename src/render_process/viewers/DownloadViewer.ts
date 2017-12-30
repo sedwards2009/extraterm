@@ -27,26 +27,18 @@ import {ViewerElementMetadata, ViewerElement, ViewerElementPosture} from './View
     </div>
 
     <template v-else>
-      <template v-if="finished">
-        <div class="available-bytes-known-total-finished">
-          {{formattedHumanAvailableBytes}}
-        </div>
-      </template>
+      <div class="available-bytes-known-total">
+        {{formattedHumanAvailableBytes}}
+      </div>
 
-      <template>
-        <div class="available-bytes-known-total">
-          {{formattedHumanAvailableBytes}}
-        </div>
-
-        <div class="progress-container">
-          <progress min="0" max="100" :value="progressPercent"></progress>
-        </div>
-        <div class="eta">
-          <template v-if="etaSeconds !== -1">
-            <i class='fa fa-hourglass-o'></i>&nbsp;{{formattedEta}}
-          </template>
-        </div>
-      </template>
+      <div class="progress-container">
+        <progress min="0" max="100" :value="progressPercent"></progress>
+      </div>
+      <div class="eta">
+        <template v-if="etaSeconds !== -1 && ! finished">
+          <i class='fa fa-hourglass-o'></i>&nbsp;{{formattedEta}}
+        </template>
+      </div>
     </template>
   </div>
 </div>`
@@ -58,9 +50,14 @@ class DownloadUI extends Vue {
   finished: boolean = false;
   etaSeconds = -1;
   speedBytesPerSecond = -1;
+  averageSpeedBytesPerSecond = -1;
 
   get formattedExactAvailableBytes(): string {
     return this.availableSize.toLocaleString("en-US");
+  }
+
+  get formattedExactTotalBytes(): string {
+    return this.totalSize.toLocaleString("en-US");
   }
 
   get formattedHumanAvailableBytes(): string {
@@ -76,11 +73,27 @@ class DownloadUI extends Vue {
   }
 
   get formattedTooltip(): string {
-    return `Downloaded ${this.formattedHumanAvailableBytes} (${this.formattedExactAvailableBytes} bytes)`;
+    if (this.finished) {
+      return `Completed download of ${this.formattedHumanAvailableBytes} (${this.formattedExactAvailableBytes} bytes)
+at ${formatHumanBytes(this.averageSpeedBytesPerSecond)}/s`;
+
+    } else {
+
+      if (this.totalSize > 0) {
+        const speed = this.speedBytesPerSecond === -1 ? "" : `
+at ${formatHumanBytes(this.speedBytesPerSecond)}/s`;
+
+        return `Downloaded ${this.formattedHumanAvailableBytes} of ${this.formattedHumanTotalBytes}
+(${this.formattedExactAvailableBytes} / ${this.formattedExactTotalBytes} bytes)${speed}`;
+
+      } else {
+        return `Downloaded ${this.formattedHumanAvailableBytes} (${this.formattedExactAvailableBytes} bytes)`;
+      }
+    }
   }
 
   get progressPercent(): number {
-    return this.totalSize === 0 ? 0 : Math.floor(100 * this.availableSize / this.totalSize);
+    return this.totalSize === 0 ? 0 : Math.round(100 * this.availableSize / this.totalSize);
   }
 
   get formattedEta(): string {
@@ -165,6 +178,7 @@ export class DownloadViewer extends SimpleViewerElement {
     this._ui.availableSize = this._bulkFileHandle.getAvailableSize();
     if (this._speedTracker != null) {
       this._speedTracker.updateProgress(this._ui.availableSize);
+      this._ui.averageSpeedBytesPerSecond = this._speedTracker.getAverageSpeed();
       if (this._speedTracker.isSpeedAvailable()) {
         this._ui.etaSeconds = this._speedTracker.getETASeconds();
         this._ui.speedBytesPerSecond = this._speedTracker.getCurrentSpeed();
@@ -303,6 +317,14 @@ class SpeedTracker {
 
   getCurrentSpeed(): number {
     return this._currentSpeed;
+  }
+
+  getAverageSpeed(): number {
+    if (this._lastBytesRead === 0) {
+      return 0;
+    }
+    const timePeriodSeconds = (this._lastUpdateTime - this._creationTime) / 1000;
+    return this._lastBytesRead / timePeriodSeconds;
   }
 
   getETASeconds(): number {
