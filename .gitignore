@@ -120,3 +120,5 @@ extraterm-web-component-decorators/test/TestCode.js
 extraterm-web-component-decorators/test/TestCode.d.ts
 src/render_process/viewers/DownloadViewer.js
 src/render_process/viewers/SimpleViewerElement.js
+src/render_process/gui/SimpleElementBase.js
+src/render_process/gui/FileTransferProgress.js

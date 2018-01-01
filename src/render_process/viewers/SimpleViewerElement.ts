@@ -28,11 +28,11 @@ export const ID_CONTAINER = "ID_CONTAINER";
  */
 export class SimpleViewerElement extends ViewerElement {
 
-  private _simpleViewerElementlog: Logger;
+  private _simpleViewerElementLog: Logger;
 
   constructor() {
     super();
-    this._simpleViewerElementlog = getLogger("et-download-viewer", this);
+    this._simpleViewerElementLog = getLogger("et-download-viewer", this);
     this._setupDOM();
   }
 
@@ -112,7 +112,7 @@ export class SimpleViewerElement extends ViewerElement {
   // VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
     if (DEBUG_SIZE) {
-      this._simpleViewerElementlog.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
+      this._simpleViewerElementLog.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
         setterState.yOffset, setterState.yOffsetChanged);
     }
     
@@ -127,7 +127,7 @@ export class SimpleViewerElement extends ViewerElement {
   // VirtualScrollable
   getVirtualHeight(containerHeight: number): number {
     if (DEBUG_SIZE) {
-      this._simpleViewerElementlog.debug("getVirtualHeight: ", this._rootElementHeight);
+      this._simpleViewerElementLog.debug("getVirtualHeight: ", this._rootElementHeight);
     }
     return this._rootElementHeight;
   }
@@ -135,7 +135,7 @@ export class SimpleViewerElement extends ViewerElement {
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     if (DEBUG_SIZE) {
-      this._simpleViewerElementlog.debug("getReserveViewportHeight: ", 0);
+      this._simpleViewerElementLog.debug("getReserveViewportHeight: ", 0);
     }
     return 0;
   }
