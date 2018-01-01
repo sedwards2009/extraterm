@@ -185,7 +185,7 @@ export class FileTransferProgress extends SimpleElementBase implements Disposabl
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     const types = super._themeCssFiles();
     types.push(ThemeTypes.CssFile.FONT_AWESOME);
-    types.push(ThemeTypes.CssFile.DOWNLOAD_VIEWER);
+    types.push(ThemeTypes.CssFile.GUI_FILE_TRANSFER_PROGRESS);
     return types;
   }
 

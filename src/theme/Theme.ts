@@ -48,7 +48,7 @@ export enum CssFile {
   EMPTY_PANE_MENU,
   GUI_SNAP_DROP_CONTAINER,
   THEME_VARS,
-  DOWNLOAD_VIEWER
+  GUI_FILE_TRANSFER_PROGRESS
 }
 
 export const cssFileEnumItems: CssFile[] = [
@@ -80,7 +80,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.EMPTY_PANE_MENU,
   CssFile.GUI_SNAP_DROP_CONTAINER,
   CssFile.THEME_VARS,
-  CssFile.DOWNLOAD_VIEWER
+  CssFile.GUI_FILE_TRANSFER_PROGRESS
 ];
 
 const _CssFileNameMapping = {
@@ -112,7 +112,7 @@ const _CssFileNameMapping = {
   [CssFile.EMPTY_PANE_MENU]: "empty-pane-menu",
   [CssFile.GUI_SNAP_DROP_CONTAINER]: "gui-snap-drop-container",
   [CssFile.THEME_VARS]: "theme-vars",
-  [CssFile.DOWNLOAD_VIEWER]: "download-viewer",
+  [CssFile.GUI_FILE_TRANSFER_PROGRESS]: "gui-file-transfer-progress",
 };
 
 export function cssFileNameBase(cssFile: CssFile): string {
@@ -155,5 +155,5 @@ export const UiCssFiles: CssFile[] = [
   CssFile.EMPTY_PANE_MENU,
   CssFile.GUI_SNAP_DROP_CONTAINER,
   CssFile.THEME_VARS,
-  CssFile.DOWNLOAD_VIEWER
+  CssFile.GUI_FILE_TRANSFER_PROGRESS
 ];
