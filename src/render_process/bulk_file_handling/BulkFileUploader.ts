@@ -32,13 +32,20 @@ export class BulkFileUploader {
   private _log: Logger;
   private _buffer: Buffer = Buffer.alloc(0);
   private _onPtyDataEventEmitter = new EventEmitter<string>();
+  private _onUploadedChangeEmitter = new EventEmitter<number>();
+  private _onFinishedEmitter = new EventEmitter<void>();
+  private _uploadedCount = 0;
 
   constructor(private _bulkFileHandle: BulkFileHandle) {
     this._log = getLogger("BulkFileUploader", this);
     this.onPtyData = this._onPtyDataEventEmitter.event;
+    this.onUploadedChange = this._onUploadedChangeEmitter.event;
+    this.onFinished = this._onFinishedEmitter.event;
   }
 
   onPtyData: Event<string>;
+  onUploadedChange: Event<number>;
+  onFinished: Event<void>;
 
   upload(): void {
     this._sendEncodedLine("metadata");
@@ -86,6 +93,7 @@ export class BulkFileUploader {
     for (let i = 0; i < lines; i++) {
       const lineBuffer = this._buffer.slice(i*BYTES_PER_LINE, (i+1) * BYTES_PER_LINE);
       this._sendEncodedLine(lineBuffer.toString("base64"));
+      this._uploadedCount += lineBuffer.length;
     }
 
     const remainder = this._buffer.length % BYTES_PER_LINE;
@@ -96,10 +104,16 @@ export class BulkFileUploader {
     } else {
       this._buffer = Buffer.alloc(0);
     }
+
+    this._onUploadedChangeEmitter.fire(this._uploadedCount);
   }
 
   private _responseOnEnd(): void {
+    this._uploadedCount += this._buffer.length;
     this._sendEncodedDataToPty(this._buffer);
+
+    this._onUploadedChangeEmitter.fire(this._uploadedCount);
+    this._onFinishedEmitter.fire(undefined);
   }
 
   private _reponseOnError(e): void {

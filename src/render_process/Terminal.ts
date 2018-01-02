@@ -42,6 +42,7 @@ import * as DomUtils from './DomUtils';
 import * as Term from './emulator/Term';
 import * as TermApi from './emulator/TermApi';
 import {ScrollBar} from './gui/ScrollBar';
+import {UploadProgressBar} from './UploadProgressBar';
 import * as util from './gui/Util';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
@@ -1942,6 +1943,21 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const event = new CustomEvent(EtTerminal.EVENT_USER_INPUT, { detail: {data: text } });
       this.dispatchEvent(event);
     });
+
+// Filter
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    const uploadProgressBar = <UploadProgressBar> document.createElement(UploadProgressBar.TAG_NAME);
+
+    uploadProgressBar.total = bulkFileHandle.getTotalSize();
+    uploader.onUploadedChange(uploaded => {
+      uploadProgressBar.transferred = uploaded;
+    });
+    uploader.onFinished(() => {
+      containerDiv.removeChild(uploadProgressBar);
+    });
+    
+    containerDiv.appendChild(uploadProgressBar);
+
     uploader.upload();
   }
 

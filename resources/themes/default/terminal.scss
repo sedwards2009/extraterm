@@ -10,6 +10,8 @@
 }
 
 #ID_CONTAINER {
+  position: relative;
+
   display: flex;
   flex-direction: row;
   width: 100%;
@@ -47,4 +49,11 @@
    left: pxToRem(4px);
    right: pxToRem(4px);
   }
+}
+
+et-upload-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
 }

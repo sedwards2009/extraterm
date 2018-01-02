@@ -122,3 +122,4 @@ src/render_process/viewers/DownloadViewer.js
 src/render_process/viewers/SimpleViewerElement.js
 src/render_process/gui/SimpleElementBase.js
 src/render_process/gui/FileTransferProgress.js
+src/render_process/UploadProgressBar.js
