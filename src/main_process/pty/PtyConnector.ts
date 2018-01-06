@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Event} from 'extraterm-extension-api';
 
 /**
  * Represents a PTY.
@@ -14,7 +15,7 @@ export interface Pty {
    * @param data data to write.
    */
   write(data: any): void;
-  
+
   /**
    * Tell the pty that the size of the terminal has changed
    *
@@ -30,9 +31,9 @@ export interface Pty {
    */
   destroy(): void;
   
-  onData(callback: (data: string) => void): void;
+  onData: Event<string>;
   
-  onExit(callback: () => void): void;
+  onExit: Event<void>;
 }
 
 export interface EnvironmentMap {

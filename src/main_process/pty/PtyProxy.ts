@@ -4,19 +4,17 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as child_process from 'child_process';
-import * as PtyConnector from './PtyConnector';
-import * as _ from 'lodash';
-import * as configInterfaces from '../../Config';
+import {Event} from 'extraterm-extension-api';
 import * as fs from 'fs';
+import * as _ from 'lodash';
 import * as path from 'path';
+
+import {Pty, PtyConnector, PtyOptions} from './PtyConnector';
+import {Config} from '../../Config';
 import {Logger, getLogger} from '../../logging/Logger';
 import * as SourceDir from '../../SourceDir';
+import {EventEmitter} from '../../utils/EventEmitter';
 
-type Config = configInterfaces.Config;
-
-type PtyConnector = PtyConnector.PtyConnector;
-type Pty = PtyConnector.Pty;
-type PtyOptions = PtyConnector.PtyOptions;
 
 const DEBUG_FINE = false;
 
@@ -74,23 +72,30 @@ interface TerminateMessage extends ProxyMessage {
 
 const NULL_ID = -1;
 
+
 class ProxyPty implements Pty {
   
   private _id: number = NULL_ID;
-    
-  private _dataListener: (data: any) => void = null;
-    
-  private _exitListener: () => void = null;
-  
   private _writeFunc: (id: number, msg: ProxyMessage) => void = null;
   
   // Pre-open write queue.
   private _writeQueue: ProxyMessage[] = [];
-  
   private _live = true;
   
+  private _onDataEventEmitter = new EventEmitter<string>();
+  private _onExitEventEmitter = new EventEmitter<void>();
+
+  onData: Event<string>;
+  onExit: Event<void>;
+
   constructor(writeFunc) {
     this._writeFunc = writeFunc;
+
+    this._onDataEventEmitter = new EventEmitter<string>();
+    this.onData = this._onDataEventEmitter.event;
+
+    this._onExitEventEmitter = new EventEmitter<void>();
+    this.onExit = this._onExitEventEmitter.event;
   }
   
   getId(): number {
@@ -130,30 +135,20 @@ class ProxyPty implements Pty {
     this._writeMessage(this._id, msg);
   }
   
-  onData(callback: (data: any) => void): void {
-    this._dataListener = callback;
-  }
-
   permittedDataSize(size: number): void {
     const msg: PermitDataSizeMessage = { type: TYPE_PERMIT_DATA_SIZE, id: this._id, size: size };
     this._writeMessage(this._id, msg);
   }
 
   data(data: string): void {
-    if (this._live && this._dataListener !== null) {
-      this._dataListener(data);
+    if (this._live) {
+      this._onDataEventEmitter.fire(data);
     }
-  }
-  
-  onExit(callback: () => void): void {
-    this._exitListener = callback;
   }
   
   exit(): void {
-    if (this._exitListener !== null) {
-      this._live = false;
-      this._exitListener();
-    }
+    this._onExitEventEmitter.fire(undefined);
+    this._live = false;
   }
   
   destroy(): void {    
