@@ -80,7 +80,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
 
   private _onAvailableSizeChangeEventEmitter = new EventEmitter<number>();
   private _onStateChangeEventEmitter = new EventEmitter<BulkFileState>();
-  private _onWriteBufferSizeEventEmitter = new EventEmitter<number>();
+  private _onWriteBufferSizeChangeEventEmitter = new EventEmitter<number>();
 
   private _availableSize = 0;
   private _peekBuffer: SmartBuffer = new SmartBuffer();
@@ -96,7 +96,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   private _state = BulkFileState.DOWNLOADING;
 
   onAvailableSizeChange: Event<number>;
-  onAvailableWriteBufferSizeChanged: Event<number>;
+  onAvailableWriteBufferSizeChange: Event<number>;
   onStateChange: Event<BulkFileState>;
 
   constructor(private _disposable: Disposable, private _metadata: Metadata, private _totalSize: number) {
@@ -104,7 +104,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
 
     this.onAvailableSizeChange = this._onAvailableSizeChangeEventEmitter.event;
     this.onStateChange = this._onStateChangeEventEmitter.event;
-    this.onAvailableWriteBufferSizeChanged = this._onWriteBufferSizeEventEmitter.event;
+    this.onAvailableWriteBufferSizeChange = this._onWriteBufferSizeChangeEventEmitter.event;
     
     const {identifier, url} = WebIpc.createBulkFileSync(_metadata, _totalSize);
     this._fileIdentifier = identifier;
@@ -232,7 +232,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this._sendBuffers();
 
     process.nextTick(() => {
-      this._onWriteBufferSizeEventEmitter.fire(this.getAvailableWriteBufferSize());
+      this._onWriteBufferSizeChangeEventEmitter.fire(this.getAvailableWriteBufferSize());
     });
   }
 

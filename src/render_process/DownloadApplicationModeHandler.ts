@@ -131,7 +131,7 @@ class DownloadSession {
 
       this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, filesize);
       this._fileHandle.ref();
-      this._availableWriteBufferSizeChangedDisposable = this._fileHandle.onAvailableWriteBufferSizeChanged(this._handleAvailableWriteBufferSizeChanged.bind(this));
+      this._availableWriteBufferSizeChangedDisposable = this._fileHandle.onAvailableWriteBufferSizeChange(this._handleAvailableWriteBufferSizeChange.bind(this));
       this._state = DownloadHandlerState.BODY;
       this._handleBody("");
 
@@ -239,7 +239,7 @@ class DownloadSession {
     return -1;
   }
 
-  private _handleAvailableWriteBufferSizeChanged(bufferSize: number): void {
+  private _handleAvailableWriteBufferSizeChange(bufferSize: number): void {
     // this._log.debug(`Write buffer size ${bufferSize}`);
     if (this._fileHandle == null) {
       return;
