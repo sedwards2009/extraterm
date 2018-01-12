@@ -6,7 +6,6 @@
 import {Event} from 'extraterm-extension-api';
 
 import {Pty, BufferSizeChange} from '../pty/Pty';
-import {EtTerminal} from './Terminal';
 import {EventEmitter} from '../utils/EventEmitter';
 import {Logger, getLogger} from '../logging/Logger';
 import * as WebIpc from './WebIpc';
@@ -25,24 +24,24 @@ export class PtyIpcBridge {
     this._log = getLogger("PtyIpcBridge", this);
 
     WebIpc.registerDefaultHandler(Messages.MessageType.PTY_OUTPUT, this._handlePtyOutput.bind(this));
-    WebIpc.registerDefaultHandler(Messages.MessageType.PTY_INPUT_BUFFER_SIZE_CHANGE, this._handlePtyInputBufferSizeChange.bind(this));
+    WebIpc.registerDefaultHandler(Messages.MessageType.PTY_INPUT_BUFFER_SIZE_CHANGE,
+      this._handlePtyInputBufferSizeChange.bind(this));
     WebIpc.registerDefaultHandler(Messages.MessageType.PTY_CLOSE, this._handlePtyClose.bind(this));
   }
 
-  // FIXME remove the need for this class to know that EtTerminal exists.
-
-  createPtyForTerminal(terminal: EtTerminal, command: string, sessionArguments: string[], newEnv: any): Pty {
+  createPtyForTerminal(command: string, sessionArguments: string[], newEnv: any, columns: number, rows: number): Pty {
     const ptyImpl = new PtyImpl();
+    ptyImpl.resize(columns, rows);
 
-    WebIpc.requestPtyCreate(command, sessionArguments,
-      terminal.getColumns(), terminal.getRows(), newEnv)
+    WebIpc.requestPtyCreate(command, sessionArguments, columns, rows, newEnv)
     .then( (msg: Messages.CreatedPtyMessage) => {
       ptyImpl._ptyId = msg.id;
 
       this._idToPtyImplMap.set(msg.id, ptyImpl);
-
-      WebIpc.ptyResize(msg.id, terminal.getColumns(), terminal.getRows());
-      WebIpc.ptyOutputBufferSize(msg.id, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
+      ptyImpl._resendSize();
+      
+      // Just big enough to get things started. We don't need the exact buffer size.
+      WebIpc.ptyOutputBufferSize(msg.id, 1024);
     });
 
     ptyImpl._onWillDestroy(() => {
@@ -94,6 +93,9 @@ class PtyImpl implements Pty {
   private _onExitEventEmitter = new EventEmitter<void>();
   private _onWillDestroyEventEmitter = new EventEmitter<void>();
 
+  private _columns = 80;
+  private _rows = 24;
+
   constructor() {
     this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
     this.onData = this._onDataEventEmitter.event;
@@ -125,9 +127,17 @@ class PtyImpl implements Pty {
     this._onExitEventEmitter.fire(undefined);
   }
 
-  resize(cols: number, rows: number): void {
+  resize(columns: number, rows: number): void {
+    this._columns = columns;
+    this._rows = rows;
     if (this._ptyId != null) {
-      WebIpc.ptyResize(this._ptyId, cols, rows);
+      WebIpc.ptyResize(this._ptyId, columns, rows);
+    }
+  }
+
+  _resendSize(): void {
+    if (this._ptyId != null) {
+      WebIpc.ptyResize(this._ptyId, this._columns, this._rows);
     }
   }
 
