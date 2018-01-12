@@ -6,10 +6,12 @@
 import {Event} from 'extraterm-extension-api';
 import * as pty from 'ptyw.js';
 
-import {PtyConnector as PtyConnector, Pty as Pty, PtyOptions as PtyOptions} from './PtyConnector';
+import {Pty, BufferSizeChange} from '../../pty/Pty';
+import {PtyConnector, PtyOptions} from './PtyConnector';
 import {Config} from '../../Config';
 import {EventEmitter} from '../../utils/EventEmitter';
 
+const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
 
 class DirectPty implements Pty {
   
@@ -18,16 +20,17 @@ class DirectPty implements Pty {
   private _paused = true;
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
+  private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
+  private _outstandingWriteDataCount = 0;
 
   onData: Event<string>;
   onExit: Event<void>;
+  onAvailableWriteBufferSizeChange: Event<BufferSizeChange>;
 
   constructor(file?: string, args?: string[], opt?: PtyOptions) {
-    this._onDataEventEmitter = new EventEmitter<string>();
     this.onData = this._onDataEventEmitter.event;
-
-    this._onExitEventEmitter = new EventEmitter<void>();
     this.onExit = this._onExitEventEmitter.event;
+    this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
 
     this.realPty = pty.createTerminal(file, args, opt);
 
@@ -40,13 +43,23 @@ class DirectPty implements Pty {
       this._onExitEventEmitter.fire(undefined);
     });
 
+    this.realPty.socket.on('drain', () => {
+      this._onAvailableWriteBufferSizeChangeEventEmitter.fire({
+        totalBufferSize: MAXIMUM_WRITE_BUFFER_SIZE,
+        availableDelta: this._outstandingWriteDataCount
+      });
+      this._outstandingWriteDataCount = 0;
+
+    });
+
     this.realPty.pause();
   }
   
-  write(data: any): void {
+  write(data: string): void {
+    this._outstandingWriteDataCount += data.length;
     this.realPty.write(data);
   }
-  
+
   resize(cols: number, rows: number): void {
     this.realPty.resize(cols, rows);
   }

@@ -40,6 +40,7 @@ import * as util from './gui/Util';
 import {ViewerElement} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import {EtViewerTab} from './ViewerTab';
+import {PtyIpcBridge} from './PtyIpcBridge';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 
@@ -127,8 +128,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  private _terminalPtyIdMap: Map<EtTerminal,number> = new Map<EtTerminal, number>();
-  private _ptyIdTerminalMap: Map<number, EtTerminal> = new Map<number, EtTerminal>();
+
+  private _ptyIpcBridge: PtyIpcBridge = null;
   private _tabIdCounter = 0;
   private _configManager: ConfigManager = null;
   private _keyBindingManager: KeyBindingManager = null;
@@ -148,7 +149,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._setUpMainContainer();
     this._setUpSplitLayout();
     this._setUpWindowControls();
-    this._setupIpc();
+    this._setupPtyIpc();
   }
 
   focus(): void {
@@ -539,8 +540,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
-    this._terminalPtyIdMap.set(newTerminal, null);
-
     this._applyNewTerminalConfig(newTerminal, this._configManager.getConfig());
     this._addTab(tabWidget, newTerminal);
     this._setUpNewTerminalEventHandlers(newTerminal);
@@ -567,43 +566,16 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       newEnv[prop] = expandedExtra[prop];
     }
 
-    WebIpc.requestPtyCreate(sessionProfile.command, sessionProfile.arguments,
-        newTerminal.getColumns(), newTerminal.getRows(), newEnv)
-      .then( (msg: Messages.CreatedPtyMessage) => {
-        this._terminalPtyIdMap.set(newTerminal, msg.id);
-        this._ptyIdTerminalMap.set(msg.id, newTerminal);
-        WebIpc.ptyResize(msg.id, newTerminal.getColumns(), newTerminal.getRows());
-        WebIpc.ptyOutputBufferSize(msg.id, 1024);  // Just big enough to get things started. We don't need the exact buffer size.
-      });
+    const pty = this._ptyIpcBridge.createPtyForTerminal(newTerminal, sessionProfile.command, sessionProfile.arguments, newEnv);
+    pty.onExit(() => {
+      this.closeTab(newTerminal);
+    });
+    newTerminal.setPty(pty);
   }
 
   private _setUpNewTerminalEventHandlers(newTerminal: EtTerminal): void {
     newTerminal.addEventListener('focus', (ev: FocusEvent) => {
       this._lastFocus = newTerminal;
-    });
-    
-    newTerminal.addEventListener(EtTerminal.EVENT_USER_INPUT, (ev: CustomEvent): void => {
-      const ptyId = this._terminalPtyIdMap.get(newTerminal);
-      if (ptyId != null) {
-        WebIpc.ptyInput(ptyId, (<any> ev).detail.data);
-      }
-    });
-    
-    newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_RESIZE, (ev: CustomEvent): void => {
-      const currentColumns = (<any> ev).detail.columns;
-      const currentRows = (<any> ev).detail.rows;
-      const ptyId = this._terminalPtyIdMap.get(newTerminal);
-      if (ptyId != null) {
-        WebIpc.ptyResize(ptyId, currentColumns, currentRows);
-      }
-    });
-
-    newTerminal.addEventListener(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, (ev: CustomEvent): void => {
-      const status: { bufferSize: number;} = <any> ev.detail;
-      const ptyId = this._terminalPtyIdMap.get(newTerminal);
-      if(ptyId != null) {
-        WebIpc.ptyOutputBufferSize(ptyId, status.bufferSize);
-      }
     });
 
     newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (ev: CustomEvent): void => {
@@ -737,9 +709,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  /**
-   *
-   */
   closeTab(tabContentElement: Element): void {
     const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
     const tabWidgetContents = this._splitLayout.getTabContentsByTabWidget(tabWidget);
@@ -748,13 +717,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._splitLayout.update();
 
     if (tabContentElement instanceof EtTerminal) {
-      const ptyId = this._terminalPtyIdMap.get(tabContentElement);
+      const pty = tabContentElement.getPty();
       tabContentElement.destroy();
-      if (ptyId !== null) {
-        WebIpc.ptyClose(ptyId);
+      if (pty !== null) {
+        pty.destroy();
       }
-      this._terminalPtyIdMap.delete(tabContentElement);
-      this._ptyIdTerminalMap.delete(ptyId);
     }
     
     if (DisposableUtils.isDisposable(tabContentElement)) {
@@ -1201,45 +1168,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return true;
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //   ######  ####### #     # 
-  //   #     #    #     #   #  
-  //   #     #    #      # #   
-  //   ######     #       #    
-  //   #          #       #    
-  //   #          #       #    
-  //   #          #       #    
-  //
-  //-----------------------------------------------------------------------
-  private _setupIpc(): void {
-    WebIpc.registerDefaultHandler(Messages.MessageType.PTY_OUTPUT, this._handlePtyOutput.bind(this));
-    WebIpc.registerDefaultHandler(Messages.MessageType.PTY_CLOSE, this._handlePtyClose.bind(this));
+  private _setupPtyIpc(): void {
+    this._ptyIpcBridge = new PtyIpcBridge();
   }
-  
-  private _handlePtyOutput(msg: Messages.PtyOutput): void {
-    const terminal = this._ptyIdTerminalMap.get(msg.id);
-    if (terminal == null) {
-      this._log.warn(`Unable to find a Terminal object to match pty ID ${msg.id}`);
-      return;
-    }
-
-    const status = terminal.write(msg.data);
-    WebIpc.ptyOutputBufferSize(msg.id, status.bufferSize);
-  }
-  
-  private _handlePtyClose(msg: Messages.PtyClose): void {
-    const terminal = this._ptyIdTerminalMap.get(msg.id);
-    if (terminal == null) {
-      this._log.warn(`Unable to find a Terminal object to match pty ID ${msg.id}`);
-      return;
-    }
-
-    this.closeTab(terminal);
-  }
-
-  //-----------------------------------------------------------------------
-  
   
   private _getById(id: string): HTMLElement {
     return <HTMLElement>DomUtils.getShadowRoot(this).querySelector('#'+id);

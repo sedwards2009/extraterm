@@ -9,6 +9,7 @@ import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import * as utf8 from 'utf8';
 import {clipboard} from 'electron';
+import {Disposable} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
@@ -18,6 +19,7 @@ import * as BulkFileUtils from './bulk_file_handling/BulkFileUtils';
 import * as DisposableUtils from '../utils/DisposableUtils';
 import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 import {DownloadViewer} from './viewers/DownloadViewer';
+import {Pty} from '../pty/Pty';
 
 import {ViewerElement} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
@@ -51,7 +53,6 @@ import {FrameFinder} from './FrameFinderType';
 import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import {Config, ConfigDistributor, CommandLineAction, injectConfigDistributor, AcceptsConfigDistributor} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
-import { Disposable } from 'extraterm-extension-api';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -143,14 +144,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   AcceptsConfigDistributor, Disposable, SupportsClipboardPaste.SupportsClipboardPaste {
   
   static TAG_NAME = "ET-TERMINAL";
-  static EVENT_USER_INPUT = "user-input";
-  static EVENT_TERMINAL_RESIZE = "terminal-resize";
-  static EVENT_TERMINAL_BUFFER_SIZE = "temrinal-buffer-size";
   static EVENT_TITLE = "title";
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
   
   private _log: Logger;
-
+  private _pty: Pty = null;
   private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea = null;
   private _stashArea: DocumentFragment = null;
   private _childElementList: ChildElementStatus[] = [];
@@ -300,7 +298,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
       scrollArea.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
-        this._sendDataToPtyEvent(ev.detail.text);
+        this.send(ev.detail.text);
       });
 
       // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
@@ -384,12 +382,29 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   getColumns(): number {
     return this._columns;
   }
-  
+
   /**
    * The number of rows in the terminal screen.
    */
   getRows(): number {
     return this._rows;
+  }
+
+  getPty(): Pty {
+    return this._pty;
+  }
+
+  setPty(pty: Pty): void {
+    this._pty = pty;
+
+    pty.onData((text: string): void => {
+      this._emulator.write(text);
+      // FIXME flow control.
+    });
+
+    DomUtils.doLater(() => {
+      pty.resize(this._columns, this._rows);
+    })
   }
 
   setConfigDistributor(configManager: ConfigDistributor): void {
@@ -512,7 +527,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    * @param text the data to send.
    */
   send(text: string): void {
-    this._sendDataToPtyEvent(text);
+    this._pty.write(text);
   }
     
   resizeToContainer(): void {
@@ -855,8 +870,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _handleWriteBufferSize(emulator: Term.Emulator, status: TermApi.WriteBufferStatus): void {
-    const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_BUFFER_SIZE, { detail: status });
-    this.dispatchEvent(event);
+    if (this._pty != null) {
+      this._pty.permittedDataSize(status.bufferSize);
+    }
   }
 
   /**
@@ -866,7 +882,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    * @param {string} data The data to process.
    */
   private _handleTermData(emulator: Term.Emulator, data: string): void {
-    this._sendDataToPtyEvent(data);
+// Filter the input in the case that an upload is in progress.
+    this.send(data);
   }
   
   private _handleTermSize(emulator: Term.Emulator, event: TermApi.RenderEvent): void {
@@ -877,30 +894,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
     this._columns = newColumns;
     this._rows = newRows;
-    this._sendResizeEvent(newColumns, newRows);
+
+    if (this._pty != null) {
+      this._pty.resize(newColumns, newRows);
+    }
   }
   
-  /**
-   * Send data to the pseudoterminal.
-   * 
-   * @param {string} text
-   */
-  private _sendDataToPtyEvent(text: string): void {
-    const event = new CustomEvent(EtTerminal.EVENT_USER_INPUT, { detail: {data: text } });
-    this.dispatchEvent(event);
-  }
-
-  /**
-   * Send a resize message to the pty.
-   * 
-   * @param {number} cols The new number of columns in the terminal.
-   * @param {number} rows The new number of rows in the terminal.
-   */
-  private _sendResizeEvent(cols: number, rows: number, callback?: Function): void {
-    const event = new CustomEvent(EtTerminal.EVENT_TERMINAL_RESIZE, { detail: {columns: cols, rows: rows } });
-    this.dispatchEvent(event);    
-  }
-
   private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
     this.dispatchEvent(event);    
@@ -1934,14 +1933,13 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
     const bulkFileHandle = this._frameFinder(frameId);
     if (bulkFileHandle === null) {
-      this._sendDataToPtyEvent("#error\n");
+      this.send("#error\n");
       return;
     }
 
-    const uploader = new BulkFileUploader(bulkFileHandle);
+    const uploader = new BulkFileUploader(bulkFileHandle); //, this._pty);
     uploader.onPtyData(text => {
-      const event = new CustomEvent(EtTerminal.EVENT_USER_INPUT, { detail: {data: text } });
-      this.dispatchEvent(event);
+      this.send(text);
     });
 
 // Filter

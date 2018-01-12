@@ -9,7 +9,8 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 
-import {Pty, PtyConnector, PtyOptions} from './PtyConnector';
+import {Pty, BufferSizeChange} from '../../pty/Pty';
+import {PtyConnector, PtyOptions} from './PtyConnector';
 import {Config} from '../../Config';
 import {Logger, getLogger} from '../../logging/Logger';
 import * as SourceDir from '../../SourceDir';
@@ -84,18 +85,18 @@ class ProxyPty implements Pty {
   
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
+  private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
 
   onData: Event<string>;
   onExit: Event<void>;
+  onAvailableWriteBufferSizeChange: Event<BufferSizeChange>;
 
   constructor(writeFunc) {
     this._writeFunc = writeFunc;
 
-    this._onDataEventEmitter = new EventEmitter<string>();
     this.onData = this._onDataEventEmitter.event;
-
-    this._onExitEventEmitter = new EventEmitter<void>();
     this.onExit = this._onExitEventEmitter.event;
+    this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
   }
   
   getId(): number {
@@ -125,11 +126,11 @@ class ProxyPty implements Pty {
     }
   }
   
-  write(data: any): void {
+  write(data: string): void {
     const msg: WriteMessage = { type: TYPE_WRITE, id: this._id, data: data };
     this._writeMessage(this._id, msg);
   }
-  
+
   resize(cols: number, rows: number): void {
     const msg: ResizeMessage = { type: TYPE_RESIZE, id: this._id, rows: rows, columns: cols };
     this._writeMessage(this._id, msg);

@@ -51,6 +51,7 @@ export const enum MessageType {
   NEW_TAG_REQUEST,
   NEW_TAG,
   PTY_OUTPUT_BUFFER_SIZE,
+  PTY_INPUT_BUFFER_SIZE_CHANGE,
 
   BULK_FILE_CREATE,
   BULK_FILE_CREATED,
@@ -276,6 +277,13 @@ export interface PtyInput extends Message {
    * The data to send to the PTY as input.  
    */
   data: string;
+}
+
+export interface PtyInputBufferSizeChange extends Message {
+  id: number;
+
+  totalBufferSize: number;
+  availableDelta: number;
 }
 
 /**

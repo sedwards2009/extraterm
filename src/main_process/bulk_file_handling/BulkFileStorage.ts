@@ -91,7 +91,7 @@ export class BulkFileStorage {
     bulkFile.ref();
     const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
 
-    bulkFile.onWriteBufferSize(({totalBufferSize, availableDelta}): void => {
+    bulkFile.onWriteBufferSizeChange(({totalBufferSize, availableDelta}): void => {
       this._onWriteBufferSizeEventEmitter.fire({identifier: internalFileIdentifier, totalBufferSize, availableDelta});
     });
 
@@ -178,12 +178,12 @@ export class BulkFile {
 
   private _closePending = false;
   private _succeess = false;
-  private _onWriteBufferSizeEventEmitter = new EventEmitter<{totalBufferSize: number, availableDelta: number}>();
+  private _onWriteBufferSizeChangeEventEmitter = new EventEmitter<{totalBufferSize: number, availableDelta: number}>();
   private _onCloseEventEmitter = new EventEmitter<{success: boolean}>();
 
   private _peekBuffer = new SmartBuffer();
 
-  onWriteBufferSize: Event<{totalBufferSize: number, availableDelta: number}>;
+  onWriteBufferSizeChange: Event<{totalBufferSize: number, availableDelta: number}>;
   onClose: Event<{success: boolean}>;
 
   constructor(private  _metadata: Metadata, public filePath: string) {
@@ -198,7 +198,7 @@ export class BulkFile {
     this._writeStream = aesCipher;
     aesCipher.pipe(this._wrFile.getWriteStream());
     this.onClose = this._onCloseEventEmitter.event;
-    this.onWriteBufferSize = this._onWriteBufferSizeEventEmitter.event;
+    this.onWriteBufferSizeChange = this._onWriteBufferSizeChangeEventEmitter.event;
   }
 
   ref(): number {
@@ -248,7 +248,7 @@ export class BulkFile {
     }
     if (availableDelta !== 0) {
       const totalBufferSize = BULK_FILE_MAXIMUM_BUFFER_SIZE;
-      this._onWriteBufferSizeEventEmitter.fire({totalBufferSize, availableDelta});
+      this._onWriteBufferSizeChangeEventEmitter.fire({totalBufferSize, availableDelta});
       }
   }
 

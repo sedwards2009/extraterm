@@ -12,7 +12,7 @@ import {EventEmitter} from '../../utils/EventEmitter';
 import {Logger, getLogger} from '../../logging/Logger';
 
 
-const BYTES_PER_LINE = 90;
+const BYTES_PER_LINE = 3*1024;
 
 /**
  * Uploads files to a remote process over shell and remote's stdin.
@@ -121,11 +121,8 @@ export class BulkFileUploader {
   }
 
   private _sendEncodedLine(line: string): void {
-    this._sendDataToPtyEvent("#");
-    if (line.length !== 0) {
-      this._sendDataToPtyEvent(line);
-    }
-    this._sendDataToPtyEvent("\n");
+    const fullLine = "#" + line + "\n";
+    this._sendDataToPtyEvent(fullLine);
   }
 
   private _sendEncodedDataToPty(buffer: Buffer): void {

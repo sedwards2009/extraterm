@@ -27,7 +27,8 @@ import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSI
   SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
 import {Logger, getLogger, addLogWriter} from '../logging/Logger';
-import {PtyConnector, Pty, PtyOptions, EnvironmentMap} from './pty/PtyConnector';
+import {Pty, BufferSizeChange} from '../pty/Pty';
+import {PtyConnector, PtyOptions, EnvironmentMap} from './pty/PtyConnector';
 // Our special 'fake' module which selects the correct pty connector factory implementation.
 const PtyConnectorFactory = require("./pty/PtyConnectorFactory");
 import * as ResourceLoader from '../ResourceLoader';
@@ -1114,6 +1115,16 @@ function createPty(sender: Electron.WebContents, file: string, args: string[], e
     }
     ptyTerm.destroy();
     ptyMap.delete(ptyId);
+  });
+
+  ptyTerm.onAvailableWriteBufferSizeChange( (bufferSizeChange: BufferSizeChange) => {
+    const msg: Messages.PtyInputBufferSizeChange = {
+      type: Messages.MessageType.PTY_INPUT_BUFFER_SIZE_CHANGE,
+      id: ptyId,
+      totalBufferSize: bufferSizeChange.totalBufferSize,
+      availableDelta:bufferSizeChange.availableDelta
+    };
+    sender.send(Messages.CHANNEL_NAME, msg);  
   });
 
   return ptyId;
