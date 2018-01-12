@@ -8,6 +8,7 @@ import Vue from 'vue';
 import {WebComponent, Attribute, Observe} from 'extraterm-web-component-decorators';
 
 import * as DomUtils from '../DomUtils';
+import {DebouncedDoLater} from '../../utils/DoLater';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import {SimpleElementBase} from './SimpleElementBase';
@@ -122,14 +123,14 @@ export class FileTransferProgress extends SimpleElementBase implements Disposabl
 
   private _log: Logger;
   private _ui: FileTransferUI = null;
-  private _updateLater: DomUtils.DebouncedDoLater = null;
+  private _updateLater: DebouncedDoLater = null;
   private _speedTracker: SpeedTracker = null;
 
   constructor() {
     super();
     this._log = getLogger(FileTransferProgress.TAG_NAME, this);
 
-    this._updateLater = new DomUtils.DebouncedDoLater(this._updateLaterCallback.bind(this), 250);
+    this._updateLater = new DebouncedDoLater(this._updateLaterCallback.bind(this), 250);
 
     this._ui = new FileTransferUI();
     const component = this._ui.$mount();

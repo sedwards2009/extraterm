@@ -7,6 +7,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
+import { doLater } from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
@@ -45,7 +46,7 @@ export class SimpleViewerElement extends ViewerElement {
   connectedCallback(): void {
     super.connectedCallback();
     if (this._updateRootElementHeight()) {
-      DomUtils.doLater(() => {
+      doLater(() => {
         VirtualScrollAreaEmitResizeEvent(this);
       });
     }
@@ -70,7 +71,7 @@ export class SimpleViewerElement extends ViewerElement {
 
   setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
     super.setThemeCssMap(cssMap);
-    DomUtils.doLater(() => {
+    doLater(() => {
       this._updateRootElementHeight();
       VirtualScrollAreaEmitResizeEvent(this);
     });

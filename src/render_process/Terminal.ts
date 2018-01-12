@@ -41,6 +41,7 @@ import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_C
 import {Logger, getLogger} from '../logging/Logger';
 import LogDecorator from '../logging/LogDecorator';
 import * as DomUtils from './DomUtils';
+import {doLater} from '../utils/DoLater';
 import * as Term from './emulator/Term';
 import * as TermApi from './emulator/TermApi';
 import {ScrollBar} from './gui/ScrollBar';
@@ -191,14 +192,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _themeCssPath: string = null;
   private _mainStyleLoaded = false;
   private _themeStyleLoaded = false;
-  private _resizePollHandle: DomUtils.LaterHandle = null;
+  private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
   private _needsCompleteRefresh = true;
 
   // This flag is needed to prevent the _enforceScrollbackLength() method from being run recursively
   private _enforceScrollbackLengthGuard= false;
   
-  private _scheduleLaterHandle: DomUtils.LaterHandle = null;
+  private _scheduleLaterHandle: Disposable = null;
   private _scheduleLaterQueue: Function[] = [];
   private _stashedChildResizeTask: () => void = null;
 
@@ -402,7 +403,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       // FIXME flow control.
     });
 
-    DomUtils.doLater(() => {
+    doLater(() => {
       pty.resize(this._columns, this._rows);
     })
   }
@@ -480,7 +481,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    */
   destroy(): void {
     if (this._resizePollHandle !== null) {
-      this._resizePollHandle.cancel();
+      this._resizePollHandle.dispose();
       this._resizePollHandle = null;
     }
 
@@ -703,7 +704,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     });
 
     if (ev.detail.originMouse) {
-      DomUtils.doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
+      doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
     }
   }
 
@@ -711,7 +712,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     // This needs to be done later otherwise it tickles a bug in
     // Chrome/Blink and prevents drag and drop from working.
     // https://bugs.chromium.org/p/chromium/issues/detail?id=726248
-    DomUtils.doLater( () => {
+    doLater( () => {
       if (this._mode === Mode.DEFAULT) {
         this.focus();
       }
@@ -1497,7 +1498,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._scheduleLaterQueue.push(func);
     
     if (this._scheduleLaterHandle === null) {
-      this._scheduleLaterHandle = DomUtils.doLater( () => {
+      this._scheduleLaterHandle = doLater( () => {
         this._scheduleLaterHandle = null;
         const queue = this._scheduleLaterQueue;
         this._scheduleLaterQueue = [];

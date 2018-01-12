@@ -18,6 +18,7 @@ import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable,
     from './CommandPaletteRequestTypes';
 import * as config from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
+import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
@@ -588,7 +589,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
   const path = ev.composedPath();
   const requestCommandableStack: Commandable[] = <any> path.filter(el => isCommandable(el));
 
-  DomUtils.doLater( () => {
+  doLater( () => {
     const commandableStack: Commandable[] = [...requestCommandableStack, {executeCommand, getCommandPaletteEntries}];
     
     const firstCommandable = commandableStack[0];
@@ -660,7 +661,7 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
   if (selectedId !== null) {
     const commandIndex = Number.parseInt(selectedId);
     const commandEntry = commandPaletteRequestEntries[commandIndex];
-    DomUtils.doLater( () => {
+    doLater( () => {
       commandEntry.commandExecutor.executeCommand(commandEntry.id, commandEntry.commandArguments);
       commandPaletteRequestSource = null;
       commandPaletteRequestEntries = null;

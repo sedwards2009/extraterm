@@ -3,8 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as _ from 'lodash';
 import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
+import {doLater} from '../../utils/DoLater';
+import * as DomUtils from '../DomUtils';
+import log from '../../logging/LogDecorator';
+import {Logger, getLogger} from '../../logging/Logger';
+import * as Util from './Util';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import {StackedWidget} from './StackedWidget';
@@ -13,11 +19,6 @@ import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail} from '.
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import * as Util from './Util';
-import * as DomUtils from '../DomUtils';
-import * as _ from 'lodash';
-import {Logger, getLogger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
 
 const ID = "EtTabWidgetTemplate";
 const ATTR_TAG = 'data-et-tag';
@@ -270,7 +271,7 @@ export class TabWidget extends ThemeableElementBase {
     // supresses the event if the tab has been removed already.
     if (tabElement.parentNode !== null) {
       this.setSelectedIndex(index);
-      DomUtils.doLater(this._sendSwitchEvent.bind(this));
+      doLater(this._sendSwitchEvent.bind(this));
     }
   }
 

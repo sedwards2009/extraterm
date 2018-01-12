@@ -6,6 +6,7 @@ import {Disposable} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle, BulkFileState} from '../bulk_file_handling/BulkFileHandle';
+import {DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import {FileTransferProgress} from '../gui/FileTransferProgress';
 import {Logger, getLogger} from '../../logging/Logger';
@@ -24,13 +25,13 @@ export class DownloadViewer extends SimpleViewerElement {
   private _fileTransferProgress: FileTransferProgress = null;
   private _onAvailableSizeChangeDisposable: Disposable = null;
   private _onStateChangeDisposable: Disposable = null;
-  private _updateLater: DomUtils.DebouncedDoLater = null;
+  private _updateLater: DebouncedDoLater = null;
 
   constructor() {
     super();
     this._log = getLogger("et-download-viewer", this);
 
-    this._updateLater = new DomUtils.DebouncedDoLater(this._updateLaterCallback.bind(this), 250);
+    this._updateLater = new DebouncedDoLater(this._updateLaterCallback.bind(this), 250);
 
     this._fileTransferProgress =  <FileTransferProgress> document.createElement(FileTransferProgress.TAG_NAME);
     this.getContainerNode().appendChild(this._fileTransferProgress);

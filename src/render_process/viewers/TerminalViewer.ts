@@ -15,6 +15,7 @@ import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
 import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
 from '../CommandPaletteRequestTypes';
+import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as GeneralEvents from '../GeneralEvents';
 import * as keybindingmanager from '../keybindings/KeyBindingManager';
@@ -32,6 +33,7 @@ import * as Util from '../gui/Util';
 import {ViewerElement, ViewerElementMetadata, ViewerElementPosture} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
+import { Disposable } from 'extraterm-extension-api';
 
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -115,7 +117,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
   private _terminalFirstRow = 0;
-  private _metadataEventDoLater: DomUtils.DebouncedDoLater = null;
+  private _metadataEventDoLater: DebouncedDoLater = null;
   private _commandLine: string = null;
   private _returnCode: string = null;
 
@@ -129,7 +131,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _visualState: VisualState = VisualState.AUTO;
 
   private _mainStyleLoaded: boolean = false;
-  private _resizePollHandle: DomUtils.LaterHandle = null;
+  private _resizePollHandle: Disposable = null;
   private _needEmulatorResize: boolean = false;
   
   private _operationRunning = false; // True if we are currently running an operation with the operation() method.
@@ -161,7 +163,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     this.document = document;
     this._renderEventListener = this._handleRenderEvent.bind(this);
 
-    this._metadataEventDoLater = new DomUtils.DebouncedDoLater(() => {
+    this._metadataEventDoLater = new DebouncedDoLater(() => {
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
       this.dispatchEvent(event);
     });
@@ -301,7 +303,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
             // The last action didn't move the cursor.
             const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
-            DomUtils.doLater( () => {
+            doLater( () => {
               const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
                                                                       ? ViewerElementTypes.Edge.TOP
                                                                       : ViewerElementTypes.Edge.BOTTOM,
@@ -321,7 +323,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         const height = to - from;
         if (height !== this._viewportHeight) {
           this._viewportHeight = height;
-          DomUtils.doLater( () => {
+          doLater( () => {
             VirtualScrollArea.emitResizeEvent(this);
           });
         }
@@ -1047,7 +1049,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
   
   private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
-    DomUtils.doLater( () => {
+    doLater( () => {
       const fakeKeyDownEvent = DomUtils.newKeyboardEvent('keydown', {
         bubbles: true,
         key: ev.key,        
@@ -1237,7 +1239,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   private _cleanUpFontLoading(): void {
     if (this._resizePollHandle !== null) {
-      this._resizePollHandle.cancel();
+      this._resizePollHandle.dispose();
       this._resizePollHandle = null;
     }
   }
@@ -1245,7 +1247,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _handleStyleLoad(): void {
     if (this._mainStyleLoaded) {
       // Start polling the term for application of the font.
-      this._resizePollHandle = DomUtils.doLaterFrame(this._resizePoll.bind(this));
+      this._resizePollHandle = doLaterFrame(this._resizePoll.bind(this));
     }
   }
   
@@ -1259,7 +1261,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     if (this._mainStyleLoaded) {  // FIXME this font loading stuff needs to be replaced with resize canary.
       if ( ! this.isFontLoaded()) {
         // Font has not been correctly applied yet.
-        this._resizePollHandle = DomUtils.doLaterFrame(this._resizePoll.bind(this));
+        this._resizePollHandle = doLaterFrame(this._resizePoll.bind(this));
       } else {
         // Yay! the font is correct. Resize the term soon.
         this._codeMirror.defaultTextHeight(); // tickle the DOM to maybe force CSS recalc.

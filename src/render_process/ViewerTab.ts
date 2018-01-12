@@ -5,11 +5,13 @@
  */
 
 import * as fs from 'fs';
+import {Disposable} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
   Commandable, CommandEntry} from './CommandPaletteRequestTypes';
+import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from '../logging/Logger';
@@ -79,11 +81,11 @@ export class EtViewerTab extends ViewerElement implements Commandable,
 
   private _mainStyleLoaded = false;
   private _themeStyleLoaded = false;
-  private _resizePollHandle: DomUtils.LaterHandle = null;
+  private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
   private _needsCompleteRefresh = true;
 
-  private _scheduleLaterHandle: DomUtils.LaterHandle = null;
+  private _scheduleLaterHandle: Disposable = null;
   private _scheduledResize = false;
 
   private _fontSizeAdjustment = 0;
@@ -174,7 +176,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
 
     this.updateThemeCss();
 
-    DomUtils.doLater(this._processResize.bind(this));
+    doLater(this._processResize.bind(this));
   }
 
   disconnectedCallback(): void {
@@ -186,6 +188,10 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     const element = this.getViewerElement();
     if (element !== null) {
       element.dispose();
+    }
+    if (this._resizePollHandle !== null) {
+      this._resizePollHandle.dispose();
+      this._resizePollHandle = null;
     }
   }
 
@@ -202,13 +208,6 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     this._tag = tag;
   }
   
-  destroy(): void {
-    if (this._resizePollHandle !== null) {
-      this._resizePollHandle.cancel();
-      this._resizePollHandle = null;
-    }
-  }
-
   focus(): void {
     const element = this.getViewerElement();
     if (element !== null) {
@@ -549,7 +548,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
 
   private _handleBeforeSelectionChange(ev: CustomEvent): void {
     if (ev.detail.originMouse) {
-      DomUtils.doLater( () => { this.copyToClipboard() } );
+      doLater( () => { this.copyToClipboard() } );
     }
   }
 

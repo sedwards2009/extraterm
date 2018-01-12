@@ -35,8 +35,6 @@ export class PopDownDialog extends ThemeableElementBase {
   static TAG_NAME = "ET-POPDOWNDIALOG";
   static EVENT_CLOSE_REQUEST = "ET-POPDOWNDIALOG-CLOSE_REQUEST";
   
-  private _laterHandle: DomUtils.LaterHandle = null;
-
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });

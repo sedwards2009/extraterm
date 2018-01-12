@@ -3,9 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Disposable} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as DomUtils from './DomUtils';
+import {doLater} from '../utils/DoLater';
 import {Logger, getLogger} from '../logging/Logger';
 import ElementResizeDetectorMaker = require('element-resize-detector');
 
@@ -20,7 +22,7 @@ export class ResizeCanary extends HTMLElement {
 
   private _log: Logger = null;
   private _erd: any; //ElementResizeDetector.Detector;
-  private _laterHandle: DomUtils.LaterHandle = null;
+  private _laterHandle: Disposable = null;
   private _css: string = "";
 
   setCss(css: string): void {
@@ -44,7 +46,7 @@ export class ResizeCanary extends HTMLElement {
     
     this._erd.listenTo(container, (el: HTMLElement) => {
       if (this._laterHandle === null) {
-        this._laterHandle = DomUtils.doLater( () => {
+        this._laterHandle = doLater( () => {
           const event = new CustomEvent('resize', { detail: { } });
           this.dispatchEvent(event);
           this._laterHandle = null;

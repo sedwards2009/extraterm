@@ -3,11 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Disposable} from 'extraterm-extension-api';
 import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
+import {doLater} from '../../utils/DoLater';
 import {PopDownDialog} from './PopDownDialog';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
@@ -33,7 +35,7 @@ const ID_RESULTS = "ID_RESULTS";
   private _selectedId: string = null;
   private _filterEntries: (entries: T[], filterText: string) => T[];
   private _formatEntries: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string;
-  private _laterHandle: DomUtils.LaterHandle = null;
+  private _laterHandle: Disposable = null;
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
 
   constructor() {
@@ -260,7 +262,7 @@ const ID_RESULTS = "ID_RESULTS";
 
   private _okId(selectedId: string): void {
     if (this._laterHandle === null) {
-      this._laterHandle = DomUtils.doLater( () => {
+      this._laterHandle = doLater( () => {
         this._laterHandle = null;
         const event = new CustomEvent("selected", { detail: {selected: selectedId } });
         this.dispatchEvent(event);

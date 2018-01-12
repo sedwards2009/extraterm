@@ -128,6 +128,7 @@
         "./src/typings/extra_lib.d.ts",
         "./src/typings/ptyw.js/ptyw.js.d.ts",
         "./src/typings/requirejs.d.ts",
+        "./src/utils/DoLater.ts",
         "./src/utils/EventEmitter.ts",
         "./src/utils/OwnerTrackingList.ts",
         "./src/utils/SetUtils.ts",

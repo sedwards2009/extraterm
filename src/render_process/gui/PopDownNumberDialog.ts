@@ -3,12 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Disposable} from 'extraterm-extension-api';
 import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
-import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as ThemeTypes from '../../theme/Theme';
+import {doLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import {PopDownDialog} from './PopDownDialog';
+import {ThemeableElementBase} from '../ThemeableElementBase';
+import * as ThemeTypes from '../../theme/Theme';
 
 const ID = "EtPopDownNumberDialogTemplate";
 const ID_DIALOG = "ID_DIALOG";
@@ -22,7 +24,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
   
   static TAG_NAME = "ET-POPDOWNNUMBERDIALOG";
 
-  private _laterHandle: DomUtils.LaterHandle = null;
+  private _laterHandle: Disposable = null;
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
 
   constructor() {
@@ -143,7 +145,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
 
   private _okId(value: number): void {
     if (this._laterHandle === null) {
-      this._laterHandle = DomUtils.doLater( () => {
+      this._laterHandle = doLater( () => {
         this.close();
         this._laterHandle = null;
         const event = new CustomEvent("selected", { detail: {value: value } });

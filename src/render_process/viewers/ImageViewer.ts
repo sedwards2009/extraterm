@@ -9,6 +9,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
+import {DebouncedDoLater} from '../../utils/DoLater';
 import {ViewerElement, ViewerElementMetadata} from './ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -63,7 +64,7 @@ export class ImageViewer extends ViewerElement {
   private _log: Logger;
   private _keyBindingManager: KeyBindingManager = null;
   private _bulkFileHandle: BulkFileHandle = null;
-  private _metadataEventDoLater: DomUtils.DebouncedDoLater = null;
+  private _metadataEventDoLater: DebouncedDoLater = null;
   private _text = null;
   private _buffer: Buffer = null;
   private _mimeType: string = null;
@@ -84,7 +85,7 @@ export class ImageViewer extends ViewerElement {
     this._log = getLogger(ImageViewer.TAG_NAME, this);
     this.document = document;
 
-    this._metadataEventDoLater = new DomUtils.DebouncedDoLater(() => {
+    this._metadataEventDoLater = new DebouncedDoLater(() => {
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
       this.dispatchEvent(event);
     });

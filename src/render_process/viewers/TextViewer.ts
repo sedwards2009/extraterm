@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as SourceDir from '../../SourceDir';
+import {Disposable} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
@@ -16,6 +17,7 @@ import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
 import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
 from '../CommandPaletteRequestTypes';
+import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as GeneralEvents from '../GeneralEvents';
@@ -114,7 +116,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _keyBindingManager: KeyBindingManager = null;
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
-  private _metadataEventDoLater: DomUtils.DebouncedDoLater = null;
+  private _metadataEventDoLater: DebouncedDoLater = null;
   
   private _codeMirror: CodeMirror.Editor = null;
   private _height = 0;
@@ -125,7 +127,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _visualState: VisualState = VisualState.AUTO;
 
   private _mainStyleLoaded = false;
-  private _resizePollHandle: DomUtils.LaterHandle = null;
+  private _resizePollHandle: Disposable = null;
 
   private _lastCursorAnchorPosition: CodeMirror.Position = null;
   private _lastCursorHeadPosition: CodeMirror.Position = null;
@@ -141,7 +143,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._log = getLogger(TextViewer.TAG_NAME, this);
     this.document = document;
 
-    this._metadataEventDoLater = new DomUtils.DebouncedDoLater(() => {
+    this._metadataEventDoLater = new DebouncedDoLater(() => {
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
       this.dispatchEvent(event);
     });
@@ -267,7 +269,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
           // The last action didn't move the cursor.
           const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
-          DomUtils.doLater( () => {
+          doLater( () => {
             const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
                                                                     ? ViewerElementTypes.Edge.TOP
                                                                     : ViewerElementTypes.Edge.BOTTOM,
@@ -287,7 +289,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       const height = to - from;
       if (height !== this._viewportHeight) {
         this._viewportHeight = height;
-        DomUtils.doLater(this._emitVirtualResizeEvent.bind(this));
+        doLater(this._emitVirtualResizeEvent.bind(this));
       }
     });
     
@@ -732,7 +734,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
   
   private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
-    DomUtils.doLater( () => {
+    doLater( () => {
       const fakeKeyDownEvent = DomUtils.newKeyboardEvent('keydown', {
         bubbles: true,
         key: ev.key,        
@@ -907,7 +909,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   private _cleanUpFontLoading(): void {
     if (this._resizePollHandle !== null) {
-      this._resizePollHandle.cancel();
+      this._resizePollHandle.dispose();
       this._resizePollHandle = null;
     }
   }
@@ -915,7 +917,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _handleStyleLoad(): void {
     if (this._mainStyleLoaded) {
       // Start polling the term for application of the font.
-      this._resizePollHandle = DomUtils.doLaterFrame(this._resizePoll.bind(this));
+      this._resizePollHandle = doLaterFrame(this._resizePoll.bind(this));
     }
   }
   
@@ -929,7 +931,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     if (this._mainStyleLoaded) {
       if ( ! this.isFontLoaded()) {
         // Font has not been correctly applied yet.
-        this._resizePollHandle = DomUtils.doLaterFrame(this._resizePoll.bind(this));
+        this._resizePollHandle = doLaterFrame(this._resizePoll.bind(this));
       } else {
         // Yay! the font is correct. Resize the term soon.
 // FIXME do we need to do anything here?

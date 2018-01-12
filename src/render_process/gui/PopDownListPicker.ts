@@ -3,8 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Disposable} from 'extraterm-extension-api';
 import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
+import {doLater} from '../../utils/DoLater';
 import {Logger, getLogger} from '../../logging/Logger';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -31,7 +33,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   private _entries: T[] = [];
   private _filterEntries: (entries: T[], filterText: string) => T[];
   private _formatEntries: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string;
-  private _laterHandle: DomUtils.LaterHandle = null;
+  private _laterHandle: Disposable = null;
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
 
   constructor() {
@@ -273,7 +275,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
   private _okId(selectedId: string): void {
     if (this._laterHandle === null) {
-      this._laterHandle = DomUtils.doLater( () => {
+      this._laterHandle = doLater( () => {
         this.close();
         this._laterHandle = null;
         const event = new CustomEvent("selected", { detail: {selected: selectedId } });
