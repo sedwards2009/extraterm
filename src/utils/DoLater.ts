@@ -92,4 +92,9 @@ export class DebouncedDoLater {
       this._laterDisposable = null;
     }
   }
+  
+  doNow(): void {
+    this.cancel();
+    this._callback();
+  }
 }

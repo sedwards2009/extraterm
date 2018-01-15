@@ -1938,10 +1938,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       return;
     }
 
-    const uploader = new BulkFileUploader(bulkFileHandle); //, this._pty);
-    uploader.onPtyData(text => {
-      this.send(text);
-    });
+    const uploader = new BulkFileUploader(bulkFileHandle, this._pty);
 
 // Filter
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
