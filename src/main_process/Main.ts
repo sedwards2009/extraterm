@@ -122,7 +122,7 @@ function main(): void {
     try {
       ptyConnector = PtyConnectorFactory.factory(config);
     } catch(err) {
-      _log.severe(err.message);
+      _log.severe("Error occured while creating the PTY connector factory: " + err.message);
       failed = true;
     }
   }
