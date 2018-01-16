@@ -6,15 +6,19 @@
 import {Event} from 'extraterm-extension-api';
 import * as pty from 'ptyw.js';
 
+import {Config} from '../../Config';
+import {DebouncedDoLater} from '../../utils/DoLater';
+import {EventEmitter} from '../../utils/EventEmitter';
+import {getLogger, Logger} from '../../logging/Logger';
 import {Pty, BufferSizeChange} from '../../pty/Pty';
 import {PtyConnector, PtyOptions} from './PtyConnector';
-import {Config} from '../../Config';
-import {EventEmitter} from '../../utils/EventEmitter';
 
 const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
 
+
 class DirectPty implements Pty {
-  
+
+  private _log: Logger;
   private realPty: pty.Terminal;
   private _permittedDataSize = 0; 
   private _paused = true;
@@ -22,12 +26,17 @@ class DirectPty implements Pty {
   private _onExitEventEmitter = new EventEmitter<void>();
   private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
   private _outstandingWriteDataCount = 0;
+  private _emitBufferSizeLater: DebouncedDoLater = null;
+
+  // Amount of data which went directly tothe OS but still needs to 'announced' via an event.
+  private _directWrittenDataCount = 0;
 
   onData: Event<string>;
   onExit: Event<void>;
   onAvailableWriteBufferSizeChange: Event<BufferSizeChange>;
 
   constructor(file?: string, args?: string[], opt?: PtyOptions) {
+    this._log = getLogger("DirectPty", this);
     this.onData = this._onDataEventEmitter.event;
     this.onExit = this._onExitEventEmitter.event;
     this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
@@ -46,18 +55,39 @@ class DirectPty implements Pty {
     this.realPty.socket.on('drain', () => {
       this._onAvailableWriteBufferSizeChangeEventEmitter.fire({
         totalBufferSize: MAXIMUM_WRITE_BUFFER_SIZE,
-        availableDelta: this._outstandingWriteDataCount
+        availableDelta: this._outstandingWriteDataCount + this._directWrittenDataCount
       });
+      this._directWrittenDataCount = 0;
       this._outstandingWriteDataCount = 0;
-
     });
+
+    this._emitBufferSizeLater = new DebouncedDoLater(this._emitAvailableWriteBufferSizeChange.bind(this));
 
     this.realPty.pause();
   }
   
   write(data: string): void {
-    this._outstandingWriteDataCount += data.length;
-    this.realPty.write(data);
+    if (this.realPty.write(data)) {
+      this._directWrittenDataCount += data.length;
+      this._emitBufferSizeLater.trigger();
+    } else {
+      this._outstandingWriteDataCount += data.length;
+    }
+  }
+
+  private _emitAvailableWriteBufferSizeChange(): void {
+    if (this._directWrittenDataCount !== 0) {
+      const writtenCount = this._directWrittenDataCount;
+      this._directWrittenDataCount = 0;
+      this._onAvailableWriteBufferSizeChangeEventEmitter.fire({
+        totalBufferSize: MAXIMUM_WRITE_BUFFER_SIZE,
+        availableDelta: writtenCount
+      });
+    }
+  }
+
+  getAvailableWriteBufferSize(): number {
+    return MAXIMUM_WRITE_BUFFER_SIZE - this._outstandingWriteDataCount - this._directWrittenDataCount;
   }
 
   resize(cols: number, rows: number): void {
@@ -65,6 +95,7 @@ class DirectPty implements Pty {
   }
   
   destroy(): void {
+    this._emitBufferSizeLater.cancel();
     this.realPty.destroy();
   }
 

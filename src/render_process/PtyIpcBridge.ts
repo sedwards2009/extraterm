@@ -8,8 +8,11 @@ import {Event} from 'extraterm-extension-api';
 import {Pty, BufferSizeChange} from '../pty/Pty';
 import {EventEmitter} from '../utils/EventEmitter';
 import {Logger, getLogger} from '../logging/Logger';
+import log from '../logging/LogDecorator';
+
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
+
 
 /**
  * Exposes PTY objects in the render process which are backed by corresponding
@@ -39,7 +42,7 @@ export class PtyIpcBridge {
 
       this._idToPtyImplMap.set(msg.id, ptyImpl);
       ptyImpl._resendSize();
-      
+
       // Just big enough to get things started. We don't need the exact buffer size.
       WebIpc.ptyOutputBufferSize(msg.id, 1024);
     });
@@ -87,16 +90,22 @@ export class PtyIpcBridge {
 
 class PtyImpl implements Pty {
   
+  private _log: Logger;
+
   _ptyId: number = null;
   private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
   private _onWillDestroyEventEmitter = new EventEmitter<void>();
+  private _outstandingWriteDataCount = 0;
+  private _maximumWriteBufferSize = 1024; // This is just an initial value which is updated later.
 
   private _columns = 80;
   private _rows = 24;
 
   constructor() {
+    this._log = getLogger("PtyImpl", this);
+    
     this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
     this.onData = this._onDataEventEmitter.event;
     this.onExit = this._onExitEventEmitter.event;
@@ -111,8 +120,13 @@ class PtyImpl implements Pty {
 
   write(data: string): void {
     if (this._ptyId != null) {
+      this._outstandingWriteDataCount += data.length;
       WebIpc.ptyInput(this._ptyId, data);
     }
+  }
+
+  getAvailableWriteBufferSize(): number {
+    return this._maximumWriteBufferSize - this._outstandingWriteDataCount;
   }
 
   _processPtyOutput(data: string): void {
@@ -120,6 +134,8 @@ class PtyImpl implements Pty {
   }
 
   _processInputBufferSizeChange(totalBufferSize: number, availableDelta: number): void {
+    this._maximumWriteBufferSize = totalBufferSize;
+    this._outstandingWriteDataCount -= availableDelta;
     this._onAvailableWriteBufferSizeChangeEventEmitter.fire({totalBufferSize, availableDelta});
   }
 

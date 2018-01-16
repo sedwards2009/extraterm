@@ -23,6 +23,8 @@ export interface Pty {
    */
   write(data: string): void;
 
+  getAvailableWriteBufferSize(): number;
+
   onAvailableWriteBufferSizeChange: Event<BufferSizeChange>;
 
   /**

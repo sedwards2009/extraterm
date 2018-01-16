@@ -6,12 +6,24 @@
 
 import {Disposable, Event} from 'extraterm-extension-api';
 
+
+import {DisposableHolder} from '../utils/DisposableUtils';
+
+
 /**
  * An event emitter which can be subscribe to to hear when this event is fired.
  */
-export class EventEmitter<T> {
+export class EventEmitter<T> implements Disposable {
 
   private _listeners: ((t: T) => void)[] = [];
+  private _disposables = new DisposableHolder();
+
+  /**
+   * Dispose of and disconnect all listeners.
+   */
+  dispose(): void {
+    this._disposables.dispose();
+  }
 
   /**
    * Attach a listener to this event.
@@ -21,11 +33,10 @@ export class EventEmitter<T> {
    */
   event: Event<T> = (listener: (t: T) => void): Disposable => {
     this._listeners.push(listener);
-    return {
+    return this._disposables.add({
       dispose: () => {
         this._listeners = this._listeners.filter(item => item !== listener);
-      }
-    };
+      }});
   }
 
   /**

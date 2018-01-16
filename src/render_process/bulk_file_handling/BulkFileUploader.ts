@@ -5,16 +5,17 @@
  */
 import  getUri = require('get-uri');  // Top level on this import is a callable, have to use other syntax.
 import * as http from 'http';
-import {Event} from 'extraterm-extension-api';
+import {Event, Disposable} from 'extraterm-extension-api';
 import {Transform, Readable} from 'stream';
 
 import {BulkFileHandle} from './BulkFileHandle';
 import {Metadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {ByteCountingStreamTransform} from '../../utils/ByteCountingStreamTransform';
+import {DisposableHolder} from '../../utils/DisposableUtils';
 import {EventEmitter} from '../../utils/EventEmitter';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
-import {Pty} from '../../pty/Pty';
+import {Pty, BufferSizeChange} from '../../pty/Pty';
 
 
 const BYTES_PER_LINE = 90;
@@ -32,17 +33,28 @@ const BYTES_PER_LINE = 90;
  * '#\n'
  * 
  */
-export class BulkFileUploader {
+export class BulkFileUploader implements Disposable {
   
   private _log: Logger;
   private _buffer: Buffer = Buffer.alloc(0);
   private _onUploadedChangeEmitter = new EventEmitter<number>();
   private _onFinishedEmitter = new EventEmitter<void>();
-
+  private _dataPipe: NodeJS.ReadableStream = null;
+  private _nextStringChunk: string = null;
+  private _disposables = new DisposableHolder();
+  
   constructor(private _bulkFileHandle: BulkFileHandle, private _pty: Pty) {
     this._log = getLogger("BulkFileUploader", this);
+
+    this._disposables.add(this._onUploadedChangeEmitter);
+    this._disposables.add(this._onFinishedEmitter);
+
     this.onUploadedChange = this._onUploadedChangeEmitter.event;
     this.onFinished = this._onFinishedEmitter.event;
+  }
+
+  dispose(): void {
+    this._disposables.dispose();
   }
 
   onUploadedChange: Event<number>;
@@ -53,17 +65,20 @@ export class BulkFileUploader {
     const url = this._bulkFileHandle.getUrl();
     if (url.startsWith("data:")) {
       getUri(url, (err, stream) => {
-        const lastStage = this._configurePipeline(stream);
-        lastStage.on('error', this._reponseOnError.bind(this));
+        this._dataPipe = this._configurePipeline(stream);
+        this._dataPipe.on('error', this._reponseOnError.bind(this));
       });
     } else {
       const req = http.request(<any> url, (res) => {
-        this._configurePipeline(res);
+        this._dataPipe = this._configurePipeline(res);
       });
       req.on('error', this._reponseOnError.bind(this));
       
       req.end();
     }
+
+    this._disposables.add(this._pty.onAvailableWriteBufferSizeChange(
+      this._handlePtyWriteBufferSizeChange.bind(this)));
   }
 
   private _configurePipeline(sourceStream: NodeJS.ReadableStream): NodeJS.ReadableStream {
@@ -82,7 +97,21 @@ export class BulkFileUploader {
   }
 
   private _responseOnData(chunk: Buffer): void {
-    this._pty.write(chunk.toString("utf8"));
+    const nextStringChunk = chunk.toString("utf8");
+    if (nextStringChunk.length <= this._pty.getAvailableWriteBufferSize()) {
+      this._pty.write(nextStringChunk);
+    } else {
+      this._nextStringChunk = nextStringChunk;
+      this._dataPipe.pause();
+    }
+  }
+
+  private _handlePtyWriteBufferSizeChange(bufferSizeChange: BufferSizeChange): void {
+    if (this._nextStringChunk != null && this._nextStringChunk.length <= this._pty.getAvailableWriteBufferSize()) {
+      this._pty.write(this._nextStringChunk);
+      this._nextStringChunk = null;
+      this._dataPipe.resume();
+    }
   }
 
   private _responseOnEnd(): void {

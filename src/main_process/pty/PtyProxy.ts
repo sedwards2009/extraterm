@@ -19,6 +19,8 @@ import {EventEmitter} from '../../utils/EventEmitter';
 
 const DEBUG_FINE = false;
 
+const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
+
 const _log = getLogger("ptyproxy");
 
 const TYPE_CREATE = "create";
@@ -82,6 +84,7 @@ class ProxyPty implements Pty {
   // Pre-open write queue.
   private _writeQueue: ProxyMessage[] = [];
   private _live = true;
+  private _outstandingWriteDataCount = 0;
   
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
@@ -127,8 +130,13 @@ class ProxyPty implements Pty {
   }
   
   write(data: string): void {
+    // this._outstandingWriteDataCount += data.length;  // FIXME complete the implementation and the remote/Python side.
     const msg: WriteMessage = { type: TYPE_WRITE, id: this._id, data: data };
     this._writeMessage(this._id, msg);
+  }
+
+  getAvailableWriteBufferSize(): number {
+    return MAXIMUM_WRITE_BUFFER_SIZE - this._outstandingWriteDataCount;
   }
 
   resize(cols: number, rows: number): void {
