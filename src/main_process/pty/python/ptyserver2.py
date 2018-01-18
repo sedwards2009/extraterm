@@ -91,7 +91,6 @@ class NonblockingFileReader:
                 self._read_valve.clear()
 
     def _thread_start(self):
-        global activity_event
         try:
             while True:
                 self._read_valve.wait()
@@ -107,12 +106,12 @@ class NonblockingFileReader:
                 # Tick the alarm
                 if LOG_FINER:
                     log("NonblockingFileReader._thread_start() Setting activity flag.")
-                activity_event.set()
+                SignalIOActivity()
         except EOFError:
             self._isEOF = True
             if LOG_FINE:
                 log("NonblockingFileReader got EOF, bye!")
-            activity_event.set()
+            SignalIOActivity()
             
     def _read_next(self):
         if self._custom_read is not None:
@@ -130,6 +129,80 @@ class NonblockingLineReader(NonblockingFileReader):
 
     def _read_next(self):
         return self.file_object.readline()
+
+
+class NonblockingFileWriter:
+    def __init__(self, write):
+        global nbfr_counter
+
+        self._write = write
+
+        self.id = nbfr_counter
+        nbfr_counter += 1
+        
+        self._lock = threading.RLock()
+        self.buffer_list = []        
+        self.bytes_written_list = []
+
+        self._write_valve = threading.Event()
+        self._write_valve.clear()
+
+        self.thread = threading.Thread(name="Nonblocking File Writer "+str(self.id),
+            target=self._thread_start)
+        self.thread.daemon = True
+        self.thread.start()
+
+    def _thread_start(self):
+        try:
+            while True:
+                self._write_valve.wait()
+
+                while True:
+                    self._write_valve.clear()
+
+                    buffer = None
+                    with self._lock:
+                        if len(self.buffer_list) != 0:
+                            buffer = self.buffer_list[0]
+                            del self.buffer_list[0]
+
+                    if buffer is not None:
+                        if LOG_FINER:
+                            log("NonblockingFileWriter writing " + str(len(buffer)) + " chars")
+
+                        self._write(buffer)
+
+                        # with self._lock:
+                        #     self.bytes_written_list.append(len(buffer))
+                        # if LOG_FINER:
+                        #     log("NonblockingFileWriter._thread_start() Setting activity flag.")
+                        # SignalIOActivity()
+                    else:
+                        break
+        except EOFError:
+            if LOG_FINE:
+                log("NonblockingFileWriter got EOF, bye!")
+            SignalIOActivity()
+
+    def write(self, data):
+        if LOG_FINE:
+            log("NonblockingFileWriter write()")
+        with self._lock:
+            self.buffer_list.append(data)
+            self._write_valve.set()
+
+    def nextBytesWritten(self):
+        with self._lock:
+            if len(self.bytes_written_list) == 0:
+                return None
+            else:
+                bytes_written = self.bytes_written_list[0]
+                del self.bytes_written_list[0]
+                return bytes_written
+
+
+def SignalIOActivity():
+    activity_event.set()
 
 def WaitOnIOActivity():
     global activity_event
@@ -205,80 +278,101 @@ pty_list = []   # List of dicts with structure {id: string, pty: pty, reader: }
 pty_counter = 1
 
 def process_command(json_command):
-    global pty_list
-    global pty_counter
-    
     if LOG_FINE:
-        log("server process command:"+repr(json_command))
+        log("server process command:" + repr(json_command))
     cmd = json.loads(json_command)
+    cmd_type = cmd["type"]
 
-    # Create new PTY
-    if cmd["type"] == "create":
-        # Create a new pty.
-        rows = cmd["rows"]
-        columns = cmd["columns"]
-        env = cmd["env"]
-        
-        # Fix up the PATH variable on cygwin.
-        if sys.platform == "cygwin":
-            if "Path" in env and "PATH" not in env:
-                env["PATH"] = env["Path"]
-                del env["Path"]
-            env["PATH"] = cygwin_convert_path_variable(env["PATH"])
-                
-        pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns), env=env) #cwd=, )
-        pty_reader = NonblockingFileReader(read=pty.read)
-        pty_id = pty_counter
-        pty_list.append( { "id": pty_id, "pty": pty, "reader": pty_reader,
-            "readDecoder": codecs.lookup("utf8").incrementaldecoder(errors="ignore") } )
-        pty_counter += 1
-        
-        send_to_controller({ "type": "created", "id": pty_id })
-        return True
-        
-    # Write to PTY
-    if cmd["type"] == "write":
-        pty = find_pty_by_id(cmd["id"])
-        if pty is None:
-            log("Received a write command for an unknown pty (id=" + str(cmd["id"]) + "")
-            return True
-        pty.write(cmd["data"].encode())
-        return True
-
-    # Resize PTY
-    if cmd["type"] == "resize":
-        pty = find_pty_by_id(cmd["id"])
-        if pty is None:
-            log("Received a resize command for an unknown pty (id=" + str(cmd["id"]) + "")
-            return True
-        pty.setwinsize(cmd["rows"], cmd["columns"])
-        return True
-
-    # Set permitted data size
-    if cmd["type"] == "permit-data-size":
-        reader = find_reader_by_id(cmd["id"])
-        if reader is None:
-            log("Received a permit-data-size command for an unknown pty (id=" + str(cmd["id"]) + "")
-            return True
-        reader.permitDataSize(cmd["size"])
-        return True
-
-    # Terminate a PTY
-    if cmd["type"] == "terminate":
-        for pty_tup in pty_list:
-            pty_tup["pty"].terminate(True)
-            pty_tup["reader"].permitDataSize(1024*1024*1024)
-        return False
+    if cmd_type == "create":
+        return process_create_command(cmd)
+    if cmd_type == "write":
+        return process_write_command(cmd)
+    if cmd_type == "resize":
+        return process_resize_command(cmd)
+    if cmd_type == "permit-data-size":
+        return process_permit_data_size_command(cmd)
+    if cmd_type == "terminate":
+        return process_terminate_command(cmd)
         
     log("ptyserver receive unrecognized message:" + json_command)
     return True
+
+def process_create_command(cmd):
+    global pty_list
+    global pty_counter
     
+    # Create a new pty.
+    rows = cmd["rows"]
+    columns = cmd["columns"]
+    env = cmd["env"]
+    
+    # Fix up the PATH variable on cygwin.
+    if sys.platform == "cygwin":
+        if "Path" in env and "PATH" not in env:
+            env["PATH"] = env["Path"]
+            del env["Path"]
+        env["PATH"] = cygwin_convert_path_variable(env["PATH"])
+
+    pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns), env=env) #cwd=, )
+    pty_reader = NonblockingFileReader(read=pty.read)
+    pty_writer = NonblockingFileWriter(write=pty.write)
+
+    pty_id = pty_counter
+    pty_list.append({
+        "id": pty_id,
+        "pty": pty,
+        "reader": pty_reader,
+        "readDecoder": codecs.lookup("utf8").incrementaldecoder(errors="ignore"),
+        "writer": pty_writer})
+    pty_counter += 1
+    
+    send_to_controller({ "type": "created", "id": pty_id })
+    return True
+
+def process_resize_command(cmd):
+    pty = find_pty_by_id(cmd["id"])
+    if pty is None:
+        log("Received a resize command for an unknown pty (id=" + str(cmd["id"]) + "")
+        return True
+    pty.setwinsize(cmd["rows"], cmd["columns"])
+    return True
+
+def process_permit_data_size_command(cmd):
+    reader = find_reader_by_id(cmd["id"])
+    if reader is None:
+        log("Received a permit-data-size command for an unknown pty (id=" + str(cmd["id"]) + "")
+        return True
+    reader.permitDataSize(cmd["size"])
+    return True
+
+def process_write_command(cmd):
+    if LOG_FINE:
+        log("process_write_command()")
+    pty_tuple = find_pty_tuple_by_id(cmd["id"])
+    if pty_tuple is None:
+        log("Received a write command for an unknown pty (id=" + str(cmd["id"]) + "")
+        return True
+    pty_tuple["writer"].write(cmd["data"].encode())
+    return True
+
+def process_terminate_command(cmd):
+    for pty_tup in pty_list:
+        pty_tup["pty"].terminate(True)
+        pty_tup["reader"].permitDataSize(1024*1024*1024)
+    return False
+
 def send_to_controller(msg):
     msg_text = json.dumps(msg)+"\n"
     if LOG_FINE:
         log("server >>> main : "+msg_text)
     sys.stdout.write(msg_text)
     sys.stdout.flush()
+
+def find_pty_tuple_by_id(pty_id):
+    for pty_tup in pty_list:
+        if pty_tup["id"] == pty_id:
+            return pty_tup
+    return None
 
 def find_pty_by_id(pty_id):
     for pty_tup in pty_list:
@@ -324,7 +418,7 @@ def main():
             while chunk is not None:    # Consume all of the commands now. They have high prio.
                 if LOG_FINE:
                     log("server <<< main : " + repr(chunk))
-                running = False if not running or not process_command(chunk.strip()) else True
+                running = running and process_command(chunk.strip())
                 if LOG_FINE:
                     log("running: " + str(running))
                 chunk = stdin_reader.read()
