@@ -141,8 +141,8 @@ class NonblockingFileWriter:
         nbfr_counter += 1
         
         self._lock = threading.RLock()
-        self.buffer_list = []        
-        self.bytes_written_list = []
+        self.string_list = []
+        self.chars_written_list = []
 
         self._write_valve = threading.Event()
         self._write_valve.clear()
@@ -160,23 +160,23 @@ class NonblockingFileWriter:
                 while True:
                     self._write_valve.clear()
 
-                    buffer = None
+                    string = None
                     with self._lock:
-                        if len(self.buffer_list) != 0:
-                            buffer = self.buffer_list[0]
-                            del self.buffer_list[0]
+                        if len(self.string_list) != 0:
+                            string = self.string_list[0]
+                            del self.string_list[0]
 
-                    if buffer is not None:
+                    if string is not None:
                         if LOG_FINER:
-                            log("NonblockingFileWriter writing " + str(len(buffer)) + " chars")
+                            log("NonblockingFileWriter writing " + str(len(string)) + " chars")
 
-                        self._write(buffer)
+                        self._write(string.encode())
 
-                        # with self._lock:
-                        #     self.bytes_written_list.append(len(buffer))
-                        # if LOG_FINER:
-                        #     log("NonblockingFileWriter._thread_start() Setting activity flag.")
-                        # SignalIOActivity()
+                        with self._lock:
+                            self.chars_written_list.append(len(string))
+                        if LOG_FINER:
+                            log("NonblockingFileWriter._thread_start() Setting activity flag.")
+                        SignalIOActivity()
                     else:
                         break
         except EOFError:
@@ -184,21 +184,21 @@ class NonblockingFileWriter:
                 log("NonblockingFileWriter got EOF, bye!")
             SignalIOActivity()
 
-    def write(self, data):
+    def write(self, string):
         if LOG_FINE:
             log("NonblockingFileWriter write()")
         with self._lock:
-            self.buffer_list.append(data)
+            self.string_list.append(string)
             self._write_valve.set()
 
-    def nextBytesWritten(self):
+    def nextCharsWritten(self):
         with self._lock:
-            if len(self.bytes_written_list) == 0:
+            if len(self.chars_written_list) == 0:
                 return None
             else:
-                bytes_written = self.bytes_written_list[0]
-                del self.bytes_written_list[0]
-                return bytes_written
+                chars_written = self.chars_written_list[0]
+                del self.chars_written_list[0]
+                return chars_written
 
 
 def SignalIOActivity():
@@ -352,7 +352,7 @@ def process_write_command(cmd):
     if pty_tuple is None:
         log("Received a write command for an unknown pty (id=" + str(cmd["id"]) + "")
         return True
-    pty_tuple["writer"].write(cmd["data"].encode())
+    pty_tuple["writer"].write(cmd["data"])
     return True
 
 def process_terminate_command(cmd):
@@ -433,6 +433,17 @@ def main():
                     # Decode the chunk of bytes.
                     data = pty_struct["readDecoder"].decode(pty_chunk)
                     send_to_controller( {"type": "output", "id": pty_struct["id"], "data": data} )
+
+                # Send any output-written message
+                writer = pty_struct["writer"]
+                total_chars_written = 0
+                next_chars_written = writer.nextCharsWritten()
+                while next_chars_written is not None:
+                    total_chars_written += next_chars_written
+                    next_chars_written = writer.nextCharsWritten()
+
+                if total_chars_written != 0:
+                    send_to_controller( {"type": "output-written", "id": pty_struct["id"], "chars": total_chars_written} )
 
             # Check for exited ptys
             for pty_struct in pty_list[:]:
