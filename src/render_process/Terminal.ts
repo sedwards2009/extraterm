@@ -1963,6 +1963,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     const uploadProgressBar = <UploadProgressBar> document.createElement(UploadProgressBar.TAG_NAME);
+    
+    if ("filename" in bulkFileHandle.getMetadata()) {
+      uploadProgressBar.filename = <string> bulkFileHandle.getMetadata()["filename"];
+    }
 
     uploadProgressBar.total = bulkFileHandle.getTotalSize();
     uploader.onUploadedChange(uploaded => {

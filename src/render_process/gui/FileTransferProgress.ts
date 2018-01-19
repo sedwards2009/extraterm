@@ -14,12 +14,14 @@ import log from '../../logging/LogDecorator';
 import {SimpleElementBase} from './SimpleElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 
+type ActionType = "download" | "upload";
+
 
 @Component(
 {
   template: `<div class="container" :title="formattedTooltip">
     <div v-if="finished" class="filename"><i class='fa fa-download'></i>&nbsp;{{name}}</div>
-    <div v-else class="filename"><i class='fa fa-download'></i>&nbsp;Downloading {{name}}</div>
+    <div v-else class="filename"><i class='fa fa-download'></i>&nbsp;{{actionMessage}}</div>
 
     <div v-if="totalSize == -1" class="available-bytes-unknown-total">
       {{formattedHumanAvailableBytes}}
@@ -50,6 +52,12 @@ class FileTransferUI extends Vue {
   etaSeconds = -1;
   speedBytesPerSecond = -1;
   averageSpeedBytesPerSecond = -1;
+  actionType: ActionType = "download";
+
+  get actionMessage(): string {
+    const msgFormat = this.actionType === "download" ? "Downloading {{name}}" : "Uploading {{name}}";
+    return msgFormat.replace("{{name}}", this.name);
+  }
 
   get formattedExactAvailableBytes(): string {
     return this.availableSize.toLocaleString("en-US");
@@ -73,20 +81,21 @@ class FileTransferUI extends Vue {
 
   get formattedTooltip(): string {
     if (this.finished) {
-      return `Completed download of ${this.formattedHumanAvailableBytes} (${this.formattedExactAvailableBytes} bytes)
+      const verb = this.actionType === "download" ? "download" : "upload";
+      return `Completed ${verb} of ${this.formattedHumanAvailableBytes} (${this.formattedExactAvailableBytes} bytes)
 at ${formatHumanBytes(this.averageSpeedBytesPerSecond)}/s`;
 
     } else {
 
+      const verb = this.actionType === "download" ? "Downloaded" : "Uploaded";
       if (this.totalSize > 0) {
         const speed = this.speedBytesPerSecond === -1 ? "" : `
 at ${formatHumanBytes(this.speedBytesPerSecond)}/s`;
-
-        return `Downloaded ${this.formattedHumanAvailableBytes} of ${this.formattedHumanTotalBytes}
+        return `${verb} ${this.formattedHumanAvailableBytes} of ${this.formattedHumanTotalBytes}
 (${this.formattedExactAvailableBytes} / ${this.formattedExactTotalBytes} bytes)${speed}`;
 
       } else {
-        return `Downloaded ${this.formattedHumanAvailableBytes} (${this.formattedExactAvailableBytes} bytes)`;
+        return `${verb} ${this.formattedHumanAvailableBytes} (${this.formattedExactAvailableBytes} bytes)`;
       }
     }
   }
@@ -149,6 +158,15 @@ export class FileTransferProgress extends SimpleElementBase implements Disposabl
     this._ui.name = this.filename;
   }
   
+  @Attribute({default: "download"}) public actionType: string;
+
+  @Observe("actionType")
+  private updateActionType(): void {
+    if (this.actionType === "download" || this.actionType === "upload") {
+      this._ui.actionType = this.actionType;
+    }
+  }
+
   @Attribute({default: null}) public total: number;
 
   @Observe("total")

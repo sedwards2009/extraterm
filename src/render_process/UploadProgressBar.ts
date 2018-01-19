@@ -20,6 +20,7 @@ export class UploadProgressBar extends SimpleElementBase {
   constructor() {
     super();
     this._fileTransferProgress = <FileTransferProgress> document.createElement(FileTransferProgress.TAG_NAME);
+    this._fileTransferProgress.actionType = "upload";
     this.getContainerNode().appendChild(this._fileTransferProgress);
   }
 
