@@ -134,6 +134,9 @@ interface WriteBufferStatus {
   bufferSize: number;
 }
 
+type InputStreamFilter = (input: string) => string;
+
+
 /**
  * An Extraterm terminal.
  * 
@@ -212,6 +215,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _armResizeCanary = false;  // Controls when the resize canary is allowed to chirp.
 
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
+
+  private _inputStreamFilters: InputStreamFilter[] = [];
+
 
   constructor() {
     super();
@@ -883,8 +889,15 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    * @param {string} data The data to process.
    */
   private _handleTermData(emulator: Term.Emulator, data: string): void {
-// Filter the input in the case that an upload is in progress.
-    this.send(data);
+    // Apply the input filters
+    let filteredData = data;
+    for (const filter of this._inputStreamFilters) {
+      filteredData = filter(filteredData);
+    }
+
+    if (filteredData !== "") {
+      this.send(filteredData);
+    }
   }
   
   private _handleTermSize(emulator: Term.Emulator, event: TermApi.RenderEvent): void {
@@ -1267,6 +1280,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   //   #    # ######   #   #####   ####  #    # #    # #####  
   //                                                        
   // ----------------------------------------------------------------------
+  private _registerInputStreamFilter(filter: InputStreamFilter): Disposable {
+    this._inputStreamFilters.push(filter);
+    return {
+      dispose: () => {
+        this._inputStreamFilters = this._inputStreamFilters.filter(f => f !== filter);
+      }
+    };
+  }
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
     if (this._terminalViewer === null || this._keyBindingManager === null ||
@@ -1940,7 +1961,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
     const uploader = new BulkFileUploader(bulkFileHandle, this._pty);
 
-// Filter
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     const uploadProgressBar = <UploadProgressBar> document.createElement(UploadProgressBar.TAG_NAME);
 
@@ -1948,11 +1968,28 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     uploader.onUploadedChange(uploaded => {
       uploadProgressBar.transferred = uploaded;
     });
+
+    const inputFilterRegistration = this._registerInputStreamFilter((input: string): string => {
+      const ctrlCIndex = input.indexOf("\x03");
+      if (ctrlCIndex !== -1) {
+        // Abort the upload.
+        uploader.abort();
+        inputFilterRegistration.dispose();
+        return input.substr(ctrlCIndex);
+      } else {
+        return "";
+      }
+    });
+
     uploader.onFinished(() => {
       containerDiv.removeChild(uploadProgressBar);
-      doLater(() => uploader.dispose());
+      inputFilterRegistration.dispose();
+      doLater(() => {
+        uploader.dispose();
+      });
     });
-    
+
+
     containerDiv.appendChild(uploadProgressBar);
 
     uploader.upload();

@@ -53,6 +53,9 @@ export class BulkFileUploader implements Disposable {
     this.onFinished = this._onFinishedEmitter.event;
   }
 
+  abort(): void {
+  }
+
   dispose(): void {
     this._disposables.dispose();
   }
