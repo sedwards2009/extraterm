@@ -19,6 +19,9 @@ from signal import signal, SIGPIPE, SIG_DFL
 ##@inline
 from extratermclient import extratermclient
 
+HASH_LENGTH = 64
+
+
 class Metadata:
     def __init__(self, metadata):
         self.metadata = metadata
@@ -54,38 +57,51 @@ def requestFrame(frame_name):
     extratermclient.requestFrame(frame_name)
 
     line = sys.stdin.readline()
-    if line.strip() != "#metadata":
-        return FrameReadError("Error while reading in frame data. Expected '#metadata', but didn't receive it.")
+    if line.endswith("\n"):
+        line = line[:-1]
 
-    metadata_buffer = ""
-    b64data = sys.stdin.readline().strip()
-    while len(b64data) != 0:
-        if b64data[0] != '#':
-            return FrameReadError("Error while reading in metadata. Line didn't start with '#'.")
-        elif len(b64data) == 1:
-            # Decode the metadata.
-            yield Metadata(json.loads(str(base64.b64decode(metadata_buffer), encoding="utf-8")))
-            break
-        else:
-            metadata_buffer += b64data[1:]
-            b64data = sys.stdin.readline().strip()
+    if not line.startswith("#M:"):
+        return FrameReadError("Error while reading in frame data. Expected '#M:...', but didn't receive it.")
+
+    if len(line) < 3 + 1 + HASH_LENGTH:
+        return FrameReadError("Error while reading in metadata. Line is too short.")
+        
+    b64data = line[3:-HASH_LENGTH-1]
+    hash = line[:-HASH_LENGTH]
+
+    # FIXME check the hash.
+
+    # Decode the metadata.
+    yield Metadata(json.loads(str(base64.b64decode(b64data), encoding="utf-8")))
     
-    line = sys.stdin.readline().strip()
-    if line != "#body":
-        return FrameReadError("Error while reading in frame data. Expected '#body', but didn't receive it.")
 
     # Read stdin until an empty buffer is returned.
     try:
-        b64data = sys.stdin.readline().strip()
-        while len(b64data) != 0:
-            if b64data[0] != '#':
-                return FrameReadError("Error while reading in metadata. Line didn't start with '#'.")
-            elif len(b64data) == 1:
-                break   # Reached the end
-            else:
+        while True:
+            line = sys.stdin.readline()
+            if line.endswith("\n"):
+                line = line[:-1]
+            
+            if len(line) < 3 + 1 + HASH_LENGTH:
+                return FrameReadError("Error while reading frame body data. Line is too short.")
+
+            if line.startswith("#D:"):
+                # Data
+                b64data = line[3:-HASH_LENGTH-1]
+
+                hash = line[:-HASH_LENGTH]
+                # FIXME check the hash.
+
                 # Send the input to stdout.
-                yield BodyData(base64.b64decode(b64data[1:])) # Strip the leading # and decode.
-                b64data = sys.stdin.readline().strip()
+                yield BodyData(base64.b64decode(b64data))
+
+            elif line.startswith("E:"):
+                # EOF
+                break
+
+            else:
+                return FrameReadError("Error while reading frame body data. Line didn't start with '#D:' or '#E:'.")
+
     except OSError as ex:
         print(ex.strerror, file=sys.stderr)
         

@@ -150,15 +150,22 @@ class UploadEncodeDataTransform extends Transform {
   }
 
   protected _flush(callback: Function): void {
-    this._sendEncodedDataToPty(this._buffer);
+    this._sendLine("D", this._buffer);
+    this._sendLine("E", null);
     callback();
   }
 
   private _sendHeader(): void {
-    this._sendEncodedLine("metadata");
     const jsonString = JSON.stringify(this._metadata);
-    this._sendEncodedDataToPty(Buffer.from(jsonString, "utf8"));
-    this._sendEncodedLine("body");
+    this._sendLine("M", Buffer.from(jsonString, "utf8"));
+  }
+
+  private _sendLine(command: string, content: Buffer): void {
+    this.push("#" + command + ":");
+    if (content !== null && content.length !==0) {
+      this.push(content.toString("base64"));
+    }
+    this.push(":0123456789012345678901234567890123456789012345678901234567890123\n");
   }
 
   private _appendChunkToBuffer(chunk: Buffer): void {
@@ -176,7 +183,7 @@ class UploadEncodeDataTransform extends Transform {
     const lines = Math.floor(this._buffer.length/BYTES_PER_LINE);
     for (let i = 0; i < lines; i++) {
       const lineBuffer = this._buffer.slice(i*BYTES_PER_LINE, (i+1) * BYTES_PER_LINE);
-      this._sendEncodedLine(lineBuffer.toString("base64"));
+      this._sendLine("D", lineBuffer);
     }
 
     const remainder = this._buffer.length % BYTES_PER_LINE;
@@ -187,19 +194,5 @@ class UploadEncodeDataTransform extends Transform {
     } else {
       this._buffer = Buffer.alloc(0);
     }
-  }
-
-  private _sendEncodedLine(data: string): void {
-    const fullLine = "#" + data + "\n";
-    const buf = Buffer.from(fullLine, "utf8");
-    this.push(buf);
-  }
-
-  private _sendEncodedDataToPty(buffer: Buffer): void {
-    for (let i = 0; i < buffer.length; i += BYTES_PER_LINE) {
-      const lineBuffer = buffer.slice(i, Math.min(i + BYTES_PER_LINE, buffer.length));
-      this._sendEncodedLine(lineBuffer.toString("base64"));
-    }
-    this._sendEncodedLine("");  // Terminator
   }
 }
