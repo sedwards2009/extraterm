@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as crypto from 'crypto';
 import  getUri = require('get-uri');  // Top level on this import is a callable, have to use other syntax.
 import * as http from 'http';
 import {Event, Disposable} from 'extraterm-extension-api';
@@ -132,6 +133,7 @@ class UploadEncodeDataTransform extends Transform {
 
   private _doneIntro = false;
   private _buffer: Buffer = Buffer.alloc(0);
+  private _previousHash: Buffer = null;
 
   constructor(private _metadata: Metadata) {
     super();
@@ -162,10 +164,22 @@ class UploadEncodeDataTransform extends Transform {
 
   private _sendLine(command: string, content: Buffer): void {
     this.push("#" + command + ":");
+
+    const hash = crypto.createHash("sha256");
+    if (this._previousHash !== null) {
+      hash.update(this._previousHash);
+    }
+
     if (content !== null && content.length !==0) {
+      hash.update(content);
       this.push(content.toString("base64"));
     }
-    this.push(":0123456789012345678901234567890123456789012345678901234567890123\n");
+
+    this._previousHash = hash.digest();
+
+    this.push(":");
+    this.push(this._previousHash.toString("hex"));
+    this.push("\r");
   }
 
   private _appendChunkToBuffer(chunk: Buffer): void {

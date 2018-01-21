@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+# Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
 #
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 # 
@@ -8,6 +8,7 @@
 import argparse
 import atexit
 import base64
+import hashlib
 import json
 import os
 import sys
@@ -20,6 +21,7 @@ from signal import signal, SIGPIPE, SIG_DFL
 from extratermclient import extratermclient
 
 HASH_LENGTH = 64
+COMMAND_PREFIX_LENGTH = 3
 
 
 class Metadata:
@@ -56,51 +58,69 @@ def requestFrame(frame_name):
     # Request the frame contents from the terminal.
     extratermclient.requestFrame(frame_name)
 
-    line = sys.stdin.readline()
-    if line.endswith("\n"):
-        line = line[:-1]
+    line = sys.stdin.readline().strip()
 
     if not line.startswith("#M:"):
-        return FrameReadError("Error while reading in frame data. Expected '#M:...', but didn't receive it.")
+        yield FrameReadError("Error while reading in frame data. Expected '#M:...', but didn't receive it.")
+        return
 
-    if len(line) < 3 + 1 + HASH_LENGTH:
-        return FrameReadError("Error while reading in metadata. Line is too short.")
+    if len(line) < COMMAND_PREFIX_LENGTH + 1 + HASH_LENGTH:
+        yield FrameReadError("Error while reading in metadata. Line is too short.")
+        return
         
-    b64data = line[3:-HASH_LENGTH-1]
-    hash = line[:-HASH_LENGTH]
+    b64data = line[COMMAND_PREFIX_LENGTH:-HASH_LENGTH-1]
+    lineHash = line[-HASH_LENGTH:]
 
-    # FIXME check the hash.
+    contents = base64.b64decode(b64data)
+
+    hash = hashlib.sha256()
+    hash.update(contents)
+    previousHash = hash.digest()
+    hashHex = hash.hexdigest()
+
+    # Check the hash.
+    if lineHash.lower() != hash.hexdigest().lower():
+        yield FrameReadError("Error: Hash didn't match for metadata line. '"+lineHash+"'")
+        return
 
     # Decode the metadata.
-    yield Metadata(json.loads(str(base64.b64decode(b64data), encoding="utf-8")))
-    
+    yield Metadata(json.loads(str(contents, encoding="utf-8")))
 
     # Read stdin until an empty buffer is returned.
     try:
         while True:
-            line = sys.stdin.readline()
-            if line.endswith("\n"):
-                line = line[:-1]
+            line = sys.stdin.readline().strip()
             
-            if len(line) < 3 + 1 + HASH_LENGTH:
+            if len(line) < COMMAND_PREFIX_LENGTH + 1 + HASH_LENGTH:
                 return FrameReadError("Error while reading frame body data. Line is too short.")
 
-            if line.startswith("#D:"):
+            if line.startswith("#D:") or line.startswith("#E:"):
                 # Data
-                b64data = line[3:-HASH_LENGTH-1]
+                b64data = line[COMMAND_PREFIX_LENGTH:-HASH_LENGTH-1]
+                contents = base64.b64decode(b64data)
+                lineHash = line[-HASH_LENGTH:]
 
-                hash = line[:-HASH_LENGTH]
-                # FIXME check the hash.
+                hash = hashlib.sha256()
+                hash.update(previousHash)
+                hash.update(contents)
+                previousHash = hash.digest()
 
-                # Send the input to stdout.
-                yield BodyData(base64.b64decode(b64data))
+                # Check the hash.
+                if lineHash != hash.hexdigest():
+                    yield FrameReadError("Error: Hash didn't match for data line.")
+                    return
 
-            elif line.startswith("E:"):
-                # EOF
-                break
+                if line.startswith("#E:"):
+                    # EOF
+                    break
+                else:
+                    # Send the input to stdout.
+                    yield BodyData(contents)
+
 
             else:
-                return FrameReadError("Error while reading frame body data. Line didn't start with '#D:' or '#E:'.")
+                yield FrameReadError("Error while reading frame body data. Line didn't start with '#D:' or '#E:'.")
+                return
 
     except OSError as ex:
         print(ex.strerror, file=sys.stderr)
@@ -109,6 +129,7 @@ def requestFrame(frame_name):
         signal(SIGPIPE,SIG_DFL)
 
 def outputFrame(frame_name):
+    rc = 0
     for block in requestFrame(frame_name):
         if isinstance(block, Metadata):
             pass
@@ -116,31 +137,39 @@ def outputFrame(frame_name):
             sys.stdout.buffer.write(block.data)
         else:
             # FrameReadError
-            sys.stdout.buffer.write(bytes(block.message, 'utf8'))
-            break
+            sys.stderr.buffer.write(bytes(block.message, 'utf8'))
+            sys.stderr.buffer.write(bytes("\n", "utf8"))
+            sys.stderr.flush()
+            rc = 1
     sys.stdout.flush()
+    return rc
 
 def xargs(frame_names, command_list):
     temp_files = []
+    rc = 0
     try:
         # Fetch the contents of each frame and put them in tmp files.
         for frame_name in frame_names:
-            next_temp_file = readFrameToTempFile(frame_name)
+            rc, next_temp_file = readFrameToTempFile(frame_name)
             temp_files.append(next_temp_file)
-
-        # Build the complete command and args.
-        args = command_list[:]
-        for temp_file in temp_files:
-            args.append(temp_file.name)
-        
-        os.spawnvp(os.P_WAIT, args[0], [os.path.basename(args[0])] + args[1:])
+            if rc != 0:
+                break
+        else:
+            # Build the complete command and args.
+            args = command_list[:]
+            for temp_file in temp_files:
+                args.append(temp_file.name)
+            
+            os.spawnvp(os.P_WAIT, args[0], [os.path.basename(args[0])] + args[1:])
 
     finally:
         # Clean up any temp files.
         for temp_file in temp_files:
             os.unlink(temp_file.name)
+    return rc
 
 def readFrameToTempFile(frame_name):
+    rc = 0
     fhandle = tempfile.NamedTemporaryFile('w+b', delete=False)
     for block in requestFrame(frame_name):
         if isinstance(block, Metadata):
@@ -149,11 +178,13 @@ def readFrameToTempFile(frame_name):
             fhandle.write(block.data)
         else:
             # FrameReadError
-            sys.stdout.buffer.write(bytes(block.message, 'utf8'))
+            sys.stderr.buffer.write(bytes(block.message, 'utf8'))
+            sys.stderr.flush()
+            rc = 1
             break
     fhandle.close()
 
-    return fhandle 
+    return rc, fhandle 
 
 def main():
     parser = argparse.ArgumentParser(prog='from', description='Fetch data from an Extraterm frame.')
@@ -174,9 +205,11 @@ def main():
     if args.xargs is None:
         # Normal execution. Output the frames.
         for frame_name in args.frames:
-            outputFrame(frame_name)
+            rc = outputFrame(frame_name)
+            if rc != 0:
+                sys.exit(rc)
+        sys.exit(0)
     else:
-        xargs(args.frames, args.xargs)
+        sys.exit(xargs(args.frames, args.xargs))
 
-    sys.exit(0)
 main()
