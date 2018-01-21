@@ -208,7 +208,7 @@ export function factory(config: Config): PtyConnector {
 
   proxy.stdout.on('data', function(data: Buffer) {
     if (DEBUG_FINE) {
-      _log.debug("main <<< server : ", data);
+      _log.debug("server -> main: ", data.toString("utf8"));
     }
     messageBuffer = messageBuffer + data.toString('utf8');
     processMessageBuffer();
@@ -301,6 +301,9 @@ export function factory(config: Config): PtyConnector {
   
   function sendMessage(id: number, msg: ProxyMessage): void {
     const msgText = JSON.stringify(msg);
+    if (DEBUG_FINE) {
+      _log.debug("main -> server: ", msgText);
+    }
     proxy.stdin.write(msgText + "\n", 'utf8');
   }
   
