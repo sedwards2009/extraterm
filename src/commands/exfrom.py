@@ -49,6 +49,9 @@ def requestFrame(frame_name):
     new_settings[3] = new_settings[3] & ~termios.ECHO          # lflags
     termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
 
+    # Run in terminal cbreak mode because we need to read (very) long lines which cooked mode will truncate.
+    tty.setcbreak(fd)
+
     # Set up a hook to restore the tty settings at exit.
     def restoreTty():
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
@@ -90,7 +93,7 @@ def requestFrame(frame_name):
     try:
         while True:
             line = sys.stdin.readline().strip()
-            
+
             if len(line) < COMMAND_PREFIX_LENGTH + 1 + HASH_LENGTH:
                 return FrameReadError("Error while reading frame body data. Line is too short.")
 

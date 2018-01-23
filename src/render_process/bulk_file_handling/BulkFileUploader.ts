@@ -19,7 +19,7 @@ import log from '../../logging/LogDecorator';
 import {Pty, BufferSizeChange} from '../../pty/Pty';
 
 
-const BYTES_PER_LINE = 90;
+const BYTES_PER_LINE = 3 * 1024;
 
 /**
  * Uploads files to a remote process over shell and remote's stdin.
