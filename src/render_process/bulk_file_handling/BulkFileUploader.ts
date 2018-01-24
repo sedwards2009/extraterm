@@ -20,6 +20,8 @@ import {Pty, BufferSizeChange} from '../../pty/Pty';
 
 
 const BYTES_PER_LINE = 3 * 1024;
+const DEBUG = false;
+
 
 /**
  * Uploads files to a remote process over shell and remote's stdin.
@@ -43,7 +45,8 @@ export class BulkFileUploader implements Disposable {
   private _dataPipe: NodeJS.ReadableStream = null;
   private _nextStringChunk: string = null;
   private _disposables = new DisposableHolder();
-  
+  private _sourceStream: NodeJS.ReadableStream = null;
+
   constructor(private _bulkFileHandle: BulkFileHandle, private _pty: Pty) {
     this._log = getLogger("BulkFileUploader", this);
 
@@ -69,11 +72,13 @@ export class BulkFileUploader implements Disposable {
     const url = this._bulkFileHandle.getUrl();
     if (url.startsWith("data:")) {
       getUri(url, (err, stream) => {
+        this._sourceStream = stream;
         this._dataPipe = this._configurePipeline(stream);
         this._dataPipe.on('error', this._reponseOnError.bind(this));
       });
     } else {
       const req = http.request(<any> url, (res) => {
+        this._sourceStream = res;
         this._dataPipe = this._configurePipeline(res);
       });
       req.on('error', this._reponseOnError.bind(this));
@@ -89,6 +94,9 @@ export class BulkFileUploader implements Disposable {
     const countingTransform = new ByteCountingStreamTransform();
     sourceStream.pipe(countingTransform);
     countingTransform.onCountUpdate((count: number) => {
+    if (DEBUG) {
+      this._log.debug("count is ",count);
+    }
       this._onUploadedChangeEmitter.fire(count);
     });
 
@@ -101,20 +109,37 @@ export class BulkFileUploader implements Disposable {
   }
 
   private _responseOnData(chunk: Buffer): void {
+
     const nextStringChunk = chunk.toString("utf8");
+
+    if (DEBUG) {
+      this._log.debug("_responseOnData this._pty.getAvailableWriteBufferSize() = ",this._pty.getAvailableWriteBufferSize());
+    }
+
     if (nextStringChunk.length <= this._pty.getAvailableWriteBufferSize()) {
       this._pty.write(nextStringChunk);
     } else {
       this._nextStringChunk = nextStringChunk;
+      if (DEBUG) {
+        this._log.debug("pausing");
+      }
+      this._sourceStream.pause();
       this._dataPipe.pause();
     }
   }
 
   private _handlePtyWriteBufferSizeChange(bufferSizeChange: BufferSizeChange): void {
+    if (DEBUG) {
+      this._log.debug(`availableDelta: ${bufferSizeChange.availableDelta}, totalBufferSize: ${bufferSizeChange.totalBufferSize}, availableWriteBufferSize: ${this._pty.getAvailableWriteBufferSize()}`);
+    }
     if (this._nextStringChunk != null && this._nextStringChunk.length <= this._pty.getAvailableWriteBufferSize()) {
       this._pty.write(this._nextStringChunk);
       this._nextStringChunk = null;
+      if (DEBUG) {
+        this._log.debug("resuming");
+      }
       this._dataPipe.resume();
+      this._sourceStream.resume();
     }
   }
 
@@ -179,7 +204,7 @@ class UploadEncodeDataTransform extends Transform {
 
     this.push(":");
     this.push(this._previousHash.toString("hex"));
-    this.push("\r");
+    this.push("\n");
   }
 
   private _appendChunkToBuffer(chunk: Buffer): void {
