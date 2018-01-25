@@ -91,17 +91,22 @@ export class BulkFileUploader implements Disposable {
   }
 
   private _configurePipeline(sourceStream: NodeJS.ReadableStream): NodeJS.ReadableStream {
-    const countingTransform = new ByteCountingStreamTransform();
-    sourceStream.pipe(countingTransform);
-    countingTransform.onCountUpdate((count: number) => {
-    if (DEBUG) {
-      this._log.debug("count is ",count);
-    }
+    const byteCountingTransform = new ByteCountingStreamTransform();
+    let countSleep = 1024*1024;
+    byteCountingTransform.onCountUpdate((count: number) => {
+      if (DEBUG) {
+        if (count > countSleep) {
+          this._log.debug("byte count is ", count / (1024*1024), "MiB");
+          countSleep += 1024*1024;
+        }
+      }
       this._onUploadedChangeEmitter.fire(count);
     });
 
     const encodeTransform = new UploadEncodeDataTransform(this._bulkFileHandle.getMetadata());
-    countingTransform.pipe(encodeTransform);
+
+    sourceStream.pipe(byteCountingTransform);
+    byteCountingTransform.pipe(encodeTransform);
 
     encodeTransform.on('data', this._responseOnData.bind(this));
     encodeTransform.on('end', this._responseOnEnd.bind(this));
@@ -121,7 +126,7 @@ export class BulkFileUploader implements Disposable {
     } else {
       this._nextStringChunk = nextStringChunk;
       if (DEBUG) {
-        this._log.debug("pausing");
+        this._log.debug(`pausing, availableWriteBufferSize: ${this._pty.getAvailableWriteBufferSize()}`);
       }
       this._sourceStream.pause();
       this._dataPipe.pause();
@@ -136,7 +141,7 @@ export class BulkFileUploader implements Disposable {
       this._pty.write(this._nextStringChunk);
       this._nextStringChunk = null;
       if (DEBUG) {
-        this._log.debug("resuming");
+        this._log.debug(`resuming, availableWriteBufferSize: ${this._pty.getAvailableWriteBufferSize()}`);
       }
       this._dataPipe.resume();
       this._sourceStream.resume();
