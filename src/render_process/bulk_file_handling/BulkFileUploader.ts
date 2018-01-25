@@ -188,7 +188,11 @@ class UploadEncodeDataTransform extends Transform {
   }
 
   private _sendLine(command: string, content: Buffer): void {
-    this.push("#" + command + ":");
+    const parts: string[] = [];
+
+    parts.push("#");
+    parts.push(command);
+    parts.push(":");
 
     const hash = crypto.createHash("sha256");
     if (this._previousHash !== null) {
@@ -197,14 +201,16 @@ class UploadEncodeDataTransform extends Transform {
 
     if (content !== null && content.length !==0) {
       hash.update(content);
-      this.push(content.toString("base64"));
+      parts.push(content.toString("base64"));
     }
 
     this._previousHash = hash.digest();
 
-    this.push(":");
-    this.push(this._previousHash.toString("hex"));
-    this.push("\n");
+    parts.push(":");
+    parts.push(this._previousHash.toString("hex"));
+    parts.push("\n");
+
+    this.push(parts.join(""));
   }
 
   private _appendChunkToBuffer(chunk: Buffer): void {
