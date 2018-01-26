@@ -1979,7 +1979,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         // Abort the upload.
         uploader.abort();
         inputFilterRegistration.dispose();
-        return input.substr(ctrlCIndex);
+        return input.substr(ctrlCIndex + 1);
       } else {
         return "";
       }

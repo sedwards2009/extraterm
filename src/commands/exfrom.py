@@ -39,6 +39,11 @@ class FrameReadError:
         self.message = message
 
 
+def readStdinLine():
+    line = sys.stdin.readline()
+    return line.strip()
+
+
 def requestFrame(frame_name):
     """Returns a generator which outputs the frame contents as blocks of binary data.
     """
@@ -61,7 +66,7 @@ def requestFrame(frame_name):
     # Request the frame contents from the terminal.
     extratermclient.requestFrame(frame_name)
 
-    line = sys.stdin.readline().strip()
+    line = readStdinLine()
 
     if not line.startswith("#M:"):
         yield FrameReadError("Error while reading in frame data. Expected '#M:...', but didn't receive it.")
@@ -92,12 +97,12 @@ def requestFrame(frame_name):
     # Read stdin until an empty buffer is returned.
     try:
         while True:
-            line = sys.stdin.readline().strip()
+            line = readStdinLine()
 
             if len(line) < COMMAND_PREFIX_LENGTH + 1 + HASH_LENGTH:
                 return FrameReadError("Error while reading frame body data. Line is too short.")
 
-            if line.startswith("#D:") or line.startswith("#E:"):
+            if line.startswith("#D:") or line.startswith("#E:") or line.startswith("#A:"):
                 # Data
                 b64data = line[COMMAND_PREFIX_LENGTH:-HASH_LENGTH-1]
                 contents = base64.b64decode(b64data)
@@ -110,12 +115,15 @@ def requestFrame(frame_name):
 
                 # Check the hash.
                 if lineHash != hash.hexdigest():
-                    yield FrameReadError("Error: Hash didn't match for data line.")
+                    yield FrameReadError("Error: Upload failed. (Hash didn't match for data line. Expected " + hash.hexdigest() + " got " + lineHash + ")")
                     return
 
                 if line.startswith("#E:"):
                     # EOF
                     break
+                elif line.startswith("#A:"):
+                    yield FrameReadError("Upload aborted")
+                    return
                 else:
                     # Send the input to stdout.
                     yield BodyData(contents)
@@ -130,6 +138,7 @@ def requestFrame(frame_name):
         
         #Ignore further SIG_PIPE signals and don't throw exceptions
         signal(SIGPIPE,SIG_DFL)
+
 
 def outputFrame(frame_name):
     rc = 0
@@ -146,6 +155,7 @@ def outputFrame(frame_name):
             rc = 1
     sys.stdout.flush()
     return rc
+
 
 def xargs(frame_names, command_list):
     temp_files = []
@@ -171,6 +181,7 @@ def xargs(frame_names, command_list):
             os.unlink(temp_file.name)
     return rc
 
+
 def readFrameToTempFile(frame_name):
     rc = 0
     fhandle = tempfile.NamedTemporaryFile('w+b', delete=False)
@@ -188,6 +199,7 @@ def readFrameToTempFile(frame_name):
     fhandle.close()
 
     return rc, fhandle 
+
 
 def main():
     parser = argparse.ArgumentParser(prog='from', description='Fetch data from an Extraterm frame.')
