@@ -173,7 +173,9 @@ class NonblockingFileWriter:
                         self._write(string.encode())
 
                         with self._lock:
-                            self.chars_written_list.append(len(string))
+                            # JavaScript strings have 16bit chars. Python strings have unicode code points.
+                            # Measure the length of the string in 16bit chars.
+                            self.chars_written_list.append(len(string.encode("utf_16_be"))//2)
                         if LOG_FINER:
                             log("NonblockingFileWriter._thread_start() Setting activity flag.")
                         SignalIOActivity()

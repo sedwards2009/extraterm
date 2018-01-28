@@ -7,7 +7,7 @@ import {Event} from 'extraterm-extension-api';
 
 
 export interface BufferSizeChange {
-  totalBufferSize: number;
+  totalBufferSize: number;  // Sizes here are in 16bit characters.
   availableDelta: number;
 }
 
