@@ -34,14 +34,14 @@ export class ByteCountingStreamTransform extends Transform {
     }, DEBOUNCE_DELAY_MILLIS);
   }
 
-  protected _transform(chunk: any, encoding: string, callback: Function): void {
+  _transform(chunk: any, encoding: string, callback: Function): void {
     this._counter += chunk.length;
     this.push(chunk);
     this._doLater.trigger();
     callback();
   }
 
-  protected _flush(callback: Function): void {
+  _flush(callback: Function): void {
     this._doLater.doNow();
     callback();
   }

@@ -46,7 +46,7 @@ class CounterTransform extends Transform {
     });
   }
 
-  protected _transform(chunk: any, encoding: string, callback: Function): void {
+  _transform(chunk: any, encoding: string, callback: Function): void {
     this.push(chunk);
     this._counter += chunk.length;
 
@@ -85,7 +85,7 @@ class TailingFileReader extends Readable {
     this._buffer = Buffer.alloc(TRAILING_FILE_READER_BUFFER_SIZE);
   }
 
-  protected _read(size: number): void {
+  _read(size: number): void {
     if (this._counterTransformer.isClosed() && this._counterTransformer.getCount() === this._readPointer) {
       this.push(null);  // Done
       return;

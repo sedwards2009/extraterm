@@ -8,6 +8,7 @@ import {protocol} from 'electron';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
+import * as net from 'net';
 import {SmartBuffer, SmartBufferOptions} from 'smart-buffer';
 
 import {Event} from 'extraterm-extension-api';
@@ -26,6 +27,8 @@ export interface Metadata {
 
 export type BufferSizeEvent = {identifier: BulkFileIdentifier, totalBufferSize: number, availableDelta: number};
 export type CloseEvent = {identifier: BulkFileIdentifier, success: boolean};
+
+const MAXIMUM_UPLOAD_BUFFER_SIZE_BYTES = 10 * 1024 * 1024;
 
 
 /**
@@ -324,7 +327,26 @@ class BulkFileServer {
 
     res.statusCode = 200;
     res.setHeader('Content-Type', combinedMimeType);
-    bulkFile.createReadStream().pipe(res);
+    const readStream = bulkFile.createReadStream();
+    const connection = <net.Socket> (<any> res).connection; // FIXME fix the type info elsewhere.
+
+    readStream.on("data", (chunk: Buffer) => {
+      res.write(chunk);
+      if (connection.bufferSize > MAXIMUM_UPLOAD_BUFFER_SIZE_BYTES) {
+        readStream.pause();
+      }
+    });
+
+    connection.on("drain", () => {
+      readStream.resume();
+    });
+    
+    readStream.on("end", () => {
+      res.end();
+    });
+    res.on("close", () => {
+      this._log.warn("ServerResponse closed unexpectedly!");
+    });
   }
 
   private _guessMimetype(buffer: Buffer, metadata: Metadata, filename: string): {mimeType: string, charset:string} {
