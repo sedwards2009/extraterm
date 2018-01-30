@@ -83,7 +83,11 @@
 
   border: 1px solid $dropdown-border;
   border-radius: $border-radius-base;
-  box-shadow: 0 pxToRem(6px) pxToRem(12px) rgba(0,0,0,.175);
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+
+  box-shadow: 0 0 pxToRem(10px) $base-border-color;
+
   background-clip: padding-box;
 
   z-index: 101;  

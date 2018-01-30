@@ -27,7 +27,8 @@ $background-color-info: $brand-info;
 $background-color-success: $brand-success;
 $background-color-warning: #ffaa2c;
 $background-color-error: $brand-danger;
-$background-color-highlight: rgba(255, 255, 255, 0.07);
+$background-color-highlight: #2e2f31;
+
 $background-color-selected: #4182c4;
 
 //== Scaffolding
@@ -912,3 +913,6 @@ $dl-horizontal-offset:        $component-offset-horizontal !default;
 $dl-horizontal-breakpoint:    $grid-float-breakpoint !default;
 //** Horizontal line color.
 $hr-border:                   $base-border-color !default;
+
+$overlay-background-color: #202123;
+$overlay-border-color: $background-color-highlight;
