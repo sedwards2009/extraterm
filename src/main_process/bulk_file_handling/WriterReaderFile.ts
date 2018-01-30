@@ -5,6 +5,8 @@
 */
 import * as fs from 'fs';
 import {Readable, ReadableOptions, Transform, Writable} from 'stream';
+import {Disposable} from 'extraterm-extension-api';
+
 import {getLogger, Logger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 
@@ -20,11 +22,11 @@ export class WriterReaderFile {
     this._counterTransform.pipe(this._writeStream);
   }
 
-  getWriteStream(): NodeJS.WritableStream {
+  getWritableStream(): NodeJS.WritableStream {
     return this._counterTransform;
   }
 
-  createReadStream(): NodeJS.ReadableStream {
+  createReadableStream(): NodeJS.ReadableStream & Disposable {
     return new TailingFileReader(this._filename, this._counterTransform);
   }
 }
@@ -70,14 +72,15 @@ const TRAILING_FILE_READER_BUFFER_SIZE = 256 * 1024;
 /**
  * File reader which can read and follow a file which concurrently being written to.
  */
-class TailingFileReader extends Readable {
+class TailingFileReader extends Readable implements Disposable {
   private _log: Logger;
   private _fhandle = -1;
   private _readPointer = 0;
   private _buffer: Buffer = null;
   private _reading = false;
   private _readOperationRunning = false;
-  
+  private _closed = false;
+
   constructor(filename: string, private _counterTransformer: CounterTransform, options?: ReadableOptions) {
     super(options);
     this._log = getLogger("TailingFileReader", this);
@@ -85,9 +88,22 @@ class TailingFileReader extends Readable {
     this._buffer = Buffer.alloc(TRAILING_FILE_READER_BUFFER_SIZE);
   }
 
+  dispose(): void {
+    this._closed = true;
+    this.removeAllListeners();
+    if (this._fhandle !== -1) {
+      fs.closeSync(this._fhandle);
+      this._fhandle = -1;
+    }  
+  }
+
   _read(size: number): void {
-    if (this._counterTransformer.isClosed() && this._counterTransformer.getCount() === this._readPointer) {
+    if (this._closed || (this._counterTransformer.isClosed() && this._counterTransformer.getCount() === this._readPointer)) {
       this.push(null);  // Done
+      if (this._fhandle !== -1) {
+        fs.closeSync(this._fhandle);
+        this._fhandle = -1;
+      }
       return;
     }
     this._reading = true;

@@ -10,8 +10,9 @@ import * as http from 'http';
 import * as path from 'path';
 import * as net from 'net';
 import {SmartBuffer, SmartBufferOptions} from 'smart-buffer';
+import {Transform} from 'stream';
 
-import {Event} from 'extraterm-extension-api';
+import {Disposable, Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
 import {getLogger, Logger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
@@ -196,10 +197,10 @@ export class BulkFile {
     this._cryptoIV = crypto.randomBytes(16);  // 128bit block size, thus 16 bytes
 
     this._wrFile = new WriterReaderFile(filePath);
-    this._wrFile.getWriteStream().on('drain', this._handleDrain.bind(this));
+    this._wrFile.getWritableStream().on('drain', this._handleDrain.bind(this));
     const aesCipher = crypto.createCipheriv("aes256", this._cryptoKey, this._cryptoIV);
     this._writeStream = aesCipher;
-    aesCipher.pipe(this._wrFile.getWriteStream());
+    aesCipher.pipe(this._wrFile.getWritableStream());
     this.onClose = this._onCloseEventEmitter.event;
     this.onWriteBufferSizeChange = this._onWriteBufferSizeChangeEventEmitter.event;
   }
@@ -282,13 +283,33 @@ export class BulkFile {
     return this._peekBuffer.toBuffer();
   }
 
-  createReadStream(): NodeJS.ReadableStream {
+  createReadableStream(): NodeJS.ReadableStream & Disposable {
     const aesDecipher = crypto.createDecipheriv("aes256", this._cryptoKey, this._cryptoIV);
-    this._wrFile.createReadStream().pipe(aesDecipher);
-    return aesDecipher;
+    const fileReadStream = this._wrFile.createReadableStream();
+    fileReadStream.pipe(aesDecipher);
+
+    const dnt = new DisposableNullTransform(fileReadStream);
+    aesDecipher.pipe(dnt);
+    return dnt;
   }
 }
 
+// This is an elaborate way of passing back a dispose() method and a Readable in one object.
+class DisposableNullTransform extends Transform implements Disposable {
+
+  constructor(private _disposable: Disposable) {
+    super();
+  }
+
+  _transform(chunk: any, encoding: string, callback: Function): void {
+    this.push(chunk);
+    callback();
+  }
+
+  dispose(): void {
+    this._disposable.dispose();
+  }
+}
 
 /**
  * A small local server for exposing bulk files over HTTP.
@@ -327,7 +348,7 @@ class BulkFileServer {
 
     res.statusCode = 200;
     res.setHeader('Content-Type', combinedMimeType);
-    const readStream = bulkFile.createReadStream();
+    const readStream = bulkFile.createReadableStream();
     const connection = <net.Socket> (<any> res).connection; // FIXME fix the type info elsewhere.
 
     readStream.on("data", (chunk: Buffer) => {
@@ -343,9 +364,12 @@ class BulkFileServer {
     
     readStream.on("end", () => {
       res.end();
+      readStream.dispose();
     });
+
     res.on("close", () => {
-      this._log.warn("ServerResponse closed unexpectedly!");
+      this._log.debug("ServerResponse closed unexpectedly.");
+      readStream.dispose();
     });
   }
 
