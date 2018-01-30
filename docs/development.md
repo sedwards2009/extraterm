@@ -17,7 +17,7 @@ Extraterm is built on the following technologies:
 
 * [Electron](http://electron.atom.io/) - A platform for running desktop applications made using web technologies.
 * [TypeScript](http://www.typescriptlang.org) - superset of JavaScript which adds static typing.
-* [CodeMirror](http://electron.atom.io/) - text editor component which is used extensively to show terminal output and provide cursor based selections and editing.
+* [CodeMirror](https://codemirror.net/) - text editor component which is used extensively to show terminal output and provide cursor based selections and editing.
 * [term.js](https://github.com/chjj/term.js) - Terminal emulator component, pulled into the Extraterm code base and heavily modified.
 * [ptyw.js](https://github.com/iiegor/ptyw.js) - PTY support for node.js.
 * … plus many other smaller libraries.
