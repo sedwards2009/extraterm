@@ -1,0 +1,14 @@
+/**
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ */
+
+ @import "bootstrap/variables";
+ 
+ .container {
+  border: 1px solid $overlay-border-color;
+  border-radius: $border-radius-base;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+
+  box-shadow: 0 0 pxToRem(10px) $base-border-color;
+}

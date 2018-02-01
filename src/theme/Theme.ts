@@ -48,7 +48,8 @@ export enum CssFile {
   EMPTY_PANE_MENU,
   GUI_SNAP_DROP_CONTAINER,
   THEME_VARS,
-  GUI_FILE_TRANSFER_PROGRESS
+  GUI_FILE_TRANSFER_PROGRESS,
+  GUI_UPLOAD_PROGRESS_BAR
 }
 
 export const cssFileEnumItems: CssFile[] = [
@@ -80,7 +81,8 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.EMPTY_PANE_MENU,
   CssFile.GUI_SNAP_DROP_CONTAINER,
   CssFile.THEME_VARS,
-  CssFile.GUI_FILE_TRANSFER_PROGRESS
+  CssFile.GUI_FILE_TRANSFER_PROGRESS,
+  CssFile.GUI_UPLOAD_PROGRESS_BAR
 ];
 
 const _CssFileNameMapping = {
@@ -113,6 +115,7 @@ const _CssFileNameMapping = {
   [CssFile.GUI_SNAP_DROP_CONTAINER]: "gui-snap-drop-container",
   [CssFile.THEME_VARS]: "theme-vars",
   [CssFile.GUI_FILE_TRANSFER_PROGRESS]: "gui-file-transfer-progress",
+  [CssFile.GUI_UPLOAD_PROGRESS_BAR]: "gui-upload-progress",
 };
 
 export function cssFileNameBase(cssFile: CssFile): string {
@@ -155,5 +158,6 @@ export const UiCssFiles: CssFile[] = [
   CssFile.EMPTY_PANE_MENU,
   CssFile.GUI_SNAP_DROP_CONTAINER,
   CssFile.THEME_VARS,
-  CssFile.GUI_FILE_TRANSFER_PROGRESS
+  CssFile.GUI_FILE_TRANSFER_PROGRESS,
+  CssFile.GUI_UPLOAD_PROGRESS_BAR
 ];
