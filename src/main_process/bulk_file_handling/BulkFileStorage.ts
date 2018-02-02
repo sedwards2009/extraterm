@@ -334,7 +334,13 @@ class BulkFileServer {
   }
 
   private _handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
-    const identifier = req.url.slice(1);
+    let identifier = req.url.slice(1);
+
+    // Strip off everything after the first slash.
+    if (identifier.indexOf("/") !== -1) {
+      identifier = identifier.substr(0, identifier.indexOf("/"));
+    }
+
     const bulkFile = this._storage.getBulkFileByIdentifier(identifier);
     if (bulkFile == null) {
       res.statusCode = 404;

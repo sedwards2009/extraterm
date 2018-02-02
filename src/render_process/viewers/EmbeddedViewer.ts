@@ -5,9 +5,12 @@
  */
 
 import * as _ from 'lodash';
+import * as path from 'path';
+
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
+import {BulkFileHandle, BulkFileState} from '../bulk_file_handling/BulkFileHandle';
+import {guessMimetype} from '../bulk_file_handling/BulkFileUtils';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
 import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
 import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
@@ -62,6 +65,7 @@ const CLASS_SUCCEEDED = "CLASS_SUCCEEDED";
 const CLASS_NEUTRAL = "CLASS_NEUTRAL";
 
 const DEBUG_SIZE = false;
+const DND_TEXT_SIZE_THRESHOLD = 1024 * 1024;
 
 
 /**
@@ -535,14 +539,64 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       return;
     }
 
+    // Reference to this frame for the purposes of drag and drop inside Extraterm.
     ev.dataTransfer.setData(FrameMimeType.MIMETYPE, "" + this.getTag());
-    // ev.dataTransfer.setData("text/plain", this.getText());
+    
+    const handle = this.getBulkFileHandle();
+
+this._log.debug("handle.getState() ", handle.getState()); // FIXME
+this._log.debug(BulkFileState[handle.getState()]);
+
+    if (handle.getState() === BulkFileState.COMPLETED) {
+      const metadata = handle.getMetadata();
+      let {mimeType, charset} = guessMimetype(handle);
+
+      if (mimeType.startsWith("text/") && handle.getTotalSize() < DND_TEXT_SIZE_THRESHOLD) {
+        // It is text and not too big. Send it the contents as part of the DnD event.
+        const stringByteData = this._fetchUrlImmediately(handle.getUrl());
+        const byteData = Buffer.from(stringByteData, "latin1");
+        if (charset == null || charset === "") {
+          charset = "utf8";
+        }
+        const decodedString = byteData.toString(charset);
+
+        ev.dataTransfer.setData("text/plain", decodedString);
+      }
+
+      // Expose the contents as a URL which can be downloaded.
+      let filename = <string> metadata["filename"];
+      if (filename == null) {
+        filename = "";
+      }
+      filename = path.basename(filename);
+
+      ev.dataTransfer.setData("text/uri-list", handle.getUrl() + "/" + filename);      
+    }
+
     ev.dataTransfer.setDragImage(target, -10, -10);
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';
 
     const dragStartedEvent = new CustomEvent(EVENT_DRAG_STARTED, { bubbles: true });
     this.dispatchEvent(dragStartedEvent);
+  }
+
+  private _fetchUrlImmediately(url: string): string {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url, false);
+
+    let response: string = null;
+    xhr.onload = (e) => {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          response = xhr.response;
+        } else {
+          this._log.warn("An error occurred while downloading URL ", url, xhr.statusText);
+        }
+      }
+    };
+    xhr.send(null);
+    return response;
   }
 
   private _handleDragEnd(ev: DragEvent): void {
