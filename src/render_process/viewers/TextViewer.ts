@@ -405,10 +405,15 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
 
   setBulkFileHandle(handle: BulkFileHandle): void {
+    if (this._bulkFileHandle != null) {
+      this._bulkFileHandle.deref();
+      this._bulkFileHandle = null;
+    }
     this._loadBulkFile(handle);
   }
 
   private async _loadBulkFile(handle: BulkFileHandle): Promise<void> {
+    handle.ref();
     this._bulkFileHandle = handle;
     this._metadataEventDoLater.trigger();
     const data = await BulkFileUtils.readDataAsArrayBuffer(handle)

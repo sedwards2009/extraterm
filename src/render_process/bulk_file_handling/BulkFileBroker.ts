@@ -17,54 +17,6 @@ import * as Messages from '../../WindowMessages';
 
 const ONE_KILOBYTE = 1024;
 
-/**
- * Render process side class for managing the creation and use of bulk files
- * which are stored in the main process.
- */
-export class BulkFileBroker {
-
-  private _fileHandleMap = new Map<BulkFileIdentifier, WriteableBulkFileHandle>();
-  private _log: Logger;
-
-  constructor() {
-    this._log = getLogger("BulkFileBroker", this);
-    WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_BUFFER_SIZE,
-      this._handleBufferSizeMessage.bind(this));
-      WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_STATE,
-        this._handleBufferStateMessage.bind(this));        
-  }
-
-  createWriteableBulkFileHandle(metadata: Metadata, size: number): WriteableBulkFileHandle {
-    let newFileHandle: WriteableBulkFileHandle = null;
-    newFileHandle = new WriteableBulkFileHandle({dispose: () => this._dispose(newFileHandle) }, metadata, size);
-    this._fileHandleMap.set(newFileHandle.getBulkFileIdentifier(), newFileHandle);
-    return newFileHandle;
-  }
-
-  private _dispose(fileHandle: WriteableBulkFileHandle): void {
-    process.nextTick(() => {
-      if (fileHandle.getReferenceCount() <= 0) {
-        const identifier = fileHandle.getBulkFileIdentifier();
-        WebIpc.derefBulkFile(identifier);
-        this._fileHandleMap.delete(identifier);
-      }
-    });
-  }
-
-  private _handleBufferSizeMessage(msg: Messages.BulkFileBufferSizeMessage): void {
-    if (this._fileHandleMap.has(msg.identifier)) {
-      this._fileHandleMap.get(msg.identifier).updateRemoteBufferSize(msg.totalBufferSize, msg.availableDelta);
-    }
-  }
-
-  private _handleBufferStateMessage(msg: Messages.BulkFileStateMessage): void {
-    if (this._fileHandleMap.has(msg.identifier)) {
-      this._fileHandleMap.get(msg.identifier).updateState(msg.state);
-    }
-  }
-}
-
-
 const MAXIMUM_WRITE_BUFFER_SIZE = 512 * 1024;   // Maximum amount of data WriteableBulkFileHandle will buffer internally.
 const PACKET_MINIMUM_SIZE = 64 * 1024;          // Minimum size of a write packet to send via IPC.
 const INITIAL_REMOTE_BUFFER_SIZE = 256 * 1024;  // Initial (assumed) size of the remote buffer.
@@ -253,5 +205,52 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this._success = success;
     this._sendBuffers();
   }
+}
 
+
+/**
+ * Render process side class for managing the creation and use of bulk files
+ * which are stored in the main process.
+ */
+export class BulkFileBroker {
+
+  private _fileHandleMap = new Map<BulkFileIdentifier, WriteableBulkFileHandle>();
+  private _log: Logger;
+
+  constructor() {
+    this._log = getLogger("BulkFileBroker", this);
+    WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_BUFFER_SIZE,
+      this._handleBufferSizeMessage.bind(this));
+      WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_STATE,
+        this._handleBufferStateMessage.bind(this));        
+  }
+
+  createWriteableBulkFileHandle(metadata: Metadata, size: number): WriteableBulkFileHandle {
+    let newFileHandle: WriteableBulkFileHandle = null;
+    newFileHandle = new WriteableBulkFileHandle({dispose: () => this._dispose(newFileHandle) }, metadata, size);
+    this._fileHandleMap.set(newFileHandle.getBulkFileIdentifier(), newFileHandle);
+    return newFileHandle;
+  }
+
+  private _dispose(fileHandle: WriteableBulkFileHandle): void {
+    process.nextTick(() => {
+      if (fileHandle.getReferenceCount() <= 0) {
+        const identifier = fileHandle.getBulkFileIdentifier();
+        WebIpc.derefBulkFile(identifier);
+        this._fileHandleMap.delete(identifier);
+      }
+    });
+  }
+
+  private _handleBufferSizeMessage(msg: Messages.BulkFileBufferSizeMessage): void {
+    if (this._fileHandleMap.has(msg.identifier)) {
+      this._fileHandleMap.get(msg.identifier).updateRemoteBufferSize(msg.totalBufferSize, msg.availableDelta);
+    }
+  }
+
+  private _handleBufferStateMessage(msg: Messages.BulkFileStateMessage): void {
+    if (this._fileHandleMap.has(msg.identifier)) {
+      this._fileHandleMap.get(msg.identifier).updateState(msg.state);
+    }
+  }
 }

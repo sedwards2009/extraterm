@@ -17,7 +17,8 @@ export class WriterReaderFile {
   private _counterTransform: CounterTransform = null;
 
   constructor(private _filename: string) {
-    this._writeStream = fs.createWriteStream(_filename);
+    const fd = fs.openSync(_filename, "w");
+    this._writeStream = fs.createWriteStream("", {fd});
     this._counterTransform = new CounterTransform();
     this._counterTransform.pipe(this._writeStream);
   }

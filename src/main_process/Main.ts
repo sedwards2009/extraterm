@@ -1270,7 +1270,7 @@ function handleRefBulkFile(msg: Messages.BulkFileRefMessage): void {
   bulkFileStorage.ref(msg.identifier);
 }
 
-function handleDerefBulkFile(msg: Messages.BulkFileRefMessage): void {
+function handleDerefBulkFile(msg: Messages.BulkFileDerefMessage): void {
   bulkFileStorage.deref(msg.identifier); 
 }
 
