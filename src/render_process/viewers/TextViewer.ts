@@ -421,7 +421,12 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     const decodedText = Buffer.from(data).toString(charset);
     this._setText(decodedText);
     this.setMimeType(mimeType);
-    this._emitVirtualResizeEvent();
+
+    // After setting the whole contents of a CodeMirror instance, it takes a
+    // short while before CM fully updates itself and is ready to correctly
+    // handle sizing and scroll commands. Thus, we wait a short time before
+    // triggering the resizing events and activities.
+    doLater(this._emitVirtualResizeEvent.bind(this));
   }
   
   setMode(newMode: ViewerElementTypes.Mode): void {
