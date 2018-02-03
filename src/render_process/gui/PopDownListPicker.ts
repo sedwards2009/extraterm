@@ -91,7 +91,11 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
     return window.document.importNode(template.content, true);
   }
-  
+
+  private _getDialog(): PopDownDialog {
+    return <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME,
       ThemeTypes.CssFile.GUI_POP_DOWN_LIST_PICKER, ...this._extraCssFiles];
@@ -124,7 +128,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
   @Observe("titlePrimary")
   private _updateTitlePrimary(target: string): void {
-    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
+    const dialog = this._getDialog();
     if (dialog != null) {
       dialog.titlePrimary = this.titlePrimary;
     }
@@ -134,7 +138,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
   @Observe("titleSecondary")
   private _updateTitleSecondary(target: string): void {
-    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
+    const dialog = this._getDialog();
     if (dialog != null) {
       dialog.titleSecondary = this.titleSecondary;
     }
@@ -262,15 +266,24 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     this._updateEntries();
     filterInput.focus();
 
-    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
-    dialog.open(x, y, width, height);
-
+    this._getDialog().open(x, y, width, height);
     this._scrollToSelected();      
   }
 
   close(): void {
-    const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
+    const dialog = this._getDialog();
+    if (dialog == null) {
+      return;
+    }
     dialog.close();
+  }
+
+  isOpen(): boolean {
+    const dialog = this._getDialog();
+    if (dialog == null) {
+      return false;
+    }
+    return dialog.isOpen();
   }
 
   private _okId(selectedId: string): void {

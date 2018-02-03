@@ -258,7 +258,12 @@ function startUpWindowEvents(): void {
   // Make sure something sensible is focussed if only the window gets the focus.
   window.addEventListener('focus', (ev: FocusEvent) => {
     if (ev.target === window) {
-      mainWebUi.focus();
+      const commandPalette = <PopDownListPicker<CommandMenuItem>> document.getElementById(ID_COMMAND_PALETTE);
+      if (commandPalette.isOpen()) {
+        commandPalette.focus();
+      } else {
+        mainWebUi.focus();
+      }
     }
   });
 

@@ -34,7 +34,9 @@ export class PopDownDialog extends ThemeableElementBase {
   
   static TAG_NAME = "ET-POPDOWNDIALOG";
   static EVENT_CLOSE_REQUEST = "ET-POPDOWNDIALOG-CLOSE_REQUEST";
-  
+
+  private _isOpen = false;
+
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
@@ -105,6 +107,8 @@ export class PopDownDialog extends ThemeableElementBase {
     const cover = <HTMLDivElement> DomUtils.getShadowId(this, ID_COVER);
     cover.classList.remove(CLASS_COVER_CLOSED);
     cover.classList.add(CLASS_COVER_OPEN);
+
+    this._isOpen = true;
   }
 
   close(): void {
@@ -115,5 +119,11 @@ export class PopDownDialog extends ThemeableElementBase {
     const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTEXT_COVER);
     container.classList.remove(CLASS_CONTEXT_COVER_OPEN);
     container.classList.add(CLASS_CONTEXT_COVER_CLOSED);
+
+    this._isOpen = false;
+  }
+
+  isOpen(): boolean {
+    return this._isOpen;
   }
 }
