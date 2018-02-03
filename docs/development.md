@@ -29,7 +29,7 @@ Thanks go out to the people and organisations responsible for the great software
 
 Getting started from source:
 
-Note: Run these commands from a terminal which *isn't* Extraterm. (An environment variable is set inside every extraterm session which confuses `node-sass` when building from source, namely in the `npm install` step.)
+Note: Run these commands from a terminal which *isn't* Extraterm < v0.30.0. (An environment variable is set inside every extraterm session which confuses `node-sass` when building from source, namely in the `npm install` step. This problem is fixed in Extraterm 0.30.0 though.)
 
 * Clone the repository from github to your local machine.
 * Make sure that you are using node version 7.4.0. :warning: This is important. Using the same node version as the version of Electron simplifies installation of the one native node module that Extraterm depends on (pty.js). You can fetch it from https://nodejs.org/dist/v7.4.0/
