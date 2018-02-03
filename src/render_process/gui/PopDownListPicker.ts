@@ -180,6 +180,9 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   private _scrollToSelected(): void {
     const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
     const selectedElement = <HTMLElement> resultsDiv.querySelector("." + PopDownListPicker.CLASS_RESULT_SELECTED);
+    if (selectedElement == null) {
+      return;
+    }
     const selectedRelativeTop = selectedElement.offsetTop - resultsDiv.offsetTop;
     resultsDiv.scrollTop = selectedRelativeTop;
   }
