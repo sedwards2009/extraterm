@@ -29,10 +29,12 @@ Thanks go out to the people and organisations responsible for the great software
 
 Getting started from source:
 
+Note: Run these commands from a terminal which *isn't* Extraterm. (An environment variable is set inside every extraterm session which confuses `node-sass` when building from source, namely in the `npm install` step.)
+
 * Clone the repository from github to your local machine.
-* Make sure that you are using node version 5.1.1. :warning: This is important. Using the same node version as the version of Electron simplifies installation of the one native node module that Extraterm depends on (pty.js). You can fetch it from https://nodejs.org/dist/v5.1.1/
-* Install the modules: `npm install` (pty.js will not install on cygwin, but that is ok and expected.)
-* Build it: `npm run build`
+* Make sure that you are using node version 7.4.0. :warning: This is important. Using the same node version as the version of Electron simplifies installation of the one native node module that Extraterm depends on (pty.js). You can fetch it from https://nodejs.org/dist/v7.4.0/
+* Install the modules: `npm run npm-install-all` (pty.js will not install on cygwin, but that is ok and expected.)
+* Build it: `npm run build-all`
 * Run it: `npm run run`
 
 If you are using Atom as your editor, then it will quickly and automatically compile the TS files for you. You can usually skip the manual build step during most development.
