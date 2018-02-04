@@ -19,8 +19,9 @@ import log from '../../logging/LogDecorator';
 import {Pty, BufferSizeChange} from '../../pty/Pty';
 
 
-const BYTES_PER_LINE = 3 * 1024;
-const DEBUG = false;
+const BYTES_PER_LINE = 3 * 240;
+const DEBUG = true;
+const HASH_LENGTH = 20; // 20 hex chars hash length
 
 
 /**
@@ -80,7 +81,7 @@ export class BulkFileUploader implements Disposable {
       this._sourceHttpStream.destroy();
       this._sourceHttpStream = null;
     }
-  
+
     this._disposables.dispose();
   }
 
@@ -301,7 +302,7 @@ class UploadEncoder {
     this._previousHash = hash.digest();
 
     parts.push(":");
-    parts.push(this._previousHash.toString("hex"));
+    parts.push(this._previousHash.toString("hex").substr(0, HASH_LENGTH));
     parts.push("\n");
 
     return parts.join("");

@@ -20,7 +20,7 @@ from signal import signal, SIGPIPE, SIG_DFL
 ##@inline
 from extratermclient import extratermclient
 
-HASH_LENGTH = 64
+HASH_LENGTH = 20
 COMMAND_PREFIX_LENGTH = 3
 
 
@@ -47,15 +47,18 @@ def readStdinLine():
 def requestFrame(frame_name):
     """Returns a generator which outputs the frame contents as blocks of binary data.
     """
+    # We use plain old cooked mode for the transfer. Cygwin is a bit buggy
+    # and corrupts input when in cbreak or raw mode. Cooked mode also means
+    # that input lines have limited length defined by the size of the input
+    # buffer in the terminal driver. Linux supports up to about 4K, OS X is
+    # about 1K. Cygwin is ???.
+
     # Turn off echo on the tty.
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     new_settings = termios.tcgetattr(fd)
     new_settings[3] = new_settings[3] & ~termios.ECHO          # lflags
     termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
-
-    # Run in terminal cbreak mode because we need to read (very) long lines which cooked mode will truncate.
-    tty.setcbreak(fd)
 
     # Set up a hook to restore the tty settings at exit.
     def restoreTty():
@@ -87,7 +90,7 @@ def requestFrame(frame_name):
     hashHex = hash.hexdigest()
 
     # Check the hash.
-    if lineHash.lower() != hash.hexdigest().lower():
+    if lineHash.lower() != hash.hexdigest()[:HASH_LENGTH].lower():
         yield FrameReadError("Error: Hash didn't match for metadata line. '"+lineHash+"'")
         return
 
@@ -106,7 +109,7 @@ def requestFrame(frame_name):
                 # Data
                 b64data = line[COMMAND_PREFIX_LENGTH:-HASH_LENGTH-1]
                 contents = base64.b64decode(b64data)
-                lineHash = line[-HASH_LENGTH:]
+                lineHash = line[-HASH_LENGTH:].lower()
 
                 hash = hashlib.sha256()
                 hash.update(previousHash)
@@ -114,8 +117,9 @@ def requestFrame(frame_name):
                 previousHash = hash.digest()
 
                 # Check the hash.
-                if lineHash != hash.hexdigest():
-                    yield FrameReadError("Error: Upload failed. (Hash didn't match for data line. Expected " + hash.hexdigest() + " got " + lineHash + ")")
+                computedHashHex = hash.hexdigest()[:HASH_LENGTH].lower()
+                if lineHash != computedHashHex:
+                    yield FrameReadError("Error: Upload failed. (Hash didn't match for data line. Expected " + computedHashHex + " got " + lineHash + ")")
                     return
 
                 if line.startswith("#E:"):
