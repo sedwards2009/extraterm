@@ -20,7 +20,7 @@ import {Pty, BufferSizeChange} from '../../pty/Pty';
 
 
 const BYTES_PER_LINE = 3 * 240;
-const DEBUG = true;
+const DEBUG = false;
 const HASH_LENGTH = 20; // 20 hex chars hash length
 
 
