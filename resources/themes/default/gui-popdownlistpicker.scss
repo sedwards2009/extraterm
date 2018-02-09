@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
 /* Command Palette */
@@ -10,6 +10,16 @@
   outline: none;
 }
 
+#ID_RESULTS_CONTAINER {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
 #ID_FILTER {
   box-sizing: border-box;
   width: 100%;
@@ -18,6 +28,8 @@
 #ID_RESULTS {
   overflow: auto;
   cursor: default;
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 
 .CLASS_RESULT_ENTRY {
@@ -38,4 +50,13 @@
     color: $btn-primary-color;
     background-color: $btn-primary-bg;
   }
+}
+
+et-popdowndialog {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }

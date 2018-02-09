@@ -130,12 +130,12 @@ export class PopDownNumberDialog extends ThemeableElementBase {
     }
   }
 
-  open(x: number, y: number, width: number, height: number): void {
+  open(): void {
     const textInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_INPUT);
     textInput.focus();
 
     const dialog = <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
-    dialog.open(x, y, width, height);
+    dialog.open();
   }
 
   close(): void {

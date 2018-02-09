@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Disposable} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as path from 'path';
@@ -32,6 +33,7 @@ import {PopDownListPicker} from './gui/PopDownListPicker';
 import {ResizeCanary} from './ResizeCanary';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {SettingsTab} from './settings/SettingsTab';
+import * as SupportsDialogStack from './SupportsDialogStack';
 import {TabWidget} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
 import {TerminalViewer} from './viewers/TerminalViewer';
@@ -80,6 +82,9 @@ let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configManager: ConfigManagerImpl = null;
 let extensionManager: ExtensionManager = null;
+let commandPalette: PopDownListPicker<CommandMenuItem> = null;
+let commandPaletteDisposable: Disposable = null;
+
 
 /**
  * 
@@ -258,12 +263,7 @@ function startUpWindowEvents(): void {
   // Make sure something sensible is focussed if only the window gets the focus.
   window.addEventListener('focus', (ev: FocusEvent) => {
     if (ev.target === window) {
-      const commandPalette = <PopDownListPicker<CommandMenuItem>> document.getElementById(ID_COMMAND_PALETTE);
-      if (commandPalette.isOpen()) {
-        commandPalette.focus();
-      } else {
-        mainWebUi.focus();
-      }
+      mainWebUi.focus();
     }
   });
 
@@ -577,7 +577,7 @@ function startUpCommandPalette(): void {
   const doc = window.document;
 
   // Command palette
-  const commandPalette = <PopDownListPicker<CommandMenuItem>> doc.createElement(PopDownListPicker.TAG_NAME);
+  commandPalette = <PopDownListPicker<CommandMenuItem>> doc.createElement(PopDownListPicker.TAG_NAME);
   commandPalette.id = ID_COMMAND_PALETTE;
   commandPalette.titlePrimary = "Command Palette";
   commandPalette.titleSecondary = "Ctrl+Shift+P";
@@ -586,9 +586,8 @@ function startUpCommandPalette(): void {
   commandPalette.setFormatEntriesFunc(commandPaletteFormatEntries);
   commandPalette.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
 
-  doc.body.appendChild(commandPalette);
   commandPalette.addEventListener('selected', handleCommandPaletteSelected);
-}    
+}
 
 function handleCommandPaletteRequest(ev: CustomEvent): void {
   const path = ev.composedPath();
@@ -623,20 +622,19 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
       };
     });
     
-    const commandPalette = <PopDownListPicker<CommandMenuItem>> document.getElementById(ID_COMMAND_PALETTE);
     const shortcut = keyBindingManager.getKeyBindingContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
     commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
     commandPalette.setEntries(paletteEntries);
     
     const contextElement = requestCommandableStack[requestCommandableStack.length-2];
-    if (contextElement instanceof HTMLElement) {
-      let rect: ClientRect = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500 };
-      if (contextElement != null) {
-        rect = contextElement.getBoundingClientRect();
-      }
-      
-      commandPalette.open(rect.left, rect.top, rect.width, rect.height);
+
+    if (SupportsDialogStack.isSupportsDialogStack(contextElement)) {
+      commandPaletteDisposable = contextElement.showDialog(commandPalette);
+    
+      commandPalette.open();
       commandPalette.focus();
+    } else {
+      _log.warn("Command palette context element doesn't support DialogStack. ", contextElement);
     }
   });
 }
@@ -656,8 +654,9 @@ function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry
 }
 
 function handleCommandPaletteSelected(ev: CustomEvent): void {
-  const commandPalette = <PopDownListPicker<CommandMenuItem>> document.getElementById(ID_COMMAND_PALETTE);
   commandPalette.close();
+  commandPaletteDisposable.dispose();
+  commandPaletteDisposable = null;
   if (commandPaletteRequestSource !== null) {
     commandPaletteRequestSource.focus();
   }

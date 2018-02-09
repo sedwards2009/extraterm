@@ -1,16 +1,11 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
 /* Command Palette */
 @import "bootstrap/variables";
 @import "extraterm-scrollbars";
 
-/*
-:host {
-  visibility: hidden;
-}
-*/
 
 #ID_COVER {
   &.CLASS_COVER_CLOSED {
@@ -18,7 +13,7 @@
   }
 
   &.CLASS_COVER_OPEN {
-    position: fixed;
+    position: absolute;
     visibility: visible;
     top: 0;
     bottom: 0;
@@ -32,11 +27,33 @@
   padding: $padding-base-vertical $padding-base-horizontal;
 }
 
-#ID_CONTEXT_COVER {
-  position: relative;
+#ID_TITLE_CONTAINER {
+  width: 100%;
+  display: flex;
+
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-color;
+  margin-bottom: pxToRem(5px);
+}
+
+#ID_TITLE_PRIMARY {
+  flex-grow: 1;
+  font-weight: bold;
+}
+
+#ID_TITLE_SECONDARY {
+  flex-grow: 0;
 }
 
 #ID_CONTEXT_COVER {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+
   &.CLASS_CONTEXT_COVER_OPEN {
   
   }
@@ -69,22 +86,3 @@
   z-index: 101;  
 }
 
-#ID_TITLE_CONTAINER {
-  width: 100%;
-  display: flex;
-
-  font-family: $font-family-base;
-  font-size: $font-size-base;
-  line-height: $line-height-base;
-  color: $text-color;
-  margin-bottom: pxToRem(5px);
-}
-
-#ID_TITLE_PRIMARY {
-  flex-grow: 1;
-  font-weight: bold;
-}
-
-#ID_TITLE_SECONDARY {
-  flex-grow: 0;
-}

@@ -54,6 +54,7 @@ import {FrameFinder} from './FrameFinderType';
 import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import {Config, ConfigDistributor, CommandLineAction, injectConfigDistributor, AcceptsConfigDistributor} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
+import * as SupportsDialogStack from "./SupportsDialogStack";
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -101,6 +102,7 @@ const COMMAND_GO_TO_NEXT_FRAME = "goToNextFrame";
 
 const CHILD_RESIZE_BATCH_SIZE = 3;
 
+const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 const CLASS_CURSOR_MODE = "cursor-mode";
 const SCROLL_STEP = 1;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -145,7 +147,8 @@ type InputStreamFilter = (input: string) => string;
  */
 @WebComponent({tag: "et-terminal"})
 export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingManager,
-  AcceptsConfigDistributor, Disposable, SupportsClipboardPaste.SupportsClipboardPaste {
+  AcceptsConfigDistributor, Disposable, SupportsClipboardPaste.SupportsClipboardPaste,
+  SupportsDialogStack.SupportsDialogStack {
   
   static TAG_NAME = "ET-TERMINAL";
   static EVENT_TITLE = "title";
@@ -217,7 +220,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
 
   private _inputStreamFilters: InputStreamFilter[] = [];
-
+  private _dialogStack: HTMLElement[] = [];
 
   constructor() {
     super();
@@ -502,6 +505,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    * Focus on this terminal.
    */
   focus(): void {
+    if (this._dialogStack.length !== 0) {
+      this._dialogStack[this._dialogStack.length-1].focus();
+      return;
+    }
+
     if (this._terminalViewer !== null) {
       DomUtils.focusWithoutScroll(this._terminalViewer);
     }
@@ -594,6 +602,20 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     this._processRefresh(level);
+  }
+
+  showDialog(dialogElement: HTMLElement): Disposable {
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    dialogElement.classList.add(CLASS_VISITOR_DIALOG);
+    containerDiv.appendChild(dialogElement);
+    this._dialogStack.push(dialogElement);
+    return {
+      dispose: () => {
+        dialogElement.classList.remove(CLASS_VISITOR_DIALOG);
+        this._dialogStack = this._dialogStack.filter(el => el !== dialogElement);
+        containerDiv.removeChild(dialogElement);
+      }
+    };
   }
 
   //-----------------------------------------------------------------------

@@ -74,9 +74,7 @@ export class ExtensionManager {
 export class ExtensionBridge {
 
   private _log: Logger = null;
-
   private _numberInputDialog: PopDownNumberDialog = null;
-
   private _listPicker: PopDownListPicker<IdLabelPair> = null;
 
   constructor() {
@@ -160,19 +158,19 @@ return [];
 
     if (this._numberInputDialog == null) {
       this._numberInputDialog = <PopDownNumberDialog> window.document.createElement(PopDownNumberDialog.TAG_NAME);
-      window.document.body.appendChild(this._numberInputDialog);
     }
     this._numberInputDialog.titlePrimary = options.title;
     this._numberInputDialog.setMinimum(options.minimum !== undefined ? options.minimum : Number.MIN_SAFE_INTEGER);
     this._numberInputDialog.setMaximum(options.maximum !== undefined ? options.maximum : Number.MAX_SAFE_INTEGER);
     this._numberInputDialog.setValue(options.value);
 
-    const rect = terminal.getBoundingClientRect();
-    this._numberInputDialog.open(rect.left, rect.top, rect.width, rect.height);
+    const dialogDisposable = terminal.showDialog(this._numberInputDialog);
+    this._numberInputDialog.open();
     this._numberInputDialog.focus();
 
     return new Promise((resolve, reject) => {
       const selectedHandler = (ev: CustomEvent): void => {
+        dialogDisposable.dispose();
         this._numberInputDialog.removeEventListener('selected', selectedHandler);
         resolve(ev.detail.value == null ? undefined : ev.detail.value);
         lastFocus.focus();
@@ -199,8 +197,6 @@ return [];
       });
 
       this._listPicker.setFilterAndRankEntriesFunc(this._listPickerFilterAndRankEntries.bind(this));
-
-      window.document.body.appendChild(this._listPicker);
     }
 
     this._listPicker.titlePrimary = options.title;
@@ -209,12 +205,13 @@ return [];
     this._listPicker.setEntries(convertedItems);
     this._listPicker.selected = "" + options.selectedItemIndex;
 
-    const rect = terminal.getBoundingClientRect();
-    this._listPicker.open(rect.left, rect.top, rect.width, rect.height);
+    const dialogDisposable = terminal.showDialog(this._listPicker);
+    this._listPicker.open();
     this._listPicker.focus();
 
     return new Promise((resolve, reject) => {
       const selectedHandler = (ev: CustomEvent): void => {
+        dialogDisposable.dispose();
         this._listPicker.removeEventListener('selected', selectedHandler);
         resolve(ev.detail.selected == null ? undefined : parseInt(ev.detail.selected, 10));
         lastFocus.focus();

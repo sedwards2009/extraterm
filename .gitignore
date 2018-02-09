@@ -127,3 +127,4 @@ src/render_process/PtyIpcBridge.js
 src/pty/Pty.js
 src/utils/DoLater.js
 src/utils/ByteCountingStreamTransform.js
+src/render_process/SupportsDialogStack.js

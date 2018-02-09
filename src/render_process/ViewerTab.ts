@@ -21,6 +21,7 @@ import {ResizeCanary} from './ResizeCanary';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ScrollBar} from'./gui/ScrollBar';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
+import * as SupportsDialogStack from "./SupportsDialogStack";
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import {ViewerElement, ViewerElementMetadata} from "./viewers/ViewerElement";
@@ -45,6 +46,7 @@ const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_CSS_VARS = "ID_CSS_VARS";
 const KEYBINDINGS_VIEWER_TAB = "viewer-tab";
+const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 
 const PALETTE_GROUP = "viewertab";
 const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
@@ -63,7 +65,8 @@ const SCROLL_STEP = 1;
  */
 @WebComponent({tag: "et-viewer-tab"})
 export class EtViewerTab extends ViewerElement implements Commandable,
-    AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste {
+    AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste,
+    SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-VIEWER-TAB";
 
@@ -90,6 +93,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
 
   private _fontSizeAdjustment = 0;
   private _armResizeCanary = false;  // Controls when the resize canary is allowed to chirp.
+  private _dialogStack: HTMLElement[] = [];
 
   constructor() {
     super();
@@ -209,6 +213,11 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   }
   
   focus(): void {
+    if (this._dialogStack.length !== 0) {
+      this._dialogStack[this._dialogStack.length-1].focus();
+      return;
+    }
+
     const element = this.getViewerElement();
     if (element !== null) {
       element.focus();
@@ -301,6 +310,20 @@ export class EtViewerTab extends ViewerElement implements Commandable,
       this._virtualScrollArea.updateScrollableSizes([viewerElement]);
       this._virtualScrollArea.reapplyState();
     }
+  }
+
+  showDialog(dialogElement: HTMLElement): Disposable {
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    dialogElement.classList.add(CLASS_VISITOR_DIALOG);
+    containerDiv.appendChild(dialogElement);
+    this._dialogStack.push(dialogElement);
+    return {
+      dispose: () => {
+        dialogElement.classList.remove(CLASS_VISITOR_DIALOG);
+        this._dialogStack = this._dialogStack.filter(el => el !== dialogElement);
+        containerDiv.removeChild(dialogElement);
+      }
+    };
   }
   
   private _createClone(): Node {

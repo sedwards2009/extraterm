@@ -98,6 +98,7 @@
         "./src/render_process/settings/SettingsTab.ts",
         "./src/render_process/SplitLayout.ts",
         "./src/render_process/SupportsClipboardPaste.ts",
+        "./src/render_process/SupportsDialogStack.ts",
         "./src/render_process/Terminal.ts",
         "./src/render_process/ThemeableElementBase.ts",
         "./src/render_process/UploadProgressBar.ts",

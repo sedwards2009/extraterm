@@ -91,19 +91,11 @@ export class PopDownDialog extends ThemeableElementBase {
     titleSecondaryDiv.innerText = this.titleSecondary;
   }
 
-  open(x: number, y: number, width: number, height: number): void {
-    // Nuke any style like 'display: none' which can be use to prevent flicker.
-    this.setAttribute('style', '');
-    
+  open(): void {
     const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTEXT_COVER);
     container.classList.remove(CLASS_CONTEXT_COVER_CLOSED);
     container.classList.add(CLASS_CONTEXT_COVER_OPEN);
-  
-    container.style.left = `${x}px`;
-    container.style.top = `${y}px`;
-    container.style.width = `${width}px`;
-    container.style.height = `${height}px`;
-  
+
     const cover = <HTMLDivElement> DomUtils.getShadowId(this, ID_COVER);
     cover.classList.remove(CLASS_COVER_CLOSED);
     cover.classList.add(CLASS_COVER_OPEN);
