@@ -19,6 +19,7 @@ export interface Config {
 
   commandLineActions?: CommandLineAction[];
   scrollbackLines?: number;
+  scrollbackFrames?: number;
   keyBindingsFilename?: string;
   
   showTips?: ShowTipsStrEnum;

@@ -553,7 +553,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _applyNewTerminalConfig(newTerminal: EtTerminal, config: config.Config): void {
     newTerminal.setBlinkingCursor(config.blinkingCursor);
-    newTerminal.setScrollbackSize(config.scrollbackLines);
+    newTerminal.setScrollbackMaxSize(config.scrollbackLines, config.scrollbackFrames);
   }
 
   private _createPtyForTerminal(newTerminal: EtTerminal): void {
