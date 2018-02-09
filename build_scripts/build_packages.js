@@ -221,18 +221,18 @@ function main() {
     cd(prevDir);
   }
   
-  replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-win32-x64');
+  replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'build_scripts/node_modules-win32-x64');
   makePackage('x64', 'win32')
     .then( () => {
-      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-linux-x64');
+      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'build_scripts/node_modules-linux-x64');
       return makePackage('x64', 'linux'); })
     
     .then( () => {
-      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-linux-ia32');
+      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'build_scripts/node_modules-linux-ia32');
       return makePackage('ia32', 'linux'); })
       
     .then( () => {
-      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'src/build_scripts/node_modules-darwin-x64');
+      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'build_scripts/node_modules-darwin-x64');
       return makePackage('x64', 'darwin'); })
       
     .then( () => { log("Done"); } );
