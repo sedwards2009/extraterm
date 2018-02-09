@@ -544,9 +544,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     
     const handle = this.getBulkFileHandle();
 
-this._log.debug("handle.getState() ", handle.getState()); // FIXME
-this._log.debug(BulkFileState[handle.getState()]);
-
     if (handle.getState() === BulkFileState.COMPLETED) {
       const metadata = handle.getMetadata();
       let {mimeType, charset} = guessMimetype(handle);
@@ -569,8 +566,11 @@ this._log.debug(BulkFileState[handle.getState()]);
         filename = "";
       }
       filename = path.basename(filename);
-
-      ev.dataTransfer.setData("text/uri-list", handle.getUrl() + "/" + filename);      
+      if (process.platform === "win32") {
+        ev.dataTransfer.setData("DownloadURL", mimeType + ":" + filename + ":" + handle.getUrl() + "/" + filename);
+      } else {
+        ev.dataTransfer.setData("text/uri-list", handle.getUrl() + "/" + filename);
+      }
     }
 
     ev.dataTransfer.setDragImage(target, -10, -10);
