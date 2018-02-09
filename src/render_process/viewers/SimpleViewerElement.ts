@@ -69,8 +69,8 @@ export class SimpleViewerElement extends ViewerElement {
     this.updateThemeCss();
   }
 
-  setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
-    super.setThemeCssMap(cssMap);
+  setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>, themeTimeStamp: number): void {
+    super.setThemeCssMap(cssMap, themeTimeStamp);
     doLater(() => {
       this._updateRootElementHeight();
       VirtualScrollAreaEmitResizeEvent(this);

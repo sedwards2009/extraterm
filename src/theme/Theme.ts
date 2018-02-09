@@ -123,7 +123,7 @@ export function cssFileNameBase(cssFile: CssFile): string {
 }
 
 export interface Themeable {
-  setThemeCssMap(cssMap: Map<CssFile, string>): void;
+  setThemeCssMap(cssMap: Map<CssFile, string>, themeTimeStamp: number): void;
 }
 
 export const FALLBACK_TERMINAL_THEME = "default-terminal";

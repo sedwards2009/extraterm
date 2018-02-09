@@ -22,6 +22,8 @@ ThemeTypes.cssFileEnumItems.forEach( (cssFile) => {
   currentCssMap.set(cssFile, "");
 });
 
+let themeTimeStamp = 0;
+
 /**
  * Register a `Themeable` instance for updates.
  *
@@ -43,16 +45,21 @@ export function unregisterThemeable(themeable: ThemeTypes.Themeable): void {
   themeableRegistry.delete(themeable);
 }
 
+export function currentThemeTimeStamp(): number {
+  return themeTimeStamp;
+}
+
 /**
  * Updates the CSS used by all Themeable instances with newly computed CSS.
  *
  * @param cssMap the map of CssFiles to their matching CSS texts
  */
 export function updateCss(cssMap: Map<ThemeTypes.CssFile, string>): void {
+  themeTimeStamp++;
   const newCssMap = new Map(currentCssMap);
   cssMap.forEach( (value, key) => newCssMap.set(key, value));
   currentCssMap = newCssMap;
-  themeableRegistry.forEach( (themeable) => themeable.setThemeCssMap(newCssMap) );
+  themeableRegistry.forEach( (themeable) => themeable.setThemeCssMap(newCssMap, themeTimeStamp) );
 }
 
 /**

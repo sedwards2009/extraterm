@@ -16,10 +16,12 @@ export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefresh
 
   static ID_THEME = "ID_THEME";
 
+  private _themeTimeStamp = -1;
+
   /**
    * See `ThemeTypes.Themeable.setThemeCssMap()`
    */
-  setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
+  setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>, themeTimeStamp: number): void {
     if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
@@ -30,6 +32,7 @@ export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefresh
     }
     const cssText = this._themeCssFiles().map( (cssFile) => cssMap.get(cssFile) ).join("\n");
     themeElement.textContent = cssText;
+    this._themeTimeStamp = themeTimeStamp;
   }
 
   /**
@@ -37,6 +40,10 @@ export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefresh
    */
   protected connectedCallback(): void {
     ThemeConsumer.registerThemeable(this);
+
+    if (ThemeConsumer.currentThemeTimeStamp() > this._themeTimeStamp) {
+      this.installThemeCss();
+    }
   }
   
   /**
@@ -50,7 +57,7 @@ export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefresh
    * Updates the style element's CSS contents.
    */
   protected installThemeCss(): void {
-    this.setThemeCssMap(ThemeConsumer.cssMap());
+    this.setThemeCssMap(ThemeConsumer.cssMap(), ThemeConsumer.currentThemeTimeStamp());
   }
 
   /**

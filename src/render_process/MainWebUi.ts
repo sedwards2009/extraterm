@@ -956,8 +956,12 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   //-----------------------------------------------------------------------
   private _refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    const mainContents = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
+    if (mainContents == null) {
+      return;
+    }
     ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(
-      DomUtils.getShadowId(this, ID_MAIN_CONTENTS), level);
+      mainContents, level);
   }
 
   private _sendTabOpenedEvent(): void {
