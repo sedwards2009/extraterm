@@ -566,7 +566,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
         filename = "";
       }
       filename = path.basename(filename);
-      if (process.platform === "win32") {
+      if (process.platform === "win32" || process.platform === "darwin") {
         ev.dataTransfer.setData("DownloadURL", mimeType + ":" + filename + ":" + handle.getUrl() + "/" + filename);
       } else {
         ev.dataTransfer.setData("text/uri-list", handle.getUrl() + "/" + filename);
