@@ -10,6 +10,7 @@
         "sourceMap": true,
         "noLib": false,
         "outDir": ".",
+        "rootDir": "src",
         "jsx": "react",
         "experimentalDecorators": true,
         "baseUrl": ".",
@@ -18,12 +19,10 @@
     },
     "filesGlob": [
         "./src/*.ts",
+        "./src/test/*.ts"
+    ],
+    "exclude": [
+        "./*.ts",
         "./test/*.ts"
-    ],
-    "files": [
-        "./src/Decorators.ts",
-        "./test/TestCode.ts",
-        "./test/DecoratorsTest.ts"
-    ],
-    "exclude": []
+    ]
 }

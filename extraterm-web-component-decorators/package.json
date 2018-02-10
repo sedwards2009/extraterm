@@ -4,8 +4,8 @@
   "description": "TypeScript decorators for Web Components from the Extraterm project",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "src/Decorators.js",
-  "types": "src/Decorators.d.ts",
+  "main": "Decorators.js",
+  "types": "Decorators.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"

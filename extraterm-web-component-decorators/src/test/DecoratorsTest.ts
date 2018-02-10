@@ -5,7 +5,7 @@
  */
 
 import * as nodeunit from 'nodeunit';
-import {Attribute, Filter, Observe, WebComponent} from '../src/Decorators';
+import {Attribute, Filter, Observe, WebComponent} from '../Decorators';
 
 
 @WebComponent({tag: "string-component"})
