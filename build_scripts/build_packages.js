@@ -168,7 +168,7 @@ function main() {
         packagerOptions.win32metadata = {
           FileDescription: "Extraterm",
           ProductName: "Extraterm",
-          LegalCopyright: "(C) 2017 Simon Edwards"
+          LegalCopyright: "(C) 2018 Simon Edwards"
         };
       } else if (platform === "darwin") {
         packagerOptions.icon = "resources/logo/extraterm_small_logo.icns";
