@@ -42,11 +42,16 @@ function main() {
   echo("Setting up the run time dependencies in " + BUILD_TMP);
 
   cd("extraterm");
-  echo("Downloading dependencies.");
+
+  echo("Building web-component-decorators");
+  exec("npm run npm-install-web-component-decorators");
+  exec("npm run build-web-component-decorators");
+
+  echo("Downloading main dependencies.");
   exec("npm install");
   exec("npm run npm-install-extensions");
   
-  echo("Building");
+  echo("Building main");
   exec("npm run build");
   exec("npm run build-extensions");
 
@@ -100,7 +105,7 @@ function main() {
 
   function pruneEmojiOne(versionedOutputDir, platform) {
     if (platform !== "linux") {
-      const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "src/themes/default/emojione-android.ttf");
+      const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "resources/themes/default/emojione-android.ttf");
       rm(emojiOnePath);
     }
   }
