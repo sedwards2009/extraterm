@@ -304,8 +304,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       });
       scrollArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
         this._handleBeforeSelectionChange.bind(this));
-      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
-      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleTerminalViewerCursorEdge.bind(this));
+      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleViewerCursor.bind(this));
+      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleViewerCursorEdge.bind(this));
       
       scrollArea.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
@@ -1112,20 +1112,24 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     (<HTMLElement> (<any> scrollable)).style.top = "" + top + "px";
   }
 
-  private _handleTerminalViewerCursor(ev: CustomEvent): void {
+  private _handleViewerCursor(ev: CustomEvent): void {
     const node = <Node> ev.target;
     if (ViewerElement.isViewerElement(node)) {
-      const pos = node.getCursorPosition();
-      const nodeTop = this._virtualScrollArea.getScrollableTop(node);
-      const top = pos.top + nodeTop;
-      const bottom = pos.bottom + nodeTop;
-      this._virtualScrollArea.scrollIntoView(top, bottom);
+      this._scrollViewerCursorIntoView(node);
     } else {
       this._log.warn("_handleTerminalViewerCursor(): node is not a ViewerElement.");
     }
   }
   
-  private _handleTerminalViewerCursorEdge(ev: CustomEvent): void {
+  private _scrollViewerCursorIntoView(viewer: ViewerElement): void {
+    const pos = viewer.getCursorPosition();
+    const nodeTop = this._virtualScrollArea.getScrollableTop(viewer);
+    const top = pos.top + nodeTop;
+    const bottom = pos.bottom + nodeTop;
+    this._virtualScrollArea.scrollIntoView(top, bottom);
+  }
+
+  private _handleViewerCursorEdge(ev: CustomEvent): void {
     const detail = <ViewerElementTypes.CursorEdgeDetail> ev.detail;
     const index = this._childElementListIndexOf(<any> ev.target);
     if (index === -1) {
@@ -1141,6 +1145,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
           this._makeVisible(node);
           if (node.setCursorPositionBottom(detail.ch)) {
             DomUtils.focusWithoutScroll(node);
+            this._scrollViewerCursorIntoView(node);
             break;
           }
         }
@@ -1154,6 +1159,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
           this._makeVisible(node);
           if (node.setCursorPositionTop(detail.ch)) {
             DomUtils.focusWithoutScroll(node);
+            this._scrollViewerCursorIntoView(node);
             break;
           }
         }

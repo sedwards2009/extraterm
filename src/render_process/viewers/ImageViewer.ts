@@ -19,8 +19,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
-import * as keybindingmanager from '../keybindings/KeyBindingManager';
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
+import {AcceptsKeyBindingManager, KeyBindingManager} from '../keybindings/KeyBindingManager';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -47,7 +46,7 @@ let instanceIdCounter = 0;
 
 
 @WebComponent({tag: "et-image-viewer"})
-export class ImageViewer extends ViewerElement {
+export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManager {
 
   static TAG_NAME = "ET-IMAGE-VIEWER";
   
@@ -144,6 +143,10 @@ export class ImageViewer extends ViewerElement {
       this._bulkFileHandle.deref();
       this._bulkFileHandle = null;
     }
+  }
+
+  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+    this._keyBindingManager = newKeyBindingManager;
   }
 
   getSelectionText(): string {    
@@ -447,8 +450,6 @@ export class ImageViewer extends ViewerElement {
             default:
               break;
           }
-          ev.preventDefault();
-          ev.stopPropagation();          
           return;
         }
       }
