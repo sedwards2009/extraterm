@@ -71,7 +71,9 @@ function main() {
   const electronVersion = packageData.devDependencies['electron'];
 
   const ignoreRegExp = [
-    /^\/src\/build_scripts\//,
+    /^\/build_scripts\//,
+    /^\/extraterm-web-component-decorators\//,
+    /^\/extraterm-extension-api\//,
     /^\/test\//,
     /^\/build_tmp\//,
     /^\/src\/typedocs\//,
