@@ -71,15 +71,21 @@ function main() {
   const electronVersion = packageData.devDependencies['electron'];
 
   const ignoreRegExp = [
-    /^\/build_scripts\//,
-    /^\/extraterm-web-component-decorators\//,
-    /^\/extraterm-extension-api\//,
-    /^\/test\//,
-    /^\/build_tmp\//,
-    /^\/src\/typedocs\//,
+    /^\/build_scripts\b/,
+    /^\/extraterm-web-component-decorators\b/,
+    /^\/extraterm-extension-api\b/,
+    /^\/test\b/,
+    /^\/build_tmp\b/,
+    /^\/src\/typedocs\b/,
     /\.ts$/,
     /\.js\.map$/,
-    /^\/\.git\//
+    /^\/\.git\//,
+    /^\/docs\b/,
+    /^\/resources\/node-sass-binary\b/,
+    /^\/resources\/logo\b/,
+    /^\/resources\/extra_icons\b/,
+    /^\/src\/test\b/,
+    /^\/src\/testfiles\b/
   ];
 
   const ignoreFunc = function ignoreFunc(filePath) {
@@ -127,24 +133,37 @@ function main() {
       "codemirror/src",
       "ptyw.js/vendor",
       "ptyw.js/src",
+      "ptyw.js/build",
       "ptyw.js/node_modules/nan",
       "node-sass/src",
       "node-sass/node_modules/nan",
       "node-gyp",
       "ajv",
-      "globule"
+      "globule",
+      "vue/src",
+      "vue/dist/vue.esm.browser.js",
+      "vue/dist/vue.esm.js",
+      "vue/dist/vue.js",
+      "vue/dist/vue.min.js",
+      "vue/dist/vue.runtime.common.js",
+      "vue/dist/vue.runtime.esm.js",
+      "vue/dist/vue.runtime.js",
+      "vue/dist/vue.runtime.min.js",
+      "font-manager/src",
+      "font-manager/build",
+      ".bin"
     ].forEach( (subpath) => {
       const fullPath = path.join("node_modules", subpath);
 
       echo("Deleting " + fullPath);
 
-  if (test('-d', fullPath)) {
-      rm('-rf', fullPath);
-
-  } else {
-    echo("----------- Unable to find path "+ fullPath);
-  }
-
+      if (test('-d', fullPath)) {
+        rm('-rf', fullPath);
+      } else if (test('-f', fullPath)) {
+          rm(fullPath);
+      } else {
+        echo("----------- Unable to find path "+ fullPath);
+      }
     });
 
   }
@@ -192,9 +211,11 @@ function main() {
           const thisCD = pwd();
           cd(buildTmpPath);
 
-          // Prune any unneeded node-sass binaries.
           pruneNodeModules(versionedOutputDir, platform);
+
+          // Prune any unneeded node-sass binaries.
           pruneNodeSass(versionedOutputDir, arch, platform);
+
           pruneEmojiOne(versionedOutputDir, platform);
 
           // Zip it up.
