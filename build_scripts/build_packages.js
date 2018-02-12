@@ -81,7 +81,6 @@ function main() {
     /\.js\.map$/,
     /^\/\.git\//,
     /^\/docs\b/,
-    /^\/resources\/node-sass-binary\b/,
     /^\/resources\/logo\b/,
     /^\/resources\/extra_icons\b/,
     /^\/src\/test\b/,
@@ -133,7 +132,6 @@ function main() {
       "codemirror/src",
       "ptyw.js/vendor",
       "ptyw.js/src",
-      "ptyw.js/build",
       "ptyw.js/node_modules/nan",
       "node-sass/src",
       "node-sass/node_modules/nan",
@@ -145,12 +143,10 @@ function main() {
       "vue/dist/vue.esm.js",
       "vue/dist/vue.js",
       "vue/dist/vue.min.js",
-      "vue/dist/vue.runtime.common.js",
       "vue/dist/vue.runtime.esm.js",
       "vue/dist/vue.runtime.js",
       "vue/dist/vue.runtime.min.js",
       "font-manager/src",
-      "font-manager/build",
       ".bin"
     ].forEach( (subpath) => {
       const fullPath = path.join("node_modules", subpath);
