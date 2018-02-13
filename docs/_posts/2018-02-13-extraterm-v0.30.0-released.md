@@ -1,6 +1,6 @@
 ---
 title: Extraterm v0.30.0 released
-date: 2018-02-13 22:00:00 +0100
+date: 2018-02-13 21:35:00 +0100
 categories: release
 ---
 This release is focused on big improvement to how the `show` and `from` commands do their work. Now it is possible to use `show` and `from` to move and operate on large files. These files are kept on disk in encrypted form as long as Extraterm is running and the files are still present in a terminal tab. `show` also supports showing binary files as downloads.
