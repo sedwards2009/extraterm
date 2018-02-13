@@ -81,7 +81,6 @@ function main() {
     /\.js\.map$/,
     /^\/\.git\//,
     /^\/docs\b/,
-    /^\/resources\/logo\b/,
     /^\/resources\/extra_icons\b/,
     /^\/src\/test\b/,
     /^\/src\/testfiles\b/
