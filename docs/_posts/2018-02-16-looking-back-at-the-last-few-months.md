@@ -1,5 +1,5 @@
 ---
-title: Looking back at the last few months of Extraterm development
+title: Looking back at the last few months
 date: 2018-02-16 13:40:00 +0100
 categories: blog
 ---
