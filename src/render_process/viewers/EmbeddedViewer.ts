@@ -141,6 +141,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   private _connectSetupDone = false;
   private _titleBarUI: TitleBarUI = null;
+  private _defaultMetadata: ViewerElementMetadata = null;
 
   constructor() {
     super();
@@ -149,7 +150,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
 
     this._setUpShadowDom();
-    this._updateMetadata();
+    this._updateUiFromMetadata();
     this.installThemeCss();
     this._setUpEventHandlers();
   }
@@ -171,6 +172,14 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     metadata.title = this._titleBarUI.commandLine;
     metadata.icon = this._titleBarUI.awesomeIconName;
     return metadata;
+  }
+
+  /**
+   * Set the metadata to use in absence of a viewer element.
+   */
+  setDefaultMetadata(metadata: ViewerElementMetadata): void {
+    this._defaultMetadata = metadata;
+    this._updateUiFromMetadata();
   }
 
   dispose(): void {
@@ -197,7 +206,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       this.appendChild(element);
       this._virtualScrollArea.appendScrollable(element);
 
-      this._updateMetadata();
+      this._updateUiFromMetadata();
     }
   }
   
@@ -444,19 +453,28 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._titleBarUI = new TitleBarUI({ el: headerDiv });
   }
 
-  private _updateMetadata(): void {
-    const viewerElement = this.getViewerElement();
-    const metadata: ViewerElementMetadata = viewerElement !== null ? viewerElement.getMetadata() : 
-      {
-        title: "",
-        icon: null,
-        posture: ViewerElementPosture.NEUTRAL,
-        toolTip: null
-      };
+  private _updateUiFromMetadata(): void {
+    let metadata: ViewerElementMetadata = {
+      title: "",
+      posture: ViewerElementPosture.NEUTRAL,
+    };
 
+    const viewerElement = this.getViewerElement();
+    if (viewerElement != null) {
+      metadata = viewerElement.getMetadata();
+    } else {
+      if (this._defaultMetadata != null) {
+        metadata = this._defaultMetadata;
+      }
+    }
+
+    this._updateFromMetadata(metadata);
+  }
+
+  private _updateFromMetadata(metadata: ViewerElementMetadata): void {
     this._titleBarUI.commandLine = metadata.title;
     this._titleBarUI.toolTip = metadata.toolTip == null ? "" : metadata.toolTip;
-    this._titleBarUI.awesomeIconName = metadata.icon;
+    this._titleBarUI.awesomeIconName = metadata.icon == null ? null : metadata.icon;
 
     this._updatePosture(metadata.posture);
   }
@@ -541,7 +559,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   private _handleViewerMetadataChanged(): void {
-    this._updateMetadata();
+    this._updateUiFromMetadata();
   }
 
   private _handleDragStart(ev: DragEvent): void {

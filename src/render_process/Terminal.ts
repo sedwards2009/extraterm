@@ -21,7 +21,7 @@ import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 import {DownloadViewer} from './viewers/DownloadViewer';
 import {Pty} from '../pty/Pty';
 
-import {ViewerElement} from './viewers/ViewerElement';
+import {ViewerElement, ViewerElementMetadata, ViewerElementPosture} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ResizeCanary} from './ResizeCanary';
@@ -1753,6 +1753,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     if ( ! this._isNoFrameCommand(cleancommand)) {
       // Create and set up a new command-frame.
       const el = this._createEmbeddedViewerElement();
+
+      const defaultMetadata: ViewerElementMetadata = {
+        title: cleancommand,
+        posture: ViewerElementPosture.RUNNING,
+        icon: "cog"
+      };
+      el.setDefaultMetadata(defaultMetadata);
+
       this._appendScrollableElement(el);
     } else {
 
@@ -1917,7 +1925,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
       // Append our new embedded viewer.
       const newViewerElement = this._createEmbeddedViewerElement();
-      // Hang the terminal viewer under the Embedded viewer.
+
+        // Hang the terminal viewer under the Embedded viewer.
       newViewerElement.className = "extraterm_output";
 
       this._appendScrollable(newViewerElement);
@@ -1938,7 +1947,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         outputTerminalViewer.setDecoratedLines(moveText.text, moveText.decorations);
       }
       outputTerminalViewer.setEditable(true);
-      
+
       this._appendNewTerminalViewer();
       this._refocus();
       const activeTerminalViewer = this._terminalViewer;
