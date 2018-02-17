@@ -1757,7 +1757,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const defaultMetadata: ViewerElementMetadata = {
         title: cleancommand,
         posture: ViewerElementPosture.RUNNING,
-        icon: "cog"
+        icon: "cog",
+        moveable: false,
+        deleteable: false
       };
       el.setDefaultMetadata(defaultMetadata);
 

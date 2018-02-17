@@ -49,7 +49,9 @@ export class DownloadViewer extends SimpleViewerElement {
         case BulkFileState.DOWNLOADING:
           metadata.title = `Downloading ${filename}`;
           metadata.posture = ViewerElementPosture.NEUTRAL;
-          metadata.icon = "cog";
+          metadata.icon = "download";
+          metadata.moveable = false;
+          metadata.deleteable = false;
           break;
 
         case BulkFileState.COMPLETED:
