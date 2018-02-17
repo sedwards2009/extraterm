@@ -1417,51 +1417,48 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _executeCommand(command: string): boolean {
-      switch (command) {
-        case COMMAND_ENTER_CURSOR_MODE:
-          this._enterCursorMode();
-          break;
+    switch (command) {
+      case COMMAND_ENTER_CURSOR_MODE:
+        this._enterCursorMode();
+        break;
 
-        case COMMAND_ENTER_NORMAL_MODE:
-          this._exitCursorMode();
-          break;
+      case COMMAND_ENTER_NORMAL_MODE:
+        this._exitCursorMode();
+        break;
+        
+      case COMMAND_SCROLL_PAGE_UP:
+        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+          - this._virtualScrollArea.getScrollContainerHeight() / 2);
+        break;
           
-        case COMMAND_SCROLL_PAGE_UP:
-          this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-            - this._virtualScrollArea.getScrollContainerHeight() / 2);
-          break;
-          
-        case COMMAND_SCROLL_PAGE_DOWN:
-          this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-            + this._virtualScrollArea.getScrollContainerHeight() / 2);
-          break;
+      case COMMAND_SCROLL_PAGE_DOWN:
+        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+          + this._virtualScrollArea.getScrollContainerHeight() / 2);
+        break;
 
-        case COMMAND_GO_TO_PREVIOUS_FRAME:
-          this._goToPreviousFrame();
-          break;
+      case COMMAND_GO_TO_PREVIOUS_FRAME:
+        this._goToPreviousFrame();
+        break;
 
-        case COMMAND_GO_TO_NEXT_FRAME:
-          this._goToNextFrame();
-          break;
+      case COMMAND_GO_TO_NEXT_FRAME:
+        this._goToNextFrame();
+        break;
 
-        case COMMAND_COPY_TO_CLIPBOARD:
-          this.copyToClipboard();
-          break;
+      case COMMAND_COPY_TO_CLIPBOARD:
+        this.copyToClipboard();
+        break;
 
-        case COMMAND_PASTE_FROM_CLIPBOARD:
-          this._pasteFromClipboard();
-          break;
+      case COMMAND_PASTE_FROM_CLIPBOARD:
+        this._pasteFromClipboard();
+        break;
 
-        case COMMAND_DELETE_LAST_FRAME:
-          this._deleteLastEmbeddedViewer();
-          break;
+      case COMMAND_DELETE_LAST_FRAME:
+        this._deleteLastEmbeddedViewer();
+        break;
 
-        case COMMAND_OPEN_LAST_FRAME:
-          const viewer = this._getLastEmbeddedViewer();
-          if (viewer !== null) {
-            this._embeddedViewerPopOutEvent(viewer);
-          }
-          break;
+      case COMMAND_OPEN_LAST_FRAME:
+        this._popOutLastEmbeddedViewer();
+        break;
 
       case COMMAND_RESET_VT:
         this._emulator.reset();
@@ -1802,14 +1799,28 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
     return null;
   }
-  
-  private _deleteLastEmbeddedViewer(): void {
-    const kid = this._getLastEmbeddedViewer();
-    if (kid === null) {
+
+  private _popOutLastEmbeddedViewer(): void {
+    const viewer = this._getLastEmbeddedViewer();
+    if (viewer === null) {
       return;
     }
-    this.deleteEmbeddedViewer(kid);
-    this.focus();
+    const metadata = viewer.getMetadata();
+    if (metadata.moveable !== false) {
+      this._embeddedViewerPopOutEvent(viewer);
+    }
+  }
+
+  private _deleteLastEmbeddedViewer(): void {
+    const viewer = this._getLastEmbeddedViewer();
+    if (viewer === null) {
+      return;
+    }
+    const metadata = viewer.getMetadata();
+    if (metadata.deleteable !== false) {
+      this.deleteEmbeddedViewer(viewer);
+      this.focus();
+    }
   }
   
   private _createEmbeddedViewerElement(): EmbeddedViewer {

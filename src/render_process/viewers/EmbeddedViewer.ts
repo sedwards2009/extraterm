@@ -179,6 +179,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     const metadata = super.getMetadata();
     metadata.title = this._titleBarUI.commandLine;
     metadata.icon = this._titleBarUI.awesomeIconName;
+    metadata.moveable = this._titleBarUI.enablePopOut;
+    metadata.deleteable = this._titleBarUI.enableClose;
     return metadata;
   }
 
