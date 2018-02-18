@@ -2084,11 +2084,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _handleShowFile(bulkFileHandle: BulkFileHandle): void {
+    const isDownload = bulkFileHandle.getMetadata()["download"] === "true";
     const {mimeType, charset} = BulkFileUtils.guessMimetype(bulkFileHandle);
-    if (mimeType !== null) {
-      this._appendMimeViewer(mimeType, bulkFileHandle);
-    } else {
+    if (mimeType == null || isDownload) {
       this._appendMimeViewer("application/octet-stream", bulkFileHandle);
+    } else {
+      this._appendMimeViewer(mimeType, bulkFileHandle);
     }
   }
 

@@ -23,7 +23,7 @@ import {WriterReaderFile} from './WriterReaderFile';
 export type BulkFileIdentifier = string;
 
 export interface Metadata {
-  readonly [index: string]: (string | number);
+  readonly [index: string]: (string | number | undefined);
 }
 
 export type BufferSizeEvent = {identifier: BulkFileIdentifier, totalBufferSize: number, availableDelta: number};
