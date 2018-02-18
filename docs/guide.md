@@ -155,6 +155,8 @@ Now I can go into selection mode and cut away the parts of the text I don't need
 
 With a shell pipe and `xargs` I can give the list of documents to the `wc` (word count) command:
 
+Using the `--save` or `-s` option `from` can directly write the frame contents to disk using the file's original filename.
+
 
 ## Executing Commands from Cursor Mode
 
