@@ -157,7 +157,7 @@ def requestFrame(frame_name):
 
 def outputFrame(frame_name):
     writer = FrameWriter(sys.stdout.buffer.write, sys.stdout.flush, sys.stderr.buffer.write, sys.stderr.flush)
-    rc, metadata = writeFrame(writer)
+    rc, metadata = writeFrame(frame_name, writer)
     return rc
 
 
