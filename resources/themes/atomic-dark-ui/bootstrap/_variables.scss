@@ -18,16 +18,22 @@ $gray-light:             lighten($gray-base, 46.7%) !default; // #777
 $gray-lighter:           lighten($gray-base, 93.5%) !default; // #eee
 
 $brand-primary:         darken(#428bca, 6.5%) !default; // #337ab7
-$brand-success:         #2bda77 !default;
-$brand-info:            #5293d8 !default;
-$brand-warning:         #ff982d !default;
+$brand-success:         #11ca65 !default;
+$brand-info:            #0098ff !default;
+$brand-warning:         #ffaa2c !default;
 $brand-danger:          #cc0000 !default;
+
+$brand-text-primary:  #ffffff;
+$brand-text-success:  #ffffff;
+$brand-text-info: #ffffff;
+$brand-text-warning:  #ffffff;
+$brand-text-danger: #ffffff;
 
 $background-color-info: $brand-info;
 $background-color-success: $brand-success;
-$background-color-warning: #ffaa2c;
+$background-color-warning: $brand-warning;
 $background-color-error: $brand-danger;
-$background-color-highlight: #2e2f31;
+$background-color-highlight: rgba(255, 255, 255, 0.07);
 
 $background-color-selected: #4182c4;
 

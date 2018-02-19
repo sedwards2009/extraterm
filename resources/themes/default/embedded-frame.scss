@@ -2,7 +2,8 @@
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
 @import "bootstrap/px-to-rem";
- 
+@import "bootstrap/variables";
+
 /* embedded-frame styles */
 
 $TERMINAL_MARGIN_LEFT: pxToRem(4px);
@@ -16,17 +17,15 @@ $CORNER_RADIUS: pxToRem(3px);
 
 $TEAR_BORDER_HEIGHT: pxToRem(2px);
 
-$LITE_BACKGROUND_COLOR: #5b82a7;
-$DARK_BACKGROUND_COLOR: #567089;
+$DEFAULT_BACKGROUND_COLOR: $brand-primary;
+$FAIL_BACKGROUND_COLOR: $brand-danger;
+$SUCCESS_BACKGROUND_COLOR: $brand-primary;
 
-$FOREGROUND_COLOR: #d6dfe9;
+$ICON_RUNNING_COLOR: $brand-text-primary;
+$ICON_NEUTRAL_COLOR: $brand-text-primary;
+$ICON_SUCCESS_COLOR: $brand-text-primary;
+$ICON_FAIL_COLOR: $brand-text-danger;
 
-$FAIL_BACKGROUND_COLOR: #a75b5b;
-
-$ICON_RUNNING_COLOR: #d6dfe9;
-$ICON_NEUTRAL_COLOR: $ICON_RUNNING_COLOR;
-$ICON_SUCCESS_COLOR: #54ff54;
-$ICON_FAIL_COLOR: #ff5454;
 
 :host {
   display: block;
@@ -51,7 +50,7 @@ $ICON_FAIL_COLOR: #ff5454;
   display: flex;
   width: 100%;
   z-index: 5;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 
 #ID_OUTPUT_CONTAINER {
@@ -115,6 +114,11 @@ $ICON_FAIL_COLOR: #ff5454;
   color: $ICON_NEUTRAL_COLOR;
 }
 
+#ID_CONTAINER.CLASS_FAILED > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
+  color: $ICON_FAIL_COLOR;
+}
+
+
 /* *** Comand line DIV *** */
 #ID_COMMAND_LINE {
   flex: auto 0 1;
@@ -124,7 +128,7 @@ $ICON_FAIL_COLOR: #ff5454;
   padding-right: 0.5em;
   padding-bottom: pxToRem(1px);
 
-  color: $FOREGROUND_COLOR;
+  color: $ICON_NEUTRAL_COLOR;
 }
 
 
@@ -141,8 +145,8 @@ $ICON_FAIL_COLOR: #ff5454;
   }
 }
 
-.right_block, #ID_POP_OUT_BUTTON, #ID_CLOSE_BUTTON {
-  color: $FOREGROUND_COLOR;
+.right_block, BUTTON {
+  color: $ICON_NEUTRAL_COLOR;
 }
 
 #ID_EXPAND_BUTTON, #ID_CLOSE_BUTTON, #ID_POP_OUT_BUTTON {
@@ -152,12 +156,12 @@ $ICON_FAIL_COLOR: #ff5454;
   border: pxToRem(0px);
 }
 
-#ID_CLOSE_BUTTON:hover {
-  color: red;
+BUTTON:hover {
+  color: #ffffff - $ICON_NEUTRAL_COLOR;
 }
 
 #ID_HEADER {
-  background-color: $LITE_BACKGROUND_COLOR;
+  background-color: $DEFAULT_BACKGROUND_COLOR;
   border-top-left-radius: $CORNER_RADIUS;
   border-top-right-radius: $CORNER_RADIUS;
 
@@ -167,7 +171,7 @@ $ICON_FAIL_COLOR: #ff5454;
 }
 
 #ID_CONTAINER.not-scrolling > #ID_HEADER {
-  border-bottom: $TEAR_BORDER_HEIGHT solid $LITE_BACKGROUND_COLOR;
+  border-bottom: $TEAR_BORDER_HEIGHT solid $DEFAULT_BACKGROUND_COLOR;
 }
 
 #ID_CONTAINER.not-scrolling.CLASS_FAILED > #ID_HEADER {
@@ -186,9 +190,9 @@ $ICON_FAIL_COLOR: #ff5454;
 
 // Success mode
 #ID_CONTAINER.CLASS_SUCCEEDED > #ID_OUTPUT_CONTAINER, #ID_CONTAINER.CLASS_NEUTRAL > #ID_OUTPUT_CONTAINER {
-  border-left-color: $LITE_BACKGROUND_COLOR;
-  border-right-color: $LITE_BACKGROUND_COLOR;
-  border-bottom-color: $LITE_BACKGROUND_COLOR;
+  border-left-color: $SUCCESS_BACKGROUND_COLOR;
+  border-right-color: $SUCCESS_BACKGROUND_COLOR;
+  border-bottom-color: $SUCCESS_BACKGROUND_COLOR;
 }
 
 // Fail mode
@@ -196,10 +200,7 @@ $ICON_FAIL_COLOR: #ff5454;
 
   & > #ID_HEADER {
     background-color: $FAIL_BACKGROUND_COLOR;
-
-    & > .header_spacer {
-      border-color: rgba($ICON_FAIL_COLOR, 0.5);      
-    }
+    font-weight: bold;
   }
 
   & > #ID_OUTPUT_CONTAINER {
