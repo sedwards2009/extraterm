@@ -50,7 +50,7 @@ $ICON_FAIL_COLOR: $brand-text-danger;
   display: flex;
   width: 100%;
   z-index: 5;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 #ID_OUTPUT_CONTAINER {
@@ -170,16 +170,9 @@ BUTTON:hover {
   }
 }
 
-#ID_CONTAINER.not-scrolling > #ID_HEADER {
-  border-bottom: $TEAR_BORDER_HEIGHT solid $DEFAULT_BACKGROUND_COLOR;
-}
-
-#ID_CONTAINER.not-scrolling.CLASS_FAILED > #ID_HEADER {
-  border-bottom: $TEAR_BORDER_HEIGHT solid $FAIL_BACKGROUND_COLOR;
-}
-
 #ID_CONTAINER.scrolling > #ID_HEADER {
   border-bottom: $TEAR_BORDER_HEIGHT dashed var(--terminal-background-color);
+  margin-bottom: -1 * $TEAR_BORDER_HEIGHT;
 }
 
 #ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT_CONTAINER {
@@ -209,7 +202,6 @@ BUTTON:hover {
     border-bottom-color: $FAIL_BACKGROUND_COLOR;
   }
 }
-
 
 .header_spacer {
   flex: 0em 1 1;
