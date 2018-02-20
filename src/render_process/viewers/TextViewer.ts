@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
 "use strict";
@@ -11,6 +11,7 @@ import * as SourceDir from '../../SourceDir';
 import {Disposable} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
+import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
@@ -114,7 +115,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   private _log: Logger;
   private _keyBindingManager: KeyBindingManager = null;
-  private _bulkFileHandle: BulkFileHandle = null;
+  private _title = "";
   private _mimeType: string = null;
   private _metadataEventDoLater: DebouncedDoLater = null;
   
@@ -153,8 +154,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   getMetadata(): ViewerElementMetadata {
     const metadata = super.getMetadata();
     
-    if (this._bulkFileHandle !== null && this._bulkFileHandle.getMetadata()["filename"] != null) {
-      metadata.title = <string> this._bulkFileHandle.getMetadata()["filename"];
+    if (this._title !== "") {
+      metadata.title = this._title;     
     } else {
       metadata.title = "Text";
     }
@@ -306,11 +307,6 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     });
         
     this._applyVisualState(this._visualState);
-
-    if (this._bulkFileHandle !== null) {
-      this._loadBulkFile(this._bulkFileHandle);
-    }
-
     this._adjustHeight(this._height);
   }
   
@@ -401,26 +397,30 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
 
   getBulkFileHandle(): BulkFileHandle {
-    return this._bulkFileHandle;
+    const text =  this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
+    return new BlobBulkFileHandle(this.getMimeType()+";charset=utf8", {}, Buffer.from(text, 'utf8'));
   }
 
   setBulkFileHandle(handle: BulkFileHandle): void {
-    if (this._bulkFileHandle != null) {
-      this._bulkFileHandle.deref();
-      this._bulkFileHandle = null;
+    if (handle.getMetadata()["filename"] != null) {
+      this._title = <string> handle.getMetadata()["filename"];
+    } else {
+      this._title = "";
     }
+
     this._loadBulkFile(handle);
   }
 
   private async _loadBulkFile(handle: BulkFileHandle): Promise<void> {
     handle.ref();
-    this._bulkFileHandle = handle;
     this._metadataEventDoLater.trigger();
     const data = await BulkFileUtils.readDataAsArrayBuffer(handle)
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     const decodedText = Buffer.from(data).toString(charset);
     this._setText(decodedText);
     this.setMimeType(mimeType);
+
+    handle.deref();
 
     // After setting the whole contents of a CodeMirror instance, it takes a
     // short while before CM fully updates itself and is ready to correctly
