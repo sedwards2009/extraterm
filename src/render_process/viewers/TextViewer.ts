@@ -99,7 +99,7 @@ function init(): void {
 
 @WebComponent({tag: "et-text-viewer"})
 export class TextViewer extends ViewerElement implements Commandable, AcceptsKeyBindingManager,
-    SupportsClipboardPaste.SupportsClipboardPaste {
+    SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
   
@@ -116,6 +116,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _log: Logger;
   private _keyBindingManager: KeyBindingManager = null;
   private _title = "";
+  private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
   private _metadataEventDoLater: DebouncedDoLater = null;
   
@@ -293,7 +294,16 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
         doLater(this._emitVirtualResizeEvent.bind(this));
       }
     });
-    
+
+    this._codeMirror.on("change", () => {
+      // If the contents are changed then drop our ref to the source file and
+      // force getBulkFileHandle() to read from CodeMirror.
+      if (this._bulkFileHandle != null) {
+        this._bulkFileHandle.deref();
+        this._bulkFileHandle = null;
+      }
+    });
+
     // Filter the keyboard events before they reach CodeMirror.
     containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
     containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
@@ -313,7 +323,15 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
-  
+
+  dispose(): void {
+    if (this._bulkFileHandle != null) {
+      this._bulkFileHandle.deref();
+      this._bulkFileHandle = null;
+    }
+    super.dispose();
+  }
+
   setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
     this._keyBindingManager = newKeyBindingManager;
   }
@@ -397,11 +415,20 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
 
   getBulkFileHandle(): BulkFileHandle {
-    const text =  this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
-    return new BlobBulkFileHandle(this.getMimeType()+";charset=utf8", {}, Buffer.from(text, 'utf8'));
+    if (this._bulkFileHandle != null) {
+      return this._bulkFileHandle;
+    } else {
+      const text =  this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
+      return new BlobBulkFileHandle(this.getMimeType()+";charset=utf8", {}, Buffer.from(text, 'utf8'));
+    }
   }
 
   setBulkFileHandle(handle: BulkFileHandle): void {
+    if (this._bulkFileHandle != null) {
+      this._bulkFileHandle.deref();
+      this._bulkFileHandle = null;
+    }
+
     if (handle.getMetadata()["filename"] != null) {
       this._title = <string> handle.getMetadata()["filename"];
     } else {
@@ -419,8 +446,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     const decodedText = Buffer.from(data).toString(charset);
     this._setText(decodedText);
     this.setMimeType(mimeType);
-
-    handle.deref();
+    this._bulkFileHandle = handle;
 
     // After setting the whole contents of a CodeMirror instance, it takes a
     // short while before CM fully updates itself and is ready to correctly
