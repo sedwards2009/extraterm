@@ -698,11 +698,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   /**
    * Delete the top n pixels from the scrollback.
    *
-   * @param topPixels the number of lines to removed measured in pixels.
+   * @param topLines the number of lines to be removed.
    */
-  deleteTopPixels(topPixels: number): void {
-    const defaultTextHeight = this._codeMirror.defaultTextHeight();
-    const linesToDelete = Math.min(Math.floor(topPixels / defaultTextHeight), this.lineCount());
+  deleteTopLines(topLines: number): void {
+    const linesToDelete = Math.min(topLines, this.lineCount());
     
     const doc = this._codeMirror.getDoc();
     const pos = { line: 0, ch: 0 };

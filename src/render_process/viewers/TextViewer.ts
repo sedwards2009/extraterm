@@ -600,15 +600,13 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     return mode !== null && mode !== undefined;
   }
   
-  deleteTopPixels(topPixels: number): void {
-    const defaultTextHeight = this._codeMirror.defaultTextHeight();
-    const linesToDelete = Math.min(Math.floor(topPixels / defaultTextHeight), this.lineCount());
+  deleteTopLines(topLines: number): void {
+    const linesToDelete = Math.min(topLines, this.lineCount());
     const pos = { line: 0, ch: 0 };
     const endPos = { line: linesToDelete, ch: 0 };
     this._codeMirror.getDoc().replaceRange("", pos, endPos);
     this._emitVirtualResizeEvent();
   }
-
 
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     if (this._codeMirror !== null) {

@@ -540,7 +540,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
-    this._applyNewTerminalConfig(newTerminal, this._configManager.getConfig());
     this._addTab(tabWidget, newTerminal);
     this._setUpNewTerminalEventHandlers(newTerminal);
     this._createPtyForTerminal(newTerminal);
@@ -549,11 +548,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     newTerminal.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     return newTerminal;
-  }
-
-  private _applyNewTerminalConfig(newTerminal: EtTerminal, config: config.Config): void {
-    newTerminal.setBlinkingCursor(config.blinkingCursor);
-    newTerminal.setScrollbackMaxSize(config.scrollbackLines, config.scrollbackFrames);
   }
 
   private _createPtyForTerminal(newTerminal: EtTerminal): void {

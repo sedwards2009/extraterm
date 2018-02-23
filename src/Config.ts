@@ -18,8 +18,8 @@ export interface Config {
   uiScalePercent?: number;
 
   commandLineActions?: CommandLineAction[];
-  scrollbackLines?: number;
-  scrollbackFrames?: number;
+  scrollbackMaxLines?: number;
+  scrollbackMaxFrames?: number;
   keyBindingsFilename?: string;
   
   showTips?: ShowTipsStrEnum;
