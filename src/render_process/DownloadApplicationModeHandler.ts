@@ -87,8 +87,7 @@ class DownloadSession {
   handleData(data: string): TermApi.ApplicationModeResponse {
     switch (this._state) {
       case DownloadHandlerState.METADATA:
-        this._handleMetadata(data);
-        break;
+        return this._handleMetadata(data);
     
       case DownloadHandlerState.BODY:
         return this._handleBody(data);
@@ -107,7 +106,7 @@ class DownloadSession {
     return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
-  private _handleMetadata(encodedData: string): void {
+  private _handleMetadata(encodedData: string): TermApi.ApplicationModeResponse {
     this._encodedDataBuffer += encodedData;
     if (this._encodedDataBuffer.length >= this._metadataSize) {
       let metadata = null;
@@ -116,7 +115,7 @@ class DownloadSession {
       } catch(ex) {
         this._log.warn("Unable to parse JSON metadata.", ex);
         this._state = DownloadHandlerState.ERROR;
-        return;
+        return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
       }
       this._encodedDataBuffer = this._encodedDataBuffer.slice(this._metadataSize);
 
@@ -132,11 +131,12 @@ class DownloadSession {
       this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, filesize);
       this._fileHandle.ref();
       this._availableWriteBufferSizeChangedDisposable = this._fileHandle.onAvailableWriteBufferSizeChange(this._handleAvailableWriteBufferSizeChange.bind(this));
-      this._state = DownloadHandlerState.BODY;
-      this._handleBody("");
-
       this._onCreatedBulkFileEventEmitter.fire(this._fileHandle);
+
+      this._state = DownloadHandlerState.BODY;
+      return this._handleBody("");
     }
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
   private _closeFileHandle(success: boolean): void {
