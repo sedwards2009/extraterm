@@ -8,6 +8,7 @@ import argparse
 import atexit
 import base64
 import hashlib
+import os
 import os.path
 import sys
 import termios
@@ -70,6 +71,8 @@ def ShowStdin(mimeType=None, charset=None, filenameMeta=None, download=False):
 def TurnOffEcho():
     # Turn off echo on the tty.
     fd = sys.stdin.fileno()
+    if not os.isatty(fd):
+        return
     old_settings = termios.tcgetattr(fd)
     new_settings = termios.tcgetattr(fd)
     new_settings[3] = new_settings[3] & ~termios.ECHO          # lflags
