@@ -21,7 +21,7 @@ import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 import {DownloadViewer} from './viewers/DownloadViewer';
 import {Pty} from '../pty/Pty';
 
-import {ViewerElement} from './viewers/ViewerElement';
+import {ViewerElement, ViewerElementMetadata, ViewerElementPosture} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ResizeCanary} from './ResizeCanary';
@@ -191,8 +191,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _title = "New Tab";
   private _frameFinder: FrameFinder = null;
-  private _maxScrollbackLines: number;
-  private _maxScrollbackFrames: number;
   
   private _nextTag: string = null;
 
@@ -434,15 +432,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  setScrollbackMaxSize(scrollbackSize: number, scrollbackFrames: number): void {
-    this._maxScrollbackLines = scrollbackSize;
-    this._maxScrollbackFrames = scrollbackFrames;
-  }
-  
-  getScrollbackMaxSize(): {maxScrollbackLines: number, maxScrollbackFrames: number} {
-    return {maxScrollbackLines: this._maxScrollbackLines, maxScrollbackFrames: this._maxScrollbackFrames};
-  }
-  
   private _isNoFrameCommand(commandLine: string): boolean {
     const cleanCommandLine = commandLine.trim();
     if (cleanCommandLine === "") {
@@ -1055,7 +1044,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
     this._virtualScrollArea.updateScrollableSize(virtualScrollable);
-    this._enforceScrollbackSize(this._maxScrollbackLines, this._maxScrollbackFrames);
+    if (this._configManager != null) {
+      const config = this._configManager.getConfig();
+      this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
+    }
   }
 
   private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): void {
@@ -1103,7 +1095,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
         this._virtualScrollArea.updateScrollableSizes(childrenToResize);
         this._virtualScrollArea.reapplyState();
-        this._enforceScrollbackSize(this._maxScrollbackLines, this._maxScrollbackFrames);
+
+        if (this._configManager != null) {
+          const config = this._configManager.getConfig();
+          this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
+        }
       });
     }
   }
@@ -1173,7 +1169,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._enforceScrollbackLengthGuard = true;
     const rc = func();
     this._enforceScrollbackLengthGuard = oldGuardFlag;
-    this._enforceScrollbackSize(this._maxScrollbackLines, this._maxScrollbackFrames);
+
+    if (this._configManager != null) {
+      const config = this._configManager.getConfig();
+      this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
+    }
     return rc;
   }
   
@@ -1192,49 +1192,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _enforceScrollbackSize2(maxScrollbackLines: number, maxScrollbackFrames: number): void {
-    this._enforceScrollbackFrames(maxScrollbackFrames);
-    this._enforceScrollbackPixels(maxScrollbackLines);
-  }
-  
-  private _enforceScrollbackPixels(maxScrollbackLines: number): void {
-    let virtualHeight = this._virtualScrollArea.getVirtualHeight();
-    const effectiveScrollbackSize = window.screen.height + maxScrollbackLines;
-    const hardLimit = Math.floor(effectiveScrollbackSize * 1.1);
-    if (virtualHeight < hardLimit) {
-      return;
-    }
-    
-    const killList: (VirtualScrollable & HTMLElement)[] = [];
-    for (const nodeInfo of this._childElementList) {
-      const scrollableKid: VirtualScrollable & HTMLElement = <any> nodeInfo.element;
-      const kidVirtualHeight = this._virtualScrollArea.getScrollableVirtualHeight(scrollableKid);
-      const newVirtualHeight = virtualHeight - kidVirtualHeight;
-      // We don't want to cut out too much at once.
-      if (newVirtualHeight > effectiveScrollbackSize) {
-        // Just remove the thing. There is plenty of scrollback left over.
-        killList.push(scrollableKid);
-        
-      } else {
-        this._deleteTopPixels(scrollableKid, virtualHeight - effectiveScrollbackSize);
-        break;
-      }
-      
-      virtualHeight = newVirtualHeight;
-      if (virtualHeight < hardLimit) {
-        break;
-      }
-    }
-
-    for (const scrollableKid of killList) {
-      this._removeScrollable(scrollableKid);
-    }
-  }
-
-  private _enforceScrollbackFrames(maxScrollbackFrames: number): void {
     const windowHeight = window.screen.height;
     const killList: (VirtualScrollable & HTMLElement)[] = [];
     let currentHeight = 0;
     let frameCount = 0;
+    let lineCount = 0;
 
     const childrenReverse = Array.from(this._childElementList);
     childrenReverse.reverse();
@@ -1244,9 +1206,29 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const kidVirtualHeight = this._virtualScrollArea.getScrollableVirtualHeight(scrollableKid);
 
       if (currentHeight > windowHeight) {
+        // The frame is inside the scrollback area.
+
         frameCount++;
-        if (frameCount > maxScrollbackFrames) {
+        if (frameCount > maxScrollbackFrames || lineCount > maxScrollbackLines) {
+          // Too many frames. Kill it.
           killList.push(scrollableKid);
+        } else {
+
+          const textLikeViewer = this._castToTextLikeViewer(scrollableKid);
+          if (textLikeViewer != null) {
+            // This frame is on the border. Trim or kill it.
+            const trim = (lineCount + textLikeViewer.lineCount()) - maxScrollbackLines;
+            lineCount += textLikeViewer.lineCount();
+            if (trim > 0) {
+              if (TerminalViewer.is(scrollableKid)) {
+                // Raw terminal viewers without frames can be trimmed.
+                textLikeViewer.deleteTopLines(textLikeViewer.lineCount() - trim);
+              } else {
+                // Framed text is just removed completely.
+                killList.push(scrollableKid);
+              }
+            }
+          }
         }
       }
 
@@ -1258,33 +1240,20 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  private _deleteTopPixels(kidNode: HTMLElement & VirtualScrollable, pixelCount: number): void {
-    // Try to cut part of it off.
+  private _castToTextLikeViewer(kidNode: HTMLElement): {deleteTopLines(lines: number): void, lineCount(): number} {
     if (TerminalViewer.is(kidNode)) {
-      kidNode.deleteTopPixels(pixelCount);
-      this._scheduleStashedChildResize(kidNode);
-      return;
-      
+      return kidNode;
     } else if (EmbeddedViewer.is(kidNode)) {
       const viewer = kidNode.getViewerElement();
-
       if (TerminalViewer.is(viewer)) {
-        viewer.deleteTopPixels(pixelCount);
-        this._scheduleStashedChildResize(kidNode);
-        return;  
-        
+        return viewer;  
       } else if (TextViewer.is(viewer)) {
-        viewer.deleteTopPixels(pixelCount);
-        this._scheduleStashedChildResize(kidNode);
-        return;
+        return viewer;
       }
     }
-    this._removeScrollable(kidNode);
-    if (ViewerElement.isViewerElement(kidNode)) {
-      kidNode.dispose();
-    }
+    return null;
   }
-  
+
   private _adjustFontSize(delta: number): void {
     const newAdjustment = Math.min(Math.max(this._fontSizeAdjustment + delta, MINIMUM_FONT_SIZE), MAXIMUM_FONT_SIZE);
     if (newAdjustment !== this._fontSizeAdjustment) {
@@ -1417,51 +1386,48 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _executeCommand(command: string): boolean {
-      switch (command) {
-        case COMMAND_ENTER_CURSOR_MODE:
-          this._enterCursorMode();
-          break;
+    switch (command) {
+      case COMMAND_ENTER_CURSOR_MODE:
+        this._enterCursorMode();
+        break;
 
-        case COMMAND_ENTER_NORMAL_MODE:
-          this._exitCursorMode();
-          break;
+      case COMMAND_ENTER_NORMAL_MODE:
+        this._exitCursorMode();
+        break;
+        
+      case COMMAND_SCROLL_PAGE_UP:
+        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+          - this._virtualScrollArea.getScrollContainerHeight() / 2);
+        break;
           
-        case COMMAND_SCROLL_PAGE_UP:
-          this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-            - this._virtualScrollArea.getScrollContainerHeight() / 2);
-          break;
-          
-        case COMMAND_SCROLL_PAGE_DOWN:
-          this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-            + this._virtualScrollArea.getScrollContainerHeight() / 2);
-          break;
+      case COMMAND_SCROLL_PAGE_DOWN:
+        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
+          + this._virtualScrollArea.getScrollContainerHeight() / 2);
+        break;
 
-        case COMMAND_GO_TO_PREVIOUS_FRAME:
-          this._goToPreviousFrame();
-          break;
+      case COMMAND_GO_TO_PREVIOUS_FRAME:
+        this._goToPreviousFrame();
+        break;
 
-        case COMMAND_GO_TO_NEXT_FRAME:
-          this._goToNextFrame();
-          break;
+      case COMMAND_GO_TO_NEXT_FRAME:
+        this._goToNextFrame();
+        break;
 
-        case COMMAND_COPY_TO_CLIPBOARD:
-          this.copyToClipboard();
-          break;
+      case COMMAND_COPY_TO_CLIPBOARD:
+        this.copyToClipboard();
+        break;
 
-        case COMMAND_PASTE_FROM_CLIPBOARD:
-          this._pasteFromClipboard();
-          break;
+      case COMMAND_PASTE_FROM_CLIPBOARD:
+        this._pasteFromClipboard();
+        break;
 
-        case COMMAND_DELETE_LAST_FRAME:
-          this._deleteLastEmbeddedViewer();
-          break;
+      case COMMAND_DELETE_LAST_FRAME:
+        this._deleteLastEmbeddedViewer();
+        break;
 
-        case COMMAND_OPEN_LAST_FRAME:
-          const viewer = this._getLastEmbeddedViewer();
-          if (viewer !== null) {
-            this._embeddedViewerPopOutEvent(viewer);
-          }
-          break;
+      case COMMAND_OPEN_LAST_FRAME:
+        this._popOutLastEmbeddedViewer();
+        break;
 
       case COMMAND_RESET_VT:
         this._emulator.reset();
@@ -1753,6 +1719,16 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     if ( ! this._isNoFrameCommand(cleancommand)) {
       // Create and set up a new command-frame.
       const el = this._createEmbeddedViewerElement();
+
+      const defaultMetadata: ViewerElementMetadata = {
+        title: cleancommand,
+        posture: ViewerElementPosture.RUNNING,
+        icon: "cog",
+        moveable: false,
+        deleteable: false
+      };
+      el.setDefaultMetadata(defaultMetadata);
+
       this._appendScrollableElement(el);
     } else {
 
@@ -1792,14 +1768,28 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
     return null;
   }
-  
-  private _deleteLastEmbeddedViewer(): void {
-    const kid = this._getLastEmbeddedViewer();
-    if (kid === null) {
+
+  private _popOutLastEmbeddedViewer(): void {
+    const viewer = this._getLastEmbeddedViewer();
+    if (viewer === null) {
       return;
     }
-    this.deleteEmbeddedViewer(kid);
-    this.focus();
+    const metadata = viewer.getMetadata();
+    if (metadata.moveable !== false) {
+      this._embeddedViewerPopOutEvent(viewer);
+    }
+  }
+
+  private _deleteLastEmbeddedViewer(): void {
+    const viewer = this._getLastEmbeddedViewer();
+    if (viewer === null) {
+      return;
+    }
+    const metadata = viewer.getMetadata();
+    if (metadata.deleteable !== false) {
+      this.deleteEmbeddedViewer(viewer);
+      this.focus();
+    }
   }
   
   private _createEmbeddedViewerElement(): EmbeddedViewer {
@@ -1917,7 +1907,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
       // Append our new embedded viewer.
       const newViewerElement = this._createEmbeddedViewerElement();
-      // Hang the terminal viewer under the Embedded viewer.
+
+        // Hang the terminal viewer under the Embedded viewer.
       newViewerElement.className = "extraterm_output";
 
       this._appendScrollable(newViewerElement);
@@ -1938,7 +1929,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         outputTerminalViewer.setDecoratedLines(moveText.text, moveText.decorations);
       }
       outputTerminalViewer.setEditable(true);
-      
+
       this._appendNewTerminalViewer();
       this._refocus();
       const activeTerminalViewer = this._terminalViewer;
@@ -2062,11 +2053,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _handleShowFile(bulkFileHandle: BulkFileHandle): void {
+    const isDownload = bulkFileHandle.getMetadata()["download"] === "true";
     const {mimeType, charset} = BulkFileUtils.guessMimetype(bulkFileHandle);
-    if (mimeType !== null) {
-      this._appendMimeViewer(mimeType, bulkFileHandle);
-    } else {
+    if (mimeType == null || isDownload) {
       this._appendMimeViewer("application/octet-stream", bulkFileHandle);
+    } else {
+      this._appendMimeViewer(mimeType, bulkFileHandle);
     }
   }
 
@@ -2077,7 +2069,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const viewerElement = this._createEmbeddedViewerElement();
       viewerElement.setViewerElement(mimeViewerElement);
       this._appendScrollableElement(viewerElement);
-      this._enforceScrollbackSize(this._maxScrollbackLines, this._maxScrollbackFrames);
+
+      if (this._configManager != null) {
+        const config = this._configManager.getConfig();
+        this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
+      }
     }
   }
 

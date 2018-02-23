@@ -124,7 +124,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
     this._data = {
       showTips: 'always',
       showTipsOptions: [ { id: 'always', name: 'Everytime' }, { id: 'daily', name: 'Daily'}, { id: 'never', name: 'Never'} ],
-      maxScrollbackLines: 10000,
+      maxScrollbackLines: 500000,
       maxScrollbackFrames: 100,
       terminalFontSize: 12,
       commandLineActions: [],
@@ -220,7 +220,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
         <div class="form-group">
           <label for="${ID_TERMINAL_FONT_SIZE}" class="col-sm-3 control-label">Terminal Font Size:</label>
           <div class="input-group col-sm-2">
-            <input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="form-control" number v-model="terminalFontSize" min='1'
+            <input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="form-control" v-model.number="terminalFontSize" min='1'
               max='1024' debounce="100" />
             <div class="input-group-addon">pixels</div>
           </div>
@@ -238,19 +238,19 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
         </div>
 
         <div class="form-group">
-          <label for="${ID_SCROLLBACK}" class="col-sm-3 control-label">Maximum Scrollback Height:</label>
+          <label for="${ID_SCROLLBACK}" class="col-sm-3 control-label">Maximum Scrollback Lines:</label>
           <div class="input-group col-sm-2">
-            <input id="${ID_SCROLLBACK}" type="number" class="form-control" number v-model="maxScrollbackLines" min='1'
-              max='1000000' debounce="500" />
-            <div class="input-group-addon">pixels</div>
+            <input id="${ID_SCROLLBACK}" type="number" class="form-control" v-model.number="maxScrollbackLines" min="1"
+              max="10000000" debounce="500" />
+            <div class="input-group-addon">lines</div>
           </div>
         </div>
 
         <div class="form-group">
           <label for="${ID_SCROLLBACK_FRAMES}" class="col-sm-3 control-label">Maximum Scrollback Frames:</label>
           <div class="input-group col-sm-2">
-            <input id="${ID_SCROLLBACK_FRAMES}" type="number" class="form-control" number v-model="maxScrollbackFrames" min='1'
-              max='1000' debounce="500" />
+            <input id="${ID_SCROLLBACK_FRAMES}" type="number" class="form-control" v-model.number="maxScrollbackFrames" min="1"
+              max="1000" debounce="500" />
             <div class="input-group-addon">frames</div>
           </div>
         </div>
@@ -462,12 +462,12 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
     }
     
     // We take care to only update things which have actually changed.
-    if (this._data.maxScrollbackLines !== config.scrollbackLines) {
-      this._data.maxScrollbackLines = config.scrollbackLines;
+    if (this._data.maxScrollbackLines !== config.scrollbackMaxLines) {
+      this._data.maxScrollbackLines = config.scrollbackMaxLines;
     }
 
-    if (this._data.maxScrollbackFrames !== config.scrollbackFrames) {
-      this._data.maxScrollbackFrames = config.scrollbackFrames;
+    if (this._data.maxScrollbackFrames !== config.scrollbackMaxFrames) {
+      this._data.maxScrollbackFrames = config.scrollbackMaxFrames;
     }
     
     if (this._data.terminalFontSize !== config.terminalFontSize) {
@@ -531,8 +531,8 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
     stripIds(model.commandLineActions);
     
     newConfig.showTips = model.showTips;
-    newConfig.scrollbackLines = model.maxScrollbackLines;
-    newConfig.scrollbackFrames = model.maxScrollbackFrames;
+    newConfig.scrollbackMaxLines = model.maxScrollbackLines;
+    newConfig.scrollbackMaxFrames = model.maxScrollbackFrames;
     newConfig.terminalFontSize = model.terminalFontSize;
     newConfig.terminalFont = model.terminalFont;
     newConfig.commandLineActions = model.commandLineActions;

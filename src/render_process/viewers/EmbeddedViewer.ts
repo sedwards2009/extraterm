@@ -6,7 +6,8 @@
 
 import * as _ from 'lodash';
 import * as path from 'path';
-
+import Component from 'vue-class-component';
+import Vue from 'vue';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle, BulkFileState} from '../bulk_file_handling/BulkFileHandle';
@@ -41,19 +42,6 @@ const ID_CONTAINER = "ID_CONTAINER";
 const ID_HEADER = "ID_HEADER";
 const ID_OUTPUT = "ID_OUTPUT";
 const ID_OUTPUT_CONTAINER = "ID_OUTPUT_CONTAINER";
-const ID_ICON = "ID_ICON";
-const ID_ICON_DIV = "ID_ICON_DIV";
-const ID_COMMAND_LINE = "ID_COMMAND_LINE";
-const ID_TAG_NAME = "ID_TAG_NAME";
-const ID_SCROLL_ICON = "ID_SCROLL_ICON";
-const ID_SCROLL_NAME = "ID_SCROLL_NAME";
-
-// const ID_EXPAND_BUTTON = "expand_button";
-// const ID_EXPAND_ICON = "expand_icon";
-// const ID_EXPAND_MENU_ITEM = "expandmenuitem";
-const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
-const ID_POP_OUT_BUTTON = "ID_POP_OUT_BUTTON";
-const ID_TAG_ICON = "ID_TAG_ICON";
 
 const CLASS_SCROLLING = "scrolling";
 const CLASS_NOT_SCROLLING = "not-scrolling";
@@ -66,6 +54,58 @@ const CLASS_NEUTRAL = "CLASS_NEUTRAL";
 
 const DEBUG_SIZE = false;
 const DND_TEXT_SIZE_THRESHOLD = 1024 * 1024;
+
+@Component(
+  {
+    template: `<div id="${ID_HEADER}" tabindex="0">
+    <div class="left_block">
+      <div id="ID_ICON_DIV" :title="toolTip"><i id="ID_ICON" :class="awesomeIconClass"></i></div>
+      <div id="ID_COMMAND_LINE" :title="toolTip">{{commandLine}}</div>
+    </div>
+    <div class="header_spacer"></div>
+    <div class="right_block">
+      <div id="ID_SCROLL_ICON"><i class="fa fa-arrows-v"></i></div>
+      <div id="ID_SCROLL_NAME">{{scrollName}}</div>
+      <div class="spacer"></div>
+      <div id="ID_TAG_ICON"><i class="fa fa-tag"></i></div>
+      <div id="ID_TAG_NAME">{{tagName}}</div>
+      <div class="spacer"></div>
+` +//              <button id="${ID_EXPAND_BUTTON}" title="Expand/Collapse"><i id="${ID_EXPAND_ICON}" class="fa fa-plus-square-o"></i></button>
+//              <div class="spacer"></div>
+`              <button v-if="enablePopOut" id="ID_POP_OUT_BUTTON" v-on:click="popOutClick"><i class="fa fa-external-link"></i></button>
+      <div class="spacer"></div>
+      <button v-if="enableClose" id="ID_CLOSE_BUTTON" v-on:click="closeClick" title="Close"><i class="fa fa-times-circle"></i></button>
+    </div>
+  </div>`
+  })
+class TitleBarUI extends Vue {
+  commandLine = "";
+  tagName = "";
+  toolTip = "";
+  scrollName = "";
+  awesomeIconName: string = null;
+  enablePopOut = true;
+  enableClose = true;
+
+  popOutHandler: () => void = null;
+  closeHandler: () => void = null;
+
+  get awesomeIconClass(): string {
+    return "fa " + (this.awesomeIconName != null && this.awesomeIconName !== "" ? "fa-" : "") + this.awesomeIconName;
+  }
+
+  popOutClick(): void {
+    if (this.popOutHandler != null) {
+      this.popOutHandler();
+    }
+  }
+
+  closeClick(): void {
+    if (this.closeHandler != null) {
+      this.closeHandler();
+    }
+  }
+}
 
 
 /**
@@ -92,13 +132,10 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
   
   private _log: Logger = null;
-  private _title: string = "";
-  private _tag: string = "";
-  private _awesomeIcon: string = null;
   private _visualState: VisualState = ViewerElementTypes.VisualState.AUTO;
   private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
   private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
-  private _childFocusHandlerFunc: (ev: FocusEvent) => void;
+  private _boundFocusHandler: (ev: FocusEvent) => void;
   private _requestContainerHeight = false; // true if the container needs a height update.
   private _requestContainerScroll = false; // true if the container needs scroll to be set.
   private _requestContainerYScroll = 0; // the new scroll Y to use during update.
@@ -106,16 +143,22 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _headerBottom = 0;
 
   private _connectSetupDone = false;
+  private _titleBarUI: TitleBarUI = null;
+  private _defaultMetadata: ViewerElementMetadata = null;
+
+  private _boundHandleDragStart: (ev: DragEvent) => void = null;
+  private _boundHandleDragEnd: (ev: DragEvent) => void = null;
 
   constructor() {
     super();
     this._log = getLogger(EmbeddedViewer.TAG_NAME, this);
     this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
-    this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
-
+    this._boundFocusHandler = this._handleChildFocus.bind(this);
+    this._boundHandleDragStart = this._handleDragStart.bind(this);
+    this._boundHandleDragEnd = this._handleDragStart.bind(this);
+  
     this._setUpShadowDom();
-    this._updateMetadata();
-    this.setTag(this._tag);
+    this._updateUiFromMetadata();
     this.installThemeCss();
     this._setUpEventHandlers();
   }
@@ -124,19 +167,29 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     super.connectedCallback();
 
     if ( ! this._connectSetupDone) {
-    this._setUpVirtualScrollArea();
+      this._setUpVirtualScrollArea();
 
-    // Remove the anti-flicker style.
-    DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
-      this._connectSetupDone = true;
-  }
+      // Remove the anti-flicker style.
+      DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
+        this._connectSetupDone = true;
+    }
   }
 
   getMetadata(): ViewerElementMetadata {
     const metadata = super.getMetadata();
-    metadata.title = this._title;
-    metadata.icon = this._awesomeIcon;
+    metadata.title = this._titleBarUI.commandLine;
+    metadata.icon = this._titleBarUI.awesomeIconName;
+    metadata.moveable = this._titleBarUI.enablePopOut;
+    metadata.deleteable = this._titleBarUI.enableClose;
     return metadata;
+  }
+
+  /**
+   * Set the metadata to use in absence of a viewer element.
+   */
+  setDefaultMetadata(metadata: ViewerElementMetadata): void {
+    this._defaultMetadata = metadata;
+    this._updateUiFromMetadata();
   }
 
   dispose(): void {
@@ -149,7 +202,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   setViewerElement(element: ViewerElement): void {
     const oldViewer = this._getViewerElement()
     if (oldViewer != null) {
-      oldViewer.removeEventListener('focus', this._childFocusHandlerFunc);
+      oldViewer.removeEventListener('focus', this._boundFocusHandler);
     }
 
     if (this.childNodes.length !== 0) {
@@ -159,11 +212,11 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     if (element !== null) {
       element.setVisualState(this._visualState);
       element.setMode(this._mode);
-      element.addEventListener('focus', this._childFocusHandlerFunc);
+      element.addEventListener('focus', this._boundFocusHandler);
       this.appendChild(element);
       this._virtualScrollArea.appendScrollable(element);
 
-      this._updateMetadata();
+      this._updateUiFromMetadata();
     }
   }
   
@@ -253,10 +306,9 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       containerDiv.classList.remove(CLASS_BOTTOM_VISIBLE);
     }
     
-    const scrollNameDiv = <HTMLDivElement>this._getById(ID_SCROLL_NAME);
     const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
-    scrollNameDiv.innerHTML = "" + percent + "%";
-    
+    this._titleBarUI.scrollName = "" + percent + "%";
+
     if (setterState.heightChanged) {
       this._requestContainerHeight = true;
     }
@@ -307,13 +359,11 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }  
 
   setTag(tag: string): void {
-    this._tag = tag;
-    const tagName = <HTMLDivElement>this._getById(ID_TAG_NAME);
-    tagName.innerText = tag;
+    this._titleBarUI.tagName = tag;
   }
   
   getTag(): string {
-    return this._tag;
+    return this._titleBarUI.tagName;
   }
 
   hasFocus(): boolean {
@@ -408,66 +458,66 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this._createClone();
     shadow.appendChild(clone);
+
+    const headerDiv = DomUtils.getShadowId(this, ID_HEADER);
+    this._titleBarUI = new TitleBarUI({ el: headerDiv });
   }
 
-  private _updateMetadata(): void {
+  private _getMetadata(): ViewerElementMetadata {
+    let metadata: ViewerElementMetadata = {
+      title: "",
+      posture: ViewerElementPosture.NEUTRAL,
+    };
+
     const viewerElement = this.getViewerElement();
-    const metadata: ViewerElementMetadata = viewerElement !== null ? viewerElement.getMetadata() : 
-      {
-        title: "",
-        icon: null,
-        posture: ViewerElementPosture.NEUTRAL,
-        toolTip: null
-      };
+    if (viewerElement != null) {
+      metadata = viewerElement.getMetadata();
+    } else {
+      if (this._defaultMetadata != null) {
+        metadata = this._defaultMetadata;
+      }
+    }
+    return metadata;
+  }
 
-    this._updateTitle(metadata.title);
-    this._updateAwesomeIcon(metadata.icon);
+  private _updateUiFromMetadata(): void {
+    this._updateFromMetadata(this._getMetadata());
+  }
+
+  private _updateFromMetadata(metadata: ViewerElementMetadata): void {
+    this._titleBarUI.commandLine = metadata.title;
+    this._titleBarUI.toolTip = metadata.toolTip == null ? "" : metadata.toolTip;
+    this._titleBarUI.awesomeIconName = metadata.icon == null ? null : metadata.icon;
+    this._titleBarUI.enablePopOut = metadata.moveable !== false;
+    this._titleBarUI.enableClose = metadata.deleteable !== false;
+
     this._updatePosture(metadata.posture);
-    this._updateToolTip(metadata.toolTip);
-  }
-  
-  private _updateTitle(title: string): void {
-    (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).innerText = title;
-  }
-
-  private _updateAwesomeIcon(iconName: string): void {
-    this._awesomeIcon = iconName;
-    const icon = <HTMLDivElement>this._getById(ID_ICON);
-    icon.className = "fa " + (iconName !== null && iconName !== undefined && iconName !== "" ? "fa-" : "") + iconName;
+    this._switchDragDropHandlers(metadata.moveable !== false);
   }
   
   private _updatePosture(posture: ViewerElementPosture): void {
     const container = <HTMLDivElement>this._getById(ID_CONTAINER);
     
-    container.classList.remove(CLASS_RUNNING);
-    container.classList.remove(CLASS_SUCCEEDED);
-    container.classList.remove(CLASS_FAILED);
-    container.classList.remove(CLASS_NEUTRAL);
+    const postureMapping = new Map<ViewerElementPosture, string>();
+    postureMapping.set(ViewerElementPosture.RUNNING, CLASS_RUNNING);
+    postureMapping.set(ViewerElementPosture.SUCCESS, CLASS_SUCCEEDED);
+    postureMapping.set(ViewerElementPosture.FAILURE, CLASS_FAILED);
+    postureMapping.set(ViewerElementPosture.NEUTRAL, CLASS_NEUTRAL);
 
-    container.classList.add({
-        [ViewerElementPosture.RUNNING]: CLASS_RUNNING,
-        [ViewerElementPosture.SUCCESS]: CLASS_SUCCEEDED,
-        [ViewerElementPosture.FAILURE]: CLASS_FAILED,
-        [ViewerElementPosture.NEUTRAL]: CLASS_NEUTRAL,
-      }[posture]);
-  }
-
-  private _updateToolTip(toolTip: string): void {
-    if (toolTip !== null) {
-      (<HTMLDivElement>this._getById(ID_ICON_DIV)).setAttribute('title', toolTip);
-      (<HTMLDivElement>this._getById(ID_COMMAND_LINE)).setAttribute('title', toolTip);
+    for (const [key, value] of postureMapping) {
+      if (key === posture) {
+        container.classList.add(value);
+      } else {
+        container.classList.remove(value);
+      }
     }
   }
 
   private _setUpEventHandlers(): void {
     this.addEventListener(ViewerElement.EVENT_METADATA_CHANGE, this._handleViewerMetadataChanged.bind(this));
-    DomUtils.getShadowId(this, ID_POP_OUT_BUTTON).addEventListener('click', this._emitFramePopOut.bind(this));
-    DomUtils.getShadowId(this, ID_CLOSE_BUTTON).addEventListener('click', this._emitCloseRequest.bind(this));
+    this._titleBarUI.popOutHandler = this._emitFramePopOut.bind(this);
+    this._titleBarUI.closeHandler = this._emitCloseRequest.bind(this);
     
-    const headerDiv = DomUtils.getShadowId(this, ID_HEADER);
-    headerDiv.addEventListener('dragstart', this._handleDragStart.bind(this), false);
-    headerDiv.addEventListener('dragend', this._handleDragEnd.bind(this), false);
-
     const outputDiv = DomUtils.getShadowId(this, ID_OUTPUT);    
     outputDiv.addEventListener('mousedown', this.focus.bind(this));
     outputDiv.addEventListener('click', this.focus.bind(this));
@@ -496,6 +546,18 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     });
   }
 
+  private _switchDragDropHandlers(on: boolean): void {  
+    const headerDiv = DomUtils.getShadowId(this, ID_HEADER);
+    headerDiv.draggable = on;
+    if (on) {
+      headerDiv.addEventListener('dragstart', this._boundHandleDragStart, false);
+      headerDiv.addEventListener('dragend', this._boundHandleDragEnd, false);
+    } else {
+      headerDiv.removeEventListener("dragstart", this._boundHandleDragStart, false);
+      headerDiv.removeEventListener('dragend', this._boundHandleDragEnd, false);
+    }
+  }
+
   private _setUpVirtualScrollArea(): void {
     const outputContainerDiv = DomUtils.getShadowId(this, ID_OUTPUT_CONTAINER);
     DomUtils.preventScroll(outputContainerDiv);
@@ -504,12 +566,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       outputDiv.style.top = "-" + offset +"px";
     });
     
-    // const expandbutton = this._getById(ID_EXPAND_BUTTON);
-    // expandbutton.addEventListener('click', (): void => {
-    //   const expanded = util.htmlValueToBool(this.getAttribute(EtEmbeddedViewer.ATTR_EXPAND), true);
-    //   this.setAttribute(EtEmbeddedViewer.ATTR_EXPAND, "" + !expanded);
-    // });
-
     const setterState: VirtualScrollArea.SetterState = {
       height: this.getMinHeight(),
       heightChanged: true,
@@ -527,10 +583,15 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   private _handleViewerMetadataChanged(): void {
-    this._updateMetadata();
+    this._updateUiFromMetadata();
   }
 
   private _handleDragStart(ev: DragEvent): void {
+    const metadata = this._getMetadata();
+    if (metadata.moveable === false) {
+      return;
+    }
+
     ev.stopPropagation();
 
     const target = <HTMLElement>ev.target;
@@ -612,18 +673,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._executeCommand(commandId);
   }
 
-  //-----------------------------------------------------------------------
-  //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
-
   private _createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -633,26 +682,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       template.innerHTML = `
         <style id=${ThemeableElementBase.ID_THEME}></style>
         <div id='${ID_CONTAINER}' style='display: none;' class='${CLASS_RUNNING}'>
-          <div id='${ID_HEADER}' tabindex='0' draggable='true'>
-            <div class='left_block'>
-              <div id='${ID_ICON_DIV}'><i id='${ID_ICON}'></i></div>
-              <div id='${ID_COMMAND_LINE}'></div>
-            </div>
-            <div class='header_spacer'></div>
-            <div class='right_block'>
-              <div id='${ID_SCROLL_ICON}'><i class='fa fa-arrows-v'></i></div>
-              <div id='${ID_SCROLL_NAME}'></div>
-              <div class='spacer'></div>
-              <div id='${ID_TAG_ICON}'><i class='fa fa-tag'></i></div>
-              <div id='${ID_TAG_NAME}'></div>
-              <div class='spacer'></div>
-` +//              <button id='${ID_EXPAND_BUTTON}' title='Expand/Collapse'><i id='${ID_EXPAND_ICON}' class='fa fa-plus-square-o'></i></button>
-//              <div class='spacer'></div>
-`              <button id='${ID_POP_OUT_BUTTON}'><i class='fa fa-external-link'></i></button>
-              <div class='spacer'></div>
-              <button id='${ID_CLOSE_BUTTON}' title='Close'><i class='fa fa-times-circle'></i></button>` +
-            `</div>` +
-          `</div>
+          <div id='${ID_HEADER}' tabindex='0'></div>
           <div id='${ID_OUTPUT_CONTAINER}'><div id='${ID_OUTPUT}'><slot></slot></div></div>
         </div>`;
       window.document.body.appendChild(template);
@@ -717,7 +747,10 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _executeCommand(command): boolean {
     switch (command) {
       case COMMAND_OPEN_COMMAND_PALETTE:
-        dispatchCommandPaletteRequest(this);
+        const metadata = this._getMetadata();
+        if (metadata.moveable !== false) {
+          dispatchCommandPaletteRequest(this);
+        }
         break;
         
       default:

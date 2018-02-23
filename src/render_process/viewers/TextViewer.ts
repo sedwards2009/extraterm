@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
 "use strict";
@@ -11,6 +11,7 @@ import * as SourceDir from '../../SourceDir';
 import {Disposable} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
+import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
@@ -39,6 +40,7 @@ type VisualState = ViewerElementTypes.VisualState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
 const ID = "EtTextViewerTemplate";
+const ID_CSS_VARS = "ID_CSS_VARS";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_MAIN_STYLE = "ID_MAIN_STYLE";
 const CLASS_HIDE_CURSOR = "hide_cursor";
@@ -98,7 +100,7 @@ function init(): void {
 
 @WebComponent({tag: "et-text-viewer"})
 export class TextViewer extends ViewerElement implements Commandable, AcceptsKeyBindingManager,
-    SupportsClipboardPaste.SupportsClipboardPaste {
+    SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
   
@@ -114,6 +116,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   private _log: Logger;
   private _keyBindingManager: KeyBindingManager = null;
+  private _title = "";
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
   private _metadataEventDoLater: DebouncedDoLater = null;
@@ -125,6 +128,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _editable = false;
   private document: Document;
   private _visualState: VisualState = VisualState.AUTO;
+  private _fontUnitWidth = 10;  // slightly bogus defaults
+  private _fontUnitHeight = 10;
 
   private _mainStyleLoaded = false;
   private _resizePollHandle: Disposable = null;
@@ -153,8 +158,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   getMetadata(): ViewerElementMetadata {
     const metadata = super.getMetadata();
     
-    if (this._bulkFileHandle !== null && this._bulkFileHandle.getMetadata()["filename"] != null) {
-      metadata.title = <string> this._bulkFileHandle.getMetadata()["filename"];
+    if (this._title !== "") {
+      metadata.title = this._title;     
     } else {
       metadata.title = "Text";
     }
@@ -292,7 +297,16 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
         doLater(this._emitVirtualResizeEvent.bind(this));
       }
     });
-    
+
+    this._codeMirror.on("change", () => {
+      // If the contents are changed then drop our ref to the source file and
+      // force getBulkFileHandle() to read from CodeMirror.
+      if (this._bulkFileHandle != null) {
+        this._bulkFileHandle.deref();
+        this._bulkFileHandle = null;
+      }
+    });
+
     // Filter the keyboard events before they reach CodeMirror.
     containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
     containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
@@ -304,20 +318,24 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
       ev.preventDefault();
     });
-        
+    
+    this._updateCssVars(); 
     this._applyVisualState(this._visualState);
-
-    if (this._bulkFileHandle !== null) {
-      this._loadBulkFile(this._bulkFileHandle);
-    }
-
     this._adjustHeight(this._height);
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
-  
+
+  dispose(): void {
+    if (this._bulkFileHandle != null) {
+      this._bulkFileHandle.deref();
+      this._bulkFileHandle = null;
+    }
+    super.dispose();
+  }
+
   setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
     this._keyBindingManager = newKeyBindingManager;
   }
@@ -401,7 +419,12 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
 
   getBulkFileHandle(): BulkFileHandle {
-    return this._bulkFileHandle;
+    if (this._bulkFileHandle != null) {
+      return this._bulkFileHandle;
+    } else {
+      const text =  this._isEmpty ? "" : this._codeMirror.getDoc().getValue();
+      return new BlobBulkFileHandle(this.getMimeType()+";charset=utf8", {}, Buffer.from(text, 'utf8'));
+    }
   }
 
   setBulkFileHandle(handle: BulkFileHandle): void {
@@ -409,18 +432,25 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       this._bulkFileHandle.deref();
       this._bulkFileHandle = null;
     }
+
+    if (handle.getMetadata()["filename"] != null) {
+      this._title = <string> handle.getMetadata()["filename"];
+    } else {
+      this._title = "";
+    }
+
     this._loadBulkFile(handle);
   }
 
   private async _loadBulkFile(handle: BulkFileHandle): Promise<void> {
     handle.ref();
-    this._bulkFileHandle = handle;
     this._metadataEventDoLater.trigger();
     const data = await BulkFileUtils.readDataAsArrayBuffer(handle)
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     const decodedText = Buffer.from(data).toString(charset);
     this._setText(decodedText);
     this.setMimeType(mimeType);
+    this._bulkFileHandle = handle;
 
     // After setting the whole contents of a CodeMirror instance, it takes a
     // short while before CM fully updates itself and is ready to correctly
@@ -574,15 +604,13 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     return mode !== null && mode !== undefined;
   }
   
-  deleteTopPixels(topPixels: number): void {
-    const defaultTextHeight = this._codeMirror.defaultTextHeight();
-    const linesToDelete = Math.min(Math.floor(topPixels / defaultTextHeight), this.lineCount());
+  deleteTopLines(topLines: number): void {
+    const linesToDelete = Math.min(topLines, this.lineCount());
     const pos = { line: 0, ch: 0 };
     const endPos = { line: linesToDelete, ch: 0 };
     this._codeMirror.getDoc().replaceRange("", pos, endPos);
     this._emitVirtualResizeEvent();
   }
-
 
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     if (this._codeMirror !== null) {
@@ -596,7 +624,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
         this._codeMirror.refresh();
       }
     }
-
+    this._updateCssVars();
     VirtualScrollAreaEmitResizeEvent(this);
   }
 
@@ -616,6 +644,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
         ${getCssText()}
         </style>
+        <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id="${ID_CONTAINER}" class="terminal_viewer ${CLASS_UNFOCUSED}"></div>`
 
@@ -624,7 +653,30 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     
     return window.document.importNode(template.content, true);
   }
+
+  private _getCssVarsRules(): string {
+    return `#${ID_CONTAINER} {
+      ${this._getCssFontUnitSizeRule()}
+}`;
+  }
+
+  private _getCssFontUnitSizeRule(): string {
+    return `
+  --terminal-font-unit-width: ${this._fontUnitWidth}px;
+  --terminal-font-unit-height: ${this._fontUnitHeight}px;
+`;
+  }
+
+  private _updateCssVars():  void {
+    const charHeight = this._codeMirror.defaultTextHeight();
+    const charWidth = this._codeMirror.defaultCharWidth();
   
+    this._fontUnitWidth = charWidth;
+    this._fontUnitHeight = charHeight;
+    const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
+    styleElement.textContent = this._getCssVarsRules();
+  }
+
   private _applyVisualState(visualState: VisualState): void {
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     if ((visualState === VisualState.AUTO && this.hasFocus()) ||

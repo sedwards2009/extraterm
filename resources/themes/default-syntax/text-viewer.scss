@@ -48,6 +48,10 @@
   padding: 0 0; /* Horizontal padding of content */
 }
 
+.CodeMirror pre.CodeMirror-line {
+  height: var(--terminal-font-unit-height);
+}
+
 .cm-s-text {
   line-height: 1.3em;
 }

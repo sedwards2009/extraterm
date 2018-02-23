@@ -116,9 +116,19 @@ In the future more shortcuts and features will be added to make more use of this
 
 The shell integration adds a pair of new Extraterm specific commands to your shell. The `show` command is a general tool for showing the contents of a file inside the terminal. Currently it supports showing and highlighting many programming languages and mark up languages. It can also show the most common image formats directly in the terminal.
 
-In the future this tool and the support needed in Extraterm itself will be expanded to support other file formats.
-
 ![Showing an image with the 'show' command](show_image.png)
+
+'show' accepts filenames as arguments and will download an show them. It is also possible to pipe data directly into 'show' via stdin.
+
+'show' supports a number of command line options. These options are related to specifying what kind of data is being shown. Most of the time 'show' can figure this out for itself but when piping data directly into 'show' it is sometimes useful to set them.
+
+* **--charset <*charset*>** the character set used by the file. This is only relevant for text files.
+* **--mimetype <*mimetype*>** the mimetype of the file
+* **--filename <*filename*>** the file name to associate with the file
+
+Other options:
+
+* **-d, --download** specify this option to show the file as a download and not in a specific viewer
 
 
 ## The 'from' Command
@@ -144,6 +154,8 @@ Now I can go into selection mode and cut away the parts of the text I don't need
 ![git status](from_git_2.png)
 
 With a shell pipe and `xargs` I can give the list of documents to the `wc` (word count) command:
+
+Using the `--save` or `-s` option `from` can directly write the frame contents to disk using the file's original filename.
 
 
 ## Executing Commands from Cursor Mode

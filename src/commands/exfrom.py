@@ -14,8 +14,11 @@ import os
 import sys
 import tempfile
 import termios
+import time
 import tty
-from signal import signal, SIGPIPE, SIG_DFL 
+import uuid
+from signal import signal, SIGPIPE, SIG_DFL, SIGTSTP, SIG_IGN, SIGTTOU
+
 
 ##@inline
 from extratermclient import extratermclient
@@ -37,6 +40,14 @@ class BodyData:
 class FrameReadError:
     def __init__(self, message):
         self.message = message
+
+
+class FrameWriter:
+    def __init__(self, writeFunction, outputFlushFunction, errorWriteFunction, errorFlushFunction):
+        self.write = writeFunction
+        self.flush = outputFlushFunction
+        self.errorWrite = errorWriteFunction
+        self.errorFlush = errorFlushFunction
 
 
 def readStdinLine():
@@ -145,20 +156,55 @@ def requestFrame(frame_name):
 
 
 def outputFrame(frame_name):
+    writer = FrameWriter(sys.stdout.buffer.write, sys.stdout.flush, sys.stderr.buffer.write, sys.stderr.flush)
+    rc, metadata = writeFrame(frame_name, writer)
+    return rc
+
+
+def writeFrameToDisk(frame_name):
+    tmpFileName = str(uuid.uuid4()) + ".tmp"
+    with open(tmpFileName, "wb") as fhandle:
+        writer = FrameWriter(fhandle.write, fhandle.flush, sys.stderr.buffer.write, sys.stderr.flush)
+        rc, metadata = writeFrame(frame_name, writer)
+
+    # Compute the final filename
+    filename = None
+    if "filename" in metadata:
+        filename = os.path.basename(metadata["filename"])
+
+    else:
+        if "mimeType" in metadata:
+            filename = metadata["mimeType"].replace("/", "-")
+        else:
+            return rc, tmpFileName
+    
+    counter = 0
+    basename = filename
+
+    while os.path.exists(filename):
+        parts = os.path.splitext(basename)
+        filename = parts[0] + " (" + str(counter) + ")" + parts[1]
+        counter += 1
+    os.rename(tmpFileName, filename)
+
+    return rc, filename    
+
+def writeFrame(frame_name, frameWriter):
     rc = 0
+    metadata = None
     for block in requestFrame(frame_name):
         if isinstance(block, Metadata):
-            pass
+            metadata = block.metadata
         elif isinstance(block, BodyData):
-            sys.stdout.buffer.write(block.data)
+            frameWriter.write(block.data)
         else:
             # FrameReadError
-            sys.stderr.buffer.write(bytes(block.message, 'utf8'))
-            sys.stderr.buffer.write(bytes("\n", "utf8"))
-            sys.stderr.flush()
+            frameWriter.errorWrite.write(bytes(block.message, 'utf8'))
+            frameWriter.errorWrite.write(bytes("\n", "utf8"))
+            frameWriter.errorFlush.flush()
             rc = 1
-    sys.stdout.flush()
-    return rc
+    frameWriter.flush()
+    return rc, metadata
 
 
 def xargs(frame_names, command_list):
@@ -187,29 +233,19 @@ def xargs(frame_names, command_list):
 
 
 def readFrameToTempFile(frame_name):
-    rc = 0
     fhandle = tempfile.NamedTemporaryFile('w+b', delete=False)
-    for block in requestFrame(frame_name):
-        if isinstance(block, Metadata):
-            pass
-        elif isinstance(block, BodyData):
-            fhandle.write(block.data)
-        else:
-            # FrameReadError
-            sys.stderr.buffer.write(bytes(block.message, 'utf8'))
-            sys.stderr.flush()
-            rc = 1
-            break
+    def noop(): pass
+    writer = FrameWriter(fhandle.write, noop, sys.stderr.buffer.write, sys.stderr.flush)
+    rc, metadata = writeFrame(writer)
     fhandle.close()
-
-    return rc, fhandle 
+    return rc, fhandle
 
 
 def main():
     parser = argparse.ArgumentParser(prog='from', description='Fetch data from an Extraterm frame.')
     parser.add_argument('frames', metavar='frame_ID', type=str, nargs='+', help='a frame ID')
+    parser.add_argument('-s', '--save', dest='save', action='store_true', default=None, help='write frames to disk')
     parser.add_argument('--xargs', metavar='xargs', type=str, nargs=argparse.REMAINDER, help='execute a command with frame contents as temp file names')
-
     args = parser.parse_args()
 
     if not extratermclient.isExtraterm():
@@ -224,7 +260,11 @@ def main():
     if args.xargs is None:
         # Normal execution. Output the frames.
         for frame_name in args.frames:
-            rc = outputFrame(frame_name)
+            if args.save:
+                rc, filename = writeFrameToDisk(frame_name)
+                print("Wrote " +filename)
+            else:
+                rc = outputFrame(frame_name)
             if rc != 0:
                 sys.exit(rc)
         sys.exit(0)

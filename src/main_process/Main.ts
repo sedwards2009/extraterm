@@ -695,8 +695,8 @@ function setConfigDefaults(config: Config): void {
   config.systemConfig = defaultValue(config.systemConfig, null);
   config.expandedProfiles = defaultValue(config.expandedProfiles, null);
   config.blinkingCursor = defaultValue(config.blinkingCursor, false);
-  config.scrollbackLines = defaultValue(config.scrollbackLines, 500000);
-  config.scrollbackFrames = defaultValue(config.scrollbackFrames, 100);
+  config.scrollbackMaxLines = defaultValue(config.scrollbackMaxLines, 500000);
+  config.scrollbackMaxFrames = defaultValue(config.scrollbackMaxFrames, 100);
   config.showTips = defaultValue<ShowTipsStrEnum>(config.showTips, 'always');
   config.tipTimestamp = defaultValue(config.tipTimestamp, 0);
   config.tipCounter = defaultValue(config.tipCounter, 0);
@@ -990,8 +990,8 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.tipTimestamp = incomingConfig.tipTimestamp;
   newConfig.tipCounter = incomingConfig.tipCounter;
   newConfig.blinkingCursor = incomingConfig.blinkingCursor;
-  newConfig.scrollbackLines = incomingConfig.scrollbackLines;
-  newConfig.scrollbackFrames = incomingConfig.scrollbackFrames;
+  newConfig.scrollbackMaxLines = incomingConfig.scrollbackMaxLines;
+  newConfig.scrollbackMaxFrames = incomingConfig.scrollbackMaxFrames;
   newConfig.terminalFontSize = incomingConfig.terminalFontSize;
   newConfig.terminalFont = incomingConfig.terminalFont;
   newConfig.commandLineActions = incomingConfig.commandLineActions;

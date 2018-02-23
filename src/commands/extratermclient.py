@@ -37,7 +37,7 @@ class extratermclient:
             print(rc, end="")
         print("\x00", end="")
 
-    def startFileTransfer(mimeType, charset, filename, filesize=-1):
+    def startFileTransfer(mimeType, charset, filename, filesize=-1, download=False):
         payload = {}
         if mimeType is not None:
             payload["mimeType"] = mimeType
@@ -47,6 +47,8 @@ class extratermclient:
             payload["charset"] = charset
         if filesize != -1:
             payload["filesize"] = filesize
+        if download:
+            payload["download"] = "true"
         jsonPayload = json.dumps(payload)
         print(extratermclient.INTRO + extratermclient.cookie() + ";5;" + str(len(jsonPayload)) + "\x07" + jsonPayload, end="")
 
