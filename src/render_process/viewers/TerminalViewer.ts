@@ -346,6 +346,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       });
     }
 
+    this._updateCssVars();
+    
     if (this._needEmulatorResize) {
       this._needEmulatorResize = false;
       this._resizePoll();

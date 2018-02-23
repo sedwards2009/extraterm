@@ -74,8 +74,13 @@
 .CodeMirror-lines {
   padding: 0 0; /* Vertical padding around content */
 }
+
 .CodeMirror pre {
   padding: 0 0; /* Horizontal padding of content */
+}
+
+.CodeMirror pre.CodeMirror-line {
+  height: var(--terminal-font-unit-height);
 }
 
 .CodeMirror-selected, .terminal-unfocused .CodeMirror-selected {

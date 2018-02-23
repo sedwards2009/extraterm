@@ -40,6 +40,7 @@ type VisualState = ViewerElementTypes.VisualState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 
 const ID = "EtTextViewerTemplate";
+const ID_CSS_VARS = "ID_CSS_VARS";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_MAIN_STYLE = "ID_MAIN_STYLE";
 const CLASS_HIDE_CURSOR = "hide_cursor";
@@ -127,6 +128,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _editable = false;
   private document: Document;
   private _visualState: VisualState = VisualState.AUTO;
+  private _fontUnitWidth = 10;  // slightly bogus defaults
+  private _fontUnitHeight = 10;
 
   private _mainStyleLoaded = false;
   private _resizePollHandle: Disposable = null;
@@ -315,7 +318,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
       ev.preventDefault();
     });
-        
+    
+    this._updateCssVars(); 
     this._applyVisualState(this._visualState);
     this._adjustHeight(this._height);
   }
@@ -620,7 +624,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
         this._codeMirror.refresh();
       }
     }
-
+    this._updateCssVars();
     VirtualScrollAreaEmitResizeEvent(this);
   }
 
@@ -640,6 +644,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
         ${getCssText()}
         </style>
+        <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id="${ID_CONTAINER}" class="terminal_viewer ${CLASS_UNFOCUSED}"></div>`
 
@@ -648,7 +653,30 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     
     return window.document.importNode(template.content, true);
   }
+
+  private _getCssVarsRules(): string {
+    return `#${ID_CONTAINER} {
+      ${this._getCssFontUnitSizeRule()}
+}`;
+  }
+
+  private _getCssFontUnitSizeRule(): string {
+    return `
+  --terminal-font-unit-width: ${this._fontUnitWidth}px;
+  --terminal-font-unit-height: ${this._fontUnitHeight}px;
+`;
+  }
+
+  private _updateCssVars():  void {
+    const charHeight = this._codeMirror.defaultTextHeight();
+    const charWidth = this._codeMirror.defaultCharWidth();
   
+    this._fontUnitWidth = charWidth;
+    this._fontUnitHeight = charHeight;
+    const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
+    styleElement.textContent = this._getCssVarsRules();
+  }
+
   private _applyVisualState(visualState: VisualState): void {
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     if ((visualState === VisualState.AUTO && this.hasFocus()) ||
