@@ -805,7 +805,7 @@ function getFonts(): FontInfo[] {
       } );
   
   const allFonts = [...getBundledFonts(), ...systemFonts];
-  const fonts = _.unique(allFonts, false, "postscriptName");
+  const fonts = _.uniqBy(allFonts, x => x.postscriptName);
   return fonts;
 }
 

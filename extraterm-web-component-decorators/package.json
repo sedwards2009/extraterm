@@ -19,7 +19,7 @@
   },
   "scripts": {
     "run": "false",
-    "build-all": "npm run build",
+    "build-all": "yarn run build",
     "build": "tsc && webpack test/TestCode.js test/bundle.js",
     "server": "http-server ."
   },

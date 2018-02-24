@@ -5,7 +5,7 @@
   "main": "src/InjectShellIntegrationExtension.js",
   "scripts": {
     "build": "tsc",
-    "test": "npm run build ; nodeunit src/InjectShellIntegrationExtensionTest.js"
+    "test": "yarn run build ; nodeunit src/InjectShellIntegrationExtensionTest.js"
   },
   "dependencies": {
   },

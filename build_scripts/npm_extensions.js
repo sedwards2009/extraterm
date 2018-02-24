@@ -18,15 +18,15 @@ switch(process.argv[2]) {
     break;
 
   case 'build':
-    npmCommandExtensions('run build');
+    yarnCommandExtensions('run build');
     break;
 
   case 'install':
-    npmCommandExtensions('install');
+    yarnCommandExtensions('install');
     break;
 
   case 'prune':
-    npmCommandExtensions('prune --production');
+    yarnCommandExtensions('prune --production');
     break;
 
   default:
@@ -48,15 +48,15 @@ function installExtensionApi() {
     const package = JSON.parse(packageJson);
     if (package.devDependencies !== undefined && package.devDependencies["extraterm-extension-api"] !== undefined) {
       echo('cd ' + fullExtensionPath);
-      echo('npm install extraterm-extension-api')
-      exec('npm install extraterm-extension-api');
+      echo('yarn install extraterm-extension-api')
+      exec('yarn install extraterm-extension-api');
     }
 
     cd(currentDir);
   });
 }
 
-function findExtensions(npmCommand) {
+function findExtensions() {
   const sourceExtensionDirs = ['src/test/extensions', 'extensions'];
   const extensionDirs = [];
 
@@ -72,15 +72,15 @@ function findExtensions(npmCommand) {
   return extensionDirs;
 }
 
-function npmCommandExtensions(command) {
+function yarnCommandExtensions(command) {
   const currentDir = pwd();
   findExtensions().forEach(fullExtensionPath => {
     echo('');
     echo('cd ' + fullExtensionPath);
     cd(fullExtensionPath);
 
-    echo('npm ' + command)
-    exec('npm '+ command);
+    echo('yarn ' + command)
+    exec('yarn '+ command);
 
     cd(currentDir);
   });
