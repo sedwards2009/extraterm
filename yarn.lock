@@ -1049,7 +1049,7 @@ detect-indent@^4.0.0:
   dependencies:
     repeating "^2.0.0"
 
-detect-libc@^1.0.2:
+detect-libc@^1.0.2, detect-libc@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-1.0.3.tgz#fa137c4bd698edf55cd5cd02ac559f91a4c4ba9b"
 
@@ -1162,12 +1162,13 @@ electron-packager@8.7.0:
     sanitize-filename "^1.6.0"
     semver "^5.3.0"
 
-electron-rebuild@1.6.0:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/electron-rebuild/-/electron-rebuild-1.6.0.tgz#e8d26f4d8e9fe5388df35864b3658e5cfd4dcb7e"
+electron-rebuild@1.7.2:
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/electron-rebuild/-/electron-rebuild-1.7.2.tgz#7c7b60c58cfea0d42601e469a943a8d87ab3332b"
   dependencies:
     colors "^1.1.2"
     debug "^2.6.3"
+    detect-libc "^1.0.3"
     fs-extra "^3.0.1"
     node-abi "^2.0.0"
     node-gyp "^3.6.0"
@@ -4624,9 +4625,9 @@ write-file-atomic@^1.1.2, write-file-atomic@^1.1.4:
     imurmurhash "^0.1.4"
     slide "^1.1.5"
 
-wsrun@^1.5.1:
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/wsrun/-/wsrun-1.5.1.tgz#dd245e657f9b26fc4e0784aab185f5643d210ee8"
+wsrun@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/wsrun/-/wsrun-1.6.0.tgz#5a121059486b30bbbb8aa234653840c807716743"
   dependencies:
     "@types/chalk" "^2.2.0"
     bluebird "^3.5.1"

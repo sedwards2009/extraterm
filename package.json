@@ -11,7 +11,7 @@
   },
   "scripts": {
     "run": "electron extraterm/src/main_process/Main.js --dev-tools",
-    "build-all": "yarn run build-web-component-decorators && rm -rf node_modules/extraterm-web-component-decorators && yarn install --check-files && yarn run yarn-install-extension-api && yarn run build && yarn run build-extensions",
+    "build": "wsrun build --exclude-missing",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o ptyw.js,font-manager -f -v 1.6.8",
     "yarn-prune-extensions": "node build_scripts/npm_extensions.js prune",
     "package": "node build_scripts/build_packages.js"
@@ -29,7 +29,17 @@
     "packages/*",
     "extensions/*"
   ],
+
+  "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
+  "dependencies": {
+    "font-manager": "0.2.2"
+  },
+
+  "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
+  "optionalDependencies": {
+    "ptyw.js": "0.4.0"
+  },
   "devDependencies": {
-    "wsrun": "^1.5.1"
+    "wsrun": "^1.7.0"
   }
 }

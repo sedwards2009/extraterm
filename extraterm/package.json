@@ -52,7 +52,7 @@
     "cajon": "0.2.10",
     "electron": "1.6.8",
     "electron-packager": "8.7.0",
-    "electron-rebuild": "1.6.0",
+    "electron-rebuild": "1.7.2",
     "extraterm-extension-api": "file:../packages/extraterm-extension-api/",
     "finalhandler": "0.4.0",
     "modclean": "2.1.0",
