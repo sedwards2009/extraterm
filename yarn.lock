@@ -4625,9 +4625,9 @@ write-file-atomic@^1.1.2, write-file-atomic@^1.1.4:
     imurmurhash "^0.1.4"
     slide "^1.1.5"
 
-wsrun@^1.6.0:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/wsrun/-/wsrun-1.6.0.tgz#5a121059486b30bbbb8aa234653840c807716743"
+wsrun@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/wsrun/-/wsrun-1.7.0.tgz#880e27e061944199770f215705ae41cf8e4263be"
   dependencies:
     "@types/chalk" "^2.2.0"
     bluebird "^3.5.1"
