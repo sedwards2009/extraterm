@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,6 +7,7 @@ require('shelljs/global');
 const fs = require('fs');
 const path = require('path');
 const packager = require('electron-packager');
+const getRepoInfo = require('git-repo-info');
 
 const log = console.log.bind(console);
 const BUILD_TMP = 'build_tmp';
@@ -30,7 +31,9 @@ function main() {
   const packageData = JSON.parse(packageJson);
   
   const gitUrl = packageData.repository.url.replace("git://github.com/", "git@github.com:");
-  
+   
+  const info = getRepoInfo();
+
   echo("Fetching a clean copy of the source code from " + gitUrl);
   cd(BUILD_TMP);
 
@@ -38,26 +41,18 @@ function main() {
   const buildTmpPath = "" + pwd();
   
   exec("git clone --depth 1 " + gitUrl);
-  
+  exec("git checkout " + info.branch);
+
   echo("Setting up the run time dependencies in " + BUILD_TMP);
 
   cd("extraterm");
 
-  echo("Building web-component-decorators");
-  exec("npm run npm-install-web-component-decorators");
-  exec("npm run build-web-component-decorators");
-
-  echo("Downloading main dependencies.");
-  exec("npm install");
-  exec("npm run npm-install-extensions");
-  
-  echo("Building main");
-  exec("npm run build");
-  exec("npm run build-extensions");
+  exec("yarn install");
+  exec("yarn run electron-rebuild");
+  exec("yarn run build");
 
   echo("Removing development dependencies");
-  exec("npm prune --production");
-  exec("npm run npm-prune-extensions");
+  exec("yarn install --production=true");
 
   // Create the commands zip
   echo("Creating commands.zip");
@@ -111,7 +106,7 @@ function main() {
 
   function pruneEmojiOne(versionedOutputDir, platform) {
     if (platform !== "linux") {
-      const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "resources/themes/default/emojione-android.ttf");
+      const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/emojione-android.ttf");
       rm(emojiOnePath);
     }
   }
@@ -185,14 +180,14 @@ function main() {
         out: buildTmpPath
       };
       if (platform === "win32") {
-        packagerOptions.icon = "resources/logo/extraterm_small_logo.ico";
+        packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.ico";
         packagerOptions.win32metadata = {
           FileDescription: "Extraterm",
           ProductName: "Extraterm",
           LegalCopyright: "(C) 2018 Simon Edwards"
         };
       } else if (platform === "darwin") {
-        packagerOptions.icon = "resources/logo/extraterm_small_logo.icns";
+        packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.icns";
       }
 
       packager(packagerOptions, function done(err, appPath) {
