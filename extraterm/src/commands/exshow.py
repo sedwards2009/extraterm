@@ -90,7 +90,7 @@ def main():
     parser.add_argument('-d', '--download', dest='download', action='store_true', default=None, help='download the file and don\'t show it')
     parser.add_argument('--mimetype', dest='mimetype', action='store', default=None, help='the mime-type of the input file (default: auto-detect)')
     parser.add_argument('--filename', dest='filename', action='store', default=None, help='sets the file name in the metadata sent to the terminal (useful when reading from stdin).')
-    
+    parser.add_argument('-t', '--text', dest='text', action='store_true', default=None, help='Treat the file as plain text.')
     parser.add_argument('files', metavar='file', type=str, nargs='*', help='file name. The file data is read from stdin if no files are specified.')
     args = parser.parse_args()
  
@@ -98,15 +98,19 @@ def main():
         print("Sorry, you're not using Extraterm as your terminal.")
         return 1
 
+    mimetype = args.mimetype
+    if args.text:
+        mimetype = "text/plain"
+
     if len(args.files) != 0:
         for filename in args.files:
-            result = ShowFile(filename, mimeType=args.mimetype, charset=args.charset, filenameMeta=args.filename,
+            result = ShowFile(filename, mimeType=mimetype, charset=args.charset, filenameMeta=args.filename,
                               download=args.download)
             if result != 0:
                 return result
         return 0
     else:
-        return ShowStdin(mimeType=args.mimetype, charset=args.charset, filenameMeta=args.filename,
+        return ShowStdin(mimeType=mimetype, charset=args.charset, filenameMeta=args.filename,
                          download=args.download)
 
 main()
