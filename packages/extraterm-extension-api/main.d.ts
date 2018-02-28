@@ -237,6 +237,19 @@ export interface Workspace {
   registerCommandsOnTextViewer(
     commandLister: (textViewer: TextViewer) => CommandEntry[],
     commandExecutor: (textViewer: TextViewer, commandId: string, commandArguments?: object) => void): Disposable;
+
+  extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;
+  registerViewer(name: string, viewerClass: ExtensionViewerBase, mimeTypes: string[]): void; 
+}
+
+
+export interface ExtensionViewerBase {
+  // protected _setMetadata(metadata: Metadata): string;
+}
+
+
+export interface ExtensionViewerBaseConstructor {
+  new(): ExtensionViewerBase;
 }
 
 
