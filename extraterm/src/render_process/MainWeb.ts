@@ -23,7 +23,8 @@ import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
-import {ExtensionManager} from './extension/ExtensionManager';
+import {ExtensionManagerImpl} from './extension/ExtensionManager';
+import {ExtensionManager} from './extension/InternalInterfaces';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import * as keybindingmanager from './keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../logging/Logger';
@@ -114,6 +115,7 @@ export function startUp(): void {
     doc.body.innerHTML = "";  // Remove the old contents.
     doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
 
+    startUpExtensions();
     startUpMainWebUi();
     startUpMainMenu();
     startUpResizeCanary();
@@ -123,8 +125,6 @@ export function startUp(): void {
     if (process.platform === "darwin") {
       setupOSXMenus(mainWebUi);
     }
-
-    startUpExtensions();
 
     mainWebUi.newTerminalTab();
     mainWebUi.focus();
@@ -178,6 +178,7 @@ function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
   config.injectConfigDistributor(mainWebUi, configManager);
   keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
+  mainWebUi.setExtensionManager(extensionManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
     <div class="space"></div>
     <button id="${ID_MENU_BUTTON}" class="btn btn-quiet"><i class="fa fa-bars"></i></button>
@@ -294,7 +295,7 @@ function startUpWindowEvents(): void {
 }
 
 function startUpExtensions() {
-  extensionManager = new ExtensionManager();
+  extensionManager = new ExtensionManagerImpl();
   extensionManager.startUp();
 }
 
@@ -604,9 +605,9 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
     commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => {
       let result: CommandEntry[] = commandable.getCommandPaletteEntries(commandableStack);
       if (commandable instanceof EtTerminal) {
-        result = [...result, ...extensionManager.getExtensionBridge().getWorkspaceTerminalCommands(commandable)];
+        result = [...result, ...extensionManager.getWorkspaceTerminalCommands(commandable)];
       } else if (commandable instanceof TextViewer) {
-        result = [...result, ...extensionManager.getExtensionBridge().getWorkspaceTextViewerCommands(commandable)];
+        result = [...result, ...extensionManager.getWorkspaceTextViewerCommands(commandable)];
       }
       return result;
     }));

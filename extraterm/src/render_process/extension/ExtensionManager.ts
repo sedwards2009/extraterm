@@ -20,7 +20,7 @@ import {PopDownListPicker} from '../gui/PopDownListPicker';
 import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
 import {TerminalViewer} from '../viewers/TerminalViewer';
-import {ExtensionBridge, InternalExtensionContext, CommandRegistration} from './InternalInterfaces';
+import {ExtensionManager, ExtensionBridge, InternalExtensionContext, CommandRegistration} from './InternalInterfaces';
 import {FrameViewerProxy, TerminalOutputProxy, TextViewerProxy} from './ViewerProxies';
 import {TerminalProxy, TerminalTabProxy, WorkspaceProxy} from './Proxies';
 
@@ -32,7 +32,7 @@ interface ActiveExtension {
 }
 
 
-export class ExtensionManager {
+export class ExtensionManagerImpl implements ExtensionManager {
   private _log: Logger = null;
   private _extensionLoader: ExtensionLoader = null;
   private _activeExtensions: ActiveExtension[] = [];
@@ -52,8 +52,22 @@ export class ExtensionManager {
     }
   }
 
-  getExtensionBridge(): ExtensionBridge {
-    return this._extensionBridge;
+  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[] {
+    return this._extensionBridge.getWorkspaceTerminalCommands(terminal);
+  }
+
+  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[]{
+    return this._extensionBridge.getWorkspaceTextViewerCommands(textViewer);
+  }
+
+  findViewerElementTagByMimeType(mimeType: string): string {
+    for (let extension of this._activeExtensions) {
+      const tag = extension.extensionContextImpl.findViewerElementTagByMimeType(mimeType);
+      if (tag !== null) {
+        return tag;
+      }
+    }
+    return null;
   }
 
   private _startExtension(extensionMetadata: ExtensionMetadata): void {
@@ -320,5 +334,9 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
         return new FrameViewerProxy(this, viewer);
       }
       return null;
+  }
+
+  findViewerElementTagByMimeType(mimeType: string): string {
+    return this.workspace.findViewerElementTagByMimeType(mimeType);
   }
 }

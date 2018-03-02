@@ -10,6 +10,13 @@ import {ViewerElement} from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 
+export interface ExtensionManager {
+  startUp(): void;
+  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[];
+  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[];
+
+  findViewerElementTagByMimeType(mimeType: string): string;
+}
 
 export interface CommandRegistration<V> {
   commandLister: (viewer: V) => ExtensionApi.CommandEntry[];
@@ -34,4 +41,6 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext 
   getTabProxy(terminal: EtTerminal): ExtensionApi.Tab;
   getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal;
   getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer;
+
+  findViewerElementTagByMimeType(mimeType: string): string;
 }

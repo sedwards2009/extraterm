@@ -1,11 +1,22 @@
 import * as ExtensionApi from 'extraterm-extension-api';
 import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
 import {InternalExtensionContext} from './InternalInterfaces';
+import {Logger, getLogger} from '../../logging/Logger';
+import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
 
+
+interface RegisteredViewer {
+  tag: string;
+  mimeTypes: string[];
+}
 
 export class WorkspaceProxy implements ExtensionApi.Workspace {
+  private _log: Logger = null;
+  private _registeredViewers: RegisteredViewer[] = [];
 
   constructor(private _internalExtensionContext: InternalExtensionContext) {
+    this._log = getLogger("WorkspaceProxy", this);
+    this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
   }
 
   getTerminals(): ExtensionApi.Terminal[] {
@@ -39,9 +50,57 @@ export class WorkspaceProxy implements ExtensionApi.Workspace {
   extensionViewerBaseConstructor: ExtensionApi.ExtensionViewerBaseConstructor;
 
   registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor, mimeTypes: string[]): void {
+    const viewerElementProxyClass = class extends ExtensionViewerProxy {
+      protected _createExtensionViewer(): ExtensionApi.ExtensionViewerBase {
+        return new viewerClass();
+      }
+    };
+    
+// FIXME
+    const tag = this._internalExtensionContext.extensionMetadata.name + "-" + kebabCase(name);
+    this._log.info("Registering custom element ", tag);
+    window.customElements.define(tag, viewerElementProxyClass);
 
+    this._registeredViewers.push({
+      mimeTypes, tag
+    });
   }
 
+  findViewerElementTagByMimeType(mimeType: string): string {
+    for (const registeredViewer of this._registeredViewers) {
+      if (registeredViewer.mimeTypes.indexOf(mimeType) !== -1) {
+        return registeredViewer.tag;
+      }
+    }
+    return null;
+  }
+}
+
+function kebabCase(name: string): string {
+  return name.split(/(?=[ABCDEFGHIJKLMNOPQRSTUVWXYZ])/g).map(s => s.toLowerCase()).join("-");
+}
+
+
+class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase {
+  constructor() {
+    console.log("ExtensionViewerBaseImpl()");
+  }
+}
+
+
+class ExtensionViewerProxy extends SimpleViewerElement {
+  private _extensionViewer: ExtensionApi.ExtensionViewerBase = null;
+
+  constructor() {
+    super();
+    this._extensionViewer = this._createExtensionViewer();
+
+    
+  }
+
+  protected _createExtensionViewer(): ExtensionApi.ExtensionViewerBase {
+    return null;  
+  }
 }
 
 

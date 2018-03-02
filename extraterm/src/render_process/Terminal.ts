@@ -55,6 +55,7 @@ import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import {Config, ConfigDistributor, CommandLineAction, injectConfigDistributor, AcceptsConfigDistributor} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
+import { ExtensionManager } from './extension/InternalInterfaces';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -188,7 +189,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _configManager: ConfigDistributor = null;
   private _keyBindingManager: KeyBindingManager = null;
-  
+  private _extensionManager: ExtensionManager = null;
+
   private _title = "New Tab";
   private _frameFinder: FrameFinder = null;
   
@@ -430,6 +432,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     if (this._emulator != null) {
       this._initDownloadApplicationModeHandler();
     }
+  }
+
+  setExtensionManager(extensionManager: ExtensionManager): void {
+    this._extensionManager = extensionManager;
   }
 
   private _isNoFrameCommand(commandLine: string): boolean {
@@ -2078,14 +2084,20 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _createMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): ViewerElement {
+    let tag: string = null;
     const candidates = viewerClasses.filter( (viewerClass) => viewerClass.supportsMimeType(mimeType) );
-    
-    if (candidates.length === 0) {
+    if (candidates.length !== 0) {
+      tag = candidates[0].TAG_NAME;
+    } else {
+      tag = this._extensionManager.findViewerElementTagByMimeType(mimeType);
+    }
+
+    if (tag == null) {
       this._log.debug("Unknown mime type: " + mimeType);
       return null;
     }
     
-    const dataViewer = <ViewerElement> this._getWindow().document.createElement(candidates[0].TAG_NAME);
+    const dataViewer = <ViewerElement> this._getWindow().document.createElement(tag);
     injectKeyBindingManager(dataViewer, this._keyBindingManager);
     injectConfigDistributor(dataViewer, this._configManager);
     if (bulkFileHandle !== null) {

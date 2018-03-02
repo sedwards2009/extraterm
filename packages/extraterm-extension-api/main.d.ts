@@ -252,7 +252,12 @@ export interface ExtensionViewerBaseConstructor {
   new(): ExtensionViewerBase;
 }
 
-
+/**
+ * This interface grants the extension at load and activtion time.
+ * 
+ * It provides access to the whole Extraterm extension API, as well as some
+ * convenience class and objects.
+ */
 export interface ExtensionContext {
   workspace: Workspace;
   codeMirrorModule: typeof CodeMirror;

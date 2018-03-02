@@ -43,6 +43,7 @@ import {EtViewerTab} from './ViewerTab';
 import {PtyIpcBridge} from './PtyIpcBridge';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
+import { ExtensionManager } from './extension/InternalInterfaces';
 
 type Config = config.Config;
 type ConfigManager =config.ConfigDistributor;
@@ -133,6 +134,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   private _tabIdCounter = 0;
   private _configManager: ConfigManager = null;
   private _keyBindingManager: KeyBindingManager = null;
+  private _extensionManager: ExtensionManager = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _lastFocus: Element = null;
   private _splitLayout = new SplitLayout();
@@ -171,7 +173,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
     this._keyBindingManager = keyBindingManager;
   }
-  
+
+  setExtensionManager(extensionManager: ExtensionManager): void {
+    this._extensionManager = extensionManager;
+  }
+
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._themes = themes;
   }
@@ -538,6 +544,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     newTerminal.setBulkFileBroker(this._fileBroker);
     config.injectConfigDistributor(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
+    newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
     this._addTab(tabWidget, newTerminal);
