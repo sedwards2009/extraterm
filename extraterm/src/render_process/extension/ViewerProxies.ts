@@ -1,6 +1,6 @@
 import * as DomUtils from '../DomUtils';
 import * as ExtensionApi from 'extraterm-extension-api';
-import {ExtensionBridge, InternalExtensionContext, CommandRegistration} from './InternalInterfaces';
+import {ExtensionUiUtils, ProxyFactory} from './InternalInterfaces';
 import {ViewerElement} from '../viewers/ViewerElement';
 import {EtTerminal} from '../Terminal';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
@@ -12,12 +12,12 @@ abstract class ViewerProxy implements ExtensionApi.ViewerBase {
 
   viewerType: string;
 
-  constructor(public _internalExtensionContext: InternalExtensionContext, public _viewer: ViewerElement) {
+  constructor(public _proxyFactory: ProxyFactory, public _viewer: ViewerElement) {
   }
 
   getTab(): ExtensionApi.Tab {
     const terminal = this._getOwningEtTerminal();
-    return terminal == null ? null : this._internalExtensionContext.getTabProxy(terminal);
+    return terminal == null ? null : this._proxyFactory.getTabProxy(terminal);
   }
 
   private _getOwningEtTerminal(): EtTerminal {
@@ -32,7 +32,7 @@ abstract class ViewerProxy implements ExtensionApi.ViewerBase {
 
   getOwningTerminal(): ExtensionApi.Terminal {
     const terminal = this._getOwningEtTerminal();
-    return terminal == null ? null : this._internalExtensionContext.getTerminalProxy(terminal);
+    return terminal == null ? null : this._proxyFactory.getTerminalProxy(terminal);
   }
 }
 
@@ -40,8 +40,8 @@ export class TerminalOutputProxy extends ViewerProxy implements ExtensionApi.Ter
 
   viewerType: 'terminal-output' = 'terminal-output';
 
-  constructor(public _internalExtensionContext: InternalExtensionContext, private _terminalViewer: TerminalViewer) {
-    super(_internalExtensionContext, _terminalViewer);
+  constructor(public _proxyFactory: ProxyFactory, private _terminalViewer: TerminalViewer) {
+    super(_proxyFactory, _terminalViewer);
   }
 
   isLive(): boolean {
@@ -54,14 +54,14 @@ export class FrameViewerProxy extends ViewerProxy implements ExtensionApi.FrameV
 
   viewerType: 'frame' = 'frame';
 
-  constructor(public _internalExtensionContext: InternalExtensionContext, private _embeddedViewer: EmbeddedViewer) {
-    super(_internalExtensionContext, _embeddedViewer);
+  constructor(public _proxyFactory: ProxyFactory, private _embeddedViewer: EmbeddedViewer) {
+    super(_proxyFactory, _embeddedViewer);
   }
 
   getContents(): ExtensionApi.Viewer {
     const viewerElement = this._embeddedViewer.getViewerElement();
     if (viewerElement !== null) {
-      return this._internalExtensionContext.getViewerProxy(viewerElement);
+      return this._proxyFactory.getViewerProxy(viewerElement);
     }
     return null; 
   }
@@ -72,8 +72,8 @@ export class TextViewerProxy extends ViewerProxy implements ExtensionApi.TextVie
 
   viewerType: 'text' = 'text';
 
-  constructor(_internalExtensionContext: InternalExtensionContext, private _textViewer: TextViewer) {
-    super(_internalExtensionContext, _textViewer);
+  constructor(_proxyFactory: ProxyFactory, private _textViewer: TextViewer) {
+    super(_proxyFactory, _textViewer);
   }
   
   getTabSize(): number {

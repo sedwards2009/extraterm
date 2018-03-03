@@ -18,8 +18,13 @@ export interface ExtensionManager {
   findViewerElementTagByMimeType(mimeType: string): string;
 }
 
-export interface ExtensionBridge {
-  workspaceGetTerminals(): EtTerminal[];
+export interface ProxyFactory {
+  getTabProxy(terminal: EtTerminal): ExtensionApi.Tab;
+  getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal;
+  getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer;
+}
+
+export interface ExtensionUiUtils {
   showNumberInput(terminal: EtTerminal, options: ExtensionApi.NumberInputOptions): Promise<number | undefined>;
   showListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
 }
@@ -31,12 +36,10 @@ export interface InternalWorkspace extends ExtensionApi.Workspace {
 }
 
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
-  extensionBridge: ExtensionBridge;
+  extensionUiUtils: ExtensionUiUtils;
   extensionMetadata: ExtensionMetadata;
   internalWorkspace: InternalWorkspace;
-  getTabProxy(terminal: EtTerminal): ExtensionApi.Tab;
-  getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal;
-  getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer;
+  proxyFactory: ProxyFactory;
 
   findViewerElementTagByMimeType(mimeType: string): string;
 }

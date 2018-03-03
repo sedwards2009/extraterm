@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {DisposableItemList} from '../../utils/DisposableUtils';
 import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
-import {InternalExtensionContext, InternalWorkspace} from './InternalInterfaces';
+import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalInterfaces';
 import {Logger, getLogger} from '../../logging/Logger';
 import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
 
@@ -34,8 +34,9 @@ export class WorkspaceProxy implements InternalWorkspace {
   }
 
   getTerminals(): ExtensionApi.Terminal[] {
-    return this._internalExtensionContext.extensionBridge.workspaceGetTerminals()
-      .map(terminal => this._internalExtensionContext.getTerminalProxy(terminal));
+    return []; // FIXME
+    // return this._internalExtensionContext.extensionBridge.workspaceGetTerminals()
+    //   .map(terminal => this._internalExtensionContext.getTerminalProxy(terminal));
   }
 
   private _onDidCreateTerminalListenerList = new DisposableItemList<(e: ExtensionApi.Terminal) => any>();
@@ -171,7 +172,8 @@ class ExtensionViewerProxy extends SimpleViewerElement {
 
 export class TerminalTabProxy implements ExtensionApi.Tab {
 
-  constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
+  constructor(private _internalExtensionContext: ProxyFactory, private _extensionUiUtils: ExtensionUiUtils,
+    private _terminal: EtTerminal) {
   }
 
   getTerminal(): ExtensionApi.Terminal {
@@ -179,11 +181,11 @@ export class TerminalTabProxy implements ExtensionApi.Tab {
   }
 
   showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
-    return this._internalExtensionContext.extensionBridge.showNumberInput(this._terminal, options);
+    return this._extensionUiUtils.showNumberInput(this._terminal, options);
   }
 
   showListPicker(options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
-    return this._internalExtensionContext.extensionBridge.showListPicker(this._terminal, options);
+    return this._extensionUiUtils.showListPicker(this._terminal, options);
   }
 }
 
@@ -192,11 +194,11 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   
   viewerType: 'terminal-output';
 
-  constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
+  constructor(private _proxyFactory: ProxyFactory, private _terminal: EtTerminal) {
   }
 
   getTab(): ExtensionApi.Tab {
-    return this._internalExtensionContext.getTabProxy(this._terminal);
+    return this._proxyFactory.getTabProxy(this._terminal);
   }
 
   type(text: string): void {
@@ -204,7 +206,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   getViewers(): ExtensionApi.Viewer[] {
-    return this._terminal.getViewerElements().map(viewer => this._internalExtensionContext.getViewerProxy(viewer));
+    return this._terminal.getViewerElements().map(viewer => this._proxyFactory.getViewerProxy(viewer));
   }
 
   getExtratermCookieValue(): string {
