@@ -137,7 +137,6 @@
         "./src/utils/ByteCountingStreamTransform.ts",
         "./src/utils/DoLater.ts",
         "./src/utils/EventEmitter.ts",
-        "./src/utils/OwnerTrackingList.ts",
         "./src/utils/SetUtils.ts",
         "./src/WindowMessages.ts"
     ],

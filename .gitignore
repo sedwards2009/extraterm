@@ -97,7 +97,6 @@ extensions/TextViewerTabWidth/src/TextViewerTabWidthExtension.js
 __pycache__/
 build_tmp
 extraterm/src/ExtensionApi/ExtensionContext.js
-extraterm/src/utils/OwnerTrackingList.js
 extensions/TextViewerSyntaxHighlighting/src/TextViewerSyntaxHighlightingExtension.js
 extensions/InjectShellIntegration/src/InjectShellIntegrationExtension.js
 extensions/InjectShellIntegration/src/InjectShellIntegrationExtensionTest.js
