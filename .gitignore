@@ -133,3 +133,6 @@ packages/extraterm-web-component-decorators/Decorators.js
 extraterm/src/render_process/extension/InternalInterfaces.js
 extraterm/src/render_process/extension/Proxies.js
 extraterm/src/render_process/extension/ViewerProxies.jsextraterm/src/render_process/extension/ExtensionUiUtilsImpl.js
+extraterm/src/render_process/extension/ExtensionUiUtilsImpl.js
+extraterm/src/render_process/extension/ProxyFactoryImpl.js
+extraterm/src/render_process/extension/ViewerProxies.js

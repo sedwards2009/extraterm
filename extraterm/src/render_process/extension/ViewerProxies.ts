@@ -1,11 +1,17 @@
+/*
+ * Copyright 2017-2018 Simon Edwards <simon@simonzone.com>
+ *
+ * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
+ */
 import * as DomUtils from '../DomUtils';
 import * as ExtensionApi from 'extraterm-extension-api';
-import {ExtensionUiUtils, ProxyFactory} from './InternalInterfaces';
+import {ProxyFactory} from './InternalInterfaces';
 import {ViewerElement} from '../viewers/ViewerElement';
 import {EtTerminal} from '../Terminal';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
 import {TerminalViewer} from '../viewers/TerminalViewer';
 import {TextViewer} from'../viewers/TextViewer';
+import {WorkspaceProxy} from './Proxies';
 
 
 abstract class ViewerProxy implements ExtensionApi.ViewerBase {

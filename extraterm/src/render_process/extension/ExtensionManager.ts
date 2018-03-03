@@ -12,14 +12,11 @@ import {Logger, getLogger} from '../../logging/Logger';
 import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {EtTerminal} from '../Terminal';
-import {ViewerElement} from '../viewers/ViewerElement';
 import {TextViewer} from'../viewers/TextViewer';
-import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
-import {TerminalViewer} from '../viewers/TerminalViewer';
+import {ProxyFactoryImpl} from './ProxyFactoryImpl';
 import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalInterfaces';
-import {FrameViewerProxy, TerminalOutputProxy, TextViewerProxy} from './ViewerProxies';
-import {TerminalProxy, TerminalTabProxy, WorkspaceProxy} from './Proxies';
 import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';
+import {WorkspaceProxy} from './Proxies';
 
 
 interface ActiveExtension {
@@ -34,11 +31,13 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _extensionLoader: ExtensionLoader = null;
   private _activeExtensions: ActiveExtension[] = [];
   private _extensionUiUtils: ExtensionUiUtils = null;
+  private _proxyFactory: ProxyFactory = null;
 
   constructor() {
     this._log = getLogger("ExtensionManager", this);
     this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../../../../extensions" )]);
     this._extensionUiUtils = new ExtensionUiUtilsImpl();
+    this._proxyFactory = new ProxyFactoryImpl(this._extensionUiUtils);
   }
 
   startUp(): void {
@@ -82,7 +81,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _startExtension(extensionMetadata: ExtensionMetadata): void {
     if (this._extensionLoader.load(extensionMetadata)) {
       try {
-        const extensionContextImpl = new InternalExtensionContextImpl(this._extensionUiUtils, extensionMetadata);
+        const extensionContextImpl = new InternalExtensionContextImpl(this._extensionUiUtils, extensionMetadata,
+                                      this._proxyFactory);
         const extensionPublicApi = (<ExtensionApi.ExtensionModule> extensionMetadata.module).activate(extensionContextImpl);
         this._activeExtensions.push({extensionMetadata, extensionPublicApi, extensionContextImpl});
       } catch(ex) {
@@ -93,60 +93,16 @@ export class ExtensionManagerImpl implements ExtensionManager {
 }
 
 
-class InternalExtensionContextImpl implements InternalExtensionContext, ProxyFactory {
+class InternalExtensionContextImpl implements InternalExtensionContext {
   workspace: InternalWorkspace = null;
   internalWorkspace: InternalWorkspace = null;
   codeMirrorModule: typeof CodeMirror = CodeMirror;
   logger: ExtensionApi.Logger = null;
-  proxyFactory: ProxyFactory = null;
 
-  private _tabProxyMap = new WeakMap<EtTerminal, ExtensionApi.Tab>();
-  private _terminalProxyMap = new WeakMap<EtTerminal, ExtensionApi.Terminal>();
-  private _viewerProxyMap = new WeakMap<ViewerElement, ExtensionApi.Viewer>();
-
-  constructor(public extensionUiUtils: ExtensionUiUtils, public extensionMetadata: ExtensionMetadata) {
+  constructor(public extensionUiUtils: ExtensionUiUtils, public extensionMetadata: ExtensionMetadata, public proxyFactory: ProxyFactory) {
     this.workspace = new WorkspaceProxy(this);
     this.internalWorkspace = this.workspace;
     this.logger = getLogger(extensionMetadata.name);
-    this.proxyFactory = this;
-  }
-
-  getTabProxy(terminal: EtTerminal): ExtensionApi.Tab {
-    if ( ! this._tabProxyMap.has(terminal)) {
-      this._tabProxyMap.set(terminal, new TerminalTabProxy(this, this.extensionUiUtils, terminal));
-    }
-    return this._tabProxyMap.get(terminal);
-  }
-
-  getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal {
-    if ( ! this._terminalProxyMap.has(terminal)) {
-      this._terminalProxyMap.set(terminal, new TerminalProxy(this, terminal));
-    }
-    return this._terminalProxyMap.get(terminal);
-  }
-
-  getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer {
-    if ( ! this._viewerProxyMap.has(viewer)) {
-      const proxy = this._createViewerProxy(viewer);
-      if (proxy === null) {
-        return null;
-      }
-      this._viewerProxyMap.set(viewer, proxy);
-    }
-    return this._viewerProxyMap.get(viewer);
-  }
-
-  private _createViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer {
-      if (viewer instanceof TerminalViewer) {
-        return new TerminalOutputProxy(this, viewer);
-      }
-      if (viewer instanceof TextViewer) {
-        return new TextViewerProxy(this, viewer);
-      }
-      if (viewer instanceof EmbeddedViewer) {
-        return new FrameViewerProxy(this, viewer);
-      }
-      return null;
   }
 
   findViewerElementTagByMimeType(mimeType: string): string {
