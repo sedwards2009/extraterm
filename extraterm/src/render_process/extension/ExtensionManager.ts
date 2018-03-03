@@ -5,13 +5,14 @@
  */
 import * as path from 'path';
 import * as _ from 'lodash';
-import {Logger, getLogger} from '../../logging/Logger';
+import * as ExtensionApi from 'extraterm-extension-api';
 import * as he from 'he';
+
+import {Logger, getLogger} from '../../logging/Logger';
 import * as DomUtils from '../DomUtils';
 import * as CodeMirror from 'codemirror';
 import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
-import * as ExtensionApi from 'extraterm-extension-api';
 import {EtTerminal} from '../Terminal';
 import {ViewerElement} from '../viewers/ViewerElement';
 import {TextViewer} from'../viewers/TextViewer';
@@ -20,7 +21,7 @@ import {PopDownListPicker} from '../gui/PopDownListPicker';
 import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
 import {TerminalViewer} from '../viewers/TerminalViewer';
-import {ExtensionManager, ExtensionBridge, InternalExtensionContext, CommandRegistration} from './InternalInterfaces';
+import {ExtensionManager, ExtensionBridge, InternalExtensionContext, InternalWorkspace} from './InternalInterfaces';
 import {FrameViewerProxy, TerminalOutputProxy, TextViewerProxy} from './ViewerProxies';
 import {TerminalProxy, TerminalTabProxy, WorkspaceProxy} from './Proxies';
 
@@ -53,11 +54,23 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[] {
-    return this._extensionBridge.getWorkspaceTerminalCommands(terminal);
+    return _.flatten(
+      this._activeExtensions.map(activeExtension => {
+        const ownerExtensionContext = activeExtension.extensionContextImpl;
+        const terminalProxy = ownerExtensionContext.getTerminalProxy(terminal);
+        return activeExtension.extensionContextImpl.internalWorkspace.getTerminalCommands(
+          activeExtension.extensionMetadata.name, terminalProxy);
+      }));
   }
 
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[]{
-    return this._extensionBridge.getWorkspaceTextViewerCommands(textViewer);
+  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
+    return _.flatten(
+      this._activeExtensions.map(activeExtension => {
+        const extensionContext = activeExtension.extensionContextImpl;
+        const textViewerProxy = <ExtensionApi.TextViewer> extensionContext.getViewerProxy(textViewer);
+        return extensionContext.internalWorkspace.getTextViewerCommands(
+          activeExtension.extensionMetadata.name, textViewerProxy);
+      }));
   }
 
   findViewerElementTagByMimeType(mimeType: string): string {
@@ -96,77 +109,6 @@ export class ExtensionBridgeImpl implements ExtensionBridge {
 
   workspaceGetTerminals(): EtTerminal[] {
 return [];
-  }
-
-  private _workspaceOnDidCreateTerminal = new OwnerTrackingEventListenerList<ExtensionApi.Terminal>();
-  private _workspaceRegisterCommandsOnTerminal = new OwnerTrackingList<InternalExtensionContext, CommandRegistration<ExtensionApi.Terminal>>();
-  private _workspaceRegisterCommandsOnTextViewer = new OwnerTrackingList<InternalExtensionContext, CommandRegistration<ExtensionApi.TextViewer>>();
-
-  registerOnDidCreateTerminalListener(internalExtensionContext: InternalExtensionContext, listener: (e: ExtensionApi.Terminal) => any): ExtensionApi.Disposable {
-    return this._workspaceOnDidCreateTerminal.add(internalExtensionContext, listener);
-  }
-
-  registerCommandsOnTerminal(internalExtensionContext: InternalExtensionContext, commandRegistration: CommandRegistration<ExtensionApi.Terminal>): ExtensionApi.Disposable {
-    return this._workspaceRegisterCommandsOnTerminal.add(internalExtensionContext, commandRegistration);
-  }
-
-  registerCommandsOnTextViewer(internalExtensionContext: InternalExtensionContext, commandRegistration: CommandRegistration<ExtensionApi.TextViewer>): ExtensionApi.Disposable {
-    return this._workspaceRegisterCommandsOnTextViewer.add(internalExtensionContext, commandRegistration);
-  }
-
-  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[] {
-    return _.flatten(this._workspaceRegisterCommandsOnTerminal.mapWithOwner(
-      (ownerExtensionContext, registration): CommandPaletteRequestTypes.CommandEntry[] => {
-        const terminalProxy = ownerExtensionContext.getTerminalProxy(terminal);
-        const rawCommands = registration.commandLister(terminalProxy);
-        
-        const target: CommandPaletteRequestTypes.CommandExecutor = {
-          executeCommand(commandId: string, options?: object): void {
-            const commandIdWithoutPrefix = commandId.slice(ownerExtensionContext.extensionMetadata.name.length+1);
-            registration.commandExecutor(terminalProxy, commandIdWithoutPrefix, options);
-          }
-        };
-        
-        return this._formatCommands(rawCommands, target, ownerExtensionContext.extensionMetadata.name);
-      }));
-  }
-
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
-    return _.flatten(this._workspaceRegisterCommandsOnTextViewer.mapWithOwner(
-      (ownerExtensionContext, registration): CommandPaletteRequestTypes.CommandEntry[] => {
-        const textViewerProxy = <TextViewerProxy> ownerExtensionContext.getViewerProxy(textViewer);
-        const rawCommands = registration.commandLister(textViewerProxy);
-        
-        const target: CommandPaletteRequestTypes.CommandExecutor = {
-          executeCommand(commandId: string, options?: object): void {
-            const commandIdWithoutPrefix = commandId.slice(ownerExtensionContext.extensionMetadata.name.length+1);
-            registration.commandExecutor(textViewerProxy, commandIdWithoutPrefix, options);
-          }
-        };
-        
-        return this._formatCommands(rawCommands, target, ownerExtensionContext.extensionMetadata.name);
-      }));
-  }
-
-  private _formatCommands(
-      rawCommands: ExtensionApi.CommandEntry[],
-      commandExecutor: CommandPaletteRequestTypes.CommandExecutor,
-      commandPrefix: string): CommandPaletteRequestTypes.CommandEntry[] {
-
-    const commands: CommandPaletteRequestTypes.CommandEntry[] = [];
-    for (const rawCommand of rawCommands) {
-      commands.push({
-        id: commandPrefix + '.' + rawCommand.id,
-        group: rawCommand.group,
-        iconLeft: rawCommand.iconLeft,
-        iconRight: rawCommand.iconRight,
-        label: rawCommand.label,
-        shortcut: '',
-        commandExecutor,
-        commandArguments: rawCommand.commandArguments
-      });
-    }
-    return commands;
   }
 
   showNumberInput(terminal: EtTerminal, options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
@@ -286,7 +228,8 @@ class OwnerTrackingEventListenerList<E> extends OwnerTrackingList<InternalExtens
 
 
 class InternalExtensionContextImpl implements InternalExtensionContext {
-  workspace: WorkspaceProxy = null;
+  workspace: InternalWorkspace = null;
+  internalWorkspace: InternalWorkspace;
   codeMirrorModule: typeof CodeMirror = CodeMirror;
   logger: ExtensionApi.Logger;
   private _tabProxyMap = new WeakMap<EtTerminal, ExtensionApi.Tab>();
@@ -295,6 +238,7 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
 
   constructor(public extensionBridge: ExtensionBridge, public extensionMetadata: ExtensionMetadata) {
     this.workspace = new WorkspaceProxy(this);
+    this.internalWorkspace = this.workspace;
     this.logger = getLogger(extensionMetadata.name);
   }
 
@@ -337,6 +281,6 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   findViewerElementTagByMimeType(mimeType: string): string {
-    return this.workspace.findViewerElementTagByMimeType(mimeType);
+    return this.internalWorkspace.findViewerElementTagByMimeType(mimeType);
   }
 }

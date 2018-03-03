@@ -18,26 +18,22 @@ export interface ExtensionManager {
   findViewerElementTagByMimeType(mimeType: string): string;
 }
 
-export interface CommandRegistration<V> {
-  commandLister: (viewer: V) => ExtensionApi.CommandEntry[];
-  commandExecutor: (viewer: V, commandId: string, commandArguments?: object) => void;
-}
-
 export interface ExtensionBridge {
   workspaceGetTerminals(): EtTerminal[];
   showNumberInput(terminal: EtTerminal, options: ExtensionApi.NumberInputOptions): Promise<number | undefined>;
   showListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
-  registerOnDidCreateTerminalListener(internalExtensionContext: InternalExtensionContext, listener: (e: ExtensionApi.Terminal) => any): ExtensionApi.Disposable;
-  registerCommandsOnTerminal(internalExtensionContext: InternalExtensionContext, commandRegistration: CommandRegistration<ExtensionApi.Terminal>): ExtensionApi.Disposable;
-  registerCommandsOnTextViewer(internalExtensionContext: InternalExtensionContext, commandRegistration: CommandRegistration<ExtensionApi.TextViewer>): ExtensionApi.Disposable;
+}
 
-  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[];
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[];
+export interface InternalWorkspace extends ExtensionApi.Workspace {
+  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.CommandEntry[];
+  getTextViewerCommands(extensionName: string, terminal: ExtensionApi.TextViewer): CommandPaletteRequestTypes.CommandEntry[];
+  findViewerElementTagByMimeType(mimeType: string): string;
 }
 
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
   extensionBridge: ExtensionBridge;
   extensionMetadata: ExtensionMetadata;
+  internalWorkspace: InternalWorkspace;
   getTabProxy(terminal: EtTerminal): ExtensionApi.Tab;
   getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal;
   getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer;
