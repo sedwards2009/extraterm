@@ -1,0 +1,16 @@
+{
+  "name": "audio-viewer",
+  "description": "Audio viewer",
+  "version": "1.0.0",
+  "main": "src/AudioViewerExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "2.6.1"
+  }
+}

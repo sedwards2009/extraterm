@@ -135,3 +135,4 @@ extraterm/src/render_process/extension/ViewerProxies.jsextraterm/src/render_proc
 extraterm/src/render_process/extension/ExtensionUiUtilsImpl.js
 extraterm/src/render_process/extension/ProxyFactoryImpl.js
 extraterm/src/render_process/extension/ViewerProxies.js
+extensions/AudioViewer/src/AudioViewerExtension.js
