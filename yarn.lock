@@ -1434,14 +1434,6 @@ extract-zip@^1.0.3:
     mkdirp "0.5.0"
     yauzl "2.4.1"
 
-"extraterm-extension-api@file:packages/extraterm-extension-api":
-  version "0.1.0"
-
-"extraterm-web-component-decorators@file:packages/extraterm-web-component-decorators":
-  version "0.1.0"
-  dependencies:
-    reflect-metadata "0.1.10"
-
 extsprintf@1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.3.0.tgz#96918440e3041a7a414f8c52e3c574eb3c3e1e05"

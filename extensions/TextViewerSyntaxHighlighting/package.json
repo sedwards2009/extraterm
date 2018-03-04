@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "devDependencies": {
     "typescript": "2.6.1",
-    "extraterm-extension-api": "file:../../packages/extraterm-extension-api/"
+    "extraterm-extension-api": "0.1.0"
   },
   "main": "src/TextViewerSyntaxHighlightingExtension.js",
   "scripts": {
