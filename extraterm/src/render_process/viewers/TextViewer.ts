@@ -31,7 +31,7 @@ import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
-import {ViewerElement, ViewerElementMetadata} from '../viewers/ViewerElement';
+import {ViewerElement, ViewerMetadata} from '../viewers/ViewerElement';
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, VirtualScrollable} from '../VirtualScrollArea';
 
@@ -155,7 +155,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
   }
   
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     
     if (this._title !== "") {

@@ -24,7 +24,7 @@ import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import {ViewerElement, ViewerElementMetadata} from "./viewers/ViewerElement";
+import {ViewerElement, ViewerMetadata} from "./viewers/ViewerElement";
 import * as Util from './gui/Util';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';
@@ -100,7 +100,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
   }
    
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = this._title;
 

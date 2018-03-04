@@ -29,7 +29,7 @@ import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
-import {ViewerElement, ViewerElementMetadata, ViewerElementPosture} from './ViewerElement';
+import {ViewerElement, ViewerMetadata, ViewerPosture} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {VisualState} from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
@@ -144,7 +144,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
   private _connectSetupDone = false;
   private _titleBarUI: TitleBarUI = null;
-  private _defaultMetadata: ViewerElementMetadata = null;
+  private _defaultMetadata: ViewerMetadata = null;
 
   private _boundHandleDragStart: (ev: DragEvent) => void = null;
   private _boundHandleDragEnd: (ev: DragEvent) => void = null;
@@ -175,7 +175,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
   }
 
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = this._titleBarUI.commandLine;
     metadata.icon = this._titleBarUI.awesomeIconName;
@@ -187,7 +187,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   /**
    * Set the metadata to use in absence of a viewer element.
    */
-  setDefaultMetadata(metadata: ViewerElementMetadata): void {
+  setDefaultMetadata(metadata: ViewerMetadata): void {
     this._defaultMetadata = metadata;
     this._updateUiFromMetadata();
   }
@@ -463,10 +463,10 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._titleBarUI = new TitleBarUI({ el: headerDiv });
   }
 
-  private _getMetadata(): ViewerElementMetadata {
-    let metadata: ViewerElementMetadata = {
+  private _getMetadata(): ViewerMetadata {
+    let metadata: ViewerMetadata = {
       title: "",
-      posture: ViewerElementPosture.NEUTRAL,
+      posture: ViewerPosture.NEUTRAL,
     };
 
     const viewerElement = this.getViewerElement();
@@ -484,7 +484,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._updateFromMetadata(this._getMetadata());
   }
 
-  private _updateFromMetadata(metadata: ViewerElementMetadata): void {
+  private _updateFromMetadata(metadata: ViewerMetadata): void {
     this._titleBarUI.commandLine = metadata.title;
     this._titleBarUI.toolTip = metadata.toolTip == null ? "" : metadata.toolTip;
     this._titleBarUI.awesomeIconName = metadata.icon == null ? null : metadata.icon;
@@ -495,14 +495,14 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._switchDragDropHandlers(metadata.moveable !== false);
   }
   
-  private _updatePosture(posture: ViewerElementPosture): void {
+  private _updatePosture(posture: ViewerPosture): void {
     const container = <HTMLDivElement>this._getById(ID_CONTAINER);
     
-    const postureMapping = new Map<ViewerElementPosture, string>();
-    postureMapping.set(ViewerElementPosture.RUNNING, CLASS_RUNNING);
-    postureMapping.set(ViewerElementPosture.SUCCESS, CLASS_SUCCEEDED);
-    postureMapping.set(ViewerElementPosture.FAILURE, CLASS_FAILED);
-    postureMapping.set(ViewerElementPosture.NEUTRAL, CLASS_NEUTRAL);
+    const postureMapping = new Map<ViewerPosture, string>();
+    postureMapping.set(ViewerPosture.RUNNING, CLASS_RUNNING);
+    postureMapping.set(ViewerPosture.SUCCESS, CLASS_SUCCEEDED);
+    postureMapping.set(ViewerPosture.FAILURE, CLASS_FAILED);
+    postureMapping.set(ViewerPosture.NEUTRAL, CLASS_NEUTRAL);
 
     for (const [key, value] of postureMapping) {
       if (key === posture) {

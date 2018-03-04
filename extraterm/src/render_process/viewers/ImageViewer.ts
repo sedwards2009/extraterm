@@ -10,7 +10,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import {DebouncedDoLater} from '../../utils/DoLater';
-import {ViewerElement, ViewerElementMetadata} from './ViewerElement';
+import {ViewerElement, ViewerMetadata} from './ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as Util from '../gui/Util';
@@ -90,7 +90,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManag
     });
   }
 
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
 
     if (this._bulkFileHandle !== null && this._bulkFileHandle.getMetadata()["filename"] != null) {

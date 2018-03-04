@@ -6,7 +6,7 @@
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as ThemeTypes from '../theme/Theme';
-import {ViewerElement, ViewerElementMetadata} from './viewers/ViewerElement';
+import {ViewerElement, ViewerMetadata} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
@@ -31,7 +31,7 @@ export class AboutTab extends ViewerElement {
     this._log = getLogger(AboutTab.TAG_NAME, this);
   }
 
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "About";
     metadata.icon = "lightbulb-o";

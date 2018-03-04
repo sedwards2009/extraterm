@@ -18,7 +18,7 @@ type ConfigManager = config.ConfigDistributor;
 import * as keybindingmanager from '../keybindings/KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import {ViewerElement, ViewerElementMetadata} from '../viewers/ViewerElement';
+import {ViewerElement, ViewerMetadata} from '../viewers/ViewerElement';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -96,7 +96,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     this._log = getLogger(TipViewer.TAG_NAME, this);
   }
 
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Tip";
     metadata.icon = "lightbulb-o";

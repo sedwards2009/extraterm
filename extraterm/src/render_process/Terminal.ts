@@ -21,7 +21,7 @@ import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 import {DownloadViewer} from './viewers/DownloadViewer';
 import {Pty} from '../pty/Pty';
 
-import {ViewerElement, ViewerElementMetadata, ViewerElementPosture} from './viewers/ViewerElement';
+import {ViewerElement, ViewerMetadata, ViewerPosture} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ResizeCanary} from './ResizeCanary';
@@ -1726,9 +1726,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       // Create and set up a new command-frame.
       const el = this._createEmbeddedViewerElement();
 
-      const defaultMetadata: ViewerElementMetadata = {
+      const defaultMetadata: ViewerMetadata = {
         title: cleancommand,
-        posture: ViewerElementPosture.RUNNING,
+        posture: ViewerPosture.RUNNING,
         icon: "cog",
         moveable: false,
         deleteable: false

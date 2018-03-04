@@ -15,17 +15,17 @@ import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 
 
-export enum ViewerElementPosture {
+export enum ViewerPosture {
   NEUTRAL,
   RUNNING,
   SUCCESS,
   FAILURE,
 }
 
-export interface ViewerElementMetadata {
+export interface ViewerMetadata {
   title: string;
   icon?: string;
-  posture: ViewerElementPosture;
+  posture: ViewerPosture;
   moveable?: boolean;
   deleteable?: boolean;
   toolTip?: string;
@@ -48,11 +48,11 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
     return node !== null && node !== undefined && node instanceof ViewerElement;
   }
 
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     return {
       title: "ViewerElement",
       icon: "desktop",
-      posture: ViewerElementPosture.NEUTRAL,
+      posture: ViewerPosture.NEUTRAL,
       moveable: true,
       deleteable: true,
       toolTip: null

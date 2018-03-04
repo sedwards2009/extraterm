@@ -7,7 +7,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as _ from 'lodash';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import {ViewerElement, ViewerElementMetadata} from '../viewers/ViewerElement';
+import {ViewerElement, ViewerMetadata} from '../viewers/ViewerElement';
 import Vue from 'vue';
 
 import * as config from '../../Config';
@@ -165,7 +165,7 @@ export class SettingsTab extends ViewerElement implements config.AcceptsConfigDi
     };
   }
 
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Settings";
     metadata.icon = "wrench";

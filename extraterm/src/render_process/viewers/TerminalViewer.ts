@@ -30,7 +30,7 @@ import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
-import {ViewerElement, ViewerElementMetadata, ViewerElementPosture} from './ViewerElement';
+import {ViewerElement, ViewerMetadata, ViewerPosture} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
@@ -169,20 +169,20 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     });
   }
 
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = this._commandLine !== null ? this._commandLine : "Terminal Command";
     metadata.icon = this._returnCode === '0' ? 'check' : 'times';
 
     switch(this._returnCode) {
       case null:
-        metadata.posture = ViewerElementPosture.RUNNING;
+        metadata.posture = ViewerPosture.RUNNING;
         break;
       case "0":
-        metadata.posture = ViewerElementPosture.SUCCESS;
+        metadata.posture = ViewerPosture.SUCCESS;
         break;
       default:
-        metadata.posture = ViewerElementPosture.FAILURE;
+        metadata.posture = ViewerPosture.FAILURE;
         break;
     }
 

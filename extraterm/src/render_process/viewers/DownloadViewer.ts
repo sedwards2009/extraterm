@@ -12,7 +12,7 @@ import {FileTransferProgress} from '../gui/FileTransferProgress';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import {SimpleViewerElement} from '../viewers/SimpleViewerElement';
-import {ViewerElementMetadata, ViewerElement, ViewerElementPosture} from './ViewerElement';
+import {ViewerMetadata, ViewerElement, ViewerPosture} from './ViewerElement';
 
 
 @WebComponent({tag: "et-download-viewer"})
@@ -37,7 +37,7 @@ export class DownloadViewer extends SimpleViewerElement {
     this.getContainerNode().appendChild(this._fileTransferProgress);
   }
 
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Download";
     metadata.icon = "download";
@@ -48,7 +48,7 @@ export class DownloadViewer extends SimpleViewerElement {
       switch (this._bulkFileHandle.getState()) {
         case BulkFileState.DOWNLOADING:
           metadata.title = `Downloading ${filename}`;
-          metadata.posture = ViewerElementPosture.NEUTRAL;
+          metadata.posture = ViewerPosture.NEUTRAL;
           metadata.icon = "download";
           metadata.moveable = false;
           metadata.deleteable = false;
@@ -56,13 +56,13 @@ export class DownloadViewer extends SimpleViewerElement {
 
         case BulkFileState.COMPLETED:
           metadata.title = `Completed downloading ${filename}`;
-          metadata.posture = ViewerElementPosture.SUCCESS;
+          metadata.posture = ViewerPosture.SUCCESS;
           metadata.icon = "check";
           break;
 
         case BulkFileState.FAILED:
           metadata.title = `Failed to download ${filename}`;
-          metadata.posture = ViewerElementPosture.FAILURE;
+          metadata.posture = ViewerPosture.FAILURE;
           metadata.icon = "times";
           break;
       }

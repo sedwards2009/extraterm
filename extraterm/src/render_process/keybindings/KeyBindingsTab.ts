@@ -10,7 +10,7 @@ import * as _ from 'lodash';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as ThemeTypes from '../../theme/Theme';
-import {ViewerElement, ViewerElementMetadata} from '../viewers/ViewerElement';
+import {ViewerElement, ViewerMetadata} from '../viewers/ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
@@ -94,7 +94,7 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
     };
   }
 
-  getMetadata(): ViewerElementMetadata {
+  getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Key Bindings";
     metadata.icon = "keyboard-o";
