@@ -68,7 +68,7 @@
         "./src/render_process/extension/ExtensionLoaderTest.ts",
         "./src/render_process/extension/ExtensionManager.ts",
         "./src/render_process/extension/ExtensionUiUtilsImpl.ts",
-        "./src/render_process/extension/InternalInterfaces.ts",
+        "./src/render_process/extension/InternalTypes.ts",
         "./src/render_process/extension/Proxies.ts",
         "./src/render_process/extension/ProxyFactoryImpl.ts",
         "./src/render_process/extension/ViewerProxies.ts",

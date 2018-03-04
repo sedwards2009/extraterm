@@ -24,7 +24,7 @@ import * as DomUtils from './DomUtils';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
-import {ExtensionManager} from './extension/InternalInterfaces';
+import {ExtensionManager} from './extension/InternalTypes';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import * as keybindingmanager from './keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../logging/Logger';

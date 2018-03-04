@@ -8,7 +8,7 @@ import * as ExtensionApi from 'extraterm-extension-api';
 import * as he from 'he';
 
 import {EtTerminal} from '../Terminal';
-import {ExtensionUiUtils} from './InternalInterfaces';
+import {ExtensionUiUtils} from './InternalTypes';
 import {Logger, getLogger} from '../../logging/Logger';
 import {PopDownListPicker} from '../gui/PopDownListPicker';
 import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';

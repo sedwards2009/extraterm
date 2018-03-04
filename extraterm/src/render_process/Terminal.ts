@@ -55,7 +55,7 @@ import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import {Config, ConfigDistributor, CommandLineAction, injectConfigDistributor, AcceptsConfigDistributor} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
-import { ExtensionManager } from './extension/InternalInterfaces';
+import { ExtensionManager } from './extension/InternalTypes';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;

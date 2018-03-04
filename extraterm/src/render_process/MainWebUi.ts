@@ -43,7 +43,7 @@ import {EtViewerTab} from './ViewerTab';
 import {PtyIpcBridge} from './PtyIpcBridge';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
-import { ExtensionManager } from './extension/InternalInterfaces';
+import { ExtensionManager } from './extension/InternalTypes';
 
 type Config = config.Config;
 type ConfigManager =config.ConfigDistributor;

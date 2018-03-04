@@ -14,7 +14,7 @@ import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextViewer';
 import {ProxyFactoryImpl} from './ProxyFactoryImpl';
-import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalInterfaces';
+import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalTypes';
 import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';
 import {WorkspaceProxy} from './Proxies';
 

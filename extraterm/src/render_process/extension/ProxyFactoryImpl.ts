@@ -5,7 +5,7 @@
  */
 import * as ExtensionApi from 'extraterm-extension-api';
 
-import {ExtensionUiUtils, ProxyFactory} from './InternalInterfaces';
+import {ExtensionUiUtils, ProxyFactory} from './InternalTypes';
 import {TerminalProxy, TerminalTabProxy} from './Proxies';
 import {EtTerminal} from '../Terminal';
 import {FrameViewerProxy, TerminalOutputProxy, TextViewerProxy} from './ViewerProxies';

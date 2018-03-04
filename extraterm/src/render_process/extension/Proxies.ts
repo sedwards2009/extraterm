@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {DisposableItemList} from '../../utils/DisposableUtils';
 import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
-import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalInterfaces';
+import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalTypes';
 import {Logger, getLogger} from '../../logging/Logger';
 import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
 

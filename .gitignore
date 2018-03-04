@@ -129,7 +129,7 @@ extraterm/src/utils/ByteCountingStreamTransform.js
 extraterm/src/render_process/SupportsDialogStack.js
 packages/extraterm-web-component-decorators/Decorators.d.ts
 packages/extraterm-web-component-decorators/Decorators.js
-extraterm/src/render_process/extension/InternalInterfaces.js
+extraterm/src/render_process/extension/InternalTypes.js
 extraterm/src/render_process/extension/Proxies.js
 extraterm/src/render_process/extension/ViewerProxies.jsextraterm/src/render_process/extension/ExtensionUiUtilsImpl.js
 extraterm/src/render_process/extension/ExtensionUiUtilsImpl.js
