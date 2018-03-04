@@ -239,17 +239,37 @@ export interface Workspace {
     commandExecutor: (textViewer: TextViewer, commandId: string, commandArguments?: object) => void): Disposable;
 
   extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;
-  registerViewer(name: string, viewerClass: ExtensionViewerBase, mimeTypes: string[]): void; 
+    // extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;
+  registerViewer(name: string, viewerClass: ExtensionViewerBaseConstructor, mimeTypes: string[]): void; 
 }
 
-
+/**
+ * Extensions which implement Viewer must subclass this.
+ * 
+ * Note that TypeScript subclasses should not provide a constructor. Pure
+ * JavaScript subclasses can have a constructor but it must pass all of
+ * its arguments to the super class.
+ */
 export interface ExtensionViewerBase {
-  // protected _setMetadata(metadata: Metadata): string;
+
+  /**
+   * Extension writers can override method to perform set up and
+   * initialisation after construction.
+   */
+  created(): void;
+
+  // updateMetadata(): void;
+
+  /**
+   * Get the container element under which this Viewer's contents can be placed.
+   */
+  getContainerElement(): HTMLElement;
+
 }
 
 
 export interface ExtensionViewerBaseConstructor {
-  new(): ExtensionViewerBase;
+  new(...any: any[]): ExtensionViewerBase;
 }
 
 /**

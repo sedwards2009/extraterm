@@ -12,6 +12,7 @@ import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
 import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalTypes';
 import {Logger, getLogger} from '../../logging/Logger';
 import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
+import { BulkFileHandle } from '../bulk_file_handling/BulkFileHandle';
 
 
 interface RegisteredViewer {
@@ -118,7 +119,7 @@ export class WorkspaceProxy implements InternalWorkspace {
   registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor, mimeTypes: string[]): void {
     const viewerElementProxyClass = class extends ExtensionViewerProxy {
       protected _createExtensionViewer(): ExtensionApi.ExtensionViewerBase {
-        return new viewerClass();
+        return new viewerClass(this);
       }
     };
     
@@ -147,28 +148,35 @@ function kebabCase(name: string): string {
 }
 
 
-class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase {
-  constructor() {
-    console.log("ExtensionViewerBaseImpl()");
-  }
-}
-
-
 class ExtensionViewerProxy extends SimpleViewerElement {
   private _extensionViewer: ExtensionApi.ExtensionViewerBase = null;
 
   constructor() {
     super();
     this._extensionViewer = this._createExtensionViewer();
-
-    
+    this._extensionViewer.created();
   }
 
   protected _createExtensionViewer(): ExtensionApi.ExtensionViewerBase {
-    return null;  
+    return null;
+  }
+
+  setBulkFileHandle(handle: BulkFileHandle): void {
   }
 }
 
+
+class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase {
+  constructor(private _viewerProxy: ExtensionViewerProxy, ..._: any[]) {
+  }
+
+  created(): void {
+  }
+
+  getContainerElement(): HTMLElement {
+    return this._viewerProxy.getContainerNode();
+  }
+}
 
 export class TerminalTabProxy implements ExtensionApi.Tab {
 
