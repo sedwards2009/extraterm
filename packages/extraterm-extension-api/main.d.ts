@@ -243,6 +243,23 @@ export interface Workspace {
   registerViewer(name: string, viewerClass: ExtensionViewerBaseConstructor, mimeTypes: string[]): void; 
 }
 
+export enum ViewerPosture {
+  NEUTRAL,
+  RUNNING,
+  SUCCESS,
+  FAILURE,
+}
+
+export interface ViewerMetadata {
+  title: string;
+  icon: string;
+  posture: ViewerPosture;
+  moveable: boolean;
+  deleteable: boolean;
+  toolTip: string;
+}
+
+
 /**
  * Extensions which implement Viewer must subclass this.
  * 

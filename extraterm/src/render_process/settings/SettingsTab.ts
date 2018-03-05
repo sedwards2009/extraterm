@@ -4,10 +4,11 @@
 
 // Settings tab using Vue.js
 import {WebComponent} from 'extraterm-web-component-decorators';
+import {ViewerMetadata} from 'extraterm-extension-api';
 
 import * as _ from 'lodash';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import {ViewerElement, ViewerMetadata} from '../viewers/ViewerElement';
+import {ViewerElement} from '../viewers/ViewerElement';
 import Vue from 'vue';
 
 import * as config from '../../Config';

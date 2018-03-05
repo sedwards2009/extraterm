@@ -2,7 +2,7 @@
  * Copyright 2017 Simon Edwards <simon@simonzone.com>
  */
 
-import {Disposable} from 'extraterm-extension-api';
+import {Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle, BulkFileState} from '../bulk_file_handling/BulkFileHandle';
@@ -12,7 +12,7 @@ import {FileTransferProgress} from '../gui/FileTransferProgress';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import {SimpleViewerElement} from '../viewers/SimpleViewerElement';
-import {ViewerMetadata, ViewerElement, ViewerPosture} from './ViewerElement';
+import {ViewerElement} from './ViewerElement';
 
 
 @WebComponent({tag: "et-download-viewer"})

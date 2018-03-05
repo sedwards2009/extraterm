@@ -9,7 +9,7 @@ import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import * as utf8 from 'utf8';
 import {clipboard} from 'electron';
-import {Disposable} from 'extraterm-extension-api';
+import {Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
@@ -21,7 +21,7 @@ import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 import {DownloadViewer} from './viewers/DownloadViewer';
 import {Pty} from '../pty/Pty';
 
-import {ViewerElement, ViewerMetadata, ViewerPosture} from './viewers/ViewerElement';
+import {ViewerElement} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ResizeCanary} from './ResizeCanary';

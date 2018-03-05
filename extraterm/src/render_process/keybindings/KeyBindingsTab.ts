@@ -8,9 +8,10 @@
 
 import * as _ from 'lodash';
 import {WebComponent} from 'extraterm-web-component-decorators';
+import {ViewerMetadata} from 'extraterm-extension-api';
 
 import * as ThemeTypes from '../../theme/Theme';
-import {ViewerElement, ViewerMetadata} from '../viewers/ViewerElement';
+import {ViewerElement} from '../viewers/ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as keybindingmanager from './KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;

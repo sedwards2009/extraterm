@@ -5,7 +5,7 @@
  */
 
 import * as fs from 'fs';
-import {Disposable} from 'extraterm-extension-api';
+import {Disposable, ViewerMetadata} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
@@ -24,7 +24,7 @@ import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import {ViewerElement, ViewerMetadata} from "./viewers/ViewerElement";
+import {ViewerElement} from "./viewers/ViewerElement";
 import * as Util from './gui/Util';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';

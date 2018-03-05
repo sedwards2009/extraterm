@@ -5,7 +5,7 @@
  */
 
 import * as fs from 'fs';
-import {Disposable} from 'extraterm-extension-api';
+import {Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 
 import * as Util from '../gui/Util';
 import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
@@ -15,21 +15,6 @@ import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
 import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 
 
-export enum ViewerPosture {
-  NEUTRAL,
-  RUNNING,
-  SUCCESS,
-  FAILURE,
-}
-
-export interface ViewerMetadata {
-  title: string;
-  icon: string;
-  posture: ViewerPosture;
-  moveable: boolean;
-  deleteable: boolean;
-  toolTip: string;
-}
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {
   

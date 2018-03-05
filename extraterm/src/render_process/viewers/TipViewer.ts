@@ -11,6 +11,7 @@ import * as path from 'path';
 import * as he from 'he';
 import * as SourceDir from '../../SourceDir';
 import {WebComponent} from 'extraterm-web-component-decorators';
+import {ViewerMetadata} from 'extraterm-extension-api';
 
 import * as config from '../../Config';
 type ConfigManager = config.ConfigDistributor;
@@ -18,7 +19,7 @@ type ConfigManager = config.ConfigDistributor;
 import * as keybindingmanager from '../keybindings/KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 
-import {ViewerElement, ViewerMetadata} from '../viewers/ViewerElement';
+import {ViewerElement} from '../viewers/ViewerElement';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
