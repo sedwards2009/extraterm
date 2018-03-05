@@ -24,11 +24,11 @@ export enum ViewerPosture {
 
 export interface ViewerMetadata {
   title: string;
-  icon?: string;
+  icon: string;
   posture: ViewerPosture;
-  moveable?: boolean;
-  deleteable?: boolean;
-  toolTip?: string;
+  moveable: boolean;
+  deleteable: boolean;
+  toolTip: string;
 }
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {

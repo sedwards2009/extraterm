@@ -467,6 +467,10 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     let metadata: ViewerMetadata = {
       title: "",
       posture: ViewerPosture.NEUTRAL,
+      icon: null,
+      moveable: true,
+      deleteable: true,
+      toolTip: null
     };
 
     const viewerElement = this.getViewerElement();

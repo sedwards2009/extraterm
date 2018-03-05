@@ -1731,7 +1731,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         posture: ViewerPosture.RUNNING,
         icon: "cog",
         moveable: false,
-        deleteable: false
+        deleteable: false,
+        toolTip: null
       };
       el.setDefaultMetadata(defaultMetadata);
 
