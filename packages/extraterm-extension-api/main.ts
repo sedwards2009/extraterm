@@ -259,6 +259,7 @@ export interface ViewerMetadata {
   toolTip: string;
 }
 
+export type ViewerMetadataChange = { [K in keyof ViewerMetadata]?: ViewerMetadata[K] };
 
 /**
  * Extensions which implement Viewer must subclass this.
@@ -282,6 +283,8 @@ export interface ExtensionViewerBase {
    */
   getContainerElement(): HTMLElement;
 
+  getMetadata(): ViewerMetadata;
+  updateMetadata(changes: ViewerMetadataChange): void;
 }
 
 

@@ -19,9 +19,14 @@ export function activate(context: ExtensionContext): any {
       myDiv.innerHTML = "Text Viewer Element calling in!";
 
       this.getContainerElement().appendChild(myDiv);
+
+      this.updateMetadata({
+        title: "Audio Viewer",
+        icon: "file-audio-o"
+      });
     }
   }
 
-  context.workspace.registerViewer("TestViewer", TestViewer, ["foo/bar"]);
+  context.workspace.registerViewer("AudioViewer", TestViewer, ["audio/pcm"]);
 }
 

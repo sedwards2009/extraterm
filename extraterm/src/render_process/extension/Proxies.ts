@@ -13,6 +13,7 @@ import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFact
 import {Logger, getLogger} from '../../logging/Logger';
 import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
 import { BulkFileHandle } from '../bulk_file_handling/BulkFileHandle';
+import { ViewerElement } from '../viewers/ViewerElement';
 
 
 interface RegisteredViewer {
@@ -161,13 +162,33 @@ class ExtensionViewerProxy extends SimpleViewerElement {
     return null;
   }
 
+  getMetadata(): ExtensionApi.ViewerMetadata {
+    return this._extensionViewer.getMetadata();
+  }
+  
+  _metadataUpdated(): void {
+    const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
+    this.dispatchEvent(event);
+  }
+
   setBulkFileHandle(handle: BulkFileHandle): void {
   }
 }
 
 
 class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase {
+
+  private __ExtensionViewerBaseImpl_metadata: ExtensionApi.ViewerMetadata = null;
+
   constructor(private _viewerProxy: ExtensionViewerProxy, ..._: any[]) {
+    this.__ExtensionViewerBaseImpl_metadata = {
+      title: "ExtensionViewer",
+      deleteable: true,
+      moveable: true,
+      icon: null,
+      posture: ExtensionApi.ViewerPosture.NEUTRAL,
+      toolTip: null
+    };
   }
 
   created(): void {
@@ -175,6 +196,24 @@ class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase {
 
   getContainerElement(): HTMLElement {
     return this._viewerProxy.getContainerNode();
+  }
+
+  getMetadata(): ExtensionApi.ViewerMetadata {
+    return this.__ExtensionViewerBaseImpl_metadata;
+  }
+  
+  updateMetadata(changes: ExtensionApi.ViewerMetadataChange): void {
+    let changed = false;
+    for (const key of Object.getOwnPropertyNames(changes)) {
+      if (this.__ExtensionViewerBaseImpl_metadata[key] !== changes[key]) {
+        this.__ExtensionViewerBaseImpl_metadata[key] = changes[key];
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this._viewerProxy._metadataUpdated();
+    }
   }
 }
 
