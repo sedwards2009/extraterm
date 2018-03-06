@@ -10,7 +10,12 @@ if [ -n "$LC_EXTRATERM_COOKIE" ]; then
 
     # Put our enhanced commands at the start of the PATH.
     filedir=`dirname "$BASH_SOURCE"`
-    export PATH="$PWD/$filedir:$PATH"
+    if [ ${filedir:0:1} != "/" ]
+    then
+        filedir="$PWD/$filedir"
+    fi
+    
+    export PATH="$filedir:$PATH"
 
     postexec () {
       echo -n -e "\033&${LC_EXTRATERM_COOKIE};3\007"
