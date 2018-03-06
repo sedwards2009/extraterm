@@ -9,5 +9,8 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "scripts": {
+    "build": "tsc"
   }
 }

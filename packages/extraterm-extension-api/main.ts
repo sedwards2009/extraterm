@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as CodeMirror from 'codemirror';
+import * as CodeMirror from './typings/codemirror/index';
 
 
 /**
