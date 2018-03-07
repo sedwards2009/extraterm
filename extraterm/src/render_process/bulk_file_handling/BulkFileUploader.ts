@@ -10,7 +10,7 @@ import {Event, Disposable} from 'extraterm-extension-api';
 import {Transform, Readable} from 'stream';
 
 import {BulkFileHandle} from './BulkFileHandle';
-import {Metadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileMetadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {ByteCountingStreamTransform} from '../../utils/ByteCountingStreamTransform';
 import {DisposableHolder} from '../../utils/DisposableUtils';
 import {EventEmitter} from '../../utils/EventEmitter';
@@ -222,7 +222,7 @@ class UploadEncoder {
   onData: Event<string>;
   onEnd: Event<undefined>;
 
-  constructor(private _metadata: Metadata, private _readable: NodeJS.ReadableStream) {
+  constructor(private _metadata: BulkFileMetadata, private _readable: NodeJS.ReadableStream) {
     this._log = getLogger("UploadEncoder", this);
     this.onData = this._onDataEmitter.event;
     this.onEnd = this._onEndEmitter.event;

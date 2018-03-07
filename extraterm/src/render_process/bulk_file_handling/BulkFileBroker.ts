@@ -5,7 +5,7 @@
  */
 import {Disposable} from 'extraterm-extension-api';
 import {BulkFileHandle, BulkFileState} from './BulkFileHandle';
-import {BulkFileIdentifier, Metadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileIdentifier, BulkFileMetadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {getLogger, Logger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as WebIpc from '../WebIpc';
@@ -51,7 +51,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
   onAvailableWriteBufferSizeChange: Event<number>;
   onStateChange: Event<BulkFileState>;
 
-  constructor(private _disposable: Disposable, private _metadata: Metadata, private _totalSize: number) {
+  constructor(private _disposable: Disposable, private _metadata: BulkFileMetadata, private _totalSize: number) {
     this._log = getLogger("WriteableBulkFileHandle", this);
 
     this.onAvailableSizeChange = this._onAvailableSizeChangeEventEmitter.event;
@@ -83,7 +83,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     return this._totalSize;
   }
 
-  getMetadata(): Metadata {
+  getMetadata(): BulkFileMetadata {
     return this._metadata;
   }
 
@@ -225,7 +225,7 @@ export class BulkFileBroker {
         this._handleBufferStateMessage.bind(this));        
   }
 
-  createWriteableBulkFileHandle(metadata: Metadata, size: number): WriteableBulkFileHandle {
+  createWriteableBulkFileHandle(metadata: BulkFileMetadata, size: number): WriteableBulkFileHandle {
     let newFileHandle: WriteableBulkFileHandle = null;
     newFileHandle = new WriteableBulkFileHandle({dispose: () => this._dispose(newFileHandle) }, metadata, size);
     this._fileHandleMap.set(newFileHandle.getBulkFileIdentifier(), newFileHandle);

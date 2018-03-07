@@ -5,7 +5,7 @@
  */
 
 import {Event} from 'extraterm-extension-api';
-import {Metadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileMetadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {BulkFileHandle, BulkFileState} from './BulkFileHandle';
 
 
@@ -17,7 +17,7 @@ export class BlobBulkFileHandle implements BulkFileHandle {
   private _peekBuffer: Buffer = null;
   private _url: string = null;
 
-  constructor(private _mimeType: string, private _metadata: Metadata, private _blobBuffer: Buffer) {
+  constructor(private _mimeType: string, private _metadata: BulkFileMetadata, private _blobBuffer: Buffer) {
   }
 
   getState(): BulkFileState {
@@ -39,7 +39,7 @@ export class BlobBulkFileHandle implements BulkFileHandle {
     return this._blobBuffer.length;    
   }
 
-  getMetadata(): Metadata {
+  getMetadata(): BulkFileMetadata {
     return this._metadata;
   }
 

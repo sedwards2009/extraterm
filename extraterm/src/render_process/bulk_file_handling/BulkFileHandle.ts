@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {Metadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileMetadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {Event} from 'extraterm-extension-api';
 
 export enum BulkFileState {
@@ -46,7 +46,7 @@ export interface BulkFileHandle {
    * 
    * The keys are simply strings and are specific to the file type.
    */
-  getMetadata(): Metadata;
+  getMetadata(): BulkFileMetadata;
 
   /**
    * Get the first 1KB of the file contents.

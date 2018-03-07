@@ -22,7 +22,7 @@ import {WriterReaderFile} from './WriterReaderFile';
 
 export type BulkFileIdentifier = string;
 
-export interface Metadata {
+export interface BulkFileMetadata {
   readonly [index: string]: (string | number | undefined);
 }
 
@@ -87,7 +87,7 @@ export class BulkFileStorage {
     }
   }
 
-  createBulkFile(metadata: Metadata, size: number): {identifier: BulkFileIdentifier, url: string} {
+  createBulkFile(metadata: BulkFileMetadata, size: number): {identifier: BulkFileIdentifier, url: string} {
     const onDiskFileIdentifier = crypto.randomBytes(16).toString('hex');
     const fullPath = path.join(this._storageDirectory, onDiskFileIdentifier);
     
@@ -190,7 +190,7 @@ export class BulkFile {
   onWriteBufferSizeChange: Event<{totalBufferSize: number, availableDelta: number}>;
   onClose: Event<{success: boolean}>;
 
-  constructor(private  _metadata: Metadata, public filePath: string) {
+  constructor(private  _metadata: BulkFileMetadata, public filePath: string) {
     this._log = getLogger("BulkFile", this);
 
     this._cryptoKey = crypto.randomBytes(32); // 256bit AES, thus 32 bytes
@@ -215,7 +215,7 @@ export class BulkFile {
     return this._referenceCount;
   }
 
-  getMetadata(): Metadata {
+  getMetadata(): BulkFileMetadata {
     return this._metadata;
   }
 
@@ -379,7 +379,7 @@ class BulkFileServer {
     });
   }
 
-  private _guessMimetype(buffer: Buffer, metadata: Metadata, filename: string): {mimeType: string, charset:string} {
+  private _guessMimetype(buffer: Buffer, metadata: BulkFileMetadata, filename: string): {mimeType: string, charset:string} {
     let mimeType: string = metadata.mimeType == null ? null : "" + metadata.mimeType;
     let charset: string = metadata.charset == null ? null : "" + metadata.charset;
     if (mimeType === null) {

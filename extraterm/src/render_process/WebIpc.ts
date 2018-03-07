@@ -7,7 +7,7 @@
 import * as Electron from 'electron';
 const ipc = Electron.ipcRenderer;
 
-import {BulkFileIdentifier, Metadata} from '../main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileIdentifier, BulkFileMetadata} from '../main_process/bulk_file_handling/BulkFileStorage';
 import * as Messages from '../WindowMessages';
 import * as config from '../Config';
 import {Logger, getLogger} from '../logging/Logger';
@@ -181,7 +181,7 @@ export function windowMaximizeRequest(): void {
   ipc.send(Messages.CHANNEL_NAME, msg);  
 }
 
-export function createBulkFileSync(metadata: Metadata, size: number): {identifier: BulkFileIdentifier, url: string} {
+export function createBulkFileSync(metadata: BulkFileMetadata, size: number): {identifier: BulkFileIdentifier, url: string} {
   const msg: Messages.BulkFileCreateMessage = {type: Messages.MessageType.BULK_FILE_CREATE, metadata, size};
   const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
   const createdBulkFileMessage = <Messages.BulkFileCreatedResponseMessage> event;

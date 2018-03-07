@@ -11,7 +11,7 @@
 import * as Config from './Config';
 import * as ThemeTypes from './theme/Theme';
 import {BulkFileState} from './render_process/bulk_file_handling/BulkFileHandle';
-import {BulkFileIdentifier, Metadata} from './main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileIdentifier, BulkFileMetadata} from './main_process/bulk_file_handling/BulkFileStorage';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeContents = ThemeTypes.ThemeContents;
@@ -414,7 +414,7 @@ export interface NewTagMessage extends Message {
 }
 
 export interface BulkFileCreateMessage extends Message {
-  metadata: Metadata;
+  metadata: BulkFileMetadata;
   size: number;
 }
 
