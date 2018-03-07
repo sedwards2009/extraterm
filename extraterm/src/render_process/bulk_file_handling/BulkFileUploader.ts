@@ -9,8 +9,7 @@ import * as http from 'http';
 import {Event, Disposable} from 'extraterm-extension-api';
 import {Transform, Readable} from 'stream';
 
-import {BulkFileHandle} from './BulkFileHandle';
-import {BulkFileMetadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileHandle, BulkFileMetadata} from './BulkFileHandle';
 import {ByteCountingStreamTransform} from '../../utils/ByteCountingStreamTransform';
 import {DisposableHolder} from '../../utils/DisposableUtils';
 import {EventEmitter} from '../../utils/EventEmitter';

@@ -10,8 +10,8 @@
 
 import * as Config from './Config';
 import * as ThemeTypes from './theme/Theme';
-import {BulkFileState} from './render_process/bulk_file_handling/BulkFileHandle';
-import {BulkFileIdentifier, BulkFileMetadata} from './main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileState, BulkFileMetadata} from './render_process/bulk_file_handling/BulkFileHandle';
+import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeContents = ThemeTypes.ThemeContents;

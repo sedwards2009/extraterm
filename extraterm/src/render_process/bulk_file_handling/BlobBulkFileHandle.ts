@@ -5,8 +5,7 @@
  */
 
 import {Event} from 'extraterm-extension-api';
-import {BulkFileMetadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
-import {BulkFileHandle, BulkFileState} from './BulkFileHandle';
+import {BulkFileHandle, BulkFileState, BulkFileMetadata} from './BulkFileHandle';
 
 
 const ONE_KILOBYTE = 1024;

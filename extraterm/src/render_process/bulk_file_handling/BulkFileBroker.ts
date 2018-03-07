@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {Disposable} from 'extraterm-extension-api';
-import {BulkFileHandle, BulkFileState} from './BulkFileHandle';
-import {BulkFileIdentifier, BulkFileMetadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileHandle, BulkFileState, BulkFileMetadata} from './BulkFileHandle';
+import {BulkFileIdentifier} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {getLogger, Logger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as WebIpc from '../WebIpc';

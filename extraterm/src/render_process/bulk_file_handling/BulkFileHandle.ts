@@ -1,11 +1,15 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {BulkFileMetadata} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {Event} from 'extraterm-extension-api';
+
+
+export interface BulkFileMetadata {
+  readonly [index: string]: (string | number | undefined);
+}
 
 export enum BulkFileState {
   DOWNLOADING,

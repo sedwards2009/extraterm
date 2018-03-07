@@ -7,11 +7,12 @@
 import * as Electron from 'electron';
 const ipc = Electron.ipcRenderer;
 
-import {BulkFileIdentifier, BulkFileMetadata} from '../main_process/bulk_file_handling/BulkFileStorage';
+import {BulkFileIdentifier} from '../main_process/bulk_file_handling/BulkFileStorage';
 import * as Messages from '../WindowMessages';
 import * as config from '../Config';
 import {Logger, getLogger} from '../logging/Logger';
 import * as ThemeTypes from '../theme/Theme';
+import { BulkFileMetadata } from './bulk_file_handling/BulkFileHandle';
 
 const _log = getLogger("WebIPC");
 

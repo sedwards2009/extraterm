@@ -18,13 +18,10 @@ import {getLogger, Logger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as MimeTypeDetector from '../../mimetype_detector/MimeTypeDetector';
 import {WriterReaderFile} from './WriterReaderFile';
+import { BulkFileMetadata } from '../../render_process/bulk_file_handling/BulkFileHandle';
 
 
 export type BulkFileIdentifier = string;
-
-export interface BulkFileMetadata {
-  readonly [index: string]: (string | number | undefined);
-}
 
 export type BufferSizeEvent = {identifier: BulkFileIdentifier, totalBufferSize: number, availableDelta: number};
 export type CloseEvent = {identifier: BulkFileIdentifier, success: boolean};
