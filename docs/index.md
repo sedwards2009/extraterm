@@ -10,12 +10,13 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 
 * Supports Linux, macOS and Cygwin on Windows
 * xterm compatible
-* Multiple tabs and panes, split and tiled any way you like
-* Keyboard based selection
 * Show images in the terminal
 * Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
-* Previous command output can be used as input for new commands
+* Easy uploads and downloads using the shell integration
+* Multiple tabs and panes, split and tiled any way you like
+* Keyboard based selection
 * Command output is editable in place. Multi-cursor editing
+* Previous command output can be used as input for new commands
 * Keyboard friendly "command palette" for searching menus
 * Text zoom
 * Unicode support

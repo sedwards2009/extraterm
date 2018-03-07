@@ -23,6 +23,14 @@ Or you can edit the command output directly in place and execute the selection w
 
 ![Directly edit and execute command output](edit_direct.gif)
 
+
+# Easy Downloads and Uploads
+
+The shell integration makes uploading and downloading files easy without requiring additional tools. It works transparently across SSH too.
+
+![Download](download.png)
+
+
 # Tiling and panes
 
 Extraterm also supports tiling and panes, text size scaling per terminal session and color emoji on all operating systems.
