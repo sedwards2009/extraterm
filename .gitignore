@@ -1,6 +1,7 @@
 *~
 *.map
 .vscode
+yarn-error.log
 node_modules/
 extraterm/src/test/admzip_test.js
 extraterm/src/test/charattr_test.js
@@ -131,8 +132,9 @@ packages/extraterm-web-component-decorators/Decorators.d.ts
 packages/extraterm-web-component-decorators/Decorators.js
 extraterm/src/render_process/extension/InternalTypes.js
 extraterm/src/render_process/extension/Proxies.js
-extraterm/src/render_process/extension/ViewerProxies.jsextraterm/src/render_process/extension/ExtensionUiUtilsImpl.js
 extraterm/src/render_process/extension/ExtensionUiUtilsImpl.js
 extraterm/src/render_process/extension/ProxyFactoryImpl.js
 extraterm/src/render_process/extension/ViewerProxies.js
 extensions/AudioViewer/src/AudioViewerExtension.js
+packages/extraterm-extension-api/main.d.ts
+packages/extraterm-extension-api/main.js
