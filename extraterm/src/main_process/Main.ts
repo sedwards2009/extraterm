@@ -14,6 +14,7 @@ import * as SourceMapSupport from 'source-map-support';
 import * as child_process from 'child_process';
 import * as Commander from 'commander';
 import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen} from 'electron';
+import { BulkFileState } from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
 import * as fs from 'fs';
@@ -21,7 +22,6 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as os from 'os';
 
-import {BulkFileState} from '../render_process/bulk_file_handling/BulkFileHandle';
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
 import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
   SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from '../Config';

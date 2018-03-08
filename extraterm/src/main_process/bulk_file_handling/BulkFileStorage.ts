@@ -12,13 +12,12 @@ import * as net from 'net';
 import {SmartBuffer, SmartBufferOptions} from 'smart-buffer';
 import {Transform} from 'stream';
 
-import {Disposable, Event} from 'extraterm-extension-api';
+import {BulkFileMetadata, Disposable, Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
 import {getLogger, Logger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as MimeTypeDetector from '../../mimetype_detector/MimeTypeDetector';
 import {WriterReaderFile} from './WriterReaderFile';
-import { BulkFileMetadata } from '../../render_process/bulk_file_handling/BulkFileHandle';
 
 
 export type BulkFileIdentifier = string;

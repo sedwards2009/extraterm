@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+import { BulkFileMetadata } from 'extraterm-extension-api';
 import * as Electron from 'electron';
 const ipc = Electron.ipcRenderer;
 
@@ -12,7 +13,6 @@ import * as Messages from '../WindowMessages';
 import * as config from '../Config';
 import {Logger, getLogger} from '../logging/Logger';
 import * as ThemeTypes from '../theme/Theme';
-import { BulkFileMetadata } from './bulk_file_handling/BulkFileHandle';
 
 const _log = getLogger("WebIPC");
 

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {BulkFileHandle} from './BulkFileHandle';
+import { BulkFileHandle } from 'extraterm-extension-api';
 import * as MimeTypeDetector from '../../mimetype_detector/MimeTypeDetector';
 
 

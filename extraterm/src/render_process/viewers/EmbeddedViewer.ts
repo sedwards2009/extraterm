@@ -9,9 +9,8 @@ import * as path from 'path';
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 
-import {BulkFileHandle, BulkFileState} from '../bulk_file_handling/BulkFileHandle';
 import {guessMimetype} from '../bulk_file_handling/BulkFileUtils';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
 import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';

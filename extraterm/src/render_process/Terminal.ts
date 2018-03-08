@@ -9,11 +9,10 @@ import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import * as utf8 from 'utf8';
 import {clipboard} from 'electron';
-import {Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
-import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 import {BulkFileUploader} from './bulk_file_handling/BulkFileUploader';
 import * as BulkFileUtils from './bulk_file_handling/BulkFileUtils';
 import * as DisposableUtils from '../utils/DisposableUtils';

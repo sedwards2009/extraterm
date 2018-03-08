@@ -12,7 +12,6 @@ import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
 import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalTypes';
 import {Logger, getLogger} from '../../logging/Logger';
 import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
-import { BulkFileHandle } from '../bulk_file_handling/BulkFileHandle';
 import { ViewerElement } from '../viewers/ViewerElement';
 
 
@@ -171,7 +170,7 @@ class ExtensionViewerProxy extends SimpleViewerElement {
     this.dispatchEvent(event);
   }
 
-  setBulkFileHandle(handle: BulkFileHandle): void {
+  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): void {
   }
 }
 

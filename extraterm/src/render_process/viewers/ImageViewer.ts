@@ -6,9 +6,8 @@
 import * as _ from 'lodash';
 import * as fs from 'fs';
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata} from 'extraterm-extension-api';
+import {BulkFileHandle, ViewerMetadata} from 'extraterm-extension-api';
 
-import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import {DebouncedDoLater} from '../../utils/DoLater';
 import {ViewerElement} from './ViewerElement';

@@ -8,11 +8,10 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as SourceDir from '../../SourceDir';
-import {Disposable, ViewerMetadata} from 'extraterm-extension-api';
+import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
-import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
 import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';

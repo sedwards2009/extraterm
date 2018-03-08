@@ -2,10 +2,9 @@
  * Copyright 2017 Simon Edwards <simon@simonzone.com>
  */
 
-import {Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import {BulkFileHandle, BulkFileState, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import {BulkFileHandle, BulkFileState} from '../bulk_file_handling/BulkFileHandle';
 import {DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import {FileTransferProgress} from '../gui/FileTransferProgress';

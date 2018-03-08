@@ -6,7 +6,6 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 
-import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import { doLater } from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import {Logger, getLogger} from '../../logging/Logger';

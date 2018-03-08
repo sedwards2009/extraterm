@@ -49,7 +49,6 @@
         "./src/render_process/AboutTab.ts",
         "./src/render_process/bulk_file_handling/BlobBulkFileHandle.ts",
         "./src/render_process/bulk_file_handling/BulkFileBroker.ts",
-        "./src/render_process/bulk_file_handling/BulkFileHandle.ts",
         "./src/render_process/bulk_file_handling/BulkFileUploader.ts",
         "./src/render_process/bulk_file_handling/BulkFileUtils.ts",
         "./src/render_process/codemirror/CodeMirrorCommands.ts",

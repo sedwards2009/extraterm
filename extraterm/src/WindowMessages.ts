@@ -8,9 +8,10 @@
  * Message formats for the IPC between the main process and render processes.
  */
 
+import { BulkFileMetadata, BulkFileState } from 'extraterm-extension-api';
+
 import * as Config from './Config';
 import * as ThemeTypes from './theme/Theme';
-import {BulkFileState, BulkFileMetadata} from './render_process/bulk_file_handling/BulkFileHandle';
 import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;

@@ -6,12 +6,11 @@
 import * as he from 'he';
 import * as _ from 'lodash';
 import * as path from 'path';
-import {Disposable} from 'extraterm-extension-api';
+import {BulkFileHandle, Disposable} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {AboutTab} from './AboutTab';
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
-import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 import {Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
 import * as config from '../Config';
 import * as DisposableUtils from '../utils/DisposableUtils';

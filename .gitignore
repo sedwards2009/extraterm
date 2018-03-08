@@ -93,7 +93,6 @@ extraterm/src/render_process/viewers/TextViewer.js
 extraterm/src/render_process/viewers/TipViewer.js
 extraterm/src/main_process/bulk_file_handling/BulkFileStorage.js
 extraterm/src/render_process/bulk_file_handling/BulkFileBroker.js
-extraterm/src/render_process/bulk_file_handling/BulkFileHandle.js
 extensions/TextViewerTabWidth/src/TextViewerTabWidthExtension.js
 __pycache__/
 build_tmp

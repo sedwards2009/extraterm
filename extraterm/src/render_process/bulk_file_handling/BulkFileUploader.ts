@@ -6,10 +6,9 @@
 import * as crypto from 'crypto';
 import  getUri = require('get-uri');  // Top level on this import is a callable, have to use other syntax.
 import * as http from 'http';
-import {Event, Disposable} from 'extraterm-extension-api';
+import {BulkFileHandle, BulkFileMetadata, Event, Disposable} from 'extraterm-extension-api';
 import {Transform, Readable} from 'stream';
 
-import {BulkFileHandle, BulkFileMetadata} from './BulkFileHandle';
 import {ByteCountingStreamTransform} from '../../utils/ByteCountingStreamTransform';
 import {DisposableHolder} from '../../utils/DisposableUtils';
 import {EventEmitter} from '../../utils/EventEmitter';

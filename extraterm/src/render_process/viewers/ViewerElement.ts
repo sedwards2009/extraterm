@@ -5,15 +5,13 @@
  */
 
 import * as fs from 'fs';
-import {Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 
 import * as Util from '../gui/Util';
 import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
-import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
-
 
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {

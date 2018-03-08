@@ -8,10 +8,9 @@ import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import {BulkFileHandle, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
-import {BulkFileHandle} from '../bulk_file_handling/BulkFileHandle';
 import * as CodeMirrorCommands from '../codemirror/CodeMirrorCommands';
 import * as CodeMirrorUtils from '../codemirror/CodeMirrorUtils';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}

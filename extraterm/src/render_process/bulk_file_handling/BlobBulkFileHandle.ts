@@ -4,8 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {Event} from 'extraterm-extension-api';
-import {BulkFileHandle, BulkFileState, BulkFileMetadata} from './BulkFileHandle';
+import {BulkFileHandle, BulkFileState, BulkFileMetadata, Event} from 'extraterm-extension-api';
 
 
 const ONE_KILOBYTE = 1024;

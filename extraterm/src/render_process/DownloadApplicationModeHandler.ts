@@ -5,13 +5,12 @@
  */
 
 import * as crypto from 'crypto';
-import {Event, Disposable} from 'extraterm-extension-api';
+import {BulkFileHandle, Event, Disposable} from 'extraterm-extension-api';
 import {EventEmitter} from '../utils/EventEmitter';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
 
 import {BulkFileBroker, WriteableBulkFileHandle} from './bulk_file_handling/BulkFileBroker';
-import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 import * as TermApi from './emulator/TermApi';
 
 

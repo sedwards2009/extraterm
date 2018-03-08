@@ -5,10 +5,9 @@
  */
 
 import * as fs from 'fs';
-import {Disposable, ViewerMetadata} from 'extraterm-extension-api';
+import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import {BulkFileHandle} from './bulk_file_handling/BulkFileHandle';
 import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
   Commandable, CommandEntry} from './CommandPaletteRequestTypes';
 import {doLater} from '../utils/DoLater';
