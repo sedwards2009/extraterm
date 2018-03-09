@@ -2064,11 +2064,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     if (mimeType == null || isDownload) {
       this._appendMimeViewer("application/octet-stream", bulkFileHandle);
     } else {
-      this._appendMimeViewer(mimeType, bulkFileHandle);
+      const newViewer = this._appendMimeViewer(mimeType, bulkFileHandle);
+      if (newViewer == null) {
+        this._appendMimeViewer("application/octet-stream", bulkFileHandle);
+      }
     }
   }
 
-  private _appendMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): void {
+  private _appendMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): ViewerElement {
     const mimeViewerElement = this._createMimeViewer(mimeType, bulkFileHandle);
     if (mimeViewerElement !== null) {
       this._closeLastEmbeddedViewer("0");
@@ -2081,6 +2084,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
     }
+    return mimeViewerElement;
   }
 
   private _createMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): ViewerElement {
