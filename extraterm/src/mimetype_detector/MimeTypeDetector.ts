@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as jschardet from 'jschardet';
+import * as mime from 'mime';
+
 
 export interface DetectionResult {
   readonly mimeType: string;
@@ -26,7 +28,7 @@ export function detect(filename: string=null, buffer: Buffer=null): DetectionRes
       return {mimeType, charset: null };
     }
 
-    const imageMimeType = filenameToImageMimetype(filename);
+    const imageMimeType = mime.getType(filename);
     if (imageMimeType !== null) {
       return { mimeType: imageMimeType, charset: null };
     }
@@ -234,38 +236,6 @@ function filenameToTextMimetype(name: string): string {
           }
         }
       }
-    }
-  }
-  return null;
-}
-
-const mimeTypeMap = {
-    bmp: "image/bmp",
-    dib: "image/bmp",
-    png: "image/png",
-    gif: "image/gif",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    jpe: "image/jpeg",
-    jif: "image/jpeg",
-    jfif: "image/jpeg",
-    jfi: "image/jpeg",
-    webp: "image/webp"
-};
-
-/**
- * Try to match a filename to an image mimetype.
- * 
- * @param name the filename to match.
- * @return the matching mimetype or null if one could not be identified.
- */
-function filenameToImageMimetype(name: string): string {
-  const lowerFilename = name.toLowerCase();
-  const dotIndex = lowerFilename.lastIndexOf('.');
-  if (dotIndex !== -1) {
-    const extension = lowerFilename.slice(lowerFilename.indexOf('.') + 1);
-    if (mimeTypeMap[extension] !== undefined) {
-      return mimeTypeMap[extension];
     }
   }
   return null;
