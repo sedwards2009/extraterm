@@ -170,7 +170,12 @@ class ExtensionViewerProxy extends SimpleViewerElement {
     this.dispatchEvent(event);
   }
 
+  getBulkFileHandle(): ExtensionApi.BulkFileHandle {
+    return this._extensionViewer.getBulkFileHandle();
+  }
+
   setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): void {
+    this._extensionViewer.setBulkFileHandle(handle);
   }
 }
 
@@ -213,6 +218,13 @@ class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase {
     if (changed) {
       this._viewerProxy._metadataUpdated();
     }
+  }
+
+  getBulkFileHandle(): ExtensionApi.BulkFileHandle {
+    return null;
+  }
+
+  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): void {
   }
 }
 

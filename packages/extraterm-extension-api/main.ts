@@ -366,8 +366,27 @@ export interface ExtensionViewerBase {
    */
   getContainerElement(): HTMLElement;
 
+  /**
+   * Get the metadata describing this viewer.
+   */
   getMetadata(): ViewerMetadata;
+
+  /**
+   * Change fields in the metadata.
+   *
+   * @param changes object containing the fields to change
+   */
   updateMetadata(changes: ViewerMetadataChange): void;
+
+  /**
+   * Get a BulkFileHandle with the contents of this viewer.
+   */
+  getBulkFileHandle(): BulkFileHandle;
+
+  /**
+   *
+   */
+  setBulkFileHandle(handle: BulkFileHandle): void;
 }
 
 
