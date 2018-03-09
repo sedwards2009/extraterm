@@ -20,6 +20,12 @@
   dependencies:
     "@types/node" "*"
 
+"@types/file-type@^5.2.1":
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/@types/file-type/-/file-type-5.2.1.tgz#e7af49e08187b6b7598509c5e416669d25fa3461"
+  dependencies:
+    "@types/node" "*"
+
 "@types/he@0.5.29":
   version "0.5.29"
   resolved "https://registry.yarnpkg.com/@types/he/-/he-0.5.29.tgz#67f9392287b05558013d1cabc96801a5185adbea"
@@ -1459,6 +1465,10 @@ fd-slicer@~1.0.1:
   resolved "https://registry.yarnpkg.com/fd-slicer/-/fd-slicer-1.0.1.tgz#8b5bcbd9ec327c5041bf9ab023fd6750f1177e65"
   dependencies:
     pend "~1.2.0"
+
+file-type@^7.6.0:
+  version "7.6.0"
+  resolved "https://registry.yarnpkg.com/file-type/-/file-type-7.6.0.tgz#b3dbfc8029148e86f30761b21253562943d21f06"
 
 file-uri-to-path@1:
   version "1.0.0"

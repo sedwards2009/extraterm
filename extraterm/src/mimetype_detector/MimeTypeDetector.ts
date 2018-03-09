@@ -5,6 +5,7 @@
  */
 import * as jschardet from 'jschardet';
 import * as mime from 'mime';
+import * as filetype from 'file-type';
 
 
 export interface DetectionResult {
@@ -36,9 +37,9 @@ export function detect(filename: string=null, buffer: Buffer=null): DetectionRes
 
   // Check the data directly.
   if (buffer !== null) {
-    const mimeType = magicToMimeType(buffer);
-    if (mimeType !== null) {
-      return {mimeType, charset: null };
+    const fileTypeResult = filetype(buffer);
+    if (fileTypeResult !== null) {
+      return {mimeType: fileTypeResult.mime, charset: null };
     }
 
     if ( ! isNotText(buffer)) {
@@ -239,64 +240,6 @@ function filenameToTextMimetype(name: string): string {
     }
   }
   return null;
-}
-
-interface MagicTest {
-  tests: [number, string][];
-  mimetype: string;
-}
-
-const magic: MagicTest[] = [
-  { tests: [ [0, "GIF8"]], mimetype: "image/gif"},
-  { tests: [ [0, "\x89PNG\x0d\x0a\x1a\x0a"]], mimetype: "image/png"},
-  { tests: [ [0, "\xff\xd8"]], mimetype: "image/jpeg"},
-  { tests: [ [0, "BM"]], mimetype: "image/bmp"},
-  { tests: [ [0, "RIFF"], [8, "WEBP"]], mimetype: "image/webp"}
-];
-
-/**
- * Try to match a buffer of bytes to a mimetype.
- * 
- * @param buffer the buffer of bytes to examine.
- * @return the matching mimetype or null if one could not be identified.
- */
-function magicToMimeType(buffer: Buffer): string {
-  for (const mimeTypeTest of magic) {
-    let match = true;
-    for(const test of mimeTypeTest.tests) {
-      const offset = test[0];
-      const stringTest = test[1];
-      if ( ! bufferStartsWith(buffer, stringTest, offset)) {
-        match = false;
-        break;
-      }
-    }
-    if (match) {
-      return mimeTypeTest.mimetype;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Check if a byte string appears at the start of a byte buffer.
- * 
- * @param buffer the byte buffer to compare against.
- * @param testString the string of bytes to test.
- * @param offset the offset to start comparing at in the buffer. Optional.
- * @return true if the test string matches the buffer.  
- */
-function bufferStartsWith(buffer: Buffer, testString: string, offset=0): boolean {
-  if (testString.length + offset> buffer.length) {
-    return false;
-  }
-  for (let i=0; i<testString.length; i++) {
-    if (testString.codePointAt(i) !== buffer.readUInt8(i+offset)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 /**
