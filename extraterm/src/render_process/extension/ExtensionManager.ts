@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import * as ExtensionApi from 'extraterm-extension-api';
 
 import {Logger, getLogger} from '../../logging/Logger';
-import {ExtensionLoader, ExtensionMetadata} from './ExtensionLoader';
+import {ExtensionLoader} from './ExtensionLoader';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextViewer';
@@ -17,6 +17,8 @@ import {ProxyFactoryImpl} from './ProxyFactoryImpl';
 import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalTypes';
 import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';
 import {WorkspaceProxy} from './Proxies';
+import { ExtensionMetadata } from '../../ExtensionMetadata';
+import * as WebIpc from '../WebIpc';
 
 
 interface ActiveExtension {
@@ -36,14 +38,13 @@ export class ExtensionManagerImpl implements ExtensionManager {
   constructor() {
     this._log = getLogger("ExtensionManager", this);
     this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../../../../extensions" )]);
+    this._extensionLoader.startUp();
     this._extensionUiUtils = new ExtensionUiUtilsImpl();
     this._proxyFactory = new ProxyFactoryImpl(this._extensionUiUtils);
   }
 
   startUp(): void {
-    this._extensionLoader.scan();
-
-    for (const extensionInfo of this._extensionLoader.getExtensions()) {
+    for (const extensionInfo of this._extensionLoader.getExtensionMetadata()) {
       this._startExtension(extensionInfo);
     }
   }

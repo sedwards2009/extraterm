@@ -13,7 +13,7 @@ export function testHelloWorld(test: nodeunit.Test): void {
   const loader = new ExtensionLoader([path.join(__dirname, "../../test/extensions")]);
   loader.scan();
 
-  const extensions = loader.getExtensions();
+  const extensions = loader.getExtensionMetadata();
 
   test.ok(extensions.length >= 1, "Found extensions");
 
@@ -35,7 +35,7 @@ export function testHelloDependency(test: nodeunit.Test): void {
   const loader = new ExtensionLoader([path.join(__dirname, "../../test/extensions")]);
   loader.scan();
 
-  const extensions = loader.getExtensions();
+  const extensions = loader.getExtensionMetadata();
 
   test.ok(extensions.length >= 1, "Found extensions");
 

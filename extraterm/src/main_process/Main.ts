@@ -36,6 +36,7 @@ import * as ThemeTypes from '../theme/Theme';
 import * as ThemeManager from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import * as Util from '../render_process/gui/Util';
+import { MainExtensionManager } from './extension/MainExtensionManager';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
@@ -79,12 +80,14 @@ let tagCounter = 1;
 let fonts: FontInfo[] = null;
 let titleBarVisible = false;
 let bulkFileStorage: BulkFileStorage = null;
+let extensionManager: MainExtensionManager = null;
+
 
 function main(): void {
   let failed = false;
 
-  prepareAppData();
-  setUpLogging();
+  setupAppData();
+  setupLogging();
 
   app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
   app.commandLine.appendSwitch('high-dpi-support', 'true');
@@ -107,14 +110,12 @@ function main(): void {
     .option(EXTRATERM_DEVICE_SCALE_FACTOR + ' []', '(Internal Extraterm option. Ignore)')
     .parse(normalizedArgv);
 
-
   // Themes
   const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  
   themeManager = ThemeManager.makeThemeManager([themesdir, userThemesDir]);
   
-  initConfig();
+  setupConfig();
   
   if (config.expandedProfiles.length === 0) {
     failed = true;
@@ -136,6 +137,8 @@ function main(): void {
   
   _log.stopRecording();
 
+  setupExtensionManager();
+
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
     ptyConnector.destroy();
@@ -147,67 +150,87 @@ function main(): void {
 
   // This method will be called when Electron has done everything
   // initialization and ready for creating browser windows.
-  app.on('ready', function() {
-    const deviceScaleFactor = <any>Commander.extratermDeviceScaleFactor;
-    const {restartNeeded, originalScaleFactor, currentScaleFactor} = setScaleFactor(deviceScaleFactor);
-    if (restartNeeded) {
-      return;
-    }
-    config.systemConfig.currentScaleFactor = currentScaleFactor;
-    config.systemConfig.originalScaleFactor = originalScaleFactor;
-
-    bulkFileStorage = new BulkFileStorage(os.tmpdir());
-    bulkFileStorage.onWriteBufferSize(sendBulkFileWriteBufferSizeEvent);
-    bulkFileStorage.onClose(sendBulkFileStateChangeEvent);
-    startIpc();
-    
-    // Create the browser window.
-    const options = <Electron.BrowserWindowOptions> {
-      width: 1200,
-      height: 600,
-      "webPreferences": {
-        "experimentalFeatures": true,
-      },
-      frame: config.showTitleBar,
-      title: "Extraterm"
-    };
-    if (process.platform === "win32") {
-      options.icon = path.join(__dirname, ICO_ICON_PATH);
-    } else if (process.platform === "linux") {
-      options.icon = path.join(__dirname, PNG_ICON_PATH);
-    }
-
-    titleBarVisible = config.showTitleBar;
-    mainWindow = new BrowserWindow(options);
-
-    if ((<any>Commander).devTools) {
-      mainWindow.webContents.openDevTools();
-    }
-
-    mainWindow.setMenu(null);
-
-    // Emitted when the window is closed.
-    const mainWindowId = mainWindow.id;
-    mainWindow.on('closed', function() {
-      cleanUpPtyWindow(mainWindowId);
-      mainWindow = null;
-    });
-    
-    // and load the index.html of the app.
-    mainWindow.loadURL(ResourceLoader.toUrl('render_process/main.html'));
-
-    mainWindow.webContents.on('devtools-closed', function() {
-      sendDevToolStatus(mainWindow, false);
-    });
-    
-    mainWindow.webContents.on('devtools-opened', function() {
-      sendDevToolStatus(mainWindow, true);
-    });
-
-  });
+  app.on('ready', startUpWindows);
 }
 
-function setUpLogging(): void {
+function setupExtensionManager(): void {
+  extensionManager = new MainExtensionManager([path.join(__dirname, "../../../extensions" )]);
+  extensionManager.scan();
+}
+
+function startUpWindows(): void {
+  if ( ! setupScale()) {
+    return;
+  }
+  
+  setupBulkFileStorage();
+  setupIpc();  
+  openWindow();
+}
+
+function setupScale(): boolean {
+  const deviceScaleFactor = <any>Commander.extratermDeviceScaleFactor;
+  const {restartNeeded, originalScaleFactor, currentScaleFactor} = setScaleFactor(deviceScaleFactor);
+  if (restartNeeded) {
+    return false;
+  }
+  config.systemConfig.currentScaleFactor = currentScaleFactor;
+  config.systemConfig.originalScaleFactor = originalScaleFactor;
+  return true;
+}
+
+function setupBulkFileStorage(): void {
+  bulkFileStorage = new BulkFileStorage(os.tmpdir());
+  bulkFileStorage.onWriteBufferSize(sendBulkFileWriteBufferSizeEvent);
+  bulkFileStorage.onClose(sendBulkFileStateChangeEvent);
+}
+
+function openWindow(): void {
+  // Create the browser window.
+  const options = <Electron.BrowserWindowOptions> {
+    width: 1200,
+    height: 600,
+    "webPreferences": {
+      "experimentalFeatures": true,
+    },
+    frame: config.showTitleBar,
+    title: "Extraterm"
+  };
+  if (process.platform === "win32") {
+    options.icon = path.join(__dirname, ICO_ICON_PATH);
+  } else if (process.platform === "linux") {
+    options.icon = path.join(__dirname, PNG_ICON_PATH);
+  }
+
+  titleBarVisible = config.showTitleBar;
+  mainWindow = new BrowserWindow(options);
+
+  if ((<any>Commander).devTools) {
+    mainWindow.webContents.openDevTools();
+  }
+
+  mainWindow.setMenu(null);
+
+  // Emitted when the window is closed.
+  const mainWindowId = mainWindow.id;
+  mainWindow.on('closed', function() {
+    cleanUpPtyWindow(mainWindowId);
+    mainWindow = null;
+  });
+  
+  // and load the index.html of the app.
+  mainWindow.loadURL(ResourceLoader.toUrl('render_process/main.html'));
+
+  mainWindow.webContents.on('devtools-closed', function() {
+    sendDevToolStatus(mainWindow, false);
+  });
+  
+  mainWindow.webContents.on('devtools-opened', function() {
+    sendDevToolStatus(mainWindow, true);
+  });
+}
+  
+function setupLogging(): void {
   const logFilePath = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
 
   if ( ! process.argv.find(item => item.startsWith(EXTRATERM_DEVICE_SCALE_FACTOR))) {
@@ -593,7 +616,7 @@ function setupOSX(): void {
 //
 //-------------------------------------------------------------------------
 
-function prepareAppData(): void {
+function setupAppData(): void {
   const configDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR);
   if ( ! fs.existsSync(configDir)) {
     fs.mkdirSync(configDir);
@@ -624,7 +647,7 @@ function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
   return themeInfo.type.indexOf(themeType) !== -1;
 }
 
-function initConfig(): void {
+function setupConfig(): void {
   config = readConfigurationFile();
   config.systemConfig = systemConfiguration(config);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
@@ -849,7 +872,7 @@ function pathToUrl(path: string): string {
 //
 //-------------------------------------------------------------------------
 
-function startIpc(): void {
+function setupIpc(): void {
   ipc.on(Messages.CHANNEL_NAME, handleIpc);
 }
 
@@ -960,6 +983,10 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
     case Messages.MessageType.BULK_FILE_DEREF:
       handleDerefBulkFile(<Messages.BulkFileDerefMessage> msg);
       break;
+
+    case Messages.MessageType.EXTENSION_METADATA_REQUEST:
+      event.returnValue = handleExtensionMetadataRequest();
+      return;
 
     default:
       break;
@@ -1274,6 +1301,10 @@ function handleRefBulkFile(msg: Messages.BulkFileRefMessage): void {
 
 function handleDerefBulkFile(msg: Messages.BulkFileDerefMessage): void {
   bulkFileStorage.deref(msg.identifier); 
+}
+
+function handleExtensionMetadataRequest(): Messages.ExtensionMetadataMessage {
+  return {type: Messages.MessageType.EXTENSION_METADATA, extensionMetadata: extensionManager.getExtensionMetadata()};
 }
 
 main();

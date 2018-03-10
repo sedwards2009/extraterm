@@ -13,6 +13,7 @@ import { BulkFileMetadata, BulkFileState } from 'extraterm-extension-api';
 import * as Config from './Config';
 import * as ThemeTypes from './theme/Theme';
 import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
+import { ExtensionMetadata } from './ExtensionMetadata';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeContents = ThemeTypes.ThemeContents;
@@ -62,6 +63,9 @@ export const enum MessageType {
   BULK_FILE_REF,
   BULK_FILE_DEREF,
   BULK_FILE_STATE,
+
+  EXTENSION_METADATA_REQUEST,
+  EXTENSION_METADATA,
 }
 
 /**
@@ -452,4 +456,12 @@ export interface BulkFileDerefMessage extends Message {
 export interface BulkFileStateMessage extends Message {
   identifier: BulkFileIdentifier;
   state: BulkFileState;
+}
+
+
+export interface ExtensionMetadataRequestMessage extends Message {
+}
+
+export interface ExtensionMetadataMessage extends Message {
+  extensionMetadata: ExtensionMetadata[];
 }

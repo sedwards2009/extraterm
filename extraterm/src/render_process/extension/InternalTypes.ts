@@ -3,12 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {ExtensionMetadata} from './ExtensionLoader';
 import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextViewer';
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
+import { ExtensionMetadata } from '../../ExtensionMetadata';
 
 export interface ExtensionManager {
   startUp(): void;

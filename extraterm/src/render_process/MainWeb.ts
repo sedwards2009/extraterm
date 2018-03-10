@@ -491,43 +491,42 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
   return new Promise<void>( (resolve, cancel) => { resolve(); } );
 }
 
-function requestThemeContents(themeTerminal: string, themeSyntax: string, themeGUI: string): Promise<void> {
-  const terminalThemeIdList = [themeTerminal, ThemeTypes.FALLBACK_TERMINAL_THEME];
-  const syntaxThemeIdList = [themeSyntax, ThemeTypes.FALLBACK_SYNTAX_THEME];
-  const uiThemeIdList = [themeGUI, ThemeTypes.FALLBACK_UI_THEME];
-  
-  const cssFileMap = new Map<ThemeTypes.CssFile, string>();
-  return WebIpc.requestThemeContents(terminalThemeIdList, ThemeTypes.TerminalCssFiles)
-    .then( (result: Messages.ThemeContentsMessage): Promise<Messages.ThemeContentsMessage> => {
-      if (result.success) {
-        ThemeTypes.TerminalCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
-          const key = ThemeTypes.cssFileNameBase(cssFile);
-          cssFileMap.set(cssFile, result.themeContents.cssFiles[key]);
-        });
-      }
-      return WebIpc.requestThemeContents(syntaxThemeIdList, ThemeTypes.SyntaxCssFiles);
-    }, themeContentsError)
-    .then( (result: Messages.ThemeContentsMessage): Promise<Messages.ThemeContentsMessage> => {
-      if (result.success) {
-        ThemeTypes.SyntaxCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
-          const key = ThemeTypes.cssFileNameBase(cssFile);
-          cssFileMap.set(cssFile, result.themeContents.cssFiles[key]);
-        });
-      }
+async function requestThemeContents(themeTerminal: string, themeSyntax: string, themeGUI: string): Promise<void> {
+  try {
+    const terminalThemeIdList = [themeTerminal, ThemeTypes.FALLBACK_TERMINAL_THEME];
+    const syntaxThemeIdList = [themeSyntax, ThemeTypes.FALLBACK_SYNTAX_THEME];
+    const uiThemeIdList = [themeGUI, ThemeTypes.FALLBACK_UI_THEME];
+    const cssFileMap = new Map<ThemeTypes.CssFile, string>();
 
-      return WebIpc.requestThemeContents(uiThemeIdList, ThemeTypes.UiCssFiles);
-    }, themeContentsError)
-    .then( (result: Messages.ThemeContentsMessage): void => {
-      if (result.success) {
-        ThemeTypes.UiCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
-          const key = ThemeTypes.cssFileNameBase(cssFile);
-          cssFileMap.set(cssFile, result.themeContents.cssFiles[key]);
-        });
-      }
-      
-      // Distribute the CSS files to the classes which want them.
-      ThemeConsumer.updateCss(cssFileMap);
-    }, themeContentsError);
+    const terminalResult = await WebIpc.requestThemeContents(terminalThemeIdList, ThemeTypes.TerminalCssFiles);
+    if (terminalResult.success) {
+      ThemeTypes.TerminalCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
+        const key = ThemeTypes.cssFileNameBase(cssFile);
+        cssFileMap.set(cssFile, terminalResult.themeContents.cssFiles[key]);
+      });
+    }
+
+    const syntaxResult = await WebIpc.requestThemeContents(syntaxThemeIdList, ThemeTypes.SyntaxCssFiles);
+    if (syntaxResult.success) {
+      ThemeTypes.SyntaxCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
+        const key = ThemeTypes.cssFileNameBase(cssFile);
+        cssFileMap.set(cssFile, syntaxResult.themeContents.cssFiles[key]);
+      });
+    }
+
+    const uiResult = await WebIpc.requestThemeContents(uiThemeIdList, ThemeTypes.UiCssFiles);
+    if (uiResult.success) {
+      ThemeTypes.UiCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
+        const key = ThemeTypes.cssFileNameBase(cssFile);
+        cssFileMap.set(cssFile, uiResult.themeContents.cssFiles[key]);
+      });
+    }
+        
+    // Distribute the CSS files to the classes which want them.
+    ThemeConsumer.updateCss(cssFileMap);
+  } catch(e) {
+    themeContentsError(e);
+  }
 }
 
 function reloadThemeContents(): void {

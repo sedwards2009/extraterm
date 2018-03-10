@@ -13,6 +13,7 @@ import * as Messages from '../WindowMessages';
 import * as config from '../Config';
 import {Logger, getLogger} from '../logging/Logger';
 import * as ThemeTypes from '../theme/Theme';
+import { ExtensionMetadata } from '../ExtensionMetadata';
 
 const _log = getLogger("WebIPC");
 
@@ -207,4 +208,11 @@ export function refBulkFile(identifier: BulkFileIdentifier): void {
 export function derefBulkFile(identifier: BulkFileIdentifier): void {
   const msg: Messages.BulkFileDerefMessage = {type: Messages.MessageType.BULK_FILE_DEREF, identifier};
   ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function requestExtensionMetadataSync(): ExtensionMetadata[] {
+  const msg: Messages.ExtensionMetadataRequestMessage = {type: Messages.MessageType.EXTENSION_METADATA_REQUEST};
+  const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
+  const extensionMetadataMessage = <Messages.ExtensionMetadataMessage> event;
+  return extensionMetadataMessage.extensionMetadata;
 }
