@@ -8,15 +8,8 @@ import * as _ from 'lodash';
 import * as path from 'path';
 
 import { Logger, getLogger } from "../../logging/Logger";
-import { ExtensionMetadata } from "../../ExtensionMetadata";
-
-
-interface ExtensionPackageData {
-  name?: string;
-  version?: string;
-  description?: string;
-  main?: string;
-}
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution } from "../../ExtensionMetadata";
+import { parsePackageJson } from './PackageFileParser';
 
 
 export class MainExtensionManager {
@@ -65,25 +58,12 @@ export class MainExtensionManager {
     const packageJsonPath = path.join(extensionPath, "package.json");
     const packageJsonString = fs.readFileSync(packageJsonPath, "UTF8");
     try {
-      const packageJson = <ExtensionPackageData> JSON.parse(packageJsonString);
-
-      if (packageJson.name === undefined) {
-        this._log.warn(`${packageJsonPath} didn't contain a 'name' field, skipping.`);
-        return null;
-      }
-
-      const result: ExtensionMetadata = {
-        name: packageJson.name,
-        path: extensionPath,
-        main: packageJson.main !== undefined ? packageJson.main : "main.js",
-        version: packageJson.version,
-        description: packageJson.description,
-        module: null
-      };
+      const packageJson = JSON.parse(packageJsonString);
+      const result = parsePackageJson(packageJson, packageJsonPath);
       return result;
     } catch(ex) {
-      this._log.warn(`An error occurred while processing ${packageJsonPath}.`, ex);
+      this._log.warn("An error occurred while processing '${packageJsonPath}': " + ex);
       return null;
     }
-  }  
+  }
 }

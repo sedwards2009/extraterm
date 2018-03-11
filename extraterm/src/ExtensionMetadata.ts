@@ -11,4 +11,14 @@
   version?: string;
   description?: string;
   module: any;
+  contributions: ExtensionContributions;
+}
+
+export interface ExtensionContributions {
+  viewer: ExtensionViewerContribution[];
+}
+
+export interface ExtensionViewerContribution {
+  name: string;
+  mimeTypes: string[];
 }

@@ -41,6 +41,8 @@
         "./src/main_process/bulk_file_handling/BulkFileStorage.ts",
         "./src/main_process/bulk_file_handling/WriterReaderFile.ts",
         "./src/main_process/extension/MainExtensionManager.ts",
+        "./src/main_process/extension/PackageFileParser.ts",
+        "./src/main_process/extension/PackageFileParserTest.ts",
         "./src/main_process/Main.ts",
         "./src/main_process/pty/PtyConnector.ts",
         "./src/main_process/pty/PtyDirect.ts",
