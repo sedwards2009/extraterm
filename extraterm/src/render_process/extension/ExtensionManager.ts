@@ -9,7 +9,6 @@ import * as _ from 'lodash';
 import * as ExtensionApi from 'extraterm-extension-api';
 
 import {Logger, getLogger} from '../../logging/Logger';
-import {ExtensionLoader} from './ExtensionLoader';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextViewer';
@@ -22,29 +21,30 @@ import * as WebIpc from '../WebIpc';
 
 
 interface ActiveExtension {
-  extensionMetadata: ExtensionMetadata;
-  extensionContextImpl: InternalExtensionContext;
-  extensionPublicApi: any;
+  metadata: ExtensionMetadata;
+  contextImpl: InternalExtensionContext;
+  publicApi: any;
+  module: any;
 }
 
 
 export class ExtensionManagerImpl implements ExtensionManager {
   private _log: Logger = null;
-  private _extensionLoader: ExtensionLoader = null;
+  private _extensionMetadata: ExtensionMetadata[] = [];
   private _activeExtensions: ActiveExtension[] = [];
   private _extensionUiUtils: ExtensionUiUtils = null;
   private _proxyFactory: ProxyFactory = null;
 
   constructor() {
     this._log = getLogger("ExtensionManager", this);
-    this._extensionLoader = new ExtensionLoader([path.join(__dirname, "../../../../extensions" )]);
-    this._extensionLoader.startUp();
     this._extensionUiUtils = new ExtensionUiUtilsImpl();
     this._proxyFactory = new ProxyFactoryImpl(this._extensionUiUtils);
   }
 
   startUp(): void {
-    for (const extensionInfo of this._extensionLoader.getExtensionMetadata()) {
+    this._extensionMetadata = WebIpc.requestExtensionMetadataSync();
+
+    for (const extensionInfo of this._extensionMetadata) {
       this._startExtension(extensionInfo);
     }
   }
@@ -52,26 +52,26 @@ export class ExtensionManagerImpl implements ExtensionManager {
   getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[] {
     return _.flatten(
       this._activeExtensions.map(activeExtension => {
-        const ownerExtensionContext = activeExtension.extensionContextImpl;
+        const ownerExtensionContext = activeExtension.contextImpl;
         const terminalProxy = ownerExtensionContext.proxyFactory.getTerminalProxy(terminal);
-        return activeExtension.extensionContextImpl.internalWorkspace.getTerminalCommands(
-          activeExtension.extensionMetadata.name, terminalProxy);
+        return activeExtension.contextImpl.internalWorkspace.getTerminalCommands(
+          activeExtension.metadata.name, terminalProxy);
       }));
   }
 
   getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
     return _.flatten(
       this._activeExtensions.map(activeExtension => {
-        const extensionContext = activeExtension.extensionContextImpl;
+        const extensionContext = activeExtension.contextImpl;
         const textViewerProxy = <ExtensionApi.TextViewer> extensionContext.proxyFactory.getViewerProxy(textViewer);
         return extensionContext.internalWorkspace.getTextViewerCommands(
-          activeExtension.extensionMetadata.name, textViewerProxy);
+          activeExtension.metadata.name, textViewerProxy);
       }));
   }
 
   findViewerElementTagByMimeType(mimeType: string): string {
     for (let extension of this._activeExtensions) {
-      const tag = extension.extensionContextImpl.findViewerElementTagByMimeType(mimeType);
+      const tag = extension.contextImpl.findViewerElementTagByMimeType(mimeType);
       if (tag !== null) {
         return tag;
       }
@@ -79,16 +79,28 @@ export class ExtensionManagerImpl implements ExtensionManager {
     return null;
   }
 
-  private _startExtension(extensionMetadata: ExtensionMetadata): void {
-    if (this._extensionLoader.load(extensionMetadata)) {
+  private _startExtension(metadata: ExtensionMetadata): void {
+    const module = this._loadExtensionModule(metadata);
+    if (module != null) {
       try {
-        const extensionContextImpl = new InternalExtensionContextImpl(this._extensionUiUtils, extensionMetadata,
+        const contextImpl = new InternalExtensionContextImpl(this._extensionUiUtils, metadata,
                                       this._proxyFactory);
-        const extensionPublicApi = (<ExtensionApi.ExtensionModule> extensionMetadata.module).activate(extensionContextImpl);
-        this._activeExtensions.push({extensionMetadata, extensionPublicApi, extensionContextImpl});
+        const publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
+        this._activeExtensions.push({metadata, publicApi, contextImpl, module});
       } catch(ex) {
-        this._log.warn(`Exception occurred while starting extensions ${extensionMetadata.name}. ${ex}`);
+        this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
       }
+    }
+  }
+
+  private _loadExtensionModule(extension: ExtensionMetadata): any {
+    const mainJsPath = path.join(extension.path, extension.main);
+    try {
+      const module = require(mainJsPath);
+      return module;
+    } catch(ex) {
+      this._log.warn(`Unable to load ${mainJsPath}. ${ex}`);
+      return null;
     }
   }
 }

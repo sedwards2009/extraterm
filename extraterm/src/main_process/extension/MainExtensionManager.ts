@@ -59,7 +59,7 @@ export class MainExtensionManager {
     const packageJsonString = fs.readFileSync(packageJsonPath, "UTF8");
     try {
       const packageJson = JSON.parse(packageJsonString);
-      const result = parsePackageJson(packageJson, packageJsonPath);
+      const result = parsePackageJson(packageJson, extensionPath);
       return result;
     } catch(ex) {
       this._log.warn("An error occurred while processing '${packageJsonPath}': " + ex);
