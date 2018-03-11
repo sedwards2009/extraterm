@@ -59,19 +59,6 @@ export function activate(context: ExtensionContext): any {
     }
   }
 
-  context.workspace.registerViewer("AudioViewer", TestViewer, [
-    "audio/vorbis",
-    "audio/wav",
-    "audio/wave",
-    "audio/vnd.wave",
-    "audio/x-wav",
-    "audio/x-pn-wav",
-    "audio/flac",
-    "audio/x-flac",
-    "audio/webm",
-    "audio/ogg",
-    "audio/mp3",
-    "audio/mpeg"
-  ]);
+  context.workspace.registerViewer("AudioViewer", TestViewer);
 }
 

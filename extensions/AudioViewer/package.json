@@ -12,5 +12,26 @@
     "@types/node": "7.0.5",
     "extraterm-extension-api": "0.1.0",
     "typescript": "2.6.1"
+  },
+  "contributions": {
+    "viewer": [
+      {
+        "name": "AudioViewer",
+        "mimeTypes": [
+          "audio/vorbis",
+          "audio/wav",
+          "audio/wave",
+          "audio/vnd.wave",
+          "audio/x-wav",
+          "audio/x-pn-wav",
+          "audio/flac",
+          "audio/x-flac",
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp3",
+          "audio/mpeg"
+        ]
+      }
+    ]
   }
 }

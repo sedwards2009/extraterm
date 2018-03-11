@@ -13,6 +13,7 @@ import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFact
 import {Logger, getLogger} from '../../logging/Logger';
 import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
 import { ViewerElement } from '../viewers/ViewerElement';
+import { ExtensionViewerContribution } from '../../ExtensionMetadata';
 
 
 interface RegisteredViewer {
@@ -116,7 +117,22 @@ export class WorkspaceProxy implements InternalWorkspace {
 
   extensionViewerBaseConstructor: ExtensionApi.ExtensionViewerBaseConstructor;
 
-  registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor, mimeTypes: string[]): void {
+  registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor): void {
+    let viewerMetadata: ExtensionViewerContribution = null;
+    for (const vmd of this._internalExtensionContext.extensionMetadata.contributions.viewer) {
+      if (vmd.name === name) {
+        viewerMetadata = vmd;
+        break;
+      }
+    }
+
+    if (viewerMetadata == null) {
+      this._log.warn(`Unable to register viewer '${name}' for extension ` +
+        `'${this._internalExtensionContext.extensionMetadata.name}' because the viewer contribution data couldn't ` +
+        `be found in the extension's package.json file.`);
+      return;
+    }
+
     const viewerElementProxyClass = class extends ExtensionViewerProxy {
       protected _createExtensionViewer(): ExtensionApi.ExtensionViewerBase {
         return new viewerClass(this);
@@ -129,7 +145,7 @@ export class WorkspaceProxy implements InternalWorkspace {
     window.customElements.define(tag, viewerElementProxyClass);
 
     this._registeredViewers.push({
-      mimeTypes, tag
+      mimeTypes: viewerMetadata.mimeTypes, tag
     });
   }
 

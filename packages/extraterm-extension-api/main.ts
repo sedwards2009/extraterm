@@ -239,8 +239,7 @@ export interface Workspace {
     commandExecutor: (textViewer: TextViewer, commandId: string, commandArguments?: object) => void): Disposable;
 
   extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;
-    // extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;
-  registerViewer(name: string, viewerClass: ExtensionViewerBaseConstructor, mimeTypes: string[]): void; 
+  registerViewer(name: string, viewerClass: ExtensionViewerBaseConstructor): void;
 }
 
 
