@@ -14,7 +14,6 @@ export function parsePackageJson(packageJson: any, extensionPath: string): Exten
     main: assertJsonStringField(packageJson, "main", "main.js"),
     version: assertJsonStringField(packageJson, "version"),
     description: assertJsonStringField(packageJson, "description"),
-    module: null,
     contributions: parseContributionsJson(packageJson)
   };
   return result;

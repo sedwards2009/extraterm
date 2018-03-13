@@ -67,8 +67,6 @@
         "./src/render_process/emulator/Term.ts",
         "./src/render_process/emulator/TermApi.ts",
         "./src/render_process/emulator/TermTest.ts",
-        "./src/render_process/extension/ExtensionLoader.ts",
-        "./src/render_process/extension/ExtensionLoaderTest.ts",
         "./src/render_process/extension/ExtensionManager.ts",
         "./src/render_process/extension/ExtensionUiUtilsImpl.ts",
         "./src/render_process/extension/InternalTypes.ts",
