@@ -21,7 +21,7 @@ export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefresh
   /**
    * See `ThemeTypes.Themeable.setThemeCssMap()`
    */
-  setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>, themeTimeStamp: number): void {
+  setThemeCssMap(cssMap: ThemeTypes.CssFileMap, themeTimeStamp: number): void {
     if (DomUtils.getShadowRoot(this) === null) {
       return;
     }

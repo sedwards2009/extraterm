@@ -6,6 +6,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as _ from 'lodash';
 
 import * as SourceDir from '../SourceDir';
 
@@ -24,15 +25,14 @@ if (previousSASS_BINARY_PATH === undefined) {
   process.env.SASS_BINARY_PATH = previousSASS_BINARY_PATH;
 }
 
-import * as _ from 'lodash';
 
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
-import * as ThemeTypes from './Theme';
+import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
+  CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
+  cssFileToFilename, cssFileToExtension} from './Theme';
+import { Config } from '../Config';
 
-type ThemeInfo = ThemeTypes.ThemeInfo;
-type ThemeContents = ThemeTypes.ThemeContents;
-type CssFile = ThemeTypes.CssFile;
 const THEME_CONFIG = "theme.json";
 
 const DEBUG_SASS = false;
@@ -49,37 +49,12 @@ export interface RenderResult {
   errorMessage: string;
 }
 
-export interface ThemeManager {
-  getTheme(themeName: string): ThemeInfo;
-  
-  getAllThemes(): ThemeInfo[];
-  
-  /**
-   * Render a stack of themes.
-   * 
-   * @param  themeIds the stack or themes to render
-   * @return the rendered CSS texts
-   */
-  renderThemes(themeIdList: string[], cssFileList: CssFile[], globalVariables?: Map<string, number|boolean|string>): Promise<RenderResult>;
-}
 
-//-------------------------------------------------------------------------
-//
-//  #######                             #     #                                           ###                      
-//     #    #    # ###### #    # ###### ##   ##   ##   #    #   ##    ####  ###### #####   #  #    # #####  #      
-//     #    #    # #      ##  ## #      # # # #  #  #  ##   #  #  #  #    # #      #    #  #  ##  ## #    # #      
-//     #    ###### #####  # ## # #####  #  #  # #    # # #  # #    # #      #####  #    #  #  # ## # #    # #      
-//     #    #    # #      #    # #      #     # ###### #  # # ###### #  ### #      #####   #  #    # #####  #      
-//     #    #    # #      #    # #      #     # #    # #   ## #    # #    # #      #   #   #  #    # #      #      
-//     #    #    # ###### #    # ###### #     # #    # #    # #    #  ####  ###### #    # ### #    # #      ######
-//
-//-------------------------------------------------------------------------
-class ThemeManagerImpl implements ThemeManager {
+export class ThemeManager {
   
   private _log: Logger = null;
-  
+  private _config: Config = null;
   private _directories: string[] = null;
-  
   private _themes: Map<string, ThemeInfo> = null;
   
   constructor(directories: string[]) {
@@ -109,14 +84,52 @@ class ThemeManagerImpl implements ThemeManager {
     return result;
   }
 
-  renderThemes(themeStack: string[], cssFileList: CssFile[], globalVariables?: Map<string, number|boolean|string>): Promise<RenderResult> {
+  setConfig(config: Config): void {
+    this._config = config;
+  }
+
+  async render(themeType: ThemeType, globalVariables?: Map<string, number|boolean|string>): Promise<RenderResult> {
+    let moduleName = "";
+    let themeStack: string[] = null;
+    let fallbackTheme = "";
+    switch (themeType) {
+      case "gui":
+        moduleName = CSS_MODULE_INTERNAL_GUI;
+        themeStack = [this._config.themeGUI, FALLBACK_UI_THEME];
+        fallbackTheme = FALLBACK_UI_THEME;
+        break;
+
+      case "terminal":
+        moduleName = CSS_MODULE_INTERNAL_TERMINAL;
+        themeStack = [this._config.themeTerminal, FALLBACK_TERMINAL_THEME];
+        fallbackTheme = FALLBACK_TERMINAL_THEME;
+        break;
+
+      case "syntax":
+        moduleName = CSS_MODULE_INTERNAL_SYNTAX;
+        themeStack = [this._config.themeSyntax, FALLBACK_SYNTAX_THEME];
+        fallbackTheme = FALLBACK_SYNTAX_THEME;
+        break;
+    }
+
+    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === moduleName);
+
+    // Add extra CSS files needed by extensions.
+    const result = await this._renderThemes(themeStack, neededCssFiles, globalVariables);
+    if (result.success) {
+      return result;
+    }
+
+    const fallbackResult = await this._renderThemes([fallbackTheme], neededCssFiles, globalVariables);
+    fallbackResult.errorMessage = result.errorMessage;
+    return fallbackResult;
+  }
+
+  private _renderThemes(themeStack: string[], cssFileList: CssFile[], globalVariables?: Map<string, number|boolean|string>): Promise<RenderResult> {
     const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
     globalVariables = globalVariables || new Map<string, number|boolean|string>();
 
-    return this._renderThemeStackContents(themeInfoList, cssFileList, globalVariables)
-      .then( (renderResults) => {
-        return renderResults;
-      });
+    return this._renderCssFiles(themeInfoList, cssFileList, globalVariables);
   }
   
   private _themeIdListToThemeInfoList(themeIdList: string[]): ThemeInfo[] {
@@ -173,27 +186,42 @@ class ThemeManagerImpl implements ThemeManager {
     themeInfo.debug = themeInfo.debug === undefined ? false : themeInfo.debug;
   }
 
-  /**
-   * 
-   */
   private _validateThemeInfo(themeinfo: ThemeInfo): boolean {
     return _.isString(themeinfo.name) && themeinfo.name !== "";
   }
 
-  private _renderThemeStackContents(themeStack: ThemeInfo[], cssFileList: CssFile[], globalVariables: Map<string, number|boolean|string>): Promise<RenderResult> {
-    return this._recursiveRenderThemeStackContents(cssFileList.slice(0), themeStack, globalVariables);
+  private async _renderCssFiles(themeStack: ThemeInfo[], cssFileList: CssFile[],
+      globalVariables: Map<string, number|boolean|string>): Promise<RenderResult> {
+
+    const renderResult: RenderResult = {
+      success: true,
+      themeContents: {
+        cssFiles: []
+      },
+      errorMessage: ""
+    };
+
+    for (const cssFile of cssFileList) {
+      const {errorMessage, cssText} = await this._renderCssFile(cssFile, themeStack, globalVariables);
+      if (errorMessage == null) {
+        renderResult.themeContents.cssFiles.push({cssFileName: cssFile, contents: cssText});
+      } else {
+        renderResult.success = false;
+        renderResult.errorMessage += errorMessage + "\n";
+      }
+    }
+    return renderResult;
   }
 
-  private _recursiveRenderThemeStackContents(todoCssFile: ThemeTypes.CssFile[], themeStack: ThemeInfo[], globalVariables: Map<string, number|boolean|string>):
-      Promise<RenderResult> {
+  private async _renderCssFile(cssFile: CssFile, themeStack: ThemeInfo[],
+      globalVariables: Map<string, number|boolean|string>): Promise<{cssText: string, errorMessage: string}> {
         
     if (DEBUG_SASS) {
-      this._log.debug("Compiling _recursiveRenderThemeStackContents:" + todoCssFile.length);
+      this._log.debug("Compiling _recursiveRenderThemeStackContents: " + cssFile);
     }
     
-    const cssFile = todoCssFile[0];
     const dirStack = _.uniq(themeStack.map( (themeInfo) => themeInfo.path ));
-    const sassFileName = ThemeTypes.cssFileNameBase(cssFile) + '.scss';
+    const sassFileName = cssFileToFilename(cssFile) + '.scss';
     
     // Create SASS variables for the location of each theme directory.
     const variables = new Map<string, number|boolean|string>(globalVariables);
@@ -205,31 +233,16 @@ class ThemeManagerImpl implements ThemeManager {
       this._log.debug("Compiling " + sassFileName);
       this._log.startTime("Compiling " + sassFileName);
     }
-    
-    const loadSassPromise = this._loadSassFile(dirStack, sassFileName, variables);
-    return loadSassPromise.then( (cssText) => {
-      
+    try {
+      const cssText = await this._loadSassFile(dirStack, sassFileName, variables);
       if (DEBUG_SASS) {
         this._log.endTime("Compiling " + sassFileName);
         this._log.debug("Done " + sassFileName);
       }
-      
-      if (todoCssFile.length <= 1) {
-        // Done. Send back some results.
-        const themeContents: ThemeContents = {
-          cssFiles: {}
-        };
-        themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)] = cssText;
-        const renderResult: RenderResult = { success: true, themeContents: themeContents, errorMessage: null };
-        return renderResult;
-      } else {
-        return this._recursiveRenderThemeStackContents(todoCssFile.slice(1), themeStack, globalVariables)
-          .then( (renderResult: RenderResult) => {
-            renderResult.themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)] = cssText;
-            return renderResult;
-          });
-      }
-    });
+      return {cssText, errorMessage: null};
+    } catch(ex) {
+      return {cssText: null, errorMessage: ex.message + " (Directories: " + dirStack.join(", ") +" )"};
+    } 
   }
 
   private _loadSassFile(dirStack: string[], sassFileName: string, variables?: Map<string, number|boolean|string>): Promise<string> {
@@ -398,8 +411,4 @@ function findThemePath(themeDirectories: string[], themeName: string): string {
     }
   }
   return null;
-}
-
-export function makeThemeManager(directories: string[]): ThemeManager {
-  return new ThemeManagerImpl(directories);
 }

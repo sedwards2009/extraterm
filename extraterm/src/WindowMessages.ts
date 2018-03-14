@@ -11,12 +11,10 @@
 import { BulkFileMetadata, BulkFileState } from 'extraterm-extension-api';
 
 import * as Config from './Config';
-import * as ThemeTypes from './theme/Theme';
+import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
 import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
 import { ExtensionMetadata } from './ExtensionMetadata';
 
-type ThemeInfo = ThemeTypes.ThemeInfo;
-type ThemeContents = ThemeTypes.ThemeContents;
 
 /**
  * The name of the channel as required by Electron's ipc module calls.
@@ -132,25 +130,23 @@ export interface ThemeListMessage extends Message {
 }
 
 /**
- * Requests the contents of a theme.
+ * Requests the rendered CSS.
  *
  * This is sent from a render process to main.
  *
  * See `ThemeContentsRequestMessage`.
  */
 export interface ThemeContentsRequestMessage extends Message {
-  themeIdList: string[];
-  cssFileList: ThemeTypes.CssFile[];
+  themeType: ThemeType
 }
 
 /**
- * The contents of a theme.
+ * Rendered CSS files.
  *
  * This is a response to `ThemeContentsRequestMessage`.
  */
 export interface ThemeContentsMessage extends Message {
-  themeIdList: string[];
-  cssFileList: ThemeTypes.CssFile[];
+  themeType: ThemeType;
   themeContents: ThemeContents; // is null in the case of errror.
   success: boolean;             // true if the render was successful, otherwise there was an error.
   errorMessage: string;         // contains the error message in the case of sucess=false, otherwise null.

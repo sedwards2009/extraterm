@@ -5,6 +5,7 @@
  */
 
 import * as ThemeTypes from './Theme';
+import { CssFileMap } from './Theme';
 
 /**
  * Module for handling the distribution of newly computed CSS themes to all
@@ -17,7 +18,7 @@ import * as ThemeTypes from './Theme';
 const themeableRegistry = new Set<ThemeTypes.Themeable>();
 
 // Last known CssFile map.
-let currentCssMap = new Map<ThemeTypes.CssFile, string>();
+let currentCssMap = new CssFileMap();
 ThemeTypes.cssFileEnumItems.forEach( (cssFile) => {
   currentCssMap.set(cssFile, "");
 });
@@ -54,7 +55,7 @@ export function currentThemeTimeStamp(): number {
  *
  * @param cssMap the map of CssFiles to their matching CSS texts
  */
-export function updateCss(cssMap: Map<ThemeTypes.CssFile, string>): void {
+export function updateCss(cssMap: CssFileMap): void {
   themeTimeStamp++;
   const newCssMap = new Map(currentCssMap);
   cssMap.forEach( (value, key) => newCssMap.set(key, value));
@@ -67,6 +68,6 @@ export function updateCss(cssMap: Map<ThemeTypes.CssFile, string>): void {
  * 
  * @returns the map
  */
-export function cssMap(): Map<ThemeTypes.CssFile, string> {
+export function cssMap(): CssFileMap {
   return currentCssMap;
 }

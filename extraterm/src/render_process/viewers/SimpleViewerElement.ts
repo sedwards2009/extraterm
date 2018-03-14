@@ -16,6 +16,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, VirtualScrollable} from '../VirtualScrollArea';
+import { CssFileMap } from '../../theme/Theme';
 
 
 const DEBUG_SIZE = false;
@@ -68,7 +69,7 @@ export class SimpleViewerElement extends ViewerElement {
     this.updateThemeCss();
   }
 
-  setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>, themeTimeStamp: number): void {
+  setThemeCssMap(cssMap: CssFileMap, themeTimeStamp: number): void {
     super.setThemeCssMap(cssMap, themeTimeStamp);
     doLater(() => {
       this._updateRootElementHeight();

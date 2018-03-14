@@ -33,7 +33,7 @@ import {PtyConnector, PtyOptions, EnvironmentMap} from './pty/PtyConnector';
 const PtyConnectorFactory = require("./pty/PtyConnectorFactory");
 import * as ResourceLoader from '../ResourceLoader';
 import * as ThemeTypes from '../theme/Theme';
-import * as ThemeManager from '../theme/ThemeManager';
+import {ThemeManager} from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import * as Util from '../render_process/gui/Util';
 import { MainExtensionManager } from './extension/MainExtensionManager';
@@ -73,7 +73,7 @@ const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
 const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
 
 
-let themeManager: ThemeManager.ThemeManager;
+let themeManager: ThemeManager;
 let config: Config;
 let ptyConnector: PtyConnector;
 let tagCounter = 1;
@@ -113,10 +113,11 @@ function main(): void {
   // Themes
   const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  themeManager = ThemeManager.makeThemeManager([themesdir, userThemesDir]);
+  themeManager = new ThemeManager([themesdir, userThemesDir]);
   
   setupConfig();
-  
+  themeManager.setConfig(config);
+
   if (config.expandedProfiles.length === 0) {
     failed = true;
   } else {
@@ -616,6 +617,7 @@ function setupOSX(): void {
 //
 //-------------------------------------------------------------------------
 
+// FIXME refactor this out into a different file and/or class.
 function setupAppData(): void {
   const configDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR);
   if ( ! fs.existsSync(configDir)) {
@@ -765,6 +767,7 @@ function setConfig(newConfig: Config): void {
   // Write it to disk.
   writeConfigurationFile(newConfig);
   config = newConfig;
+  themeManager.setConfig(config);
 }
 
 function getConfig(): Config {
@@ -898,8 +901,7 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       break;
       
     case Messages.MessageType.THEME_CONTENTS_REQUEST:
-      sendThemeContents(event.sender, (<Messages.ThemeContentsRequestMessage> msg).themeIdList,
-        (<Messages.ThemeContentsRequestMessage> msg).cssFileList);
+      handleThemeContentsRequest(event.sender, <Messages.ThemeContentsRequestMessage> msg);
       break;
       
     case Messages.MessageType.PTY_CREATE:
@@ -1052,35 +1054,36 @@ function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages
   return reply;
 }
 
-function sendThemeContents(webContents: Electron.WebContents, themeIdList: string[],
-    cssFileList: ThemeTypes.CssFile[]): void {
+async function handleThemeContentsRequest(webContents: Electron.WebContents, 
+  msg: Messages.ThemeContentsRequestMessage): Promise<void> {
 
   const globalVariables = new Map<string, number|boolean|string>();
   globalVariables.set("extraterm-titlebar-visible", titleBarVisible);
   globalVariables.set("extraterm-platform", process.platform);
 
-  themeManager.renderThemes(themeIdList, cssFileList, globalVariables)
-    .then( (renderResult) => {
-      const themeContents = renderResult.themeContents;
-      const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS,
-        themeIdList: themeIdList,
-        cssFileList: cssFileList,
-        themeContents: themeContents,
-        success: true,
-        errorMessage: null
-      };
-      webContents.send(Messages.CHANNEL_NAME, msg);
-    })
-    .catch( (err: Error) => {
-      const msg: Messages.ThemeContentsMessage = { type: Messages.MessageType.THEME_CONTENTS, 
-        themeIdList: themeIdList,
-        cssFileList: cssFileList,
-        themeContents: null,
-        success: false,
-        errorMessage: err.message
-      };
-      webContents.send(Messages.CHANNEL_NAME, msg);      
-    });
+  try {
+    const renderResult = await themeManager.render(msg.themeType, globalVariables);
+
+    const themeContents = renderResult.themeContents;
+    const reply: Messages.ThemeContentsMessage = {
+      type: Messages.MessageType.THEME_CONTENTS,
+      themeType: msg.themeType,
+      themeContents: themeContents,
+      success: true,
+      errorMessage: renderResult.errorMessage
+    };
+    webContents.send(Messages.CHANNEL_NAME, reply);
+
+  } catch(err) {
+    const reply: Messages.ThemeContentsMessage = {
+      type: Messages.MessageType.THEME_CONTENTS, 
+      themeType: msg.themeType,
+      themeContents: null,
+      success: false,
+      errorMessage: err.message
+    };
+    webContents.send(Messages.CHANNEL_NAME, reply);
+  }
 }
 
 //-------------------------------------------------------------------------

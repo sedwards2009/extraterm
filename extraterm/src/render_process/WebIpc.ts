@@ -14,6 +14,7 @@ import * as config from '../Config';
 import {Logger, getLogger} from '../logging/Logger';
 import * as ThemeTypes from '../theme/Theme';
 import { ExtensionMetadata } from '../ExtensionMetadata';
+import { ThemeType } from '../theme/Theme';
 
 const _log = getLogger("WebIPC");
 
@@ -88,13 +89,14 @@ export function requestThemeList(): Promise<Messages.ThemeListMessage> {
   return <Promise<Messages.ThemeListMessage>> request(msg, Messages.MessageType.THEME_LIST);
 }
 
-export function requestThemeContents(themeIdList: string[], cssFileList: ThemeTypes.CssFile[]): Promise<Messages.ThemeContentsMessage> {
+export function requestThemeContents(themeType: ThemeType): Promise<Messages.ThemeContentsMessage> {
   if (DEBUG) {
-    _log.debug("requestThemeContents(): ", themeIdList);
+    _log.debug("requestThemeContents(): ", themeType);
   }
-  const msg: Messages.ThemeContentsRequestMessage = {type: Messages.MessageType.THEME_CONTENTS_REQUEST,
-    themeIdList: themeIdList,
-    cssFileList: cssFileList};
+  const msg: Messages.ThemeContentsRequestMessage = {
+    type: Messages.MessageType.THEME_CONTENTS_REQUEST,
+    themeType
+  };
   return <Promise<Messages.ThemeContentsMessage>> request(msg, Messages.MessageType.THEME_CONTENTS);
 }
 

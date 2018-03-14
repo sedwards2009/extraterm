@@ -407,32 +407,18 @@ function handleThemeListMessage(msg: Messages.Message): void {
 
 function handleThemeContentsMessage(msg: Messages.Message): void {
   const themeContentsMessage = <Messages.ThemeContentsMessage> msg;
-  
-  if (themeContentsMessage.success) {
-    const cssFileMap = new Map<ThemeTypes.CssFile, string>();
-    themeContentsMessage.cssFileList.forEach( (cssFile) => {
-      cssFileMap.set(cssFile, themeContentsMessage.themeContents.cssFiles[ThemeTypes.cssFileNameBase(cssFile)]);
-    });
 
-    // Distribute the CSS files to the classes which want them.
-    ThemeConsumer.updateCss(cssFileMap);
-  } else {
-    themeContentsError(themeContentsMessage);
+  const cssFileMap = new Map<ThemeTypes.CssFile, string>();
+  for (const renderedCssFile of themeContentsMessage.themeContents.cssFiles) {
+    cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
   }
-}
 
-function themeContentsError(themeContentsMessage: Messages.ThemeContentsMessage): void {
-  // Something went wrong.
-  _log.warn(themeContentsMessage.errorMessage);
-  
-  if (themeContentsMessage.themeIdList.every( id => id === ThemeTypes.FALLBACK_UI_THEME)) {
-    // Error occurred while trying to generate the default themes.
-    window.alert("Something has gone wrong. The default theme couldn't be generated. Sorry.");
-  } else {
-    _log.warn("Attempting to use the default theme.");
-    window.alert("Something has gone wrong while generating the theme. The default theme will be tried.");
-    requestThemeContents(ThemeTypes.FALLBACK_TERMINAL_THEME, ThemeTypes.FALLBACK_SYNTAX_THEME, ThemeTypes.FALLBACK_UI_THEME);
+  if (themeContentsMessage.errorMessage !== "") {
+    _log.warn(themeContentsMessage.errorMessage);
   }
+
+  // Distribute the CSS files to the classes which want them.
+  ThemeConsumer.updateCss(cssFileMap);
 }
 
 function handleDevToolsStatus(msg: Messages.Message): void {
@@ -484,54 +470,53 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
       oldConfig.themeSyntax !== newConfig.themeSyntax ||
       oldConfig.themeGUI !== newConfig.themeGUI) {
 
-    return requestThemeContents(newConfig.themeTerminal, newConfig.themeSyntax, newConfig.themeGUI);
+    return requestThemeContents();
   }
   
   // no-op promise.
   return new Promise<void>( (resolve, cancel) => { resolve(); } );
 }
 
-async function requestThemeContents(themeTerminal: string, themeSyntax: string, themeGUI: string): Promise<void> {
-  try {
-    const terminalThemeIdList = [themeTerminal, ThemeTypes.FALLBACK_TERMINAL_THEME];
-    const syntaxThemeIdList = [themeSyntax, ThemeTypes.FALLBACK_SYNTAX_THEME];
-    const uiThemeIdList = [themeGUI, ThemeTypes.FALLBACK_UI_THEME];
-    const cssFileMap = new Map<ThemeTypes.CssFile, string>();
+async function requestThemeContents(): Promise<void> {
+  const cssFileMap = new Map<ThemeTypes.CssFile, string>();
 
-    const terminalResult = await WebIpc.requestThemeContents(terminalThemeIdList, ThemeTypes.TerminalCssFiles);
-    if (terminalResult.success) {
-      ThemeTypes.TerminalCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
-        const key = ThemeTypes.cssFileNameBase(cssFile);
-        cssFileMap.set(cssFile, terminalResult.themeContents.cssFiles[key]);
-      });
+  const terminalResult = await WebIpc.requestThemeContents("terminal");
+  if (terminalResult.success) {
+    for (const renderedCssFile of terminalResult.themeContents.cssFiles) {
+      cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
     }
-
-    const syntaxResult = await WebIpc.requestThemeContents(syntaxThemeIdList, ThemeTypes.SyntaxCssFiles);
-    if (syntaxResult.success) {
-      ThemeTypes.SyntaxCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
-        const key = ThemeTypes.cssFileNameBase(cssFile);
-        cssFileMap.set(cssFile, syntaxResult.themeContents.cssFiles[key]);
-      });
-    }
-
-    const uiResult = await WebIpc.requestThemeContents(uiThemeIdList, ThemeTypes.UiCssFiles);
-    if (uiResult.success) {
-      ThemeTypes.UiCssFiles.forEach( (cssFile: ThemeTypes.CssFile): void => {
-        const key = ThemeTypes.cssFileNameBase(cssFile);
-        cssFileMap.set(cssFile, uiResult.themeContents.cssFiles[key]);
-      });
-    }
-        
-    // Distribute the CSS files to the classes which want them.
-    ThemeConsumer.updateCss(cssFileMap);
-  } catch(e) {
-    themeContentsError(e);
   }
+  if (terminalResult.errorMessage !== "") {
+    _log.warn(terminalResult.errorMessage);
+  }
+
+  const syntaxResult = await WebIpc.requestThemeContents("syntax");
+  if (syntaxResult.success) {
+    for (const renderedCssFile of syntaxResult.themeContents.cssFiles) {
+      cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+    }
+  }
+  if (syntaxResult.errorMessage !== "") {
+    _log.warn(syntaxResult.errorMessage);
+  }
+
+  const uiResult = await WebIpc.requestThemeContents("gui");
+  if (uiResult.success) {
+    for (const renderedCssFile of uiResult.themeContents.cssFiles) {
+      cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+    }
+  }
+  if (uiResult.errorMessage !== "") {
+    _log.warn(uiResult.errorMessage);
+  }
+      
+  // Distribute the CSS files to the classes which want them.
+  ThemeConsumer.updateCss(cssFileMap);
 }
 
 function reloadThemeContents(): void {
   const config = configManager.getConfig();
-  requestThemeContents(config.themeTerminal, config.themeSyntax, config.themeGUI);
+  requestThemeContents();
 }
 
 function setCssVars(fontName: string, fontPath: string, terminalFontSizePx: number): void {
