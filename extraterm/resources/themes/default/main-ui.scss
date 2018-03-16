@@ -116,6 +116,8 @@ DIV.tab_header_close > BUTTON {
   display: inline-block;
   background-color: transparent;
   border-radius: pxToRem(2px);
+
+  transition: background-color,color 0.2s ease-in-out;
 }
 
 DIV.tab_header_close:hover > BUTTON {

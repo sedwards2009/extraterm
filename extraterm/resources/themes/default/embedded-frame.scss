@@ -154,6 +154,8 @@ $ICON_FAIL_COLOR: $brand-text-danger;
   padding: pxToRem(0px);
   background-color: transparent;
   border: pxToRem(0px);
+
+  transition: color 0.2s ease-in-out;
 }
 
 BUTTON:hover {

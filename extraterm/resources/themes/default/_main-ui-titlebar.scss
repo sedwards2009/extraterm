@@ -47,15 +47,31 @@ $resize-bar-height: pxToRem(4px);
     flex-grow: 0;
     flex-shrink: 0;
 
+    color: $text-color;
+
     background-color: transparent;
     border: pxToRem(0px);
 
+    transition: color,background-color 0.2s ease-in-out;
+
     &:hover {
-      background-color: $input-group-addon-bg;
+      color: $text-color-highlight;
     }
 
     &:focus {
       outline: pxToRem(0px) solid transparent;
+    }
+  }
+
+  #ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON {
+    &:hover {
+      background-color: $input-group-addon-bg;
+    }
+  }
+
+  #ID_CLOSE_BUTTON {
+    &:hover {
+      background-color: $brand-danger;
     }
   }
 

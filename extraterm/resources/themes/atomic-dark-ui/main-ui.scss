@@ -128,6 +128,8 @@ DIV.tab_header_close > BUTTON {
   border-radius: pxToRem(8px);
   background-color: transparent;
   text-align: center;
+
+  transition: background-color,color 0.2s ease-in-out;
   
   & > i {
     position: relative;

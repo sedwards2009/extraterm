@@ -7,7 +7,9 @@
   background-color: inherit;
   color: $text-color;
   text-shadow: none;
-  
+
+  transition: color,border-color 0.2s ease-in-out;
+
   &:hover, &:focus {
     color: $text-color;
     border-color: $btn-default-border;

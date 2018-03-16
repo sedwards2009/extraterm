@@ -10,6 +10,8 @@
   background-image: none;
   box-shadow: none;
 
+  transition: color 0.2s ease-in-out;
+
   &:hover {
     box-shadow: $border-shadow;
     color: $text-color-highlight;
