@@ -26,4 +26,5 @@ export interface ExtensionViewerContribution {
 export interface ExtensionCss {
   directory: string;
   cssFile: string[];
+  fontAwesome: boolean;
 }

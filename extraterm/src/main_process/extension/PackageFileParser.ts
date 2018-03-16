@@ -6,6 +6,8 @@
 
 import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss } from "../../ExtensionMetadata";
 
+const FONT_AWESOME_DEFAULT = false;
+
 
 export function parsePackageJson(packageJson: any, extensionPath: string): ExtensionMetadata {
   const result: ExtensionMetadata = {
@@ -30,6 +32,18 @@ function assertJsonStringField(packageJson: any, fieldName: string, defaultValue
 
   if (typeof value !== "string") {
     throw `Field '${fieldName}' is not a string.`;
+  }
+  return value;
+}
+
+function assertJsonBooleanField(packageJson: any, fieldName: string, defaultValue: boolean): boolean {
+  const value = packageJson[fieldName];
+  if (value == null) {
+    return defaultValue;
+  }
+
+  if (typeof value !== "boolean") {
+    throw `Field '${fieldName}' is not a boolean.`;
   }
   return value;
 }
@@ -105,14 +119,16 @@ function  parseCss(packageJson: any): ExtensionCss {
   if (value == null) {
     return {
       directory: null,
-      cssFile: []
+      cssFile: [],
+      fontAwesome: FONT_AWESOME_DEFAULT
     };
   }
 
   try {
     return {
       directory: assertJsonStringField(value, "directory", "."),
-      cssFile: assertJsonStringArrayField(value, "cssFile", [])
+      cssFile: assertJsonStringArrayField(value, "cssFile", []),
+      fontAwesome: assertJsonBooleanField(value, "fontAwesome", FONT_AWESOME_DEFAULT)
     };
   } catch (ex) {
     throw `Failed to process a CSS field: ${ex}`;
