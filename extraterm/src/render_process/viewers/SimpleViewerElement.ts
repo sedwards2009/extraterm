@@ -21,7 +21,6 @@ import { CssFileMap } from '../../theme/Theme';
 
 const DEBUG_SIZE = false;
 
-export const ID_CONTAINER = "ID_CONTAINER";
 
 /**
  * A simple base class for Viewers which don't need to support virtual
@@ -63,7 +62,6 @@ export class SimpleViewerElement extends ViewerElement {
     this.shadowRoot.appendChild(this._styleElement);
 
     this._containerDivElement = document.createElement("div");
-    this._containerDivElement.id = ID_CONTAINER;
     this.shadowRoot.appendChild(this._containerDivElement);
 
     this.updateThemeCss();

@@ -14,7 +14,7 @@ import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
  */
 export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefreshElementBase implements ThemeTypes.Themeable {
 
-  static ID_THEME = "ID_THEME";
+  static ID_THEME = "__ID_THEMEABLE_ELEMENT_BASE_STYLE__";
 
   private _themeTimeStamp = -1;
 
