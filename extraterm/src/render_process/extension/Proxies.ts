@@ -14,6 +14,7 @@ import {Logger, getLogger} from '../../logging/Logger';
 import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
 import { ViewerElement } from '../viewers/ViewerElement';
 import { ExtensionViewerContribution } from '../../ExtensionMetadata';
+import { CssFile } from '../../theme/Theme';
 
 
 interface RegisteredViewer {
@@ -133,9 +134,19 @@ export class WorkspaceProxy implements InternalWorkspace {
       return;
     }
 
+    const internalExtensionContext = this._internalExtensionContext;
+
     const viewerElementProxyClass = class extends ExtensionViewerProxy {
       protected _createExtensionViewer(): ExtensionApi.ExtensionViewerBase {
         return new viewerClass(this);
+      }
+
+      protected _getExtensionContext(): InternalExtensionContext {
+        return internalExtensionContext;
+      }
+    
+      protected _getExtensionViewerContribution(): ExtensionViewerContribution {
+        return viewerMetadata;
       }
     };
     
@@ -175,6 +186,21 @@ class ExtensionViewerProxy extends SimpleViewerElement {
 
   protected _createExtensionViewer(): ExtensionApi.ExtensionViewerBase {
     return null;
+  }
+
+  protected _getExtensionContext(): InternalExtensionContext {
+    return null;
+  }
+
+  protected _getExtensionViewerContribution(): ExtensionViewerContribution {
+    return null;
+  }
+
+  protected _themeCssFiles(): CssFile[] {
+    const extensionContext = this._getExtensionContext();
+    const name = extensionContext.extensionMetadata.name
+    const cssFiles = this._getExtensionViewerContribution().css.cssFile.map(cf =>  name + ":" + cf);
+    return [CssFile.GUI_CONTROLS, ...cssFiles];
   }
 
   getMetadata(): ExtensionApi.ViewerMetadata {

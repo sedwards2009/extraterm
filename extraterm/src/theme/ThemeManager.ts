@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -32,6 +32,8 @@ import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, C
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
   cssFileToFilename, cssFileToExtension} from './Theme';
 import { Config } from '../Config';
+import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
+import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 
 const THEME_CONFIG = "theme.json";
 
@@ -43,10 +45,17 @@ interface ListenerFunc {
   (theme: ThemeInfo): void;
 }
 
-export interface RenderResult {
+type GlobalVariableMap = Map<string, number|boolean|string>;
+
+interface RenderResult {
   success: boolean;
   themeContents: ThemeContents;
   errorMessage: string;
+}
+
+interface CssDirectory {
+  id: string;
+  path: string;
 }
 
 
@@ -54,12 +63,10 @@ export class ThemeManager {
   
   private _log: Logger = null;
   private _config: Config = null;
-  private _directories: string[] = null;
   private _themes: Map<string, ThemeInfo> = null;
   
-  constructor(directories: string[]) {
+  constructor(private _directories: string[], private _mainExtensionManager: MainExtensionManager) {
     this._log = getLogger("ThemeManagerImpl", this);
-    this._directories = directories;
 
     const allThemes = new Map<string, ThemeInfo>();
     this._directories.forEach( (directory) => {
@@ -71,81 +78,7 @@ export class ThemeManager {
     
     this._themes = allThemes;
   }
-  
-  getTheme(themeId: string): ThemeInfo {
-    return this._themes.get(themeId) || null;
-  }
-  
-  getAllThemes(): ThemeInfo[] {
-    const result: ThemeInfo[] = [];
-    this._themes.forEach( (value) => {
-      result.push(value);
-    });
-    return result;
-  }
 
-  setConfig(config: Config): void {
-    this._config = config;
-  }
-
-  async render(themeType: ThemeType, globalVariables?: Map<string, number|boolean|string>): Promise<RenderResult> {
-    let moduleName = "";
-    let themeStack: string[] = null;
-    let fallbackTheme = "";
-    switch (themeType) {
-      case "gui":
-        moduleName = CSS_MODULE_INTERNAL_GUI;
-        themeStack = [this._config.themeGUI, FALLBACK_UI_THEME];
-        fallbackTheme = FALLBACK_UI_THEME;
-        break;
-
-      case "terminal":
-        moduleName = CSS_MODULE_INTERNAL_TERMINAL;
-        themeStack = [this._config.themeTerminal, FALLBACK_TERMINAL_THEME];
-        fallbackTheme = FALLBACK_TERMINAL_THEME;
-        break;
-
-      case "syntax":
-        moduleName = CSS_MODULE_INTERNAL_SYNTAX;
-        themeStack = [this._config.themeSyntax, FALLBACK_SYNTAX_THEME];
-        fallbackTheme = FALLBACK_SYNTAX_THEME;
-        break;
-    }
-
-    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === moduleName);
-
-    // Add extra CSS files needed by extensions.
-    const result = await this._renderThemes(themeStack, neededCssFiles, globalVariables);
-    if (result.success) {
-      return result;
-    }
-
-    const fallbackResult = await this._renderThemes([fallbackTheme], neededCssFiles, globalVariables);
-    fallbackResult.errorMessage = result.errorMessage;
-    return fallbackResult;
-  }
-
-  private _renderThemes(themeStack: string[], cssFileList: CssFile[], globalVariables?: Map<string, number|boolean|string>): Promise<RenderResult> {
-    const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
-    globalVariables = globalVariables || new Map<string, number|boolean|string>();
-
-    return this._renderCssFiles(themeInfoList, cssFileList, globalVariables);
-  }
-  
-  private _themeIdListToThemeInfoList(themeIdList: string[]): ThemeInfo[] {
-    // Convert the list of theme IDs to a list of ThemeInfos
-    const themeInfoList = themeIdList.map( (themeId) => {
-      const themeInfo = this.getTheme(themeId);
-      if (themeInfo === null) {
-        this._log.warn("The requested theme name '" + themeId + "' is unknown.");
-        return null;
-      } else {
-        return themeInfo;
-      }
-    }).filter( (themeInfo) => themeInfo !== null );
-    return themeInfoList;
-  }
-  
   /**
    * Scan for themes.
    * 
@@ -189,9 +122,93 @@ export class ThemeManager {
   private _validateThemeInfo(themeinfo: ThemeInfo): boolean {
     return _.isString(themeinfo.name) && themeinfo.name !== "";
   }
+  
+  getTheme(themeId: string): ThemeInfo {
+    return this._themes.get(themeId) || null;
+  }
+  
+  getAllThemes(): ThemeInfo[] {
+    const result: ThemeInfo[] = [];
+    this._themes.forEach( (value) => {
+      result.push(value);
+    });
+    return result;
+  }
 
-  private async _renderCssFiles(themeStack: ThemeInfo[], cssFileList: CssFile[],
-      globalVariables: Map<string, number|boolean|string>): Promise<RenderResult> {
+  setConfig(config: Config): void {
+    this._config = config;
+  }
+
+  async render(themeType: ThemeType, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
+    let moduleName = "";
+    let themeNameStack: string[] = null;
+    let fallbackTheme = "";
+    switch (themeType) {
+      case "gui":
+        moduleName = CSS_MODULE_INTERNAL_GUI;
+        themeNameStack = [this._config.themeGUI, FALLBACK_UI_THEME];
+        fallbackTheme = FALLBACK_UI_THEME;
+        break;
+
+      case "terminal":
+        moduleName = CSS_MODULE_INTERNAL_TERMINAL;
+        themeNameStack = [this._config.themeTerminal, FALLBACK_TERMINAL_THEME];
+        fallbackTheme = FALLBACK_TERMINAL_THEME;
+        break;
+
+      case "syntax":
+        moduleName = CSS_MODULE_INTERNAL_SYNTAX;
+        themeNameStack = [this._config.themeSyntax, FALLBACK_SYNTAX_THEME];
+        fallbackTheme = FALLBACK_SYNTAX_THEME;
+        break;
+    }
+
+    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === moduleName);
+
+    // Add extra CSS files needed by extensions.
+    let result = await this._renderThemes(themeNameStack, neededCssFiles, globalVariables);
+    if ( ! result.success) {
+      themeNameStack = [fallbackTheme];
+      const fallbackResult = await this._renderThemes(themeNameStack, neededCssFiles, globalVariables);
+      fallbackResult.errorMessage = result.errorMessage;
+      result = fallbackResult;
+    }
+
+    if (themeType === "gui") {
+      // Now render the CSS files for the extensions.
+
+      const extensionResult = await this._renderAllExtensionCss(themeNameStack, globalVariables);
+      if ( ! extensionResult.success) {
+        result.success = false;
+      }
+      result.themeContents.cssFiles = [...result.themeContents.cssFiles, ...extensionResult.themeContents.cssFiles];
+      result.errorMessage += extensionResult.errorMessage + "\n";
+    }
+
+    return result;
+  }
+
+  private _renderThemes(themeStack: string[], cssFileList: CssFile[], globalVariables: GlobalVariableMap): Promise<RenderResult> {
+    const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
+    return this._renderCssFiles(themeInfoList, cssFileList, globalVariables);
+  }
+  
+  private _themeIdListToThemeInfoList(themeIdList: string[]): ThemeInfo[] {
+    // Convert the list of theme IDs to a list of ThemeInfos
+    const themeInfoList = themeIdList.map( (themeId) => {
+      const themeInfo = this.getTheme(themeId);
+      if (themeInfo === null) {
+        this._log.warn("The requested theme name '" + themeId + "' is unknown.");
+        return null;
+      } else {
+        return themeInfo;
+      }
+    }).filter( (themeInfo) => themeInfo !== null );
+    return themeInfoList;
+  }
+  
+  private async _renderCssFiles(cssDirectoryStack: CssDirectory[], cssFileList: CssFile[],
+      globalVariables: GlobalVariableMap): Promise<RenderResult> {
 
     const renderResult: RenderResult = {
       success: true,
@@ -201,8 +218,16 @@ export class ThemeManager {
       errorMessage: ""
     };
 
+    // Create SASS variables for the location of each theme directory.
+    const variables = new Map<string, number|boolean|string>(globalVariables);
+    cssDirectoryStack.forEach( cssDirectory => {
+      variables.set('--source-dir-' + cssDirectory.id, cssDirectory.path.replace(/\\/g, "/"));
+    });
+
+    const dirPathStack = _.uniq(cssDirectoryStack.map( themeInfo => themeInfo.path ));
+
     for (const cssFile of cssFileList) {
-      const {errorMessage, cssText} = await this._renderCssFile(cssFile, themeStack, globalVariables);
+      const {errorMessage, cssText} = await this._renderCssFile(cssFile, dirPathStack, variables);
       if (errorMessage == null) {
         renderResult.themeContents.cssFiles.push({cssFileName: cssFile, contents: cssText});
       } else {
@@ -213,39 +238,32 @@ export class ThemeManager {
     return renderResult;
   }
 
-  private async _renderCssFile(cssFile: CssFile, themeStack: ThemeInfo[],
-      globalVariables: Map<string, number|boolean|string>): Promise<{cssText: string, errorMessage: string}> {
+  private async _renderCssFile(cssFile: CssFile, dirPathStack: string[], variables: GlobalVariableMap
+    ): Promise<{cssText: string, errorMessage: string}> {
         
     if (DEBUG_SASS) {
       this._log.debug("Compiling _recursiveRenderThemeStackContents: " + cssFile);
     }
     
-    const dirStack = _.uniq(themeStack.map( (themeInfo) => themeInfo.path ));
-    const sassFileName = cssFileToFilename(cssFile) + '.scss';
-    
-    // Create SASS variables for the location of each theme directory.
-    const variables = new Map<string, number|boolean|string>(globalVariables);
-    themeStack.forEach( (themeInfo) => {
-      variables.set('--source-dir-' + themeInfo.id, themeInfo.path.replace(/\\/g, "/"));
-    });
+    const sassFileName = cssFileToFilename(cssFile);
     
     if (DEBUG_SASS) {
       this._log.debug("Compiling " + sassFileName);
       this._log.startTime("Compiling " + sassFileName);
     }
     try {
-      const cssText = await this._loadSassFile(dirStack, sassFileName, variables);
+      const cssText = await this._loadSassFile(dirPathStack, sassFileName, variables);
       if (DEBUG_SASS) {
         this._log.endTime("Compiling " + sassFileName);
         this._log.debug("Done " + sassFileName);
       }
       return {cssText, errorMessage: null};
     } catch(ex) {
-      return {cssText: null, errorMessage: ex.message + " (Directories: " + dirStack.join(", ") +" )"};
+      return {cssText: null, errorMessage: ex.message + " (Directories: " + dirPathStack.join(", ") +" )"};
     } 
   }
 
-  private _loadSassFile(dirStack: string[], sassFileName: string, variables?: Map<string, number|boolean|string>): Promise<string> {
+  private _loadSassFile(dirPathStack: string[], sassFileName: string, variables?: GlobalVariableMap): Promise<string> {
     let formattedVariables = "";
     if (variables !== undefined) {
       variables.forEach( (value, key) => {
@@ -287,7 +305,7 @@ export class ThemeManager {
           ];
           
           for (let candidate of candidates) {
-            const candidateFileName = this._findFile(dirStack, candidate);
+            const candidateFileName = this._findFile(dirPathStack, candidate);
             if (candidateFileName) {
               if (DEBUG_SASS_FINE) {
                 this._log.debug("Trying " + candidateFileName);
@@ -351,64 +369,53 @@ export class ThemeManager {
       }
     }
     return null;
-  }  
-}
-
-/**
- * Maps a stack of theme names to a file name
- * 
- * @param  themeStack the stack of theme names to encode into a file name
- * @return the file name which encodes the list of theme names
- */
-function themeStackName(themeStack: string[]): string {
-  // We use the period char to separate parts of the theme names.
-  return themeStack.map(escapeThemeFileName).join(".");
-}
-
-function escapeThemeFileName(name: string): string {
-  return name.replace(/_/g, "__").replace(/\./g, "_.");
-}
-
-function unescapeThemeFileName(name: string): string {
-  return name.replace(/_\./g, ".").replace(/__/g, "_");
-}
-
-/**
- * Decomposes a theme cache file name into a stack theme names.
- * 
- * @param  fileName the base file name without extension
- * @return the stack of theme names
- */
-function decomposeThemeStackName(fileName: string): string[] {
-  const parts = fileName.split(/\./g).reduce( (accu, part) => {
-      if (accu.length === 0) {
-        return [part];
-      } else {
-        const last = accu[accu.length-1];
-        if (last.endsWith("_")) {
-          accu[accu.length-1] = last + "." + part;
-          return accu;
-        } else {
-          return [...accu, part];
-        }
-      }
-    }, []);
-  return parts.map(unescapeThemeFileName);
-}
-
-/**
- * Finds the path of a path in a list of directories.
- * 
- * @param  themeDirectories the list of directories to search
- * @param  themeName        the theme to search for
- * @return                  the full path to the theme directory or null if it could not be found
- */
-function findThemePath(themeDirectories: string[], themeName: string): string {
-  for (let themeDir of themeDirectories) {
-    const fullThemePath = path.join(themeDir, themeName);
-    if (fs.existsSync(fullThemePath)) {
-      return fullThemePath;
-    }
   }
-  return null;
+
+  private async _renderAllExtensionCss(themeNameStack: string[], globalVariables: GlobalVariableMap): Promise<RenderResult> {
+    const cssDirectoryStack = this._themeIdListToThemeInfoList(themeNameStack);
+    
+    const renderResult: RenderResult = {
+      success: true,
+      themeContents: {
+        cssFiles: []
+      },
+      errorMessage: ""
+    };
+
+    for (const extensionMetadata of this._mainExtensionManager.getExtensionMetadata()) {
+      for (const viewerMetadata of extensionMetadata.contributions.viewer) {
+        const nextResult = await this._renderExtensionCss(cssDirectoryStack, globalVariables, extensionMetadata,
+          viewerMetadata.css);
+
+        if ( ! nextResult.success) {
+          renderResult.success = false;
+        }
+        if (nextResult.errorMessage != null && nextResult.errorMessage !== "") {
+          renderResult.errorMessage = renderResult.errorMessage + "\n" + nextResult.errorMessage;
+        }
+        renderResult.themeContents.cssFiles = [...renderResult.themeContents.cssFiles, ...nextResult.themeContents.cssFiles];
+      }
+    }
+
+    return renderResult;
+  }
+
+  private async _renderExtensionCss(cssDirectoryStack: CssDirectory[],
+      globalVariables: GlobalVariableMap,
+      extensionMetadata: ExtensionMetadata,
+      extensionCssDecl: ExtensionCss): Promise<RenderResult> {
+
+    if (extensionCssDecl == null) {
+      return {success: true, errorMessage: null, themeContents: {cssFiles: []} };
+    }
+
+    const cssDirectory = path.join(extensionMetadata.path, extensionCssDecl.directory);
+    const extDirStack = [{id: extensionMetadata.name, path: cssDirectory}, ...cssDirectoryStack];
+    const cookedCssFiles = extensionCssDecl.cssFile.map(cssFile => extensionMetadata.name + ":" + cssFile);
+
+    const variables = new Map<string, number|boolean|string>(globalVariables);
+    variables.set('--source-dir-' + extensionMetadata.name, extensionCssDecl.directory.replace(/\\/g, "/"));
+
+    return this._renderCssFiles(extDirStack, cookedCssFiles, globalVariables);
+  }
 }

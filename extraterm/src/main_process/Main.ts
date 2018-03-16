@@ -110,11 +110,8 @@ function main(): void {
     .option(EXTRATERM_DEVICE_SCALE_FACTOR + ' []', '(Internal Extraterm option. Ignore)')
     .parse(normalizedArgv);
 
-  // Themes
-  const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
-  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  themeManager = new ThemeManager([themesdir, userThemesDir]);
-  
+  setupExtensionManager();
+  setupThemeManager();
   setupConfig();
   themeManager.setConfig(config);
 
@@ -138,7 +135,6 @@ function main(): void {
   
   _log.stopRecording();
 
-  setupExtensionManager();
 
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
@@ -157,6 +153,13 @@ function main(): void {
 function setupExtensionManager(): void {
   extensionManager = new MainExtensionManager([path.join(__dirname, "../../../extensions" )]);
   extensionManager.scan();
+}
+
+function setupThemeManager(): void {
+  // Themes
+  const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
+  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
+  themeManager = new ThemeManager([themesdir, userThemesDir], extensionManager);
 }
 
 function startUpWindows(): void {

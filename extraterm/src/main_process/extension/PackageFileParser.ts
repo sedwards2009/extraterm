@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution } from "../../ExtensionMetadata";
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss } from "../../ExtensionMetadata";
 
 
 export function parsePackageJson(packageJson: any, extensionPath: string): ExtensionMetadata {
@@ -92,9 +92,29 @@ function parseViewerConstributionJson(packageJson: any): ExtensionViewerContribu
   try {
     return {
       name: assertJsonStringField(packageJson, "name"),
-      mimeTypes: assertJsonStringArrayField(packageJson, "mimeTypes")
+      mimeTypes: assertJsonStringArrayField(packageJson, "mimeTypes"),
+      css: parseCss(packageJson)
     };
   } catch (ex) {
     throw `Failed to process a viewer contribution: ${ex}`;
+  }
+}
+
+function  parseCss(packageJson: any): ExtensionCss {
+  const value = packageJson["css"];
+  if (value == null) {
+    return {
+      directory: null,
+      cssFile: []
+    };
+  }
+
+  try {
+    return {
+      directory: assertJsonStringField(value, "directory", "."),
+      cssFile: assertJsonStringArrayField(value, "cssFile", [])
+    };
+  } catch (ex) {
+    throw `Failed to process a CSS field: ${ex}`;
   }
 }

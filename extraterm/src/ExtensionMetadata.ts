@@ -20,4 +20,10 @@ export interface ExtensionContributions {
 export interface ExtensionViewerContribution {
   name: string;
   mimeTypes: string[];
+  css: ExtensionCss;
+}
+
+export interface ExtensionCss {
+  directory: string;
+  cssFile: string[];
 }
