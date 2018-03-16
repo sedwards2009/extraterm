@@ -141,3 +141,4 @@ extraterm/src/ExtensionMetadata.js
 extraterm/src/main_process/extension/MainExtensionManager.js
 extraterm/src/main_process/extension/PackageFileParser.js
 extraterm/src/main_process/extension/PackageFileParserTest.js
+extensions/AudioViewer/src/AudioViewerUi.js

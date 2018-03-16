@@ -1,0 +1,17 @@
+/**
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ */
+
+ /**
+ * Audio viewer CSS
+ */
+ @import "bootstrap/_variables";
+
+#top_container {
+  display: flex;
+  width: 100%;
+
+  background-color: $body-bg;
+  
+  padding: $panel-body-padding;
+}

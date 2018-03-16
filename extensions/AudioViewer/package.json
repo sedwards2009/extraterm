@@ -7,6 +7,8 @@
     "build": "tsc"
   },
   "dependencies": {
+    "vue": "2.5.9",
+    "vue-class-component": "6.1.0"
   },
   "devDependencies": {
     "@types/node": "7.0.5",
@@ -35,7 +37,8 @@
           "directory": "resources/sass",
           "cssFile": [
             "audio-viewer.scss"
-          ]
+          ],
+          "fontAwesome": true
         }
       }
     ]
