@@ -190,6 +190,8 @@ function setupBulkFileStorage(): void {
 }
 
 function openWindow(): void {
+  const themeInfo = themeManager.getTheme(config.themeGUI);
+
   // Create the browser window.
   const options = <Electron.BrowserWindowOptions> {
     width: 1200,
@@ -198,7 +200,8 @@ function openWindow(): void {
       "experimentalFeatures": true,
     },
     frame: config.showTitleBar,
-    title: "Extraterm"
+    title: "Extraterm",
+    backgroundColor: themeInfo.loadingBackgroundColor
   };
   if (process.platform === "win32") {
     options.icon = path.join(__dirname, ICO_ICON_PATH);
@@ -222,8 +225,11 @@ function openWindow(): void {
     mainWindow = null;
   });
   
+  const params = "?loadingBackgroundColor=" + themeInfo.loadingBackgroundColor.replace("#", "") +
+    "&loadingForegroundColor=" + themeInfo.loadingForegroundColor.replace("#", "");
+
   // and load the index.html of the app.
-  mainWindow.loadURL(ResourceLoader.toUrl('render_process/main.html'));
+  mainWindow.loadURL(ResourceLoader.toUrl("render_process/main.html") + params);
 
   mainWindow.webContents.on('devtools-closed', function() {
     sendDevToolStatus(mainWindow, false);

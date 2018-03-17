@@ -90,7 +90,7 @@ let commandPaletteDisposable: Disposable = null;
 /**
  * 
  */
-export function startUp(): void {
+export function startUp(closeSplash: () => void): void {
   if (process.platform === "darwin") {
     setupOSXEmptyMenus();
   }
@@ -111,12 +111,13 @@ export function startUp(): void {
             .then( () => {
 
     const doc = window.document;
-    doc.body.classList.remove("preparing");
-    doc.body.innerHTML = "";  // Remove the old contents.
     doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
 
     startUpExtensions();
     startUpMainWebUi();
+
+    closeSplash();
+
     startUpMainMenu();
     startUpResizeCanary();
     startUpCommandPalette();

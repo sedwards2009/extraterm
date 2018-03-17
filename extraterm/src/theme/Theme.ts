@@ -13,6 +13,8 @@ export interface ThemeInfo {
   path: string;
   debug: boolean;
   comment: string;
+  loadingBackgroundColor: string;
+  loadingForegroundColor: string;
 }
 
 export interface ThemeContents {

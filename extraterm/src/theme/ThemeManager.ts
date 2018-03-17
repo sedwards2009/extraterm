@@ -117,6 +117,12 @@ export class ThemeManager {
   private _fillThemeInfoDefaults(themeInfo: ThemeInfo): void {
     themeInfo.comment = themeInfo.comment === undefined ? "" : themeInfo.comment;
     themeInfo.debug = themeInfo.debug === undefined ? false : themeInfo.debug;
+    
+    const lbc = themeInfo.loadingBackgroundColor;
+    themeInfo.loadingBackgroundColor = lbc === undefined ? "#ffffff" : lbc;
+
+    const lfc = themeInfo.loadingForegroundColor;
+    themeInfo.loadingForegroundColor = lfc === undefined ? "#000000" : lfc;
   }
 
   private _validateThemeInfo(themeinfo: ThemeInfo): boolean {
