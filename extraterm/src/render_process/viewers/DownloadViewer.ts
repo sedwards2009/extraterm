@@ -7,7 +7,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
-import {FileTransferProgress} from '../gui/FileTransferProgress';
+import {FileTransferProgress} from '../gui/file_transfer/FileTransferProgress';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import {SimpleViewerElement} from '../viewers/SimpleViewerElement';

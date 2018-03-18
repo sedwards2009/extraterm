@@ -120,7 +120,7 @@ extraterm-web-component-decorators/test/TestCode.d.ts
 extraterm/src/render_process/viewers/DownloadViewer.js
 extraterm/src/render_process/viewers/SimpleViewerElement.js
 extraterm/src/render_process/gui/SimpleElementBase.js
-extraterm/src/render_process/gui/FileTransferProgress.js
+extraterm/src/render_process/gui/file_transfer/FileTransferProgress.js
 extraterm/src/render_process/UploadProgressBar.js
 extraterm/src/render_process/PtyIpcBridge.js
 extraterm/src/pty/Pty.js

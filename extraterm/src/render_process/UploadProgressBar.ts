@@ -5,7 +5,7 @@
  */
 import {WebComponent} from 'extraterm-web-component-decorators';
 import * as ThemeTypes from '../theme/Theme';
-import {FileTransferProgress} from './gui/FileTransferProgress';
+import {FileTransferProgress} from './gui/file_transfer/FileTransferProgress';
 
 
 @WebComponent({tag: "et-upload-progress-bar"})
