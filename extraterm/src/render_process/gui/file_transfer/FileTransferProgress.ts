@@ -13,6 +13,7 @@ import {Logger, getLogger} from '../../../logging/Logger';
 import log from '../../../logging/LogDecorator';
 import {SimpleElementBase} from '../SimpleElementBase';
 import * as ThemeTypes from '../../../theme/Theme';
+import { SpeedTracker } from './SpeedTracker';
 
 type ActionType = "download" | "upload";
 
@@ -101,23 +102,7 @@ at ${formatHumanBytes(this.speedBytesPerSecond)}/s`;
   }
 
   get formattedEta(): string {
-    const ONE_HOUR = 60 * 60;
-    const ONE_MINUTE = 60;
-
-    if (this.etaSeconds >= ONE_HOUR) {
-      const hours = Math.floor(this.etaSeconds / ONE_HOUR);
-      const minutes = Math.floor((this.etaSeconds % ONE_HOUR) / 60);
-      return `${hours}h${minutes}m`;
-
-    } else if (this.etaSeconds >= ONE_MINUTE) {
-      const minutes = Math.floor(this.etaSeconds / ONE_MINUTE);
-      const seconds = Math.floor(this.etaSeconds % ONE_MINUTE);
-      return `${minutes}m${seconds}s`;
-
-    } else {
-      const seconds = Math.floor(this.etaSeconds);
-      return `${seconds}s`;
-    }
+    return formatHumanDuration(this.etaSeconds);
   }
 }
 
@@ -232,65 +217,22 @@ function formatHumanBytes(numberBytes: number): string {
   return displayNumber.toLocaleString("en-US", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + units;
 }
 
-const SAMPLE_PERIOD_MS = 500;
-const SMOOTHING_FACTOR = 0.05;
+function formatHumanDuration(durationSeconds: number): string {
+  const ONE_HOUR = 60 * 60;
+  const ONE_MINUTE = 60;
 
-class SpeedTracker {
-  private _creationTime = 0;
-  private _lastUpdateTime = -1;
-  private _lastBytesRead = 0;
-  private _currentSpeed = 0;
-  private _updateCounter = 0;
+  if (durationSeconds >= ONE_HOUR) {
+    const hours = Math.floor(durationSeconds / ONE_HOUR);
+    const minutes = Math.floor((durationSeconds % ONE_HOUR) / 60);
+    return `${hours}h${minutes}m`;
 
-  constructor(private _totalBytes: number) {
-    this._creationTime = performance.now();
-    this._lastUpdateTime = 0;
-  }
+  } else if (durationSeconds >= ONE_MINUTE) {
+    const minutes = Math.floor(durationSeconds / ONE_MINUTE);
+    const seconds = Math.floor(durationSeconds % ONE_MINUTE);
+    return `${minutes}m${seconds}s`;
 
-  updateProgress(newReadBytes: number): void {
-    const stamp = performance.now();
-
-    if (this._lastUpdateTime === -1) {
-      const timePeriodSeconds = (stamp - this._creationTime) / 1000;
-
-      if (timePeriodSeconds !== 0) {
-        const recentBytesPerSecond = newReadBytes / timePeriodSeconds;
-        this._currentSpeed = recentBytesPerSecond;;
-
-        this._lastUpdateTime = stamp;
-        this._lastBytesRead = newReadBytes;
-      }
-    } else {
-
-      if ((stamp - this._lastUpdateTime) > SAMPLE_PERIOD_MS) {
-        const timePeriodSeconds = (stamp - this._lastUpdateTime) / 1000;
-        const recentBytesPerSecond = (newReadBytes - this._lastBytesRead) / timePeriodSeconds;
-        this._currentSpeed = SMOOTHING_FACTOR * recentBytesPerSecond + (1-SMOOTHING_FACTOR) * this._currentSpeed;
-
-        this._lastUpdateTime = stamp;
-        this._lastBytesRead = newReadBytes;
-      }
-    }
-    this._updateCounter++;
-  }
-
-  isSpeedAvailable(): boolean {
-    return this._updateCounter > 20;
-  }
-
-  getCurrentSpeed(): number {
-    return this._currentSpeed;
-  }
-
-  getAverageSpeed(): number {
-    if (this._lastBytesRead === 0) {
-      return 0;
-    }
-    const timePeriodSeconds = (this._lastUpdateTime - this._creationTime) / 1000;
-    return this._lastBytesRead / timePeriodSeconds;
-  }
-
-  getETASeconds(): number {
-    return (this._totalBytes - this._lastBytesRead) / this._currentSpeed;
+  } else {
+    const seconds = Math.floor(durationSeconds);
+    return `${seconds}s`;
   }
 }

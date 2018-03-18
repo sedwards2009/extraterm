@@ -79,6 +79,7 @@
         "./src/render_process/gui/ContextMenu.ts",
         "./src/render_process/gui/DropDown.ts",
         "./src/render_process/gui/file_transfer/FileTransferProgress.ts",
+        "./src/render_process/gui/file_transfer/SpeedTracker.ts",
         "./src/render_process/gui/ListPicker.ts",
         "./src/render_process/gui/MenuItem.ts",
         "./src/render_process/gui/PopDownDialog.ts",
