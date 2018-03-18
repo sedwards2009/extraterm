@@ -21,7 +21,7 @@ type ActionType = "download" | "upload";
 
 @Component(
 {
-  template: `<div class="container" :title="formattedTooltip">
+  template: `<div class="top_container" :title="formattedTooltip">
     <div v-if="finished" class="filename"><i class='fa fa-download'></i>&nbsp;{{name}}</div>
     <div v-else class="filename"><i class='fa fa-download'></i>&nbsp;{{actionMessage}}</div>
 

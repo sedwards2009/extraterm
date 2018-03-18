@@ -8,44 +8,68 @@ import Vue from 'vue';
 
 @Component(
   {
-    template: `<div id="top_container" :title="formattedTooltip">
-    <audio ref="player" :src="url"
-      v-on:durationchange="onDurationChange"
-      v-on:timeupdate="onTimeUpdate"
-      v-on:ended="onEnded"></audio>
-    <div>
-      {{title}}
-    </div>
-    <div class="btn-toolbar">
-      <div class="btn-group">
-        <button v-on:click="onPlayPauseClick" class="btn btn-default">
-          <i v-if="!playing" class="fa fa-fw fa-play"></i>
-          <i v-if="playing" class="fa fa-fw fa-pause"></i>
-        </button>
+    template: `
+    <div id="top_container" :title="formattedTooltip">
+      <audio ref="player" :src="url"
+        v-on:durationchange="onDurationChange"
+        v-on:timeupdate="onTimeUpdate"
+        v-on:ended="onEnded"></audio>
+
+      <div id="title">
+        <i class="fa fa-volume-up"></i>
+        {{title}}
       </div>
-    </div>
-    <div>
-      {{formattedTime}}/{{formattedDuration}}
-    </div>
-  </div>`
+      <div id="toolbar">
+        <div class="btn-group">
+          <button v-on:click="onPlayPauseClick" class="btn btn-default">
+            <i v-if="!playing" class="fa fa-play"></i>
+            <i v-if="playing" class="fa fa-pause"></i>
+          </button>
+        </div>
+      </div>
+      <div id="time">
+        {{formattedTimes}}
+      </div>
+      <div id="progress_bar">
+        <progress :max="progressMax" :value="progressValue"></progress>
+      </div>
+      <div id="file_size">
+        <et-compact-file-transfer-progress
+          :finished="downloadFinished"
+          :total="totalSizeBytes"
+          :transferred="availableSizeBytes">
+        </et-compact-file-transfer-progress>
+      </div>
+    </div>`
 })
 export class AudioViewerUi extends Vue {
   title = "-";
   playing = false;
   url: string = null;
   currentTime = 0;
-  duration = 0;
+  duration = NaN;
+  availableSizeBytes = 0;
+  totalSizeBytes = 0;
+  downloadFinished = false;
 
   get formattedTooltip(): string {
     return this.playing ? "Playing " + this.title : this.title;
   }
 
-  get formattedTime(): string {
-    return formatTimeSeconds(this.currentTime);
+  get formattedTimes(): string {
+    if (Number.isNaN(this.duration)|| ! Number.isFinite(this.duration)) {
+      return formatTimeSeconds(this.currentTime);
+    } else {
+      return formatTimeSeconds(this.currentTime) + " / " + formatTimeSeconds(this.duration);
+    }
   }
 
-  get formattedDuration(): string {
-    return formatTimeSeconds(this.duration);
+  get progressValue(): number {
+    return Number.isFinite(this.duration) ? this.currentTime : 0;
+  }
+
+  get progressMax(): number {
+    return Number.isFinite(this.duration) ? this.duration : 1;
   }
 
   private _getAudioElement(): HTMLAudioElement {

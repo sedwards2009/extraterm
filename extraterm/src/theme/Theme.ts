@@ -58,6 +58,8 @@ export const CssFile = {
   THEME_VARS: CSS_MODULE_INTERNAL_GUI + ":" + "theme-vars.scss",
   GUI_FILE_TRANSFER_PROGRESS: CSS_MODULE_INTERNAL_GUI + ":" + "gui-file-transfer-progress.scss",
   GUI_UPLOAD_PROGRESS_BAR: CSS_MODULE_INTERNAL_GUI + ":" + "gui-upload-progress.scss",
+  GUI_COMPACT_FILE_TRANSFER_PROGRESS: CSS_MODULE_INTERNAL_GUI + ":" + "gui-compact-file-transfer-progress.scss",
+  DOWNLOAD_VIEWER: CSS_MODULE_INTERNAL_GUI + ":" + "download-viewer.scss",
 }
 
 export function cssFileToFilename(cssFile: CssFile): string {
@@ -100,7 +102,9 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.GUI_SNAP_DROP_CONTAINER,
   CssFile.THEME_VARS,
   CssFile.GUI_FILE_TRANSFER_PROGRESS,
-  CssFile.GUI_UPLOAD_PROGRESS_BAR
+  CssFile.GUI_UPLOAD_PROGRESS_BAR,
+  CssFile.GUI_COMPACT_FILE_TRANSFER_PROGRESS,
+  CssFile.DOWNLOAD_VIEWER,
 ];
 
 export class CssFileMap extends Map<CssFile, string> {

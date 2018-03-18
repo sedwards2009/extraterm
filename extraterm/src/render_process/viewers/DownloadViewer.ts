@@ -12,6 +12,7 @@ import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import {SimpleViewerElement} from '../viewers/SimpleViewerElement';
 import {ViewerElement} from './ViewerElement';
+import * as ThemeTypes from '../../theme/Theme';
 
 
 @WebComponent({tag: "et-download-viewer"})
@@ -33,7 +34,11 @@ export class DownloadViewer extends SimpleViewerElement {
     this._updateLater = new DebouncedDoLater(this._updateLaterCallback.bind(this), 250);
 
     this._fileTransferProgress =  <FileTransferProgress> document.createElement(FileTransferProgress.TAG_NAME);
-    this.getContainerNode().appendChild(this._fileTransferProgress);
+
+    const div = document.createElement("DIV");
+    div.id = "top_container";
+    div.appendChild(this._fileTransferProgress);
+    this.getContainerNode().appendChild(div);
   }
 
   getMetadata(): ViewerMetadata {
@@ -73,6 +78,10 @@ export class DownloadViewer extends SimpleViewerElement {
   private _updateLaterCallback(): void {
     const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
     this.dispatchEvent(event);
+  }
+
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.DOWNLOAD_VIEWER];
   }
 
   // From viewerelementtypes.SupportsMimeTypes

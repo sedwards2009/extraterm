@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {BulkFileHandle, CommandEntry, ExtensionContext, Logger, Terminal} from 'extraterm-extension-api';
+import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Terminal} from 'extraterm-extension-api';
 import {AudioViewerUi} from './AudioViewerUi';
 
 
@@ -30,7 +30,7 @@ export function activate(context: ExtensionContext): any {
     private _updateMetadata(): void {
       this.updateMetadata({
         title: this._getTitle(),
-        icon: "file-audio-o"
+        icon: "volume-up"
       });
     }
 
@@ -62,6 +62,15 @@ export function activate(context: ExtensionContext): any {
       this._updateMetadata();
       this._ui.url = this._bulkFileHandle.getUrl();
       this._ui.title = this._getTitle();
+      this._ui.totalSizeBytes = handle.getTotalSize();
+      handle.onAvailableSizeChange(size => {
+        this._ui.availableSizeBytes = size;
+      });
+      handle.onStateChange(state => {
+        if (state === BulkFileState.COMPLETED || state === BulkFileState.FAILED) {
+          this._ui.downloadFinished = true;
+        }
+      });
     }
   }
 

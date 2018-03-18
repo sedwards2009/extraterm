@@ -1,0 +1,16 @@
+/**
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ */
+@import "bootstrap/_variables";
+
+.top_container {
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-color;
+  text-align: right;
+
+  &:focus {
+    outline: 0 solid black;
+  }
+}
