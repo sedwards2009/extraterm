@@ -57,7 +57,7 @@ function main() {
   // Create the commands zip
   echo("Creating commands.zip");
   const commandsDir = packageData.name + "-commands-" + packageData.version;
-  cp("-r", "src/commands", path.join(buildTmpPath, commandsDir));
+  cp("-r", "extraterm/src/commands", path.join(buildTmpPath, commandsDir));
   const codeDir = pwd();
   cd(buildTmpPath);
   exec(`zip -y -r ${commandsDir}.zip ${commandsDir}`);
