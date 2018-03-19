@@ -38,6 +38,8 @@
   },
   "devDependencies": {
     "electron": "1.6.8",
+    "electron-packager": "8.7.0",
+    "electron-rebuild": "1.7.2",
     "git-repo-info": "^1.4.1",
     "wsrun": "^1.7.0"
   }

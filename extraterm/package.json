@@ -13,7 +13,6 @@
     "testsplitlayout": "yarn run build && nodeunit src/render_process/SplitLayoutTest.js",
     "testterm": "tsc && nodeunit src/render_process/emulator/TermTest.js",
     "typedoc": "node build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
-    "package": "node build_scripts/build_packages.js",
     "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
@@ -56,8 +55,6 @@
     "@types/utf8": "2.1.5",
     "cajon": "0.2.10",
     "electron": "1.6.8",
-    "electron-packager": "8.7.0",
-    "electron-rebuild": "1.7.2",
     "extraterm-extension-api": "0.1.0",
     "finalhandler": "0.4.0",
     "modclean": "2.1.0",

@@ -177,7 +177,8 @@ function main() {
         version: electronVersion,
         ignore: ignoreFunc,
         overwrite: true,
-        out: buildTmpPath
+        out: buildTmpPath,
+        packageManager: "yarn"
       };
       if (platform === "win32") {
         packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.ico";
