@@ -34,7 +34,7 @@ abstract class ScriptBuilder {
   }
     
   protected _buildScriptForCommand(commandName: string, commandPyFile: string): string {
-    const flattener = new PythonFileFlattener(path.join(__dirname, '../../../src/commands/'));
+    const flattener = new PythonFileFlattener(path.join(__dirname, '../../../extraterm/src/commands/'));
     const script = flattener.readAndInlineCommand(commandPyFile);
     return this._formatCommand(commandName, script);
   }

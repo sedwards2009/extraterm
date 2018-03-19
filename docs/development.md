@@ -29,15 +29,28 @@ Thanks go out to the people and organisations responsible for the great software
 
 Getting started from source:
 
-Note: Run these commands from a terminal which *isn't* Extraterm < v0.30.0. (An environment variable is set inside every extraterm session which confuses `node-sass` when building from source, namely in the `npm install` step. This problem is fixed in Extraterm 0.30.0 though.)
+Note: Run these commands from a terminal which *isn't* Extraterm < v0.30.0. (An environment variable is set inside every extraterm session which confuses `node-sass` when building from source, namely in the `yarn install` step. This problem is fixed in Extraterm 0.30.0 though.)
+
+Extraterm uses (yarn)[http://yarnpkg.com/] for package management. It is easiest to have it available in your path or just globally.
 
 * Clone the repository from github to your local machine.
 * Make sure that you are using node version 7.4.0. :warning: This is important. Using the same node version as the version of Electron simplifies installation of the one native node module that Extraterm depends on (pty.js). You can fetch it from https://nodejs.org/dist/v7.4.0/
-* Install the modules: `npm run npm-install-all` (pty.js will not install on cygwin, but that is ok and expected.)
-* Build it: `npm run build-all`
-* Run it: `npm run run`
+* Install the modules: `yarn install` (pty.js will not install on cygwin, but that is ok and expected.)
+* Fix up the binary modules to work inside Electron: `yarn run electron-rebuild`
+* Build it: `yarn run build`
+* Run it: `yarn run run`
 
-If you are using Atom as your editor, then it will quickly and automatically compile the TS files for you. You can usually skip the manual build step during most development.
+
+# Code Layout
+
+In the root of the git repository we have:
+* `build_scripts` - Extra scripts used for building the software and creating packages.
+* `docs` - Documentation and the contents of the website.
+* `extensions` - Extensions/plugins which are loaded by Extraterm at start up.
+* `extraterm` - The main application.
+    * `resources` - Extra resource files which are need by the main application.
+    * `src` - The source code of the main application.
+* `packages` - Separate modules of code which are used by the main application and extensions but is otherwise independent.
 
 
 # Submitting Changes
@@ -65,77 +78,7 @@ The basic rule is just follow the formatting already being used in existing code
 
 # Road Map
 
+Keep an eye on these places for information and speculation about future development:
 
-These are the features which are with in the scope of this project. (Shown in no particular order)
-
-* General text handling
-  * [x] Editable in-place text
-  * [x] Zoom
-  * [ ] Find functionality and highlighting
-    * [ ] Multiple highlights
-  * [ ] Snapshot the contents of the current terminal into a new tab
-  * [ ] Special paste. Paste text with different encodings, i.e. escape shell characters.
-  * [ ] Insert symbol (unicode character)
-* Shell integration
-  * [x] Show the success or failure status of commands
-  * [ ] Report command activity in the tab title (i.e. a spinner if a command is running, or a checkmark or X cross)
-  * [ ] Record the start and end time of commands and make it available via the frame title bar
-  * [ ] Easier way of setting the Extraterm env cookie on remote ssh session
-  * [ ] Directory history navigation from a pop up list
-  * [ ] Previous command selection from a pop up list
-* UI
-  * [ ] Theming
-  * [ ] Keyboard shortcut customisation
-  * [ ] Multiple windows
-  * [ ] Full screen mode
-* Tab management
-  * [x] Vertical split
-  * [ ] Tab renaming
-  * [x] Reorder tabs
-  * [x] Move tabs between splits
-  * [x] Multiple vertical and horizontal splits
-  * [ ] Hide the tab bar
-* Scrollbar Mini-map
-  * [ ] Displays different command output areas
-  * [ ] Displays a representation of the textual contents
-  * [ ] Displays the results of the find functionality
-* `from` command:
-  * [ ] Robust and graceful handling of Ctrl+C termination
-  * [ ] Can select a range of lines from the target frame. i.e. `from 12:3-5`
-  * Allows different output encoding options:
-    * [ ] escape shell characters
-    * [ ] escape HTML
-    * [ ] escape XML
-* `show` command:
-  * [x] Option to manually specify the mime type
-  * [x] Can read data from stdin
-  * [x] Can guess the mimetype from the input stream data
-* Data viewers / frames
-  * [ ] Open content in external program
-  * [ ] Save to file
-  * [ ] Show timestamp info
-  * Text / terminal output viewer
-    * [x] Line numbers
-    * [x] Configurable syntax highlighting
-    * [ ] Pull in content after editing it in an external editor
-    * [ ] Sorting
-    * [ ] Easier column selections and editing
-    * Command to apply encoding / decoding
-      * [x] Shell character escaping
-  * Image viewer
-    * [ ] Zoom control
-    * [ ] Image info
-    * [ ] Frameless inline images
-  * HTML viewer foundation ([ProseMirror](http://prosemirror.net/) integration)
-    * [ ] Markdown viewer
-    * [ ] Rich text viewer (.rtf)
-  * [ ] JSON viewer
-  * [ ] Spreadsheet / tabular data viewer
-    * [ ] Integration with the `from` command
-  * [ ] Plugin system for viewers
-* [ ] Upload files
-* [ ] Download files
-  * [ ] Show progress bar
-  * [ ] Allow canceling of a download
-* [ ] Diff the contents to two frames / tabs
-  * [ ] Option to ignore the first n characters of each line (i.e. to skip logging timestamps)
+* (Development Roadmap)[https://github.com/sedwards2009/extraterm/issues/30]
+* (News section up on extraterm.org)[http://extraterm.org/news.html]

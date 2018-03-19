@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "declaration": false,
+        "noImplicitAny": false,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "removeComments": false,
+        "sourceMap": true,
+        "noLib": false,
+        "outDir": "src",
+        "jsx": "react",
+        "experimentalDecorators": true,
+        "types": ["fontinfo"],
+        "typeRoots" : ["./src/typings"],
+        "paths": {
+         "*": ["./src/typings/*"]
+        },
+        "baseUrl": ".",
+        "emitDecoratorMetadata": true
+      
+    },
+    "filesGlob": [
+        "./src/**/*.ts"
+    ],
+    "exclude": []
+}

@@ -3,8 +3,8 @@
   "description": "Text Viewer tab width selector extension for extraterm",
   "version": "1.0.0",
   "devDependencies": {
-    "typescript": "2.4.2",
-    "extraterm-extension-api": "file:../../extraterm-extension-api/"
+    "typescript": "2.6.1",
+    "extraterm-extension-api": "0.1.0"
   },
   "main": "src/TextViewerTabWidthExtension.js",
   "scripts": {

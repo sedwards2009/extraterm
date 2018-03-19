@@ -1,0 +1,46 @@
+{
+  "name": "audio-viewer",
+  "description": "Audio viewer",
+  "version": "1.0.0",
+  "main": "src/AudioViewerExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "vue": "2.5.9",
+    "vue-class-component": "6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "2.6.1"
+  },
+  "contributions": {
+    "viewer": [
+      {
+        "name": "AudioViewer",
+        "mimeTypes": [
+          "audio/vorbis",
+          "audio/wav",
+          "audio/wave",
+          "audio/vnd.wave",
+          "audio/x-wav",
+          "audio/x-pn-wav",
+          "audio/flac",
+          "audio/x-flac",
+          "audio/webm",
+          "audio/ogg",
+          "audio/mp3",
+          "audio/mpeg"
+        ],
+        "css": {
+          "directory": "resources/sass",
+          "cssFile": [
+            "audio-viewer.scss"
+          ],
+          "fontAwesome": true
+        }
+      }
+    ]
+  }
+}

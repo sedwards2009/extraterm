@@ -1,0 +1,229 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+@import "bootstrap/px-to-rem";
+@import "bootstrap/variables";
+
+/* embedded-frame styles */
+
+$TERMINAL_MARGIN_LEFT: pxToRem(4px);
+$TERMINAL_MARGIN_RIGHT: pxToRem(4px);
+
+$BLOCK_BORDER_LEFT: pxToRem(2px);
+$BLOCK_BORDER_RIGHT: pxToRem(2px);
+$BLOCK_BORDER_BOTTOM: pxToRem(2px);
+
+$CORNER_RADIUS: pxToRem(3px);
+
+$TEAR_BORDER_HEIGHT: pxToRem(2px);
+
+$DEFAULT_BACKGROUND_COLOR: $brand-primary;
+$FAIL_BACKGROUND_COLOR: $brand-danger;
+$SUCCESS_BACKGROUND_COLOR: $brand-primary;
+
+$ICON_RUNNING_COLOR: $brand-text-primary;
+$ICON_NEUTRAL_COLOR: $brand-text-primary;
+$ICON_SUCCESS_COLOR: $brand-text-primary;
+$ICON_FAIL_COLOR: $brand-text-danger;
+
+
+:host {
+  display: block;
+  width: 100%;
+  contain: strict;
+}
+
+#ID_CONTAINER {
+  contain: content;
+  width: calc(100% - #{$TERMINAL_MARGIN_LEFT + $BLOCK_BORDER_LEFT - $TERMINAL_MARGIN_RIGHT + $BLOCK_BORDER_RIGHT});
+  height: 100%;
+  box-sizing: border-box;
+  
+  margin-left: $TERMINAL_MARGIN_LEFT - $BLOCK_BORDER_LEFT;
+  margin-right: $TERMINAL_MARGIN_RIGHT - $BLOCK_BORDER_RIGHT;
+  
+  position: relative;
+}
+
+#ID_HEADER {
+  position: relative;
+  display: flex;
+  width: 100%;
+  z-index: 5;
+  font-size: 0.8rem;
+}
+
+#ID_OUTPUT_CONTAINER {
+  position: absolute;
+  top: pxToRem(0px);
+  bottom: pxToRem(0px);
+  left: pxToRem(0px);
+  right: pxToRem(0px);
+  
+  overflow: hidden;
+
+  border-left: $BLOCK_BORDER_LEFT solid rgba(0,0,0,0);
+  border-right: $BLOCK_BORDER_RIGHT solid rgba(0,0,0,0);
+  
+  padding-bottom: -1*$BLOCK_BORDER_BOTTOM;
+  border-bottom: $BLOCK_BORDER_BOTTOM solid rgba(0,0,0,0);
+  
+  border-bottom-left-radius: $CORNER_RADIUS;
+  border-bottom-right-radius: $CORNER_RADIUS;
+}
+
+/* *** Output DIV *** */
+#ID_OUTPUT {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+// #ID_OUTPUT.closed {
+//   display: none;
+//   height: pxToRem(1px);
+//   overflow: hidden;
+// }
+
+/* Block of controls top left/right */
+.left_block, .right_block {
+  flex: 0 0 auto;
+  display: flex;
+  padding-top: pxToRem(1px);
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-bottom: pxToRem(1px);
+  align-items: center;
+}
+
+/* Eliminate any outline around the button when it is clicked. */
+.right_block BUTTON:focus {
+  outline: pxToRem(0px);
+}
+
+/* *** Icon Div *** */
+#ID_ICON_DIV {
+  display: inline-block;
+}
+
+#ID_CONTAINER.CLASS_SUCCEEDED > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
+  color: $ICON_SUCCESS_COLOR;          
+}
+
+#ID_CONTAINER.CLASS_NEUTRAL > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
+  color: $ICON_NEUTRAL_COLOR;
+}
+
+#ID_CONTAINER.CLASS_FAILED > #ID_HEADER > DIV.left_block > #ID_ICON_DIV {
+  color: $ICON_FAIL_COLOR;
+}
+
+
+/* *** Comand line DIV *** */
+#ID_COMMAND_LINE {
+  flex: auto 0 1;
+  border-bottom-right-radius: 0.5em;
+  padding-top: pxToRem(1px);
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-bottom: pxToRem(1px);
+
+  color: $ICON_NEUTRAL_COLOR;
+}
+
+
+#ID_CONTAINER.CLASS_RUNNING > #ID_HEADER {
+  border-bottom-left-radius: $CORNER_RADIUS;
+  border-bottom-right-radius: $CORNER_RADIUS;
+
+  & > #ID_COMMANDLINE {
+    border: pxToRem(1px) solid $ICON_RUNNING_COLOR;
+  }
+
+  & > DIV.left_block > #ID_ICON_DIV {
+    color: $ICON_RUNNING_COLOR;
+  }
+}
+
+.right_block, BUTTON {
+  color: $ICON_NEUTRAL_COLOR;
+}
+
+#ID_EXPAND_BUTTON, #ID_CLOSE_BUTTON, #ID_POP_OUT_BUTTON {
+  flex: 0 0 auto;
+  padding: pxToRem(0px);
+  background-color: transparent;
+  border: pxToRem(0px);
+
+  transition: color 0.2s ease-in-out;
+}
+
+BUTTON:hover {
+  color: #ffffff - $ICON_NEUTRAL_COLOR;
+}
+
+#ID_HEADER {
+  background-color: $DEFAULT_BACKGROUND_COLOR;
+  border-top-left-radius: $CORNER_RADIUS;
+  border-top-right-radius: $CORNER_RADIUS;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+#ID_CONTAINER.scrolling > #ID_HEADER {
+  border-bottom: $TEAR_BORDER_HEIGHT dashed var(--terminal-background-color);
+  margin-bottom: -1 * $TEAR_BORDER_HEIGHT;
+}
+
+#ID_CONTAINER.bottom-not-visible.bottom-not-visible > #ID_OUTPUT_CONTAINER {
+  border-bottom-color: rgba(0, 0, 0, 0);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+// Success mode
+#ID_CONTAINER.CLASS_SUCCEEDED > #ID_OUTPUT_CONTAINER, #ID_CONTAINER.CLASS_NEUTRAL > #ID_OUTPUT_CONTAINER {
+  border-left-color: $SUCCESS_BACKGROUND_COLOR;
+  border-right-color: $SUCCESS_BACKGROUND_COLOR;
+  border-bottom-color: $SUCCESS_BACKGROUND_COLOR;
+}
+
+// Fail mode
+#ID_CONTAINER.CLASS_FAILED {
+
+  & > #ID_HEADER {
+    background-color: $FAIL_BACKGROUND_COLOR;
+    font-weight: bold;
+  }
+
+  & > #ID_OUTPUT_CONTAINER {
+    border-left-color: $FAIL_BACKGROUND_COLOR;
+    border-right-color: $FAIL_BACKGROUND_COLOR;
+    border-bottom-color: $FAIL_BACKGROUND_COLOR;
+  }
+}
+
+.header_spacer {
+  flex: 0em 1 1;
+}
+
+.spacer {
+  flex: 1em 0 0;
+  min-width: 1em;
+}
+        
+#ID_TAG_NAME {
+  flex: 0 1 auto;
+}
+
+#ID_CONTAINER.not-scrolling #ID_SCROLL_NAME, #ID_CONTAINER.not-scrolling #ID_SCROLL_ICON {
+  display: none;
+}
+
+#ID_SCROLL_NAME {
+  text-align: right;
+  min-width: 2.5em;
+  padding-left: 0.5em;
+}

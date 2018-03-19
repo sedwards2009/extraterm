@@ -1,0 +1,8 @@
+{
+"name": "Atomic Light UI theme",
+"type": ["gui"],
+"comment": "Based on the Atom Light theme from the Atom text editor (https://atom.io/).",
+"debug": false,
+"loadingBackgroundColor": "#d8d8d8",
+"loadingForegroundColor": "#444444"
+}

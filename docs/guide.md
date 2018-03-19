@@ -125,6 +125,7 @@ The shell integration adds a pair of new Extraterm specific commands to your she
 * **--charset <*charset*>** the character set used by the file. This is only relevant for text files.
 * **--mimetype <*mimetype*>** the mimetype of the file
 * **--filename <*filename*>** the file name to associate with the file
+* **-t, --text** treat the file as plain text. Convenient alternative to `--mimetype text/plain`
 
 Other options:
 

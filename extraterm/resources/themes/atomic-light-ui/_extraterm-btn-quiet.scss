@@ -1,0 +1,37 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+.btn.btn-quiet {
+  $border-shadow: inset 0 0 0 pxToRem(1px) $button-border-color;
+  $active-shadow: inset 0 pxToRem(3px) pxToRem(5px) rgba(0, 0, 0, .125);
+  color: $text-color;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  
+  transition: color 0.2s ease-in-out;
+
+
+  &:hover {
+    box-shadow: $border-shadow;
+    color: $text-color-highlight;
+    background-image: -webkit-linear-gradient($button-background-color-hover, darken($button-background-color-hover, 8%));
+  }
+  &:active,
+  &.selected:hover:active {
+    background-image: -webkit-linear-gradient($button-background-color, darken($button-background-color, 8%));
+    box-shadow: $active-shadow, $border-shadow;
+  }
+  &.selected,
+  &.selected:hover {
+    color: $text-color-highlight;
+    box-shadow: inset 0 pxToRem(2px) pxToRem(5px) rgba(0, 0, 0,.3), $border-shadow;
+    text-shadow: 0 0 pxToRem(2px) rgba(0, 0, 0, 0.3);
+    background-image: -webkit-linear-gradient(darken($button-background-color-selected, 8%), $button-background-color-selected);
+  }
+  &.selected:hover {
+    box-shadow: $border-shadow;
+    background-image: -webkit-linear-gradient($button-background-color-selected, darken($button-background-color-selected, 8%));
+  }
+}
