@@ -37,6 +37,7 @@
     "ptyw.js": "0.4.0"
   },
   "devDependencies": {
+    "electron": "1.6.8",
     "git-repo-info": "^1.4.1",
     "wsrun": "^1.7.0"
   }
