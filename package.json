@@ -30,7 +30,8 @@
   ],
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
-    "font-manager": "0.2.2"
+    "font-manager": "0.2.2",
+    "electron-rebuild": "1.7.2"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "optionalDependencies": {
@@ -39,7 +40,6 @@
   "devDependencies": {
     "electron": "1.6.8",
     "electron-packager": "8.7.0",
-    "electron-rebuild": "1.7.2",
     "git-repo-info": "^1.4.1",
     "wsrun": "^1.7.0"
   }

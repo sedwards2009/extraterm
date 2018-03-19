@@ -53,6 +53,7 @@ function main() {
 
   echo("Removing development dependencies");
   exec("yarn install --production=true");
+  exec("yarn run electron-rebuild");
 
   // Create the commands zip
   echo("Creating commands.zip");
