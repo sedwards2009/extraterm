@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "electron": "1.6.8",
-    "electron-packager": "8.7.0",
+    "electron-packager": "11.1.0",
     "git-repo-info": "^1.4.1",
     "wsrun": "^1.7.0"
   }

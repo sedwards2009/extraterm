@@ -179,7 +179,13 @@ function main() {
         ignore: ignoreFunc,
         overwrite: true,
         out: buildTmpPath,
-        packageManager: "yarn"
+        packageManager: "yarn",
+        afterPrune: [
+          (buildPath, electronVersion, platform, arch, callback) => {
+            replaceDirs(path.join(buildPath, "node_modules"), path.join("" + codeDir,`build_scripts/node_modules-${platform}-${arch}`));
+            callback();
+          }
+        ]
       };
       if (platform === "win32") {
         packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.ico";
@@ -241,20 +247,10 @@ function main() {
     cd(prevDir);
   }
   
-  replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'build_scripts/node_modules-win32-x64');
-  makePackage('x64', 'win32')
-    .then( () => {
-      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'build_scripts/node_modules-linux-x64');
-      return makePackage('x64', 'linux'); })
-    
-    .then( () => {
-      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'build_scripts/node_modules-linux-ia32');
-      return makePackage('ia32', 'linux'); })
-      
-    .then( () => {
-      replaceDirs(path.join(buildTmpPath, 'extraterm/node_modules'), 'build_scripts/node_modules-darwin-x64');
-      return makePackage('x64', 'darwin'); })
-      
+  makePackage("x64", "win32")
+    .then( () => makePackage("x64", "linux"))
+    .then( () => makePackage("ia32", "linux"))
+    .then( () => makePackage("x64", "darwin"))
     .then( () => { log("Done"); } );
 }
 
