@@ -1,6 +1,9 @@
 *~
 *.map
-*.js
+packages/**/*.js
+extensions/**/*.js
+extraterm/**/*.js
+
 .vscode/
 .directory
 yarn-error.log
@@ -11,7 +14,6 @@ node_modules/
 
 !extraterm/src/main_process/pty/PtyConnectorFactory.js
 !extraterm/src/dirname.js
-!build_scripts/*.js
 
 packages/extraterm-extension-api/main.d.ts
 packages/extraterm-web-component-decorators/Decorators.d.ts
