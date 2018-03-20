@@ -53,7 +53,6 @@ function main() {
 
   echo("Removing development dependencies");
   exec("yarn install --production=true");
-  exec("yarn run electron-rebuild");
 
   // Create the commands zip
   echo("Creating commands.zip");
@@ -109,6 +108,27 @@ function main() {
     if (platform !== "linux") {
       const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/emojione-android.ttf");
       rm(emojiOnePath);
+    }
+  }
+
+  function hoistSubprojectsModules(versionedOutputDir, platform) {
+    const modulesDir = path.join(versionedOutputDir, appDir(platform), "node_modules");
+
+    // Delete the symlinks.
+    for (const item of ls(modulesDir)) {
+      const itemPath = path.join(modulesDir, item);
+      if (test('-L', itemPath)) {
+        echo(`Deleting symlink ${item} in ${modulesDir}`);
+        rm(itemPath);
+      }
+    }
+
+    // Move the 'packages' subprojects up into this node_modules dir.
+    const packagesDir = path.join(versionedOutputDir, appDir(platform), "packages");
+    for (const item of ls(packagesDir)) {
+      const destDir = path.join(modulesDir, item);
+      echo(`Moving ${item} in to ${destDir}`);
+      mv(path.join(packagesDir, item), destDir);
     }
   }
 
@@ -209,6 +229,7 @@ function main() {
           const thisCD = pwd();
           cd(buildTmpPath);
 
+          hoistSubprojectsModules(versionedOutputDir, platform);
           pruneNodeModules(versionedOutputDir, platform);
 
           // Prune any unneeded node-sass binaries.
