@@ -25,6 +25,9 @@ import Vue from 'vue';
             <i v-if="!playing" class="fa fa-play"></i>
             <i v-if="playing" class="fa fa-pause"></i>
           </button>
+          <button v-on:click="onStopClick" class="btn btn-default">
+            <i class="fa fa-stop"></i>
+          </button>
         </div>
       </div>
       <div id="time">
@@ -85,6 +88,15 @@ export class AudioViewerUi extends Vue {
       player.pause();
       this.playing = false;
     }
+  }
+
+  onStopClick(): void {
+    const player = this._getAudioElement();
+    if (this.playing) {
+      player.pause();
+      this.playing = false;
+    }
+    player.currentTime = 0;
   }
 
   onTimeUpdate(): void {
