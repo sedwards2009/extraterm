@@ -826,18 +826,32 @@ function scanKeyBindingFiles(keyBindingsDir: string): KeyBindingInfo[] {
 }
 
 function getFonts(): FontInfo[] {
-  const fontResults = FontManager.findFontsSync( { monospace: true } );
-  const systemFonts = fontResults.filter( (result) => result.path.toLowerCase().endsWith(".ttf" ))
-      .map( (result) => {
-        const name = result.family + (result.style==="Regular" ? "" : " " + result.style) +
-          (result.italic && result.style.indexOf("Italic") === -1 ? " Italic" : "");
-        const fontInfo: FontInfo = {
-          name: name,
-          path: pathToUrl(result.path),
-          postscriptName: result.postscriptName
-        };
-        return fontInfo;
-      } );
+  const allAvailableFonts = FontManager.getAvailableFontsSync();
+  const usableFonts = allAvailableFonts.filter(fontInfo => {
+    const path = fontInfo.path.toLowerCase();
+    if ( ! path.endsWith(".ttf") && ! path.endsWith(".otf")) {
+      return false;
+    }
+    if (fontInfo.italic || fontInfo.style.indexOf("Oblique") !== -1) {
+      return false;
+    }
+    if (fontInfo.weight > 600) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const systemFonts = usableFonts.map(result => {
+    const name = result.family + (result.style==="Regular" ? "" : " " + result.style) +
+      (result.italic && result.style.indexOf("Italic") === -1 ? " Italic" : "");
+    const fontInfo: FontInfo = {
+      name: name,
+      path: pathToUrl(result.path),
+      postscriptName: result.postscriptName
+    };
+    return fontInfo;
+  } );
   
   const allFonts = [...getBundledFonts(), ...systemFonts];
   const fonts = _.uniqBy(allFonts, x => x.postscriptName);
