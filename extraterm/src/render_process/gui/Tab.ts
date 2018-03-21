@@ -7,40 +7,22 @@ import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
+import { WebComponent } from 'extraterm-web-component-decorators';
 
 /**
  * Holds the contents of one tab inside a TabWidget tag.
  */
+@WebComponent({tag: "et-tab"})
 export class Tab extends HTMLElement {
   
   static TAG_NAME = "ET-TAB";
 
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
-  
   private _mutationObserver: MutationObserver;
-
-  private _initProperties(): void {
-    this._mutationObserver = null;
-    this._log = getLogger(Tab.TAG_NAME, this);
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #                                                         
-  //   #       # ###### ######  ####  #   #  ####  #      ###### 
-  //   #       # #      #      #    #  # #  #    # #      #      
-  //   #       # #####  #####  #        #   #      #      #####  
-  //   #       # #      #      #        #   #      #      #      
-  //   #       # #      #      #    #   #   #    # #      #      
-  //   ####### # #      ######  ####    #    ####  ###### ###### 
-  //
-  //-----------------------------------------------------------------------
 
   constructor() {
     super();
-    this._initProperties();
+    this._log = getLogger(Tab.TAG_NAME, this);
 
     this._mutationObserver = new MutationObserver( (mutations) => {
       this._applyDraggable();
