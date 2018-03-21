@@ -55,7 +55,9 @@ export class FishScriptBuilder extends ScriptBuilder {
     return [
         {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
         {type: 'wait', durationMilliseconds: 300},
-        {type: 'text', text: 'stty -echo; source\n'},
+        {type: 'text', text: 'stty -echo\n'},
+        {type: 'wait', durationMilliseconds: 300},
+        {type: 'text', text: 'source\n'},
         {type: 'wait', durationMilliseconds: 300},
         ...super.build(),
         {type: 'text', text: 'echo "Shell integration is configured"\n'},
@@ -105,7 +107,9 @@ export class BashScriptBuilder extends ScriptBuilder {
     return [
       {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
       {type: 'wait', durationMilliseconds: 300},
-      {type: 'text', text: 'stty -echo; source /dev/stdin\n'},
+      {type: 'text', text: 'stty -echo\n'},
+      {type: 'wait', durationMilliseconds: 300},
+      {type: 'text', text: 'source /dev/stdin\n'},
       {type: 'wait', durationMilliseconds: 300},
       ...super.build(),
       {type: 'text', text: 'echo "Shell integration is configured"\n'},
@@ -159,7 +163,9 @@ export class ZshScriptBuilder extends ScriptBuilder {
     return [
       {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
       {type: 'wait', durationMilliseconds: 300},
-      {type: 'text', text: 'stty -echo; source =(cat </dev/stdin)\n'},
+      {type: 'text', text: 'stty -echo\n'},
+      {type: 'wait', durationMilliseconds: 300},
+      {type: 'text', text: 'source =(cat </dev/stdin)\n'},
       {type: 'wait', durationMilliseconds: 300},
       ...super.build(),
       {type: 'text', text: 'echo "Shell integration is configured"\n'},
