@@ -6,6 +6,7 @@
 import {WebComponent} from 'extraterm-web-component-decorators';
 import * as ThemeTypes from '../theme/Theme';
 import {FileTransferProgress} from './gui/file_transfer/FileTransferProgress';
+import { doLater } from '../utils/DoLater';
 
 
 @WebComponent({tag: "et-upload-progress-bar"})
@@ -16,6 +17,20 @@ export class UploadProgressBar extends FileTransferProgress {
   connectedCallback(): void {
     super.connectedCallback();
     this.actionType = "upload";
+  }
+
+  hide(): void {
+    this.getContainerNode().classList.add("upload_hide");
+  }
+
+  show(delayMs=0): void {
+    if (delayMs === 0) {
+      this.getContainerNode().classList.remove("upload_hide");
+    } else {
+      doLater(() => {
+        this.getContainerNode().classList.remove("upload_hide");
+        }, delayMs);
+    }
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

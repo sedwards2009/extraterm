@@ -1,3 +1,14 @@
 /**
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
+
+@import "bootstrap/variables";
+
+.top_container {
+  background-color: $body-bg;
+  padding: $panel-body-padding;
+}
+
+.upload_hide {
+    opacity: 0;
+}

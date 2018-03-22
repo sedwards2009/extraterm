@@ -2053,7 +2053,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       });
     });
 
+    uploadProgressBar.hide();
     containerDiv.appendChild(uploadProgressBar);
+    uploadProgressBar.show(200);  // Show after delay
 
     uploader.upload();
   }
