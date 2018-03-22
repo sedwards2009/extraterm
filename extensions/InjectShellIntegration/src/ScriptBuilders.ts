@@ -125,10 +125,12 @@ export class BashScriptBuilder extends ScriptBuilder {
 
   protected _buildShellReporting(): string {
     return `
+PREVIOUS_PROMPT_COMMAND=$PROMPT_COMMAND
 postexec () {
   echo -n -e "\\033&$\{${this._extratermCookieName}\};3\\007"
   echo -n $1
   echo -n -e "\\000"
+  $PREVIOUS_PROMPT_COMMAND
 }
 export PROMPT_COMMAND="postexec \\$?"
 
