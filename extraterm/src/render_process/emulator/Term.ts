@@ -2593,7 +2593,7 @@ export class Emulator implements EmulatorApi {
   }
 
   private fillRight(x: number, y: number, ch: string = ' '): void {
-    const line = this._tryGetRow(y);
+    const line = this._getRow(y);
     if (line === null) {
       return;
     }
