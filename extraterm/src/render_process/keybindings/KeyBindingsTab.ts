@@ -8,7 +8,7 @@
 
 import * as _ from 'lodash';
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata} from 'extraterm-extension-api';
+import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
 
 import * as ThemeTypes from '../../theme/Theme';
 import {ViewerElement} from '../viewers/ViewerElement';
@@ -85,6 +85,7 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
   private _configManager: ConfigManager = null;
   private _keyBindingManager: KeyBindingManager = null;
   private _data: ModelData = null;
+  private _configManagerDisposable: Disposable = null;
 
   constructor() {
     super();
@@ -156,8 +157,9 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this._configManager !== null) {
-      this._configManager.unregisterChangeListener(this);
+    if (this._configManagerDisposable !== null) {
+      this._configManagerDisposable.dispose();
+      this._configManagerDisposable = null;
     }
     if (this._keyBindingManager !== null) {
       this._keyBindingManager.unregisterChangeListener(this);
@@ -185,7 +187,7 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
   
   setConfigDistributor(configManager: ConfigManager): void {
     this._configManager = configManager;
-    this._configManager.registerChangeListener(this, () => {
+    this._configManagerDisposable = this._configManager.onChange(() => {
       this._setConfig(configManager.getConfig());
     });
     this._setConfig(configManager.getConfig());

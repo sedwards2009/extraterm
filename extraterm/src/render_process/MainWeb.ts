@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable} from 'extraterm-extension-api';
+import {Disposable, Event} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as path from 'path';
@@ -18,7 +18,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
     from './CommandPaletteRequestTypes';
-import * as config from '../Config';
+import {Config, ConfigDistributor, SessionProfile, injectConfigDistributor} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
@@ -45,12 +45,9 @@ import * as ThemeConsumer from '../theme/ThemeConsumer';
 import * as Util from './gui/Util';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
+import { EventEmitter } from '../utils/EventEmitter';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
-
-type Config = config.Config;
-type ConfigManager = config.ConfigDistributor;
-type SessionProfile = config.SessionProfile;
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
 type KeyBindingContexts = keybindingmanager.KeyBindingContexts;
@@ -82,7 +79,7 @@ let terminalIdCounter = 0;
 let keyBindingManager: KeyBindingManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
-let configManager: ConfigManagerImpl = null;
+let configManager: ConfigDistributorImpl = null;
 let extensionManager: ExtensionManager = null;
 let commandPalette: PopDownListPicker<CommandMenuItem> = null;
 let commandPaletteDisposable: Disposable = null;
@@ -100,7 +97,7 @@ export function startUp(closeSplash: () => void): void {
   startUpWebIpc();
 
   // Get the Config working.
-  configManager = new ConfigManagerImpl();
+  configManager = new ConfigDistributorImpl();
   keyBindingManager = new KeyBindingManagerImpl();  // depends on the config.
   const themePromise = WebIpc.requestConfig().then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
@@ -178,7 +175,7 @@ function loadFontFaces(): Promise<FontFace[]> {
 
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
-  config.injectConfigDistributor(mainWebUi, configManager);
+  injectConfigDistributor(mainWebUi, configManager);
   keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
   mainWebUi.setExtensionManager(extensionManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
@@ -660,20 +657,15 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
   }
 }
 
-class ConfigManagerImpl implements ConfigManager {
-  
+class ConfigDistributorImpl implements ConfigDistributor {
   private _config: Config = null;
+  private _onChangeEventEmitter = new EventEmitter<void>();
+  onChange: Event<void>;
   
-  private _listenerList: {key: any; onChange: ()=> void; }[] = [];  // Immutable list
-  
-  registerChangeListener(key: any, onChange: () => void): void {
-    this._listenerList = [...this._listenerList, {key, onChange}];
+  constructor() {
+    this.onChange = this._onChangeEventEmitter.event;
   }
-  
-  unregisterChangeListener(key: any): void {
-    this._listenerList = this._listenerList.filter( (tup) => tup.key !== key);
-  }
-  
+
   getConfig(): Config {
     return this._config;
   }
@@ -687,11 +679,7 @@ class ConfigManagerImpl implements ConfigManager {
    */
   setNewConfig(newConfig: Config): void {
     this._config = newConfig;
-    
-    const listenerList = this._listenerList;
-    for (const tup of listenerList) {
-      tup.onChange();
-    }
+    this._onChangeEventEmitter.fire(undefined);
   }
 }
 

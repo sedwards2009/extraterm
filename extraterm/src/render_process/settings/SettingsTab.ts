@@ -1,9 +1,9 @@
 /**
- * Copyright 2015 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata} from 'extraterm-extension-api';
+import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
 
 import * as _ from 'lodash';
 import {ThemeableElementBase} from '../ThemeableElementBase';
@@ -25,6 +25,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   private _log: Logger = null;
   private _ui: SettingsUi = null;
   private _configManager: ConfigDistributor = null;
+  private _configManagerDisposable: Disposable = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _fontOptions: FontInfo[] = [];
 
@@ -56,8 +57,9 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this._configManager !== null) {
-      this._configManager.unregisterChangeListener(this);
+    if (this._configManagerDisposable !== null) {
+      this._configManagerDisposable.dispose();
+      this._configManagerDisposable = null;
     }
   }
 
@@ -74,12 +76,13 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
     return false;
   }
   
-  setConfigDistributor(configManager: ConfigDistributor): void {
-    this._configManager = configManager;
-    configManager.registerChangeListener(this, () => {
-      this._setConfig(configManager.getConfig());
+  setConfigDistributor(configDistributor: ConfigDistributor): void {
+    this._configManager = configDistributor;
+    this._configManagerDisposable = configDistributor.onChange(() => {
+      this._setConfig(configDistributor.getConfig());
     });
-    this._setConfig(configManager.getConfig());
+    this._setConfig(configDistributor.getConfig());
+    this._ui.configDistributor = configDistributor;
   }
   
   private _setConfig(config: Config): void {

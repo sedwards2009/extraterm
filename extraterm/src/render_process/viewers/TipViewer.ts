@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as he from 'he';
 import * as SourceDir from '../../SourceDir';
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata} from 'extraterm-extension-api';
+import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
 
 import * as config from '../../Config';
 type ConfigManager = config.ConfigDistributor;
@@ -91,6 +91,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
   private _keyBindingManager: KeyBindingManager = null;
   private _height = 0;
   private _tipIndex = 0;
+  private _configManagerDisposable: Disposable = null;
 
   constructor() {
     super();
@@ -160,8 +161,9 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
   
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this._configManager !== null) {
-      this._configManager.unregisterChangeListener(this);
+    if (this._configManagerDisposable !== null) {
+      this._configManagerDisposable.dispose();
+      this._configManagerDisposable = null;
     }
   }
   
@@ -170,13 +172,14 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
   }
 
   setConfigDistributor(newConfigManager: ConfigManager): void {
-    if (this._configManager !== null) {
-      this._configManager.unregisterChangeListener(this);
+    if (this._configManagerDisposable !== null) {
+      this._configManagerDisposable.dispose();
+      this._configManagerDisposable = null;
     }
     
     this._configManager = newConfigManager;
     if (this._configManager !== null) {
-      this._configManager.registerChangeListener(this, this._configChanged.bind(this));
+      this._configManagerDisposable = this._configManager.onChange(this._configChanged.bind(this));
     }
   }
 
