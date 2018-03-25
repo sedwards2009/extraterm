@@ -6,8 +6,9 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 
-import {Config, FontInfo, CommandLineAction, ShowTipsStrEnum} from '../../Config';
+import {FontInfo, CommandLineAction, ShowTipsStrEnum, ConfigDistributor} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
+import { APPEARANCE_SETTINGS_TAG } from './AppearanceSettings';
 
 const ID_SCROLLBACK = "ID_SCROLLBACK";
 const ID_SETTINGS = "ID_SETTINGS";
@@ -46,10 +47,21 @@ export function nextId(): string {
   return "" + idCounter;
 }
 
+for (const el of [APPEARANCE_SETTINGS_TAG]) {
+  if (Vue.config.ignoredElements.indexOf(el) === -1) {
+    Vue.config.ignoredElements.push(el);
+  }
+}
+
+
 @Component(
   {
     template: `
 <div id='${ID_SETTINGS}'>
+  <section>
+  It should appear here:
+    <et-appearance-settings v-bind:configDistributor.prop="getConfigDistributor()"></et-appearance-settings>
+  </section>
   <section>
     <h2>Settings</h2>
     <div className='settingsform'>
@@ -245,6 +257,8 @@ export function nextId(): string {
 `
 })
 export class SettingsUi extends Vue {
+  private __configDistributor: ConfigDistributor = null;
+
   showTips: ShowTipsStrEnum;
   showTipsOptions:{ id: ShowTipsStrEnum, name: string; }[];
   
@@ -354,5 +368,14 @@ export class SettingsUi extends Vue {
       }
     }
     return "";
+  }
+
+  setConfigDistributor(configDistributor: ConfigDistributor) {
+    this.__configDistributor = configDistributor;
+    this.$forceUpdate();
+  }
+
+  getConfigDistributor(): ConfigDistributor {
+    return this.__configDistributor;
   }
 }

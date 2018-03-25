@@ -15,6 +15,7 @@ import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi, nextId, IdentifiableCommandLineAction, Identifiable } from './SettingsUi';
+import {ConfigElementBinder} from './ConfigElementBinder';
 
 
 @WebComponent({tag: "et-settings-tab"})
@@ -24,18 +25,18 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   
   private _log: Logger = null;
   private _ui: SettingsUi = null;
-  private _configManager: ConfigDistributor = null;
-  private _configManagerDisposable: Disposable = null;
+  private _configBinder: ConfigElementBinder = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _fontOptions: FontInfo[] = [];
 
   constructor() {
     super();
     this._log = getLogger(SettingsTab.TAG_NAME, this);
+    this._configBinder = new ConfigElementBinder(this._setConfig.bind(this));
 
     this._ui = new SettingsUi();
     const component = this._ui.$mount();
-    this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } )
+    this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
 
     const shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
     const themeStyle = document.createElement("style");
@@ -54,13 +55,15 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
     metadata.icon = "wrench";
     return metadata;
   }
-  
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this._configBinder.connectedCallback();
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this._configManagerDisposable !== null) {
-      this._configManagerDisposable.dispose();
-      this._configManagerDisposable = null;
-    }
+    this._configBinder.disconnectedCallback();
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -77,12 +80,8 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   }
   
   setConfigDistributor(configDistributor: ConfigDistributor): void {
-    this._configManager = configDistributor;
-    this._configManagerDisposable = configDistributor.onChange(() => {
-      this._setConfig(configDistributor.getConfig());
-    });
-    this._setConfig(configDistributor.getConfig());
-    this._ui.configDistributor = configDistributor;
+    this._configBinder.setConfigDistributor(configDistributor);
+    this._ui.setConfigDistributor(configDistributor);
   }
   
   private _setConfig(config: Config): void {
@@ -156,7 +155,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   }
 
   private _dataChanged(): void {
-    const newConfig = _.cloneDeep(this._configManager.getConfig());
+    const newConfig = _.cloneDeep(this._configBinder.getConfigDistributor().getConfig());
     
     newConfig.showTips = this._ui.showTips;
     newConfig.scrollbackMaxLines = this._ui.maxScrollbackLines;
@@ -173,7 +172,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
     stripIds(commandLineActions);
     newConfig.commandLineActions = commandLineActions;
 
-    this._configManager.setConfig(newConfig);
+    this._configBinder.getConfigDistributor().setConfig(newConfig);
   }
 }
 
