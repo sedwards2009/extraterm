@@ -17,11 +17,16 @@ export class ConfigElementBinder {
   }
 
   setConfigDistributor(configDistributor: ConfigDistributor): void {
+    if (this._configDistributor === configDistributor) {
+      return;
+    }
+
     this._stopHandle();
     this._configDistributor = configDistributor;
 
     if (this._connected) {
       this._configDistributorDisposable = this._configDistributor.onChange(this._handleOnChange.bind(this));
+      this._handleOnChange();
     }
   }
 
@@ -37,7 +42,9 @@ export class ConfigElementBinder {
   }
 
   private _handleOnChange(): void {
-    this._onConfigChange(this._configDistributor.getConfig());
+    if (this._configDistributor != null && this._configDistributor.getConfig() != null) {
+      this._onConfigChange(this._configDistributor.getConfig());
+    }
   }
 
   connectedCallback(): void {

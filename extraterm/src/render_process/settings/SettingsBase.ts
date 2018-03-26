@@ -6,21 +6,23 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
 import { ConfigDistributor, Config } from '../../Config';
-import { ThemeableElementBase } from '../ThemeableElementBase';
 import { ConfigElementBinder } from './ConfigElementBinder';
+import { ThemeableElementBase } from '../ThemeableElementBase';
+import * as ThemeTypes from '../../theme/Theme';
 import Vue from 'vue';
 
 
-export abstract class SettingsBase extends ThemeableElementBase {
+export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
   private _configBinder: ConfigElementBinder = null;
+  private _ui: V;
 
-  constructor() {
+  constructor(uiConstructor: { new(): V}) {
     super();
     this._configBinder = new ConfigElementBinder(this._setConfig.bind(this));
 
-    const ui = this._createVueUi();
-    const component = ui.$mount();
-    ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
+    this._ui = new uiConstructor();
+    const component = this._ui.$mount();
+    this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
 
     const shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
     const themeStyle = document.createElement("style");
@@ -30,6 +32,14 @@ export abstract class SettingsBase extends ThemeableElementBase {
     this.updateThemeCss();
     
     shadow.appendChild(component.$el);
+  }
+
+  protected _getUi(): V {
+    return this._ui;
+  }
+  
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB, ThemeTypes.CssFile.FONT_AWESOME];
   }
 
   set configDistributor(configDistributor: ConfigDistributor) {
@@ -66,7 +76,6 @@ export abstract class SettingsBase extends ThemeableElementBase {
     }
   }
   
-  protected abstract _createVueUi(): Vue;
   protected abstract _setConfig(config: Config): void;
   protected abstract _dataChanged(): void;
 }
