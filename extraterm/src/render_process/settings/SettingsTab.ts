@@ -35,7 +35,6 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
 
     this._ui = new SettingsUi();
     const component = this._ui.$mount();
-    this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
 
     const shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
     const themeStyle = document.createElement("style");
@@ -84,35 +83,9 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   }
 
   private _setConfig(config: Config): void {
-    
-    if (this._ui.showTips !== config.showTips) {
-      this._ui.showTips = config.showTips;
-    }
-    
-    // We take care to only update things which have actually changed.
-    if (this._ui.maxScrollbackLines !== config.scrollbackMaxLines) {
-      this._ui.maxScrollbackLines = config.scrollbackMaxLines;
-    }
-
-    if (this._ui.maxScrollbackFrames !== config.scrollbackMaxFrames) {
-      this._ui.maxScrollbackFrames = config.scrollbackMaxFrames;
-    }
-    
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._ui.themes = themes;
   }
-
-  private _dataChanged(): void {
-    const newConfig = _.cloneDeep(this._configBinder.getConfigDistributor().getConfig());
-    
-    newConfig.showTips = this._ui.showTips;
-    newConfig.scrollbackMaxLines = this._ui.maxScrollbackLines;
-    newConfig.scrollbackMaxFrames = this._ui.maxScrollbackFrames;
-
-
-    this._configBinder.getConfigDistributor().setConfig(newConfig);
-  }
 }
-
