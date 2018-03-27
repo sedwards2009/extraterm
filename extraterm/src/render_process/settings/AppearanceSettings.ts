@@ -67,7 +67,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     newConfig.themeGUI = ui.themeGUI;
     newConfig.showTitleBar = ui.titleBar === "native";
     newConfig.uiScalePercent = ui.uiScalePercent;
-
+    
     this._updateConfig(newConfig);
   }
 

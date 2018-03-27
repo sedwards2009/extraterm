@@ -14,7 +14,7 @@ import { AcceptsConfigDistributor, ConfigDistributor, FontInfo, Config } from '.
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ThemeTypes from '../../theme/Theme';
-import { SettingsUi, nextId, IdentifiableCommandLineAction, Identifiable } from './SettingsUi';
+import { SettingsUi } from './SettingsUi';
 import {ConfigElementBinder} from './ConfigElementBinder';
 
 
@@ -98,14 +98,6 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
       this._ui.maxScrollbackFrames = config.scrollbackMaxFrames;
     }
     
-    const cleanCommandLineAction = _.cloneDeep(this._ui.commandLineActions);
-    stripIds(cleanCommandLineAction);
-
-    if ( ! _.isEqual(cleanCommandLineAction, config.commandLineActions)) {
-      const updateCLA = <IdentifiableCommandLineAction[]> _.cloneDeep(config.commandLineActions);
-      setIds(updateCLA);
-      this._ui.commandLineActions = updateCLA;
-    }
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
@@ -119,26 +111,8 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
     newConfig.scrollbackMaxLines = this._ui.maxScrollbackLines;
     newConfig.scrollbackMaxFrames = this._ui.maxScrollbackFrames;
 
-    const commandLineActions = _.cloneDeep(this._ui.commandLineActions);
-    stripIds(commandLineActions);
-    newConfig.commandLineActions = commandLineActions;
 
     this._configBinder.getConfigDistributor().setConfig(newConfig);
   }
 }
 
-function setIds(list: Identifiable[]): void {
-  list.forEach( (idable) => {
-    if (idable.id === undefined) {
-      idable.id = nextId();
-    }
-  });
-}
-
-function stripIds(list: Identifiable[]): void {
-  list.forEach( (idable) => {
-    if (idable.id !== undefined) {
-      delete idable.id;
-    }
-  });  
-}
