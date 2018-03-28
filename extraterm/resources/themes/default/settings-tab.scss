@@ -11,15 +11,53 @@
   outline: 0 solid transparent;
 }
 
-#ID_SETTINGS {
+#settings_top {
   height: 100%;
-  overflow: auto;
-  padding: $panel-body-padding;
-
-  & > * {
-    max-width: calc(100% - 1rem);
-  }  
+  display: flex;
+  flex-direction: row;
 }
+
+#settings_menu {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 180px;
+
+  -webkit-user-select: none;
+  user-select: none;
+  padding-top: $component-padding;
+  background-color: lighten($base-background-color, 2%);
+  border-right: 1px solid $base-border-color;
+  overflow-x: auto;
+  
+  ul {
+    list-style: none;
+    padding-left: 0;
+
+    li {
+      display: block;
+      padding: $nav-link-padding;
+      cursor: pointer;
+
+      &.active, &.active:hover {
+        color: $text-color-selected;
+        background-color: $background-color-selected;
+      }
+
+      &:focus, &:hover {
+        color: $text-color-highlight;
+        background-color: $background-color-highlight;
+      }
+    }
+  }
+}
+
+
+#settings_pane {  
+  flex-grow: 1;
+  padding: $panel-body-padding;
+  overflow: auto;
+}
+
 
 #ID_COMMAND_OUTPUT_HANDLING > table td.CLASS_FRAME {
   min-width: 10em;

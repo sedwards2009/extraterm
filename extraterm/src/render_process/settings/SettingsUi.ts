@@ -21,40 +21,68 @@ for (const el of [GENERAL_SETTINGS_TAG, APPEARANCE_SETTINGS_TAG, FRAME_SETTINGS_
 
 const ID_SETTINGS = "ID_SETTINGS";
 
+type MenuItemId = "general" | "appearance" | "frames";
+
+interface MenuItem {
+  id: MenuItemId;
+  icon: string;
+  title: string;
+}
 
 @Component(
   {
     template: `
-<div id='${ID_SETTINGS}'>
-  <section>
-    <et-appearance-settings
+<div id="settings_top">
+  <div id="settings_menu">
+    <ul>
+      <li v-for="item in menuItems"
+        :key="item.id"
+        v-bind:class="{active: item.id == selectedTab}"
+        v-on:click="selectMenuTab(item.id)">
+        <i v-bind:class="{fa: true, ['fa-' + item.icon]: true}"></i>&nbsp;&nbsp;{{ item.title }}
+      </li>
+    </ul>
+  </div>
+
+  <div id="settings_pane">
+    <et-general-settings v-if="selectedTab == 'general'"
+      v-bind:configDistributor.prop="getConfigDistributor()">
+    </et-general-settings>
+
+    <et-appearance-settings v-if="selectedTab == 'appearance'"
       v-bind:configDistributor.prop="getConfigDistributor()"
       v-bind:themes.prop="themes" >
     </et-appearance-settings>
-  </section>
 
-  <section>
-    <et-frame-settings
+    <et-frame-settings v-if="selectedTab == 'frames'"
       v-bind:configDistributor.prop="getConfigDistributor()">
     </et-frame-settings>
-  </section>
 
-  <section>
-    <et-general-settings
-      v-bind:configDistributor.prop="getConfigDistributor()">
-    </et-general-settings>
-  </section>
+  </div>
 </div>
 `
 })
 export class SettingsUi extends Vue {
   private __configDistributor: ConfigDistributor = null;
 
+  selectedTab: string;
   themes: ThemeTypes.ThemeInfo[];
-  
+
+  menuItems: MenuItem[];
+
   constructor() {
     super();
+    this.selectedTab = "general";
     this.themes = [];
+    this.menuItems = [
+      { id: "general", icon: "sliders", title: "General"},
+      { id: "appearance", icon: "paint-brush", title: "Appearance"},
+      { id: "frames", icon: "window-maximize", title: "Frames"}
+    ];
+  }
+
+  selectMenuTab(id: MenuItemId): void {
+    this.selectedTab = id;
   }
 
   setConfigDistributor(configDistributor: ConfigDistributor) {
