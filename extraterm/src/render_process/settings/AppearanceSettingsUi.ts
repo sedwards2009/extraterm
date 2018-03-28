@@ -30,7 +30,7 @@ interface UiScalePercentOption {
   {
     template: `
 <div>
-  <h2>Appearance</h2>
+  <h2><i class="fa fa-paint-brush"></i>&nbsp;&nbsp;Appearance</h2>
 
   <div class="form-horizontal">
     <div class="form-group">

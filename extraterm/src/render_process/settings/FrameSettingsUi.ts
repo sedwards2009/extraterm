@@ -33,7 +33,7 @@ export function nextId(): string {
   {
     template: `
 <div>
-  <h2>Command Output Handling Rules</h2>
+  <h2><i class="fa fa-window-maximize"></i>&nbsp;&nbsp;Frame Handling Rules</h2>
   <table class="table">
     <thead v-if="commandLineActions.length !== 0">
       <tr><th>Match</th><th>Command</th><th>Frame</th><th></th></tr>

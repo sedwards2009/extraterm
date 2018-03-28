@@ -17,7 +17,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
   {
     template: `
 <div>
-  <h2>General Settings</h2>
+  <h2><i class="fa fa-sliders"></i>&nbsp;&nbsp;General Settings</h2>
     
   <div class="form-horizontal">
     <div class="form-group">
