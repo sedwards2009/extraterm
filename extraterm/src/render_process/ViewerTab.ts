@@ -15,7 +15,7 @@ import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
-import {AcceptsKeyBindingManager, KeyBindingManager} from './keybindings/KeyBindingManager';
+import {AcceptsKeyBindingManager, KeyBindingsManager} from './keybindings/KeyBindingManager';
 import {ResizeCanary} from './ResizeCanary';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ScrollBar} from'./gui/ScrollBar';
@@ -79,7 +79,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   private _title = "New Tab";
   private _tag: string = null;
 
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keyBindingManager: KeyBindingsManager = null;
 
   private _mainStyleLoaded = false;
   private _themeStyleLoaded = false;
@@ -268,7 +268,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     return ViewerElementTypes.Mode.CURSOR;
   }
   
-  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+  setKeyBindingManager(keyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
 

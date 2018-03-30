@@ -34,7 +34,7 @@ import {TextViewer} from './viewers/TextViewer';
 import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
-import {KeyBindingManager, injectKeyBindingManager, AcceptsKeyBindingManager} from './keybindings/KeyBindingManager';
+import {KeyBindingsManager, injectKeyBindingManager, AcceptsKeyBindingManager} from './keybindings/KeyBindingManager';
 import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
 import {Logger, getLogger} from '../logging/Logger';
@@ -187,7 +187,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _selectionPreviousLineCount: number;
   
   private _configManager: ConfigDistributor = null;
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keyBindingManager: KeyBindingsManager = null;
   private _extensionManager: ExtensionManager = null;
 
   private _title = "New Tab";
@@ -421,7 +421,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._configManager = configManager;
   }
   
-  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+  setKeyBindingManager(keyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
   

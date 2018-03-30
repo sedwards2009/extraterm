@@ -49,7 +49,7 @@ import { EventEmitter } from '../utils/EventEmitter';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
+type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 type KeyBindingsContexts = keybindingmanager.KeyBindingsContexts;
 
 SourceMapSupport.install();

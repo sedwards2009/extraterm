@@ -36,7 +36,7 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
 
 
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
+type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;

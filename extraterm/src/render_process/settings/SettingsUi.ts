@@ -12,7 +12,7 @@ import { APPEARANCE_SETTINGS_TAG } from './AppearanceSettings';
 import { FRAME_SETTINGS_TAG } from './FrameSettings';
 import { GENERAL_SETTINGS_TAG} from './GeneralSettings';
 import { KEY_BINDINGS_SETTINGS_TAG } from './KeyBindingsSettings';
-import { KeyBindingManager } from '../keybindings/KeyBindingManager';
+import { KeyBindingsManager } from '../keybindings/KeyBindingManager';
 
 for (const el of [GENERAL_SETTINGS_TAG, APPEARANCE_SETTINGS_TAG, FRAME_SETTINGS_TAG, KEY_BINDINGS_SETTINGS_TAG]) {
   if (Vue.config.ignoredElements.indexOf(el) === -1) {
@@ -69,7 +69,7 @@ interface MenuItem {
 })
 export class SettingsUi extends Vue {
   private __configDistributor: ConfigDistributor = null;
-  private __keyBindingManager: KeyBindingManager = null;
+  private __keyBindingManager: KeyBindingsManager = null;
 
   selectedTab: string;
   themes: ThemeTypes.ThemeInfo[];
@@ -100,12 +100,12 @@ export class SettingsUi extends Vue {
     return this.__configDistributor;
   }
 
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
     this.__keyBindingManager = newKeyBindingManager;
     this.$forceUpdate();
   }
 
-  getKeyBindingManager(): KeyBindingManager {
+  getKeyBindingManager(): KeyBindingsManager {
     return this.__keyBindingManager;
   }
 }

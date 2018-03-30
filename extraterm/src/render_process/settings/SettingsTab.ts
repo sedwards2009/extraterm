@@ -11,7 +11,7 @@ import {ViewerElement} from '../viewers/ViewerElement';
 import Vue from 'vue';
 
 import { AcceptsConfigDistributor, ConfigDistributor, FontInfo, Config } from '../../Config';
-import { AcceptsKeyBindingManager, KeyBindingManager } from '../keybindings/KeyBindingManager';
+import { AcceptsKeyBindingManager, KeyBindingsManager } from '../keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ThemeTypes from '../../theme/Theme';
@@ -26,7 +26,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   private _log: Logger = null;
   private _ui: SettingsUi = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keyBindingManager: KeyBindingsManager = null;
 
   constructor() {
     super();
@@ -70,7 +70,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
     this._ui.setConfigDistributor(configDistributor);
   }
   
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = newKeyBindingManager;
     this._ui.setKeyBindingManager(newKeyBindingManager);
   }

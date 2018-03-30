@@ -17,7 +17,7 @@ import * as config from '../../Config';
 type ConfigManager = config.ConfigDistributor;
 
 import * as keybindingmanager from '../keybindings/KeyBindingManager';
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
+type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';

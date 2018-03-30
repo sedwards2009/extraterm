@@ -21,7 +21,7 @@ import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as GeneralEvents from '../GeneralEvents';
-import {KeyBindingManager, AcceptsKeyBindingManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingManager';
+import {KeyBindingsManager, AcceptsKeyBindingManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -114,7 +114,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
   
   private _log: Logger;
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keyBindingManager: KeyBindingsManager = null;
   private _title = "";
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
@@ -335,7 +335,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     super.dispose();
   }
 
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = newKeyBindingManager;
   }
   

@@ -374,7 +374,7 @@ export function loadKeyBindingsFromObject(obj: Object, platform: string): KeyBin
   return new KeyBindingsContexts(obj, platform);
 }
 
-export interface KeyBindingManager {
+export interface KeyBindingsManager {
   /**
    * Gets the KeyBindingContexts object contain within.
    *
@@ -392,7 +392,7 @@ export interface KeyBindingManager {
 }
 
 export interface AcceptsKeyBindingManager {
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void;
+  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void;
 }
 
 export function isAcceptsKeyBindingManager(instance: any): instance is AcceptsKeyBindingManager {
@@ -402,7 +402,7 @@ export function isAcceptsKeyBindingManager(instance: any): instance is AcceptsKe
   return (<AcceptsKeyBindingManager> instance).setKeyBindingManager !== undefined;
 }
 
-export function injectKeyBindingManager(instance: any, keyBindingManager: KeyBindingManager): void {
+export function injectKeyBindingManager(instance: any, keyBindingManager: KeyBindingsManager): void {
   if (isAcceptsKeyBindingManager(instance)) {
     instance.setKeyBindingManager(keyBindingManager);
   }
