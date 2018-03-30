@@ -6,19 +6,19 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
 import { ConfigDistributor, Config } from '../../Config';
-import { ConfigElementBinder } from './ConfigElementBinder';
+import { OnChangeEmitterElementLifecycleBinder } from './OnChangeEmitterElementLifecycleBinder';
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import Vue from 'vue';
 
 
 export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
-  private _configBinder: ConfigElementBinder = null;
+  private _configBinder: OnChangeEmitterElementLifecycleBinder<ConfigDistributor> = null;
   private _ui: V;
 
   constructor(uiConstructor: { new(): V}) {
     super();
-    this._configBinder = new ConfigElementBinder(this._setConfig.bind(this));
+    this._configBinder = new OnChangeEmitterElementLifecycleBinder<ConfigDistributor>(this._handleConfigChange.bind(this));
 
     this._ui = new uiConstructor();
     const component = this._ui.$mount();
@@ -34,6 +34,13 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     shadow.appendChild(component.$el);
   }
 
+  private _handleConfigChange(configDistributor: ConfigDistributor): void {
+    if (configDistributor.getConfig() == null) {
+      return;
+    }
+    this._setConfig(configDistributor.getConfig());
+  }
+
   protected _getUi(): V {
     return this._ui;
   }
@@ -43,11 +50,11 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
   }
 
   set configDistributor(configDistributor: ConfigDistributor) {
-    this._configBinder.setConfigDistributor(configDistributor);
+    this._configBinder.setOnChangeEmitter(configDistributor);
   }
 
   get configDistributor(): ConfigDistributor {
-    return this._configBinder.getConfigDistributor();
+    return this._configBinder.getOnChangeEmitter();
   }
 
   connectedCallback(): void {
@@ -61,8 +68,8 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
   }
 
   protected _getConfigCopy(): Config {
-    if (this._configBinder.getConfigDistributor() != null) {
-      const config = this._configBinder.getConfigDistributor().getConfig();
+    if (this._configBinder.getOnChangeEmitter() != null) {
+      const config = this._configBinder.getOnChangeEmitter().getConfig();
       if (config != null) {
         return _.cloneDeep(config);
       }
@@ -71,11 +78,11 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
   }
 
   protected _updateConfig(newConfig: Config): void {
-    if (this._configBinder.getConfigDistributor() != null) {
-      this._configBinder.getConfigDistributor().setConfig(newConfig);
+    if (this._configBinder.getOnChangeEmitter() != null) {
+      this._configBinder.getOnChangeEmitter().setConfig(newConfig);
     }
   }
-  
+
   protected abstract _setConfig(config: Config): void;
   protected abstract _dataChanged(): void;
 }

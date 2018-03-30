@@ -16,7 +16,6 @@ import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi } from './SettingsUi';
-import {ConfigElementBinder} from './ConfigElementBinder';
 
 
 @WebComponent({tag: "et-settings-tab"})
@@ -26,14 +25,12 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   
   private _log: Logger = null;
   private _ui: SettingsUi = null;
-  private _configBinder: ConfigElementBinder = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _keyBindingManager: KeyBindingManager = null;
 
   constructor() {
     super();
     this._log = getLogger(SettingsTab.TAG_NAME, this);
-    this._configBinder = new ConfigElementBinder(this._setConfig.bind(this));
 
     this._ui = new SettingsUi();
     const component = this._ui.$mount();
@@ -56,16 +53,6 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
     return metadata;
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
-    this._configBinder.connectedCallback();
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this._configBinder.disconnectedCallback();
-  }
-
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB, ThemeTypes.CssFile.FONT_AWESOME];
   }
@@ -80,16 +67,12 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   }
 
   setConfigDistributor(configDistributor: ConfigDistributor): void {
-    this._configBinder.setConfigDistributor(configDistributor);
     this._ui.setConfigDistributor(configDistributor);
   }
   
   setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
     this._keyBindingManager = newKeyBindingManager;
     this._ui.setKeyBindingManager(newKeyBindingManager);
-  }
-
-  private _setConfig(config: Config): void {
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
