@@ -95,7 +95,7 @@ function init(): void {
 
 @WebComponent({tag: "et-terminal-viewer"})
 export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
-    SupportsClipboardPaste.SupportsClipboardPaste {
+    SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-VIEWER";
   
@@ -155,6 +155,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   private _bookmarkCounter = 0;
   private _bookmarkIndex = new Map<BookmarkRef, CodeMirror.TextMarker>();
+  private _keyBindingManagerOnChangeDisposable: Disposable = null;
 
   constructor() {
     super();
@@ -167,6 +168,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
       this.dispatchEvent(event);
     });
+  }
+
+  dispose(): void {
+    if (this._keyBindingManagerOnChangeDisposable != null) {
+      this._keyBindingManagerOnChangeDisposable.dispose();
+    }
   }
 
   getMetadata(): ViewerMetadata {
@@ -371,13 +378,14 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   //-----------------------------------------------------------------------
 
   setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
-    if (this._keyBindingManager !== null) {
-      this._keyBindingManager.unregisterChangeListener(this);
+    if (this._keyBindingManagerOnChangeDisposable != null) {
+      this._keyBindingManagerOnChangeDisposable.dispose();
+      this._keyBindingManagerOnChangeDisposable = null;
     }
     
     this._keyBindingManager = newKeyBindingManager;
     if (this._keyBindingManager !== null) {
-      this._keyBindingManager.registerChangeListener(this, () => {
+      this._keyBindingManagerOnChangeDisposable = this._keyBindingManager.onChange(() => {
         this._codeMirror.setOption("keyMap", this._codeMirrorKeyMap());
       });
     }

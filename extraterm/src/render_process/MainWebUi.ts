@@ -21,7 +21,6 @@ import {FrameFinder} from './FrameFinderType';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
 import * as keybindingmanager from './keybindings/KeyBindingManager';
-import {EtKeyBindingsTab} from './keybindings/KeyBindingsTab';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
@@ -678,20 +677,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
       
       viewerElement.setThemes(this._themes);
-      this._openViewerTab(this._firstTabWidget(), viewerElement);
-      this._switchToTab(viewerElement);
-    }
-  }
-  
-  openKeyBindingsTab(): void {
-    const keyBindingsTabs = this._splitLayout.getAllTabContents().filter( (el) => el instanceof EtKeyBindingsTab );
-    if (keyBindingsTabs.length !== 0) {
-      this._switchToTab(keyBindingsTabs[0]);
-    } else {
-      const viewerElement = <EtKeyBindingsTab> document.createElement(EtKeyBindingsTab.TAG_NAME);
-      config.injectConfigDistributor(viewerElement, this._configManager);
-      keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
-
       this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);
     }

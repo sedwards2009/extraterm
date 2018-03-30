@@ -49,6 +49,8 @@ export class KeyBindingsSettings extends SettingsBase<KeyBindingsSettingsUi> {
   set keyBindingManager(keyBindingManager: KeyBindingManager) {
     this._keyBindingManager = keyBindingManager;
     this._getUi().setKeyBindingsContexts(keyBindingManager.getKeyBindingsContexts());
+
+    
   }
 
   get keyBindingManager(): KeyBindingManager {

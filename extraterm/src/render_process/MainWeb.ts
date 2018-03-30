@@ -58,7 +58,6 @@ const PLUGINS_DIRECTORY = "plugins";
 
 const PALETTE_GROUP = "mainweb";
 const MENU_ITEM_SETTINGS = 'settings';
-const MENU_ITEM_KEY_BINDINGS = 'key_bindings';
 const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
 const MENU_ITEM_ABOUT = 'about';
 const MENU_ITEM_RELOAD_CSS = 'reload_css';
@@ -227,7 +226,6 @@ function startUpMainMenu(): void {
   const contextMenuFragment = DomUtils.htmlToFragment(`
     <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
         <${MenuItem.TAG_NAME} icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
-        <${MenuItem.TAG_NAME} icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</${MenuItem.TAG_NAME}>
         <${CheckboxMenuItem.TAG_NAME} icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
         <${MenuItem.TAG_NAME} icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
@@ -315,10 +313,6 @@ function executeCommand(commandId: string, options?: object): boolean {
       mainWebUi.openSettingsTab();
       break;
       
-    case MENU_ITEM_KEY_BINDINGS:
-      mainWebUi.openKeyBindingsTab();
-      break;
-      
     case MENU_ITEM_DEVELOPER_TOOLS:
       const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
       developerToolMenu.checked = ! developerToolMenu.checked;
@@ -365,12 +359,6 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
         label: 'Preferences...',
         click(item, focusedWindow) {
           mainWebUi.openSettingsTab();
-        },
-      },
-      {
-        label: 'Key Bindings...',
-        click(item, focusedWindow) {
-          mainWebUi.openKeyBindingsTab();
         },
       },
       {
@@ -629,7 +617,6 @@ function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry
   const commandExecutor: CommandExecutor = {executeCommand};
   const commandList: CommandEntry[] = [
     { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", commandExecutor },
-    { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", commandExecutor },
     { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", commandExecutor },
     { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", commandExecutor },
     { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", commandExecutor },
@@ -684,40 +671,21 @@ class ConfigDistributorImpl implements ConfigDistributor {
 }
 
 class KeyBindingsManagerImpl implements KeyBindingManager {
-  
   private _keyBindingsContexts: KeyBindingsContexts = null;
+
+  private _onChangeEventEmitter = new EventEmitter<void>();
+  onChange: Event<void>;
   
-  private _listenerList: {key: any; onChange: ()=> void; }[] = [];  // Immutable list
-  
+  constructor() {
+    this.onChange = this._onChangeEventEmitter.event;
+  }
+
   getKeyBindingsContexts(): KeyBindingsContexts {
     return this._keyBindingsContexts;
   }
   
   setKeyBindingsContexts(newKeyBindingContexts: KeyBindingsContexts): void {
     this._keyBindingsContexts = newKeyBindingContexts;
-    
-    const listenerList = this._listenerList;
-    for (const tup of listenerList) {
-      tup.onChange();
-    }
-  }
-  
-  /**
-   * Register a listener to hear when the key bindings change.
-   *
-   * @param key an opaque object which is used to identify this registration.
-   * @param onChange the function to call when the config changes.
-   */
-  registerChangeListener(key: any, onChange: () => void): void {
-    this._listenerList = [...this._listenerList, {key, onChange}];
-  }
-  
-  /**
-   * Unregister a listener.
-   *
-   * @param key the same opaque object which was used during registerChangeListener().
-   */
-  unregisterChangeListener(key: any): void {
-    this._listenerList = this._listenerList.filter( (tup) => tup.key !== key);
+    this._onChangeEventEmitter.fire(undefined);
   }
 }

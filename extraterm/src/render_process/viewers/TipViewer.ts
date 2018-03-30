@@ -70,7 +70,7 @@ function loadTipFile(): string[] {
 const tipData = loadTipFile();
 
 @WebComponent({tag: "et-tip-viewer"})
-export class TipViewer extends ViewerElement implements config.AcceptsConfigDistributor, keybindingmanager.AcceptsKeyBindingManager {
+export class TipViewer extends ViewerElement implements config.AcceptsConfigDistributor, keybindingmanager.AcceptsKeyBindingManager, Disposable {
 
   static TAG_NAME = "ET-TIP-VIEWER";
   
@@ -92,10 +92,18 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
   private _height = 0;
   private _tipIndex = 0;
   private _configManagerDisposable: Disposable = null;
+  private _keyBindingManagerDisposable: Disposable = null;
 
   constructor() {
     super();
     this._log = getLogger(TipViewer.TAG_NAME, this);
+  }
+
+  dispose(): void {
+    if (this._keyBindingManagerDisposable != null) {
+      this._keyBindingManagerDisposable.dispose();
+      this._keyBindingManagerDisposable = null;
+    }
   }
 
   getMetadata(): ViewerMetadata {
@@ -184,13 +192,14 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
   }
 
   setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
-    if (this._keyBindingManager !== null) {
-      this._keyBindingManager.unregisterChangeListener(this);
+    if (this._keyBindingManagerDisposable !== null) {
+      this._keyBindingManagerDisposable.dispose();
+      this._keyBindingManagerDisposable = null;
     }
     
     this._keyBindingManager = newKeyBindingManager;
     if (this._keyBindingManager !== null) {
-      this._keyBindingManager.registerChangeListener(this, this._keyBindingChanged.bind(this));
+      this._keyBindingManagerDisposable = this._keyBindingManager.onChange(this._keyBindingChanged.bind(this));
     }
   }
   

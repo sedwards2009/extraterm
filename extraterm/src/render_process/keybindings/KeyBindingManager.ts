@@ -3,8 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Logger, getLogger} from '../../logging/Logger';
+import { Disposable, Event } from 'extraterm-extension-api';
 import * as _ from 'lodash';
+
+import {Logger, getLogger} from '../../logging/Logger';
 import * as SetUtils from '../../utils/SetUtils';
 
 const FALLTHROUGH = "fallthrough";
@@ -94,9 +96,7 @@ function mapString(s: string): string {
 export class KeyBindingsMapping {
   
   public keyBindings: KeyBinding[] = [];
-  
-  private _log: Logger = null;
-  
+  private _log: Logger = null;  
   private _platform: string;
   
   constructor(mappingName: string, allMappingsJson: Object, platform: string) {
@@ -383,21 +383,12 @@ export interface KeyBindingManager {
   getKeyBindingsContexts(): KeyBindingsContexts;
   
   setKeyBindingsContexts(newKeyBindingsContexts: KeyBindingsContexts): void;
-  
+
   /**
    * Register a listener to hear when the key bindings change.
    *
-   * @param key an opaque object which is used to identify this registration.
-   * @param onChange the function to call when the config changes.
    */
-  registerChangeListener(key: any, onChange: () => void): void;
-  
-  /**
-   * Unregister a listener.
-   *
-   * @param key the same opaque object which was used during registerChangeListener().
-   */
-  unregisterChangeListener(key: any): void;
+  onChange: Event<void>;
 }
 
 export interface AcceptsKeyBindingManager {

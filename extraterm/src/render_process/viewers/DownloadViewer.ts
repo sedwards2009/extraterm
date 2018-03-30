@@ -16,7 +16,7 @@ import * as ThemeTypes from '../../theme/Theme';
 
 
 @WebComponent({tag: "et-download-viewer"})
-export class DownloadViewer extends SimpleViewerElement {
+export class DownloadViewer extends SimpleViewerElement implements Disposable {
 
   static TAG_NAME = "et-download-viewer";
 
@@ -118,7 +118,7 @@ export class DownloadViewer extends SimpleViewerElement {
     }
   }
 
-  private _releaseBulkFileHandle(): void {    
+  private _releaseBulkFileHandle(): void {
     if (this._bulkFileHandle !== null) {
       this._onAvailableSizeChangeDisposable.dispose();
       this._onStateChangeDisposable.dispose();
