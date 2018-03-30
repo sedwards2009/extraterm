@@ -767,11 +767,11 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   //                                                        
   // ----------------------------------------------------------------------
   private _codeMirrorKeyMap(): any {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingContexts() === null) {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
       return {};  // empty keymap
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings === null) {
       return {};
     }
@@ -823,10 +823,10 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
-    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null  &&
+    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null  &&
         this._mode === ViewerElementTypes.Mode.CURSOR) {
           
-      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
+      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
         if (this._executeCommand(command)) {
@@ -896,7 +896,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       commandList = [...commandList, ...cmCommandList];
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)

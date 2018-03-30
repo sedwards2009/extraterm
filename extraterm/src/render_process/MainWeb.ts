@@ -50,7 +50,7 @@ import { EventEmitter } from '../utils/EventEmitter';
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
 type KeyBindingManager = keybindingmanager.KeyBindingManager;
-type KeyBindingContexts = keybindingmanager.KeyBindingContexts;
+type KeyBindingsContexts = keybindingmanager.KeyBindingsContexts;
 
 SourceMapSupport.install();
 
@@ -98,7 +98,7 @@ export function startUp(closeSplash: () => void): void {
 
   // Get the Config working.
   configManager = new ConfigDistributorImpl();
-  keyBindingManager = new KeyBindingManagerImpl();  // depends on the config.
+  keyBindingManager = new KeyBindingsManagerImpl();  // depends on the config.
   const themePromise = WebIpc.requestConfig().then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
@@ -443,8 +443,8 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
   const keyBindingContexts = keybindingmanager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts,
     process.platform);
 
-  if (! keyBindingContexts.equals(keyBindingManager.getKeyBindingContexts())) {
-    keyBindingManager.setKeyBindingContexts(keyBindingContexts);
+  if (! keyBindingContexts.equals(keyBindingManager.getKeyBindingsContexts())) {
+    keyBindingManager.setKeyBindingsContexts(keyBindingContexts);
   }
 
   if (oldConfig === null ||
@@ -606,7 +606,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
       };
     });
     
-    const shortcut = keyBindingManager.getKeyBindingContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
+    const shortcut = keyBindingManager.getKeyBindingsContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
     commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
     commandPalette.setEntries(paletteEntries);
     
@@ -683,18 +683,18 @@ class ConfigDistributorImpl implements ConfigDistributor {
   }
 }
 
-class KeyBindingManagerImpl {
+class KeyBindingsManagerImpl implements KeyBindingManager {
   
-  private _keyBindingContexts: KeyBindingContexts = null;
+  private _keyBindingsContexts: KeyBindingsContexts = null;
   
   private _listenerList: {key: any; onChange: ()=> void; }[] = [];  // Immutable list
   
-  getKeyBindingContexts(): KeyBindingContexts {
-    return this._keyBindingContexts;
+  getKeyBindingsContexts(): KeyBindingsContexts {
+    return this._keyBindingsContexts;
   }
   
-  setKeyBindingContexts(newKeyBindingContexts: KeyBindingContexts): void {
-    this._keyBindingContexts = newKeyBindingContexts;
+  setKeyBindingsContexts(newKeyBindingContexts: KeyBindingsContexts): void {
+    this._keyBindingsContexts = newKeyBindingContexts;
     
     const listenerList = this._listenerList;
     for (const tup of listenerList) {

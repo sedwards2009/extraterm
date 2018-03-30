@@ -144,7 +144,7 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
         computed: {
           summary: function(this: ModelData) {
             const foo = this.keyBindingsContextsStamp;
-            return formatKeyBindingsPage(elementThis._keyBindingManager.getKeyBindingContexts());
+            return formatKeyBindingsPage(elementThis._keyBindingManager.getKeyBindingsContexts());
           }
         }
       });
@@ -219,14 +219,14 @@ export class EtKeyBindingsTab extends ViewerElement implements config.AcceptsCon
   }
 }
 
-function formatKeyBindingsPage(keyBindingContexts: keybindingmanager.KeyBindingContexts): string {
+function formatKeyBindingsPage(keyBindingContexts: keybindingmanager.KeyBindingsContexts): string {
   return contexts()
     .map( (contextName) => {
         return `<h2>${contextHeading(contextName)}</h2>` +  formatKeyBindingsMapping(keyBindingContexts.context(contextName));
       } ).join("");
 }
 
-function formatKeyBindingsMapping(context: keybindingmanager.KeyBindingMapping): string {
+function formatKeyBindingsMapping(context: keybindingmanager.KeyBindingsMapping): string {
   const bindings = _.clone(context.keyBindings);
   bindings.sort( (a,b): number => {
     const nameA = commandName(a.command);

@@ -312,7 +312,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
       const dataContext = kbd.getAttribute("data-context");
       const dataCommand = kbd.getAttribute("data-command");
       if (dataContext !== null && dataCommand !== null) {
-        const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(dataContext);
+        const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(dataContext);
         if (keyBindings != null) {
           const shortcut = keyBindings.mapCommandToKeyBinding(dataCommand);
           if (shortcut !== null) {

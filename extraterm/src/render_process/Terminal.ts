@@ -1328,11 +1328,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
     if (this._terminalViewer === null || this._keyBindingManager === null ||
-        this._keyBindingManager.getKeyBindingContexts() === null) {
+        this._keyBindingManager.getKeyBindingsContexts() === null) {
       return;
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
@@ -1375,7 +1375,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     commandList.push( { id: COMMAND_CLEAR_SCROLLBACK, group: PALETTE_GROUP, iconRight: "eraser", label: "Clear Scrollback", commandExecutor: this } );
     commandList.push( { id: COMMAND_RESET_VT, group: PALETTE_GROUP, iconRight: "refresh", label: "Reset VT", commandExecutor: this } );
 
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {

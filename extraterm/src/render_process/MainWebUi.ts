@@ -1012,11 +1012,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(tabContentElement: Element, ev: KeyboardEvent): void {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingContexts() === null) {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
       return;
     }
     
-    const bindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
+    const bindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_MAIN_UI);
     if (bindings === null) {
       return;
     }
@@ -1087,7 +1087,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _insertCommandKeyBindings(commandList: CommandEntry[]): void {
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_MAIN_UI);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_MAIN_UI);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)

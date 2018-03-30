@@ -403,10 +403,10 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManag
   }
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null &&
+    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null &&
         this._mode === ViewerElementTypes.Mode.CURSOR) {
           
-      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
+      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
         
         const command = keyBindings.mapEventToCommand(ev);
