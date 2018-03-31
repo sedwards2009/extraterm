@@ -104,7 +104,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     metadata.title = this._title;
 
     const viewerElement = this.getViewerElement();
-    metadata.icon = viewerElement === null ? "desktop" : viewerElement.getMetadata().icon;
+    metadata.icon = viewerElement === null ? "fa fa-desktop" : viewerElement.getMetadata().icon;
     return metadata;
   }
 

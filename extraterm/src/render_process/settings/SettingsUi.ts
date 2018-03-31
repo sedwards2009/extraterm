@@ -30,6 +30,7 @@ interface MenuItem {
   title: string;
 }
 
+
 @Component(
   {
     template: `
@@ -40,7 +41,7 @@ interface MenuItem {
         :key="item.id"
         v-bind:class="{active: item.id == selectedTab}"
         v-on:click="selectMenuTab(item.id)">
-        <i v-bind:class="{fa: true, ['fa-' + item.icon]: true}"></i>&nbsp;&nbsp;{{ item.title }}
+        <i v-bind:class="formatIcon(item.icon)"></i>&nbsp;&nbsp;{{ item.title }}
       </li>
     </ul>
   </div>
@@ -80,10 +81,10 @@ export class SettingsUi extends Vue {
     this.selectedTab = "general";
     this.themes = [];
     this.menuItems = [
-      { id: "general", icon: "sliders", title: "General"},
-      { id: "appearance", icon: "paint-brush", title: "Appearance"},
-      { id: "keybindings", icon: "keyboard-o", title: "Key Bindings"},
-      { id: "frames", icon: "window-maximize", title: "Frames"}
+      { id: "general", icon: "fa-sliders-h", title: "General"},
+      { id: "appearance", icon: "fa-paint-brush", title: "Appearance"},
+      { id: "keybindings", icon: "far fa-keyboard", title: "Key Bindings"},
+      { id: "frames", icon: "far fa-window-maximize", title: "Frames"}
     ];
   }
 
@@ -108,4 +109,11 @@ export class SettingsUi extends Vue {
   getKeyBindingManager(): KeyBindingsManager {
     return this.__keyBindingManager;
   }
-}
+  
+  formatIcon(icon: string): object {
+    return icon.split(" ").reduce( (accu, clazz) => {
+      accu[clazz] = true;
+      return accu;
+    }, {});
+  }
+  }

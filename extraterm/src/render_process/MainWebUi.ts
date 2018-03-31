@@ -355,9 +355,9 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
       const commandList: CommandEntry[] = [
-        { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", commandExecutor: null },
+        { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "fa fa-plus", label: "New Terminal", commandExecutor: null },
         { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", commandExecutor: null },        
-        { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", commandExecutor: null },
+        { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "fa fa-columns", label: "Vertical Split", commandExecutor: null },
         { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor: null }
       ];
       this._insertCommandKeyBindings(commandList);
@@ -1042,8 +1042,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const commandExecutor = this;
     const commandArguments = {tabElement: tabContentElement};
     const commandList: CommandEntry[] = [
-      { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "plus", label: "New Terminal", commandExecutor, commandArguments},
-      { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "times", label: "Close Tab", commandExecutor, commandArguments },
+      { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "fa fa-plus", label: "New Terminal", commandExecutor, commandArguments},
+      { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "fa fa-times", label: "Close Tab", commandExecutor, commandArguments },
       { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", commandExecutor, commandArguments },
       { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", commandExecutor, commandArguments },
 
@@ -1053,7 +1053,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       { id: COMMAND_SELECT_PANE_BELOW, group: PALETTE_GROUP, label: " Select pane below", commandExecutor, commandArguments },
 
       { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", commandExecutor, commandArguments },
-      { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "columns", label: "Vertical Split", commandExecutor, commandArguments },
+      { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "fa fa-columns", label: "Vertical Split", commandExecutor, commandArguments },
 
       { id: COMMAND_MOVE_TAB_LEFT, group: PALETTE_GROUP, label: "Move Tab Left", commandExecutor, commandArguments },
       { id: COMMAND_MOVE_TAB_RIGHT, group: PALETTE_GROUP, label: "Move Tab Right", commandExecutor, commandArguments },

@@ -179,7 +179,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = this._commandLine !== null ? this._commandLine : "Terminal Command";
-    metadata.icon = this._returnCode === '0' ? 'check' : 'times';
+    metadata.icon = this._returnCode === '0' ? 'fa-check' : 'fa-times';
 
     switch(this._returnCode) {
       case null:
@@ -1157,8 +1157,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     let commandList: CommandEntry[] = [
-      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", commandExecutor: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this }
+      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection", commandExecutor: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
     if (this._mode === ViewerElementTypes.Mode.CURSOR) {

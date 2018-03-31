@@ -140,8 +140,8 @@ export function commandDescriptions(cm: CodeMirror.Editor): CommandDescription[]
     { command: COMMAND_ESCAPE_SHELL_CHARS, iconRight: "", label: "Escape Shell Characters" },
     { command: COMMAND_UNESCAPE_SHELL_CHARS, iconRight: "", label: "Unescape Shell Characters" },
     { command: COMMAND_VERTICAL_MULTICURSOR, iconRight: "", label: "Selection to Multiple Cursors" },
-    { command: COMMAND_TOGGLE_LINE_NUMBERS, iconLeft: cm.getOption("lineNumbers") ? "check-square-o" : "square-o",
-      iconRight: "list-ol", label: "Line Numbers" },
+    { command: COMMAND_TOGGLE_LINE_NUMBERS, iconLeft: cm.getOption("lineNumbers") ? "far fa-check-square" : "far fa-square",
+      iconRight: "fa fa-list-ol", label: "Line Numbers" },
   ];
   return descriptions;
 }

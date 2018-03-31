@@ -99,7 +99,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManag
       metadata.title = "Image";
     }
 
-    metadata.icon = "file-image-o";
+    metadata.icon = "fa fa-file-image";
     return metadata;
   }
 

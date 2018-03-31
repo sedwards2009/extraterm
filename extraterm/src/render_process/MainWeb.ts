@@ -225,9 +225,9 @@ function startUpMainWebUi(): void {
 function startUpMainMenu(): void {
   const contextMenuFragment = DomUtils.htmlToFragment(`
     <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
-        <${MenuItem.TAG_NAME} icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
-        <${CheckboxMenuItem.TAG_NAME} icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
-        <${MenuItem.TAG_NAME} icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="fa fa-wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
+        <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="far fa-lightbulb" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
   `);
   window.document.body.appendChild(contextMenuFragment)
@@ -616,10 +616,10 @@ function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry
   const devToolsOpen = developerToolMenu.checked;
   const commandExecutor: CommandExecutor = {executeCommand};
   const commandList: CommandEntry[] = [
-    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", commandExecutor },
-    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", commandExecutor },
-    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", commandExecutor },
-    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", commandExecutor },
+    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "fa fa-wrench", label: "Settings", commandExecutor },
+    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "far fa-check-square" : "far fa-square", iconRight: "fa fa-cogs", label: "Developer Tools", commandExecutor },
+    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "fa fa-sync", label: "Reload Theme", commandExecutor },
+    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "far fa-lightbulb", label: "About", commandExecutor },
   ];
   return commandList;
 }

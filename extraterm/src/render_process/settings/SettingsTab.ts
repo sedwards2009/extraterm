@@ -49,7 +49,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Settings";
-    metadata.icon = "wrench";
+    metadata.icon = "fa fa-wrench";
     return metadata;
   }
 

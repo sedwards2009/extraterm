@@ -30,7 +30,7 @@ export class CheckboxMenuItem extends MenuItem {
   @Observe("checked")
   private _updateChecked(): void {
     const shadow = DomUtils.getShadowRoot(this);
-    const checkedhtml = "<i class='fa fa-fw fa-" + (this.checked ? "check-" : "") + "square-o'></i>";
+    const checkedhtml = "<i class='fa-fw " + (this.checked ? "far fa-check-square" : "far fa-square") + " '></i>";
     (<HTMLDivElement>shadow.querySelector("#" + MenuItem.ID_ICON1)).innerHTML = checkedhtml; 
   }
 

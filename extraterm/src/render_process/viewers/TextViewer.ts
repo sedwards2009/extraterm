@@ -163,7 +163,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       metadata.title = "Text";
     }
 
-    metadata.icon = "file-text-o";
+    metadata.icon = "fa fa-file-text";
     return metadata;
   }
 
@@ -879,8 +879,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     let commandList: CommandEntry[] = [
-      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", commandExecutor: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this }
+      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection", commandExecutor: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
     if (this._mode ===ViewerElementTypes.Mode.CURSOR) {

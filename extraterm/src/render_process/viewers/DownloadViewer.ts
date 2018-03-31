@@ -44,7 +44,7 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Download";
-    metadata.icon = "download";
+    metadata.icon = "fa fa-download";
     if (this._bulkFileHandle != null) {
       const fileMetadata = this._bulkFileHandle.getMetadata()
       const filename = fileMetadata["filename"] != null ? fileMetadata["filename"] : "(unknown)";
@@ -53,7 +53,7 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
         case BulkFileState.DOWNLOADING:
           metadata.title = `Downloading ${filename}`;
           metadata.posture = ViewerPosture.NEUTRAL;
-          metadata.icon = "download";
+          metadata.icon = "fa fa-download";
           metadata.moveable = false;
           metadata.deleteable = false;
           break;
@@ -61,13 +61,13 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
         case BulkFileState.COMPLETED:
           metadata.title = `Completed downloading ${filename}`;
           metadata.posture = ViewerPosture.SUCCESS;
-          metadata.icon = "check";
+          metadata.icon = "fa fa-check";
           break;
 
         case BulkFileState.FAILED:
           metadata.title = `Failed to download ${filename}`;
           metadata.posture = ViewerPosture.FAILURE;
-          metadata.icon = "times";
+          metadata.icon = "fa fa-times";
           break;
       }
     }

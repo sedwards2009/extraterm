@@ -17,7 +17,7 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
   {
     template: `
 <div>
-  <h2><i class="fa fa-keyboard-o"></i>&nbsp;&nbsp;Key Bindings</h2>
+  <h2><i class="far fa-keyboard"></i>&nbsp;&nbsp;Key Bindings</h2>
 
   <div className=''>
     <div class="form-horizontal">
