@@ -22,7 +22,7 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
   <div className=''>
     <div class="form-horizontal">
       <div class="form-group">
-        <label for="theme-terminal" class="col-sm-2 control-label">Key bindings style:</label>
+        <label for="theme-terminal" class="col-sm-3 control-label">Key bindings style:</label>
         <div class="col-sm-3">
           <select class="form-control" id="keybindings-style" v-model="selectedKeyBindings">
             <option v-for="option in keyBindingsFiles" v-bind:value="option.filename">

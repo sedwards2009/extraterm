@@ -21,7 +21,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     
   <div class="form-horizontal">
     <div class="form-group">
-      <label for="tips" class="col-sm-3 control-label">Show Tips:</label>
+      <label for="tips" class="col-sm-4 control-label">Show Tips:</label>
       <div class="input-group col-sm-4">
         <select class="form-control" id="tips" v-model="showTips">
           <option v-for="option in showTipsOptions" v-bind:value="option.id">
@@ -32,7 +32,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     </div>
     
     <div class="form-group">
-      <label for="${ID_SCROLLBACK}" class="col-sm-3 control-label">Maximum Scrollback Lines:</label>
+      <label for="${ID_SCROLLBACK}" class="col-sm-4 control-label">Maximum Scrollback Lines:</label>
       <div class="input-group col-sm-2">
         <input id="${ID_SCROLLBACK}" type="number" class="form-control" v-model.number="maxScrollbackLines" min="1"
           max="10000000" debounce="500" />
@@ -41,7 +41,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     </div>
 
     <div class="form-group">
-      <label for="${ID_SCROLLBACK_FRAMES}" class="col-sm-3 control-label">Maximum Scrollback Frames:</label>
+      <label for="${ID_SCROLLBACK_FRAMES}" class="col-sm-4 control-label">Maximum Scrollback Frames:</label>
       <div class="input-group col-sm-2">
         <input id="${ID_SCROLLBACK_FRAMES}" type="number" class="form-control" v-model.number="maxScrollbackFrames" min="1"
           max="1000" debounce="500" />
