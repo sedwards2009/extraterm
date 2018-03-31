@@ -127,7 +127,7 @@ interface UiScalePercentOption {
 
     <div class="form-group">
       <label for="${ID_UI_ZOOM}" class="col-sm-3 control-label">Interface Zoom:</label>
-      <div class="input-group col-sm-1">
+      <div class="input-group col-sm-2">
         <select class="form-control" id="${ID_UI_ZOOM}" v-model="uiScalePercent">
           <option v-for="option in uiScalePercentOptions" v-bind:value="option.id">
             {{ option.name }}
