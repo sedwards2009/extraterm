@@ -684,7 +684,7 @@ function setupConfig(): void {
   if ( ! isThemeType(themeManager.getTheme(config.themeSyntax), 'syntax')) {
     config.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
   }
-  if ( ! isThemeType(themeManager.getTheme(config.themeGUI), 'gui')) {
+  if (config.themeGUI === "default" || ! isThemeType(themeManager.getTheme(config.themeGUI), 'gui')) {
     config.themeGUI = "atomic-dark-ui";
   }
 

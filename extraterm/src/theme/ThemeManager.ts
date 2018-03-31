@@ -135,8 +135,11 @@ export class ThemeManager {
   
   getAllThemes(): ThemeInfo[] {
     const result: ThemeInfo[] = [];
-    this._themes.forEach( (value) => {
-      result.push(value);
+    this._themes.forEach( themeInfo => {
+      if (themeInfo.type.indexOf("gui") !== -1 && themeInfo.id === "default") {
+        return;
+      }
+      result.push(themeInfo);
     });
     return result;
   }
