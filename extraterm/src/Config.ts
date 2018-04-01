@@ -27,6 +27,8 @@ export interface Config {
   tipTimestamp?: number;
   showTitleBar?: boolean;
 
+  windowConfiguration?: WindowConfiguration;
+
   sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
   expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.
   systemConfig: SystemConfig;
@@ -43,6 +45,17 @@ export interface CommandLineAction {
 export interface KeyBindingInfo {
   name: string;
   filename: string;
+}
+
+export interface WindowConfiguration {
+  [index: number]: SingleWindowConfiguration;
+}
+
+export interface SingleWindowConfiguration {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface SystemConfig {

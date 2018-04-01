@@ -203,6 +203,16 @@ function openWindow(): void {
     title: "Extraterm",
     backgroundColor: themeInfo.loadingBackgroundColor
   };
+
+  // Restore the window position and size from the last session.
+  const dimensions = getWindowDimensionsFromConfig(0);
+  if (dimensions != null) {
+    options.x = dimensions.x;
+    options.y = dimensions.y;
+    options.width = dimensions.width;
+    options.height = dimensions.height;
+  }
+
   if (process.platform === "win32") {
     options.icon = path.join(__dirname, ICO_ICON_PATH);
   } else if (process.platform === "linux") {
@@ -220,11 +230,18 @@ function openWindow(): void {
 
   // Emitted when the window is closed.
   const mainWindowId = mainWindow.id;
-  mainWindow.on('closed', function() {
+  mainWindow.on("closed", function() {
     cleanUpPtyWindow(mainWindowId);
     mainWindow = null;
   });
   
+  mainWindow.on("resize", () => {
+    saveWindowDimensions(0, mainWindow.getBounds());
+  });
+  mainWindow.on("move", () => {
+    saveWindowDimensions(0, mainWindow.getBounds());
+  });
+
   const params = "?loadingBackgroundColor=" + themeInfo.loadingBackgroundColor.replace("#", "") +
     "&loadingForegroundColor=" + themeInfo.loadingForegroundColor.replace("#", "");
 
@@ -239,7 +256,38 @@ function openWindow(): void {
     sendDevToolStatus(mainWindow, true);
   });
 }
-  
+
+function saveWindowDimensions(windowId: number, rect: Electron.Rectangle): void {
+  const config = getConfig();
+
+  if (config.windowConfiguration == null) {
+    config.windowConfiguration = {};
+  }
+  config.windowConfiguration[windowId] = {
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height
+  };
+  setConfig(config);
+}
+
+function getWindowDimensionsFromConfig(windowId: number): Electron.Rectangle {
+  if (config.windowConfiguration == null) {
+    return null;
+  }
+  const singleWindowConfig = config.windowConfiguration[windowId];
+  if (singleWindowConfig == null) {
+    return null;
+  }
+  return {
+    x: singleWindowConfig.x,
+    y: singleWindowConfig.y,
+    width: singleWindowConfig.width,
+    height: singleWindowConfig.height
+  };
+}
+
 function setupLogging(): void {
   const logFilePath = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
 
