@@ -35,7 +35,7 @@ export class AboutTab extends ViewerElement {
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "About";
-    metadata.icon = "lightbulb-o";
+    metadata.icon = "far fa-lightbulb";
     return metadata;
   }
 

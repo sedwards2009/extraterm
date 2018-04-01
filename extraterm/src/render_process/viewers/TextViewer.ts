@@ -21,7 +21,7 @@ import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as GeneralEvents from '../GeneralEvents';
-import {KeyBindingManager, AcceptsKeyBindingManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingManager';
+import {KeyBindingsManager, AcceptsKeyBindingManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -114,7 +114,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
   
   private _log: Logger;
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keyBindingManager: KeyBindingsManager = null;
   private _title = "";
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
@@ -163,7 +163,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       metadata.title = "Text";
     }
 
-    metadata.icon = "file-text-o";
+    metadata.icon = "fa fa-file-text";
     return metadata;
   }
 
@@ -335,7 +335,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     super.dispose();
   }
 
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = newKeyBindingManager;
   }
   
@@ -767,11 +767,11 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   //                                                        
   // ----------------------------------------------------------------------
   private _codeMirrorKeyMap(): any {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingContexts() === null) {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
       return {};  // empty keymap
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings === null) {
       return {};
     }
@@ -823,10 +823,10 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
-    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null  &&
+    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null  &&
         this._mode === ViewerElementTypes.Mode.CURSOR) {
           
-      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
+      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
         if (this._executeCommand(command)) {
@@ -879,8 +879,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     let commandList: CommandEntry[] = [
-      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", commandExecutor: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this }
+      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection", commandExecutor: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
     if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
@@ -896,7 +896,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       commandList = [...commandList, ...cmCommandList];
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)

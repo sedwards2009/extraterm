@@ -34,7 +34,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   getMetadata(): ViewerMetadata {
     return {
       title: "ViewerElement",
-      icon: "desktop",
+      icon: "fa fa-desktop",
       posture: ViewerPosture.NEUTRAL,
       moveable: true,
       deleteable: true,

@@ -11,13 +11,13 @@ import * as path from 'path';
 import * as he from 'he';
 import * as SourceDir from '../../SourceDir';
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata} from 'extraterm-extension-api';
+import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
 
 import * as config from '../../Config';
 type ConfigManager = config.ConfigDistributor;
 
 import * as keybindingmanager from '../keybindings/KeyBindingManager';
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
+type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -70,7 +70,7 @@ function loadTipFile(): string[] {
 const tipData = loadTipFile();
 
 @WebComponent({tag: "et-tip-viewer"})
-export class TipViewer extends ViewerElement implements config.AcceptsConfigDistributor, keybindingmanager.AcceptsKeyBindingManager {
+export class TipViewer extends ViewerElement implements config.AcceptsConfigDistributor, keybindingmanager.AcceptsKeyBindingManager, Disposable {
 
   static TAG_NAME = "ET-TIP-VIEWER";
   
@@ -91,16 +91,25 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
   private _keyBindingManager: KeyBindingManager = null;
   private _height = 0;
   private _tipIndex = 0;
+  private _configManagerDisposable: Disposable = null;
+  private _keyBindingManagerDisposable: Disposable = null;
 
   constructor() {
     super();
     this._log = getLogger(TipViewer.TAG_NAME, this);
   }
 
+  dispose(): void {
+    if (this._keyBindingManagerDisposable != null) {
+      this._keyBindingManagerDisposable.dispose();
+      this._keyBindingManagerDisposable = null;
+    }
+  }
+
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Tip";
-    metadata.icon = "lightbulb-o";
+    metadata.icon = "far fa-lightbulb";
     return metadata;
   }
   
@@ -160,8 +169,9 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
   
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this._configManager !== null) {
-      this._configManager.unregisterChangeListener(this);
+    if (this._configManagerDisposable !== null) {
+      this._configManagerDisposable.dispose();
+      this._configManagerDisposable = null;
     }
   }
   
@@ -170,24 +180,26 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
   }
 
   setConfigDistributor(newConfigManager: ConfigManager): void {
-    if (this._configManager !== null) {
-      this._configManager.unregisterChangeListener(this);
+    if (this._configManagerDisposable !== null) {
+      this._configManagerDisposable.dispose();
+      this._configManagerDisposable = null;
     }
     
     this._configManager = newConfigManager;
     if (this._configManager !== null) {
-      this._configManager.registerChangeListener(this, this._configChanged.bind(this));
+      this._configManagerDisposable = this._configManager.onChange(this._configChanged.bind(this));
     }
   }
 
   setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
-    if (this._keyBindingManager !== null) {
-      this._keyBindingManager.unregisterChangeListener(this);
+    if (this._keyBindingManagerDisposable !== null) {
+      this._keyBindingManagerDisposable.dispose();
+      this._keyBindingManagerDisposable = null;
     }
     
     this._keyBindingManager = newKeyBindingManager;
     if (this._keyBindingManager !== null) {
-      this._keyBindingManager.registerChangeListener(this, this._keyBindingChanged.bind(this));
+      this._keyBindingManagerDisposable = this._keyBindingManager.onChange(this._keyBindingChanged.bind(this));
     }
   }
   
@@ -309,7 +321,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
       const dataContext = kbd.getAttribute("data-context");
       const dataCommand = kbd.getAttribute("data-command");
       if (dataContext !== null && dataCommand !== null) {
-        const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(dataContext);
+        const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(dataContext);
         if (keyBindings != null) {
           const shortcut = keyBindings.mapCommandToKeyBinding(dataCommand);
           if (shortcut !== null) {

@@ -19,7 +19,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
-import {AcceptsKeyBindingManager, KeyBindingManager} from '../keybindings/KeyBindingManager';
+import {AcceptsKeyBindingManager, KeyBindingsManager} from '../keybindings/KeyBindingManager';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -61,7 +61,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManag
   }
   
   private _log: Logger;
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keyBindingManager: KeyBindingsManager = null;
   private _bulkFileHandle: BulkFileHandle = null;
   private _metadataEventDoLater: DebouncedDoLater = null;
   private _text = null;
@@ -99,7 +99,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManag
       metadata.title = "Image";
     }
 
-    metadata.icon = "file-image-o";
+    metadata.icon = "fa fa-file-image";
     return metadata;
   }
 
@@ -145,7 +145,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManag
     }
   }
 
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = newKeyBindingManager;
   }
 
@@ -403,10 +403,10 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManag
   }
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null &&
+    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null &&
         this._mode === ViewerElementTypes.Mode.CURSOR) {
           
-      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_SELECTION_MODE);
+      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
         
         const command = keyBindings.mapEventToCommand(ev);

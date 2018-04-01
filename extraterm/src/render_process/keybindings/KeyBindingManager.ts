@@ -3,8 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Logger, getLogger} from '../../logging/Logger';
+import { Disposable, Event } from 'extraterm-extension-api';
 import * as _ from 'lodash';
+
+import {Logger, getLogger} from '../../logging/Logger';
 import * as SetUtils from '../../utils/SetUtils';
 
 const FALLTHROUGH = "fallthrough";
@@ -91,12 +93,10 @@ function mapString(s: string): string {
  * Mapping from keyboard events to command strings, and command strings to
  * shortcut names.
  */
-export class KeyBindingMapping {
+export class KeyBindingsMapping {
   
   public keyBindings: KeyBinding[] = [];
-  
-  private _log: Logger = null;
-  
+  private _log: Logger = null;  
   private _platform: string;
   
   constructor(mappingName: string, allMappingsJson: Object, platform: string) {
@@ -112,7 +112,7 @@ export class KeyBindingMapping {
     });
   }
   
-  equals(other: KeyBindingMapping): boolean {
+  equals(other: KeyBindingsMapping): boolean {
     if (other == null) {
       return false;
     }
@@ -306,11 +306,11 @@ function formatNormalizedKeyBinding(keyBinding: KeyBinding): string {
 /**
  * Container for mapping context names ot KeyBindingMapper objects.
  */
-export class KeyBindingContexts {
+export class KeyBindingsContexts {
   
   private _log: Logger = null;
   
-  private _contexts = new Map<string, KeyBindingMapping>();
+  private _contexts = new Map<string, KeyBindingsMapping>();
   
   public contextNames = [];
   
@@ -318,14 +318,14 @@ export class KeyBindingContexts {
     this._log = getLogger("KeyBindingContexts", this);
     for (let key in obj) {
       if (key !== NAME) {
-        const mapper = new KeyBindingMapping(key, obj, platform);
+        const mapper = new KeyBindingsMapping(key, obj, platform);
         this.contextNames.push(key);
         this._contexts.set(key, mapper);
       }
     }
   }
 
-  equals(other: KeyBindingContexts): boolean {
+  equals(other: KeyBindingsContexts): boolean {
     if (other == null) {
       return false;
     }
@@ -358,7 +358,7 @@ export class KeyBindingContexts {
    * @return the `KeyBindingMapping` object for the context or `null` if the
    *         context is unknown
    */
-  context(contextName: string): KeyBindingMapping {
+  context(contextName: string): KeyBindingsMapping {
     return this._contexts.get(contextName) || null;
   }
 }
@@ -370,38 +370,29 @@ export class KeyBindingContexts {
  *            being objects mapping key binding strings to command strings
  * @return the object which maps context names to `KeyBindingMapping` objects
  */
-export function loadKeyBindingsFromObject(obj: Object, platform: string): KeyBindingContexts {
-  return new KeyBindingContexts(obj, platform);
+export function loadKeyBindingsFromObject(obj: Object, platform: string): KeyBindingsContexts {
+  return new KeyBindingsContexts(obj, platform);
 }
 
-export interface KeyBindingManager {
+export interface KeyBindingsManager {
   /**
    * Gets the KeyBindingContexts object contain within.
    *
    * @return the KeyBindingContexts object or Null if one is not available.
    */
-  getKeyBindingContexts(): KeyBindingContexts;
+  getKeyBindingsContexts(): KeyBindingsContexts;
   
-  setKeyBindingContexts(newKeyBindingContexts: KeyBindingContexts): void;
-  
+  setKeyBindingsContexts(newKeyBindingsContexts: KeyBindingsContexts): void;
+
   /**
    * Register a listener to hear when the key bindings change.
    *
-   * @param key an opaque object which is used to identify this registration.
-   * @param onChange the function to call when the config changes.
    */
-  registerChangeListener(key: any, onChange: () => void): void;
-  
-  /**
-   * Unregister a listener.
-   *
-   * @param key the same opaque object which was used during registerChangeListener().
-   */
-  unregisterChangeListener(key: any): void;
+  onChange: Event<void>;
 }
 
 export interface AcceptsKeyBindingManager {
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void;
+  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void;
 }
 
 export function isAcceptsKeyBindingManager(instance: any): instance is AcceptsKeyBindingManager {
@@ -411,7 +402,7 @@ export function isAcceptsKeyBindingManager(instance: any): instance is AcceptsKe
   return (<AcceptsKeyBindingManager> instance).setKeyBindingManager !== undefined;
 }
 
-export function injectKeyBindingManager(instance: any, keyBindingManager: KeyBindingManager): void {
+export function injectKeyBindingManager(instance: any, keyBindingManager: KeyBindingsManager): void {
   if (isAcceptsKeyBindingManager(instance)) {
     instance.setKeyBindingManager(keyBindingManager);
   }

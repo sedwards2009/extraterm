@@ -59,8 +59,12 @@ function commandPaletteFormatEntry(entry: CommandMenuItem, selected: boolean, ex
 
 function commandPaletteFormatIcon(iconName?: string): string {
   if (iconName != null && iconName.startsWith('extraicon-')) {
-    return `<span class='fa fa-fw CLASS_EXTRAICON'>&${iconName.substr('extraicon-'.length)};</span>`;
+    return `<span class='fa-fw CLASS_EXTRAICON'>&${iconName.substr('extraicon-'.length)};</span>`;
   } else {
-    return `<i class='fa fa-fw ${iconName !== undefined && iconName !== null ? "fa-" + iconName : ""}'></i>`;
+    if (iconName == null) {
+      return `<i class='fa-fw fa'>&nbsp;</i>`;
+    } else {
+      return `<i class='fa-fw ${iconName != null ? iconName : ""}'></i>`;
+    }
   }
 }

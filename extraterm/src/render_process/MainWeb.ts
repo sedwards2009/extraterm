@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable} from 'extraterm-extension-api';
+import {Disposable, Event} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as path from 'path';
@@ -18,7 +18,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
     from './CommandPaletteRequestTypes';
-import * as config from '../Config';
+import {Config, ConfigDistributor, SessionProfile, injectConfigDistributor} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
@@ -45,15 +45,12 @@ import * as ThemeConsumer from '../theme/ThemeConsumer';
 import * as Util from './gui/Util';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
+import { EventEmitter } from '../utils/EventEmitter';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
-type Config = config.Config;
-type ConfigManager = config.ConfigDistributor;
-type SessionProfile = config.SessionProfile;
-
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
-type KeyBindingContexts = keybindingmanager.KeyBindingContexts;
+type KeyBindingManager = keybindingmanager.KeyBindingsManager;
+type KeyBindingsContexts = keybindingmanager.KeyBindingsContexts;
 
 SourceMapSupport.install();
 
@@ -61,7 +58,6 @@ const PLUGINS_DIRECTORY = "plugins";
 
 const PALETTE_GROUP = "mainweb";
 const MENU_ITEM_SETTINGS = 'settings';
-const MENU_ITEM_KEY_BINDINGS = 'key_bindings';
 const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
 const MENU_ITEM_ABOUT = 'about';
 const MENU_ITEM_RELOAD_CSS = 'reload_css';
@@ -82,7 +78,7 @@ let terminalIdCounter = 0;
 let keyBindingManager: KeyBindingManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
-let configManager: ConfigManagerImpl = null;
+let configManager: ConfigDistributorImpl = null;
 let extensionManager: ExtensionManager = null;
 let commandPalette: PopDownListPicker<CommandMenuItem> = null;
 let commandPaletteDisposable: Disposable = null;
@@ -100,8 +96,8 @@ export function startUp(closeSplash: () => void): void {
   startUpWebIpc();
 
   // Get the Config working.
-  configManager = new ConfigManagerImpl();
-  keyBindingManager = new KeyBindingManagerImpl();  // depends on the config.
+  configManager = new ConfigDistributorImpl();
+  keyBindingManager = new KeyBindingsManagerImpl();  // depends on the config.
   const themePromise = WebIpc.requestConfig().then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
@@ -178,7 +174,7 @@ function loadFontFaces(): Promise<FontFace[]> {
 
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
-  config.injectConfigDistributor(mainWebUi, configManager);
+  injectConfigDistributor(mainWebUi, configManager);
   keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
   mainWebUi.setExtensionManager(extensionManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
@@ -229,10 +225,9 @@ function startUpMainWebUi(): void {
 function startUpMainMenu(): void {
   const contextMenuFragment = DomUtils.htmlToFragment(`
     <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
-        <${MenuItem.TAG_NAME} icon="wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
-        <${MenuItem.TAG_NAME} icon="keyboard-o" name="${MENU_ITEM_KEY_BINDINGS}">Key Bindings</${MenuItem.TAG_NAME}>
-        <${CheckboxMenuItem.TAG_NAME} icon="cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
-        <${MenuItem.TAG_NAME} icon="lightbulb-o" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="fa fa-wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
+        <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="far fa-lightbulb" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
   `);
   window.document.body.appendChild(contextMenuFragment)
@@ -318,10 +313,6 @@ function executeCommand(commandId: string, options?: object): boolean {
       mainWebUi.openSettingsTab();
       break;
       
-    case MENU_ITEM_KEY_BINDINGS:
-      mainWebUi.openKeyBindingsTab();
-      break;
-      
     case MENU_ITEM_DEVELOPER_TOOLS:
       const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
       developerToolMenu.checked = ! developerToolMenu.checked;
@@ -368,12 +359,6 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
         label: 'Preferences...',
         click(item, focusedWindow) {
           mainWebUi.openSettingsTab();
-        },
-      },
-      {
-        label: 'Key Bindings...',
-        click(item, focusedWindow) {
-          mainWebUi.openKeyBindingsTab();
         },
       },
       {
@@ -446,8 +431,8 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
   const keyBindingContexts = keybindingmanager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts,
     process.platform);
 
-  if (! keyBindingContexts.equals(keyBindingManager.getKeyBindingContexts())) {
-    keyBindingManager.setKeyBindingContexts(keyBindingContexts);
+  if (! keyBindingContexts.equals(keyBindingManager.getKeyBindingsContexts())) {
+    keyBindingManager.setKeyBindingsContexts(keyBindingContexts);
   }
 
   if (oldConfig === null ||
@@ -609,7 +594,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
       };
     });
     
-    const shortcut = keyBindingManager.getKeyBindingContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
+    const shortcut = keyBindingManager.getKeyBindingsContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
     commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
     commandPalette.setEntries(paletteEntries);
     
@@ -631,11 +616,10 @@ function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry
   const devToolsOpen = developerToolMenu.checked;
   const commandExecutor: CommandExecutor = {executeCommand};
   const commandList: CommandEntry[] = [
-    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "wrench", label: "Settings", commandExecutor },
-    { id: MENU_ITEM_KEY_BINDINGS, group: PALETTE_GROUP, iconRight: "keyboard-o", label: "Key Bindings", commandExecutor },
-    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "check-square-o" : "square-o", iconRight: "cogs", label: "Developer Tools", commandExecutor },
-    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "refresh", label: "Reload Theme", commandExecutor },
-    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "lightbulb-o", label: "About", commandExecutor },
+    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "fa fa-wrench", label: "Settings", commandExecutor },
+    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "far fa-check-square" : "far fa-square", iconRight: "fa fa-cogs", label: "Developer Tools", commandExecutor },
+    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "fa fa-sync", label: "Reload Theme", commandExecutor },
+    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "far fa-lightbulb", label: "About", commandExecutor },
   ];
   return commandList;
 }
@@ -660,20 +644,15 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
   }
 }
 
-class ConfigManagerImpl implements ConfigManager {
-  
+class ConfigDistributorImpl implements ConfigDistributor {
   private _config: Config = null;
+  private _onChangeEventEmitter = new EventEmitter<void>();
+  onChange: Event<void>;
   
-  private _listenerList: {key: any; onChange: ()=> void; }[] = [];  // Immutable list
-  
-  registerChangeListener(key: any, onChange: () => void): void {
-    this._listenerList = [...this._listenerList, {key, onChange}];
+  constructor() {
+    this.onChange = this._onChangeEventEmitter.event;
   }
-  
-  unregisterChangeListener(key: any): void {
-    this._listenerList = this._listenerList.filter( (tup) => tup.key !== key);
-  }
-  
+
   getConfig(): Config {
     return this._config;
   }
@@ -687,49 +666,26 @@ class ConfigManagerImpl implements ConfigManager {
    */
   setNewConfig(newConfig: Config): void {
     this._config = newConfig;
-    
-    const listenerList = this._listenerList;
-    for (const tup of listenerList) {
-      tup.onChange();
-    }
+    this._onChangeEventEmitter.fire(undefined);
   }
 }
 
-class KeyBindingManagerImpl {
+class KeyBindingsManagerImpl implements KeyBindingManager {
+  private _keyBindingsContexts: KeyBindingsContexts = null;
+
+  private _onChangeEventEmitter = new EventEmitter<void>();
+  onChange: Event<void>;
   
-  private _keyBindingContexts: KeyBindingContexts = null;
-  
-  private _listenerList: {key: any; onChange: ()=> void; }[] = [];  // Immutable list
-  
-  getKeyBindingContexts(): KeyBindingContexts {
-    return this._keyBindingContexts;
+  constructor() {
+    this.onChange = this._onChangeEventEmitter.event;
+  }
+
+  getKeyBindingsContexts(): KeyBindingsContexts {
+    return this._keyBindingsContexts;
   }
   
-  setKeyBindingContexts(newKeyBindingContexts: KeyBindingContexts): void {
-    this._keyBindingContexts = newKeyBindingContexts;
-    
-    const listenerList = this._listenerList;
-    for (const tup of listenerList) {
-      tup.onChange();
-    }
-  }
-  
-  /**
-   * Register a listener to hear when the key bindings change.
-   *
-   * @param key an opaque object which is used to identify this registration.
-   * @param onChange the function to call when the config changes.
-   */
-  registerChangeListener(key: any, onChange: () => void): void {
-    this._listenerList = [...this._listenerList, {key, onChange}];
-  }
-  
-  /**
-   * Unregister a listener.
-   *
-   * @param key the same opaque object which was used during registerChangeListener().
-   */
-  unregisterChangeListener(key: any): void {
-    this._listenerList = this._listenerList.filter( (tup) => tup.key !== key);
+  setKeyBindingsContexts(newKeyBindingContexts: KeyBindingsContexts): void {
+    this._keyBindingsContexts = newKeyBindingContexts;
+    this._onChangeEventEmitter.fire(undefined);
   }
 }

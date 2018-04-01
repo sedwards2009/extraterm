@@ -16,7 +16,7 @@ import * as ThemeTypes from '../../theme/Theme';
 
 
 @WebComponent({tag: "et-download-viewer"})
-export class DownloadViewer extends SimpleViewerElement {
+export class DownloadViewer extends SimpleViewerElement implements Disposable {
 
   static TAG_NAME = "et-download-viewer";
 
@@ -44,7 +44,7 @@ export class DownloadViewer extends SimpleViewerElement {
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Download";
-    metadata.icon = "download";
+    metadata.icon = "fa fa-download";
     if (this._bulkFileHandle != null) {
       const fileMetadata = this._bulkFileHandle.getMetadata()
       const filename = fileMetadata["filename"] != null ? fileMetadata["filename"] : "(unknown)";
@@ -53,7 +53,7 @@ export class DownloadViewer extends SimpleViewerElement {
         case BulkFileState.DOWNLOADING:
           metadata.title = `Downloading ${filename}`;
           metadata.posture = ViewerPosture.NEUTRAL;
-          metadata.icon = "download";
+          metadata.icon = "fa fa-download";
           metadata.moveable = false;
           metadata.deleteable = false;
           break;
@@ -61,13 +61,13 @@ export class DownloadViewer extends SimpleViewerElement {
         case BulkFileState.COMPLETED:
           metadata.title = `Completed downloading ${filename}`;
           metadata.posture = ViewerPosture.SUCCESS;
-          metadata.icon = "check";
+          metadata.icon = "fa fa-check";
           break;
 
         case BulkFileState.FAILED:
           metadata.title = `Failed to download ${filename}`;
           metadata.posture = ViewerPosture.FAILURE;
-          metadata.icon = "times";
+          metadata.icon = "fa fa-times";
           break;
       }
     }
@@ -118,7 +118,7 @@ export class DownloadViewer extends SimpleViewerElement {
     }
   }
 
-  private _releaseBulkFileHandle(): void {    
+  private _releaseBulkFileHandle(): void {
     if (this._bulkFileHandle !== null) {
       this._onAvailableSizeChangeDisposable.dispose();
       this._onStateChangeDisposable.dispose();

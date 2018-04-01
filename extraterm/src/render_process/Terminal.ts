@@ -34,7 +34,7 @@ import {TextViewer} from './viewers/TextViewer';
 import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
-import {KeyBindingManager, injectKeyBindingManager, AcceptsKeyBindingManager} from './keybindings/KeyBindingManager';
+import {KeyBindingsManager, injectKeyBindingManager, AcceptsKeyBindingManager} from './keybindings/KeyBindingManager';
 import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
 import {Logger, getLogger} from '../logging/Logger';
@@ -187,7 +187,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _selectionPreviousLineCount: number;
   
   private _configManager: ConfigDistributor = null;
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keyBindingManager: KeyBindingsManager = null;
   private _extensionManager: ExtensionManager = null;
 
   private _title = "New Tab";
@@ -421,7 +421,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._configManager = configManager;
   }
   
-  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+  setKeyBindingManager(keyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
   
@@ -1328,11 +1328,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
     if (this._terminalViewer === null || this._keyBindingManager === null ||
-        this._keyBindingManager.getKeyBindingContexts() === null) {
+        this._keyBindingManager.getKeyBindingsContexts() === null) {
       return;
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
@@ -1350,32 +1350,32 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   getCommandPaletteEntries(commandableStack): CommandEntry[] {
     const commandList: CommandEntry[] = [];
     if (this._mode === Mode.DEFAULT) {
-      commandList.push( { id: COMMAND_ENTER_CURSOR_MODE, group: PALETTE_GROUP, iconRight: "i-cursor", label: "Enter cursor mode", commandExecutor: this } );
+      commandList.push( { id: COMMAND_ENTER_CURSOR_MODE, group: PALETTE_GROUP, iconRight: "fa fa-i-cursor", label: "Enter cursor mode", commandExecutor: this } );
     } else {
       commandList.push( { id: COMMAND_ENTER_NORMAL_MODE, group: PALETTE_GROUP, label: "Enter normal mode", commandExecutor: this } );
     }
-    commandList.push( { id: COMMAND_SCROLL_PAGE_UP, group: PALETTE_GROUP, iconRight: "angle-double-up", label: "Scroll Page Up", commandExecutor: this } );
-    commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, group: PALETTE_GROUP, iconRight: "angle-double-down", label: "Scroll Page Down", commandExecutor: this } );
+    commandList.push( { id: COMMAND_SCROLL_PAGE_UP, group: PALETTE_GROUP, iconRight: "fa fa-angle-double-up", label: "Scroll Page Up", commandExecutor: this } );
+    commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, group: PALETTE_GROUP, iconRight: "fa fa-angle-double-down", label: "Scroll Page Down", commandExecutor: this } );
 
     commandList.push( { id: COMMAND_GO_TO_PREVIOUS_FRAME, group: PALETTE_GROUP, label: "Go to Previous Frame", commandExecutor: this } );
     commandList.push( { id: COMMAND_GO_TO_NEXT_FRAME, group: PALETTE_GROUP, label: "Go to Next Frame", commandExecutor: this } );
     
-    commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "copy", label: "Copy to Clipboard", commandExecutor: this } );
+    commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "far fa-copy", label: "Copy to Clipboard", commandExecutor: this } );
     if (this._mode === Mode.CURSOR) {
-      commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "clipboard", label: "Paste from Clipboard", commandExecutor: this } );
+      commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "fa fa-clipboard", label: "Paste from Clipboard", commandExecutor: this } );
     }
-    commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "external-link", label: "Open Last Frame", commandExecutor: this } );
-    commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "times-circle", label: "Delete Last Frame", commandExecutor: this } );
+    commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "fa fa-external-link-alt", label: "Open Last Frame", commandExecutor: this } );
+    commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "fa fa-times-circle", label: "Delete Last Frame", commandExecutor: this } );
 
     commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", commandExecutor: this } );
     commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", commandExecutor: this } );
     commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", commandExecutor: this } );
 
 
-    commandList.push( { id: COMMAND_CLEAR_SCROLLBACK, group: PALETTE_GROUP, iconRight: "eraser", label: "Clear Scrollback", commandExecutor: this } );
-    commandList.push( { id: COMMAND_RESET_VT, group: PALETTE_GROUP, iconRight: "refresh", label: "Reset VT", commandExecutor: this } );
+    commandList.push( { id: COMMAND_CLEAR_SCROLLBACK, group: PALETTE_GROUP, iconRight: "fa fa-eraser", label: "Clear Scrollback", commandExecutor: this } );
+    commandList.push( { id: COMMAND_RESET_VT, group: PALETTE_GROUP, iconRight: "fa fa-sync", label: "Reset VT", commandExecutor: this } );
 
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(this._mode === Mode.DEFAULT
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
@@ -1728,7 +1728,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const defaultMetadata: ViewerMetadata = {
         title: cleancommand,
         posture: ViewerPosture.RUNNING,
-        icon: "cog",
+        icon: "fa fa-cog",
         moveable: false,
         deleteable: false,
         toolTip: null

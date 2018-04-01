@@ -15,7 +15,7 @@ import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
-import {AcceptsKeyBindingManager, KeyBindingManager} from './keybindings/KeyBindingManager';
+import {AcceptsKeyBindingManager, KeyBindingsManager} from './keybindings/KeyBindingManager';
 import {ResizeCanary} from './ResizeCanary';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ScrollBar} from'./gui/ScrollBar';
@@ -79,7 +79,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   private _title = "New Tab";
   private _tag: string = null;
 
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keyBindingManager: KeyBindingsManager = null;
 
   private _mainStyleLoaded = false;
   private _themeStyleLoaded = false;
@@ -104,7 +104,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     metadata.title = this._title;
 
     const viewerElement = this.getViewerElement();
-    metadata.icon = viewerElement === null ? "desktop" : viewerElement.getMetadata().icon;
+    metadata.icon = viewerElement === null ? "fa fa-desktop" : viewerElement.getMetadata().icon;
     return metadata;
   }
 
@@ -268,7 +268,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     return ViewerElementTypes.Mode.CURSOR;
   }
   
-  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+  setKeyBindingManager(keyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
 
@@ -494,11 +494,11 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingContexts() === null) {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
       return;
     }
 
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_VIEWER_TAB);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
       ev.stopPropagation();
@@ -513,7 +513,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", commandExecutor: this } );
     commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", commandExecutor: this } );
 
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_VIEWER_TAB);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)

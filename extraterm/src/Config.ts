@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as os from 'os';
+import { Disposable, Event } from 'extraterm-extension-api';
 
 export type ShowTipsStrEnum = 'always' | 'daily' | 'never';
 
@@ -26,6 +27,8 @@ export interface Config {
   tipTimestamp?: number;
   showTitleBar?: boolean;
 
+  windowConfiguration?: WindowConfiguration;
+
   sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
   expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.
   systemConfig: SystemConfig;
@@ -42,6 +45,17 @@ export interface CommandLineAction {
 export interface KeyBindingInfo {
   name: string;
   filename: string;
+}
+
+export interface WindowConfiguration {
+  [index: number]: SingleWindowConfiguration;
+}
+
+export interface SingleWindowConfiguration {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface SystemConfig {
@@ -116,17 +130,8 @@ export interface ConfigDistributor {
   /**
    * Register a listener to hear when the config has changed.
    *
-   * @param key an opaque object which is used to identify this registration.
-   * @param onChange the function to call when the config changes.
    */
-  registerChangeListener(key: any, onChange: () => void): void;
-  
-  /**
-   * Unregister a listener.
-   *
-   * @param key the same opaque object which was used during registerChangeListener().
-   */
-  unregisterChangeListener(key: any): void;
+  onChange: Event<void>;
   
   /**
    * Set a new application wide config.

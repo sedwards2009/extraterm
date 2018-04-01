@@ -30,7 +30,7 @@ export function activate(context: ExtensionContext): any {
     private _updateMetadata(): void {
       this.updateMetadata({
         title: this._getTitle(),
-        icon: "volume-up"
+        icon: "fa fa-volume-up"
       });
     }
 

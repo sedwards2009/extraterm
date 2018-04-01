@@ -36,7 +36,7 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
 
 
-type KeyBindingManager = keybindingmanager.KeyBindingManager;
+type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -95,7 +95,7 @@ function init(): void {
 
 @WebComponent({tag: "et-terminal-viewer"})
 export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
-    SupportsClipboardPaste.SupportsClipboardPaste {
+    SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-VIEWER";
   
@@ -155,6 +155,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   private _bookmarkCounter = 0;
   private _bookmarkIndex = new Map<BookmarkRef, CodeMirror.TextMarker>();
+  private _keyBindingManagerOnChangeDisposable: Disposable = null;
 
   constructor() {
     super();
@@ -169,10 +170,16 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     });
   }
 
+  dispose(): void {
+    if (this._keyBindingManagerOnChangeDisposable != null) {
+      this._keyBindingManagerOnChangeDisposable.dispose();
+    }
+  }
+
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = this._commandLine !== null ? this._commandLine : "Terminal Command";
-    metadata.icon = this._returnCode === '0' ? 'check' : 'times';
+    metadata.icon = this._returnCode === '0' ? 'fa-check' : 'fa-times';
 
     switch(this._returnCode) {
       case null:
@@ -371,13 +378,14 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   //-----------------------------------------------------------------------
 
   setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
-    if (this._keyBindingManager !== null) {
-      this._keyBindingManager.unregisterChangeListener(this);
+    if (this._keyBindingManagerOnChangeDisposable != null) {
+      this._keyBindingManagerOnChangeDisposable.dispose();
+      this._keyBindingManagerOnChangeDisposable = null;
     }
     
     this._keyBindingManager = newKeyBindingManager;
     if (this._keyBindingManager !== null) {
-      this._keyBindingManager.registerChangeListener(this, () => {
+      this._keyBindingManagerOnChangeDisposable = this._keyBindingManager.onChange(() => {
         this._codeMirror.setOption("keyMap", this._codeMirrorKeyMap());
       });
     }
@@ -1022,11 +1030,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   // ----------------------------------------------------------------------
   
   private _codeMirrorKeyMap(): any {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingContexts() === null) {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
       return {};  // empty keymap
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings === null) {
       return {};
     }
@@ -1088,8 +1096,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
-    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingContexts() !== null) {
-      const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
+    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
+      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
         if (this._executeCommand(command)) {
@@ -1149,8 +1157,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
     let commandList: CommandEntry[] = [
-      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection", commandExecutor: this },
-      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "terminal", label: "Type Selection & Execute", commandExecutor: this }
+      { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection", commandExecutor: this },
+      { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
     if (this._mode === ViewerElementTypes.Mode.CURSOR) {
@@ -1166,7 +1174,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       commandList = [...commandList, ...cmCommandList];
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
