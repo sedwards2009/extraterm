@@ -39,7 +39,7 @@ type ActionType = "download" | "upload";
       </div>
       <div class="eta">
         <template v-if="etaSeconds !== -1 && ! finished">
-          <i class='fa fa-hourglass-o'></i>&nbsp;{{formattedEta}}
+          <i class='far fa-hourglass'></i>&nbsp;{{formattedEta}}
         </template>
       </div>
     </template>
