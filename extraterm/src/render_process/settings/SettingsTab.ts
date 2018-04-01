@@ -72,7 +72,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
   
   setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = newKeyBindingManager;
-    this._ui.setKeyBindingManager(newKeyBindingManager);
+    this._ui.setKeyBindingsManager(newKeyBindingManager);
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {

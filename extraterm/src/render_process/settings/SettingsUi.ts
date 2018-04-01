@@ -13,6 +13,7 @@ import { FRAME_SETTINGS_TAG } from './FrameSettings';
 import { GENERAL_SETTINGS_TAG} from './GeneralSettings';
 import { KEY_BINDINGS_SETTINGS_TAG } from './KeyBindingsSettings';
 import { KeyBindingsManager } from '../keybindings/KeyBindingManager';
+import { doLater } from '../../utils/DoLater';
 
 for (const el of [GENERAL_SETTINGS_TAG, APPEARANCE_SETTINGS_TAG, FRAME_SETTINGS_TAG, KEY_BINDINGS_SETTINGS_TAG]) {
   if (Vue.config.ignoredElements.indexOf(el) === -1) {
@@ -47,45 +48,65 @@ interface MenuItem {
   </div>
 
   <div id="settings_pane">
-    <et-general-settings v-if="selectedTab == 'general'"
-      v-bind:configDistributor.prop="getConfigDistributor()">
-    </et-general-settings>
+    <template v-if="firstShowComplete || selectedTab == 'general'">
+      <et-general-settings v-show="selectedTab == 'general'"
+        v-bind:configDistributor.prop="getConfigDistributor()">
+      </et-general-settings>
+    </template>
 
-    <et-appearance-settings v-if="selectedTab == 'appearance'"
-      v-bind:configDistributor.prop="getConfigDistributor()"
-      v-bind:themes.prop="themes" >
-    </et-appearance-settings>
+    <template v-if="firstShowComplete || selectedTab == 'appearance'">
+      <et-appearance-settings v-show="selectedTab == 'appearance'"
+        v-bind:configDistributor.prop="getConfigDistributor()"
+        v-bind:themes.prop="themes" >
+      </et-appearance-settings>
+    </template>
+      
+    <template v-if="firstShowComplete || selectedTab == 'frames'">
+      <et-frame-settings v-show="selectedTab == 'frames'"
+        v-bind:configDistributor.prop="getConfigDistributor()">
+      </et-frame-settings>
+    </template>
 
-    <et-frame-settings v-if="selectedTab == 'frames'"
-      v-bind:configDistributor.prop="getConfigDistributor()">
-    </et-frame-settings>
-
-    <et-key-bindings-settings v-if="selectedTab == 'keybindings'"
-      v-bind:configDistributor.prop="getConfigDistributor()"
-      v-bind:keyBindingManager.prop="getKeyBindingManager()">
-    </et-key-bindings-settings>
+    <template v-if="firstShowComplete || selectedTab == 'keybindings'">
+      <et-key-bindings-settings v-show="selectedTab == 'keybindings'"
+        v-bind:configDistributor.prop="getConfigDistributor()"
+        v-bind:keyBindingManager.prop="getKeyBindingsManager()">
+      </et-key-bindings-settings>
+    </template>
   </div>
 </div>
 `
 })
 export class SettingsUi extends Vue {
   private __configDistributor: ConfigDistributor = null;
-  private __keyBindingManager: KeyBindingsManager = null;
+  private __keyBindingsManager: KeyBindingsManager = null;
 
+  firstShowComplete: boolean;
   selectedTab: string;
   themes: ThemeTypes.ThemeInfo[];
   menuItems: MenuItem[];
 
   constructor() {
     super();
+    this.firstShowComplete = false;
     this.selectedTab = "general";
     this.themes = [];
     this.menuItems = [
-      { id: "general", icon: "fa-sliders-h", title: "General"},
-      { id: "appearance", icon: "fa-paint-brush", title: "Appearance"},
+      { id: "general", icon: "fa fa-sliders-h", title: "General"},
+      { id: "appearance", icon: "fa fa-paint-brush", title: "Appearance"},
       { id: "keybindings", icon: "far fa-keyboard", title: "Key Bindings"},
       { id: "frames", icon: "far fa-window-maximize", title: "Frames"}
     ];
+  }
+
+  mounted(): void {
+    if (this.firstShowComplete) {
+      return;
+    }
+
+    doLater(() => {
+      this.firstShowComplete = true;
+    });
   }
 
   selectMenuTab(id: MenuItemId): void {
@@ -101,13 +122,13 @@ export class SettingsUi extends Vue {
     return this.__configDistributor;
   }
 
-  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
-    this.__keyBindingManager = newKeyBindingManager;
+  setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {
+    this.__keyBindingsManager = newKeyBindingManager;
     this.$forceUpdate();
   }
 
-  getKeyBindingManager(): KeyBindingsManager {
-    return this.__keyBindingManager;
+  getKeyBindingsManager(): KeyBindingsManager {
+    return this.__keyBindingsManager;
   }
   
   formatIcon(icon: string): object {
