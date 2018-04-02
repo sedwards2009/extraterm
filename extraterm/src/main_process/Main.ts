@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {Config, CommandLineAction, SessionProfile, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
+import {Config, CommandLineAction, SessionConfig, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
   SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
 import {Logger, getLogger, addLogWriter} from '../logging/Logger';
@@ -402,12 +402,12 @@ function logJSData(data: string): void {
 //-------------------------------------------------------------------------
 
 /**
- * Expands a list of partial profiles.
+ * Expands a list of partial session configs.
  *
- * @param profiles List of user configurable partially filled in profiles.
- * @return List where the profiles are completed and a default is added.
+ * @param sessionConfigs List of user configurable partially filled in session configs.
+ * @return List where the session configs are completed and a default is added.
  */
-function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?: string }): SessionProfile[] {
+function expandSessionConfigs(sessionConfigs: SessionConfig[], options: { cygwinDir?: string }): SessionConfig[] {
   if (process.platform === "win32") {
     // Check for the existance of the user specified cygwin installation.
     let cygwinDir = findOptionCygwinInstallation(options.cygwinDir);
@@ -418,32 +418,32 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
         cygwinDir = findBabunCygwinInstallation();
       }
     }
-    let canonicalCygwinProfile = cygwinDir !== null ? defaultCygwinProfile(cygwinDir) : null;
+    let canonicalCygwinSessionConfig = cygwinDir !== null ? defaultCygwinSessionConfig(cygwinDir) : null;
     
-    const expandedProfiles: SessionProfile[] = [];
-    if (profiles !== undefined && profiles !== null) {
-      profiles.forEach( profile => {
-        switch (profile.type) {
+    const expandedSessionConfigs: SessionConfig[] = [];
+    if (sessionConfigs !== undefined && sessionConfigs !== null) {
+      sessionConfigs.forEach( sessionConfig => {
+        switch (sessionConfig.type) {
           case SESSION_TYPE_CYGWIN:
-            let templateProfile = canonicalCygwinProfile;
+            let templateSessionConfig = canonicalCygwinSessionConfig;
             
-            if (profile.cygwinDir !== undefined && profile.cygwinDir !== null) {
+            if (sessionConfig.cygwinDir !== undefined && sessionConfig.cygwinDir !== null) {
               // This profile specifies the location of a cygwin installation.
-              templateProfile = defaultCygwinProfile(profile.cygwinDir);
+              templateSessionConfig = defaultCygwinSessionConfig(sessionConfig.cygwinDir);
             }
           
-            if (templateProfile !== null) {
-              const expandedProfile: SessionProfile = {
-                name: profile.name,
+            if (templateSessionConfig !== null) {
+              const expandedSessionConfig: SessionConfig = {
+                name: sessionConfig.name,
                 type: SESSION_TYPE_CYGWIN,
-                command: profile.command !== undefined ? profile.command : templateProfile.command,
-                arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
-                extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv,
-                cygwinDir: profile.cygwinDir !== undefined ? profile.cygwinDir : templateProfile.cygwinDir              
+                command: sessionConfig.command !== undefined ? sessionConfig.command : templateSessionConfig.command,
+                arguments: sessionConfig.arguments !== undefined ? sessionConfig.arguments : templateSessionConfig.arguments,
+                extraEnv: sessionConfig.extraEnv !== undefined ? sessionConfig.extraEnv : templateSessionConfig.extraEnv,
+                cygwinDir: sessionConfig.cygwinDir !== undefined ? sessionConfig.cygwinDir : templateSessionConfig.cygwinDir              
               };
-              expandedProfiles.push(expandedProfile);
+              expandedSessionConfigs.push(expandedSessionConfig);
             } else {
-              _log.info(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
+              _log.info(`Ignoring session configuration '${sessionConfig.name}' with type '${sessionConfig.type}'. ` +
                 `The cygwin installation couldn't be found.`);
             }
           
@@ -453,50 +453,50 @@ function expandSessionProfiles(profiles: SessionProfile[], options: { cygwinDir?
             break;
             
           default:
-          _log.info(`Ignoring session profile '${profile.name}' with type '${profile.type}'. ` +
+          _log.info(`Ignoring session configuration '${sessionConfig.name}' with type '${sessionConfig.type}'. ` +
               `It is neither ${SESSION_TYPE_CYGWIN} nor ${SESSION_TYPE_BABUN}.`);
             break;
         }
 
       });
     }
-    expandedProfiles.push(canonicalCygwinProfile);
-    return expandedProfiles;
+    expandedSessionConfigs.push(canonicalCygwinSessionConfig);
+    return expandedSessionConfigs;
     
   } else {
     // A 'nix style system.
-    const expandedProfiles: SessionProfile[] = [];
-    let canonicalProfile = defaultProfile();
-    if (profiles !== undefined && profiles !== null) {
-      profiles.forEach( profile => {
-        switch (profile.type) {
+    const expandedSessionConfigs: SessionConfig[] = [];
+    let canonicalSessionConfig = defaultSessionConfig();
+    if (sessionConfigs !== undefined && sessionConfigs !== null) {
+      sessionConfigs.forEach( sessionConfig => {
+        switch (sessionConfig.type) {
           case undefined:
           case null:
           case SESSION_TYPE_UNIX:
-            let templateProfile = canonicalProfile;
-            const expandedProfile: SessionProfile = {
-              name: profile.name,
+            let templateSessionConfig = canonicalSessionConfig;
+            const expandedSessionConfig: SessionConfig = {
+              name: sessionConfig.name,
               type: SESSION_TYPE_UNIX,
-              command: profile.command !== undefined ? profile.command : templateProfile.command,
-              arguments: profile.arguments !== undefined ? profile.arguments : templateProfile.arguments,
-              extraEnv: profile.extraEnv !== undefined ? profile.extraEnv : templateProfile.extraEnv
+              command: sessionConfig.command !== undefined ? sessionConfig.command : templateSessionConfig.command,
+              arguments: sessionConfig.arguments !== undefined ? sessionConfig.arguments : templateSessionConfig.arguments,
+              extraEnv: sessionConfig.extraEnv !== undefined ? sessionConfig.extraEnv : templateSessionConfig.extraEnv
             };
-            expandedProfiles.push(expandedProfile);
+            expandedSessionConfigs.push(expandedSessionConfig);
             break;
             
           default:
-          _log.info(`Ignoring session profile '${profile.name}' with type '${profile.type}'.`);
+          _log.info(`Ignoring session configuration '${sessionConfig.name}' with type '${sessionConfig.type}'.`);
             break;
         }
       });
     }
     
-    expandedProfiles.push(canonicalProfile);
-    return expandedProfiles;
+    expandedSessionConfigs.push(canonicalSessionConfig);
+    return expandedSessionConfigs;
   }
 }
 
-function defaultProfile(): SessionProfile {
+function defaultSessionConfig(): SessionConfig {
   const shell = readDefaultUserShell(process.env.USER);
   return {
     name: "Default",
@@ -540,7 +540,7 @@ function readDefaultUserShellFromOpenDirectory(userName: string): string {
   }
 }
 
-function defaultCygwinProfile(cygwinDir: string): SessionProfile {
+function defaultCygwinSessionConfig(cygwinDir: string): SessionConfig {
   let defaultShell: string = null;
   let homeDir: string = null;
   
@@ -710,7 +710,7 @@ function setupConfig(): void {
   config = readConfigurationFile();
   config.systemConfig = systemConfiguration(config);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
-  config.expandedProfiles = expandSessionProfiles(config.sessionProfiles, <any> Commander);
+  config.expandedProfiles = expandSessionConfigs(config.sessionProfiles, <any> Commander);
   
   if (config.terminalFontSize === undefined || typeof config.terminalFontSize !== 'number') {
     config.terminalFontSize = 12;

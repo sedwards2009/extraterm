@@ -29,8 +29,8 @@ export interface Config {
 
   windowConfiguration?: WindowConfiguration;
 
-  sessionProfiles?: SessionProfile[]; // User configurable list of sessions.
-  expandedProfiles: SessionProfile[]; // 'cooked' or expanded list of sessions where missing information is filled in.
+  sessionProfiles?: SessionConfig[]; // User configurable list of sessions.
+  expandedProfiles: SessionConfig[]; // 'cooked' or expanded list of sessions where missing information is filled in.
   systemConfig: SystemConfig;
 }
 
@@ -79,7 +79,7 @@ export const SESSION_TYPE_UNIX = "unix";
 export const SESSION_TYPE_CYGWIN = "cygwin";
 export const SESSION_TYPE_BABUN = "babun";
 
-export interface SessionProfile {
+export interface SessionConfig {
   name: string;             // Human readable name for the profile.
   type?: string;            // type - "cygwin", "babun" or "native" ("" means "native")
   command?: string;         // the command to execute in the terminal

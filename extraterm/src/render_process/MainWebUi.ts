@@ -45,7 +45,7 @@ import { ExtensionManager } from './extension/InternalTypes';
 
 type Config = config.Config;
 type ConfigManager =config.ConfigDistributor;
-type SessionProfile = config.SessionProfile;
+type SessionProfile = config.SessionConfig;
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 const VisualState = ViewerElementTypes.VisualState;

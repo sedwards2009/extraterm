@@ -18,7 +18,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
     from './CommandPaletteRequestTypes';
-import {Config, ConfigDistributor, SessionProfile, injectConfigDistributor} from '../Config';
+import {Config, ConfigDistributor, SessionConfig, injectConfigDistributor} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
