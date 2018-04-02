@@ -82,6 +82,7 @@ export const SESSION_TYPE_BABUN = "babun";
 export interface SessionConfig {
   name: string;             // Human readable name for the profile.
   type?: string;            // type - "cygwin", "babun" or "native" ("" means "native")
+  
   command?: string;         // the command to execute in the terminal
   arguments?: string[];     // the arguments for said command
   extraEnv?: Object;        // extra entries to add to the environment before running the command.

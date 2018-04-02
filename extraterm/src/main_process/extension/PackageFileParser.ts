@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss } from "../../ExtensionMetadata";
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution } from "../../ExtensionMetadata";
 
 const FONT_AWESOME_DEFAULT = false;
 
@@ -73,7 +73,8 @@ function assertJsonStringArrayField(packageJson: any, fieldName: string, default
 function parseContributionsJson(packageJson: any): ExtensionContributions {
   if (packageJson["contributions"] == null) {
     return {
-      viewer: []
+      viewer: [],
+      sessionEditor: []
     };
   }
 
@@ -82,7 +83,8 @@ function parseContributionsJson(packageJson: any): ExtensionContributions {
   }
 
   return {
-    viewer: parseViewerContributionsListJson(packageJson["contributions"])
+    viewer: parseViewerContributionsListJson(packageJson["contributions"]),
+    sessionEditor: parseSessionEditorContributionsListJson(packageJson["contributions"])
   };
 }
 
@@ -132,5 +134,33 @@ function  parseCss(packageJson: any): ExtensionCss {
     };
   } catch (ex) {
     throw `Failed to process a CSS field: ${ex}`;
+  }
+}
+
+function parseSessionEditorContributionsListJson(packageJson: any): ExtensionSessionEditorContribution[] {
+  const value = packageJson["sessionEditor"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'sessionEditor' of in the 'contributions' object is not an array.`;
+  }
+
+  const result: ExtensionSessionEditorContribution[] = [];
+  for (const item of value) {
+    result.push(parseSessionEditorConstributionJson(item));
+  }
+  return result;
+}
+
+function parseSessionEditorConstributionJson(packageJson: any): ExtensionSessionEditorContribution {
+  try {
+    return {
+      name: assertJsonStringField(packageJson, "name"),
+      type: assertJsonStringField(packageJson, "type"),
+      css: parseCss(packageJson)
+    };
+  } catch (ex) {
+    throw `Failed to process a session editor contribution: ${ex}`;
   }
 }

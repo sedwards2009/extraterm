@@ -15,6 +15,7 @@ export interface ExtensionMetadata {
 
 export interface ExtensionContributions {
   viewer: ExtensionViewerContribution[];
+  sessionEditor: ExtensionSessionEditorContribution[];
 }
 
 export interface ExtensionViewerContribution {
@@ -27,4 +28,17 @@ export interface ExtensionCss {
   directory: string;
   cssFile: string[];
   fontAwesome: boolean;
+}
+
+export interface ExtensionSessionEditorContribution {
+  /**
+   * Human readable name for this session editor.
+   */
+  name: string;
+
+  /**
+   * Internal symbol used internally for indentifying this type of session.
+   */
+  type: string;
+  css: ExtensionCss;
 }
