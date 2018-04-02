@@ -13,13 +13,19 @@ import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFact
 import {Logger, getLogger} from '../../logging/Logger';
 import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
 import { ViewerElement } from '../viewers/ViewerElement';
-import { ExtensionViewerContribution } from '../../ExtensionMetadata';
+import { ExtensionViewerContribution, ExtensionSessionEditorContribution } from '../../ExtensionMetadata';
 import { CssFile } from '../../theme/Theme';
+import { ThemeableElementBase } from '../ThemeableElementBase';
 
 
 interface RegisteredViewer {
   tag: string;
   mimeTypes: string[];
+}
+
+interface RegisteredSessionEditor {
+  type: string;
+  tag: string;
 }
 
 interface CommandRegistration<V> {
@@ -30,10 +36,12 @@ interface CommandRegistration<V> {
 export class WorkspaceProxy implements InternalWorkspace {
   private _log: Logger = null;
   private _registeredViewers: RegisteredViewer[] = [];
+  private _registeredSessionEditors: RegisteredSessionEditor[] = [];
 
   constructor(private _internalExtensionContext: InternalExtensionContext) {
     this._log = getLogger("WorkspaceProxy", this);
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
+    this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;    
   }
 
   getTerminals(): ExtensionApi.Terminal[] {
@@ -168,6 +176,51 @@ export class WorkspaceProxy implements InternalWorkspace {
     }
     return null;
   }
+
+  extensionSessionEditorBaseConstructor: ExtensionApi.ExtensionSessionEditorBaseConstructor;
+
+  registerSessionEditor(type: string, sessionEditorClass: ExtensionApi.ExtensionSessionEditorBaseConstructor): void {
+    let sessionEditorMetadata: ExtensionSessionEditorContribution = null;
+    for (const semd of this._internalExtensionContext.extensionMetadata.contributions.sessionEditor) {
+      if (semd.name === name) {
+        sessionEditorMetadata = semd;
+        break;
+      }
+    }
+
+    if (sessionEditorMetadata == null) {
+      this._log.warn(`Unable to register session editor '${name}' for extension ` +
+        `'${this._internalExtensionContext.extensionMetadata.name}' because the session editor contribution data ` +
+        `couldn't be found in the extension's package.json file.`);
+      return;
+    }
+
+    const internalExtensionContext = this._internalExtensionContext;
+
+    const sessionEditorProxyClass = class extends ExtensionSessionEditorProxy {
+      protected _createExtensionSessionEditor(): ExtensionApi.ExtensionSessionEditorBase {
+        return new sessionEditorClass(this);
+      }
+
+      protected _getExtensionContext(): InternalExtensionContext {
+        return internalExtensionContext;
+      }
+    
+      protected _getExtensionViewerContribution(): ExtensionSessionEditorContribution {
+        return sessionEditorMetadata;
+      }
+    };
+    
+// FIXME
+    const tag = this._internalExtensionContext.extensionMetadata.name + "-session-editor-" + kebabCase(name);
+    this._log.info("Registering custom element ", tag);
+    window.customElements.define(tag, sessionEditorProxyClass);
+
+    this._registeredSessionEditors.push({
+      type: sessionEditorMetadata.type, tag
+    });
+  }
+  
 }
 
 function kebabCase(name: string): string {
@@ -270,6 +323,19 @@ class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase {
   }
 
   setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): void {
+  }
+}
+
+class ExtensionSessionEditorProxy extends ThemeableElementBase  {
+
+}
+
+class ExtensionSessionEditorBaseImpl implements ExtensionApi.ExtensionSessionEditorBase {
+  created(): void {
+  }
+
+  getContainerElement(): HTMLElement {
+    return null;  // FIXME implement
   }
 }
 

@@ -16,6 +16,9 @@ export interface ExtensionManager {
   getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[];
 
   findViewerElementTagByMimeType(mimeType: string): string;
+
+  getAllSessionTypes(): { name: string, type: string }[];
+  getSessionEditorTagForType(type: string): string;
 }
 
 export interface ProxyFactory {

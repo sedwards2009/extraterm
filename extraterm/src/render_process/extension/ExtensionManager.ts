@@ -103,6 +103,14 @@ export class ExtensionManagerImpl implements ExtensionManager {
       return null;
     }
   }
+
+  getAllSessionTypes(): { name: string, type: string }[] {
+    return [];
+  }
+
+  getSessionEditorTagForType(type: string): string {
+    return null;
+  }
 }
 
 

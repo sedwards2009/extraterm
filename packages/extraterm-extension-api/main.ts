@@ -240,6 +240,9 @@ export interface Workspace {
 
   extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;
   registerViewer(name: string, viewerClass: ExtensionViewerBaseConstructor): void;
+
+  extensionSessionEditorBaseConstructor: ExtensionSessionEditorBaseConstructor;
+  registerSessionEditor(type: string, sessionEditorClass: ExtensionSessionEditorBaseConstructor): void;
 }
 
 
@@ -358,8 +361,6 @@ export interface ExtensionViewerBase {
    */
   created(): void;
 
-  // updateMetadata(): void;
-
   /**
    * Get the container element under which this Viewer's contents can be placed.
    */
@@ -391,6 +392,31 @@ export interface ExtensionViewerBase {
 
 export interface ExtensionViewerBaseConstructor {
   new(...any: any[]): ExtensionViewerBase;
+}
+
+
+/**
+ * Extensions which implement Session Editor must subclass this.
+ * 
+ * Note that TypeScript subclasses should not provide a constructor. Pure
+ * JavaScript subclasses can have a constructor but it must pass all of
+ * its arguments to the super class.
+ */
+export interface ExtensionSessionEditorBase {
+  /**
+   * Extension writers can override method to perform set up and
+   * initialisation after construction.
+   */
+  created(): void;
+
+  /**
+   * Get the container element under which this Viewer's contents can be placed.
+   */
+  getContainerElement(): HTMLElement;
+}
+
+export interface ExtensionSessionEditorBaseConstructor {
+  new(...any: any[]): ExtensionSessionEditorBase;
 }
 
 /**
