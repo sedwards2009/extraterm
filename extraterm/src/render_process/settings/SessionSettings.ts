@@ -11,13 +11,14 @@ import { Config, FontInfo } from '../../Config';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import { SettingsBase } from './SettingsBase';
+import { ExtensionManager } from '../extension/InternalTypes';
 
 export const SESSION_SETTINGS_TAG = "et-session-settings";
 
 @WebComponent({tag: SESSION_SETTINGS_TAG})
 export class SessionSettings extends SettingsBase<SessionSettingsUi> {
   private _log: Logger = null;
-  private _fontOptions: FontInfo[] = [];
+  private _extensionManager: ExtensionManager = null;
 
   constructor() {
     super(SessionSettingsUi);
@@ -34,5 +35,14 @@ export class SessionSettings extends SettingsBase<SessionSettingsUi> {
     const ui = this._getUi();
     
     this._updateConfig(newConfig);
+  }
+
+  set extensionManager(extensionManager: ExtensionManager) {
+    this._extensionManager = extensionManager;
+    this._getUi().setExtensionManager(extensionManager);
+  }
+
+  get extensionManager(): ExtensionManager {
+    return this._extensionManager;
   }
 }

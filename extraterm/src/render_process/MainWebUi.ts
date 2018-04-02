@@ -41,7 +41,7 @@ import {EtViewerTab} from './ViewerTab';
 import {PtyIpcBridge} from './PtyIpcBridge';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
-import { ExtensionManager } from './extension/InternalTypes';
+import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
 
 type Config = config.Config;
 type ConfigManager =config.ConfigDistributor;
@@ -675,7 +675,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const viewerElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigDistributor(viewerElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
-      
+      injectExtensionManager(viewerElement, this._extensionManager);
+
       viewerElement.setThemes(this._themes);
       this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);

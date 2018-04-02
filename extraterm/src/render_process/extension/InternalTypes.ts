@@ -21,6 +21,20 @@ export interface ExtensionManager {
   getSessionEditorTagForType(type: string): string;
 }
 
+export interface AcceptsExtensionManager {
+  setExtensionManager(extensionManager: ExtensionManager): void;
+}
+
+export function injectExtensionManager(instance: any, extensionManager: ExtensionManager): void {
+  if (isAcceptsExtensionManager(instance)) {
+    instance.setExtensionManager(extensionManager);
+  }
+}
+
+export function isAcceptsExtensionManager(instance: any): instance is AcceptsExtensionManager {
+  return (<AcceptsExtensionManager> instance).setExtensionManager !== undefined;
+}
+
 export interface ProxyFactory {
   getTabProxy(terminal: EtTerminal): ExtensionApi.Tab;
   getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal;

@@ -1,0 +1,26 @@
+{
+  "name": "unix-session-editor",
+  "description": "Unix Session Editor",
+  "version": "1.0.0",
+  "main": "src/UnixSessionEditorExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "vue": "2.5.9",
+    "vue-class-component": "6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "2.6.1"
+  },
+  "contributions": {
+    "sessionEditor": [
+      {
+        "name": "Unix",
+        "type": "unix"
+      }
+    ]
+  }
+}

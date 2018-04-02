@@ -15,6 +15,7 @@ import { KEY_BINDINGS_SETTINGS_TAG } from './KeyBindingsSettings';
 import { SESSION_SETTINGS_TAG } from './SessionSettings';
 import { KeyBindingsManager } from '../keybindings/KeyBindingManager';
 import { doLater } from '../../utils/DoLater';
+import { ExtensionManager } from '../extension/InternalTypes';
 
 for (const el of [
     GENERAL_SETTINGS_TAG,
@@ -69,7 +70,8 @@ interface MenuItem {
 
     <template v-if="firstShowComplete || selectedTab == 'session'">
       <et-session-settings v-show="selectedTab == 'session'"
-        v-bind:configDistributor.prop="getConfigDistributor()">
+        v-bind:configDistributor.prop="getConfigDistributor()"
+        v-bind:extensionManager.prop="getExtensionManager()">
       </et-session-settings>
     </template>
     
@@ -90,8 +92,9 @@ interface MenuItem {
 `
 })
 export class SettingsUi extends Vue {
-  private __configDistributor: ConfigDistributor = null;
-  private __keyBindingsManager: KeyBindingsManager = null;
+  private _configDistributor: ConfigDistributor = null;
+  private _keyBindingsManager: KeyBindingsManager = null;
+  private _extensionManager: ExtensionManager = null;
 
   firstShowComplete: boolean;
   selectedTab: string;
@@ -127,27 +130,35 @@ export class SettingsUi extends Vue {
   }
 
   setConfigDistributor(configDistributor: ConfigDistributor) {
-    this.__configDistributor = configDistributor;
+    this._configDistributor = configDistributor;
     this.$forceUpdate();
   }
 
   getConfigDistributor(): ConfigDistributor {
-    return this.__configDistributor;
+    return this._configDistributor;
   }
 
   setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {
-    this.__keyBindingsManager = newKeyBindingManager;
+    this._keyBindingsManager = newKeyBindingManager;
     this.$forceUpdate();
   }
 
   getKeyBindingsManager(): KeyBindingsManager {
-    return this.__keyBindingsManager;
+    return this._keyBindingsManager;
   }
   
+  setExtensionManager(extensionManager: ExtensionManager): void {
+    this._extensionManager = extensionManager;
+  }
+
+  getExtensionManager(): ExtensionManager {
+    return this._extensionManager;    
+  }
+
   formatIcon(icon: string): object {
     return icon.split(" ").reduce( (accu, clazz) => {
       accu[clazz] = true;
       return accu;
     }, {});
   }
-  }
+}

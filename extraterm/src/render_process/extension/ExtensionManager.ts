@@ -105,7 +105,15 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   getAllSessionTypes(): { name: string, type: string }[] {
-    return [];
+    return _.flatten(
+      this._activeExtensions.map(activeExtension => {
+        if (activeExtension.metadata.contributions.sessionEditor != null) {
+          return activeExtension.metadata.contributions.sessionEditor.map(se => ({name: se.name, type: se.type}));
+        } else {
+          return [];
+        }
+      })
+    );
   }
 
   getSessionEditorTagForType(type: string): string {

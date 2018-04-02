@@ -24,10 +24,11 @@ export class WorkspaceProxy implements InternalWorkspace {
   constructor(private _internalExtensionContext: InternalExtensionContext) {
     this._log = getLogger("WorkspaceProxy", this);
     this._workspaceCommandsRegistry = new WorkspaceCommandsRegistry();
+    this._workspaceSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
     this._workspaceViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
     
-    this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
     this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;    
+    this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
   }
 
   getTerminals(): ExtensionApi.Terminal[] {

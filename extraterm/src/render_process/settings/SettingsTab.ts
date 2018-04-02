@@ -16,10 +16,12 @@ import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi } from './SettingsUi';
+import { AcceptsExtensionManager, ExtensionManager } from '../extension/InternalTypes';
 
 
 @WebComponent({tag: "et-settings-tab"})
-export class SettingsTab extends ViewerElement implements AcceptsConfigDistributor, AcceptsKeyBindingManager {
+export class SettingsTab extends ViewerElement implements AcceptsConfigDistributor, AcceptsKeyBindingManager,
+    AcceptsExtensionManager {
   
   static TAG_NAME = "ET-SETTINGS-TAB";
   
@@ -75,6 +77,10 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
     this._ui.setKeyBindingsManager(newKeyBindingManager);
   }
 
+  setExtensionManager(extensionManager: ExtensionManager): void {
+    this._ui.setExtensionManager(extensionManager);
+  }
+  
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._ui.themes = themes;
   }
