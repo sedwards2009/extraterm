@@ -86,7 +86,8 @@ $resize-bar-height: pxToRem(4px);
   }
 
   #ID_CLOSE_BUTTON:before {
-    font-family: FontAwesome;
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
     font-size: 120%;
     content: "\f00d";  
   }
