@@ -2593,7 +2593,7 @@ export class Emulator implements EmulatorApi {
   }
 
   private fillRight(x: number, y: number, ch: string = ' '): void {
-    const line = this._getRow(y);
+    const line = this._tryGetRow(y);
     if (line === null) {
       return;
     }
@@ -2806,6 +2806,7 @@ export class Emulator implements EmulatorApi {
         this.eraseRight(this.x, this.y);
         j = this.y + 1;
         for (; j < this.rows; j++) {
+          this._getRow(j);
           this.eraseLine(j);
         }
         break;
@@ -2813,12 +2814,14 @@ export class Emulator implements EmulatorApi {
         this.eraseLeft(this.x, this.y);
         j = this.y;
         while (j--) {
+          this._getRow(j);
           this.eraseLine(j);
         }
         break;
       case 2:
         j = this.rows;
         while (j--) {
+          this._getRow(j);
           this.eraseLine(j);
         }
         break;
