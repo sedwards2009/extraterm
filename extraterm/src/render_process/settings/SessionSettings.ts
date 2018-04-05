@@ -29,13 +29,15 @@ export class SessionSettings extends SettingsBase<SessionSettingsUi> {
     const ui = this._getUi();
 
     // ui.sessions = config.sessions;
-    ui.sessions = [
+    const sessions = [
       {
         uuid: "1234",
         name: "fish",
-        type: "unix"
+        type: "unix",
+        shell: "/usr/bin/fish"
       }
     ];
+    ui.sessions = sessions;
   }
 
   protected _dataChanged(): void {

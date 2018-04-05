@@ -19,7 +19,11 @@ import { ExtensionManager } from '../extension/InternalTypes';
 
   <div v-for="item in sessions" key="item.uuid">
     {{ item.name }}
-    <component v-bind:is="sessionEditor(item.type)">
+    <component
+      v-bind:is="sessionEditor(item.type)"
+      v-bind:sessionConfiguration.prop="item"
+      key="item.uuid"
+      v-on:change="handleChange(item.uuid)">
     </component>
   </div>
 
@@ -56,5 +60,9 @@ export class SessionSettingsUi extends Vue {
 
   sessionEditor(type: string): string {
     return this._extensionManager.getSessionEditorTagForType(type);
+  }
+
+  handleChange(uuid: string): void {
+console.log("got a vue change event from a custom element using uuid: ",uuid);
   }
 }

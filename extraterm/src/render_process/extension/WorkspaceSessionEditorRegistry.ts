@@ -10,6 +10,7 @@ import { InternalExtensionContext } from './InternalTypes';
 import { Logger, getLogger } from '../../logging/Logger';
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import { CssFile } from '../../theme/Theme';
+import log from '../../logging/LogDecorator';
 
 interface RegisteredSessionEditor {
   type: string;
@@ -78,16 +79,27 @@ function kebabCase(name: string): string {
 
 class ExtensionSessionEditorProxy extends ThemeableElementBase  {
   private _extensionSessionEditor: ExtensionSessionEditorBaseImpl = null;
+  private _log: Logger = null;
+  private _doneSetup = false;
 
   constructor() {
     super();
-    this._setupDOM();
+    this._log = getLogger("ExtensionSessionEditorProxy", this);
+    this._log.debug("constructor");
     this._extensionSessionEditor = <ExtensionSessionEditorBaseImpl> this._createExtensionSessionEditor();
-    this._extensionSessionEditor.created();
   }
 
   private _styleElement: HTMLStyleElement = null;
   private _containerDivElement: HTMLDivElement = null;
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    if ( ! this._doneSetup) {
+      this._doneSetup = true;
+      this._setupDOM();
+      this._extensionSessionEditor.created();
+    }
+  }
 
   private _setupDOM(): void {
     this.attachShadow({ mode: 'open', delegatesFocus: false });
@@ -132,10 +144,20 @@ class ExtensionSessionEditorProxy extends ThemeableElementBase  {
   }
 
   _sessionConfigurationChanged(): void {
-
+    const config = this._extensionSessionEditor.getSessionConfiguration();
+this._log.debug("_sessionConfigurationChanged ",config);
+    
+    const changeEvent = new CustomEvent("change", {bubbles: true, composed: true});
+    changeEvent.initCustomEvent("change", true, true, null);
+    this.dispatchEvent(changeEvent);
   }
 
-  setSessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration): void {
+  // setSessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration): void {
+  //   this._extensionSessionEditor.__setSessionConfiguration(sessionConfiguration);
+  // }
+
+  set sessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration) {
+    this._log.debug("set sessionConfiguration");
     this._extensionSessionEditor.__setSessionConfiguration(sessionConfiguration);
   }
 }
@@ -162,8 +184,8 @@ export class ExtensionSessionEditorBaseImpl implements ExtensionApi.ExtensionSes
     return this.__ExtensionSessionEditorBaseImpl_sessionConfiguration;
   }
 
-  updateSessionConfiguration(sessionConfigurationChange: object): void {
-
+  updateSessionConfiguration(sessionConfigurationChange: ExtensionApi.SessionConfiguration): void {
+    this.__ExtensionSessionEditorBaseImpl_sessionConfiguration = sessionConfigurationChange;
 
     this._sessionEditorProxy._sessionConfigurationChanged();
   }
