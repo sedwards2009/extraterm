@@ -394,6 +394,11 @@ export interface ExtensionViewerBaseConstructor {
   new(...any: any[]): ExtensionViewerBase;
 }
 
+export interface SessionConfiguration {
+  uuid: string;
+  name: string;             // Human readable name for the profile.
+  type?: string;            // type - "cygwin", "babun" or "native" ("" means "native")
+}
 
 /**
  * Extensions which implement Session Editor must subclass this.
@@ -413,6 +418,10 @@ export interface ExtensionSessionEditorBase {
    * Get the container element under which this Viewer's contents can be placed.
    */
   getContainerElement(): HTMLElement;
+
+  getSessionConfiguration(): SessionConfiguration;
+
+  updateSessionConfiguration(sessionConfigurationChange: object): void;
 }
 
 export interface ExtensionSessionEditorBaseConstructor {

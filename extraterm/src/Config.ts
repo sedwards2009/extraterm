@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as os from 'os';
-import { Disposable, Event } from 'extraterm-extension-api';
+import { Disposable, Event, SessionConfiguration } from 'extraterm-extension-api';
 
 export type ShowTipsStrEnum = 'always' | 'daily' | 'never';
 
@@ -29,8 +29,12 @@ export interface Config {
 
   windowConfiguration?: WindowConfiguration;
 
+  sessions?: SessionConfiguration[];
+
+  // These 2 fields are obsolete.
   sessionProfiles?: SessionConfig[]; // User configurable list of sessions.
   expandedProfiles: SessionConfig[]; // 'cooked' or expanded list of sessions where missing information is filled in.
+
   systemConfig: SystemConfig;
 }
 

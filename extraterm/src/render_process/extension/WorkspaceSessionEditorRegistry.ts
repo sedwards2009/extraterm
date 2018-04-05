@@ -9,6 +9,7 @@ import { ExtensionSessionEditorContribution } from '../../ExtensionMetadata';
 import { InternalExtensionContext } from './InternalTypes';
 import { Logger, getLogger } from '../../logging/Logger';
 import { ThemeableElementBase } from '../ThemeableElementBase';
+import { CssFile } from '../../theme/Theme';
 
 interface RegisteredSessionEditor {
   type: string;
@@ -17,10 +18,11 @@ interface RegisteredSessionEditor {
 
 export class WorkspaceSessionEditorRegistry {
   private _log: Logger = null;
-  private _registeredSessionEditors: RegisteredSessionEditor[] = [];
+  private _registeredSessionEditors: Map<string, string> = null;
 
   constructor(private _internalExtensionContext: InternalExtensionContext) {
     this._log = getLogger("WorkspaceSessionEditorRegistry", this);
+    this._registeredSessionEditors = new Map();
   }
 
   registerSessionEditor(type: string, sessionEditorClass: ExtensionApi.ExtensionSessionEditorBaseConstructor): void {
@@ -33,7 +35,7 @@ export class WorkspaceSessionEditorRegistry {
     }
 
     if (sessionEditorMetadata == null) {
-      this._log.warn(`Unable to register session editor '${name}' for extension ` +
+      this._log.warn(`Unable to register session editor '${type}' for extension ` +
         `'${this._internalExtensionContext.extensionMetadata.name}' because the session editor contribution data ` +
         `couldn't be found in the extension's package.json file.`);
       return;
@@ -50,21 +52,23 @@ export class WorkspaceSessionEditorRegistry {
         return internalExtensionContext;
       }
     
-      protected _getExtensionViewerContribution(): ExtensionSessionEditorContribution {
+      protected _getExtensionSessionEditorContribution(): ExtensionSessionEditorContribution {
         return sessionEditorMetadata;
       }
     };
     
 // FIXME
-    const tag = this._internalExtensionContext.extensionMetadata.name + "-session-editor-" + kebabCase(name);
+    const tag = this._internalExtensionContext.extensionMetadata.name + "-session-editor-" + kebabCase(type);
     this._log.info("Registering custom element ", tag);
     window.customElements.define(tag, sessionEditorProxyClass);
 
-    this._registeredSessionEditors.push({
-      type: sessionEditorMetadata.type, tag
-    });
+    this._registeredSessionEditors.set(sessionEditorMetadata.type, tag);
   }
 
+  getSessionEditorTagForType(sessionType: string): string {
+    const tag = this._registeredSessionEditors.get(sessionType);
+    return tag == null ? null : tag;
+  }
 }
 
 function kebabCase(name: string): string {
@@ -73,14 +77,94 @@ function kebabCase(name: string): string {
 
 
 class ExtensionSessionEditorProxy extends ThemeableElementBase  {
+  private _extensionSessionEditor: ExtensionSessionEditorBaseImpl = null;
 
+  constructor() {
+    super();
+    this._setupDOM();
+    this._extensionSessionEditor = <ExtensionSessionEditorBaseImpl> this._createExtensionSessionEditor();
+    this._extensionSessionEditor.created();
+  }
+
+  private _styleElement: HTMLStyleElement = null;
+  private _containerDivElement: HTMLDivElement = null;
+
+  private _setupDOM(): void {
+    this.attachShadow({ mode: 'open', delegatesFocus: false });
+
+    this._styleElement = document.createElement("style");
+    this._styleElement.id = ThemeableElementBase.ID_THEME;
+    this.shadowRoot.appendChild(this._styleElement);
+
+    this._containerDivElement = document.createElement("div");
+    this.shadowRoot.appendChild(this._containerDivElement);
+
+    this.updateThemeCss();
+  }
+
+  /**
+   * Get the node where the element's DOM nodes should be placed.
+   */
+  getContainerNode(): HTMLDivElement {
+    return this._containerDivElement;
+  }
+
+  protected _createExtensionSessionEditor(): ExtensionApi.ExtensionSessionEditorBase {
+    return null;
+  }
+
+  protected _getExtensionContext(): InternalExtensionContext {
+    return null;
+  }
+
+  protected _getExtensionSessionEditorContribution(): ExtensionSessionEditorContribution {
+    return null;
+  }
+
+  protected _themeCssFiles(): CssFile[] {
+    const extensionContext = this._getExtensionContext();
+    const name = extensionContext.extensionMetadata.name
+    const cssDecl = this._getExtensionSessionEditorContribution().css;
+    const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + cf);
+
+    const fontAwesomeCss = cssDecl.fontAwesome ? [CssFile.FONT_AWESOME] : [];
+    return [CssFile.GUI_CONTROLS, ...fontAwesomeCss, ...cssFiles];
+  }
+
+  _sessionConfigurationChanged(): void {
+
+  }
+
+  setSessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration): void {
+    this._extensionSessionEditor.__setSessionConfiguration(sessionConfiguration);
+  }
 }
 
+
 export class ExtensionSessionEditorBaseImpl implements ExtensionApi.ExtensionSessionEditorBase {
+  private __ExtensionSessionEditorBaseImpl_sessionConfiguration: ExtensionApi.SessionConfiguration = null;
+
+  constructor(private _sessionEditorProxy: ExtensionSessionEditorProxy, ..._: any[]) {
+  }
+
   created(): void {
   }
 
   getContainerElement(): HTMLElement {
-    return null;  // FIXME implement
+    return this._sessionEditorProxy.getContainerNode();
+  }
+
+  __setSessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration): void {
+    this.__ExtensionSessionEditorBaseImpl_sessionConfiguration = sessionConfiguration;
+  }
+
+  getSessionConfiguration(): ExtensionApi.SessionConfiguration {
+    return this.__ExtensionSessionEditorBaseImpl_sessionConfiguration;
+  }
+
+  updateSessionConfiguration(sessionConfigurationChange: object): void {
+
+
+    this._sessionEditorProxy._sessionConfigurationChanged();
   }
 }

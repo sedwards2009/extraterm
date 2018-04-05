@@ -79,7 +79,11 @@ export class WorkspaceProxy implements InternalWorkspace {
 
   registerSessionEditor(type: string, sessionEditorClass: ExtensionApi.ExtensionSessionEditorBaseConstructor): void {
     this._workspaceSessionEditorRegistry.registerSessionEditor(type, sessionEditorClass);
-  }  
+  }
+
+  getSessionEditorTagForType(sessionType: string): string {
+    return this._workspaceSessionEditorRegistry.getSessionEditorTagForType(sessionType);
+  }
 }
 
 

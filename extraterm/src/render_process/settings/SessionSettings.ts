@@ -28,13 +28,21 @@ export class SessionSettings extends SettingsBase<SessionSettingsUi> {
   protected _setConfig(config: Config): void {
     const ui = this._getUi();
 
+    // ui.sessions = config.sessions;
+    ui.sessions = [
+      {
+        uuid: "1234",
+        name: "fish",
+        type: "unix"
+      }
+    ];
   }
 
   protected _dataChanged(): void {
-    const newConfig = this._getConfigCopy();
-    const ui = this._getUi();
+    // const newConfig = this._getConfigCopy();
+    // const ui = this._getUi();
     
-    this._updateConfig(newConfig);
+    // this._updateConfig(newConfig);
   }
 
   set extensionManager(extensionManager: ExtensionManager) {

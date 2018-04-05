@@ -50,6 +50,7 @@ export interface InternalWorkspace extends ExtensionApi.Workspace {
   getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.CommandEntry[];
   getTextViewerCommands(extensionName: string, terminal: ExtensionApi.TextViewer): CommandPaletteRequestTypes.CommandEntry[];
   findViewerElementTagByMimeType(mimeType: string): string;
+  getSessionEditorTagForType(sessionType): string;
 }
 
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {

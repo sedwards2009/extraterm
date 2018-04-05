@@ -5,7 +5,9 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import { SessionConfiguration } from 'extraterm-extension-api';
 import * as _ from 'lodash';
+
 import { ExtensionManager } from '../extension/InternalTypes';
 
 
@@ -15,6 +17,12 @@ import { ExtensionManager } from '../extension/InternalTypes';
 <div>
   <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Sessions</h2>
 
+  <div v-for="item in sessions" key="item.uuid">
+    {{ item.name }}
+    <component v-bind:is="sessionEditor(item.type)">
+    </component>
+  </div>
+
   <div v-for="item in sessionTypes">
     {{ item.name }}
   </div>
@@ -23,6 +31,7 @@ import { ExtensionManager } from '../extension/InternalTypes';
 })
 export class SessionSettingsUi extends Vue {
   private _extensionManager: ExtensionManager = null;
+  sessions: SessionConfiguration[] = [];
 
   extensionManagerStamp: any;
 
@@ -30,7 +39,7 @@ export class SessionSettingsUi extends Vue {
     super();
     this.extensionManagerStamp = Date.now();
   }
-
+  
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._extensionManager = extensionManager;
     this.extensionManagerStamp = Date.now();
@@ -45,4 +54,7 @@ export class SessionSettingsUi extends Vue {
     return this._extensionManager.getAllSessionTypes();
   }
 
+  sessionEditor(type: string): string {
+    return this._extensionManager.getSessionEditorTagForType(type);
+  }
 }

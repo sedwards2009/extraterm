@@ -116,7 +116,14 @@ export class ExtensionManagerImpl implements ExtensionManager {
     );
   }
 
-  getSessionEditorTagForType(type: string): string {
+  getSessionEditorTagForType(sessionType: string): string {
+    const seExtensions = this._activeExtensions.filter(ae => ae.metadata.contributions.sessionEditor != null);
+    for (const extension of seExtensions) {
+      const tag = extension.contextImpl.internalWorkspace.getSessionEditorTagForType(sessionType);
+      if (tag != null) {
+        return tag;
+      }
+    }
     return null;
   }
 }
