@@ -145,19 +145,17 @@ class ExtensionSessionEditorProxy extends ThemeableElementBase  {
 
   _sessionConfigurationChanged(): void {
     const config = this._extensionSessionEditor.getSessionConfiguration();
-this._log.debug("_sessionConfigurationChanged ",config);
     
     const changeEvent = new CustomEvent("change", {bubbles: true, composed: true});
     changeEvent.initCustomEvent("change", true, true, null);
     this.dispatchEvent(changeEvent);
   }
 
-  // setSessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration): void {
-  //   this._extensionSessionEditor.__setSessionConfiguration(sessionConfiguration);
-  // }
+  get sessionConfiguration(): ExtensionApi.SessionConfiguration {
+    return this._extensionSessionEditor.getSessionConfiguration();
+  }
 
   set sessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration) {
-    this._log.debug("set sessionConfiguration");
     this._extensionSessionEditor.__setSessionConfiguration(sessionConfiguration);
   }
 }
@@ -184,9 +182,17 @@ export class ExtensionSessionEditorBaseImpl implements ExtensionApi.ExtensionSes
     return this.__ExtensionSessionEditorBaseImpl_sessionConfiguration;
   }
 
-  updateSessionConfiguration(sessionConfigurationChange: ExtensionApi.SessionConfiguration): void {
-    this.__ExtensionSessionEditorBaseImpl_sessionConfiguration = sessionConfigurationChange;
+  updateSessionConfiguration(changes: object): void {
+    let changed = false;
+    for (const key of Object.getOwnPropertyNames(changes)) {
+      if (this.__ExtensionSessionEditorBaseImpl_sessionConfiguration[key] !== changes[key]) {
+        this.__ExtensionSessionEditorBaseImpl_sessionConfiguration[key] = changes[key];
+        changed = true;
+      }
+    }
 
-    this._sessionEditorProxy._sessionConfigurationChanged();
+    if (changed) {
+      this._sessionEditorProxy._sessionConfigurationChanged();
+    }
   }
 }

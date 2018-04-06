@@ -31,6 +31,11 @@ export function activate(context: ExtensionContext): any {
       this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
 
       const config = <UnixSessionConfiguration> this.getSessionConfiguration();
+      if (config.name == null) {
+        this._ui.name = "bash";
+        this._ui.shell = "/bin/bash";
+      }
+
       this._ui.name = config.name;
       this._ui.shell = config.shell;
 
@@ -38,15 +43,11 @@ export function activate(context: ExtensionContext): any {
     }
 
     _dataChanged(): void {
-      const oldConfig = this.getSessionConfiguration();
-      const newConfig: UnixSessionConfiguration = {
-        uuid: oldConfig.uuid,
+      const changes = {
         name: this._ui.name,
         shell: this._ui.shell
       };
-      if ( ! _.isEqual(oldConfig, newConfig)) {
-        this.updateSessionConfiguration(newConfig);
-      }
+      this.updateSessionConfiguration(changes);
     }
   }
 

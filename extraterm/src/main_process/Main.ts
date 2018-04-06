@@ -746,6 +746,10 @@ function setupConfig(): void {
   if ( ! config.systemConfig.keyBindingsFiles.some( (t) => t.filename === config.keyBindingsFilename )) {
     config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
   }
+
+  if (config.sessions == null) {
+    config.sessions = [];
+  }
 }
 
 /**
@@ -1101,7 +1105,8 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.keyBindingsFilename = incomingConfig.keyBindingsFilename;
   newConfig.showTitleBar = incomingConfig.showTitleBar;
   newConfig.uiScalePercent = incomingConfig.uiScalePercent;
-
+  newConfig.sessions = incomingConfig.sessions;
+  
   setConfig(newConfig);
 
   const newConfigMsg: Messages.ConfigMessage = {
