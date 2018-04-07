@@ -168,6 +168,8 @@ export interface EnvironmentMap {
  * See `CreatedPtyMessage`
  */
 export interface CreatePtyRequestMessage extends Message {
+  sessionUuid: string;
+  
   /**
    * The command or executable to run.
    */

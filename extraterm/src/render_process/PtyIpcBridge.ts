@@ -32,11 +32,11 @@ export class PtyIpcBridge {
     WebIpc.registerDefaultHandler(Messages.MessageType.PTY_CLOSE, this._handlePtyClose.bind(this));
   }
 
-  createPtyForTerminal(command: string, sessionArguments: string[], newEnv: any, columns: number, rows: number): Pty {
+  createPtyForTerminal(sessionUuid: string, command: string, sessionArguments: string[], newEnv: any, columns: number, rows: number): Pty {
     const ptyImpl = new PtyImpl();
     ptyImpl.resize(columns, rows);
 
-    WebIpc.requestPtyCreate(command, sessionArguments, columns, rows, newEnv)
+    WebIpc.requestPtyCreate(sessionUuid, command, sessionArguments, columns, rows, newEnv)
     .then( (msg: Messages.CreatedPtyMessage) => {
       ptyImpl._ptyId = msg.id;
 

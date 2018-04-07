@@ -100,7 +100,7 @@ export function requestThemeContents(themeType: ThemeType): Promise<Messages.The
   return <Promise<Messages.ThemeContentsMessage>> request(msg, Messages.MessageType.THEME_CONTENTS);
 }
 
-export function requestPtyCreate(command: string, args: string[], columns: number, rows: number,
+export function requestPtyCreate(sessionUuid: string, command: string, args: string[], columns: number, rows: number,
     env: Messages.EnvironmentMap): Promise<Messages.CreatedPtyMessage> {
       
   if (args === undefined) {
@@ -109,6 +109,7 @@ export function requestPtyCreate(command: string, args: string[], columns: numbe
 
   const msg: Messages.CreatePtyRequestMessage = {
     type: Messages.MessageType.PTY_CREATE,
+    sessionUuid,
     command: command,
     args: args,
     columns: columns,

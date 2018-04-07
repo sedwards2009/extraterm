@@ -27,15 +27,11 @@ import {Config, CommandLineAction, SessionConfig, SystemConfig, FontInfo, SESSIO
   SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
 import {Logger, getLogger, addLogWriter} from '../logging/Logger';
-import {Pty, BufferSizeChange} from '../pty/Pty';
-import {PtyConnector, PtyOptions, EnvironmentMap} from './pty/PtyConnector';
-// Our special 'fake' module which selects the correct pty connector factory implementation.
-const PtyConnectorFactory = require("./pty/PtyConnectorFactory");
+import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeManager} from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
-import * as Util from '../render_process/gui/Util';
 import { MainExtensionManager } from './extension/MainExtensionManager';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
@@ -74,8 +70,8 @@ const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
 
 
 let themeManager: ThemeManager;
+let ptyManager: PtyManager;
 let config: Config;
-let ptyConnector: PtyConnector;
 let tagCounter = 1;
 let fonts: FontInfo[] = null;
 let titleBarVisible = false;
@@ -119,7 +115,7 @@ function main(): void {
     failed = true;
   } else {
     try {
-      ptyConnector = PtyConnectorFactory.factory(config);
+      ptyManager = new PtyManager(config);
     } catch(err) {
       _log.severe("Error occured while creating the PTY connector factory: " + err.message);
       failed = true;
@@ -138,7 +134,7 @@ function main(): void {
 
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
-    ptyConnector.destroy();
+    ptyManager.dispose();
     if (bulkFileStorage !== null) {
       bulkFileStorage.dispose();
     }
@@ -230,8 +226,8 @@ function openWindow(): void {
 
   // Emitted when the window is closed.
   const mainWindowId = mainWindow.id;
-  mainWindow.on("closed", function() {
-    cleanUpPtyWindow(mainWindowId);
+  mainWindow.on("closed", () => {
+    ptyManager.cleanUpPtyWindow(mainWindowId);
     mainWindow = null;
   });
   
@@ -248,11 +244,11 @@ function openWindow(): void {
   // and load the index.html of the app.
   mainWindow.loadURL(ResourceLoader.toUrl("render_process/main.html") + params);
 
-  mainWindow.webContents.on('devtools-closed', function() {
+  mainWindow.webContents.on('devtools-closed', () => {
     sendDevToolStatus(mainWindow, false);
   });
   
-  mainWindow.webContents.on('devtools-opened', function() {
+  mainWindow.webContents.on('devtools-opened', () => {
     sendDevToolStatus(mainWindow, true);
   });
 }
@@ -337,57 +333,6 @@ function setScaleFactor(originalFactorArg?: string): {restartNeeded: boolean, cu
 }
 
 const _log = getLogger("main");
-
-function mapBadChar(m: string): string {
-  const c = m.charCodeAt(0);
-  switch (c) {
-    case 8:
-      return "\\b";
-    case 12:
-      return "\\f";
-    case 13:
-      return "\\r";
-    case 11:
-      return "\\v";
-    case 0x22:
-      return '\\"';
-    default:
-      if (c <= 255) {
-        return "\\x" + Util.to2DigitHex(c);
-      } else {
-        return "\\u" + Util.to2DigitHex( c >> 8) + Util.to2DigitHex(c & 0xff);
-      }
-  }
-}
-
-function substituteBadChars(data: string): string {
-  return data.replace(/[^ /{},.:;<>!@#$%^&*()+=_'"a-zA-Z0-9-]/g, mapBadChar);
-}
-
-function logData(data: string): void {
-  _log.debug(substituteBadChars(data));
-}
-// Format a string as a series of JavaScript string literals.
-function formatJSData(data: string, maxLen: number = 60): string {
-  let buf = "";
-  let result = "";
-  for (let i=0; i<data.length; i++) {
-    buf += substituteBadChars(data[i]);
-    if (buf.length+6 >= maxLen) {
-      result += "\"" + buf + "\"\n";
-      buf = "";
-    }
-  }
-  
-  if (buf !== "") {
-    result += "\"" + buf + "\"\n";
-  }
-  return result;
-}
-
-function logJSData(data: string): void {
-  _log.debug(formatJSData(data));
-}
 
 //-------------------------------------------------------------------------
 //
@@ -809,6 +754,8 @@ function setConfigDefaults(config: Config): void {
   if (config.keyBindingsFilename === undefined) {
     config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
   }
+
+  config.sessions = defaultValue(config.sessions, []);
 }
 
 /**
@@ -1106,7 +1053,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.showTitleBar = incomingConfig.showTitleBar;
   newConfig.uiScalePercent = incomingConfig.uiScalePercent;
   newConfig.sessions = incomingConfig.sessions;
-  
+
   setConfig(newConfig);
 
   const newConfigMsg: Messages.ConfigMessage = {
@@ -1162,146 +1109,26 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
   }
 }
 
-//-------------------------------------------------------------------------
-//
-//  ######  ####### #     # 
-//  #     #    #     #   #  
-//  #     #    #      # #   
-//  ######     #       #    
-//  #          #       #    
-//  #          #       #    
-//  #          #       #    
-//
-//-------------------------------------------------------------------------
-
-let ptyCounter = 0;
-interface PtyTuple {
-  windowId: number;
-  ptyTerm: Pty;
-  outputBufferSize: number; // The number of characters we are allowed to send.
-  outputPaused: boolean;    // True if the term's output is paused.
-};
-
-const ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
-
-function createPty(sender: Electron.WebContents, file: string, args: string[], env: EnvironmentMap,
-    cols: number, rows: number): number {
-    
-  const ptyEnv = _.clone(env);
-  ptyEnv["TERM"] = 'xterm';
-
-  const ptyTerm = ptyConnector.spawn(file, args, {
-      name: 'xterm',
-      cols: cols,
-      rows: rows,
-  //    cwd: process.env.HOME,
-      env: ptyEnv } );
-
-  ptyCounter++;
-  const ptyId = ptyCounter;
-  const ptyTup = { windowId: BrowserWindow.fromWebContents(sender).id, ptyTerm: ptyTerm, outputBufferSize: 0, outputPaused: true };
-  ptyMap.set(ptyId, ptyTup);
-  
-  ptyTerm.onData( (data: string) => {
-    if (LOG_FINE) {
-      _log.debug("pty process got data for ptyID="+ptyId);
-      logJSData(data);
-    }
-    if ( ! sender.isDestroyed()) {
-      const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: ptyId, data: data };
-      sender.send(Messages.CHANNEL_NAME, msg);
-    }
-  });
-
-  ptyTerm.onExit( () => {
-    if (LOG_FINE) {
-      _log.debug("pty process exited.");
-    }
-    if ( ! sender.isDestroyed()) {
-      const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
-      sender.send(Messages.CHANNEL_NAME, msg);
-    }
-    ptyTerm.destroy();
-    ptyMap.delete(ptyId);
-  });
-
-  ptyTerm.onAvailableWriteBufferSizeChange( (bufferSizeChange: BufferSizeChange) => {
-    const msg: Messages.PtyInputBufferSizeChange = {
-      type: Messages.MessageType.PTY_INPUT_BUFFER_SIZE_CHANGE,
-      id: ptyId,
-      totalBufferSize: bufferSizeChange.totalBufferSize,
-      availableDelta:bufferSizeChange.availableDelta
-    };
-    sender.send(Messages.CHANNEL_NAME, msg);  
-  });
-
-  return ptyId;
-}
-
 function handlePtyCreate(sender: Electron.WebContents, msg: Messages.CreatePtyRequestMessage): Messages.CreatedPtyMessage {
-  const id = createPty(sender, msg.command, msg.args, msg.env, msg.columns, msg.rows);
+  const id = ptyManager.createPty(sender, msg.command, msg.args, msg.env, msg.columns, msg.rows);
   const reply: Messages.CreatedPtyMessage = { type: Messages.MessageType.PTY_CREATED, id: id };
   return reply;
 }
 
 function handlePtyInput(msg: Messages.PtyInput): void {
-  const ptyTerminalTuple = ptyMap.get(msg.id);
-  if (ptyTerminalTuple === undefined) {
-    _log.debug("handlePtyInput() WARNING: Input arrived for a terminal which doesn't exist.");
-    return;
-  }
-
-  ptyTerminalTuple.ptyTerm.write(msg.data);
+  ptyManager.ptyInput(msg.id, msg.data);
 }
 
 function handlePtyOutputBufferSize(msg: Messages.PtyOutputBufferSize): void {
-  const ptyTerminalTuple = ptyMap.get(msg.id);
-  if (ptyTerminalTuple === undefined) {
-    _log.debug("handlePtyOutputBufferSize() WARNING: Input arrived for a terminal which doesn't exist.");
-    return;
-  }
-
-  if (LOG_FINE) {
-    _log.debug(`Received Output Buffer Size message. id: ${msg.id}, size: ${msg.size}`);
-  }
-  ptyTerminalTuple.ptyTerm.permittedDataSize(msg.size);
+  ptyManager.ptyOutputBufferSize(msg.id, msg.size);
 }
 
 function handlePtyResize(msg: Messages.PtyResize): void {
-  const ptyTerminalTuple = ptyMap.get(msg.id);
-  if (ptyTerminalTuple === undefined) {
-    _log.debug("handlePtyResize() WARNING: Input arrived for a terminal which doesn't exist.");
-    return;
-  }
-  ptyTerminalTuple.ptyTerm.resize(msg.columns, msg.rows);  
+  ptyManager.ptyResize(msg.id, msg.columns, msg.rows);
 }
 
 function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
-  const ptyTerminalTuple = ptyMap.get(msg.id);
-  if (ptyTerminalTuple === undefined) {
-    _log.debug("handlePtyCloseRequest() WARNING: Input arrived for a terminal which doesn't exist.");
-    return;
-  }
-  closePty(msg.id);
-}
-
-function closePty(id: number): void {
-  const ptyTerminalTuple = ptyMap.get(id);
-  if (ptyTerminalTuple === undefined) {
-    return;
-  }
-  ptyTerminalTuple.ptyTerm.destroy();
-  ptyMap.delete(id);
-}
-
-function cleanUpPtyWindow(windowId: number): void {
-  const keys = [...ptyMap.keys()];
-  for (const key of keys) {
-    const tup = ptyMap.get(key);
-    if (tup.windowId === windowId) {
-      closePty(key);
-    }
-  }
+  ptyManager.closePty(msg.id);
 }
 
 //-------------------------------------------------------------------------

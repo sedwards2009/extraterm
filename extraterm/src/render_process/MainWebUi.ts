@@ -354,9 +354,22 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
+
+      const sessionCommandList: CommandEntry[] = [];
+      for (const sessionConfig of this._configManager.getConfig().sessions) {
+        sessionCommandList.push({
+          id: COMMAND_NEW_TERMINAL,
+          group: PALETTE_GROUP,
+          iconRight: "fa fa-plus",
+          label: "New Terminal: " + sessionConfig.name,
+          commandExecutor: null,
+          commandArguments: {sessionUuid: sessionConfig.uuid}
+        });
+      }
+
       const commandList: CommandEntry[] = [
-        { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "fa fa-plus", label: "New Terminal", commandExecutor: null },
-        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", commandExecutor: null },        
+        ...sessionCommandList,
+        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", commandExecutor: null },
         { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "fa fa-columns", label: "Vertical Split", commandExecutor: null },
         { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor: null }
       ];
@@ -533,7 +546,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  newTerminalTab(tabWidget: TabWidget = null): EtTerminal {
+  newTerminalTab(tabWidget: TabWidget, sessionUuid: string): EtTerminal {
     if (tabWidget == null) {
       tabWidget = this._splitLayout.firstTabWidget();
     }
@@ -547,7 +560,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     this._addTab(tabWidget, newTerminal);
     this._setUpNewTerminalEventHandlers(newTerminal);
-    this._createPtyForTerminal(newTerminal);
+    this._createPtyForTerminal(newTerminal, sessionUuid);
     this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
@@ -555,7 +568,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     return newTerminal;
   }
 
-  private _createPtyForTerminal(newTerminal: EtTerminal): void {
+  private _createPtyForTerminal(newTerminal: EtTerminal, sessionUuid: string): void {
     const sessionProfile = this._configManager.getConfig().expandedProfiles[0];
     const newEnv = _.cloneDeep(process.env);
     const expandedExtra = sessionProfile.extraEnv;
@@ -565,7 +578,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       newEnv[prop] = expandedExtra[prop];
     }
 
-    const pty = this._ptyIpcBridge.createPtyForTerminal(sessionProfile.command, sessionProfile.arguments, newEnv, newTerminal.getColumns(), newTerminal.getRows());
+    const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, sessionProfile.command, sessionProfile.arguments, newEnv, newTerminal.getColumns(), newTerminal.getRows());
     pty.onExit(() => {
       this.closeTab(newTerminal);
     });
@@ -1042,8 +1055,21 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     const commandExecutor = this;
     const commandArguments = {tabElement: tabContentElement};
+
+    const sessionCommandList: CommandEntry[] = [];
+    for (const sessionConfig of this._configManager.getConfig().sessions) {
+      sessionCommandList.push({
+        id: COMMAND_NEW_TERMINAL,
+        group: PALETTE_GROUP,
+        iconRight: "fa fa-plus",
+        label: "New Terminal: " + sessionConfig.name,
+        commandExecutor,
+        commandArguments: {tabElement: tabContentElement, sessionUuid: sessionConfig.uuid}
+      });
+    }
+
     const commandList: CommandEntry[] = [
-      { id: COMMAND_NEW_TERMINAL, group: PALETTE_GROUP, iconRight: "fa fa-plus", label: "New Terminal", commandExecutor, commandArguments},
+      ...sessionCommandList,
       { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "fa fa-times", label: "Close Tab", commandExecutor, commandArguments },
       { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", commandExecutor, commandArguments },
       { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", commandExecutor, commandArguments },
@@ -1117,7 +1143,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
         break;
 
       case COMMAND_NEW_TERMINAL:
-        this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement)));
+        this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement), (<any>options).sessionUuid));
         break;
         
       case COMMAND_CLOSE_TAB:
