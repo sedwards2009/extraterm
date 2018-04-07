@@ -13,7 +13,7 @@ import * as SourceMapSupport from 'source-map-support';
 
 import * as child_process from 'child_process';
 import * as Commander from 'commander';
-import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen} from 'electron';
+import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
 import { BulkFileState } from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
@@ -114,10 +114,7 @@ function main(): void {
   if (config.expandedProfiles.length === 0) {
     failed = true;
   } else {
-    try {
-      ptyManager = new PtyManager(config);
-    } catch(err) {
-      _log.severe("Error occured while creating the PTY connector factory: " + err.message);
+    if ( ! setupPtyManager(config)) {
       failed = true;
     }
   }
@@ -225,9 +222,10 @@ function openWindow(): void {
   mainWindow.setMenu(null);
 
   // Emitted when the window is closed.
-  const mainWindowId = mainWindow.id;
+
+  const mainWindowWebContentsId = mainWindow.webContents.id;
   mainWindow.on("closed", () => {
-    ptyManager.cleanUpPtyWindow(mainWindowId);
+    cleanUpPtyWindow(mainWindowWebContentsId);
     mainWindow = null;
   });
   
@@ -1109,9 +1107,65 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
   }
 }
 
+const ptyToSenderMap = new Map<number, number>();
+
+function setupPtyManager(config: Config): boolean {
+  try {
+    ptyManager = new PtyManager(config);
+
+    ptyManager.onPtyData(event => {
+      const senderId = ptyToSenderMap.get(event.ptyId);
+      if (senderId == null) {
+        return;
+      }
+      const sender = webContents.fromId(senderId);
+      if (sender == null || sender.isDestroyed()) {
+        return;
+      }
+      const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: event.ptyId, data: event.data };
+      sender.send(Messages.CHANNEL_NAME, msg);
+    });
+
+    ptyManager.onPtyExit(ptyId => {
+      const senderId = ptyToSenderMap.get(ptyId);
+      if (senderId == null) {
+        return;
+      }
+      const sender = webContents.fromId(senderId);
+      if (sender == null || sender.isDestroyed()) {
+        return;
+      }
+
+      const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
+      sender.send(Messages.CHANNEL_NAME, msg);
+    });
+
+    ptyManager.onPtyAvailableWriteBufferSizeChange(event => {
+      const senderId = ptyToSenderMap.get(event.ptyId);
+      const sender = webContents.fromId(senderId);
+      if (sender == null && ! sender.isDestroyed()) {
+        const msg: Messages.PtyInputBufferSizeChange = {
+          type: Messages.MessageType.PTY_INPUT_BUFFER_SIZE_CHANGE,
+          id: event.ptyId,
+          totalBufferSize: event.bufferSizeChange.totalBufferSize,
+          availableDelta:event.bufferSizeChange.availableDelta
+        };
+        sender.send(Messages.CHANNEL_NAME, msg);  
+      }
+    });
+
+    return true;
+  } catch(err) {
+    _log.severe("Error occured while creating the PTY connector factory: " + err.message);
+    return false;
+  }
+}
+
 function handlePtyCreate(sender: Electron.WebContents, msg: Messages.CreatePtyRequestMessage): Messages.CreatedPtyMessage {
-  const id = ptyManager.createPty(sender, msg.command, msg.args, msg.env, msg.columns, msg.rows);
-  const reply: Messages.CreatedPtyMessage = { type: Messages.MessageType.PTY_CREATED, id: id };
+  const ptyId = ptyManager.createPty(msg.command, msg.args, msg.env, msg.columns, msg.rows);
+  _log.debug(`handlePtyCreate ptyId: ${ptyId}, sender.id: ${sender.id}`);
+  ptyToSenderMap.set(ptyId, sender.id);
+  const reply: Messages.CreatedPtyMessage = { type: Messages.MessageType.PTY_CREATED, id: ptyId };
   return reply;
 }
 
@@ -1131,6 +1185,22 @@ function handlePtyCloseRequest(msg: Messages.PtyCloseRequest): void {
   ptyManager.closePty(msg.id);
 }
 
+function cleanUpPtyWindow(webContentsId: number): void {
+  const closedPtyList: number[] = [];
+
+  for (const [ptyId, senderId] of ptyToSenderMap) {
+    if (webContentsId === senderId) {
+      ptyManager.closePty(ptyId);
+      closedPtyList.push(ptyId);
+    }
+  }
+
+  for (const ptyId of closedPtyList) {
+    ptyToSenderMap.delete(ptyId);
+  }
+}
+
+
 //-------------------------------------------------------------------------
 
 function handleDevToolsRequest(sender: Electron.WebContents, msg: Messages.DevToolsRequestMessage): void {
@@ -1140,7 +1210,6 @@ function handleDevToolsRequest(sender: Electron.WebContents, msg: Messages.DevTo
     sender.closeDevTools();
   }
 }
-
 
 function sendDevToolStatus(window: Electron.BrowserWindow, open: boolean): void {
   const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };

@@ -3,37 +3,53 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import {Disposable, Event} from 'extraterm-extension-api';
 import * as _ from 'lodash';
 
 import {Pty, BufferSizeChange} from '../../pty/Pty';
 import {PtyConnector, PtyOptions, EnvironmentMap} from './PtyConnector';
 import { Config } from '../../Config';
-import { BrowserWindow } from 'electron';
 import { Logger, getLogger } from '../../logging/Logger';
 // Our special 'fake' module which selects the correct pty connector factory implementation.
 const PtyConnectorFactory = require("../pty/PtyConnectorFactory");
 
 import * as Messages from '../../WindowMessages';
 import * as Util from '../../render_process/gui/Util';
+import { EventEmitter } from '../../utils/EventEmitter';
 
 const LOG_FINE = false;
 
 interface PtyTuple {
-  windowId: number;
   ptyTerm: Pty;
   outputBufferSize: number; // The number of characters we are allowed to send.
   outputPaused: boolean;    // True if the term's output is paused.
 };
 
-export class PtyManager {
+export interface PtyDataEvent {
+  ptyId: number;
+  data: string;
+}
+
+export interface PtyAvailableWriteBufferSizeChangeEvent {
+  ptyId: number;
+  bufferSizeChange: BufferSizeChange;
+}
+
+export class PtyManager implements Disposable {
   private _log: Logger;
   private _ptyConnector: PtyConnector;
   private _ptyCounter = 0;
   private _ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
-  
+  private _onPtyExitEventEmitter = new EventEmitter<number>();
+  private _onPtyDataEventEmitter = new EventEmitter<PtyDataEvent>();
+  private _onPtyAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<PtyAvailableWriteBufferSizeChangeEvent>();
+
   constructor(config: Config) {
     this._log = getLogger("PtyManager", this);
     this._ptyConnector = PtyConnectorFactory.factory(config);
+    this.onPtyExit = this._onPtyExitEventEmitter.event;
+    this.onPtyData = this._onPtyDataEventEmitter.event;
+    this.onPtyAvailableWriteBufferSizeChange = this._onPtyAvailableWriteBufferSizeChangeEventEmitter.event;
   }
 
   dispose(): void {
@@ -41,8 +57,11 @@ export class PtyManager {
     this._ptyConnector = null;
   }
 
-  createPty(sender: Electron.WebContents, file: string, args: string[], env: EnvironmentMap,
-      cols: number, rows: number): number {
+  onPtyExit: Event<number>;
+  onPtyData: Event<PtyDataEvent>;
+  onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
+
+  createPty(file: string, args: string[], env: EnvironmentMap, cols: number, rows: number): number {
       
     const ptyEnv = _.clone(env);
     ptyEnv["TERM"] = 'xterm';
@@ -56,7 +75,7 @@ export class PtyManager {
   
     this._ptyCounter++;
     const ptyId = this._ptyCounter;
-    const ptyTup = { windowId: BrowserWindow.fromWebContents(sender).id, ptyTerm: ptyTerm, outputBufferSize: 0, outputPaused: true };
+    const ptyTup = { ptyTerm: ptyTerm, outputBufferSize: 0, outputPaused: true };
     this._ptyMap.set(ptyId, ptyTup);
     
     ptyTerm.onData( (data: string) => {
@@ -64,37 +83,23 @@ export class PtyManager {
         this._log.debug("pty process got data for ptyID=" + ptyId);
         this._logJSData(data);
       }
-// FIXME use event
-      if ( ! sender.isDestroyed()) {
-        const msg: Messages.PtyOutput = { type: Messages.MessageType.PTY_OUTPUT, id: ptyId, data: data };
-        sender.send(Messages.CHANNEL_NAME, msg);
-      }
+
+      this._onPtyDataEventEmitter.fire({ptyId, data});
     });
   
     ptyTerm.onExit( () => {
       if (LOG_FINE) {
         this._log.debug("pty process exited.");
       }
-// FIXME use event
-      if ( ! sender.isDestroyed()) {
-        const msg: Messages.PtyClose = { type: Messages.MessageType.PTY_CLOSE, id: ptyId };
-        sender.send(Messages.CHANNEL_NAME, msg);
-      }
+
+      this._onPtyExitEventEmitter.fire(ptyId);
+
       ptyTerm.destroy();
       this._ptyMap.delete(ptyId);
     });
   
     ptyTerm.onAvailableWriteBufferSizeChange( (bufferSizeChange: BufferSizeChange) => {
-
-// FIXME use event
-
-      const msg: Messages.PtyInputBufferSizeChange = {
-        type: Messages.MessageType.PTY_INPUT_BUFFER_SIZE_CHANGE,
-        id: ptyId,
-        totalBufferSize: bufferSizeChange.totalBufferSize,
-        availableDelta:bufferSizeChange.availableDelta
-      };
-      sender.send(Messages.CHANNEL_NAME, msg);  
+      this._onPtyAvailableWriteBufferSizeChangeEventEmitter.fire({ptyId, bufferSizeChange});
     });
   
     return ptyId;
@@ -142,16 +147,6 @@ export class PtyManager {
     this._ptyMap.delete(ptyId);
   }
   
-  cleanUpPtyWindow(windowId: number): void {
-    const keys = [...this._ptyMap.keys()];
-    for (const key of keys) {
-      const tup = this._ptyMap.get(key);
-      if (tup.windowId === windowId) {
-        this.closePty(key);
-      }
-    }
-  }
-
   private _logData(data: string): void {
     this._log.debug(substituteBadChars(data));
   }
