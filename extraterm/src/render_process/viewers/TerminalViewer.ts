@@ -179,7 +179,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = this._commandLine !== null ? this._commandLine : "Terminal Command";
-    metadata.icon = this._returnCode === '0' ? 'fa-check' : 'fa-times';
+    metadata.icon = this._returnCode === "0" ? "fa fa-check" : "fa fa-times";
 
     switch(this._returnCode) {
       case null:
