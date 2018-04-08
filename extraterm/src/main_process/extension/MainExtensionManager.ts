@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as ExtensionApi from 'extraterm-extension-api';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
@@ -10,12 +11,22 @@ import * as path from 'path';
 import { Logger, getLogger } from "../../logging/Logger";
 import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution } from "../../ExtensionMetadata";
 import { parsePackageJson } from './PackageFileParser';
+import { ExtensionContext, Backend, SessionBackend } from 'extraterm-extension-api';
+import log from '../../logging/LogDecorator';
 
+
+interface ActiveExtension {
+  metadata: ExtensionMetadata;
+  publicApi: any;
+  contextImpl: ExtensionContextImpl;
+  module: any;
+}
 
 export class MainExtensionManager {
 
   private _log: Logger = null;
   private _extensionMetadata: ExtensionMetadata[] = [];
+  private _activeExtensions: ActiveExtension[] = [];
 
   constructor(private extensionPaths: string[]) {
     this._log = getLogger("MainExtensionManager", this);
@@ -63,7 +74,73 @@ export class MainExtensionManager {
       return result;
     } catch(ex) {
       this._log.warn("An error occurred while processing '${packageJsonPath}': " + ex);
+      return null;   
+    }
+  }
+
+  startUp(): void {
+    for (const extensionInfo of this._extensionMetadata) {
+      if (this._isMainProcessExtension(extensionInfo)) {
+        this._startExtension(extensionInfo);
+      }
+    }
+  }
+
+  private _isMainProcessExtension(metadata: ExtensionMetadata): boolean {
+    return metadata.contributions.sessionBackend.length !== 0;
+  }
+
+  private _startExtension(metadata: ExtensionMetadata): void {
+    this._log.info(`Starting extension '${metadata.name}' in the main process.`);
+    const module = this._loadExtensionModule(metadata);
+    if (module != null) {
+      try {
+        const contextImpl = new ExtensionContextImpl(metadata);
+        const publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
+        this._activeExtensions.push({metadata, publicApi, contextImpl, module});
+      } catch(ex) {
+        this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
+      }
+    }
+  }
+
+  private _loadExtensionModule(extension: ExtensionMetadata): any {
+    const mainJsPath = path.join(extension.path, extension.main);
+    try {
+      const module = require(mainJsPath);
+      return module;
+    } catch(ex) {
+      this._log.warn(`Unable to load ${mainJsPath}. ${ex}`);
       return null;
     }
+  }
+  
+}
+
+class ExtensionContextImpl implements ExtensionContext {
+  logger: ExtensionApi.Logger = null;
+  isBackendProcess = true;
+  backend: BackendImpl = new BackendImpl();
+
+  constructor(public extensionMetadata: ExtensionMetadata) {
+    this.logger = getLogger("[Main]" + extensionMetadata.name);
+  }
+  
+  get workspace(): never {
+    this.logger.warn("'ExtensionContext.workspace' is not available from a render process.");
+    throw Error("'ExtensionContext.workspace' is not available from a render process.");    
+  }
+
+  get codeMirrorModule(): never {
+    this.logger.warn("'ExtensionContext.codeMirrorModule' is not available from a render process.");
+    throw Error("'ExtensionContext.codeMirrorModule' is not available from a render process.");    
+  }
+}
+
+class BackendImpl implements Backend {
+  private __BackendImpl__sessionBackends: SessionBackend[] = [];
+
+  registerSessionBackend(name: string, backend: SessionBackend): void {
+    this.__BackendImpl__sessionBackends.push(backend);
   }
 }

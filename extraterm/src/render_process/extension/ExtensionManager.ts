@@ -45,8 +45,14 @@ export class ExtensionManagerImpl implements ExtensionManager {
     this._extensionMetadata = WebIpc.requestExtensionMetadataSync();
 
     for (const extensionInfo of this._extensionMetadata) {
-      this._startExtension(extensionInfo);
+      if (this._isRenderProcessExtension(extensionInfo)) {
+        this._startExtension(extensionInfo);
+      }
     }
+  }
+
+  private _isRenderProcessExtension(metadata: ExtensionMetadata): boolean {
+    return  metadata.contributions.sessionBackend.length === 0;
   }
 
   getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[] {
@@ -80,6 +86,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   private _startExtension(metadata: ExtensionMetadata): void {
+    this._log.info(`Starting extension '${metadata.name}' in the render process.`);
     const module = this._loadExtensionModule(metadata);
     if (module != null) {
       try {
@@ -134,11 +141,17 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   internalWorkspace: InternalWorkspace = null;
   codeMirrorModule: typeof CodeMirror = CodeMirror;
   logger: ExtensionApi.Logger = null;
+  isBackendProcess = false;
 
   constructor(public extensionUiUtils: ExtensionUiUtils, public extensionMetadata: ExtensionMetadata, public proxyFactory: ProxyFactory) {
     this.workspace = new WorkspaceProxy(this);
     this.internalWorkspace = this.workspace;
     this.logger = getLogger(extensionMetadata.name);
+  }
+
+  get backend(): never {
+    this.logger.warn("'ExtensionContext.backend' is not available from a render process.");
+    throw Error("'ExtensionContext.backend' is not available from a render process.");
   }
 
   findViewerElementTagByMimeType(mimeType: string): string {

@@ -146,6 +146,7 @@ function main(): void {
 function setupExtensionManager(): void {
   extensionManager = new MainExtensionManager([path.join(__dirname, "../../../extensions" )]);
   extensionManager.scan();
+  extensionManager.startUp();
 }
 
 function setupThemeManager(): void {

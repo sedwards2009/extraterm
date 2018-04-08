@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution } from "../../ExtensionMetadata";
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
 
 const FONT_AWESOME_DEFAULT = false;
 
@@ -74,7 +74,8 @@ function parseContributionsJson(packageJson: any): ExtensionContributions {
   if (packageJson["contributions"] == null) {
     return {
       viewer: [],
-      sessionEditor: []
+      sessionEditor: [],
+      sessionBackend: []
     };
   }
 
@@ -84,7 +85,8 @@ function parseContributionsJson(packageJson: any): ExtensionContributions {
 
   return {
     viewer: parseViewerContributionsListJson(packageJson["contributions"]),
-    sessionEditor: parseSessionEditorContributionsListJson(packageJson["contributions"])
+    sessionEditor: parseSessionEditorContributionsListJson(packageJson["contributions"]),
+    sessionBackend: parseSessionBackendContributionsListJson(packageJson["contributions"]),
   };
 }
 
@@ -162,5 +164,32 @@ function parseSessionEditorConstributionJson(packageJson: any): ExtensionSession
     };
   } catch (ex) {
     throw `Failed to process a session editor contribution: ${ex}`;
+  }
+}
+
+function parseSessionBackendContributionsListJson(packageJson: any): ExtensionSessionBackendContribution[] {
+  const value = packageJson["sessionBackend"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'sessionBackend' of in the 'contributions' object is not an array.`;
+  }
+
+  const result: ExtensionSessionBackendContribution[] = [];
+  for (const item of value) {
+    result.push(parseSessionBackendConstributionJson(item));
+  }
+  return result;
+}
+
+function parseSessionBackendConstributionJson(packageJson: any): ExtensionSessionBackendContribution {
+  try {
+    return {
+      name: assertJsonStringField(packageJson, "name"),
+      type: assertJsonStringField(packageJson, "type")
+    };
+  } catch (ex) {
+    throw `Failed to process a session backend contribution: ${ex}`;
   }
 }

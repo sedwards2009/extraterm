@@ -16,6 +16,7 @@ export interface ExtensionMetadata {
 export interface ExtensionContributions {
   viewer: ExtensionViewerContribution[];
   sessionEditor: ExtensionSessionEditorContribution[];
+  sessionBackend: ExtensionSessionBackendContribution[];
 }
 
 export interface ExtensionViewerContribution {
@@ -41,4 +42,16 @@ export interface ExtensionSessionEditorContribution {
    */
   type: string;
   css: ExtensionCss;
+}
+
+export interface ExtensionSessionBackendContribution {
+  /**
+   * Human readable name for this session editor.
+   */
+  name: string;
+
+  /**
+   * Internal symbol used internally for indentifying this type of session.
+   */
+  type: string;
 }

@@ -5,7 +5,7 @@
  */
 import _ = require('lodash');
 
-import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Terminal, SessionConfiguration} from 'extraterm-extension-api';
+import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
 import {UnixSessionEditorUi} from './UnixSessionEditorUi';
 
 

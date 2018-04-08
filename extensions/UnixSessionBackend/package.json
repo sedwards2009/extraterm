@@ -1,0 +1,24 @@
+{
+  "name": "unix-session-backend",
+  "description": "Unix Session Backend",
+  "version": "1.0.0",
+  "main": "src/UnixSessionBackendExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "2.6.1"
+  },
+  "contributions": {
+    "sessionBackend": [
+      {
+        "name": "Unix",
+        "type": "unix"
+      }
+    ]
+  }
+}

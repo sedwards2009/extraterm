@@ -428,6 +428,14 @@ export interface ExtensionSessionEditorBaseConstructor {
   new(...any: any[]): ExtensionSessionEditorBase;
 }
 
+export interface SessionBackend {
+  defaultSessionConfigurations(): SessionConfiguration[];
+}
+
+export interface Backend {
+  registerSessionBackend(name: string, backend: SessionBackend): void;
+}
+
 /**
  * This interface grants the extension at load and activtion time.
  * 
@@ -437,6 +445,8 @@ export interface ExtensionSessionEditorBaseConstructor {
 export interface ExtensionContext {
   workspace: Workspace;
   codeMirrorModule: typeof CodeMirror;
+  isBackendProcess: boolean;
+  backend: Backend;
   logger: Logger;
 }
 
