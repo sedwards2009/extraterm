@@ -11,10 +11,12 @@ import Vue from 'vue';
     template: `
     <div id="top_container">
       Name: <input type="text" v-model.lazy="name"><br />
-      Shell: <input type="text" v-model.lazy="shell">
+      <input type="radio" value="1" v-model.number="useDefaultShell"> Use default shell<br />
+      <input type="radio" value="0" v-model.number="useDefaultShell"> Shell: <input type="text" :disabled="useDefaultShell===1" v-model.lazy="shell">
     </div>`
 })
 export class UnixSessionEditorUi extends Vue {
   name: string = "";
   shell: string = "";
+  useDefaultShell: number = 1;
 }

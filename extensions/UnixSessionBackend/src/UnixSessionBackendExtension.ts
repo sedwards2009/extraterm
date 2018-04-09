@@ -6,14 +6,27 @@
 
 import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Terminal, SessionConfiguration, Backend, SessionBackend} from 'extraterm-extension-api';
 
+
+interface UnixSessionConfiguration extends SessionConfiguration {
+  useDefaultShell?: boolean;
+  shell?: string;
+}
+
+
 class UnixBackend implements SessionBackend {
 
   constructor(private _log: Logger) {
-
   }
   
   defaultSessionConfigurations(): SessionConfiguration[] {
-    return [];
+    const loginSessionConfig: UnixSessionConfiguration = {
+      uuid: "",
+      name: "Default shell",
+      type: "unix",
+      useDefaultShell: true,
+      shell: ""
+    };
+    return [loginSessionConfig];
   }
 }
 
