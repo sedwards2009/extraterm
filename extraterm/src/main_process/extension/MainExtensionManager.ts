@@ -120,10 +120,11 @@ export class MainExtensionManager {
 class ExtensionContextImpl implements ExtensionContext {
   logger: ExtensionApi.Logger = null;
   isBackendProcess = true;
-  backend: BackendImpl = new BackendImpl();
+  backend: BackendImpl = null;
 
-  constructor(public extensionMetadata: ExtensionMetadata) {
-    this.logger = getLogger("[Main]" + extensionMetadata.name);
+  constructor(public __extensionMetadata: ExtensionMetadata) {
+    this.logger = getLogger("[Main]" + this.__extensionMetadata.name);
+    this.backend = new BackendImpl(this.__extensionMetadata);
   }
   
   get workspace(): never {
@@ -138,9 +139,23 @@ class ExtensionContextImpl implements ExtensionContext {
 }
 
 class BackendImpl implements Backend {
+  private _log: Logger = null;
   private __BackendImpl__sessionBackends: SessionBackend[] = [];
+  
+  constructor(public __extensionMetadata: ExtensionMetadata) {
+    this._log = getLogger("Backend (" + this.__extensionMetadata.name + ")", this);
+  }
 
   registerSessionBackend(name: string, backend: SessionBackend): void {
-    this.__BackendImpl__sessionBackends.push(backend);
+    for (const backendMeta of this.__extensionMetadata.contributions.sessionBackend) {
+      if (backendMeta.name === name) {
+        this.__BackendImpl__sessionBackends.push(backend);
+      }
+    }
+
+    this._log.warn(`Unable to register session backend '${name}' for extension ` +
+      `'${this.__extensionMetadata.name}' because the session backend contribution data ` +
+      `couldn't be found in the extension's package.json file.`);
+    return;
   }
 }
