@@ -383,7 +383,7 @@ function handleConfigMessage(msg: Messages.Message): Promise<void> {
   const configMessage = <Messages.ConfigMessage> msg;
   const oldConfiguration = configManager.getConfig();
   const config = configMessage.config;
-  configManager.setNewConfig(config);
+  configManager.setConfigFromMainProcess(config);
   return setupConfiguration(oldConfiguration, config);
 }
 
@@ -664,7 +664,7 @@ class ConfigDistributorImpl implements ConfigDistributor {
   /**
    * Set a new configuration object as the application wide 
    */
-  setNewConfig(newConfig: Config): void {
+  setConfigFromMainProcess(newConfig: Config): void {
     this._config = newConfig;
     this._onChangeEventEmitter.fire(undefined);
   }
