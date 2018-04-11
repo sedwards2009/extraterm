@@ -31,7 +31,7 @@ import log from '../logging/LogDecorator';
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
   cssFileToFilename, cssFileToExtension} from './Theme';
-import { Config } from '../Config';
+import { Config, AcceptsConfigDistributor, ConfigDistributor } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 
@@ -59,10 +59,10 @@ interface CssDirectory {
 }
 
 
-export class ThemeManager {
+export class ThemeManager implements AcceptsConfigDistributor {
   
   private _log: Logger = null;
-  private _config: Config = null;
+  private _configDistributor: ConfigDistributor = null;
   private _themes: Map<string, ThemeInfo> = null;
   
   constructor(private _directories: string[], private _mainExtensionManager: MainExtensionManager) {
@@ -77,6 +77,10 @@ export class ThemeManager {
     });
     
     this._themes = allThemes;
+  }
+
+  setConfigDistributor(configDistributor: ConfigDistributor): void {
+    this._configDistributor = configDistributor;
   }
 
   /**
@@ -144,30 +148,27 @@ export class ThemeManager {
     return result;
   }
 
-  setConfig(config: Config): void {
-    this._config = config;
-  }
-
   async render(themeType: ThemeType, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
+    const config = this._configDistributor.getConfig();
     let moduleName = "";
     let themeNameStack: string[] = null;
     let fallbackTheme = "";
     switch (themeType) {
       case "gui":
         moduleName = CSS_MODULE_INTERNAL_GUI;
-        themeNameStack = [this._config.themeGUI, FALLBACK_UI_THEME];
+        themeNameStack = [config.themeGUI, FALLBACK_UI_THEME];
         fallbackTheme = FALLBACK_UI_THEME;
         break;
 
       case "terminal":
         moduleName = CSS_MODULE_INTERNAL_TERMINAL;
-        themeNameStack = [this._config.themeTerminal, FALLBACK_TERMINAL_THEME];
+        themeNameStack = [config.themeTerminal, FALLBACK_TERMINAL_THEME];
         fallbackTheme = FALLBACK_TERMINAL_THEME;
         break;
 
       case "syntax":
         moduleName = CSS_MODULE_INTERNAL_SYNTAX;
-        themeNameStack = [this._config.themeSyntax, FALLBACK_SYNTAX_THEME];
+        themeNameStack = [config.themeSyntax, FALLBACK_SYNTAX_THEME];
         fallbackTheme = FALLBACK_SYNTAX_THEME;
         break;
     }

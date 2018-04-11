@@ -8,7 +8,7 @@ import * as _ from 'lodash';
 
 import {Pty, BufferSizeChange} from '../../pty/Pty';
 import {PtyConnector, PtyOptions, EnvironmentMap} from './PtyConnector';
-import { Config } from '../../Config';
+import { Config, AcceptsConfigDistributor, ConfigDistributor } from '../../Config';
 import { Logger, getLogger } from '../../logging/Logger';
 // Our special 'fake' module which selects the correct pty connector factory implementation.
 const PtyConnectorFactory = require("../pty/PtyConnectorFactory");
@@ -35,8 +35,9 @@ export interface PtyAvailableWriteBufferSizeChangeEvent {
   bufferSizeChange: BufferSizeChange;
 }
 
-export class PtyManager implements Disposable {
+export class PtyManager implements Disposable, AcceptsConfigDistributor {
   private _log: Logger;
+  private _configDistributor: ConfigDistributor = null;
   private _ptyConnector: PtyConnector;
   private _ptyCounter = 0;
   private _ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
@@ -44,7 +45,7 @@ export class PtyManager implements Disposable {
   private _onPtyDataEventEmitter = new EventEmitter<PtyDataEvent>();
   private _onPtyAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<PtyAvailableWriteBufferSizeChangeEvent>();
 
-  constructor(config: Config) {
+  constructor(config: Config /* FIXME remove this param */) {
     this._log = getLogger("PtyManager", this);
     this._ptyConnector = PtyConnectorFactory.factory(config);
     this.onPtyExit = this._onPtyExitEventEmitter.event;
@@ -52,6 +53,10 @@ export class PtyManager implements Disposable {
     this.onPtyAvailableWriteBufferSizeChange = this._onPtyAvailableWriteBufferSizeChangeEventEmitter.event;
   }
 
+  setConfigDistributor(configDistributor: ConfigDistributor): void  {
+    this._configDistributor = configDistributor;
+  }
+  
   dispose(): void {
     this._ptyConnector.destroy();
     this._ptyConnector = null;
@@ -61,7 +66,7 @@ export class PtyManager implements Disposable {
   onPtyData: Event<PtyDataEvent>;
   onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
 
-  createPty(file: string, args: string[], env: EnvironmentMap, cols: number, rows: number): number {
+  createPty(sessionUuid: string, file: string, args: string[], env: EnvironmentMap, cols: number, rows: number): number {
       
     const ptyEnv = _.clone(env);
     ptyEnv["TERM"] = 'xterm';

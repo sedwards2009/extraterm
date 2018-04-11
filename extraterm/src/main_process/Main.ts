@@ -14,7 +14,7 @@ import * as SourceMapSupport from 'source-map-support';
 import * as child_process from 'child_process';
 import * as Commander from 'commander';
 import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
-import { BulkFileState } from 'extraterm-extension-api';
+import { BulkFileState, Disposable, Event} from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
 import * as fs from 'fs';
@@ -24,7 +24,7 @@ import * as os from 'os';
 
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
 import {Config, CommandLineAction, SessionConfig, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
-  SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo} from '../Config';
+  SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo, ConfigDistributor, injectConfigDistributor} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
 import {Logger, getLogger, addLogWriter} from '../logging/Logger';
 import { PtyManager } from './pty/PtyManager';
@@ -33,6 +33,7 @@ import * as ThemeTypes from '../theme/Theme';
 import {ThemeManager} from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import { MainExtensionManager } from './extension/MainExtensionManager';
+import { EventEmitter } from '../utils/EventEmitter';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
@@ -71,7 +72,7 @@ const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
 
 let themeManager: ThemeManager;
 let ptyManager: PtyManager;
-let config: Config;
+let configManager: ConfigManager;
 let tagCounter = 1;
 let fonts: FontInfo[] = null;
 let titleBarVisible = false;
@@ -81,6 +82,7 @@ let extensionManager: MainExtensionManager = null;
 
 function main(): void {
   let failed = false;
+  configManager = new ConfigManager();
 
   setupAppData();
   setupLogging();
@@ -109,12 +111,11 @@ function main(): void {
   setupExtensionManager();
   setupThemeManager();
   setupConfig();
-  themeManager.setConfig(config);
 
-  if (config.expandedProfiles.length === 0) {
+  if (configManager.getConfig().expandedProfiles.length === 0) {
     failed = true;
   } else {
-    if ( ! setupPtyManager(config)) {
+    if ( ! setupPtyManager()) {
       failed = true;
     }
   }
@@ -154,6 +155,7 @@ function setupThemeManager(): void {
   const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
   themeManager = new ThemeManager([themesdir, userThemesDir], extensionManager);
+  injectConfigDistributor(themeManager, configManager);
 }
 
 function startUpWindows(): void {
@@ -172,8 +174,10 @@ function setupScale(): boolean {
   if (restartNeeded) {
     return false;
   }
-  config.systemConfig.currentScaleFactor = currentScaleFactor;
-  config.systemConfig.originalScaleFactor = originalScaleFactor;
+  const newConfig = _.cloneDeep(configManager.getConfig());
+  newConfig.systemConfig.currentScaleFactor = currentScaleFactor;
+  newConfig.systemConfig.originalScaleFactor = originalScaleFactor;
+  configManager.setConfig(newConfig);
   return true;
 }
 
@@ -184,6 +188,7 @@ function setupBulkFileStorage(): void {
 }
 
 function openWindow(): void {
+  const config = configManager.getConfig();
   const themeInfo = themeManager.getTheme(config.themeGUI);
 
   // Create the browser window.
@@ -253,21 +258,22 @@ function openWindow(): void {
 }
 
 function saveWindowDimensions(windowId: number, rect: Electron.Rectangle): void {
-  const config = getConfig();
+  const newConfig = _.cloneDeep(configManager.getConfig());
 
-  if (config.windowConfiguration == null) {
-    config.windowConfiguration = {};
+  if (newConfig.windowConfiguration == null) {
+    newConfig.windowConfiguration = {};
   }
-  config.windowConfiguration[windowId] = {
+  newConfig.windowConfiguration[windowId] = {
     x: rect.x,
     y: rect.y,
     width: rect.width,
     height: rect.height
   };
-  setConfig(config);
+  configManager.setConfig(newConfig);
 }
 
 function getWindowDimensionsFromConfig(windowId: number): Electron.Rectangle {
+  const config = configManager.getConfig();
   if (config.windowConfiguration == null) {
     return null;
   }
@@ -651,7 +657,7 @@ function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
 }
 
 function setupConfig(): void {
-  config = readConfigurationFile();
+  const config = readConfigurationFile();
   config.systemConfig = systemConfiguration(config);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
   config.expandedProfiles = expandSessionConfigs(config.sessionProfiles, <any> Commander);
@@ -692,8 +698,10 @@ function setupConfig(): void {
   }
 
   if (config.sessions == null) {
-    config.sessions = [];
+    config.sessions = []; // FIXME set up some default sessions.
   }
+
+  configManager.setConfigNoWrite(config);
 }
 
 /**
@@ -757,31 +765,42 @@ function setConfigDefaults(config: Config): void {
   config.sessions = defaultValue(config.sessions, []);
 }
 
-/**
- * Write out the configuration to disk.
- * 
- * @param {Object} config The configuration to write.
- */
-function writeConfigurationFile(config: Config): void {
-  const cleanConfig = <Config> _.cloneDeep(config);
-  cleanConfig.systemConfig = null;
+
+class ConfigManager implements ConfigDistributor {
+  private _config: Config = null;
+  private _onChangeEventEmitter = new EventEmitter<void>();
+  onChange: Event<void>;
   
-  const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
-  fs.writeFileSync(filename, JSON.stringify(cleanConfig, null, "  "));
-}
+  constructor() {
+    this.onChange = this._onChangeEventEmitter.event;
+  }
 
-function setConfig(newConfig: Config): void {
-  // Write it to disk.
-  writeConfigurationFile(newConfig);
-  config = newConfig;
-  themeManager.setConfig(config);
-}
+  getConfig(): Config {
+    return this._config;
+  }
 
-function getConfig(): Config {
-  return config;
+  setConfigNoWrite(newConfig: Config): void {
+    this._config = newConfig;
+    this._onChangeEventEmitter.fire(undefined);
+  }
+
+  setConfig(newConfig: Config): void {
+    // Write it to disk.
+    this._writeConfigurationFile(newConfig);
+    this.setConfigNoWrite(newConfig);
+  }
+
+  private _writeConfigurationFile(config: Config): void {
+    const cleanConfig = _.cloneDeep(config);
+    cleanConfig.systemConfig = null;
+    
+    const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
+    fs.writeFileSync(filename, JSON.stringify(cleanConfig, null, "  "));
+  }
 }
 
 function getFullConfig(): Config {
+  const config = configManager.getConfig();
   const fullConfig = _.cloneDeep(config);
 
   fullConfig.systemConfig = systemConfiguration(config);
@@ -1035,7 +1054,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   
   // Copy in the updated fields.
   const incomingConfig = msg.config;
-  const newConfig = _.cloneDeep(config);
+  const newConfig = _.cloneDeep(configManager.getConfig());
   newConfig.showTips = incomingConfig.showTips;
   newConfig.tipTimestamp = incomingConfig.tipTimestamp;
   newConfig.tipCounter = incomingConfig.tipCounter;
@@ -1053,7 +1072,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   newConfig.uiScalePercent = incomingConfig.uiScalePercent;
   newConfig.sessions = incomingConfig.sessions;
 
-  setConfig(newConfig);
+  configManager.setConfig(newConfig);
 
   const newConfigMsg: Messages.ConfigMessage = {
     type: Messages.MessageType.CONFIG,
@@ -1110,9 +1129,10 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
 
 const ptyToSenderMap = new Map<number, number>();
 
-function setupPtyManager(config: Config): boolean {
+function setupPtyManager(): boolean {
   try {
-    ptyManager = new PtyManager(config);
+    ptyManager = new PtyManager(configManager.getConfig());
+    injectConfigDistributor(ptyManager, configManager);
 
     ptyManager.onPtyData(event => {
       const senderId = ptyToSenderMap.get(event.ptyId);
@@ -1163,7 +1183,7 @@ function setupPtyManager(config: Config): boolean {
 }
 
 function handlePtyCreate(sender: Electron.WebContents, msg: Messages.CreatePtyRequestMessage): Messages.CreatedPtyMessage {
-  const ptyId = ptyManager.createPty(msg.command, msg.args, msg.env, msg.columns, msg.rows);
+  const ptyId = ptyManager.createPty(msg.sessionUuid, msg.command, msg.args, msg.env, msg.columns, msg.rows);
   _log.debug(`handlePtyCreate ptyId: ${ptyId}, sender.id: ${sender.id}`);
   ptyToSenderMap.set(ptyId, sender.id);
   const reply: Messages.CreatedPtyMessage = { type: Messages.MessageType.PTY_CREATED, id: ptyId };
