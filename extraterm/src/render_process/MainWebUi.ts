@@ -44,7 +44,7 @@ import * as Messages from '../WindowMessages';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
 
 type Config = config.Config;
-type ConfigManager =config.ConfigDistributor;
+type ConfigManager = config.ConfigDistributor;
 type SessionProfile = config.SessionConfig;
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 

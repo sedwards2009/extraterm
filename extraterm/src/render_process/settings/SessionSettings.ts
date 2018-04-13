@@ -12,6 +12,7 @@ import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import { SettingsBase } from './SettingsBase';
 import { ExtensionManager } from '../extension/InternalTypes';
+import { SessionConfiguration } from 'extraterm-extension-api';
 
 export const SESSION_SETTINGS_TAG = "et-session-settings";
 
@@ -27,7 +28,6 @@ export class SessionSettings extends SettingsBase<SessionSettingsUi> {
 
   protected _setConfig(config: Config): void {
     const ui = this._getUi();
-
     if ( ! _.isEqual(ui.sessions, config.sessions)) {
       ui.sessions = config.sessions;
     }

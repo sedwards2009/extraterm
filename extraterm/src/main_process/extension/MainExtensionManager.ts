@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 
 import { Logger, getLogger } from "../../logging/Logger";
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution } from "../../ExtensionMetadata";
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
 import { parsePackageJson } from './PackageFileParser';
 import { ExtensionContext, Backend, SessionBackend } from 'extraterm-extension-api';
 import log from '../../logging/LogDecorator';
@@ -20,6 +20,12 @@ interface ActiveExtension {
   publicApi: any;
   contextImpl: ExtensionContextImpl;
   module: any;
+}
+
+export interface LoadedSessionBackendContribution {
+  metadata: ExtensionMetadata;
+  sessionBackendMetadata: ExtensionSessionBackendContribution;
+  sessionBackend: SessionBackend;
 }
 
 export class MainExtensionManager {
@@ -38,6 +44,11 @@ export class MainExtensionManager {
 
   getExtensionMetadata(): ExtensionMetadata[] {
     return this._extensionMetadata;
+  }
+
+  getSessionBackendContributions(): LoadedSessionBackendContribution[] {
+    return _.flatten(this._activeExtensions.map(
+      ae => ae.contextImpl.backend.__BackendImpl__sessionBackends));
   }
 
   private _scanPath(extensionPath: string): ExtensionMetadata[] {
@@ -140,8 +151,8 @@ class ExtensionContextImpl implements ExtensionContext {
 
 class BackendImpl implements Backend {
   private _log: Logger = null;
-  private __BackendImpl__sessionBackends: SessionBackend[] = [];
-  
+  __BackendImpl__sessionBackends: LoadedSessionBackendContribution[] = [];
+
   constructor(public __extensionMetadata: ExtensionMetadata) {
     this._log = getLogger("Backend (" + this.__extensionMetadata.name + ")", this);
   }
@@ -149,7 +160,11 @@ class BackendImpl implements Backend {
   registerSessionBackend(name: string, backend: SessionBackend): void {
     for (const backendMeta of this.__extensionMetadata.contributions.sessionBackend) {
       if (backendMeta.name === name) {
-        this.__BackendImpl__sessionBackends.push(backend);
+        this.__BackendImpl__sessionBackends.push({
+          metadata: this.__extensionMetadata,
+          sessionBackendMetadata: backendMeta,
+          sessionBackend: backend
+        });
       }
     }
 

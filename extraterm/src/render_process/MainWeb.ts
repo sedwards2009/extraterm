@@ -658,15 +658,21 @@ class ConfigDistributorImpl implements ConfigDistributor {
   }
   
   setConfig(newConfig: Config): void {  
-    WebIpc.sendConfig(newConfig);
+    if ( ! _.isEqual(this._config, newConfig)) {
+      this._config = newConfig;
+      WebIpc.sendConfig(newConfig);
+      this._onChangeEventEmitter.fire(undefined);
+    }
   }
   
   /**
    * Set a new configuration object as the application wide 
    */
   setConfigFromMainProcess(newConfig: Config): void {
-    this._config = newConfig;
-    this._onChangeEventEmitter.fire(undefined);
+    if ( ! _.isEqual(this._config, newConfig)) {
+      this._config = newConfig;
+      this._onChangeEventEmitter.fire(undefined);
+    }
   }
 }
 

@@ -129,7 +129,8 @@ function main(): void {
   
   _log.stopRecording();
 
-
+  setupDefaultSessions();
+  
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
     ptyManager.dispose();
@@ -698,7 +699,7 @@ function setupConfig(): void {
   }
 
   if (config.sessions == null) {
-    config.sessions = []; // FIXME set up some default sessions.
+    config.sessions = [];
   }
 
   configManager.setConfigNoWrite(config);
@@ -1131,7 +1132,7 @@ const ptyToSenderMap = new Map<number, number>();
 
 function setupPtyManager(): boolean {
   try {
-    ptyManager = new PtyManager(configManager.getConfig());
+    ptyManager = new PtyManager(configManager.getConfig(), extensionManager);
     injectConfigDistributor(ptyManager, configManager);
 
     ptyManager.onPtyData(event => {
@@ -1179,6 +1180,15 @@ function setupPtyManager(): boolean {
   } catch(err) {
     _log.severe("Error occured while creating the PTY connector factory: " + err.message);
     return false;
+  }
+}
+
+function setupDefaultSessions(): void {
+  const config = configManager.getConfig();
+  if (config.sessions.length === 0) {
+    const newConfig = _.cloneDeep(config);
+    newConfig.sessions = ptyManager.getDefaultSessions();
+    configManager.setConfig(newConfig);
   }
 }
 

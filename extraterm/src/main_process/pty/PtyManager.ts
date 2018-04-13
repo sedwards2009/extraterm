@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable, Event} from 'extraterm-extension-api';
+import {Disposable, Event, SessionConfiguration} from 'extraterm-extension-api';
 import * as _ from 'lodash';
 
 import {Pty, BufferSizeChange} from '../../pty/Pty';
@@ -48,12 +48,27 @@ export class PtyManager implements Disposable, AcceptsConfigDistributor {
   private _onPtyDataEventEmitter = new EventEmitter<PtyDataEvent>();
   private _onPtyAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<PtyAvailableWriteBufferSizeChangeEvent>();
 
-  constructor(config: Config /* FIXME remove this param */) {
+  constructor(config: Config /* FIXME remove this param */, private _extensionManager: MainExtensionManager) {
     this._log = getLogger("PtyManager", this);
     this._ptyConnector = PtyConnectorFactory.factory(config);
     this.onPtyExit = this._onPtyExitEventEmitter.event;
     this.onPtyData = this._onPtyDataEventEmitter.event;
     this.onPtyAvailableWriteBufferSizeChange = this._onPtyAvailableWriteBufferSizeChangeEventEmitter.event;
+  }
+  
+  @log
+  getDefaultSessions(): SessionConfiguration[] {
+    const results: SessionConfiguration[] = [];
+    for (const backend of this._extensionManager.getSessionBackendContributions()) {
+
+      const defaultSessions = backend.sessionBackend.defaultSessionConfigurations();
+      for (const session of defaultSessions) {
+        session.uuid = createUuid();
+        results.push(session);
+      }
+    }
+
+    return results;
   }
 
   setConfigDistributor(configDistributor: ConfigDistributor): void  {
