@@ -56,7 +56,6 @@ export class PtyManager implements Disposable, AcceptsConfigDistributor {
     this.onPtyAvailableWriteBufferSizeChange = this._onPtyAvailableWriteBufferSizeChangeEventEmitter.event;
   }
   
-  @log
   getDefaultSessions(): SessionConfiguration[] {
     const results: SessionConfiguration[] = [];
     for (const backend of this._extensionManager.getSessionBackendContributions()) {
@@ -85,17 +84,31 @@ export class PtyManager implements Disposable, AcceptsConfigDistributor {
   onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
 
   createPty(sessionUuid: string, file: string, args: string[], env: EnvironmentMap, cols: number, rows: number): number {
-      
-    const ptyEnv = _.clone(env);
-    ptyEnv["TERM"] = 'xterm';
-  
-    const ptyTerm = this._ptyConnector.spawn(file, args, {
-        name: 'xterm',
-        cols: cols,
-        rows: rows,
-    //    cwd: process.env.HOME,
-        env: ptyEnv } );
-  
+    
+    const config = this._configDistributor.getConfig();
+    let sessionConfiguration: SessionConfiguration = null;
+    for (sessionConfiguration of config.sessions) {
+      if (sessionConfiguration.uuid === sessionUuid) {
+        break;
+      }
+    }
+
+    let ptyTerm: Pty = null;
+    if (sessionConfiguration !== null && sessionConfiguration.type === "unix") {
+      const backend = this._extensionManager.getSessionBackend(sessionConfiguration.type);
+      ptyTerm = backend.createSession(sessionConfiguration, cols, rows);
+
+    } else {
+      const ptyEnv = _.clone(env);
+      ptyEnv["TERM"] = 'xterm';
+      ptyTerm = this._ptyConnector.spawn(file, args, {
+          name: 'xterm',
+          cols: cols,
+          rows: rows,
+      //    cwd: process.env.HOME,
+          env: ptyEnv } );
+    }
+
     this._ptyCounter++;
     const ptyId = this._ptyCounter;
     const ptyTup = { ptyTerm: ptyTerm, outputBufferSize: 0, outputPaused: true };

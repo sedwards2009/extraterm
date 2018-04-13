@@ -124,7 +124,7 @@ export function startUp(closeSplash: () => void): void {
       setupOSXMenus(mainWebUi);
     }
 
-    mainWebUi.newTerminalTab(null, ""); //FIXME configManager.getConfig().sessions[0].uuid);
+    mainWebUi.newTerminalTab(null, configManager.getConfig().sessions[0].uuid);
     mainWebUi.focus();
     window.focus();
   });

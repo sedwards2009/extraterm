@@ -1,0 +1,21 @@
+{
+  "name": "extraterm-event-emitter",
+  "version": "1.0.0",
+  "description": "TypeScript friendly EventEmitter",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "main.js",
+  "types": "main.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "devDependencies": {
+    "typescript": "2.6.1"
+  },
+  "scripts": {
+    "run": "false",
+    "build-all": "yarn run build",
+    "build": "tsc"
+  }
+}

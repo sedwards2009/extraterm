@@ -578,7 +578,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       newEnv[prop] = expandedExtra[prop];
     }
 
-    const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, sessionProfile.command, sessionProfile.arguments, newEnv, newTerminal.getColumns(), newTerminal.getRows());
+    const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, sessionProfile.command, sessionProfile.arguments,
+                  newEnv, newTerminal.getColumns(), newTerminal.getRows());
     pty.onExit(() => {
       this.closeTab(newTerminal);
     });

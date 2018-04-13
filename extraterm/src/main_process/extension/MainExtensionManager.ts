@@ -51,6 +51,17 @@ export class MainExtensionManager {
       ae => ae.contextImpl.backend.__BackendImpl__sessionBackends));
   }
 
+  getSessionBackend(type: string): ExtensionApi.SessionBackend {
+    for (const extension of this._activeExtensions) {
+      for (const backend of extension.contextImpl.backend.__BackendImpl__sessionBackends) {
+        if (backend.sessionBackendMetadata.type === type) {
+          return backend.sessionBackend;
+        }
+      }
+    }
+    return null;
+  }
+
   private _scanPath(extensionPath: string): ExtensionMetadata[] {
     if (fs.existsSync(extensionPath)) {
       const result: ExtensionMetadata[] = [];
