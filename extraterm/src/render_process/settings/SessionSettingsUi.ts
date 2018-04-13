@@ -7,7 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import { SessionConfiguration } from 'extraterm-extension-api';
 import * as _ from 'lodash';
-import { createUUID } from 'extraterm-uuid';
+import { createUuid } from 'extraterm-uuid';
 
 import { ExtensionManager } from '../extension/InternalTypes';
 
@@ -78,7 +78,7 @@ export class SessionSettingsUi extends Vue {
   }
 
   newSession(type: string): void {
-    const newSession: SessionConfiguration = { uuid: createUUID(), name: "new " + type, type};
+    const newSession: SessionConfiguration = { uuid: createUuid(), name: "new " + type, type};
     this.sessions.push(newSession);
   }
 

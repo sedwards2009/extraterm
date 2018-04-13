@@ -16,6 +16,9 @@ const PtyConnectorFactory = require("../pty/PtyConnectorFactory");
 import * as Messages from '../../WindowMessages';
 import * as Util from '../../render_process/gui/Util';
 import { EventEmitter } from '../../utils/EventEmitter';
+import { MainExtensionManager } from '../extension/MainExtensionManager';
+import log from '../../logging/LogDecorator';
+import { createUuid } from 'extraterm-uuid';
 
 const LOG_FINE = false;
 

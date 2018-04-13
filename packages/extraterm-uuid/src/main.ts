@@ -10,9 +10,14 @@
  * Works in browser and node environments.
  * @return New cryptographcially secure UUID.
  */
-export function createUUID(): string {
+export function createUuid(): string {
   const buffer = new Uint8Array(16);
-  window.crypto.getRandomValues(buffer);
+  if (window != null) {
+    window.crypto.getRandomValues(buffer);
+  } else {
+    const crypto = require("crypto");
+    crypto.randomFillSync(buffer);
+  }
 
   buffer[6] = (buffer[6] & 0x0f) | 0x40;
   buffer[8] = (buffer[8] & 0x3f) | 0x80;
