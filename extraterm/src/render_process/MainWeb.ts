@@ -381,10 +381,9 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
 
 function handleConfigMessage(msg: Messages.Message): Promise<void> {
   const configMessage = <Messages.ConfigMessage> msg;
-  const oldConfiguration = configManager.getConfig();
   const config = configMessage.config;
-  configManager.setNewConfig(config);
-  return setupConfiguration(oldConfiguration, config);
+  configManager.setConfigFromMainProcess(config);
+  return setupConfiguration(config);
 }
 
 function handleThemeListMessage(msg: Messages.Message): void {
@@ -424,10 +423,9 @@ function handleClipboardRead(msg: Messages.Message): void {
 
 //-------------------------------------------------------------------------
 
-/**
- * 
- */
-function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void> {
+let oldConfig: Config = null;
+
+function setupConfiguration(newConfig: Config): Promise<void> {
   const keyBindingContexts = keybindingmanager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts,
     process.platform);
 
@@ -457,8 +455,11 @@ function setupConfiguration(oldConfig: Config, newConfig: Config): Promise<void>
       oldConfig.themeSyntax !== newConfig.themeSyntax ||
       oldConfig.themeGUI !== newConfig.themeGUI) {
 
+    oldConfig = newConfig;
     return requestThemeContents();
   }
+
+  oldConfig = newConfig;
   
   // no-op promise.
   return new Promise<void>( (resolve, cancel) => { resolve(); } );
@@ -658,15 +659,21 @@ class ConfigDistributorImpl implements ConfigDistributor {
   }
   
   setConfig(newConfig: Config): void {  
-    WebIpc.sendConfig(newConfig);
+    if ( ! _.isEqual(this._config, newConfig)) {
+      this._config = newConfig;
+      WebIpc.sendConfig(newConfig);
+      this._onChangeEventEmitter.fire(undefined);
+    }    
   }
   
   /**
    * Set a new configuration object as the application wide 
    */
-  setNewConfig(newConfig: Config): void {
-    this._config = newConfig;
-    this._onChangeEventEmitter.fire(undefined);
+  setConfigFromMainProcess(newConfig: Config): void {
+    if ( ! _.isEqual(this._config, newConfig)) {
+      this._config = newConfig;
+      this._onChangeEventEmitter.fire(undefined);
+    }
   }
 }
 

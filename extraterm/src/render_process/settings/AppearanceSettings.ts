@@ -28,20 +28,15 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   protected _setConfig(config: Config): void {
     const ui = this._getUi();
 
-    ui.terminalFontSize = config.terminalFontSize;
-    ui.themeTerminal = config.themeTerminal;
-    ui.themeSyntax = config.themeSyntax;
-    ui.themeGUI = config.themeGUI;
-    ui.titleBar = config.showTitleBar ? "native" : "theme";
     ui.currentTitleBar = config.systemConfig.titleBarVisible ? "native" : "theme";
-    
-    if (ui.uiScalePercent !== config.uiScalePercent) {
-      ui.uiScalePercent = config.uiScalePercent;
-    }
 
-    if (ui.terminalFont !== config.terminalFont) {
-      ui.terminalFont = config.terminalFont;
-    }
+    ui.terminalFont = config.terminalFont;
+    ui.terminalFontSize = config.terminalFontSize;
+    ui.themeGUI = config.themeGUI;
+    ui.themeSyntax = config.themeSyntax;
+    ui.themeTerminal = config.themeTerminal;
+    ui.titleBar = config.showTitleBar ? "native" : "theme";
+    ui.uiScalePercent = config.uiScalePercent;
 
     const newFontOptions = [...config.systemConfig.availableFonts];
     newFontOptions.sort( (a,b) => {
@@ -61,11 +56,12 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     const newConfig = this._getConfigCopy();
     const ui = this._getUi();
 
-    newConfig.terminalFontSize = ui.terminalFontSize;
-    newConfig.themeTerminal = ui.themeTerminal;
-    newConfig.themeSyntax = ui.themeSyntax;
-    newConfig.themeGUI = ui.themeGUI;
     newConfig.showTitleBar = ui.titleBar === "native";
+    newConfig.terminalFont = ui.terminalFont;
+    newConfig.terminalFontSize = ui.terminalFontSize;
+    newConfig.themeGUI = ui.themeGUI;
+    newConfig.themeSyntax = ui.themeSyntax;
+    newConfig.themeTerminal = ui.themeTerminal;
     newConfig.uiScalePercent = ui.uiScalePercent;
     
     this._updateConfig(newConfig);
