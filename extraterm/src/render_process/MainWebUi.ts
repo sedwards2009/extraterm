@@ -206,7 +206,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_ENDED, this);
     mainContainer.addEventListener(EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
     mainContainer.addEventListener(EVENT_DRAG_ENDED, this._handleDragEndedEvent.bind(this));
-    mainContainer.addEventListener('click', this._handleMainContainerClickEvent.bind(this));
   }
 
   private _handleTabWidgetDroppedEvent(ev: CustomEvent): void {
@@ -316,21 +315,6 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
     mainContainer.classList.remove(CLASS_MAIN_DRAGGING);
     mainContainer.classList.add(CLASS_MAIN_NOT_DRAGGING);
-  }
-
-  private _handleMainContainerClickEvent(ev): void {
-    for (const part of ev.path) {
-      if (part instanceof HTMLButtonElement) {
-        if (part.classList.contains(CLASS_NEW_TAB_BUTTON)) {
-          let el: HTMLElement = part;
-          while (el != null && ! (el instanceof TabWidget)) {
-            el = el.parentElement;
-          }
-          const  newTerminal = this.newTerminalTab(<TabWidget> el);
-          this._switchToTab(newTerminal);
-        }
-      } 
-    }
   }
 
   private _setUpSplitLayout(): void {
