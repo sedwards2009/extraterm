@@ -663,11 +663,7 @@ class ConfigDistributorImpl implements ConfigDistributor {
       this._config = newConfig;
       WebIpc.sendConfig(newConfig);
       this._onChangeEventEmitter.fire(undefined);
-<<<<<<< HEAD
     }
-=======
-    }    
->>>>>>> master
   }
   
   /**
