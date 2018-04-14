@@ -40,3 +40,34 @@ export function testViewer(test: nodeunit.Test): void {
 
   test.done();
 }
+
+export function testPlatforms(test: nodeunit.Test): void {
+  const parsed = parsePackageJson({
+    name: "Foo",
+    version: "1.0.0",
+    description: "Foobar",
+    includePlatform: [
+      {
+        os: "linux",
+        arch: "x64"
+      }
+    ],
+    excludePlatform: [
+      {
+        os: "macos"
+      },
+      {
+        arch: "mips"
+      }
+    ]
+  }, "");
+
+  test.equal(parsed.includePlatform.length, 1);
+  test.equal(parsed.includePlatform[0].os, "linux");
+  test.equal(parsed.includePlatform[0].arch, "x64");
+  test.equal(parsed.excludePlatform.length, 2);
+  test.equal(parsed.excludePlatform[0].os, "macos");
+  test.equal(parsed.excludePlatform[0].arch, null);
+  test.equal(parsed.excludePlatform[1].arch, "mips");
+  test.done();
+}

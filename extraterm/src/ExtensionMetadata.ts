@@ -11,6 +11,13 @@ export interface ExtensionMetadata {
   version?: string;
   description?: string;
   contributions: ExtensionContributions;
+  includePlatform?: ExtensionPlatform[];
+  excludePlatform?: ExtensionPlatform[];
+}
+
+export interface ExtensionPlatform {
+  os?: string;
+  arch?: string;
 }
 
 export interface ExtensionContributions {

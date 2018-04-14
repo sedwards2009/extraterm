@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform } from "../../ExtensionMetadata";
 
 const FONT_AWESOME_DEFAULT = false;
 
@@ -15,6 +15,8 @@ export function parsePackageJson(packageJson: any, extensionPath: string): Exten
     path: extensionPath,
     main: assertJsonStringField(packageJson, "main", "main.js"),
     version: assertJsonStringField(packageJson, "version"),
+    includePlatform: parsePlatformsJson(packageJson, "includePlatform"),
+    excludePlatform: parsePlatformsJson(packageJson, "excludePlatform"),
     description: assertJsonStringField(packageJson, "description"),
     contributions: parseContributionsJson(packageJson)
   };
@@ -68,6 +70,34 @@ function assertJsonStringArrayField(packageJson: any, fieldName: string, default
   }
 
   return value;
+}
+
+function parsePlatformsJson(packageJson: any, fieldName: string): ExtensionPlatform[] {
+  const value = packageJson[fieldName];
+  if (value == null) {
+    return [];
+  }
+
+  if ( ! Array.isArray(value)) {
+    throw `Field '${fieldName}' is not an array.`;
+  }
+
+  const result = [];
+  for (let i=0; i < value.length; i++) {
+    result.push(parsePlatformJson(value[i]))
+  }
+  return result;
+}
+
+function parsePlatformJson(packageJson: any): ExtensionPlatform {
+  try {
+    return {
+      os: assertJsonStringField(packageJson, "os", null),
+      arch: assertJsonStringField(packageJson, "arch", null)
+    };
+  } catch (ex) {
+    throw `Failed to process a platform specification: ${ex}`;
+  }
 }
 
 function parseContributionsJson(packageJson: any): ExtensionContributions {
