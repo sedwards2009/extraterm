@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Pty, Terminal, SessionConfiguration, Backend, SessionBackend} from 'extraterm-extension-api';
 
-import { UnixPty, PtyOptions } from './ProxyPty';
+import { ProxyPtyConnector, PtyOptions } from './ProxyPty';
 
 interface ProxySessionConfiguration extends SessionConfiguration {
   useDefaultShell?: boolean;
@@ -52,7 +52,7 @@ class ProxyBackend implements SessionBackend {
       cols: cols,
       rows: rows
     };
-    return new UnixPty(this._log, options);
+    return null; //new UnixPty(this._log, options);
   }
 
 }
