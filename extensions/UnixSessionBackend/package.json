@@ -10,6 +10,9 @@
     "lodash": "^4.0.0",
     "extraterm-event-emitter": "1.0.0"
   },
+  "optionalDependencies": {
+    "ptyw.js": "0.4.0"
+  },
   "devDependencies": {
     "@types/lodash": "^4.0.0",
     "@types/node": "7.0.5",

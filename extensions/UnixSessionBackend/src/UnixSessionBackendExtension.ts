@@ -6,7 +6,7 @@
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Pty, Terminal, SessionConfiguration, Backend, SessionBackend} from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend } from 'extraterm-extension-api';
 
 import { UnixPty, PtyOptions } from './UnixPty';
 
