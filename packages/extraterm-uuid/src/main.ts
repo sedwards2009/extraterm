@@ -12,11 +12,14 @@
  */
 export function createUuid(): string {
   const buffer = new Uint8Array(16);
-  if (window != null) {
+  if (typeof window !== "undefined") {
     window.crypto.getRandomValues(buffer);
   } else {
     const crypto = require("crypto");
-    crypto.randomFillSync(buffer);
+    const buf = crypto.randomBytes(16);
+    for (let i=0; i<16; i++) {
+      buffer[i] = buf[i];
+    }
   }
 
   buffer[6] = (buffer[6] & 0x0f) | 0x40;
