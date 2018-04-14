@@ -177,6 +177,7 @@ class BackendImpl implements Backend {
           sessionBackend: backend
         });
       }
+      return;
     }
 
     this._log.warn(`Unable to register session backend '${name}' for extension ` +
