@@ -1,0 +1,27 @@
+{
+  "name": "proxy-session-editor",
+  "description": "Proxy based Session Editor",
+  "version": "1.0.0",
+  "main": "src/ProxySessionEditorExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "lodash": "^4.0.0",
+    "vue": "2.5.9",
+    "vue-class-component": "6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "2.6.1"
+  },
+  "contributions": {
+    "sessionEditor": [
+      {
+        "name": "Cygwin",
+        "type": "cygwin"
+      }
+    ]
+  }
+}
