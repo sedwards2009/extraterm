@@ -11,7 +11,7 @@
   },
   "scripts": {
     "run": "electron extraterm/src/main_process/Main.js --dev-tools",
-    "build": "wsrun build --exclude-missing",
+    "build": "wsrun build --exclude-missing --stages",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o ptyw.js,font-manager -f -v 1.6.8",
     "package": "node build_scripts/build_packages.js"
   },
@@ -41,6 +41,6 @@
     "electron": "1.6.8",
     "electron-packager": "11.1.0",
     "git-repo-info": "^1.4.1",
-    "wsrun": "^1.7.0"
+    "wsrun": "^3.0.0"
   }
 }
