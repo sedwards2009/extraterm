@@ -13,7 +13,7 @@ import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextViewer';
 import {ProxyFactoryImpl} from './ProxyFactoryImpl';
-import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalTypes';
+import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory, isMainProcessExtension, isSupportedOnThisPlatform} from './InternalTypes';
 import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';
 import {WorkspaceProxy} from './Proxies';
 import { ExtensionMetadata } from '../../ExtensionMetadata';
@@ -45,14 +45,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
     this._extensionMetadata = WebIpc.requestExtensionMetadataSync();
 
     for (const extensionInfo of this._extensionMetadata) {
-      if (this._isRenderProcessExtension(extensionInfo)) {
+      if ( ! isMainProcessExtension(extensionInfo) && isSupportedOnThisPlatform(extensionInfo)) {
         this._startExtension(extensionInfo);
       }
     }
-  }
-
-  private _isRenderProcessExtension(metadata: ExtensionMetadata): boolean {
-    return  metadata.contributions.sessionBackend.length === 0;
   }
 
   getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[] {

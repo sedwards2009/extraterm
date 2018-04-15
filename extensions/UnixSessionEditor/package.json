@@ -16,6 +16,11 @@
     "extraterm-extension-api": "0.1.0",
     "typescript": "2.6.1"
   },
+  "excludePlatform": [
+    {
+      "os": "win32"
+    }
+  ],
   "contributions": {
     "sessionEditor": [
       {

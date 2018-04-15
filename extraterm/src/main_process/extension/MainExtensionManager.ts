@@ -9,10 +9,11 @@ import * as _ from 'lodash';
 import * as path from 'path';
 
 import { Logger, getLogger } from "../../logging/Logger";
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionSessionBackendContribution, ExtensionPlatform } from "../../ExtensionMetadata";
 import { parsePackageJson } from './PackageFileParser';
 import { ExtensionContext, Backend, SessionBackend } from 'extraterm-extension-api';
 import log from '../../logging/LogDecorator';
+import { isMainProcessExtension, isSupportedOnThisPlatform } from '../../render_process/extension/InternalTypes';
 
 
 interface ActiveExtension {
@@ -102,14 +103,10 @@ export class MainExtensionManager {
 
   startUp(): void {
     for (const extensionInfo of this._extensionMetadata) {
-      if (this._isMainProcessExtension(extensionInfo)) {
+      if (isMainProcessExtension(extensionInfo) && isSupportedOnThisPlatform(extensionInfo)) {
         this._startExtension(extensionInfo);
       }
     }
-  }
-
-  private _isMainProcessExtension(metadata: ExtensionMetadata): boolean {
-    return metadata.contributions.sessionBackend.length !== 0;
   }
 
   private _startExtension(metadata: ExtensionMetadata): void {
