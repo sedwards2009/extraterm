@@ -11,7 +11,7 @@ import Vue from 'vue';
     template: `
     <div id="top_container">
       Name: <input type="text" v-model.lazy="name"><br />
-      Python path: <input type="text" v-model.lazy="pythonExe"><br />
+      Cygwin installation path: <input type="text" v-model.lazy="cygwinPath"><br />
       <input type="radio" value="1" v-model.number="useDefaultShell"> Use default shell<br />
       <input type="radio" value="0" v-model.number="useDefaultShell"> Shell: <input type="text" :disabled="useDefaultShell===1" v-model.lazy="shell">
     </div>`
@@ -20,5 +20,5 @@ export class ProxySessionEditorUi extends Vue {
   name: string = "";
   shell: string = "";
   useDefaultShell: number = 1;
-  pythonExe = "";
+  cygwinPath = "";
 }

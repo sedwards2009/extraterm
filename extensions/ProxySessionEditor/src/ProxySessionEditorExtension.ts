@@ -14,7 +14,7 @@ let log: Logger = null;
 interface ProxySessionConfiguration extends SessionConfiguration {
   useDefaultShell?: boolean;
   shell?: string;
-  pythonExe?: string;
+  cygwinPath?: string;
 }
 
 export function activate(context: ExtensionContext): any {
@@ -37,13 +37,13 @@ export function activate(context: ExtensionContext): any {
         this._ui.name = "Cygwin";
         this._ui.useDefaultShell = 1;
         this._ui.shell = "";
-        this._ui.pythonExe = "";
+        this._ui.cygwinPath = "";
       }
 
       this._ui.name = config.name;
       this._ui.useDefaultShell = config.useDefaultShell ? 1 :0;
       this._ui.shell = config.shell;
-      this._ui.pythonExe = config.pythonExe;
+      this._ui.cygwinPath = config.cygwinPath;
 
       this.getContainerElement().appendChild(component.$el);
     }
@@ -53,7 +53,7 @@ export function activate(context: ExtensionContext): any {
         name: this._ui.name,
         useDefaultShell: this._ui.useDefaultShell === 1,
         shell: this._ui.shell,
-        pythonExe: this._ui.pythonExe
+        cygwinPath: this._ui.cygwinPath
       };
       this.updateSessionConfiguration(changes);
     }

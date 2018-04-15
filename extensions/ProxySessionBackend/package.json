@@ -11,6 +11,7 @@
     "extraterm-event-emitter": "1.0.0"
   },
   "devDependencies": {
+    "@types/electron": "1.4.32",
     "@types/lodash": "^4.0.0",
     "@types/node": "7.0.5",
     "extraterm-extension-api": "0.1.0",

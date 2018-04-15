@@ -94,7 +94,7 @@ export class PtyManager implements Disposable, AcceptsConfigDistributor {
     }
 
     let ptyTerm: Pty = null;
-    if (sessionConfiguration !== null && sessionConfiguration.type === "unix") {
+    if (sessionConfiguration !== null) {
       const backend = this._extensionManager.getSessionBackend(sessionConfiguration.type);
       ptyTerm = backend.createSession(sessionConfiguration, cols, rows);
 

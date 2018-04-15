@@ -185,32 +185,12 @@ class ProxyPty implements Pty {
   }
 }
 
-// function findCygwinPython(cygwinDir: string): string {
-//   const binDir = path.join(cygwinDir, 'bin');
-//   _log.info("Cygwin bin directory is ", binDir);
-//   if (fs.existsSync(binDir)) {
-//     const pythonRegexp = /^python3.*m\.exe$/;
-//     const binContents = fs.readdirSync(binDir);
-//     const pythons = binContents.filter( name => pythonRegexp.test(name) );
-//     return pythons.length !== 0 ? path.join(binDir,pythons[0]) : null;
-//   }
-//   return null;
-// }
-
 export class ProxyPtyConnector {
   private _ptys: ProxyPty[] = [];
   private _messageBuffer = "";
   private _proxy: child_process.ChildProcess = null;
 
   constructor(private _log: Logger, pythonExe: string) {
-    if (pythonExe !== null) {
-      this._log.info("Found Python 3 exe at ", pythonExe);
-    } else {
-      const msg = "Unable to find Python 3 exe.";
-      this._log.severe("Unable to find Python 3 exe.");
-      throw new Error(msg);
-    }
-
     const serverEnv = _.clone(process.env);
     serverEnv["PYTHONIOENCODING"] = "utf-8:ignore";
     this._proxy = child_process.spawn(pythonExe, [path.join(SourceDir.path, "python/ptyserver2.py")], {env: serverEnv});
@@ -244,19 +224,22 @@ export class ProxyPtyConnector {
     });
   }
 
-  spawn(file: string, args: string[], opt: PtyOptions): Pty {
+  spawn(options: PtyOptions): Pty {
     let rows = 24;
     let columns = 80;
+    const file = options.exe;
+    const args = options.args;
+    
     if (DEBUG_FINE) {
       this._log.debug("ptyproxy spawn file: ", file);
     }
-    if (opt !== undefined) {
-      rows = opt.rows !== undefined ? opt.rows : rows;
-      columns = opt.cols !== undefined ? opt.cols : columns;
+    if (options !== undefined) {
+      rows = options.rows !== undefined ? options.rows : rows;
+      columns = options.cols !== undefined ? options.cols : columns;
     }
     const pty = new ProxyPty(this._sendMessage.bind(this));
     this._ptys.push(pty);
-    const msg: CreatePtyMessage = { type: TYPE_CREATE, argv: [file, ...args], rows: rows, columns: columns, id: -1, env: opt.env };
+    const msg: CreatePtyMessage = { type: TYPE_CREATE, argv: [file, ...args], rows: rows, columns: columns, id: -1, env: options.env };
     this._sendMessage(null, msg);
     return pty;
   }
