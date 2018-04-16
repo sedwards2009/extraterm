@@ -6,7 +6,7 @@
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap } from 'extraterm-extension-api';
 
 import { UnixPty, PtyOptions } from './UnixPty';
 
@@ -37,15 +37,21 @@ class UnixBackend implements SessionBackend {
     return [loginSessionConfig];
   }
 
-  createSession(sessionConfiguration: SessionConfiguration, cols: number, rows: number): Pty {
+  createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty {
     const sessionConfig = <UnixSessionConfiguration> sessionConfiguration;
     
     const shell = sessionConfig.useDefaultShell ? this._readDefaultUserShell(process.env.USER) : sessionConfig.shell;
 
     // OSX expects shells to be login shells. Linux etc doesn't
     const args = process.platform === "darwin" ? ["-l"] : [];
+
     const ptyEnv = _.cloneDeep(process.env);
     ptyEnv["TERM"] = "xterm";
+
+    let prop: string;
+    for (prop in extraEnv) {
+      ptyEnv[prop] = extraEnv[prop];
+    }
 
     const options: PtyOptions = {
       name: "xterm",

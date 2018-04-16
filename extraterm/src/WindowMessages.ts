@@ -8,7 +8,7 @@
  * Message formats for the IPC between the main process and render processes.
  */
 
-import { BulkFileMetadata, BulkFileState } from 'extraterm-extension-api';
+import { BulkFileMetadata, BulkFileState, EnvironmentMap } from 'extraterm-extension-api';
 
 import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
@@ -155,10 +155,6 @@ export interface ThemeContentsMessage extends Message {
 // ********************************************************************
 // Pty related messages.
 
-export interface EnvironmentMap {
-  [key: string]: string;
-}
-
 /**
  * Create PTY request message.
  *
@@ -169,17 +165,9 @@ export interface EnvironmentMap {
  */
 export interface CreatePtyRequestMessage extends Message {
   sessionUuid: string;
-  
-  /**
-   * The command or executable to run.
-   */
-  command: string;
-  
-  /**
-   * List of string arguments which should be apssed to he command when starting it.
-   */
-  args: string[];
-  
+
+  env: EnvironmentMap;
+
   /**
    * The width of the terminal screen/area in characters.
    */
@@ -189,11 +177,6 @@ export interface CreatePtyRequestMessage extends Message {
    * The height of the terminal screen/area in charactors or rows.
    */
   rows: number;
-  
-  /**
-   * A map of key value pairs which will be used for the environment variables when starting the command.
-   */
-  env: EnvironmentMap;
 }
 
 /**

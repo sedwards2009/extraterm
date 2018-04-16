@@ -23,8 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {Config, CommandLineAction, SessionConfig, SystemConfig, FontInfo, SESSION_TYPE_CYGWIN, SESSION_TYPE_BABUN,
-  SESSION_TYPE_UNIX, ShowTipsStrEnum, KeyBindingInfo, ConfigDistributor, injectConfigDistributor} from '../Config';
+import {Config, CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDistributor, injectConfigDistributor} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
 import {Logger, getLogger, addLogWriter} from '../logging/Logger';
 import { PtyManager } from './pty/PtyManager';
@@ -112,13 +111,10 @@ function main(): void {
   setupThemeManager();
   setupConfig();
 
-  if (configManager.getConfig().expandedProfiles.length === 0) {
+  if ( ! setupPtyManager()) {
     failed = true;
-  } else {
-    if ( ! setupPtyManager()) {
-      failed = true;
-    }
   }
+
   if (failed) {
     dialog.showErrorBox("Sorry, something went wrong",
       "Something went wrong while starting up Extraterm.\n" +
@@ -133,7 +129,6 @@ function main(): void {
   
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
-    ptyManager.dispose();
     if (bulkFileStorage !== null) {
       bulkFileStorage.dispose();
     }
@@ -340,251 +335,6 @@ function setScaleFactor(originalFactorArg?: string): {restartNeeded: boolean, cu
 
 const _log = getLogger("main");
 
-//-------------------------------------------------------------------------
-//
-//  #####                              
-// #     # #    # ###### #      #      
-// #       #    # #      #      #      
-//  #####  ###### #####  #      #      
-//       # #    # #      #      #      
-// #     # #    # #      #      #      
-//  #####  #    # ###### ###### ###### 
-//
-//-------------------------------------------------------------------------
-
-/**
- * Expands a list of partial session configs.
- *
- * @param sessionConfigs List of user configurable partially filled in session configs.
- * @return List where the session configs are completed and a default is added.
- */
-function expandSessionConfigs(sessionConfigs: SessionConfig[], options: { cygwinDir?: string }): SessionConfig[] {
-  if (process.platform === "win32") {
-    // Check for the existance of the user specified cygwin installation.
-    let cygwinDir = findOptionCygwinInstallation(options.cygwinDir);
-    if (cygwinDir === null) {
-      // Find a default cygwin installation.
-      cygwinDir = findCygwinInstallation();
-      if (cygwinDir === null) {
-        cygwinDir = findBabunCygwinInstallation();
-      }
-    }
-    let canonicalCygwinSessionConfig = cygwinDir !== null ? defaultCygwinSessionConfig(cygwinDir) : null;
-    
-    const expandedSessionConfigs: SessionConfig[] = [];
-    if (sessionConfigs !== undefined && sessionConfigs !== null) {
-      sessionConfigs.forEach( sessionConfig => {
-        switch (sessionConfig.type) {
-          case SESSION_TYPE_CYGWIN:
-            let templateSessionConfig = canonicalCygwinSessionConfig;
-            
-            if (sessionConfig.cygwinDir !== undefined && sessionConfig.cygwinDir !== null) {
-              // This profile specifies the location of a cygwin installation.
-              templateSessionConfig = defaultCygwinSessionConfig(sessionConfig.cygwinDir);
-            }
-          
-            if (templateSessionConfig !== null) {
-              const expandedSessionConfig: SessionConfig = {
-                name: sessionConfig.name,
-                type: SESSION_TYPE_CYGWIN,
-                command: sessionConfig.command !== undefined ? sessionConfig.command : templateSessionConfig.command,
-                arguments: sessionConfig.arguments !== undefined ? sessionConfig.arguments : templateSessionConfig.arguments,
-                extraEnv: sessionConfig.extraEnv !== undefined ? sessionConfig.extraEnv : templateSessionConfig.extraEnv,
-                cygwinDir: sessionConfig.cygwinDir !== undefined ? sessionConfig.cygwinDir : templateSessionConfig.cygwinDir              
-              };
-              expandedSessionConfigs.push(expandedSessionConfig);
-            } else {
-              _log.info(`Ignoring session configuration '${sessionConfig.name}' with type '${sessionConfig.type}'. ` +
-                `The cygwin installation couldn't be found.`);
-            }
-          
-            break;
-            
-          case SESSION_TYPE_BABUN:
-            break;
-            
-          default:
-          _log.info(`Ignoring session configuration '${sessionConfig.name}' with type '${sessionConfig.type}'. ` +
-              `It is neither ${SESSION_TYPE_CYGWIN} nor ${SESSION_TYPE_BABUN}.`);
-            break;
-        }
-
-      });
-    }
-    expandedSessionConfigs.push(canonicalCygwinSessionConfig);
-    return expandedSessionConfigs;
-    
-  } else {
-    // A 'nix style system.
-    const expandedSessionConfigs: SessionConfig[] = [];
-    let canonicalSessionConfig = defaultSessionConfig();
-    if (sessionConfigs !== undefined && sessionConfigs !== null) {
-      sessionConfigs.forEach( sessionConfig => {
-        switch (sessionConfig.type) {
-          case undefined:
-          case null:
-          case SESSION_TYPE_UNIX:
-            let templateSessionConfig = canonicalSessionConfig;
-            const expandedSessionConfig: SessionConfig = {
-              name: sessionConfig.name,
-              type: SESSION_TYPE_UNIX,
-              command: sessionConfig.command !== undefined ? sessionConfig.command : templateSessionConfig.command,
-              arguments: sessionConfig.arguments !== undefined ? sessionConfig.arguments : templateSessionConfig.arguments,
-              extraEnv: sessionConfig.extraEnv !== undefined ? sessionConfig.extraEnv : templateSessionConfig.extraEnv
-            };
-            expandedSessionConfigs.push(expandedSessionConfig);
-            break;
-            
-          default:
-          _log.info(`Ignoring session configuration '${sessionConfig.name}' with type '${sessionConfig.type}'.`);
-            break;
-        }
-      });
-    }
-    
-    expandedSessionConfigs.push(canonicalSessionConfig);
-    return expandedSessionConfigs;
-  }
-}
-
-function defaultSessionConfig(): SessionConfig {
-  const shell = readDefaultUserShell(process.env.USER);
-  return {
-    name: "Default",
-    type: SESSION_TYPE_UNIX,
-    command: shell,
-    arguments: process.platform === "darwin" ? ["-l"] : [], // OSX expects shells to be login shells. Linux etc doesn't
-    extraEnv: { }
-  };
-}
-
-function readDefaultUserShell(userName: string): string {
-  if (process.platform === "darwin") {
-    return readDefaultUserShellFromOpenDirectory(userName);
-  } else {
-    return readDefaultUserShellFromEtcPasswd(userName);
-  }
-}
-  
-function readDefaultUserShellFromEtcPasswd(userName: string): string {
-  let shell = "/bin/bash";
-  const passwdDb = readPasswd("/etc/passwd");  
-  const userRecords = passwdDb.filter( row => row.username === userName);
-  if (userRecords.length !== 0) {
-    shell = userRecords[0].shell;
-  }
-  return shell;
-}
-
-function readDefaultUserShellFromOpenDirectory(userName: string): string {
-  try {
-    const regResult: string = <any> child_process.execFileSync("dscl",
-      [".", "-read", "/Users/" + userName, "UserShell"],
-      {encoding: "utf8"});
-    const parts = regResult.split(/ /g);
-    const shell = parts[1].trim();
-    _log.info("Found default user shell with Open Directory: " + shell);
-    return shell;
-  } catch(e) {
-    _log.warn("Couldn't run Open Directory dscl command to find the user's default shell. Defaulting to /bin/bash");
-    return "/bin/bash";
-  }
-}
-
-function defaultCygwinSessionConfig(cygwinDir: string): SessionConfig {
-  let defaultShell: string = null;
-  let homeDir: string = null;
-  
-  const passwdPath = path.join(cygwinDir, "etc", "passwd");
-  if (fs.existsSync(passwdPath)) {
-    // Get the info from /etc/passwd
-    const passwdDb = readPasswd(passwdPath);
-    const username = process.env["USERNAME"];
-    const userRecords = passwdDb.filter( row => row.username === username);
-    if (userRecords.length !== 0) {
-      defaultShell = userRecords[0].shell;
-      homeDir = userRecords[0].homeDir;
-    }
-  }
-  
-  if (homeDir === null) {
-    // Couldn't get the info we needed from /etc/passwd. Cygwin doesn't make a /etc/passwd by default anymore.
-    defaultShell = "/bin/bash";
-    homeDir = "/home/" + process.env["USERNAME"];
-  }
-  
-  return {
-    name: "Cygwin",
-    type: SESSION_TYPE_CYGWIN,
-    command: defaultShell,
-    arguments: ["-l"],
-    extraEnv: { HOME: homeDir },
-    cygwinDir: cygwinDir
-  };
-}
-
-function findOptionCygwinInstallation(cygwinDir: string): string {
-  if (cygwinDir == null) {
-    return null;
-  }
-  if (fs.existsSync(cygwinDir)) {
-    _log.info("Found user specified cygwin installation at " + cygwinDir);
-    return cygwinDir;
-  } else {
-    _log.info("Couldn't find the user specified cygwin installation at " + cygwinDir);
-    return null;
-  }
-}
-  
-function findCygwinInstallation(): string {
-  try {
-    const regResult: string = <any> child_process.execFileSync("REG",
-      ["query","HKLM\\SOFTWARE\\Cygwin\\setup","/v","rootdir"],
-      {encoding: "utf8"});
-    const parts = regResult.split(/\r/g);
-    const regsz = parts[2].indexOf("REG_SZ");
-    const cygwinDir = parts[2].slice(regsz+6).trim();
-    
-    if (fs.existsSync(cygwinDir)) {
-      _log.info("Found cygwin installation at " + cygwinDir);
-      return cygwinDir;
-    } else {
-      _log.info("The registry reported the cygwin installation directory at '" + cygwinDir +
-        "', but the directory does not exist.");
-      return null;
-    }
-  } catch(e) {
-    _log.info("Couldn't find a cygwin installation.");
-    return null;
-  }
-}
-
-function findBabunCygwinInstallation(): string {
-  const cygwinDir = path.join(app.getPath('home'), ".babun/cygwin");
-  if (fs.existsSync(cygwinDir)) {
-    _log.info("Found babun cygwin installation at " + cygwinDir);
-    return cygwinDir;
-  } else {
-    _log.info("Couldn't find a Babun cygwin installation.");
-    return null;
-  }
-}
-
-interface PasswdLine {
-  username: string;
-  homeDir: string;
-  shell: string;
-}
-
-function readPasswd(filename: string): PasswdLine[] {
-  const fileText = fs.readFileSync(filename, {encoding: 'utf8'});
-  const lines = fileText.split(/\n/g);
-  return lines.map<PasswdLine>( line => {
-    const fields = line.split(/:/g);
-    return { username: fields[0], homeDir: fields[5], shell: fields[6] };
-  });
-}
-
 /**
  * Extra information about the system configuration and platform.
  */
@@ -661,7 +411,6 @@ function setupConfig(): void {
   const config = readConfigurationFile();
   config.systemConfig = systemConfiguration(config);
   config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
-  config.expandedProfiles = expandSessionConfigs(config.sessionProfiles, <any> Commander);
   
   if (config.terminalFontSize === undefined || typeof config.terminalFontSize !== 'number') {
     config.terminalFontSize = 12;
@@ -712,7 +461,7 @@ function setupConfig(): void {
  */
 function readConfigurationFile(): Config {
   const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
-  let config: Config = { systemConfig: null, expandedProfiles: null };
+  let config: Config = { systemConfig: null };
 
   if (fs.existsSync(filename)) {
     _log.info("Reading user configuration from " + filename);
@@ -732,7 +481,6 @@ function defaultValue<T>(value: T, defaultValue: T): T {
 
 function setConfigDefaults(config: Config): void {
   config.systemConfig = defaultValue(config.systemConfig, null);
-  config.expandedProfiles = defaultValue(config.expandedProfiles, null);
   config.blinkingCursor = defaultValue(config.blinkingCursor, false);
   config.scrollbackMaxLines = defaultValue(config.scrollbackMaxLines, 500000);
   config.scrollbackMaxFrames = defaultValue(config.scrollbackMaxFrames, 100);
@@ -1132,7 +880,7 @@ const ptyToSenderMap = new Map<number, number>();
 
 function setupPtyManager(): boolean {
   try {
-    ptyManager = new PtyManager(configManager.getConfig(), extensionManager);
+    ptyManager = new PtyManager(extensionManager);
     injectConfigDistributor(ptyManager, configManager);
 
     ptyManager.onPtyData(event => {
@@ -1193,7 +941,7 @@ function setupDefaultSessions(): void {
 }
 
 function handlePtyCreate(sender: Electron.WebContents, msg: Messages.CreatePtyRequestMessage): Messages.CreatedPtyMessage {
-  const ptyId = ptyManager.createPty(msg.sessionUuid, msg.command, msg.args, msg.env, msg.columns, msg.rows);
+  const ptyId = ptyManager.createPty(msg.sessionUuid, msg.env, msg.columns, msg.rows);
   _log.debug(`handlePtyCreate ptyId: ${ptyId}, sender.id: ${sender.id}`);
   ptyToSenderMap.set(ptyId, sender.id);
   const reply: Messages.CreatedPtyMessage = { type: Messages.MessageType.PTY_CREATED, id: ptyId };
@@ -1230,7 +978,6 @@ function cleanUpPtyWindow(webContentsId: number): void {
     ptyToSenderMap.delete(ptyId);
   }
 }
-
 
 //-------------------------------------------------------------------------
 
@@ -1294,7 +1041,6 @@ function sendBulkFileStateChangeEvent(event: CloseEvent): void {
     state: event.success ? BulkFileState.COMPLETED : BulkFileState.FAILED
   };
   sendMessageToAllWindows(msg);
-
 }
 
 function handleCloseBulkFile(msg: Messages.BulkFileCloseMessage): void {

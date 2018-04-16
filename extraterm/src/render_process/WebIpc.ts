@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { BulkFileMetadata } from 'extraterm-extension-api';
+import { BulkFileMetadata, EnvironmentMap } from 'extraterm-extension-api';
 import * as Electron from 'electron';
 const ipc = Electron.ipcRenderer;
 
@@ -100,21 +100,15 @@ export function requestThemeContents(themeType: ThemeType): Promise<Messages.The
   return <Promise<Messages.ThemeContentsMessage>> request(msg, Messages.MessageType.THEME_CONTENTS);
 }
 
-export function requestPtyCreate(sessionUuid: string, command: string, args: string[], columns: number, rows: number,
-    env: Messages.EnvironmentMap): Promise<Messages.CreatedPtyMessage> {
+export function requestPtyCreate(sessionUuid: string, extraEnv: EnvironmentMap, columns: number, rows: number
+    ): Promise<Messages.CreatedPtyMessage> {
       
-  if (args === undefined) {
-    args = [];
-  }
-
   const msg: Messages.CreatePtyRequestMessage = {
     type: Messages.MessageType.PTY_CREATE,
     sessionUuid,
-    command: command,
-    args: args,
     columns: columns,
     rows: rows,
-    env: env
+    env: extraEnv
   };
   return <Promise<Messages.CreatedPtyMessage>> request(msg, Messages.MessageType.PTY_CREATED);
 }

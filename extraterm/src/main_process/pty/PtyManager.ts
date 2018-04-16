@@ -3,22 +3,19 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable, Event, SessionConfiguration} from 'extraterm-extension-api';
+import {Disposable, Event, SessionConfiguration, EnvironmentMap} from 'extraterm-extension-api';
+import { createUuid } from 'extraterm-uuid';
 import * as _ from 'lodash';
 
-import {Pty, BufferSizeChange} from '../../pty/Pty';
-import {PtyConnector, PtyOptions, EnvironmentMap} from './PtyConnector';
+import { Pty, BufferSizeChange } from '../../pty/Pty';
 import { Config, AcceptsConfigDistributor, ConfigDistributor } from '../../Config';
 import { Logger, getLogger } from '../../logging/Logger';
-// Our special 'fake' module which selects the correct pty connector factory implementation.
-const PtyConnectorFactory = require("../pty/PtyConnectorFactory");
-
 import * as Messages from '../../WindowMessages';
 import * as Util from '../../render_process/gui/Util';
 import { EventEmitter } from '../../utils/EventEmitter';
 import { MainExtensionManager } from '../extension/MainExtensionManager';
 import log from '../../logging/LogDecorator';
-import { createUuid } from 'extraterm-uuid';
+
 
 const LOG_FINE = false;
 
@@ -38,19 +35,17 @@ export interface PtyAvailableWriteBufferSizeChangeEvent {
   bufferSizeChange: BufferSizeChange;
 }
 
-export class PtyManager implements Disposable, AcceptsConfigDistributor {
+export class PtyManager implements AcceptsConfigDistributor {
   private _log: Logger;
   private _configDistributor: ConfigDistributor = null;
-  private _ptyConnector: PtyConnector;
   private _ptyCounter = 0;
   private _ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
   private _onPtyExitEventEmitter = new EventEmitter<number>();
   private _onPtyDataEventEmitter = new EventEmitter<PtyDataEvent>();
   private _onPtyAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<PtyAvailableWriteBufferSizeChangeEvent>();
 
-  constructor(config: Config /* FIXME remove this param */, private _extensionManager: MainExtensionManager) {
+  constructor(private _extensionManager: MainExtensionManager) {
     this._log = getLogger("PtyManager", this);
-    this._ptyConnector = PtyConnectorFactory.factory(config);
     this.onPtyExit = this._onPtyExitEventEmitter.event;
     this.onPtyData = this._onPtyDataEventEmitter.event;
     this.onPtyAvailableWriteBufferSizeChange = this._onPtyAvailableWriteBufferSizeChangeEventEmitter.event;
@@ -74,16 +69,11 @@ export class PtyManager implements Disposable, AcceptsConfigDistributor {
     this._configDistributor = configDistributor;
   }
   
-  dispose(): void {
-    this._ptyConnector.destroy();
-    this._ptyConnector = null;
-  }
-
   onPtyExit: Event<number>;
   onPtyData: Event<PtyDataEvent>;
   onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
 
-  createPty(sessionUuid: string, file: string, args: string[], env: EnvironmentMap, cols: number, rows: number): number {
+  createPty(sessionUuid: string, extraEnv: EnvironmentMap, cols: number, rows: number): number {
     
     const config = this._configDistributor.getConfig();
     let sessionConfiguration: SessionConfiguration = null;
@@ -93,21 +83,13 @@ export class PtyManager implements Disposable, AcceptsConfigDistributor {
       }
     }
 
-    let ptyTerm: Pty = null;
-    if (sessionConfiguration !== null) {
-      const backend = this._extensionManager.getSessionBackend(sessionConfiguration.type);
-      ptyTerm = backend.createSession(sessionConfiguration, cols, rows);
-
-    } else {
-      const ptyEnv = _.clone(env);
-      ptyEnv["TERM"] = 'xterm';
-      ptyTerm = this._ptyConnector.spawn(file, args, {
-          name: 'xterm',
-          cols: cols,
-          rows: rows,
-      //    cwd: process.env.HOME,
-          env: ptyEnv } );
+    if (sessionConfiguration === null) {
+      this._log.warn(`Unable to find a session for UUID '${sessionUuid}'.`);
+      return null;
     }
+
+    const backend = this._extensionManager.getSessionBackend(sessionConfiguration.type);
+    const ptyTerm = backend.createSession(sessionConfiguration, extraEnv, cols, rows);
 
     this._ptyCounter++;
     const ptyId = this._ptyCounter;

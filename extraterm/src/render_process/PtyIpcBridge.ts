@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Event} from 'extraterm-extension-api';
+import {Event, EnvironmentMap} from 'extraterm-extension-api';
 
 import {Pty, BufferSizeChange} from '../pty/Pty';
 import {EventEmitter} from '../utils/EventEmitter';
@@ -32,11 +32,11 @@ export class PtyIpcBridge {
     WebIpc.registerDefaultHandler(Messages.MessageType.PTY_CLOSE, this._handlePtyClose.bind(this));
   }
 
-  createPtyForTerminal(sessionUuid: string, command: string, sessionArguments: string[], newEnv: any, columns: number, rows: number): Pty {
+  createPtyForTerminal(sessionUuid: string, extraEnv: EnvironmentMap, columns: number, rows: number): Pty {
     const ptyImpl = new PtyImpl();
     ptyImpl.resize(columns, rows);
 
-    WebIpc.requestPtyCreate(sessionUuid, command, sessionArguments, columns, rows, newEnv)
+    WebIpc.requestPtyCreate(sessionUuid, extraEnv, columns, rows)
     .then( (msg: Messages.CreatedPtyMessage) => {
       ptyImpl._ptyId = msg.id;
 

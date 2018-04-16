@@ -4,16 +4,12 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {EventEmitter} from 'extraterm-event-emitter';
-import {Event, BufferSizeChange, Pty, Logger} from 'extraterm-extension-api';
+import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from 'extraterm-extension-api';
 import * as pty from 'ptyw.js';
 import * as _ from 'lodash';
 
 
 const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
-
-export interface EnvironmentMap {
-  [key:string]: string;
-}
 
 export interface PtyOptions {
   exe?: string;

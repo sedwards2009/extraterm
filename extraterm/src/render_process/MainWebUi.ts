@@ -31,7 +31,7 @@ import {Splitter, SplitOrientation} from './gui/Splitter';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import {Tab} from './gui/Tab';
 import {TabWidget, DroppedEventDetail} from './gui/TabWidget';
-import {EtTerminal} from './Terminal';
+import {EtTerminal, EXTRATERM_COOKIE_ENV} from './Terminal';
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as util from './gui/Util';
@@ -45,7 +45,6 @@ import { ExtensionManager, injectExtensionManager } from './extension/InternalTy
 
 type Config = config.Config;
 type ConfigManager = config.ConfigDistributor;
-type SessionProfile = config.SessionConfig;
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 const VisualState = ViewerElementTypes.VisualState;
@@ -553,17 +552,11 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   }
 
   private _createPtyForTerminal(newTerminal: EtTerminal, sessionUuid: string): void {
-    const sessionProfile = this._configManager.getConfig().expandedProfiles[0];
-    const newEnv = _.cloneDeep(process.env);
-    const expandedExtra = sessionProfile.extraEnv;
-
-    let prop: string;
-    for (prop in expandedExtra) {
-      newEnv[prop] = expandedExtra[prop];
-    }
-
-    const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, sessionProfile.command, sessionProfile.arguments,
-                  newEnv, newTerminal.getColumns(), newTerminal.getRows());
+    const extraEnv = {
+      [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue()
+    };
+    const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, extraEnv, newTerminal.getColumns(),
+      newTerminal.getRows());
     pty.onExit(() => {
       this.closeTab(newTerminal);
     });

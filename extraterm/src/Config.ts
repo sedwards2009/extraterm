@@ -31,10 +31,6 @@ export interface Config {
 
   sessions?: SessionConfiguration[];
 
-  // These 2 fields are obsolete.
-  sessionProfiles?: SessionConfig[]; // User configurable list of sessions.
-  expandedProfiles: SessionConfig[]; // 'cooked' or expanded list of sessions where missing information is filled in.
-
   systemConfig: SystemConfig;
 }
 
@@ -77,20 +73,6 @@ export interface FontInfo {
   path: string;
   name: string;
   postscriptName: string;
-}
-
-export const SESSION_TYPE_UNIX = "unix";
-export const SESSION_TYPE_CYGWIN = "cygwin";
-export const SESSION_TYPE_BABUN = "babun";
-
-export interface SessionConfig {
-  name: string;             // Human readable name for the profile.
-  type?: string;            // type - "cygwin", "babun" or "native" ("" means "native")
-  
-  command?: string;         // the command to execute in the terminal
-  arguments?: string[];     // the arguments for said command
-  extraEnv?: Object;        // extra entries to add to the environment before running the command.
-  cygwinDir?: string;       // The directory holding the 'system'. Used by babun and cygwin.
 }
 
 export function envContext(systemConfig: SystemConfig): Map<string, string> {

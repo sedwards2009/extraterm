@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import { app } from 'electron';
 
-import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Pty, Terminal, SessionConfiguration, Backend, SessionBackend} from 'extraterm-extension-api';
+import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Pty, Terminal, SessionConfiguration, Backend, SessionBackend, EnvironmentMap} from 'extraterm-extension-api';
 
 import { ProxyPtyConnector, PtyOptions } from './ProxyPty';
 
@@ -87,15 +87,21 @@ class ProxyBackend implements SessionBackend {
     }
   }
   
-  createSession(sessionConfiguration: SessionConfiguration, cols: number, rows: number): Pty {
+  createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty {
     const sessionConfig = <ProxySessionConfiguration> sessionConfiguration;
     const {homeDir, defaultShell} = this._getDefaultCygwinConfig(sessionConfig.cygwinPath);
     const shell = sessionConfig.useDefaultShell ? defaultShell : sessionConfig.shell;
 
     const args = ["-l"];
+    
     const ptyEnv = _.cloneDeep(process.env);
     ptyEnv["TERM"] = "xterm";
     ptyEnv["HOME"] = homeDir;
+
+    let prop: string;
+    for (prop in extraEnv) {
+      ptyEnv[prop] = extraEnv[prop];
+    }
 
     const options: PtyOptions = {
       name: "xterm",

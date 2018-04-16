@@ -428,10 +428,14 @@ export interface ExtensionSessionEditorBaseConstructor {
   new(...any: any[]): ExtensionSessionEditorBase;
 }
 
+export interface EnvironmentMap {
+  [key: string]: string;
+}
+
 export interface SessionBackend {
   defaultSessionConfigurations(): SessionConfiguration[];
 
-  createSession(sessionConfiguration: SessionConfiguration, cols: number, rows: number): Pty;
+  createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty;
 }
 
 export interface BufferSizeChange {
