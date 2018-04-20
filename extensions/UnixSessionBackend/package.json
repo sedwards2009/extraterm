@@ -17,7 +17,7 @@
     "@types/lodash": "^4.0.0",
     "@types/node": "7.0.5",
     "extraterm-extension-api": "0.1.0",
-    "typescript": "2.6.1"
+    "typescript": "2.8.3"
   },
   "excludePlatform": [
     {

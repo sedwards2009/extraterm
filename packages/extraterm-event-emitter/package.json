@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "extraterm-extension-api": "0.1.0",
-    "typescript": "2.6.1"
+    "typescript": "2.8.3"
   },
   "scripts": {
     "run": "false",
