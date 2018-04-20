@@ -18,16 +18,15 @@ import { ExtensionManager } from '../extension/InternalTypes';
 <div>
   <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Sessions</h2>
 
-  <div v-for="item in sessions" key="item.uuid" class="session-configuration panel panel-default">
-    <div class="panel-heading"><h3 class="panel-title">{{ item.name }}</h3>
-    <button class="delete_button" v-on:click="deleteSession(item.uuid)">X</button></div>
-    <div class="panel-body">
+  <div v-for="item in sessions" key="item.uuid" class="session-configuration card">
+    <h3>{{ item.name }}</h3>
+    <button class="delete_button" v-on:click="deleteSession(item.uuid)"><i class="fa fa-times"></i></button>
+    <div>
       <component
         v-bind:is="sessionEditor(item.type)"
         v-bind:sessionConfiguration.prop="item"
         v-on:change="handleChange">
       </component>
-
     </div>
   </div>
 

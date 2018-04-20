@@ -242,7 +242,7 @@ input[type="search"] {
 .checkbox-inline input[type="checkbox"] {
   position: absolute;
   margin-left: pxToRem(-20px);
-  margin-top: pxToRem(4px) \9;
+  margin-top: pxToRem(4px);
 }
 
 .radio + .radio,
@@ -614,4 +614,18 @@ input[type="checkbox"] {
       }
     }
   }
+}
+
+.input-radio {
+}
+
+.inline-text {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding-right: 1rem;
+}
+
+.form-inline .form-control.form-control.form-control {
+  float: none;
+  width: auto;
 }

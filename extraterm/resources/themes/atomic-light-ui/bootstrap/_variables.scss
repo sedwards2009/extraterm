@@ -40,10 +40,14 @@ $background-color-selected: #6aa5e9;
 //
 //## Settings for some of the most global styles.
 
+
 //** Background color for `<body>`.
 $body-bg:               #f4f4f4 !default;
 
 $base-background-color: #f4f4f4;
+
+$tool-panel-background-color: $base-background-color;
+
 $base-border-color: #9f9f9f;
 
 //** Global text color on `<body>`.

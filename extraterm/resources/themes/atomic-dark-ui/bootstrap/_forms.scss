@@ -2,6 +2,9 @@
 // Forms
 // --------------------------------------------------
 
+$component-margin-side: .3em;
+$component-size: $component-icon-size;
+$component-background-color: mix($text-color, $base-background-color, 20%);
 
 // Normalize non-controls
 //
@@ -311,7 +314,7 @@ $checkbox-space: pxToRem(27px);
 .checkbox-inline input[type="checkbox"] {
   position: absolute;
   margin-left: -$checkbox-space;
-  margin-top: pxToRem(4px) \9;
+  margin-top: pxToRem(4px);
 }
 
 .radio + .radio,
@@ -710,4 +713,59 @@ input[type="text"]:focus, input[type="number"]:focus {
       }
     }
   }
+}
+
+input[type="radio"].input-radio {
+
+  margin-top: -0.25rem;
+  margin-right: $component-margin-side;
+
+  outline: none;
+
+  vertical-align: middle;
+
+  -webkit-appearance: none;
+  display: inline-block;
+  position: relative;
+  width: $component-size;
+  height: $component-size;
+  font-size: inherit;
+  border-radius: 50%;
+  background-color: $component-background-color;
+  transition: background-color .16s cubic-bezier(0.5, 0.15, 0.2, 1);
+
+  &:before {
+    content: "";
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    border-radius: inherit;
+    border: $component-size/3 solid transparent;
+    background-clip: content-box;
+    background-color: $base-background-color;
+    transform: scale(0);
+    transition: transform .1s cubic-bezier(0.5, 0.15, 0.2, 1);
+  }
+
+  &:active {
+    background-color: $background-color-info;
+  }
+
+  &:checked {
+    background-color: $background-color-info;
+    &:before {
+      transform: scale(1);
+    }
+  }
+}
+
+.inline-text {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding-right: 1rem;
+}
+
+.form-inline .form-control.form-control.form-control {
+  float: none;
+  width: auto;
 }

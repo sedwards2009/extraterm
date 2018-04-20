@@ -34,6 +34,11 @@ $brand-text-danger: #ffffff;
 //
 //## Settings for some of the most global styles.
 
+$tool-panel-background-color: #1d1f21;
+
+//** Background color for `<body>`.
+$base-background-color: #fff;
+
 //** Background color for `<body>`.
 $body-bg:               #fff !default;
 //** Global text color on `<body>`.

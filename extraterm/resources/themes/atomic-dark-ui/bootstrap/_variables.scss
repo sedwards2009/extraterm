@@ -234,7 +234,7 @@ $tab-height: pxToRem(26px);
 //** `<input>` background color
 $input-bg:                       #212224 !default;
 //** `<input disabled>` background color
-$input-bg-disabled:              $gray-lighter !default;
+$input-bg-disabled:              transparent !default;
 
 //** Text color for `<input>`s
 $input-color:                    $text-color !default;

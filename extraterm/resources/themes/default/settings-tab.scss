@@ -66,3 +66,76 @@
 div.input-group > select.form-control.form-control.form-control:first-child {
   border-radius: $input-border-radius;
 }
+
+$package-card-background-color: lighten($tool-panel-background-color, 8%);
+
+
+.card {
+  padding: $component-padding*1.5;
+  margin-bottom: $component-padding;
+  list-style-type: none;
+  font-size: 1.2em;
+  border-radius: $component-border-radius*2;
+  border: 1px solid $base-border-color;
+  background-color: $package-card-background-color;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-user-select: none;
+}
+
+.session-configuration {
+
+  position: relative;
+
+  & h3 {
+    margin-top: 0;
+  }
+
+  & BUTTON.delete_button {
+    position: absolute;
+    right: $component-padding*1.5;
+    top: $component-padding*1.5;
+
+    font-size: 1.2em;
+
+    display: block;
+    width: 1.5em;
+    height: 1.5em;
+    border: 0;
+    padding: 0;
+    
+    border-radius: 50%;
+    background-color: transparent;
+    text-align: center;
+    line-height: 1;
+    font-size: $font-size-base;
+
+    outline: 0 solid transparent;
+
+    transition: background-color,color 0.2s ease-in-out;
+
+    // This pseudo-element exists to force the button to have a 1:1 aspect ratio always.
+    // &:after {
+    //   display: inline-block;
+    //   content: "";
+    //   width: 100%;
+    //   padding-top: 100%;
+    // }
+
+    // & > i {
+      // position: absolute;
+      // display: inline-block;
+      // left: 0;
+      // top: 0;
+    // }
+
+    &:hover {
+      background-color: $btn-danger-bg;
+      color: $tab-background-color-active;
+    }
+
+    &:focus {
+      outline: 0 solid transparent;
+    }
+  }
+}
