@@ -38,7 +38,7 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     if (configDistributor.getConfig() == null) {
       return;
     }
-    this._setConfig(configDistributor.getConfig());
+    this._setConfig(configDistributor.getConfigCopy());
   }
 
   protected _getUi(): V {
@@ -69,10 +69,7 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
 
   protected _getConfigCopy(): Config {
     if (this._configBinder.getOnChangeEmitter() != null) {
-      const config = this._configBinder.getOnChangeEmitter().getConfig();
-      if (config != null) {
-        return _.cloneDeep(config);
-      }
+      return this._configBinder.getOnChangeEmitter().getConfigCopy();
     }
     return null;
   }

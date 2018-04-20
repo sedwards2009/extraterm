@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as os from 'os';
+import { DeepReadonly } from 'extraterm-readonly-toolbox';
+
 import { Disposable, Event, SessionConfiguration } from 'extraterm-extension-api';
 
 export type ShowTipsStrEnum = 'always' | 'daily' | 'never';
@@ -103,6 +105,8 @@ export function expandEnvVariable(value: string, context: Map<string, string>): 
   return result;
 }
 
+export type ReadonlyConfig = DeepReadonly<Config>;
+
 /**
  * Interface for distributing configuration changes.
  */
@@ -112,8 +116,10 @@ export interface ConfigDistributor {
    *
    * @return the current config.
    */
-  getConfig(): Config;
-  
+  getConfig(): ReadonlyConfig;
+
+  getConfigCopy(): Config;
+
   /**
    * Register a listener to hear when the config has changed.
    *
@@ -123,10 +129,11 @@ export interface ConfigDistributor {
   /**
    * Set a new application wide config.
    *
-   * Note that this method is asynchronous in the sense that the config doesn't take effect until later.
+   * Note that the full effects of this method are asynchronous with respect
+   * to the parts of the application which run in different threads/processes.
    * @param newConfig the new config object.
    */
-  setConfig(newConfig: Config): void;
+  setConfig(newConfig: Config | ReadonlyConfig): void;
 }
 
 export interface AcceptsConfigDistributor {

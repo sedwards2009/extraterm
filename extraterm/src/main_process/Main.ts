@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {Config, CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDistributor, injectConfigDistributor} from '../Config';
+import {Config, CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDistributor, injectConfigDistributor, ReadonlyConfig} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
 import {Logger, getLogger, addLogWriter} from '../logging/Logger';
 import { PtyManager } from './pty/PtyManager';
@@ -33,6 +33,7 @@ import {ThemeManager} from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { EventEmitter } from '../utils/EventEmitter';
+import { freezeDeep } from 'extraterm-readonly-toolbox';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
@@ -170,7 +171,7 @@ function setupScale(): boolean {
   if (restartNeeded) {
     return false;
   }
-  const newConfig = _.cloneDeep(configManager.getConfig());
+  const newConfig = configManager.getConfigCopy();
   newConfig.systemConfig.currentScaleFactor = currentScaleFactor;
   newConfig.systemConfig.originalScaleFactor = originalScaleFactor;
   configManager.setConfig(newConfig);
@@ -254,7 +255,7 @@ function openWindow(): void {
 }
 
 function saveWindowDimensions(windowId: number, rect: Electron.Rectangle): void {
-  const newConfig = _.cloneDeep(configManager.getConfig());
+  const newConfig = configManager.getConfigCopy();
 
   if (newConfig.windowConfiguration == null) {
     newConfig.windowConfiguration = {};
@@ -516,7 +517,7 @@ function setConfigDefaults(config: Config): void {
 
 
 class ConfigManager implements ConfigDistributor {
-  private _config: Config = null;
+  private _config: ReadonlyConfig = null;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
   
@@ -524,23 +525,38 @@ class ConfigManager implements ConfigDistributor {
     this.onChange = this._onChangeEventEmitter.event;
   }
 
-  getConfig(): Config {
+  getConfig(): ReadonlyConfig {
     return this._config;
   }
 
-  setConfigNoWrite(newConfig: Config): void {
-    this._config = newConfig;
+  getConfigCopy(): Config {
+    if (this._config == null) {
+      return null;
+    }
+    return <Config> _.cloneDeep(this._config);
+  }
+
+  setConfigNoWrite(newConfig: Config | ReadonlyConfig): void {
+    if (Object.isFrozen(newConfig)) {
+      this._config = newConfig;
+    } else {
+      this._config = <ReadonlyConfig> freezeDeep(_.cloneDeep(newConfig));
+    }
+
     this._onChangeEventEmitter.fire(undefined);
   }
 
-  setConfig(newConfig: Config): void {
+  setConfig(newConfig: Config | ReadonlyConfig): void {
+    const copiedConfig = _.cloneDeep(newConfig);
+    freezeDeep(copiedConfig);
+
     // Write it to disk.
-    this._writeConfigurationFile(newConfig);
-    this.setConfigNoWrite(newConfig);
+    this._writeConfigurationFile(copiedConfig);
+    this.setConfigNoWrite(copiedConfig);
   }
 
-  private _writeConfigurationFile(config: Config): void {
-    const cleanConfig = _.cloneDeep(config);
+  private _writeConfigurationFile(config: ReadonlyConfig): void {
+    const cleanConfig = <Config> _.cloneDeep(config);
     cleanConfig.systemConfig = null;
     
     const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
@@ -549,7 +565,7 @@ class ConfigManager implements ConfigDistributor {
 }
 
 function getFullConfig(): Config {
-  const config = configManager.getConfig();
+  const config = configManager.getConfigCopy();
   const fullConfig = _.cloneDeep(config);
 
   fullConfig.systemConfig = systemConfiguration(config);
@@ -803,7 +819,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   
   // Copy in the updated fields.
   const incomingConfig = msg.config;
-  const newConfig = _.cloneDeep(configManager.getConfig());
+  const newConfig = configManager.getConfigCopy();
   newConfig.showTips = incomingConfig.showTips;
   newConfig.tipTimestamp = incomingConfig.tipTimestamp;
   newConfig.tipCounter = incomingConfig.tipCounter;
@@ -932,7 +948,7 @@ function setupPtyManager(): boolean {
 }
 
 function setupDefaultSessions(): void {
-  const config = configManager.getConfig();
+  const config = configManager.getConfigCopy();
   if (config.sessions.length === 0) {
     const newConfig = _.cloneDeep(config);
     newConfig.sessions = ptyManager.getDefaultSessions();

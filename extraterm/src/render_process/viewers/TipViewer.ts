@@ -161,7 +161,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
     showTipsSelect.value = this._configManager.getConfig().showTips;
     showTipsSelect.addEventListener('change', () => {
-      const newConfig = _.cloneDeep(this._configManager.getConfig());
+      const newConfig = this._configManager.getConfigCopy();
       newConfig.showTips = <config.ShowTipsStrEnum> showTipsSelect.value;
       this._configManager.setConfig(newConfig);
     });

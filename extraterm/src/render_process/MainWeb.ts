@@ -18,7 +18,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
     from './CommandPaletteRequestTypes';
-import {Config, ConfigDistributor, injectConfigDistributor} from '../Config';
+import {Config, ConfigDistributor, injectConfigDistributor, ReadonlyConfig} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
@@ -46,6 +46,7 @@ import * as Util from './gui/Util';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
+import { freezeDeep } from 'extraterm-readonly-toolbox';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -646,7 +647,7 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
 }
 
 class ConfigDistributorImpl implements ConfigDistributor {
-  private _config: Config = null;
+  private _config: ReadonlyConfig = null;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
   
@@ -654,13 +655,20 @@ class ConfigDistributorImpl implements ConfigDistributor {
     this.onChange = this._onChangeEventEmitter.event;
   }
 
-  getConfig(): Config {
+  getConfig(): ReadonlyConfig {
     return this._config;
   }
-  
-  setConfig(newConfig: Config): void {  
+
+  getConfigCopy(): Config {
+    if (this._config == null) {
+      return null;
+    }
+    return <Config> _.cloneDeep(this._config);
+  }
+
+  setConfig(newConfig: Config): void {
     if ( ! _.isEqual(this._config, newConfig)) {
-      this._config = newConfig;
+      this._config = <ReadonlyConfig> freezeDeep(_.cloneDeep(newConfig));
       WebIpc.sendConfig(newConfig);
       this._onChangeEventEmitter.fire(undefined);
     }
@@ -671,7 +679,7 @@ class ConfigDistributorImpl implements ConfigDistributor {
    */
   setConfigFromMainProcess(newConfig: Config): void {
     if ( ! _.isEqual(this._config, newConfig)) {
-      this._config = newConfig;
+      this._config = <ReadonlyConfig> freezeDeep(_.cloneDeep(newConfig));
       this._onChangeEventEmitter.fire(undefined);
     }
   }

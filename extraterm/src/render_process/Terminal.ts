@@ -673,7 +673,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _showTip(): void {
-    const config = this._configManager.getConfig();
+    const config = this._configManager.getConfigCopy();
     switch (config.showTips) {
       case 'always':
         break;
@@ -686,10 +686,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
 
     this._appendMimeViewer(TipViewer.MIME_TYPE, null);
-    const newConfig = _.cloneDeep(config);
-    newConfig.tipTimestamp = Date.now();
-    newConfig.tipCounter = newConfig.tipCounter + 1;
-    this._configManager.setConfig(newConfig);
+    config.tipTimestamp = Date.now();
+    config.tipCounter = config.tipCounter + 1;
+    this._configManager.setConfig(config);
   }
   
   private _handleFocus(event: FocusEvent): void {
