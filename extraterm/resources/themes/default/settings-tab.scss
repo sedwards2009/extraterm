@@ -114,21 +114,6 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
 
     transition: background-color,color 0.2s ease-in-out;
 
-    // This pseudo-element exists to force the button to have a 1:1 aspect ratio always.
-    // &:after {
-    //   display: inline-block;
-    //   content: "";
-    //   width: 100%;
-    //   padding-top: 100%;
-    // }
-
-    // & > i {
-      // position: absolute;
-      // display: inline-block;
-      // left: 0;
-      // top: 0;
-    // }
-
     &:hover {
       background-color: $btn-danger-bg;
       color: $tab-background-color-active;
