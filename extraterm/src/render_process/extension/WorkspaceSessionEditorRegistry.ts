@@ -156,7 +156,11 @@ class ExtensionSessionEditorProxy extends ThemeableElementBase  {
   }
 
   set sessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration) {
-    this._extensionSessionEditor.__setSessionConfiguration(sessionConfiguration);
+    if ( ! this._doneSetup) {
+      this._extensionSessionEditor.__setSessionConfiguration(sessionConfiguration);
+    } else {
+      this._extensionSessionEditor.setSessionConfiguration(sessionConfiguration);
+    }
   }
 }
 
@@ -172,6 +176,10 @@ export class ExtensionSessionEditorBaseImpl implements ExtensionApi.ExtensionSes
 
   getContainerElement(): HTMLElement {
     return this._sessionEditorProxy.getContainerNode();
+  }
+
+  setSessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration): void {
+    this.__setSessionConfiguration(sessionConfiguration);
   }
 
   __setSessionConfiguration(sessionConfiguration: ExtensionApi.SessionConfiguration): void {

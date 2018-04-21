@@ -95,14 +95,16 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
     margin-top: 0;
   }
 
-  & BUTTON.delete_button {
+  & .session-card-buttons {
     position: absolute;
     right: $component-padding*1.5;
     top: $component-padding*1.5;
+  }
 
+  & BUTTON.delete-button {
     font-size: 1.2em;
 
-    display: block;
+    display: inline-block;
     width: 1.3em;
     height: 1.3em;
     border: 0;
@@ -120,6 +122,35 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
 
     &:hover {
       background-color: $btn-danger-bg;
+      color: $tab-background-color-active;
+    }
+
+    &:focus {
+      outline: 0 solid transparent;
+    }
+  }
+
+  & BUTTON.make-default-button {
+    font-size: 1.2em;
+
+    display: inline-block;
+    width: 1.3em;
+    height: 1.3em;
+    border: 0;
+    padding: 0;
+    
+    border-radius: 50%;
+    background-color: transparent;
+    text-align: center;
+    line-height: 1;
+    font-size: $font-size-base;
+
+    outline: 0 solid transparent;
+
+    transition: background-color,color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: $btn-success-bg;
       color: $tab-background-color-active;
     }
 

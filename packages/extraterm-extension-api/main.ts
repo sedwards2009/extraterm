@@ -419,6 +419,8 @@ export interface ExtensionSessionEditorBase {
    */
   getContainerElement(): HTMLElement;
 
+  setSessionConfiguration(sessionConfiguration: SessionConfiguration): void;
+
   getSessionConfiguration(): SessionConfiguration;
 
   updateSessionConfiguration(sessionConfigurationChange: object): void;

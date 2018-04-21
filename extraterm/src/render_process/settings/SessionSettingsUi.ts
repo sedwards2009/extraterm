@@ -18,9 +18,14 @@ import { ExtensionManager } from '../extension/InternalTypes';
 <div class="settings-page">
   <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Sessions</h2>
 
-  <div v-for="item in sessions" key="item.uuid" class="session-configuration card">
+  <div v-for="(item, index) in sessions" key="item.uuid" class="session-configuration card">
     <h3>{{ item.name }}</h3>
-    <button class="delete_button" v-on:click="deleteSession(item.uuid)"><i class="fa fa-times"></i></button>
+
+    <div class="session-card-buttons">
+      <button v-if="index != 0" class="make-default-button" v-on:click="makeDefault(item.uuid)" title="Make default"><i class="fas fa-angle-double-up"></i></button>
+      <div v-if="index == 0"><em>default</em></div>
+      <button v-if="index != 0" class="delete-button" v-on:click="deleteSession(item.uuid)"><i class="fa fa-times"></i></button>
+    </div>
     <div>
       <component
         v-bind:is="sessionEditor(item.type)"
@@ -82,12 +87,24 @@ export class SessionSettingsUi extends Vue {
   }
 
   deleteSession(uuid: string): void {
+    this.sessions.splice(this._indexOfUuid(uuid), 1);
+  }
+
+  makeDefault(uuid: string): void {
+    const i = this._indexOfUuid(uuid);
+    const session = this.sessions[i];
+    this.sessions.splice(i, 1);
+    this.sessions.splice(0, 0, session);
+  }
+
+  private _indexOfUuid(uuid: string): number {
     let i = 0;
     for (const session of this.sessions) {
       if (session.uuid === uuid) {
-        this.sessions.splice(i, 1);
+        return i;
       }
       i++;
     }
+    return -1;
   }
 }

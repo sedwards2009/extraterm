@@ -33,16 +33,27 @@ export function activate(context: ExtensionContext): any {
 
       const config = <UnixSessionConfiguration> this.getSessionConfiguration();
       if (config.name == null) {
-        this._ui.name = "bash";
-        this._ui.useDefaultShell = 1;
-        this._ui.shell = "";
+        this._loadConfig({
+          uuid: config.uuid,
+          name: "bash",
+          useDefaultShell: true,
+          shell: "",
+        });
       }
 
+      this._loadConfig(config);
+      this.getContainerElement().appendChild(component.$el);
+    }
+
+    setSessionConfiguration(config: SessionConfiguration): void {
+      super.setSessionConfiguration(config);
+      this._loadConfig(config);
+    }
+
+    _loadConfig(config: UnixSessionConfiguration): void {
       this._ui.name = config.name;
       this._ui.useDefaultShell = config.useDefaultShell ? 1 :0;
       this._ui.shell = config.shell;
-
-      this.getContainerElement().appendChild(component.$el);
     }
 
     _dataChanged(): void {
