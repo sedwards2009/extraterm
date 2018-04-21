@@ -16,14 +16,14 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
 @Component(
   {
     template: `
-<div>
+<div class="settings-page">
   <h2><i class="far fa-keyboard"></i>&nbsp;&nbsp;Key Bindings</h2>
 
   <div className=''>
     <div class="form-horizontal">
       <div class="form-group">
-        <label for="theme-terminal" class="col-sm-3 control-label">Key bindings style:</label>
-        <div class="col-sm-3">
+        <label for="theme-terminal" class="col-sm-4 control-label">Key bindings style:</label>
+        <div class="col-sm-8">
           <select class="form-control" id="keybindings-style" v-model="selectedKeyBindings">
             <option v-for="option in keyBindingsFiles" v-bind:value="option.filename">
               {{ option.name }}

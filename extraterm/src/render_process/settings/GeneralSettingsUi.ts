@@ -16,7 +16,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 @Component(
   {
     template: `
-<div>
+<div class="settings-page">
   <h2><i class="fa fa-sliders-h"></i>&nbsp;&nbsp;General Settings</h2>
     
   <div class="form-horizontal">
@@ -32,18 +32,18 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     </div>
     
     <div class="form-group">
-      <label for="${ID_SCROLLBACK}" class="col-sm-4 control-label">Maximum Scrollback Lines:</label>
-      <div class="input-group col-sm-2">
-        <input id="${ID_SCROLLBACK}" type="number" class="form-control" v-model.number="maxScrollbackLines" min="1"
+      <label for="${ID_SCROLLBACK}" class="col-sm-4 control-label">Max. Scrollback Lines:</label>
+      <div class="input-group col-sm-1">
+        <input id="${ID_SCROLLBACK}" type="number" class="form-control char-width-8" v-model.number="maxScrollbackLines" min="1"
           max="10000000" debounce="500" />
         <div class="input-group-addon">lines</div>
       </div>
     </div>
 
     <div class="form-group">
-      <label for="${ID_SCROLLBACK_FRAMES}" class="col-sm-4 control-label">Maximum Scrollback Frames:</label>
-      <div class="input-group col-sm-2">
-        <input id="${ID_SCROLLBACK_FRAMES}" type="number" class="form-control" v-model.number="maxScrollbackFrames" min="1"
+      <label for="${ID_SCROLLBACK_FRAMES}" class="col-sm-4 control-label">Max. Scrollback Frames:</label>
+      <div class="input-group col-sm-1">
+        <input id="${ID_SCROLLBACK_FRAMES}" type="number" class="form-control char-width-4" v-model.number="maxScrollbackFrames" min="1"
           max="1000" debounce="500" />
         <div class="input-group-addon">frames</div>
       </div>

@@ -32,7 +32,7 @@ export function nextId(): string {
 @Component(
   {
     template: `
-<div>
+<div class="settings-page">
   <h2><i class="far fa-window-maximize"></i>&nbsp;&nbsp;Frame Handling Rules</h2>
   <table class="table">
     <thead v-if="commandLineActions.length !== 0">
@@ -49,7 +49,7 @@ export function nextId(): string {
         <div class="checkbox">
           <label>
             <input type="checkbox" v-model="commandLineAction.frame" />
-            Show frame
+            Frame
           </label>
         </div>
       </td>

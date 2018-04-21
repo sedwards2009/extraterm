@@ -70,6 +70,10 @@ div.input-group > select.form-control.form-control.form-control:first-child {
 $package-card-background-color: lighten($tool-panel-background-color, 8%);
 
 
+.settings-page {
+  max-width: 50rem;
+}
+
 .card {
   padding: $component-padding*1.5;
   margin-bottom: $component-padding;
@@ -99,8 +103,8 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
     font-size: 1.2em;
 
     display: block;
-    width: 1.5em;
-    height: 1.5em;
+    width: 1.3em;
+    height: 1.3em;
     border: 0;
     padding: 0;
     

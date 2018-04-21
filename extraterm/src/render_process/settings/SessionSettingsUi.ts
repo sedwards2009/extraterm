@@ -15,7 +15,7 @@ import { ExtensionManager } from '../extension/InternalTypes';
 @Component(
   {
     template: `
-<div>
+<div class="settings-page">
   <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Sessions</h2>
 
   <div v-for="item in sessions" key="item.uuid" class="session-configuration card">
