@@ -137,7 +137,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
 
   getBulkFileHandle(): BulkFileHandle {
-    throw Error("Not implemented.");
+    return null;
   }
 
   dispose(): void {

@@ -608,8 +608,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     ev.dataTransfer.setData(FrameMimeType.MIMETYPE, "" + this.getTag());
     
     const handle = this.getBulkFileHandle();
-
-    if (handle.getState() === BulkFileState.COMPLETED) {
+    if (handle != null && handle.getState() === BulkFileState.COMPLETED) {
       const metadata = handle.getMetadata();
       let {mimeType, charset} = guessMimetype(handle);
 
