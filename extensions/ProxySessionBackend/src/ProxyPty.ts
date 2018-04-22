@@ -239,7 +239,8 @@ export class ProxyPtyConnector {
     }
     const pty = new ProxyPty(this._sendMessage.bind(this));
     this._ptys.push(pty);
-    const msg: CreatePtyMessage = { type: TYPE_CREATE, argv: [file, ...args], rows: rows, columns: columns, id: -1, env: options.env };
+    const msg: CreatePtyMessage = { type: TYPE_CREATE, argv: [file, ...args], rows: rows, columns: columns,
+      id: NULL_ID, env: options.env };
     this._sendMessage(null, msg);
     return pty;
   }

@@ -125,7 +125,13 @@ export function startUp(closeSplash: () => void): void {
       setupOSXMenus(mainWebUi);
     }
 
-    mainWebUi.newTerminalTab(null, configManager.getConfig().sessions[0].uuid);
+    if (configManager.getConfig().sessions.length !== 0) {
+      mainWebUi.newTerminalTab(null, configManager.getConfig().sessions[0].uuid);
+    } else {
+      mainWebUi.openSettingsTab("session");
+      Electron.remote.dialog.showErrorBox("No session types available",
+        "Extraterm doesn't have any session types configured.");
+    }
     mainWebUi.focus();
     window.focus();
   });

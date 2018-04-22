@@ -677,19 +677,22 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     tabDiv.innerHTML = tag;
   }
 
-  openSettingsTab(): void {
+  openSettingsTab(tabName: string=null): void {
     const settingsTabs = this._splitLayout.getAllTabContents().filter( (el) => el instanceof SettingsTab );
     if (settingsTabs.length !== 0) {
       this._switchToTab(settingsTabs[0]);
     } else {
-      const viewerElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
-      config.injectConfigDistributor(viewerElement, this._configManager);
-      keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
-      injectExtensionManager(viewerElement, this._extensionManager);
+      const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
+      config.injectConfigDistributor(settingsTabElement, this._configManager);
+      keybindingmanager.injectKeyBindingManager(settingsTabElement, this._keyBindingManager);
+      injectExtensionManager(settingsTabElement, this._extensionManager);
 
-      viewerElement.setThemes(this._themes);
-      this._openViewerTab(this._firstTabWidget(), viewerElement);
-      this._switchToTab(viewerElement);
+      settingsTabElement.setThemes(this._themes);
+      if (tabName != null) {
+        settingsTabElement.setSelectedTab(tabName);
+      }
+      this._openViewerTab(this._firstTabWidget(), settingsTabElement);
+      this._switchToTab(settingsTabElement);
     }
   }
   

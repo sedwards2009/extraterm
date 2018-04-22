@@ -55,6 +55,10 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
     return metadata;
   }
 
+  setSelectedTab(tabName: string): void {
+    this._ui.selectedTab = tabName;
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB, ThemeTypes.CssFile.FONT_AWESOME];
   }
