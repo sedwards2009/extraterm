@@ -105,7 +105,7 @@ class ProxyBackend implements SessionBackend {
 
     const options: PtyOptions = {
       name: "xterm",
-      exe: defaultShell,
+      exe: shell,
       args,
       env: ptyEnv,
       cols: cols,
