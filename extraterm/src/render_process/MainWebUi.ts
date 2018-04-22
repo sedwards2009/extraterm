@@ -647,7 +647,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     if (el instanceof EtTerminal) {
       title = el.getTerminalTitle();
       htmlTitle = he.escape(title);
-      icon = "keyboard-o";
+      icon = "fa fa-keyboard";
 
     } else if (el instanceof EtViewerTab) {
       title = el.getMetadata().title;
@@ -667,7 +667,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
 
     const iconDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
-    iconDiv.innerHTML = icon !== null ? '<i class="fa fa-' + icon + '"></i>' : "";
+    iconDiv.innerHTML = icon !== null ? '<i class="' + icon + '"></i>' : "";
     
     const middleDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
     middleDiv.title = title;
