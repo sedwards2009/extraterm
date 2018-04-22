@@ -12,7 +12,7 @@ import Vue from 'vue';
 <div class="form-horizontal">
   <div class="form-group">
     <label for="name" class="col-sm-4 control-label">Name:</label>
-    <div class="input-group col-sm-4">
+    <div class="input-group col-sm-8">
       <input type="text" class="form-control" name="name" v-model.lazy="name">
     </div>
   </div>

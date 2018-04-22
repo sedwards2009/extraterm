@@ -34,18 +34,29 @@ export function activate(context: ExtensionContext): any {
 
       const config = <ProxySessionConfiguration> this.getSessionConfiguration();
       if (config.name == null) {
-        this._ui.name = "Cygwin";
-        this._ui.useDefaultShell = 1;
-        this._ui.shell = "";
-        this._ui.cygwinPath = "";
+        this._loadConfig({
+          uuid: config.uuid,
+          name: "Cygwin",
+          useDefaultShell: true,
+          shell: "",
+          cygwinPath: ""
+        });
       }
 
+      this._loadConfig(config);
+      this.getContainerElement().appendChild(component.$el);
+    }
+
+    setSessionConfiguration(config: SessionConfiguration): void {
+      super.setSessionConfiguration(config);
+      this._loadConfig(config);
+    }
+
+    _loadConfig(config: ProxySessionConfiguration): void {
       this._ui.name = config.name;
       this._ui.useDefaultShell = config.useDefaultShell ? 1 :0;
       this._ui.shell = config.shell;
       this._ui.cygwinPath = config.cygwinPath;
-
-      this.getContainerElement().appendChild(component.$el);
     }
 
     _dataChanged(): void {
