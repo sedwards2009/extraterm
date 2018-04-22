@@ -16,7 +16,7 @@ import { ExtensionManager } from '../extension/InternalTypes';
   {
     template: `
 <div class="settings-page">
-  <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Sessions</h2>
+  <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
 
   <div v-for="(item, index) in sessions" key="item.uuid" class="session-configuration card">
     <h3>{{ item.name }}</h3>
@@ -36,7 +36,7 @@ import { ExtensionManager } from '../extension/InternalTypes';
   </div>
 
   <div v-for="item in sessionTypes" key="item.uuid">
-    <button class="btn btn-default" v-on:click="newSession(item.type)">New {{ item.name }} session</button>
+    <button class="btn btn-default" v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
   </div>
 </div>
 `

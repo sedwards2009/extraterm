@@ -109,7 +109,7 @@ export class SettingsUi extends Vue {
     this.menuItems = [
       { id: "general", icon: "fa fa-sliders-h", title: "General"},
       { id: "appearance", icon: "fa fa-paint-brush", title: "Appearance"},
-      { id: "session", icon: "fa fa-terminal", title: "Sessions"},
+      { id: "session", icon: "fa fa-terminal", title: "Session Types"},
       { id: "keybindings", icon: "far fa-keyboard", title: "Key Bindings"},
       { id: "frame", icon: "far fa-window-maximize", title: "Frames"}
     ];
