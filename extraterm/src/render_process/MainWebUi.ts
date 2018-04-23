@@ -358,9 +358,12 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
 
       const sessionCommandList: CommandEntry[] = [];
-      for (const sessionConfig of this._configManager.getConfig().sessions) {
+      const sessions = this._configManager.getConfig().sessions;
+      for (let i=0; i<sessions.length; i++) {
+        const sessionConfig = sessions[i];
+        const commandId = i === 0 ? COMMAND_NEW_TERMINAL : COMMAND_NEW_TERMINAL + ":" + sessionConfig.uuid;
         sessionCommandList.push({
-          id: COMMAND_NEW_TERMINAL,
+          id: commandId,
           group: PALETTE_GROUP,
           iconRight: "fa fa-plus",
           label: "New Terminal: " + sessionConfig.name,
@@ -1057,9 +1060,12 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const commandArguments = {tabElement: tabContentElement};
 
     const sessionCommandList: CommandEntry[] = [];
-    for (const sessionConfig of this._configManager.getConfig().sessions) {
+    const sessions = this._configManager.getConfig().sessions;
+    for (let i = 0; i < sessions.length; i++) {
+      const sessionConfig  = sessions[i];
+      const commandId = i === 0 ? COMMAND_NEW_TERMINAL : COMMAND_NEW_TERMINAL + ":" + sessionConfig.uuid;
       sessionCommandList.push({
-        id: COMMAND_NEW_TERMINAL,
+        id: commandId,
         group: PALETTE_GROUP,
         iconRight: "fa fa-plus",
         label: "New Terminal: " + sessionConfig.name,
@@ -1117,7 +1123,14 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       return false;
     }
 
-    switch (commandId) {
+    if (commandId == null) {
+      return false;
+    }
+    
+    const parts = commandId.split(":");
+    const command = parts[0];
+
+    switch (command) {
       case COMMAND_SELECT_TAB_LEFT:
         this._shiftTab(this._tabWidgetFromElement(tabElement), -1);
         break;
