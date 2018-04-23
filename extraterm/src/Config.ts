@@ -77,34 +77,6 @@ export interface FontInfo {
   postscriptName: string;
 }
 
-export function envContext(systemConfig: SystemConfig): Map<string, string> {
-  const context = new Map<string, string>();
-  context.set("HOME_DIR", systemConfig.homeDir);
-  return context;
-}
-
-export function expandEnvVariables(extraEnv: Object, context: Map<string, string>): Object {
-  const expandedEnv = {};
-  if (extraEnv !== null && extraEnv !== undefined) {
-    let prop: string;
-    for (prop in extraEnv) {
-      expandedEnv[prop] = expandEnvVariable(extraEnv[prop], context);
-    }
-  }
-
-  return expandedEnv;
-}
-
-export function expandEnvVariable(value: string, context: Map<string, string>): string {
-  let result = value;
-  let prop: string;
-  context.forEach( (value, prop) => {
-    const re = new RegExp("\\$\\{" + prop + "\\}", "g");
-    result = result.replace(re, value);
-  });
-  return result;
-}
-
 export type ReadonlyConfig = DeepReadonly<Config>;
 
 /**
