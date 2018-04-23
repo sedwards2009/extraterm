@@ -82,7 +82,7 @@ export type ReadonlyConfig = DeepReadonly<Config>;
 /**
  * Interface for distributing configuration changes.
  */
-export interface ConfigDistributor {
+export interface ConfigDatabase {
   /**
    * Get the current config object.
    *
@@ -108,16 +108,16 @@ export interface ConfigDistributor {
   setConfig(newConfig: Config | ReadonlyConfig): void;
 }
 
-export interface AcceptsConfigDistributor {
-  setConfigDistributor(newConfigDistributor: ConfigDistributor): void;
+export interface AcceptsConfigDatabase {
+  setConfigDatabase(newConfigDatabase: ConfigDatabase): void;
 }
 
-export function isAcceptsConfigManager(instance: any): instance is AcceptsConfigDistributor {
-  return (<AcceptsConfigDistributor> instance).setConfigDistributor !== undefined;
+export function isAcceptsConfigDatabase(instance: any): instance is AcceptsConfigDatabase {
+  return (<AcceptsConfigDatabase> instance).setConfigDatabase !== undefined;
 }
 
-export function injectConfigDistributor(instance: any, configDistributor: ConfigDistributor): void {
-  if (isAcceptsConfigManager(instance)) {
-    instance.setConfigDistributor(configDistributor);
+export function injectConfigDatabase(instance: any, configDatabase: ConfigDatabase): void {
+  if (isAcceptsConfigDatabase(instance)) {
+    instance.setConfigDatabase(configDatabase);
   }
 }

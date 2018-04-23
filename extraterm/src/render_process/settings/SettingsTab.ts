@@ -10,7 +10,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
 import Vue from 'vue';
 
-import { AcceptsConfigDistributor, ConfigDistributor, FontInfo, Config } from '../../Config';
+import { AcceptsConfigDatabase, ConfigDatabase, FontInfo, Config } from '../../Config';
 import { AcceptsKeyBindingManager, KeyBindingsManager } from '../keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
@@ -20,7 +20,7 @@ import { AcceptsExtensionManager, ExtensionManager } from '../extension/Internal
 
 
 @WebComponent({tag: "et-settings-tab"})
-export class SettingsTab extends ViewerElement implements AcceptsConfigDistributor, AcceptsKeyBindingManager,
+export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase, AcceptsKeyBindingManager,
     AcceptsExtensionManager {
   
   static TAG_NAME = "ET-SETTINGS-TAB";
@@ -72,7 +72,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDistribut
     return false;
   }
 
-  setConfigDistributor(configDistributor: ConfigDistributor): void {
+  setConfigDatabase(configDistributor: ConfigDatabase): void {
     this._ui.setConfigDistributor(configDistributor);
   }
   

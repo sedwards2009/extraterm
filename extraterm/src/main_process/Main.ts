@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {Config, CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDistributor, injectConfigDistributor, ReadonlyConfig} from '../Config';
+import {Config, CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDatabase, injectConfigDatabase, ReadonlyConfig} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
 import {Logger, getLogger, addLogWriter} from '../logging/Logger';
 import { PtyManager } from './pty/PtyManager';
@@ -152,7 +152,7 @@ function setupThemeManager(): void {
   const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
   themeManager = new ThemeManager([themesdir, userThemesDir], extensionManager);
-  injectConfigDistributor(themeManager, configManager);
+  injectConfigDatabase(themeManager, configManager);
 }
 
 function startUpWindows(): void {
@@ -516,7 +516,7 @@ function setConfigDefaults(config: Config): void {
 }
 
 
-class ConfigManager implements ConfigDistributor {
+class ConfigManager implements ConfigDatabase {
   private _config: ReadonlyConfig = null;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
@@ -897,7 +897,7 @@ const ptyToSenderMap = new Map<number, number>();
 function setupPtyManager(): boolean {
   try {
     ptyManager = new PtyManager(extensionManager);
-    injectConfigDistributor(ptyManager, configManager);
+    injectConfigDatabase(ptyManager, configManager);
 
     ptyManager.onPtyData(event => {
       const senderId = ptyToSenderMap.get(event.ptyId);

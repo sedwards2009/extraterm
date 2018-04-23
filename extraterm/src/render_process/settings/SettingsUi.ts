@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 
-import {FontInfo, CommandLineAction, ShowTipsStrEnum, ConfigDistributor} from '../../Config';
+import {FontInfo, CommandLineAction, ShowTipsStrEnum, ConfigDatabase} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { APPEARANCE_SETTINGS_TAG } from './AppearanceSettings';
 import { FRAME_SETTINGS_TAG } from './FrameSettings';
@@ -92,7 +92,7 @@ interface MenuItem {
 `
 })
 export class SettingsUi extends Vue {
-  private _configDistributor: ConfigDistributor = null;
+  private _configDistributor: ConfigDatabase = null;
   private _keyBindingsManager: KeyBindingsManager = null;
   private _extensionManager: ExtensionManager = null;
 
@@ -129,12 +129,12 @@ export class SettingsUi extends Vue {
     this.selectedTab = id;
   }
 
-  setConfigDistributor(configDistributor: ConfigDistributor) {
+  setConfigDistributor(configDistributor: ConfigDatabase) {
     this._configDistributor = configDistributor;
     this.$forceUpdate();
   }
 
-  getConfigDistributor(): ConfigDistributor {
+  getConfigDistributor(): ConfigDatabase {
     return this._configDistributor;
   }
 

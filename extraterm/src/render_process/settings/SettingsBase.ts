@@ -5,7 +5,7 @@
 import {WebComponent} from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
-import { ConfigDistributor, Config } from '../../Config';
+import { ConfigDatabase, Config } from '../../Config';
 import { OnChangeEmitterElementLifecycleBinder } from './OnChangeEmitterElementLifecycleBinder';
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -13,12 +13,12 @@ import Vue from 'vue';
 
 
 export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
-  private _configBinder: OnChangeEmitterElementLifecycleBinder<ConfigDistributor> = null;
+  private _configBinder: OnChangeEmitterElementLifecycleBinder<ConfigDatabase> = null;
   private _ui: V;
 
   constructor(uiConstructor: { new(): V}) {
     super();
-    this._configBinder = new OnChangeEmitterElementLifecycleBinder<ConfigDistributor>(this._handleConfigChange.bind(this));
+    this._configBinder = new OnChangeEmitterElementLifecycleBinder<ConfigDatabase>(this._handleConfigChange.bind(this));
 
     this._ui = new uiConstructor();
     const component = this._ui.$mount();
@@ -34,7 +34,7 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     shadow.appendChild(component.$el);
   }
 
-  private _handleConfigChange(configDistributor: ConfigDistributor): void {
+  private _handleConfigChange(configDistributor: ConfigDatabase): void {
     if (configDistributor.getConfig() == null) {
       return;
     }
@@ -49,11 +49,11 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB, ThemeTypes.CssFile.FONT_AWESOME];
   }
 
-  set configDistributor(configDistributor: ConfigDistributor) {
+  set configDistributor(configDistributor: ConfigDatabase) {
     this._configBinder.setOnChangeEmitter(configDistributor);
   }
 
-  get configDistributor(): ConfigDistributor {
+  get configDistributor(): ConfigDatabase {
     return this._configBinder.getOnChangeEmitter();
   }
 

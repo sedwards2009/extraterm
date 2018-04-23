@@ -18,7 +18,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
     from './CommandPaletteRequestTypes';
-import {Config, ConfigDistributor, injectConfigDistributor, ReadonlyConfig} from '../Config';
+import {Config, ConfigDatabase, injectConfigDatabase, ReadonlyConfig} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
@@ -181,7 +181,7 @@ function loadFontFaces(): Promise<FontFace[]> {
 
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
-  injectConfigDistributor(mainWebUi, configManager);
+  injectConfigDatabase(mainWebUi, configManager);
   keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
   mainWebUi.setExtensionManager(extensionManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
@@ -652,7 +652,7 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
   }
 }
 
-class ConfigDistributorImpl implements ConfigDistributor {
+class ConfigDistributorImpl implements ConfigDatabase {
   private _config: ReadonlyConfig = null;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;

@@ -31,7 +31,7 @@ import log from '../logging/LogDecorator';
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
   cssFileToFilename, cssFileToExtension} from './Theme';
-import { Config, AcceptsConfigDistributor, ConfigDistributor } from '../Config';
+import { Config, AcceptsConfigDatabase, ConfigDatabase } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 
@@ -59,10 +59,10 @@ interface CssDirectory {
 }
 
 
-export class ThemeManager implements AcceptsConfigDistributor {
+export class ThemeManager implements AcceptsConfigDatabase {
   
   private _log: Logger = null;
-  private _configDistributor: ConfigDistributor = null;
+  private _configDistributor: ConfigDatabase = null;
   private _themes: Map<string, ThemeInfo> = null;
   
   constructor(private _directories: string[], private _mainExtensionManager: MainExtensionManager) {
@@ -79,7 +79,7 @@ export class ThemeManager implements AcceptsConfigDistributor {
     this._themes = allThemes;
   }
 
-  setConfigDistributor(configDistributor: ConfigDistributor): void {
+  setConfigDatabase(configDistributor: ConfigDatabase): void {
     this._configDistributor = configDistributor;
   }
 

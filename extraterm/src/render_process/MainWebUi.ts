@@ -44,7 +44,7 @@ import * as Messages from '../WindowMessages';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
 
 type Config = config.Config;
-type ConfigManager = config.ConfigDistributor;
+type ConfigManager = config.ConfigDatabase;
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 const VisualState = ViewerElementTypes.VisualState;
@@ -113,7 +113,7 @@ let themeCss = "";
  */
 @WebComponent({tag: "extraterm-mainwebui"})
 export class MainWebUi extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
-    config.AcceptsConfigDistributor, Commandable {
+    config.AcceptsConfigDatabase, Commandable {
   
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
   static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
@@ -163,7 +163,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  setConfigDistributor(configManager: ConfigManager): void {
+  setConfigDatabase(configManager: ConfigManager): void {
     this._configManager = configManager;
   }
   
@@ -558,7 +558,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setBulkFileBroker(this._fileBroker);
-    config.injectConfigDistributor(newTerminal, this._configManager);
+    config.injectConfigDatabase(newTerminal, this._configManager);
     keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
     newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
@@ -686,7 +686,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._switchToTab(settingsTabs[0]);
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
-      config.injectConfigDistributor(settingsTabElement, this._configManager);
+      config.injectConfigDatabase(settingsTabElement, this._configManager);
       keybindingmanager.injectKeyBindingManager(settingsTabElement, this._keyBindingManager);
       injectExtensionManager(settingsTabElement, this._extensionManager);
 

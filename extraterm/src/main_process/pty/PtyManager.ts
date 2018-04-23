@@ -8,7 +8,7 @@ import { createUuid } from 'extraterm-uuid';
 import * as _ from 'lodash';
 
 import { Pty, BufferSizeChange } from '../../pty/Pty';
-import { Config, AcceptsConfigDistributor, ConfigDistributor } from '../../Config';
+import { Config, AcceptsConfigDatabase, ConfigDatabase } from '../../Config';
 import { Logger, getLogger } from '../../logging/Logger';
 import * as Messages from '../../WindowMessages';
 import * as Util from '../../render_process/gui/Util';
@@ -35,9 +35,9 @@ export interface PtyAvailableWriteBufferSizeChangeEvent {
   bufferSizeChange: BufferSizeChange;
 }
 
-export class PtyManager implements AcceptsConfigDistributor {
+export class PtyManager implements AcceptsConfigDatabase {
   private _log: Logger;
-  private _configDistributor: ConfigDistributor = null;
+  private _configDistributor: ConfigDatabase = null;
   private _ptyCounter = 0;
   private _ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
   private _onPtyExitEventEmitter = new EventEmitter<number>();
@@ -65,7 +65,7 @@ export class PtyManager implements AcceptsConfigDistributor {
     return results;
   }
 
-  setConfigDistributor(configDistributor: ConfigDistributor): void  {
+  setConfigDatabase(configDistributor: ConfigDatabase): void  {
     this._configDistributor = configDistributor;
   }
   

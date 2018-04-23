@@ -14,7 +14,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
 
 import * as config from '../../Config';
-type ConfigManager = config.ConfigDistributor;
+type ConfigManager = config.ConfigDatabase;
 
 import * as keybindingmanager from '../keybindings/KeyBindingManager';
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
@@ -70,7 +70,7 @@ function loadTipFile(): string[] {
 const tipData = loadTipFile();
 
 @WebComponent({tag: "et-tip-viewer"})
-export class TipViewer extends ViewerElement implements config.AcceptsConfigDistributor, keybindingmanager.AcceptsKeyBindingManager, Disposable {
+export class TipViewer extends ViewerElement implements config.AcceptsConfigDatabase, keybindingmanager.AcceptsKeyBindingManager, Disposable {
 
   static TAG_NAME = "ET-TIP-VIEWER";
   
@@ -179,7 +179,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigDist
     return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
   }
 
-  setConfigDistributor(newConfigManager: ConfigManager): void {
+  setConfigDatabase(newConfigManager: ConfigManager): void {
     if (this._configManagerDisposable !== null) {
       this._configManagerDisposable.dispose();
       this._configManagerDisposable = null;
