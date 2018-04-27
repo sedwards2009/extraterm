@@ -32,16 +32,8 @@ export function activate(context: ExtensionContext): any {
       this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
 
       const config = <UnixSessionConfiguration> this.getSessionConfiguration();
-      if (config.name == null) {
-        this._loadConfig({
-          uuid: config.uuid,
-          name: "bash",
-          useDefaultShell: true,
-          shell: "",
-        });
-      }
-
       this._loadConfig(config);
+
       this.getContainerElement().appendChild(component.$el);
     }
 
@@ -51,9 +43,19 @@ export function activate(context: ExtensionContext): any {
     }
 
     _loadConfig(config: UnixSessionConfiguration): void {
-      this._ui.name = config.name;
-      this._ui.useDefaultShell = config.useDefaultShell ? 1 :0;
-      this._ui.shell = config.shell;
+      let fixedConfig = config;
+      if (config.shell == null) {
+        fixedConfig = {
+          uuid: config.uuid,
+          name: config.name,
+          useDefaultShell: true,
+          shell: "",
+        };
+      }
+
+      this._ui.name = fixedConfig.name;
+      this._ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
+      this._ui.shell = fixedConfig.shell;
     }
 
     _dataChanged(): void {
