@@ -42,9 +42,8 @@ import {PtyIpcBridge} from './PtyIpcBridge';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
+import { ConfigDatabase, SESSION_CONFIG } from '../Config';
 
-type Config = config.Config;
-type ConfigManager = config.ConfigDatabase;
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 const VisualState = ViewerElementTypes.VisualState;
@@ -129,7 +128,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
 
   private _ptyIpcBridge: PtyIpcBridge = null;
   private _tabIdCounter = 0;
-  private _configManager: ConfigManager = null;
+  private _configManager: ConfigDatabase = null;
   private _keyBindingManager: KeyBindingManager = null;
   private _extensionManager: ExtensionManager = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
@@ -163,7 +162,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     }
   }
   
-  setConfigDatabase(configManager: ConfigManager): void {
+  setConfigDatabase(configManager: ConfigDatabase): void {
     this._configManager = configManager;
   }
   
@@ -326,8 +325,8 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
           while (el != null && ! (el instanceof TabWidget)) {
             el = el.parentElement;
           }
-          if (this._configManager.getConfig().sessions.length !== 0) {
-            const  newTerminal = this.newTerminalTab(<TabWidget> el, this._configManager.getConfig().sessions[0].uuid);
+          if (this._configManager.getConfig(SESSION_CONFIG).length !== 0) {
+            const  newTerminal = this.newTerminalTab(<TabWidget> el, this._configManager.getConfig(SESSION_CONFIG)[0].uuid);
             this._switchToTab(newTerminal);
           }
         }
@@ -358,7 +357,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
 
       const sessionCommandList: CommandEntry[] = [];
-      const sessions = this._configManager.getConfig().sessions;
+      const sessions = this._configManager.getConfig(SESSION_CONFIG);
       for (let i=0; i<sessions.length; i++) {
         const sessionConfig = sessions[i];
         const commandId = i === 0 ? COMMAND_NEW_TERMINAL : COMMAND_NEW_TERMINAL + ":" + sessionConfig.uuid;
@@ -1060,7 +1059,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const commandArguments = {tabElement: tabContentElement};
 
     const sessionCommandList: CommandEntry[] = [];
-    const sessions = this._configManager.getConfig().sessions;
+    const sessions = this._configManager.getConfig(SESSION_CONFIG);
     for (let i = 0; i < sessions.length; i++) {
       const sessionConfig  = sessions[i];
       const commandId = i === 0 ? COMMAND_NEW_TERMINAL : COMMAND_NEW_TERMINAL + ":" + sessionConfig.uuid;

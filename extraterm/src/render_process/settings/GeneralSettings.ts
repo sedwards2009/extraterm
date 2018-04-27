@@ -2,13 +2,13 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { WebComponent } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 import Vue from 'vue';
 
 import { GeneralSettingsUi } from './GeneralSettingsUi';
-import { Config } from '../../Config';
-import {Logger, getLogger} from '../../logging/Logger';
+import { GeneralConfig, ConfigKey, GENERAL_CONFIG } from '../../Config';
+import { Logger, getLogger } from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import { SettingsBase } from './SettingsBase';
 
@@ -19,35 +19,38 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
   private _log: Logger = null;
 
   constructor() {
-    super(GeneralSettingsUi);
+    super(GeneralSettingsUi, [GENERAL_CONFIG]);
     this._log = getLogger(GENERAL_SETTINGS_TAG, this);
   }
 
-  protected _setConfig(config: Config): void {
-    const ui = this._getUi();
+  protected _setConfig(key: ConfigKey, config: any): void {
+    if (key === GENERAL_CONFIG) {
+      const ui = this._getUi();
+      const generalConfig = <GeneralConfig> config;
 
-    if (ui.showTips !== config.showTips) {
-      ui.showTips = config.showTips;
-    }
-    
-    // We take care to only update things which have actually changed.
-    if (ui.maxScrollbackLines !== config.scrollbackMaxLines) {
-      ui.maxScrollbackLines = config.scrollbackMaxLines;
-    }
+      if (ui.showTips !== generalConfig.showTips) {
+        ui.showTips = generalConfig.showTips;
+      }
+      
+      // We take care to only update things which have actually changed.
+      if (ui.maxScrollbackLines !== generalConfig.scrollbackMaxLines) {
+        ui.maxScrollbackLines = generalConfig.scrollbackMaxLines;
+      }
 
-    if (ui.maxScrollbackFrames !== config.scrollbackMaxFrames) {
-      ui.maxScrollbackFrames = config.scrollbackMaxFrames;
+      if (ui.maxScrollbackFrames !== generalConfig.scrollbackMaxFrames) {
+        ui.maxScrollbackFrames = generalConfig.scrollbackMaxFrames;
+      }
     }
   }
 
   protected _dataChanged(): void {
-    const newConfig = this._getConfigCopy();
+    const newGeneralConfig = this._getConfigCopy(GENERAL_CONFIG);
     const ui = this._getUi();
 
-    newConfig.showTips = ui.showTips;
-    newConfig.scrollbackMaxLines = ui.maxScrollbackLines;
-    newConfig.scrollbackMaxFrames = ui.maxScrollbackFrames;
+    newGeneralConfig.showTips = ui.showTips;
+    newGeneralConfig.scrollbackMaxLines = ui.maxScrollbackLines;
+    newGeneralConfig.scrollbackMaxFrames = ui.maxScrollbackFrames;
 
-    this._updateConfig(newConfig);
+    this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
   }
 }

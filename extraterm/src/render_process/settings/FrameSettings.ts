@@ -7,8 +7,8 @@ import * as _ from 'lodash';
 import Vue from 'vue';
 
 import { FrameSettingsUi, nextId, Identifiable, IdentifiableCommandLineAction} from './FrameSettingsUi';
-import { Config } from '../../Config';
-import {Logger, getLogger} from '../../logging/Logger';
+import { COMMAND_LINE_ACTIONS_CONFIG, ConfigKey, CommandLineAction } from '../../Config';
+import { Logger, getLogger } from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import { SettingsBase } from './SettingsBase';
 
@@ -19,32 +19,31 @@ export class FrameSettings extends SettingsBase<FrameSettingsUi> {
   private _log: Logger = null;
 
   constructor() {
-    super(FrameSettingsUi);
+    super(FrameSettingsUi, [COMMAND_LINE_ACTIONS_CONFIG]);
     this._log = getLogger(FRAME_SETTINGS_TAG, this);
   }
 
-  protected _setConfig(config: Config): void {
-    const ui = this._getUi();
+  protected _setConfig(key: ConfigKey, config: any): void {
+    if (key === COMMAND_LINE_ACTIONS_CONFIG) {
+      const ui = this._getUi();
+      const commandLineActions = <CommandLineAction[]> config;
 
-    const cleanCommandLineAction = _.cloneDeep(ui.commandLineActions);
-    stripIds(cleanCommandLineAction);
+      const cleanCommandLineAction = _.cloneDeep(ui.commandLineActions);
+      stripIds(cleanCommandLineAction);
 
-    if ( ! _.isEqual(cleanCommandLineAction, config.commandLineActions)) {
-      const updateCLA = <IdentifiableCommandLineAction[]> _.cloneDeep(config.commandLineActions);
-      setIds(updateCLA);
-      ui.commandLineActions = updateCLA;
+      if ( ! _.isEqual(cleanCommandLineAction, commandLineActions)) {
+        const updateCLA = <IdentifiableCommandLineAction[]> _.cloneDeep(commandLineActions);
+        setIds(updateCLA);
+        ui.commandLineActions = updateCLA;
+      }
     }
   }
 
   protected _dataChanged(): void {
-    const newConfig = this._getConfigCopy();
     const ui = this._getUi();
-
     const commandLineActions = _.cloneDeep(ui.commandLineActions);
     stripIds(commandLineActions);
-    newConfig.commandLineActions = commandLineActions;
-
-    this._updateConfig(newConfig);
+    this._updateConfig(COMMAND_LINE_ACTIONS_CONFIG, commandLineActions);
   }
 }
 

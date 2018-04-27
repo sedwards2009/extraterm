@@ -10,7 +10,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
 import Vue from 'vue';
 
-import { AcceptsConfigDatabase, ConfigDatabase, FontInfo, Config } from '../../Config';
+import { AcceptsConfigDatabase, ConfigDatabase, FontInfo } from '../../Config';
 import { AcceptsKeyBindingManager, KeyBindingsManager } from '../keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
@@ -72,8 +72,8 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     return false;
   }
 
-  setConfigDatabase(configDistributor: ConfigDatabase): void {
-    this._ui.setConfigDistributor(configDistributor);
+  setConfigDatabase(configDatabase: ConfigDatabase): void {
+    this._ui.setConfigDatabase(configDatabase);
   }
   
   setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {

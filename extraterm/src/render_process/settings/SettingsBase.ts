@@ -5,20 +5,21 @@
 import {WebComponent} from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
-import { ConfigDatabase, Config } from '../../Config';
-import { OnChangeEmitterElementLifecycleBinder } from './OnChangeEmitterElementLifecycleBinder';
+import { ConfigDatabase, ConfigKey } from '../../Config';
+import { ConfigElementLifecycleBinder } from './ConfigElementLifecycleBinder';
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import Vue from 'vue';
 
 
 export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
-  private _configBinder: OnChangeEmitterElementLifecycleBinder<ConfigDatabase> = null;
+  private _configBinder: ConfigElementLifecycleBinder = null;
   private _ui: V;
 
-  constructor(uiConstructor: { new(): V}) {
+  constructor(uiConstructor: { new(): V}, keys: ConfigKey[]) {
     super();
-    this._configBinder = new OnChangeEmitterElementLifecycleBinder<ConfigDatabase>(this._handleConfigChange.bind(this));
+    this._configBinder = new ConfigElementLifecycleBinder(
+      (key: ConfigKey, config: any): void => this._handleConfigChange(key, config), keys);
 
     this._ui = new uiConstructor();
     const component = this._ui.$mount();
@@ -34,11 +35,8 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     shadow.appendChild(component.$el);
   }
 
-  private _handleConfigChange(configDistributor: ConfigDatabase): void {
-    if (configDistributor.getConfig() == null) {
-      return;
-    }
-    this._setConfig(configDistributor.getConfigCopy());
+  private _handleConfigChange(key: ConfigKey, config: any): void {
+    this._setConfig(key, config);
   }
 
   protected _getUi(): V {
@@ -49,12 +47,12 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB, ThemeTypes.CssFile.FONT_AWESOME];
   }
 
-  set configDistributor(configDistributor: ConfigDatabase) {
-    this._configBinder.setOnChangeEmitter(configDistributor);
+  set configDatabase(configDatabase: ConfigDatabase) {
+    this._configBinder.setConfigDatabase(configDatabase);
   }
 
-  get configDistributor(): ConfigDatabase {
-    return this._configBinder.getOnChangeEmitter();
+  get configDatabase(): ConfigDatabase {
+    return this._configBinder.getConfigDatabase();
   }
 
   connectedCallback(): void {
@@ -67,19 +65,19 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     this._configBinder.disconnectedCallback();
   }
 
-  protected _getConfigCopy(): Config {
-    if (this._configBinder.getOnChangeEmitter() != null) {
-      return this._configBinder.getOnChangeEmitter().getConfigCopy();
+  protected _getConfigCopy(key: ConfigKey): any {
+    if (this._configBinder.getConfigDatabase() != null) {
+      return this._configBinder.getConfigDatabase().getConfigCopy(key);
     }
     return null;
   }
 
-  protected _updateConfig(newConfig: Config): void {
-    if (this._configBinder.getOnChangeEmitter() != null) {
-      this._configBinder.getOnChangeEmitter().setConfig(newConfig);
+  protected _updateConfig(key: ConfigKey, newConfig: any): void {
+    if (this._configBinder.getConfigDatabase() != null) {
+      this._configBinder.getConfigDatabase().setConfig(key, newConfig);
     }
   }
 
-  protected abstract _setConfig(config: Config): void;
+  protected abstract _setConfig(key: ConfigKey, config: any): void;
   protected abstract _dataChanged(): void;
 }

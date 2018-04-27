@@ -81,6 +81,7 @@ export interface Message {
  * sent. The response is a `ConfigMessage`.
  */
 export interface ConfigRequestMessage extends Message {
+  key: Config.ConfigKey;
 }
 
 /**
@@ -90,10 +91,11 @@ export interface ConfigRequestMessage extends Message {
  * response to a ConfigRequestMessage.
  */
 export interface ConfigMessage extends Message {
+  key: Config.ConfigKey;
   /**
    * The current configuration.
    */
-  config: Config.Config;
+  config: any;
 }
 
 /**

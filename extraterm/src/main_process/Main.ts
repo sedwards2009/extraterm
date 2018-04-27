@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {Config, CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDatabase, injectConfigDatabase, ReadonlyConfig} from '../Config';
+import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
 import {Logger, getLogger, addLogWriter} from '../logging/Logger';
 import { PtyManager } from './pty/PtyManager';
@@ -33,7 +33,8 @@ import {ThemeManager} from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { EventEmitter } from '../utils/EventEmitter';
-import { freezeDeep } from 'extraterm-readonly-toolbox';
+import { freezeDeep, DeepReadonly } from 'extraterm-readonly-toolbox';
+import log from '../logging/LogDecorator';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
@@ -72,7 +73,7 @@ const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
 
 let themeManager: ThemeManager;
 let ptyManager: PtyManager;
-let configManager: ConfigManager;
+let configDatabase: ConfigDatabaseImpl;
 let tagCounter = 1;
 let fonts: FontInfo[] = null;
 let titleBarVisible = false;
@@ -82,7 +83,7 @@ let extensionManager: MainExtensionManager = null;
 
 function main(): void {
   let failed = false;
-  configManager = new ConfigManager();
+  configDatabase = new ConfigDatabaseImpl();
 
   setupAppData();
   setupLogging();
@@ -152,7 +153,7 @@ function setupThemeManager(): void {
   const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
   themeManager = new ThemeManager([themesdir, userThemesDir], extensionManager);
-  injectConfigDatabase(themeManager, configManager);
+  injectConfigDatabase(themeManager, configDatabase);
 }
 
 function startUpWindows(): void {
@@ -171,10 +172,10 @@ function setupScale(): boolean {
   if (restartNeeded) {
     return false;
   }
-  const newConfig = configManager.getConfigCopy();
-  newConfig.systemConfig.currentScaleFactor = currentScaleFactor;
-  newConfig.systemConfig.originalScaleFactor = originalScaleFactor;
-  configManager.setConfig(newConfig);
+  const systemConfig = configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  systemConfig.currentScaleFactor = currentScaleFactor;
+  systemConfig.originalScaleFactor = originalScaleFactor;
+  configDatabase.setConfig(SYSTEM_CONFIG, systemConfig);
   return true;
 }
 
@@ -185,8 +186,8 @@ function setupBulkFileStorage(): void {
 }
 
 function openWindow(): void {
-  const config = configManager.getConfig();
-  const themeInfo = themeManager.getTheme(config.themeGUI);
+  const generalConfig = configDatabase.getConfig(GENERAL_CONFIG);
+  const themeInfo = themeManager.getTheme(generalConfig.themeGUI);
 
   // Create the browser window.
   const options = <Electron.BrowserWindowOptions> {
@@ -195,7 +196,7 @@ function openWindow(): void {
     "webPreferences": {
       "experimentalFeatures": true,
     },
-    frame: config.showTitleBar,
+    frame: generalConfig.showTitleBar,
     title: "Extraterm",
     backgroundColor: themeInfo.loadingBackgroundColor
   };
@@ -215,7 +216,7 @@ function openWindow(): void {
     options.icon = path.join(__dirname, PNG_ICON_PATH);
   }
 
-  titleBarVisible = config.showTitleBar;
+  titleBarVisible = generalConfig.showTitleBar;
   mainWindow = new BrowserWindow(options);
 
   if ((<any>Commander).devTools) {
@@ -255,26 +256,26 @@ function openWindow(): void {
 }
 
 function saveWindowDimensions(windowId: number, rect: Electron.Rectangle): void {
-  const newConfig = configManager.getConfigCopy();
+  const newGeneralConfig = configDatabase.getConfigCopy(GENERAL_CONFIG);
 
-  if (newConfig.windowConfiguration == null) {
-    newConfig.windowConfiguration = {};
+  if (newGeneralConfig.windowConfiguration == null) {
+    newGeneralConfig.windowConfiguration = {};
   }
-  newConfig.windowConfiguration[windowId] = {
+  newGeneralConfig.windowConfiguration[windowId] = {
     x: rect.x,
     y: rect.y,
     width: rect.width,
     height: rect.height
   };
-  configManager.setConfig(newConfig);
+  configDatabase.setConfig(GENERAL_CONFIG, newGeneralConfig);
 }
 
 function getWindowDimensionsFromConfig(windowId: number): Electron.Rectangle {
-  const config = configManager.getConfig();
-  if (config.windowConfiguration == null) {
+  const generalConfig = configDatabase.getConfig(GENERAL_CONFIG);
+  if (generalConfig.windowConfiguration == null) {
     return null;
   }
-  const singleWindowConfig = config.windowConfiguration[windowId];
+  const singleWindowConfig = generalConfig.windowConfiguration[windowId];
   if (singleWindowConfig == null) {
     return null;
   }
@@ -339,23 +340,24 @@ const _log = getLogger("main");
 /**
  * Extra information about the system configuration and platform.
  */
-function systemConfiguration(config: Config): SystemConfig {
+function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig): SystemConfig {
   let homeDir = app.getPath('home');
   
   const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
-  const keyBindingFiles = scanKeyBindingFiles(keyBindingsDir);
+  const keyBindingsFiles = scanKeyBindingFiles(keyBindingsDir);
+
   const defaultKeyBindingFilename = path.join(keyBindingsDir, config.keyBindingsFilename);
   const keyBindingJsonString = fs.readFileSync(defaultKeyBindingFilename, { encoding: "UTF8" } );
   const keyBindingsJSON = JSON.parse(keyBindingJsonString);
   
   return {
-    homeDir: homeDir,
+    homeDir,
     keyBindingsContexts: keyBindingsJSON,
-    keyBindingsFiles: keyBindingFiles,
+    keyBindingsFiles,
     availableFonts: getFonts(),
-    titleBarVisible: titleBarVisible,
-    currentScaleFactor: config.systemConfig == null ? 1 : config.systemConfig.currentScaleFactor,
-    originalScaleFactor: config.systemConfig == null ? 1 : config.systemConfig.originalScaleFactor
+    titleBarVisible,
+    currentScaleFactor: systemConfig == null ? 1 : systemConfig.currentScaleFactor,
+    originalScaleFactor: systemConfig == null ? 1 : systemConfig.originalScaleFactor
   };
 }
 
@@ -409,50 +411,67 @@ function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
 }
 
 function setupConfig(): void {
-  const config = readConfigurationFile();
-  config.systemConfig = systemConfiguration(config);
-  config.blinkingCursor = _.isBoolean(config.blinkingCursor) ? config.blinkingCursor : false;
+  const userStoredConfig = readConfigurationFile();
+
+
+  userStoredConfig.blinkingCursor = _.isBoolean(userStoredConfig.blinkingCursor) ? userStoredConfig.blinkingCursor : false;
   
-  if (config.terminalFontSize === undefined || typeof config.terminalFontSize !== 'number') {
-    config.terminalFontSize = 12;
+  if (userStoredConfig.terminalFontSize === undefined || typeof userStoredConfig.terminalFontSize !== 'number') {
+    userStoredConfig.terminalFontSize = 12;
   } else {
-    config.terminalFontSize = Math.max(Math.min(1024, config.terminalFontSize), 4);
+    userStoredConfig.terminalFontSize = Math.max(Math.min(1024, userStoredConfig.terminalFontSize), 4);
   }
 
-  if (config.terminalFont === undefined || config.terminalFont === null) {
-    config.terminalFont = DEFAULT_TERMINALFONT;
+  if (userStoredConfig.terminalFont === undefined || userStoredConfig.terminalFont === null) {
+    userStoredConfig.terminalFont = DEFAULT_TERMINALFONT;
   }
 
-  if ( ! config.systemConfig.availableFonts.some( (font) => font.postscriptName === config.terminalFont)) {
-    config.terminalFont = DEFAULT_TERMINALFONT;
+  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeTerminal), 'terminal')) {
+    userStoredConfig.themeTerminal = ThemeTypes.FALLBACK_TERMINAL_THEME;
+  }
+  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeSyntax), 'syntax')) {
+    userStoredConfig.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
+  }
+  if (userStoredConfig.themeGUI === "default" || ! isThemeType(themeManager.getTheme(userStoredConfig.themeGUI), 'gui')) {
+    userStoredConfig.themeGUI = "atomic-dark-ui";
   }
 
-  if ( ! isThemeType(themeManager.getTheme(config.themeTerminal), 'terminal')) {
-    config.themeTerminal = ThemeTypes.FALLBACK_TERMINAL_THEME;
-  }
-  if ( ! isThemeType(themeManager.getTheme(config.themeSyntax), 'syntax')) {
-    config.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
-  }
-  if (config.themeGUI === "default" || ! isThemeType(themeManager.getTheme(config.themeGUI), 'gui')) {
-    config.themeGUI = "atomic-dark-ui";
+  userStoredConfig.uiScalePercent = Math.min(500, Math.max(5, userStoredConfig.uiScalePercent || 100));
+
+  if (userStoredConfig.showTitleBar !== true && userStoredConfig.showTitleBar !== false) {
+    userStoredConfig.showTitleBar = false;
   }
 
-  config.uiScalePercent = Math.min(500, Math.max(5, config.uiScalePercent || 100));
-
-  if (config.showTitleBar !== true && config.showTitleBar !== false) {
-    config.showTitleBar = false;
-  }
+  const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
+  const keyBindingsFiles = scanKeyBindingFiles(keyBindingsDir);
 
   // Validate the selected keybindings config value.
-  if ( ! config.systemConfig.keyBindingsFiles.some( (t) => t.filename === config.keyBindingsFilename )) {
-    config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+  if ( ! keyBindingsFiles.some( (t) => t.filename === userStoredConfig.keyBindingsFilename )) {
+    userStoredConfig.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
   }
 
-  if (config.sessions == null) {
-    config.sessions = [];
+  if (userStoredConfig.sessions == null) {
+    configDatabase.setConfigNoWrite(SESSION_CONFIG, []);
+  } else {
+    configDatabase.setConfigNoWrite(SESSION_CONFIG, userStoredConfig.sessions);
   }
 
-  configManager.setConfigNoWrite(config);
+  if (userStoredConfig.commandLineActions == null) {
+    configDatabase.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, []);
+  } else {
+    configDatabase.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, userStoredConfig.commandLineActions);
+  }
+
+  const systemConfig = systemConfiguration(userStoredConfig, null);
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+
+  if ( ! systemConfig.availableFonts.some( (font) => font.postscriptName === userStoredConfig.terminalFont)) {
+    userStoredConfig.terminalFont = DEFAULT_TERMINALFONT;
+  }
+  
+  delete userStoredConfig.sessions;
+  delete userStoredConfig.commandLineActions;
+  configDatabase.setConfig(GENERAL_CONFIG, userStoredConfig);
 }
 
 /**
@@ -460,19 +479,18 @@ function setupConfig(): void {
  * 
  * @returns The configuration object.
  */
-function readConfigurationFile(): Config {
+function readConfigurationFile(): UserStoredConfig {
   const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
-  let config: Config = { systemConfig: null };
+  let config: UserStoredConfig = { };
 
   if (fs.existsSync(filename)) {
     _log.info("Reading user configuration from " + filename);
     const configJson = fs.readFileSync(filename, {encoding: "utf8"});
-    config = <Config>JSON.parse(configJson);
+    config = <UserStoredConfig>JSON.parse(configJson);
   } else {
     _log.info("Couldn't find user configuration file at " + filename);
   }
   setConfigDefaults(config);
-  // FIXME freeze this.
   return config;
 }
 
@@ -480,8 +498,7 @@ function defaultValue<T>(value: T, defaultValue: T): T {
   return value == null ? defaultValue : value;
 }
 
-function setConfigDefaults(config: Config): void {
-  config.systemConfig = defaultValue(config.systemConfig, null);
+function setConfigDefaults(config: UserStoredConfig): void {
   config.blinkingCursor = defaultValue(config.blinkingCursor, false);
   config.scrollbackMaxLines = defaultValue(config.scrollbackMaxLines, 500000);
   config.scrollbackMaxFrames = defaultValue(config.scrollbackMaxFrames, 100);
@@ -508,7 +525,7 @@ function setConfigDefaults(config: Config): void {
     config.commandLineActions = defaultCLA;
   }
   
-  if (config.keyBindingsFilename === undefined) {
+  if (config.keyBindingsFilename === undefined || config.keyBindingsFilename === "") {
     config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
   }
 
@@ -516,62 +533,91 @@ function setConfigDefaults(config: Config): void {
 }
 
 
-class ConfigManager implements ConfigDatabase {
-  private _config: ReadonlyConfig = null;
-  private _onChangeEventEmitter = new EventEmitter<void>();
-  onChange: Event<void>;
-  
+class ConfigDatabaseImpl implements ConfigDatabase {
+  private _configDb = new Map<ConfigKey, any>();
+  private _onChangeEventEmitter = new EventEmitter<ConfigKey>();
+  onChange: Event<ConfigKey>;
+  private _log: Logger;
+
   constructor() {
     this.onChange = this._onChangeEventEmitter.event;
+    this._log = getLogger("ConfigDatabaseImpl", this);
   }
 
-  getConfig(): ReadonlyConfig {
-    return this._config;
+  getConfig(key: ConfigKey): any {
+    if (key === "*") {
+      // Wildcard fetch all.
+      const result = {};
+
+      for (const [dbKey, value] of this._configDb.entries()) {
+        result[dbKey] = value;
+      }
+      freezeDeep(result);
+      return result;
+    } else {
+      const result = this._configDb.get(key);
+      if (result == null) {
+        this._log.warn("Unable to find config for key ", key);
+      } else {
+        return result;
+      }
+    }
   }
 
-  getConfigCopy(): Config {
-    if (this._config == null) {
+  getConfigCopy(key: ConfigKey): any {
+    const data = this.getConfig(key);
+    if (data == null) {
       return null;
     }
-    return <Config> _.cloneDeep(this._config);
+    return _.cloneDeep(data);
   }
 
-  setConfigNoWrite(newConfig: Config | ReadonlyConfig): void {
-    if (Object.isFrozen(newConfig)) {
-      this._config = newConfig;
+  setConfigNoWrite(key: ConfigKey, newConfig: any): void {
+    if (key === "*") {
+      for (const objectKey of Object.getOwnPropertyNames(newConfig)) {
+        this._setSingleConfigNoWrite(objectKey, newConfig[objectKey]);
+      }
     } else {
-      this._config = <ReadonlyConfig> freezeDeep(_.cloneDeep(newConfig));
+      this._setSingleConfigNoWrite(key, newConfig);
+    }
+  }
+
+  private _setSingleConfigNoWrite(key: ConfigKey, newConfig: any): void {
+    const oldConfig = this.getConfig(key);
+    if (_.isEqual(oldConfig, newConfig)) {
+      return;
     }
 
-    this._onChangeEventEmitter.fire(undefined);
+    if (Object.isFrozen(newConfig)) {
+      this._configDb.set(key, newConfig);
+    } else {
+      this._configDb.set(key, freezeDeep(_.cloneDeep(newConfig)));
+    }
+
+    this._onChangeEventEmitter.fire(key);
   }
 
-  setConfig(newConfig: Config | ReadonlyConfig): void {
-    const copiedConfig = _.cloneDeep(newConfig);
-    freezeDeep(copiedConfig);
+  setConfig(key: ConfigKey, newConfig: any): void {
+    if (newConfig == null) {
+      this._log.warn("setConfig() newConfig is null for key ", key);
+    }
 
-    // Write it to disk.
-    this._writeConfigurationFile(copiedConfig);
-    this.setConfigNoWrite(copiedConfig);
+    this.setConfigNoWrite(key, newConfig);
+    if ([GENERAL_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, SESSION_CONFIG, "*"].indexOf(key) !== -1) {
+      this._writeConfigurationFile();
+    }
   }
-
-  private _writeConfigurationFile(config: ReadonlyConfig): void {
-    const cleanConfig = <Config> _.cloneDeep(config);
-    cleanConfig.systemConfig = null;
-    
-    const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
-    fs.writeFileSync(filename, JSON.stringify(cleanConfig, null, "  "));
-  }
-}
-
-function getFullConfig(): Config {
-  const config = configManager.getConfigCopy();
-  const fullConfig = _.cloneDeep(config);
-
-  fullConfig.systemConfig = systemConfiguration(config);
   
-  _log.debug("Full config: ",fullConfig);
-  return fullConfig;
+  private _writeConfigurationFile(): void {
+    const cleanConfig = <UserStoredConfig> this.getConfigCopy(GENERAL_CONFIG);
+    cleanConfig.commandLineActions = this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
+    cleanConfig.sessions = this.getConfig(SESSION_CONFIG);
+
+    const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
+    const formattedConfig = JSON.stringify(cleanConfig, null, "  ");
+    this._log.debug(formattedConfig);
+    fs.writeFileSync(filename, formattedConfig);
+  }
 }
 
 function getThemes(): ThemeInfo[] {
@@ -808,40 +854,25 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
 }
 
 function handleConfigRequest(msg: Messages.ConfigRequestMessage): Messages.ConfigMessage {
-  const reply: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, config: getFullConfig() };
+  const reply: Messages.ConfigMessage = {
+    type: Messages.MessageType.CONFIG,
+    key: msg.key,
+    config: configDatabase.getConfig(msg.key)
+  };
   return reply;
 }
 
 function handleConfig(msg: Messages.ConfigMessage): void {
   if (LOG_FINE) {
-    _log.debug("Incoming new config: ",msg);
+    _log.debug("Incoming new config: ", msg);
   }
-  
-  // Copy in the updated fields.
-  const incomingConfig = msg.config;
-  const newConfig = configManager.getConfigCopy();
-  newConfig.showTips = incomingConfig.showTips;
-  newConfig.tipTimestamp = incomingConfig.tipTimestamp;
-  newConfig.tipCounter = incomingConfig.tipCounter;
-  newConfig.blinkingCursor = incomingConfig.blinkingCursor;
-  newConfig.scrollbackMaxLines = incomingConfig.scrollbackMaxLines;
-  newConfig.scrollbackMaxFrames = incomingConfig.scrollbackMaxFrames;
-  newConfig.terminalFontSize = incomingConfig.terminalFontSize;
-  newConfig.terminalFont = incomingConfig.terminalFont;
-  newConfig.commandLineActions = incomingConfig.commandLineActions;
-  newConfig.themeSyntax = incomingConfig.themeSyntax;
-  newConfig.themeTerminal = incomingConfig.themeTerminal;
-  newConfig.themeGUI = incomingConfig.themeGUI;
-  newConfig.keyBindingsFilename = incomingConfig.keyBindingsFilename;
-  newConfig.showTitleBar = incomingConfig.showTitleBar;
-  newConfig.uiScalePercent = incomingConfig.uiScalePercent;
-  newConfig.sessions = incomingConfig.sessions;
 
-  configManager.setConfig(newConfig);
+  configDatabase.setConfig(msg.key, msg.config);
 
   const newConfigMsg: Messages.ConfigMessage = {
     type: Messages.MessageType.CONFIG,
-    config: getFullConfig()
+    key: msg.key,
+    config: configDatabase.getConfig(msg.key)
   };
   sendMessageToAllWindows(newConfigMsg);  
 }
@@ -897,7 +928,7 @@ const ptyToSenderMap = new Map<number, number>();
 function setupPtyManager(): boolean {
   try {
     ptyManager = new PtyManager(extensionManager);
-    injectConfigDatabase(ptyManager, configManager);
+    injectConfigDatabase(ptyManager, configDatabase);
 
     ptyManager.onPtyData(event => {
       const senderId = ptyToSenderMap.get(event.ptyId);
@@ -948,11 +979,10 @@ function setupPtyManager(): boolean {
 }
 
 function setupDefaultSessions(): void {
-  const config = configManager.getConfigCopy();
-  if (config.sessions.length === 0) {
-    const newConfig = _.cloneDeep(config);
-    newConfig.sessions = ptyManager.getDefaultSessions();
-    configManager.setConfig(newConfig);
+  const sessions = configDatabase.getConfigCopy(SESSION_CONFIG);
+  if (sessions == null || sessions.length === 0) {
+    const newSessions = ptyManager.getDefaultSessions();
+    configDatabase.setConfig(SESSION_CONFIG, newSessions);
   }
 }
 

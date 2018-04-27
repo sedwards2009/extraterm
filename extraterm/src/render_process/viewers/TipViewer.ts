@@ -115,7 +115,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
   
   connectedCallback(): void {
     super.connectedCallback();
-    this._tipIndex = this._configManager.getConfig().tipCounter % this._getTipCount();
+    this._tipIndex = this._configManager.getConfig(config.GENERAL_CONFIG).tipCounter % this._getTipCount();
     
     if (DomUtils.getShadowRoot(this) !== null) {
       return;
@@ -159,11 +159,11 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
     });
     
     const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
-    showTipsSelect.value = this._configManager.getConfig().showTips;
+    showTipsSelect.value = this._configManager.getConfig(config.GENERAL_CONFIG).showTips;
     showTipsSelect.addEventListener('change', () => {
-      const newConfig = this._configManager.getConfigCopy();
+      const newConfig = this._configManager.getConfigCopy(config.GENERAL_CONFIG);
       newConfig.showTips = <config.ShowTipsStrEnum> showTipsSelect.value;
-      this._configManager.setConfig(newConfig);
+      this._configManager.setConfig(config.GENERAL_CONFIG, newConfig);
     });
   }
   
@@ -297,7 +297,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
   
   private _configChanged(): void {
     const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
-    showTipsSelect.value = this._configManager.getConfig().showTips;  
+    showTipsSelect.value = this._configManager.getConfig(config.GENERAL_CONFIG).showTips;
   }
 
   private _keyBindingChanged(): void {

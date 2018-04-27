@@ -18,7 +18,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
     from './CommandPaletteRequestTypes';
-import {Config, ConfigDatabase, injectConfigDatabase, ReadonlyConfig} from '../Config';
+import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
@@ -47,6 +47,7 @@ import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
+import log from '../logging/LogDecorator';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -79,7 +80,7 @@ let terminalIdCounter = 0;
 let keyBindingManager: KeyBindingManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
-let configManager: ConfigDistributorImpl = null;
+let configDatabase: ConfigDatabaseImpl = null;
 let extensionManager: ExtensionManager = null;
 let commandPalette: PopDownListPicker<CommandMenuItem> = null;
 let commandPaletteDisposable: Disposable = null;
@@ -97,9 +98,9 @@ export function startUp(closeSplash: () => void): void {
   startUpWebIpc();
 
   // Get the Config working.
-  configManager = new ConfigDistributorImpl();
+  configDatabase = new ConfigDatabaseImpl();
   keyBindingManager = new KeyBindingsManagerImpl();  // depends on the config.
-  const themePromise = WebIpc.requestConfig().then( (msg: Messages.ConfigMessage) => {
+  const themePromise = WebIpc.requestConfig("*").then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
   
@@ -125,8 +126,8 @@ export function startUp(closeSplash: () => void): void {
       setupOSXMenus(mainWebUi);
     }
 
-    if (configManager.getConfig().sessions.length !== 0) {
-      mainWebUi.newTerminalTab(null, configManager.getConfig().sessions[0].uuid);
+    if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
+      mainWebUi.newTerminalTab(null, configDatabase.getConfig(SESSION_CONFIG)[0].uuid);
     } else {
       mainWebUi.openSettingsTab("session");
       Electron.remote.dialog.showErrorBox("No session types available",
@@ -181,7 +182,7 @@ function loadFontFaces(): Promise<FontFace[]> {
 
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
-  injectConfigDatabase(mainWebUi, configManager);
+  injectConfigDatabase(mainWebUi, configDatabase);
   keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
   mainWebUi.setExtensionManager(extensionManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
@@ -388,9 +389,13 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
 
 function handleConfigMessage(msg: Messages.Message): Promise<void> {
   const configMessage = <Messages.ConfigMessage> msg;
-  const config = configMessage.config;
-  configManager.setConfigFromMainProcess(config);
-  return setupConfiguration(config);
+  const key = configMessage.key;
+  configDatabase.setConfigFromMainProcess(key, configMessage.config);
+  if ([GENERAL_CONFIG, SYSTEM_CONFIG, "*"].indexOf(key) !== -1) {
+    return setupConfiguration();
+  } else {
+    return new Promise<void>( (resolve, cancel) => { resolve(); } );
+  }
 }
 
 function handleThemeListMessage(msg: Messages.Message): void {
@@ -429,45 +434,50 @@ function handleClipboardRead(msg: Messages.Message): void {
 }
 
 //-------------------------------------------------------------------------
+let oldSystemConfig: SystemConfig = null;
+let oldGeneralConfig: GeneralConfig = null;
 
-let oldConfig: Config = null;
+function setupConfiguration(): Promise<void> {
+  const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
-function setupConfiguration(newConfig: Config): Promise<void> {
-  const keyBindingContexts = keybindingmanager.loadKeyBindingsFromObject(newConfig.systemConfig.keyBindingsContexts,
+  const keyBindingContexts = keybindingmanager.loadKeyBindingsFromObject(newSystemConfig.keyBindingsContexts,
     process.platform);
 
   if (! keyBindingContexts.equals(keyBindingManager.getKeyBindingsContexts())) {
     keyBindingManager.setKeyBindingsContexts(keyBindingContexts);
   }
 
-  if (oldConfig === null ||
-      oldConfig.systemConfig.originalScaleFactor !== newConfig.systemConfig.originalScaleFactor ||
-      oldConfig.systemConfig.currentScaleFactor !== newConfig.systemConfig.currentScaleFactor ||
-      oldConfig.uiScalePercent !== newConfig.uiScalePercent) {
-    setRootFontScaleFactor(newConfig.systemConfig.originalScaleFactor, newConfig.systemConfig.currentScaleFactor, newConfig.uiScalePercent);
+  if (oldSystemConfig === null ||
+      oldSystemConfig.originalScaleFactor !== newSystemConfig.originalScaleFactor ||
+      oldSystemConfig.currentScaleFactor !== newSystemConfig.currentScaleFactor ||
+      oldGeneralConfig.uiScalePercent !== newGeneralConfig.uiScalePercent) {
+    setRootFontScaleFactor(newSystemConfig.originalScaleFactor, newSystemConfig.currentScaleFactor, newGeneralConfig.uiScalePercent);
   }
 
-  if (oldConfig === null || oldConfig.terminalFontSize !== newConfig.terminalFontSize ||
-      oldConfig.terminalFont !== newConfig.terminalFont) {
+  if (oldGeneralConfig === null || oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize ||
+      oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont) {
         
-    const matchingFonts = newConfig.systemConfig.availableFonts.filter(
-      (font) => font.postscriptName === newConfig.terminalFont);
+    const matchingFonts = newSystemConfig.availableFonts.filter(
+      (font) => font.postscriptName === newGeneralConfig.terminalFont);
 
-    const scaleFactor = newConfig.systemConfig.originalScaleFactor / newConfig.systemConfig.currentScaleFactor;
-    const fontSizePx = Math.max(5, Math.round(newConfig.terminalFontSize * scaleFactor));
-    setCssVars(newConfig.terminalFont, matchingFonts[0].path, fontSizePx);
+    const scaleFactor = newSystemConfig.originalScaleFactor / newSystemConfig.currentScaleFactor;
+    const fontSizePx = Math.max(5, Math.round(newGeneralConfig.terminalFontSize * scaleFactor));
+    setCssVars(newGeneralConfig.terminalFont, matchingFonts[0].path, fontSizePx);
   }
 
-  if (oldConfig === null || oldConfig.themeTerminal !== newConfig.themeTerminal ||
-      oldConfig.themeSyntax !== newConfig.themeSyntax ||
-      oldConfig.themeGUI !== newConfig.themeGUI) {
+  if (oldGeneralConfig === null || oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal ||
+      oldGeneralConfig.themeSyntax !== newGeneralConfig.themeSyntax ||
+      oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI) {
 
-    oldConfig = newConfig;
+    oldGeneralConfig = newGeneralConfig;
+    oldSystemConfig = newSystemConfig;
     return requestThemeContents();
   }
 
-  oldConfig = newConfig;
-  
+  oldGeneralConfig = newGeneralConfig;
+  oldSystemConfig = newSystemConfig;
+
   // no-op promise.
   return new Promise<void>( (resolve, cancel) => { resolve(); } );
 }
@@ -510,7 +520,6 @@ async function requestThemeContents(): Promise<void> {
 }
 
 function reloadThemeContents(): void {
-  const config = configManager.getConfig();
   requestThemeContents();
 }
 
@@ -652,42 +661,87 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
   }
 }
 
-class ConfigDistributorImpl implements ConfigDatabase {
-  private _config: ReadonlyConfig = null;
-  private _onChangeEventEmitter = new EventEmitter<void>();
-  onChange: Event<void>;
-  
+class ConfigDatabaseImpl implements ConfigDatabase {
+  private _configDb = new Map<ConfigKey, any>();
+  private _onChangeEventEmitter = new EventEmitter<ConfigKey>();
+  onChange: Event<ConfigKey>;
+  private _log: Logger;
+
   constructor() {
     this.onChange = this._onChangeEventEmitter.event;
+    this._log = getLogger("ConfigDatabaseImpl", this);
   }
 
-  getConfig(): ReadonlyConfig {
-    return this._config;
+  getConfig(key: ConfigKey): any {
+    const result = this._getConfigNoWarnings(key);
+    if (result == null) {
+      this._log.warn("Unable to find config for key ", key);
+    } else {
+      return result;
+    }
   }
 
-  getConfigCopy(): Config {
-    if (this._config == null) {
+  _getConfigNoWarnings(key: ConfigKey): any {
+    if (key === "*") {
+      // Wildcard fetch all.
+      const result = {};
+
+      for (const [dbKey, value] of this._configDb.entries()) {
+        result[dbKey] = value;
+      }
+      freezeDeep(result);
+      return result;
+    } else {
+      return this._configDb.get(key);
+    }
+  }
+
+  getConfigCopy(key: ConfigKey): any {
+    const data = this.getConfig(key);
+    if (data == null) {
       return null;
     }
-    return <Config> _.cloneDeep(this._config);
-  }
-
-  setConfig(newConfig: Config): void {
-    if ( ! _.isEqual(this._config, newConfig)) {
-      this._config = <ReadonlyConfig> freezeDeep(_.cloneDeep(newConfig));
-      WebIpc.sendConfig(newConfig);
-      this._onChangeEventEmitter.fire(undefined);
-    }
+    return _.cloneDeep(data);
   }
   
-  /**
-   * Set a new configuration object as the application wide 
-   */
-  setConfigFromMainProcess(newConfig: Config): void {
-    if ( ! _.isEqual(this._config, newConfig)) {
-      this._config = <ReadonlyConfig> freezeDeep(_.cloneDeep(newConfig));
-      this._onChangeEventEmitter.fire(undefined);
+  setConfig(key: ConfigKey, newConfig: any): void {
+    if ( ! this._setConfigNoWrite(key, newConfig)) {
+      return;
     }
+
+    WebIpc.sendConfig(key, newConfig);
+  }
+
+  setConfigFromMainProcess(key: ConfigKey, newConfig: any): void {
+    this._setConfigNoWrite(key, newConfig);
+  }
+
+  private _setConfigNoWrite(key: ConfigKey, newConfig: any): boolean {
+    if (key === "*") {
+      let changed = false;
+      for (const objectKey of Object.getOwnPropertyNames(newConfig)) {
+        changed = this._setSingleConfigNoWrite(objectKey, newConfig[objectKey]) || changed;
+      }
+      return changed;
+    } else {
+      return this._setSingleConfigNoWrite(key, newConfig);
+    }
+  }
+
+  private _setSingleConfigNoWrite(key: ConfigKey, newConfig: any): boolean {
+    const oldConfig = this._getConfigNoWarnings(key);
+    if (_.isEqual(oldConfig, newConfig)) {
+      return false;
+  }
+  
+    if (Object.isFrozen(newConfig)) {
+      this._configDb.set(key, newConfig);
+    } else {
+      this._configDb.set(key, freezeDeep(_.cloneDeep(newConfig)));
+    }
+
+    this._onChangeEventEmitter.fire(key);
+    return true;
   }
 }
 

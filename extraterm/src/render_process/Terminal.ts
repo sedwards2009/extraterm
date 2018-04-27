@@ -51,7 +51,7 @@ import * as Messages from '../WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
 import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
-import {Config, ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase} from '../Config';
+import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
@@ -448,7 +448,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       return false;
     } else {
     
-      const commandLineActions = this._configManager.getConfig().commandLineActions || [];
+      const commandLineActions = this._configManager.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
       return commandLineActions
         .filter( cla => ! cla.frame)
         .some( cla => {
@@ -673,7 +673,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _showTip(): void {
-    const config = this._configManager.getConfigCopy();
+    const config = this._configManager.getConfigCopy(GENERAL_CONFIG);
     switch (config.showTips) {
       case 'always':
         break;
@@ -688,7 +688,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._appendMimeViewer(TipViewer.MIME_TYPE, null);
     config.tipTimestamp = Date.now();
     config.tipCounter = config.tipCounter + 1;
-    this._configManager.setConfig(config);
+    this._configManager.setConfig(GENERAL_CONFIG, config);
   }
   
   private _handleFocus(event: FocusEvent): void {
@@ -1049,7 +1049,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
     this._virtualScrollArea.updateScrollableSize(virtualScrollable);
     if (this._configManager != null) {
-      const config = this._configManager.getConfig();
+      const config = this._configManager.getConfig(GENERAL_CONFIG);
       this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
     }
   }
@@ -1101,7 +1101,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         this._virtualScrollArea.reapplyState();
 
         if (this._configManager != null) {
-          const config = this._configManager.getConfig();
+          const config = this._configManager.getConfig(GENERAL_CONFIG);
           this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
         }
       });
@@ -1175,7 +1175,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._enforceScrollbackLengthGuard = oldGuardFlag;
 
     if (this._configManager != null) {
-      const config = this._configManager.getConfig();
+      const config = this._configManager.getConfig(GENERAL_CONFIG);
       this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
     }
     return rc;
@@ -2081,7 +2081,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._appendScrollableElement(viewerElement);
 
       if (this._configManager != null) {
-        const config = this._configManager.getConfig();
+        const config = this._configManager.getConfig(GENERAL_CONFIG);
         this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
     }

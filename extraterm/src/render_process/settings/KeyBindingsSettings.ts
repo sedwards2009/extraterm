@@ -2,13 +2,13 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { WebComponent } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 import Vue from 'vue';
 
 import { KeyBindingsSettingsUi} from './KeyBindingsSettingsUi';
-import { Config } from '../../Config';
-import {Logger, getLogger} from '../../logging/Logger';
+import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../Config';
+import { Logger, getLogger } from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import { SettingsBase } from './SettingsBase';
 import { KeyBindingsManager } from '../keybindings/KeyBindingManager';
@@ -23,7 +23,7 @@ export class KeyBindingsSettings extends SettingsBase<KeyBindingsSettingsUi> {
   private _keyBindingOnChangeEmitterElementLifecycleBinder: OnChangeEmitterElementLifecycleBinder<KeyBindingsManager> = null;
 
   constructor() {
-    super(KeyBindingsSettingsUi);
+    super(KeyBindingsSettingsUi, [SYSTEM_CONFIG, GENERAL_CONFIG]);
     this._log = getLogger(KEY_BINDINGS_SETTINGS_TAG, this);
     this._keyBindingOnChangeEmitterElementLifecycleBinder =
       new OnChangeEmitterElementLifecycleBinder<KeyBindingsManager>(this._handleKeyBindingsManagerChange.bind(this));
@@ -46,24 +46,31 @@ export class KeyBindingsSettings extends SettingsBase<KeyBindingsSettingsUi> {
     this._getUi().setKeyBindingsContexts(keyBindingsManager.getKeyBindingsContexts());
   }
 
-  protected _setConfig(config: Config): void {
+  protected _setConfig(key: ConfigKey, config: any): void {
     const ui = this._getUi();
 
-    if (ui.keyBindingsFiles.length !== config.systemConfig.keyBindingsFiles.length) {
-      ui.keyBindingsFiles = config.systemConfig.keyBindingsFiles;
+    if (key === SYSTEM_CONFIG) {
+      const systemConfig = <SystemConfig> config;
+      if (ui.keyBindingsFiles.length !== systemConfig.keyBindingsFiles.length) {
+        ui.keyBindingsFiles = systemConfig.keyBindingsFiles;
+      }
     }
-    if (ui.selectedKeyBindings !== config.keyBindingsFilename) {
-      ui.selectedKeyBindings = config.keyBindingsFilename;
+
+    if (key === GENERAL_CONFIG) {
+      const generalConfig = <GeneralConfig> config;
+      if (ui.selectedKeyBindings !== config.keyBindingsFilename) {
+        ui.selectedKeyBindings = config.keyBindingsFilename;
+      }
     }
   }
 
   protected _dataChanged(): void {
-    const newConfig = this._getConfigCopy();
+    const newGeneralConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
     const ui = this._getUi();
 
-    if (newConfig.keyBindingsFilename !== ui.selectedKeyBindings) {
-      newConfig.keyBindingsFilename = ui.selectedKeyBindings;
-      this._updateConfig(newConfig);
+    if (newGeneralConfig.keyBindingsFilename !== ui.selectedKeyBindings) {
+      newGeneralConfig.keyBindingsFilename = ui.selectedKeyBindings;
+      this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
     }
   }
 

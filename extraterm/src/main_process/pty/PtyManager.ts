@@ -8,7 +8,7 @@ import { createUuid } from 'extraterm-uuid';
 import * as _ from 'lodash';
 
 import { Pty, BufferSizeChange } from '../../pty/Pty';
-import { Config, AcceptsConfigDatabase, ConfigDatabase } from '../../Config';
+import { AcceptsConfigDatabase, ConfigDatabase, SESSION_CONFIG } from '../../Config';
 import { Logger, getLogger } from '../../logging/Logger';
 import * as Messages from '../../WindowMessages';
 import * as Util from '../../render_process/gui/Util';
@@ -75,9 +75,9 @@ export class PtyManager implements AcceptsConfigDatabase {
 
   createPty(sessionUuid: string, extraEnv: EnvironmentMap, cols: number, rows: number): number {
     
-    const config = this._configDistributor.getConfig();
+    const sessions = this._configDistributor.getConfig(SESSION_CONFIG);
     let sessionConfiguration: SessionConfiguration = null;
-    for (sessionConfiguration of config.sessions) {
+    for (sessionConfiguration of sessions) {
       if (sessionConfiguration.uuid === sessionUuid) {
         break;
       }

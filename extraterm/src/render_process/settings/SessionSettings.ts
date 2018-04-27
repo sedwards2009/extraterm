@@ -7,7 +7,7 @@ import * as _ from 'lodash';
 import Vue from 'vue';
 
 import { SessionSettingsUi } from './SessionSettingsUi';
-import { Config, FontInfo } from '../../Config';
+import { FontInfo, SESSION_CONFIG, ConfigKey } from '../../Config';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import { SettingsBase } from './SettingsBase';
@@ -22,22 +22,22 @@ export class SessionSettings extends SettingsBase<SessionSettingsUi> {
   private _extensionManager: ExtensionManager = null;
 
   constructor() {
-    super(SessionSettingsUi);
+    super(SessionSettingsUi, [SESSION_CONFIG]);
     this._log = getLogger(SESSION_SETTINGS_TAG, this);
   }
 
-  protected _setConfig(config: Config): void {
-    const ui = this._getUi();
-    if ( ! _.isEqual(ui.sessions, config.sessions)) {
-      ui.sessions = config.sessions;
+  protected _setConfig(key: ConfigKey, config: any): void {
+    if (key === SESSION_CONFIG) {
+      const ui = this._getUi();
+      const sessions = <SessionConfiguration[]> config;
+      if ( ! _.isEqual(ui.sessions, sessions)) {
+        ui.sessions = _.cloneDeep(sessions);
+      }
     }
   }
 
   protected _dataChanged(): void {
-    const newConfig = this._getConfigCopy();
-    const ui = this._getUi();
-    newConfig.sessions = ui.sessions;
-    this._updateConfig(newConfig);
+    this._updateConfig(SESSION_CONFIG, this._getUi().sessions);
   }
 
   set extensionManager(extensionManager: ExtensionManager) {

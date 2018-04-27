@@ -79,8 +79,8 @@ function request(msg: Messages.Message, replyType: Messages.MessageType): Promis
   });
 }
 
-export function requestConfig(): Promise<Messages.ConfigMessage> {
-  const msg: Messages.ConfigRequestMessage = {type: Messages.MessageType.CONFIG_REQUEST};
+export function requestConfig(key: config.ConfigKey): Promise<Messages.ConfigMessage> {
+  const msg: Messages.ConfigRequestMessage = {type: Messages.MessageType.CONFIG_REQUEST, key};
   return <Promise<Messages.ConfigMessage>> request(msg, Messages.MessageType.CONFIG);
 }
 
@@ -153,8 +153,8 @@ export function windowCloseRequest(): void {
   ipc.send(Messages.CHANNEL_NAME, msg);  
 }
 
-export function sendConfig(config: config.Config): void {
-  const msg: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, config: config };
+export function sendConfig(key: config.ConfigKey, config: any): void {
+  const msg: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, key, config };
   ipc.send(Messages.CHANNEL_NAME, msg);  
 }
 

@@ -31,7 +31,7 @@ import log from '../logging/LogDecorator';
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
   cssFileToFilename, cssFileToExtension} from './Theme';
-import { Config, AcceptsConfigDatabase, ConfigDatabase } from '../Config';
+import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 
@@ -149,7 +149,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   async render(themeType: ThemeType, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = this._configDistributor.getConfig();
+    const config = this._configDistributor.getConfig(GENERAL_CONFIG);
     let moduleName = "";
     let themeNameStack: string[] = null;
     let fallbackTheme = "";

@@ -57,33 +57,33 @@ interface MenuItem {
   <div id="settings_pane">
     <template v-if="firstShowComplete || selectedTab == 'general'">
       <et-general-settings v-show="selectedTab == 'general'"
-        v-bind:configDistributor.prop="getConfigDistributor()">
+        v-bind:configDatabase.prop="getConfigDatabase()">
       </et-general-settings>
     </template>
 
     <template v-if="firstShowComplete || selectedTab == 'appearance'">
       <et-appearance-settings v-show="selectedTab == 'appearance'"
-        v-bind:configDistributor.prop="getConfigDistributor()"
+        v-bind:configDatabase.prop="getConfigDatabase()"
         v-bind:themes.prop="themes" >
       </et-appearance-settings>
     </template>
 
     <template v-if="firstShowComplete || selectedTab == 'session'">
       <et-session-settings v-show="selectedTab == 'session'"
-        v-bind:configDistributor.prop="getConfigDistributor()"
+        v-bind:configDatabase.prop="getConfigDatabase()"
         v-bind:extensionManager.prop="getExtensionManager()">
       </et-session-settings>
     </template>
     
     <template v-if="firstShowComplete || selectedTab == 'frame'">
       <et-frame-settings v-show="selectedTab == 'frame'"
-        v-bind:configDistributor.prop="getConfigDistributor()">
+        v-bind:configDatabase.prop="getConfigDatabase()">
       </et-frame-settings>
     </template>
 
     <template v-if="firstShowComplete || selectedTab == 'keybindings'">
       <et-key-bindings-settings v-show="selectedTab == 'keybindings'"
-        v-bind:configDistributor.prop="getConfigDistributor()"
+        v-bind:configDatabase.prop="getConfigDatabase()"
         v-bind:keyBindingManager.prop="getKeyBindingsManager()">
       </et-key-bindings-settings>
     </template>
@@ -92,7 +92,7 @@ interface MenuItem {
 `
 })
 export class SettingsUi extends Vue {
-  private _configDistributor: ConfigDatabase = null;
+  private _configDatabase: ConfigDatabase = null;
   private _keyBindingsManager: KeyBindingsManager = null;
   private _extensionManager: ExtensionManager = null;
 
@@ -129,13 +129,13 @@ export class SettingsUi extends Vue {
     this.selectedTab = id;
   }
 
-  setConfigDistributor(configDistributor: ConfigDatabase) {
-    this._configDistributor = configDistributor;
+  setConfigDatabase(configDatabase: ConfigDatabase) {
+    this._configDatabase = configDatabase;
     this.$forceUpdate();
   }
 
-  getConfigDistributor(): ConfigDatabase {
-    return this._configDistributor;
+  getConfigDatabase(): ConfigDatabase {
+    return this._configDatabase;
   }
 
   setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {

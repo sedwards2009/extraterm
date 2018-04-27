@@ -10,7 +10,7 @@ import { Disposable, Event, SessionConfiguration } from 'extraterm-extension-api
 
 export type ShowTipsStrEnum = 'always' | 'daily' | 'never';
 
-export interface Config {
+export interface GeneralConfig {
   blinkingCursor?: boolean;
   themeTerminal?: string;
   themeSyntax?: string;
@@ -19,7 +19,6 @@ export interface Config {
   terminalFontSize?: number;  // px
   uiScalePercent?: number;
 
-  commandLineActions?: CommandLineAction[];
   scrollbackMaxLines?: number;
   scrollbackMaxFrames?: number;
   keyBindingsFilename?: string;
@@ -30,11 +29,20 @@ export interface Config {
   showTitleBar?: boolean;
 
   windowConfiguration?: WindowConfiguration;
-
-  sessions?: SessionConfiguration[];
-
-  systemConfig: SystemConfig;
 }
+
+// This is the format of the user config JSON file as stored on the filesystem.
+// It is a little wierd due to backwards compat.
+export interface UserStoredConfig extends GeneralConfig {
+  commandLineActions?: CommandLineAction[];
+  sessions?: SessionConfiguration[];
+}
+
+export const GENERAL_CONFIG = "general";
+export const COMMAND_LINE_ACTIONS_CONFIG = "command_line_action";
+export const SESSION_CONFIG = "session";
+export const SYSTEM_CONFIG = "system";
+
 
 export type CommandLineActionMatchType = 'name' | 'regexp';
 
@@ -77,7 +85,7 @@ export interface FontInfo {
   postscriptName: string;
 }
 
-export type ReadonlyConfig = DeepReadonly<Config>;
+export type ConfigKey = string;
 
 /**
  * Interface for distributing configuration changes.
@@ -88,15 +96,23 @@ export interface ConfigDatabase {
    *
    * @return the current config.
    */
-  getConfig(): ReadonlyConfig;
+  getConfig(key: "general"): DeepReadonly<GeneralConfig>;
+  getConfig(key: "session"): DeepReadonly<SessionConfiguration[]>;
+  getConfig(key: "command_line_action"): DeepReadonly<CommandLineAction[]>;
+  getConfig(key: "system"): DeepReadonly<SystemConfig>;
+  getConfig(key: ConfigKey): any;
 
-  getConfigCopy(): Config;
+  getConfigCopy(key: "general"): GeneralConfig;
+  getConfigCopy(key: "session"): SessionConfiguration[];
+  getConfigCopy(key: "command_line_action"): CommandLineAction[];
+  getConfigCopy(key: "system"): SystemConfig;
+  getConfigCopy(key: ConfigKey): any;
 
   /**
    * Register a listener to hear when the config has changed.
    *
    */
-  onChange: Event<void>;
+  onChange: Event<ConfigKey>;
   
   /**
    * Set a new application wide config.
@@ -105,7 +121,11 @@ export interface ConfigDatabase {
    * to the parts of the application which run in different threads/processes.
    * @param newConfig the new config object.
    */
-  setConfig(newConfig: Config | ReadonlyConfig): void;
+  setConfig(key: "general", newConfig: GeneralConfig | DeepReadonly<GeneralConfig>): void;
+  setConfig(key: "session", newConfig: SessionConfiguration[] | DeepReadonly<SessionConfiguration[]>): void;
+  setConfig(key: "command_line_action", newConfig: CommandLineAction[] | DeepReadonly<CommandLineAction[]>): void;
+  setConfig(key: "system", newConfig: SystemConfig | DeepReadonly<SystemConfig>): void;
+  setConfig(key: ConfigKey, newConfig: any): void;
 }
 
 export interface AcceptsConfigDatabase {

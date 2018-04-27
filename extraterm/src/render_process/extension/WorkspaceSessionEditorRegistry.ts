@@ -85,7 +85,6 @@ class ExtensionSessionEditorProxy extends ThemeableElementBase  {
   constructor() {
     super();
     this._log = getLogger("ExtensionSessionEditorProxy", this);
-    this._log.debug("constructor");
     this._extensionSessionEditor = <ExtensionSessionEditorBaseImpl> this._createExtensionSessionEditor();
   }
 
