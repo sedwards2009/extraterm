@@ -7,7 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as _ from 'lodash';
 import { KeyBindingInfo } from '../../Config';
-import { KeyBindingsMapping, KeyBindingsContexts } from '../keybindings/KeyBindingManager';
+import { KeyBindingsMapping, KeyBindingsContexts } from '../keybindings/KeyBindingsManager';
 
 const humanText = require('../keybindings/keybindingstext.json');
 

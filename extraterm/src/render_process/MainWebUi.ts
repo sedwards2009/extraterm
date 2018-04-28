@@ -20,7 +20,7 @@ import {EmptyPaneMenu} from './EmptyPaneMenu';
 import {FrameFinder} from './FrameFinderType';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
-import { KeyBindingsManager, AcceptsKeyBindingsManager, injectKeyBindingsManager } from './keybindings/KeyBindingManager';
+import { KeyBindingsManager, AcceptsKeyBindingsManager, injectKeyBindingsManager } from './keybindings/KeyBindingsManager';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';

@@ -13,7 +13,7 @@ import { FRAME_SETTINGS_TAG } from './FrameSettings';
 import { GENERAL_SETTINGS_TAG} from './GeneralSettings';
 import { KEY_BINDINGS_SETTINGS_TAG } from './KeyBindingsSettings';
 import { SESSION_SETTINGS_TAG } from './SessionSettings';
-import { KeyBindingsManager } from '../keybindings/KeyBindingManager';
+import { KeyBindingsManager } from '../keybindings/KeyBindingsManager';
 import { doLater } from '../../utils/DoLater';
 import { ExtensionManager } from '../extension/InternalTypes';
 

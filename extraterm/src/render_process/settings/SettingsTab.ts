@@ -11,7 +11,7 @@ import {ViewerElement} from '../viewers/ViewerElement';
 import Vue from 'vue';
 
 import { AcceptsConfigDatabase, ConfigDatabase, FontInfo } from '../../Config';
-import { AcceptsKeyBindingsManager, KeyBindingsManager } from '../keybindings/KeyBindingManager';
+import { AcceptsKeyBindingsManager, KeyBindingsManager } from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ThemeTypes from '../../theme/Theme';

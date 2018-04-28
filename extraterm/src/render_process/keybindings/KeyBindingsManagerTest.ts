@@ -6,7 +6,7 @@
 
 import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
-import * as KeyBindingsManager from './KeyBindingManager';
+import * as KeyBindingsManager from './KeyBindingsManager';
 
 SourceMapSupport.install();
 

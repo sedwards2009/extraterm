@@ -15,7 +15,7 @@ import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
-import {AcceptsKeyBindingsManager, KeyBindingsManager} from './keybindings/KeyBindingManager';
+import {AcceptsKeyBindingsManager, KeyBindingsManager} from './keybindings/KeyBindingsManager';
 import {ResizeCanary} from './ResizeCanary';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ScrollBar} from'./gui/ScrollBar';

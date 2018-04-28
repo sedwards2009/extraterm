@@ -21,7 +21,7 @@ import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as GeneralEvents from '../GeneralEvents';
-import {KeyBindingsManager, AcceptsKeyBindingsManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingManager';
+import {KeyBindingsManager, AcceptsKeyBindingsManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';

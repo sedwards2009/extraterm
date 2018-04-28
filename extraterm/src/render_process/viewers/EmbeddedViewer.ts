@@ -20,7 +20,7 @@ import * as DomUtils from '../DomUtils';
 import * as GeneralEvents from '../GeneralEvents';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {FrameMimeType} from '../InternalMimeTypes';
-import * as KeyBindingManager from '../keybindings/KeyBindingManager';
+import * as KeyBindingManager from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import {MenuItem} from '../gui/MenuItem';

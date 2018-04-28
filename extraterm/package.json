@@ -8,7 +8,7 @@
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o ptyw.js,font-manager -f -v 1.6.8",
     "testpackagefileparser": "yarn run build && nodeunit src/main_process/extension/PackageFileParserTest.js",
     "testextensionloader": "yarn run build && nodeunit src/render_process/extension/ExtensionLoaderTest.js",
-    "testkeybindingmanager": "yarn run build && nodeunit src/render_process/keybindings/KeyBindingManagerTest.js",
+    "testkeybindingsmanager": "yarn run build && nodeunit src/render_process/keybindings/KeyBindingManagersTest.js",
     "testmimetypedetector": "yarn run build && nodeunit src/mimetype_detector/MimeTypeDetectorTest.js",
     "testsplitlayout": "yarn run build && nodeunit src/render_process/SplitLayoutTest.js",
     "testterm": "tsc && nodeunit src/render_process/emulator/TermTest.js",

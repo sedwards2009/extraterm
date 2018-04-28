@@ -16,7 +16,7 @@ import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
 import * as config from '../../Config';
 type ConfigManager = config.ConfigDatabase;
 
-import * as keybindingmanager from '../keybindings/KeyBindingManager';
+import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 import {ViewerElement} from '../viewers/ViewerElement';

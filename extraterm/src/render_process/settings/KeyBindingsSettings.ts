@@ -11,7 +11,7 @@ import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig }
 import { Logger, getLogger } from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import { SettingsBase } from './SettingsBase';
-import { KeyBindingsManager } from '../keybindings/KeyBindingManager';
+import { KeyBindingsManager } from '../keybindings/KeyBindingsManager';
 import { OnChangeEmitterElementLifecycleBinder } from './OnChangeEmitterElementLifecycleBinder';
 
 

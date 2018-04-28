@@ -19,7 +19,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
-import {AcceptsKeyBindingsManager, KeyBindingsManager} from '../keybindings/KeyBindingManager';
+import {AcceptsKeyBindingsManager, KeyBindingsManager} from '../keybindings/KeyBindingsManager';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;

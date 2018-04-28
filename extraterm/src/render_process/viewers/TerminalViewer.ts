@@ -18,7 +18,7 @@ from '../CommandPaletteRequestTypes';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as GeneralEvents from '../GeneralEvents';
-import * as keybindingmanager from '../keybindings/KeyBindingManager';
+import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
