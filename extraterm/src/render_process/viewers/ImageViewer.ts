@@ -19,7 +19,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
-import {AcceptsKeyBindingManager, KeyBindingsManager} from '../keybindings/KeyBindingManager';
+import {AcceptsKeyBindingsManager, KeyBindingsManager} from '../keybindings/KeyBindingManager';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
@@ -46,7 +46,7 @@ let instanceIdCounter = 0;
 
 
 @WebComponent({tag: "et-image-viewer"})
-export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManager {
+export class ImageViewer extends ViewerElement implements AcceptsKeyBindingsManager {
 
   static TAG_NAME = "ET-IMAGE-VIEWER";
   
@@ -145,7 +145,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingManag
     }
   }
 
-  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
+  setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = newKeyBindingManager;
   }
 

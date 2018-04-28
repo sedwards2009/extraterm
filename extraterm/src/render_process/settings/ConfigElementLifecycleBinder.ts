@@ -2,7 +2,7 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 import { Disposable, Event } from 'extraterm-extension-api';
-import { ConfigKey, ConfigDatabase } from '../../Config';
+import { ConfigKey, ConfigDatabase, ConfigChangeEvent } from '../../Config';
 
 /**
  * Binds the handling of a ConfigDatabase with the lifecycle of an HTML
@@ -24,7 +24,7 @@ export class ConfigElementLifecycleBinder {
   private _configDatabase: ConfigDatabase = null;
   private _onChangeDisposable: Disposable = null;
 
-  constructor(private _onChangeCallback: (key: ConfigKey, config: Readonly<any>) => void, private _keys: ConfigKey[]) {
+  constructor(private _onChangeCallback: (key: ConfigKey, newConfig: any) => void, private _keys: ConfigKey[]) {
   }
 
   setConfigDatabase(configDatabase: ConfigDatabase): void {
@@ -36,10 +36,17 @@ export class ConfigElementLifecycleBinder {
     this._configDatabase = configDatabase;
 
     if (this._connected) {
-      this._onChangeDisposable = this._configDatabase.onChange((key: ConfigKey): void => this._handleOnChange(key));
-      
+      this._onChangeDisposable = this._configDatabase.onChange((event: ConfigChangeEvent): void => this._onChangeCallback(event.key, event.newConfig));
+
+      this._broadcastAllConfigs();
+    }
+  }
+
+  private _broadcastAllConfigs(): void {
+    if (this._configDatabase != null) {
       for (const key of this._keys) {
-        this._handleOnChange(key);
+        const config = this._configDatabase.getConfig(key);
+        this._onChangeCallback(key, config);
       }
     }
   }
@@ -55,29 +62,12 @@ export class ConfigElementLifecycleBinder {
     }
   }
 
-  private _handleOnChange(key: ConfigKey): void {
-    if (this._configDatabase != null) {
-      const config = this._configDatabase.getConfig(key);
-      if (config == null) {
-        console.warn("ConfigElementLifecycleBinder._handleOnChange() config is null! key: ", key);
-        return;
-      }
-      this._onChangeCallback(key, config);
-    }
-  }
-
   connectedCallback(): void {
     if (this._configDatabase != null) {
-      this._onChangeDisposable = this._configDatabase.onChange(this._handleOnChange.bind(this));
+      this._onChangeDisposable = this._configDatabase.onChange((event: ConfigChangeEvent): void => this._onChangeCallback(event.key, event.newConfig));
     }
-
     this._connected = true;
-
-    if (this._configDatabase != null) {
-      for (const key of this._keys) {
-        this._handleOnChange(key);
-      }
-    }
+    this._broadcastAllConfigs();
   }
 
   disconnectedCallback(): void {

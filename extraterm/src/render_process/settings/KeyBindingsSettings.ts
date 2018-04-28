@@ -74,7 +74,7 @@ export class KeyBindingsSettings extends SettingsBase<KeyBindingsSettingsUi> {
     }
   }
 
-  set keyBindingManager(keyBindingsManager: KeyBindingsManager) {
+  set keyBindingsManager(keyBindingsManager: KeyBindingsManager) {
     this._keyBindingOnChangeEmitterElementLifecycleBinder.setOnChangeEmitter(keyBindingsManager);
     if (keyBindingsManager == null) {
       return;
@@ -82,7 +82,7 @@ export class KeyBindingsSettings extends SettingsBase<KeyBindingsSettingsUi> {
     this._getUi().setKeyBindingsContexts(keyBindingsManager.getKeyBindingsContexts());
   }
 
-  get keyBindingManager(): KeyBindingsManager {
+  get keyBindingsManager(): KeyBindingsManager {
     return this._keyBindingOnChangeEmitterElementLifecycleBinder.getOnChangeEmitter();
   }
 }

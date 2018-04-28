@@ -20,7 +20,7 @@ import {EmptyPaneMenu} from './EmptyPaneMenu';
 import {FrameFinder} from './FrameFinderType';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
-import * as keybindingmanager from './keybindings/KeyBindingManager';
+import { KeyBindingsManager, AcceptsKeyBindingsManager, injectKeyBindingsManager } from './keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
@@ -43,8 +43,6 @@ import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
 import { ConfigDatabase, SESSION_CONFIG } from '../Config';
-
-type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -111,7 +109,7 @@ let themeCss = "";
  *
  */
 @WebComponent({tag: "extraterm-mainwebui"})
-export class MainWebUi extends ThemeableElementBase implements keybindingmanager.AcceptsKeyBindingManager,
+export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBindingsManager,
     config.AcceptsConfigDatabase, Commandable {
   
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
@@ -129,7 +127,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
   private _ptyIpcBridge: PtyIpcBridge = null;
   private _tabIdCounter = 0;
   private _configManager: ConfigDatabase = null;
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keyBindingManager: KeyBindingsManager = null;
   private _extensionManager: ExtensionManager = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _lastFocus: Element = null;
@@ -166,7 +164,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     this._configManager = configManager;
   }
   
-  setKeyBindingManager(keyBindingManager: KeyBindingManager): void {
+  setKeyBindingsManager(keyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
 
@@ -558,7 +556,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setBulkFileBroker(this._fileBroker);
     config.injectConfigDatabase(newTerminal, this._configManager);
-    keybindingmanager.injectKeyBindingManager(newTerminal, this._keyBindingManager);
+    injectKeyBindingsManager(newTerminal, this._keyBindingManager);
     newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
@@ -613,7 +611,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
-    keybindingmanager.injectKeyBindingManager(viewerTab, this._keyBindingManager);
+    injectKeyBindingsManager(viewerTab, this._keyBindingManager);
     viewerTab.setTitle(embeddedViewer.getMetadata().title);
     viewerTab.setTag(embeddedViewer.getTag());
     
@@ -686,7 +684,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigDatabase(settingsTabElement, this._configManager);
-      keybindingmanager.injectKeyBindingManager(settingsTabElement, this._keyBindingManager);
+      injectKeyBindingsManager(settingsTabElement, this._keyBindingManager);
       injectExtensionManager(settingsTabElement, this._extensionManager);
 
       settingsTabElement.setThemes(this._themes);
@@ -704,7 +702,7 @@ export class MainWebUi extends ThemeableElementBase implements keybindingmanager
       this._switchToTab(aboutTabs[0]);
     } else {
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
-      keybindingmanager.injectKeyBindingManager(viewerElement, this._keyBindingManager);
+      injectKeyBindingsManager(viewerElement, this._keyBindingManager);
       this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);
     }

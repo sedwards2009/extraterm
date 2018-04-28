@@ -70,7 +70,7 @@ function loadTipFile(): string[] {
 const tipData = loadTipFile();
 
 @WebComponent({tag: "et-tip-viewer"})
-export class TipViewer extends ViewerElement implements config.AcceptsConfigDatabase, keybindingmanager.AcceptsKeyBindingManager, Disposable {
+export class TipViewer extends ViewerElement implements config.AcceptsConfigDatabase, keybindingmanager.AcceptsKeyBindingsManager, Disposable {
 
   static TAG_NAME = "ET-TIP-VIEWER";
   
@@ -191,7 +191,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
     }
   }
 
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+  setKeyBindingsManager(newKeyBindingManager: KeyBindingManager): void {
     if (this._keyBindingManagerDisposable !== null) {
       this._keyBindingManagerDisposable.dispose();
       this._keyBindingManagerDisposable = null;

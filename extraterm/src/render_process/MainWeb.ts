@@ -18,7 +18,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
 import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
     from './CommandPaletteRequestTypes';
-import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig} from '../Config';
+import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
@@ -27,7 +27,6 @@ import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
 import {ExtensionManager} from './extension/InternalTypes';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-import * as keybindingmanager from './keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../logging/Logger';
 import {MainWebUi} from './MainWebUi';
 import {MenuItem} from './gui/MenuItem';
@@ -48,11 +47,9 @@ import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
 import log from '../logging/LogDecorator';
+import { KeyBindingsManager, injectKeyBindingsManager, loadKeyBindingsFromObject, KeyBindingsContexts } from './keybindings/KeyBindingManager';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
-
-type KeyBindingManager = keybindingmanager.KeyBindingsManager;
-type KeyBindingsContexts = keybindingmanager.KeyBindingsContexts;
 
 SourceMapSupport.install();
 
@@ -77,7 +74,7 @@ const _log = getLogger("mainweb");
  */
 
 let terminalIdCounter = 0;
-let keyBindingManager: KeyBindingManager = null;
+let keyBindingManager: KeyBindingsManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configDatabase: ConfigDatabaseImpl = null;
@@ -183,7 +180,7 @@ function loadFontFaces(): Promise<FontFace[]> {
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
   injectConfigDatabase(mainWebUi, configDatabase);
-  keybindingmanager.injectKeyBindingManager(mainWebUi, keyBindingManager);
+  injectKeyBindingsManager(mainWebUi, keyBindingManager);
   mainWebUi.setExtensionManager(extensionManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
     <div class="space"></div>
@@ -441,7 +438,7 @@ function setupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
-  const keyBindingContexts = keybindingmanager.loadKeyBindingsFromObject(newSystemConfig.keyBindingsContexts,
+  const keyBindingContexts = loadKeyBindingsFromObject(newSystemConfig.keyBindingsContexts,
     process.platform);
 
   if (! keyBindingContexts.equals(keyBindingManager.getKeyBindingsContexts())) {
@@ -663,8 +660,8 @@ function handleCommandPaletteSelected(ev: CustomEvent): void {
 
 class ConfigDatabaseImpl implements ConfigDatabase {
   private _configDb = new Map<ConfigKey, any>();
-  private _onChangeEventEmitter = new EventEmitter<ConfigKey>();
-  onChange: Event<ConfigKey>;
+  private _onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
+  onChange: Event<ConfigChangeEvent>;
   private _log: Logger;
 
   constructor() {
@@ -740,18 +737,19 @@ class ConfigDatabaseImpl implements ConfigDatabase {
       this._configDb.set(key, freezeDeep(_.cloneDeep(newConfig)));
     }
 
-    this._onChangeEventEmitter.fire(key);
+    this._onChangeEventEmitter.fire({key, oldConfig, newConfig: this.getConfig(key)});
     return true;
   }
 }
 
-class KeyBindingsManagerImpl implements KeyBindingManager {
+class KeyBindingsManagerImpl implements KeyBindingsManager {
   private _keyBindingsContexts: KeyBindingsContexts = null;
-
+  private _log: Logger;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
   
   constructor() {
+    this._log = getLogger("KeyBindingsManagerImpl", self);
     this.onChange = this._onChangeEventEmitter.event;
   }
 

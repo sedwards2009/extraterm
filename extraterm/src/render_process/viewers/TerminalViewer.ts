@@ -94,7 +94,7 @@ function init(): void {
 
 
 @WebComponent({tag: "et-terminal-viewer"})
-export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingManager,
+export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingsManager,
     SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-VIEWER";
@@ -377,7 +377,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   //
   //-----------------------------------------------------------------------
 
-  setKeyBindingManager(newKeyBindingManager: KeyBindingManager): void {
+  setKeyBindingsManager(newKeyBindingManager: KeyBindingManager): void {
     if (this._keyBindingManagerOnChangeDisposable != null) {
       this._keyBindingManagerOnChangeDisposable.dispose();
       this._keyBindingManagerOnChangeDisposable = null;

@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG} from '../Config';
+import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent} from '../Config';
 import {FileLogWriter} from '../logging/FileLogWriter';
 import {Logger, getLogger, addLogWriter} from '../logging/Logger';
 import { PtyManager } from './pty/PtyManager';
@@ -345,11 +345,8 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
   
   const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
   const keyBindingsFiles = scanKeyBindingFiles(keyBindingsDir);
+  const keyBindingsJSON = loadKeyBindingsJson(config.keyBindingsFilename);
 
-  const defaultKeyBindingFilename = path.join(keyBindingsDir, config.keyBindingsFilename);
-  const keyBindingJsonString = fs.readFileSync(defaultKeyBindingFilename, { encoding: "UTF8" } );
-  const keyBindingsJSON = JSON.parse(keyBindingJsonString);
-  
   return {
     homeDir,
     keyBindingsContexts: keyBindingsJSON,
@@ -360,6 +357,14 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
     originalScaleFactor: systemConfig == null ? 1 : systemConfig.originalScaleFactor
   };
 }
+
+function loadKeyBindingsJson(keyBindingsFilename: string): object {
+  const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
+  const defaultKeyBindingFilename = path.join(keyBindingsDir, keyBindingsFilename);
+  const keyBindingJsonString = fs.readFileSync(defaultKeyBindingFilename, { encoding: "UTF8" } );
+  const keyBindingsJSON = JSON.parse(keyBindingJsonString);
+  return keyBindingsJSON;
+}  
 
 function setupOSX(): void {
   child_process.execFileSync("defaults", ["write",
@@ -412,7 +417,6 @@ function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
 
 function setupConfig(): void {
   const userStoredConfig = readConfigurationFile();
-
 
   userStoredConfig.blinkingCursor = _.isBoolean(userStoredConfig.blinkingCursor) ? userStoredConfig.blinkingCursor : false;
   
@@ -472,6 +476,41 @@ function setupConfig(): void {
   delete userStoredConfig.sessions;
   delete userStoredConfig.commandLineActions;
   configDatabase.setConfig(GENERAL_CONFIG, userStoredConfig);
+
+  configDatabase.onChange((event: ConfigChangeEvent): void => {
+    if (event.key === GENERAL_CONFIG) {
+      //Check if the selected keybindings changed. If so update and broadcast the system config.
+      const oldGeneralConfig = <GeneralConfig> event.oldConfig;
+      const newGeneralConfig = <GeneralConfig> event.newConfig;
+      if (newGeneralConfig != null) {
+        if (oldGeneralConfig == null || oldGeneralConfig.keyBindingsFilename !== newGeneralConfig.keyBindingsFilename) {
+          const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+          systemConfig.keyBindingsContexts = loadKeyBindingsJson(newGeneralConfig.keyBindingsFilename);
+          configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+        }
+      }
+    }
+
+    broadcastConfigToWindows(event);
+  });
+}
+
+function broadcastConfigToWindows(event: ConfigChangeEvent): void {
+  const newConfigMsg: Messages.ConfigMessage = {
+    type: Messages.MessageType.CONFIG,
+    key: event.key,
+    config: event.newConfig
+  };
+  sendMessageToAllWindows(newConfigMsg);
+}
+
+function sendMessageToAllWindows(msg: Messages.Message): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (LOG_FINE) {
+      _log.debug("Broadcasting message to all windows");
+    }
+    window.webContents.send(Messages.CHANNEL_NAME, msg);
+  }
 }
 
 /**
@@ -535,8 +574,8 @@ function setConfigDefaults(config: UserStoredConfig): void {
 
 class ConfigDatabaseImpl implements ConfigDatabase {
   private _configDb = new Map<ConfigKey, any>();
-  private _onChangeEventEmitter = new EventEmitter<ConfigKey>();
-  onChange: Event<ConfigKey>;
+  private _onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
+  onChange: Event<ConfigChangeEvent>;
   private _log: Logger;
 
   constructor() {
@@ -594,7 +633,7 @@ class ConfigDatabaseImpl implements ConfigDatabase {
       this._configDb.set(key, freezeDeep(_.cloneDeep(newConfig)));
     }
 
-    this._onChangeEventEmitter.fire(key);
+    this._onChangeEventEmitter.fire({key, oldConfig, newConfig: this.getConfig(key)});
   }
 
   setConfig(key: ConfigKey, newConfig: any): void {
@@ -868,22 +907,6 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   }
 
   configDatabase.setConfig(msg.key, msg.config);
-
-  const newConfigMsg: Messages.ConfigMessage = {
-    type: Messages.MessageType.CONFIG,
-    key: msg.key,
-    config: configDatabase.getConfig(msg.key)
-  };
-  sendMessageToAllWindows(newConfigMsg);  
-}
-
-function sendMessageToAllWindows(msg: Messages.Message): void {
-  BrowserWindow.getAllWindows().forEach( (window) => {
-    if (LOG_FINE) {
-      _log.debug("Transmitting new config to window ", window.id);
-    }
-    window.webContents.send(Messages.CHANNEL_NAME, msg);
-  });
 }
 
 function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages.ThemeListMessage {

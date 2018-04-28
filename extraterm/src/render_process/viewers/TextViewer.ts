@@ -21,7 +21,7 @@ import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as GeneralEvents from '../GeneralEvents';
-import {KeyBindingsManager, AcceptsKeyBindingManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingManager';
+import {KeyBindingsManager, AcceptsKeyBindingsManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -98,7 +98,7 @@ function init(): void {
 
 
 @WebComponent({tag: "et-text-viewer"})
-export class TextViewer extends ViewerElement implements Commandable, AcceptsKeyBindingManager,
+export class TextViewer extends ViewerElement implements Commandable, AcceptsKeyBindingsManager,
     SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
@@ -335,7 +335,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     super.dispose();
   }
 
-  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
+  setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = newKeyBindingManager;
   }
   

@@ -71,7 +71,7 @@ export interface SingleWindowConfiguration {
 export interface SystemConfig {
   homeDir: string;
   keyBindingsFiles: KeyBindingInfo[];
-  keyBindingsContexts: Object;
+  keyBindingsContexts: object;
   
   availableFonts: FontInfo[];
   titleBarVisible: boolean;
@@ -86,6 +86,13 @@ export interface FontInfo {
 }
 
 export type ConfigKey = string;
+
+export interface ConfigChangeEvent {
+  key: ConfigKey;
+  newConfig: any;
+  oldConfig: any;
+}
+
 
 /**
  * Interface for distributing configuration changes.
@@ -112,7 +119,7 @@ export interface ConfigDatabase {
    * Register a listener to hear when the config has changed.
    *
    */
-  onChange: Event<ConfigKey>;
+  onChange: Event<ConfigChangeEvent>;
   
   /**
    * Set a new application wide config.

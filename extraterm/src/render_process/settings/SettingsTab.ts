@@ -11,7 +11,7 @@ import {ViewerElement} from '../viewers/ViewerElement';
 import Vue from 'vue';
 
 import { AcceptsConfigDatabase, ConfigDatabase, FontInfo } from '../../Config';
-import { AcceptsKeyBindingManager, KeyBindingsManager } from '../keybindings/KeyBindingManager';
+import { AcceptsKeyBindingsManager, KeyBindingsManager } from '../keybindings/KeyBindingManager';
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ThemeTypes from '../../theme/Theme';
@@ -20,7 +20,7 @@ import { AcceptsExtensionManager, ExtensionManager } from '../extension/Internal
 
 
 @WebComponent({tag: "et-settings-tab"})
-export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase, AcceptsKeyBindingManager,
+export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase, AcceptsKeyBindingsManager,
     AcceptsExtensionManager {
   
   static TAG_NAME = "ET-SETTINGS-TAB";
@@ -76,7 +76,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     this._ui.setConfigDatabase(configDatabase);
   }
   
-  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void {
+  setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = newKeyBindingManager;
     this._ui.setKeyBindingsManager(newKeyBindingManager);
   }

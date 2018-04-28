@@ -15,7 +15,7 @@ import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
-import {AcceptsKeyBindingManager, KeyBindingsManager} from './keybindings/KeyBindingManager';
+import {AcceptsKeyBindingsManager, KeyBindingsManager} from './keybindings/KeyBindingManager';
 import {ResizeCanary} from './ResizeCanary';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ScrollBar} from'./gui/ScrollBar';
@@ -64,7 +64,7 @@ const SCROLL_STEP = 1;
  */
 @WebComponent({tag: "et-viewer-tab"})
 export class EtViewerTab extends ViewerElement implements Commandable,
-    AcceptsKeyBindingManager, SupportsClipboardPaste.SupportsClipboardPaste,
+    AcceptsKeyBindingsManager, SupportsClipboardPaste.SupportsClipboardPaste,
     SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-VIEWER-TAB";
@@ -268,7 +268,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     return ViewerElementTypes.Mode.CURSOR;
   }
   
-  setKeyBindingManager(keyBindingManager: KeyBindingsManager): void {
+  setKeyBindingsManager(keyBindingManager: KeyBindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
 

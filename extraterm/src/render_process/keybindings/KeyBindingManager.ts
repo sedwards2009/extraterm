@@ -307,14 +307,11 @@ function formatNormalizedKeyBinding(keyBinding: KeyBinding): string {
  * Container for mapping context names ot KeyBindingMapper objects.
  */
 export class KeyBindingsContexts {
-  
   private _log: Logger = null;
-  
   private _contexts = new Map<string, KeyBindingsMapping>();
+  public contextNames: string[] = [];
   
-  public contextNames = [];
-  
-  constructor(obj: Object, platform: string) {
+  constructor(obj: object, platform: string) {
     this._log = getLogger("KeyBindingContexts", this);
     for (let key in obj) {
       if (key !== NAME) {
@@ -370,7 +367,7 @@ export class KeyBindingsContexts {
  *            being objects mapping key binding strings to command strings
  * @return the object which maps context names to `KeyBindingMapping` objects
  */
-export function loadKeyBindingsFromObject(obj: Object, platform: string): KeyBindingsContexts {
+export function loadKeyBindingsFromObject(obj: object, platform: string): KeyBindingsContexts {
   return new KeyBindingsContexts(obj, platform);
 }
 
@@ -391,19 +388,19 @@ export interface KeyBindingsManager {
   onChange: Event<void>;
 }
 
-export interface AcceptsKeyBindingManager {
-  setKeyBindingManager(newKeyBindingManager: KeyBindingsManager): void;
+export interface AcceptsKeyBindingsManager {
+  setKeyBindingsManager(newKeyBindingsManager: KeyBindingsManager): void;
 }
 
-export function isAcceptsKeyBindingManager(instance: any): instance is AcceptsKeyBindingManager {
+export function isAcceptsKeyBindingsManager(instance: any): instance is AcceptsKeyBindingsManager {
   if (instance === null || instance === undefined) {
     return false;
   }
-  return (<AcceptsKeyBindingManager> instance).setKeyBindingManager !== undefined;
+  return (<AcceptsKeyBindingsManager> instance).setKeyBindingsManager !== undefined;
 }
 
-export function injectKeyBindingManager(instance: any, keyBindingManager: KeyBindingsManager): void {
-  if (isAcceptsKeyBindingManager(instance)) {
-    instance.setKeyBindingManager(keyBindingManager);
+export function injectKeyBindingsManager(instance: any, keyBindingsManager: KeyBindingsManager): void {
+  if (isAcceptsKeyBindingsManager(instance)) {
+    instance.setKeyBindingsManager(keyBindingsManager);
   }
 }
