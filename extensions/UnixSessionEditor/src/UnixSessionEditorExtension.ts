@@ -3,7 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import _ = require('lodash');
+import * as _ from 'lodash';
+import * as fse from 'fs-extra';
+import * as constants from 'constants';
 
 import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
 import {UnixSessionEditorUi} from './UnixSessionEditorUi';
@@ -23,9 +25,12 @@ export function activate(context: ExtensionContext): any {
   
   class UnixSessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
     private _ui: UnixSessionEditorUi = null;
+    private _debouncedDataChanged: ()=> void = null;
 
     created(): void {
       super.created();
+
+      this._debouncedDataChanged = _.debounce(this._realDataChanged.bind(this), 500);
 
       this._ui = new UnixSessionEditorUi();
       const component = this._ui.$mount();
@@ -59,12 +64,51 @@ export function activate(context: ExtensionContext): any {
     }
 
     _dataChanged(): void {
+      this._debouncedDataChanged();
+    }
+
+    _realDataChanged(): void {
       const changes = {
         name: this._ui.name,
         useDefaultShell: this._ui.useDefaultShell === 1,
         shell: this._ui.shell
       };
+      this._checkShellPath();
       this.updateSessionConfiguration(changes);
+    }
+
+    _checkShellPath(): void {
+      if ( ! this._ui.useDefaultShell && this._ui.shell !== "") {
+        const shellPath = this._ui.shell;
+
+        this._checkExecutablePath(shellPath).then(resultMsg => {
+          if (shellPath === this._ui.shell) {
+            this._ui.shellErrorMsg = resultMsg;
+          }
+        });
+      } else {
+        this._ui.shellErrorMsg = "";
+      }
+    }
+
+    async _checkExecutablePath(exePath: string): Promise<string> {
+      try {
+        const metadata = await fse.stat(exePath);
+        if ( ! metadata.isFile()) {
+          return "Path isn't a file";
+        }
+
+        await fse.access(exePath, fse.constants.X_OK);
+      } catch(err) {
+        if (err.errno === -constants.ENOENT) {
+          return "Path doesn't exist";
+        }
+        if (err.errno === -constants.EACCES) {
+          return "Path isn't executable";
+        }
+        return "errno: " +  err.errno + ", err.code: " + err.code;
+      } 
+      return "";
     }
   }
 

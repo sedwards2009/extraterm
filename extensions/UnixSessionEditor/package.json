@@ -7,6 +7,8 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@types/fs-extra": "^5.0.2",
+    "fs-extra": "^5.0.0",
     "lodash": "^4.0.0",
     "vue": "2.5.9",
     "vue-class-component": "6.1.0"
@@ -25,7 +27,10 @@
     "sessionEditor": [
       {
         "name": "Unix",
-        "type": "unix"
+        "type": "unix",
+        "css": {
+          "fontAwesome": true
+        }
       }
     ]
   }
