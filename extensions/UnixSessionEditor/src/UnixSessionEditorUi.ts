@@ -29,7 +29,10 @@ import Vue from 'vue';
     <div class="input-group col-sm-8 form-inline">
       <input class="input-radio" type="radio" value="0" v-model.number="useDefaultShell">
       <div class="inline-text">Other</div>
-      <input id="other_shell" type="text" class="form-control" :disabled="useDefaultShell===1" v-model.lazy="shell">
+      <input id="other_shell" class="form-control" :disabled="useDefaultShell===1" v-model.lazy="shell" list="etcShells">
+      <datalist id="etcShells">
+        <option v-for="item in etcShells" :value="item"></option>
+      </datalist>
     </div>
   </div>
 </div>
@@ -39,4 +42,5 @@ export class UnixSessionEditorUi extends Vue {
   name: string = "";
   shell: string = "";
   useDefaultShell: number = 1;
+  etcShells: string[] = [];
 }
