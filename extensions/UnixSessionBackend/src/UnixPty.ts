@@ -19,6 +19,7 @@ export interface PtyOptions {
   rows?: number;
   cwd?: string;
   env?: EnvironmentMap;
+  preMessage?: string;
 }
 
 export class UnixPty implements Pty {
@@ -67,6 +68,12 @@ export class UnixPty implements Pty {
     this._emitBufferSizeLater = _.throttle(this._emitAvailableWriteBufferSizeChange.bind(this), 0, {leading: false});
 
     this.realPty.pause();
+
+    if (options.preMessage != null && options.preMessage !== "") {
+      process.nextTick(() => {
+        this._onDataEventEmitter.fire(options.preMessage);
+      });
+    }
   }
   
   write(data: string): void {

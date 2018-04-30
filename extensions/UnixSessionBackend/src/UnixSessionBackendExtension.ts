@@ -40,7 +40,14 @@ class UnixBackend implements SessionBackend {
   createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty {
     const sessionConfig = <UnixSessionConfiguration> sessionConfiguration;
     
-    const shell = sessionConfig.useDefaultShell ? this._readDefaultUserShell(process.env.USER) : sessionConfig.shell;
+    let shell = sessionConfig.useDefaultShell ? this._readDefaultUserShell(process.env.USER) : sessionConfig.shell;
+    let preMessage = "";
+    try {
+      fs.accessSync(shell, fs.constants.X_OK);
+    } catch(err) {
+      preMessage = `\x0a\x0d\x0a\x0d*** Shell '${shell}' couldn't be executed, falling back to '/bin/sh' ***\x0a\x0d\x0a\x0d\x0a\x0d`;
+      shell = "/bin/sh";
+    }
 
     // OSX expects shells to be login shells. Linux etc doesn't
     const args = process.platform === "darwin" ? ["-l"] : [];
@@ -59,7 +66,8 @@ class UnixBackend implements SessionBackend {
       args,
       env: ptyEnv,
       cols: cols,
-      rows: rows
+      rows: rows,
+      preMessage
     };
     return new UnixPty(this._log, options);
   }
