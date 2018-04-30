@@ -4,9 +4,11 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import _ = require('lodash');
+import * as child_process from 'child_process';
 import * as fse from 'fs-extra';
 import * as constants from 'constants';
 import * as path from 'path';
+import { app } from 'electron';
 
 import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
 import {ProxySessionEditorUi} from './ProxySessionEditorUi';
@@ -24,7 +26,8 @@ export function activate(context: ExtensionContext): any {
   log = context.logger;
   
   log.info("ProxySessionEditorExtension activate");
-  
+  let cygwinInstallationDir = "";
+
   class ProxySessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
     private _ui: ProxySessionEditorUi = null;
     private _debouncedDataChanged: ()=> void = null;
@@ -57,7 +60,7 @@ export function activate(context: ExtensionContext): any {
           name: "Cygwin",
           useDefaultShell: true,
           shell: "",
-          cygwinPath: ""          
+          cygwinPath: cygwinInstallationDir
         };
       }
 
@@ -163,5 +166,45 @@ export function activate(context: ExtensionContext): any {
     }
   }
 
+  cygwinInstallationDir = findCygwinInstallation();
+  if (cygwinInstallationDir == null) {
+    cygwinInstallationDir = findBabunCygwinInstallation();
+  }
+  cygwinInstallationDir = cygwinInstallationDir == null ? "" : cygwinInstallationDir;
+
   context.workspace.registerSessionEditor("cygwin", ProxySessionEditor);
+}
+
+function findCygwinInstallation(): string {
+  try {
+    const regResult: string = <any> child_process.execFileSync("REG",
+      ["query","HKLM\\SOFTWARE\\Cygwin\\setup","/v","rootdir"],
+      {encoding: "utf8"});
+    const parts = regResult.split(/\r/g);
+    const regsz = parts[2].indexOf("REG_SZ");
+    const cygwinDir = parts[2].slice(regsz+6).trim();
+    
+    if (fse.existsSync(cygwinDir)) {
+      log.info("Found cygwin installation at " + cygwinDir);
+      return cygwinDir;
+    } else {
+      log.info("The registry reported the cygwin installation directory at '" + cygwinDir +
+        "', but the directory does not exist.");
+      return null;
+    }
+  } catch(e) {
+    log.info("Couldn't find a cygwin installation.");
+    return null;
+  }
+}
+
+function findBabunCygwinInstallation(): string {
+  const cygwinDir = path.join(app.getPath('home'), ".babun/cygwin");
+  if (fse.existsSync(cygwinDir)) {
+    log.info("Found babun cygwin installation at " + cygwinDir);
+    return cygwinDir;
+  } else {
+    log.info("Couldn't find a Babun cygwin installation.");
+    return null;
+  }
 }
