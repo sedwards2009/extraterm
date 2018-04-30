@@ -4,6 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import _ = require('lodash');
+import * as fse from 'fs-extra';
+import * as constants from 'constants';
+import * as path from 'path';
 
 import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
 import {ProxySessionEditorUi} from './ProxySessionEditorUi';
@@ -71,7 +74,92 @@ export function activate(context: ExtensionContext): any {
         shell: this._ui.shell,
         cygwinPath: this._ui.cygwinPath
       };
+      this._checkPaths();
       this.updateSessionConfiguration(changes);
+    }
+
+    _checkPaths(): void {
+      const cygwinPath = this._ui.cygwinPath;
+      this._checkDirectoryPath(cygwinPath).then(resultMsg => {
+        if (cygwinPath === this._ui.cygwinPath) {
+          this._ui.cygwinPathErrorMsg = resultMsg;
+        }
+      });
+
+      if ( ! this._ui.useDefaultShell && this._ui.shell !== "") {
+        const shell = this._ui.shell;
+        this._checkShellPath(cygwinPath, shell).then(resultMsg => {
+          if (shell === this._ui.shell && cygwinPath === this._ui.cygwinPath) {
+            this._ui.shellErrorMsg = resultMsg;
+          }
+        });
+      } else {
+        this._ui.shellErrorMsg = "";
+      }
+    }
+
+    async _checkDirectoryPath(dirPath: string): Promise<string> {
+      try {
+        const metadata = await fse.stat(dirPath);
+        if ( ! metadata.isDirectory()) {
+          return "Path isn't a directory";
+        }
+
+        await fse.access(dirPath, fse.constants.R_OK);
+      } catch(err) {
+        if (err.code === "ENOENT") {
+          return "Path doesn't exist";
+        }
+        if (err.code === "EACCES") {
+          return "Path isn't accessible";
+        }
+        return "errno: " +  err.errno + ", err.code: " + err.code;
+      }
+      return "";
+    }
+
+    async _checkShellPath(cygwinPath: string, shell: string): Promise<string> {
+
+      const windowsFullPath = path.join(cygwinPath, shell.replace("/", "\\")) + ".exe";
+
+      const errorMsg = await this._checkSingleShellPath(windowsFullPath);
+      if (errorMsg === "") {
+        return "";
+      }
+
+      // Check alternate shell path.
+      // Cygwin treats /usr/bin and /bin as being the same thing.
+      let altShell = "";
+      if (shell.startsWith("/usr/bin/")) {
+        altShell = shell.substr(4); // /bin version.
+      } else if(shell.startsWith("/bin/")) {
+        altShell = "/usr" + shell;
+      } else {
+        return errorMsg;
+      }
+
+      const altWindowsFullPath = path.join(cygwinPath, altShell.replace("/", "\\")) + ".exe";
+
+      return this._checkSingleShellPath(altWindowsFullPath);
+    }
+
+    async _checkSingleShellPath(shellPath: string): Promise<string> {
+      try {
+        const metadata = await fse.stat(shellPath);
+        if ( ! metadata.isFile()) {
+          return "Path isn't a file";
+        }
+        await fse.access(shellPath, fse.constants.X_OK);
+      } catch(err) {
+        if (err.code === "ENOENT") {
+          return "Path doesn't exist";
+        }
+        if (err.code === "EACCES") {
+          return "Path isn't executable";
+        }
+        return "errno: " +  err.errno + ", err.code: " + err.code;
+      }
+      return "";
     }
   }
 
