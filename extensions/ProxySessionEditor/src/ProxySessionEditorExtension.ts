@@ -24,26 +24,20 @@ export function activate(context: ExtensionContext): any {
   
   class ProxySessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
     private _ui: ProxySessionEditorUi = null;
+    private _debouncedDataChanged: ()=> void = null;
 
     created(): void {
       super.created();
 
+      this._debouncedDataChanged = _.debounce(this._dataChanged.bind(this), 500);
+
       this._ui = new ProxySessionEditorUi();
       const component = this._ui.$mount();
-      this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
+      this._ui.$watch('$data', this._debouncedDataChanged.bind(this), { deep: true, immediate: false } );
 
       const config = <ProxySessionConfiguration> this.getSessionConfiguration();
-      if (config.name == null) {
-        this._loadConfig({
-          uuid: config.uuid,
-          name: "Cygwin",
-          useDefaultShell: true,
-          shell: "",
-          cygwinPath: ""
-        });
-      }
-
       this._loadConfig(config);
+
       this.getContainerElement().appendChild(component.$el);
     }
 
@@ -53,10 +47,21 @@ export function activate(context: ExtensionContext): any {
     }
 
     _loadConfig(config: ProxySessionConfiguration): void {
-      this._ui.name = config.name;
-      this._ui.useDefaultShell = config.useDefaultShell ? 1 :0;
-      this._ui.shell = config.shell;
-      this._ui.cygwinPath = config.cygwinPath;
+      let fixedConfig = config;
+      if (config.shell == null) {
+        fixedConfig = {
+          uuid: config.uuid,
+          name: "Cygwin",
+          useDefaultShell: true,
+          shell: "",
+          cygwinPath: ""          
+        };
+      }
+
+      this._ui.name = fixedConfig.name;
+      this._ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
+      this._ui.shell = fixedConfig.shell;
+      this._ui.cygwinPath = fixedConfig.cygwinPath;
     }
 
     _dataChanged(): void {

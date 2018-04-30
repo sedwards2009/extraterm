@@ -30,11 +30,11 @@ export function activate(context: ExtensionContext): any {
     created(): void {
       super.created();
 
-      this._debouncedDataChanged = _.debounce(this._realDataChanged.bind(this), 500);
+      this._debouncedDataChanged = _.debounce(this._dataChanged.bind(this), 500);
 
       this._ui = new UnixSessionEditorUi();
       const component = this._ui.$mount();
-      this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
+      this._ui.$watch('$data', this._debouncedDataChanged.bind(this), { deep: true, immediate: false } );
 
       const config = <UnixSessionConfiguration> this.getSessionConfiguration();
       this._loadConfig(config);
@@ -64,10 +64,6 @@ export function activate(context: ExtensionContext): any {
     }
 
     _dataChanged(): void {
-      this._debouncedDataChanged();
-    }
-
-    _realDataChanged(): void {
       const changes = {
         name: this._ui.name,
         useDefaultShell: this._ui.useDefaultShell === 1,
