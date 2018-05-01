@@ -377,10 +377,21 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
       ];
       this._insertCommandKeyBindings(commandList);
 
+      for (const entry of commandList) {
+        if (entry.commandArguments == null) {
+          entry.commandArguments = {};
+        }
+        entry.commandArguments["tabElement"] = emptyPaneMenu;
+      }
+
       emptyPaneMenu.setEntries(commandList);
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
         emptyPaneMenu.setFilter("");
-        this.executeCommand(ev.detail.selected, {tabElement: emptyPaneMenu});
+        for (const entry of commandList) {
+          if (entry.id === ev.detail.selected) {
+            this.executeCommand(ev.detail.selected, entry.commandArguments);
+          }
+        }
       });
       return emptyPaneMenu;
     });
