@@ -1164,7 +1164,12 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
         break;
 
       case COMMAND_NEW_TERMINAL:
-        this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement), (<any>options).sessionUuid));
+        let sessionUuid = (<any>options).sessionUuid;
+        if (sessionUuid == null) {
+          sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
+        }
+
+        this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement), sessionUuid));
         break;
         
       case COMMAND_CLOSE_TAB:
