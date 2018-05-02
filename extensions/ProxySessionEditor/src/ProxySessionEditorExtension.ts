@@ -83,7 +83,7 @@ export function activate(context: ExtensionContext): any {
 
     _checkPaths(): void {
       const cygwinPath = this._ui.cygwinPath;
-      this._checkDirectoryPath(cygwinPath).then(resultMsg => {
+      this._checkCygwinPath(cygwinPath).then(resultMsg => {
         if (cygwinPath === this._ui.cygwinPath) {
           this._ui.cygwinPathErrorMsg = resultMsg;
         }
@@ -101,7 +101,7 @@ export function activate(context: ExtensionContext): any {
       }
     }
 
-    async _checkDirectoryPath(dirPath: string): Promise<string> {
+    async _checkCygwinPath(dirPath: string): Promise<string> {
       try {
         const metadata = await fse.stat(dirPath);
         if ( ! metadata.isDirectory()) {
@@ -109,6 +109,18 @@ export function activate(context: ExtensionContext): any {
         }
 
         await fse.access(dirPath, fse.constants.R_OK);
+
+        const binDir = path.join(dirPath, 'bin');
+        if (await fse.exists(binDir)) {
+          const pythonRegexp = /^python3.*m\.exe$/;
+          const binContents = await fse.readdir(binDir);
+          const pythons = binContents.filter( name => pythonRegexp.test(name) );
+          if (pythons.length === 0) {
+            return "Couldn't find a suitable Python executable under this path";
+          }
+        } else {
+          return "Couldn't find a suitable Python executable under this path";
+        }
       } catch(err) {
         if (err.code === "ENOENT") {
           return "Path doesn't exist";
