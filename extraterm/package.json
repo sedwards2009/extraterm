@@ -43,7 +43,6 @@
   },
   "devDependencies": {
     "@types/commander": "2.3.31",
-    "@types/electron": "1.4.32",
     "@types/file-type": "^5.2.1",
     "@types/he": "0.5.29",
     "@types/lodash": "^4.0.0",
@@ -55,7 +54,7 @@
     "@types/source-map-support": "0.2.28",
     "@types/utf8": "2.1.5",
     "cajon": "0.2.10",
-    "electron": "1.6.8",
+    "electron": "1.6.17",
     "extraterm-extension-api": "0.1.0",
     "finalhandler": "0.4.0",
     "modclean": "2.1.0",

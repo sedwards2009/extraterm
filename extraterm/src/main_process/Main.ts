@@ -190,7 +190,7 @@ function openWindow(): void {
   const themeInfo = themeManager.getTheme(generalConfig.themeGUI);
 
   // Create the browser window.
-  const options = <Electron.BrowserWindowOptions> {
+  const options = <Electron.BrowserWindowConstructorOptions> {
     width: 1200,
     height: 600,
     "webPreferences": {
@@ -769,7 +769,7 @@ function setupIpc(): void {
   ipc.on(Messages.CHANNEL_NAME, handleIpc);
 }
 
-function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
+function handleIpc(event: Electron.Event, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
   
