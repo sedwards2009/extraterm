@@ -2,7 +2,7 @@ Updating the Electron version
 -----------------------------
 The Electron version used by Extraterm can be tricky to update due to the native modules which Extraterm depends on. Binary modules for Node often don't work directly on the matching version of Electron due to differences in the version of V8 used in both.  Yes, this is still a problem even when Node and the version of Node inside Electron are meant to be the same.
 
-Copies of the native modules for each of the supported platforms are kept in git inside `src/build_scripts` directory. This makes it possible and easy to produce packaged versions for release for all platforms using one command. But it does mean that they have to be updated at the same time as Electron is updated.
+Copies of the native modules for each of the supported platforms are kept in git inside `build_scripts` directory. This makes it possible and easy to produce packaged versions for release for all platforms using one command. But it does mean that they have to be updated at the same time as Electron is updated.
 
 The major steps that need to be done are detailed here below:
 
@@ -10,18 +10,21 @@ The major steps that need to be done are detailed here below:
 Updating Electron itself
 ------------------------
 
-* Install the version of node which matches the version used by the version of Electron you are moving to. `node -v` should show the new version number.
+* Install the version of node which matches the version used by the version of Electron you are moving to. `node -v` should show the new version number. Note that you may have to reinstall any globally installed node based utilities such as `yarn` and `wsrun`.
 * Bump the version of Electron in `package.json`. Consider bumping the version of `electron-rebuild` and `electron-packager` too.
+* Update the version specified for electron in the "electron-rebuild" script in `package.json`.
 * Delete the `node_modules` directory.
-* `npm install`
-* (Linux, OSX) `node node_modules/electron-rebuild/lib/cli.js -s -f -v 1.6.6 -t prod,optional,dev` -- This rebuilds any native module against the new Electron version and makes it ready for local development. Note the Electron version i nthe `-v` option!
-* (Windows) `src\build_scripts\rebuild_mods_windows.bat` -- This is the same as above, but for Windows.
+* `yarn install`
+* (Linux, OSX) `yarn run electron-rebuild` -- This rebuilds any native module against the new Electron version and makes it ready for local development. Note the Electron version i nthe `-v` option!
+* (Windows) `build_scripts\rebuild_mods_windows.bat` -- This is the same as above, but for Windows.
 * Commit the changed `package.json` to git.
 
 
 Updating the node-sass modules
 ------------------------------
-[node-sass](https://github.com/sass/node-sass/]) doesn't offically support Electron, so we have to trick it a bit and rebuild its native module ourselves. This have to be done on every platform Extraterm supports.
+[node-sass](https://github.com/sass/node-sass/]) doesn't offically support Electron, and quite often we have to trick it a bit and rebuild its native module ourselves. If the V8 module version of Electron matches its Node version's V8 module version, then this procedure can be skipped(!) It depends on whether you get modules version errors from node-sass when starting up Extraterm.
+
+Rebuilding node-sass has to be done on every platform Extraterm supports.
 
 Do this first:
 
@@ -53,11 +56,11 @@ Once this procedure has been done on all platforms, you can remove the old node-
 For more background info see https://github.com/sass/node-sass/issues/1682
 
 
-Updating the native modules in `src/build_scripts`
+Updating the native modules in `build_scripts`
 --------------------------------------------------
 This has to be done on each of the supported platforms.
 
-* `cd src/build_scripts`
+* `cd build_scripts`
 * `git rm -r node_modules-linux-x64`  -- remove the module directory which matches your platform.
 * `node create_native_modules_dir.js`
 * `git add node_modules-linux-x64`

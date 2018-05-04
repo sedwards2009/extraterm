@@ -10,20 +10,22 @@ import * as _ from 'lodash';
 
 import * as SourceDir from '../SourceDir';
 
-const PATCH_MODULE_VERSION = "53";  // This version number also appears in build_package.js
-const previousSASS_BINARY_PATH = process.env.SASS_BINARY_PATH;
-if (process.versions.modules === PATCH_MODULE_VERSION) {
-  // Patch in our special node-sass binary for the V8 module version used by Electron.
-  process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
-    `../resources/node-sass-binary/${process.platform}-${process.arch}-${PATCH_MODULE_VERSION}/binding.node`);
-}
+// This code below is needed when the modules version of Electron's V8 is different than Node's V8 module version.
+
+// const PATCH_MODULE_VERSION = "53";  // This version number also appears in build_package.js
+// const previousSASS_BINARY_PATH = process.env.SASS_BINARY_PATH;
+// if (process.versions.modules === PATCH_MODULE_VERSION) {
+//   // Patch in our special node-sass binary for the V8 module version used by Electron.
+//   process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
+//     `../resources/node-sass-binary/${process.platform}-${process.arch}-${PATCH_MODULE_VERSION}/binding.node`);
+// }
 import * as NodeSass from 'node-sass';
 
-if (previousSASS_BINARY_PATH === undefined) {
-  delete process.env.SASS_BINARY_PATH;
-} else {
-  process.env.SASS_BINARY_PATH = previousSASS_BINARY_PATH;
-}
+// if (previousSASS_BINARY_PATH === undefined) {
+//   delete process.env.SASS_BINARY_PATH;
+// } else {
+//   process.env.SASS_BINARY_PATH = previousSASS_BINARY_PATH;
+// }
 
 
 import {Logger, getLogger} from '../logging/Logger';

@@ -6,7 +6,7 @@
 const shelljs = require('shelljs');
 const fs = require('fs');
 
-const MODULE_LIST = ['font-manager', 'electron', 'electron-rebuild'];
+const MODULE_LIST = ['font-manager', 'electron', 'electron-rebuild', "node-pty", "node-sass"];
 
 // This is mostly to keep the linter happy.
 const test = shelljs.test;
@@ -57,9 +57,6 @@ Exiting.
   const packageData = JSON.parse(packageJson);
 
   const pkgList = [...MODULE_LIST];
-  if (process.platform !== 'win32') {
-    pkgList.push('ptyw.js');
-  }
 
   // Set up the build dir
   const BUILD_DIR = 'build_native';

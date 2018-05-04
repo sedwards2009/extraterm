@@ -12,7 +12,7 @@
   "scripts": {
     "run": "electron extraterm/src/main_process/Main.js --dev-tools",
     "build": "wsrun build --exclude-missing --stages",
-    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty,font-manager -f -v 1.6.8",
+    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty,font-manager -f -v 2.0.0",
     "package": "node build_scripts/build_packages.js"
   },
   "jshintConfig": {
@@ -20,7 +20,8 @@
   },
   "resolutions": {
     "@types/node": "7.0.52",
-    "typescript": "2.8.3"
+    "typescript": "2.8.3",
+    "node-abi": "2.4.0"    
   },
   "private": true,
   "workspaces": [
@@ -31,14 +32,15 @@
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
     "font-manager": "0.2.2",
-    "electron-rebuild": "1.7.2"
+    "electron-rebuild": "1.7.3",
+    "node-abi": "2.4.0"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "optionalDependencies": {
     "node-pty": "0.7.4"
   },
   "devDependencies": {
-    "electron": "1.6.17",
+    "electron": "2.0.0",
     "electron-packager": "11.1.0",
     "git-repo-info": "^1.4.1",
     "wsrun": "^3.0.0"
