@@ -2805,13 +2805,13 @@ mz@^2.6.0:
     object-assign "^4.0.1"
     thenify-all "^1.0.0"
 
-nan@2.3.5:
-  version "2.3.5"
-  resolved "https://registry.yarnpkg.com/nan/-/nan-2.3.5.tgz#822a0dc266290ce4cd3a12282ca3e7e364668a08"
-
 nan@^2.1.0, nan@^2.3.0, nan@^2.3.2:
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.9.2.tgz#f564d75f5f8f36a6d9456cca7a6c4fe488ab7866"
+
+nan@^2.6.2:
+  version "2.10.0"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.10.0.tgz#96d0cd610ebd58d4b4de9cc0c6828cda99c7548f"
 
 nan@~2.2.0:
   version "2.2.1"
@@ -2898,6 +2898,12 @@ node-pre-gyp@^0.6.39:
     semver "^5.3.0"
     tar "^2.2.1"
     tar-pack "^3.4.0"
+
+node-pty@0.7.4:
+  version "0.7.4"
+  resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-0.7.4.tgz#07146b2b40b76e432e57ce6750bda40f0da5c99f"
+  dependencies:
+    nan "^2.6.2"
 
 node-sass@4.5.3:
   version "4.5.3"
@@ -3384,13 +3390,6 @@ pruner@^0.0.7:
 pseudomap@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/pseudomap/-/pseudomap-1.0.2.tgz#f052a28da70e618917ef0a8ac34c1ae5a68286b3"
-
-ptyw.js@0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/ptyw.js/-/ptyw.js-0.4.0.tgz#a9aebbbfc08cb19ebdfa942ff333a4060a18c0b0"
-  dependencies:
-    extend "~3.0.0"
-    nan "2.3.5"
 
 public-encrypt@^4.0.0:
   version "4.0.0"

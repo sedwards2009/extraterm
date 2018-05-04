@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "build-icons": "node resources/extra_icons/build.js",
-    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o ptyw.js,font-manager -f -v 1.6.8",
+    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty,font-manager -f -v 1.6.8",
     "testpackagefileparser": "yarn run build && nodeunit src/main_process/extension/PackageFileParserTest.js",
     "testextensionloader": "yarn run build && nodeunit src/render_process/extension/ExtensionLoaderTest.js",
     "testkeybindingsmanager": "yarn run build && nodeunit src/render_process/keybindings/KeyBindingManagersTest.js",
@@ -37,9 +37,6 @@
     "utf8": "2.1.2",
     "vue": "2.5.9",
     "vue-class-component": "6.1.0"
-  },
-  "optionalDependencies": {
-    "ptyw.js": "0.4.0"
   },
   "devDependencies": {
     "@types/commander": "2.3.31",
