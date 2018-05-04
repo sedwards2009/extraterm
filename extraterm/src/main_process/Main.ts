@@ -983,14 +983,14 @@ function setupPtyManager(): boolean {
     ptyManager.onPtyAvailableWriteBufferSizeChange(event => {
       const senderId = ptyToSenderMap.get(event.ptyId);
       const sender = webContents.fromId(senderId);
-      if (sender == null && ! sender.isDestroyed()) {
+      if (sender != null && ! sender.isDestroyed()) {
         const msg: Messages.PtyInputBufferSizeChange = {
           type: Messages.MessageType.PTY_INPUT_BUFFER_SIZE_CHANGE,
           id: event.ptyId,
           totalBufferSize: event.bufferSizeChange.totalBufferSize,
           availableDelta:event.bufferSizeChange.availableDelta
         };
-        sender.send(Messages.CHANNEL_NAME, msg);  
+        sender.send(Messages.CHANNEL_NAME, msg);
       }
     });
 
