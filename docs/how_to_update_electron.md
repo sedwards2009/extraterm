@@ -40,14 +40,14 @@ Outside the Extraterm source tree, find some space and do:
 
 * `git clone --recursive https://github.com/sass/node-sass.git`
 * `cd node-sass`
-* `git checkout v4.1.0` -- this should match the desired version of node-sass
+* `git checkout v4.9.0` -- this should match the desired version of node-sass
 * `git submodule update --init --recursive`
 * `npm install`
-* `./node_modules/node-gyp/bin/node-gyp.js rebuild --target=1.6.6 --arch=x64 --dist-url=https://atom.io/download/atom-shell --verbose --libsass_ext= --libsass_cflags= --libsass_ldflags= --libsass_library=` -- target should match the new Electron version!
+* `./node_modules/node-gyp/bin/node-gyp.js rebuild --target=2.0.0 --arch=x64 --dist-url=https://atom.io/download/atom-shell --verbose --libsass_ext= --libsass_cflags= --libsass_ldflags= --libsass_library=` -- target should match the new Electron version!
 
 Now that it has been built it needs to be moved to the right location in the source tree.
 
-* Create a directory in Extraterm's `src/node-sass-binary` to match the new platform and node module version. e.g. `linux-x64-50`, 50 is the module version in this example. This is where the native module will go.
+* Create a directory in Extraterm's `extraterm/resources/node-sass-binary` to match the new platform and node module version. e.g. `linux-x64-57`, 57 is the module version in this example. This is where the native module will go.
 * Copy from node-sass `build/Release/binding.node` to the new directory in Extraterm's source.
 * Commit the module to git.
 
