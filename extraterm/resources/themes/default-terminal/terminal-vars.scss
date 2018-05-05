@@ -7,6 +7,6 @@
 @import "terminal-computed-colors";
 
 body {
-  --terminal-background-color: $terminal-background-color;
-  --terminal-foreground-color: $terminal-foreground-color;
+  --terminal-background-color: #{$terminal-background-color};
+  --terminal-foreground-color: #{$terminal-foreground-color};
 }
