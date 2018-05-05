@@ -6,7 +6,7 @@
 const shelljs = require('shelljs');
 const fs = require('fs');
 
-const MODULE_LIST = ["font-manager", "node-pty-prebuilt"];
+const MODULE_LIST = ["electron", "electron-rebuild", "font-manager", "node-pty-prebuilt"];
 
 // This is mostly to keep the linter happy.
 const test = shelljs.test;
@@ -88,6 +88,18 @@ Exiting.
   pkgList.forEach( (pkg) => {    
     exec("npm install --save " + pkg + "@" + getPackageVersion(packageDatas, pkg));
   });
+
+  if (process.platform === 'win32') {
+    exec("npm config set msvs_version 2015");
+    exec(path.join(__dirname, "rebuild_mods_windows.bat"));
+  } else {
+    exec("node node_modules/electron-rebuild/lib/cli.js -s -f -v " + getPackageVersion(packageData, "electron") +
+      " -t prod,optional,dev");
+  }
+
+  exec("npm uninstall electron-rebuild");
+  exec("npm uninstall electron");
+  exec("npm prune");
 
   const not_binary = find('.').filter(file => ! file.match(/\.node$/));
   rm(not_binary);
