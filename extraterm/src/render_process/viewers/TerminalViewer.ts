@@ -1079,6 +1079,19 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
 
   private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
+    if (this._keyBindingManager == null || this._keyBindingManager.getKeyBindingsContexts() == null) {
+      return;
+    }
+
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
+    if (keyBindings !== null) {
+      const command = keyBindings.mapEventToCommand(ev);
+      if (command != null) {
+        ev.stopPropagation();
+        return;
+      }
+    }
+
     if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
       ev.stopPropagation();
       if (this._emulator !== null) {

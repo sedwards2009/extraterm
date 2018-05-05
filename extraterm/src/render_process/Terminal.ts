@@ -296,6 +296,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
       scrollContainer.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
       scrollArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
+      scrollArea.addEventListener("keypress", (ev) => this._handleKeyPressCapture(ev), true);
 
       scrollArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
       scrollArea.addEventListener(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
@@ -1339,7 +1340,24 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       ev.preventDefault();
     }
   }
-  
+
+  private _handleKeyPressCapture(ev :KeyboardEvent): void {
+    if (this._terminalViewer === null || this._keyBindingManager === null ||
+        this._keyBindingManager.getKeyBindingsContexts() === null) {
+      return;
+    }
+    
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(this._mode === Mode.DEFAULT
+        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
+    const command = keyBindings.mapEventToCommand(ev);
+    if (command != null) {
+      // We merely have to detech the key press as belonging to one of our shortcuts and then prevent
+      // it from reaching the layers below such as the terminal viewer and term emulation.
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
+  }
+
   private _handleContextMenu(): void {
     if (this._terminalViewer !== null) {
       this._terminalViewer.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);

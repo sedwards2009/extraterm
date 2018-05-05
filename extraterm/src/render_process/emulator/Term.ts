@@ -2398,7 +2398,7 @@ export class Emulator implements EmulatorApi {
 
   keyPress(ev: KeyboardEvent): boolean {
     const key = ev.key;
-    if (!key || key.length !== 1 || ev.ctrlKey || ev.altKey || ev.metaKey) {
+    if ( ! key || key.length !== 1) {
       return false;
     }
 
