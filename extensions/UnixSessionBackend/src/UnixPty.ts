@@ -5,7 +5,7 @@
  */
 import {EventEmitter} from 'extraterm-event-emitter';
 import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from 'extraterm-extension-api';
-import * as pty from 'node-pty';
+import * as pty from 'node-pty-prebuilt';
 import * as _ from 'lodash';
 
 
