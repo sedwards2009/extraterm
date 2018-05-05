@@ -6,7 +6,7 @@
 const shelljs = require('shelljs');
 const fs = require('fs');
 
-const MODULE_LIST = ["font-manager", "node-sass", "node-pty"];
+const MODULE_LIST = ["font-manager", "node-pty-prebuilt"];
 
 // This is mostly to keep the linter happy.
 const test = shelljs.test;
