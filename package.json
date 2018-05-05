@@ -12,7 +12,7 @@
   "scripts": {
     "run": "electron extraterm/src/main_process/Main.js --dev-tools",
     "build": "wsrun build --exclude-missing --stages",
-    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty,font-manager -f -v 2.0.0",
+    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty-prebuilt,font-manager -f -v 2.0.0",
     "package": "node build_scripts/build_packages.js"
   },
   "jshintConfig": {
@@ -37,7 +37,7 @@
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "optionalDependencies": {
-    "node-pty": "0.7.4"
+    "node-pty-prebuilt": "0.7.3"
   },
   "devDependencies": {
     "electron": "2.0.0",
