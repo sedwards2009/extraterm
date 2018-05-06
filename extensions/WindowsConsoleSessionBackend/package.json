@@ -1,0 +1,33 @@
+{
+  "name": "windows-console-session-backend",
+  "description": "Windows Console Session Backend",
+  "version": "1.0.0",
+  "main": "src/WindowsConsoleSessionBackendExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "lodash": "^4.0.0",
+    "extraterm-event-emitter": "1.0.0",
+    "node-pty-prebuilt": "0.7.3"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.0.0",
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "2.8.3"
+  },
+  "includePlatform": [
+    {
+      "os": "win32"
+    }
+  ],
+  "contributions": {
+    "sessionBackend": [
+      {
+        "name": "Windows Console",
+        "type": "windows-console"
+      }
+    ]
+  }
+}

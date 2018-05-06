@@ -1,0 +1,37 @@
+{
+  "name": "windows-console-session-editor",
+  "description": "Windows Console Session Editor",
+  "version": "1.0.0",
+  "main": "src/WindowsConsoleSessionEditorExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "fs-extra": "^5.0.0",
+    "lodash": "^4.0.0",
+    "vue": "2.5.9",
+    "vue-class-component": "6.1.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^5.0.2",
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "2.8.3"
+  },
+  "includePlatform": [
+    {
+      "os": "win32"
+    }
+  ],
+  "contributions": {
+    "sessionEditor": [
+      {
+        "name": "Windows Console",
+        "type": "windows-console",
+        "css": {
+          "fontAwesome": true
+        }
+      }
+    ]
+  }
+}
