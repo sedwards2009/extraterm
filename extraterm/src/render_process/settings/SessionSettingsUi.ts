@@ -19,7 +19,8 @@ import { ExtensionManager } from '../extension/InternalTypes';
   <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
 
   <div v-for="(item, index) in sessions" key="item.uuid" class="session-configuration card">
-    <h3>{{ item.name }}</h3>
+    <h3 class="session-name">{{ item.name }}</h3>
+    <div class="session-type">{{getSessionTypeName(item.type)}}</div>
 
     <div class="session-card-buttons">
       <button v-if="index != 0" class="make-default-button" v-on:click="makeDefault(item.uuid)" title="Make default"><i class="fas fa-angle-double-up"></i></button>
@@ -35,9 +36,11 @@ import { ExtensionManager } from '../extension/InternalTypes';
     </div>
   </div>
 
-  <div v-for="item in sessionTypes" key="item.uuid">
-    <button class="btn btn-default" v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
-  </div>
+  <ul class="list-inline">
+    <li v-for="item in sessionTypes" key="item.uuid">
+      <button class="btn btn-default" v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
+    </li>
+  </ul>
 </div>
 `
 })
@@ -106,5 +109,18 @@ export class SessionSettingsUi extends Vue {
       i++;
     }
     return -1;
+  }
+
+  getSessionTypeName(type: string): string {
+    if (this._extensionManager == null) {
+      return "";
+    }
+
+    for (const sessionType of this._extensionManager.getAllSessionTypes()) {
+      if (sessionType.type === type) {
+        return sessionType.name;
+      }
+    }
+    return "";
   }
 }
