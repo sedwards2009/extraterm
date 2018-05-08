@@ -173,8 +173,8 @@ class BackendImpl implements Backend {
           sessionBackendMetadata: backendMeta,
           sessionBackend: backend
         });
+        return;
       }
-      return;
     }
 
     this._log.warn(`Unable to register session backend '${name}' for extension ` +
