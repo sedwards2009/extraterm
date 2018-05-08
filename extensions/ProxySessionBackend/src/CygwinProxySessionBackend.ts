@@ -11,6 +11,7 @@ import { app } from 'electron';
 
 import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Pty, Terminal, SessionConfiguration, Backend, SessionBackend, EnvironmentMap} from 'extraterm-extension-api';
 
+import * as SourceDir from './SourceDir';
 import { ProxyPtyConnector, PtyOptions } from './ProxyPty';
 
 interface CygwinProxySessionConfiguration extends SessionConfiguration {
@@ -170,8 +171,25 @@ export class CygwinProxySessionBackend implements SessionBackend {
 
   private _getConnector(pythonExe: string): ProxyPtyConnector {
     if ( ! this._connectors.has(pythonExe)) {
-      this._connectors.set(pythonExe, new ProxyPtyConnector(this._log, pythonExe));
+      const connector = new CygwinProxyPtyConnector(this._log, pythonExe);
+      connector.start();
+      this._connectors.set(pythonExe, connector);
     }
     return this._connectors.get(pythonExe);
+  }
+}
+
+let _log: Logger = null;
+class CygwinProxyPtyConnector extends ProxyPtyConnector {
+  constructor(logger: Logger, private _pythonExe: string) {
+    super(logger);
+    _log = logger;
+  }
+
+  protected _spawnServer(): child_process.ChildProcess {
+    let serverEnv = _.clone(process.env);
+    serverEnv["PYTHONIOENCODING"] = "utf-8:ignore";
+_log.debug(`this._pythonExe: ${this._pythonExe}`);
+    return child_process.spawn(this._pythonExe, [path.join(SourceDir.path, "python/ptyserver2.py")], {env: serverEnv});
   }
 }

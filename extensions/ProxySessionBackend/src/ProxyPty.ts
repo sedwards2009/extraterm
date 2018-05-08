@@ -8,7 +8,6 @@ import * as child_process from 'child_process';
 import {Event, BufferSizeChange, Pty, Logger} from 'extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 import * as fs from 'fs';
-import * as _ from 'lodash';
 import * as path from 'path';
 
 import * as SourceDir from './SourceDir';
@@ -187,15 +186,16 @@ class ProxyPty implements Pty {
   }
 }
 
-export class ProxyPtyConnector {
+export abstract class ProxyPtyConnector {
   private _ptys: ProxyPty[] = [];
   private _messageBuffer = "";
   private _proxy: child_process.ChildProcess = null;
 
-  constructor(private _log: Logger, pythonExe: string) {
-    const serverEnv = _.clone(process.env);
-    serverEnv["PYTHONIOENCODING"] = "utf-8:ignore";
-    this._proxy = child_process.spawn(pythonExe, [path.join(SourceDir.path, "python/ptyserver2.py")], {env: serverEnv});
+  constructor(private _log: Logger) {
+  }
+
+  start(): void {
+    this._proxy = this._spawnServer();
 
     this._proxy.stdout.on('data', (data: Buffer) => {
       if (DEBUG_FINE) {
@@ -217,14 +217,16 @@ export class ProxyPtyConnector {
     
     this._proxy.on('exit', code => {
       if (DEBUG_FINE) {
-        _log.debug('bridge process exited with code: ', code);
+        this._log.debug('bridge process exited with code: ', code);
       }
     });
     
     this._proxy.on('error', (err) => {
-      _log.severe("Failed to start process " + pythonExe + ". ", err);
+      this._log.severe("Failed to start server process. ", err);
     });
   }
+
+  protected abstract _spawnServer(): child_process.ChildProcess;
 
   spawn(options: PtyOptions): Pty {
     let rows = 24;
