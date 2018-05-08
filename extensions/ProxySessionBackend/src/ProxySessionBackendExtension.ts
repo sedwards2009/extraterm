@@ -9,5 +9,5 @@ import { WslProxyBackend } from './WslProxyBackend';
 
 export function activate(context: ExtensionContext): any {
   context.backend.registerSessionBackend("Cygwin", new CygwinProxyBackend(context.logger));
-  context.backend.registerSessionBackend("WSL", new WslProxyBackend(context.logger));
+  context.backend.registerSessionBackend("Windows Subsystem for Linux", new WslProxyBackend(context.logger));
 }
