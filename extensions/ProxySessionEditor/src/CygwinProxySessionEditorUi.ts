@@ -42,7 +42,7 @@ import Vue from 'vue';
   </div>
 </div>`
 })
-export class ProxySessionEditorUi extends Vue {
+export class CygwinProxySessionEditorUi extends Vue {
   name: string = "";
   shell: string = "";
   shellErrorMsg = "";

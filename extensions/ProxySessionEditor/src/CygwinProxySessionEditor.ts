@@ -11,7 +11,7 @@ import * as path from 'path';
 import { app } from 'electron';
 
 import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
-import {ProxySessionEditorUi} from './CygwinProxySessionEditorUi';
+import {CygwinProxySessionEditorUi} from './CygwinProxySessionEditorUi';
 
 
 let log: Logger = null;
@@ -29,7 +29,7 @@ export function getCygwinProxySessionEditorClass(context: ExtensionContext): any
   let cygwinInstallationDir = "";
 
   class ProxySessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
-    private _ui: ProxySessionEditorUi = null;
+    private _ui: CygwinProxySessionEditorUi = null;
     private _debouncedDataChanged: ()=> void = null;
 
     created(): void {
@@ -37,7 +37,7 @@ export function getCygwinProxySessionEditorClass(context: ExtensionContext): any
 
       this._debouncedDataChanged = _.debounce(this._dataChanged.bind(this), 500);
 
-      this._ui = new ProxySessionEditorUi();
+      this._ui = new CygwinProxySessionEditorUi();
       const component = this._ui.$mount();
       this._ui.$watch('$data', this._debouncedDataChanged.bind(this), { deep: true, immediate: false } );
 

@@ -25,7 +25,7 @@ interface PasswdLine {
   shell: string;
 }
 
-export class CygwinProxyBackend implements SessionBackend {
+export class CygwinProxySessionBackend implements SessionBackend {
   
   private _connectors = new Map<string, ProxyPtyConnector>();
 

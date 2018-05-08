@@ -36,7 +36,7 @@ import Vue from 'vue';
 </div>
 `
 })
-export class UnixSessionEditorUi extends Vue {
+export class WslProxySessionEditorUi extends Vue {
   name: string = "";
   shell: string = "";
   useDefaultShell: number = 1;

@@ -8,10 +8,10 @@ import * as fse from 'fs-extra';
 import * as constants from 'constants';
 
 import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
-import {UnixSessionEditorUi} from './WslProxySessionEditorUi';
+import {WslProxySessionEditorUi} from './WslProxySessionEditorUi';
 
 
-interface WslSessionConfiguration extends SessionConfiguration {
+interface WslProxySessionConfiguration extends SessionConfiguration {
   useDefaultShell?: boolean;
   shell?: string;
 }
@@ -19,10 +19,10 @@ interface WslSessionConfiguration extends SessionConfiguration {
 export function getWslProxySessionEditorClass(context: ExtensionContext): any {
   const log = context.logger;
   
-  log.info("WslSessionEditorExtension activate");
+  log.info("WslProxySessionEditorExtension activate");
   
   class WslProxySessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
-    private _ui: UnixSessionEditorUi = null;
+    private _ui: WslProxySessionEditorUi = null;
     private _debouncedDataChanged: ()=> void = null;
 
     created(): void {
@@ -30,11 +30,11 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
 
       this._debouncedDataChanged = _.debounce(this._dataChanged.bind(this), 500);
 
-      this._ui = new UnixSessionEditorUi();
+      this._ui = new WslProxySessionEditorUi();
       const component = this._ui.$mount();
       this._ui.$watch('$data', this._debouncedDataChanged.bind(this), { deep: true, immediate: false } );
 
-      const config = <WslSessionConfiguration> this.getSessionConfiguration();
+      const config = <WslProxySessionConfiguration> this.getSessionConfiguration();
       this._loadConfig(config);
 
       this.getContainerElement().appendChild(component.$el);
@@ -45,7 +45,7 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
       this._loadConfig(config);
     }
 
-    _loadConfig(config: WslSessionConfiguration): void {
+    _loadConfig(config: WslProxySessionConfiguration): void {
       let fixedConfig = config;
       if (config.shell == null) {
         fixedConfig = {

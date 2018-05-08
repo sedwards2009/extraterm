@@ -18,7 +18,7 @@ interface WslProxySessionConfiguration extends SessionConfiguration {
   shell?: string;
 }
 
-export class WslProxyBackend implements SessionBackend {
+export class WslProxySessionBackend implements SessionBackend {
   private _connectors = new Map<string, ProxyPtyConnector>();
 
   constructor(private _log: Logger) {
