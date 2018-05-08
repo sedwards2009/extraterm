@@ -11,7 +11,7 @@ import * as path from 'path';
 import { app } from 'electron';
 
 import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
-import {ProxySessionEditorUi} from './ProxySessionEditorUi';
+import {ProxySessionEditorUi} from './CygwinProxySessionEditorUi';
 
 
 let log: Logger = null;
