@@ -227,7 +227,8 @@ pty_list = []   # List of dicts with structure {id: string, pty: pty, reader: }
 #   argv: string[];
 #   rows: number;
 #   columns: number;
-#   env: {string: string};  // dict
+#   env?: {string: string};  // dict
+#   extraEnv?: {string: string}
 # }
 #
 # Created message (to Extraterm process):
@@ -306,8 +307,12 @@ def process_create_command(cmd):
     # Create a new pty.
     rows = cmd["rows"]
     columns = cmd["columns"]
-    env = cmd["env"]
-    
+    env = cmd.get("env", None)
+    if env is None:
+        env = {key: value for key, value in os.environ.items()}
+
+    env.update(cmd.get("extraEnv", {}))
+
     # Fix up the PATH variable on cygwin.
     if sys.platform == "cygwin":
         if "Path" in env and "PATH" not in env:
