@@ -20,22 +20,44 @@ interface WslProxySessionConfiguration extends SessionConfiguration {
 }
 
 export class WslProxySessionBackend implements SessionBackend {
-  private _connectors = new Map<string, ProxyPtyConnector>();
+  private _connector: WslProxyPtyConnector = null;
 
   constructor(private _log: Logger) {
   }
   
   defaultSessionConfigurations(): SessionConfiguration[] {
-    // const cygwinSessionConfig: ProxySessionConfiguration = {
-    //   uuid: "",
-    //   name: "Cygwin default shell",
-    //   type: "cygwin",
-    //   useDefaultShell: true,
-    //   shell: "",
-    //   cygwinPath: cygwinDir
-    // };
-    // return [cygwinSessionConfig];
-    return [];
+    if (this._validateExe("wsl.exe")) {
+      const wslSessionConfig: WslProxySessionConfiguration = {
+        uuid: "",
+        name: "WSL",
+        type: "wsl",
+        useDefaultShell: true,
+        shell: ""
+      };
+      return [wslSessionConfig];
+    } else {
+      return [];
+    }
+  }
+
+  private _validateExe(exe: string): boolean {
+    const searchPaths: string[] = process.env.PATH.split(";");
+    for (const p of searchPaths) {
+      const testPath = path.join(p, exe);
+      if (this._validateExePath(testPath)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private _validateExePath(exePath: string): boolean {
+    try {
+      fs.accessSync(exePath, fs.constants.X_OK);
+      return true;
+    } catch(err) {
+      return false;
+    }
   }
   
   createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty {
@@ -63,18 +85,16 @@ export class WslProxySessionBackend implements SessionBackend {
       rows: rows
     };
 
-    const pythonExe = "WSL";  // FIXME
-    const connector = this._getConnector(pythonExe);
+    const connector = this._getConnector();
     return connector.spawn(options);
   }
   
-  private _getConnector(pythonExe: string): ProxyPtyConnector {
-    if ( ! this._connectors.has(pythonExe)) {
-      const connector = new WslProxyPtyConnector(this._log);
-      connector.start();
-      this._connectors.set(pythonExe, connector);
+  private _getConnector(): ProxyPtyConnector {
+    if (this._connector == null) {
+      this._connector = new WslProxyPtyConnector(this._log);
+      this._connector.start();
     }
-    return this._connectors.get(pythonExe);
+    return this._connector;
   }
 }
 
@@ -87,13 +107,10 @@ class WslProxyPtyConnector extends ProxyPtyConnector {
   }
 
   protected _spawnServer(): child_process.ChildProcess {
-    const serverEnv = {};
-    serverEnv["PYTHONIOENCODING"] = "utf-8:ignore";
-
     let serverPath = path.join(SourceDir.path, "python/ptyserver2.py");
     serverPath = "/mnt/" + serverPath.replace(/\\/g, "/").replace("C:", "c");
 
     _log.debug(`serverPath: ${serverPath}`);
-    return child_process.spawn("wsl.exe", ["python3", serverPath], {env: serverEnv});
+    return child_process.spawn("wsl.exe", ["PYTHONIOENCODING=utf-8:ignore", "python3", serverPath], {});
   }
 }
