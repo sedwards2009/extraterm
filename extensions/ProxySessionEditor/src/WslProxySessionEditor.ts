@@ -6,6 +6,7 @@
 import * as _ from 'lodash';
 import * as fse from 'fs-extra';
 import * as constants from 'constants';
+import * as child_process from 'child_process';
 
 import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
 import {WslProxySessionEditorUi} from './WslProxySessionEditorUi';
@@ -16,11 +17,14 @@ interface WslProxySessionConfiguration extends SessionConfiguration {
   shell?: string;
 }
 
+let log: Logger = null;
+
 export function getWslProxySessionEditorClass(context: ExtensionContext): any {
-  const log = context.logger;
+  log = context.logger;
   
   log.info("WslProxySessionEditorExtension activate");
-  
+  readEtcShellsSpawn();
+
   class WslProxySessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
     private _ui: WslProxySessionEditorUi = null;
     private _debouncedDataChanged: ()=> void = null;
@@ -59,6 +63,7 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
       this._ui.name = fixedConfig.name;
       this._ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
       this._ui.shell = fixedConfig.shell;
+      this._ui.etcShells = [...etcShells];
     }
 
     _dataChanged(): void {
@@ -107,4 +112,33 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
   }
 
   return WslProxySessionEditor;
+}
+
+let etcShells: string[] = [];
+
+function readEtcShellsSpawn(): void {
+  // For some reason child_process.exec() doesn't want to work properly on Windows.
+  // spawn still does though, but it is a bit more fiddly to use.
+
+  const wslProcess = child_process.spawn("wsl.exe", ["cat", "/etc/shells"], {shell: false, stdio: 'pipe'});
+
+  let text = "";
+  wslProcess.stdout.on("data", data => {
+    text += data;
+  });
+  wslProcess.on("exit", (msg) => {
+    etcShells = splitEtcShells(text);
+  });
+  wslProcess.stdin.end();
+}
+
+function splitEtcShells(shellText: string): string[] {
+  const lines = shellText.split("\n");
+  const result: string[] = [];
+  for (const line of lines) {
+    if ( ! line.startsWith("#") && line.trim() !== "") {
+      result.push(line);
+    }
+  }
+  return result;
 }

@@ -29,8 +29,11 @@ import Vue from 'vue';
     <div class="input-group col-sm-8 form-inline" v-bind:class="{'has-error': shellErrorMsg != ''}">
       <input class="input-radio" type="radio" value="0" v-model.number="useDefaultShell">
       <div class="inline-text">Other</div>
-      <input id="other_shell" type="text" class="form-control" :disabled="useDefaultShell===1" v-model="shell">
+      <input id="other_shell" type="text" class="form-control" :disabled="useDefaultShell===1" v-model="shell" list="etcShells">
       <div v-if="shellErrorMsg != ''" class="text-center"><i class="fas fa-exclamation-triangle"></i> {{ shellErrorMsg }}</div>
+      <datalist id="etcShells">
+        <option v-for="item in etcShells" :value="item"></option>
+      </datalist>
     </div>
   </div>
 </div>
@@ -41,4 +44,5 @@ export class WslProxySessionEditorUi extends Vue {
   shell: string = "";
   useDefaultShell: number = 1;
   shellErrorMsg = "";
+  etcShells = [];
 }
