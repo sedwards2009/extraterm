@@ -72,42 +72,7 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
         useDefaultShell: this._ui.useDefaultShell === 1,
         shell: this._ui.shell
       };
-      this._checkShellPath();
       this.updateSessionConfiguration(changes);
-    }
-
-    _checkShellPath(): void {
-      if ( ! this._ui.useDefaultShell && this._ui.shell !== "") {
-        const shellPath = this._ui.shell;
-
-        this._checkExecutablePath(shellPath).then(resultMsg => {
-          if (shellPath === this._ui.shell) {
-            this._ui.shellErrorMsg = resultMsg;
-          }
-        });
-      } else {
-        this._ui.shellErrorMsg = "";
-      }
-    }
-
-    async _checkExecutablePath(exePath: string): Promise<string> {
-      try {
-        const metadata = await fse.stat(exePath);
-        if ( ! metadata.isFile()) {
-          return "Path isn't a file";
-        }
-
-        await fse.access(exePath, fse.constants.X_OK);
-      } catch(err) {
-        if (err.errno === -constants.ENOENT) {
-          return "Path doesn't exist";
-        }
-        if (err.errno === -constants.EACCES) {
-          return "Path isn't executable";
-        }
-        return "errno: " +  err.errno + ", err.code: " + err.code;
-      } 
-      return "";
     }
   }
 
