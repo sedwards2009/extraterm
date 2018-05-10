@@ -240,7 +240,7 @@ export class Emulator implements EmulatorApi {
   
   constructor(options: Options) {
     const defaults = {
-      termName: 'xterm',
+      termName: 'xterm-256color',
       geometry: [80, 24],
       debug: false,
       applicationModeCookie: null,

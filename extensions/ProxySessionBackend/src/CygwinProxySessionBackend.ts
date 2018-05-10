@@ -96,7 +96,7 @@ export class CygwinProxySessionBackend implements SessionBackend {
     const args = ["-l"];
     
     const ptyEnv = _.cloneDeep(process.env);
-    ptyEnv["TERM"] = "xterm";
+    ptyEnv["TERM"] = "xterm-256color";
     ptyEnv["HOME"] = homeDir;
 
     let prop: string;
@@ -105,7 +105,6 @@ export class CygwinProxySessionBackend implements SessionBackend {
     }
 
     const options: PtyOptions = {
-      name: "xterm",
       exe: shell,
       args,
       env: ptyEnv,

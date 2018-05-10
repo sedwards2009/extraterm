@@ -74,7 +74,6 @@ class WindowsConsoleBackend implements SessionBackend {
     }
 
     const options: PtyOptions = {
-      name: "xterm",
       exe: exe,
       args,
       env: ptyEnv,

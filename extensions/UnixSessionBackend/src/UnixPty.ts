@@ -14,7 +14,6 @@ const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
 export interface PtyOptions {
   exe?: string;
   args?: string[];
-  name?: string;
   cols?: number;
   rows?: number;
   cwd?: string;

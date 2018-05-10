@@ -19,7 +19,6 @@ export interface EnvironmentMap {
 export interface PtyOptions {
   exe?: string;
   args?: string[];
-  name?: string;
   cols?: number;
   rows?: number;
   cwd?: string;

@@ -68,7 +68,7 @@ export class WslProxySessionBackend implements SessionBackend {
     const args = ["-l"];
     
     const extraPtyEnv = {
-      TERM: "xterm"
+      TERM: "xterm-256color"
     };
 
     for (let prop in extraEnv) {
@@ -76,7 +76,6 @@ export class WslProxySessionBackend implements SessionBackend {
     }
 
     const options: PtyOptions = {
-      name: "xterm",
       exe: shell,
       args,
       env: null,
