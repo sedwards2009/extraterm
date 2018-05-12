@@ -838,7 +838,7 @@ export class Emulator implements EmulatorApi {
     }
     return line;
   }
-  
+
   private scroll(): void {
     // Drop the oldest line into the scrollback buffer.
     if (this.scrollTop === 0) {
@@ -2806,7 +2806,6 @@ export class Emulator implements EmulatorApi {
         this.eraseRight(this.x, this.y);
         j = this.y + 1;
         for (; j < this.rows; j++) {
-          this._getRow(j);
           this.eraseLine(j);
         }
         break;
@@ -2814,7 +2813,6 @@ export class Emulator implements EmulatorApi {
         this.eraseLeft(this.x, this.y);
         j = this.y;
         while (j--) {
-          this._getRow(j);
           this.eraseLine(j);
         }
         break;
