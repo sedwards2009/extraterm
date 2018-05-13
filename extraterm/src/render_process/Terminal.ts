@@ -55,6 +55,7 @@ import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigD
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
+import { DeepReadonlyObject, DeepReadonly } from 'extraterm-readonly-toolbox';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -410,7 +411,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
     pty.onData((text: string): void => {
       this._emulator.write(text);
-      // FIXME flow control.
     });
 
     doLater(() => {
@@ -438,10 +438,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._extensionManager = extensionManager;
   }
 
-  private _isNoFrameCommand(commandLine: string): boolean {
+  private _commandNeedsFrame(commandLine: string): boolean {
     const cleanCommandLine = commandLine.trim();
     if (cleanCommandLine === "") {
-      return true;
+      return false;
     }
     
     const commandParts = cleanCommandLine.split(/\s+/);
@@ -449,27 +449,38 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       return false;
     } else {
     
-      const commandLineActions = this._configManager.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
-      return commandLineActions
-        .filter( cla => ! cla.frame)
-        .some( cla => {
-          if (cla.matchType === 'name') {
-            const matcherParts = cla.match.split(/\s+/);
-            for (let i=0; i < matcherParts.length; i++) {
-              if (i >= commandParts.length) {
-                return false;
-              }
-              if (matcherParts[i] !== commandParts[i]) {
-                return false;
-              }
-            }
-            return true;        
-          } else {
-            // regexp
-            return (new RegExp(cla.match)).test(cleanCommandLine);
-          }
-        } );
+      const commandLineActions: DeepReadonly<CommandLineAction[]> = 
+        this._configManager.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
+      const frameByDefault = this._configManager.getConfig(GENERAL_CONFIG).frameByDefault;
+
+      for (const cla of commandLineActions) {
+        if (this._commandLineActionMatches(commandLine, cla)) {
+          return cla.frame;
+        }
+      }
+      return frameByDefault;
     }
+  }
+
+  private _commandLineActionMatches(command: string, cla: DeepReadonly<CommandLineAction>): boolean {
+    const cleanCommandLine = command.trim();
+    const commandParts = command.trim().split(/\s+/);
+
+    if (cla.matchType === 'name') {
+      const matcherParts = cla.match.split(/\s+/);
+      for (let i=0; i < matcherParts.length; i++) {
+        if (i >= commandParts.length) {
+          return false;
+        }
+        if (matcherParts[i] !== commandParts[i]) {
+          return false;
+        }
+      }
+      return true;        
+    } else {
+      // regexp
+      return (new RegExp(cla.match)).test(cleanCommandLine);
+    }   
   }
 
   /**
@@ -1738,7 +1749,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
     }
     
-    if ( ! this._isNoFrameCommand(cleancommand)) {
+    if (this._commandNeedsFrame(cleancommand)) {
       // Create and set up a new command-frame.
       const el = this._createEmbeddedViewerElement();
 

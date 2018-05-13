@@ -446,6 +446,10 @@ function setupConfig(): void {
     userStoredConfig.showTitleBar = false;
   }
 
+  if (userStoredConfig.frameByDefault !== true && userStoredConfig.frameByDefault !== false) {
+    userStoredConfig.frameByDefault = true;
+  }
+
   const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
   const keyBindingsFiles = scanKeyBindingFiles(keyBindingsDir);
 
@@ -549,6 +553,7 @@ function setConfigDefaults(config: UserStoredConfig): void {
   config.themeSyntax = defaultValue(config.themeSyntax, "default");
   config.themeGUI = defaultValue(config.themeGUI, "atomic-dark-ui");
   config.showTitleBar = defaultValue(config.showTitleBar, false);
+  config.frameByDefault = defaultValue(config.frameByDefault, true);
 
   if (config.commandLineActions === undefined) {
     const defaultCLA: CommandLineAction[] = [

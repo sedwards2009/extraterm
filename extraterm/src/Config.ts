@@ -29,6 +29,8 @@ export interface GeneralConfig {
   showTitleBar?: boolean;
 
   windowConfiguration?: WindowConfiguration;
+
+  frameByDefault?: boolean;
 }
 
 // This is the format of the user config JSON file as stored on the filesystem.
