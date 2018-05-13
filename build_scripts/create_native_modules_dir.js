@@ -93,7 +93,7 @@ Exiting.
     exec("npm config set msvs_version 2015");
     exec(path.join(__dirname, "rebuild_mods_windows.bat"));
   } else {
-    exec("node node_modules/electron-rebuild/lib/cli.js -s -f -v " + getPackageVersion(packageData, "electron") +
+    exec("node node_modules/electron-rebuild/lib/cli.js -s -f -v " + getPackageVersion(packageDatas, "electron") +
       " -t prod,optional,dev");
   }
 
