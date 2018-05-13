@@ -253,7 +253,6 @@ function main() {
   
   makePackage("x64", "win32")
     .then( () => makePackage("x64", "linux"))
-    .then( () => makePackage("ia32", "linux"))
     .then( () => makePackage("x64", "darwin"))
     .then( () => { log("Done"); } );
 }
