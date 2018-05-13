@@ -131,9 +131,6 @@ function main() {
   function pruneSpecificNodeModules() {
     [
       "codemirror/src",
-      "ptyw.js/vendor",
-      "ptyw.js/src",
-      "ptyw.js/node_modules/nan",
       "node-sass/src",
       "node-sass/node_modules/nan",
       "node-gyp",
@@ -188,7 +185,7 @@ function main() {
         packageManager: "yarn",
         afterPrune: [
           (buildPath, electronVersion, platform, arch, callback) => {
-            replaceDirs(path.join(buildPath, "node_modules"), path.join("" + codeDir,`build_scripts/node_modules-${platform}-${arch}`));
+            overlayFiles(path.join(buildPath, "node_modules"), path.join("" + codeDir,`build_scripts/node_modules-${platform}-${arch}`));
             callback();
           }
         ]
@@ -237,18 +234,14 @@ function main() {
     });
   }
   
-  function replaceDirs(targetDir, replacementsDir) {
-    const prevDir = pwd();
-    cd(srcRootDir);
-    const replacements = ls(replacementsDir);
-    replacements.forEach( (rDir) => {
-      const targetSubDir = path.join(targetDir, rDir);
-      if (test('-d', targetSubDir)) {
-        rm('-r', targetSubDir);
+  function overlayFiles(targetDir, overlayDir) {
+    const fileList = ls("-Rl", overlayDir);
+    for (const fileStat of fileList) {
+      if (fileStat.isFile()) {
+        echo(`copying overlay file from ${path.join(overlayDir, fileStat.name)} to ${path.join(targetDir, fileStat.name)}`);
+        cp(path.join(overlayDir, fileStat.name), path.join(targetDir, fileStat.name));
       }
-      cp('-r', path.join(replacementsDir, rDir), targetSubDir);
-    });  
-    cd(prevDir);
+    }
   }
   
   makePackage("x64", "win32")
