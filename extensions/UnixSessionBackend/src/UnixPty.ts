@@ -5,7 +5,7 @@
  */
 import {EventEmitter} from 'extraterm-event-emitter';
 import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from 'extraterm-extension-api';
-import * as pty from 'ptyw.js';
+import * as pty from 'node-pty-prebuilt';
 import * as _ from 'lodash';
 
 
@@ -14,7 +14,6 @@ const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
 export interface PtyOptions {
   exe?: string;
   args?: string[];
-  name?: string;
   cols?: number;
   rows?: number;
   cwd?: string;
@@ -24,7 +23,7 @@ export interface PtyOptions {
 
 export class UnixPty implements Pty {
 
-  private realPty: pty.Terminal;
+  private realPty: pty.IPty;
   private _permittedDataSize = 0; 
   private _paused = true;
   private _onDataEventEmitter = new EventEmitter<string>();
@@ -45,7 +44,7 @@ export class UnixPty implements Pty {
     this.onExit = this._onExitEventEmitter.event;
     this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
 
-    this.realPty = pty.createTerminal(options.exe, options.args, options);
+    this.realPty = pty.spawn(options.exe, options.args, options);
 
     this.realPty.on('data', (data: any): void => {
       this._onDataEventEmitter.fire(data);
@@ -56,7 +55,7 @@ export class UnixPty implements Pty {
       this._onExitEventEmitter.fire(undefined);
     });
 
-    this.realPty.socket.on('drain', () => {
+    this.realPty.on("drain", () => {
       this._onAvailableWriteBufferSizeChangeEventEmitter.fire({
         totalBufferSize: MAXIMUM_WRITE_BUFFER_SIZE,
         availableDelta: this._outstandingWriteDataCount + this._directWrittenDataCount
@@ -77,7 +76,7 @@ export class UnixPty implements Pty {
   }
   
   write(data: string): void {
-    if (this.realPty.write(data)) {
+    if (this.realPty._socket.write(data)) { // FIXME try to avoid using _socket directly. Upgraded node-pty is needed.
       this._directWrittenDataCount += data.length;
       this._emitBufferSizeLater();
     } else {

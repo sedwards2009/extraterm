@@ -53,7 +53,7 @@ class UnixBackend implements SessionBackend {
     const args = process.platform === "darwin" ? ["-l"] : [];
 
     const ptyEnv = _.cloneDeep(process.env);
-    ptyEnv["TERM"] = "xterm";
+    ptyEnv["TERM"] = "xterm-256color";
 
     let prop: string;
     for (prop in extraEnv) {
@@ -61,7 +61,6 @@ class UnixBackend implements SessionBackend {
     }
 
     const options: PtyOptions = {
-      name: "xterm",
       exe: shell,
       args,
       env: ptyEnv,

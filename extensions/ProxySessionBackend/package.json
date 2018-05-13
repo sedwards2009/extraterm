@@ -11,9 +11,9 @@
     "extraterm-event-emitter": "1.0.0"
   },
   "devDependencies": {
-    "@types/electron": "1.4.32",
     "@types/lodash": "^4.0.0",
     "@types/node": "7.0.5",
+    "electron": "2.0.0",
     "extraterm-extension-api": "0.1.0",
     "typescript": "2.8.3"
   },
@@ -27,6 +27,10 @@
       {
         "name": "Cygwin",
         "type": "cygwin"
+      },
+      {
+        "name": "Windows Subsystem for Linux",
+        "type": "wsl"
       }
     ]
   }

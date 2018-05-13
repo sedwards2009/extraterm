@@ -24,7 +24,7 @@
 }
 
 #ID_CONTAINER {
-  --empty-pane-menu-container-width: pxToRem(400px);
+  --empty-pane-menu-container-width: #{pxToRem(400px)};
 
   display: block;
 

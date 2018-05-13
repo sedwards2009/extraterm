@@ -6,7 +6,7 @@
 const shelljs = require('shelljs');
 const fs = require('fs');
 
-const MODULE_LIST = ['font-manager', 'electron', 'electron-rebuild'];
+const MODULE_LIST = ["electron", "electron-rebuild", "font-manager", "node-pty-prebuilt"];
 
 // This is mostly to keep the linter happy.
 const test = shelljs.test;
@@ -17,10 +17,22 @@ const mv = shelljs.mv;
 const rm = shelljs.rm;
 const echo = shelljs.echo;
 const pwd = shelljs.pwd;
+const find = shelljs.find;
 
 const path = require('path');
 
-function getPackageVersion(packageData, pkg) {
+function getPackageVersion(packageDatas, pkg) {
+  for (const data of packageDatas) {
+    const version = getPackageVersionFromJson(data, pkg);
+    if (version != null) {
+      return version;
+    }
+  }
+
+  throw new Error("Unable to find a version specified for module '" + pkg + "'");
+}
+
+function getPackageVersionFromJson(packageData, pkg) {
   if (packageData.dependencies[pkg] !== undefined) {
     return packageData.dependencies[pkg];
   }
@@ -32,8 +44,8 @@ function getPackageVersion(packageData, pkg) {
   if (packageData.devDependencies[pkg] !== undefined) {
     return packageData.devDependencies[pkg];
   }
-  
-  throw new Error("Unable to find a version specified for module '" + pkg + "'");
+
+  return null;
 }
 
 function platformModuleDir() {
@@ -53,13 +65,13 @@ Exiting.
     return;
   }
 
-  const packageJson = fs.readFileSync('../../package.json');
-  const packageData = JSON.parse(packageJson);
+  const packageDatas = [];
+  for (const packageJsonPath of ['../package.json', '../extraterm/package.json', '../extensions/UnixSessionBackend/package.json']) {
+    const packageJson = fs.readFileSync(packageJsonPath);
+    packageDatas.push(JSON.parse(packageJson));
+  }
 
   const pkgList = [...MODULE_LIST];
-  if (process.platform !== 'win32') {
-    pkgList.push('ptyw.js');
-  }
 
   // Set up the build dir
   const BUILD_DIR = 'build_native';
@@ -74,7 +86,7 @@ Exiting.
   exec("npm init -f");
   
   pkgList.forEach( (pkg) => {    
-    exec("npm install --save " + pkg + "@" + getPackageVersion(packageData, pkg));
+    exec("npm install --save " + pkg + "@" + getPackageVersion(packageDatas, pkg));
   });
 
   if (process.platform === 'win32') {
@@ -88,6 +100,9 @@ Exiting.
   exec("npm uninstall electron-rebuild");
   exec("npm uninstall electron");
   exec("npm prune");
+
+  const not_binary = find('.').filter(file => ! file.match(/\.node$/));
+  rm(not_binary);
 
   cd(currentDir);
   mv(path.join(BUILD_DIR, "node_modules"), target);

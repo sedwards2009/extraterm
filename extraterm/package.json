@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "build-icons": "node resources/extra_icons/build.js",
-    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o ptyw.js,font-manager -f -v 1.6.8",
+    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty-prebuilt,font-manager -f -v 1.6.8",
     "testpackagefileparser": "yarn run build && nodeunit src/main_process/extension/PackageFileParserTest.js",
     "testextensionloader": "yarn run build && nodeunit src/render_process/extension/ExtensionLoaderTest.js",
     "testkeybindingsmanager": "yarn run build && nodeunit src/render_process/keybindings/KeyBindingManagersTest.js",
@@ -30,7 +30,7 @@
     "lodash": "^4.0.0",
     "markdown": "0.5.0",
     "mime": "^2.2.0",
-    "node-sass": "4.5.3",
+    "node-sass": "4.9.0",
     "qs": "6.3.1",
     "smart-buffer": "^3.0.3",
     "source-map-support": "^0.3.2",
@@ -38,12 +38,8 @@
     "vue": "2.5.9",
     "vue-class-component": "6.1.0"
   },
-  "optionalDependencies": {
-    "ptyw.js": "0.4.0"
-  },
   "devDependencies": {
     "@types/commander": "2.3.31",
-    "@types/electron": "1.4.32",
     "@types/file-type": "^5.2.1",
     "@types/he": "0.5.29",
     "@types/lodash": "^4.0.0",
@@ -55,14 +51,14 @@
     "@types/source-map-support": "0.2.28",
     "@types/utf8": "2.1.5",
     "cajon": "0.2.10",
-    "electron": "1.6.8",
+    "electron": "2.0.0",
     "extraterm-extension-api": "0.1.0",
     "finalhandler": "0.4.0",
     "modclean": "2.1.0",
     "nodeunit": "0.11.0",
     "performance-now": "2.1.0",
     "serve-static": "1.10.0",
-    "shelljs": "0.7.8",
+    "shelljs": "0.8.1",
     "typedoc": "0.3.12",
     "typescript": "2.8.3",
     "webfont": "^4.0.0"

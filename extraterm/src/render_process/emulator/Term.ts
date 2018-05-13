@@ -240,7 +240,7 @@ export class Emulator implements EmulatorApi {
   
   constructor(options: Options) {
     const defaults = {
-      termName: 'xterm',
+      termName: 'xterm-256color',
       geometry: [80, 24],
       debug: false,
       applicationModeCookie: null,
@@ -838,7 +838,7 @@ export class Emulator implements EmulatorApi {
     }
     return line;
   }
-  
+
   private scroll(): void {
     // Drop the oldest line into the scrollback buffer.
     if (this.scrollTop === 0) {
@@ -2398,7 +2398,7 @@ export class Emulator implements EmulatorApi {
 
   keyPress(ev: KeyboardEvent): boolean {
     const key = ev.key;
-    if (!key || key.length !== 1 || ev.ctrlKey || ev.altKey || ev.metaKey) {
+    if ( ! key || key.length !== 1) {
       return false;
     }
 
@@ -2806,7 +2806,6 @@ export class Emulator implements EmulatorApi {
         this.eraseRight(this.x, this.y);
         j = this.y + 1;
         for (; j < this.rows; j++) {
-          this._getRow(j);
           this.eraseLine(j);
         }
         break;
@@ -2814,7 +2813,6 @@ export class Emulator implements EmulatorApi {
         this.eraseLeft(this.x, this.y);
         j = this.y;
         while (j--) {
-          this._getRow(j);
           this.eraseLine(j);
         }
         break;

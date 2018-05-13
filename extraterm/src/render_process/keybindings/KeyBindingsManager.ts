@@ -165,14 +165,14 @@ export class KeyBindingsMapping {
    *         key binding.
    */
   mapEventToCommand(ev: MinimalKeyboardEvent): string {
-    let key;
+    let key = "";
     if (ev.key.length === 1 && ev.key.charCodeAt(0) <= 31) {
       // Chrome on Windows sends us control codes directly in ev.key.
       // Turn them back into normal characters.
       if (ev.keyCode === 13) {
         key = "Enter";
       } else {
-        key = String.fromCharCode(ev.keyCode);
+        key = String.fromCharCode(ev.keyCode | 0x40);
       }
     } else {
       if (ev.key.charCodeAt(0) === 160) { // nbsp to space on the Mac

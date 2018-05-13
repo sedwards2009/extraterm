@@ -8,10 +8,8 @@
   },
   "dependencies": {
     "lodash": "^4.0.0",
-    "extraterm-event-emitter": "1.0.0"
-  },
-  "optionalDependencies": {
-    "ptyw.js": "0.4.0"
+    "extraterm-event-emitter": "1.0.0",
+    "node-pty-prebuilt": "0.7.3"
   },
   "devDependencies": {
     "@types/lodash": "^4.0.0",

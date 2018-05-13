@@ -18,6 +18,8 @@ interface UnixSessionConfiguration extends SessionConfiguration {
   shell?: string;
 }
 
+let etcShells: string[] = [];
+
 export function activate(context: ExtensionContext): any {
   log = context.logger;
   
@@ -61,6 +63,7 @@ export function activate(context: ExtensionContext): any {
       this._ui.name = fixedConfig.name;
       this._ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
       this._ui.shell = fixedConfig.shell;
+      this._ui.etcShells = etcShells;
     }
 
     _dataChanged(): void {
@@ -109,4 +112,27 @@ export function activate(context: ExtensionContext): any {
   }
 
   context.workspace.registerSessionEditor("unix", UnixSessionEditor);
+  
+  readEtcShells().then(result => {
+    etcShells = result;
+  });
+}
+
+const ETC_SHELLS = "/etc/shells";
+
+async function readEtcShells(): Promise<string[]> {
+  if (await fse.exists(ETC_SHELLS)) {
+    const shellText = await fse.readFile("/etc/shells", "utf-8");
+
+    const lines = shellText.split("\n");
+    const result: string[] = [];
+    for (const line of lines) {
+      if ( ! line.startsWith("#") && line.trim() !== "") {
+        result.push(line);
+      }
+    }
+    return result;
+  } else {
+    return [];
+  }
 }

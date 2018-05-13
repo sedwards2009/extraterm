@@ -159,3 +159,21 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
     }
   }
 }
+
+.session-name {
+  margin-bottom: 0.5rem;
+}
+
+.session-type {
+  display: block;
+  color: $text-muted;
+
+  font-size: $font-size-h5;
+  font-family: $headings-font-family;
+  font-weight: normal;
+  line-height: $headings-line-height;
+  color: $text-muted;
+
+//  margin-top: floor($line-height-computed / 2);
+  margin-bottom: 0.5rem;
+}

@@ -190,7 +190,7 @@ function openWindow(): void {
   const themeInfo = themeManager.getTheme(generalConfig.themeGUI);
 
   // Create the browser window.
-  const options = <Electron.BrowserWindowOptions> {
+  const options = <Electron.BrowserWindowConstructorOptions> {
     width: 1200,
     height: 600,
     "webPreferences": {
@@ -446,6 +446,10 @@ function setupConfig(): void {
     userStoredConfig.showTitleBar = false;
   }
 
+  if (userStoredConfig.frameByDefault !== true && userStoredConfig.frameByDefault !== false) {
+    userStoredConfig.frameByDefault = true;
+  }
+
   const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
   const keyBindingsFiles = scanKeyBindingFiles(keyBindingsDir);
 
@@ -549,6 +553,7 @@ function setConfigDefaults(config: UserStoredConfig): void {
   config.themeSyntax = defaultValue(config.themeSyntax, "default");
   config.themeGUI = defaultValue(config.themeGUI, "atomic-dark-ui");
   config.showTitleBar = defaultValue(config.showTitleBar, false);
+  config.frameByDefault = defaultValue(config.frameByDefault, true);
 
   if (config.commandLineActions === undefined) {
     const defaultCLA: CommandLineAction[] = [
@@ -769,7 +774,7 @@ function setupIpc(): void {
   ipc.on(Messages.CHANNEL_NAME, handleIpc);
 }
 
-function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
+function handleIpc(event: Electron.Event, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
   

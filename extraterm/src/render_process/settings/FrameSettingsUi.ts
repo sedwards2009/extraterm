@@ -34,6 +34,19 @@ export function nextId(): string {
     template: `
 <div class="settings-page">
   <h2><i class="far fa-window-maximize"></i>&nbsp;&nbsp;Frame Handling Rules</h2>
+
+  <div class="form-horizontal">
+    <div class="form-group">
+      <label for="tips" class="col-sm-4 control-label">Default action:</label>
+      <div class="input-group col-sm-4">
+        <select v-model="frameByDefault" class="form-control">
+          <option value="true">Frame command output</option>
+          <option value="false">Do not frame command output</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
   <table class="table">
     <thead v-if="commandLineActions.length !== 0">
       <tr><th>Match</th><th>Command</th><th>Frame</th><th></th></tr>
@@ -68,7 +81,8 @@ export function nextId(): string {
 })
 export class FrameSettingsUi extends Vue {
 
-  commandLineActions: IdentifiableCommandLineAction[];
+  frameByDefault: "true" | "false" = "true";
+  commandLineActions: IdentifiableCommandLineAction[] = [];
 
   constructor() {
     super();
