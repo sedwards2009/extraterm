@@ -3,7 +3,7 @@
  */
 import * as net from 'net';
 
-declare module 'node-pty-prebuilt' {
+declare module 'node-pty' {
 	/**
 	 * Forks a process as a pseudoterminal.
 	 * @param file The file to launch.
