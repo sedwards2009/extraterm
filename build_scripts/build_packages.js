@@ -185,7 +185,7 @@ function main() {
         packageManager: "yarn",
         afterPrune: [
           (buildPath, electronVersion, platform, arch, callback) => {
-            overlayFiles(path.join(buildPath, "node_modules"), path.join("" + codeDir,`build_scripts/node_modules-${platform}-${arch}`));
+            replaceDirs(path.join(buildPath, "node_modules"), path.join("" + codeDir,`build_scripts/node_modules-${platform}-${arch}`));
             callback();
           }
         ]
@@ -234,16 +234,20 @@ function main() {
     });
   }
   
-  function overlayFiles(targetDir, overlayDir) {
-    const fileList = ls("-Rl", overlayDir);
-    for (const fileStat of fileList) {
-      if (fileStat.isFile()) {
-        echo(`copying overlay file from ${path.join(overlayDir, fileStat.name)} to ${path.join(targetDir, fileStat.name)}`);
-        cp(path.join(overlayDir, fileStat.name), path.join(targetDir, fileStat.name));
+  function replaceDirs(targetDir, replacementsDir) {
+    const prevDir = pwd();
+    cd(srcRootDir);
+    const replacements = ls(replacementsDir);
+    replacements.forEach( (rDir) => {
+      const targetSubDir = path.join(targetDir, rDir);
+      if (test('-d', targetSubDir)) {
+        rm('-r', targetSubDir);
       }
-    }
+      cp('-r', path.join(replacementsDir, rDir), targetSubDir);
+    });  
+    cd(prevDir);
   }
-  
+
   makePackage("x64", "win32")
     .then( () => makePackage("x64", "linux"))
     .then( () => makePackage("x64", "darwin"))
