@@ -72,6 +72,7 @@ export interface SingleWindowConfiguration {
 
 export interface SystemConfig {
   homeDir: string;
+  applicationVersion: string;
   keyBindingsFiles: KeyBindingInfo[];
   keyBindingsContexts: object;
   

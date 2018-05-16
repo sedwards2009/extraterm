@@ -713,6 +713,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
       this._switchToTab(aboutTabs[0]);
     } else {
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
+      config.injectConfigDatabase(viewerElement, this._configManager);
       injectKeyBindingsManager(viewerElement, this._keyBindingManager);
       this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);

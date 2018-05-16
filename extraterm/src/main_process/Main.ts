@@ -67,6 +67,7 @@ const DEFAULT_UI_THEME = "atomic-dark-ui";
 
 const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
+const PACKAGE_JSON_PATH = "../../../package.json";
 
 const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
 
@@ -79,7 +80,7 @@ let fonts: FontInfo[] = null;
 let titleBarVisible = false;
 let bulkFileStorage: BulkFileStorage = null;
 let extensionManager: MainExtensionManager = null;
-
+let packageJson: any = null;
 
 function main(): void {
   let failed = false;
@@ -349,6 +350,7 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
 
   return {
     homeDir,
+    applicationVersion: packageJson.version,
     keyBindingsContexts: keyBindingsJSON,
     keyBindingsFiles,
     availableFonts: getFonts(),
@@ -416,6 +418,8 @@ function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
 }
 
 function setupConfig(): void {
+  packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
+
   const userStoredConfig = readConfigurationFile();
 
   userStoredConfig.blinkingCursor = _.isBoolean(userStoredConfig.blinkingCursor) ? userStoredConfig.blinkingCursor : false;

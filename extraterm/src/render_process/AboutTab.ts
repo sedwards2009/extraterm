@@ -13,6 +13,7 @@ import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
 import {shell} from 'electron';
 import {Logger, getLogger} from '../logging/Logger';
+import { AcceptsConfigDatabase, ConfigDatabase, SYSTEM_CONFIG } from '../Config';
 
 const ID_ABOUT = "ID_ABOUT";
 
@@ -21,11 +22,12 @@ const ID_ABOUT = "ID_ABOUT";
  * The Extraterm About tab.
  */
 @WebComponent({tag: "et-about-tab"})
-export class AboutTab extends ViewerElement {
+export class AboutTab extends ViewerElement implements AcceptsConfigDatabase {
   
   static TAG_NAME = "ET-ABOUT-TAB";
 
   private _log: Logger = null;
+  private _configDatabase: ConfigDatabase = null;
 
   constructor() {
     super();
@@ -47,6 +49,10 @@ export class AboutTab extends ViewerElement {
     return false;
   }
 
+  setConfigDatabase(newConfigDatabase: ConfigDatabase): void {
+    this._configDatabase = newConfigDatabase;
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
@@ -57,6 +63,7 @@ export class AboutTab extends ViewerElement {
       const divContainer = document.createElement('div');
       divContainer.innerHTML = `<div id='${ID_ABOUT}'>
   <h1>Extraterm</h1>
+  <h3>version ${this._configDatabase.getConfig(SYSTEM_CONFIG).applicationVersion}</h3>
   <p>Copyright &copy; 2015-2018 Simon Edwards &lt;simon@simonzone.com&gt;</p>
   <p>Published under the MIT license</p>
   <p>See <a href="http://extraterm.org">extraterm.org</a> and <a href="https://github.com/sedwards2009/extraterm">https://github.com/sedwards2009/extraterm</a></p>
