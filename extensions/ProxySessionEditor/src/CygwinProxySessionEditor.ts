@@ -7,6 +7,7 @@ import _ = require('lodash');
 import * as child_process from 'child_process';
 import * as fse from 'fs-extra';
 import * as constants from 'constants';
+import * as os from 'os';
 import * as path from 'path';
 import { app } from 'electron';
 
@@ -211,7 +212,7 @@ function findCygwinInstallation(): string {
 }
 
 function findBabunCygwinInstallation(): string {
-  const cygwinDir = path.join(app.getPath('home'), ".babun/cygwin");
+  const cygwinDir = path.join(os.homedir(), ".babun/cygwin");
   if (fse.existsSync(cygwinDir)) {
     log.info("Found babun cygwin installation at " + cygwinDir);
     return cygwinDir;
