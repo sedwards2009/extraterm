@@ -493,6 +493,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     return this._title;
   }
   
+  setTerminalTitle(title: string): void {
+    this._title = title;
+    this._sendTitleEvent(title);
+  }
+
   /**
    * Destroy the terminal.
    */
@@ -845,8 +850,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    * @param title The new window title for this terminal.
    */
   private _handleTitle(emulator: Term.Emulator, title: string): void {
-    this._title = title;
-    this._sendTitleEvent(title);
+    this.setTerminalTitle(title);
   }
   
   private _disconnectActiveTerminalViewer(): void {

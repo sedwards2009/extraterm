@@ -571,6 +571,15 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
     newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
+    // Set the default name of the terminal tab to the session name.
+    const sessions = this._configManager.getConfig(SESSION_CONFIG);
+    for (const session of sessions) {
+      if (session.uuid === sessionUuid) {
+        newTerminal.setTerminalTitle(session.name);
+        break;
+      }
+    }
+
     this._addTab(tabWidget, newTerminal);
     this._setUpNewTerminalEventHandlers(newTerminal);
     this._createPtyForTerminal(newTerminal, sessionUuid);
