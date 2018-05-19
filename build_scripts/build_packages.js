@@ -90,6 +90,20 @@ function main() {
     return platform === "darwin" ? "extraterm.app/Contents/Resources/app" : "resources/app";
   }
 
+  function pruneNodeSass(versionedOutputDir, arch, platform) {
+    const gutsDir = appDir(platform);
+    const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node_modules/node-sass/vendor");
+
+    rm('-rf', nodeSassVendorDir);
+    
+    const nodeSassBinaryDir = path.join(versionedOutputDir, gutsDir, "src/node-sass-binary");
+    ["darwin-x64", "linux-ia32", "linux-x64", "win32-x64"].forEach( (name) => {
+      if (name !== platform + "-" + arch) {
+        rm('-rf', path.join(nodeSassBinaryDir, name + "-" + MODULE_VERSON));
+      }
+    });
+  }
+
   function pruneEmojiOne(versionedOutputDir, platform) {
     if (platform !== "linux") {
       const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/emojione-android.ttf");
@@ -133,6 +147,7 @@ function main() {
       "codemirror/src",
       "node-sass/src",
       "node-sass/node_modules/nan",
+      "node-sass/vendor",
       "node-gyp",
       "ajv",
       "globule",
@@ -214,6 +229,9 @@ function main() {
 
           hoistSubprojectsModules(versionedOutputDir, platform);
           pruneNodeModules(versionedOutputDir, platform);
+
+          // Prune any unneeded node-sass binaries.
+          pruneNodeSass(versionedOutputDir, arch, platform);
 
           pruneEmojiOne(versionedOutputDir, platform);
 
