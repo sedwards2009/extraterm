@@ -25,7 +25,7 @@ import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as SourceDir from '../../SourceDir';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as Term from '../emulator/Term';
-import * as TermApi from '../emulator/TermApi';
+import * as TermApi from 'term-api';
 import * as EtTerminalViewerTypes from './TerminalViewerTypes';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';

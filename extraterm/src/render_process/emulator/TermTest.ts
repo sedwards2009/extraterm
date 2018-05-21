@@ -7,7 +7,7 @@
 import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
 import {Emulator} from './Term';
-import {RenderEvent, Line} from './TermApi';
+import {RenderEvent, Line} from 'term-api';
 const performanceNow = require('performance-now');
 
 export async function testBasic(test: nodeunit.Test): Promise<void> {

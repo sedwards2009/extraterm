@@ -11,7 +11,7 @@ import {Logger, getLogger} from '../logging/Logger';
 import log from '../logging/LogDecorator';
 
 import {BulkFileBroker, WriteableBulkFileHandle} from './bulk_file_handling/BulkFileBroker';
-import * as TermApi from './emulator/TermApi';
+import * as TermApi from 'term-api';
 
 
 export class DownloadApplicationModeHandler /* implements ApplicationModeHandler */ {

@@ -42,7 +42,7 @@ import LogDecorator from '../logging/LogDecorator';
 import * as DomUtils from './DomUtils';
 import {doLater} from '../utils/DoLater';
 import * as Term from './emulator/Term';
-import * as TermApi from './emulator/TermApi';
+import * as TermApi from 'term-api';
 import {ScrollBar} from './gui/ScrollBar';
 import {UploadProgressBar} from './UploadProgressBar';
 import * as util from './gui/Util';

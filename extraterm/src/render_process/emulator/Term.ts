@@ -60,7 +60,7 @@ import {
   UNDERLINE_ATTR_FLAG,
   WriteBufferStatus,
   WriteBufferSizeEventListener
-} from './TermApi';
+} from 'term-api';
 
 import log from '../../logging/LogDecorator';
 

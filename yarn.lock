@@ -59,17 +59,9 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@7.0.52", "@types/node@^7.0.4":
+"@types/node@*", "@types/node@7.0.5", "@types/node@7.0.52", "@types/node@^7.0.4", "@types/node@^8.0.24":
   version "7.0.52"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.52.tgz#8990d3350375542b0c21a83cd0331e6a8fc86716"
-
-"@types/node@7.0.5":
-  version "7.0.5"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.5.tgz#96a0f0a618b7b606f1ec547403c00650210bfbb7"
-
-"@types/node@^8.0.24":
-  version "8.10.17"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.17.tgz#d48cf10f0dc6dcf59f827f5a3fc7a4a6004318d3"
 
 "@types/nodeunit@0.0.30":
   version "0.0.30"
@@ -209,7 +201,7 @@ abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
 
-"ace-ts@file:../../../../devel/ace-ts":
+"ace-ts@file:../ace-ts":
   version "1.0.0"
 
 acorn-dynamic-import@^2.0.0:
@@ -7000,11 +6992,7 @@ typedoc@0.3.12:
     typedoc-default-themes "0.3.4"
     typescript "1.6.2"
 
-typescript@1.6.2:
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-1.6.2.tgz#5b27254abeb111027cbf9450d3431bc5843191dd"
-
-typescript@2.8.3:
+typescript@1.6.2, typescript@2.8.3:
   version "2.8.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.8.3.tgz#5d817f9b6f31bb871835f4edf0089f21abe6c170"
 
