@@ -1,0 +1,26 @@
+{
+  "name": "extraterm-ace-terminal-renderer",
+  "version": "0.1.0",
+  "description": "Custom renderer for Ace for showing terminal characters and formatting.",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "",
+  "types": "",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "devDependencies": {
+    "http-server": "0.10.0",
+    "typescript": "2.8.3",
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build-test": "tsc && webpack --config webpack.test.config.js"
+  },
+  "dependencies": {
+    "ace-ts": "/home/sbe/devel/ace-ts/"
+  }
+}

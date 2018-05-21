@@ -1,0 +1,2382 @@
+<!doctype html>
+<html>
+<link rel="stylesheet" href="./editor.css">
+
+<style type="text/css" media="screen">
+#editor { 
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+/* Character styles */
+SPAN.terminal-bold {
+  font-weight: bold; }
+
+SPAN.terminal-italic {
+  font-style: italic; }
+
+SPAN.terminal-underline {
+  text-decoration: underline; }
+
+SPAN.terminal-strikethrough {
+  text-decoration: line-through; }
+
+SPAN.terminal-underline.terminal-strikethrough {
+  text-decoration: underline line-through; }
+
+SPAN.terminal-invisible {
+  visibility: hidden; }
+
+@-webkit-keyframes BLINK_ANIMATION {
+  0% {
+    opacity: 0; }
+  50% {
+    opacity: 1; }
+  100% {
+    opacity: 0; } }
+
+SPAN.terminal-blink {
+  -webkit-animation: BLINK_ANIMATION 2s infinite;
+  animation: BLINK_ANIMATION 2s infinite; }
+
+SPAN.oversize {
+  display: inline-block;
+  width: var(--terminal-font-unit-width);
+  height: var(--terminal-font-unit-height); }
+
+/* Linux colours */
+SPAN.terminal-background-0 {
+  background-color: #000000; }
+
+SPAN.terminal-background-1 {
+  background-color: #b21818; }
+
+SPAN.terminal-background-2 {
+  background-color: #18b218; }
+
+SPAN.terminal-background-3 {
+  background-color: #b26818; }
+
+SPAN.terminal-background-4 {
+  background-color: #3535ff; }
+
+SPAN.terminal-background-5 {
+  background-color: #b218b2; }
+
+SPAN.terminal-background-6 {
+  background-color: #18b2b2; }
+
+SPAN.terminal-background-7 {
+  background-color: #b2b2b2; }
+
+/* Full bright versions */
+SPAN.terminal-background-8 {
+  background-color: #686868; }
+
+SPAN.terminal-background-9 {
+  background-color: #ff5454; }
+
+SPAN.terminal-background-10 {
+  background-color: #54ff54; }
+
+SPAN.terminal-background-11 {
+  background-color: #ffff54; }
+
+SPAN.terminal-background-12 {
+  background-color: #7373ff; }
+
+SPAN.terminal-background-13 {
+  background-color: #ff54ff; }
+
+SPAN.terminal-background-14 {
+  background-color: #54ffff; }
+
+SPAN.terminal-background-15 {
+  background-color: #ffffff; }
+
+/* 16-255 standard colours */
+SPAN.terminal-background-16 {
+  background-color: #000000; }
+
+SPAN.terminal-background-17 {
+  background-color: #00005f; }
+
+SPAN.terminal-background-18 {
+  background-color: #000087; }
+
+SPAN.terminal-background-19 {
+  background-color: #0000af; }
+
+SPAN.terminal-background-20 {
+  background-color: #0000d7; }
+
+SPAN.terminal-background-21 {
+  background-color: #0000ff; }
+
+SPAN.terminal-background-22 {
+  background-color: #005f00; }
+
+SPAN.terminal-background-23 {
+  background-color: #005f5f; }
+
+SPAN.terminal-background-24 {
+  background-color: #005f87; }
+
+SPAN.terminal-background-25 {
+  background-color: #005faf; }
+
+SPAN.terminal-background-26 {
+  background-color: #005fd7; }
+
+SPAN.terminal-background-27 {
+  background-color: #005fff; }
+
+SPAN.terminal-background-28 {
+  background-color: #008700; }
+
+SPAN.terminal-background-29 {
+  background-color: #00875f; }
+
+SPAN.terminal-background-30 {
+  background-color: #008787; }
+
+SPAN.terminal-background-31 {
+  background-color: #0087af; }
+
+SPAN.terminal-background-32 {
+  background-color: #0087d7; }
+
+SPAN.terminal-background-33 {
+  background-color: #0087ff; }
+
+SPAN.terminal-background-34 {
+  background-color: #00af00; }
+
+SPAN.terminal-background-35 {
+  background-color: #00af5f; }
+
+SPAN.terminal-background-36 {
+  background-color: #00af87; }
+
+SPAN.terminal-background-37 {
+  background-color: #00afaf; }
+
+SPAN.terminal-background-38 {
+  background-color: #00afd7; }
+
+SPAN.terminal-background-39 {
+  background-color: #00afff; }
+
+SPAN.terminal-background-40 {
+  background-color: #00d700; }
+
+SPAN.terminal-background-41 {
+  background-color: #00d75f; }
+
+SPAN.terminal-background-42 {
+  background-color: #00d787; }
+
+SPAN.terminal-background-43 {
+  background-color: #00d7af; }
+
+SPAN.terminal-background-44 {
+  background-color: #00d7d7; }
+
+SPAN.terminal-background-45 {
+  background-color: #00d7ff; }
+
+SPAN.terminal-background-46 {
+  background-color: #00ff00; }
+
+SPAN.terminal-background-47 {
+  background-color: #00ff5f; }
+
+SPAN.terminal-background-48 {
+  background-color: #00ff87; }
+
+SPAN.terminal-background-49 {
+  background-color: #00ffaf; }
+
+SPAN.terminal-background-50 {
+  background-color: #00ffd7; }
+
+SPAN.terminal-background-51 {
+  background-color: #00ffff; }
+
+SPAN.terminal-background-52 {
+  background-color: #5f0000; }
+
+SPAN.terminal-background-53 {
+  background-color: #5f005f; }
+
+SPAN.terminal-background-54 {
+  background-color: #5f0087; }
+
+SPAN.terminal-background-55 {
+  background-color: #5f00af; }
+
+SPAN.terminal-background-56 {
+  background-color: #5f00d7; }
+
+SPAN.terminal-background-57 {
+  background-color: #5f00ff; }
+
+SPAN.terminal-background-58 {
+  background-color: #5f5f00; }
+
+SPAN.terminal-background-59 {
+  background-color: #5f5f5f; }
+
+SPAN.terminal-background-60 {
+  background-color: #5f5f87; }
+
+SPAN.terminal-background-61 {
+  background-color: #5f5faf; }
+
+SPAN.terminal-background-62 {
+  background-color: #5f5fd7; }
+
+SPAN.terminal-background-63 {
+  background-color: #5f5fff; }
+
+SPAN.terminal-background-64 {
+  background-color: #5f8700; }
+
+SPAN.terminal-background-65 {
+  background-color: #5f875f; }
+
+SPAN.terminal-background-66 {
+  background-color: #5f8787; }
+
+SPAN.terminal-background-67 {
+  background-color: #5f87af; }
+
+SPAN.terminal-background-68 {
+  background-color: #5f87d7; }
+
+SPAN.terminal-background-69 {
+  background-color: #5f87ff; }
+
+SPAN.terminal-background-70 {
+  background-color: #5faf00; }
+
+SPAN.terminal-background-71 {
+  background-color: #5faf5f; }
+
+SPAN.terminal-background-72 {
+  background-color: #5faf87; }
+
+SPAN.terminal-background-73 {
+  background-color: #5fafaf; }
+
+SPAN.terminal-background-74 {
+  background-color: #5fafd7; }
+
+SPAN.terminal-background-75 {
+  background-color: #5fafff; }
+
+SPAN.terminal-background-76 {
+  background-color: #5fd700; }
+
+SPAN.terminal-background-77 {
+  background-color: #5fd75f; }
+
+SPAN.terminal-background-78 {
+  background-color: #5fd787; }
+
+SPAN.terminal-background-79 {
+  background-color: #5fd7af; }
+
+SPAN.terminal-background-80 {
+  background-color: #5fd7d7; }
+
+SPAN.terminal-background-81 {
+  background-color: #5fd7ff; }
+
+SPAN.terminal-background-82 {
+  background-color: #5fff00; }
+
+SPAN.terminal-background-83 {
+  background-color: #5fff5f; }
+
+SPAN.terminal-background-84 {
+  background-color: #5fff87; }
+
+SPAN.terminal-background-85 {
+  background-color: #5fffaf; }
+
+SPAN.terminal-background-86 {
+  background-color: #5fffd7; }
+
+SPAN.terminal-background-87 {
+  background-color: #5fffff; }
+
+SPAN.terminal-background-88 {
+  background-color: #870000; }
+
+SPAN.terminal-background-89 {
+  background-color: #87005f; }
+
+SPAN.terminal-background-90 {
+  background-color: #870087; }
+
+SPAN.terminal-background-91 {
+  background-color: #8700af; }
+
+SPAN.terminal-background-92 {
+  background-color: #8700d7; }
+
+SPAN.terminal-background-93 {
+  background-color: #8700ff; }
+
+SPAN.terminal-background-94 {
+  background-color: #875f00; }
+
+SPAN.terminal-background-95 {
+  background-color: #875f5f; }
+
+SPAN.terminal-background-96 {
+  background-color: #875f87; }
+
+SPAN.terminal-background-97 {
+  background-color: #875faf; }
+
+SPAN.terminal-background-98 {
+  background-color: #875fd7; }
+
+SPAN.terminal-background-99 {
+  background-color: #875fff; }
+
+SPAN.terminal-background-100 {
+  background-color: #878700; }
+
+SPAN.terminal-background-101 {
+  background-color: #87875f; }
+
+SPAN.terminal-background-102 {
+  background-color: #878787; }
+
+SPAN.terminal-background-103 {
+  background-color: #8787af; }
+
+SPAN.terminal-background-104 {
+  background-color: #8787d7; }
+
+SPAN.terminal-background-105 {
+  background-color: #8787ff; }
+
+SPAN.terminal-background-106 {
+  background-color: #87af00; }
+
+SPAN.terminal-background-107 {
+  background-color: #87af5f; }
+
+SPAN.terminal-background-108 {
+  background-color: #87af87; }
+
+SPAN.terminal-background-109 {
+  background-color: #87afaf; }
+
+SPAN.terminal-background-110 {
+  background-color: #87afd7; }
+
+SPAN.terminal-background-111 {
+  background-color: #87afff; }
+
+SPAN.terminal-background-112 {
+  background-color: #87d700; }
+
+SPAN.terminal-background-113 {
+  background-color: #87d75f; }
+
+SPAN.terminal-background-114 {
+  background-color: #87d787; }
+
+SPAN.terminal-background-115 {
+  background-color: #87d7af; }
+
+SPAN.terminal-background-116 {
+  background-color: #87d7d7; }
+
+SPAN.terminal-background-117 {
+  background-color: #87d7ff; }
+
+SPAN.terminal-background-118 {
+  background-color: #87ff00; }
+
+SPAN.terminal-background-119 {
+  background-color: #87ff5f; }
+
+SPAN.terminal-background-120 {
+  background-color: #87ff87; }
+
+SPAN.terminal-background-121 {
+  background-color: #87ffaf; }
+
+SPAN.terminal-background-122 {
+  background-color: #87ffd7; }
+
+SPAN.terminal-background-123 {
+  background-color: #87ffff; }
+
+SPAN.terminal-background-124 {
+  background-color: #af0000; }
+
+SPAN.terminal-background-125 {
+  background-color: #af005f; }
+
+SPAN.terminal-background-126 {
+  background-color: #af0087; }
+
+SPAN.terminal-background-127 {
+  background-color: #af00af; }
+
+SPAN.terminal-background-128 {
+  background-color: #af00d7; }
+
+SPAN.terminal-background-129 {
+  background-color: #af00ff; }
+
+SPAN.terminal-background-130 {
+  background-color: #af5f00; }
+
+SPAN.terminal-background-131 {
+  background-color: #af5f5f; }
+
+SPAN.terminal-background-132 {
+  background-color: #af5f87; }
+
+SPAN.terminal-background-133 {
+  background-color: #af5faf; }
+
+SPAN.terminal-background-134 {
+  background-color: #af5fd7; }
+
+SPAN.terminal-background-135 {
+  background-color: #af5fff; }
+
+SPAN.terminal-background-136 {
+  background-color: #af8700; }
+
+SPAN.terminal-background-137 {
+  background-color: #af875f; }
+
+SPAN.terminal-background-138 {
+  background-color: #af8787; }
+
+SPAN.terminal-background-139 {
+  background-color: #af87af; }
+
+SPAN.terminal-background-140 {
+  background-color: #af87d7; }
+
+SPAN.terminal-background-141 {
+  background-color: #af87ff; }
+
+SPAN.terminal-background-142 {
+  background-color: #afaf00; }
+
+SPAN.terminal-background-143 {
+  background-color: #afaf5f; }
+
+SPAN.terminal-background-144 {
+  background-color: #afaf87; }
+
+SPAN.terminal-background-145 {
+  background-color: #afafaf; }
+
+SPAN.terminal-background-146 {
+  background-color: #afafd7; }
+
+SPAN.terminal-background-147 {
+  background-color: #afafff; }
+
+SPAN.terminal-background-148 {
+  background-color: #afd700; }
+
+SPAN.terminal-background-149 {
+  background-color: #afd75f; }
+
+SPAN.terminal-background-150 {
+  background-color: #afd787; }
+
+SPAN.terminal-background-151 {
+  background-color: #afd7af; }
+
+SPAN.terminal-background-152 {
+  background-color: #afd7d7; }
+
+SPAN.terminal-background-153 {
+  background-color: #afd7ff; }
+
+SPAN.terminal-background-154 {
+  background-color: #afff00; }
+
+SPAN.terminal-background-155 {
+  background-color: #afff5f; }
+
+SPAN.terminal-background-156 {
+  background-color: #afff87; }
+
+SPAN.terminal-background-157 {
+  background-color: #afffaf; }
+
+SPAN.terminal-background-158 {
+  background-color: #afffd7; }
+
+SPAN.terminal-background-159 {
+  background-color: #afffff; }
+
+SPAN.terminal-background-160 {
+  background-color: #d70000; }
+
+SPAN.terminal-background-161 {
+  background-color: #d7005f; }
+
+SPAN.terminal-background-162 {
+  background-color: #d70087; }
+
+SPAN.terminal-background-163 {
+  background-color: #d700af; }
+
+SPAN.terminal-background-164 {
+  background-color: #d700d7; }
+
+SPAN.terminal-background-165 {
+  background-color: #d700ff; }
+
+SPAN.terminal-background-166 {
+  background-color: #d75f00; }
+
+SPAN.terminal-background-167 {
+  background-color: #d75f5f; }
+
+SPAN.terminal-background-168 {
+  background-color: #d75f87; }
+
+SPAN.terminal-background-169 {
+  background-color: #d75faf; }
+
+SPAN.terminal-background-170 {
+  background-color: #d75fd7; }
+
+SPAN.terminal-background-171 {
+  background-color: #d75fff; }
+
+SPAN.terminal-background-172 {
+  background-color: #d78700; }
+
+SPAN.terminal-background-173 {
+  background-color: #d7875f; }
+
+SPAN.terminal-background-174 {
+  background-color: #d78787; }
+
+SPAN.terminal-background-175 {
+  background-color: #d787af; }
+
+SPAN.terminal-background-176 {
+  background-color: #d787d7; }
+
+SPAN.terminal-background-177 {
+  background-color: #d787ff; }
+
+SPAN.terminal-background-178 {
+  background-color: #d7af00; }
+
+SPAN.terminal-background-179 {
+  background-color: #d7af5f; }
+
+SPAN.terminal-background-180 {
+  background-color: #d7af87; }
+
+SPAN.terminal-background-181 {
+  background-color: #d7afaf; }
+
+SPAN.terminal-background-182 {
+  background-color: #d7afd7; }
+
+SPAN.terminal-background-183 {
+  background-color: #d7afff; }
+
+SPAN.terminal-background-184 {
+  background-color: #d7d700; }
+
+SPAN.terminal-background-185 {
+  background-color: #d7d75f; }
+
+SPAN.terminal-background-186 {
+  background-color: #d7d787; }
+
+SPAN.terminal-background-187 {
+  background-color: #d7d7af; }
+
+SPAN.terminal-background-188 {
+  background-color: #d7d7d7; }
+
+SPAN.terminal-background-189 {
+  background-color: #d7d7ff; }
+
+SPAN.terminal-background-190 {
+  background-color: #d7ff00; }
+
+SPAN.terminal-background-191 {
+  background-color: #d7ff5f; }
+
+SPAN.terminal-background-192 {
+  background-color: #d7ff87; }
+
+SPAN.terminal-background-193 {
+  background-color: #d7ffaf; }
+
+SPAN.terminal-background-194 {
+  background-color: #d7ffd7; }
+
+SPAN.terminal-background-195 {
+  background-color: #d7ffff; }
+
+SPAN.terminal-background-196 {
+  background-color: #ff0000; }
+
+SPAN.terminal-background-197 {
+  background-color: #ff005f; }
+
+SPAN.terminal-background-198 {
+  background-color: #ff0087; }
+
+SPAN.terminal-background-199 {
+  background-color: #ff00af; }
+
+SPAN.terminal-background-200 {
+  background-color: #ff00d7; }
+
+SPAN.terminal-background-201 {
+  background-color: #ff00ff; }
+
+SPAN.terminal-background-202 {
+  background-color: #ff5f00; }
+
+SPAN.terminal-background-203 {
+  background-color: #ff5f5f; }
+
+SPAN.terminal-background-204 {
+  background-color: #ff5f87; }
+
+SPAN.terminal-background-205 {
+  background-color: #ff5faf; }
+
+SPAN.terminal-background-206 {
+  background-color: #ff5fd7; }
+
+SPAN.terminal-background-207 {
+  background-color: #ff5fff; }
+
+SPAN.terminal-background-208 {
+  background-color: #ff8700; }
+
+SPAN.terminal-background-209 {
+  background-color: #ff875f; }
+
+SPAN.terminal-background-210 {
+  background-color: #ff8787; }
+
+SPAN.terminal-background-211 {
+  background-color: #ff87af; }
+
+SPAN.terminal-background-212 {
+  background-color: #ff87d7; }
+
+SPAN.terminal-background-213 {
+  background-color: #ff87ff; }
+
+SPAN.terminal-background-214 {
+  background-color: #ffaf00; }
+
+SPAN.terminal-background-215 {
+  background-color: #ffaf5f; }
+
+SPAN.terminal-background-216 {
+  background-color: #ffaf87; }
+
+SPAN.terminal-background-217 {
+  background-color: #ffafaf; }
+
+SPAN.terminal-background-218 {
+  background-color: #ffafd7; }
+
+SPAN.terminal-background-219 {
+  background-color: #ffafff; }
+
+SPAN.terminal-background-220 {
+  background-color: #ffd700; }
+
+SPAN.terminal-background-221 {
+  background-color: #ffd75f; }
+
+SPAN.terminal-background-222 {
+  background-color: #ffd787; }
+
+SPAN.terminal-background-223 {
+  background-color: #ffd7af; }
+
+SPAN.terminal-background-224 {
+  background-color: #ffd7d7; }
+
+SPAN.terminal-background-225 {
+  background-color: #ffd7ff; }
+
+SPAN.terminal-background-226 {
+  background-color: #ffff00; }
+
+SPAN.terminal-background-227 {
+  background-color: #ffff5f; }
+
+SPAN.terminal-background-228 {
+  background-color: #ffff87; }
+
+SPAN.terminal-background-229 {
+  background-color: #ffffaf; }
+
+SPAN.terminal-background-230 {
+  background-color: #ffffd7; }
+
+SPAN.terminal-background-231 {
+  background-color: #ffffff; }
+
+SPAN.terminal-background-232 {
+  background-color: #080808; }
+
+SPAN.terminal-background-233 {
+  background-color: #121212; }
+
+SPAN.terminal-background-234 {
+  background-color: #1c1c1c; }
+
+SPAN.terminal-background-235 {
+  background-color: #262626; }
+
+SPAN.terminal-background-236 {
+  background-color: #303030; }
+
+SPAN.terminal-background-237 {
+  background-color: #3a3a3a; }
+
+SPAN.terminal-background-238 {
+  background-color: #444444; }
+
+SPAN.terminal-background-239 {
+  background-color: #4e4e4e; }
+
+SPAN.terminal-background-240 {
+  background-color: #585858; }
+
+SPAN.terminal-background-241 {
+  background-color: #626262; }
+
+SPAN.terminal-background-242 {
+  background-color: #6c6c6c; }
+
+SPAN.terminal-background-243 {
+  background-color: #767676; }
+
+SPAN.terminal-background-244 {
+  background-color: #808080; }
+
+SPAN.terminal-background-245 {
+  background-color: #8a8a8a; }
+
+SPAN.terminal-background-246 {
+  background-color: #949494; }
+
+SPAN.terminal-background-247 {
+  background-color: #9e9e9e; }
+
+SPAN.terminal-background-248 {
+  background-color: #a8a8a8; }
+
+SPAN.terminal-background-249 {
+  background-color: #b2b2b2; }
+
+SPAN.terminal-background-250 {
+  background-color: #bcbcbc; }
+
+SPAN.terminal-background-251 {
+  background-color: #c6c6c6; }
+
+SPAN.terminal-background-252 {
+  background-color: #d0d0d0; }
+
+SPAN.terminal-background-253 {
+  background-color: #dadada; }
+
+SPAN.terminal-background-254 {
+  background-color: #e4e4e4; }
+
+SPAN.terminal-background-255 {
+  background-color: #eeeeee; }
+
+/* Default background */
+SPAN.terminal-background-256 {
+  background-color: #000000; }
+
+/* Default foreground */
+SPAN.terminal-background-257 {
+  background-color: #b2b2b2; }
+
+SPAN.terminal-foreground-0 {
+  color: #000000; }
+
+SPAN.terminal-foreground-1 {
+  color: #b21818; }
+
+SPAN.terminal-foreground-2 {
+  color: #18b218; }
+
+SPAN.terminal-foreground-3 {
+  color: #b26818; }
+
+SPAN.terminal-foreground-4 {
+  color: #3535ff; }
+
+SPAN.terminal-foreground-5 {
+  color: #b218b2; }
+
+SPAN.terminal-foreground-6 {
+  color: #18b2b2; }
+
+SPAN.terminal-foreground-7 {
+  color: #b2b2b2; }
+
+SPAN.terminal-foreground-8 {
+  color: #686868; }
+
+SPAN.terminal-foreground-9 {
+  color: #ff5454; }
+
+SPAN.terminal-foreground-10 {
+  color: #54ff54; }
+
+SPAN.terminal-foreground-11 {
+  color: #ffff54; }
+
+SPAN.terminal-foreground-12 {
+  color: #7373ff; }
+
+SPAN.terminal-foreground-13 {
+  color: #ff54ff; }
+
+SPAN.terminal-foreground-14 {
+  color: #54ffff; }
+
+SPAN.terminal-foreground-15 {
+  color: #ffffff; }
+
+SPAN.terminal-foreground-16 {
+  color: #000000; }
+
+SPAN.terminal-foreground-17 {
+  color: #00005f; }
+
+SPAN.terminal-foreground-18 {
+  color: #000087; }
+
+SPAN.terminal-foreground-19 {
+  color: #0000af; }
+
+SPAN.terminal-foreground-20 {
+  color: #0000d7; }
+
+SPAN.terminal-foreground-21 {
+  color: #0000ff; }
+
+SPAN.terminal-foreground-22 {
+  color: #005f00; }
+
+SPAN.terminal-foreground-23 {
+  color: #005f5f; }
+
+SPAN.terminal-foreground-24 {
+  color: #005f87; }
+
+SPAN.terminal-foreground-25 {
+  color: #005faf; }
+
+SPAN.terminal-foreground-26 {
+  color: #005fd7; }
+
+SPAN.terminal-foreground-27 {
+  color: #005fff; }
+
+SPAN.terminal-foreground-28 {
+  color: #008700; }
+
+SPAN.terminal-foreground-29 {
+  color: #00875f; }
+
+SPAN.terminal-foreground-30 {
+  color: #008787; }
+
+SPAN.terminal-foreground-31 {
+  color: #0087af; }
+
+SPAN.terminal-foreground-32 {
+  color: #0087d7; }
+
+SPAN.terminal-foreground-33 {
+  color: #0087ff; }
+
+SPAN.terminal-foreground-34 {
+  color: #00af00; }
+
+SPAN.terminal-foreground-35 {
+  color: #00af5f; }
+
+SPAN.terminal-foreground-36 {
+  color: #00af87; }
+
+SPAN.terminal-foreground-37 {
+  color: #00afaf; }
+
+SPAN.terminal-foreground-38 {
+  color: #00afd7; }
+
+SPAN.terminal-foreground-39 {
+  color: #00afff; }
+
+SPAN.terminal-foreground-40 {
+  color: #00d700; }
+
+SPAN.terminal-foreground-41 {
+  color: #00d75f; }
+
+SPAN.terminal-foreground-42 {
+  color: #00d787; }
+
+SPAN.terminal-foreground-43 {
+  color: #00d7af; }
+
+SPAN.terminal-foreground-44 {
+  color: #00d7d7; }
+
+SPAN.terminal-foreground-45 {
+  color: #00d7ff; }
+
+SPAN.terminal-foreground-46 {
+  color: #00ff00; }
+
+SPAN.terminal-foreground-47 {
+  color: #00ff5f; }
+
+SPAN.terminal-foreground-48 {
+  color: #00ff87; }
+
+SPAN.terminal-foreground-49 {
+  color: #00ffaf; }
+
+SPAN.terminal-foreground-50 {
+  color: #00ffd7; }
+
+SPAN.terminal-foreground-51 {
+  color: #00ffff; }
+
+SPAN.terminal-foreground-52 {
+  color: #5f0000; }
+
+SPAN.terminal-foreground-53 {
+  color: #5f005f; }
+
+SPAN.terminal-foreground-54 {
+  color: #5f0087; }
+
+SPAN.terminal-foreground-55 {
+  color: #5f00af; }
+
+SPAN.terminal-foreground-56 {
+  color: #5f00d7; }
+
+SPAN.terminal-foreground-57 {
+  color: #5f00ff; }
+
+SPAN.terminal-foreground-58 {
+  color: #5f5f00; }
+
+SPAN.terminal-foreground-59 {
+  color: #5f5f5f; }
+
+SPAN.terminal-foreground-60 {
+  color: #5f5f87; }
+
+SPAN.terminal-foreground-61 {
+  color: #5f5faf; }
+
+SPAN.terminal-foreground-62 {
+  color: #5f5fd7; }
+
+SPAN.terminal-foreground-63 {
+  color: #5f5fff; }
+
+SPAN.terminal-foreground-64 {
+  color: #5f8700; }
+
+SPAN.terminal-foreground-65 {
+  color: #5f875f; }
+
+SPAN.terminal-foreground-66 {
+  color: #5f8787; }
+
+SPAN.terminal-foreground-67 {
+  color: #5f87af; }
+
+SPAN.terminal-foreground-68 {
+  color: #5f87d7; }
+
+SPAN.terminal-foreground-69 {
+  color: #5f87ff; }
+
+SPAN.terminal-foreground-70 {
+  color: #5faf00; }
+
+SPAN.terminal-foreground-71 {
+  color: #5faf5f; }
+
+SPAN.terminal-foreground-72 {
+  color: #5faf87; }
+
+SPAN.terminal-foreground-73 {
+  color: #5fafaf; }
+
+SPAN.terminal-foreground-74 {
+  color: #5fafd7; }
+
+SPAN.terminal-foreground-75 {
+  color: #5fafff; }
+
+SPAN.terminal-foreground-76 {
+  color: #5fd700; }
+
+SPAN.terminal-foreground-77 {
+  color: #5fd75f; }
+
+SPAN.terminal-foreground-78 {
+  color: #5fd787; }
+
+SPAN.terminal-foreground-79 {
+  color: #5fd7af; }
+
+SPAN.terminal-foreground-80 {
+  color: #5fd7d7; }
+
+SPAN.terminal-foreground-81 {
+  color: #5fd7ff; }
+
+SPAN.terminal-foreground-82 {
+  color: #5fff00; }
+
+SPAN.terminal-foreground-83 {
+  color: #5fff5f; }
+
+SPAN.terminal-foreground-84 {
+  color: #5fff87; }
+
+SPAN.terminal-foreground-85 {
+  color: #5fffaf; }
+
+SPAN.terminal-foreground-86 {
+  color: #5fffd7; }
+
+SPAN.terminal-foreground-87 {
+  color: #5fffff; }
+
+SPAN.terminal-foreground-88 {
+  color: #870000; }
+
+SPAN.terminal-foreground-89 {
+  color: #87005f; }
+
+SPAN.terminal-foreground-90 {
+  color: #870087; }
+
+SPAN.terminal-foreground-91 {
+  color: #8700af; }
+
+SPAN.terminal-foreground-92 {
+  color: #8700d7; }
+
+SPAN.terminal-foreground-93 {
+  color: #8700ff; }
+
+SPAN.terminal-foreground-94 {
+  color: #875f00; }
+
+SPAN.terminal-foreground-95 {
+  color: #875f5f; }
+
+SPAN.terminal-foreground-96 {
+  color: #875f87; }
+
+SPAN.terminal-foreground-97 {
+  color: #875faf; }
+
+SPAN.terminal-foreground-98 {
+  color: #875fd7; }
+
+SPAN.terminal-foreground-99 {
+  color: #875fff; }
+
+SPAN.terminal-foreground-100 {
+  color: #878700; }
+
+SPAN.terminal-foreground-101 {
+  color: #87875f; }
+
+SPAN.terminal-foreground-102 {
+  color: #878787; }
+
+SPAN.terminal-foreground-103 {
+  color: #8787af; }
+
+SPAN.terminal-foreground-104 {
+  color: #8787d7; }
+
+SPAN.terminal-foreground-105 {
+  color: #8787ff; }
+
+SPAN.terminal-foreground-106 {
+  color: #87af00; }
+
+SPAN.terminal-foreground-107 {
+  color: #87af5f; }
+
+SPAN.terminal-foreground-108 {
+  color: #87af87; }
+
+SPAN.terminal-foreground-109 {
+  color: #87afaf; }
+
+SPAN.terminal-foreground-110 {
+  color: #87afd7; }
+
+SPAN.terminal-foreground-111 {
+  color: #87afff; }
+
+SPAN.terminal-foreground-112 {
+  color: #87d700; }
+
+SPAN.terminal-foreground-113 {
+  color: #87d75f; }
+
+SPAN.terminal-foreground-114 {
+  color: #87d787; }
+
+SPAN.terminal-foreground-115 {
+  color: #87d7af; }
+
+SPAN.terminal-foreground-116 {
+  color: #87d7d7; }
+
+SPAN.terminal-foreground-117 {
+  color: #87d7ff; }
+
+SPAN.terminal-foreground-118 {
+  color: #87ff00; }
+
+SPAN.terminal-foreground-119 {
+  color: #87ff5f; }
+
+SPAN.terminal-foreground-120 {
+  color: #87ff87; }
+
+SPAN.terminal-foreground-121 {
+  color: #87ffaf; }
+
+SPAN.terminal-foreground-122 {
+  color: #87ffd7; }
+
+SPAN.terminal-foreground-123 {
+  color: #87ffff; }
+
+SPAN.terminal-foreground-124 {
+  color: #af0000; }
+
+SPAN.terminal-foreground-125 {
+  color: #af005f; }
+
+SPAN.terminal-foreground-126 {
+  color: #af0087; }
+
+SPAN.terminal-foreground-127 {
+  color: #af00af; }
+
+SPAN.terminal-foreground-128 {
+  color: #af00d7; }
+
+SPAN.terminal-foreground-129 {
+  color: #af00ff; }
+
+SPAN.terminal-foreground-130 {
+  color: #af5f00; }
+
+SPAN.terminal-foreground-131 {
+  color: #af5f5f; }
+
+SPAN.terminal-foreground-132 {
+  color: #af5f87; }
+
+SPAN.terminal-foreground-133 {
+  color: #af5faf; }
+
+SPAN.terminal-foreground-134 {
+  color: #af5fd7; }
+
+SPAN.terminal-foreground-135 {
+  color: #af5fff; }
+
+SPAN.terminal-foreground-136 {
+  color: #af8700; }
+
+SPAN.terminal-foreground-137 {
+  color: #af875f; }
+
+SPAN.terminal-foreground-138 {
+  color: #af8787; }
+
+SPAN.terminal-foreground-139 {
+  color: #af87af; }
+
+SPAN.terminal-foreground-140 {
+  color: #af87d7; }
+
+SPAN.terminal-foreground-141 {
+  color: #af87ff; }
+
+SPAN.terminal-foreground-142 {
+  color: #afaf00; }
+
+SPAN.terminal-foreground-143 {
+  color: #afaf5f; }
+
+SPAN.terminal-foreground-144 {
+  color: #afaf87; }
+
+SPAN.terminal-foreground-145 {
+  color: #afafaf; }
+
+SPAN.terminal-foreground-146 {
+  color: #afafd7; }
+
+SPAN.terminal-foreground-147 {
+  color: #afafff; }
+
+SPAN.terminal-foreground-148 {
+  color: #afd700; }
+
+SPAN.terminal-foreground-149 {
+  color: #afd75f; }
+
+SPAN.terminal-foreground-150 {
+  color: #afd787; }
+
+SPAN.terminal-foreground-151 {
+  color: #afd7af; }
+
+SPAN.terminal-foreground-152 {
+  color: #afd7d7; }
+
+SPAN.terminal-foreground-153 {
+  color: #afd7ff; }
+
+SPAN.terminal-foreground-154 {
+  color: #afff00; }
+
+SPAN.terminal-foreground-155 {
+  color: #afff5f; }
+
+SPAN.terminal-foreground-156 {
+  color: #afff87; }
+
+SPAN.terminal-foreground-157 {
+  color: #afffaf; }
+
+SPAN.terminal-foreground-158 {
+  color: #afffd7; }
+
+SPAN.terminal-foreground-159 {
+  color: #afffff; }
+
+SPAN.terminal-foreground-160 {
+  color: #d70000; }
+
+SPAN.terminal-foreground-161 {
+  color: #d7005f; }
+
+SPAN.terminal-foreground-162 {
+  color: #d70087; }
+
+SPAN.terminal-foreground-163 {
+  color: #d700af; }
+
+SPAN.terminal-foreground-164 {
+  color: #d700d7; }
+
+SPAN.terminal-foreground-165 {
+  color: #d700ff; }
+
+SPAN.terminal-foreground-166 {
+  color: #d75f00; }
+
+SPAN.terminal-foreground-167 {
+  color: #d75f5f; }
+
+SPAN.terminal-foreground-168 {
+  color: #d75f87; }
+
+SPAN.terminal-foreground-169 {
+  color: #d75faf; }
+
+SPAN.terminal-foreground-170 {
+  color: #d75fd7; }
+
+SPAN.terminal-foreground-171 {
+  color: #d75fff; }
+
+SPAN.terminal-foreground-172 {
+  color: #d78700; }
+
+SPAN.terminal-foreground-173 {
+  color: #d7875f; }
+
+SPAN.terminal-foreground-174 {
+  color: #d78787; }
+
+SPAN.terminal-foreground-175 {
+  color: #d787af; }
+
+SPAN.terminal-foreground-176 {
+  color: #d787d7; }
+
+SPAN.terminal-foreground-177 {
+  color: #d787ff; }
+
+SPAN.terminal-foreground-178 {
+  color: #d7af00; }
+
+SPAN.terminal-foreground-179 {
+  color: #d7af5f; }
+
+SPAN.terminal-foreground-180 {
+  color: #d7af87; }
+
+SPAN.terminal-foreground-181 {
+  color: #d7afaf; }
+
+SPAN.terminal-foreground-182 {
+  color: #d7afd7; }
+
+SPAN.terminal-foreground-183 {
+  color: #d7afff; }
+
+SPAN.terminal-foreground-184 {
+  color: #d7d700; }
+
+SPAN.terminal-foreground-185 {
+  color: #d7d75f; }
+
+SPAN.terminal-foreground-186 {
+  color: #d7d787; }
+
+SPAN.terminal-foreground-187 {
+  color: #d7d7af; }
+
+SPAN.terminal-foreground-188 {
+  color: #d7d7d7; }
+
+SPAN.terminal-foreground-189 {
+  color: #d7d7ff; }
+
+SPAN.terminal-foreground-190 {
+  color: #d7ff00; }
+
+SPAN.terminal-foreground-191 {
+  color: #d7ff5f; }
+
+SPAN.terminal-foreground-192 {
+  color: #d7ff87; }
+
+SPAN.terminal-foreground-193 {
+  color: #d7ffaf; }
+
+SPAN.terminal-foreground-194 {
+  color: #d7ffd7; }
+
+SPAN.terminal-foreground-195 {
+  color: #d7ffff; }
+
+SPAN.terminal-foreground-196 {
+  color: #ff0000; }
+
+SPAN.terminal-foreground-197 {
+  color: #ff005f; }
+
+SPAN.terminal-foreground-198 {
+  color: #ff0087; }
+
+SPAN.terminal-foreground-199 {
+  color: #ff00af; }
+
+SPAN.terminal-foreground-200 {
+  color: #ff00d7; }
+
+SPAN.terminal-foreground-201 {
+  color: #ff00ff; }
+
+SPAN.terminal-foreground-202 {
+  color: #ff5f00; }
+
+SPAN.terminal-foreground-203 {
+  color: #ff5f5f; }
+
+SPAN.terminal-foreground-204 {
+  color: #ff5f87; }
+
+SPAN.terminal-foreground-205 {
+  color: #ff5faf; }
+
+SPAN.terminal-foreground-206 {
+  color: #ff5fd7; }
+
+SPAN.terminal-foreground-207 {
+  color: #ff5fff; }
+
+SPAN.terminal-foreground-208 {
+  color: #ff8700; }
+
+SPAN.terminal-foreground-209 {
+  color: #ff875f; }
+
+SPAN.terminal-foreground-210 {
+  color: #ff8787; }
+
+SPAN.terminal-foreground-211 {
+  color: #ff87af; }
+
+SPAN.terminal-foreground-212 {
+  color: #ff87d7; }
+
+SPAN.terminal-foreground-213 {
+  color: #ff87ff; }
+
+SPAN.terminal-foreground-214 {
+  color: #ffaf00; }
+
+SPAN.terminal-foreground-215 {
+  color: #ffaf5f; }
+
+SPAN.terminal-foreground-216 {
+  color: #ffaf87; }
+
+SPAN.terminal-foreground-217 {
+  color: #ffafaf; }
+
+SPAN.terminal-foreground-218 {
+  color: #ffafd7; }
+
+SPAN.terminal-foreground-219 {
+  color: #ffafff; }
+
+SPAN.terminal-foreground-220 {
+  color: #ffd700; }
+
+SPAN.terminal-foreground-221 {
+  color: #ffd75f; }
+
+SPAN.terminal-foreground-222 {
+  color: #ffd787; }
+
+SPAN.terminal-foreground-223 {
+  color: #ffd7af; }
+
+SPAN.terminal-foreground-224 {
+  color: #ffd7d7; }
+
+SPAN.terminal-foreground-225 {
+  color: #ffd7ff; }
+
+SPAN.terminal-foreground-226 {
+  color: #ffff00; }
+
+SPAN.terminal-foreground-227 {
+  color: #ffff5f; }
+
+SPAN.terminal-foreground-228 {
+  color: #ffff87; }
+
+SPAN.terminal-foreground-229 {
+  color: #ffffaf; }
+
+SPAN.terminal-foreground-230 {
+  color: #ffffd7; }
+
+SPAN.terminal-foreground-231 {
+  color: #ffffff; }
+
+SPAN.terminal-foreground-232 {
+  color: #080808; }
+
+SPAN.terminal-foreground-233 {
+  color: #121212; }
+
+SPAN.terminal-foreground-234 {
+  color: #1c1c1c; }
+
+SPAN.terminal-foreground-235 {
+  color: #262626; }
+
+SPAN.terminal-foreground-236 {
+  color: #303030; }
+
+SPAN.terminal-foreground-237 {
+  color: #3a3a3a; }
+
+SPAN.terminal-foreground-238 {
+  color: #444444; }
+
+SPAN.terminal-foreground-239 {
+  color: #4e4e4e; }
+
+SPAN.terminal-foreground-240 {
+  color: #585858; }
+
+SPAN.terminal-foreground-241 {
+  color: #626262; }
+
+SPAN.terminal-foreground-242 {
+  color: #6c6c6c; }
+
+SPAN.terminal-foreground-243 {
+  color: #767676; }
+
+SPAN.terminal-foreground-244 {
+  color: #808080; }
+
+SPAN.terminal-foreground-245 {
+  color: #8a8a8a; }
+
+SPAN.terminal-foreground-246 {
+  color: #949494; }
+
+SPAN.terminal-foreground-247 {
+  color: #9e9e9e; }
+
+SPAN.terminal-foreground-248 {
+  color: #a8a8a8; }
+
+SPAN.terminal-foreground-249 {
+  color: #b2b2b2; }
+
+SPAN.terminal-foreground-250 {
+  color: #bcbcbc; }
+
+SPAN.terminal-foreground-251 {
+  color: #c6c6c6; }
+
+SPAN.terminal-foreground-252 {
+  color: #d0d0d0; }
+
+SPAN.terminal-foreground-253 {
+  color: #dadada; }
+
+SPAN.terminal-foreground-254 {
+  color: #e4e4e4; }
+
+SPAN.terminal-foreground-255 {
+  color: #eeeeee; }
+
+SPAN.terminal-foreground-256 {
+  color: #000000; }
+
+SPAN.terminal-foreground-257 {
+  color: #b2b2b2; }
+
+/* faint or dim versions of the foreground colours. */
+SPAN.terminal-faint-0 {
+  color: rgba(0, 0, 0, 0.6); }
+
+SPAN.terminal-faint-1 {
+  color: rgba(178, 24, 24, 0.6); }
+
+SPAN.terminal-faint-2 {
+  color: rgba(24, 178, 24, 0.6); }
+
+SPAN.terminal-faint-3 {
+  color: rgba(178, 104, 24, 0.6); }
+
+SPAN.terminal-faint-4 {
+  color: rgba(53, 53, 255, 0.6); }
+
+SPAN.terminal-faint-5 {
+  color: rgba(178, 24, 178, 0.6); }
+
+SPAN.terminal-faint-6 {
+  color: rgba(24, 178, 178, 0.6); }
+
+SPAN.terminal-faint-7 {
+  color: rgba(178, 178, 178, 0.6); }
+
+SPAN.terminal-faint-8 {
+  color: rgba(104, 104, 104, 0.6); }
+
+SPAN.terminal-faint-9 {
+  color: rgba(255, 84, 84, 0.6); }
+
+SPAN.terminal-faint-10 {
+  color: rgba(84, 255, 84, 0.6); }
+
+SPAN.terminal-faint-11 {
+  color: rgba(255, 255, 84, 0.6); }
+
+SPAN.terminal-faint-12 {
+  color: rgba(115, 115, 255, 0.6); }
+
+SPAN.terminal-faint-13 {
+  color: rgba(255, 84, 255, 0.6); }
+
+SPAN.terminal-faint-14 {
+  color: rgba(84, 255, 255, 0.6); }
+
+SPAN.terminal-faint-15 {
+  color: rgba(255, 255, 255, 0.6); }
+
+SPAN.terminal-faint-16 {
+  color: rgba(0, 0, 0, 0.6); }
+
+SPAN.terminal-faint-17 {
+  color: rgba(0, 0, 95, 0.6); }
+
+SPAN.terminal-faint-18 {
+  color: rgba(0, 0, 135, 0.6); }
+
+SPAN.terminal-faint-19 {
+  color: rgba(0, 0, 175, 0.6); }
+
+SPAN.terminal-faint-20 {
+  color: rgba(0, 0, 215, 0.6); }
+
+SPAN.terminal-faint-21 {
+  color: rgba(0, 0, 255, 0.6); }
+
+SPAN.terminal-faint-22 {
+  color: rgba(0, 95, 0, 0.6); }
+
+SPAN.terminal-faint-23 {
+  color: rgba(0, 95, 95, 0.6); }
+
+SPAN.terminal-faint-24 {
+  color: rgba(0, 95, 135, 0.6); }
+
+SPAN.terminal-faint-25 {
+  color: rgba(0, 95, 175, 0.6); }
+
+SPAN.terminal-faint-26 {
+  color: rgba(0, 95, 215, 0.6); }
+
+SPAN.terminal-faint-27 {
+  color: rgba(0, 95, 255, 0.6); }
+
+SPAN.terminal-faint-28 {
+  color: rgba(0, 135, 0, 0.6); }
+
+SPAN.terminal-faint-29 {
+  color: rgba(0, 135, 95, 0.6); }
+
+SPAN.terminal-faint-30 {
+  color: rgba(0, 135, 135, 0.6); }
+
+SPAN.terminal-faint-31 {
+  color: rgba(0, 135, 175, 0.6); }
+
+SPAN.terminal-faint-32 {
+  color: rgba(0, 135, 215, 0.6); }
+
+SPAN.terminal-faint-33 {
+  color: rgba(0, 135, 255, 0.6); }
+
+SPAN.terminal-faint-34 {
+  color: rgba(0, 175, 0, 0.6); }
+
+SPAN.terminal-faint-35 {
+  color: rgba(0, 175, 95, 0.6); }
+
+SPAN.terminal-faint-36 {
+  color: rgba(0, 175, 135, 0.6); }
+
+SPAN.terminal-faint-37 {
+  color: rgba(0, 175, 175, 0.6); }
+
+SPAN.terminal-faint-38 {
+  color: rgba(0, 175, 215, 0.6); }
+
+SPAN.terminal-faint-39 {
+  color: rgba(0, 175, 255, 0.6); }
+
+SPAN.terminal-faint-40 {
+  color: rgba(0, 215, 0, 0.6); }
+
+SPAN.terminal-faint-41 {
+  color: rgba(0, 215, 95, 0.6); }
+
+SPAN.terminal-faint-42 {
+  color: rgba(0, 215, 135, 0.6); }
+
+SPAN.terminal-faint-43 {
+  color: rgba(0, 215, 175, 0.6); }
+
+SPAN.terminal-faint-44 {
+  color: rgba(0, 215, 215, 0.6); }
+
+SPAN.terminal-faint-45 {
+  color: rgba(0, 215, 255, 0.6); }
+
+SPAN.terminal-faint-46 {
+  color: rgba(0, 255, 0, 0.6); }
+
+SPAN.terminal-faint-47 {
+  color: rgba(0, 255, 95, 0.6); }
+
+SPAN.terminal-faint-48 {
+  color: rgba(0, 255, 135, 0.6); }
+
+SPAN.terminal-faint-49 {
+  color: rgba(0, 255, 175, 0.6); }
+
+SPAN.terminal-faint-50 {
+  color: rgba(0, 255, 215, 0.6); }
+
+SPAN.terminal-faint-51 {
+  color: rgba(0, 255, 255, 0.6); }
+
+SPAN.terminal-faint-52 {
+  color: rgba(95, 0, 0, 0.6); }
+
+SPAN.terminal-faint-53 {
+  color: rgba(95, 0, 95, 0.6); }
+
+SPAN.terminal-faint-54 {
+  color: rgba(95, 0, 135, 0.6); }
+
+SPAN.terminal-faint-55 {
+  color: rgba(95, 0, 175, 0.6); }
+
+SPAN.terminal-faint-56 {
+  color: rgba(95, 0, 215, 0.6); }
+
+SPAN.terminal-faint-57 {
+  color: rgba(95, 0, 255, 0.6); }
+
+SPAN.terminal-faint-58 {
+  color: rgba(95, 95, 0, 0.6); }
+
+SPAN.terminal-faint-59 {
+  color: rgba(95, 95, 95, 0.6); }
+
+SPAN.terminal-faint-60 {
+  color: rgba(95, 95, 135, 0.6); }
+
+SPAN.terminal-faint-61 {
+  color: rgba(95, 95, 175, 0.6); }
+
+SPAN.terminal-faint-62 {
+  color: rgba(95, 95, 215, 0.6); }
+
+SPAN.terminal-faint-63 {
+  color: rgba(95, 95, 255, 0.6); }
+
+SPAN.terminal-faint-64 {
+  color: rgba(95, 135, 0, 0.6); }
+
+SPAN.terminal-faint-65 {
+  color: rgba(95, 135, 95, 0.6); }
+
+SPAN.terminal-faint-66 {
+  color: rgba(95, 135, 135, 0.6); }
+
+SPAN.terminal-faint-67 {
+  color: rgba(95, 135, 175, 0.6); }
+
+SPAN.terminal-faint-68 {
+  color: rgba(95, 135, 215, 0.6); }
+
+SPAN.terminal-faint-69 {
+  color: rgba(95, 135, 255, 0.6); }
+
+SPAN.terminal-faint-70 {
+  color: rgba(95, 175, 0, 0.6); }
+
+SPAN.terminal-faint-71 {
+  color: rgba(95, 175, 95, 0.6); }
+
+SPAN.terminal-faint-72 {
+  color: rgba(95, 175, 135, 0.6); }
+
+SPAN.terminal-faint-73 {
+  color: rgba(95, 175, 175, 0.6); }
+
+SPAN.terminal-faint-74 {
+  color: rgba(95, 175, 215, 0.6); }
+
+SPAN.terminal-faint-75 {
+  color: rgba(95, 175, 255, 0.6); }
+
+SPAN.terminal-faint-76 {
+  color: rgba(95, 215, 0, 0.6); }
+
+SPAN.terminal-faint-77 {
+  color: rgba(95, 215, 95, 0.6); }
+
+SPAN.terminal-faint-78 {
+  color: rgba(95, 215, 135, 0.6); }
+
+SPAN.terminal-faint-79 {
+  color: rgba(95, 215, 175, 0.6); }
+
+SPAN.terminal-faint-80 {
+  color: rgba(95, 215, 215, 0.6); }
+
+SPAN.terminal-faint-81 {
+  color: rgba(95, 215, 255, 0.6); }
+
+SPAN.terminal-faint-82 {
+  color: rgba(95, 255, 0, 0.6); }
+
+SPAN.terminal-faint-83 {
+  color: rgba(95, 255, 95, 0.6); }
+
+SPAN.terminal-faint-84 {
+  color: rgba(95, 255, 135, 0.6); }
+
+SPAN.terminal-faint-85 {
+  color: rgba(95, 255, 175, 0.6); }
+
+SPAN.terminal-faint-86 {
+  color: rgba(95, 255, 215, 0.6); }
+
+SPAN.terminal-faint-87 {
+  color: rgba(95, 255, 255, 0.6); }
+
+SPAN.terminal-faint-88 {
+  color: rgba(135, 0, 0, 0.6); }
+
+SPAN.terminal-faint-89 {
+  color: rgba(135, 0, 95, 0.6); }
+
+SPAN.terminal-faint-90 {
+  color: rgba(135, 0, 135, 0.6); }
+
+SPAN.terminal-faint-91 {
+  color: rgba(135, 0, 175, 0.6); }
+
+SPAN.terminal-faint-92 {
+  color: rgba(135, 0, 215, 0.6); }
+
+SPAN.terminal-faint-93 {
+  color: rgba(135, 0, 255, 0.6); }
+
+SPAN.terminal-faint-94 {
+  color: rgba(135, 95, 0, 0.6); }
+
+SPAN.terminal-faint-95 {
+  color: rgba(135, 95, 95, 0.6); }
+
+SPAN.terminal-faint-96 {
+  color: rgba(135, 95, 135, 0.6); }
+
+SPAN.terminal-faint-97 {
+  color: rgba(135, 95, 175, 0.6); }
+
+SPAN.terminal-faint-98 {
+  color: rgba(135, 95, 215, 0.6); }
+
+SPAN.terminal-faint-99 {
+  color: rgba(135, 95, 255, 0.6); }
+
+SPAN.terminal-faint-100 {
+  color: rgba(135, 135, 0, 0.6); }
+
+SPAN.terminal-faint-101 {
+  color: rgba(135, 135, 95, 0.6); }
+
+SPAN.terminal-faint-102 {
+  color: rgba(135, 135, 135, 0.6); }
+
+SPAN.terminal-faint-103 {
+  color: rgba(135, 135, 175, 0.6); }
+
+SPAN.terminal-faint-104 {
+  color: rgba(135, 135, 215, 0.6); }
+
+SPAN.terminal-faint-105 {
+  color: rgba(135, 135, 255, 0.6); }
+
+SPAN.terminal-faint-106 {
+  color: rgba(135, 175, 0, 0.6); }
+
+SPAN.terminal-faint-107 {
+  color: rgba(135, 175, 95, 0.6); }
+
+SPAN.terminal-faint-108 {
+  color: rgba(135, 175, 135, 0.6); }
+
+SPAN.terminal-faint-109 {
+  color: rgba(135, 175, 175, 0.6); }
+
+SPAN.terminal-faint-110 {
+  color: rgba(135, 175, 215, 0.6); }
+
+SPAN.terminal-faint-111 {
+  color: rgba(135, 175, 255, 0.6); }
+
+SPAN.terminal-faint-112 {
+  color: rgba(135, 215, 0, 0.6); }
+
+SPAN.terminal-faint-113 {
+  color: rgba(135, 215, 95, 0.6); }
+
+SPAN.terminal-faint-114 {
+  color: rgba(135, 215, 135, 0.6); }
+
+SPAN.terminal-faint-115 {
+  color: rgba(135, 215, 175, 0.6); }
+
+SPAN.terminal-faint-116 {
+  color: rgba(135, 215, 215, 0.6); }
+
+SPAN.terminal-faint-117 {
+  color: rgba(135, 215, 255, 0.6); }
+
+SPAN.terminal-faint-118 {
+  color: rgba(135, 255, 0, 0.6); }
+
+SPAN.terminal-faint-119 {
+  color: rgba(135, 255, 95, 0.6); }
+
+SPAN.terminal-faint-120 {
+  color: rgba(135, 255, 135, 0.6); }
+
+SPAN.terminal-faint-121 {
+  color: rgba(135, 255, 175, 0.6); }
+
+SPAN.terminal-faint-122 {
+  color: rgba(135, 255, 215, 0.6); }
+
+SPAN.terminal-faint-123 {
+  color: rgba(135, 255, 255, 0.6); }
+
+SPAN.terminal-faint-124 {
+  color: rgba(175, 0, 0, 0.6); }
+
+SPAN.terminal-faint-125 {
+  color: rgba(175, 0, 95, 0.6); }
+
+SPAN.terminal-faint-126 {
+  color: rgba(175, 0, 135, 0.6); }
+
+SPAN.terminal-faint-127 {
+  color: rgba(175, 0, 175, 0.6); }
+
+SPAN.terminal-faint-128 {
+  color: rgba(175, 0, 215, 0.6); }
+
+SPAN.terminal-faint-129 {
+  color: rgba(175, 0, 255, 0.6); }
+
+SPAN.terminal-faint-130 {
+  color: rgba(175, 95, 0, 0.6); }
+
+SPAN.terminal-faint-131 {
+  color: rgba(175, 95, 95, 0.6); }
+
+SPAN.terminal-faint-132 {
+  color: rgba(175, 95, 135, 0.6); }
+
+SPAN.terminal-faint-133 {
+  color: rgba(175, 95, 175, 0.6); }
+
+SPAN.terminal-faint-134 {
+  color: rgba(175, 95, 215, 0.6); }
+
+SPAN.terminal-faint-135 {
+  color: rgba(175, 95, 255, 0.6); }
+
+SPAN.terminal-faint-136 {
+  color: rgba(175, 135, 0, 0.6); }
+
+SPAN.terminal-faint-137 {
+  color: rgba(175, 135, 95, 0.6); }
+
+SPAN.terminal-faint-138 {
+  color: rgba(175, 135, 135, 0.6); }
+
+SPAN.terminal-faint-139 {
+  color: rgba(175, 135, 175, 0.6); }
+
+SPAN.terminal-faint-140 {
+  color: rgba(175, 135, 215, 0.6); }
+
+SPAN.terminal-faint-141 {
+  color: rgba(175, 135, 255, 0.6); }
+
+SPAN.terminal-faint-142 {
+  color: rgba(175, 175, 0, 0.6); }
+
+SPAN.terminal-faint-143 {
+  color: rgba(175, 175, 95, 0.6); }
+
+SPAN.terminal-faint-144 {
+  color: rgba(175, 175, 135, 0.6); }
+
+SPAN.terminal-faint-145 {
+  color: rgba(175, 175, 175, 0.6); }
+
+SPAN.terminal-faint-146 {
+  color: rgba(175, 175, 215, 0.6); }
+
+SPAN.terminal-faint-147 {
+  color: rgba(175, 175, 255, 0.6); }
+
+SPAN.terminal-faint-148 {
+  color: rgba(175, 215, 0, 0.6); }
+
+SPAN.terminal-faint-149 {
+  color: rgba(175, 215, 95, 0.6); }
+
+SPAN.terminal-faint-150 {
+  color: rgba(175, 215, 135, 0.6); }
+
+SPAN.terminal-faint-151 {
+  color: rgba(175, 215, 175, 0.6); }
+
+SPAN.terminal-faint-152 {
+  color: rgba(175, 215, 215, 0.6); }
+
+SPAN.terminal-faint-153 {
+  color: rgba(175, 215, 255, 0.6); }
+
+SPAN.terminal-faint-154 {
+  color: rgba(175, 255, 0, 0.6); }
+
+SPAN.terminal-faint-155 {
+  color: rgba(175, 255, 95, 0.6); }
+
+SPAN.terminal-faint-156 {
+  color: rgba(175, 255, 135, 0.6); }
+
+SPAN.terminal-faint-157 {
+  color: rgba(175, 255, 175, 0.6); }
+
+SPAN.terminal-faint-158 {
+  color: rgba(175, 255, 215, 0.6); }
+
+SPAN.terminal-faint-159 {
+  color: rgba(175, 255, 255, 0.6); }
+
+SPAN.terminal-faint-160 {
+  color: rgba(215, 0, 0, 0.6); }
+
+SPAN.terminal-faint-161 {
+  color: rgba(215, 0, 95, 0.6); }
+
+SPAN.terminal-faint-162 {
+  color: rgba(215, 0, 135, 0.6); }
+
+SPAN.terminal-faint-163 {
+  color: rgba(215, 0, 175, 0.6); }
+
+SPAN.terminal-faint-164 {
+  color: rgba(215, 0, 215, 0.6); }
+
+SPAN.terminal-faint-165 {
+  color: rgba(215, 0, 255, 0.6); }
+
+SPAN.terminal-faint-166 {
+  color: rgba(215, 95, 0, 0.6); }
+
+SPAN.terminal-faint-167 {
+  color: rgba(215, 95, 95, 0.6); }
+
+SPAN.terminal-faint-168 {
+  color: rgba(215, 95, 135, 0.6); }
+
+SPAN.terminal-faint-169 {
+  color: rgba(215, 95, 175, 0.6); }
+
+SPAN.terminal-faint-170 {
+  color: rgba(215, 95, 215, 0.6); }
+
+SPAN.terminal-faint-171 {
+  color: rgba(215, 95, 255, 0.6); }
+
+SPAN.terminal-faint-172 {
+  color: rgba(215, 135, 0, 0.6); }
+
+SPAN.terminal-faint-173 {
+  color: rgba(215, 135, 95, 0.6); }
+
+SPAN.terminal-faint-174 {
+  color: rgba(215, 135, 135, 0.6); }
+
+SPAN.terminal-faint-175 {
+  color: rgba(215, 135, 175, 0.6); }
+
+SPAN.terminal-faint-176 {
+  color: rgba(215, 135, 215, 0.6); }
+
+SPAN.terminal-faint-177 {
+  color: rgba(215, 135, 255, 0.6); }
+
+SPAN.terminal-faint-178 {
+  color: rgba(215, 175, 0, 0.6); }
+
+SPAN.terminal-faint-179 {
+  color: rgba(215, 175, 95, 0.6); }
+
+SPAN.terminal-faint-180 {
+  color: rgba(215, 175, 135, 0.6); }
+
+SPAN.terminal-faint-181 {
+  color: rgba(215, 175, 175, 0.6); }
+
+SPAN.terminal-faint-182 {
+  color: rgba(215, 175, 215, 0.6); }
+
+SPAN.terminal-faint-183 {
+  color: rgba(215, 175, 255, 0.6); }
+
+SPAN.terminal-faint-184 {
+  color: rgba(215, 215, 0, 0.6); }
+
+SPAN.terminal-faint-185 {
+  color: rgba(215, 215, 95, 0.6); }
+
+SPAN.terminal-faint-186 {
+  color: rgba(215, 215, 135, 0.6); }
+
+SPAN.terminal-faint-187 {
+  color: rgba(215, 215, 175, 0.6); }
+
+SPAN.terminal-faint-188 {
+  color: rgba(215, 215, 215, 0.6); }
+
+SPAN.terminal-faint-189 {
+  color: rgba(215, 215, 255, 0.6); }
+
+SPAN.terminal-faint-190 {
+  color: rgba(215, 255, 0, 0.6); }
+
+SPAN.terminal-faint-191 {
+  color: rgba(215, 255, 95, 0.6); }
+
+SPAN.terminal-faint-192 {
+  color: rgba(215, 255, 135, 0.6); }
+
+SPAN.terminal-faint-193 {
+  color: rgba(215, 255, 175, 0.6); }
+
+SPAN.terminal-faint-194 {
+  color: rgba(215, 255, 215, 0.6); }
+
+SPAN.terminal-faint-195 {
+  color: rgba(215, 255, 255, 0.6); }
+
+SPAN.terminal-faint-196 {
+  color: rgba(255, 0, 0, 0.6); }
+
+SPAN.terminal-faint-197 {
+  color: rgba(255, 0, 95, 0.6); }
+
+SPAN.terminal-faint-198 {
+  color: rgba(255, 0, 135, 0.6); }
+
+SPAN.terminal-faint-199 {
+  color: rgba(255, 0, 175, 0.6); }
+
+SPAN.terminal-faint-200 {
+  color: rgba(255, 0, 215, 0.6); }
+
+SPAN.terminal-faint-201 {
+  color: rgba(255, 0, 255, 0.6); }
+
+SPAN.terminal-faint-202 {
+  color: rgba(255, 95, 0, 0.6); }
+
+SPAN.terminal-faint-203 {
+  color: rgba(255, 95, 95, 0.6); }
+
+SPAN.terminal-faint-204 {
+  color: rgba(255, 95, 135, 0.6); }
+
+SPAN.terminal-faint-205 {
+  color: rgba(255, 95, 175, 0.6); }
+
+SPAN.terminal-faint-206 {
+  color: rgba(255, 95, 215, 0.6); }
+
+SPAN.terminal-faint-207 {
+  color: rgba(255, 95, 255, 0.6); }
+
+SPAN.terminal-faint-208 {
+  color: rgba(255, 135, 0, 0.6); }
+
+SPAN.terminal-faint-209 {
+  color: rgba(255, 135, 95, 0.6); }
+
+SPAN.terminal-faint-210 {
+  color: rgba(255, 135, 135, 0.6); }
+
+SPAN.terminal-faint-211 {
+  color: rgba(255, 135, 175, 0.6); }
+
+SPAN.terminal-faint-212 {
+  color: rgba(255, 135, 215, 0.6); }
+
+SPAN.terminal-faint-213 {
+  color: rgba(255, 135, 255, 0.6); }
+
+SPAN.terminal-faint-214 {
+  color: rgba(255, 175, 0, 0.6); }
+
+SPAN.terminal-faint-215 {
+  color: rgba(255, 175, 95, 0.6); }
+
+SPAN.terminal-faint-216 {
+  color: rgba(255, 175, 135, 0.6); }
+
+SPAN.terminal-faint-217 {
+  color: rgba(255, 175, 175, 0.6); }
+
+SPAN.terminal-faint-218 {
+  color: rgba(255, 175, 215, 0.6); }
+
+SPAN.terminal-faint-219 {
+  color: rgba(255, 175, 255, 0.6); }
+
+SPAN.terminal-faint-220 {
+  color: rgba(255, 215, 0, 0.6); }
+
+SPAN.terminal-faint-221 {
+  color: rgba(255, 215, 95, 0.6); }
+
+SPAN.terminal-faint-222 {
+  color: rgba(255, 215, 135, 0.6); }
+
+SPAN.terminal-faint-223 {
+  color: rgba(255, 215, 175, 0.6); }
+
+SPAN.terminal-faint-224 {
+  color: rgba(255, 215, 215, 0.6); }
+
+SPAN.terminal-faint-225 {
+  color: rgba(255, 215, 255, 0.6); }
+
+SPAN.terminal-faint-226 {
+  color: rgba(255, 255, 0, 0.6); }
+
+SPAN.terminal-faint-227 {
+  color: rgba(255, 255, 95, 0.6); }
+
+SPAN.terminal-faint-228 {
+  color: rgba(255, 255, 135, 0.6); }
+
+SPAN.terminal-faint-229 {
+  color: rgba(255, 255, 175, 0.6); }
+
+SPAN.terminal-faint-230 {
+  color: rgba(255, 255, 215, 0.6); }
+
+SPAN.terminal-faint-231 {
+  color: rgba(255, 255, 255, 0.6); }
+
+SPAN.terminal-faint-232 {
+  color: rgba(8, 8, 8, 0.6); }
+
+SPAN.terminal-faint-233 {
+  color: rgba(18, 18, 18, 0.6); }
+
+SPAN.terminal-faint-234 {
+  color: rgba(28, 28, 28, 0.6); }
+
+SPAN.terminal-faint-235 {
+  color: rgba(38, 38, 38, 0.6); }
+
+SPAN.terminal-faint-236 {
+  color: rgba(48, 48, 48, 0.6); }
+
+SPAN.terminal-faint-237 {
+  color: rgba(58, 58, 58, 0.6); }
+
+SPAN.terminal-faint-238 {
+  color: rgba(68, 68, 68, 0.6); }
+
+SPAN.terminal-faint-239 {
+  color: rgba(78, 78, 78, 0.6); }
+
+SPAN.terminal-faint-240 {
+  color: rgba(88, 88, 88, 0.6); }
+
+SPAN.terminal-faint-241 {
+  color: rgba(98, 98, 98, 0.6); }
+
+SPAN.terminal-faint-242 {
+  color: rgba(108, 108, 108, 0.6); }
+
+SPAN.terminal-faint-243 {
+  color: rgba(118, 118, 118, 0.6); }
+
+SPAN.terminal-faint-244 {
+  color: rgba(128, 128, 128, 0.6); }
+
+SPAN.terminal-faint-245 {
+  color: rgba(138, 138, 138, 0.6); }
+
+SPAN.terminal-faint-246 {
+  color: rgba(148, 148, 148, 0.6); }
+
+SPAN.terminal-faint-247 {
+  color: rgba(158, 158, 158, 0.6); }
+
+SPAN.terminal-faint-248 {
+  color: rgba(168, 168, 168, 0.6); }
+
+SPAN.terminal-faint-249 {
+  color: rgba(178, 178, 178, 0.6); }
+
+SPAN.terminal-faint-250 {
+  color: rgba(188, 188, 188, 0.6); }
+
+SPAN.terminal-faint-251 {
+  color: rgba(198, 198, 198, 0.6); }
+
+SPAN.terminal-faint-252 {
+  color: rgba(208, 208, 208, 0.6); }
+
+SPAN.terminal-faint-253 {
+  color: rgba(218, 218, 218, 0.6); }
+
+SPAN.terminal-faint-254 {
+  color: rgba(228, 228, 228, 0.6); }
+
+SPAN.terminal-faint-255 {
+  color: rgba(238, 238, 238, 0.6); }
+
+</style>
+
+<body>
+  <div id="editor">function foo(items) {
+      var x = "All this is syntax highlighted";
+      return x;
+  }</div>
+   
+  <script src="../dist/test_bundle.js"></script>
+</body>
+</html>
