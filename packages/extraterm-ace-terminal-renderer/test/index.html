@@ -7,6 +7,14 @@
     position: absolute;
     top: 0;
     right: 0;
+    bottom: 150px;
+    left: 0;
+}
+
+#controls {
+  position: absolute;
+    height: 150px;
+    right: 0;
     bottom: 0;
     left: 0;
 }
@@ -2376,7 +2384,15 @@ SPAN.terminal-faint-255 {
       var x = "All this is syntax highlighted";
       return x;
   }</div>
-   
+
+  <div id="controls">
+    Line: <input type="text" id="input_line"><br>Attr: <input type="text" id="attr_line"><br>
+    <button id="append_text">Append Line</button>
+    <button id="replace_text">Replace Line</button><br>
+    <input id="bold" type="checkbox">Bold<br>
+    <input id="italic" type="checkbox">Italic<br>
+    <input id="underline" type="checkbox">Underline<br>
+  </div>
   <script src="../dist/test_bundle.js"></script>
 </body>
 </html>

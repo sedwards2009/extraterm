@@ -21,6 +21,7 @@
     "build-test": "tsc && webpack --config webpack.test.config.js"
   },
   "dependencies": {
-    "ace-ts": "/home/sbe/devel/ace-ts/"
+    "ace-ts": "/home/sbe/devel/ace-ts/",
+    "term-api": "1.0.0"
   }
 }

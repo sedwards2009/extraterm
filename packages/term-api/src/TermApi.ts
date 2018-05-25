@@ -254,6 +254,10 @@ export function backgroundFromCharAttr(attr: CharAttr): number {
   return attr & 0x1ff;
 }
 
+export function packAttr(attrFlags: number, foreground: number, background: number): number {
+  return (attrFlags << 18) | (foreground << 9) | background;
+}
+
 // Character rendering attributes packed inside a CharAttr.
 export const BOLD_ATTR_FLAG = 1;
 export const UNDERLINE_ATTR_FLAG = 2;
