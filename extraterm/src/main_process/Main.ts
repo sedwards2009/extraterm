@@ -317,7 +317,8 @@ function setScaleFactor(originalFactorArg?: string): {restartNeeded: boolean, cu
       cwd: process.cwd(),
       detached: true,
       env: process.env,
-      stdio: [process.stdin, process.stdout, process.stderr]});
+      stdio: "inherit"
+    });
 
     _log.info("Restarting with scale factor ", scaleFactor);
     app.exit(0);
