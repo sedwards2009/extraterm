@@ -7,6 +7,7 @@ import * as dom from "ace-ts/build/lib/dom";
 import * as event from "ace-ts/build/lib/event";
 import { TerminalAceEditor } from "../TerminalAceEditor";
 import * as TermApi from "term-api";
+import { TerminalDocument } from "../TerminalDocument";
 
 
 function createEditSession(text, mode?): EditSession {
@@ -37,7 +38,7 @@ function terminalEditor(elementOrString: HTMLElement | string): TerminalAceEdito
       el.innerHTML = "";
   }
 
-  var editSession = new TerminalEditSession(value);
+  var editSession = new TerminalEditSession(new TerminalDocument(value));
   editSession.setUndoManager(new UndoManager());
 
   var editor = new TerminalAceEditor(new Renderer(el as HTMLElement), editSession);

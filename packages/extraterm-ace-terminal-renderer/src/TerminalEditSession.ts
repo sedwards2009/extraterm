@@ -2,7 +2,6 @@ import { Document } from "ace-ts/build/Document";
 import { EditSession } from "ace-ts/build/EditSession";
 import { HighlighterToken } from "ace-ts/build/mode/Highlighter";
 import { TokenWithIndex } from "ace-ts/build/Token";
-import { RowAttributes } from "./RowAttributes";
 import { Delta } from "ace-ts/build/Delta";
 import { Fold } from "ace-ts/build/Fold";
 import { LanguageMode } from "ace-ts/build/LanguageMode";
@@ -11,19 +10,23 @@ import { TextMode } from "ace-ts/build/mode/TextMode";
 import * as TermApi from "term-api";
 import { RangeBasic } from "ace-ts/build/RangeBasic";
 
+import * as LineFunctions from "./LineFunctions";
 
 const OVERSIZE_CLASSES = "oversize";
+const defaultCellAttr = TermApi.packAttr(0, 257, 256);
 
 
 export class TerminalEditSession extends EditSession {
 
-  private _rowAttributesList: RowAttributes[] = [];
   private _lineData: TermApi.Line[] = [];
 
   constructor(doc: string | Document, mode: LanguageMode = new TextMode(), callback?) {
     super(doc, mode, callback);
-    this._initializeRowAttributes();
     this._initializeLineAttributes();
+  }
+
+  getState(row: number): string {
+    return "";
   }
 
   setTerminalLine(row: number, line: TermApi.Line): void {
@@ -39,8 +42,8 @@ export class TerminalEditSession extends EditSession {
     };
 
     const newText = String.fromCodePoint(...line.chars);
-    this._lineData[row] = line;
     this.replace(range, newText);
+    this._lineData[row] = line;
   }
 
   appendTerminalLine(line: TermApi.Line): void {
@@ -57,40 +60,21 @@ export class TerminalEditSession extends EditSession {
     };
 
     const newText = String.fromCodePoint(...line.chars);
-    this._lineData.push(line);
+    const lineDataLen = this._lineData.length;
     this.replace(range,"\n" + newText);
-  }
-
-  private _initializeRowAttributes(): void {
-    const numberOfRows = this.doc.getLength();
-    for (let i=0; i<numberOfRows; i++) {
-      const line = this.doc.getLine(i);
-      this._rowAttributesList.push(new RowAttributes(line.length));
-    }
-
+    this._lineData[lineDataLen] = line;
   }
 
   private _initializeLineAttributes(): void {
     const numberOfRows = this.doc.getLength();
     for (let i=0; i<numberOfRows; i++) {
-      this._lineData.push(null);
+      this._lineData.push(LineFunctions.create(this.getLine(i).length));
     }
-  }
-
-  __getTokens(row: number): HighlighterToken[] {
-
-    console.log("new style tokens: ", this.__getTokens(row));
-
-
-    const ra = this._rowAttributesList[row]
-    const rowText = this.doc.getLine(row);
-    return ra.getTokens(rowText);
   }
 
   getTokens(row: number): HighlighterToken[] {
     const lineData = this._lineData[row];
 
-    const defaultCellAttr = TermApi.packAttr(0, 257, 256);
     let currentCellAttr = defaultCellAttr;
     const lineCellAttrs = lineData == null ? null : lineData.attrs;
 
@@ -232,29 +216,40 @@ export class TerminalEditSession extends EditSession {
     return folds;
   }
 
+  private _getLineData(row: number): TermApi.Line {
+    let data = this._lineData[row];
+    if (data == null) {
+      const text = this.getLine(row);
+      data = LineFunctions.create(text.length);
+      this._lineData[row] = data;
+    }
+    return data;
+  }
+
   private _updateDeltaInsert(delta: Delta): void {
-    const rowAttr = this._rowAttributesList[delta.start.row];
+    const lineData = this._getLineData(delta.start.row);
+
     if (delta.lines.length == 1) {
-      rowAttr.insertSpaces(delta.start.column, delta.lines[0].length);
+      LineFunctions.insertSpaces(lineData, delta.start.column, delta.lines[0].length);
     } else {
 
       // Start row
-      const endRowAttr = rowAttr.split(delta.start.column);
-      rowAttr.insertSpaces(delta.start.column, delta.lines[0].length);
+      const endRowAttr = LineFunctions.split(lineData, delta.start.column);
+      LineFunctions.insertSpaces(lineData, delta.start.column, delta.lines[0].length);
 
       // Middle rows
       if (delta.lines.length > 2) {
         const middleLast = delta.lines.length-1;
-        const middleRows: RowAttributes[] = [];
+        const middleRows: TermApi.Line[] = [];
         for (let i=1; i<middleLast; i++) {
-          middleRows.push(new RowAttributes(delta.lines[i].length));
+          middleRows.push(LineFunctions.create(delta.lines[i].length));
         }
-        this._rowAttributesList.splice.apply(this._rowAttributesList, [delta.start.row+1, 0, ...middleRows]);
+        this._lineData.splice.apply(this._lineData, [delta.start.row+1, 0, ...middleRows]);
       }
 
       // End row
-      endRowAttr.insertSpaces(0, delta.lines[delta.lines.length-1].length);
-      this._rowAttributesList.splice(delta.start.row + delta.lines.length-1, 0, endRowAttr);
+      LineFunctions.insertSpaces(endRowAttr, 0, delta.lines[delta.lines.length-1].length);
+      this._lineData.splice(delta.start.row + delta.lines.length-1, 0, endRowAttr);
     }
   }
 
@@ -263,15 +258,15 @@ export class TerminalEditSession extends EditSession {
     const endColumn = delta.end.column;
     const endRow = delta.end.row;
     if (startRow === endRow) {
-      this._rowAttributesList[startRow].cut(delta.start.column, endColumn);
+      LineFunctions.cut(this._getLineData(startRow), delta.start.column, endColumn);
     } else {
-      const startRowAttr = this._rowAttributesList[startRow];
-      startRowAttr.cut(delta.start.column);
-      const endRowAttr = this._rowAttributesList[delta.end.row];
-      endRowAttr.cut(0, delta.end.column);
-      startRowAttr.insert(startRowAttr.length, endRowAttr);
+      const startRowLine = this._getLineData(startRow);
+      LineFunctions.cut(startRowLine, delta.start.column);
+      const endRowLine = this._getLineData(delta.end.row);
+      LineFunctions.cut(endRowLine, 0, delta.end.column);
+      LineFunctions.insert(startRowLine, startRowLine.attrs.length, endRowLine);
       if (delta.lines.length > 1) {
-        this._rowAttributesList.splice(delta.start.row+1, delta.lines.length-1);
+        this._lineData.splice(delta.start.row+1, delta.lines.length-1);
       }
     }
   }
