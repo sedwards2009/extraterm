@@ -37,7 +37,7 @@ import {SettingsTab} from './settings/SettingsTab';
 import * as SupportsDialogStack from './SupportsDialogStack';
 import {TabWidget} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
-import {TerminalViewer} from './viewers/TerminalViewer';
+import {TerminalViewer} from './viewers/TerminalAceViewer';
 import {TextViewer} from'./viewers/TextViewer';
 import * as ThemeTypes from '../theme/Theme';
 import * as ThemeConsumer from '../theme/ThemeConsumer';

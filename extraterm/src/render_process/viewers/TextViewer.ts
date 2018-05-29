@@ -25,7 +25,6 @@ import {KeyBindingsManager, AcceptsKeyBindingsManager, MinimalKeyboardEvent} fro
 import {Logger, getLogger} from '../../logging/Logger';
 import log from '../../logging/LogDecorator';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import {TextDecoration} from './TerminalViewerTypes';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';

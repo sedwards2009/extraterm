@@ -12,7 +12,7 @@ import {FrameViewerProxy, TerminalOutputProxy, TextViewerProxy} from './ViewerPr
 import {ViewerElement} from '../viewers/ViewerElement';
 import {TextViewer} from'../viewers/TextViewer';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
-import {TerminalViewer} from '../viewers/TerminalViewer';
+import {TerminalViewer} from '../viewers/TerminalAceViewer';
 
 
 export class ProxyFactoryImpl implements ProxyFactory {

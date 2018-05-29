@@ -1,14 +1,13 @@
-import { Document } from "ace-ts/build/Document";
-import { EditSession } from "ace-ts/build/EditSession";
-import { HighlighterToken } from "ace-ts/build/mode/Highlighter";
-import { TokenWithIndex } from "ace-ts/build/Token";
-import { Delta } from "ace-ts/build/Delta";
-import { Fold } from "ace-ts/build/Fold";
-import { LanguageMode } from "ace-ts/build/LanguageMode";
-import { TextMode } from "ace-ts/build/mode/TextMode";
+import { Document,
+         EditSession,
+         HighlighterToken,
+         TokenWithIndex,
+         Delta,
+         Fold,
+         LanguageMode,
+         TextMode, RangeBasic } from "ace-ts";
 
 import * as TermApi from "term-api";
-import { RangeBasic } from "ace-ts/build/RangeBasic";
 
 import * as LineFunctions from "./LineFunctions";
 
@@ -29,7 +28,8 @@ export class TerminalEditSession extends EditSession {
     return "";
   }
 
-  setTerminalLine(row: number, line: TermApi.Line): void {
+  setTerminalLine(row: number, sourceLine: TermApi.Line): void {
+    const line = LineFunctions.copy(sourceLine);
     const range: RangeBasic = {
       start: {
         row,
@@ -46,7 +46,8 @@ export class TerminalEditSession extends EditSession {
     this._lineData[row] = line;
   }
 
-  appendTerminalLine(line: TermApi.Line): void {
+  appendTerminalLine(sourceLine: TermApi.Line): void {
+    const line = LineFunctions.copy(sourceLine);
     const rowCount = this.getLength();
     const range: RangeBasic = {
       start: {

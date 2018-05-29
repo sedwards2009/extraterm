@@ -1,6 +1,6 @@
-import { Document } from "ace-ts/build/Document";
-import { RangeBasic } from "ace-ts/build/RangeBasic";
-import { Position } from "ace-ts/build/Position";
+import { Document } from "ace-ts";
+import { RangeBasic } from "ace-ts";
+import { Position } from "ace-ts";
 
 export class TerminalDocument extends Document {
 

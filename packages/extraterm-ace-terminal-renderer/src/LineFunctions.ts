@@ -54,3 +54,10 @@ export function insert(line: TermApi.Line, column: number, insetLine: TermApi.Li
   leftAttr.set(line.attrs.slice(column), column + insetLine.attrs.length);
   line.attrs = leftAttr;
 }
+
+export function copy(sourceLine: TermApi.Line): TermApi.Line {
+  return {
+    attrs: new Uint32Array(sourceLine.attrs),
+    chars: new Uint32Array(sourceLine.chars),
+  };
+}

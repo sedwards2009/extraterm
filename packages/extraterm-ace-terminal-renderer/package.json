@@ -4,8 +4,8 @@
   "description": "Custom renderer for Ace for showing terminal characters and formatting.",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "",
-  "types": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"

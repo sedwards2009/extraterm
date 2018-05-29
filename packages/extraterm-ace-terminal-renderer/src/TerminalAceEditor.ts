@@ -1,4 +1,4 @@
-import { Editor } from "ace-ts/build/Editor";
+import { Editor } from "ace-ts";
 import { Line } from "term-api";
 import { TerminalEditSession } from "./TerminalEditSession";
 

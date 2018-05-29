@@ -16,9 +16,11 @@
     "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
+    "ace-ts": "/home/sbe/devel/ace-ts/",
     "codemirror": "5.27.4",
     "commander": "^2.9.0",
     "element-resize-detector": "1.1.3",
+    "extraterm-ace-terminal-renderer": "0.1.0",
     "extraterm-web-component-decorators": "0.1.0",
     "extraterm-readonly-toolbox": "0.1.0",
     "file-type": "^7.6.0",
