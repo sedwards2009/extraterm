@@ -66,6 +66,25 @@ export class TerminalEditSession extends EditSession {
     this._lineData[lineDataLen] = line;
   }
 
+  insertTerminalLine(row: number, sourceLine: TermApi.Line): void {
+    const line = LineFunctions.copy(sourceLine);
+    const rowCount = this.getLength();
+    const range: RangeBasic = {
+      start: {
+        row,
+        column: 0
+      },
+      end: {
+        row,
+        column: 0
+      }
+    };
+
+    const newText = String.fromCodePoint(...line.chars);
+    this.replace(range, newText + "\n");
+    this._lineData[row] = line;
+  }
+
   private _initializeLineAttributes(): void {
     const numberOfRows = this.doc.getLength();
     for (let i=0; i<numberOfRows; i++) {

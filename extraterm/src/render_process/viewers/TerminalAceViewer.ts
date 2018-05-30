@@ -219,10 +219,13 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._aceEditSession = new TerminalEditSession(new TerminalDocument(""));
       this._aceEditSession.setUndoManager(new UndoManager());
 
-      // const el = document.createElement("DIV");
-      // containerDiv.appendChild(el);
-      this._aceEditor = new TerminalAceEditor(new Renderer(containerDiv), this._aceEditSession);
-      
+      const aceRenderer = new Renderer(containerDiv);
+      aceRenderer.setShowGutter(false);
+      aceRenderer.setShowLineNumbers(false);
+
+      this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
+      this._aceEditor.setReadOnly(true);
+
       this.__updateHasTerminalClass();
       
       // this._codeMirror.on("cursorActivity", () => {
@@ -1239,10 +1242,10 @@ return null;
     //       CodeMirrorCommands.executeCommand(this._codeMirror, command);
     //       return true;
     //     } else {
-    //       return false;
+          return false;
     //     }
     // }
-    return true;
+    // return true;
   }
   
   //-----------------------------------------------------------------------
@@ -1321,7 +1324,6 @@ return null;
   // #     # ###### #    # #####  ###### #    # 
   //                                            
   //-----------------------------------------------------------------------
-
   private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
     let emitVirtualResizeEventFlag = false;
     
@@ -1365,41 +1367,40 @@ return null;
   }
   
   private _handleSizeEvent(newRows: number, newColumns: number, realizedRows: number): boolean {
-    // const doc = this._codeMirror.getDoc();
-    // const lineCount = doc.lineCount();
-    // const currentRealizedRows = lineCount - this._terminalFirstRow;
-    // if (this._rows === newRows && this._columns === newColumns && currentRealizedRows <= realizedRows) {
-    //   return false; // Nothing to do.
-    // }
+    const lineCount = this._aceEditSession.getLength();
+    const currentRealizedRows = lineCount - this._terminalFirstRow;
+    if (this._rows === newRows && this._columns === newColumns && currentRealizedRows <= realizedRows) {
+      return false; // Nothing to do.
+    }
     
-    // if (currentRealizedRows > realizedRows) {
-    //   // Trim off the extra lines.
-    //   const startPos = this._terminalFirstRow + realizedRows === 0
-    //     ? { line: this._terminalFirstRow + realizedRows, ch: 0 }
-    //     : { line: this._terminalFirstRow + realizedRows -1, ch: doc.getLine(this._terminalFirstRow + realizedRows-1).length };
-    //   const endPos = { line: lineCount-1, ch: doc.getLine(lineCount-1).length };
-    //   doc.replaceRange("", startPos, endPos);
+    if (currentRealizedRows > realizedRows) {
+      // Trim off the extra lines.
+      const startPos = this._terminalFirstRow + realizedRows === 0
+        ? { row: this._terminalFirstRow + realizedRows, column: 0 }
+        : { row: this._terminalFirstRow + realizedRows -1, column: this._aceEditSession.getLine(this._terminalFirstRow + realizedRows-1).length };
+      const endPos = { row: lineCount-1, column: this._aceEditSession.getLine(lineCount-1).length };
+      this._aceEditSession.replace({start: startPos, end: endPos}, "");
 
-    //   this._realizedRows = realizedRows;
-    // }
+      this._realizedRows = realizedRows;
+    }
     
-    // this._rows = newRows;
-    // this._columns = newColumns;
+    this._rows = newRows;
+    this._columns = newColumns;
     return true;
   }
 
   private _handleScrollbackEvent(scrollbackLines: TermApi.Line[]): void {
-    // const pos: CodeMirror.Position = { line: this._terminalFirstRow, ch: 0 };
-    // const {text: text, decorations: decorations} = this._linesToTextStyles(scrollbackLines);
-    // this._codeMirror.operation( () => {
-    //   this._insertLinesAtPos(pos ,pos, text + "\n", decorations);
-    // });
-    // this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
+    for (let i=0; i<scrollbackLines.length; i++) {
+      const line = scrollbackLines[i];
+      this._aceEditSession.insertTerminalLine(this._terminalFirstRow + i, line);
+    }
+
+    this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
   }
 
   private _insertLinesOnScreen(startRow: number, endRow: number, lines: TermApi.Line[]): void {
     const lineCount = this._aceEditSession.getLength();
-this._log.debug(`_insertLinesOnScreen() lineCount is ${lineCount}`);
+
     // Mark sure there are enough rows inside CodeMirror.
     if (lineCount < endRow + this._terminalFirstRow) {
       const pos = { row: this._terminalFirstRow + lineCount, column: 0 };
@@ -1414,7 +1415,7 @@ this._log.debug(`_insertLinesOnScreen() lineCount is ${lineCount}`);
     }
 
     for (let i=0; i<lines.length; i++) {
-      this._aceEditSession.setTerminalLine(startRow + i, lines[i]);
+      this._aceEditSession.setTerminalLine(startRow + i + this._terminalFirstRow, lines[i]);
     }
 
     this._isEmpty = false;
@@ -1440,17 +1441,17 @@ this._log.debug(`_insertLinesOnScreen() lineCount is ${lineCount}`);
   private _deleteLines(startLine: number, endLine: number): void {
     const lineCount = this._aceEditSession.getLength();
     const doc = this._aceEditSession.getDocument();
-    const endPos = { line: endLine, ch: doc.getLine(endLine).length };
-// FIXME    
-    // if (startLine === 0) {
-    //   const startPos = { line: startLine, ch: 0 };
-    //   doc.replaceRange("", startPos, endPos);  
-    //   this._isEmpty = lineCount-1 === endLine;
-    // } else {
-    //   // Start deleting from the end of the row before the top of the terminal.
-    //   const startPos = { line: startLine-1, ch: doc.getLine(startLine-1).length };
-    //   doc.replaceRange("", startPos, endPos);
-    // }
+    const endPos = { row: endLine, column: doc.getLine(endLine).length };
+
+    if (startLine === 0) {
+      const startPos = { row: startLine, column: 0 };
+      this._aceEditSession.replace({start: startPos, end: endPos}, "")
+      this._isEmpty = lineCount-1 === endLine;
+    } else {
+      // Start deleting from the end of the row before the top of the terminal.
+      const startPos = { row: startLine-1, column: doc.getLine(startLine-1).length };
+      doc.replace({start: startPos, end: endPos}, "");
+    }
   }
   
   private getVirtualTextHeight(): number {
