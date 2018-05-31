@@ -446,7 +446,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._metadataEventDoLater.trigger();
     const data = await BulkFileUtils.readDataAsArrayBuffer(handle)
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
-    const decodedText = Buffer.from(data).toString(charset);
+    const decodedText = Buffer.from(data).toString(charset == null ? "utf8" : charset);
     this._setText(decodedText);
     this.setMimeType(mimeType);
     this._bulkFileHandle = handle;
