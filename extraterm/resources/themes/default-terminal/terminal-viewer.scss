@@ -26,14 +26,6 @@
   outline: 0px;
 }
 
-#ID_CONTAINER.hide-cursor .CodeMirror-cursors {
-    display: none !important;
-}
-
-#ID_CONTAINER.hide-cursor .CodeMirror-lines {
-  cursor: default;
-}
-
 .terminal_container, .terminal, .ace_editor {
     font-family: "EmojiOne", var(--terminal-font);
     font-size: var(--terminal-font-size);
@@ -249,6 +241,7 @@
 
 .ace_cursor-layer {
   z-index: 4;
+  mix-blend-mode: difference;
 }
 
 .ace_cursor {
@@ -257,7 +250,31 @@
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
-  border-left: 2px solid
+  border-left: 2px solid;
+
+  border-color: $terminal-cursor-background-color;
+  mix-blend-mode: difference; 
+}
+
+#ID_CONTAINER.hide-cursor .ace_cursor {
+  visibility: hidden;
+}
+
+.ace_selection {
+  background: $terminal-selection-background-color;
+}
+
+.terminal-unfocused .ace_selection {
+  background: $terminal-selection-unfocused-background-color
+}
+
+.ace_marker-layer .ace_bracket {
+  margin: -1px 0 0 -1px;
+  border: 1px solid rgba(255, 255, 255, 0.15)
+}
+
+.ace_marker-layer .ace_active-line {
+  background: rgba(0, 0, 0, 0.35)
 }
 
 .ace_slim-cursors .ace_cursor {

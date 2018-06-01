@@ -129,8 +129,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _columns = -1;
   private _realizedRows = -1;
 
-  private _lastCursorAnchorPosition: CodeMirror.Position = null;
-  private _lastCursorHeadPosition: CodeMirror.Position = null;
+  private _lastCursorAnchorPosition: Position = null;
+  private _lastCursorHeadPosition: Position = null;
   private _viewportHeight= -1;  // Used to detect changes in the viewport size when in Cursor mode.
   private _fontUnitWidth = 10;  // slightly bogus defaults
   private _fontUnitHeight = 10;
@@ -503,11 +503,10 @@ return "";
   }
   
   setEditable(editable: boolean): void {
-// FIXME
-    // this._editable = editable;
-    // if (this._mode === ViewerElementTypes.Mode.CURSOR) {
-    //   this._codeMirror.setOption("readOnly", ! editable);
-    // }
+    this._editable = editable;
+    if (this._mode === ViewerElementTypes.Mode.CURSOR) {
+      this._aceEditor.setReadOnly(! editable);
+    }
   }
   
   getEditable(): boolean {
@@ -874,62 +873,59 @@ return null;
   }
 
   private _updateCssVars():  void {
-    // const charHeight = this._codeMirror.defaultTextHeight();
-    // const charWidth = this._codeMirror.defaultCharWidth();
-  
-    // this._fontUnitWidth = charWidth;
-    // this._fontUnitHeight = charHeight;
-    // const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
-    // styleElement.textContent = this._getCssVarsRules();
+    this._fontUnitWidth = this._aceEditor.renderer.characterWidth;
+    this._fontUnitHeight = this._aceEditor.renderer.lineHeight;
+    const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
+    styleElement.textContent = this._getCssVarsRules();
   }
 
   private _enterCursorMode(): void {
-    // const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
-    // containerDiv.classList.remove(CLASS_HIDE_CURSOR);
+    const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
+    containerDiv.classList.remove(CLASS_HIDE_CURSOR);
 
-    // const doc = this._codeMirror.getDoc();
-    // if (this._emulator !== null) {
-    //   const dimensions = this._emulator.getDimensions();
-    //   doc.setCursor( { line: dimensions.cursorY + this._terminalFirstRow, ch: dimensions.cursorX } );
-    // } else {
-    //   doc.setCursor( { line: doc.lineCount()-1, ch: 0 } );
-    // }
+    if (this._emulator !== null) {
+      const dimensions = this._emulator.getDimensions();
+      this._aceEditor.selection.moveCursorToPosition(
+        { row: dimensions.cursorY + this._terminalFirstRow, column: dimensions.cursorX });
 
+    } else {
+      this._aceEditor.selection.moveCursorToPosition({ row: this._aceEditSession.getLength()-1, column: 0 });
+    }
+// FIXME
     // this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
     // this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
-    // if (this._editable) {
-    //   this._codeMirror.setOption("readOnly", false);
-    // }
+    if (this._editable) {
+      this._aceEditor.setReadOnly(false);
+    }
   }
 
   private _exitCursorMode(): void {
-    // if (this._codeMirror !== null) {
-    //   this._codeMirror.setOption("readOnly", true);
-    // }
+    if (this._aceEditor !== null) {
+      this._aceEditor.setReadOnly(true);
+    }
 
-    // const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
-    // containerDiv.classList.add(CLASS_HIDE_CURSOR);
+    const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
+    containerDiv.classList.add(CLASS_HIDE_CURSOR);
   }
   
-  private _codemirrorTextMarksToDecorations(markers: CodeMirror.TextMarker[]): TextDecoration[] {
-    const result = markers.map( (m) => {
-      const loc = m.find();
-      const td: TextDecoration = {
-        line: loc.from.line,
-        fromCh: loc.from.ch,
-        toCh: loc.to.ch,
-        classList: [m.className]
-      };
-      return td;
-    });
+  // private _codemirrorTextMarksToDecorations(markers: CodeMirror.TextMarker[]): TextDecoration[] {
+  //   const result = markers.map( (m) => {
+  //     const loc = m.find();
+  //     const td: TextDecoration = {
+  //       line: loc.from.line,
+  //       fromCh: loc.from.ch,
+  //       toCh: loc.to.ch,
+  //       classList: [m.className]
+  //     };
+  //     return td;
+  //   });
     
-    return result;
-  }
+  //   return result;
+  // }
 
   private _emitKeyboardActivityEvent(): void {
-    // const scrollInfo = this._codeMirror.getScrollInfo();    
-    // const event = new CustomEvent(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
-    // this.dispatchEvent(event);
+    const event = new CustomEvent(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
+    this.dispatchEvent(event);
   }
 
   private _emitBeforeSelectionChangeEvent(originMouse: boolean): void {
@@ -1488,13 +1484,6 @@ return null;
       containerDiv.style.height = "" + aceEditorHeight + "px";
       this._aceEditor.resize(true);
     }
-  }
-    
-  _themeCssSet(): void {  
-    // const themeTag = <HTMLStyleElement> util.getShadowId(this, ID_THEME_STYLE);
-    // if (themeTag !== null) {
-    //   themeTag.innerHTML = this.getThemeCss();
-    // }
   }
 }
 

@@ -1,3 +1,6 @@
+/**
+ * Copyright 2015-2018 Simon Edwards <simon@simonzone.com>
+ */
 
 import { Renderer, HScrollBar, VScrollBar } from "ace-ts";
 
