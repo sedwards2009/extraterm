@@ -31,7 +31,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
 
-import { TerminalAceEditor, TerminalDocument, TerminalEditSession } from "extraterm-ace-terminal-renderer";
+import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Renderer, Position, UndoManager } from "ace-ts";
 
 
@@ -219,7 +219,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._aceEditSession = new TerminalEditSession(new TerminalDocument(""));
       this._aceEditSession.setUndoManager(new UndoManager());
 
-      const aceRenderer = new Renderer(containerDiv);
+      const aceRenderer = new TerminalRenderer(containerDiv);
       aceRenderer.setShowGutter(false);
       aceRenderer.setShowLineNumbers(false);
 
@@ -953,20 +953,21 @@ return null;
   }
 
   scrollTo(optionsOrX: ScrollToOptions | number, y?: number): void {
-    // let xCoord = 0;
-    // let yCoord = 0;
+    let xCoord = 0;
+    let yCoord = 0;
 
-    // if (typeof optionsOrX === "number") {
-    //   xCoord = optionsOrX;
-    //   if (y !== undefined) {
-    //     yCoord = y;
-    //   }
-    // } else {
-    //   xCoord = optionsOrX.left;
-    //   yCoord = optionsOrX.top;
-    // }
+    if (typeof optionsOrX === "number") {
+      xCoord = optionsOrX;
+      if (y !== undefined) {
+        yCoord = y;
+      }
+    } else {
+      xCoord = optionsOrX.left;
+      yCoord = optionsOrX.top;
+    }
 
-    // this._codeMirror.scrollTo(xCoord, yCoord);
+    this._aceEditSession.setScrollLeft(xCoord);
+    this._aceEditSession.setScrollTop(yCoord);
   }
   
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => void): void {
