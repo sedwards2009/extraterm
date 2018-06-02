@@ -203,17 +203,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._exitCursorMode();
       this._mode = ViewerElementTypes.Mode.DEFAULT;
 
-      // const options = {
-      //   value: "",
-      //   readOnly: true,
-      //   scrollbarStyle: "overlay",
-      //   cursorScrollMargin: 0,
-      //   showCursorWhenSelecting: true,
-      //   mode: null,
-      //   keyMap: this._codeMirrorKeyMap(),
-      //   resetSelectionOnContextMenu: false
-      // };
-
       this._aceEditSession = new TerminalEditSession(new TerminalDocument(""));
       this._aceEditSession.setUndoManager(new UndoManager());
 
@@ -240,67 +229,46 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         }
       });
 
-      // this._codeMirror.on("cursorActivity", () => {
-      //   const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
-      //                           (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
-      //   if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
-      //     this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
-      //     this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
+      this._aceEditor.selection.on("changeCursor", () => {
+        const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
+                                (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
+        if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
+          // this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
+          // this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
           
-      //     const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-      //     this.dispatchEvent(event);
-      //   }
-      // });
+          const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+          this.dispatchEvent(event);
+        }
+      });
       
-      // this._codeMirror.on("scroll", () => {
-      //   // Over-scroll bug/feature fix
-      //   const scrollInfo = this._codeMirror.getScrollInfo();
-      //   // this._log.debug("codemirror event scroll:", scrollInfo);
+      this._aceEditor.on("focus", () => {
+        if (this._emulator !== null) {
+          this._emulator.focus();
+        }
         
-      //   const clientYScrollRange = this._getClientYScrollRange();
-      //   if (scrollInfo.top > clientYScrollRange) {
-      //     this._codeMirror.scrollTo(0, clientYScrollRange);
-      //   }
-      // });
-      
-      // this._codeMirror.on("focus", (instance: CodeMirror.Editor): void => {
-      //   if (this._emulator !== null) {
-      //     this._emulator.focus();
-      //   }
-        
-      //   if (this._visualState === VisualState.AUTO) {
-      //     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      //     containerDiv.classList.add(CLASS_FOCUSED);
-      //     containerDiv.classList.remove(CLASS_UNFOCUSED);
-      //   }
+        if (this._visualState === VisualState.AUTO) {
+          const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+          containerDiv.classList.add(CLASS_FOCUSED);
+          containerDiv.classList.remove(CLASS_UNFOCUSED);
+        }
 
-      //   super.focus();
-      // });
+        super.focus();
+      });
 
-      // this._codeMirror.on("blur", (instance: CodeMirror.Editor): void => {
-      //   if (this._emulator !== null) {
-      //     this._emulator.blur();
-      //   }
+      this._aceEditor.on("blur", () => {
+        if (this._emulator !== null) {
+          this._emulator.blur();
+        }
         
-      //   if (this._visualState === VisualState.AUTO) {
-      //     containerDiv.classList.add(CLASS_UNFOCUSED);
-      //     containerDiv.classList.remove(CLASS_FOCUSED);
-      //   }
-      // });
+        if (this._visualState === VisualState.AUTO) {
+          containerDiv.classList.add(CLASS_UNFOCUSED);
+          containerDiv.classList.remove(CLASS_FOCUSED);
+        }
+      });
       
-      // this._codeMirror.on("beforeSelectionChange", (instance: CodeMirror.Editor, obj): void => {
-      //   if (obj.ranges.length === 0) {
-      //     return;
-      //   }
-        
-      //   if (obj.ranges.length === 1) {
-      //     const pair = obj.ranges[0];
-      //     if (_.isEqual(pair.anchor, pair.head)) {
-      //       return;
-      //     }
-      //   }
-      //   this._emitBeforeSelectionChangeEvent(obj.origin === "*mouse");
-      // });
+      this._aceEditor.on("changeSelection", () => {
+        this._emitBeforeSelectionChangeEvent(true);
+      });
 
       // this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
       //   const isUp = name === "PageUp" || name === "Up";
@@ -328,20 +296,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       //   }
       // });
       
-      // this._codeMirror.on('viewportChange', (instance: CodeMirror.Editor, from: number, to: number) => {
-      //   if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
-      //     return;
-      //   }
-        
-      //   const height = to - from;
-      //   if (height !== this._viewportHeight) {
-      //     this._viewportHeight = height;
-      //     doLater( () => {
-      //       VirtualScrollArea.emitResizeEvent(this);
-      //     });
-      //   }
-      // });
-      
       // Filter the keyboard events before they reach CodeMirror.
       containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
       containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
@@ -353,10 +307,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       // codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
       // codeMirrorElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
       // codeMirrorElement.addEventListener("mousemove", this._handleMouseMoveEvent.bind(this), true);
-      
-      // this._codeMirror.on("scrollCursorIntoView", (instance: CodeMirror.Editor, ev: Event): void => {
-      //   ev.preventDefault();
-      // });
     }
 
     this._updateCssVars();
@@ -409,16 +359,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
     
   getSelectionText(): string {    
-// FIXME    
-    // const doc = this._codeMirror.getDoc();
-    // const cursorAnchorPos = doc.getCursor("anchor");
-    // const cursorHeadPos = doc.getCursor("head");
-    // if (_.isEqual(cursorHeadPos, cursorAnchorPos)) {
-    //   return null;
-    // }
-    
-    // return doc.getSelection("\n");
-return "";    
+    if (this._aceEditor.selection.isEmpty()) {
+      return null;
+    }
+    return this._aceEditor.getSelectedText();
   }
 
   // From SupportsClipboardPaste interface.
@@ -681,30 +625,21 @@ return "";
   }
   
   getCursorPosition(): CursorMoveDetail {
-    // const cursorPos = this._codeMirror.cursorCoords(true, "local");
-    // const scrollInfo = this._codeMirror.getScrollInfo();
-// FIXME
-const cursorPos = {
-  left: 1, top: 1, bottom: 10
-};
-const scrollInfo = { top: 0 };
+    const cursorPos = this._aceEditor.getCursorPositionScreen();
+    const charHeight = this._aceEditor.renderer.lineHeight;
+    const charWidth = this._aceEditor.renderer.characterWidth;
 
     const detail: CursorMoveDetail = {
-      left: cursorPos.left,
-      top: cursorPos.top,
-      bottom: cursorPos.bottom,
-      viewPortTop: scrollInfo.top
+      left: cursorPos.column * charWidth,
+      top: cursorPos.row * charHeight,
+      bottom: (cursorPos.row + 1) * charHeight,
+      viewPortTop: this._aceEditSession.getScrollTop()
     };
     return detail;
   }
 
   clearSelection(): void {
-//FIXME    
-    // const doc = this._codeMirror.getDoc();
-    // if ( ! doc.somethingSelected()) {
-    //   return;
-    // }
-    // doc.setCursor(doc.getCursor());
+    this._aceEditor.clearSelection();
   }
   
   setCursorPositionTop(ch: number): boolean {
