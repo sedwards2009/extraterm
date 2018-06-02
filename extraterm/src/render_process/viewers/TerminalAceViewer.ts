@@ -131,7 +131,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   private _lastCursorAnchorPosition: Position = null;
   private _lastCursorHeadPosition: Position = null;
-  private _viewportHeight= -1;  // Used to detect changes in the viewport size when in Cursor mode.
+  private _documentHeightRows= -1;  // Used to detect changes in the viewport size when in Cursor mode.
   private _fontUnitWidth = 10;  // slightly bogus defaults
   private _fontUnitHeight = 10;
 
@@ -214,8 +214,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       //   resetSelectionOnContextMenu: false
       // };
 
-      // Create the CodeMirror instance
-
       this._aceEditSession = new TerminalEditSession(new TerminalDocument(""));
       this._aceEditSession.setUndoManager(new UndoManager());
 
@@ -227,7 +225,21 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._aceEditor.setReadOnly(true);
 
       this.__updateHasTerminalClass();
-      
+
+      this._aceEditor.on("change", (data, editor) => {
+        if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
+          return;
+        }
+        
+        const heightRows = this._aceEditSession.getLength();
+        if (heightRows !== this._documentHeightRows) {
+          this._documentHeightRows = heightRows;
+          doLater( () => {
+            VirtualScrollArea.emitResizeEvent(this);
+          });
+        }
+      });
+
       // this._codeMirror.on("cursorActivity", () => {
       //   const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
       //                           (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
