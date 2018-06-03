@@ -68,7 +68,7 @@ const NON_CODEMIRROR_COMMANDS = [
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
-const DEBUG_RESIZE = true;
+const DEBUG_RESIZE = false;
 
 let classInitialized = false;
 let cssText: string = null;
@@ -106,7 +106,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _commandLine: string = null;
   private _returnCode: string = null;
 
-  // private _codeMirror: CodeMirror.Editor = null;
   private _aceEditor: TerminalAceEditor = null;
   private _aceEditSession: TerminalEditSession = null;
   private _height = 0;
@@ -1348,7 +1347,6 @@ return null;
     }
 
     this._isEmpty = false;
-    this._log.debug(`_insertLinesOnScreen() doc is:${this._aceEditSession.getValue()}`);
   }
   
   private _deleteScreen(): void {

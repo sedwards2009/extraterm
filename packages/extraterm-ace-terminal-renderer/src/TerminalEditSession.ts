@@ -29,7 +29,7 @@ export class TerminalEditSession extends EditSession {
   }
 
   setTerminalLine(row: number, sourceLine: TermApi.Line): void {
-    const line = LineFunctions.copy(sourceLine);
+    const line = this._trimRightWhitespace(sourceLine);
     const range: RangeBasic = {
       start: {
         row,
@@ -46,8 +46,25 @@ export class TerminalEditSession extends EditSession {
     this._lineData[row] = line;
   }
 
+  private _trimRightWhitespace(sourceLine: TermApi.Line): TermApi.Line {
+    let lineLength = sourceLine.chars.length;
+    const spaceCodePoint = ' '.codePointAt(0);
+    const attrs = sourceLine.attrs;
+    const uint32Chars = sourceLine.chars;
+    
+    // Trim off any unstyled whitespace to the right of the line.
+    while (lineLength !==0 && attrs[lineLength-1] === defaultCellAttr && uint32Chars[lineLength-1] === spaceCodePoint) {
+      lineLength--;
+    }
+
+    return {
+      chars: sourceLine.chars.slice(0, lineLength),
+      attrs: sourceLine.attrs.slice(0, lineLength)
+    };
+  }
+
   appendTerminalLine(sourceLine: TermApi.Line): void {
-    const line = LineFunctions.copy(sourceLine);
+    const line = this._trimRightWhitespace(sourceLine);
     const rowCount = this.getLength();
     const range: RangeBasic = {
       start: {
@@ -67,7 +84,7 @@ export class TerminalEditSession extends EditSession {
   }
 
   insertTerminalLine(row: number, sourceLine: TermApi.Line): void {
-    const line = LineFunctions.copy(sourceLine);
+    const line = this._trimRightWhitespace(sourceLine);
     const rowCount = this.getLength();
     const range: RangeBasic = {
       start: {
@@ -225,7 +242,6 @@ export class TerminalEditSession extends EditSession {
 
   protected _updateInternalDataOnChange(delta: Delta): Fold[] {
     const folds = super._updateInternalDataOnChange(delta);
-    console.log("delta:", delta);
 
     if (delta.action === "insert") {
       this._updateDeltaInsert(delta);
