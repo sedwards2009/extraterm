@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "ace-ts": "/home/sbe/devel/ace-ts/",
+    "extraterm-event-emitter": "1.0.0",
     "term-api": "1.0.0"
   }
 }

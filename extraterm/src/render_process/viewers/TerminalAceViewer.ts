@@ -129,8 +129,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _columns = -1;
   private _realizedRows = -1;
 
-  private _lastCursorAnchorPosition: Position = null;
-  private _lastCursorHeadPosition: Position = null;
   private _documentHeightRows= -1;  // Used to detect changes in the viewport size when in Cursor mode.
   private _fontUnitWidth = 10;  // slightly bogus defaults
   private _fontUnitHeight = 10;
@@ -233,9 +231,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
                                 (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
         if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
-          // this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
-          // this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
-          
           const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
           this.dispatchEvent(event);
         }
@@ -270,31 +265,13 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         this._emitBeforeSelectionChangeEvent(true);
       });
 
-      // this._codeMirror.on("keyHandled", (instance: CodeMirror.Editor, name: string, event: KeyboardEvent): void => {
-      //   const isUp = name === "PageUp" || name === "Up";
-      //   const isDown = name === "PageDown" || name === "Down";
-      //   if (isUp || isDown) {
-      //     const cursorAnchorPos = this._codeMirror.getDoc().getCursor("anchor");
-      //     const cursorHeadPos = this._codeMirror.getDoc().getCursor("head");
-          
-      //     if (this._lastCursorHeadPosition !== null && this._lastCursorAnchorPosition !== null
-      //         && _.isEqual(this._lastCursorHeadPosition, this._lastCursorAnchorPosition)  // check for no selection
-      //         && _.isEqual(cursorHeadPos, cursorAnchorPos)  // check for no selection
-      //         && this._lastCursorHeadPosition.line === cursorHeadPos.line) {
+      this._aceEditor.onCursorTopHit((column: number) => {
+        this._emitCursorEdgeEvent(ViewerElementTypes.Edge.TOP, column);
+      });
 
-      //       // The last action didn't move the cursor.
-      //       const ch = this._lastCursorAnchorPosition.ch; // _lastCursorAnchorPosition can change before the code below runs.
-      //       doLater( () => {
-      //         const detail: ViewerElementTypes.CursorEdgeDetail = { edge: isUp
-      //                                                                 ? ViewerElementTypes.Edge.TOP
-      //                                                                 : ViewerElementTypes.Edge.BOTTOM,
-      //                                                               ch: ch };
-      //         const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-      //         this.dispatchEvent(event);
-      //       });
-      //     }
-      //   }
-      // });
+      this._aceEditor.onCursorBottomHit((column: number) => {
+        this._emitCursorEdgeEvent(ViewerElementTypes.Edge.BOTTOM, column);
+      });
       
       // Filter the keyboard events before they reach CodeMirror.
       containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
@@ -319,6 +296,14 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TERMINAL_VIEWER];
+  }
+
+  private _emitCursorEdgeEvent(edge: ViewerElementTypes.Edge, column: number): void {
+    doLater( () => {
+      const detail: ViewerElementTypes.CursorEdgeDetail = { edge, ch: column };
+      const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+      this.dispatchEvent(event);
+    });
   }
 
   //-----------------------------------------------------------------------
