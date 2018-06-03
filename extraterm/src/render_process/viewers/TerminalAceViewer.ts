@@ -279,10 +279,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
       containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
 
-      // const codeMirrorElement = this._codeMirror.getWrapperElement();
-      // codeMirrorElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
-      // codeMirrorElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
-      // codeMirrorElement.addEventListener("mousemove", this._handleMouseMoveEvent.bind(this), true);
+      const aceElement = this._aceEditor.renderer.scroller;
+      aceElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
+      aceElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
+      aceElement.addEventListener("mousemove", this._handleMouseMoveEvent.bind(this), true);
     }
 
     this._updateCssVars();
@@ -900,34 +900,34 @@ return null;
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => void): void {
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
-    // if (ev.ctrlKey) { 
-    //   return;
-    // }
-    // const pos = this._codeMirror.coordsChar( { left: ev.clientX, top: ev.clientY } );
-    // if (pos === null) {
-    //   return;
-    // }
+    if (ev.ctrlKey) { 
+      return;
+    }
+    const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
+    if (pos === null) {
+      return;
+    }
 
-    // // FIXME use the 'buttons' API.
-    // const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
+    // FIXME use the 'buttons' API.
+    const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
 
-    // // send the button
-    // const options: TermApi.MouseEventOptions = {
-    //   leftButton: button === 0,
-    //   middleButton: button === 1,
-    //   rightButton: button === 2,
-    //   ctrlKey: ev.ctrlKey,
-    //   shiftKey: ev.shiftKey,
-    //   metaKey: ev.metaKey,
-    //   row: pos.line - this._terminalFirstRow,
-    //   column: pos.ch
-    // };
+    // send the button
+    const options: TermApi.MouseEventOptions = {
+      leftButton: button === 0,
+      middleButton: button === 1,
+      rightButton: button === 2,
+      ctrlKey: ev.ctrlKey,
+      shiftKey: ev.shiftKey,
+      metaKey: ev.metaKey,
+      row: pos.row - this._terminalFirstRow,
+      column: pos.column
+    };
     
-    // if (emulatorHandler(options)) {
-    //   // The emulator consumed the event. Stop CodeMirror from processing it too.
-    //   ev.stopPropagation();
-    //   ev.preventDefault();
-    // }
+    if (emulatorHandler(options)) {
+      // The emulator consumed the event. Stop Ace from processing it too.
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
   }
   
   private _handleMouseDownEvent(ev: MouseEvent): void {
@@ -1044,8 +1044,10 @@ return null;
     }
   }
 
+
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
+    
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
       const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
       if (keyBindings !== null) {
