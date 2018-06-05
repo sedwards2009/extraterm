@@ -32,7 +32,7 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
 
 import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
-import { Renderer, Position, UndoManager } from "ace-ts";
+import { Command, DefaultCommands, Editor, MultiSelectCommands, Renderer, Position, UndoManager } from "ace-ts";
 
 
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
@@ -56,7 +56,7 @@ const CLASS_HAS_TERMINAL = "CLASS_HAS_TERMINAL";
 
 const OVERSIZE_CLASS_LIST = ["oversize"];
 
-const KEYBINDINGS_CURSOR_MODE = "terminal-viewer";
+const KEYBINDINGS_TERMINAL_VIEWER = "terminal-viewer";
 const PALETTE_GROUP = "terminalviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
@@ -139,7 +139,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   private _bookmarkCounter = 0;
   private _bookmarkIndex = new Map<BookmarkRef, CodeMirror.TextMarker>();
-  private _keyBindingManagerOnChangeDisposable: Disposable = null;
 
   constructor() {
     super();
@@ -154,9 +153,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
 
   dispose(): void {
-    if (this._keyBindingManagerOnChangeDisposable != null) {
-      this._keyBindingManagerOnChangeDisposable.dispose();
-    }
   }
 
   getMetadata(): ViewerMetadata {
@@ -209,6 +205,9 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
       this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
       this._aceEditor.setReadOnly(true);
+
+      this.__addCommands(DefaultCommands);
+      this.__addCommands(MultiSelectCommands);
 
       this.__updateHasTerminalClass();
 
@@ -305,6 +304,23 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     });
   }
 
+  private __addCommands(commands: Command<Editor>[]): void {
+    const commandsWithoutKeys: Command<Editor>[] = [];
+    for (let cmd of commands) {
+      commandsWithoutKeys.push({
+        name:cmd.name,
+        exec:cmd.exec,
+        group:cmd.group,
+        multiSelectAction:cmd.multiSelectAction,
+        passEvent:cmd.passEvent,
+        readOnly:cmd.readOnly,
+        scrollIntoView:cmd.scrollIntoView,
+        isAvailable:cmd.isAvailable,
+      });  
+    }
+    this._aceEditor.commands.addCommands(commandsWithoutKeys);
+  }
+
   //-----------------------------------------------------------------------
   //
   // ######                                
@@ -318,18 +334,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   //-----------------------------------------------------------------------
 
   setKeyBindingsManager(newKeyBindingManager: KeyBindingManager): void {
-    if (this._keyBindingManagerOnChangeDisposable != null) {
-      this._keyBindingManagerOnChangeDisposable.dispose();
-      this._keyBindingManagerOnChangeDisposable = null;
-    }
-    
     this._keyBindingManager = newKeyBindingManager;
-    if (this._keyBindingManager !== null) {
-      this._keyBindingManagerOnChangeDisposable = this._keyBindingManager.onChange(() => {
-// FIXME        
-        // this._codeMirror.setOption("keyMap", this._codeMirrorKeyMap());
-      });
-    }
   }
 
   setCommandLine(commandLine: string): void {
@@ -966,61 +971,42 @@ return null;
   //                                                        
   // ----------------------------------------------------------------------
   
-  private _codeMirrorKeyMap(): any {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
-      return {};  // empty keymap
-    }
-    
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
-    if (keyBindings === null) {
-      return {};
-    }
-
-    const codeMirrorKeyMap = keyBindings.keyBindings
-          .filter( (binding) => NON_CODEMIRROR_COMMANDS.indexOf(binding.command) === -1)
-          .reduce( (accu, binding) => {
-            accu[binding.normalizedShortcut] = binding.command;
-            return accu;
-          }, {});
-    return codeMirrorKeyMap;
-  }
+  // public dispatchEvent(ev: Event): boolean {
+  //   if (ev.type === 'keydown' || ev.type === 'keypress') {
+  //     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+  //     return containerDiv.dispatchEvent(ev);
+  //   } else {
+  //     return super.dispatchEvent(ev);
+  //   }
+  // }
   
-  public dispatchEvent(ev: Event): boolean {
-    if (ev.type === 'keydown' || ev.type === 'keypress') {
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      return containerDiv.dispatchEvent(ev);
-    } else {
-      return super.dispatchEvent(ev);
-    }
-  }
-  
-  private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
-    doLater( () => {
-      const fakeKeyDownEvent = DomUtils.newKeyboardEvent('keydown', {
-        bubbles: true,
-        key: ev.key,        
-        code: ev.code,
-        location: ev.location,
-        repeat: ev.repeat,
-        keyCode: ev.keyCode,
-        charCode: ev.charCode,
-        which: ev.which,
-        ctrlKey: ev.ctrlKey,
-        shiftKey: ev.shiftKey,
-        altKey: ev.altKey,
-        metaKey: ev.metaKey
-      });
+  // private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
+  //   doLater( () => {
+  //     const fakeKeyDownEvent = DomUtils.newKeyboardEvent('keydown', {
+  //       bubbles: true,
+  //       key: ev.key,        
+  //       code: ev.code,
+  //       location: ev.location,
+  //       repeat: ev.repeat,
+  //       keyCode: ev.keyCode,
+  //       charCode: ev.charCode,
+  //       which: ev.which,
+  //       ctrlKey: ev.ctrlKey,
+  //       shiftKey: ev.shiftKey,
+  //       altKey: ev.altKey,
+  //       metaKey: ev.metaKey
+  //     });
       
-      super.dispatchEvent(fakeKeyDownEvent);
-    });
-  }
+  //     super.dispatchEvent(fakeKeyDownEvent);
+  //   });
+  // }
 
   private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
     if (this._keyBindingManager == null || this._keyBindingManager.getKeyBindingsContexts() == null) {
       return;
     }
 
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_TERMINAL_VIEWER);
     if (keyBindings !== null) {
       const command = keyBindings.mapEventToCommand(ev);
       if (command != null) {
@@ -1044,36 +1030,31 @@ return null;
     }
   }
 
-
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
     
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
-      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
+      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_TERMINAL_VIEWER);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
+this._log.debug(`Got command ${command}`);        
         if (this._executeCommand(command)) {
           ev.stopPropagation();
+          ev.preventDefault();
           return;
         } else {
-          if (this._mode ===ViewerElementTypes.Mode.CURSOR) {
-            if (command !== null) {
+          if (this._mode === ViewerElementTypes.Mode.CURSOR) {
+            if (command == null) {
               return;
             }
-            if (ev.shiftKey) {
-              const evWithoutShift: keybindingmanager.MinimalKeyboardEvent = {
-                shiftKey: false,
-                metaKey: ev.metaKey,
-                altKey: ev.altKey,
-                ctrlKey: ev.ctrlKey,
-                key: ev.key,
-                keyCode: ev.keyCode
-              };
-              command = keyBindings.mapEventToCommand(evWithoutShift);
-              if (command !== null && command.startsWith("go")) {
-                // CodeMirror will handle this key.
-                return;
-              }
+            const aceCommand = this._aceEditor.commands.getCommandByName(command);
+            if (aceCommand != null) {
+              this._aceEditor.commands.exec(aceCommand, this._aceEditor);
+              ev.stopPropagation();
+              ev.preventDefault();
+              return;
+            } else {
+              this._log.warn(`Unable to find command '${command}'.`);
             }
           }
         }
@@ -1082,12 +1063,8 @@ return null;
     
     if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
       ev.stopPropagation();
-
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
-       this._emitKeyboardActivityEvent();
-      } else {
-       // Emit a key down event which our parent elements can catch.
-       this._scheduleSyntheticKeyDown(ev);
+        this._emitKeyboardActivityEvent();
       }
     }
   }
@@ -1126,7 +1103,7 @@ return null;
     //   commandList = [...commandList, ...cmCommandList];
     // }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_TERMINAL_VIEWER);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
