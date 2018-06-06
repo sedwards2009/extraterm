@@ -82,6 +82,10 @@
     "moveTabUp": "Move tab up",
     "moveTabDown": "Move tab down",
     "moveTabLeft": "Move tab left",
-    "moveTabRight": "Move tab right"
+    "moveTabRight": "Move tab right",
+    "selectLineStart": "Select to start of line",
+    "selectLineEnd": "Select to end of line",
+    "selectUp": "Select up one line",
+    "selectDown": "Select down one line"
   }
 }
