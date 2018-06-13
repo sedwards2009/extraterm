@@ -531,6 +531,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
         this._aceEditor.resize(false);
       } else {
+        this._aceEditor.updateFontSize();
         this._aceEditor.resize(true);
       }
     }
