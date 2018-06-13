@@ -6,6 +6,10 @@ import { Renderer, HScrollBar, VScrollBar } from "ace-ts";
 
 export class TerminalRenderer extends Renderer {
 
+  constructor(container: HTMLElement) {
+    super(container, { injectCss: false });
+  }
+
   protected createVScrollBar(container: HTMLElement): VScrollBar {
     return new HiddenVScrollBar(container, this);
   }
