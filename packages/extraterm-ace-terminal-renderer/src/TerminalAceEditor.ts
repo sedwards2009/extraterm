@@ -67,4 +67,15 @@ export class TerminalAceEditor extends Editor {
       this._onCursorBottomHitEventEmitter.fire(oldCursorColumn);
     }    
   }
+
+  protected resetCursorStyle(): void {
+    const cursorLayer = this.renderer.cursorLayer;
+    if (!cursorLayer) {
+        return;
+    }
+
+    cursorLayer.setSmoothBlinking(false);
+    cursorLayer.isBlinking = true;
+    cursorLayer.setCssClass("ace_slim-cursors", true);
+  }
 }
