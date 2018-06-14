@@ -820,6 +820,7 @@ return null;
     const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
 
+    this._aceEditor.clearSelection();
     if (this._emulator !== null) {
       const dimensions = this._emulator.getDimensions();
       this._aceEditor.selection.moveCursorToPosition(
