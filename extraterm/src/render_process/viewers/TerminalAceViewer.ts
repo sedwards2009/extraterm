@@ -361,11 +361,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   // From SupportsClipboardPaste interface.
   pasteText(text: string): void {
-// FIXME    
-    // if ( ! this.canPaste()) {
-    //   return;
-    // }
-    // CodeMirrorUtils.pasteText(this._codeMirror.getDoc(), text);
+    if ( ! this.canPaste()) {
+      return;
+    }
+    this._aceEditor.paste({text});
   }
 
   focus(): void {
