@@ -1091,19 +1091,6 @@ this._log.debug(`Got command ${command}`);
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
-    // if (this._mode === ViewerElementTypes.Mode.CURSOR) {
-    //   const cmCommandList: CommandEntry[] =
-    //     CodeMirrorCommands.commandDescriptions(this._codeMirror).map( (desc) => {
-    //       return { id: desc.command,
-    //         group: PALETTE_GROUP,
-    //         iconLeft: desc.iconLeft,
-    //         iconRight: desc.iconRight,
-    //         label: desc.label,
-    //         commandExecutor: this };
-    //     });
-    //   commandList = [...commandList, ...cmCommandList];
-    // }
-    
     const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_TERMINAL_VIEWER);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
@@ -1121,24 +1108,24 @@ this._log.debug(`Got command ${command}`);
   
   private _executeCommand(command): boolean {
     switch (command) {
-      // case COMMAND_TYPE_AND_CR_SELECTION:
-      // case COMMAND_TYPE_SELECTION:
-      //   const text = this._codeMirror.getDoc().getSelection();
-      //   if (text !== "") {
-      //     if (command === COMMAND_TYPE_AND_CR_SELECTION) {
-      //       // Exit selection mode.
-      //       const setModeDetail: GeneralEvents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
-      //       const setModeEvent = new CustomEvent(GeneralEvents.EVENT_SET_MODE, { detail: setModeDetail });
-      //       setModeEvent.initCustomEvent(GeneralEvents.EVENT_SET_MODE, true, true, setModeDetail);
-      //       this.dispatchEvent(setModeEvent);
-      //     }              
-      //     const typeTextDetail: GeneralEvents.TypeTextEventDetail =
-      //                             { text: text + (command === COMMAND_TYPE_AND_CR_SELECTION ? "\n" : "") };
-      //     const typeTextEvent = new CustomEvent(GeneralEvents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
-      //     typeTextEvent.initCustomEvent(GeneralEvents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
-      //     this.dispatchEvent(typeTextEvent);
-      //   }            
-      //   break;
+      case COMMAND_TYPE_AND_CR_SELECTION:
+      case COMMAND_TYPE_SELECTION:
+        const text = this._aceEditor.getSelectedText();
+        if (text !== "") {
+          if (command === COMMAND_TYPE_AND_CR_SELECTION) {
+            // Exit selection mode.
+            const setModeDetail: GeneralEvents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
+            const setModeEvent = new CustomEvent(GeneralEvents.EVENT_SET_MODE, { detail: setModeDetail });
+            setModeEvent.initCustomEvent(GeneralEvents.EVENT_SET_MODE, true, true, setModeDetail);
+            this.dispatchEvent(setModeEvent);
+          }              
+          const typeTextDetail: GeneralEvents.TypeTextEventDetail =
+                                  { text: text + (command === COMMAND_TYPE_AND_CR_SELECTION ? "\n" : "") };
+          const typeTextEvent = new CustomEvent(GeneralEvents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
+          typeTextEvent.initCustomEvent(GeneralEvents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
+          this.dispatchEvent(typeTextEvent);
+        }            
+        break;
         
       case COMMAND_OPEN_COMMAND_PALETTE:
         dispatchCommandPaletteRequest(this);
