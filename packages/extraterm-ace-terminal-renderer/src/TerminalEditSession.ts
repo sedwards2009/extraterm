@@ -46,6 +46,13 @@ export class TerminalEditSession extends EditSession {
     this._lineData[row] = line;
   }
 
+  getTerminalLine(row: number): TermApi.Line {
+    return {
+      attrs: new Uint32Array(this._lineData[row].attrs),
+      chars: LineFunctions.stringToCodePointArray(this.getLine(row))
+    };
+  }
+
   private _trimRightWhitespace(sourceLine: TermApi.Line): TermApi.Line {
     let lineLength = sourceLine.chars.length;
     const spaceCodePoint = ' '.codePointAt(0);

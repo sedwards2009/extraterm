@@ -1939,7 +1939,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._disconnectActiveTerminalViewer();
       
       // Extract the output of the failed command.
-      const moveText = this._lastCommandTerminalViewer.getDecoratedLines(this._lastCommandTerminalLine);
+      const moveText = this._lastCommandTerminalViewer.getTerminalLines(this._lastCommandTerminalLine);
       this._lastCommandTerminalViewer.deleteLines(this._lastCommandTerminalLine);
       this._lastCommandTerminalViewer = null;
       
@@ -1964,7 +1964,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       outputTerminalViewer.setCommandLine(this._lastCommandLine);
       outputTerminalViewer.setUseVPad(false);
       if (moveText !== null) {
-        outputTerminalViewer.setDecoratedLines(moveText.text, moveText.decorations);
+        outputTerminalViewer.setTerminalLines(moveText);
       }
       outputTerminalViewer.setEditable(true);
 

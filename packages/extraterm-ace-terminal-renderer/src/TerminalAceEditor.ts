@@ -16,9 +16,14 @@ export class TerminalAceEditor extends Editor {
     this.onCursorBottomHit = this._onCursorBottomHitEventEmitter.event;
   }
 
-  setTerminalLine(lineNumber: number, line: Line): void {
+  setTerminalLine(row: number, line: Line): void {
     const session = <TerminalEditSession> this.sessionOrThrow();
-    session.setTerminalLine(lineNumber, line);
+    session.setTerminalLine(row, line);
+  }
+
+  getTerminalLine(row: number): Line {
+    const session = <TerminalEditSession> this.sessionOrThrow();
+    return session.getTerminalLine(row);
   }
 
   appendTerminalLine(line: Line): void {

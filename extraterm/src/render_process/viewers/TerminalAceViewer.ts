@@ -22,7 +22,7 @@ import * as SourceDir from '../../SourceDir';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as Term from '../emulator/Term';
 import * as TermApi from 'term-api';
-import * as EtTerminalViewerTypes from './TerminalViewerTypes';
+import { BookmarkRef } from './TerminalViewerTypes';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as Util from '../gui/Util';
@@ -32,18 +32,15 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
 
 import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
-import { Command, DefaultCommands, Editor, MultiSelectCommands, Renderer, Position, UndoManager } from "ace-ts";
+import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Renderer, Position, UndoManager } from "ace-ts";
 
 
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
 
-type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
-type TextDecoration = EtTerminalViewerTypes.TextDecoration;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
-type BookmarkRef = EtTerminalViewerTypes.BookmarkRef;
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -60,11 +57,6 @@ const KEYBINDINGS_TERMINAL_VIEWER = "terminal-viewer";
 const PALETTE_GROUP = "terminalviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
-
-const NON_CODEMIRROR_COMMANDS = [
-  COMMAND_TYPE_AND_CR_SELECTION,
-  COMMAND_TYPE_SELECTION
-];
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
@@ -112,7 +104,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _isEmpty = true;
   private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
   private _editable = false;
-  private document: Document;
   private _useVPad = true;
   private _visualState: VisualState = VisualState.AUTO;
 
@@ -138,12 +129,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _renderEventListener: TermApi.RenderEventHandler = this._handleRenderEvent.bind(this);
 
   private _bookmarkCounter = 0;
-  private _bookmarkIndex = new Map<BookmarkRef, CodeMirror.TextMarker>();
+  private _bookmarkIndex = new Map<BookmarkRef, Anchor>();
 
   constructor() {
     super();
     this._log = getLogger(TerminalViewer.TAG_NAME, this);
-    this.document = document;
     this._renderEventListener = this._handleRenderEvent.bind(this);
 
     this._metadataEventDoLater = new DebouncedDoLater(() => {
@@ -647,84 +637,69 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
    * @param topLines the number of lines to be removed.
    */
   deleteTopLines(topLines: number): void {
-// FIXME    
-    // const linesToDelete = Math.min(topLines, this.lineCount());
-    
-    // const doc = this._codeMirror.getDoc();
-    // const pos = { line: 0, ch: 0 };
-    // const endPos = { line: linesToDelete, ch: 0 };
-    // doc.replaceRange("", pos, endPos);
+    const linesToDelete = Math.min(topLines, this.lineCount());
 
-    // this._terminalFirstRow -= linesToDelete;
-    // VirtualScrollArea.emitResizeEvent(this);
+    const pos: Position = { row: 0, column: 0 };
+    const endPos: Position = { row: linesToDelete, column: 0 };
+    this._aceEditor.replaceRange({start: pos, end: endPos}, "");
+
+    this._terminalFirstRow -= linesToDelete;
+    VirtualScrollArea.emitResizeEvent(this);
   }
   
   deleteLines(startLineOrBookmark: number | BookmarkRef, endLineOrBookmark?: number | BookmarkRef): void {
-// FIXME
-    // const doc = this._codeMirror.getDoc();
+    let startLine = this._getLineNumberFromBookmark(startLineOrBookmark);
     
-    // let startLine = this._getLineNumberFromBookmark(startLineOrBookmark);
+    let endLine = 0;
+    if (endLineOrBookmark === undefined) {
+      endLine = this.lineCount()-1;
+    } else {
+      endLine = this._getLineNumberFromBookmark(endLineOrBookmark);
+    }
     
-    // let endLine = 0;
-    // if (endLineOrBookmark === undefined) {
-    //   endLine = doc.lineCount()-1;
-    // } else {
-    //   endLine = this._getLineNumberFromBookmark(endLineOrBookmark);
-    // }
+    if (startLine < 0 || endLine < 0) {
+      this._log.warn(`Invalid arguments to deleteLines(). Resolved startLine=${startLine}, endLine=${endLine}.`);
+      return;
+    }
     
-    // if (startLine < 0 || endLine < 0) {
-    //   this._log.warn(`Invalid arguments to deleteLines(). Resolved startLine=${startLine}, endLine=${endLine}.`);
-    //   return;
-    // }
-    
-    // this._deleteLines(startLine, endLine);
-    // VirtualScrollArea.emitResizeEvent(this);
+    this._deleteLines(startLine, endLine);
+    VirtualScrollArea.emitResizeEvent(this);
   }
 
-  getDecoratedLines(startLineOrBookmark: number | BookmarkRef): { text: string; decorations: TextDecoration[]; } {
-// FIXME
-    // const startLine = this._getLineNumberFromBookmark(startLineOrBookmark);
-    // if (startLine < 0) {
-    //   return null;
-    // }
-    
-    // const doc = this._codeMirror.getDoc();
-    // const endLine = this.lineCount();
-    // const marks = doc.findMarks( { line: startLine, ch: 0}, { line: endLine, ch: 0 } );
-    
-    // const decorations = this._codemirrorTextMarksToDecorations(marks);
-    // decorations.forEach( (d) => {
-    //   d.line -= startLine;
-    // });
-    
-    // const text = doc.getRange( { line: startLine, ch: 0 }, { line: endLine, ch: 0 } );
-    // return { text, decorations };
-return null;
+  getTerminalLines(startLineOrBookmark: number | BookmarkRef): TermApi.Line[] {
+    const startRow = this._getLineNumberFromBookmark(startLineOrBookmark);
+    if (startRow < 0) {
+      return null;
+    }
+
+    const result: TermApi.Line[] = [];
+    const endRow = this.lineCount();
+    for (let i = startRow; i < endRow; i++) {
+      result.push(this._aceEditor.getTerminalLine(i));
+    }
+
+    return result;
   }
 
-  setDecoratedLines(text: string, decorations: TextDecoration[]): void {
-// FIXME    
-    // const startPos = { line: 0, ch: 0 };
-    // const endPos = { line: 0, ch: 0 };
-    // this._insertLinesAtPos(startPos, endPos, text, decorations);
-    // this._isEmpty = false;
-    // VirtualScrollArea.emitResizeEvent(this);
+  setTerminalLines(lines: TermApi.Line[]): void {
+    for (let i=0; i<lines.length; i++) {
+      this._aceEditor.setTerminalLine(i, lines[i]);
+    }
+    this._isEmpty = false;
+    VirtualScrollArea.emitResizeEvent(this);
   }
 
   bookmarkLine(lineNumber: number): BookmarkRef {
-// FIXME
-    // const doc = this._codeMirror.getDoc();
-    // const textBookmark = doc.setBookmark( {line: lineNumber, ch: 0 } );
-    // const bookmarkCounter = this._bookmarkCounter;
-    // this._bookmarkCounter++;
+    const textBookmark = new Anchor(this._aceEditor.getSession().doc, lineNumber, 0);
+    const bookmarkCounter = this._bookmarkCounter;
+    this._bookmarkCounter++;
     
-    // const ref: BookmarkRef = {
-    //   bookmarkRefId: bookmarkCounter
-    // };
-    // this._bookmarkIndex.set(ref, textBookmark);
+    const ref: BookmarkRef = {
+      bookmarkRefId: bookmarkCounter
+    };
+    this._bookmarkIndex.set(ref, textBookmark);
     
-    // return ref;
-return null;
+    return ref;
   }
 
   private __updateHasTerminalClass(): void {
@@ -738,37 +713,6 @@ return null;
     }
   }
 
-  /**
-   * Quickly execute a function without intermediate on-screen updates.
-   *
-   * @param op the function to execute without updates.
-   */
-  operation(op: () => void): void {
-// FIXME    
-    // this._operationRunning = true;
-    // this._codeMirror.operation(op);
-    // this._operationRunning = false;
-    
-    // if (this._operationEmitResize) {
-    //   VirtualScrollArea.emitResizeEvent(this);
-    // }
-    // this._operationEmitResize = false;
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
-  /**
-   * 
-   */
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -845,21 +789,6 @@ return null;
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
   }
   
-  // private _codemirrorTextMarksToDecorations(markers: CodeMirror.TextMarker[]): TextDecoration[] {
-  //   const result = markers.map( (m) => {
-  //     const loc = m.find();
-  //     const td: TextDecoration = {
-  //       line: loc.from.line,
-  //       fromCh: loc.from.ch,
-  //       toCh: loc.to.ch,
-  //       classList: [m.className]
-  //     };
-  //     return td;
-  //   });
-    
-  //   return result;
-  // }
-
   private _emitKeyboardActivityEvent(): void {
     const event = new CustomEvent(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
     this.dispatchEvent(event);
@@ -872,16 +801,15 @@ return null;
   }
 
   private _getLineNumberFromBookmark(lineOrBookmark: number | BookmarkRef): number {
-    let startLine = 0;
     if (typeof lineOrBookmark === 'number') {
       return lineOrBookmark;
     } else {
-      const marker = this._bookmarkIndex.get(lineOrBookmark);
-      if (marker === undefined) {
+      const anchor = this._bookmarkIndex.get(lineOrBookmark);
+      if (anchor === undefined) {
         return -1;
       }
-      const position = marker.find();
-      return position !== undefined && position.from !== undefined ? position.from.line : -1;
+      const position = anchor.getPosition();
+      return position.row;
     }
   }
 
@@ -971,36 +899,6 @@ return null;
   //   #    # ######   #   #####   ####  #    # #    # #####  
   //                                                        
   // ----------------------------------------------------------------------
-  
-  // public dispatchEvent(ev: Event): boolean {
-  //   if (ev.type === 'keydown' || ev.type === 'keypress') {
-  //     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-  //     return containerDiv.dispatchEvent(ev);
-  //   } else {
-  //     return super.dispatchEvent(ev);
-  //   }
-  // }
-  
-  // private _scheduleSyntheticKeyDown(ev: KeyboardEvent): void {
-  //   doLater( () => {
-  //     const fakeKeyDownEvent = DomUtils.newKeyboardEvent('keydown', {
-  //       bubbles: true,
-  //       key: ev.key,        
-  //       code: ev.code,
-  //       location: ev.location,
-  //       repeat: ev.repeat,
-  //       keyCode: ev.keyCode,
-  //       charCode: ev.charCode,
-  //       which: ev.which,
-  //       ctrlKey: ev.ctrlKey,
-  //       shiftKey: ev.shiftKey,
-  //       altKey: ev.altKey,
-  //       metaKey: ev.metaKey
-  //     });
-      
-  //     super.dispatchEvent(fakeKeyDownEvent);
-  //   });
-  // }
 
   private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
     if (this._keyBindingManager == null || this._keyBindingManager.getKeyBindingsContexts() == null) {
