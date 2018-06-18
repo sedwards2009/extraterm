@@ -13,6 +13,7 @@ import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommand
 from '../CommandPaletteRequestTypes';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
+import { ExtraEditCommands } from './ExtraAceEditCommands';
 import * as GeneralEvents from '../GeneralEvents';
 import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from '../../logging/Logger';
@@ -198,6 +199,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
       this.__addCommands(DefaultCommands);
       this.__addCommands(MultiSelectCommands);
+      this.__addCommands(ExtraEditCommands);
 
       this.__updateHasTerminalClass();
 

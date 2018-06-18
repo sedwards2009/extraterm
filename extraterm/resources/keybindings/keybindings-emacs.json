@@ -103,11 +103,11 @@
     "Ctrl-[": "blockOutdent",
     "Ctrl-]": "blockIndent",
     "Shift-Ctrl-U": "redoSelection",
-    "Ctrl-Shift-\\": "verticalMultiCursor",
+    "Ctrl-Shift-|": "cursorColumn",
     "Ctrl-/": "backSlashesToForward",
     "Ctrl-\\": "forwardSlashesToBack",
     "Ctrl-'": "escapeShellChars",
-    "Ctrl-Shift-'": "unescapeShellChars"
+    "Ctrl-Shift-\"": "unescapeShellChars"
   },
   "terminal-viewer": {
     "Ctrl-Enter": "typeSelection",

@@ -84,11 +84,11 @@
     "Ctrl-]": "blockIndent",
     "Ctrl-u": "undoSelection",
     "Esc": "singleSelection",
-    "Ctrl-Shift-\\": "FIXMEverticalMultiCursor",
-    "Ctrl-/": "FIXMEbackSlashesToForward",
-    "Ctrl-\\": "FIXMEforwardSlashesToBack",
-    "Ctrl-'": "FIXMEescapeShellChars",
-    "Ctrl-Shift-'": "FIXMEunescapeShellChars"
+    "Ctrl-Shift-|": "cursorColumn",
+    "Ctrl-/": "backSlashesToForward",
+    "Ctrl-\\": "forwardSlashesToBack",
+    "Ctrl-'": "escapeShellChars",
+    "Ctrl-Shift-\"": "unescapeShellChars"
   },
   "terminal-viewer": {
     "Ctrl-Enter": "typeSelection",
