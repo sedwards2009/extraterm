@@ -32,7 +32,7 @@ import {ViewerElement} from '../viewers/ViewerElement';
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, VirtualScrollable} from '../VirtualScrollArea';
 
-import { ExtratermAceEditor } from "extraterm-ace-terminal-renderer";
+import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, Renderer, Position, UndoManager } from "ace-ts";
 
 const VisualState = ViewerElementTypes.VisualState;
@@ -158,7 +158,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._aceEditSession = new EditSession(new Document(""));
     this._aceEditSession.setUndoManager(new UndoManager());
 
-    const aceRenderer = new Renderer(containerDiv, { injectCss: false, fontSize: null });
+    const aceRenderer = new TerminalRenderer(containerDiv);
     aceRenderer.setShowGutter(false);
     aceRenderer.setShowLineNumbers(false);
 
