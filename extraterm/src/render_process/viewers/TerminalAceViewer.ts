@@ -516,7 +516,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     if (this._aceEditSession !== null) {
       if (DEBUG_RESIZE) {
-        this._log.debug("calling codeMirror.refresh()");
+        this._log.debug("calling aceEditor.resize()");
       }
 
       if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
@@ -774,9 +774,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     } else {
       this._aceEditor.selection.moveCursorToPosition({ row: this._aceEditSession.getLength()-1, column: 0 });
     }
-// FIXME
-    // this._lastCursorHeadPosition = this._codeMirror.getDoc().getCursor("head");
-    // this._lastCursorAnchorPosition = this._codeMirror.getDoc().getCursor("anchor");
     if (this._editable) {
       this._aceEditor.setReadOnly(false);
     }
@@ -1261,7 +1258,6 @@ this._log.debug(`Got command ${command}`);
       this._currentVPad = this._useVPad;
       this.style.height = "" + elementHeight + "px";
       
-      const totalTextHeight = this.getVirtualTextHeight();
       let aceEditorHeight;
       if (this._useVPad) {
         // Adjust the height of the code mirror such that a small gap is at the bottom to 'push'

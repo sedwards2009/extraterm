@@ -3,68 +3,68 @@
  */
 
 @mixin text-general {
- background: #000000;
- color: #b2b2b2;
+  background: #000000;
+  color: #b2b2b2;
 }
 
 @mixin text-cursor {
- border-left: 1px solid #ffb300;
+  border-left: 1px solid #ffb300;
 }
 
 @mixin text-selected {
- background-color: #005CCC;
+  background-color: #005CCC;
 }
 
 @mixin text-matchingbracket {
- outline: 1px solid #b2b2b2;
- color: #ffffff;
+  outline: 1px solid #b2b2b2;
+  color: #ffffff;
 }
 
 @mixin text-activeline {
- background-color: #202020;
+  background-color: #202020;
 }
 
 @mixin text-gutters {
- background: #000000;
- border-right: 1px solid #b2b2b2;
+  background: #000000;
+  border-right: 1px solid #b2b2b2;
 }
 
 @mixin text-guttermarker {
- color: #599eff;
+  color: #599eff;
 }
 
 @mixin text-guttermarker-subtle {
- color: #b2b2b2;
+  color: #b2b2b2;
 }
 
 @mixin text-linenumber {
- color: #b2b2b2;
+  color: #b2b2b2;
 }
 
 @mixin text-syntax-header {
- color: #b2b2b2;
+  color: #b2b2b2;
 }
 
 @mixin text-syntax-quote {
- color: #b2b2b2;
+  color: #b2b2b2;
 }
 
 @mixin text-syntax-keyword {
- color: #7373ff;
- font-weight: bold;
+  color: #7373ff;
+  font-weight: bold;
 }
 
 @mixin text-syntax-atom {
- color: #b2b2b2;
+  color: #b2b2b2;
 }
 
 @mixin text-syntax-number {
- color: #18b218;
+  color: #18b218;
 }
 
 @mixin text-syntax-def {
- color: #b2b2b2;
- font-weight: bold;
+  color: #b2b2b2;
+  font-weight: bold;
 }
 
 @mixin text-syntax-variable {
@@ -114,7 +114,7 @@
 }
 
 @mixin text-syntax-bracket {
- color: #b2b2b27;
+ color: #b2b2b2;
 }
 
 @mixin text-syntax-tag {

@@ -10,7 +10,7 @@ import {TerminalProxy, TerminalTabProxy} from './Proxies';
 import {EtTerminal} from '../Terminal';
 import {FrameViewerProxy, TerminalOutputProxy, TextViewerProxy} from './ViewerProxies';
 import {ViewerElement} from '../viewers/ViewerElement';
-import {TextViewer} from'../viewers/TextViewer';
+import {TextViewer} from'../viewers/TextAceViewer';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
 import {TerminalViewer} from '../viewers/TerminalAceViewer';
 

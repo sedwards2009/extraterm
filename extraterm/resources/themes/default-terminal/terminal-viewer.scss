@@ -527,17 +527,6 @@ styles.join("\n")
 .ace_br14{border-top-right-radius   : 3px; border-bottom-right-radius: 3px; border-bottom-left-radius:  3px;}
 .ace_br15{border-top-left-radius    : 3px; border-top-right-radius:    3px; border-bottom-right-radius: 3px; border-bottom-left-radius: 3px;}
 
-//------------------------------------------------
-
-// .CodeMirror-focused .CodeMirror-selected, .terminal-focused .CodeMirror-selected {
-//   background: $terminal-selection-background-color;
-// }
-
-// .CodeMirror-gutters { @include text-gutters; }
-// .CodeMirror-guttermarker { @include text-guttermarker; }
-// .CodeMirror-guttermarker-subtle { @include text-guttermarker-subtle; }
-// .CodeMirror-linenumber { @include text-linenumber; }
-
 /* Character styles */
 
 SPAN.terminal-bold {

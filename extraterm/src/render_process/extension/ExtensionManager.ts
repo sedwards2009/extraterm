@@ -11,7 +11,7 @@ import * as ExtensionApi from 'extraterm-extension-api';
 import {Logger, getLogger} from '../../logging/Logger';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {EtTerminal} from '../Terminal';
-import {TextViewer} from'../viewers/TextViewer';
+import {TextViewer} from'../viewers/TextAceViewer';
 import {ProxyFactoryImpl} from './ProxyFactoryImpl';
 import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory, isMainProcessExtension, isSupportedOnThisPlatform} from './InternalTypes';
 import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';

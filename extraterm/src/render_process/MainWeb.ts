@@ -38,7 +38,7 @@ import * as SupportsDialogStack from './SupportsDialogStack';
 import {TabWidget} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
 import {TerminalViewer} from './viewers/TerminalAceViewer';
-import {TextViewer} from'./viewers/TextViewer';
+import {TextViewer} from'./viewers/TextAceViewer';
 import * as ThemeTypes from '../theme/Theme';
 import * as ThemeConsumer from '../theme/ThemeConsumer';
 import * as Util from './gui/Util';

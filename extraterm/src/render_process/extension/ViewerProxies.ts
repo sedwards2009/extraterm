@@ -10,7 +10,7 @@ import {ViewerElement} from '../viewers/ViewerElement';
 import {EtTerminal} from '../Terminal';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
 import {TerminalViewer} from '../viewers/TerminalAceViewer';
-import {TextViewer} from'../viewers/TextViewer';
+import {TextViewer} from'../viewers/TextAceViewer';
 import {WorkspaceProxy} from './Proxies';
 
 

@@ -30,7 +30,7 @@ import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {CommandPlaceHolder} from './CommandPlaceholder';
 import {TerminalViewer} from './viewers/TerminalAceViewer';
 import {BookmarkRef} from './viewers/TerminalViewerTypes';
-import {TextViewer} from './viewers/TextViewer';
+import {TextViewer} from './viewers/TextAceViewer';
 import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';

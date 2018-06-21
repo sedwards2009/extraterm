@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {EtTerminal} from '../Terminal';
-import {TextViewer} from'../viewers/TextViewer';
+import {TextViewer} from'../viewers/TextAceViewer';
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
