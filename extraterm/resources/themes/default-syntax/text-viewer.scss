@@ -258,6 +258,10 @@
   background: rgba(0, 0, 0, 0.35)
 }
 
+#ID_CONTAINER.hide-cursor .ace_marker-layer .ace_active-line {
+  background: transparent;
+}
+
 .ace_slim-cursors .ace_cursor {
   border-left-width: 2px;
 }

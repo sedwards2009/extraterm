@@ -43,7 +43,7 @@ const ID = "EtTextViewerTemplate";
 const ID_CSS_VARS = "ID_CSS_VARS";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_MAIN_STYLE = "ID_MAIN_STYLE";
-const CLASS_HIDE_CURSOR = "hide_cursor";
+const CLASS_HIDE_CURSOR = "hide-cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 
