@@ -306,6 +306,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   private _setText(newText: string): void {
     this._aceEditor.setValue(newText);
+    this._aceEditor.selection.clearSelection();
   }
   
   // From SupportsClipboardPaste interface.

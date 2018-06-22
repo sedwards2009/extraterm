@@ -10,7 +10,9 @@ export class TerminalAceEditor extends ExtratermAceEditor {
 
   setTerminalLine(row: number, line: Line): void {
     const session = <TerminalEditSession> this.sessionOrThrow();
-    session.setTerminalLine(row, line);
+    if ( ! session.setTerminalLine(row, line)) {
+      this.renderer.updateLines(row, row, true);
+    }
   }
 
   getTerminalLine(row: number): Line {

@@ -28,7 +28,11 @@ export class TerminalEditSession extends EditSession {
     return "";
   }
 
-  setTerminalLine(row: number, sourceLine: TermApi.Line): void {
+  /**
+   * 
+   * @return True if the text changed.
+   */
+  setTerminalLine(row: number, sourceLine: TermApi.Line): boolean {
     const line = this._trimRightWhitespace(sourceLine);
     const range: RangeBasic = {
       start: {
@@ -42,8 +46,15 @@ export class TerminalEditSession extends EditSession {
     };
 
     const newText = String.fromCodePoint(...line.chars);
-    this.replace(range, newText);
-    this._lineData[row] = line;
+    const oldText = this.getLine(row);
+    if (newText !== oldText) {
+      this.replace(range, newText);
+      this._lineData[row] = line;
+      return true;
+    } else {
+      this._lineData[row] = line;
+      return false;
+    }
   }
 
   getTerminalLine(row: number): TermApi.Line {

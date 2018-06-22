@@ -1201,7 +1201,7 @@ this._log.debug(`Got command ${command}`);
     }
 
     for (let i=0; i<lines.length; i++) {
-      this._aceEditSession.setTerminalLine(startRow + i + this._terminalFirstRow, lines[i]);
+      this._aceEditor.setTerminalLine(startRow + i + this._terminalFirstRow, lines[i]);
     }
 
     this._isEmpty = false;
