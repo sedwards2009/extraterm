@@ -24,12 +24,18 @@ function textViewerCommandLister(textViewer: TextViewer): CommandEntry[] {
 
 function getMimeTypeName(textViewer: TextViewer): string {
   const mimeType = textViewer.getMimeType();
-  const matchingMimeList = extensionContext.codeMirrorModule.modeInfo.filter(info => info.mime === mimeType);
-  return matchingMimeList.length !== 0 ? matchingMimeList[0].name : mimeType;
+  const matchingMode = extensionContext.aceModule.ModeList.getModeByMimeType(mimeType);
+  return matchingMode != null ? matchingMode.name : mimeType;
 }
 
 async function textViewerCommandExecutor(textViewer: TextViewer, commandId: string, commandArguments?: object): Promise<any> {
-  const mimeList = <{mime: string, name: string}[]>extensionContext.codeMirrorModule.modeInfo;
+  const modesByNameObject = extensionContext.aceModule.ModeList.modesByName
+  const mimeList: {name: string, mime: string}[] =  [];
+  for (let key in modesByNameObject) {
+    const mode = modesByNameObject[key];
+    mimeList.push({name: mode.name, mime: mode.mimeTypes[0]})
+  }
+
   sortArrayBy(mimeList, item => item.name.toLowerCase());
 
   const items = mimeList.map(item => item.name + ' ' + item.mime);

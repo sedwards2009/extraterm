@@ -50,7 +50,6 @@ import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
-import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
@@ -1080,47 +1079,45 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
       // --- DOM Read ---
-      CodeMirrorOperation.bulkOperation(() => {
-        ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
+      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
 
-        const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-        scrollbar.refresh(level);
+      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+      scrollbar.refresh(level);
 
-        // --- DOM write ---
-        const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-        this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
+      // --- DOM write ---
+      const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
+      this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 
-        // Build the list of elements we will resize right now.
-        const childrenToResize: VirtualScrollable[] = [];
-        const len = scrollerArea.children.length;
-        for (let i=0; i<len; i++) {
-          const child = scrollerArea.children[i];
-          if (ViewerElement.isViewerElement(child)) {
-            childrenToResize.push(child);
-          }
+      // Build the list of elements we will resize right now.
+      const childrenToResize: VirtualScrollable[] = [];
+      const len = scrollerArea.children.length;
+      for (let i=0; i<len; i++) {
+        const child = scrollerArea.children[i];
+        if (ViewerElement.isViewerElement(child)) {
+          childrenToResize.push(child);
         }
+      }
 
-        // Keep track of which children will need a resize later on.
-        const childrenToResizeSet = new Set(childrenToResize);
-        for (const childStatus of this._childElementList) {
-          if ( ! childrenToResizeSet.has(childStatus.element)) {
-            childStatus.needsRefresh = true;
-            childStatus.refreshLevel = level;
-          }
+      // Keep track of which children will need a resize later on.
+      const childrenToResizeSet = new Set(childrenToResize);
+      for (const childStatus of this._childElementList) {
+        if ( ! childrenToResizeSet.has(childStatus.element)) {
+          childStatus.needsRefresh = true;
+          childStatus.refreshLevel = level;
         }
+      }
 
-        if (childrenToResize.length !== this._childElementList.length) {
-          this._scheduleStashedChildResizeTask();
-        }
+      if (childrenToResize.length !== this._childElementList.length) {
+        this._scheduleStashedChildResizeTask();
+      }
 
-        this._virtualScrollArea.updateScrollableSizes(childrenToResize);
-        this._virtualScrollArea.reapplyState();
+      this._virtualScrollArea.updateScrollableSizes(childrenToResize);
+      this._virtualScrollArea.reapplyState();
 
-        if (this._configManager != null) {
-          const config = this._configManager.getConfig(GENERAL_CONFIG);
-          this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
-        }
-      });
+      if (this._configManager != null) {
+        const config = this._configManager.getConfig(GENERAL_CONFIG);
+        this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
+      }
     }
   }
 
@@ -1553,18 +1550,16 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
             }
           }
 
-          CodeMirrorOperation.bulkOperation( () => {
-            stashedList.forEach(el => this._markVisible(el, true));
+          stashedList.forEach(el => this._markVisible(el, true));
 
-            for (const childStatus of processList) {
-              const el = childStatus.element;
-              if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
-                el.refresh(childStatus.refreshLevel);
-              }
+          for (const childStatus of processList) {
+            const el = childStatus.element;
+            if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
+              el.refresh(childStatus.refreshLevel);
             }
+          }
 
-            this._virtualScrollArea.updateScrollableSizes(processList.map(childStatus => childStatus.element));
-          });
+          this._virtualScrollArea.updateScrollableSizes(processList.map(childStatus => childStatus.element));
 
           if (stashedList.length !== 0) {
             stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))

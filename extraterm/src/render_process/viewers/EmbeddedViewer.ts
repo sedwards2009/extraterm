@@ -13,7 +13,6 @@ import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from 'extr
 
 import {guessMimetype} from '../bulk_file_handling/BulkFileUtils';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
-import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
 import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
 from '../CommandPaletteRequestTypes';
 import * as DomUtils from '../DomUtils';

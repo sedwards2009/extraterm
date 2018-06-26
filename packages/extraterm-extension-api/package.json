@@ -12,5 +12,8 @@
   },
   "scripts": {
     "build": "tsc"
+  },
+  "devDependencies": {
+    "ace-ts": "/home/sbe/devel/ace-ts/"
   }
 }

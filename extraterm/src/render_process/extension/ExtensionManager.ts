@@ -3,10 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as CodeMirror from 'codemirror';
 import * as path from 'path';
 import * as _ from 'lodash';
 import * as ExtensionApi from 'extraterm-extension-api';
+import * as Ace from 'ace-ts';
 
 import {Logger, getLogger} from '../../logging/Logger';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
@@ -135,7 +135,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 class InternalExtensionContextImpl implements InternalExtensionContext {
   workspace: InternalWorkspace = null;
   internalWorkspace: InternalWorkspace = null;
-  codeMirrorModule: typeof CodeMirror = CodeMirror;
+  aceModule: typeof Ace = Ace;
   logger: ExtensionApi.Logger = null;
   isBackendProcess = false;
 

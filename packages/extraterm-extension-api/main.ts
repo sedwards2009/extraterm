@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as CodeMirror from './typings/codemirror/index';
+import * as Ace from "ace-ts";
 
 
 /**
@@ -493,7 +493,7 @@ export interface Backend {
  */
 export interface ExtensionContext {
   workspace: Workspace;
-  codeMirrorModule: typeof CodeMirror;
+  aceModule: typeof Ace;
   isBackendProcess: boolean;
   backend: Backend;
   logger: Logger;

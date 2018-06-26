@@ -151,9 +151,9 @@ class ExtensionContextImpl implements ExtensionContext {
     throw Error("'ExtensionContext.workspace' is not available from a render process.");    
   }
 
-  get codeMirrorModule(): never {
-    this.logger.warn("'ExtensionContext.codeMirrorModule' is not available from a render process.");
-    throw Error("'ExtensionContext.codeMirrorModule' is not available from a render process.");    
+  get aceModule(): never {
+    this.logger.warn("'ExtensionContext.aceModule' is not available from a render process.");
+    throw Error("'ExtensionContext.aceModule' is not available from a render process.");    
   }
 }
 
