@@ -33,7 +33,7 @@ import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, VirtualScrollable} from '../VirtualScrollArea';
 
 import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
-import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, Renderer, Position, UndoManager } from "ace-ts";
+import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Renderer, Position, UndoManager } from "ace-ts";
 
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
@@ -157,7 +157,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
     this._aceEditSession = new EditSession(new Document(""));
     this._aceEditSession.setUndoManager(new UndoManager());
-
+    this._aceEditSession.setUseWorker(false);
+    
     const aceRenderer = new TerminalRenderer(containerDiv);
     aceRenderer.setShowGutter(false);
     aceRenderer.setShowLineNumbers(false);
@@ -325,15 +326,12 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   setMimeType(mimeType: string): void {
     this._mimeType = mimeType;
     
-    // const modeInfo = CodeMirror.findModeByMIME(mimeType);
-    // if (modeInfo != null) {
-    //   if (modeInfo.mode !== null && modeInfo.mode !== "null") {
-    //     LoadCodeMirrorMode(modeInfo.mode);
-    //   }
-    //   if (this._codeMirror !== null) {
-    //     this._codeMirror.setOption("mode", mimeType);
-    //   }
-    // }
+    const mode = ModeList.getModeByMimeType(mimeType);
+    if (mode != null) {
+      this._aceEditSession.setLanguageMode(mode, (err: any) => {
+        this._log.warn(err);
+       });
+    }
   }
   
   getMimeType(): string {
@@ -528,10 +526,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   // From viewerelementtypes.SupportsMimeTypes
   static supportsMimeType(mimeType): boolean {
-// FIXME
-    return mimeType === "text/plain";
-    // const mode = CodeMirror.findModeByMIME(mimeType);
-    // return mode !== null && mode !== undefined;
+    const mode = ModeList.getModeByMimeType(mimeType);
+    return mode !== null && mode !== undefined;
   }
   
   deleteTopLines(topLines: number): void {
