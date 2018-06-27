@@ -154,10 +154,11 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._aceEditSession = new EditSession(new Document(""));
     this._aceEditSession.setUndoManager(new UndoManager());
     this._aceEditSession.setUseWorker(false);
-    
+
     const aceRenderer = new TerminalRenderer(containerDiv);
     aceRenderer.setShowGutter(false);
     aceRenderer.setShowLineNumbers(false);
+    aceRenderer.setDisplayIndentGuides(false);
 
     this._aceEditor = new ExtratermAceEditor(aceRenderer, this._aceEditSession);
 
