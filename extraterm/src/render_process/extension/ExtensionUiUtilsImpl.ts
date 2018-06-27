@@ -103,6 +103,11 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
       
   _listPickerFilterAndRankEntries(entries: IdLabelPair[], filterText: string): IdLabelPair[] {
     const lowerFilterText = filterText.toLowerCase().trim();
+
+    if (lowerFilterText === "") { // Special case for when no filter is entered.
+      return [...entries];
+    }
+
     const filtered = entries.filter( (entry: IdLabelPair): boolean => {
       return entry.label.toLowerCase().indexOf(lowerFilterText) !== -1;
     });
