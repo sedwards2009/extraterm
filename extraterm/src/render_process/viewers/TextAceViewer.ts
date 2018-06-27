@@ -336,14 +336,11 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
 
   getTabSize(): number {
-// FIXME
-    // return parseInt(this._codeMirror.getOption("tabSize"), 10);
-    return 4;
+    return this._aceEditSession.getTabSize();
   }
 
   setTabSize(size: number): void {
-// FIXME    
-    // this._codeMirror.setOption("tabSize", size);
+    this._aceEditSession.setTabSize(size);
   }
 
   getBulkFileHandle(): BulkFileHandle {
