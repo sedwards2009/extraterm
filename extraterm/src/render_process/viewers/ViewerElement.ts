@@ -21,7 +21,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
    * Type guard for detecting a ViewerElement instance.
    * 
    * @param  node the node to test
-   * @return      True if the node is a EtCodeMirrorViewer.
+   * @return      True if the node is a ViewerElement
    */
   static isViewerElement(node: Node): node is ViewerElement {
     return node !== null && node !== undefined && node instanceof ViewerElement;

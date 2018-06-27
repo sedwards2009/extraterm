@@ -61,15 +61,11 @@ const COMMANDS = [
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 const DEBUG_RESIZE = false;
 
-let classInitialized = false;
-
 let cssText: string = null;
 
 function getCssText(): string {
   return cssText;
 }
-
-const loadedCodeMirrorModes = new Set<string>();
 
 
 @WebComponent({tag: "et-text-viewer"})
@@ -217,14 +213,14 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
     this._aceEditor.on("change", () => {
       // If the contents are changed then drop our ref to the source file and
-      // force getBulkFileHandle() to read from CodeMirror.
+      // force getBulkFileHandle() to read from Ace.
       if (this._bulkFileHandle != null) {
         this._bulkFileHandle.deref();
         this._bulkFileHandle = null;
       }
     });
 
-    // Filter the keyboard events before they reach CodeMirror.
+    // Filter the keyboard events before they reach Ace.
     containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
     containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
     containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);    
@@ -383,10 +379,11 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this.setMimeType(mimeType);
     this._bulkFileHandle = handle;
 
-    // After setting the whole contents of a CodeMirror instance, it takes a
-    // short while before CM fully updates itself and is ready to correctly
+    // After setting the whole contents of a Ace instance, it takes a
+    // short while before it fully updates itself and is ready to correctly
     // handle sizing and scroll commands. Thus, we wait a short time before
     // triggering the resizing events and activities.
+// FIXME this might not be needed anymore    
     doLater(this._emitVirtualResizeEvent.bind(this));
   }
   
@@ -466,16 +463,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
         `visibleBottomOffsetChanged=${setterState.visibleBottomOffsetChanged}`);
       }
 
-      // FIXME the commented code makes it go faster but breaks the pop-out frame function and hangs the whole app.
-      // const op = () => {
-        this._adjustHeight(setterState.height);
-        this.scrollTo(0, setterState.yOffset);
-      // };
-      // if (this._codeMirror !== null) {
-      //   this._codeMirror.operation(op);
-      // } else {
-      //   op();
-      // }
+      this._adjustHeight(setterState.height);
+      this.scrollTo(0, setterState.yOffset);
     }
     
     // if (setterState.visibleBottomOffsetChanged) {
@@ -762,7 +751,6 @@ this._log.debug(`Got command ${command}`);
   }
 
   private _handleContextMenuCapture(ev: MouseEvent): void {
-    // Prevent CodeMirror from seeing this event and messing with the hidden textarea and the focus.
     ev.stopImmediatePropagation();
     ev.preventDefault();
 

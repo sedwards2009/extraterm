@@ -263,7 +263,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         this._emitCursorEdgeEvent(ViewerElementTypes.Edge.BOTTOM, column);
       });
       
-      // Filter the keyboard events before they reach CodeMirror.
+      // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
       containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
       containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);

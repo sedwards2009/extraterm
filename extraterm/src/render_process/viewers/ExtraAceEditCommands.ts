@@ -7,7 +7,7 @@ import { Command, Editor, OrientedRange, Position } from "ace-ts";
 export const ExtraEditCommands: Command<Editor>[] = [];
 
 /**
- * Replaces text in the CodeMirror selection using a RegExp.
+ * Replaces text in the Ace selection using a RegExp.
  *
  * @param editor the Ace Editor instance to operate on
  * @param searchExp the regular expression matching the strings to replace
