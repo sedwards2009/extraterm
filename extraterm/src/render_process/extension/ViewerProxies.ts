@@ -97,4 +97,12 @@ export class TextViewerProxy extends ViewerProxy implements ExtensionApi.TextVie
   setMimeType(mimeType: string): void {
     this._textViewer.setMimeType(mimeType);
   }
+
+  getShowLineNumbers(): boolean {
+    return this._textViewer.getShowLineNumbers();
+  }
+
+  setShowLineNumbers(show: boolean): void {
+    this._textViewer.setShowLineNumbers(show);
+  }
 }

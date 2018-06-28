@@ -15,6 +15,7 @@ export function activate(context: ExtensionContext): any {
 
 const COMMAND_SET_SYNTAX_HIGHLIGHTING = "setSyntaxHighlighting";
 const COMMAND_SET_TAB_WIDTH = "setTabWidth";
+const COMMAND_SHOW_LINE_NUMBERS = "showLineNumbers";
 
 
 function textViewerCommandLister(textViewer: TextViewer): CommandEntry[] {
@@ -25,6 +26,12 @@ function textViewerCommandLister(textViewer: TextViewer): CommandEntry[] {
   {
     id: COMMAND_SET_TAB_WIDTH,
     label: "Tab Size: " + textViewer.getTabSize()
+  },
+  {
+    id: COMMAND_SHOW_LINE_NUMBERS,
+    label: "Line Numbers",
+    iconLeft: textViewer.getShowLineNumbers() ? "far fa-check-square" : "far fa-square",
+    iconRight: "fa fa-list-ol",
   }];
 }
 
@@ -35,6 +42,9 @@ async function textViewerCommandExecutor(textViewer: TextViewer, commandId: stri
 
     case COMMAND_SET_SYNTAX_HIGHLIGHTING:
       return syntaxHighlightingCommandExecutor(textViewer);
+
+    case COMMAND_SHOW_LINE_NUMBERS:
+      return toggleLineNumbers(textViewer);
 
     default:
       break;
@@ -96,4 +106,10 @@ async function tabCommand(textViewer: TextViewer): Promise<any> {
   if (selectedTabSize !== undefined) {
     textViewer.setTabSize(selectedTabSize);
   }
+}
+
+//-------------------------------------------------------------------------
+
+async function toggleLineNumbers(textViewer: TextViewer): Promise<any> {
+  textViewer.setShowLineNumbers( ! textViewer.getShowLineNumbers());
 }

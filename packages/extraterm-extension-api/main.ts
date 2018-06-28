@@ -180,6 +180,16 @@ export interface TextViewer extends ViewerBase {
    * Set the mimetype of the cotnent of this text viewer.
    */
   setMimeType(mimeType: string): void;
+
+  /**
+   * Return true if line numbers are being shown in the gutter.
+   */
+  getShowLineNumbers(): boolean;
+
+  /**
+   * Set whether to show line numebrs in the gutter.
+   */
+  setShowLineNumbers(show: boolean): void;
 }
 
 

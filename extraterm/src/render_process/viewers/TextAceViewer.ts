@@ -156,8 +156,9 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._aceEditSession.setUseWorker(false);
 
     const aceRenderer = new TerminalRenderer(containerDiv);
-    aceRenderer.setShowGutter(false);
-    aceRenderer.setShowLineNumbers(false);
+    aceRenderer.setShowGutter(true);
+    aceRenderer.setShowLineNumbers(true);
+    aceRenderer.setShowFoldWidgets(false);
     aceRenderer.setDisplayIndentGuides(false);
 
     this._aceEditor = new ExtratermAceEditor(aceRenderer, this._aceEditSession);
@@ -341,6 +342,21 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
   setTabSize(size: number): void {
     this._aceEditSession.setTabSize(size);
+  }
+
+  /**
+   * Return true if line numbers are being shown in the gutter.
+   */
+  getShowLineNumbers(): boolean {
+    return this._aceEditor.renderer.getShowLineNumbers();
+  }
+
+  /**
+   * Set whether to show line numebrs in the gutter.
+   */
+  setShowLineNumbers(show: boolean): void {
+    this._aceEditor.renderer.setShowGutter(show);
+    this._aceEditor.renderer.setShowLineNumbers(show);
   }
 
   getBulkFileHandle(): BulkFileHandle {
