@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -14,13 +14,34 @@ export function activate(context: ExtensionContext): any {
 }
 
 const COMMAND_SET_SYNTAX_HIGHLIGHTING = "setSyntaxHighlighting";
+const COMMAND_SET_TAB_WIDTH = "setTabWidth";
+
 
 function textViewerCommandLister(textViewer: TextViewer): CommandEntry[] {
   return [{
     id: COMMAND_SET_SYNTAX_HIGHLIGHTING,
     label: "Syntax: " + getMimeTypeName(textViewer)
+  },
+  {
+    id: COMMAND_SET_TAB_WIDTH,
+    label: "Tab Size: " + textViewer.getTabSize()
   }];
 }
+
+async function textViewerCommandExecutor(textViewer: TextViewer, commandId: string, commandArguments?: object): Promise<any> {
+  switch(commandId) {
+    case COMMAND_SET_TAB_WIDTH:
+      return tabCommand(textViewer);
+
+    case COMMAND_SET_SYNTAX_HIGHLIGHTING:
+      return syntaxHighlightingCommandExecutor(textViewer);
+
+    default:
+      break;
+  }
+}
+
+//-------------------------------------------------------------------------
 
 function getMimeTypeName(textViewer: TextViewer): string {
   const mimeType = textViewer.getMimeType();
@@ -28,7 +49,7 @@ function getMimeTypeName(textViewer: TextViewer): string {
   return matchingMode != null ? matchingMode.friendlyName : mimeType;
 }
 
-async function textViewerCommandExecutor(textViewer: TextViewer, commandId: string, commandArguments?: object): Promise<any> {
+async function syntaxHighlightingCommandExecutor(textViewer: TextViewer): Promise<any> {
   const modesByNameObject = extensionContext.aceModule.ModeList.modesByName
   const mimeList: {name: string, nameLower: string, mime: string}[] =  [];
   for (let key in modesByNameObject) {
@@ -61,4 +82,18 @@ function sortArrayBy(items: any[], keyFunc: (item: any) => string): void {
     }
     return keyA < keyB ? -1 : 1;
   });
+}
+
+//-------------------------------------------------------------------------
+
+async function tabCommand(textViewer: TextViewer): Promise<any> {
+  const selectedTabSize = await textViewer.getTab().showNumberInput({
+    title: "Tab Size",
+    value: textViewer.getTabSize(),
+    minimum: 0,
+    maximum: 32
+  });
+  if (selectedTabSize !== undefined) {
+    textViewer.setTabSize(selectedTabSize);
+  }
 }

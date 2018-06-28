@@ -19,12 +19,8 @@
         "baseUrl": "."
       
     },
-    "filesGlob": [
-        "./src/*.ts",
-        "./src/*.tsx"
-    ],
-    "files": [
-        "./src/TextViewerSyntaxHighlightingExtension.ts"
+    "include": [
+        "src/*.ts"
     ],
     "exclude": []
 }
