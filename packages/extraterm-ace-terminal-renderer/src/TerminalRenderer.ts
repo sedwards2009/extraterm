@@ -15,9 +15,8 @@ export class TerminalRenderer extends Renderer {
   }
 
   protected createHScrollBar(container: HTMLElement): HScrollBar {
-      return new HiddenHScrollBar(container, this);
+      return new InsetHScrollBar(container, this);
   }
-
 }
 
 class HiddenVScrollBar extends VScrollBar {
@@ -29,12 +28,16 @@ class HiddenVScrollBar extends VScrollBar {
   }
 }
 
-class HiddenHScrollBar extends HScrollBar {
-  
-  setVisible(isVisible: boolean): this {
-    if (isVisible === false) {
-      super.setVisible(false);    // Stop the scrollbar from ever being visible.
-    }
-    return this;
+class InsetHScrollBar extends HScrollBar {
+
+  constructor(parent: HTMLElement, renderer: Renderer) {
+    super(parent, renderer);
+
+    this.inner.style.removeProperty("height");
+    this.element.style.removeProperty("height");
+  }
+
+  get height(): number {
+    return 0;
   }
 }

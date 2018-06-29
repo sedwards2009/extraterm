@@ -479,16 +479,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
       this._adjustHeight(setterState.height);
       this.scrollTo(0, setterState.yOffset);
-    }
-    
-    // if (setterState.visibleBottomOffsetChanged) {
-    //   const shadowRoot = DomUtils.getShadowRoot(this);
-    //   if (shadowRoot !== null) {
-        // const horizontalScrollbar = <HTMLDivElement> shadowRoot.querySelector("DIV.CodeMirror-overlayscroll-horizontal");
-        // const offsetFromBottom = Math.max(0,-1*setterState.visibleBottomOffset);
-        // horizontalScrollbar.style.bottom = "" + offsetFromBottom + "px";
-    //   }
-    // }
+    }    
   }
   
   isFontLoaded(): boolean {

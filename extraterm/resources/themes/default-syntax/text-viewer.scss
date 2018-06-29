@@ -135,6 +135,12 @@
   right: 0;
   bottom: 0;
   z-index: 6;
+  
+  opacity: 0.5;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 .ace_scrollbar-inner {
@@ -142,9 +148,11 @@
   cursor: text;
   left: 0;
   top: 0;
+
+  height: calc( var(--terminal-font-size) / 2);
 }
 
-.ace_scrollbar-v{
+.ace_scrollbar-v {
   overflow-x: hidden;
   overflow-y: scroll;
   top: 0;
@@ -154,7 +162,24 @@
   overflow-x: scroll;
   overflow-y: hidden;
   left: 0;
+  height: calc( var(--terminal-font-size) / 2); 
 }
+
+::-webkit-scrollbar {
+  width: calc( var(--terminal-font-size) / 2);
+  height: calc( var(--terminal-font-size) / 2);
+	background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb-hover-background-color);
+  border-radius: calc( var(--terminal-font-size) / 4);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover-background-color);
+}
+
 
 .ace_print-margin {
   position: absolute;

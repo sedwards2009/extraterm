@@ -467,14 +467,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._adjustHeight(setterState.height);
       this.scrollTo(0, setterState.yOffset);
     }
-
-    if (setterState.visibleBottomOffsetChanged) {
-      const shadowRoot = DomUtils.getShadowRoot(this);
-      if (shadowRoot !== null) {
-        const horizontalScrollbar = <HTMLDivElement> shadowRoot.querySelector("DIV.CodeMirror-overlayscroll-horizontal");
-        horizontalScrollbar.style.bottom = "" + (Math.max(0,-1*setterState.visibleBottomOffset)) + "px";
-      }
-    }
   }
   
   // VirtualScrollable
