@@ -1,6 +1,6 @@
 {
 "name": "Atomic Dark UI theme",
-"type": ["gui"],
+"type": "gui",
 "comment": "Based on the Atom Dark theme from the Atom text editor (https://atom.io/).",
 "debug": false,
 "loadingBackgroundColor": "#222222",

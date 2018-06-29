@@ -1,6 +1,6 @@
 {
 "name": "XTerm",
 "comment": "",
-"type": ["terminal"],
+"type": "terminal",
 "debug": false
 }

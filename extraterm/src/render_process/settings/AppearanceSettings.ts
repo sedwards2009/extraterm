@@ -4,7 +4,6 @@
 
 import { WebComponent } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
-import Vue from 'vue';
 
 import { AppearanceSettingsUi } from './AppearanceSettingsUi';
 import { FontInfo, GeneralConfig, GENERAL_CONFIG, ConfigKey, SYSTEM_CONFIG, SystemConfig } from '../../Config';

@@ -1,5 +1,5 @@
 {
 "name": "Default Syntax Theme",
-"type": ["syntax"],
+"type": "syntax",
 "debug": false
 }

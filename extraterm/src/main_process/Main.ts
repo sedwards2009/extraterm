@@ -414,7 +414,7 @@ function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
   if (themeInfo === null) {
     return false;
   }
-  return themeInfo.type.indexOf(themeType) !== -1;
+  return themeInfo.type === themeType;
 }
 
 function setupConfig(): void {

@@ -1,6 +1,6 @@
 {
 "name": "Solarized Light",
 "comment": "Solarized Light syntax theme. See http://ethanschoonover.com/solarized",
-"type": ["syntax"],
+"type": "syntax",
 "debug": false
 }

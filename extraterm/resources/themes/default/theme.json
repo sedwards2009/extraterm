@@ -1,5 +1,5 @@
 {
 "name": "Bootstrap Theme",
-"type": ["gui"],
+"type": "gui",
 "debug": false
 }

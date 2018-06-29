@@ -1,6 +1,6 @@
 {
 "name": "Base16 Default Light",
 "comment": "Scheme: Chris Kempson (http://chriskempson.com)",
-"type": ["terminal"],
+"type": "terminal",
 "debug": false
 }

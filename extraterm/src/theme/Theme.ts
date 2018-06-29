@@ -9,7 +9,7 @@ export type ThemeType = 'terminal' | 'syntax' | 'gui';
 export interface ThemeInfo {
   name: string;
   id: string;
-  type: ThemeType[];  // Defines the type of theme this is. FIXME make this singular.
+  type: ThemeType;
   path: string;
   debug: boolean;
   comment: string;

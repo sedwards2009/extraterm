@@ -219,8 +219,7 @@ export class AppearanceSettingsUi extends Vue {
   }
 
   getThemesByType(type: ThemeTypes.ThemeType): ThemeTypes.ThemeInfo[] {
-    const themeTerminalOptions = this.themes
-      .filter( (themeInfo) => themeInfo.type.indexOf(type) !== -1 );
+    const themeTerminalOptions = this.themes.filter( themeInfo => themeInfo.type === type );
     return _.sortBy(themeTerminalOptions, (themeInfo: ThemeTypes.ThemeInfo): string => themeInfo.name );
   }
 

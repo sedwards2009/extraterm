@@ -141,7 +141,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   getAllThemes(): ThemeInfo[] {
     const result: ThemeInfo[] = [];
     this._themes.forEach( themeInfo => {
-      if (themeInfo.type.indexOf("gui") !== -1 && themeInfo.id === "default") {
+      if (themeInfo.type === "gui" && themeInfo.id === "default") {
         return;
       }
       result.push(themeInfo);
