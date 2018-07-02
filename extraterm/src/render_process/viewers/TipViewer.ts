@@ -27,8 +27,8 @@ import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import {Logger, getLogger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;

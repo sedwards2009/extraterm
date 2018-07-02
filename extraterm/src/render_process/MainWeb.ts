@@ -27,7 +27,7 @@ import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
 import {ExtensionManager} from './extension/InternalTypes';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-import {Logger, getLogger} from '../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import {MainWebUi} from './MainWebUi';
 import {MenuItem} from './gui/MenuItem';
 import {PopDownListPicker} from './gui/PopDownListPicker';
@@ -46,7 +46,7 @@ import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
-import log from '../logging/LogDecorator';
+import { log } from "extraterm-logging";
 import { KeyBindingsManager, injectKeyBindingsManager, loadKeyBindingsFromObject, KeyBindingsContexts } from './keybindings/KeyBindingsManager';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;

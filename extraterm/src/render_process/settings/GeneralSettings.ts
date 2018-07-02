@@ -8,8 +8,8 @@ import Vue from 'vue';
 
 import { GeneralSettingsUi } from './GeneralSettingsUi';
 import { GeneralConfig, ConfigKey, GENERAL_CONFIG } from '../../Config';
-import { Logger, getLogger } from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import { Logger, getLogger } from "extraterm-logging";
+import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 
 export const GENERAL_SETTINGS_TAG = "et-general-settings";

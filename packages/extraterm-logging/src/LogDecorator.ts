@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {Logger, getLogger, objectName} from './Logger';
+import {Logger, objectName} from './Logger';
 
 /**
  * Decorator to log method calls.
@@ -14,7 +14,7 @@ import {Logger, getLogger, objectName} from './Logger';
  * @param  {any}    descriptor [description]
  * @return {[type]}            [description]
  */
-export default function log(target: Object, key: string, descriptor: any) {
+export function log(target: Object, key: string, descriptor: any) {
   const originalMethod = descriptor.value; 
 
   descriptor.value =  function (this: any, ...args: any[]) {

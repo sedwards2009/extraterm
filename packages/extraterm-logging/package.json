@@ -1,0 +1,22 @@
+{
+  "name": "extraterm-logging",
+  "version": "1.0.0",
+  "description": "Logging support for Electron apps.",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/Main.js",
+  "types": "dist/Main.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "devDependencies": {
+    "@types/node": "7.0.52",
+    "typescript": "2.8.3"
+  },
+  "scripts": {
+    "run": "false",
+    "build-all": "yarn run build",
+    "build": "tsc"
+  }
+}

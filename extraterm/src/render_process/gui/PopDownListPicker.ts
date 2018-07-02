@@ -7,7 +7,7 @@ import {Disposable} from 'extraterm-extension-api';
 import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import {doLater} from '../../utils/DoLater';
-import {Logger, getLogger} from '../../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';

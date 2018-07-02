@@ -37,8 +37,8 @@ import * as GeneralEvents from './GeneralEvents';
 import {KeyBindingsManager, injectKeyBindingsManager, AcceptsKeyBindingsManager} from './keybindings/KeyBindingsManager';
 import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
-import {Logger, getLogger} from '../logging/Logger';
-import LogDecorator from '../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';
 import {doLater} from '../utils/DoLater';
 import * as Term from './emulator/Term';

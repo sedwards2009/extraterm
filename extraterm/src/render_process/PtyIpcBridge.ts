@@ -7,8 +7,8 @@ import {Event, EnvironmentMap} from 'extraterm-extension-api';
 
 import {Pty, BufferSizeChange} from '../pty/Pty';
 import {EventEmitter} from '../utils/EventEmitter';
-import {Logger, getLogger} from '../logging/Logger';
-import log from '../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';

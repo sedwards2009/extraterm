@@ -11,7 +11,7 @@ import {MenuItem} from './MenuItem';
 import {CheckboxMenuItem} from './CheckboxMenuItem';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
-import {Logger, getLogger} from '../../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 
 
 const ID = "EtContextMenuTemplate";

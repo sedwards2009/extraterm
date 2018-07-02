@@ -8,7 +8,7 @@ import * as _ from 'lodash';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as Ace from 'ace-ts';
 
-import {Logger, getLogger} from '../../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextAceViewer';

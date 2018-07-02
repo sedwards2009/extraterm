@@ -27,8 +27,8 @@ if (previousSASS_BINARY_PATH === undefined) {
 }
 
 
-import {Logger, getLogger} from '../logging/Logger';
-import log from '../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
   cssFileToFilename, cssFileToExtension} from './Theme';

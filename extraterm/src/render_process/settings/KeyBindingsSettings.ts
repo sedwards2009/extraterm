@@ -8,8 +8,8 @@ import Vue from 'vue';
 
 import { KeyBindingsSettingsUi} from './KeyBindingsSettingsUi';
 import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../Config';
-import { Logger, getLogger } from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import { Logger, getLogger } from "extraterm-logging";
+import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 import { KeyBindingsManager } from '../keybindings/KeyBindingsManager';
 import { OnChangeEmitterElementLifecycleBinder } from './OnChangeEmitterElementLifecycleBinder';

@@ -7,10 +7,10 @@ import * as ExtensionApi from 'extraterm-extension-api';
 
 import { ExtensionSessionEditorContribution } from '../../ExtensionMetadata';
 import { InternalExtensionContext } from './InternalTypes';
-import { Logger, getLogger } from '../../logging/Logger';
+import { Logger, getLogger } from "extraterm-logging";
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import { CssFile } from '../../theme/Theme';
-import log from '../../logging/LogDecorator';
+import { log } from "extraterm-logging";
 
 interface RegisteredSessionEditor {
   type: string;

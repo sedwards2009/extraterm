@@ -12,8 +12,8 @@ import Vue from 'vue';
 
 import { AcceptsConfigDatabase, ConfigDatabase, FontInfo } from '../../Config';
 import { AcceptsKeyBindingsManager, KeyBindingsManager } from '../keybindings/KeyBindingsManager';
-import {Logger, getLogger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi } from './SettingsUi';
 import { AcceptsExtensionManager, ExtensionManager } from '../extension/InternalTypes';

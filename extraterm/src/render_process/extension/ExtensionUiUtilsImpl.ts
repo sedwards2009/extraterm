@@ -9,7 +9,7 @@ import * as he from 'he';
 
 import {EtTerminal} from '../Terminal';
 import {ExtensionUiUtils} from './InternalTypes';
-import {Logger, getLogger} from '../../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import {PopDownListPicker} from '../gui/PopDownListPicker';
 import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';
 import {ViewerElement} from '../viewers/ViewerElement';

@@ -24,8 +24,7 @@ import * as os from 'os';
 
 import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
 import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent} from '../Config';
-import {FileLogWriter} from '../logging/FileLogWriter';
-import {Logger, getLogger, addLogWriter} from '../logging/Logger';
+import {FileLogWriter, Logger, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
 import * as ThemeTypes from '../theme/Theme';
@@ -34,7 +33,7 @@ import * as Messages from '../WindowMessages';
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep, DeepReadonly } from 'extraterm-readonly-toolbox';
-import log from '../logging/LogDecorator';
+import { log } from "extraterm-logging";
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;

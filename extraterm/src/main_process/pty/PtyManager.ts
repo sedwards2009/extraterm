@@ -9,12 +9,12 @@ import * as _ from 'lodash';
 
 import { Pty, BufferSizeChange } from '../../pty/Pty';
 import { AcceptsConfigDatabase, ConfigDatabase, SESSION_CONFIG } from '../../Config';
-import { Logger, getLogger } from '../../logging/Logger';
+import { Logger, getLogger } from "extraterm-logging";
 import * as Messages from '../../WindowMessages';
 import * as Util from '../../render_process/gui/Util';
 import { EventEmitter } from '../../utils/EventEmitter';
 import { MainExtensionManager } from '../extension/MainExtensionManager';
-import log from '../../logging/LogDecorator';
+import { log } from "extraterm-logging";
 
 
 const LOG_FINE = false;

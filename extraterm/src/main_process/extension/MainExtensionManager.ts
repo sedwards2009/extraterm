@@ -8,11 +8,11 @@ import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
 
-import { Logger, getLogger } from "../../logging/Logger";
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionSessionBackendContribution, ExtensionPlatform } from "../../ExtensionMetadata";
+import { Logger, getLogger } from "extraterm-logging";
+import { ExtensionMetadata, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
 import { parsePackageJson } from './PackageFileParser';
-import { ExtensionContext, Backend, SessionBackend } from 'extraterm-extension-api';
-import log from '../../logging/LogDecorator';
+import { ExtensionContext, Backend, SessionBackend, SyntaxThemeProvider } from 'extraterm-extension-api';
+import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from '../../render_process/extension/InternalTypes';
 
 

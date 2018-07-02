@@ -12,8 +12,8 @@ import {Transform, Readable} from 'stream';
 import {ByteCountingStreamTransform} from '../../utils/ByteCountingStreamTransform';
 import {DisposableHolder} from '../../utils/DisposableUtils';
 import {EventEmitter} from '../../utils/EventEmitter';
-import {Logger, getLogger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import {Pty, BufferSizeChange} from '../../pty/Pty';
 
 

@@ -7,8 +7,8 @@ import * as _ from 'lodash';
 
 import { AppearanceSettingsUi } from './AppearanceSettingsUi';
 import { FontInfo, GeneralConfig, GENERAL_CONFIG, ConfigKey, SYSTEM_CONFIG, SystemConfig } from '../../Config';
-import { Logger, getLogger } from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import { Logger, getLogger } from "extraterm-logging";
+import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 import * as ThemeTypes from '../../theme/Theme';
 

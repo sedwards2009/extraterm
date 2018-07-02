@@ -6,7 +6,7 @@
 import { Disposable, Event } from 'extraterm-extension-api';
 import * as _ from 'lodash';
 
-import {Logger, getLogger} from '../../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import * as SetUtils from '../../utils/SetUtils';
 
 const FALLTHROUGH = "fallthrough";

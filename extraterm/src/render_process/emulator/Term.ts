@@ -62,7 +62,7 @@ import {
   WriteBufferSizeEventListener
 } from 'term-api';
 
-import log from '../../logging/LogDecorator';
+import { log } from "extraterm-logging";
 
 
 const DEBUG_RESIZE = false;

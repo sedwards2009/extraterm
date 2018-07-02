@@ -13,8 +13,8 @@ import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandab
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
-import {Logger, getLogger} from '../logging/Logger';
-import log from '../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import {AcceptsKeyBindingsManager, KeyBindingsManager} from './keybindings/KeyBindingsManager';
 import {ResizeCanary} from './ResizeCanary';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';

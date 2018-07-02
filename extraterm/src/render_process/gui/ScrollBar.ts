@@ -6,8 +6,8 @@
 import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import * as DomUtils from '../DomUtils';
-import {Logger, getLogger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';

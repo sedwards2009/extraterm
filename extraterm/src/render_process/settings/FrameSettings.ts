@@ -8,8 +8,8 @@ import Vue from 'vue';
 
 import { FrameSettingsUi, nextId, Identifiable, IdentifiableCommandLineAction} from './FrameSettingsUi';
 import { COMMAND_LINE_ACTIONS_CONFIG, ConfigKey, CommandLineAction, GENERAL_CONFIG, GeneralConfig } from '../../Config';
-import { Logger, getLogger } from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import { Logger, getLogger } from "extraterm-logging";
+import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 
 export const FRAME_SETTINGS_TAG = "et-frame-settings";

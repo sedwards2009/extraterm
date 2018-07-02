@@ -8,8 +8,8 @@ import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorato
 
 import {doLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
-import log from '../../logging/LogDecorator';
-import {Logger, getLogger} from '../../logging/Logger';
+import { log } from "extraterm-logging";
+import {Logger, getLogger} from "extraterm-logging";
 import * as Util from './Util';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
