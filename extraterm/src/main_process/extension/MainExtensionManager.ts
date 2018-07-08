@@ -29,6 +29,11 @@ export interface LoadedSessionBackendContribution {
   sessionBackend: SessionBackend;
 }
 
+export interface LoadedSyntaxThemeProviderContribution {
+  metadata: ExtensionMetadata;
+  syntaxThemeProvider: SyntaxThemeProvider;
+}
+
 export class MainExtensionManager {
 
   private _log: Logger = null;
@@ -61,6 +66,11 @@ export class MainExtensionManager {
       }
     }
     return null;
+  }
+
+  getSyntaxThemeProviderContributions(): LoadedSyntaxThemeProviderContribution[] {
+    return _.flatten(this._activeExtensions.map(
+      ae => ae.contextImpl.backend.__BackendImpl__syntaxThemeProviders));
   }
 
   private _scanPath(extensionPath: string): ExtensionMetadata[] {
@@ -160,6 +170,7 @@ class ExtensionContextImpl implements ExtensionContext {
 class BackendImpl implements Backend {
   private _log: Logger = null;
   __BackendImpl__sessionBackends: LoadedSessionBackendContribution[] = [];
+  __BackendImpl__syntaxThemeProviders: LoadedSyntaxThemeProviderContribution[] = [];
 
   constructor(public __extensionMetadata: ExtensionMetadata) {
     this._log = getLogger("Backend (" + this.__extensionMetadata.name + ")", this);
@@ -179,6 +190,23 @@ class BackendImpl implements Backend {
 
     this._log.warn(`Unable to register session backend '${name}' for extension ` +
       `'${this.__extensionMetadata.name}' because the session backend contribution data ` +
+      `couldn't be found in the extension's package.json file.`);
+    return;
+  }
+
+  registerSyntaxThemeProvider(name: string, provider: SyntaxThemeProvider): void {
+    for (const backendMeta of this.__extensionMetadata.contributions.syntaxThemeProvider) {
+      if (backendMeta.name === name) {
+        this.__BackendImpl__syntaxThemeProviders.push({
+          metadata: this.__extensionMetadata,
+          syntaxThemeProvider: provider
+        } );
+        return;
+      }
+    }
+
+    this._log.warn(`Unable to register syntax theme provider '${name}' for extension ` +
+      `'${this.__extensionMetadata.name}' because the syntax theme provider contribution data ` +
       `couldn't be found in the extension's package.json file.`);
     return;
   }

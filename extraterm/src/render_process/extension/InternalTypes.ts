@@ -63,7 +63,8 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext 
 }
 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {
-  return metadata.contributions.sessionBackend.length !== 0;
+  return metadata.contributions.sessionBackend.length !== 0 ||
+    metadata.contributions.syntaxThemeProvider.length !== 0;
 }
 
 export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean {

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform } from "../../ExtensionMetadata";
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution } from "../../ExtensionMetadata";
 
 const FONT_AWESOME_DEFAULT = false;
 
@@ -101,22 +101,34 @@ function parsePlatformJson(packageJson: any): ExtensionPlatform {
 }
 
 function parseContributionsJson(packageJson: any): ExtensionContributions {
-  if (packageJson["contributions"] == null) {
+  const contributions = packageJson["contributions"];
+  if (contributions == null) {
     return {
       viewer: [],
       sessionEditor: [],
-      sessionBackend: []
+      sessionBackend: [],
+      syntaxThemeProvider: []
     };
   }
 
-  if (typeof packageJson["contributions"] !== "object") {
+  if (typeof contributions !== "object") {
     throw `'contributions' field is not an object.`;
   }
 
+  const knownContributions = ["viewer", "sessionEditor", "sessionBackend", "syntaxThemeProvider"];
+  for (const key in contributions) {
+    if (contributions.hasOwnProperty(key)) {
+      if (knownContributions.indexOf(key) === -1) {
+        throw `'contributions' contains an unknown property '${key}'`;
+      }
+    }
+  }
+
   return {
-    viewer: parseViewerContributionsListJson(packageJson["contributions"]),
-    sessionEditor: parseSessionEditorContributionsListJson(packageJson["contributions"]),
-    sessionBackend: parseSessionBackendContributionsListJson(packageJson["contributions"]),
+    viewer: parseViewerContributionsListJson(contributions),
+    sessionEditor: parseSessionEditorContributionsListJson(contributions),
+    sessionBackend: parseSessionBackendContributionsListJson(contributions),
+    syntaxThemeProvider: parseSyntaxThemeProviderContributionsListJson(contributions)
   };
 }
 
@@ -221,5 +233,31 @@ function parseSessionBackendConstributionJson(packageJson: any): ExtensionSessio
     };
   } catch (ex) {
     throw `Failed to process a session backend contribution: ${ex}`;
+  }
+}
+
+function parseSyntaxThemeProviderContributionsListJson(packageJson: any): ExtensionSyntaxThemeProviderContribution[] {
+  const value = packageJson["syntaxThemeProvider"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'syntaxThemeProvider' of in the 'contributions' object is not an array.`;
+  }
+
+  const result: ExtensionSyntaxThemeProviderContribution[] = [];
+  for (const item of value) {
+    result.push(parseSyntaxThemeProviderContributionsJson(item));
+  }
+  return result;
+}
+
+function parseSyntaxThemeProviderContributionsJson(packageJson: any): ExtensionSyntaxThemeProviderContribution {
+  try {
+    return {
+      name: assertJsonStringField(packageJson, "name")
+    };
+  } catch (ex) {
+    throw `Failed to process a syntax theme provider contribution: ${ex}`;
   }
 }

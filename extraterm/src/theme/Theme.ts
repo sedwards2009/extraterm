@@ -11,6 +11,7 @@ export interface ThemeInfo {
   id: string;
   type: ThemeType;
   path: string;
+  provider: string;
   debug: boolean;
   comment: string;
   loadingBackgroundColor: string;

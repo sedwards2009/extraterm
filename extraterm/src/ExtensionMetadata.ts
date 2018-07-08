@@ -24,6 +24,7 @@ export interface ExtensionContributions {
   viewer: ExtensionViewerContribution[];
   sessionEditor: ExtensionSessionEditorContribution[];
   sessionBackend: ExtensionSessionBackendContribution[];
+  syntaxThemeProvider: ExtensionSyntaxThemeProviderContribution[]
 }
 
 export interface ExtensionViewerContribution {
@@ -61,4 +62,8 @@ export interface ExtensionSessionBackendContribution {
    * Internal symbol used internally for indentifying this type of session.
    */
   type: string;
+}
+
+export interface ExtensionSyntaxThemeProviderContribution {
+  name: string;
 }

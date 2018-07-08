@@ -35,16 +35,13 @@ import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, C
 import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
+import { SyntaxTheme } from 'extraterm-extension-api';
 
 const THEME_CONFIG = "theme.json";
 
 const DEBUG_SASS = false;
 const DEBUG_SASS_FINE = false;
 const DEBUG_SCAN = false;
-
-interface ListenerFunc {
-  (theme: ThemeInfo): void;
-}
 
 type GlobalVariableMap = Map<string, number|boolean|string>;
 
@@ -66,18 +63,25 @@ export class ThemeManager implements AcceptsConfigDatabase {
   private _configDistributor: ConfigDatabase = null;
   private _themes: Map<string, ThemeInfo> = null;
   
-  constructor(private _directories: string[], private _mainExtensionManager: MainExtensionManager) {
-    this._log = getLogger("ThemeManagerImpl", this);
+  constructor(private _paths: string[], private _mainExtensionManager: MainExtensionManager) {
+    this._log = getLogger("ThemeManagerImpl", this);    
+    this._themes = this._scanThemePaths(this._paths);
+  }
+
+  private _scanThemePaths(paths: string[]): Map<string, ThemeInfo> {
+    let themesList: ThemeInfo[] = [];
+    for (const themePath of paths) {
+      themesList = [...themesList, ...this._scanThemePath(themePath)];
+    }
+
+    themesList = [...themesList, ...this._scanThemesWithSyntaxThemeProviders(paths)];
 
     const allThemes = new Map<string, ThemeInfo>();
-    this._directories.forEach( (directory) => {
-      const themes = this._scanThemeDirectory(directory);
-      themes.forEach( (value, key) => {
-        allThemes.set(key, value);
-      });
+    themesList.forEach( themeInfo => {
+      allThemes.set(themeInfo.id, themeInfo);
     });
-    
-    this._themes = allThemes;
+
+    return allThemes;
   }
 
   setConfigDatabase(configDistributor: ConfigDatabase): void {
@@ -90,33 +94,33 @@ export class ThemeManager implements AcceptsConfigDatabase {
    * @param themesdir The directory to scan for themes.
    * @returns Map of found theme config objects.
    */
-  private _scanThemeDirectory(themesDir: string): Map<string, ThemeInfo> {
-    let themeMap = new Map<string, ThemeInfo>();
-    if (fs.existsSync(themesDir)) {
-      const contents = fs.readdirSync(themesDir);
-      contents.forEach( (item) => {
-        const infoPath = path.join(themesDir, item, THEME_CONFIG);
+  private _scanThemePath(themePath: string): ThemeInfo[] {
+    const themes: ThemeInfo[] = [];
+    if (fs.existsSync(themePath)) {
+      const contents = fs.readdirSync(themePath);
+      for (const item of contents) {
+        const infoPath = path.join(themePath, item, THEME_CONFIG);
         try {
           const infoStr = fs.readFileSync(infoPath, {encoding: "utf8"});
           const themeInfo = <ThemeInfo>JSON.parse(infoStr);
-          themeInfo.path = path.join(themesDir, item);
+          themeInfo.path = path.join(themePath, item);
           themeInfo.id = item;
           this._fillThemeInfoDefaults(themeInfo);
           
           if (this._validateThemeInfo(themeInfo)) {
-            themeMap.set(item, themeInfo);
+            themes.push(themeInfo);
           }
           
           if (DEBUG_SCAN) {
-            this._log.debug(themeInfo);
+            this._log.debug(`ThemeInfo<name=${themeInfo.name}, id=${themeInfo.id}, type=${themeInfo.type}, path=${themeInfo.path}, provider=${themeInfo.provider}>`);
           }
 
         } catch(err) {
           this._log.warn("Warning: Unable to read file ", infoPath, err);
         }
-      });
+      }
     }
-    return themeMap;
+    return themes;
   }
 
   private _fillThemeInfoDefaults(themeInfo: ThemeInfo): void {
@@ -133,7 +137,34 @@ export class ThemeManager implements AcceptsConfigDatabase {
   private _validateThemeInfo(themeinfo: ThemeInfo): boolean {
     return _.isString(themeinfo.name) && themeinfo.name !== "";
   }
-  
+
+  private _scanThemesWithSyntaxThemeProviders(paths: string[]): ThemeInfo[] {
+    const result: ThemeInfo[] = [];
+    for (const provider of this._mainExtensionManager.getSyntaxThemeProviderContributions()) {
+      for (const theme of provider.syntaxThemeProvider.scanThemes(paths)) {
+        const themeId = provider.metadata.name + ":" + theme.id;
+        const themeInfo: ThemeInfo = {
+          id: themeId,
+          type: 'syntax',
+          debug: false,
+          name: theme.name,
+          comment: theme.comment,
+          path: null,
+          provider: provider.metadata.name,
+          loadingBackgroundColor: null,
+          loadingForegroundColor: null
+        };
+
+        if (DEBUG_SCAN) {
+          this._log.debug(themeInfo);
+        }
+
+      result.push(themeInfo);
+      }
+    }
+    return result;
+  }
+
   getTheme(themeId: string): ThemeInfo {
     return this._themes.get(themeId) || null;
   }
@@ -154,6 +185,8 @@ export class ThemeManager implements AcceptsConfigDatabase {
     let moduleName = "";
     let themeNameStack: string[] = null;
     let fallbackTheme = "";
+    let syntaxCss = "";
+
     switch (themeType) {
       case "gui":
         moduleName = CSS_MODULE_INTERNAL_GUI;
@@ -169,7 +202,10 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
       case "syntax":
         moduleName = CSS_MODULE_INTERNAL_SYNTAX;
-        themeNameStack = [config.themeSyntax, FALLBACK_SYNTAX_THEME];
+
+        const syntaxThemeInfo = this._themes.get(config.themeSyntax);
+        syntaxCss = this._formatSyntaxTheme(syntaxThemeInfo);
+        themeNameStack = [FALLBACK_SYNTAX_THEME];
         fallbackTheme = FALLBACK_SYNTAX_THEME;
         break;
     }
@@ -196,6 +232,10 @@ export class ThemeManager implements AcceptsConfigDatabase {
       result.errorMessage += extensionResult.errorMessage + "\n";
     }
 
+    if (themeType === "syntax") {
+      result.themeContents.cssFiles[0].contents = result.themeContents.cssFiles[0].contents + syntaxCss;
+    }
+
     return result;
   }
 
@@ -206,7 +246,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   
   private _themeIdListToThemeInfoList(themeIdList: string[]): ThemeInfo[] {
     // Convert the list of theme IDs to a list of ThemeInfos
-    const themeInfoList = themeIdList.map( (themeId) => {
+    const themeInfoList = themeIdList.map( themeId => {
       const themeInfo = this.getTheme(themeId);
       if (themeInfo === null) {
         this._log.warn("The requested theme name '" + themeId + "' is unknown.");
@@ -214,7 +254,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
       } else {
         return themeInfo;
       }
-    }).filter( (themeInfo) => themeInfo !== null );
+    }).filter( themeInfo => themeInfo !== null );
     return themeInfoList;
   }
   
@@ -428,5 +468,106 @@ export class ThemeManager implements AcceptsConfigDatabase {
     variables.set('--source-dir-' + extensionMetadata.name, extensionCssDecl.directory.replace(/\\/g, "/"));
 
     return this._renderCssFiles(extDirStack, cookedCssFiles, globalVariables);
+  }
+
+  private _formatSyntaxTheme(syntaxThemeInfo: ThemeInfo): string {
+    const contents = this._getSyntaxThemeContentsFromInfo(syntaxThemeInfo);
+    if (contents == null) {
+      this._log.warn(`Unable to find syntax theme contents for ID ${syntaxThemeInfo.id}`);
+    }
+    return this._formatSyntaxThemeAsCss(contents);
+  }
+
+  private _getSyntaxThemeContentsFromInfo(syntaxThemeInfo: ThemeInfo): SyntaxTheme {
+    for (const provider of this._mainExtensionManager.getSyntaxThemeProviderContributions()) {
+      if (provider.metadata.name === syntaxThemeInfo.provider) {
+        const parts = syntaxThemeInfo.id.split(":");
+        if (parts.length === 2) {
+          return provider.syntaxThemeProvider.readTheme(this._paths, parts[1]);
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private _formatSyntaxThemeAsCss(syntaxTheme: SyntaxTheme): string {
+    const lines: string[]  = [];
+
+    const cursorColor = syntaxTheme.caret != null ? syntaxTheme.caret : "#ffb300";
+    lines.push(`
+.ace_cursor {
+  border-left: 1px solid ${cursorColor};
+}
+`);
+
+    const foregroundColor = syntaxTheme.foreground != null ? syntaxTheme.foreground : "#b2b2b2";
+    const backgroundColor = syntaxTheme.background != null ? syntaxTheme.background : "#000000";
+    lines.push(`
+.ace_editor {
+  color: ${foregroundColor};
+  background-color: ${backgroundColor};
+}
+`);
+
+    const invisiblesColor = syntaxTheme.invisibles != null ? syntaxTheme.invisibles : "rgb(191, 191, 191)";
+    lines.push(`
+.ace_invisible {
+  color: ${invisiblesColor};
+}
+`);
+
+    const lineHighlightColor = syntaxTheme.lineHighlight != null ? syntaxTheme.lineHighlight : "#202020";
+    lines.push(`
+.ace_marker-layer .ace_active-line {
+  background-color: ${lineHighlightColor};
+}
+
+.ace_gutter-active-line {
+  background-color: ${lineHighlightColor};
+}
+`);    
+
+    const selectionColor = syntaxTheme.selection != null ? syntaxTheme.selection : "#005CCC";
+    lines.push(`
+.ace_selection {
+  background-color: ${selectionColor};
+}
+
+.ace_marker-layer .ace_selection {
+  background-color: ${selectionColor};
+}
+`);
+
+    lines.push(`
+.ace_gutter {
+  background: ${backgroundColor};
+  border-right: 1px solid ${foregroundColor};
+}`
+);
+
+    for (const rule of syntaxTheme.syntaxTokenRule) {
+      const cssSelector = ".ace_" + rule.scope.split(".").join(".ace_");
+      lines.push(cssSelector + " {");
+
+      if (rule.textStyle.foregroundColor != null) {
+        lines.push(`  color: ${rule.textStyle.foregroundColor};`);
+      }
+      if (rule.textStyle.backgroundColor != null) {
+        lines.push(`  background-color: ${rule.textStyle.backgroundColor};`);
+      }
+      if (rule.textStyle.bold) {
+        lines.push("  font-height: bold;");
+      }
+      if (rule.textStyle.italic) {
+        lines.push("  font-style: italic;");
+      }
+      if (rule.textStyle.underline) {
+        lines.push("  text-decoration: underline;");
+      }
+      lines.push("}");
+    }
+
+    return lines.join("\n");
   }
 }

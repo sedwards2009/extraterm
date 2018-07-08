@@ -491,8 +491,44 @@ export interface Pty {
   onExit: Event<void>;
 }
 
+export interface SyntaxThemeInfo {
+  id: string;
+  name: string;
+  comment: string;
+}
+
+export interface TextStyle {
+  foregroundColor?: string;
+  backgroundColor?: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+}
+
+export interface SyntaxTheme {
+  foreground: string;
+  background: string;
+  caret: string;
+  invisibles: string;
+  lineHighlight: string;
+  selection: string;
+  
+  syntaxTokenRule: SyntaxTokenRule[];
+}
+
+export interface SyntaxTokenRule {
+  scope: string;
+  textStyle: TextStyle;
+}
+
+export interface SyntaxThemeProvider {
+  scanThemes(paths: string[]): SyntaxThemeInfo[];
+  readTheme(paths: string[], id: string): SyntaxTheme;
+}
+
 export interface Backend {
   registerSessionBackend(name: string, backend: SessionBackend): void;
+  registerSyntaxThemeProvider(name: string, provider: SyntaxThemeProvider): void;
 }
 
 /**

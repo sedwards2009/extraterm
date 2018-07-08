@@ -3,8 +3,6 @@
  */
 /* text viewer styles */
 
-@import "text-computed-colors";
-
 :host {
   display: block;
   width: 100%;
@@ -31,7 +29,6 @@
   font-size: var(--terminal-font-size);
   line-height: normal;
   outline: none;
-  @include text-general;
 }
 
 .ace_editor {
@@ -194,7 +191,6 @@
   opacity: 0;
   background: transparent;
   -moz-appearance: none;
-/*  appearance: none; */
   border: none;
   resize: none;
   outline: none;
@@ -262,7 +258,6 @@
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
 
-  @include text-cursor;
   mix-blend-mode: difference; 
 }
 
@@ -270,17 +265,9 @@
   visibility: hidden;
 }
 
-.ace_selection {
-  @include text-selected;
-}
-
 .ace_marker-layer .ace_bracket {
   margin: -1px 0 0 -1px;
   border: 1px solid rgba(255, 255, 255, 0.15)
-}
-
-.ace_marker-layer .ace_active-line {
-  background: rgba(0, 0, 0, 0.35)
 }
 
 #ID_CONTAINER.hide-cursor .ace_marker-layer .ace_active-line {
@@ -360,11 +347,6 @@
   cursor: pointer;
   pointer-events: auto;
 }
-
-/*
-.ace_dark .ace_fold {
-}
-*/
 
 .ace_fold:hover{
   background-image:
@@ -542,102 +524,12 @@ styles.join("\n")
 //------------------------------------------------------------------------
 
 .ace_gutter {
-  @include text-gutters;
   overflow : hidden;
 }
 
 .ace_print-margin {
   width: 1px;
   background: #e8e8e8;
-}
-
-.ace_cursor {
-  @include text-cursor;  
-}
-
-.ace_invisible {
-  color: rgb(191, 191, 191);
-}
-
-.ace_constant.ace_buildin {
-  @include text-syntax-builtin;
-}
-
-.ace_constant.ace_language {
-  color: rgb(88, 92, 246);
-}
-
-.ace_constant.ace_library {
-  color: rgb(6, 150, 14);
-}
-
-.ace_invalid {
-  @include text-syntax-error;  
-}
-
-.ace_fold {
-}
-
-.ace_support.ace_function {
-  @include text-syntax-def;
-}
-
-.ace_support.ace_constant {
-  color: rgb(6, 150, 14);
-}
-
-.ace_support.ace_type,
-.ace_support.ace_class,
-.ace_support.ace_other {
-  color: rgb(109, 121, 222);
-}
-
-.ace_variable.ace_parameter {
-  font-style:italic;
-  color:#FD971F;
-}
-.ace_keyword.ace_operator {
-  @include text-syntax-operator;
-}
-
-.ace_comment {
-  @include text-syntax-comment;
-}
-
-.ace_comment.ace_doc {
-  color: #236e24;
-}
-
-.ace_comment.ace_doc.ace_tag {
-  @include text-syntax-tag;  
-}
-
-.ace_constant.ace_numeric {
-  @include text-syntax-number;
-}
-
-.ace_variable {
-  @include text-syntax-variable;  
-}
-
-.ace_xml-pe {
-  color: rgb(104, 104, 91);
-}
-
-.ace_entity.ace_name.ace_function {
-  @include text-syntax-def;
-}
-
-.ace_heading {
-  @include text-syntax-header;  
-}
-
-.ace_list {
-  color:rgb(185, 6, 144);
-}
-
-.ace_marker-layer .ace_selection {
-  @include text-selected;
 }
 
 .ace_marker-layer .ace_step {
@@ -649,38 +541,12 @@ styles.join("\n")
 }
 
 .ace_marker-layer .ace_bracket {
-  @include text-syntax-bracket;
-}
-
-.ace_marker-layer .ace_active-line {
-  @include text-activeline;
-}
-
-.ace_gutter-active-line {
-  @include text-activeline;
+  color: #b2b2b2;
 }
 
 .ace_marker-layer .ace_selected-word {
   background: rgb(250, 250, 255);
   border: 1px solid rgb(200, 200, 250);
-}
-
-.ace_storage,
-.ace_keyword,
-.ace_meta.ace_tag {
-  @include text-syntax-qualifier;
-}
-
-.ace_string.ace_regex {
-  @include text-syntax-string-2;
-}
-
-.ace_string {
-  @include text-syntax-string;
-}
-
-.ace_entity.ace_other.ace_attribute-name {
-  @include text-syntax-attribute;
 }
 
 .ace_indent-guide {
