@@ -69,7 +69,7 @@ export class TextMateSyntaxThemeProvider implements SyntaxThemeProvider {
     
     const foreground = this._readTextStyleValue(tmThemeContents, "settings.0.settings.foreground", "");
     const background = this._readTextStyleValue(tmThemeContents, "settings.0.settings.background", "");
-    const caret = this._readTextStyleValue(tmThemeContents, "settings.0.settings.caret", "");
+    const cursor = this._readTextStyleValue(tmThemeContents, "settings.0.settings.caret", "");
     const invisibles = this._readTextStyleValue(tmThemeContents, "settings.0.settings.invisibles", "");
     const lineHighlight = this._readTextStyleValue(tmThemeContents, "settings.0.settings.lineHighlight", "");
     const selection = this._readTextStyleValue(tmThemeContents, "settings.0.settings.selection", "");
