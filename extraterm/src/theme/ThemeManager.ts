@@ -494,7 +494,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   private _formatSyntaxThemeAsCss(syntaxTheme: SyntaxTheme): string {
     const lines: string[]  = [];
 
-    const cursorColor = syntaxTheme.caret != null ? syntaxTheme.caret : "#ffb300";
+    const cursorColor = syntaxTheme.cursor != null ? syntaxTheme.cursor : "#ffb300";
     lines.push(`
 .ace_cursor {
   border-left: 1px solid ${cursorColor};
