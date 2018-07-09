@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-export type ThemeType = 'terminal' | 'syntax' | 'gui';
+export type ThemeType = 'terminal' | 'syntax' | 'syntax-css' | 'gui';
 
 export interface ThemeInfo {
   name: string;
@@ -116,5 +116,6 @@ export interface Themeable {
 }
 
 export const FALLBACK_TERMINAL_THEME = "default-terminal";
-export const FALLBACK_SYNTAX_THEME = "default-syntax";
+export const FALLBACK_SYNTAX_THEME = "textmate-syntax-theme-provider:Extraterm Default.tmTheme";
 export const FALLBACK_UI_THEME = "default";
+export const SYNTAX_CSS_THEME = "default-syntax";

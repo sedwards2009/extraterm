@@ -78,7 +78,7 @@ export class TextMateSyntaxThemeProvider implements SyntaxThemeProvider {
       foreground,
       invisibles,
       background,
-      caret,
+      cursor,
       lineHighlight,
       selection,
 

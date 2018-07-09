@@ -31,7 +31,7 @@ import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
-  cssFileToFilename, cssFileToExtension} from './Theme';
+  cssFileToFilename, cssFileToExtension, SYNTAX_CSS_THEME} from './Theme';
 import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
@@ -64,17 +64,31 @@ export class ThemeManager implements AcceptsConfigDatabase {
   private _themes: Map<string, ThemeInfo> = null;
   
   constructor(private _paths: string[], private _mainExtensionManager: MainExtensionManager) {
-    this._log = getLogger("ThemeManagerImpl", this);    
-    this._themes = this._scanThemePaths(this._paths);
+    this._log = getLogger("ThemeManagerImpl", this);
+    this._updateThemesList();
   }
 
-  private _scanThemePaths(paths: string[]): Map<string, ThemeInfo> {
+  private _updateThemesList(): void {
+    this._themes = this._scanThemePaths(this._paths, this._getSyntaxThemeExtensionPaths());
+  }
+
+  private _getSyntaxThemeExtensionPaths(): string [] {
+    const paths: string[] = [];
+    for (const extension of this._mainExtensionManager.getExtensionMetadata()) {
+      for (const st of extension.contributions.syntaxTheme) {
+        paths.push(path.join(extension.path, st.path));
+      }
+    }
+    return paths;
+  }
+
+  private _scanThemePaths(paths: string[], syntaxThemePaths: string[]): Map<string, ThemeInfo> {
     let themesList: ThemeInfo[] = [];
     for (const themePath of paths) {
       themesList = [...themesList, ...this._scanThemePath(themePath)];
     }
 
-    themesList = [...themesList, ...this._scanThemesWithSyntaxThemeProviders(paths)];
+    themesList = [...themesList, ...this._scanThemesWithSyntaxThemeProviders([...paths, ...syntaxThemePaths])];
 
     const allThemes = new Map<string, ThemeInfo>();
     themesList.forEach( themeInfo => {
@@ -100,23 +114,25 @@ export class ThemeManager implements AcceptsConfigDatabase {
       const contents = fs.readdirSync(themePath);
       for (const item of contents) {
         const infoPath = path.join(themePath, item, THEME_CONFIG);
-        try {
-          const infoStr = fs.readFileSync(infoPath, {encoding: "utf8"});
-          const themeInfo = <ThemeInfo>JSON.parse(infoStr);
-          themeInfo.path = path.join(themePath, item);
-          themeInfo.id = item;
-          this._fillThemeInfoDefaults(themeInfo);
-          
-          if (this._validateThemeInfo(themeInfo)) {
-            themes.push(themeInfo);
-          }
-          
-          if (DEBUG_SCAN) {
-            this._log.debug(`ThemeInfo<name=${themeInfo.name}, id=${themeInfo.id}, type=${themeInfo.type}, path=${themeInfo.path}, provider=${themeInfo.provider}>`);
-          }
+        if (fs.existsSync(infoPath)) {
+          try {
+            const infoStr = fs.readFileSync(infoPath, {encoding: "utf8"});
+            const themeInfo = <ThemeInfo>JSON.parse(infoStr);
+            themeInfo.path = path.join(themePath, item);
+            themeInfo.id = item;
+            this._fillThemeInfoDefaults(themeInfo);
+            
+            if (this._validateThemeInfo(themeInfo)) {
+              themes.push(themeInfo);
+            }
+            
+            if (DEBUG_SCAN) {
+              this._log.debug(`ThemeInfo<name=${themeInfo.name}, id=${themeInfo.id}, type=${themeInfo.type}, path=${themeInfo.path}, provider=${themeInfo.provider}>`);
+            }
 
-        } catch(err) {
-          this._log.warn("Warning: Unable to read file ", infoPath, err);
+          } catch(err) {
+            this._log.warn("Warning: Unable to read file ", infoPath, err);
+          }
         }
       }
     }
@@ -181,62 +197,75 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   async render(themeType: ThemeType, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = this._configDistributor.getConfig(GENERAL_CONFIG);
-    let moduleName = "";
-    let themeNameStack: string[] = null;
-    let fallbackTheme = "";
-    let syntaxCss = "";
-
     switch (themeType) {
       case "gui":
-        moduleName = CSS_MODULE_INTERNAL_GUI;
-        themeNameStack = [config.themeGUI, FALLBACK_UI_THEME];
-        fallbackTheme = FALLBACK_UI_THEME;
-        break;
-
+        return await this._renderGui(globalVariables);
       case "terminal":
-        moduleName = CSS_MODULE_INTERNAL_TERMINAL;
-        themeNameStack = [config.themeTerminal, FALLBACK_TERMINAL_THEME];
-        fallbackTheme = FALLBACK_TERMINAL_THEME;
-        break;
-
+        return await this._renderTerminal(globalVariables);
       case "syntax":
-        moduleName = CSS_MODULE_INTERNAL_SYNTAX;
-
-        const syntaxThemeInfo = this._themes.get(config.themeSyntax);
-        syntaxCss = this._formatSyntaxTheme(syntaxThemeInfo);
-        themeNameStack = [FALLBACK_SYNTAX_THEME];
-        fallbackTheme = FALLBACK_SYNTAX_THEME;
-        break;
+        return await this._renderSyntax(globalVariables);
     }
+    return null;
+  }
 
-    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === moduleName);
+  async _renderGui(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
+    const config = this._configDistributor.getConfig(GENERAL_CONFIG);
+    let themeNameStack = [config.themeGUI, FALLBACK_UI_THEME];
+    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_GUI);
 
     // Add extra CSS files needed by extensions.
     let result = await this._renderThemes(themeNameStack, neededCssFiles, globalVariables);
     if ( ! result.success) {
-      themeNameStack = [fallbackTheme];
+      themeNameStack = [FALLBACK_UI_THEME];
       const fallbackResult = await this._renderThemes(themeNameStack, neededCssFiles, globalVariables);
       fallbackResult.errorMessage = result.errorMessage;
       result = fallbackResult;
     }
 
-    if (themeType === "gui") {
-      // Now render the CSS files for the extensions.
-
-      const extensionResult = await this._renderAllExtensionCss(themeNameStack, globalVariables);
-      if ( ! extensionResult.success) {
-        result.success = false;
-      }
-      result.themeContents.cssFiles = [...result.themeContents.cssFiles, ...extensionResult.themeContents.cssFiles];
-      result.errorMessage += extensionResult.errorMessage + "\n";
+    // Now render the CSS files for the extensions.
+    const extensionResult = await this._renderAllExtensionCss(themeNameStack, globalVariables);
+    if ( ! extensionResult.success) {
+      result.success = false;
     }
+    result.themeContents.cssFiles = [...result.themeContents.cssFiles, ...extensionResult.themeContents.cssFiles];
+    result.errorMessage += extensionResult.errorMessage + "\n";
+    return result;
+  }
 
-    if (themeType === "syntax") {
-      result.themeContents.cssFiles[0].contents = result.themeContents.cssFiles[0].contents + syntaxCss;
+  async _renderTerminal(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
+    const config = this._configDistributor.getConfig(GENERAL_CONFIG);
+    let themeNameStack = [config.themeTerminal, FALLBACK_TERMINAL_THEME];
+    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_TERMINAL);
+
+    // Add extra CSS files needed by extensions.
+    let result = await this._renderThemes(themeNameStack, neededCssFiles, globalVariables);
+    if ( ! result.success) {
+      themeNameStack = [FALLBACK_TERMINAL_THEME];
+      const fallbackResult = await this._renderThemes(themeNameStack, neededCssFiles, globalVariables);
+      fallbackResult.errorMessage = result.errorMessage;
+      result = fallbackResult;
     }
 
     return result;
+  }
+  
+  async _renderSyntax(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
+    const config = this._configDistributor.getConfig(GENERAL_CONFIG);
+    this._log.debug(`Rendering syntax theme for ${config.themeSyntax}`);
+
+    const syntaxThemeInfo = this._themes.get(config.themeSyntax);
+    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_SYNTAX);
+    try {
+      // Add extra CSS files needed by extensions.
+      const result = await this._renderThemes([SYNTAX_CSS_THEME], neededCssFiles, globalVariables);
+      const syntaxCss = this._formatSyntaxTheme(syntaxThemeInfo);
+      result.themeContents.cssFiles[0].contents = result.themeContents.cssFiles[0].contents + syntaxCss;
+      this._log.debug(`Complete syntax theme CSS is: ${result.themeContents.cssFiles[0].contents}`);
+      return result;
+    } catch(ex) {
+      this._log.debug(ex);
+      return null;
+    }
   }
 
   private _renderThemes(themeStack: string[], cssFileList: CssFile[], globalVariables: GlobalVariableMap): Promise<RenderResult> {
@@ -479,11 +508,12 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   private _getSyntaxThemeContentsFromInfo(syntaxThemeInfo: ThemeInfo): SyntaxTheme {
+    const paths = [...this._paths, ...this._getSyntaxThemeExtensionPaths()];
     for (const provider of this._mainExtensionManager.getSyntaxThemeProviderContributions()) {
       if (provider.metadata.name === syntaxThemeInfo.provider) {
         const parts = syntaxThemeInfo.id.split(":");
         if (parts.length === 2) {
-          return provider.syntaxThemeProvider.readTheme(this._paths, parts[1]);
+          return provider.syntaxThemeProvider.readTheme(paths, parts[1]);
         }
       }
     }

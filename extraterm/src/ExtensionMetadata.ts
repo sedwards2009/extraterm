@@ -24,7 +24,8 @@ export interface ExtensionContributions {
   viewer: ExtensionViewerContribution[];
   sessionEditor: ExtensionSessionEditorContribution[];
   sessionBackend: ExtensionSessionBackendContribution[];
-  syntaxThemeProvider: ExtensionSyntaxThemeProviderContribution[]
+  syntaxTheme: ExtensionSyntaxThemeContribution[];
+  syntaxThemeProvider: ExtensionSyntaxThemeProviderContribution[];
 }
 
 export interface ExtensionViewerContribution {
@@ -66,4 +67,8 @@ export interface ExtensionSessionBackendContribution {
 
 export interface ExtensionSyntaxThemeProviderContribution {
   name: string;
+}
+
+export interface ExtensionSyntaxThemeContribution {
+  path: string;
 }
