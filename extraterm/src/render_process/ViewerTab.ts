@@ -4,11 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as fs from 'fs';
 import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import {EVENT_COMMAND_PALETTE_REQUEST, COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
+import { COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
   Commandable, CommandEntry} from './CommandPaletteRequestTypes';
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
@@ -24,19 +23,15 @@ import * as SupportsDialogStack from "./SupportsDialogStack";
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import {ViewerElement} from "./viewers/ViewerElement";
-import * as Util from './gui/Util';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as WebIpc from './WebIpc';
 
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
-type SetterState = VirtualScrollArea.SetterState;
 type ScrollableElement = VirtualScrollable & HTMLElement;
 type VisualState = ViewerElementTypes.VisualState;
 const VisualState = ViewerElementTypes.VisualState;
-
-const DEBUG = true;
 
 const ID = "EtTabViewerTemplate";
 
@@ -71,25 +66,14 @@ export class EtViewerTab extends ViewerElement implements Commandable,
 
   private _log: Logger;
   private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea = null;
-  private _terminalSize: ClientRect = null;
-  private _scrollYOffset = 0; // The Y scroll offset into the virtual height.
-  private _virtualHeight = 0; // The virtual height of the terminal contents in px.
   
-  private _blinkingCursor = false;
   private _title = "New Tab";
   private _tag: string = null;
 
   private _keyBindingManager: KeyBindingsManager = null;
-
-  private _mainStyleLoaded = false;
-  private _themeStyleLoaded = false;
   private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
   private _needsCompleteRefresh = true;
-
-  private _scheduleLaterHandle: Disposable = null;
-  private _scheduledResize = false;
-
   private _fontSizeAdjustment = 0;
   private _armResizeCanary = false;  // Controls when the resize canary is allowed to chirp.
   private _dialogStack: HTMLElement[] = [];

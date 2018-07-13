@@ -3,14 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable, Event, SessionConfiguration, EnvironmentMap} from 'extraterm-extension-api';
+import { Event, SessionConfiguration, EnvironmentMap} from 'extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
-import * as _ from 'lodash';
 
 import { Pty, BufferSizeChange } from '../../pty/Pty';
 import { AcceptsConfigDatabase, ConfigDatabase, SESSION_CONFIG } from '../../Config';
 import { Logger, getLogger } from "extraterm-logging";
-import * as Messages from '../../WindowMessages';
 import * as Util from '../../render_process/gui/Util';
 import { EventEmitter } from '../../utils/EventEmitter';
 import { MainExtensionManager } from '../extension/MainExtensionManager';

@@ -12,7 +12,6 @@ import {BulkFileIdentifier} from '../main_process/bulk_file_handling/BulkFileSto
 import * as Messages from '../WindowMessages';
 import * as config from '../Config';
 import {Logger, getLogger} from "extraterm-logging";
-import * as ThemeTypes from '../theme/Theme';
 import { ExtensionMetadata } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
 

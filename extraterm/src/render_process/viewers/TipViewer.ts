@@ -5,7 +5,6 @@
 "use strict";
 import * as Electron from 'electron';
 const shell = Electron.shell;
-import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as he from 'he';
@@ -23,18 +22,12 @@ import {ViewerElement} from '../viewers/ViewerElement';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
-import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
-import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 
-type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
-type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
-type VisualState = ViewerElementTypes.VisualState;
-const VisualState = ViewerElementTypes.VisualState;
 
 const ID = "EtTipViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -45,11 +38,8 @@ const ID_NEXT_BUTTON = "ID_NEXT_BUTTON";
 const ID_SHOW_TIPS = "ID_SHOW_TIPS";
 const CLASS_KEYCAP = "CLASS_KEYCAP";
 
-const KEYBINDINGS_SELECTION_MODE = "image-viewer";
-
 const DEBUG_SIZE = false;
 
-let instanceIdCounter = 0;
 
 /**
  * Load in the array of tips from src/tips/tips.html.

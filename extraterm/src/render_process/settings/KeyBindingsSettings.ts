@@ -3,8 +3,6 @@
  */
 
 import { WebComponent } from 'extraterm-web-component-decorators';
-import * as _ from 'lodash';
-import Vue from 'vue';
 
 import { KeyBindingsSettingsUi} from './KeyBindingsSettingsUi';
 import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../Config';

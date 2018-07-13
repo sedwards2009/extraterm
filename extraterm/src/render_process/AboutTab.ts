@@ -8,7 +8,6 @@ import {ViewerMetadata} from 'extraterm-extension-api';
 
 import * as ThemeTypes from '../theme/Theme';
 import {ViewerElement} from './viewers/ViewerElement';
-import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
 import {shell} from 'electron';

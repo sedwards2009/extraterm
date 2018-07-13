@@ -7,7 +7,6 @@ import { Disposable } from 'extraterm-extension-api';
 import Vue from 'vue';
 import {WebComponent, Attribute, Observe} from 'extraterm-web-component-decorators';
 
-import * as DomUtils from '../../DomUtils';
 import {DebouncedDoLater} from '../../../utils/DoLater';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";

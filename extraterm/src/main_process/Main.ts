@@ -13,8 +13,8 @@ import * as SourceMapSupport from 'source-map-support';
 
 import * as child_process from 'child_process';
 import * as Commander from 'commander';
-import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
-import { BulkFileState, Disposable, Event} from 'extraterm-extension-api';
+import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
+import { BulkFileState, Event} from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
 import * as fs from 'fs';
@@ -22,7 +22,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as os from 'os';
 
-import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
+import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
 import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent} from '../Config';
 import {FileLogWriter, Logger, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
@@ -32,7 +32,7 @@ import {ThemeManager} from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { EventEmitter } from '../utils/EventEmitter';
-import { freezeDeep, DeepReadonly } from 'extraterm-readonly-toolbox';
+import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
@@ -54,15 +54,10 @@ const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
 const KEYBINDINGS_DIRECTORY = "../../resources/keybindings";
-const DEFAULT_KEYBINDING = "keybindings.json";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
 const KEYBINDINGS_PC = "keybindings.json";
 const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
 const DEFAULT_TERMINALFONT = "DejaVuSansMono";
-
-const DEFAULT_TERMINAL_THEME = "default-terminal";
-const DEFAULT_SYNTAX_THEME = "default-syntax";
-const DEFAULT_UI_THEME = "atomic-dark-ui";
 
 const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
@@ -75,7 +70,6 @@ let themeManager: ThemeManager;
 let ptyManager: PtyManager;
 let configDatabase: ConfigDatabaseImpl;
 let tagCounter = 1;
-let fonts: FontInfo[] = null;
 let titleBarVisible = false;
 let bulkFileStorage: BulkFileStorage = null;
 let extensionManager: MainExtensionManager = null;

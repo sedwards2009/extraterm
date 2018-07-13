@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 
 import { Logger, getLogger } from "extraterm-logging";
-import { ExtensionMetadata, ExtensionSessionBackendContribution, ExtensionSyntaxThemeContribution } from "../../ExtensionMetadata";
+import { ExtensionMetadata, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
 import { parsePackageJson } from './PackageFileParser';
 import { ExtensionContext, Backend, SessionBackend, SyntaxThemeProvider } from 'extraterm-extension-api';
 import { log } from "extraterm-logging";

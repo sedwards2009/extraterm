@@ -6,7 +6,6 @@
 
 import {Disposable, Event} from 'extraterm-extension-api';
 
-
 import {DisposableHolder} from '../utils/DisposableUtils';
 
 

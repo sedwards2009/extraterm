@@ -1,10 +1,6 @@
 /**
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
-
-import {WebComponent} from 'extraterm-web-component-decorators';
-import * as _ from 'lodash';
-
 import { ConfigDatabase, ConfigKey } from '../../Config';
 import { ConfigElementLifecycleBinder } from './ConfigElementLifecycleBinder';
 import { ThemeableElementBase } from '../ThemeableElementBase';

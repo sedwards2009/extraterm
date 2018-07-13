@@ -5,7 +5,6 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
-import * as _ from 'lodash';
 
 import {CommandLineAction} from '../../Config';
 

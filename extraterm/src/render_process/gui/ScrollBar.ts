@@ -11,7 +11,6 @@ import { log } from "extraterm-logging";
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as Util from './Util';
 
 
 const ID = "EtScrollbarTemplate";

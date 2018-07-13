@@ -12,10 +12,6 @@ import { ThemeableElementBase } from '../ThemeableElementBase';
 import { CssFile } from '../../theme/Theme';
 import { log } from "extraterm-logging";
 
-interface RegisteredSessionEditor {
-  type: string;
-  tag: string;
-}
 
 export class WorkspaceSessionEditorRegistry {
   private _log: Logger = null;

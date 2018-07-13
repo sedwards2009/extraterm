@@ -10,7 +10,7 @@ import { log } from "extraterm-logging";
 import * as WebIpc from '../WebIpc';
 import {Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
-import {SmartBuffer, SmartBufferOptions} from 'smart-buffer';
+import { SmartBuffer } from 'smart-buffer';
 import * as Messages from '../../WindowMessages';
 
 

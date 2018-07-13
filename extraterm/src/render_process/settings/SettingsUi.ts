@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 
-import {FontInfo, CommandLineAction, ShowTipsStrEnum, ConfigDatabase} from '../../Config';
+import { ConfigDatabase } from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { APPEARANCE_SETTINGS_TAG } from './AppearanceSettings';
 import { FRAME_SETTINGS_TAG } from './FrameSettings';

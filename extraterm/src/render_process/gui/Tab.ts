@@ -3,10 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as DomUtils from '../DomUtils';
-import * as Util from './Util';
-import {Logger, getLogger} from "extraterm-logging";
-import { log } from "extraterm-logging";
+import {log, Logger, getLogger} from "extraterm-logging";
 import { WebComponent } from 'extraterm-web-component-decorators';
 
 /**

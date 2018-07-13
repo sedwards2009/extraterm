@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as _ from 'lodash';
 import * as path from 'path';
 import Component from 'vue-class-component';
 import Vue from 'vue';
@@ -16,23 +15,19 @@ import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
 import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
 from '../CommandPaletteRequestTypes';
 import * as DomUtils from '../DomUtils';
-import * as GeneralEvents from '../GeneralEvents';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {FrameMimeType} from '../InternalMimeTypes';
-import * as KeyBindingManager from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import {MenuItem} from '../gui/MenuItem';
-import * as ResourceLoader from '../../ResourceLoader';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as Util from '../gui/Util';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {VisualState} from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import {SetterState, VirtualScrollable} from '../VirtualScrollArea';
+import { SetterState } from '../VirtualScrollArea';
 
 
 const ID = "EtEmbeddedViewerTemplate";

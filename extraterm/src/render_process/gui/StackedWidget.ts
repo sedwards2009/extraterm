@@ -5,15 +5,12 @@
  */
 import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
-import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
-import * as Util from './Util';
 
 const ID = "EtStackedWidgetTemplate";
 const ID_CONTAINER = 'ID_CONTAINER';
-const ATTR_INDEX = 'data-et-index';
 
 
 /**

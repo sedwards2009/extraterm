@@ -3,8 +3,6 @@
  */
 
 "use strict";
-import * as _ from 'lodash';
-import * as fs from 'fs';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import {BulkFileHandle, ViewerMetadata} from 'extraterm-extension-api';
 
@@ -13,7 +11,6 @@ import {DebouncedDoLater} from '../../utils/DoLater';
 import {ViewerElement} from './ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
-import * as Util from '../gui/Util';
 import * as DomUtils from '../DomUtils';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
@@ -21,7 +18,6 @@ import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import {AcceptsKeyBindingsManager, KeyBindingsManager} from '../keybindings/KeyBindingsManager';
 
-type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type SetterState = VirtualScrollArea.SetterState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
 type VisualState = ViewerElementTypes.VisualState;
@@ -41,8 +37,6 @@ const COMMAND_GO_UP = "goUp";
 const COMMAND_GO_DOWN = "goDown";
 
 const DEBUG_SIZE = false;
-
-let instanceIdCounter = 0;
 
 
 @WebComponent({tag: "et-image-viewer"})

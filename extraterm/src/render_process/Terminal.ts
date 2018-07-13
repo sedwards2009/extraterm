@@ -4,11 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as fs from 'fs';
 import * as crypto from 'crypto';
-import * as _ from 'lodash';
-import * as utf8 from 'utf8';
-import {clipboard} from 'electron';
 import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
@@ -35,7 +31,7 @@ import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeyBindingsManager, injectKeyBindingsManager, AcceptsKeyBindingsManager} from './keybindings/KeyBindingsManager';
-import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
+import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
@@ -45,7 +41,6 @@ import * as Term from './emulator/Term';
 import * as TermApi from 'term-api';
 import {ScrollBar} from './gui/ScrollBar';
 import {UploadProgressBar} from './UploadProgressBar';
-import * as util from './gui/Util';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
@@ -54,7 +49,7 @@ import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigD
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
-import { DeepReadonlyObject, DeepReadonly } from 'extraterm-readonly-toolbox';
+import { DeepReadonly } from 'extraterm-readonly-toolbox';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -68,10 +63,8 @@ type ScrollableElement = VirtualScrollable & HTMLElement;
 
 const log = LogDecorator;
 
-const DEBUG = true;
 const DEBUG_APPLICATION_MODE = false;
 
-let startTime: number = window.performance.now();
 
 const ID = "EtTerminalTemplate";
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
@@ -103,7 +96,6 @@ const COMMAND_GO_TO_NEXT_FRAME = "goToNextFrame";
 const CHILD_RESIZE_BATCH_SIZE = 3;
 
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
-const CLASS_CURSOR_MODE = "cursor-mode";
 const SCROLL_STEP = 1;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 

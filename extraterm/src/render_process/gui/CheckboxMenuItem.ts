@@ -3,13 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
+import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import * as DomUtils from '../DomUtils';
 import {MenuItem} from './MenuItem';
-import * as Util from './Util';
-
-const ID = "EtCheckboxMenuItemTemplate";
 
 
 /**

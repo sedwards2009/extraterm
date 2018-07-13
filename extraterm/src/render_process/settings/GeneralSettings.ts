@@ -3,8 +3,6 @@
  */
 
 import { WebComponent } from 'extraterm-web-component-decorators';
-import * as _ from 'lodash';
-import Vue from 'vue';
 
 import { GeneralSettingsUi } from './GeneralSettingsUi';
 import { GeneralConfig, ConfigKey, GENERAL_CONFIG } from '../../Config';

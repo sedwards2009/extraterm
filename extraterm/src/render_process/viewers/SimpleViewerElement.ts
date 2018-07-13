@@ -2,19 +2,13 @@
  * Copyright 2017 Simon Edwards <simon@simonzone.com>
  */
 
-import {WebComponent} from 'extraterm-web-component-decorators';
-import Vue from 'vue';
-import Component from 'vue-class-component';
-
 import { doLater } from '../../utils/DoLater';
-import * as DomUtils from '../DomUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
-import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, VirtualScrollable} from '../VirtualScrollArea';
 import { CssFileMap } from '../../theme/Theme';
 

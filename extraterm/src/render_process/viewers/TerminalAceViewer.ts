@@ -2,9 +2,6 @@
  * Copyright 2015-2018 Simon Edwards <simon@simonzone.com>
  */
 
-import * as _ from 'lodash';
-import * as fs from 'fs';
-import * as path from 'path';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import {BulkFileHandle, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 
@@ -19,14 +16,12 @@ import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import * as SourceDir from '../../SourceDir';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as Term from '../emulator/Term';
 import * as TermApi from 'term-api';
 import { BookmarkRef } from './TerminalViewerTypes';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as Util from '../gui/Util';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
@@ -52,8 +47,6 @@ const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 const CLASS_HAS_TERMINAL = "CLASS_HAS_TERMINAL";
 
-const OVERSIZE_CLASS_LIST = ["oversize"];
-
 const KEYBINDINGS_TERMINAL_VIEWER = "terminal-viewer";
 const PALETTE_GROUP = "terminalviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
@@ -63,7 +56,6 @@ const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const DEBUG_RESIZE = false;
 
-let classInitialized = false;
 let cssText: string = null;
 
 function getCssText(): string {

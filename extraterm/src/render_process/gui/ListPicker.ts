@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable} from 'extraterm-extension-api';
-import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
+import { Disposable } from 'extraterm-extension-api';
+import { WebComponent } from 'extraterm-web-component-decorators';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';

@@ -4,7 +4,6 @@
 
 import {WebComponent} from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
-import Vue from 'vue';
 
 import { FrameSettingsUi, nextId, Identifiable, IdentifiableCommandLineAction} from './FrameSettingsUi';
 import { COMMAND_LINE_ACTIONS_CONFIG, ConfigKey, CommandLineAction, GENERAL_CONFIG, GeneralConfig } from '../../Config';

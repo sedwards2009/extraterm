@@ -5,12 +5,9 @@
 import {WebComponent} from 'extraterm-web-component-decorators';
 import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
 
-import * as _ from 'lodash';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
-import Vue from 'vue';
-
-import { AcceptsConfigDatabase, ConfigDatabase, FontInfo } from '../../Config';
+import { AcceptsConfigDatabase, ConfigDatabase } from '../../Config';
 import { AcceptsKeyBindingsManager, KeyBindingsManager } from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";

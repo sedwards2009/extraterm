@@ -3,10 +3,6 @@
  */
 
 "use strict";
-import * as fs from 'fs';
-import * as _ from 'lodash';
-import * as path from 'path';
-import * as SourceDir from '../../SourceDir';
 import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
@@ -17,7 +13,6 @@ import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommand
 from '../CommandPaletteRequestTypes';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
-import * as ExtensionApi from 'extraterm-extension-api';
 import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 import * as GeneralEvents from '../GeneralEvents';
 import {KeyBindingsManager, AcceptsKeyBindingsManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingsManager';
@@ -27,7 +22,6 @@ import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as Util from '../gui/Util';
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, VirtualScrollable} from '../VirtualScrollArea';
@@ -51,12 +45,6 @@ const KEYBINDINGS_CURSOR_MODE = "text-viewer";
 const PALETTE_GROUP = "textviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
-
-const COMMANDS = [
-  COMMAND_TYPE_AND_CR_SELECTION,
-  COMMAND_TYPE_SELECTION,
-  COMMAND_OPEN_COMMAND_PALETTE
-];
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 const DEBUG_RESIZE = false;

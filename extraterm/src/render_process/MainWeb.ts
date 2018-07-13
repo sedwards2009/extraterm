@@ -6,11 +6,9 @@
 import {Disposable, Event} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
-import * as path from 'path';
 import * as SourceMapSupport from 'source-map-support';
 
 const ElectronMenu = Electron.remote.Menu;
-const ElectronMenuItem = Electron.remote.MenuItem;
 
 import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
@@ -41,7 +39,6 @@ import {TerminalViewer} from './viewers/TerminalAceViewer';
 import {TextViewer} from'./viewers/TextAceViewer';
 import * as ThemeTypes from '../theme/Theme';
 import * as ThemeConsumer from '../theme/ThemeConsumer';
-import * as Util from './gui/Util';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
@@ -52,8 +49,6 @@ import { KeyBindingsManager, injectKeyBindingsManager, loadKeyBindingsFromObject
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
 SourceMapSupport.install();
-
-const PLUGINS_DIRECTORY = "plugins";
 
 const PALETTE_GROUP = "mainweb";
 const MENU_ITEM_SETTINGS = 'settings';
@@ -73,7 +68,6 @@ const _log = getLogger("mainweb");
  * starting up the main component and handling the window directly.
  */
 
-let terminalIdCounter = 0;
 let keyBindingManager: KeyBindingsManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;

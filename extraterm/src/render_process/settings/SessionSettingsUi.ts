@@ -6,7 +6,6 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { SessionConfiguration } from 'extraterm-extension-api';
-import * as _ from 'lodash';
 import { createUuid } from 'extraterm-uuid';
 
 import { ExtensionManager } from '../extension/InternalTypes';
