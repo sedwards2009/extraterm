@@ -263,7 +263,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
       this._log.debug(`Complete syntax theme CSS is: ${result.themeContents.cssFiles[0].contents}`);
       return result;
     } catch(ex) {
-      this._log.debug(ex);
+      this._log.warn(ex);
       return null;
     }
   }

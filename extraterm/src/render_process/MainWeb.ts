@@ -434,7 +434,7 @@ function handleClipboardRead(msg: Messages.Message): void {
 let oldSystemConfig: SystemConfig = null;
 let oldGeneralConfig: GeneralConfig = null;
 
-function setupConfiguration(): Promise<void> {
+async function setupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
@@ -463,53 +463,70 @@ function setupConfiguration(): Promise<void> {
     setCssVars(newGeneralConfig.terminalFont, matchingFonts[0].path, fontSizePx);
   }
 
-  if (oldGeneralConfig === null || oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal ||
-      oldGeneralConfig.themeSyntax !== newGeneralConfig.themeSyntax ||
-      oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI) {
 
+  if (oldGeneralConfig == null) {
     oldGeneralConfig = newGeneralConfig;
     oldSystemConfig = newSystemConfig;
-    return requestThemeContents();
+    await requestThemeContents();
+  } else {
+    const refreshThemeTypeList: ThemeTypes.ThemeType[] = [];
+    if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
+      refreshThemeTypeList.push("terminal");
+    }
+    if (oldGeneralConfig.themeSyntax !== newGeneralConfig.themeSyntax) {
+      refreshThemeTypeList.push("syntax");
+    }
+    if (oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI) {
+      refreshThemeTypeList.push("gui");
+    }
+    oldGeneralConfig = newGeneralConfig;
+    oldSystemConfig = newSystemConfig;
+    if (refreshThemeTypeList.length !== 0) {
+      await requestThemeContents(refreshThemeTypeList);
+    }
   }
 
   oldGeneralConfig = newGeneralConfig;
   oldSystemConfig = newSystemConfig;
-
-  // no-op promise.
-  return new Promise<void>( (resolve, cancel) => { resolve(); } );
 }
 
-async function requestThemeContents(): Promise<void> {
-  const cssFileMap = new Map<ThemeTypes.CssFile, string>();
+async function requestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[] = []): Promise<void> {
+  const cssFileMap = new Map<ThemeTypes.CssFile, string>(ThemeConsumer.cssMap());
 
-  const terminalResult = await WebIpc.requestThemeContents("terminal");
-  if (terminalResult.success) {
-    for (const renderedCssFile of terminalResult.themeContents.cssFiles) {
-      cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+  if (refreshThemeTypeList.length === 0 || refreshThemeTypeList.indexOf("terminal") !== -1) {
+    const terminalResult = await WebIpc.requestThemeContents("terminal");
+    if (terminalResult.success) {
+      for (const renderedCssFile of terminalResult.themeContents.cssFiles) {
+        cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+      }
+    }
+    if (terminalResult.errorMessage !== "") {
+      _log.warn(terminalResult.errorMessage);
     }
   }
-  if (terminalResult.errorMessage !== "") {
-    _log.warn(terminalResult.errorMessage);
-  }
 
-  const syntaxResult = await WebIpc.requestThemeContents("syntax");
-  if (syntaxResult.success) {
-    for (const renderedCssFile of syntaxResult.themeContents.cssFiles) {
-      cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+  if (refreshThemeTypeList.length === 0 || refreshThemeTypeList.indexOf("syntax") !== -1) {
+    const syntaxResult = await WebIpc.requestThemeContents("syntax");
+    if (syntaxResult.success) {
+      for (const renderedCssFile of syntaxResult.themeContents.cssFiles) {
+        cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+      }
+    }
+    if (syntaxResult.errorMessage !== "") {
+      _log.warn(syntaxResult.errorMessage);
     }
   }
-  if (syntaxResult.errorMessage !== "") {
-    _log.warn(syntaxResult.errorMessage);
-  }
 
-  const uiResult = await WebIpc.requestThemeContents("gui");
-  if (uiResult.success) {
-    for (const renderedCssFile of uiResult.themeContents.cssFiles) {
-      cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+  if (refreshThemeTypeList.length === 0 || refreshThemeTypeList.indexOf("gui") !== -1) {
+    const uiResult = await WebIpc.requestThemeContents("gui");
+    if (uiResult.success) {
+      for (const renderedCssFile of uiResult.themeContents.cssFiles) {
+        cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+      }
     }
-  }
-  if (uiResult.errorMessage !== "") {
-    _log.warn(uiResult.errorMessage);
+    if (uiResult.errorMessage !== "") {
+      _log.warn(uiResult.errorMessage);
+    }
   }
       
   // Distribute the CSS files to the classes which want them.
