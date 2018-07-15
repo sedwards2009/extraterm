@@ -33,8 +33,13 @@ interface UiScalePercentOption {
   <h2><i class="fa fa-paint-brush"></i>&nbsp;&nbsp;Appearance</h2>
 
   <div class="form-horizontal">
-    <div class="form-group">
-      <label for="terminal-font" class="col-sm-4 control-label">Terminal Font:</label>
+
+  <div class="form-group">
+    <div class="col-sm-12"><h3>Terminal</h3></div>
+  </div>
+
+  <div class="form-group">
+      <label for="terminal-font" class="col-sm-4 control-label">Font:</label>
       <div class="input-group col-sm-4">
         <select class="form-control" id="terminal-font" v-model="terminalFont">
           <option v-for="option in terminalFontOptions" v-bind:value="option.postscriptName">
@@ -55,7 +60,7 @@ interface UiScalePercentOption {
     </div>
 
     <div class="form-group">
-      <label for="${ID_TERMINAL_FONT_SIZE}" class="col-sm-4 control-label">Terminal Font Size:</label>
+      <label for="${ID_TERMINAL_FONT_SIZE}" class="col-sm-4 control-label">Font Size:</label>
       <div class="input-group col-sm-1">
         <input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="form-control char-width-4" v-model.number="terminalFontSize" min='1'
           max='1024' debounce="100" />
@@ -64,7 +69,7 @@ interface UiScalePercentOption {
     </div>
 
     <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Terminal Theme:</label>
+      <label for="theme-terminal" class="col-sm-4 control-label">Theme:</label>
       <div class="input-group col-sm-4">
         <select class="form-control" id="theme-terminal" v-model="themeTerminal">
           <option v-for="option in themeTerminalOptions" v-bind:value="option.id">
@@ -84,28 +89,11 @@ interface UiScalePercentOption {
     </div>
 
     <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Text &amp; Syntax Theme:</label>
-      <div class="input-group col-sm-4">
-        <select class="form-control" id="theme-terminal" v-model="themeSyntax">
-          <option v-for="option in themeSyntaxOptions" v-bind:value="option.id">
-            {{ option.name }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <div v-if="themeSyntaxComment != ''" class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <p class="help-block">
-          <i class="fa fa-info-circle"></i>
-          {{themeSyntaxComment}}
-        </p>
-      </div>
+      <div class="col-sm-12"><h3>Interface</h3></div>
     </div>
 
     <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Interface Theme:</label>
+      <label for="theme-terminal" class="col-sm-4 control-label">Theme:</label>
       <div class="input-group col-sm-4">
         <select class="form-control" id="theme-terminal" v-model="themeGUI">
           <option v-for="option in themeGUIOptions" v-bind:value="option.id">
@@ -126,7 +114,7 @@ interface UiScalePercentOption {
     </div>
 
     <div class="form-group">
-      <label for="${ID_UI_ZOOM}" class="col-sm-4 control-label">Interface Zoom:</label>
+      <label for="${ID_UI_ZOOM}" class="col-sm-4 control-label">Zoom:</label>
       <div class="input-group col-sm-8">
         <select class="form-control char-width-4" id="${ID_UI_ZOOM}" v-model="uiScalePercent">
           <option v-for="option in uiScalePercentOptions" v-bind:value="option.id">
@@ -144,6 +132,31 @@ interface UiScalePercentOption {
             {{ option.name }}
           </option>
         </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-12"><h3>Text Viewer</h3></div>
+    </div>
+
+    <div class="form-group">
+      <label for="theme-terminal" class="col-sm-4 control-label">Theme:</label>
+      <div class="input-group col-sm-4">
+        <select class="form-control" id="theme-terminal" v-model="themeSyntax">
+          <option v-for="option in themeSyntaxOptions" v-bind:value="option.id">
+            {{ option.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div v-if="themeSyntaxComment != ''" class="form-group">
+      <div class="col-sm-4"></div>
+      <div class="input-group col-sm-8">
+        <p class="help-block">
+          <i class="fa fa-info-circle"></i>
+          {{themeSyntaxComment}}
+        </p>
       </div>
     </div>
 
