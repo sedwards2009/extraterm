@@ -160,6 +160,15 @@ interface UiScalePercentOption {
       </div>
     </div>
 
+    <div class="form-group">
+      <div class="col-sm-4"></div>
+      <div class="input-group col-sm-8">
+        <button v-on:click="openUserSyntaxThemesDir" class="btn btn-default">
+          <i class="far fa-folder-open"></i>&nbsp;User themes
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 `
@@ -262,5 +271,8 @@ export class AppearanceSettingsUi extends Vue {
     }
     return "";
   }
-  
+
+  openUserSyntaxThemesDir(): void {
+    this.$emit("openUserSyntaxThemesDir");
+  }
 }
