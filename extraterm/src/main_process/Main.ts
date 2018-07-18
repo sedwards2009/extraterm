@@ -53,6 +53,7 @@ const EXTRATERM_CONFIG_DIR = "extraterm";
 const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
+const USER_SYNTAX_THEMES_DIR = "syntax";
 const KEYBINDINGS_DIRECTORY = "../../resources/keybindings";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
 const KEYBINDINGS_PC = "keybindings.json";
@@ -144,10 +145,14 @@ function setupExtensionManager(): void {
 
 function setupThemeManager(): void {
   // Themes
-  const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
-  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  themeManager = new ThemeManager([themesdir, userThemesDir], extensionManager);
+  const themesDir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
+  themeManager = new ThemeManager({css: [themesDir], syntax: [getUserSyntaxThemeDirectory()]}, extensionManager);
   injectConfigDatabase(themeManager, configDatabase);
+}
+
+function getUserSyntaxThemeDirectory(): string {
+  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
+  return path.join(userThemesDir, USER_SYNTAX_THEMES_DIR);
 }
 
 function startUpWindows(): void {
@@ -349,7 +354,8 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
     availableFonts: getFonts(),
     titleBarVisible,
     currentScaleFactor: systemConfig == null ? 1 : systemConfig.currentScaleFactor,
-    originalScaleFactor: systemConfig == null ? 1 : systemConfig.originalScaleFactor
+    originalScaleFactor: systemConfig == null ? 1 : systemConfig.originalScaleFactor,
+    userSyntaxThemeDirectory: getUserSyntaxThemeDirectory()
   };
 }
 
@@ -398,6 +404,17 @@ function setupAppData(): void {
     const statInfo = fs.statSync(userThemesDir);
     if ( ! statInfo.isDirectory()) {
       _log.warn("Extraterm user themes path " + userThemesDir + " is not a directory!");
+      return;
+    }
+  }
+
+  const userSyntaxThemesDir = path.join(userThemesDir, USER_SYNTAX_THEMES_DIR);
+  if ( ! fs.existsSync(userSyntaxThemesDir)) {
+    fs.mkdirSync(userSyntaxThemesDir);
+  } else {
+    const statInfo = fs.statSync(userSyntaxThemesDir);
+    if ( ! statInfo.isDirectory()) {
+      _log.warn("Extraterm user syntax themes path " + userSyntaxThemesDir + " is not a directory!");
       return;
     }
   }

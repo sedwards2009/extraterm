@@ -56,14 +56,19 @@ interface CssDirectory {
   path: string;
 }
 
+interface ThemeTypePaths {
+  css: string[];
+  syntax: string[];
+};
+
 
 export class ThemeManager implements AcceptsConfigDatabase {
   
   private _log: Logger = null;
   private _configDistributor: ConfigDatabase = null;
   private _themes: Map<string, ThemeInfo> = null;
-  
-  constructor(private _paths: string[], private _mainExtensionManager: MainExtensionManager) {
+
+  constructor(private _paths: ThemeTypePaths, private _mainExtensionManager: MainExtensionManager) {
     this._log = getLogger("ThemeManagerImpl", this);
     this._updateThemesList();
   }
@@ -82,13 +87,13 @@ export class ThemeManager implements AcceptsConfigDatabase {
     return paths;
   }
 
-  private _scanThemePaths(paths: string[], syntaxThemePaths: string[]): Map<string, ThemeInfo> {
+  private _scanThemePaths(paths: ThemeTypePaths, syntaxThemePaths: string[]): Map<string, ThemeInfo> {
     let themesList: ThemeInfo[] = [];
-    for (const themePath of paths) {
+    for (const themePath of paths.css) {
       themesList = [...themesList, ...this._scanThemePath(themePath)];
     }
 
-    themesList = [...themesList, ...this._scanThemesWithSyntaxThemeProviders([...paths, ...syntaxThemePaths])];
+    themesList = [...themesList, ...this._scanThemesWithSyntaxThemeProviders([...paths.syntax, ...syntaxThemePaths])];
 
     const allThemes = new Map<string, ThemeInfo>();
     themesList.forEach( themeInfo => {
@@ -508,7 +513,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   private _getSyntaxThemeContentsFromInfo(syntaxThemeInfo: ThemeInfo): SyntaxTheme {
-    const paths = [...this._paths, ...this._getSyntaxThemeExtensionPaths()];
+    const paths = [...this._paths.syntax, ...this._getSyntaxThemeExtensionPaths()];
     for (const provider of this._mainExtensionManager.getSyntaxThemeProviderContributions()) {
       if (provider.metadata.name === syntaxThemeInfo.provider) {
         const parts = syntaxThemeInfo.id.split(":");
