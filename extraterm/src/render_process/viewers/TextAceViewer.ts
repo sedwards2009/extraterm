@@ -114,7 +114,6 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
-    this._exitCursorMode();
     this._mode = ViewerElementTypes.Mode.DEFAULT;
 
     this._aceEditSession = new EditSession(new Document(""));
@@ -132,6 +131,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this.__addCommands(DefaultCommands);
     this.__addCommands(MultiSelectCommands);
     this.__addCommands(ExtraEditCommands);
+
+    this._exitCursorMode();
 
     this._aceEditor.on("change", (data, editor) => {
       if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
@@ -402,9 +403,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   setEditable(editable: boolean): void {
     this._editable = editable;
-    if (this._mode === ViewerElementTypes.Mode.CURSOR) {
-      this._aceEditor.setReadOnly(! editable);
-    }
+    this._aceEditor.setReadOnly(! editable);
   }
   
   getEditable(): boolean {

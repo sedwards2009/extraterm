@@ -155,8 +155,6 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
     }
     
     if (element !== null) {
-      // element.visualState = ViewerElementTypes. this._visualState; FIXME
-      element.setMode(ViewerElementTypes.Mode.CURSOR);
       this._appendScrollableElement(element);
     }
   }

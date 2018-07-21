@@ -32,6 +32,8 @@ export class VueTextAceViewerElement extends ViewerElement {
       this._scrollCanvas = <VirtualScrollCanvas> document.createElement(VirtualScrollCanvas.TAG_NAME);
 
       this._textViewer = <TextViewer> document.createElement(TextViewer.TAG_NAME);
+      this._textViewer.setEditable(false);
+
       this._scrollCanvas.setViewerElement(this._textViewer);
       this._setText(this.getAttribute("viewer-text") || "");
       const mimeType = this.getAttribute("mime-type") || "text/plain";
