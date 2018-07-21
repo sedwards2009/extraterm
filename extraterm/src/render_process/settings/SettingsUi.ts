@@ -16,13 +16,16 @@ import { SESSION_SETTINGS_TAG } from './SessionSettings';
 import { KeyBindingsManager } from '../keybindings/KeyBindingsManager';
 import { doLater } from '../../utils/DoLater';
 import { ExtensionManager } from '../extension/InternalTypes';
+import { VUE_TEXT_ACE_VIEWER_ELEMENT_TAG } from './VueTextAceViewerElement';
 
 for (const el of [
     GENERAL_SETTINGS_TAG,
     APPEARANCE_SETTINGS_TAG,
     FRAME_SETTINGS_TAG,
     KEY_BINDINGS_SETTINGS_TAG,
-    SESSION_SETTINGS_TAG]) {
+    SESSION_SETTINGS_TAG,
+    VUE_TEXT_ACE_VIEWER_ELEMENT_TAG
+  ]) {
   if (Vue.config.ignoredElements.indexOf(el) === -1) {
     Vue.config.ignoredElements.push(el);
   }

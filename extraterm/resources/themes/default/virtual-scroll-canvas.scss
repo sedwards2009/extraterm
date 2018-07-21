@@ -1,0 +1,35 @@
+/**
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ */
+
+/* virtual-scroll-canvas styles */
+@import 'bootstrap/px-to-rem';
+
+:host {
+  display: block;
+}
+
+:host(:focus) {
+  outline: 0 solid transparent;
+}
+
+#ID_CONTAINER {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+}
+
+#ID_SCROLLBAR {
+    flex: 0;
+    min-width: pxToRem(15px);
+    height: 100%;
+}
+
+#ID_SCROLL_AREA {
+  flex: 1;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  background-color: var(--terminal-background-color);
+}

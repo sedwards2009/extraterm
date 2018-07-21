@@ -10,6 +10,10 @@ import * as _ from 'lodash';
 import {FontInfo} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 
+import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
+import { log } from 'extraterm-logging';
+
+
 const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
 const ID_UI_ZOOM = "ID_UI_ZOOM";
 
@@ -20,7 +24,7 @@ interface TitleBarOption {
   name: string;
 }
 
-interface UiScalePercentOption {
+interface SelectableOption {
   id: number;
   name: string;
 }
@@ -169,6 +173,25 @@ interface UiScalePercentOption {
       </div>
     </div>
 
+    <div class="form-group">
+      <div class="col-sm-12">
+        <et-vue-text-ace-viewer-element
+          id="syntax_theme_preview"
+          :viewer-text="getThemeSyntaxPreviewText()"
+          :mime-type="getThemeSyntaxPreviewMimeType()"></et-vue-text-ace-viewer-element>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-12">
+        <select class="form-control" id="syntax_theme_preview_contents" v-model="themeSyntaxPreviewContents">
+          <option v-for="(option, index) in themeSyntaxPreviewContentOptions" :value="index">
+            {{ option.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+
   </div>
 </div>
 `
@@ -190,7 +213,10 @@ export class AppearanceSettingsUi extends Vue {
   terminalFontOptions: FontInfo[];
 
   uiScalePercent: number;
-  uiScalePercentOptions: UiScalePercentOption[];
+  uiScalePercentOptions: SelectableOption[];
+
+  themeSyntaxPreviewContents: number;
+  themeSyntaxPreviewContentOptions: ThemeSyntaxPreviewContents[];
 
   constructor() {
     super();
@@ -226,6 +252,9 @@ export class AppearanceSettingsUi extends Vue {
       { id: 250, name: "250%"},
       { id: 300, name: "300%"},
     ];
+
+    this.themeSyntaxPreviewContents = 0;
+    this.themeSyntaxPreviewContentOptions = ThemeSyntaxPreviewContents;
   }
 
   get themeTerminalOptions(): ThemeTypes.ThemeInfo[] {
@@ -274,5 +303,13 @@ export class AppearanceSettingsUi extends Vue {
 
   openUserSyntaxThemesDir(): void {
     this.$emit("openUserSyntaxThemesDir");
+  }
+
+  getThemeSyntaxPreviewText(): string {
+    return ThemeSyntaxPreviewContents[this.themeSyntaxPreviewContents].text;
+  }
+
+  getThemeSyntaxPreviewMimeType(): string {
+    return ThemeSyntaxPreviewContents[this.themeSyntaxPreviewContents].mimeType;
   }
 }
