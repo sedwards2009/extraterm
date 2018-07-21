@@ -104,27 +104,6 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
       this.dispatchEvent(event);
     });
-
-  }
-  
-  getMetadata(): ViewerMetadata {
-    const metadata = super.getMetadata();
-    
-    if (this._title !== "") {
-      metadata.title = this._title;     
-    } else {
-      metadata.title = "Text";
-    }
-
-    metadata.icon = "fa fa-file-text";
-    return metadata;
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) !== null) {
-      return;
-    }
     
     const shadow = this.attachShadow( { mode: 'open', delegatesFocus: true } );
     const clone = this.createClone();
@@ -135,7 +114,6 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
-    this.style.height = "0px";
     this._exitCursorMode();
     this._mode = ViewerElementTypes.Mode.DEFAULT;
 
@@ -220,6 +198,19 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._updateCssVars(); 
     this._applyVisualState(this._visualState);
     this._adjustHeight(this._height);
+  }
+
+  getMetadata(): ViewerMetadata {
+    const metadata = super.getMetadata();
+    
+    if (this._title !== "") {
+      metadata.title = this._title;     
+    } else {
+      metadata.title = "Text";
+    }
+
+    metadata.icon = "fa fa-file-text";
+    return metadata;
   }
 
   private _emitCursorEdgeEvent(edge: ViewerElementTypes.Edge, column: number): void {
@@ -823,13 +814,6 @@ this._log.debug(`Got command ${command}`);
     });
   }
   
-  private _cleanUpFontLoading(): void {
-    if (this._resizePollHandle !== null) {
-      this._resizePollHandle.dispose();
-      this._resizePollHandle = null;
-    }
-  }
-
   private _handleStyleLoad(): void {
     if (this._mainStyleLoaded) {
       // Start polling the term for application of the font.
@@ -862,10 +846,6 @@ this._log.debug(`Got command ${command}`);
     return this._isEmpty ? 0 : this._aceEditor.renderer.lineHeight * this.lineCount();
   }
   
-  private _getClientYScrollRange(): number {
-    return Math.max(0, this.getVirtualHeight(this.getHeight()) - this.getHeight() + this.getReserveViewportHeight(this.getHeight()));
-  }
-
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
     if (this.parentNode === null || DomUtils.getShadowRoot(this) === null) {
