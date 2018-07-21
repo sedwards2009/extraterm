@@ -9,7 +9,6 @@ import { Logger, getLogger } from 'extraterm-logging';
 import { TextViewer } from '../viewers/TextAceViewer';
 import { BlobBulkFileHandle } from '../bulk_file_handling/BlobBulkFileHandle';
 import { VirtualScrollCanvas } from '../VirtualScrollCanvas';
-import { RefreshLevel } from '../ResizeRefreshElementBase';
 
 export const VUE_TEXT_ACE_VIEWER_ELEMENT_TAG = "et-vue-text-ace-viewer-element";
 
@@ -39,24 +38,7 @@ export class VueTextAceViewerElement extends ViewerElement {
       const mimeType = this.getAttribute("mime-type") || "text/plain";
       this._setMimeType(mimeType);
       this.appendChild(this._scrollCanvas);
-
-      this._scrollTextViewerToTop();
     }
-  }
-
-  private _scrollTextViewerToTop(): void {
-    this._textViewer.setDimensionsAndScroll({
-      height: 150,
-      heightChanged: true,
-      yOffset: 0,
-      yOffsetChanged: true,
-      physicalTop: 0,
-      physicalTopChanged: true,
-      containerHeight: 150,
-      containerHeightChanged: true,
-      visibleBottomOffset: 0,
-      visibleBottomOffsetChanged: true
-    });
   }
 
   @Attribute viewerText: string;
@@ -75,9 +57,7 @@ export class VueTextAceViewerElement extends ViewerElement {
     const newBulkFileHandle = new BlobBulkFileHandle(mimeType + ";charset=utf8", {}, Buffer.from(viewerText, 'utf8'));
     this._textViewer.setBulkFileHandle(newBulkFileHandle);
 
-    this._scrollTextViewerToTop();
-
-    this._scrollCanvas.refresh(RefreshLevel.COMPLETE);  // FIXME
+    this._scrollCanvas.scrollContentsTo(0);
   }
 
   @Attribute mimeType: string;

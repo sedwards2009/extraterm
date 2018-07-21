@@ -17,7 +17,6 @@ import {ScrollBar} from'./gui/ScrollBar';
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import {ViewerElement} from "./viewers/ViewerElement";
-import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';
 
 
@@ -35,6 +34,15 @@ const MINIMUM_FONT_SIZE = -3;
 const MAXIMUM_FONT_SIZE = 4;
 
 const SCROLL_STEP = 1;
+
+
+const intersectionObserver = new IntersectionObserver((entries) => {
+  for (const item of entries) {
+    if (item.intersectionRatio > 0) {
+      (<VirtualScrollCanvas> item.target)._elementIsVisibleEvent();
+    }
+  }
+});
 
 
 /**
@@ -105,10 +113,12 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
 
   connectedCallback(): void {
     super.connectedCallback();
+    intersectionObserver.observe(this);
     doLater(() => this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE));
   }
 
   disconnectedCallback(): void {
+    intersectionObserver.unobserve(this);
     super.disconnectedCallback();
     this._needsCompleteRefresh = true;
   }
@@ -171,11 +181,19 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
     this._adjustFontSize(delta)
   }
 
+  scrollContentsTo(offset: number): void {
+    this._virtualScrollArea.scrollTo(offset);
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.VIRTUAL_SCROLL_CANVAS];
   }
 
-  @log
+  _elementIsVisibleEvent(): void {
+    this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+    intersectionObserver.unobserve(this);
+  }
+
   refresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): void {
     let level = requestedLevel;
     if (this._needsCompleteRefresh) {
@@ -256,7 +274,6 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
     this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset() + delta);
   }
 
-  @log
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
     this._updateVirtualScrollableSize(<any> ev.target); 
       // ^ We know this event only comes from VirtualScrollable elements.
@@ -264,19 +281,6 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
 
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
     this._virtualScrollArea.updateScrollableSize(virtualScrollable);
-  }
-
-  /**
-   * Handle a resize event from the window.
-   */
-  @log
-  private _processResize(): void {
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    this._virtualScrollArea.updateContainerHeight(scrollerArea.getBoundingClientRect().height);
-    const viewerElement = this.getViewerElement();
-    if (viewerElement !== null) {
-      this._updateVirtualScrollableSize(viewerElement);
-    }
   }
 
   private _handleTerminalViewerCursor(ev: CustomEvent): void {
