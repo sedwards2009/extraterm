@@ -48,15 +48,14 @@ export class VueTextAceViewerElement extends ViewerElement {
     this._setText(this.viewerText);
   }
 
-  private _setText(viewerText: string): void {
+  private async _setText(viewerText: string): Promise<void> {
     if (this._textViewer == null) {
       return;
     }
 
     const mimeType = this.getAttribute("mimeType") || "text/plain";
     const newBulkFileHandle = new BlobBulkFileHandle(mimeType + ";charset=utf8", {}, Buffer.from(viewerText, 'utf8'));
-    this._textViewer.setBulkFileHandle(newBulkFileHandle);
-
+    await this._textViewer.setBulkFileHandle(newBulkFileHandle);
     this._scrollCanvas.scrollContentsTo(0);
   }
 
