@@ -126,8 +126,8 @@ class ExtensionViewerProxy extends SimpleViewerElement {
     return this._extensionViewer.getBulkFileHandle();
   }
 
-  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): void {
-    this._extensionViewer.setBulkFileHandle(handle);
+  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): Promise<void> {
+    return this._extensionViewer.setBulkFileHandle(handle);
   }
 }
 
@@ -176,6 +176,7 @@ export class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase
     return null;
   }
 
-  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): void {
+  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): Promise<void> {
+    throw "Not implemented";
   }
 }

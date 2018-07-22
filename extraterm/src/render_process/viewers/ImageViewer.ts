@@ -17,6 +17,7 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import {AcceptsKeyBindingsManager, KeyBindingsManager} from '../keybindings/KeyBindingsManager';
+import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
 
 type SetterState = VirtualScrollArea.SetterState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
@@ -185,7 +186,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingsMana
     return this._bulkFileHandle;
   }
 
-  setBulkFileHandle(handle: BulkFileHandle): void {
+  setBulkFileHandle(handle: BulkFileHandle): Promise<void> {
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     this.setMimeType(mimeType);
 
@@ -200,6 +201,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingsMana
     if (DomUtils.getShadowRoot(this) !== null) {
       this._setImageUrl(handle.getUrl());
     }
+    return newImmediateResolvePromise();
   }
 
   setMode(newMode: ViewerElementTypes.Mode): void {

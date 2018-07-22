@@ -396,7 +396,7 @@ export interface ExtensionViewerBase {
   /**
    *
    */
-  setBulkFileHandle(handle: BulkFileHandle): void;
+  setBulkFileHandle(handle: BulkFileHandle): Promise<void>;
 }
 
 

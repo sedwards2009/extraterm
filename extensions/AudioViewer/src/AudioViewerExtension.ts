@@ -49,27 +49,30 @@ export function activate(context: ExtensionContext): any {
       return this._bulkFileHandle;
     }
   
-    setBulkFileHandle(handle: BulkFileHandle): void {
-      if (this._bulkFileHandle != null) {
-        this._ui.url = null;
-        this._bulkFileHandle.deref();
-        this._bulkFileHandle = null;
-      }
-
-      this._bulkFileHandle = handle;
-      handle.ref();
-
-      this._updateMetadata();
-      this._ui.url = this._bulkFileHandle.getUrl();
-      this._ui.title = this._getTitle();
-      this._ui.totalSizeBytes = handle.getTotalSize();
-      handle.onAvailableSizeChange(size => {
-        this._ui.availableSizeBytes = size;
-      });
-      handle.onStateChange(state => {
-        if (state === BulkFileState.COMPLETED || state === BulkFileState.FAILED) {
-          this._ui.downloadFinished = true;
+    setBulkFileHandle(handle: BulkFileHandle): Promise<void> {
+      return new Promise( (resolve, reject) => {
+        if (this._bulkFileHandle != null) {
+          this._ui.url = null;
+          this._bulkFileHandle.deref();
+          this._bulkFileHandle = null;
         }
+
+        this._bulkFileHandle = handle;
+        handle.ref();
+
+        this._updateMetadata();
+        this._ui.url = this._bulkFileHandle.getUrl();
+        this._ui.title = this._getTitle();
+        this._ui.totalSizeBytes = handle.getTotalSize();
+        handle.onAvailableSizeChange(size => {
+          this._ui.availableSizeBytes = size;
+        });
+        handle.onStateChange(state => {
+          if (state === BulkFileState.COMPLETED || state === BulkFileState.FAILED) {
+            this._ui.downloadFinished = true;
+            resolve();
+          }
+        });
       });
     }
   }

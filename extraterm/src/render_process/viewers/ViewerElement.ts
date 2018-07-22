@@ -127,8 +127,14 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   setCursorPositionTop(x: number): boolean {
     return false;
   }
-  
-  setBulkFileHandle(handle: BulkFileHandle): void {
+
+  /**
+   * Set the bulk file to display in the viewer.
+   * 
+   * @param handle the file to load and display
+   * @return A promise which is resolved once the file data has been loaded.
+   */
+  setBulkFileHandle(handle: BulkFileHandle): Promise<void> {
     throw Error("Not implemented.");
   }
 

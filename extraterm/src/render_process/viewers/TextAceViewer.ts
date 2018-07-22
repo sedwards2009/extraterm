@@ -28,6 +28,7 @@ import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, Virtua
 
 import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Renderer, Position, UndoManager } from "ace-ts";
+import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
 
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
@@ -348,7 +349,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     }
   }
 
-  setBulkFileHandle(handle: BulkFileHandle): void {
+  setBulkFileHandle(handle: BulkFileHandle): Promise<void> {
     if (this._bulkFileHandle != null) {
       this._bulkFileHandle.deref();
       this._bulkFileHandle = null;
@@ -360,7 +361,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       this._title = "";
     }
 
-    this._loadBulkFile(handle);
+    return this._loadBulkFile(handle);
   }
 
   private async _loadBulkFile(handle: BulkFileHandle): Promise<void> {
@@ -378,7 +379,9 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     // handle sizing and scroll commands. Thus, we wait a short time before
     // triggering the resizing events and activities.
 // FIXME this might not be needed anymore    
-    doLater(this._emitVirtualResizeEvent.bind(this));
+    return newImmediateResolvePromise().then(() => {
+      this._emitVirtualResizeEvent();
+    })
   }
   
   setMode(newMode: ViewerElementTypes.Mode): void {
@@ -861,10 +864,3 @@ this._log.debug(`Got command ${command}`);
     }
   }
 }
-
-function px(value) {
-  if (value === null || value === undefined || value === "") {
-    return 0;
-  }
-  return parseInt(value.slice(0,-2),10);
-}  
