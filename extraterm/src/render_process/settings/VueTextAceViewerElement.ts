@@ -34,8 +34,8 @@ export class VueTextAceViewerElement extends ViewerElement {
       this._textViewer.setEditable(false);
 
       this._scrollCanvas.setViewerElement(this._textViewer);
-      this._setText(this.getAttribute("viewer-text") || "");
-      const mimeType = this.getAttribute("mime-type") || "text/plain";
+      this._setText(this.viewerText || "");
+      const mimeType = this.mimeType || "text/plain";
       this._setMimeType(mimeType);
       this.appendChild(this._scrollCanvas);
     }
@@ -53,7 +53,7 @@ export class VueTextAceViewerElement extends ViewerElement {
       return;
     }
 
-    const mimeType = this.getAttribute("mimeType") || "text/plain";
+    const mimeType = this.mimeType || "text/plain";
     const newBulkFileHandle = new BlobBulkFileHandle(mimeType + ";charset=utf8", {}, Buffer.from(viewerText, 'utf8'));
     await this._textViewer.setBulkFileHandle(newBulkFileHandle);
     this._scrollCanvas.scrollContentsTo(0);

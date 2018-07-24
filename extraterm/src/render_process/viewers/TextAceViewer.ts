@@ -304,12 +304,18 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
 
   setMimeType(mimeType: string): void {
     this._mimeType = mimeType;
-    
+    this._setMimeTypeOnAce(mimeType);
+  }
+
+  private _setMimeTypeOnAce(mimeType: string): void {
+    console.trace();
     const mode = ModeList.getModeByMimeType(mimeType);
     if (mode != null) {
       this._aceEditSession.setLanguageMode(mode, (err: any) => {
-        this._log.warn(err);
-       });
+        if (err != null) {
+          this._log.warn(err);
+        }
+      });
     }
   }
   
@@ -349,7 +355,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     }
   }
 
-  setBulkFileHandle(handle: BulkFileHandle): Promise<void> {
+  async setBulkFileHandle(handle: BulkFileHandle): Promise<void> {
     if (this._bulkFileHandle != null) {
       this._bulkFileHandle.deref();
       this._bulkFileHandle = null;
@@ -361,17 +367,18 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       this._title = "";
     }
 
-    return this._loadBulkFile(handle);
+    await this._loadBulkFile(handle);
+    this._setMimeTypeOnAce(this._mimeType);
   }
 
   private async _loadBulkFile(handle: BulkFileHandle): Promise<void> {
     handle.ref();
     this._metadataEventDoLater.trigger();
-    const data = await BulkFileUtils.readDataAsArrayBuffer(handle)
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
+    this.setMimeType(mimeType);
+    const data = await BulkFileUtils.readDataAsArrayBuffer(handle)
     const decodedText = Buffer.from(data).toString(charset == null ? "utf8" : charset);
     this._setText(decodedText);
-    this.setMimeType(mimeType);
     this._bulkFileHandle = handle;
 
     // After setting the whole contents of a Ace instance, it takes a
@@ -379,9 +386,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     // handle sizing and scroll commands. Thus, we wait a short time before
     // triggering the resizing events and activities.
 // FIXME this might not be needed anymore    
-    return newImmediateResolvePromise().then(() => {
-      this._emitVirtualResizeEvent();
-    })
+    await newImmediateResolvePromise();
+    this._emitVirtualResizeEvent();
   }
   
   setMode(newMode: ViewerElementTypes.Mode): void {
