@@ -308,7 +308,6 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
 
   private _setMimeTypeOnAce(mimeType: string): void {
-    console.trace();
     const mode = ModeList.getModeByMimeType(mimeType);
     if (mode != null) {
       this._aceEditSession.setLanguageMode(mode, (err: any) => {
