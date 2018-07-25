@@ -67,6 +67,10 @@
 
     function wedgeRequire() {
       const m = require("module");
+
+      // A little hack to allow modules which depend on requirejs to load. This is mainly Ace related files.
+      m.wrapper[0] = m.wrapper[0] + "var define = function(f) {f(require,exports,module)};";
+
       const originalFindPath = m._findPath;
       m._findPath = function(request, paths, isMain) {
         const result = originalFindPath(request, paths, isMain);
