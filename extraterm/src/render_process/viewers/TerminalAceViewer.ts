@@ -185,6 +185,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const aceRenderer = new TerminalRenderer(containerDiv);
       aceRenderer.setShowGutter(false);
       aceRenderer.setShowLineNumbers(false);
+      aceRenderer.setPadding(0);
 
       this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
       this._aceEditor.setReadOnly(true);
@@ -571,10 +572,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._log.debug("resizeEmulatorToBox() new rows: ",newRows);
     }
     return {cols: newCols, rows: newRows};
-  }
-
-  private __applyRoundingErrorCompensation(width: number): number {
-    return Math.floor(width) !== width ? width * (1.005): width;
   }
   
   isFontLoaded(): boolean {

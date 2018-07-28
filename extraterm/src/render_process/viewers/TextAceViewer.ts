@@ -126,7 +126,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     aceRenderer.setShowLineNumbers(true);
     aceRenderer.setShowFoldWidgets(false);
     aceRenderer.setDisplayIndentGuides(false);
-
+    aceRenderer.setPadding(0);
+    
     this._aceEditor = new ExtratermAceEditor(aceRenderer, this._aceEditSession);
 
     this.__addCommands(DefaultCommands);
