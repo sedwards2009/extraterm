@@ -482,8 +482,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
-    const textHeight = this.getVirtualTextHeight();
     if (this._useVPad) {
+      if (this._aceEditor.renderer.lineHeight === 0) {
+        return 0;
+      }
       const defaultTextHeight = this._aceEditor.renderer.lineHeight;
       const vPad = containerHeight % defaultTextHeight;
       if (DEBUG_RESIZE) {
@@ -525,7 +527,9 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       while (window.getComputedStyle(viewportElement).position === 'absolute') {
         viewportElement = viewportElement.parentElement;
       }
-      this.resizeEmulatorToBox(this.clientWidth, viewportElement.clientHeight);
+      if (this.clientWidth !== 0) {
+        this.resizeEmulatorToBox(this.clientWidth, viewportElement.clientHeight);
+      }
     }
     this._updateCssVars();
   }

@@ -152,8 +152,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _stashArea: DocumentFragment = null;
   private _childElementList: ChildElementStatus[] = [];
 
-  private _autoscroll = true;
-  
   private _terminalViewer: TerminalViewer = null;
   
   private _emulator: Term.Emulator = null;
@@ -176,7 +174,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _lastCommandTerminalLine: BookmarkRef = null;
   
   private _mode: Mode = Mode.DEFAULT;
-  private _selectionPreviousLineCount: number;
   
   private _configManager: ConfigDatabase = null;
   private _keyBindingManager: KeyBindingsManager = null;
@@ -187,9 +184,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _nextTag: string = null;
 
-  private _themeCssPath: string = null;
-  private _mainStyleLoaded = false;
-  private _themeStyleLoaded = false;
   private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
   private _needsCompleteRefresh = true;
