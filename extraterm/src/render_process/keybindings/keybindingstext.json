@@ -86,6 +86,8 @@
     "selectLineStart": "Select to start of line",
     "selectLineEnd": "Select to end of line",
     "selectUp": "Select up one line",
-    "selectDown": "Select down one line"
+    "selectDown": "Select down one line",
+    "addCursorAbove": "Add cursor above",
+    "addCursorBelow": "Add cursor below"
   }
 }
