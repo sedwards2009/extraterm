@@ -88,6 +88,8 @@
     "selectUp": "Select up one line",
     "selectDown": "Select down one line",
     "addCursorAbove": "Add cursor above",
-    "addCursorBelow": "Add cursor below"
+    "addCursorBelow": "Add cursor below",
+    "selectMoreAfter": "Add next match to selection"
+
   }
 }

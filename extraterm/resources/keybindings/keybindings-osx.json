@@ -64,6 +64,7 @@
     "Alt-Shift-Up": "addCursorAbove",
     "Ctrl-Shift-Down": "addCursorBelow",
     "Alt-Shift-Down": "addCursorBelow",
+    "Ctrl-d": "selectMoreAfter",
     "Tab": "indent",
     "Shift-Tab": "outdent",
     "Insert": "overwrite",

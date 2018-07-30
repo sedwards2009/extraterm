@@ -73,6 +73,7 @@
     "Alt-Shift-Up": "addCursorAbove",
     "Ctrl-Shift-Down": "addCursorBelow",
     "Alt-Shift-Down": "addCursorBelow",
+    "Ctrl-d": "selectMoreAfter",
     "Ctrl-z": "undo",
     "Shift-Ctrl-Z": "redo",
     "Ctrl-y": "redo",
