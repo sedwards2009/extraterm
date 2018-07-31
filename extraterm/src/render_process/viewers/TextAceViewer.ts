@@ -261,7 +261,13 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     if (this._aceEditor.selection.isEmpty()) {
       return null;
     }
-    return this._aceEditor.getSelectedText();
+
+    const selection = this._aceEditSession.getSelection()
+    if (selection.inMultiSelectMode) {
+      return selection.getAllRanges().map(range => this._aceEditSession.getTextRange(range)).join("\n");
+    } else {
+      return this._aceEditor.getSelectedText();
+    }
   }
 
   focus(): void {

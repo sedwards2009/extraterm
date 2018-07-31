@@ -28,7 +28,7 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
 
 import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
-import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Renderer, Position, UndoManager } from "ace-ts";
+import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Renderer, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
 
 
 type KeyBindingManager = keybindingmanager.KeyBindingsManager;
@@ -244,8 +244,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         }
       });
       
-      this._aceEditor.on("changeSelection", () => {
-        this._emitBeforeSelectionChangeEvent(true);
+      this._aceEditor.on("changeSelection", (event: SelectionChangeEvent) => {
+        this._emitBeforeSelectionChangeEvent(event.origin === Origin.USER_MOUSE);
       });
 
       this._aceEditor.onCursorTopHit((column: number) => {
@@ -331,12 +331,18 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     this._returnCode = returnCode;
     this._metadataEventDoLater.trigger();
   }
-    
+
   getSelectionText(): string {    
     if (this._aceEditor.selection.isEmpty()) {
       return null;
     }
-    return this._aceEditor.getSelectedText();
+
+    const selection = this._aceEditSession.getSelection()
+    if (selection.inMultiSelectMode) {
+      return selection.getAllRanges().map(range => this._aceEditSession.getTextRange(range)).join("\n");
+    } else {
+      return this._aceEditor.getSelectedText();
+    }
   }
 
   // From SupportsClipboardPaste interface.
