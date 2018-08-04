@@ -34,6 +34,7 @@
     "enterCursorMode": "Go to cursor mode",
     "enterNormalMode": "Go to normal mode",
     "escapeShellChars": "Escape special shell characters in selection",
+    "findAll": "Select all occurences of current word",
     "forwardSlashesToBack": "Convert forward slashes to backslashes in selection",
     "goDown": "Move down",
     "goLineDown": "Move cursor down one line",

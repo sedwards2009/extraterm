@@ -65,6 +65,7 @@
     "Ctrl-Shift-Down": "addCursorBelow",
     "Alt-Shift-Down": "addCursorBelow",
     "Alt-Shift-I": "splitIntoLines",
+    "Ctrl-F2": "findAll",
     "Ctrl-d": "selectMoreAfter",
     "Tab": "indent",
     "Shift-Tab": "outdent",
