@@ -710,9 +710,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
       const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
       if (keyBindings !== null) {
-this._log.debug(keybindingmanager.formatKeyboardEvent(ev));
         command = keyBindings.mapEventToCommand(ev);
-this._log.debug(`Got command ${command}`);        
         if (this._executeCommand(command)) {
           ev.stopPropagation();
           ev.preventDefault();
