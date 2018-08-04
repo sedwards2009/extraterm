@@ -74,6 +74,7 @@
     "Alt-Shift-Up": "addCursorAbove",
     "Ctrl-Shift-Down": "addCursorBelow",
     "Alt-Shift-Down": "addCursorBelow",
+    "Alt-Shift-I": "splitIntoLines",
     "Tab": "indent",
     "Shift-Tab": "outdent",
     "Insert": "overwrite",
