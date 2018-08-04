@@ -58,7 +58,7 @@
     "Shift-Tab": "outdent",
     "Insert": "overwrite",
     "Ctrl-a": "selectAll",
-    "Shift-Delete": "FIXMEdeleteLine",
+    "Shift-Delete": "removeLines",
     "Shift-Up": "selectUp",
     "Shift-Down": "selectDown",
     "Shift-Home": "selectLineStart",

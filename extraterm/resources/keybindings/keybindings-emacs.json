@@ -83,7 +83,7 @@
     "Shift-Tab": "outdent",
     "Insert": "overwrite",
     
-    "Shift-Delete": "deleteLine",
+    "Shift-Delete": "removeLines",
 
     "Ctrl-_": "undo",
     "Ctrl-x": "undo",

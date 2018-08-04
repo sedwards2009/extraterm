@@ -80,7 +80,7 @@
     "Esc": "singleSelection",
   
     "Cmd-a": "selectAll",
-    "Cmd-d": "deleteLine",
+    "Cmd-d": "removeLines",
     "Cmd-z": "undo",
 
     "Ctrl-_": "undo",

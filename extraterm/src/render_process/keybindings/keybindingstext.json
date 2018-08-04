@@ -31,7 +31,7 @@
     "decreaseFontSize": "Decrease font size",
     "del": "Delete character after cursor",
     "deleteLastFrame": "Delete the last frame",
-    "deleteLine": "Delete line",
+    "removeLines": "Delete line",
     "enterCursorMode": "Go to cursor mode",
     "enterNormalMode": "Go to normal mode",
     "escapeShellChars": "Escape special shell characters in selection",

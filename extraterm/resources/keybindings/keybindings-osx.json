@@ -69,7 +69,7 @@
     "Shift-Tab": "outdent",
     "Insert": "overwrite",
     "Cmd-a": "selectAll",
-    "Cmd-d": "deleteLine",
+    "Cmd-d": "removeLines",
     "Cmd-z": "undo",
     "Shift-Cmd-Z": "redo",
     "Esc": "singleSelection",
