@@ -167,9 +167,10 @@ interface SelectableOption {
     <div class="form-group">
       <div class="col-sm-4"></div>
       <div class="input-group col-sm-8">
-        <button v-on:click="openUserSyntaxThemesDir" class="btn btn-default">
+        <button v-on:click="openUserSyntaxThemesDir" class="btn" title="Open user syntax theme directory in file manager">
           <i class="far fa-folder-open"></i>&nbsp;User themes
         </button>
+        <button v-on:click="rescanUserSyntaxThemesDir" class="btn" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button>
       </div>
     </div>
 
@@ -303,6 +304,10 @@ export class AppearanceSettingsUi extends Vue {
 
   openUserSyntaxThemesDir(): void {
     this.$emit("openUserSyntaxThemesDir");
+  }
+
+  rescanUserSyntaxThemesDir(): void {
+    this.$emit("rescanUserSyntaxThemesDir");
   }
 
   getThemeSyntaxPreviewText(): string {

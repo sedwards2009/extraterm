@@ -13,6 +13,7 @@ import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 import * as ThemeTypes from '../../theme/Theme';
 import { shell } from 'electron';
+import * as WebIpc from '../WebIpc';
 
 export const APPEARANCE_SETTINGS_TAG = "et-appearance-settings";
 
@@ -27,6 +28,9 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     this._log = getLogger(APPEARANCE_SETTINGS_TAG, this);
     this._getUi().$on("openUserSyntaxThemesDir", () => {
       shell.showItemInFolder(this._userSyntaxThemeDirectory);
+    });
+    this._getUi().$on("rescanUserSyntaxThemesDir", () => {
+      WebIpc.rescanThemes();
     });
   }
 

@@ -73,6 +73,10 @@ export class ThemeManager implements AcceptsConfigDatabase {
     this._updateThemesList();
   }
 
+  rescan(): void {
+    this._updateThemesList();
+  }
+
   private _updateThemesList(): void {
     this._themes = this._scanThemePaths(this._paths, this._getSyntaxThemeExtensionPaths());
   }

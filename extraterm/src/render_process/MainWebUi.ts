@@ -161,6 +161,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._themes = themes;
+    const settingsTab = this._getSettingsTab();
+    if (settingsTab != null) {
+      settingsTab.setThemes(this._themes);
+    }
   }
   
   getTabCount(): number {
@@ -684,10 +688,19 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
     tabDiv.innerHTML = tag;
   }
 
-  openSettingsTab(tabName: string=null): void {
-    const settingsTabs = this._splitLayout.getAllTabContents().filter( (el) => el instanceof SettingsTab );
+  private _getSettingsTab(): SettingsTab {
+    const settingsTabs = this._splitLayout.getAllTabContents().filter(el => el instanceof SettingsTab);
     if (settingsTabs.length !== 0) {
-      this._switchToTab(settingsTabs[0]);
+      return <SettingsTab> settingsTabs[0];
+    } else {
+      return null;
+    }
+  }
+
+  openSettingsTab(tabName: string=null): void {
+    const settingsTab = this._getSettingsTab();
+    if (settingsTab != null) {
+      this._switchToTab(settingsTab);
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigDatabase(settingsTabElement, this._configManager);

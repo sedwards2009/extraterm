@@ -99,6 +99,11 @@ export function requestThemeContents(themeType: ThemeType): Promise<Messages.The
   return <Promise<Messages.ThemeContentsMessage>> request(msg, Messages.MessageType.THEME_CONTENTS);
 }
 
+export function rescanThemes(): void {
+  const msg: Messages.ThemeRescan = {type: Messages.MessageType.THEME_RESCAN };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
 export function requestPtyCreate(sessionUuid: string, extraEnv: EnvironmentMap, columns: number, rows: number
     ): Promise<Messages.CreatedPtyMessage> {
       

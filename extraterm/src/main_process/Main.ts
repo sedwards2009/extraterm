@@ -806,13 +806,17 @@ function handleIpc(event: Electron.Event, arg: any): void {
       break;
       
     case Messages.MessageType.THEME_LIST_REQUEST:
-      reply = handleThemeListRequest(<Messages.ThemeListRequestMessage> msg);
+      reply = handleThemeListRequest();
       break;
       
     case Messages.MessageType.THEME_CONTENTS_REQUEST:
       handleThemeContentsRequest(event.sender, <Messages.ThemeContentsRequestMessage> msg);
       break;
       
+    case Messages.MessageType.THEME_RESCAN:
+      reply = handleThemeRescan();
+      break;
+
     case Messages.MessageType.PTY_CREATE:
       reply = handlePtyCreate(event.sender, <Messages.CreatePtyRequestMessage> msg);
       break;
@@ -928,7 +932,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   configDatabase.setConfig(msg.key, msg.config);
 }
 
-function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages.ThemeListMessage {
+function handleThemeListRequest(): Messages.ThemeListMessage {
   const reply: Messages.ThemeListMessage = { type: Messages.MessageType.THEME_LIST, themeInfo: getThemes() };
   return reply;
 }
@@ -963,6 +967,18 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
     };
     webContents.send(Messages.CHANNEL_NAME, reply);
   }
+}
+
+function handleThemeRescan(): Messages.ThemeListMessage {
+  themeManager.rescan();
+
+  const userStoredConfig = configDatabase.getConfigCopy(GENERAL_CONFIG);
+  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeSyntax), 'syntax')) {
+    userStoredConfig.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
+    configDatabase.setConfig(GENERAL_CONFIG, userStoredConfig);
+  }
+
+  return handleThemeListRequest();
 }
 
 const ptyToSenderMap = new Map<number, number>();

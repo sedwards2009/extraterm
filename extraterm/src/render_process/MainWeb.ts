@@ -391,7 +391,10 @@ function handleConfigMessage(msg: Messages.Message): Promise<void> {
 
 function handleThemeListMessage(msg: Messages.Message): void {
   const themesMessage = <Messages.ThemeListMessage> msg;
-  themes = themesMessage.themeInfo
+  themes = themesMessage.themeInfo;
+  if (mainWebUi != null) {
+    mainWebUi.setThemes(themes);
+  }
 }
 
 function handleThemeContentsMessage(msg: Messages.Message): void {
