@@ -14,6 +14,6 @@
     "build": "tsc"
   },
   "devDependencies": {
-    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.3.0/ace-ts-v0.3.0.tgz"
+    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.4.0/ace-ts-v0.4.0.tgz"
   }
 }
