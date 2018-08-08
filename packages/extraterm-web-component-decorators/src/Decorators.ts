@@ -355,12 +355,12 @@ function validateAttributeDefaultValue(key: string, propertyType: PropertyType, 
       }
       break;
     case "Number":
-      if ((typeof defaultValue) === "number") {
+      if ((typeof defaultValue) === "number" || defaultValue === null) {
         return;
       }
       break;
     case "Boolean":
-      if ((typeof defaultValue) === "boolean") {
+      if ((typeof defaultValue) === "boolean" || defaultValue === null) {
         return;
       }
       break;
