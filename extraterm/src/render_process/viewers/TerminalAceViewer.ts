@@ -927,7 +927,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_TERMINAL_VIEWER);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
-this._log.debug(`Got command ${command}`);        
         if (this._executeCommand(command)) {
           ev.stopPropagation();
           ev.preventDefault();
