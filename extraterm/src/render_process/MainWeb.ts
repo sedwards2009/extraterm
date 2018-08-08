@@ -521,7 +521,7 @@ async function requestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[]
         cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
       }
     }
-    if (uiResult.errorMessage !== "") {
+    if (uiResult.errorMessage != null && uiResult.errorMessage.trim() !== "") {
       _log.warn(uiResult.errorMessage);
     }
   }
