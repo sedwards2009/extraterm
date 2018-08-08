@@ -185,6 +185,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const aceRenderer = new TerminalRenderer(containerDiv);
       aceRenderer.setShowGutter(false);
       aceRenderer.setShowLineNumbers(false);
+      aceRenderer.setDisplayIndentGuides(false);
       aceRenderer.setPadding(0);
 
       this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
