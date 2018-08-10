@@ -190,6 +190,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
       this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
       this._aceEditor.setReadOnly(true);
+      this._aceEditor.setAutoscroll(false);
 
       this.__addCommands(DefaultCommands);
       this.__addCommands(MultiSelectCommands);
