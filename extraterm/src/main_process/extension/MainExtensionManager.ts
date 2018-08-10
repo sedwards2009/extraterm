@@ -11,7 +11,7 @@ import * as path from 'path';
 import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
 import { parsePackageJson } from './PackageFileParser';
-import { ExtensionContext, Backend, SessionBackend, SyntaxThemeProvider } from 'extraterm-extension-api';
+import { ExtensionContext, Backend, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from 'extraterm-extension-api';
 import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from '../../render_process/extension/InternalTypes';
 
@@ -33,6 +33,12 @@ export interface LoadedSyntaxThemeProviderContribution {
   metadata: ExtensionMetadata;
   syntaxThemeProvider: SyntaxThemeProvider;
 }
+
+export interface LoadedTerminalThemeProviderContribution {
+  metadata: ExtensionMetadata;
+  terminalThemeProvider: TerminalThemeProvider;
+}
+
 
 export class MainExtensionManager {
 
@@ -73,6 +79,11 @@ export class MainExtensionManager {
       ae => ae.contextImpl.backend.__BackendImpl__syntaxThemeProviders));
   }
 
+  getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
+    return _.flatten(this._activeExtensions.map(
+      ae => ae.contextImpl.backend.__BackendImpl__terminalThemeProviders));
+  }
+
   private _scanPath(extensionPath: string): ExtensionMetadata[] {
     if (fs.existsSync(extensionPath)) {
       const result: ExtensionMetadata[] = [];
@@ -106,7 +117,7 @@ export class MainExtensionManager {
       const result = parsePackageJson(packageJson, extensionPath);
       return result;
     } catch(ex) {
-      this._log.warn("An error occurred while processing '${packageJsonPath}': " + ex);
+      this._log.warn(`An error occurred while processing '${packageJsonPath}': ` + ex);
       return null;   
     }
   }
@@ -171,6 +182,7 @@ class BackendImpl implements Backend {
   private _log: Logger = null;
   __BackendImpl__sessionBackends: LoadedSessionBackendContribution[] = [];
   __BackendImpl__syntaxThemeProviders: LoadedSyntaxThemeProviderContribution[] = [];
+  __BackendImpl__terminalThemeProviders: LoadedTerminalThemeProviderContribution[] = [];
 
   constructor(public __extensionMetadata: ExtensionMetadata) {
     this._log = getLogger("Backend (" + this.__extensionMetadata.name + ")", this);
@@ -207,6 +219,23 @@ class BackendImpl implements Backend {
 
     this._log.warn(`Unable to register syntax theme provider '${name}' for extension ` +
       `'${this.__extensionMetadata.name}' because the syntax theme provider contribution data ` +
+      `couldn't be found in the extension's package.json file.`);
+    return;
+  }
+
+  registerTerminalThemeProvider(name: string, provider: TerminalThemeProvider): void {
+    for (const backendMeta of this.__extensionMetadata.contributions.terminalThemeProvider) {
+      if (backendMeta.name === name) {
+        this.__BackendImpl__terminalThemeProviders.push({
+          metadata: this.__extensionMetadata,
+          terminalThemeProvider: provider
+        } );
+        return;
+      }
+    }
+
+    this._log.warn(`Unable to register terminal theme provider '${name}' for extension ` +
+      `'${this.__extensionMetadata.name}' because the terminal theme provider contribution data ` +
       `couldn't be found in the extension's package.json file.`);
     return;
   }

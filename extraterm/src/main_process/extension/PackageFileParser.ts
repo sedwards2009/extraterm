@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution } from "../../ExtensionMetadata";
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution } from "../../ExtensionMetadata";
 
 const FONT_AWESOME_DEFAULT = false;
 
@@ -108,7 +108,9 @@ function parseContributionsJson(packageJson: any): ExtensionContributions {
       sessionEditor: [],
       sessionBackend: [],
       syntaxTheme: [],
-      syntaxThemeProvider: []
+      syntaxThemeProvider: [],
+      terminalTheme: [],
+      terminalThemeProvider: [],
     };
   }
 
@@ -116,7 +118,7 @@ function parseContributionsJson(packageJson: any): ExtensionContributions {
     throw `'contributions' field is not an object.`;
   }
 
-  const knownContributions = ["viewer", "sessionEditor", "sessionBackend", "syntaxTheme", "syntaxThemeProvider"];
+  const knownContributions = ["viewer", "sessionEditor", "sessionBackend", "syntaxTheme", "syntaxThemeProvider", "terminalTheme", "terminalThemeProvider"];
   for (const key in contributions) {
     if (contributions.hasOwnProperty(key)) {
       if (knownContributions.indexOf(key) === -1) {
@@ -130,7 +132,9 @@ function parseContributionsJson(packageJson: any): ExtensionContributions {
     sessionEditor: parseSessionEditorContributionsListJson(contributions),
     sessionBackend: parseSessionBackendContributionsListJson(contributions),
     syntaxTheme: parseSyntaxThemeContributionsListJson(contributions),
-    syntaxThemeProvider: parseSyntaxThemeProviderContributionsListJson(contributions)
+    syntaxThemeProvider: parseSyntaxThemeProviderContributionsListJson(contributions),
+    terminalTheme: parseTerminalThemeContributionsListJson(contributions),
+    terminalThemeProvider: parseTerminalThemeProviderContributionsListJson(contributions)
   };
 }
 
@@ -287,5 +291,57 @@ function parseSyntaxThemeProviderContributionsJson(packageJson: any): ExtensionS
     };
   } catch (ex) {
     throw `Failed to process a syntax theme provider contribution: ${ex}`;
+  }
+}
+
+function parseTerminalThemeContributionsListJson(packageJson: any): ExtensionTerminalThemeContribution[] {
+  const value = packageJson["terminalTheme"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'terminalTheme' of in the 'contributions' object is not an array.`;
+  }
+
+  const result: ExtensionTerminalThemeContribution[] = [];
+  for (const item of value) {
+    result.push(parseTerminalThemeContributionsJson(item));
+  }
+  return result;
+}
+
+function parseTerminalThemeContributionsJson(packageJson: any): ExtensionTerminalThemeContribution {
+  try {
+    return {
+      path: assertJsonStringField(packageJson, "path")
+    };
+  } catch (ex) {
+    throw `Failed to process a terminal theme contribution: ${ex}`;
+  }
+}
+
+function parseTerminalThemeProviderContributionsListJson(packageJson: any): ExtensionTerminalThemeProviderContribution[] {
+  const value = packageJson["terminalThemeProvider"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'terminalThemeProvider' of in the 'contributions' object is not an array.`;
+  }
+
+  const result: ExtensionTerminalThemeProviderContribution[] = [];
+  for (const item of value) {
+    result.push(parseTerminalThemeProviderContributionsJson(item));
+  }
+  return result;
+}
+
+function parseTerminalThemeProviderContributionsJson(packageJson: any): ExtensionTerminalThemeProviderContribution {
+  try {
+    return {
+      name: assertJsonStringField(packageJson, "name")
+    };
+  } catch (ex) {
+    throw `Failed to process a terminal theme provider contribution: ${ex}`;
   }
 }

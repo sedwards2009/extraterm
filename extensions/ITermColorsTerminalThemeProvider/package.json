@@ -1,0 +1,27 @@
+{
+  "name": "itermcolors-terminal-theme-provider",
+  "description": "iTerm Colors Terminal Theme Provider",
+  "version": "1.0.0",
+  "main": "dist/ITermColorsTerminalThemeProviderExtension.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "yarn run build && nodeunit dist/test/ITermColorsTerminalThemeProviderExtensionTest.js"
+  },
+  "dependencies": {
+    "extraterm-logging": "1.0.0",
+    "plist": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/nodeunit": "0.0.30",
+    "extraterm-extension-api": "0.1.0",
+    "nodeunit": "0.11.0",
+    "typescript": "2.8.3"
+  },
+  "contributions": {
+    "terminalThemeProvider": [
+      {
+        "name": "iTermColors"
+      }
+    ]
+  }
+}

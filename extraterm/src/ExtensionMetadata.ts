@@ -26,6 +26,8 @@ export interface ExtensionContributions {
   sessionBackend: ExtensionSessionBackendContribution[];
   syntaxTheme: ExtensionSyntaxThemeContribution[];
   syntaxThemeProvider: ExtensionSyntaxThemeProviderContribution[];
+  terminalTheme: ExtensionTerminalThemeContribution[];
+  terminalThemeProvider: ExtensionTerminalThemeProviderContribution[];
 }
 
 export interface ExtensionViewerContribution {
@@ -70,5 +72,13 @@ export interface ExtensionSyntaxThemeProviderContribution {
 }
 
 export interface ExtensionSyntaxThemeContribution {
+  path: string;
+}
+
+export interface ExtensionTerminalThemeProviderContribution {
+  name: string;
+}
+
+export interface ExtensionTerminalThemeContribution {
   path: string;
 }

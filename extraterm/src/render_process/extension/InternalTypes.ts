@@ -65,7 +65,9 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {
   return metadata.contributions.sessionBackend.length !== 0 ||
     metadata.contributions.syntaxThemeProvider.length !== 0 ||
-    metadata.contributions.syntaxTheme.length !== 0;
+    metadata.contributions.syntaxTheme.length !== 0 ||
+    metadata.contributions.terminalThemeProvider.length !== 0 ||
+    metadata.contributions.terminalTheme.length !== 0;
 }
 
 export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean {

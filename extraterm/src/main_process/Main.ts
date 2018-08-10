@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -54,6 +54,7 @@ const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
 const USER_SYNTAX_THEMES_DIR = "syntax";
+const USER_TERMINAL_THEMES_DIR = "terminal";
 const KEYBINDINGS_DIRECTORY = "../../resources/keybindings";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
 const KEYBINDINGS_PC = "keybindings.json";
@@ -146,8 +147,16 @@ function setupExtensionManager(): void {
 function setupThemeManager(): void {
   // Themes
   const themesDir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
-  themeManager = new ThemeManager({css: [themesDir], syntax: [getUserSyntaxThemeDirectory()]}, extensionManager);
+  themeManager = new ThemeManager({
+    css: [themesDir],
+    syntax: [getUserSyntaxThemeDirectory()],
+    terminal: [getUserTerminalThemeDirectory()]}, extensionManager);
   injectConfigDatabase(themeManager, configDatabase);
+}
+
+function getUserTerminalThemeDirectory(): string {
+  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
+  return path.join(userThemesDir, USER_TERMINAL_THEMES_DIR);
 }
 
 function getUserSyntaxThemeDirectory(): string {
@@ -415,6 +424,17 @@ function setupAppData(): void {
     const statInfo = fs.statSync(userSyntaxThemesDir);
     if ( ! statInfo.isDirectory()) {
       _log.warn("Extraterm user syntax themes path " + userSyntaxThemesDir + " is not a directory!");
+      return;
+    }
+  }
+
+  const userTerminalThemesDir = path.join(userThemesDir, USER_TERMINAL_THEMES_DIR);
+  if ( ! fs.existsSync(userTerminalThemesDir)) {
+    fs.mkdirSync(userTerminalThemesDir);
+  } else {
+    const statInfo = fs.statSync(userTerminalThemesDir);
+    if ( ! statInfo.isDirectory()) {
+      _log.warn("Extraterm user terminal themes path " + userTerminalThemesDir + " is not a directory!");
       return;
     }
   }
