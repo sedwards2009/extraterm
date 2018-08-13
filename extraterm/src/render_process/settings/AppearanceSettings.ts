@@ -21,11 +21,18 @@ export const APPEARANCE_SETTINGS_TAG = "et-appearance-settings";
 export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   private _log: Logger = null;
   private _fontOptions: FontInfo[] = [];
+  private _userTerminalThemeDirectory: string = null;
   private _userSyntaxThemeDirectory: string = null;
 
   constructor() {
     super(AppearanceSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
     this._log = getLogger(APPEARANCE_SETTINGS_TAG, this);
+    this._getUi().$on("openUserTerminalThemesDir", () => {
+      shell.showItemInFolder(this._userTerminalThemeDirectory);
+    });
+    this._getUi().$on("rescanUserTerminalThemesDir", () => {
+      WebIpc.rescanThemes();
+    });
     this._getUi().$on("openUserSyntaxThemesDir", () => {
       shell.showItemInFolder(this._userSyntaxThemeDirectory);
     });
@@ -38,6 +45,8 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     if (key === SYSTEM_CONFIG) {
       const ui = this._getUi();
       const systemConfig = <SystemConfig> config;
+
+      this._userTerminalThemeDirectory = path.join(systemConfig.userTerminalThemeDirectory, "force_the_directory_open");
       this._userSyntaxThemeDirectory = path.join(systemConfig.userSyntaxThemeDirectory, "force_the_directory_open");
       ui.currentTitleBar = systemConfig.titleBarVisible ? "native" : "theme";
       const newFontOptions = [...systemConfig.availableFonts];

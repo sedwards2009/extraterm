@@ -364,6 +364,7 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
     titleBarVisible,
     currentScaleFactor: systemConfig == null ? 1 : systemConfig.currentScaleFactor,
     originalScaleFactor: systemConfig == null ? 1 : systemConfig.originalScaleFactor,
+    userTerminalThemeDirectory: getUserTerminalThemeDirectory(),
     userSyntaxThemeDirectory: getUserSyntaxThemeDirectory()
   };
 }

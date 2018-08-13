@@ -386,7 +386,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
     themesList = [...themesList,
       ...this._scanThemesWithSyntaxThemeProviders([...paths.syntax, ...syntaxThemePaths]),
-      ...this._scanThemesWithTerminalThemeProviders([...paths.syntax, ...terminalThemePaths]),
+      ...this._scanThemesWithTerminalThemeProviders([...paths.terminal, ...terminalThemePaths]),
     ];
 
     const allThemes = new Map<string, ThemeInfo>();

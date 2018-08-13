@@ -79,6 +79,7 @@ export interface SystemConfig {
   currentScaleFactor: number;
   originalScaleFactor: number;
 
+  userTerminalThemeDirectory: string;
   userSyntaxThemeDirectory: string;
 }
 

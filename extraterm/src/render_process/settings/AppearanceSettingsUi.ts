@@ -93,6 +93,16 @@ interface SelectableOption {
     </div>
 
     <div class="form-group">
+      <div class="col-sm-4"></div>
+      <div class="input-group col-sm-8">
+        <button v-on:click="openUserTerminalThemesDir" class="btn" title="Open user terminal theme directory in file manager">
+          <i class="far fa-folder-open"></i>&nbsp;User themes
+        </button>
+        <button v-on:click="rescanUserTerminalThemesDir" class="btn" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button>
+      </div>
+    </div>
+
+    <div class="form-group">
       <div class="col-sm-12">
         <et-vue-terminal-ace-viewer-element id="terminal_theme_preview"></et-vue-terminal-ace-viewer-element>
       </div>
@@ -306,6 +316,14 @@ export class AppearanceSettingsUi extends Vue {
       }
     }
     return "";
+  }
+
+  openUserTerminalThemesDir(): void {
+    this.$emit("openUserTerminalThemesDir");
+  }
+
+  rescanUserTerminalThemesDir(): void {
+    this.$emit("rescanUserTerminalThemesDir");
   }
 
   openUserSyntaxThemesDir(): void {
