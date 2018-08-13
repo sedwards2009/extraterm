@@ -93,6 +93,12 @@ interface SelectableOption {
     </div>
 
     <div class="form-group">
+      <div class="col-sm-12">
+        <et-vue-terminal-ace-viewer-element id="terminal_theme_preview"></et-vue-terminal-ace-viewer-element>
+      </div>
+    </div>
+
+    <div class="form-group">
       <div class="col-sm-12"><h3>Interface</h3></div>
     </div>
 

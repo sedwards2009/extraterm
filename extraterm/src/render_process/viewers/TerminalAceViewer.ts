@@ -491,7 +491,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     if (this._useVPad) {
-      if (this._aceEditor.renderer.lineHeight === 0) {
+      if (this._aceEditor == null || this._aceEditor.renderer.lineHeight === 0) {
         return 0;
       }
       const defaultTextHeight = this._aceEditor.renderer.lineHeight;
@@ -806,6 +806,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
 
   scrollTo(optionsOrX: ScrollToOptions | number, y?: number): void {
+    if (this._aceEditSession == null) {
+      return;
+    }
+    
     let xCoord = 0;
     let yCoord = 0;
 
@@ -1241,7 +1245,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
-    if (this.parentNode === null) {
+    if (this.parentNode === null || this._aceEditor == null) {
       return;
     }
     const elementHeight = this.getHeight();
