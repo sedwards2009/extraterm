@@ -565,6 +565,9 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     
     const charHeight = this._aceEditor.renderer.lineHeight;
     const charWidth = this._aceEditor.renderer.characterWidth;
+    if (charHeight === 0 || charWidth === 0) {
+      return {cols: cols, rows: rows};
+    }
     const computedStyle = window.getComputedStyle(this);
     const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight) - 4;
     const newCols = Math.floor(width / charWidth);
