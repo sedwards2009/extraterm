@@ -1,4 +1,4 @@
-This extension holds a number of popular syntax hihglighting themes gathered from around the place. Information about the origin and license is given below.
+This extension holds a number of popular syntax highlighting themes gathered from around the internet. Information about the origin and license is given below.
 
 
 Atom One Dark Theme
