@@ -46,7 +46,7 @@ export class VueTerminalAceViewerElement extends ViewerElement {
       this._scrollCanvas.setViewerElement(this._terminalViewer);
       this.appendChild(this._scrollCanvas);
 
-      emulator.write(this._demoContents());
+      emulator.write(demoContents());
     }
   }
   
@@ -56,29 +56,46 @@ export class VueTerminalAceViewerElement extends ViewerElement {
     });
   }
 
-  private _demoContents(): string {
-    let result = "\n\r ";
-    for (let i=0; i<16; i++) {
-      if (i == 1) {
-        result += charFG(1);
-      }
-      if (i==8) {
-        result += "\n\r ";
-      }
+}
 
-      result += charBG(i);
-      if (i < 10) {
-        result += " "
-      }
-      result += " " + i + " " + charBG(0) + " ";
+function demoContents(): string {
+  const defaultFG = "\x1b[0m";
+  const defaultColor = "\x1b[0m";
+  const newline = "\n\r ";
+
+  let result = newline;
+
+  for (let i=0; i<16; i++) {
+    if (i==8) {
+      result += "\n\r ";
+    }
+    result += " ";
+    if (i == 1) {
+      result += charFG(0);
     }
 
-    result += charFG(0);
-
-    result += "\n\r" + charFG(12) + "bin" + charFG(0) + "/\n\r";
-
-    return result;
+    result += charBG(i);
+    if (i < 10) {
+      result += " "
+    }
+    result += " " + i + " " + charBG(0);
   }
+
+  result += charFG(0);
+
+  result += newline + defaultFG + newline +
+    " " + boldFG(4) + "dir" + defaultColor + "/         " + boldFG(2) + "script.sh" + defaultColor + "*" + newline +
+    " file         " + boldFG(6) + "symbolic_link" + defaultColor + " -> something" + newline +
+    " " + boldFG(5) + "image.png" + defaultColor + "    " + boldFG(1) + "shambolic_link" + defaultColor + " -> " + boldFG(1) + "nothing" + defaultColor + newline +
+    " \x1b[30;42mtmp" + defaultColor + "/" + newline +
+    newline +
+    " " + charFG(2) +"[user@computer " + charFG(12) + "/home/user" + charFG(2) + "]$ "+ defaultColor;
+
+  return result;
+}
+
+function boldFG(n: number): string {
+  return `\x1b[1;${30+n}m`;
 }
 
 function charFG(n: number): string {
