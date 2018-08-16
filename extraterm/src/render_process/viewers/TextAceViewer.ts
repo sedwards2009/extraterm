@@ -352,6 +352,15 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this._aceEditor.renderer.setShowLineNumbers(show);
   }
 
+  setWrapLines(wrap: boolean): void {
+    this._aceEditSession.setUseWrapMode(wrap);
+  }
+  
+  getWrapLines(): boolean {
+    return this._aceEditSession.getUseWrapMode();
+  }
+
+
   getBulkFileHandle(): BulkFileHandle {
     if (this._bulkFileHandle != null) {
       return this._bulkFileHandle;
@@ -855,7 +864,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     if (this._aceEditor == null) {
       return 0;
     }
-    return this._isEmpty ? 0 : this._aceEditor.renderer.lineHeight * this.lineCount();
+    const lineHeight = this._aceEditor.renderer.lineHeight;
+    return this._isEmpty ? 0 : lineHeight * this._aceEditSession.getScreenLength();
   }
   
   private _adjustHeight(newHeight: number): void {

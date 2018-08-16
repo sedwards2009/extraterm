@@ -195,7 +195,8 @@ interface SelectableOption {
         <et-vue-text-ace-viewer-element
           id="syntax_theme_preview"
           :viewer-text="getThemeSyntaxPreviewText()"
-          :mime-type="getThemeSyntaxPreviewMimeType()"></et-vue-text-ace-viewer-element>
+          :mime-type="getThemeSyntaxPreviewMimeType()"
+          :wrap-lines="getThemeSyntaxPreviewWrapLines()"></et-vue-text-ace-viewer-element>
       </div>
     </div>
 
@@ -340,5 +341,9 @@ export class AppearanceSettingsUi extends Vue {
 
   getThemeSyntaxPreviewMimeType(): string {
     return ThemeSyntaxPreviewContents[this.themeSyntaxPreviewContents].mimeType;
+  }
+
+  getThemeSyntaxPreviewWrapLines(): boolean {
+    return this.themeSyntaxPreviewContents === 0;
   }
 }

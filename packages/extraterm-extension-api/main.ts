@@ -190,6 +190,16 @@ export interface TextViewer extends ViewerBase {
    * Set whether to show line numebrs in the gutter.
    */
   setShowLineNumbers(show: boolean): void;
+
+  /**
+   * Set whether long lines should be wrapped.
+   */
+  setWrapLines(wrap: boolean): void;
+  
+  /**
+   * Return true if long lines are set to be wrapped.
+   */
+  getWrapLines(): boolean;
 }
 
 

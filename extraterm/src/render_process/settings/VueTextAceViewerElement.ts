@@ -37,6 +37,7 @@ export class VueTextAceViewerElement extends ViewerElement {
       this._setText(this.viewerText || "");
       const mimeType = this.mimeType || "text/plain";
       this._setMimeType(mimeType);
+      this._setWrapLines(this.wrapLines);
       this.appendChild(this._scrollCanvas);
     }
   }
@@ -71,5 +72,18 @@ export class VueTextAceViewerElement extends ViewerElement {
       return;
     }
     this._textViewer.setMimeType(mimeType);
+  }
+
+  @Attribute wrapLines: boolean;
+
+  @Observe("wrapLines")
+  private _updateWrapText(target: string): void {
+    this._setWrapLines(this.wrapLines);
+  }
+  private _setWrapLines(wrap: boolean): void {
+    if (this._textViewer == null) {
+      return;
+    }
+    this._textViewer.setWrapLines(wrap);
   }
 }

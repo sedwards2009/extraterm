@@ -104,4 +104,12 @@ export class TextViewerProxy extends ViewerProxy implements ExtensionApi.TextVie
   setShowLineNumbers(show: boolean): void {
     this._textViewer.setShowLineNumbers(show);
   }
+
+  getWrapLines(): boolean {
+    return this._textViewer.getWrapLines();
+  }
+
+  setWrapLines(wrap: boolean): void {
+    this._textViewer.setWrapLines(wrap);
+  }
 }
