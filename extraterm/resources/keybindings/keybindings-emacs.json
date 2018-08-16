@@ -26,7 +26,7 @@
     "Ctrl-Shift-V": "pasteFromClipboard",
     "Ctrl-Shift-W": "deleteLastFrame",
     "Ctrl-Shift-O": "openLastFrame",
-    "Ctrl-Plus": "increaseFontSize",
+    "Ctrl-Shift-Plus": "increaseFontSize",
     "Ctrl-Minus": "decreaseFontSize",
     "Ctrl-=": "resetFontSize"
   },
@@ -39,7 +39,7 @@
     "Shift-Insert": "pasteFromClipboard",
     "Ctrl-Shift-V": "pasteFromClipboard",
     "Ctrl-v": "pasteFromClipboard",
-    "Ctrl-Plus": "increaseFontSize",
+    "Ctrl-Shift-Plus": "increaseFontSize",
     "Ctrl-Minus": "decreaseFontSize",
     "Ctrl-=": "resetFontSize"
   },
@@ -137,7 +137,7 @@
     "Shift-Insert": "pasteFromClipboard",
     "Ctrl-Shift-V": "pasteFromClipboard",
     "Ctrl-v": "pasteFromClipboard",
-    "Ctrl-Plus": "increaseFontSize",
+    "Ctrl-Shift-Plus": "increaseFontSize",
     "Ctrl-Minus": "decreaseFontSize",
     "Ctrl-=": "resetFontSize"
   }

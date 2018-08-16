@@ -24,7 +24,7 @@
     "Cmd-v": "pasteFromClipboard",
     "Cmd-w": "deleteLastFrame",
     "Cmd-o": "openLastFrame",
-    "Cmd-Plus": "increaseFontSize",
+    "Cmd-Shift-Plus": "increaseFontSize",
     "Cmd-Minus": "decreaseFontSize",
     "Cmd-=": "resetFontSize"
   },
@@ -34,7 +34,7 @@
     "Cmd-Shift-PageDown": "goToNextFrame",
     "Cmd-c": "copyToClipboard",
     "Cmd-v": "pasteFromClipboard",
-    "Cmd-Plus": "increaseFontSize",
+    "Cmd-Shift-Plus": "increaseFontSize",
     "Cmd-Minus": "decreaseFontSize",
     "Cmd-=": "resetFontSize"
   },
@@ -139,7 +139,7 @@
     "Cmd-c": "copyToClipboard",
     "Cmd-v": "pasteFromClipboard",
     "Cmd-Shift-V": "pasteFromClipboard",
-    "Ctrl-Plus": "increaseFontSize",
+    "Ctrl-Shift-Plus": "increaseFontSize",
     "Ctrl-Minus": "decreaseFontSize",
     "Ctrl-=": "resetFontSize"
   }
