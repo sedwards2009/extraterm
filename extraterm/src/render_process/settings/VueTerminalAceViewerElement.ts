@@ -70,7 +70,7 @@ function demoContents(): string {
       result += "\n\r ";
     }
     result += " ";
-    if (i == 1) {
+    if (i >= 1) {
       result += charFG(0);
     }
 
@@ -78,7 +78,7 @@ function demoContents(): string {
     if (i < 10) {
       result += " "
     }
-    result += " " + i + " " + charBG(0);
+    result += " " + i + " " + defaultColor;
   }
 
   result += charFG(0);
