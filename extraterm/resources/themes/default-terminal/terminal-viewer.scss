@@ -149,6 +149,12 @@
   right: 0;
   bottom: 0;
   z-index: 6;
+
+  opacity: 0.5;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 .ace_scrollbar-inner {
@@ -164,12 +170,6 @@
   overflow-x: hidden;
   overflow-y: scroll;
   top: 0;
-
-  opacity: 0.5;
-
-  &:hover {
-    opacity: 1;
-  }
 }
 
 .ace_scrollbar-h {
