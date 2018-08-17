@@ -1007,7 +1007,9 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     switch (command) {
       case COMMAND_TYPE_AND_CR_SELECTION:
       case COMMAND_TYPE_SELECTION:
-        const text = this._aceEditor.getSelectedText();
+        const session = this._aceEditSession;
+        const allRanges = this._aceEditor.getSelection().getAllRanges();
+        const text = allRanges.map(range => session.getTextRange(range)).join("\n");
         if (text !== "") {
           if (command === COMMAND_TYPE_AND_CR_SELECTION) {
             // Exit selection mode.
