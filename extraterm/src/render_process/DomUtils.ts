@@ -289,6 +289,20 @@ export function preventScroll(el: HTMLElement): void {
   });
 }
 
+/**
+ * Convert a length with 'px' suffix to a plain float.
+ *
+ * @param length the length value as a string
+ * @return the length as a number
+ */
+export function pixelLengthToFloat(length: string | number): number {
+  if (typeof length === "string") {
+    const lengthStr = length.indexOf("px") !== -1 ? length.substr(0, length.length-2) : length;    
+    return parseFloat(lengthStr);
+  } else {
+    return length;
+  }
+}
 
 /**
  * Convert a length with 'px' suffix to a plain integer.
@@ -298,8 +312,7 @@ export function preventScroll(el: HTMLElement): void {
  */
 export function pixelLengthToInt(length: string | number): number {
   if (typeof length === "string") {
-    const lengthStr = length.indexOf("px") !== -1 ? length.substr(0, length.length-2) : length;    
-    return parseInt(lengthStr, 10);
+    return Math.floor(pixelLengthToFloat(length));
   } else {
     return length;
   }

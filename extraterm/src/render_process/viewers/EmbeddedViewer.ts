@@ -144,6 +144,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';
   static EVENT_SCROLL_MOVE = 'scroll-move';
 
+  private static _resizeHandler = new ResizeHandler();
+
   /**
    * Type guard for detecting a EtEmbeddedViewer instance.
    * 
@@ -743,8 +745,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       return { top: this._headerTop, bottom: this._headerBottom };
     }
 
-    const top = headerRect.height + DomUtils.pixelLengthToInt(outputContainerStyle.borderTopWidth);
-    const bottom = DomUtils.pixelLengthToInt(outputContainerStyle.borderBottomWidth);
+    const top = Math.ceil(headerRect.height + DomUtils.pixelLengthToFloat(outputContainerStyle.borderTopWidth));
+    const bottom = Math.ceil(DomUtils.pixelLengthToFloat(outputContainerStyle.borderBottomWidth));
 
     this._headerTop = top;
     this._headerBottom = bottom;
