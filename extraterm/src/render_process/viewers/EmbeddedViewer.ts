@@ -101,6 +101,35 @@ class TitleBarUI extends Vue {
   }
 }
 
+interface ResizeCallback {
+  (target: Element, contentRect: DOMRectReadOnly): void;
+}
+
+class ResizeHandler {
+  private _resizeObserver: ResizeObserver;
+  private _observedElementsMap = new WeakMap<Element, ResizeCallback>();
+
+  constructor() {
+     this._resizeObserver = new ResizeObserver(entries => {
+       for (const entry of entries) {
+        const callback = this._observedElementsMap.get(entry.target);
+        if (callback != null) {
+          callback(entry.target, entry.contentRect);
+        }
+      }
+    });
+  }
+
+  observe(element: Element, callback: ResizeCallback): void {
+    this._resizeObserver.observe(element);
+    this._observedElementsMap.set(element, callback);
+  }
+
+  unobserve(element: Element): void {
+    this._resizeObserver.unobserve(element);
+    this._observedElementsMap.delete(element);
+  }
+}
 
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
@@ -155,6 +184,11 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._updateUiFromMetadata();
     this.installThemeCss();
     this._setUpEventHandlers();
+
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    EmbeddedViewer._resizeHandler.observe(headerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+      VirtualScrollArea.emitResizeEvent(this);
+    });
   }
   
   connectedCallback(): void {
@@ -187,6 +221,11 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   dispose(): void {
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    if (headerDiv != null) {
+      EmbeddedViewer._resizeHandler.unobserve(headerDiv);
+    }
+
     const viewerElement = this._getViewerElement();
     if (viewerElement !== null) {
       viewerElement.dispose();
@@ -760,12 +799,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     return [];
   }
 
-  private _emitManualScroll(): void {
-    const event = new CustomEvent(EmbeddedViewer.EVENT_SCROLL_MOVE);
-    event.initCustomEvent(EmbeddedViewer.EVENT_SCROLL_MOVE, true, true, null);
-    this.dispatchEvent(event);
-  }
-  
   private _emitFramePopOut(): void {
     const event = new CustomEvent(EmbeddedViewer.EVENT_FRAME_POP_OUT);
     event.initCustomEvent(EmbeddedViewer.EVENT_FRAME_POP_OUT, true, true, this);
