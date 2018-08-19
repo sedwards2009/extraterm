@@ -128,134 +128,127 @@ export class TerminalEditSession extends EditSession {
   }
 
   getTokens(row: number): HighlighterToken[] {
-    const lineData = this._lineData[row];
-
-    let currentCellAttr = defaultCellAttr;
-    const lineCellAttrs = lineData == null ? null : lineData.attrs;
-
-    // const uint32Chars = lineData.chars;
-    // let lineLength = uint32Chars.length;
-
+    const lineCellAttrs = this._lineData[row] == null ? null : this._lineData[row].attrs;
     const tokens: HighlighterToken[] = [];
-    const spaceCodePoint = ' '.codePointAt(0);
-
-    // Trim off any unstyled whitespace to the right of the line.
-    // while (lineLength !==0 && attrs[lineLength-1] === defAttr && uint32Chars[lineLength-1] === spaceCodePoint) {
-    //   lineLength--;
-    // }
-
-    let column = 0;
-    // const text = lineLength !== uint32Chars.length ? String.fromCodePoint(...uint32Chars.slice(0,lineLength)) : String.fromCodePoint(...uint32Chars);
     const text = this.doc.getLine(row);
     const lineLength = text.length;
-
     const normalWidthCodePointCutOff = maxNormalWidthCodePoint();
+
+    let currentCellAttr = defaultCellAttr;
     let spanStart = 0;
-    let classList: string[] = [];
+    let cellAttrIndex = 0;
+    let charIndex = 0;
+    let outputOversize = false;
 
-    for (let i = 0; i < lineLength; i++, column++) {
-      const iCellAttr = lineCellAttrs == null ? defaultCellAttr : lineCellAttrs[i];
-      
-      // const codePoint = uint32Chars[i];
+    while (charIndex < lineLength) {
+      let codePoint: number;
+      if (isFirstSurogate(text[charIndex])) {
+        codePoint = text.substr(charIndex,2).codePointAt(0);
+      } else {
+        codePoint = text[charIndex].codePointAt(0);
+      }
 
-// FIXME surrogate pair support      
-      // const dataOversize = codePoint > normalWidthCodePointCutOff && isCodePointNormalWidth(codePoint) === false;
+      const oversizeCodePoint = codePoint > normalWidthCodePointCutOff && isCodePointNormalWidth(codePoint) === false;
 
-      // if (dataOversize) {
-      //   if (codePoint >= 0x10000) {
-      //     // UTF-16 surrogate pair, takes up two chars.
-      //     tokens.push( { value: text.slice(column, column+2), type: OVERSIZE_CLASSES } );
-      //     column++;
-      //   } else {
-      //     tokens.push( { value: text.slice(column, column+1), type: OVERSIZE_CLASSES } );
-      //   }
-      // }
-
-      if (iCellAttr !== currentCellAttr) {
-
-        if (i !== 0) {
+      const iCellAttr = lineCellAttrs == null ? defaultCellAttr : lineCellAttrs[cellAttrIndex];
+      if (iCellAttr !== currentCellAttr || oversizeCodePoint || outputOversize) {
+        if (charIndex !== 0 && spanStart !== charIndex) {
           // This is the end of a token. Add it to the list.
-          tokens.push({type: " " + classList.join(" "), value: text.slice(spanStart, i)});
-          spanStart = i;
+          const classList = " " + this._cellAttrToClasses(currentCellAttr).join(" ") + (outputOversize ? " " + OVERSIZE_CLASSES : "");
+          tokens.push({type: classList, value: text.slice(spanStart, charIndex)});
+          spanStart = charIndex;
         }
-        classList = [];
-        if (iCellAttr === 0xffffffff) {
-          // Cursor itself
-          classList.push("reverse-video");
-          classList.push("terminal-cursor");
-        } else {
-        
-          let bg = TermApi.backgroundFromCharAttr(iCellAttr);
-          let fg = TermApi.foregroundFromCharAttr(iCellAttr);
-          const flags = TermApi.flagsFromCharAttr(iCellAttr);
-          
-          // bold
-          if (flags & TermApi.BOLD_ATTR_FLAG) {
-            classList.push('terminal-bold');
+        outputOversize = oversizeCodePoint;
+      }
+      currentCellAttr = iCellAttr;
+    
+      charIndex++;
+      if (codePoint >= 0x10000) {
+        // Must have been part of a surogate pair. Skip the pair.
+        charIndex++;
+      }
+      cellAttrIndex++
+    }
 
-            // See: XTerm*boldColors
-            if (fg < 8) {
-              fg += 8;  // Use the bright version of the color.
-            }
-          }
+    if (spanStart !== charIndex) {
+      tokens.push({type: " " + this._cellAttrToClasses(currentCellAttr).join(" "), value: text.slice(spanStart)});
+    }
 
-          // italic
-          if (flags & TermApi.ITALIC_ATTR_FLAG) {
-            classList.push('terminal-italic');
-          }
-          
-          // underline
-          if (flags & TermApi.UNDERLINE_ATTR_FLAG) {
-            classList.push('terminal-underline');
-          }
+    return tokens;
+  }
 
-          // strike through
-          if (flags & TermApi.STRIKE_THROUGH_ATTR_FLAG) { 
-            classList.push('terminal-strikethrough');
-          }
-          
-          // inverse
-          if (flags & TermApi.INVERSE_ATTR_FLAG) {
-            let tmp = fg;
-            fg = bg;
-            bg = tmp;
-            
-            // Should inverse just be before the
-            // above boldColors effect instead?
-            if ((flags & TermApi.BOLD_ATTR_FLAG) && fg < 8) {
-              fg += 8;  // Use the bright version of the color.
-            }
-          }
+  private _cellAttrToClasses(cellAttr: number): string[] {
+    const classList = [];
+    if (cellAttr === 0xffffffff) {
+      // Cursor itself
+      classList.push("reverse-video");
+      classList.push("terminal-cursor");
+    } else {
+    
+      let bg = TermApi.backgroundFromCharAttr(cellAttr);
+      let fg = TermApi.foregroundFromCharAttr(cellAttr);
+      const flags = TermApi.flagsFromCharAttr(cellAttr);
+      
+      // bold
+      if (flags & TermApi.BOLD_ATTR_FLAG) {
+        classList.push('terminal-bold');
 
-          // invisible
-          if (flags & TermApi.INVISIBLE_ATTR_FLAG) {
-            classList.push('terminal-invisible');
-          }
-
-          if (bg !== 256) {
-            classList.push('terminal-background-' + bg);
-          }
-
-          if (flags & TermApi.FAINT_ATTR_FLAG) {
-            classList.push('terminal-faint-' + fg);
-          } else {
-            if (fg !== 257) {
-              classList.push('terminal-foreground-' + fg);
-            }
-          }
-          
-          if (flags & TermApi.BLINK_ATTR_FLAG) {
-            classList.push("terminal-blink");
-          }
+        // See: XTerm*boldColors
+        if (fg < 8) {
+          fg += 8;  // Use the bright version of the color.
         }
       }
 
-      currentCellAttr = iCellAttr;
+      // italic
+      if (flags & TermApi.ITALIC_ATTR_FLAG) {
+        classList.push('terminal-italic');
+      }
+      
+      // underline
+      if (flags & TermApi.UNDERLINE_ATTR_FLAG) {
+        classList.push('terminal-underline');
+      }
+
+      // strike through
+      if (flags & TermApi.STRIKE_THROUGH_ATTR_FLAG) { 
+        classList.push('terminal-strikethrough');
+      }
+      
+      // inverse
+      if (flags & TermApi.INVERSE_ATTR_FLAG) {
+        let tmp = fg;
+        fg = bg;
+        bg = tmp;
+        
+        // Should inverse just be before the
+        // above boldColors effect instead?
+        if ((flags & TermApi.BOLD_ATTR_FLAG) && fg < 8) {
+          fg += 8;  // Use the bright version of the color.
+        }
+      }
+
+      // invisible
+      if (flags & TermApi.INVISIBLE_ATTR_FLAG) {
+        classList.push('terminal-invisible');
+      }
+
+      if (bg !== 256) {
+        classList.push('terminal-background-' + bg);
+      }
+
+      if (flags & TermApi.FAINT_ATTR_FLAG) {
+        classList.push('terminal-faint-' + fg);
+      } else {
+        if (fg !== 257) {
+          classList.push('terminal-foreground-' + fg);
+        }
+      }
+      
+      if (flags & TermApi.BLINK_ATTR_FLAG) {
+        classList.push("terminal-blink");
+      }
     }
-
-    tokens.push({type: " " + classList.join(" "), value: text.slice(spanStart)});
-
-    return tokens;
+    return classList;
   }
 
   protected _updateInternalDataOnChange(delta: Delta): Fold[] {
@@ -353,4 +346,9 @@ function isCodePointNormalWidth(codePoint: number): boolean {
   }
 
   return false;
+}
+
+function isFirstSurogate(s: string): boolean {
+  const codePoint = s.codePointAt(0);
+  return (codePoint & 0xFC00) == 0xD800;
 }
