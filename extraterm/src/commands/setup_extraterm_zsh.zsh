@@ -12,7 +12,12 @@ if [ -n "$LC_EXTRATERM_COOKIE" ]; then
 
     # Put our enhanced commands at the start of the PATH.
     filedir=`dirname "${(%):-%x}"`
-    export PATH="$PWD/$filedir:$PATH"
+    if [ "${filedir:0:1}" = "/" ]
+    then
+      export PATH="$filedir:$PATH" 
+    else
+      export PATH="$PWD/$filedir:$PATH"
+    fi
 
     # Insert our special code to communicate to Extraterm the status of the last command.
     extraterm_install_prompt_integration () {
