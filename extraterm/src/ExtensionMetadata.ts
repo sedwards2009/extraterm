@@ -24,6 +24,10 @@ export interface ExtensionContributions {
   viewer: ExtensionViewerContribution[];
   sessionEditor: ExtensionSessionEditorContribution[];
   sessionBackend: ExtensionSessionBackendContribution[];
+  syntaxTheme: ExtensionSyntaxThemeContribution[];
+  syntaxThemeProvider: ExtensionSyntaxThemeProviderContribution[];
+  terminalTheme: ExtensionTerminalThemeContribution[];
+  terminalThemeProvider: ExtensionTerminalThemeProviderContribution[];
 }
 
 export interface ExtensionViewerContribution {
@@ -61,4 +65,20 @@ export interface ExtensionSessionBackendContribution {
    * Internal symbol used internally for indentifying this type of session.
    */
   type: string;
+}
+
+export interface ExtensionSyntaxThemeProviderContribution {
+  name: string;
+}
+
+export interface ExtensionSyntaxThemeContribution {
+  path: string;
+}
+
+export interface ExtensionTerminalThemeProviderContribution {
+  name: string;
+}
+
+export interface ExtensionTerminalThemeContribution {
+  path: string;
 }

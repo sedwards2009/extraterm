@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
+import { WebComponent } from 'extraterm-web-component-decorators';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -11,7 +11,7 @@ import {MenuItem} from './MenuItem';
 import {CheckboxMenuItem} from './CheckboxMenuItem';
 import * as DomUtils from '../DomUtils';
 import * as Util from './Util';
-import {Logger, getLogger} from '../../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 
 
 const ID = "EtContextMenuTemplate";

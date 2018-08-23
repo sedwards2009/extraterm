@@ -4,11 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as fs from 'fs';
 import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
-
-import * as Util from '../gui/Util';
-import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
@@ -25,7 +21,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
    * Type guard for detecting a ViewerElement instance.
    * 
    * @param  node the node to test
-   * @return      True if the node is a EtCodeMirrorViewer.
+   * @return      True if the node is a ViewerElement
    */
   static isViewerElement(node: Node): node is ViewerElement {
     return node !== null && node !== undefined && node instanceof ViewerElement;
@@ -131,8 +127,14 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   setCursorPositionTop(x: number): boolean {
     return false;
   }
-  
-  setBulkFileHandle(handle: BulkFileHandle): void {
+
+  /**
+   * Set the bulk file to display in the viewer.
+   * 
+   * @param handle the file to load and display
+   * @return A promise which is resolved once the file data has been loaded.
+   */
+  setBulkFileHandle(handle: BulkFileHandle): Promise<void> {
     throw Error("Not implemented.");
   }
 

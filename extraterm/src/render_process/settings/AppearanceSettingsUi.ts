@@ -10,6 +10,10 @@ import * as _ from 'lodash';
 import {FontInfo} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 
+import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
+import { log } from 'extraterm-logging';
+
+
 const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
 const ID_UI_ZOOM = "ID_UI_ZOOM";
 
@@ -20,7 +24,7 @@ interface TitleBarOption {
   name: string;
 }
 
-interface UiScalePercentOption {
+interface SelectableOption {
   id: number;
   name: string;
 }
@@ -33,8 +37,13 @@ interface UiScalePercentOption {
   <h2><i class="fa fa-paint-brush"></i>&nbsp;&nbsp;Appearance</h2>
 
   <div class="form-horizontal">
-    <div class="form-group">
-      <label for="terminal-font" class="col-sm-4 control-label">Terminal Font:</label>
+
+  <div class="form-group">
+    <div class="col-sm-12"><h3>Terminal</h3></div>
+  </div>
+
+  <div class="form-group">
+      <label for="terminal-font" class="col-sm-4 control-label">Font:</label>
       <div class="input-group col-sm-4">
         <select class="form-control" id="terminal-font" v-model="terminalFont">
           <option v-for="option in terminalFontOptions" v-bind:value="option.postscriptName">
@@ -55,7 +64,7 @@ interface UiScalePercentOption {
     </div>
 
     <div class="form-group">
-      <label for="${ID_TERMINAL_FONT_SIZE}" class="col-sm-4 control-label">Terminal Font Size:</label>
+      <label for="${ID_TERMINAL_FONT_SIZE}" class="col-sm-4 control-label">Font Size:</label>
       <div class="input-group col-sm-1">
         <input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="form-control char-width-4" v-model.number="terminalFontSize" min='1'
           max='1024' debounce="100" />
@@ -64,7 +73,7 @@ interface UiScalePercentOption {
     </div>
 
     <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Terminal Theme:</label>
+      <label for="theme-terminal" class="col-sm-4 control-label">Theme:</label>
       <div class="input-group col-sm-4">
         <select class="form-control" id="theme-terminal" v-model="themeTerminal">
           <option v-for="option in themeTerminalOptions" v-bind:value="option.id">
@@ -84,28 +93,27 @@ interface UiScalePercentOption {
     </div>
 
     <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Text &amp; Syntax Theme:</label>
-      <div class="input-group col-sm-4">
-        <select class="form-control" id="theme-terminal" v-model="themeSyntax">
-          <option v-for="option in themeSyntaxOptions" v-bind:value="option.id">
-            {{ option.name }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <div v-if="themeSyntaxComment != ''" class="form-group">
       <div class="col-sm-4"></div>
       <div class="input-group col-sm-8">
-        <p class="help-block">
-          <i class="fa fa-info-circle"></i>
-          {{themeSyntaxComment}}
-        </p>
+        <button v-on:click="openUserTerminalThemesDir" class="btn" title="Open user terminal theme directory in file manager">
+          <i class="far fa-folder-open"></i>&nbsp;User themes
+        </button>
+        <button v-on:click="rescanUserTerminalThemesDir" class="btn" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button>
       </div>
     </div>
 
     <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Interface Theme:</label>
+      <div class="col-sm-12">
+        <et-vue-terminal-ace-viewer-element id="terminal_theme_preview"></et-vue-terminal-ace-viewer-element>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-12"><h3>Interface</h3></div>
+    </div>
+
+    <div class="form-group">
+      <label for="theme-terminal" class="col-sm-4 control-label">Theme:</label>
       <div class="input-group col-sm-4">
         <select class="form-control" id="theme-terminal" v-model="themeGUI">
           <option v-for="option in themeGUIOptions" v-bind:value="option.id">
@@ -126,7 +134,7 @@ interface UiScalePercentOption {
     </div>
 
     <div class="form-group">
-      <label for="${ID_UI_ZOOM}" class="col-sm-4 control-label">Interface Zoom:</label>
+      <label for="${ID_UI_ZOOM}" class="col-sm-4 control-label">Zoom:</label>
       <div class="input-group col-sm-8">
         <select class="form-control char-width-4" id="${ID_UI_ZOOM}" v-model="uiScalePercent">
           <option v-for="option in uiScalePercentOptions" v-bind:value="option.id">
@@ -141,6 +149,61 @@ interface UiScalePercentOption {
       <div class="input-group col-sm-4">
         <select class="form-control" id="title-bar" v-model="titleBar">
           <option v-for="option in titleBarOptions" v-bind:value="option.id">
+            {{ option.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-12"><h3>Text Viewer</h3></div>
+    </div>
+
+    <div class="form-group">
+      <label for="theme-terminal" class="col-sm-4 control-label">Theme:</label>
+      <div class="input-group col-sm-4">
+        <select class="form-control" id="theme-terminal" v-model="themeSyntax">
+          <option v-for="option in themeSyntaxOptions" v-bind:value="option.id">
+            {{ option.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div v-if="themeSyntaxComment != ''" class="form-group">
+      <div class="col-sm-4"></div>
+      <div class="input-group col-sm-8">
+        <p class="help-block">
+          <i class="fa fa-info-circle"></i>
+          {{themeSyntaxComment}}
+        </p>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-4"></div>
+      <div class="input-group col-sm-8">
+        <button v-on:click="openUserSyntaxThemesDir" class="btn" title="Open user syntax theme directory in file manager">
+          <i class="far fa-folder-open"></i>&nbsp;User themes
+        </button>
+        <button v-on:click="rescanUserSyntaxThemesDir" class="btn" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-12">
+        <et-vue-text-ace-viewer-element
+          id="syntax_theme_preview"
+          :viewer-text="getThemeSyntaxPreviewText()"
+          :mime-type="getThemeSyntaxPreviewMimeType()"
+          :wrap-lines="getThemeSyntaxPreviewWrapLines()"></et-vue-text-ace-viewer-element>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-12">
+        <select class="form-control" id="syntax_theme_preview_contents" v-model="themeSyntaxPreviewContents">
+          <option v-for="(option, index) in themeSyntaxPreviewContentOptions" :value="index">
             {{ option.name }}
           </option>
         </select>
@@ -168,7 +231,10 @@ export class AppearanceSettingsUi extends Vue {
   terminalFontOptions: FontInfo[];
 
   uiScalePercent: number;
-  uiScalePercentOptions: UiScalePercentOption[];
+  uiScalePercentOptions: SelectableOption[];
+
+  themeSyntaxPreviewContents: number;
+  themeSyntaxPreviewContentOptions: ThemeSyntaxPreviewContents[];
 
   constructor() {
     super();
@@ -204,6 +270,9 @@ export class AppearanceSettingsUi extends Vue {
       { id: 250, name: "250%"},
       { id: 300, name: "300%"},
     ];
+
+    this.themeSyntaxPreviewContents = 0;
+    this.themeSyntaxPreviewContentOptions = ThemeSyntaxPreviewContents;
   }
 
   get themeTerminalOptions(): ThemeTypes.ThemeInfo[] {
@@ -219,8 +288,7 @@ export class AppearanceSettingsUi extends Vue {
   }
 
   getThemesByType(type: ThemeTypes.ThemeType): ThemeTypes.ThemeInfo[] {
-    const themeTerminalOptions = this.themes
-      .filter( (themeInfo) => themeInfo.type.indexOf(type) !== -1 );
+    const themeTerminalOptions = this.themes.filter( themeInfo => themeInfo.type === type );
     return _.sortBy(themeTerminalOptions, (themeInfo: ThemeTypes.ThemeInfo): string => themeInfo.name );
   }
 
@@ -250,5 +318,32 @@ export class AppearanceSettingsUi extends Vue {
     }
     return "";
   }
-  
+
+  openUserTerminalThemesDir(): void {
+    this.$emit("openUserTerminalThemesDir");
+  }
+
+  rescanUserTerminalThemesDir(): void {
+    this.$emit("rescanUserTerminalThemesDir");
+  }
+
+  openUserSyntaxThemesDir(): void {
+    this.$emit("openUserSyntaxThemesDir");
+  }
+
+  rescanUserSyntaxThemesDir(): void {
+    this.$emit("rescanUserSyntaxThemesDir");
+  }
+
+  getThemeSyntaxPreviewText(): string {
+    return ThemeSyntaxPreviewContents[this.themeSyntaxPreviewContents].text;
+  }
+
+  getThemeSyntaxPreviewMimeType(): string {
+    return ThemeSyntaxPreviewContents[this.themeSyntaxPreviewContents].mimeType;
+  }
+
+  getThemeSyntaxPreviewWrapLines(): boolean {
+    return this.themeSyntaxPreviewContents === 0;
+  }
 }

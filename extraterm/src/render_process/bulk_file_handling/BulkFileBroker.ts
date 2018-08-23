@@ -5,12 +5,12 @@
  */
 import {BulkFileHandle, BulkFileState, BulkFileMetadata, Disposable} from 'extraterm-extension-api';
 import {BulkFileIdentifier} from '../../main_process/bulk_file_handling/BulkFileStorage';
-import {getLogger, Logger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import {getLogger, Logger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import * as WebIpc from '../WebIpc';
 import {Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
-import {SmartBuffer, SmartBufferOptions} from 'smart-buffer';
+import { SmartBuffer } from 'smart-buffer';
 import * as Messages from '../../WindowMessages';
 
 

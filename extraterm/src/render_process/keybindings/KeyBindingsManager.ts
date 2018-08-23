@@ -3,10 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Disposable, Event } from 'extraterm-extension-api';
+import { Event } from 'extraterm-extension-api';
 import * as _ from 'lodash';
 
-import {Logger, getLogger} from '../../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import * as SetUtils from '../../utils/SetUtils';
 
 const FALLTHROUGH = "fallthrough";
@@ -188,7 +188,7 @@ export class KeyBindingsMapping {
       if (keyBinding.key === key &&
           keyBinding.altKey === ev.altKey &&
           keyBinding.ctrlKey === ev.ctrlKey &&
-          ((key.length === 1 && key !== " ") || keyBinding.shiftKey === ev.shiftKey) &&
+          keyBinding.shiftKey === ev.shiftKey &&
           keyBinding.metaKey === ev.metaKey) {
         return keyBinding.command;
       }

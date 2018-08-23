@@ -6,10 +6,9 @@ import {BulkFileHandle, BulkFileState, Disposable, ViewerMetadata, ViewerPosture
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {DebouncedDoLater} from '../../utils/DoLater';
-import * as DomUtils from '../DomUtils';
 import {FileTransferProgress} from '../gui/file_transfer/FileTransferProgress';
-import {Logger, getLogger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import {SimpleViewerElement} from '../viewers/SimpleViewerElement';
 import {ViewerElement} from './ViewerElement';
 import * as ThemeTypes from '../../theme/Theme';
@@ -93,29 +92,32 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
     return this._bulkFileHandle;
   }
 
-  setBulkFileHandle(handle: BulkFileHandle): void {
+  setBulkFileHandle(handle: BulkFileHandle): Promise<void> {
     this._releaseBulkFileHandle();
 
     this._bulkFileHandle = handle;
     handle.ref();
 
-    this._onAvailableSizeChangeDisposable = this._bulkFileHandle.onAvailableSizeChange(
-      () => {
-        this._fileTransferProgress.transferred = this._bulkFileHandle.getAvailableSize();
+    return new Promise( (resolve, reject) => {
+      this._onAvailableSizeChangeDisposable = this._bulkFileHandle.onAvailableSizeChange(
+        () => {
+          this._fileTransferProgress.transferred = this._bulkFileHandle.getAvailableSize();
+        });
+        
+      this._onStateChangeDisposable = this._bulkFileHandle.onStateChange(() => {
+        this._fileTransferProgress.finished = true;
+        this._updateLater.trigger();
+        resolve();
       });
-      
-    this._onStateChangeDisposable = this._bulkFileHandle.onStateChange(() => {
-      this._fileTransferProgress.finished = true;
-      this._updateLater.trigger()
+
+      this._fileTransferProgress.transferred = handle.getAvailableSize()
+      this._fileTransferProgress.total = handle.getTotalSize()
+
+      const metadata = handle.getMetadata();
+      if (metadata["filename"] !== undefined) {
+        this._fileTransferProgress.filename = <string> metadata["filename"];
+      }
     });
-
-    this._fileTransferProgress.transferred = handle.getAvailableSize()
-    this._fileTransferProgress.total = handle.getTotalSize()
-
-    const metadata = handle.getMetadata();
-    if (metadata["filename"] !== undefined) {
-      this._fileTransferProgress.filename = <string> metadata["filename"];
-    }
   }
 
   private _releaseBulkFileHandle(): void {

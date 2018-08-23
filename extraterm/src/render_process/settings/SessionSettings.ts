@@ -4,12 +4,11 @@
 
 import {WebComponent} from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
-import Vue from 'vue';
 
 import { SessionSettingsUi } from './SessionSettingsUi';
-import { FontInfo, SESSION_CONFIG, ConfigKey } from '../../Config';
-import {Logger, getLogger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import { SESSION_CONFIG, ConfigKey } from '../../Config';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { SessionConfiguration } from 'extraterm-extension-api';

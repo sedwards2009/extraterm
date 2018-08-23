@@ -5,12 +5,7 @@
  */
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import * as VirtualScrollArea from './VirtualScrollArea';
-
-type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
-type SetterState = VirtualScrollArea.SetterState;
-
-const ID = "EtCommandPlaceHolderTemplate";
+import { VirtualScrollable, SetterState } from './VirtualScrollArea';
 
 
 /**

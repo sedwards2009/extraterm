@@ -1,5 +1,5 @@
 {
-"name": "Default Syntax Theme",
-"type": ["syntax"],
+"name": "Syntax Theme CSS",
+"type": "syntax-css",
 "debug": false
 }

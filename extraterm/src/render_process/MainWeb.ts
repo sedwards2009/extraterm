@@ -6,11 +6,9 @@
 import {Disposable, Event} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
-import * as path from 'path';
 import * as SourceMapSupport from 'source-map-support';
 
 const ElectronMenu = Electron.remote.Menu;
-const ElectronMenuItem = Electron.remote.MenuItem;
 
 import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
@@ -27,7 +25,7 @@ import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
 import {ExtensionManager} from './extension/InternalTypes';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-import {Logger, getLogger} from '../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import {MainWebUi} from './MainWebUi';
 import {MenuItem} from './gui/MenuItem';
 import {PopDownListPicker} from './gui/PopDownListPicker';
@@ -37,23 +35,20 @@ import {SettingsTab} from './settings/SettingsTab';
 import * as SupportsDialogStack from './SupportsDialogStack';
 import {TabWidget} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
-import {TerminalViewer} from './viewers/TerminalViewer';
-import {TextViewer} from'./viewers/TextViewer';
+import {TerminalViewer} from './viewers/TerminalAceViewer';
+import {TextViewer} from'./viewers/TextAceViewer';
 import * as ThemeTypes from '../theme/Theme';
 import * as ThemeConsumer from '../theme/ThemeConsumer';
-import * as Util from './gui/Util';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
-import log from '../logging/LogDecorator';
+import { log } from "extraterm-logging";
 import { KeyBindingsManager, injectKeyBindingsManager, loadKeyBindingsFromObject, KeyBindingsContexts } from './keybindings/KeyBindingsManager';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
 SourceMapSupport.install();
-
-const PLUGINS_DIRECTORY = "plugins";
 
 const PALETTE_GROUP = "mainweb";
 const MENU_ITEM_SETTINGS = 'settings';
@@ -73,7 +68,6 @@ const _log = getLogger("mainweb");
  * starting up the main component and handling the window directly.
  */
 
-let terminalIdCounter = 0;
 let keyBindingManager: KeyBindingsManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
@@ -397,7 +391,10 @@ function handleConfigMessage(msg: Messages.Message): Promise<void> {
 
 function handleThemeListMessage(msg: Messages.Message): void {
   const themesMessage = <Messages.ThemeListMessage> msg;
-  themes = themesMessage.themeInfo
+  themes = themesMessage.themeInfo;
+  if (mainWebUi != null) {
+    mainWebUi.setThemes(themes);
+  }
 }
 
 function handleThemeContentsMessage(msg: Messages.Message): void {
@@ -434,7 +431,7 @@ function handleClipboardRead(msg: Messages.Message): void {
 let oldSystemConfig: SystemConfig = null;
 let oldGeneralConfig: GeneralConfig = null;
 
-function setupConfiguration(): Promise<void> {
+async function setupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
@@ -463,53 +460,70 @@ function setupConfiguration(): Promise<void> {
     setCssVars(newGeneralConfig.terminalFont, matchingFonts[0].path, fontSizePx);
   }
 
-  if (oldGeneralConfig === null || oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal ||
-      oldGeneralConfig.themeSyntax !== newGeneralConfig.themeSyntax ||
-      oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI) {
 
+  if (oldGeneralConfig == null) {
     oldGeneralConfig = newGeneralConfig;
     oldSystemConfig = newSystemConfig;
-    return requestThemeContents();
+    await requestThemeContents();
+  } else {
+    const refreshThemeTypeList: ThemeTypes.ThemeType[] = [];
+    if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
+      refreshThemeTypeList.push("terminal");
+    }
+    if (oldGeneralConfig.themeSyntax !== newGeneralConfig.themeSyntax) {
+      refreshThemeTypeList.push("syntax");
+    }
+    if (oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI) {
+      refreshThemeTypeList.push("gui");
+    }
+    oldGeneralConfig = newGeneralConfig;
+    oldSystemConfig = newSystemConfig;
+    if (refreshThemeTypeList.length !== 0) {
+      await requestThemeContents(refreshThemeTypeList);
+    }
   }
 
   oldGeneralConfig = newGeneralConfig;
   oldSystemConfig = newSystemConfig;
-
-  // no-op promise.
-  return new Promise<void>( (resolve, cancel) => { resolve(); } );
 }
 
-async function requestThemeContents(): Promise<void> {
-  const cssFileMap = new Map<ThemeTypes.CssFile, string>();
+async function requestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[] = []): Promise<void> {
+  const cssFileMap = new Map<ThemeTypes.CssFile, string>(ThemeConsumer.cssMap());
 
-  const terminalResult = await WebIpc.requestThemeContents("terminal");
-  if (terminalResult.success) {
-    for (const renderedCssFile of terminalResult.themeContents.cssFiles) {
-      cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+  if (refreshThemeTypeList.length === 0 || refreshThemeTypeList.indexOf("terminal") !== -1) {
+    const terminalResult = await WebIpc.requestThemeContents("terminal");
+    if (terminalResult.success) {
+      for (const renderedCssFile of terminalResult.themeContents.cssFiles) {
+        cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+      }
+    }
+    if (terminalResult.errorMessage !== "") {
+      _log.warn(terminalResult.errorMessage);
     }
   }
-  if (terminalResult.errorMessage !== "") {
-    _log.warn(terminalResult.errorMessage);
-  }
 
-  const syntaxResult = await WebIpc.requestThemeContents("syntax");
-  if (syntaxResult.success) {
-    for (const renderedCssFile of syntaxResult.themeContents.cssFiles) {
-      cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+  if (refreshThemeTypeList.length === 0 || refreshThemeTypeList.indexOf("syntax") !== -1) {
+    const syntaxResult = await WebIpc.requestThemeContents("syntax");
+    if (syntaxResult.success) {
+      for (const renderedCssFile of syntaxResult.themeContents.cssFiles) {
+        cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+      }
+    }
+    if (syntaxResult.errorMessage !== "") {
+      _log.warn(syntaxResult.errorMessage);
     }
   }
-  if (syntaxResult.errorMessage !== "") {
-    _log.warn(syntaxResult.errorMessage);
-  }
 
-  const uiResult = await WebIpc.requestThemeContents("gui");
-  if (uiResult.success) {
-    for (const renderedCssFile of uiResult.themeContents.cssFiles) {
-      cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+  if (refreshThemeTypeList.length === 0 || refreshThemeTypeList.indexOf("gui") !== -1) {
+    const uiResult = await WebIpc.requestThemeContents("gui");
+    if (uiResult.success) {
+      for (const renderedCssFile of uiResult.themeContents.cssFiles) {
+        cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+      }
     }
-  }
-  if (uiResult.errorMessage !== "") {
-    _log.warn(uiResult.errorMessage);
+    if (uiResult.errorMessage != null && uiResult.errorMessage.trim() !== "") {
+      _log.warn(uiResult.errorMessage);
+    }
   }
       
   // Distribute the CSS files to the classes which want them.

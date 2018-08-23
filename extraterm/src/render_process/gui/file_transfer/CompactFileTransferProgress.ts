@@ -7,16 +7,13 @@ import { Disposable } from 'extraterm-extension-api';
 import Vue from 'vue';
 import {WebComponent, Attribute, Observe} from 'extraterm-web-component-decorators';
 
-import * as DomUtils from '../../DomUtils';
 import {DebouncedDoLater} from '../../../utils/DoLater';
-import {Logger, getLogger} from '../../../logging/Logger';
-import log from '../../../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import {SimpleElementBase} from '../SimpleElementBase';
 import * as ThemeTypes from '../../../theme/Theme';
 import { SpeedTracker } from './SpeedTracker';
 import { formatHumanBytes, formatHumanDuration } from '../../../utils/TextUtils';
-
-type ActionType = "download" | "upload";
 
 
 @Component(

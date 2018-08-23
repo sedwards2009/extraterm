@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {EtTerminal} from '../Terminal';
-import {TextViewer} from'../viewers/TextViewer';
+import {TextViewer} from'../viewers/TextAceViewer';
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
@@ -63,7 +63,11 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext 
 }
 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {
-  return metadata.contributions.sessionBackend.length !== 0;
+  return metadata.contributions.sessionBackend.length !== 0 ||
+    metadata.contributions.syntaxThemeProvider.length !== 0 ||
+    metadata.contributions.syntaxTheme.length !== 0 ||
+    metadata.contributions.terminalThemeProvider.length !== 0 ||
+    metadata.contributions.terminalTheme.length !== 0;
 }
 
 export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean {

@@ -8,10 +8,9 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 
 import * as DomUtils from './DomUtils';
 import {doLater} from '../utils/DoLater';
-import {Logger, getLogger} from '../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import ElementResizeDetectorMaker = require('element-resize-detector');
 
-const ID = "ExtratermResizeCanaryTemplate";
 const ID_SIZER = "ID_SIZER";
 const ID_CONTAINER = "ID_CONTAINER";
 

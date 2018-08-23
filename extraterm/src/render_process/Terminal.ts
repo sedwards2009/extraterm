@@ -4,11 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as fs from 'fs';
 import * as crypto from 'crypto';
-import * as _ from 'lodash';
-import * as utf8 from 'utf8';
-import {clipboard} from 'electron';
 import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
@@ -28,34 +24,32 @@ import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from '../theme/Theme';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {CommandPlaceHolder} from './CommandPlaceholder';
-import {TerminalViewer} from './viewers/TerminalViewer';
-import {TextDecoration, BookmarkRef} from './viewers/TerminalViewerTypes';
-import {TextViewer} from './viewers/TextViewer';
+import {TerminalViewer} from './viewers/TerminalAceViewer';
+import {BookmarkRef} from './viewers/TerminalViewerTypes';
+import {TextViewer} from './viewers/TextAceViewer';
 import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeyBindingsManager, injectKeyBindingsManager, AcceptsKeyBindingsManager} from './keybindings/KeyBindingsManager';
-import {Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
+import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
-import {Logger, getLogger} from '../logging/Logger';
-import LogDecorator from '../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';
 import {doLater} from '../utils/DoLater';
 import * as Term from './emulator/Term';
-import * as TermApi from './emulator/TermApi';
+import * as TermApi from 'term-api';
 import {ScrollBar} from './gui/ScrollBar';
 import {UploadProgressBar} from './UploadProgressBar';
-import * as util from './gui/Util';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
-import * as CodeMirrorOperation from './codemirror/CodeMirrorOperation';
 import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
-import { DeepReadonlyObject, DeepReadonly } from 'extraterm-readonly-toolbox';
+import { DeepReadonly } from 'extraterm-readonly-toolbox';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -69,10 +63,8 @@ type ScrollableElement = VirtualScrollable & HTMLElement;
 
 const log = LogDecorator;
 
-const DEBUG = true;
 const DEBUG_APPLICATION_MODE = false;
 
-let startTime: number = window.performance.now();
 
 const ID = "EtTerminalTemplate";
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
@@ -104,7 +96,6 @@ const COMMAND_GO_TO_NEXT_FRAME = "goToNextFrame";
 const CHILD_RESIZE_BATCH_SIZE = 3;
 
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
-const CLASS_CURSOR_MODE = "cursor-mode";
 const SCROLL_STEP = 1;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -161,8 +152,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _stashArea: DocumentFragment = null;
   private _childElementList: ChildElementStatus[] = [];
 
-  private _autoscroll = true;
-  
   private _terminalViewer: TerminalViewer = null;
   
   private _emulator: Term.Emulator = null;
@@ -185,7 +174,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _lastCommandTerminalLine: BookmarkRef = null;
   
   private _mode: Mode = Mode.DEFAULT;
-  private _selectionPreviousLineCount: number;
   
   private _configManager: ConfigDatabase = null;
   private _keyBindingManager: KeyBindingsManager = null;
@@ -196,9 +184,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _nextTag: string = null;
 
-  private _themeCssPath: string = null;
-  private _mainStyleLoaded = false;
-  private _themeStyleLoaded = false;
   private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
   private _needsCompleteRefresh = true;
@@ -1080,47 +1065,45 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea !== null) {
       // --- DOM Read ---
-      CodeMirrorOperation.bulkOperation(() => {
-        ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
+      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
 
-        const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-        scrollbar.refresh(level);
+      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+      scrollbar.refresh(level);
 
-        // --- DOM write ---
-        const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-        this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
+      // --- DOM write ---
+      const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
+      this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 
-        // Build the list of elements we will resize right now.
-        const childrenToResize: VirtualScrollable[] = [];
-        const len = scrollerArea.children.length;
-        for (let i=0; i<len; i++) {
-          const child = scrollerArea.children[i];
-          if (ViewerElement.isViewerElement(child)) {
-            childrenToResize.push(child);
-          }
+      // Build the list of elements we will resize right now.
+      const childrenToResize: VirtualScrollable[] = [];
+      const len = scrollerArea.children.length;
+      for (let i=0; i<len; i++) {
+        const child = scrollerArea.children[i];
+        if (ViewerElement.isViewerElement(child)) {
+          childrenToResize.push(child);
         }
+      }
 
-        // Keep track of which children will need a resize later on.
-        const childrenToResizeSet = new Set(childrenToResize);
-        for (const childStatus of this._childElementList) {
-          if ( ! childrenToResizeSet.has(childStatus.element)) {
-            childStatus.needsRefresh = true;
-            childStatus.refreshLevel = level;
-          }
+      // Keep track of which children will need a resize later on.
+      const childrenToResizeSet = new Set(childrenToResize);
+      for (const childStatus of this._childElementList) {
+        if ( ! childrenToResizeSet.has(childStatus.element)) {
+          childStatus.needsRefresh = true;
+          childStatus.refreshLevel = level;
         }
+      }
 
-        if (childrenToResize.length !== this._childElementList.length) {
-          this._scheduleStashedChildResizeTask();
-        }
+      if (childrenToResize.length !== this._childElementList.length) {
+        this._scheduleStashedChildResizeTask();
+      }
 
-        this._virtualScrollArea.updateScrollableSizes(childrenToResize);
-        this._virtualScrollArea.reapplyState();
+      this._virtualScrollArea.updateScrollableSizes(childrenToResize);
+      this._virtualScrollArea.reapplyState();
 
-        if (this._configManager != null) {
-          const config = this._configManager.getConfig(GENERAL_CONFIG);
-          this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
-        }
-      });
+      if (this._configManager != null) {
+        const config = this._configManager.getConfig(GENERAL_CONFIG);
+        this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
+      }
     }
   }
 
@@ -1553,18 +1536,16 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
             }
           }
 
-          CodeMirrorOperation.bulkOperation( () => {
-            stashedList.forEach(el => this._markVisible(el, true));
+          stashedList.forEach(el => this._markVisible(el, true));
 
-            for (const childStatus of processList) {
-              const el = childStatus.element;
-              if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
-                el.refresh(childStatus.refreshLevel);
-              }
+          for (const childStatus of processList) {
+            const el = childStatus.element;
+            if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
+              el.refresh(childStatus.refreshLevel);
             }
+          }
 
-            this._virtualScrollArea.updateScrollableSizes(processList.map(childStatus => childStatus.element));
-          });
+          this._virtualScrollArea.updateScrollableSizes(processList.map(childStatus => childStatus.element));
 
           if (stashedList.length !== 0) {
             stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))
@@ -1939,7 +1920,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._disconnectActiveTerminalViewer();
       
       // Extract the output of the failed command.
-      const moveText = this._lastCommandTerminalViewer.getDecoratedLines(this._lastCommandTerminalLine);
+      const moveText = this._lastCommandTerminalViewer.getTerminalLines(this._lastCommandTerminalLine);
       this._lastCommandTerminalViewer.deleteLines(this._lastCommandTerminalLine);
       this._lastCommandTerminalViewer = null;
       
@@ -1964,7 +1945,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       outputTerminalViewer.setCommandLine(this._lastCommandLine);
       outputTerminalViewer.setUseVPad(false);
       if (moveText !== null) {
-        outputTerminalViewer.setDecoratedLines(moveText.text, moveText.decorations);
+        outputTerminalViewer.setTerminalLines(moveText);
       }
       outputTerminalViewer.setEditable(true);
 

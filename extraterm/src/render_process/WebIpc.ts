@@ -11,8 +11,7 @@ const ipc = Electron.ipcRenderer;
 import {BulkFileIdentifier} from '../main_process/bulk_file_handling/BulkFileStorage';
 import * as Messages from '../WindowMessages';
 import * as config from '../Config';
-import {Logger, getLogger} from '../logging/Logger';
-import * as ThemeTypes from '../theme/Theme';
+import {Logger, getLogger} from "extraterm-logging";
 import { ExtensionMetadata } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
 
@@ -98,6 +97,11 @@ export function requestThemeContents(themeType: ThemeType): Promise<Messages.The
     themeType
   };
   return <Promise<Messages.ThemeContentsMessage>> request(msg, Messages.MessageType.THEME_CONTENTS);
+}
+
+export function rescanThemes(): void {
+  const msg: Messages.ThemeRescan = {type: Messages.MessageType.THEME_RESCAN };
+  ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
 export function requestPtyCreate(sessionUuid: string, extraEnv: EnvironmentMap, columns: number, rows: number

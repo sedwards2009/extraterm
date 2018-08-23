@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform } from "../../ExtensionMetadata";
+import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution } from "../../ExtensionMetadata";
 
 const FONT_AWESOME_DEFAULT = false;
 
@@ -101,22 +101,40 @@ function parsePlatformJson(packageJson: any): ExtensionPlatform {
 }
 
 function parseContributionsJson(packageJson: any): ExtensionContributions {
-  if (packageJson["contributions"] == null) {
+  const contributions = packageJson["contributions"];
+  if (contributions == null) {
     return {
       viewer: [],
       sessionEditor: [],
-      sessionBackend: []
+      sessionBackend: [],
+      syntaxTheme: [],
+      syntaxThemeProvider: [],
+      terminalTheme: [],
+      terminalThemeProvider: [],
     };
   }
 
-  if (typeof packageJson["contributions"] !== "object") {
+  if (typeof contributions !== "object") {
     throw `'contributions' field is not an object.`;
   }
 
+  const knownContributions = ["viewer", "sessionEditor", "sessionBackend", "syntaxTheme", "syntaxThemeProvider", "terminalTheme", "terminalThemeProvider"];
+  for (const key in contributions) {
+    if (contributions.hasOwnProperty(key)) {
+      if (knownContributions.indexOf(key) === -1) {
+        throw `'contributions' contains an unknown property '${key}'`;
+      }
+    }
+  }
+
   return {
-    viewer: parseViewerContributionsListJson(packageJson["contributions"]),
-    sessionEditor: parseSessionEditorContributionsListJson(packageJson["contributions"]),
-    sessionBackend: parseSessionBackendContributionsListJson(packageJson["contributions"]),
+    viewer: parseViewerContributionsListJson(contributions),
+    sessionEditor: parseSessionEditorContributionsListJson(contributions),
+    sessionBackend: parseSessionBackendContributionsListJson(contributions),
+    syntaxTheme: parseSyntaxThemeContributionsListJson(contributions),
+    syntaxThemeProvider: parseSyntaxThemeProviderContributionsListJson(contributions),
+    terminalTheme: parseTerminalThemeContributionsListJson(contributions),
+    terminalThemeProvider: parseTerminalThemeProviderContributionsListJson(contributions)
   };
 }
 
@@ -221,5 +239,109 @@ function parseSessionBackendConstributionJson(packageJson: any): ExtensionSessio
     };
   } catch (ex) {
     throw `Failed to process a session backend contribution: ${ex}`;
+  }
+}
+
+function parseSyntaxThemeContributionsListJson(packageJson: any): ExtensionSyntaxThemeContribution[] {
+  const value = packageJson["syntaxTheme"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'syntaxTheme' of in the 'contributions' object is not an array.`;
+  }
+
+  const result: ExtensionSyntaxThemeContribution[] = [];
+  for (const item of value) {
+    result.push(parseSyntaxThemeContributionsJson(item));
+  }
+  return result;
+}
+
+function parseSyntaxThemeContributionsJson(packageJson: any): ExtensionSyntaxThemeContribution {
+  try {
+    return {
+      path: assertJsonStringField(packageJson, "path")
+    };
+  } catch (ex) {
+    throw `Failed to process a syntax theme contribution: ${ex}`;
+  }
+}
+
+function parseSyntaxThemeProviderContributionsListJson(packageJson: any): ExtensionSyntaxThemeProviderContribution[] {
+  const value = packageJson["syntaxThemeProvider"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'syntaxThemeProvider' of in the 'contributions' object is not an array.`;
+  }
+
+  const result: ExtensionSyntaxThemeProviderContribution[] = [];
+  for (const item of value) {
+    result.push(parseSyntaxThemeProviderContributionsJson(item));
+  }
+  return result;
+}
+
+function parseSyntaxThemeProviderContributionsJson(packageJson: any): ExtensionSyntaxThemeProviderContribution {
+  try {
+    return {
+      name: assertJsonStringField(packageJson, "name")
+    };
+  } catch (ex) {
+    throw `Failed to process a syntax theme provider contribution: ${ex}`;
+  }
+}
+
+function parseTerminalThemeContributionsListJson(packageJson: any): ExtensionTerminalThemeContribution[] {
+  const value = packageJson["terminalTheme"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'terminalTheme' of in the 'contributions' object is not an array.`;
+  }
+
+  const result: ExtensionTerminalThemeContribution[] = [];
+  for (const item of value) {
+    result.push(parseTerminalThemeContributionsJson(item));
+  }
+  return result;
+}
+
+function parseTerminalThemeContributionsJson(packageJson: any): ExtensionTerminalThemeContribution {
+  try {
+    return {
+      path: assertJsonStringField(packageJson, "path")
+    };
+  } catch (ex) {
+    throw `Failed to process a terminal theme contribution: ${ex}`;
+  }
+}
+
+function parseTerminalThemeProviderContributionsListJson(packageJson: any): ExtensionTerminalThemeProviderContribution[] {
+  const value = packageJson["terminalThemeProvider"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'terminalThemeProvider' of in the 'contributions' object is not an array.`;
+  }
+
+  const result: ExtensionTerminalThemeProviderContribution[] = [];
+  for (const item of value) {
+    result.push(parseTerminalThemeProviderContributionsJson(item));
+  }
+  return result;
+}
+
+function parseTerminalThemeProviderContributionsJson(packageJson: any): ExtensionTerminalThemeProviderContribution {
+  try {
+    return {
+      name: assertJsonStringField(packageJson, "name")
+    };
+  } catch (ex) {
+    throw `Failed to process a terminal theme provider contribution: ${ex}`;
   }
 }

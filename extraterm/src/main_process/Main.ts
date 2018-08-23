@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -13,8 +13,8 @@ import * as SourceMapSupport from 'source-map-support';
 
 import * as child_process from 'child_process';
 import * as Commander from 'commander';
-import {app, BrowserWindow, crashReporter, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
-import { BulkFileState, Disposable, Event} from 'extraterm-extension-api';
+import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
+import { BulkFileState, Event} from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
 import * as fs from 'fs';
@@ -22,10 +22,9 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as os from 'os';
 
-import {BulkFileStorage, BulkFileIdentifier, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
+import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
 import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent} from '../Config';
-import {FileLogWriter} from '../logging/FileLogWriter';
-import {Logger, getLogger, addLogWriter} from '../logging/Logger';
+import {FileLogWriter, Logger, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
 import * as ThemeTypes from '../theme/Theme';
@@ -33,8 +32,8 @@ import {ThemeManager} from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { EventEmitter } from '../utils/EventEmitter';
-import { freezeDeep, DeepReadonly } from 'extraterm-readonly-toolbox';
-import log from '../logging/LogDecorator';
+import { freezeDeep } from 'extraterm-readonly-toolbox';
+import { log } from "extraterm-logging";
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
@@ -54,16 +53,13 @@ const EXTRATERM_CONFIG_DIR = "extraterm";
 const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
+const USER_SYNTAX_THEMES_DIR = "syntax";
+const USER_TERMINAL_THEMES_DIR = "terminal";
 const KEYBINDINGS_DIRECTORY = "../../resources/keybindings";
-const DEFAULT_KEYBINDING = "keybindings.json";
 const KEYBINDINGS_OSX = "keybindings-osx.json";
 const KEYBINDINGS_PC = "keybindings.json";
 const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
 const DEFAULT_TERMINALFONT = "DejaVuSansMono";
-
-const DEFAULT_TERMINAL_THEME = "default-terminal";
-const DEFAULT_SYNTAX_THEME = "default-syntax";
-const DEFAULT_UI_THEME = "atomic-dark-ui";
 
 const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
@@ -76,7 +72,6 @@ let themeManager: ThemeManager;
 let ptyManager: PtyManager;
 let configDatabase: ConfigDatabaseImpl;
 let tagCounter = 1;
-let fonts: FontInfo[] = null;
 let titleBarVisible = false;
 let bulkFileStorage: BulkFileStorage = null;
 let extensionManager: MainExtensionManager = null;
@@ -151,10 +146,22 @@ function setupExtensionManager(): void {
 
 function setupThemeManager(): void {
   // Themes
-  const themesdir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
-  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  themeManager = new ThemeManager([themesdir, userThemesDir], extensionManager);
+  const themesDir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
+  themeManager = new ThemeManager({
+    css: [themesDir],
+    syntax: [getUserSyntaxThemeDirectory()],
+    terminal: [getUserTerminalThemeDirectory()]}, extensionManager);
   injectConfigDatabase(themeManager, configDatabase);
+}
+
+function getUserTerminalThemeDirectory(): string {
+  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
+  return path.join(userThemesDir, USER_TERMINAL_THEMES_DIR);
+}
+
+function getUserSyntaxThemeDirectory(): string {
+  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
+  return path.join(userThemesDir, USER_SYNTAX_THEMES_DIR);
 }
 
 function startUpWindows(): void {
@@ -357,7 +364,9 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
     availableFonts: getFonts(),
     titleBarVisible,
     currentScaleFactor: systemConfig == null ? 1 : systemConfig.currentScaleFactor,
-    originalScaleFactor: systemConfig == null ? 1 : systemConfig.originalScaleFactor
+    originalScaleFactor: systemConfig == null ? 1 : systemConfig.originalScaleFactor,
+    userTerminalThemeDirectory: getUserTerminalThemeDirectory(),
+    userSyntaxThemeDirectory: getUserSyntaxThemeDirectory()
   };
 }
 
@@ -409,13 +418,35 @@ function setupAppData(): void {
       return;
     }
   }
+
+  const userSyntaxThemesDir = path.join(userThemesDir, USER_SYNTAX_THEMES_DIR);
+  if ( ! fs.existsSync(userSyntaxThemesDir)) {
+    fs.mkdirSync(userSyntaxThemesDir);
+  } else {
+    const statInfo = fs.statSync(userSyntaxThemesDir);
+    if ( ! statInfo.isDirectory()) {
+      _log.warn("Extraterm user syntax themes path " + userSyntaxThemesDir + " is not a directory!");
+      return;
+    }
+  }
+
+  const userTerminalThemesDir = path.join(userThemesDir, USER_TERMINAL_THEMES_DIR);
+  if ( ! fs.existsSync(userTerminalThemesDir)) {
+    fs.mkdirSync(userTerminalThemesDir);
+  } else {
+    const statInfo = fs.statSync(userTerminalThemesDir);
+    if ( ! statInfo.isDirectory()) {
+      _log.warn("Extraterm user terminal themes path " + userTerminalThemesDir + " is not a directory!");
+      return;
+    }
+  }
 }
 
 function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
   if (themeInfo === null) {
     return false;
   }
-  return themeInfo.type.indexOf(themeType) !== -1;
+  return themeInfo.type === themeType;
 }
 
 function setupConfig(): void {
@@ -797,13 +828,17 @@ function handleIpc(event: Electron.Event, arg: any): void {
       break;
       
     case Messages.MessageType.THEME_LIST_REQUEST:
-      reply = handleThemeListRequest(<Messages.ThemeListRequestMessage> msg);
+      reply = handleThemeListRequest();
       break;
       
     case Messages.MessageType.THEME_CONTENTS_REQUEST:
       handleThemeContentsRequest(event.sender, <Messages.ThemeContentsRequestMessage> msg);
       break;
       
+    case Messages.MessageType.THEME_RESCAN:
+      reply = handleThemeRescan();
+      break;
+
     case Messages.MessageType.PTY_CREATE:
       reply = handlePtyCreate(event.sender, <Messages.CreatePtyRequestMessage> msg);
       break;
@@ -919,7 +954,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   configDatabase.setConfig(msg.key, msg.config);
 }
 
-function handleThemeListRequest(msg: Messages.ThemeListRequestMessage): Messages.ThemeListMessage {
+function handleThemeListRequest(): Messages.ThemeListMessage {
   const reply: Messages.ThemeListMessage = { type: Messages.MessageType.THEME_LIST, themeInfo: getThemes() };
   return reply;
 }
@@ -954,6 +989,18 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
     };
     webContents.send(Messages.CHANNEL_NAME, reply);
   }
+}
+
+function handleThemeRescan(): Messages.ThemeListMessage {
+  themeManager.rescan();
+
+  const userStoredConfig = configDatabase.getConfigCopy(GENERAL_CONFIG);
+  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeSyntax), 'syntax')) {
+    userStoredConfig.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
+    configDatabase.setConfig(GENERAL_CONFIG, userStoredConfig);
+  }
+
+  return handleThemeListRequest();
 }
 
 const ptyToSenderMap = new Map<number, number>();

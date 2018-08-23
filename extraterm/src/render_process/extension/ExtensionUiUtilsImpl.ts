@@ -9,7 +9,7 @@ import * as he from 'he';
 
 import {EtTerminal} from '../Terminal';
 import {ExtensionUiUtils} from './InternalTypes';
-import {Logger, getLogger} from '../../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import {PopDownListPicker} from '../gui/PopDownListPicker';
 import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';
 import {ViewerElement} from '../viewers/ViewerElement';
@@ -103,6 +103,11 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
       
   _listPickerFilterAndRankEntries(entries: IdLabelPair[], filterText: string): IdLabelPair[] {
     const lowerFilterText = filterText.toLowerCase().trim();
+
+    if (lowerFilterText === "") { // Special case for when no filter is entered.
+      return [...entries];
+    }
+
     const filtered = entries.filter( (entry: IdLabelPair): boolean => {
       return entry.label.toLowerCase().indexOf(lowerFilterText) !== -1;
     });

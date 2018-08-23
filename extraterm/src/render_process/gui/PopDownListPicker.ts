@@ -7,7 +7,7 @@ import {Disposable} from 'extraterm-extension-api';
 import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
 import {doLater} from '../../utils/DoLater';
-import {Logger, getLogger} from '../../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
@@ -184,12 +184,12 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     const filteredEntries = this._filterEntries(this._entries, filterInputValue);
     
     if (filteredEntries.length === 0) {
-      this.selected = null;
+      this._setSelected(null);
     } else {
       const newSelectedIndex = filteredEntries.findIndex( (entry) => entry.id === this.selected);
       const newSelected = filteredEntries[Math.max(0, newSelectedIndex)].id;
       if (newSelected !== this.selected) {
-        this.selected = newSelected;
+        this._setSelected(newSelected);
       }
     }
     

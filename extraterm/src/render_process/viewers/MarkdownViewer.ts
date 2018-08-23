@@ -9,15 +9,10 @@ import {ViewerElement} from '../viewers/ViewerElement';
 import * as DomUtils from '../DomUtils';
 import * as markdownMod from 'markdown';
 const markdown = markdownMod.markdown;
-import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 
 const ID = "EtMarkdownViewerTemplate";
 const ID_CONTAINER = "container";
 const ID_MAIN_STYLE = "main_style";
-const ENCODING_ATTR = "encoding";
-
-const ENCODING_PLAIN = "plain";
-const ENCODING_BASE64 = "base64";
 
 
 @WebComponent({tag: "et-markdown-viewer"})

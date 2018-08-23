@@ -9,9 +9,8 @@ import {ProxyFactory} from './InternalTypes';
 import {ViewerElement} from '../viewers/ViewerElement';
 import {EtTerminal} from '../Terminal';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
-import {TerminalViewer} from '../viewers/TerminalViewer';
-import {TextViewer} from'../viewers/TextViewer';
-import {WorkspaceProxy} from './Proxies';
+import {TerminalViewer} from '../viewers/TerminalAceViewer';
+import {TextViewer} from'../viewers/TextAceViewer';
 
 
 abstract class ViewerProxy implements ExtensionApi.ViewerBase {
@@ -96,5 +95,21 @@ export class TextViewerProxy extends ViewerProxy implements ExtensionApi.TextVie
 
   setMimeType(mimeType: string): void {
     this._textViewer.setMimeType(mimeType);
+  }
+
+  getShowLineNumbers(): boolean {
+    return this._textViewer.getShowLineNumbers();
+  }
+
+  setShowLineNumbers(show: boolean): void {
+    this._textViewer.setShowLineNumbers(show);
+  }
+
+  getWrapLines(): boolean {
+    return this._textViewer.getWrapLines();
+  }
+
+  setWrapLines(wrap: boolean): void {
+    this._textViewer.setWrapLines(wrap);
   }
 }

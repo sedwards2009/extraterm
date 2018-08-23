@@ -14,8 +14,8 @@ import {Transform} from 'stream';
 
 import {BulkFileMetadata, Disposable, Event} from 'extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
-import {getLogger, Logger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import {getLogger, Logger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import * as MimeTypeDetector from '../../mimetype_detector/MimeTypeDetector';
 import {WriterReaderFile} from './WriterReaderFile';
 

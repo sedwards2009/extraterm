@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as CodeMirror from './typings/codemirror/index';
+import * as Ace from "ace-ts";
 
 
 /**
@@ -180,6 +180,26 @@ export interface TextViewer extends ViewerBase {
    * Set the mimetype of the cotnent of this text viewer.
    */
   setMimeType(mimeType: string): void;
+
+  /**
+   * Return true if line numbers are being shown in the gutter.
+   */
+  getShowLineNumbers(): boolean;
+
+  /**
+   * Set whether to show line numebrs in the gutter.
+   */
+  setShowLineNumbers(show: boolean): void;
+
+  /**
+   * Set whether long lines should be wrapped.
+   */
+  setWrapLines(wrap: boolean): void;
+  
+  /**
+   * Return true if long lines are set to be wrapped.
+   */
+  getWrapLines(): boolean;
 }
 
 
@@ -386,7 +406,7 @@ export interface ExtensionViewerBase {
   /**
    *
    */
-  setBulkFileHandle(handle: BulkFileHandle): void;
+  setBulkFileHandle(handle: BulkFileHandle): Promise<void>;
 }
 
 
@@ -481,8 +501,182 @@ export interface Pty {
   onExit: Event<void>;
 }
 
+/**
+ * A Terminal Theme Provider supplies terminal themes to Extraterm.
+ * 
+ * It exposes its list of terminal themes and a method to fetch the contents
+ * of a requested theme..
+ */
+export interface TerminalThemeProvider {
+  /**
+   * Scan for themes and return a list.
+   * 
+   * @param paths a list of directories which may be used to scan for themes.
+   * @return the list of themes found which this provider can also read.
+   */
+  scanThemes(paths: string[]): TerminalThemeInfo[];
+
+  /**
+   * Read in the contents of request theme.
+   * 
+   * @param paths a list of directories which may contain themes. This is the same list as in `scanThemes()`
+   * @return the theme contents.
+   */
+  readTheme(paths: string[], id: string): TerminalTheme;
+}
+
+/**
+ * Describes a terminal theme.
+ */
+export interface TerminalThemeInfo {
+  /** Unique (for this provider) ID of the theme. */
+  id: string;
+
+  /**
+   * Human readable name of the theme.
+   */
+  name: string;
+
+  /**
+   * Human readable comment regarding this theme.
+   */
+  comment: string;
+}
+
+export interface TerminalTheme {
+  foregroundColor?: string;
+  backgroundColor?: string;
+  cursorForegroundColor?: string;
+  cursorBackgroundColor?: string;
+  selectionBackgroundColor?: string;
+
+  [colorIndex: number]: string;
+  // selectionunfocused-background-color: #404040;
+}
+
+/**
+ * A Syntax Theme Provider supplies syntax themes to Extraterm.
+ * 
+ * It exposes its list of syntax themes and a method to fetch the contents
+ * of a requested theme..
+ */
+export interface SyntaxThemeProvider {
+  /**
+   * Scan for themes and return a list.
+   * 
+   * @param paths a list of directories which may be used to scan for themes.
+   * @return the list of themes found which this provider can also read.
+   */
+  scanThemes(paths: string[]): SyntaxThemeInfo[];
+
+  /**
+   * Read in the contents of request theme.
+   * 
+   * @param paths a list of directories which may contain themes. This is the same list as in `scanThemes()`
+   * @return the theme contents.
+   */
+  readTheme(paths: string[], id: string): SyntaxTheme;
+}
+
+export interface SyntaxThemeInfo extends TerminalThemeInfo {
+
+}
+
+/**
+ * The contents of a syntax theme.
+ * 
+ * Note: All color strings must be of the form #RRGGBB.
+ */
+export interface SyntaxTheme {
+  /**
+   * Default text foreground color.
+   */
+  foreground: string;
+
+  /**
+   * Default text background color.
+   */
+  background: string;
+
+  /**
+   * Color of the cursor.
+   */
+  cursor: string;
+
+  /**
+   * Color to show whitespace characters (when enabled).
+   */
+  invisibles: string;
+
+  /**
+   * Color of the line highlight.
+   */
+  lineHighlight: string;
+
+  /**
+   * Selection color.
+   */
+  selection: string;
+  
+  /**
+   * List of token coloring rules.
+   */
+  syntaxTokenRule: SyntaxTokenRule[];
+}
+
+export interface SyntaxTokenRule {
+  /**
+   * Scope of the rule.
+   * 
+   * This string follows the naming convention for syntax token as described
+   * in https://www.sublimetext.com/docs/3/scope_naming.html
+   * Note that only one scope rule can be put in this field.
+   */
+  scope: string;
+
+  /**
+   * The text style to apply to this token.
+   */
+  textStyle: TextStyle;
+}
+
+/**
+ * Describes a text style.
+ */
+export interface TextStyle {
+  /**
+   * Optional foreground color. Format is CSS sstyle #RRGGBB.
+   */
+  foregroundColor?: string;
+
+  /**
+   * Optional background color. Format is CSS sstyle #RRGGBB.
+   */
+  backgroundColor?: string;
+
+  /**
+   * Show as bold text.
+   */
+  bold?: boolean;
+
+  /**
+   * Show as italic text.
+   */
+  italic?: boolean;
+
+  /**
+   * Show as underline text.
+   */
+  underline?: boolean;
+}
+
+/**
+ * Extension API for extensions which need to operate in the back end process.
+ */
 export interface Backend {
   registerSessionBackend(name: string, backend: SessionBackend): void;
+  registerSyntaxThemeProvider(name: string, provider: SyntaxThemeProvider): void;
+  registerTerminalThemeProvider(name: string, provider: TerminalThemeProvider): void;
 }
 
 /**
@@ -492,10 +686,29 @@ export interface Backend {
  * convenience class and objects.
  */
 export interface ExtensionContext {
+  /**
+   * Extension APIs which can be used from a front-end render process.
+   */
   workspace: Workspace;
-  codeMirrorModule: typeof CodeMirror;
+
+  /**
+   * Access to Extraterm's own Ace module.
+   */
+  aceModule: typeof Ace;
+
+  /**
+   * True if this process is the backend process. False if it is a render process.
+   */
   isBackendProcess: boolean;
+
+  /**
+   * Extension APIs which may only be used from the backend process.
+   */
   backend: Backend;
+
+  /**
+   * Logger object which the extension can use.
+   */
   logger: Logger;
 }
 

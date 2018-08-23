@@ -4,14 +4,16 @@
 
 import { WebComponent } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
-import Vue from 'vue';
+import * as path from 'path';
 
 import { AppearanceSettingsUi } from './AppearanceSettingsUi';
 import { FontInfo, GeneralConfig, GENERAL_CONFIG, ConfigKey, SYSTEM_CONFIG, SystemConfig } from '../../Config';
-import { Logger, getLogger } from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import { Logger, getLogger } from "extraterm-logging";
+import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 import * as ThemeTypes from '../../theme/Theme';
+import { shell } from 'electron';
+import * as WebIpc from '../WebIpc';
 
 export const APPEARANCE_SETTINGS_TAG = "et-appearance-settings";
 
@@ -19,16 +21,33 @@ export const APPEARANCE_SETTINGS_TAG = "et-appearance-settings";
 export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   private _log: Logger = null;
   private _fontOptions: FontInfo[] = [];
+  private _userTerminalThemeDirectory: string = null;
+  private _userSyntaxThemeDirectory: string = null;
 
   constructor() {
     super(AppearanceSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
     this._log = getLogger(APPEARANCE_SETTINGS_TAG, this);
+    this._getUi().$on("openUserTerminalThemesDir", () => {
+      shell.showItemInFolder(this._userTerminalThemeDirectory);
+    });
+    this._getUi().$on("rescanUserTerminalThemesDir", () => {
+      WebIpc.rescanThemes();
+    });
+    this._getUi().$on("openUserSyntaxThemesDir", () => {
+      shell.showItemInFolder(this._userSyntaxThemeDirectory);
+    });
+    this._getUi().$on("rescanUserSyntaxThemesDir", () => {
+      WebIpc.rescanThemes();
+    });
   }
 
   protected _setConfig(key: ConfigKey, config: any): void {
     if (key === SYSTEM_CONFIG) {
       const ui = this._getUi();
       const systemConfig = <SystemConfig> config;
+
+      this._userTerminalThemeDirectory = path.join(systemConfig.userTerminalThemeDirectory, "force_the_directory_open");
+      this._userSyntaxThemeDirectory = path.join(systemConfig.userSyntaxThemeDirectory, "force_the_directory_open");
       ui.currentTitleBar = systemConfig.titleBarVisible ? "native" : "theme";
       const newFontOptions = [...systemConfig.availableFonts];
       newFontOptions.sort( (a,b) => {

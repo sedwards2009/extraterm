@@ -1,8 +1,10 @@
 *~
 *.map
 packages/**/*.js
+!packages/**/webpack*.js
 extensions/**/*.js
 extraterm/**/*.js
+dist/
 
 .vscode/
 .directory

@@ -1,0 +1,12 @@
+{
+  "name": "community-syntax-themes",
+  "description": "Popular syntax themes from the community",
+  "version": "1.0.0",
+  "contributions": {
+    "syntaxTheme": [
+      {
+        "path": "theme"
+      }
+    ]
+  }
+}

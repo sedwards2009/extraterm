@@ -1,0 +1,19 @@
+{
+  "name": "term-api",
+  "version": "1.0.0",
+  "description": "API of Extraterm's internal xterm.js fork",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/TermApi.js",
+  "types": "dist/TermApi.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "devDependencies": {
+    "typescript": "2.8.3"
+  },
+  "scripts": {
+    "build": "tsc"
+  }
+}

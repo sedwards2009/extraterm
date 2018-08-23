@@ -7,7 +7,7 @@ import * as ExtensionApi from 'extraterm-extension-api';
 
 import { ExtensionViewerContribution } from '../../ExtensionMetadata';
 import { InternalExtensionContext } from './InternalTypes';
-import { Logger, getLogger } from '../../logging/Logger';
+import { Logger, getLogger } from "extraterm-logging";
 import { SimpleViewerElement } from '../viewers/SimpleViewerElement';
 import { CssFile } from '../../theme/Theme';
 import { ViewerElement } from '../viewers/ViewerElement';
@@ -126,8 +126,8 @@ class ExtensionViewerProxy extends SimpleViewerElement {
     return this._extensionViewer.getBulkFileHandle();
   }
 
-  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): void {
-    this._extensionViewer.setBulkFileHandle(handle);
+  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): Promise<void> {
+    return this._extensionViewer.setBulkFileHandle(handle);
   }
 }
 
@@ -176,6 +176,7 @@ export class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase
     return null;
   }
 
-  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): void {
+  setBulkFileHandle(handle: ExtensionApi.BulkFileHandle): Promise<void> {
+    throw "Not implemented";
   }
 }

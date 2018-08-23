@@ -7,8 +7,8 @@ import * as fs from 'fs';
 import {Readable, ReadableOptions, Transform, Writable} from 'stream';
 import {Disposable} from 'extraterm-extension-api';
 
-import {getLogger, Logger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import {getLogger, Logger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 
 
 export class WriterReaderFile {

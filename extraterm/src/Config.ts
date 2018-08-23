@@ -3,10 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as os from 'os';
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
-
-import { Disposable, Event, SessionConfiguration } from 'extraterm-extension-api';
+import { Event, SessionConfiguration } from 'extraterm-extension-api';
 
 export type ShowTipsStrEnum = 'always' | 'daily' | 'never';
 
@@ -80,6 +78,9 @@ export interface SystemConfig {
   titleBarVisible: boolean;
   currentScaleFactor: number;
   originalScaleFactor: number;
+
+  userTerminalThemeDirectory: string;
+  userSyntaxThemeDirectory: string;
 }
 
 export interface FontInfo {

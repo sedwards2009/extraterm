@@ -7,11 +7,11 @@
 import * as crypto from 'crypto';
 import {BulkFileHandle, Event, Disposable} from 'extraterm-extension-api';
 import {EventEmitter} from '../utils/EventEmitter';
-import {Logger, getLogger} from '../logging/Logger';
-import log from '../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 
 import {BulkFileBroker, WriteableBulkFileHandle} from './bulk_file_handling/BulkFileBroker';
-import * as TermApi from './emulator/TermApi';
+import * as TermApi from 'term-api';
 
 
 export class DownloadApplicationModeHandler /* implements ApplicationModeHandler */ {

@@ -156,3 +156,22 @@ interface Document {
 interface HTMLIFrameElement {
   srcdoc: string;
 }
+
+interface ResizeObserverEntry {
+  readonly target: Element;
+  readonly contentRect: DOMRectReadOnly;
+}
+
+interface ResizeObserverCallback {
+  (entires: ResizeObserverEntry[], observer: ResizeObserver): void;
+}
+
+interface ResizeObserver {
+  observe(target: Element): void;
+  unobserve(target: Element): void;
+  disconnect(): void
+}
+
+declare const ResizeObserver: {
+  new(callback: ResizeObserverCallback): ResizeObserver;
+}

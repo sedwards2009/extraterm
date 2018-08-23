@@ -1,0 +1,14 @@
+{
+  "name": "text-viewer-options",
+  "description": "Text Viewer options extension for extraterm",
+  "version": "1.0.0",
+  "devDependencies": {
+    "typescript": "2.8.3",
+    "extraterm-extension-api": "0.1.0"
+  },
+  "main": "src/TextViewerOptionsExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {}
+}

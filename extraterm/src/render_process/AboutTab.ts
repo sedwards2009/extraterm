@@ -8,11 +8,10 @@ import {ViewerMetadata} from 'extraterm-extension-api';
 
 import * as ThemeTypes from '../theme/Theme';
 import {ViewerElement} from './viewers/ViewerElement';
-import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as DomUtils from './DomUtils';
 import {shell} from 'electron';
-import {Logger, getLogger} from '../logging/Logger';
+import {Logger, getLogger} from "extraterm-logging";
 import { AcceptsConfigDatabase, ConfigDatabase, SYSTEM_CONFIG } from '../Config';
 
 const ID_ABOUT = "ID_ABOUT";

@@ -3,11 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
+import { WebComponent } from 'extraterm-web-component-decorators';
 
 import {ContextMenu} from './ContextMenu';
-import * as DomUtils from '../DomUtils';
-import * as Util from './Util';
 
 
 const ID = "EtDropDownTemplate";

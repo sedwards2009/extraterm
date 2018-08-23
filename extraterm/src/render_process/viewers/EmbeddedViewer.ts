@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as _ from 'lodash';
 import * as path from 'path';
 import Component from 'vue-class-component';
 import Vue from 'vue';
@@ -13,27 +12,22 @@ import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from 'extr
 
 import {guessMimetype} from '../bulk_file_handling/BulkFileUtils';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
-import * as CodeMirrorOperation from '../codemirror/CodeMirrorOperation';
 import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, CommandEntry, Commandable, isCommandable}
 from '../CommandPaletteRequestTypes';
 import * as DomUtils from '../DomUtils';
-import * as GeneralEvents from '../GeneralEvents';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {FrameMimeType} from '../InternalMimeTypes';
-import * as KeyBindingManager from '../keybindings/KeyBindingsManager';
-import {Logger, getLogger} from '../../logging/Logger';
-import log from '../../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import {MenuItem} from '../gui/MenuItem';
-import * as ResourceLoader from '../../ResourceLoader';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
-import * as Util from '../gui/Util';
 import {ViewerElement} from './ViewerElement';
 import * as ViewerElementTypes from './ViewerElementTypes';
 import {VisualState} from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
-import {SetterState, VirtualScrollable} from '../VirtualScrollArea';
+import { SetterState } from '../VirtualScrollArea';
 
 
 const ID = "EtEmbeddedViewerTemplate";
@@ -107,6 +101,35 @@ class TitleBarUI extends Vue {
   }
 }
 
+interface ResizeCallback {
+  (target: Element, contentRect: DOMRectReadOnly): void;
+}
+
+class ResizeHandler {
+  private _resizeObserver: ResizeObserver;
+  private _observedElementsMap = new WeakMap<Element, ResizeCallback>();
+
+  constructor() {
+     this._resizeObserver = new ResizeObserver(entries => {
+       for (const entry of entries) {
+        const callback = this._observedElementsMap.get(entry.target);
+        if (callback != null) {
+          callback(entry.target, entry.contentRect);
+        }
+      }
+    });
+  }
+
+  observe(element: Element, callback: ResizeCallback): void {
+    this._resizeObserver.observe(element);
+    this._observedElementsMap.set(element, callback);
+  }
+
+  unobserve(element: Element): void {
+    this._resizeObserver.unobserve(element);
+    this._observedElementsMap.delete(element);
+  }
+}
 
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
@@ -120,6 +143,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   static EVENT_CLOSE_REQUEST = 'close-request';
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';
   static EVENT_SCROLL_MOVE = 'scroll-move';
+
+  private static _resizeHandler = new ResizeHandler();
 
   /**
    * Type guard for detecting a EtEmbeddedViewer instance.
@@ -161,6 +186,11 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._updateUiFromMetadata();
     this.installThemeCss();
     this._setUpEventHandlers();
+
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    EmbeddedViewer._resizeHandler.observe(headerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+      VirtualScrollArea.emitResizeEvent(this);
+    });
   }
   
   connectedCallback(): void {
@@ -193,6 +223,11 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   dispose(): void {
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    if (headerDiv != null) {
+      EmbeddedViewer._resizeHandler.unobserve(headerDiv);
+    }
+
     const viewerElement = this._getViewerElement();
     if (viewerElement !== null) {
       viewerElement.dispose();
@@ -710,8 +745,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       return { top: this._headerTop, bottom: this._headerBottom };
     }
 
-    const top = headerRect.height + DomUtils.pixelLengthToInt(outputContainerStyle.borderTopWidth);
-    const bottom = DomUtils.pixelLengthToInt(outputContainerStyle.borderBottomWidth);
+    const top = Math.ceil(headerRect.height + DomUtils.pixelLengthToFloat(outputContainerStyle.borderTopWidth));
+    const bottom = Math.ceil(DomUtils.pixelLengthToFloat(outputContainerStyle.borderBottomWidth));
 
     this._headerTop = top;
     this._headerBottom = bottom;
@@ -766,12 +801,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     return [];
   }
 
-  private _emitManualScroll(): void {
-    const event = new CustomEvent(EmbeddedViewer.EVENT_SCROLL_MOVE);
-    event.initCustomEvent(EmbeddedViewer.EVENT_SCROLL_MOVE, true, true, null);
-    this.dispatchEvent(event);
-  }
-  
   private _emitFramePopOut(): void {
     const event = new CustomEvent(EmbeddedViewer.EVENT_FRAME_POP_OUT);
     event.initCustomEvent(EmbeddedViewer.EVENT_FRAME_POP_OUT, true, true, this);

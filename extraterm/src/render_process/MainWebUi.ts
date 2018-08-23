@@ -4,25 +4,22 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as he from 'he';
-import * as _ from 'lodash';
-import * as path from 'path';
-import {BulkFileHandle, Disposable} from 'extraterm-extension-api';
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { BulkFileHandle } from 'extraterm-extension-api';
+import { WebComponent } from 'extraterm-web-component-decorators';
 
 import {AboutTab} from './AboutTab';
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
-import {Commandable, CommandEntry, EVENT_COMMAND_PALETTE_REQUEST} from './CommandPaletteRequestTypes';
+import { Commandable, CommandEntry } from './CommandPaletteRequestTypes';
 import * as config from '../Config';
 import * as DisposableUtils from '../utils/DisposableUtils';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {EmptyPaneMenu} from './EmptyPaneMenu';
-import {FrameFinder} from './FrameFinderType';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
 import { KeyBindingsManager, AcceptsKeyBindingsManager, injectKeyBindingsManager } from './keybindings/KeyBindingsManager';
-import {Logger, getLogger} from '../logging/Logger';
-import log from '../logging/LogDecorator';
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {SettingsTab} from './settings/SettingsTab';
 import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation} from './gui/SnapDropContainer';
@@ -34,13 +31,10 @@ import {TabWidget, DroppedEventDetail} from './gui/TabWidget';
 import {EtTerminal, EXTRATERM_COOKIE_ENV} from './Terminal';
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
-import * as util from './gui/Util';
 import {ViewerElement} from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import {EtViewerTab} from './ViewerTab';
 import {PtyIpcBridge} from './PtyIpcBridge';
-import * as WebIpc from './WebIpc';
-import * as Messages from '../WindowMessages';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
 import { ConfigDatabase, SESSION_CONFIG } from '../Config';
 
@@ -63,8 +57,6 @@ const ID_OSX_CLOSE_BUTTON = "ID_OSX_CLOSE_BUTTON";
 
 const ID_REST_SLOT = "ID_REST_SLOT";
 const ID_REST_DIV_LEFT = "ID_REST_DIV_LEFT";
-
-const CLASS_SPLIT = "split";
 
 const CLASS_TAB_HEADER_CONTAINER = "tab_header_container";
 const CLASS_TAB_HEADER_ICON = "tab_header_icon";
@@ -96,13 +88,8 @@ const COMMAND_HORIZONTAL_SPLIT = "horizontalSplit";
 const COMMAND_VERTICAL_SPLIT = "verticalSplit";
 const COMMAND_CLOSE_PANE = "closePane";
 
-const LAST_FOCUS = "last_focus";
-
 const staticLog = getLogger("Static ExtratermMainWebUI");
 
-// Theme management
-const activeInstances: Set<MainWebUi> = new Set();
-let themeCss = "";
 
 /**
  * Top level UI component for a normal terminal window
@@ -174,6 +161,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._themes = themes;
+    const settingsTab = this._getSettingsTab();
+    if (settingsTab != null) {
+      settingsTab.setThemes(this._themes);
+    }
   }
   
   getTabCount(): number {
@@ -697,10 +688,19 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
     tabDiv.innerHTML = tag;
   }
 
-  openSettingsTab(tabName: string=null): void {
-    const settingsTabs = this._splitLayout.getAllTabContents().filter( (el) => el instanceof SettingsTab );
+  private _getSettingsTab(): SettingsTab {
+    const settingsTabs = this._splitLayout.getAllTabContents().filter(el => el instanceof SettingsTab);
     if (settingsTabs.length !== 0) {
-      this._switchToTab(settingsTabs[0]);
+      return <SettingsTab> settingsTabs[0];
+    } else {
+      return null;
+    }
+  }
+
+  openSettingsTab(tabName: string=null): void {
+    const settingsTab = this._getSettingsTab();
+    if (settingsTab != null) {
+      this._switchToTab(settingsTab);
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigDatabase(settingsTabElement, this._configManager);

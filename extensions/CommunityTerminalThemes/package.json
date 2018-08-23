@@ -1,0 +1,12 @@
+{
+  "name": "community-terminal-themes",
+  "description": "Popular terminal themes from the community",
+  "version": "1.0.0",
+  "contributions": {
+    "terminalTheme": [
+      {
+        "path": "theme"
+      }
+    ]
+  }
+}

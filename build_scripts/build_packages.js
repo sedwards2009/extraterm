@@ -40,12 +40,10 @@ function main() {
   // For some reason pwd() is returning "not quite strings" which path.join() doesn't like. Thus "" + ...
   const buildTmpPath = "" + pwd();
   
-  exec("git clone --depth 1 " + gitUrl);
-  exec("git checkout " + info.branch);
+  exec("git clone --depth 1 -b " + info.branch + " " + gitUrl);
+  cd("extraterm");
 
   echo("Setting up the run time dependencies in " + BUILD_TMP);
-
-  cd("extraterm");
 
   exec("yarn install");
   exec("yarn run electron-rebuild");
