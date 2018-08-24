@@ -97,7 +97,12 @@
     "Ctrl-'": "escapeShellChars",
     "Ctrl-Shift-\"": "unescapeShellChars"
   },
-  "terminal-viewer": {
+  "terminal-viewer-default-mode": {
+    "Ctrl-Enter": "typeSelection",
+    "Ctrl-Shift-Enter": "typeSelectionAndCr",
+    "Ctrl-Shift-P": "openCommandPalette"
+  },
+  "terminal-viewer-cursor-mode": {
     "Ctrl-Enter": "typeSelection",
     "Ctrl-Shift-Enter": "typeSelectionAndCr",
     "Ctrl-Shift-P": "openCommandPalette",

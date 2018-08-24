@@ -47,7 +47,9 @@ const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 const CLASS_HAS_TERMINAL = "CLASS_HAS_TERMINAL";
 
-const KEYBINDINGS_TERMINAL_VIEWER = "terminal-viewer";
+const KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE = "terminal-viewer-default-mode";
+const KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE = "terminal-viewer-cursor-mode";
+
 const PALETTE_GROUP = "terminalviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
@@ -905,7 +907,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       return;
     }
 
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_TERMINAL_VIEWER);
+    const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
+                      KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
+                      KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(context);
     if (keyBindings !== null) {
       const command = keyBindings.mapEventToCommand(ev);
       if (command != null) {
@@ -933,7 +938,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     let command: string = null;
     
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
-      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_TERMINAL_VIEWER);
+      const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
+                        KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
+                        KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
+      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(context);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
         if (this._executeCommand(command)) {
@@ -988,7 +996,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_TERMINAL_VIEWER);
+    const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
+                      KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
+                      KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(context);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
         const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)

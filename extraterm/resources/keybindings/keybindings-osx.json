@@ -99,7 +99,12 @@
     "Cmd-Backspace": "delWrappedLineLeft",
     "Cmd-Delete": "delWrappedLineRight"
   },  
-  "terminal-viewer": {
+  "terminal-viewer-default-mode": {
+    "Cmd-Enter": "typeSelection",
+    "Cmd-Shift-Enter": "typeSelectionAndCr",
+    "Cmd-Shift-P": "openCommandPalette"
+  },
+  "terminal-viewer-cursor-mode": {
     "Cmd-Enter": "typeSelection",
     "Cmd-Shift-Enter": "typeSelectionAndCr",
     "Cmd-Shift-P": "openCommandPalette",

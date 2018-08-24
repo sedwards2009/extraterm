@@ -3,7 +3,8 @@
     "main-ui",
     "terminal-default-mode",
     "terminal-cursor-mode",
-    "terminal-viewer",
+    "terminal-viewer-default-mode",
+    "terminal-viewer-cursor-mode",
     "text-viewer",
     "image-viewer",
     "viewer-tab"
@@ -13,7 +14,8 @@
     "main-ui": "Window",
     "terminal-default-mode": "Terminal Tab: Normal mode",
     "terminal-cursor-mode": "Terminal Tab: Cursor mode",
-    "terminal-viewer": "Terminal Frame",
+    "terminal-viewer-default-mode": "Terminal Frame: Normal mode",
+    "terminal-viewer-cursor-mode": "Terminal Frame: Cursor mode",
     "text-viewer": "Text Frame",
     "viewer-tab": "Viewer Tab"
   },
