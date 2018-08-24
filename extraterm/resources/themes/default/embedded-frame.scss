@@ -61,7 +61,11 @@ $ICON_FAIL_COLOR: $brand-text-danger;
   right: pxToRem(0px);
   
   overflow: hidden;
+}
 
+#ID_CONTAINER.CLASS_SUCCEEDED > #ID_OUTPUT_CONTAINER,
+#ID_CONTAINER.CLASS_NEUTRAL > #ID_OUTPUT_CONTAINER,
+#ID_CONTAINER.CLASS_FAILED > #ID_OUTPUT_CONTAINER {
   border-left: $BLOCK_BORDER_LEFT solid rgba(0,0,0,0);
   border-right: $BLOCK_BORDER_RIGHT solid rgba(0,0,0,0);
   
