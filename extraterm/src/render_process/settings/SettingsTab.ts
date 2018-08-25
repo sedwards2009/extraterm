@@ -60,9 +60,6 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.SETTINGS_TAB, ThemeTypes.CssFile.FONT_AWESOME];
   }
 
-  focus(): void {
-  }
-
   hasFocus(): boolean {
     // const root = util.getShadowRoot(this);
     // return root.activeElement !== null;

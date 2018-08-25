@@ -203,6 +203,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
 
     const element = this.getViewerElement();
     if (element !== null) {
+      super.focus();
       element.focus();
     }
   }

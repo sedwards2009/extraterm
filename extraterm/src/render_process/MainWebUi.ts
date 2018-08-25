@@ -1235,5 +1235,8 @@ interface Focusable {
 }
 
 function elementSupportsFocus(content: Element | Focusable): content is Focusable {
-  return content instanceof EtTerminal || content instanceof EmptyPaneMenu || content instanceof EtViewerTab
+  return content instanceof EtTerminal ||
+          content instanceof EmptyPaneMenu ||
+          content instanceof EtViewerTab ||
+          content instanceof SettingsTab;
 }
