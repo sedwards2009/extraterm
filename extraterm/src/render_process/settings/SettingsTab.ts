@@ -14,11 +14,17 @@ import { log } from "extraterm-logging";
 import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi } from './SettingsUi';
 import { AcceptsExtensionManager, ExtensionManager } from '../extension/InternalTypes';
+import { Commandable, dispatchCommandPaletteRequest, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE } from '../CommandPaletteRequestTypes';
+import * as SupportsDialogStack from "../SupportsDialogStack";
+
+
+const SETTINGS_TAB = "settings-tab";
+const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 
 
 @WebComponent({tag: "et-settings-tab"})
-export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase, AcceptsKeyBindingsManager,
-    AcceptsExtensionManager {
+export class SettingsTab extends ViewerElement implements Commandable, AcceptsConfigDatabase,
+    AcceptsExtensionManager, AcceptsKeyBindingsManager, SupportsDialogStack.SupportsDialogStack {
   
   static TAG_NAME = "ET-SETTINGS-TAB";
   
@@ -26,6 +32,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   private _ui: SettingsUi = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _keyBindingManager: KeyBindingsManager = null;
+  private _dialogStack: HTMLElement[] = [];
 
   constructor() {
     super();
@@ -43,6 +50,8 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     this.updateThemeCss();
     
     shadow.appendChild(component.$el);
+    component.$el.addEventListener('keydown', ev => this._handleKeyDownCapture(ev), true);
+    component.$el.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
   }
 
   getMetadata(): ViewerMetadata {
@@ -82,4 +91,57 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._ui.themes = themes;
   }
+
+  private _handleKeyDownCapture(ev: KeyboardEvent): void {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
+      return;
+    }
+
+    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(SETTINGS_TAB);
+    const command = keyBindings.mapEventToCommand(ev);
+    if (this._executeCommand(command)) {
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
+  }
+  
+  private _handleContextMenuCapture(ev: MouseEvent): void {
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+
+    this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
+  }
+
+  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
+    const entries: CommandEntry[] = [];
+    return entries;
+  }
+
+  executeCommand(commandId: string): void {
+    this._executeCommand(commandId);
+  }
+  
+  private _executeCommand(command: string): boolean {
+    if (command === COMMAND_OPEN_COMMAND_PALETTE) {
+      dispatchCommandPaletteRequest(this);
+      return true;
+    }
+
+    return false;
+  }
+
+  showDialog(dialogElement: HTMLElement): Disposable {
+    const containerDiv = this._ui.$el;
+    dialogElement.classList.add(CLASS_VISITOR_DIALOG);
+    containerDiv.appendChild(dialogElement);
+    this._dialogStack.push(dialogElement);
+    return {
+      dispose: () => {
+        dialogElement.classList.remove(CLASS_VISITOR_DIALOG);
+        this._dialogStack = this._dialogStack.filter(el => el !== dialogElement);
+        containerDiv.removeChild(dialogElement);
+      }
+    };
+  }
+
 }

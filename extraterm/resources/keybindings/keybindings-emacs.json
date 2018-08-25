@@ -145,5 +145,8 @@
     "Ctrl-Shift-Plus": "increaseFontSize",
     "Ctrl-Minus": "decreaseFontSize",
     "Ctrl-=": "resetFontSize"
+  },
+  "settings-tab": {
+    "Ctrl-Shift-P": "openCommandPalette"
   }
 }

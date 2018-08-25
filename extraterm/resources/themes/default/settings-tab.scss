@@ -188,3 +188,12 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
     height: 100%;  
   }
 }
+
+.CLASS_VISITOR_DIALOG {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
