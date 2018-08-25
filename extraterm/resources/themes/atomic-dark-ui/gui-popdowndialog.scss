@@ -23,7 +23,29 @@
 }
 
 #ID_CONTAINER {
+  position: absolute;
+
+  $width: pxToRem(500px);
+  width: $width;
+  left: calc(50% - #{$width} / 2);
+  
+  font-family: $font-family-base;
+  font-size: $input-font-size;
+  font-weight: normal;
+  line-height: $line-height-base;
+  color: $dropdown-link-color;
+  background-color: $overlay-background-color;
+
   padding: $padding-base-vertical $padding-base-horizontal;
+  border: 1px solid $overlay-border-color;
+  border-radius: $border-radius-base;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+
+  box-shadow: 0 0 pxToRem(10px) $base-border-color;
+  background-clip: padding-box;
+
+  z-index: 101;  
 }
 
 #ID_TITLE_CONTAINER {
@@ -60,30 +82,4 @@
   &.CLASS_CONTEXT_COVER_CLOSED {
     display: none;
   }
-}
-
-
-#ID_CONTAINER {
-  position: absolute;
-
-  $width: pxToRem(400px);
-  width: $width;
-  left: calc(50% - #{$width} / 2);
-  
-  font-family: $font-family-base;
-  font-size: $input-font-size;
-  font-weight: normal;
-  line-height: $line-height-base;
-  color: $dropdown-link-color;
-  background-color: $overlay-background-color;
-
-  border: 1px solid $overlay-border-color;
-  border-radius: $border-radius-base;
-  border-top-left-radius: 0px;
-  border-top-right-radius: 0px;
-
-  box-shadow: 0 0 pxToRem(10px) $base-border-color;
-  background-clip: padding-box;
-
-  z-index: 101;  
 }
