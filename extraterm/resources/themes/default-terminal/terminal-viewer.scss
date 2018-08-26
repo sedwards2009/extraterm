@@ -588,6 +588,7 @@ SPAN.oversize {
   display: inline-block;
   width: var(--terminal-font-unit-width);
   height: var(--terminal-font-unit-height);
+  vertical-align: top;
 }
 
 /* Linux colours */
