@@ -670,10 +670,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     return this.ownerDocument.defaultView;  
   }
   
-  private _getDocument(): Document {
-    return this.ownerDocument;
-  }
-  
   private _showTip(): void {
     const config = this._configManager.getConfigCopy(GENERAL_CONFIG);
     switch (config.showTips) {

@@ -342,19 +342,6 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     return `--terminal-font-size: calc(var(--default-terminal-font-size) * ${scale});`;
   }
 
-  /**
-   * Get the window which this terminal is on.
-   * 
-   * @returns {Window} The window object.
-   */
-  private _getWindow(): Window {
-    return this.ownerDocument.defaultView;  
-  }
-  
-  private _getDocument(): Document {
-    return this.ownerDocument;
-  }
-  
   private _handleFocus(event: FocusEvent): void {
     // Forcefully set the visual state of each thing in the terminal to appear focused.
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);

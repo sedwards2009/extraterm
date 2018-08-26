@@ -262,16 +262,16 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       });
       
       // Filter the keyboard events before they reach Ace.
-      containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
-      containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
-      containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);
-      containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
-      containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
+      containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
+      containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDown(ev));
+      containerDiv.addEventListener('keypress', ev => this._handleContainerKeyPressCapture(ev), true);
+      containerDiv.addEventListener('keyup', ev => this._handleContainerKeyUpCapture(ev), true);
+      containerDiv.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
 
       const aceElement = this._aceEditor.renderer.scroller;
-      aceElement.addEventListener("mousedown", this._handleMouseDownEvent.bind(this), true);
-      aceElement.addEventListener("mouseup", this._handleMouseUpEvent.bind(this), true);
-      aceElement.addEventListener("mousemove", this._handleMouseMoveEvent.bind(this), true);
+      aceElement.addEventListener("mousedown", ev => this._handleMouseDownEvent(ev), true);
+      aceElement.addEventListener("mouseup", ev => this._handleMouseUpEvent(ev), true);
+      aceElement.addEventListener("mousemove", ev => this._handleMouseMoveEvent(ev), true);
     }
 
     this._updateCssVars();
