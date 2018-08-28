@@ -64,7 +64,7 @@ class DownloadSession {
   private _decodedDataBuffers: Buffer[] = [];
   private _metadataSize = -1;
   private _previousHash: Buffer = null;
-  private _fileHandle : WriteableBulkFileHandle = null;
+  private _fileHandle: WriteableBulkFileHandle = null;
   private _availableWriteBufferSizeChangedDisposable: Disposable = null;
 
   onCreatedBulkFile: Event<BulkFileHandle>;

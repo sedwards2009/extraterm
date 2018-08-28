@@ -58,6 +58,10 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this.onAvailableWriteBufferSizeChange = this._onWriteBufferSizeChangeEventEmitter.event;
     
     const {identifier, url} = WebIpc.createBulkFileSync(_metadata, _totalSize);
+    if (identifier == null) {
+      this._log.warn("Failed to create a writeable bulk file!");
+      throw new Error("Failed to create a writeable bulk file!");
+    }
     this._fileIdentifier = identifier;
     this._url = url;
   }

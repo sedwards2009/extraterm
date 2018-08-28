@@ -37,7 +37,6 @@ const HASH_LENGTH = 20; // 20 hex chars hash length
 export class BulkFileUploader implements Disposable {
   
   private _log: Logger;
-  private _buffer: Buffer = Buffer.alloc(0);
   private _onUploadedChangeEmitter = new EventEmitter<number>();
   private _onFinishedEmitter = new EventEmitter<void>();
   private _uploadEncoder: UploadEncoder = null;
@@ -94,7 +93,7 @@ export class BulkFileUploader implements Disposable {
         this._sourceStream.on('error', this._responseOnError.bind(this));
       });
     } else {
-      const req = http.request(<any> url, (res) => {
+      const req = http.request(<any> url, res => {
         this._sourceHttpStream = res;
         [this._pipeEnd, this._uploadEncoder] = this._configurePipeline(res);
       });

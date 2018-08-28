@@ -4,12 +4,11 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as crypto from 'crypto';
-import {protocol} from 'electron';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
 import * as net from 'net';
-import {SmartBuffer, SmartBufferOptions} from 'smart-buffer';
+import {SmartBuffer} from 'smart-buffer';
 import {Transform} from 'stream';
 
 import {BulkFileMetadata, Disposable, Event} from 'extraterm-extension-api';
@@ -71,6 +70,23 @@ export class BulkFileStorage {
     return fullPath;
   }
 
+  private _checkAndSetupStorageDirectory(): boolean {
+    try {
+      fs.accessSync(this._storageDirectory, fs.constants.R_OK | fs.constants.W_OK);
+      return true;
+    } catch (err) {
+      this._log.warn(`Bulk file storage directory ${this._storageDirectory} is no longer accessible!`, err);
+    }
+
+    try {
+      this._storageDirectory = this._createStorageDirectory(this._tempDirectory);
+      return true;
+    } catch (err) {
+      this._log.warn(`Attempt to create new bulk file storage directory at ${this._storageDirectory} failed!`, err);
+      return false;
+    }
+  }
+
   dispose(): void {
     for (const identifier of this._storageMap.keys()) {
       this._deleteBulkFile(identifier);
@@ -85,23 +101,33 @@ export class BulkFileStorage {
 
   createBulkFile(metadata: BulkFileMetadata, size: number): {identifier: BulkFileIdentifier, url: string} {
     const onDiskFileIdentifier = crypto.randomBytes(16).toString('hex');
-    const fullPath = path.join(this._storageDirectory, onDiskFileIdentifier);
-    
-    const bulkFile = new BulkFile(metadata, fullPath);
-    bulkFile.ref();
-    const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
 
-    bulkFile.onWriteBufferSizeChange(({totalBufferSize, availableDelta}): void => {
-      this._onWriteBufferSizeEventEmitter.fire({identifier: internalFileIdentifier, totalBufferSize, availableDelta});
-    });
+    if ( ! this._checkAndSetupStorageDirectory()) {
+      this._log.warn("Unable to create bulk file.");
+      return { identifier: null, url: null};
+    }
 
-    bulkFile.onClose((payload: {success: boolean}): void => {
-      this._onCloseEventEmitter.fire({identifier: internalFileIdentifier, success: payload.success});
-    });
+    try {
+      const fullPath = path.join(this._storageDirectory, onDiskFileIdentifier);
+      const bulkFile = new BulkFile(metadata, fullPath);
+      bulkFile.ref();
+      const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
 
-    this._storageMap.set(internalFileIdentifier, bulkFile);
+      bulkFile.onWriteBufferSizeChange(({totalBufferSize, availableDelta}): void => {
+        this._onWriteBufferSizeEventEmitter.fire({identifier: internalFileIdentifier, totalBufferSize, availableDelta});
+      });
 
-    return {identifier: internalFileIdentifier, url: this._server.getUrl(internalFileIdentifier)};
+      bulkFile.onClose((payload: {success: boolean}): void => {
+        this._onCloseEventEmitter.fire({identifier: internalFileIdentifier, success: payload.success});
+      });
+
+      this._storageMap.set(internalFileIdentifier, bulkFile);
+
+      return {identifier: internalFileIdentifier, url: this._server.getUrl(internalFileIdentifier)};
+    } catch(e) {
+      this._log.warn("Unable to create bulk file on disk.", e);
+      return { identifier: null, url: null};
+    }
   }
 
   write(identifier: BulkFileIdentifier, data: Buffer): void {
@@ -135,7 +161,7 @@ export class BulkFileStorage {
       this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
       return;
     }
-    const newReferenceCount = this._storageMap.get(identifier).deref();
+    this._storageMap.get(identifier).deref();
     this._deleteBulkFile(identifier);
   }
 
@@ -252,14 +278,6 @@ export class BulkFile {
       }
   }
 
-  private _pendingBufferSize(): number {
-    let total = 0;
-    for (const buf of this._writeBuffers) {
-      total += buf.length;
-    }
-    return total;
-  }
-  
   close(success: boolean): void {
     if ( ! this._writeStreamOpen) {
       this._log.warn("Write attempted to closed bulk file!");
@@ -281,12 +299,18 @@ export class BulkFile {
 
   createReadableStream(): NodeJS.ReadableStream & Disposable {
     const aesDecipher = crypto.createDecipheriv("aes256", this._cryptoKey, this._cryptoIV);
-    const fileReadStream = this._wrFile.createReadableStream();
-    fileReadStream.pipe(aesDecipher);
 
-    const dnt = new DisposableNullTransform(fileReadStream);
-    aesDecipher.pipe(dnt);
-    return dnt;
+    try {    
+      const fileReadStream = this._wrFile.createReadableStream();
+      fileReadStream.pipe(aesDecipher);
+
+      const dnt = new DisposableNullTransform(fileReadStream);
+      aesDecipher.pipe(dnt);
+      return dnt;
+    } catch (err) {
+      this._log.warn(`Unable to open a read stream of ${this.filePath}!`, err);
+      throw new Error(`Unable to open a read stream of ${this.filePath}!`);
+    }
   }
 }
 
@@ -350,7 +374,17 @@ class BulkFileServer {
 
     res.statusCode = 200;
     res.setHeader('Content-Type', combinedMimeType);
-    const readStream = bulkFile.createReadableStream();
+
+    let readStream: NodeJS.ReadableStream & Disposable;
+    try {
+      readStream = bulkFile.createReadableStream();
+    } catch (err) {
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end('');
+      return;
+    }
+
     const connection = <net.Socket> (<any> res).connection; // FIXME fix the type info elsewhere.
 
     readStream.on("data", (chunk: Buffer) => {
@@ -373,22 +407,6 @@ class BulkFileServer {
       this._log.debug("ServerResponse closed unexpectedly.");
       readStream.dispose();
     });
-  }
-
-  private _guessMimetype(buffer: Buffer, metadata: BulkFileMetadata, filename: string): {mimeType: string, charset:string} {
-    let mimeType: string = metadata.mimeType == null ? null : "" + metadata.mimeType;
-    let charset: string = metadata.charset == null ? null : "" + metadata.charset;
-    if (mimeType === null) {
-      // Try to determine a mimetype by inspecting the file name first.
-      const detectionResult = MimeTypeDetector.detect(filename, buffer);
-      if (detectionResult !== null) {
-        mimeType = detectionResult.mimeType;
-        if (charset === null) {
-          charset = detectionResult.charset;
-        }
-      }
-    }
-    return {mimeType, charset};
   }
 
   getUrl(identifier: BulkFileIdentifier): string {

@@ -4,7 +4,7 @@
 * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 */
 import * as fs from 'fs';
-import {Readable, ReadableOptions, Transform, Writable} from 'stream';
+import {Readable, ReadableOptions, Transform} from 'stream';
 import {Disposable} from 'extraterm-extension-api';
 
 import {getLogger, Logger} from "extraterm-logging";
