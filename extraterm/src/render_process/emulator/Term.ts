@@ -2552,7 +2552,9 @@ export class Emulator implements EmulatorApi {
       
       refreshStartRow: checkedRefreshStart,
       refreshEndRow: checkedRefreshEnd,
-      scrollbackLines: this._scrollbackLineQueue
+      scrollbackLines: this._scrollbackLineQueue,
+      cursorRow: this.y,
+      cursorColumn: this.x
     };
     
     this._refreshStart = REFRESH_START_NULL;

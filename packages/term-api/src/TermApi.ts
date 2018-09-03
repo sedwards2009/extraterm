@@ -59,6 +59,8 @@ export interface RenderEvent {
   refreshEndRow: number;    // The end row of a range on the screen which needds to be refreshed.
   
   scrollbackLines: Line[];  // List of lines which have reached the scrollback. Can be null.
+  cursorRow: number;
+  cursorColumn: number;
 }
 
 export interface RenderEventHandler {

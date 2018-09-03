@@ -107,7 +107,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _needEmulatorResize: boolean = false;
   
   private _operationRunning = false; // True if we are currently running an operation with the operation() method.
-  private _operationEmitResize = false;  // True if a resize evnet shuld be emitted once the operation is finished.
+  private _operationEmitResize = false;  // True if a resize event should be emitted once the operation is finished.
   
   // Emulator dimensions
   private _rows = -1;
@@ -1108,45 +1108,36 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   //                                            
   //-----------------------------------------------------------------------
   private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
-    let emitVirtualResizeEventFlag = false;
-    
-    const op = () => {
-      emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
+    let emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
 
-      // Refresh the active part of the screen.
-      const startRow = event.refreshStartRow;
-      if (startRow !== -1) {
-        const endRow = event.refreshEndRow;
-        const lines: TermApi.Line[] = [];
-        for (let row = startRow; row < endRow; row++) {
-          lines.push(this._emulator.lineAtRow(row));
-        }
-        this._insertLinesOnScreen(startRow, endRow, lines);
-        
-        // Update our realised rows var if needed.
-        const lineCount = this._aceEditSession.getLength();
-        const currentRealizedRows = lineCount - this._terminalFirstRow;
-        if (currentRealizedRows !== this._realizedRows) {
-          this._realizedRows = currentRealizedRows;
-          emitVirtualResizeEventFlag = true;
-        }
+    // Refresh the active part of the screen.
+    const startRow = event.refreshStartRow;
+    if (startRow !== -1) {
+      const endRow = event.refreshEndRow;
+      const lines: TermApi.Line[] = [];
+      for (let row = startRow; row < endRow; row++) {
+        lines.push(this._emulator.lineAtRow(row));
       }
+      this._insertLinesOnScreen(startRow, endRow, lines);
       
-      if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
-        this._handleScrollbackEvent(event.scrollbackLines);
+      // Update our realised rows var if needed.
+      const lineCount = this._aceEditSession.getLength();
+      const currentRealizedRows = lineCount - this._terminalFirstRow;
+      if (currentRealizedRows !== this._realizedRows) {
+        this._realizedRows = currentRealizedRows;
         emitVirtualResizeEventFlag = true;
       }
-    };
-    
-    if ( ! this._operationRunning) {
-      op();
-      if (emitVirtualResizeEventFlag) {
-        VirtualScrollArea.emitResizeEvent(this);
-      }
-    } else {
-      op();
-      this._operationEmitResize = emitVirtualResizeEventFlag;
     }
+    
+    if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
+      this._handleScrollbackEvent(event.scrollbackLines);
+      emitVirtualResizeEventFlag = true;
+    }
+    
+    if (emitVirtualResizeEventFlag) {
+      VirtualScrollArea.emitResizeEvent(this);
+    }
+    this._aceEditor.selection.moveCursorTo(event.cursorRow, event.cursorColumn);
   }
   
   private _handleSizeEvent(newRows: number, newColumns: number, realizedRows: number): boolean {
