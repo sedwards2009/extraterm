@@ -2186,6 +2186,9 @@ export class Emulator implements EmulatorApi {
     this.write(data + '\r\n');
   };
   
+  /**
+   * @return true if the event and key was understood and handled.
+   */
   keyDown(ev: KeyboardEvent): boolean {
     let key: string = null;
     
@@ -2377,7 +2380,7 @@ export class Emulator implements EmulatorApi {
     if (key === null) {
       return false;
     }
-    
+
     this.handler(key);
 
     cancelEvent(ev);
@@ -2405,6 +2408,11 @@ export class Emulator implements EmulatorApi {
     this.handler(key);
     
     cancelEvent(ev);
+    return true;
+  }
+
+  plainKeyPress(key: string): boolean {
+    this.handler(key);
     return true;
   }
 
@@ -2652,7 +2660,7 @@ export class Emulator implements EmulatorApi {
     return (name + '').indexOf(term) === 0;
   }
 
-  private handler(data) {
+  private handler(data: string): void {
     this._emit(DATA_EVENT, this, data);
   }
 

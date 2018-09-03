@@ -191,6 +191,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       aceRenderer.setPadding(0);
 
       this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
+      this._aceEditor.setRelayInput(true);
       this._aceEditor.setReadOnly(true);
       this._aceEditor.setAutoscroll(false);
       this._aceEditor.setHighlightActiveLine(false);
@@ -200,7 +201,13 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this.__addCommands(ExtraEditCommands);
 
       this.__updateHasTerminalClass();
-
+      this._aceEditor.on("keyPress", ev => {
+        if (this._emulator != null) {
+          if (this._emulator.plainKeyPress(ev.text)) {
+            this._emitKeyboardActivityEvent();
+          }
+        }
+      });
       this._aceEditor.on("change", (data, editor) => {
         if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
           return;
@@ -263,9 +270,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       
       // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
-      containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDown(ev));
       containerDiv.addEventListener('keypress', ev => this._handleContainerKeyPressCapture(ev), true);
-      containerDiv.addEventListener('keyup', ev => this._handleContainerKeyUpCapture(ev), true);
       containerDiv.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
 
       const aceElement = this._aceEditor.renderer.scroller;
@@ -918,25 +923,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         return;
       }
     }
-
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-      if (this._emulator !== null) {
-        this._emulator.keyPress(ev);
-      }
-      this._emitKeyboardActivityEvent();
-    }
   }
   
-  private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-    }
-  }
-
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
-    
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
       const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
                         KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
@@ -944,7 +934,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(context);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
-        if (this._executeCommand(command)) {
+        if (command != null && this._executeCommand(command)) {
           ev.stopPropagation();
           ev.preventDefault();
           return;
@@ -968,18 +958,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
     
     if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
+        ev.stopPropagation();
         this._emitKeyboardActivityEvent();
+        return;
       }
     }
-  }
-
-  private _handleContainerKeyUpCapture(ev: KeyboardEvent): void {
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }      
   }
 
   private _handleContextMenuCapture(ev: MouseEvent): void {
