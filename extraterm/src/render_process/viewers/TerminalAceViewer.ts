@@ -106,13 +106,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _resizePollHandle: Disposable = null;
   private _needEmulatorResize: boolean = false;
   
-  private _operationRunning = false; // True if we are currently running an operation with the operation() method.
-  private _operationEmitResize = false;  // True if a resize event should be emitted once the operation is finished.
-  
   // Emulator dimensions
   private _rows = -1;
   private _columns = -1;
   private _realizedRows = -1;
+  private _cursorRow = 0;
+  private _cursorColumn = 0;
 
   private _documentHeightRows= -1;  // Used to detect changes in the viewport size when in Cursor mode.
   private _fontUnitWidth = 10;  // slightly bogus defaults
@@ -202,12 +201,13 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
       this.__updateHasTerminalClass();
       this._aceEditor.on("keyPress", ev => {
-        if (this._emulator != null) {
+        if (this._emulator != null && this._mode == ViewerElementTypes.Mode.DEFAULT) {
           if (this._emulator.plainKeyPress(ev.text)) {
             this._emitKeyboardActivityEvent();
           }
         }
       });
+      this._aceEditor.on("compositionStart", () => this._onCompositionStart());
       this._aceEditor.on("change", (data, editor) => {
         if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
           return;
@@ -1137,9 +1137,20 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     if (emitVirtualResizeEventFlag) {
       VirtualScrollArea.emitResizeEvent(this);
     }
-    this._aceEditor.selection.moveCursorTo(event.cursorRow, event.cursorColumn);
+
+    this._cursorRow = event.cursorRow;
+    this._cursorColumn = event.cursorColumn;
   }
-  
+
+  private _onCompositionStart(): void {
+    if (this._mode == ViewerElementTypes.Mode.DEFAULT) {
+      this._aceEditor.selection.setSelectionRange({
+        start: {row: this._cursorRow, column: this._cursorColumn},
+        end: {row: this._cursorRow, column: this._cursorColumn}
+      });
+    }
+  }
+
   private _handleSizeEvent(newRows: number, newColumns: number, realizedRows: number): boolean {
     const lineCount = this._aceEditSession.getLength();
     const currentRealizedRows = lineCount - this._terminalFirstRow;
