@@ -429,17 +429,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   setMode(newMode: ViewerElementTypes.Mode): void {
     if (newMode !== this._mode) {
-      switch (newMode) {
-        case ViewerElementTypes.Mode.CURSOR:
-          // Enter cursor mode.
-          this._enterCursorMode();
-          break;
-          
-        case ViewerElementTypes.Mode.DEFAULT:
-          this._exitCursorMode();
-          break;
-      }
       this._mode = newMode;
+      this._applyMode();
     }
   }
   
@@ -449,14 +440,26 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   setEditable(editable: boolean): void {
     this._editable = editable;
-    if (this._mode === ViewerElementTypes.Mode.CURSOR) {
-      this._aceEditor.setReadOnly(! editable);
-    }
+
+    this._applyMode();
   }
   
   getEditable(): boolean {
     return this._editable;
   }  
+
+  private _applyMode(): void {
+    switch (this._mode) {
+      case ViewerElementTypes.Mode.CURSOR:
+        // Enter cursor mode.
+        this._enterCursorMode();
+        break;
+        
+      case ViewerElementTypes.Mode.DEFAULT:
+        this._exitCursorMode();
+        break;
+    }
+  }
 
   /**
    * Gets the height of this element.
@@ -780,12 +783,15 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
     if (this._editable) {
       this._aceEditor.setReadOnly(false);
+    } else {
+      this._aceEditor.setRelayInput(false);
     }
   }
 
   private _exitCursorMode(): void {
     if (this._aceEditor !== null) {
       this._aceEditor.setReadOnly(true);
+      this._aceEditor.setRelayInput(this._emulator != null);
     }
 
     const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
