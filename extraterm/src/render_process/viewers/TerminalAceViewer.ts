@@ -1151,8 +1151,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _onCompositionStart(): void {
     if (this._mode == ViewerElementTypes.Mode.DEFAULT) {
       this._aceEditor.selection.setSelectionRange({
-        start: {row: this._cursorRow, column: this._cursorColumn},
-        end: {row: this._cursorRow, column: this._cursorColumn}
+        start: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn},
+        end: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn}
       });
     }
   }
