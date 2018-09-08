@@ -106,13 +106,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _resizePollHandle: Disposable = null;
   private _needEmulatorResize: boolean = false;
   
-  private _operationRunning = false; // True if we are currently running an operation with the operation() method.
-  private _operationEmitResize = false;  // True if a resize evnet shuld be emitted once the operation is finished.
-  
   // Emulator dimensions
   private _rows = -1;
   private _columns = -1;
   private _realizedRows = -1;
+  private _cursorRow = 0;
+  private _cursorColumn = 0;
 
   private _documentHeightRows= -1;  // Used to detect changes in the viewport size when in Cursor mode.
   private _fontUnitWidth = 10;  // slightly bogus defaults
@@ -191,6 +190,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       aceRenderer.setPadding(0);
 
       this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
+      this._aceEditor.setRelayInput(true);
       this._aceEditor.setReadOnly(true);
       this._aceEditor.setAutoscroll(false);
       this._aceEditor.setHighlightActiveLine(false);
@@ -200,7 +200,14 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this.__addCommands(ExtraEditCommands);
 
       this.__updateHasTerminalClass();
-
+      this._aceEditor.on("keyPress", ev => {
+        if (this._emulator != null && this._mode == ViewerElementTypes.Mode.DEFAULT) {
+          if (this._emulator.plainKeyPress(ev.text)) {
+            this._emitKeyboardActivityEvent();
+          }
+        }
+      });
+      this._aceEditor.on("compositionStart", () => this._onCompositionStart());
       this._aceEditor.on("change", (data, editor) => {
         if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
           return;
@@ -263,9 +270,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       
       // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
-      containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDown(ev));
       containerDiv.addEventListener('keypress', ev => this._handleContainerKeyPressCapture(ev), true);
-      containerDiv.addEventListener('keyup', ev => this._handleContainerKeyUpCapture(ev), true);
       containerDiv.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
 
       const aceElement = this._aceEditor.renderer.scroller;
@@ -424,17 +429,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   setMode(newMode: ViewerElementTypes.Mode): void {
     if (newMode !== this._mode) {
-      switch (newMode) {
-        case ViewerElementTypes.Mode.CURSOR:
-          // Enter cursor mode.
-          this._enterCursorMode();
-          break;
-          
-        case ViewerElementTypes.Mode.DEFAULT:
-          this._exitCursorMode();
-          break;
-      }
       this._mode = newMode;
+      this._applyMode();
     }
   }
   
@@ -444,14 +440,26 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   setEditable(editable: boolean): void {
     this._editable = editable;
-    if (this._mode === ViewerElementTypes.Mode.CURSOR) {
-      this._aceEditor.setReadOnly(! editable);
-    }
+
+    this._applyMode();
   }
   
   getEditable(): boolean {
     return this._editable;
   }  
+
+  private _applyMode(): void {
+    switch (this._mode) {
+      case ViewerElementTypes.Mode.CURSOR:
+        // Enter cursor mode.
+        this._enterCursorMode();
+        break;
+        
+      case ViewerElementTypes.Mode.DEFAULT:
+        this._exitCursorMode();
+        break;
+    }
+  }
 
   /**
    * Gets the height of this element.
@@ -795,12 +803,15 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
     if (this._editable) {
       this._aceEditor.setReadOnly(false);
+    } else {
+      this._aceEditor.setRelayInput(false);
     }
   }
 
   private _exitCursorMode(): void {
     if (this._aceEditor !== null) {
       this._aceEditor.setReadOnly(true);
+      this._aceEditor.setRelayInput(this._emulator != null);
     }
 
     const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
@@ -938,25 +949,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         return;
       }
     }
-
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-      if (this._emulator !== null) {
-        this._emulator.keyPress(ev);
-      }
-      this._emitKeyboardActivityEvent();
-    }
   }
   
-  private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-    }
-  }
-
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
-    
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
       const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
                         KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
@@ -964,7 +960,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(context);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
-        if (this._executeCommand(command)) {
+        if (command != null && this._executeCommand(command)) {
           ev.stopPropagation();
           ev.preventDefault();
           return;
@@ -988,18 +984,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
     
     if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
+        ev.stopPropagation();
         this._emitKeyboardActivityEvent();
+        return;
       }
     }
-  }
-
-  private _handleContainerKeyUpCapture(ev: KeyboardEvent): void {
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }      
   }
 
   private _handleContextMenuCapture(ev: MouseEvent): void {
@@ -1144,47 +1134,49 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   //                                            
   //-----------------------------------------------------------------------
   private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
-    let emitVirtualResizeEventFlag = false;
-    
-    const op = () => {
-      emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
+    let emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
 
-      // Refresh the active part of the screen.
-      const startRow = event.refreshStartRow;
-      if (startRow !== -1) {
-        const endRow = event.refreshEndRow;
-        const lines: TermApi.Line[] = [];
-        for (let row = startRow; row < endRow; row++) {
-          lines.push(this._emulator.lineAtRow(row));
-        }
-        this._insertLinesOnScreen(startRow, endRow, lines);
-        
-        // Update our realised rows var if needed.
-        const lineCount = this._aceEditSession.getLength();
-        const currentRealizedRows = lineCount - this._terminalFirstRow;
-        if (currentRealizedRows !== this._realizedRows) {
-          this._realizedRows = currentRealizedRows;
-          emitVirtualResizeEventFlag = true;
-        }
+    // Refresh the active part of the screen.
+    const startRow = event.refreshStartRow;
+    if (startRow !== -1) {
+      const endRow = event.refreshEndRow;
+      const lines: TermApi.Line[] = [];
+      for (let row = startRow; row < endRow; row++) {
+        lines.push(this._emulator.lineAtRow(row));
       }
+      this._insertLinesOnScreen(startRow, endRow, lines);
       
-      if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
-        this._handleScrollbackEvent(event.scrollbackLines);
+      // Update our realised rows var if needed.
+      const lineCount = this._aceEditSession.getLength();
+      const currentRealizedRows = lineCount - this._terminalFirstRow;
+      if (currentRealizedRows !== this._realizedRows) {
+        this._realizedRows = currentRealizedRows;
         emitVirtualResizeEventFlag = true;
       }
-    };
+    }
     
-    if ( ! this._operationRunning) {
-      op();
-      if (emitVirtualResizeEventFlag) {
-        VirtualScrollArea.emitResizeEvent(this);
-      }
-    } else {
-      op();
-      this._operationEmitResize = emitVirtualResizeEventFlag;
+    if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
+      this._handleScrollbackEvent(event.scrollbackLines);
+      emitVirtualResizeEventFlag = true;
+    }
+    
+    if (emitVirtualResizeEventFlag) {
+      VirtualScrollArea.emitResizeEvent(this);
+    }
+
+    this._cursorRow = event.cursorRow;
+    this._cursorColumn = event.cursorColumn;
+  }
+
+  private _onCompositionStart(): void {
+    if (this._mode == ViewerElementTypes.Mode.DEFAULT) {
+      this._aceEditor.selection.setSelectionRange({
+        start: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn},
+        end: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn}
+      });
     }
   }
-  
+
   private _handleSizeEvent(newRows: number, newColumns: number, realizedRows: number): boolean {
     const lineCount = this._aceEditSession.getLength();
     const currentRealizedRows = lineCount - this._terminalFirstRow;
