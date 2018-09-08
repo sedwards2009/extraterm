@@ -45,28 +45,3 @@ To explicitly specify where your cygwin installation directory is you can pass t
 ```
 extraterm.exe --cygwinDir=C:\cygwin64
 ```
-
-
-How can I use Extraterm's shell integration over ssh?
------------------------------------------------------
-
-To use Extraterm's shell integration across `ssh` two things have to be set up:
-
-* Just like on your local machine the script from the extraterm-commands zip needs to be read in on the remote machine.
-* The `LC_EXTRATERM_COOKIE` environment variable needs to be set on the remote end.
-
-First, before you run `ssh`, print the value of the `LC_EXTRATERM_COOKIE` environment variable.
-```
-echo $LC_EXTRATERM_COOKIE
-```
-Now, run `ssh` to go to your remote machine. Set the `LC_EXTRATERM_COOKIE` environment variable to the value which was just displayed before.
-
-For bash and zshell that is:
-```
-LC_EXTRATERM_COOKIE=<value goes here>
-```
-Fish uses:
-```
-set -x LC_EXTRATERM_COOKIE <value goes here>
-```
-Hopefully this will be made easier in the future.
