@@ -536,6 +536,11 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     VirtualScrollAreaEmitResizeEvent(this);
   }
 
+  pixelHeightToRows(pixelHeight: number): number {
+    const charHeight = this._aceEditor.renderer.lineHeight;
+    return Math.floor(pixelHeight / charHeight);
+  }
+
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
     if (this._aceEditSession !== null) {
       if (DEBUG_RESIZE) {

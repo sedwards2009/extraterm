@@ -566,32 +566,52 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       return {cols: cols, rows: rows};
     }
     
-    const charHeight = this._aceEditor.renderer.lineHeight;
-    const charWidth = this._aceEditor.renderer.characterWidth;
-    if (charHeight === 0 || charWidth === 0) {
+    const newRowsCols = this._computeTerminalSize(widthPixels, heightPixels);
+    if (newRowsCols == null) {
       return {cols: cols, rows: rows};
     }
-    const computedStyle = window.getComputedStyle(this);
-    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight) - 4;
-    const newCols = Math.floor(width / charWidth);
-    const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
-    
+
+    const {cols: newCols, rows: newRows} = newRowsCols;
     if (newCols !== cols || newRows !== rows) {
       this.getEmulator().resize( { rows: newRows, columns: newCols } );
     }
     
     if (DEBUG_RESIZE) {
       this._log.debug("resizeEmulatorToBox() old cols: ",cols);
-      this._log.debug("resizeEmulatorToBox() calculated charWidth: ",charWidth);    
-      this._log.debug("resizeEmulatorToBox() calculated charHeight: ",charHeight);
-      this._log.debug("resizeEmulatorToBox() element width: ",width);
       // this._log.debug("resizeEmulatorToBox() element height: ",this.element.clientHeight);
       this._log.debug("resizeEmulatorToBox() new cols: ",newCols);
       this._log.debug("resizeEmulatorToBox() new rows: ",newRows);
     }
     return {cols: newCols, rows: newRows};
   }
-  
+
+  private _computeTerminalSize(widthPixels: number, heightPixels: number): {rows: number, cols: number} {
+    const charHeight = this._aceEditor.renderer.lineHeight;
+    const charWidth = this._aceEditor.renderer.characterWidth;
+
+    if (charHeight === 0 || charWidth === 0) {
+      return null;
+    }
+
+    const computedStyle = window.getComputedStyle(this);
+    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight) - 4;
+    const newCols = Math.floor(width / charWidth);
+    const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
+
+    if (DEBUG_RESIZE) {
+      this._log.debug("resizeEmulatorToBox() calculated charWidth: ",charWidth);    
+      this._log.debug("resizeEmulatorToBox() calculated charHeight: ",charHeight);
+      this._log.debug("resizeEmulatorToBox() element width: ",width);
+    }
+
+    return {rows: newRows, cols: newCols};
+  }
+
+  pixelHeightToRows(pixelHeight: number): number {
+    const result = this._computeTerminalSize(1024, pixelHeight);
+    return result == null ? 2 : result.rows;
+  }
+
   isFontLoaded(): boolean {
     return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   }
