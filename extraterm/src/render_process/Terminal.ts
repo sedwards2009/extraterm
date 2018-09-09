@@ -1406,9 +1406,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     commandList.push( { id: COMMAND_GO_TO_NEXT_FRAME, group: PALETTE_GROUP, label: "Go to Next Frame", commandExecutor: this } );
     
     commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "far fa-copy", label: "Copy to Clipboard", commandExecutor: this } );
-    if (this._mode === Mode.CURSOR) {
-      commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "fa fa-clipboard", label: "Paste from Clipboard", commandExecutor: this } );
-    }
+    commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "fa fa-clipboard", label: "Paste from Clipboard", commandExecutor: this } );
     commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "fa fa-external-link-alt", label: "Open Last Frame", commandExecutor: this } );
     commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "fa fa-times-circle", label: "Delete Last Frame", commandExecutor: this } );
 
