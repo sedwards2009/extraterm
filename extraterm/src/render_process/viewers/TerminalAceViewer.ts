@@ -177,7 +177,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
       this.style.height = "0px";
-      this._exitCursorMode();
       this._mode = ViewerElementTypes.Mode.DEFAULT;
 
       this._aceEditSession = new TerminalEditSession(new TerminalDocument(""));
@@ -267,6 +266,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._aceEditor.onCursorBottomHit((column: number) => {
         this._emitCursorEdgeEvent(ViewerElementTypes.Edge.BOTTOM, column);
       });
+      
+      this._exitCursorMode();
       
       // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
@@ -809,10 +810,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
 
   private _exitCursorMode(): void {
-    if (this._aceEditor !== null) {
-      this._aceEditor.setReadOnly(true);
-      this._aceEditor.setRelayInput(this._emulator != null);
+    if (this._aceEditor == null) {
+      return;
     }
+    
+    this._aceEditor.setReadOnly(true);
+    this._aceEditor.setRelayInput(this._emulator != null);
 
     const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);

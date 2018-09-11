@@ -14,6 +14,7 @@ import { SettingsBase } from './SettingsBase';
 import * as ThemeTypes from '../../theme/Theme';
 import { shell } from 'electron';
 import * as WebIpc from '../WebIpc';
+import { ExtensionManager } from '../extension/InternalTypes';
 
 export const APPEARANCE_SETTINGS_TAG = "et-appearance-settings";
 
@@ -23,6 +24,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   private _fontOptions: FontInfo[] = [];
   private _userTerminalThemeDirectory: string = null;
   private _userSyntaxThemeDirectory: string = null;
+  private _extensionManager: ExtensionManager = null;
 
   constructor() {
     super(AppearanceSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
@@ -93,5 +95,16 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
 
   set themes(themes: ThemeTypes.ThemeInfo[]) {
     this._getUi().themes = themes;
+  }
+
+  set extensionManager(extensionManager: ExtensionManager) {
+    this._extensionManager = extensionManager;
+
+    this._getUi().themeTerminalFormatNames = extensionManager.getAllTerminalThemeFormats().map(pair => pair.formatName);
+    this._getUi().themeSyntaxFormatNames = extensionManager.getAllSyntaxThemeFormats().map(pair => pair.formatName);
+  }
+
+  get extensionManager(): ExtensionManager {
+    return this._extensionManager;
   }
 }

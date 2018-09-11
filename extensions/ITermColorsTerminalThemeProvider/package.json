@@ -20,7 +20,8 @@
   "contributions": {
     "terminalThemeProvider": [
       {
-        "name": "iTermColors"
+        "name": "iTermColors",
+        "humanFormatNames": ["iTerm2 .itermcolors"]
       }
     ]
   }

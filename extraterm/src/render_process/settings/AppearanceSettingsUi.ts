@@ -9,9 +9,7 @@ import * as _ from 'lodash';
 
 import {FontInfo} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
-
 import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
-import { log } from 'extraterm-logging';
 
 
 const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
@@ -99,6 +97,13 @@ interface SelectableOption {
           <i class="far fa-folder-open"></i>&nbsp;User themes
         </button>
         <button v-on:click="rescanUserTerminalThemesDir" class="btn" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-4"></div>
+      <div class="input-group col-sm-8">
+        <p>{{themeTerminalFormatsMessage}}</p>
       </div>
     </div>
 
@@ -191,6 +196,13 @@ interface SelectableOption {
     </div>
 
     <div class="form-group">
+      <div class="col-sm-4"></div>
+      <div class="input-group col-sm-8">
+        <p>{{themeSyntaxFormatsMessage}}</p>
+      </div>
+    </div>
+
+    <div class="form-group">
       <div class="col-sm-12">
         <et-vue-text-ace-viewer-element
           id="syntax_theme_preview"
@@ -235,6 +247,9 @@ export class AppearanceSettingsUi extends Vue {
 
   themeSyntaxPreviewContents: number;
   themeSyntaxPreviewContentOptions: ThemeSyntaxPreviewContents[];
+
+  themeTerminalFormatNames: string[] = [];
+  themeSyntaxFormatNames: string[] = [];
 
   constructor() {
     super();
@@ -335,12 +350,20 @@ export class AppearanceSettingsUi extends Vue {
     this.$emit("rescanUserSyntaxThemesDir");
   }
 
+  get themeTerminalFormatsMessage(): string {
+    return "Supported theme formats: " + this.themeTerminalFormatNames.join(", ");
+  }
+
   getThemeSyntaxPreviewText(): string {
     return ThemeSyntaxPreviewContents[this.themeSyntaxPreviewContents].text;
   }
 
   getThemeSyntaxPreviewMimeType(): string {
     return ThemeSyntaxPreviewContents[this.themeSyntaxPreviewContents].mimeType;
+  }
+
+  get themeSyntaxFormatsMessage(): string {
+    return "Supported theme formats: " + this.themeSyntaxFormatNames.join(", ");
   }
 
   getThemeSyntaxPreviewWrapLines(): boolean {

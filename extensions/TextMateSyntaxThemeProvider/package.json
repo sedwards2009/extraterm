@@ -20,7 +20,8 @@
   "contributions": {
     "syntaxThemeProvider": [
       {
-        "name": "TextMate"
+        "name": "TextMate",
+        "humanFormatNames": ["TextMate Syntax Theme"]
       }
     ]
   }
