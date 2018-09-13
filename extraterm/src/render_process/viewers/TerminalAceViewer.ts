@@ -56,6 +56,14 @@ const COMMAND_TYPE_SELECTION = "typeSelection";
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
+// Electron on Linux under conditions and configuration which happen on one
+// of my machines, will render underscore characters below the text line and
+// into the line below it. If this is the last line in the viewer, then the
+// underscore will be cut off(!).
+// This hack adds just a little bit of extra space at the bottom of the
+// viewer for the underscore.
+const OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK = 1; // px
+
 const DEBUG_RESIZE = false;
 
 let cssText: string = null;
@@ -266,7 +274,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._aceEditor.onCursorBottomHit((column: number) => {
         this._emitCursorEdgeEvent(ViewerElementTypes.Edge.BOTTOM, column);
       });
-      
+
       this._exitCursorMode();
       
       // Filter the keyboard events before they reach Ace.
@@ -502,22 +510,19 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
+    let reserve = 0;
     if (this._useVPad) {
-      if (this._aceEditor == null || this._aceEditor.renderer.lineHeight === 0) {
-        return 0;
+      if (this._aceEditor != null && this._aceEditor.renderer.lineHeight !== 0) {
+        const defaultTextHeight = this._aceEditor.renderer.lineHeight;
+        const vPad = containerHeight % defaultTextHeight;
+        reserve = vPad;
       }
-      const defaultTextHeight = this._aceEditor.renderer.lineHeight;
-      const vPad = containerHeight % defaultTextHeight;
-      if (DEBUG_RESIZE) {
-        this._log.debug("getReserveViewportHeight: ", vPad);
-      }
-      return vPad;
-    } else {
-      if (DEBUG_RESIZE) {
-        this._log.debug("getReserveViewportHeight: ", 0);
-      }
-      return 0;
     }
+    reserve = Math.max(OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK, reserve);
+    if (DEBUG_RESIZE) {
+      this._log.debug("getReserveViewportHeight: ", reserve);
+    }
+    return reserve;
   }
 
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
@@ -1271,10 +1276,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return this._isEmpty ? 0 : this._aceEditor.renderer.lineHeight * this.lineCount();
   }
   
-  private _getClientYScrollRange(): number {
-    return Math.max(0, this.getVirtualHeight(this.getHeight()) - this.getHeight() + this.getReserveViewportHeight(this.getHeight()));
-  }
-
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
     if (this.parentNode === null || this._aceEditor == null) {
@@ -1288,7 +1289,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       
       let aceEditorHeight;
       if (this._useVPad) {
-        // Adjust the height of the code mirror such that a small gap is at the bottom to 'push'
+        // Adjust the height of the Ace editor such that a small gap is at the bottom to 'push'
         // the lines up and align them with the top of the viewport.
         aceEditorHeight = elementHeight - (elementHeight % this._aceEditor.renderer.lineHeight);
       } else {
@@ -1296,8 +1297,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       }
 
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      containerDiv.style.height = "" + aceEditorHeight + "px";
+      containerDiv.style.height = "" + (aceEditorHeight-OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK) + "px";
       this._aceEditor.resize(true);
+
+      // One pixel fudge factor to prevent the underscore charactor from sometimes disappearing on Linux
+      containerDiv.style.height = "" + aceEditorHeight + "px";
     }
   }
 }

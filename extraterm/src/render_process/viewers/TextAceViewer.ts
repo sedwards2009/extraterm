@@ -47,6 +47,15 @@ const PALETTE_GROUP = "textviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
 
+
+// Electron on Linux under conditions and configuration which happen on one
+// of my machines, will render underscore characters below the text line and
+// into the line below it. If this is the last line in the viewer, then the
+// underscore will be cut off(!).
+// This hack adds just a little bit of extra space at the bottom of the
+// viewer for the underscore.
+const OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK = 1; // px
+
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 const DEBUG_RESIZE = false;
 
@@ -462,7 +471,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     if (DEBUG_RESIZE) {
       this._log.debug("getReserveViewportHeight: ", 0);
     }
-    return 0;
+    return OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK;
   }
   
   // VirtualScrollable
@@ -884,8 +893,10 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       this.style.height = "" + elementHeight + "px";
 
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      containerDiv.style.height = "" + elementHeight + "px";
+
+      containerDiv.style.height = "" + (elementHeight-OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK) + "px";
       this._aceEditor.resize(true);
+      containerDiv.style.height = "" + elementHeight + "px";
     }
   }
 }
