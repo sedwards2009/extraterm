@@ -214,7 +214,13 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
       ev.stopPropagation();
       return;
     }
-    
+
+    if (ev.key === "Tab") {
+      ev.preventDefault();
+      ev.stopPropagation();
+      return;
+    }    
+
     const isPageKey = ev.key === "PageUp" || ev.key === "PageDown";
     const isUp = ev.key === "PageUp" || ev.key === "ArrowUp" || ev.key === "Home";
     
