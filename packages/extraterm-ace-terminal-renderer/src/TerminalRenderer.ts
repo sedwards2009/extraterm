@@ -2,12 +2,13 @@
  * Copyright 2015-2018 Simon Edwards <simon@simonzone.com>
  */
 
-import { Renderer, HScrollBar, VScrollBar } from "ace-ts";
+import { Renderer, HScrollBar, HScrollTracking, VScrollBar } from "ace-ts";
 
 export class TerminalRenderer extends Renderer {
 
   constructor(container: HTMLElement) {
     super(container, { injectCss: false, fontSize: null });
+    this.setHScrollTracking(HScrollTracking.VISIBLE);
   }
 
   protected createVScrollBar(container: HTMLElement): VScrollBar {

@@ -70,7 +70,8 @@ interface MenuItem {
     <template v-if="firstShowComplete || selectedTab == 'appearance'">
       <et-appearance-settings v-show="selectedTab == 'appearance'"
         v-bind:configDatabase.prop="getConfigDatabase()"
-        v-bind:themes.prop="themes" >
+        v-bind:themes.prop="themes"
+        v-bind:extensionManager.prop="getExtensionManager()">
       </et-appearance-settings>
     </template>
 

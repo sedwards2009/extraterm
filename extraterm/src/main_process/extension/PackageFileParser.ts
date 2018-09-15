@@ -287,7 +287,8 @@ function parseSyntaxThemeProviderContributionsListJson(packageJson: any): Extens
 function parseSyntaxThemeProviderContributionsJson(packageJson: any): ExtensionSyntaxThemeProviderContribution {
   try {
     return {
-      name: assertJsonStringField(packageJson, "name")
+      name: assertJsonStringField(packageJson, "name"),
+      humanFormatNames: assertJsonStringArrayField(packageJson, "humanFormatNames", [])
     };
   } catch (ex) {
     throw `Failed to process a syntax theme provider contribution: ${ex}`;
@@ -339,7 +340,8 @@ function parseTerminalThemeProviderContributionsListJson(packageJson: any): Exte
 function parseTerminalThemeProviderContributionsJson(packageJson: any): ExtensionTerminalThemeProviderContribution {
   try {
     return {
-      name: assertJsonStringField(packageJson, "name")
+      name: assertJsonStringField(packageJson, "name"),
+      humanFormatNames: assertJsonStringArrayField(packageJson, "humanFormatNames", [])
     };
   } catch (ex) {
     throw `Failed to process a terminal theme provider contribution: ${ex}`;

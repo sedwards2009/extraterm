@@ -1193,45 +1193,75 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _enforceScrollbackSize2(maxScrollbackLines: number, maxScrollbackFrames: number): void {
     const windowHeight = window.screen.height;
     const killList: (VirtualScrollable & HTMLElement)[] = [];
-    let currentHeight = 0;
-    let frameCount = 0;
-    let lineCount = 0;
 
     const childrenReverse = Array.from(this._childElementList);
     childrenReverse.reverse();
 
-    for (const nodeInfo of childrenReverse) {
-      const scrollableKid: VirtualScrollable & HTMLElement = <any> nodeInfo.element;
+    // Skip past everything which could fit on one screen.
+    let i = 0;
+    let currentHeight = 0;
+    while (i < childrenReverse.length) {
+      const scrollableKid: VirtualScrollable & HTMLElement = <any> childrenReverse[i].element;
       const kidVirtualHeight = this._virtualScrollArea.getScrollableVirtualHeight(scrollableKid);
+      if (currentHeight + kidVirtualHeight > windowHeight) {
+        break;
+      }
+      currentHeight += kidVirtualHeight;
+      i++;
+    }
 
-      if (currentHeight > windowHeight) {
-        // The frame is inside the scrollback area.
+    let linesInScrollback = 0;
 
-        frameCount++;
-        if (frameCount > maxScrollbackFrames || lineCount > maxScrollbackLines) {
-          // Too many frames. Kill it.
-          killList.push(scrollableKid);
-        } else {
+    // We may have found the element which straddles the visible top of the screen.
+    if (i < childrenReverse.length) {
+      const scrollableKid: VirtualScrollable & HTMLElement = <any> childrenReverse[i].element;
+      i++;
 
-          const textLikeViewer = this._castToTextLikeViewer(scrollableKid);
-          if (textLikeViewer != null) {
-            // This frame is on the border. Trim or kill it.
-            const trim = (lineCount + textLikeViewer.lineCount()) - maxScrollbackLines;
-            lineCount += textLikeViewer.lineCount();
-            if (trim > 0) {
-              if (TerminalViewer.is(scrollableKid)) {
-                // Raw terminal viewers without frames can be trimmed.
-                textLikeViewer.deleteTopLines(textLikeViewer.lineCount() - trim);
-              } else {
-                // Framed text is just removed completely.
-                killList.push(scrollableKid);
-              }
-            }
+      const textLikeViewer = this._castToTextLikeViewer(scrollableKid);
+      if (textLikeViewer != null) {
+        const visibleRows = textLikeViewer.pixelHeightToRows(windowHeight - currentHeight);
+        linesInScrollback = textLikeViewer.lineCount() - visibleRows;
+        if (linesInScrollback > maxScrollbackLines) {
+
+          if (TerminalViewer.is(scrollableKid)) {
+            // Trim it.
+            textLikeViewer.deleteTopLines(linesInScrollback - maxScrollbackLines);
+          } else {
+            // Delete it outright.
+            killList.push(scrollableKid);
           }
+
+          while (i < childrenReverse.length) {
+            killList.push(childrenReverse[i].element);
+            i++;
+          }
+          i = childrenReverse.length;
         }
       }
+    }
 
-      currentHeight += kidVirtualHeight;
+    let frameCount = 0;
+    while (i < childrenReverse.length) {
+      const scrollableKid: VirtualScrollable & HTMLElement = <any> childrenReverse[i].element;
+      i++;
+      frameCount++;
+
+      const textLikeViewer = this._castToTextLikeViewer(scrollableKid);
+      if (textLikeViewer != null) {
+        linesInScrollback += textLikeViewer.lineCount();
+        if (frameCount > maxScrollbackFrames || linesInScrollback > maxScrollbackLines) {
+          
+          // We've hit a limit. Delete the rest.
+          killList.push(scrollableKid);
+          while (i < childrenReverse.length) {
+            killList.push(childrenReverse[i].element);
+            i++;
+          }
+          i = childrenReverse.length;
+        }
+
+        linesInScrollback += textLikeViewer.lineCount();
+      }
     }
 
     for (const scrollableKid of killList) {
@@ -1239,7 +1269,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  private _castToTextLikeViewer(kidNode: HTMLElement): {deleteTopLines(lines: number): void, lineCount(): number} {
+  private _castToTextLikeViewer(kidNode: HTMLElement): {
+      deleteTopLines(lines: number): void;
+      lineCount(): number;
+      pixelHeightToRows(pixelHeight: number): number; } {
+
     if (TerminalViewer.is(kidNode)) {
       return kidNode;
     } else if (EmbeddedViewer.is(kidNode)) {
@@ -1372,9 +1406,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     commandList.push( { id: COMMAND_GO_TO_NEXT_FRAME, group: PALETTE_GROUP, label: "Go to Next Frame", commandExecutor: this } );
     
     commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "far fa-copy", label: "Copy to Clipboard", commandExecutor: this } );
-    if (this._mode === Mode.CURSOR) {
-      commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "fa fa-clipboard", label: "Paste from Clipboard", commandExecutor: this } );
-    }
+    commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "fa fa-clipboard", label: "Paste from Clipboard", commandExecutor: this } );
     commandList.push( { id: COMMAND_OPEN_LAST_FRAME, group: PALETTE_GROUP, iconRight: "fa fa-external-link-alt", label: "Open Last Frame", commandExecutor: this } );
     commandList.push( { id: COMMAND_DELETE_LAST_FRAME, group: PALETTE_GROUP, iconRight: "fa fa-times-circle", label: "Delete Last Frame", commandExecutor: this } );
 

@@ -223,8 +223,8 @@
 }
 
 .ace_text-input.ace_composition {
-  background: inherit;
-  color: inherit;
+  color: $terminal-cursor-foreground-color;
+  background: $terminal-cursor-background-color;
   z-index: 1000;
   opacity: 1;
   text-indent: 0;

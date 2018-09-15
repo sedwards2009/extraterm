@@ -665,7 +665,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
       htmlTitle = he.escape(title);
       icon = el.getMetadata().icon;
       if (el.getTag() !== null) {
-        tag = "<i class='fa fa-tag'></i>" + el.getTag();
+        tag = "<i class='fa fa-tag'></i> " + el.getTag();
       }
 
     } else if (el instanceof ViewerElement) {

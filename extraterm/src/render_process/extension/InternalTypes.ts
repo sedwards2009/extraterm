@@ -19,6 +19,9 @@ export interface ExtensionManager {
 
   getAllSessionTypes(): { name: string, type: string }[];
   getSessionEditorTagForType(type: string): string;
+
+  getAllTerminalThemeFormats(): { name: string, formatName: string }[];
+  getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
 }
 
 export interface AcceptsExtensionManager {

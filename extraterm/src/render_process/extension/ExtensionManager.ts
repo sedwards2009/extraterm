@@ -129,6 +129,30 @@ export class ExtensionManagerImpl implements ExtensionManager {
     }
     return null;
   }
+
+  getAllTerminalThemeFormats(): {name: string, formatName: string}[] {
+    const results = [];
+    for (const metadata of this._extensionMetadata) {
+      for (const provider of metadata.contributions.terminalThemeProvider) {
+        for (const formatName of provider.humanFormatNames) {
+          results.push( { name: provider.name, formatName } );
+        }
+      }
+    }
+    return results;
+  }
+
+  getAllSyntaxThemeFormats(): {name: string, formatName: string}[] {
+    const results = [];
+    for (const metadata of this._extensionMetadata) {
+      for (const provider of metadata.contributions.syntaxThemeProvider) {
+        for (const formatName of provider.humanFormatNames) {
+          results.push( { name: provider.name, formatName } );
+        }
+      }
+    }
+    return results;
+  }
 }
 
 

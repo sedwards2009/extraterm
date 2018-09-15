@@ -62,13 +62,18 @@ export interface ExtensionSessionBackendContribution {
   name: string;
 
   /**
-   * Internal symbol used internally for indentifying this type of session.
+   * Symbol used internally for identifying this type of session.
    */
   type: string;
 }
 
 export interface ExtensionSyntaxThemeProviderContribution {
+  /**
+   * Internal name for this provider.
+   */
   name: string;
+
+  humanFormatNames: string[];
 }
 
 export interface ExtensionSyntaxThemeContribution {
@@ -76,7 +81,12 @@ export interface ExtensionSyntaxThemeContribution {
 }
 
 export interface ExtensionTerminalThemeProviderContribution {
+  /**
+   * Internal name for this provider.
+   */
   name: string;
+
+  humanFormatNames: string[];
 }
 
 export interface ExtensionTerminalThemeContribution {

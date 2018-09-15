@@ -56,6 +56,14 @@ const COMMAND_TYPE_SELECTION = "typeSelection";
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
+// Electron on Linux under conditions and configuration which happen on one
+// of my machines, will render underscore characters below the text line and
+// into the line below it. If this is the last line in the viewer, then the
+// underscore will be cut off(!).
+// This hack adds just a little bit of extra space at the bottom of the
+// viewer for the underscore.
+const OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK = 1; // px
+
 const DEBUG_RESIZE = false;
 
 let cssText: string = null;
@@ -106,13 +114,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _resizePollHandle: Disposable = null;
   private _needEmulatorResize: boolean = false;
   
-  private _operationRunning = false; // True if we are currently running an operation with the operation() method.
-  private _operationEmitResize = false;  // True if a resize evnet shuld be emitted once the operation is finished.
-  
   // Emulator dimensions
   private _rows = -1;
   private _columns = -1;
   private _realizedRows = -1;
+  private _cursorRow = 0;
+  private _cursorColumn = 0;
 
   private _documentHeightRows= -1;  // Used to detect changes in the viewport size when in Cursor mode.
   private _fontUnitWidth = 10;  // slightly bogus defaults
@@ -178,7 +185,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
       this.style.height = "0px";
-      this._exitCursorMode();
       this._mode = ViewerElementTypes.Mode.DEFAULT;
 
       this._aceEditSession = new TerminalEditSession(new TerminalDocument(""));
@@ -191,6 +197,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       aceRenderer.setPadding(0);
 
       this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
+      this._aceEditor.setRelayInput(true);
       this._aceEditor.setReadOnly(true);
       this._aceEditor.setAutoscroll(false);
       this._aceEditor.setHighlightActiveLine(false);
@@ -200,7 +207,14 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this.__addCommands(ExtraEditCommands);
 
       this.__updateHasTerminalClass();
-
+      this._aceEditor.on("keyPress", ev => {
+        if (this._emulator != null && this._mode == ViewerElementTypes.Mode.DEFAULT) {
+          if (this._emulator.plainKeyPress(ev.text)) {
+            this._emitKeyboardActivityEvent();
+          }
+        }
+      });
+      this._aceEditor.on("compositionStart", () => this._onCompositionStart());
       this._aceEditor.on("change", (data, editor) => {
         if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
           return;
@@ -260,12 +274,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._aceEditor.onCursorBottomHit((column: number) => {
         this._emitCursorEdgeEvent(ViewerElementTypes.Edge.BOTTOM, column);
       });
+
+      this._exitCursorMode();
       
       // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
-      containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDown(ev));
       containerDiv.addEventListener('keypress', ev => this._handleContainerKeyPressCapture(ev), true);
-      containerDiv.addEventListener('keyup', ev => this._handleContainerKeyUpCapture(ev), true);
       containerDiv.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
 
       const aceElement = this._aceEditor.renderer.scroller;
@@ -424,17 +438,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   setMode(newMode: ViewerElementTypes.Mode): void {
     if (newMode !== this._mode) {
-      switch (newMode) {
-        case ViewerElementTypes.Mode.CURSOR:
-          // Enter cursor mode.
-          this._enterCursorMode();
-          break;
-          
-        case ViewerElementTypes.Mode.DEFAULT:
-          this._exitCursorMode();
-          break;
-      }
       this._mode = newMode;
+      this._applyMode();
     }
   }
   
@@ -444,14 +449,26 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   setEditable(editable: boolean): void {
     this._editable = editable;
-    if (this._mode === ViewerElementTypes.Mode.CURSOR) {
-      this._aceEditor.setReadOnly(! editable);
-    }
+
+    this._applyMode();
   }
   
   getEditable(): boolean {
     return this._editable;
   }  
+
+  private _applyMode(): void {
+    switch (this._mode) {
+      case ViewerElementTypes.Mode.CURSOR:
+        // Enter cursor mode.
+        this._enterCursorMode();
+        break;
+        
+      case ViewerElementTypes.Mode.DEFAULT:
+        this._exitCursorMode();
+        break;
+    }
+  }
 
   /**
    * Gets the height of this element.
@@ -493,22 +510,19 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
+    let reserve = 0;
     if (this._useVPad) {
-      if (this._aceEditor == null || this._aceEditor.renderer.lineHeight === 0) {
-        return 0;
+      if (this._aceEditor != null && this._aceEditor.renderer.lineHeight !== 0) {
+        const defaultTextHeight = this._aceEditor.renderer.lineHeight;
+        const vPad = containerHeight % defaultTextHeight;
+        reserve = vPad;
       }
-      const defaultTextHeight = this._aceEditor.renderer.lineHeight;
-      const vPad = containerHeight % defaultTextHeight;
-      if (DEBUG_RESIZE) {
-        this._log.debug("getReserveViewportHeight: ", vPad);
-      }
-      return vPad;
-    } else {
-      if (DEBUG_RESIZE) {
-        this._log.debug("getReserveViewportHeight: ", 0);
-      }
-      return 0;
     }
+    reserve = Math.max(OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK, reserve);
+    if (DEBUG_RESIZE) {
+      this._log.debug("getReserveViewportHeight: ", reserve);
+    }
+    return reserve;
   }
 
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
@@ -566,32 +580,52 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       return {cols: cols, rows: rows};
     }
     
-    const charHeight = this._aceEditor.renderer.lineHeight;
-    const charWidth = this._aceEditor.renderer.characterWidth;
-    if (charHeight === 0 || charWidth === 0) {
+    const newRowsCols = this._computeTerminalSize(widthPixels, heightPixels);
+    if (newRowsCols == null) {
       return {cols: cols, rows: rows};
     }
-    const computedStyle = window.getComputedStyle(this);
-    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight) - 4;
-    const newCols = Math.floor(width / charWidth);
-    const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
-    
+
+    const {cols: newCols, rows: newRows} = newRowsCols;
     if (newCols !== cols || newRows !== rows) {
       this.getEmulator().resize( { rows: newRows, columns: newCols } );
     }
     
     if (DEBUG_RESIZE) {
       this._log.debug("resizeEmulatorToBox() old cols: ",cols);
-      this._log.debug("resizeEmulatorToBox() calculated charWidth: ",charWidth);    
-      this._log.debug("resizeEmulatorToBox() calculated charHeight: ",charHeight);
-      this._log.debug("resizeEmulatorToBox() element width: ",width);
       // this._log.debug("resizeEmulatorToBox() element height: ",this.element.clientHeight);
       this._log.debug("resizeEmulatorToBox() new cols: ",newCols);
       this._log.debug("resizeEmulatorToBox() new rows: ",newRows);
     }
     return {cols: newCols, rows: newRows};
   }
-  
+
+  private _computeTerminalSize(widthPixels: number, heightPixels: number): {rows: number, cols: number} {
+    const charHeight = this._aceEditor.renderer.lineHeight;
+    const charWidth = this._aceEditor.renderer.characterWidth;
+
+    if (charHeight === 0 || charWidth === 0) {
+      return null;
+    }
+
+    const computedStyle = window.getComputedStyle(this);
+    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight) - 4;
+    const newCols = Math.floor(width / charWidth);
+    const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
+
+    if (DEBUG_RESIZE) {
+      this._log.debug("resizeEmulatorToBox() calculated charWidth: ",charWidth);    
+      this._log.debug("resizeEmulatorToBox() calculated charHeight: ",charHeight);
+      this._log.debug("resizeEmulatorToBox() element width: ",width);
+    }
+
+    return {rows: newRows, cols: newCols};
+  }
+
+  pixelHeightToRows(pixelHeight: number): number {
+    const result = this._computeTerminalSize(1024, pixelHeight);
+    return result == null ? 2 : result.rows;
+  }
+
   isFontLoaded(): boolean {
     return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   }
@@ -775,13 +809,18 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
     if (this._editable) {
       this._aceEditor.setReadOnly(false);
+    } else {
+      this._aceEditor.setRelayInput(false);
     }
   }
 
   private _exitCursorMode(): void {
-    if (this._aceEditor !== null) {
-      this._aceEditor.setReadOnly(true);
+    if (this._aceEditor == null) {
+      return;
     }
+    
+    this._aceEditor.setReadOnly(true);
+    this._aceEditor.setRelayInput(this._emulator != null);
 
     const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
@@ -918,25 +957,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         return;
       }
     }
-
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-      if (this._emulator !== null) {
-        this._emulator.keyPress(ev);
-      }
-      this._emitKeyboardActivityEvent();
-    }
   }
   
-  private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-    }
-  }
-
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
-    
     if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
       const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
                         KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
@@ -944,7 +968,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(context);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
-        if (this._executeCommand(command)) {
+        if (command != null && this._executeCommand(command)) {
           ev.stopPropagation();
           ev.preventDefault();
           return;
@@ -968,18 +992,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
     
     if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
+        ev.stopPropagation();
         this._emitKeyboardActivityEvent();
+        return;
       }
     }
-  }
-
-  private _handleContainerKeyUpCapture(ev: KeyboardEvent): void {
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }      
   }
 
   private _handleContextMenuCapture(ev: MouseEvent): void {
@@ -1124,47 +1142,49 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   //                                            
   //-----------------------------------------------------------------------
   private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
-    let emitVirtualResizeEventFlag = false;
-    
-    const op = () => {
-      emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
+    let emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
 
-      // Refresh the active part of the screen.
-      const startRow = event.refreshStartRow;
-      if (startRow !== -1) {
-        const endRow = event.refreshEndRow;
-        const lines: TermApi.Line[] = [];
-        for (let row = startRow; row < endRow; row++) {
-          lines.push(this._emulator.lineAtRow(row));
-        }
-        this._insertLinesOnScreen(startRow, endRow, lines);
-        
-        // Update our realised rows var if needed.
-        const lineCount = this._aceEditSession.getLength();
-        const currentRealizedRows = lineCount - this._terminalFirstRow;
-        if (currentRealizedRows !== this._realizedRows) {
-          this._realizedRows = currentRealizedRows;
-          emitVirtualResizeEventFlag = true;
-        }
+    // Refresh the active part of the screen.
+    const startRow = event.refreshStartRow;
+    if (startRow !== -1) {
+      const endRow = event.refreshEndRow;
+      const lines: TermApi.Line[] = [];
+      for (let row = startRow; row < endRow; row++) {
+        lines.push(this._emulator.lineAtRow(row));
       }
+      this._insertLinesOnScreen(startRow, endRow, lines);
       
-      if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
-        this._handleScrollbackEvent(event.scrollbackLines);
+      // Update our realised rows var if needed.
+      const lineCount = this._aceEditSession.getLength();
+      const currentRealizedRows = lineCount - this._terminalFirstRow;
+      if (currentRealizedRows !== this._realizedRows) {
+        this._realizedRows = currentRealizedRows;
         emitVirtualResizeEventFlag = true;
       }
-    };
+    }
     
-    if ( ! this._operationRunning) {
-      op();
-      if (emitVirtualResizeEventFlag) {
-        VirtualScrollArea.emitResizeEvent(this);
-      }
-    } else {
-      op();
-      this._operationEmitResize = emitVirtualResizeEventFlag;
+    if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
+      this._handleScrollbackEvent(event.scrollbackLines);
+      emitVirtualResizeEventFlag = true;
+    }
+    
+    if (emitVirtualResizeEventFlag) {
+      VirtualScrollArea.emitResizeEvent(this);
+    }
+
+    this._cursorRow = event.cursorRow;
+    this._cursorColumn = event.cursorColumn;
+  }
+
+  private _onCompositionStart(): void {
+    if (this._mode == ViewerElementTypes.Mode.DEFAULT) {
+      this._aceEditor.selection.setSelectionRange({
+        start: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn},
+        end: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn}
+      });
     }
   }
-  
+
   private _handleSizeEvent(newRows: number, newColumns: number, realizedRows: number): boolean {
     const lineCount = this._aceEditSession.getLength();
     const currentRealizedRows = lineCount - this._terminalFirstRow;
@@ -1256,10 +1276,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return this._isEmpty ? 0 : this._aceEditor.renderer.lineHeight * this.lineCount();
   }
   
-  private _getClientYScrollRange(): number {
-    return Math.max(0, this.getVirtualHeight(this.getHeight()) - this.getHeight() + this.getReserveViewportHeight(this.getHeight()));
-  }
-
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
     if (this.parentNode === null || this._aceEditor == null) {
@@ -1273,7 +1289,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       
       let aceEditorHeight;
       if (this._useVPad) {
-        // Adjust the height of the code mirror such that a small gap is at the bottom to 'push'
+        // Adjust the height of the Ace editor such that a small gap is at the bottom to 'push'
         // the lines up and align them with the top of the viewport.
         aceEditorHeight = elementHeight - (elementHeight % this._aceEditor.renderer.lineHeight);
       } else {
@@ -1281,8 +1297,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       }
 
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      containerDiv.style.height = "" + aceEditorHeight + "px";
+      containerDiv.style.height = "" + (aceEditorHeight-OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK) + "px";
       this._aceEditor.resize(true);
+
+      // One pixel fudge factor to prevent the underscore charactor from sometimes disappearing on Linux
+      containerDiv.style.height = "" + aceEditorHeight + "px";
     }
   }
 }
