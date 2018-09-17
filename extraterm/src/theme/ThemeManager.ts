@@ -341,7 +341,7 @@ const DEFAULT_TERMINAL_THEME: TerminalTheme = {
 export class ThemeManager implements AcceptsConfigDatabase {
   
   private _log: Logger = null;
-  private _configDistributor: ConfigDatabase = null;
+  private _configDatabase: ConfigDatabase = null;
   private _themes: Map<string, ThemeInfo> = null;
 
   constructor(private _paths: ThemeTypePaths, private _mainExtensionManager: MainExtensionManager) {
@@ -398,7 +398,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   setConfigDatabase(configDistributor: ConfigDatabase): void {
-    this._configDistributor = configDistributor;
+    this._configDatabase = configDistributor;
   }
 
   /**
@@ -535,7 +535,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   async _renderGui(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = this._configDistributor.getConfig(GENERAL_CONFIG);
+    const config = this._configDatabase.getConfig(GENERAL_CONFIG);
     let themeNameStack = [config.themeGUI, FALLBACK_UI_THEME];
     const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_GUI);
 
@@ -559,7 +559,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   async _renderTerminal(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = this._configDistributor.getConfig(GENERAL_CONFIG);
+    const config = this._configDatabase.getConfig(GENERAL_CONFIG);
     const terminalThemeInfo = this._themes.get(config.themeTerminal);
 
     const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_TERMINAL);
@@ -629,7 +629,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   async _renderSyntax(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = this._configDistributor.getConfig(GENERAL_CONFIG);
+    const config = this._configDatabase.getConfig(GENERAL_CONFIG);
 
     const syntaxThemeInfo = this._themes.get(config.themeSyntax);
     const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_SYNTAX);

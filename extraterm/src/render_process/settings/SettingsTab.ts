@@ -8,7 +8,7 @@ import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
 import { AcceptsConfigDatabase, ConfigDatabase } from '../../Config';
-import { AcceptsKeyBindingsManager, KeyBindingsManager } from '../keybindings/KeyBindingsManager';
+import { AcceptsKeybindingsManager, KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as ThemeTypes from '../../theme/Theme';
@@ -24,14 +24,14 @@ const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 
 @WebComponent({tag: "et-settings-tab"})
 export class SettingsTab extends ViewerElement implements Commandable, AcceptsConfigDatabase,
-    AcceptsExtensionManager, AcceptsKeyBindingsManager, SupportsDialogStack.SupportsDialogStack {
+    AcceptsExtensionManager, AcceptsKeybindingsManager, SupportsDialogStack.SupportsDialogStack {
   
   static TAG_NAME = "ET-SETTINGS-TAB";
   
   private _log: Logger = null;
   private _ui: SettingsUi = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
-  private _keyBindingManager: KeyBindingsManager = null;
+  private _keyBindingsManager: KeybindingsManager = null;
   private _dialogStack: HTMLElement[] = [];
 
   constructor() {
@@ -79,9 +79,9 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
     this._ui.setConfigDatabase(configDatabase);
   }
   
-  setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {
-    this._keyBindingManager = newKeyBindingManager;
-    this._ui.setKeyBindingsManager(newKeyBindingManager);
+  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
+    this._keyBindingsManager = newKeybindingsManager;
+    this._ui.setKeybindingsManager(newKeybindingsManager);
   }
 
   setExtensionManager(extensionManager: ExtensionManager): void {
@@ -93,11 +93,11 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
   }
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
+    if (this._keyBindingsManager === null || this._keyBindingsManager.getKeybindingsContexts() === null) {
       return;
     }
 
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(SETTINGS_TAB);
+    const keyBindings = this._keyBindingsManager.getKeybindingsContexts().context(SETTINGS_TAB);
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
       ev.stopPropagation();

@@ -15,7 +15,7 @@ import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 import * as GeneralEvents from '../GeneralEvents';
-import {KeyBindingsManager, AcceptsKeyBindingsManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingsManager';
+import {KeybindingsManager, AcceptsKeybindingsManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -67,7 +67,7 @@ function getCssText(): string {
 
 
 @WebComponent({tag: "et-text-viewer"})
-export class TextViewer extends ViewerElement implements Commandable, AcceptsKeyBindingsManager,
+export class TextViewer extends ViewerElement implements Commandable, AcceptsKeybindingsManager,
     SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
@@ -83,7 +83,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
   
   private _log: Logger;
-  private _keyBindingManager: KeyBindingsManager = null;
+  private _keybindingsManager: KeybindingsManager = null;
   private _title = "";
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
@@ -262,8 +262,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     super.dispose();
   }
 
-  setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {
-    this._keyBindingManager = newKeyBindingManager;
+  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
+    this._keybindingsManager = newKeybindingsManager;
   }
 
   getSelectionText(): string {    
@@ -694,11 +694,11 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   // ----------------------------------------------------------------------
 
   private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
-    if (this._keyBindingManager == null || this._keyBindingManager.getKeyBindingsContexts() == null) {
+    if (this._keybindingsManager == null || this._keybindingsManager.getKeybindingsContexts() == null) {
       return;
     }
 
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       const command = keyBindings.mapEventToCommand(ev);
       if (command != null) {
@@ -730,8 +730,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
 
-    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
-      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
+    if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null) {
+      const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
         if (this._executeCommand(command)) {
@@ -782,10 +782,10 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];
     
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
+    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        const shortcut = keyBindings.mapCommandToKeybinding(commandEntry.id)
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }

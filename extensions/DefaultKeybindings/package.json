@@ -1,0 +1,12 @@
+{
+  "name": "default-keybindings",
+  "description": "Extraterm Default Keybindings",
+  "version": "1.0.0",
+  "contributions": {
+    "keybindings": [
+      {
+        "path": "keybindings"
+      }
+    ]
+  }
+}

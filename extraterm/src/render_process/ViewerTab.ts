@@ -14,7 +14,7 @@ import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import {AcceptsKeyBindingsManager, KeyBindingsManager} from './keybindings/KeyBindingsManager';
+import {AcceptsKeybindingsManager, KeybindingsManager} from './keybindings/KeyBindingsManager';
 import {ResizeCanary} from './ResizeCanary';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ScrollBar} from'./gui/ScrollBar';
@@ -59,7 +59,7 @@ const SCROLL_STEP = 1;
  */
 @WebComponent({tag: "et-viewer-tab"})
 export class EtViewerTab extends ViewerElement implements Commandable,
-    AcceptsKeyBindingsManager, SupportsClipboardPaste.SupportsClipboardPaste,
+    AcceptsKeybindingsManager, SupportsClipboardPaste.SupportsClipboardPaste,
     SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-VIEWER-TAB";
@@ -70,7 +70,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   private _title = "New Tab";
   private _tag: string = null;
 
-  private _keyBindingManager: KeyBindingsManager = null;
+  private _keyBindingManager: KeybindingsManager = null;
   private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
   private _needsCompleteRefresh = true;
@@ -253,7 +253,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     return ViewerElementTypes.Mode.CURSOR;
   }
   
-  setKeyBindingsManager(keyBindingManager: KeyBindingsManager): void {
+  setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
 
@@ -466,11 +466,11 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeybindingsContexts() === null) {
       return;
     }
 
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
+    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
       ev.stopPropagation();
@@ -486,11 +486,11 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", commandExecutor: this } );
     commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", commandExecutor: this } );
     commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", commandExecutor: this } );
-
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
+// FIXME should copy, cut and paste be on here?
+    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        const shortcut = keyBindings.mapCommandToKeybinding(commandEntry.id)
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }    

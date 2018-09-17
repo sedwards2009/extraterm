@@ -6,8 +6,8 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as _ from 'lodash';
-import { KeyBindingInfo } from '../../Config';
-import { KeyBindingsMapping, KeyBindingsContexts } from '../keybindings/KeyBindingsManager';
+import { KeybindingsInfo } from '../../Config';
+import { KeybindingsMapping, KeybindingsContexts } from '../keybindings/KeyBindingsManager';
 
 const humanText = require('../keybindings/keybindingstext.json');
 
@@ -24,8 +24,8 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
       <div class="form-group">
         <label for="theme-terminal" class="col-sm-4 control-label">Key bindings style:</label>
         <div class="col-sm-8">
-          <select class="form-control" id="keybindings-style" v-model="selectedKeyBindings">
-            <option v-for="option in keyBindingsFiles" v-bind:value="option.filename">
+          <select class="form-control" id="keybindings-style" v-model="selectedKeybindings">
+            <option v-for="option in keybindingsFiles" v-bind:value="option.filename">
               {{ option.name }}
             </option>
           </select>
@@ -37,28 +37,28 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
 </div>
 `
 })
-export class KeyBindingsSettingsUi extends Vue {
-  private __keyBindingsContexts: KeyBindingsContexts = null;
+export class KeybindingsSettingsUi extends Vue {
+  private __keybindingsContexts: KeybindingsContexts = null;
 
-  selectedKeyBindings: string;
-  keyBindingsFiles: KeyBindingInfo[];
-  keyBindingsContextsStamp: any;
+  selectedKeybindings: string;
+  keybindingsFiles: KeybindingsInfo[];
+  keybindingsContextsStamp: any;
 
   constructor() {
     super();
-    this.selectedKeyBindings = "";
-    this.keyBindingsFiles = [];
-    this.keyBindingsContextsStamp = Date.now();
+    this.selectedKeybindings = "";
+    this.keybindingsFiles = [];
+    this.keybindingsContextsStamp = Date.now();
   }
 
   get summary(): string {
-    const foo = this.keyBindingsContextsStamp;
-    return this.__keyBindingsContexts == null ? "" : formatKeyBindingsPage(this.__keyBindingsContexts);
+    const foo = this.keybindingsContextsStamp;
+    return this.__keybindingsContexts == null ? "" : formatKeybindingsPage(this.__keybindingsContexts);
   }
 
-  setKeyBindingsContexts(keyBindingsContexts: KeyBindingsContexts): void {
-    this.__keyBindingsContexts = keyBindingsContexts;
-    this.keyBindingsContextsStamp = Date.now();
+  setKeybindingsContexts(keyBindingsContexts: KeybindingsContexts): void {
+    this.__keybindingsContexts = keyBindingsContexts;
+    this.keybindingsContextsStamp = Date.now();
     this.$forceUpdate();
   }
 }
@@ -99,14 +99,14 @@ function formatShortcut(code: string): string {
   return parts.join("");
 }
 
-function formatKeyBindingsPage(keyBindingContexts: KeyBindingsContexts): string {
+function formatKeybindingsPage(keyBindingContexts: KeybindingsContexts): string {
   return contexts()
     .map( (contextName) => {
-        return `<h2>${contextHeading(contextName)}</h2>` +  formatKeyBindingsMapping(keyBindingContexts.context(contextName));
+        return `<h2>${contextHeading(contextName)}</h2>` +  formatKeybindingsMapping(keyBindingContexts.context(contextName));
       } ).join("");
 }
 
-function formatKeyBindingsMapping(context: KeyBindingsMapping): string {
+function formatKeybindingsMapping(context: KeybindingsMapping): string {
   const bindings = _.clone(context.keyBindings);
   bindings.sort( (a,b): number => {
     const nameA = commandName(a.command);

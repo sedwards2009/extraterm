@@ -52,9 +52,11 @@ export interface CommandLineAction {
   frame: boolean;
 }
 
-export interface KeyBindingInfo {
+export interface KeybindingsInfo {
   name: string;
   filename: string;
+  readOnly: boolean;
+  path: string;
 }
 
 export interface WindowConfiguration {
@@ -71,7 +73,7 @@ export interface SingleWindowConfiguration {
 export interface SystemConfig {
   homeDir: string;
   applicationVersion: string;
-  keyBindingsFiles: KeyBindingInfo[];
+  keyBindingsFiles: KeybindingsInfo[];
   keyBindingsContexts: object;
   
   availableFonts: FontInfo[];

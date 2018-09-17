@@ -30,7 +30,7 @@ import {TextViewer} from './viewers/TextAceViewer';
 import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
-import {KeyBindingsManager, injectKeyBindingsManager, AcceptsKeyBindingsManager} from './keybindings/KeyBindingsManager';
+import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
 import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
 import {Logger, getLogger} from "extraterm-logging";
@@ -138,7 +138,7 @@ type InputStreamFilter = (input: string) => string;
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
 @WebComponent({tag: "et-terminal"})
-export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeyBindingsManager,
+export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeybindingsManager,
   AcceptsConfigDatabase, Disposable, SupportsClipboardPaste.SupportsClipboardPaste,
   SupportsDialogStack.SupportsDialogStack {
   
@@ -176,7 +176,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _mode: Mode = Mode.DEFAULT;
   
   private _configManager: ConfigDatabase = null;
-  private _keyBindingManager: KeyBindingsManager = null;
+  private _keyBindingManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
 
   private _title = "New Tab";
@@ -407,7 +407,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._configManager = configManager;
   }
   
-  setKeyBindingsManager(keyBindingManager: KeyBindingsManager): void {
+  setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
   
@@ -784,7 +784,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _appendNewTerminalViewer(): void {
     // Create the TerminalViewer
     const terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
-    injectKeyBindingsManager(terminalViewer, this._keyBindingManager);
+    injectKeybindingsManager(terminalViewer, this._keyBindingManager);
     injectConfigDatabase(terminalViewer, this._configManager);
     
     terminalViewer.setEmulator(this._emulator);
@@ -1356,11 +1356,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
     if (this._terminalViewer === null || this._keyBindingManager === null ||
-        this._keyBindingManager.getKeyBindingsContexts() === null) {
+        this._keyBindingManager.getKeybindingsContexts() === null) {
       return;
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(this._mode === Mode.DEFAULT
+    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
@@ -1371,11 +1371,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _handleKeyPressCapture(ev :KeyboardEvent): void {
     if (this._terminalViewer === null || this._keyBindingManager === null ||
-        this._keyBindingManager.getKeyBindingsContexts() === null) {
+        this._keyBindingManager.getKeybindingsContexts() === null) {
       return;
     }
     
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(this._mode === Mode.DEFAULT
+    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     const command = keyBindings.mapEventToCommand(ev);
     if (command != null) {
@@ -1418,11 +1418,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     commandList.push( { id: COMMAND_CLEAR_SCROLLBACK, group: PALETTE_GROUP, iconRight: "fa fa-eraser", label: "Clear Scrollback", commandExecutor: this } );
     commandList.push( { id: COMMAND_RESET_VT, group: PALETTE_GROUP, iconRight: "fa fa-sync", label: "Reset VT", commandExecutor: this } );
 
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(this._mode === Mode.DEFAULT
+    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        const shortcut = keyBindings.mapCommandToKeybinding(commandEntry.id)
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }    
@@ -1842,7 +1842,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _createEmbeddedViewerElement(): EmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
-    injectKeyBindingsManager(el, this._keyBindingManager);
+    injectKeybindingsManager(el, this._keyBindingManager);
     injectConfigDatabase(el, this._configManager);
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
@@ -1962,7 +1962,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
-      injectKeyBindingsManager(outputTerminalViewer, this._keyBindingManager);
+      injectKeybindingsManager(outputTerminalViewer, this._keyBindingManager);
       injectConfigDatabase(outputTerminalViewer, this._configManager);
       newViewerElement.setViewerElement(outputTerminalViewer);
       
@@ -2145,7 +2145,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(tag);
-    injectKeyBindingsManager(dataViewer, this._keyBindingManager);
+    injectKeybindingsManager(dataViewer, this._keyBindingManager);
     injectConfigDatabase(dataViewer, this._configManager);
     if (bulkFileHandle !== null) {
       dataViewer.setBulkFileHandle(bulkFileHandle);

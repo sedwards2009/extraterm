@@ -31,7 +31,7 @@ import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRende
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Renderer, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
 
 
-type KeyBindingManager = keybindingmanager.KeyBindingsManager;
+type KeybindingsManager = keybindingmanager.KeybindingsManager;
 
 type SetterState = VirtualScrollArea.SetterState;
 type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
@@ -74,7 +74,7 @@ function getCssText(): string {
 
 
 @WebComponent({tag: "et-terminal-ace-viewer"})
-export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeyBindingsManager,
+export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeybindingsManager,
     SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
@@ -92,7 +92,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
 
   private _log: Logger;
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keybindingsManager: KeybindingsManager = null;
   private _emulator: Term.Emulator = null;
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
@@ -337,8 +337,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   //
   //-----------------------------------------------------------------------
 
-  setKeyBindingsManager(newKeyBindingManager: KeyBindingManager): void {
-    this._keyBindingManager = newKeyBindingManager;
+  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
+    this._keybindingsManager = newKeybindingsManager;
   }
 
   setCommandLine(commandLine: string): void {
@@ -942,14 +942,14 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   // ----------------------------------------------------------------------
 
   private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
-    if (this._keyBindingManager == null || this._keyBindingManager.getKeyBindingsContexts() == null) {
+    if (this._keybindingsManager == null || this._keybindingsManager.getKeybindingsContexts() == null) {
       return;
     }
 
     const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
                       KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
                       KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(context);
+    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
     if (keyBindings !== null) {
       const command = keyBindings.mapEventToCommand(ev);
       if (command != null) {
@@ -961,11 +961,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
-    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null) {
+    if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null) {
       const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
                         KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
                         KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
-      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(context);
+      const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
       if (keyBindings !== null) {
         command = keyBindings.mapEventToCommand(ev);
         if (command != null && this._executeCommand(command)) {
@@ -1017,10 +1017,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
                       KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
                       KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(context);
+    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        const shortcut = keyBindings.mapCommandToKeybinding(commandEntry.id)
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }
