@@ -52,25 +52,14 @@ export class KeybindingsIOManager {
       const contents = fs.readdirSync(directory);
       contents.forEach( (item) => {
         if (item.endsWith(".json")) {
-          const infoPath = path.join(directory, item);
-          try {
-            const infoStr = fs.readFileSync(infoPath, {encoding: "utf8"});
-            const keyBindingJSON = JSON.parse(infoStr);
-            const name = keyBindingJSON.name;
-            if (name !== undefined) {
-              const info: KeybindingsInfo = {
-                name: name,
-                filename: item,
-                readOnly,
-                path: directory
-              };
-              result.push(info);
-            } else {
-              this._log.warn(`Unable to get 'name' from JSON file '${item}'`);
-            }
-          } catch(err) {
-            this._log.warn("Warning: Unable to read file ", infoPath, err);
-          }
+          const name = item.slice(0, -5);
+          const info: KeybindingsInfo = {
+            name: name,
+            filename: item,
+            readOnly,
+            path: directory
+          };
+          result.push(info);
         }
       });
     }

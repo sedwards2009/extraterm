@@ -57,9 +57,8 @@ const USER_THEMES_DIR = "themes"
 const USER_SYNTAX_THEMES_DIR = "syntax";
 const USER_TERMINAL_THEMES_DIR = "terminal";
 const USER_KEYBINDINGS_DIR = "keybindings";
-const KEYBINDINGS_DIRECTORY = "../../resources/keybindings";
-const KEYBINDINGS_OSX = "keybindings-osx.json";
-const KEYBINDINGS_PC = "keybindings.json";
+const KEYBINDINGS_OSX = "Mac OS X bindings.json";
+const KEYBINDINGS_PC = "PC style bindings.json";
 const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
 const DEFAULT_TERMINALFONT = "DejaVuSansMono";
 
