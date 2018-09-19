@@ -518,7 +518,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         reserve = vPad;
       }
     }
-    reserve = Math.max(OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK, reserve);
+    reserve = Math.max(this._isEmpty ? 0 : OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK, reserve);
     if (DEBUG_RESIZE) {
       this._log.debug("getReserveViewportHeight: ", reserve);
     }
@@ -1296,11 +1296,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         aceEditorHeight = elementHeight;        
       }
 
+      const reserveHeight = this.getReserveViewportHeight(elementHeight);
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      containerDiv.style.height = "" + (aceEditorHeight-OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK) + "px";
+      containerDiv.style.height = "" + (aceEditorHeight-reserveHeight) + "px";
       this._aceEditor.resize(true);
-
-      // One pixel fudge factor to prevent the underscore charactor from sometimes disappearing on Linux
       containerDiv.style.height = "" + aceEditorHeight + "px";
     }
   }
