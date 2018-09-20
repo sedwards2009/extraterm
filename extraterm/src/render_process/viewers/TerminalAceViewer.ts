@@ -125,9 +125,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _fontUnitWidth = 10;  // slightly bogus defaults
   private _fontUnitHeight = 10;
 
-  // The current element height. This is a cached value used to prevent touching the DOM.  
-  private _currentElementHeight = -1;
-  private _currentVPad = true;
   private _renderEventListener: TermApi.RenderEventHandler = this._handleRenderEvent.bind(this);
 
   private _bookmarkCounter = 0;
@@ -1281,27 +1278,24 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     if (this.parentNode === null || this._aceEditor == null) {
       return;
     }
-    const elementHeight = this.getHeight();
-    if (elementHeight !== this._currentElementHeight || this._useVPad !== this._currentVPad) {
-      this._currentElementHeight = elementHeight;
-      this._currentVPad = this._useVPad;
-      this.style.height = "" + elementHeight + "px";
-      
-      let aceEditorHeight;
-      if (this._useVPad) {
-        // Adjust the height of the Ace editor such that a small gap is at the bottom to 'push'
-        // the lines up and align them with the top of the viewport.
-        aceEditorHeight = elementHeight - (elementHeight % this._aceEditor.renderer.lineHeight);
-      } else {
-        aceEditorHeight = elementHeight;        
-      }
 
-      const reserveHeight = this.getReserveViewportHeight(elementHeight);
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      containerDiv.style.height = "" + (aceEditorHeight-reserveHeight) + "px";
-      this._aceEditor.resize(true);
-      containerDiv.style.height = "" + aceEditorHeight + "px";
+    const elementHeight = this.getHeight();
+    let aceEditorHeight;
+    if (this._useVPad) {
+      // Adjust the height of the Ace editor such that a small gap is at the bottom to 'push'
+      // the lines up and align them with the top of the viewport.
+      aceEditorHeight = elementHeight - (elementHeight % this._aceEditor.renderer.lineHeight);
+    } else {
+      aceEditorHeight = elementHeight;        
     }
+    const reserveHeight = this.getReserveViewportHeight(elementHeight);
+
+    this.style.height = "" + elementHeight + "px";
+
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    containerDiv.style.height = "" + (aceEditorHeight-reserveHeight) + "px";
+    this._aceEditor.resize(true);
+    containerDiv.style.height = "" + aceEditorHeight + "px";
   }
 }
 
