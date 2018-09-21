@@ -66,6 +66,11 @@ export const enum MessageType {
   EXTENSION_METADATA,
 
   THEME_RESCAN,
+
+  COPY_KEYBINDINGS,
+  RENAME_KEYBINDINGS,
+  DELETE_KEYBINDINGS,
+  UPDATE_KEYBINDINGS,
 }
 
 /**
@@ -453,4 +458,13 @@ export interface ExtensionMetadataRequestMessage extends Message {
 
 export interface ExtensionMetadataMessage extends Message {
   extensionMetadata: ExtensionMetadata[];
+}
+
+export interface KeybindingsCopyMessage extends Message {
+  sourceName: string;
+  destName: string;
+}
+
+export interface KeybindingsDeleteMessage extends Message {
+  targetName: string;
 }

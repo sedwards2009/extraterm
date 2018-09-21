@@ -17,7 +17,7 @@ export class KeybindingsIOManager {
   private _log: Logger = null;
   private _keybindingsList: KeybindingsInfo[] = [];
 
-  constructor(private _userPaths: string[], private _mainExtensionManager: MainExtensionManager) {
+  constructor(private _userPath: string, private _mainExtensionManager: MainExtensionManager) {
     this._log = getLogger("KeybindingsIOManager", this);
   }
 
@@ -30,9 +30,9 @@ export class KeybindingsIOManager {
   }
 
   private _scanAll(): KeybindingsInfo[] {
-    const userInfoLists = this._userPaths.map(p => this._scanKeybindingsDirectory(p, false));
+    const userInfoList = this._scanKeybindingsDirectory(this._userPath, false);
     const extensionInfoLists = this._getKeybindingsExtensionPaths().map(p => this._scanKeybindingsDirectory(p, true));
-    const infoLists = [...userInfoLists, ...extensionInfoLists];
+    const infoLists = [userInfoList, ...extensionInfoLists];
     return infoLists.reduce( (list, accu) => [...list, ...accu], []);
   }
 
@@ -70,24 +70,65 @@ export class KeybindingsIOManager {
     return this._keybindingsList;
   }
 
-  hasKeybindingsFilename(name: string): boolean {
-    return this._getInfoByFilename(name) != null;
+  hasKeybindingsName(name: string): boolean {
+    return this._getInfoByName(name) != null;
   }
 
-  private _getInfoByFilename(name: string): KeybindingsInfo {
+  private _getInfoByName(name: string): KeybindingsInfo {
     for (const info of this._keybindingsList) {
-      if (info.filename === name) {
+      if (info.name === name) {
         return info;
       }
     }
     return null;
   }
 
-  loadKeybindingsJson(filename: string): object {
-    const info = this._getInfoByFilename(filename);
+  loadKeybindingsJson(name: string): object {
+    const info = this._getInfoByName(name);
     const fullPath = path.join(info.path, info.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
     const keyBindingsJSON = JSON.parse(keyBindingJsonString);
     return keyBindingsJSON;
+  }
+
+  copyKeybindings(sourceName: string, destName: string): boolean {
+    const sourceInfo = this._getInfoByName(sourceName);
+    if (sourceInfo == null) {
+      this._log.warn(`Unable to find keybindings file '${sourceName}'`);
+      return false;
+    }
+
+    const sourcePath = path.join(sourceInfo.path, sourceInfo.filename);
+    const destPath = path.join(this._userPath, destName + ".json");
+    try {
+      const contents = fs.readFileSync(sourcePath);
+      fs.writeFileSync(destPath, contents);
+    } catch(err) {
+      this._log.warn(`Unable to copy '${sourcePath}' to '${destPath}'. Error: ${err.message}`);
+      return false;
+    }
+
+    this.scan();
+    return true;
+  }
+
+  updateKeybindings(name: string, data: any): boolean {
+    const info = this._getInfoByName(name);
+    if (info == null) {
+      this._log.warn(`Unable to find keybindings file '${name}'`);
+      return false;
+    }
+
+    const destPath = path.join(info.path, info.filename);
+    try {
+      fs.writeFileSync(destPath, JSON.stringify(data));
+    } catch(err) {
+      this._log.warn(`Unable to update '${destPath}'. Error: ${err.message}`);
+      return false;
+    }
+
+// FIXME broadcast changes    
+
+    return true;
   }
 }

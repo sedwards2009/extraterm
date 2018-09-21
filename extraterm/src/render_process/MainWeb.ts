@@ -435,7 +435,7 @@ async function setupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
-  const keyBindingContexts = loadKeybindingsFromObject(newSystemConfig.keyBindingsContexts,
+  const keyBindingContexts = loadKeybindingsFromObject(newSystemConfig.keybindingsContexts,
     process.platform);
 
   if (! keyBindingContexts.equals(keyBindingManager.getKeybindingsContexts())) {

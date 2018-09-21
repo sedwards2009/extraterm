@@ -217,3 +217,8 @@ export function requestExtensionMetadataSync(): ExtensionMetadata[] {
   const extensionMetadataMessage = <Messages.ExtensionMetadataMessage> event;
   return extensionMetadataMessage.extensionMetadata;
 }
+
+export function keybindingsCopy(sourceName: string, destName: string): void {
+  const msg: Messages.KeybindingsCopyMessage = {type: Messages.MessageType.COPY_KEYBINDINGS, sourceName, destName};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}

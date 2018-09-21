@@ -11,6 +11,7 @@ import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { OnChangeEmitterElementLifecycleBinder } from './OnChangeEmitterElementLifecycleBinder';
+import * as WebIpc from '../WebIpc';
 
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
@@ -19,10 +20,22 @@ export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   private _log: Logger = null;
   private _keyBindingOnChangeEmitterElementLifecycleBinder: OnChangeEmitterElementLifecycleBinder<KeybindingsManager> = null;
+  private _autoSelect: string = null;
 
   constructor() {
     super(KeybindingsSettingsUi, [SYSTEM_CONFIG, GENERAL_CONFIG]);
     this._log = getLogger(KEY_BINDINGS_SETTINGS_TAG, this);
+
+    this._getUi().$on("duplicate", keybindingsName => {
+      const destName = keybindingsName + " copy";
+      this._autoSelect = destName;
+      WebIpc.keybindingsCopy(keybindingsName, destName);
+    });
+
+    this._getUi().$on("delete", keybindingsFilename => {
+      // WebIpc.keybindings
+    });
+
     this._keyBindingOnChangeEmitterElementLifecycleBinder =
       new OnChangeEmitterElementLifecycleBinder<KeybindingsManager>(this._handleKeybindingsManagerChange.bind(this));
   }
@@ -49,15 +62,19 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
 
     if (key === SYSTEM_CONFIG) {
       const systemConfig = <SystemConfig> config;
-      if (ui.keybindingsFiles.length !== systemConfig.keyBindingsFiles.length) {
-        ui.keybindingsFiles = systemConfig.keyBindingsFiles;
+      if (ui.keybindingsInfoList.length !== systemConfig.keybindingsInfoList.length) {
+        ui.keybindingsInfoList = systemConfig.keybindingsInfoList;
+        if (this._autoSelect != null) {
+          ui.selectedKeybindings = this._autoSelect;
+          this._autoSelect = null;
+        }
       }
     }
 
     if (key === GENERAL_CONFIG) {
       const generalConfig = <GeneralConfig> config;
-      if (ui.selectedKeybindings !== config.keyBindingsFilename) {
-        ui.selectedKeybindings = config.keyBindingsFilename;
+      if (ui.selectedKeybindings !== generalConfig.keybindingsName) {
+        ui.selectedKeybindings = generalConfig.keybindingsName;
       }
     }
   }
@@ -66,8 +83,8 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
     const newGeneralConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
     const ui = this._getUi();
 
-    if (newGeneralConfig.keyBindingsFilename !== ui.selectedKeybindings) {
-      newGeneralConfig.keyBindingsFilename = ui.selectedKeybindings;
+    if (newGeneralConfig.keybindingsName !== ui.selectedKeybindings) {
+      newGeneralConfig.keybindingsName = ui.selectedKeybindings;
       this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
     }
   }
