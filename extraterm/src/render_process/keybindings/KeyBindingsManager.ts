@@ -211,6 +211,16 @@ export class KeybindingsMapping {
     }
     return null;
   }
+
+  mapCommandToKeybindings(command: string): string[] {
+    const result: string[] = [];
+    for (let keyBinding of this.keyBindings) {
+      if (keyBinding.command === command) {
+        result.push(keyBinding.shortcut);
+      }
+    }
+    return result;
+  }
 }
 
 function parseKeybinding(keyBindingString: string, command: string): Keybinding {

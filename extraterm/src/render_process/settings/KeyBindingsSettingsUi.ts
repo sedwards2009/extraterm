@@ -13,8 +13,122 @@ const humanText = require('../keybindings/keybindingstext.json');
 
 const CLASS_KEYCAP = "CLASS_KEYCAP";
 
+
+@Component({
+  props: {
+    contextName: String,
+    keybindingsContext: KeybindingsMapping
+  },
+  template: `
+<div>
+  <h2>{{contextHeading}}</h2>
+  <table class='table'>
+    <tbody>
+      <tr>
+        <th class="col-md-7">Command</th>
+        <th class="col-md-5">Key</th>
+      </tr>
+      <tr v-for="command in commands" :key="command">
+        <td class="col-md-7" :title="command">{{commandHumanName(command)}}</td>
+        <td class="col-md-5">
+          <div v-for="key in keybindingsContext.mapCommandToKeybindings(command)" class='${CLASS_KEYCAP}'>
+            <span>{{formatKey(key)}}</span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>`,
+})
+class KeybindingsContext extends Vue {
+  // Props
+  contextName: string;
+  keybindingsContext: KeybindingsMapping;
+
+  get contextHeading(): string {
+    const str = humanText.contextNames[this.contextName];
+    return str || this.contextName;
+  }
+
+  get commands(): string[] {
+    const commandCodes: string[] = [...humanText.contexts[this.contextName]];
+
+    commandCodes.sort( (a,b): number => {
+      const nameA = this.commandHumanName(a);
+      const nameB = this.commandHumanName(b);
+      return nameA < nameB ? -1 : ( nameA > nameB ? 1 : 0);
+    });
+
+    return commandCodes;
+  }
+
+  commandHumanName(commandCode: string): string {
+    const str = humanText.commands[commandCode];
+    return str || commandCode;
+  }
+
+  formatKey(code: string): string {
+    if (process.platform !== "darwin") {
+      return code;
+    }
+    let parts = code.split(/\+/g);
+    parts = parts.map( (p) => {
+      switch (p) {
+        case 'Cmd':
+          return '\u2318';
+        case 'Shift':
+          return '\u21E7';
+        case 'Alt':
+          return '\u2325';
+        case 'Ctrl':
+          return '^';
+        default:
+          return p;
+      }
+    } );
+    return parts.join("");
+  }
+  
+}
+
 @Component(
   {
+    components: {
+      "keybindings-context": KeybindingsContext
+    },
+    props: {
+      keybindingsContexts: KeybindingsContexts
+    },
+    template: `
+    <div>
+      <keybindings-context
+        v-for="contextName in humanContexts"
+        :contextName="contextName"
+        :key="contextName"
+        :keybindingsContext="keybindingsContexts.context(contextName)">
+      </keybindings-context>
+    </div>`
+  }
+)
+class KeybindingsList extends Vue {
+  // Props
+  keybindingsContexts: KeybindingsContexts;
+
+  get humanContexts(): string[] {
+    return Object.keys(humanText.contexts);
+  }
+  mounted() {
+    console.log("this.keybindingsContexts != null is", this.keybindingsContexts != null);
+  }
+}
+
+
+@Component(
+  {
+    components: {
+      "keybindings-contexts-list": KeybindingsList
+    },
+
     template: `
 <div class="settings-page">
   <h2><i class="far fa-keyboard"></i>&nbsp;&nbsp;Keybindings</h2>
@@ -38,23 +152,16 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
       </div>
     </div>
   </div>
-  <div v-html="summary"></div>
+  <keybindings-contexts-list :keybindingsContexts="keybindingsContexts"></keybindings-contexts-list>
 </div>
 `
 })
 export class KeybindingsSettingsUi extends Vue {
-  private __keybindingsContexts: KeybindingsContexts = null;
+  keybindingsContexts: KeybindingsContexts = null;
 
-  selectedKeybindings: string;
-  keybindingsInfoList: KeybindingsInfo[];
-  keybindingsContextsStamp: any;
-
-  constructor() {
-    super();
-    this.selectedKeybindings = "";
-    this.keybindingsInfoList = [];
-    this.keybindingsContextsStamp = Date.now();
-  }
+  selectedKeybindings: string = "";
+  keybindingsInfoList: KeybindingsInfo[] = [];
+  keybindingsContextsStamp: any = Date.now();
 
   isSelectedKeybindingsReadOnly(): boolean {
     for (const kbf of this.keybindingsInfoList) {
@@ -62,17 +169,12 @@ export class KeybindingsSettingsUi extends Vue {
         return kbf.readOnly;
       }
     }
-console.log("Unable to find KeybindingsInfo!");    
+console.log(`Unable to find KeybindingsInfo for '${this.selectedKeybindings}'!`);
     return true;
   }
 
-  get summary(): string {
-    const foo = this.keybindingsContextsStamp;
-    return this.__keybindingsContexts == null ? "" : formatKeybindingsPage(this.__keybindingsContexts);
-  }
-
   setKeybindingsContexts(keyBindingsContexts: KeybindingsContexts): void {
-    this.__keybindingsContexts = keyBindingsContexts;
+    this.keybindingsContexts = keyBindingsContexts;
     this.keybindingsContextsStamp = Date.now();
     this.$forceUpdate();
   }
@@ -88,69 +190,4 @@ console.log("Unable to find KeybindingsInfo!");
   rename(): void {
     console.log("rename");
   }
-}
-
-function contexts(): string[] {
-  return humanText.contexts;
-}
-
-function commandName(commandCode: string): string {
-  const str = humanText.commands[commandCode];
-  return str || commandCode;
-}
-
-function contextHeading(contextName: string): string {
-  const str = humanText.contextNames[contextName];
-  return str || contextName;
-}
-
-function formatShortcut(code: string): string {
-  if (process.platform !== "darwin") {
-    return code;
-  }
-  let parts = code.split(/\+/g);
-  parts = parts.map( (p) => {
-    switch (p) {
-      case 'Cmd':
-        return '\u2318';
-      case 'Shift':
-        return '\u21E7';
-      case 'Alt':
-        return '\u2325';
-      case 'Ctrl':
-        return '^';
-      default:
-        return p;
-    }
-  } );
-  return parts.join("");
-}
-
-function formatKeybindingsPage(keyBindingContexts: KeybindingsContexts): string {
-  return contexts()
-    .map( (contextName) => {
-        return `<h2>${contextHeading(contextName)}</h2>` +  formatKeybindingsMapping(keyBindingContexts.context(contextName));
-      } ).join("");
-}
-
-function formatKeybindingsMapping(context: KeybindingsMapping): string {
-  const bindings = _.clone(context.keyBindings);
-  bindings.sort( (a,b): number => {
-    const nameA = commandName(a.command);
-    const nameB = commandName(b.command);
-    return nameA < nameB ? -1 : ( nameA > nameB ? 1 : 0);
-  });
-  
-  return `<table class='table'>
-    <tbody>
-    <tr>
-      <th class="col-md-7">Command</th>
-      <th class="col-md-2">Shortcut</th>
-      <th class="col-md-3">Code</th>
-    </tr>` +
-      bindings.map( (binding) => `<tr>
-        <td class="col-md-7">${commandName(binding.command)}</td>
-        <td class="col-md-2"><div class='${CLASS_KEYCAP}'><span>${formatShortcut(binding.shortcut)}</span></div></td>
-        <td class="col-md-3">${binding.command}</td></tr>`).join("\n") +
-    "</tbody></table>";
 }

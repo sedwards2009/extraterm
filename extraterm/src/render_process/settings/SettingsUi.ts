@@ -91,7 +91,7 @@ interface MenuItem {
     <template v-if="firstShowComplete || selectedTab == 'keybindings'">
       <et-key-bindings-settings v-show="selectedTab == 'keybindings'"
         v-bind:configDatabase.prop="getConfigDatabase()"
-        v-bind:keyBindingsManager.prop="getKeybindingsManager()">
+        v-bind:keybindingsManager.prop="getKeybindingsManager()">
       </et-key-bindings-settings>
     </template>
   </div>

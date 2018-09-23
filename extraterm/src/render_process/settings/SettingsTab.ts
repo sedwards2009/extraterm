@@ -31,7 +31,7 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
   private _log: Logger = null;
   private _ui: SettingsUi = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
-  private _keyBindingsManager: KeybindingsManager = null;
+  private _keybindingsManager: KeybindingsManager = null;
   private _dialogStack: HTMLElement[] = [];
 
   constructor() {
@@ -80,7 +80,7 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
   }
   
   setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
-    this._keyBindingsManager = newKeybindingsManager;
+    this._keybindingsManager = newKeybindingsManager;
     this._ui.setKeybindingsManager(newKeybindingsManager);
   }
 
@@ -93,11 +93,11 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
   }
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._keyBindingsManager === null || this._keyBindingsManager.getKeybindingsContexts() === null) {
+    if (this._keybindingsManager === null || this._keybindingsManager.getKeybindingsContexts() === null) {
       return;
     }
 
-    const keyBindings = this._keyBindingsManager.getKeybindingsContexts().context(SETTINGS_TAB);
+    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(SETTINGS_TAB);
     const command = keyBindings.mapEventToCommand(ev);
     if (this._executeCommand(command)) {
       ev.stopPropagation();

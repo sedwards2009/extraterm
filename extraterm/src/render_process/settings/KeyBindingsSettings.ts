@@ -12,6 +12,7 @@ import { SettingsBase } from './SettingsBase';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { OnChangeEmitterElementLifecycleBinder } from './OnChangeEmitterElementLifecycleBinder';
 import * as WebIpc from '../WebIpc';
+import * as ThemeTypes from '../../theme/Theme';
 
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
@@ -57,6 +58,10 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
     this._getUi().setKeybindingsContexts(keybindingsManager.getKeybindingsContexts());
   }
 
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.KEY_BINDINGS_TAB, ...super._themeCssFiles()];
+  }
+
   protected _setConfig(key: ConfigKey, config: any): void {
     const ui = this._getUi();
 
@@ -89,15 +94,15 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
     }
   }
 
-  set keyBindingsManager(keyBindingsManager: KeybindingsManager) {
-    this._keyBindingOnChangeEmitterElementLifecycleBinder.setOnChangeEmitter(keyBindingsManager);
-    if (keyBindingsManager == null) {
+  set keybindingsManager(keybindingsManager: KeybindingsManager) {
+    this._keyBindingOnChangeEmitterElementLifecycleBinder.setOnChangeEmitter(keybindingsManager);
+    if (keybindingsManager == null) {
       return;
     }
-    this._getUi().setKeybindingsContexts(keyBindingsManager.getKeybindingsContexts());
+    this._getUi().setKeybindingsContexts(keybindingsManager.getKeybindingsContexts());
   }
 
-  get keyBindingsManager(): KeybindingsManager {
+  get keybindingsManager(): KeybindingsManager {
     return this._keyBindingOnChangeEmitterElementLifecycleBinder.getOnChangeEmitter();
   }
 }

@@ -11,6 +11,7 @@ import Vue from 'vue';
 export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
   private _configBinder: ConfigElementLifecycleBinder = null;
   private _ui: V;
+  private _isMounted = false;
 
   constructor(uiConstructor: { new(): V}, keys: ConfigKey[]) {
     super();
@@ -18,7 +19,6 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
       (key: ConfigKey, config: any): void => this._handleConfigChange(key, config), keys);
 
     this._ui = new uiConstructor();
-    const component = this._ui.$mount();
     this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
 
     const shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
@@ -26,9 +26,7 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     themeStyle.id = ThemeableElementBase.ID_THEME;
     shadow.appendChild(themeStyle);
     
-    this.updateThemeCss();
-    
-    shadow.appendChild(component.$el);
+    this.updateThemeCss();    
   }
 
   private _handleConfigChange(key: ConfigKey, config: any): void {
@@ -53,6 +51,13 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
 
   connectedCallback(): void {
     super.connectedCallback();
+
+    if ( ! this._isMounted) {
+      const component = this._ui.$mount();
+      this.shadowRoot.appendChild(component.$el);
+      this._isMounted = true;
+    }
+
     this._configBinder.connectedCallback();
   }
 
