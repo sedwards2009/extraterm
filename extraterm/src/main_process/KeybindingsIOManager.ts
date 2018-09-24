@@ -10,6 +10,7 @@ import {Logger, getLogger, log} from "extraterm-logging";
 
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { KeybindingsInfo } from '../Config';
+import { KeybindingsFile } from '../KeybindingsFile';
 
 
 export class KeybindingsIOManager {
@@ -83,7 +84,7 @@ export class KeybindingsIOManager {
     return null;
   }
 
-  loadKeybindingsJson(name: string): object {
+  readKeybindingsJson(name: string): KeybindingsFile {
     const info = this._getInfoByName(name);
     const fullPath = path.join(info.path, info.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
@@ -112,7 +113,7 @@ export class KeybindingsIOManager {
     return true;
   }
 
-  updateKeybindings(name: string, data: any): boolean {
+  updateKeybindings(name: string, data: KeybindingsFile): boolean {
     const info = this._getInfoByName(name);
     if (info == null) {
       this._log.warn(`Unable to find keybindings file '${name}'`);

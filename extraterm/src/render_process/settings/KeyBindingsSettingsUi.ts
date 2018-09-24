@@ -7,7 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as _ from 'lodash';
 import { KeybindingsInfo } from '../../Config';
-import { KeybindingsMapping, KeybindingsContexts } from '../keybindings/KeyBindingsManager';
+import { KeybindingsFile, KeybindingsFileContext } from '../../KeybindingsFile';
 
 const humanText = require('../keybindings/keybindingstext.json');
 
@@ -17,7 +17,7 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
 @Component({
   props: {
     contextName: String,
-    keybindingsContext: KeybindingsMapping
+    keybindingsFileContext: Object //KeybindingsFileContext
   },
   template: `
 <div>
@@ -31,7 +31,7 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
       <tr v-for="command in commands" :key="command">
         <td class="col-md-7" :title="command">{{commandHumanName(command)}}</td>
         <td class="col-md-5">
-          <div v-for="key in keybindingsContext.mapCommandToKeybindings(command)" class='${CLASS_KEYCAP}'>
+          <div v-for="key in commandToKeysMapping.get(command)" class='${CLASS_KEYCAP}'>
             <span>{{formatKey(key)}}</span>
           </div>
         </td>
@@ -43,7 +43,7 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
 class KeybindingsContext extends Vue {
   // Props
   contextName: string;
-  keybindingsContext: KeybindingsMapping;
+  keybindingsFileContext: KeybindingsFileContext;
 
   get contextHeading(): string {
     const str = humanText.contextNames[this.contextName];
@@ -60,6 +60,23 @@ class KeybindingsContext extends Vue {
     });
 
     return commandCodes;
+  }
+
+  get commandToKeysMapping(): Map<string, string[]> {
+    const result = new Map<string, string[]>();
+
+    for (const command of humanText.contexts[this.contextName]) {
+      result.set(command, []);
+    }
+
+    for (const key of Object.keys(this.keybindingsFileContext)) {
+      const command = this.keybindingsFileContext[key];
+      if ( ! result.has(command)) {
+        result.set(command, []);
+      }
+      result.get(command).push(key);
+    }
+    return result;
   }
 
   commandHumanName(commandCode: string): string {
@@ -97,7 +114,7 @@ class KeybindingsContext extends Vue {
       "keybindings-context": KeybindingsContext
     },
     props: {
-      keybindingsContexts: KeybindingsContexts
+      keybindings: Object //KeybindingsFile
     },
     template: `
     <div>
@@ -105,20 +122,20 @@ class KeybindingsContext extends Vue {
         v-for="contextName in humanContexts"
         :contextName="contextName"
         :key="contextName"
-        :keybindingsContext="keybindingsContexts.context(contextName)">
+        :keybindingsFileContext="keybindings[contextName]">
       </keybindings-context>
     </div>`
   }
 )
 class KeybindingsList extends Vue {
   // Props
-  keybindingsContexts: KeybindingsContexts;
+  keybindings: KeybindingsFile;
 
   get humanContexts(): string[] {
     return Object.keys(humanText.contexts);
   }
   mounted() {
-    console.log("this.keybindingsContexts != null is", this.keybindingsContexts != null);
+    console.log("this.keybindingsContexts != null is", this.keybindings != null);
   }
 }
 
@@ -152,16 +169,14 @@ class KeybindingsList extends Vue {
       </div>
     </div>
   </div>
-  <keybindings-contexts-list :keybindingsContexts="keybindingsContexts"></keybindings-contexts-list>
+  <keybindings-contexts-list v-if="keybindings !== null" :keybindings="keybindings"></keybindings-contexts-list>
 </div>
 `
 })
 export class KeybindingsSettingsUi extends Vue {
-  keybindingsContexts: KeybindingsContexts = null;
-
+  keybindings: KeybindingsFile = null;
   selectedKeybindings: string = "";
   keybindingsInfoList: KeybindingsInfo[] = [];
-  keybindingsContextsStamp: any = Date.now();
 
   isSelectedKeybindingsReadOnly(): boolean {
     for (const kbf of this.keybindingsInfoList) {
@@ -171,12 +186,6 @@ export class KeybindingsSettingsUi extends Vue {
     }
 console.log(`Unable to find KeybindingsInfo for '${this.selectedKeybindings}'!`);
     return true;
-  }
-
-  setKeybindingsContexts(keyBindingsContexts: KeybindingsContexts): void {
-    this.keybindingsContexts = keyBindingsContexts;
-    this.keybindingsContextsStamp = Date.now();
-    this.$forceUpdate();
   }
 
   duplicate(): void {

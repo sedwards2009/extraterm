@@ -364,7 +364,7 @@ const _log = getLogger("main");
 function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig): SystemConfig {
   let homeDir = app.getPath('home');
   
-  const keyBindingsJSON = keybindingsIOManager.loadKeybindingsJson(config.keybindingsName);
+  const keyBindingsJSON = keybindingsIOManager.readKeybindingsJson(config.keybindingsName);
 
   return {
     homeDir,
@@ -535,7 +535,7 @@ function setupConfig(): void {
       if (newGeneralConfig != null) {
         if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
           const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-          systemConfig.keybindingsContexts = keybindingsIOManager.loadKeybindingsJson(newGeneralConfig.keybindingsName);
+          systemConfig.keybindingsContexts = keybindingsIOManager.readKeybindingsJson(newGeneralConfig.keybindingsName);
           configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
         }
       }
@@ -804,6 +804,10 @@ function handleIpc(event: Electron.Event, arg: any): void {
       reply = handleConfigRequest(<Messages.ConfigRequestMessage> msg);
       break;
       
+    case Messages.MessageType.CONFIG:
+      handleConfig(<Messages.ConfigMessage> msg);
+      break;
+      
     case Messages.MessageType.FRAME_DATA_REQUEST:
       _log.debug('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
       break;
@@ -868,10 +872,6 @@ function handleIpc(event: Electron.Event, arg: any): void {
       }
       break;
 
-    case Messages.MessageType.CONFIG:
-      handleConfig(<Messages.ConfigMessage> msg);
-      break;
-      
     case Messages.MessageType.NEW_TAG_REQUEST:
       const ntrm = <Messages.NewTagRequestMessage> msg;
       reply = handleNewTagRequest(ntrm);
@@ -908,6 +908,10 @@ function handleIpc(event: Electron.Event, arg: any): void {
 
     case Messages.MessageType.COPY_KEYBINDINGS:
       handleKeybindingsCopy(<Messages.KeybindingsCopyMessage> msg);
+      break;
+
+    case Messages.MessageType.READ_KEYBINDINGS_REQUEST:
+      reply = handleKeybindingsReadRequest(<Messages.KeybindingsReadRequestMessage>msg);
       break;
 
     default:
@@ -1176,6 +1180,16 @@ function handleKeybindingsCopy(msg: Messages.KeybindingsCopyMessage): void {
   const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+}
+
+function handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessage): Messages.KeybindingsReadMessage {
+  const keybindings = keybindingsIOManager.readKeybindingsJson(msg.name);
+  const reply: Messages.KeybindingsReadMessage = {
+    type: Messages.MessageType.READ_KEYBINDINGS,
+    name: msg.name,
+    keybindings
+  };
+  return reply;
 }
 
 main();

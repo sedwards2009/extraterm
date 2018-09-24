@@ -9,8 +9,6 @@ import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig }
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
-import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
-import { OnChangeEmitterElementLifecycleBinder } from './OnChangeEmitterElementLifecycleBinder';
 import * as WebIpc from '../WebIpc';
 import * as ThemeTypes from '../../theme/Theme';
 
@@ -20,7 +18,6 @@ export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 @WebComponent({tag: KEY_BINDINGS_SETTINGS_TAG})
 export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   private _log: Logger = null;
-  private _keyBindingOnChangeEmitterElementLifecycleBinder: OnChangeEmitterElementLifecycleBinder<KeybindingsManager> = null;
   private _autoSelect: string = null;
 
   constructor() {
@@ -36,26 +33,6 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
     this._getUi().$on("delete", keybindingsFilename => {
       // WebIpc.keybindings
     });
-
-    this._keyBindingOnChangeEmitterElementLifecycleBinder =
-      new OnChangeEmitterElementLifecycleBinder<KeybindingsManager>(this._handleKeybindingsManagerChange.bind(this));
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this._keyBindingOnChangeEmitterElementLifecycleBinder.connectedCallback();
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this._keyBindingOnChangeEmitterElementLifecycleBinder.disconnectedCallback();
-  }
-
-  private _handleKeybindingsManagerChange(keybindingsManager: KeybindingsManager): void {
-    if (keybindingsManager == null) {
-      return;
-    }
-    this._getUi().setKeybindingsContexts(keybindingsManager.getKeybindingsContexts());
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -71,6 +48,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
         ui.keybindingsInfoList = systemConfig.keybindingsInfoList;
         if (this._autoSelect != null) {
           ui.selectedKeybindings = this._autoSelect;
+          this._loadKeybindings(ui.selectedKeybindings);
           this._autoSelect = null;
         }
       }
@@ -80,8 +58,15 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
       const generalConfig = <GeneralConfig> config;
       if (ui.selectedKeybindings !== generalConfig.keybindingsName) {
         ui.selectedKeybindings = generalConfig.keybindingsName;
+        this._loadKeybindings(ui.selectedKeybindings);
       }
     }
+  }
+
+  private _loadKeybindings(name: string): void {
+    WebIpc.keybindingsRequestRead(name).then(msg => {
+      this._getUi().keybindings = msg.keybindings;
+    });
   }
 
   protected _dataChanged(): void {
@@ -91,18 +76,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
     if (newGeneralConfig.keybindingsName !== ui.selectedKeybindings) {
       newGeneralConfig.keybindingsName = ui.selectedKeybindings;
       this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
+      this._loadKeybindings(ui.selectedKeybindings);
     }
-  }
-
-  set keybindingsManager(keybindingsManager: KeybindingsManager) {
-    this._keyBindingOnChangeEmitterElementLifecycleBinder.setOnChangeEmitter(keybindingsManager);
-    if (keybindingsManager == null) {
-      return;
-    }
-    this._getUi().setKeybindingsContexts(keybindingsManager.getKeybindingsContexts());
-  }
-
-  get keybindingsManager(): KeybindingsManager {
-    return this._keyBindingOnChangeEmitterElementLifecycleBinder.getOnChangeEmitter();
   }
 }

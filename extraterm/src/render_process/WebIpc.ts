@@ -222,3 +222,11 @@ export function keybindingsCopy(sourceName: string, destName: string): void {
   const msg: Messages.KeybindingsCopyMessage = {type: Messages.MessageType.COPY_KEYBINDINGS, sourceName, destName};
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
+
+export function keybindingsRequestRead(name: string): Promise<Messages.KeybindingsReadMessage> {
+  const msg: Messages.KeybindingsReadRequestMessage = {
+    type: Messages.MessageType.READ_KEYBINDINGS_REQUEST,
+    name
+  };
+  return <Promise<Messages.KeybindingsReadMessage>> request(msg, Messages.MessageType.READ_KEYBINDINGS);
+}
