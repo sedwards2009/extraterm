@@ -40,6 +40,14 @@ import Vue from 'vue';
       <div v-if="shellErrorMsg != ''" class="text-center"><i class="fas fa-exclamation-triangle"></i> {{ shellErrorMsg }}</div>
     </div>
   </div>
+  
+  <div class="form-group">
+    <label for="name" class="col-sm-4 control-label">Arguments:</label>
+    <div class="input-group col-sm-8">
+      <input type="text" class="form-control" name="args" v-model="args">
+    </div>
+  </div>
+
 </div>`
 })
 export class CygwinProxySessionEditorUi extends Vue {
@@ -49,4 +57,5 @@ export class CygwinProxySessionEditorUi extends Vue {
   useDefaultShell: number = 1;
   cygwinPath = "";
   cygwinPathErrorMsg = "";
+  args: string = "";
 }

@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
 import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap } from 'extraterm-extension-api';
+import { parseArgs } from 'extraterm-args';
 
 import { WindowsConsolePty, PtyOptions } from './WindowsConsolePty';
 
@@ -64,7 +65,7 @@ class WindowsConsoleBackend implements SessionBackend {
     
     let exe = sessionConfig.exe;
     let preMessage = "";
-    const args = this.parseArgs(sessionConfig.args);
+    const args = parseArgs(sessionConfig.args);
 
     if ( ! this._validateExe(exe)) {
       preMessage = `\x0a\x0d\x0a\x0d*** Program '${exe}' couldn't be executed, falling back to 'cmd.exe' ***\x0a\x0d\x0a\x0d\x0a\x0d`;
@@ -89,32 +90,6 @@ class WindowsConsoleBackend implements SessionBackend {
     return new WindowsConsolePty(this._log, options);
   }
   
-  parseArgs(args: string): string[] {
-    var arr = [];
-    var quote = false;  // true means we're inside a quoted field
-
-    let c: number;
-    // iterate over each character, keep track of current field index (i)
-    for (var i = c = 0; c < args.length; c++) {
-        var cc = args[c], nc = args[c+1];  // current character, next character
-        arr[i] = arr[i] || '';           // create a new array value (start with empty string) if necessary
-
-        // If it's just one quotation mark, begin/end quoted field
-        if (cc == '"' || cc == '\'') { quote = !quote; continue; }
-
-        // If it's a space, and we're not in a quoted field, move on to the next field
-        if (cc == ' ' && !quote) { ++i; continue; }
-
-        // Otherwise, append the current character to the current field
-        arr[i] += cc;
-    }
-
-    this._log.debug("Parsed arguments: [" + arr + "]");
-    this._log.debug("RE Parsed arguments: [", args.split(/[^" ]+|("[^"]*")/))
-
-    return arr;
-  }
-
   private _validateExe(exe: string): boolean {
     if (path.isAbsolute(exe)) {
       return this._validateExePath(exe);

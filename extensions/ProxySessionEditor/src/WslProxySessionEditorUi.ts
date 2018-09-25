@@ -36,7 +36,15 @@ import Vue from 'vue';
       </datalist>
     </div>
   </div>
-</div>
+
+  <div class="form-group">
+    <label for="name" class="col-sm-4 control-label">Arguments:</label>
+    <div class="input-group col-sm-8">
+      <input type="text" class="form-control" name="args" v-model="args">
+    </div>
+  </div>
+
+  </div>
 `
 })
 export class WslProxySessionEditorUi extends Vue {
@@ -45,4 +53,5 @@ export class WslProxySessionEditorUi extends Vue {
   useDefaultShell: number = 1;
   shellErrorMsg = "";
   etcShells = [];
+  args = "";
 }

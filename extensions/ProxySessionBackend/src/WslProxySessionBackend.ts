@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
 import { app } from 'electron';
+import { parseArgs } from 'extraterm-args';
 
 import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Pty, Terminal, SessionConfiguration, Backend, SessionBackend, EnvironmentMap} from 'extraterm-extension-api';
 
@@ -66,7 +67,7 @@ export class WslProxySessionBackend implements SessionBackend {
 
     const defaultShell = "/bin/bash";
     let shell = sessionConfig.useDefaultShell ? defaultShell : sessionConfig.shell;
-    const args = ["-l"];
+    const args = ["-l"].concat(parseArgs(sessionConfig.args));
     
     const extraPtyEnv = {
       TERM: "xterm-256color"

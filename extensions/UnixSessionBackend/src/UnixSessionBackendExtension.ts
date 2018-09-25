@@ -7,6 +7,7 @@ import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap } from 'extraterm-extension-api';
+import { parseArgs } from 'extraterm-args';
 
 import { UnixPty, PtyOptions } from './UnixPty';
 
@@ -50,7 +51,7 @@ class UnixBackend implements SessionBackend {
     }
 
     // OSX expects shells to be login shells. Linux etc doesn't
-    const args = process.platform === "darwin" ? ["-l"] : [];
+    const args = (process.platform === "darwin" ? ["-l"] : []).concat(parseArgs(sessionConfig.args));
 
     const ptyEnv = _.cloneDeep(process.env);
     ptyEnv["TERM"] = "xterm-256color";
