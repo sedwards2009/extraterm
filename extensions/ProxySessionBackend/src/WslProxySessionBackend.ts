@@ -32,7 +32,8 @@ export class WslProxySessionBackend implements SessionBackend {
         name: "WSL",
         type: "wsl",
         useDefaultShell: true,
-        shell: ""
+        shell: "",
+        args: ""
       };
       return [wslSessionConfig];
     } else {

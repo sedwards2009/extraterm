@@ -16,7 +16,6 @@ let log: Logger = null;
 
 interface WindowsConsoleSessionConfiguration extends SessionConfiguration {
   exe?: string;
-  args?: string;
 }
 
 export function activate(context: ExtensionContext): any {
