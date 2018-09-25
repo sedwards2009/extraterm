@@ -17,7 +17,8 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
 @Component({
   props: {
     contextName: String,
-    keybindingsFileContext: Object //KeybindingsFileContext
+    keybindingsFileContext: Object, //KeybindingsFileContext
+    readOnly: Boolean
   },
   template: `
 <div>
@@ -31,9 +32,14 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
       <tr v-for="command in commands" :key="command">
         <td class="col-md-7" :title="command">{{commandHumanName(command)}}</td>
         <td class="col-md-5">
-          <div v-for="key in commandToKeysMapping.get(command)" class='${CLASS_KEYCAP}'>
-            <span>{{formatKey(key)}}</span>
-          </div>
+          <template v-for="key in commandToKeysMapping.get(command)">
+            <div class='${CLASS_KEYCAP}'>
+              <span>{{formatKey(key)}}</span>
+            </div>
+            <button v-if="!readOnly" v-on:click="deleteKey(command, key)"><i class="fas fa-times"></i></button>
+            <br />
+          </template>
+          <button v-if="!readOnly"><i class="fas fa-plus"></i></button>
         </td>
       </tr>
     </tbody>
@@ -44,6 +50,7 @@ class KeybindingsContext extends Vue {
   // Props
   contextName: string;
   keybindingsFileContext: KeybindingsFileContext;
+  readOnly: boolean;
 
   get contextHeading(): string {
     const str = humanText.contextNames[this.contextName];
@@ -105,7 +112,10 @@ class KeybindingsContext extends Vue {
     } );
     return parts.join("");
   }
-  
+
+  deleteKey(command: string, key: string): void {
+    Vue.delete(this.keybindingsFileContext, key);
+  }
 }
 
 @Component(
@@ -114,7 +124,8 @@ class KeybindingsContext extends Vue {
       "keybindings-context": KeybindingsContext
     },
     props: {
-      keybindings: Object //KeybindingsFile
+      keybindings: Object, //KeybindingsFile,
+      readOnly: Boolean
     },
     template: `
     <div>
@@ -122,7 +133,8 @@ class KeybindingsContext extends Vue {
         v-for="contextName in humanContexts"
         :contextName="contextName"
         :key="contextName"
-        :keybindingsFileContext="keybindings[contextName]">
+        :keybindingsFileContext="keybindings[contextName]"
+        :readOnly="readOnly">
       </keybindings-context>
     </div>`
   }
@@ -130,6 +142,7 @@ class KeybindingsContext extends Vue {
 class KeybindingsList extends Vue {
   // Props
   keybindings: KeybindingsFile;
+  readOnly: boolean;
 
   get humanContexts(): string[] {
     return Object.keys(humanText.contexts);
@@ -163,13 +176,17 @@ class KeybindingsList extends Vue {
         </div>
         <div class="col-sm-4">
           <button title="Duplicate" class="btn btn-default" v-on:click="duplicate()"><i class="fas fa-copy"></i></button>
-          <button title="Rename" class="btn btn-default" v-bind:disabled="isSelectedKeybindingsReadOnly()" v-on:click="rename()"><i class="fas fa-edit"></i></button>
-          <button title="Delete" class="btn btn-default" v-bind:disabled="isSelectedKeybindingsReadOnly()" v-on:click="trash()"><i class="fas fa-trash"></i></button>
+          <button title="Rename" class="btn btn-default" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="rename()"><i class="fas fa-edit"></i></button>
+          <button title="Delete" class="btn btn-default" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="trash()"><i class="fas fa-trash"></i></button>
         </div>
       </div>
     </div>
   </div>
-  <keybindings-contexts-list v-if="keybindings !== null" :keybindings="keybindings"></keybindings-contexts-list>
+  <keybindings-contexts-list
+    v-if="keybindings !== null"
+    :keybindings="keybindings"
+    :readOnly="isSelectedKeybindingsReadOnly">
+  </keybindings-contexts-list>
 </div>
 `
 })
@@ -178,7 +195,7 @@ export class KeybindingsSettingsUi extends Vue {
   selectedKeybindings: string = "";
   keybindingsInfoList: KeybindingsInfo[] = [];
 
-  isSelectedKeybindingsReadOnly(): boolean {
+  get isSelectedKeybindingsReadOnly(): boolean {
     for (const kbf of this.keybindingsInfoList) {
       if (kbf.name === this.selectedKeybindings) {
         return kbf.readOnly;
