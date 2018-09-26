@@ -56,7 +56,7 @@ export function activate(context: ExtensionContext): any {
           uuid: config.uuid,
           name: config.name,
           exe: "cmd.exe",
-          args: "",
+          args: ""
         };
       }
 

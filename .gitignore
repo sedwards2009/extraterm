@@ -23,3 +23,5 @@ packages/extraterm-web-component-decorators/Decorators.d.ts
 packages/extraterm-event-emitter/main.d.ts
 packages/extraterm-readonly-toolbox/main.d.ts
 packages/extraterm-uuid/main.d.ts
+packages/extraterm-args/main.d.ts
+
