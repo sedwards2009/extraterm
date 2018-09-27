@@ -1,7 +1,7 @@
 {
-  "name": "extraterm-args",
+  "name": "extraterm-shell-string-parser",
   "version": "1.0.0",
-  "description": "parse arguments",
+  "description": "Parse Shell String Arguments",
   "author": "Nick Shanny",
   "license": "MIT",
   "main": "main.js",
