@@ -4,14 +4,14 @@
 
 import { WebComponent } from 'extraterm-web-component-decorators';
 
-import { KeybindingsSettingsUi, START_KEY_INPUT_EVENT, END_KEY_INPUT_EVENT} from './KeyBindingsSettingsUi';
-import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../Config';
+import { KeybindingsSettingsUi, START_KEY_INPUT_EVENT, END_KEY_INPUT_EVENT} from './KeybindingsSettingsUi';
+import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
-import { SettingsBase } from './SettingsBase';
-import * as WebIpc from '../WebIpc';
-import * as ThemeTypes from '../../theme/Theme';
-import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
+import { SettingsBase } from '../SettingsBase';
+import * as WebIpc from '../../WebIpc';
+import * as ThemeTypes from '../../../theme/Theme';
+import { KeybindingsManager } from '../../keybindings/KeyBindingsManager';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 

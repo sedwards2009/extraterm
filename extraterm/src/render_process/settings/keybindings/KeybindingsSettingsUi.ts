@@ -6,8 +6,8 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as _ from 'lodash';
-import { KeybindingsInfo } from '../../Config';
-import { KeybindingsFile, KeybindingsFileContext } from '../../KeybindingsFile';
+import { KeybindingsInfo } from '../../../Config';
+import { KeybindingsFile, KeybindingsFileContext } from '../../../KeybindingsFile';
 
 const humanText = require('../keybindings/keybindingstext.json');
 
