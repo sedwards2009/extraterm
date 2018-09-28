@@ -98,7 +98,8 @@ export class KeybindingsMapping {
   public keyBindings: Keybinding[] = [];
   private _log: Logger = null;  
   private _platform: string;
-  
+  private _enabled = true;
+
   constructor(mappingName: string, allMappingsJson: Object, platform: string) {
     this._log = getLogger("KeybindingMapping", this);
     this._platform = platform;
@@ -111,7 +112,11 @@ export class KeybindingsMapping {
       }
     });
   }
-  
+
+  setEnabled(enabled: boolean): void {
+    this._enabled = enabled;
+  }
+
   equals(other: KeybindingsMapping): boolean {
     if (other == null) {
       return false;
@@ -165,6 +170,11 @@ export class KeybindingsMapping {
    *         key binding.
    */
   mapEventToCommand(ev: MinimalKeyboardEvent): string {
+    if ( ! this._enabled) {
+      return null;
+    }
+
+
     let key = "";
     if (ev.key.length === 1 && ev.key.charCodeAt(0) <= 31) {
       // Chrome on Windows sends us control codes directly in ev.key.
@@ -320,7 +330,8 @@ export class KeybindingsContexts {
   private _log: Logger = null;
   private _contexts = new Map<string, KeybindingsMapping>();
   public contextNames: string[] = [];
-  
+  private _enabled = true;
+
   constructor(obj: object, platform: string) {
     this._log = getLogger("KeybindingContexts", this);
     for (let key in obj) {
@@ -330,6 +341,10 @@ export class KeybindingsContexts {
         this._contexts.set(key, mapper);
       }
     }
+  }
+
+  setEnabled(enabled: boolean): void {
+    this._enabled = enabled;
   }
 
   equals(other: KeybindingsContexts): boolean {
@@ -366,7 +381,11 @@ export class KeybindingsContexts {
    *         context is unknown
    */
   context(contextName: string): KeybindingsMapping {
-    return this._contexts.get(contextName) || null;
+    const mapping = this._contexts.get(contextName) || null;
+    if (mapping != null) {
+      mapping.setEnabled(this._enabled);
+    }
+    return mapping;
   }
 }
 
@@ -396,6 +415,8 @@ export interface KeybindingsManager {
    *
    */
   onChange: Event<void>;
+
+  setEnabled(on: boolean): void;
 }
 
 export interface AcceptsKeybindingsManager {

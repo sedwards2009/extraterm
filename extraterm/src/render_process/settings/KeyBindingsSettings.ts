@@ -4,14 +4,14 @@
 
 import { WebComponent } from 'extraterm-web-component-decorators';
 
-import { KeybindingsSettingsUi} from './KeyBindingsSettingsUi';
+import { KeybindingsSettingsUi, START_KEY_INPUT_EVENT, END_KEY_INPUT_EVENT} from './KeyBindingsSettingsUi';
 import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 import * as WebIpc from '../WebIpc';
 import * as ThemeTypes from '../../theme/Theme';
-
+import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 
@@ -19,6 +19,7 @@ export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   private _log: Logger = null;
   private _autoSelect: string = null;
+  private _keybindingsManager: KeybindingsManager = null;
 
   constructor() {
     super(KeybindingsSettingsUi, [SYSTEM_CONFIG, GENERAL_CONFIG]);
@@ -32,6 +33,18 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
 
     this._getUi().$on("delete", keybindingsFilename => {
       // WebIpc.keybindings
+    });
+
+    this._getUi().$on(START_KEY_INPUT_EVENT, () => {
+      if (this._keybindingsManager != null) {
+        this._keybindingsManager.setEnabled(false);
+      }
+    });
+
+    this._getUi().$on(END_KEY_INPUT_EVENT, () => {
+      if (this._keybindingsManager != null) {
+        this._keybindingsManager.setEnabled(true);
+      }
     });
   }
 
@@ -79,4 +92,12 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
       this._loadKeybindings(ui.selectedKeybindings);
     }
   }
+
+  set keybindingsManager(keybindingsManager: KeybindingsManager) {
+    this._keybindingsManager = keybindingsManager;
+  }
+
+  get keybindingsManager(): KeybindingsManager {
+    return this._keybindingsManager;
+  }  
 }

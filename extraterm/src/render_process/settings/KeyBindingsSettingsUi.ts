@@ -13,8 +13,43 @@ const humanText = require('../keybindings/keybindingstext.json');
 
 const CLASS_KEYCAP = "CLASS_KEYCAP";
 
+@Component({
+  props: {
+    commandHumanName: String
+  },
+  template: `<input
+    ref="input"
+    class="form-control"
+    placeholder="Type a key"
+    v-on:keypress.capture="onKeyPress"
+    v-on:blur="onCancel" />`
+})
+class KeybindingsKeyInput extends Vue {
+  // Props
+  commandHumanName: string;
+
+  mounted(): void {
+    this.$nextTick(() => (<HTMLInputElement>this.$refs.input).focus());
+  }
+
+  onCancel(): void {
+    this.$emit("cancelled");
+  }
+
+  onKeyPress(event: KeyboardEvent): void {
+    console.log(event);
+  }
+}
+
+type KeybindingsKeyInputState = "read" | "edit" | "conflict";
+export const START_KEY_INPUT_EVENT = "start-key-input";
+export const END_KEY_INPUT_EVENT = "end-key-input";
+
 
 @Component({
+  components: {
+    "keybindings-key-input": KeybindingsKeyInput
+  },
   props: {
     contextName: String,
     keybindingsFileContext: Object, //KeybindingsFileContext
@@ -39,7 +74,13 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
             <button v-if="!readOnly" v-on:click="deleteKey(command, key)"><i class="fas fa-times"></i></button>
             <br />
           </template>
-          <button v-if="!readOnly"><i class="fas fa-plus"></i></button>
+          <button v-if="effectiveInputState(command) === 'read'" v-on:click="addKey(command)"><i class="fas fa-plus"></i></button>
+          <keybindings-key-input v-if="effectiveInputState(command) === 'edit' && selectedCommand===command"
+            :commandHumanName="selectedCommandHumanName"
+            v-on:selected="onKeyInputSelected"
+            v-on:cancelled="onKeyInputCancelled"
+            >
+          </keybindings-key-input>
         </td>
       </tr>
     </tbody>
@@ -51,6 +92,10 @@ class KeybindingsContext extends Vue {
   contextName: string;
   keybindingsFileContext: KeybindingsFileContext;
   readOnly: boolean;
+
+  inputState: KeybindingsKeyInputState = "read";
+  selectedCommand = "";
+  conflictKey = "";
 
   get contextHeading(): string {
     const str = humanText.contextNames[this.contextName];
@@ -86,6 +131,10 @@ class KeybindingsContext extends Vue {
     return result;
   }
 
+  effectiveInputState(command: string): KeybindingsKeyInputState {
+    return command !== this.selectedCommand ? "read" : this.inputState;
+  }
+
   commandHumanName(commandCode: string): string {
     const str = humanText.commands[commandCode];
     return str || commandCode;
@@ -116,6 +165,31 @@ class KeybindingsContext extends Vue {
   deleteKey(command: string, key: string): void {
     Vue.delete(this.keybindingsFileContext, key);
   }
+
+  addKey(command: string): void {
+    this.inputState = "edit";
+    this.selectedCommand = command;
+    this.$emit(START_KEY_INPUT_EVENT);
+  }
+
+  get selectedCommandHumanName(): string {
+    return this.commandHumanName(this.selectedCommand);
+  }
+
+  onKeyInputSelected(keyCode: string): void {
+    console.log(`keyCode: ${keyCode}`);
+
+
+    this.inputState = "read";
+
+    this.$emit(END_KEY_INPUT_EVENT);
+
+  }
+
+  onKeyInputCancelled(): void {
+    this.inputState = "read";
+    this.$emit(END_KEY_INPUT_EVENT);
+  }
 }
 
 @Component(
@@ -134,7 +208,9 @@ class KeybindingsContext extends Vue {
         :contextName="contextName"
         :key="contextName"
         :keybindingsFileContext="keybindings[contextName]"
-        :readOnly="readOnly">
+        :readOnly="readOnly"
+        v-on:${START_KEY_INPUT_EVENT}="$emit('${START_KEY_INPUT_EVENT}')"
+        v-on:${END_KEY_INPUT_EVENT}="$emit('${END_KEY_INPUT_EVENT}')">
       </keybindings-context>
     </div>`
   }
@@ -185,7 +261,9 @@ class KeybindingsList extends Vue {
   <keybindings-contexts-list
     v-if="keybindings !== null"
     :keybindings="keybindings"
-    :readOnly="isSelectedKeybindingsReadOnly">
+    :readOnly="isSelectedKeybindingsReadOnly"
+    v-on:${START_KEY_INPUT_EVENT}="$emit('${START_KEY_INPUT_EVENT}')"
+    v-on:${END_KEY_INPUT_EVENT}="$emit('${END_KEY_INPUT_EVENT}')">
   </keybindings-contexts-list>
 </div>
 `

@@ -757,22 +757,31 @@ class ConfigDatabaseImpl implements ConfigDatabase {
 }
 
 class KeybindingsManagerImpl implements KeybindingsManager {
-  private _keyBindingsContexts: KeybindingsContexts = null;
+  private _keybindingsContexts: KeybindingsContexts = null;
   private _log: Logger;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
-  
+  private _enabled = true;
+
   constructor() {
     this._log = getLogger("KeybindingsManagerImpl", self);
     this.onChange = this._onChangeEventEmitter.event;
   }
 
   getKeybindingsContexts(): KeybindingsContexts {
-    return this._keyBindingsContexts;
+    return this._keybindingsContexts;
   }
   
   setKeybindingsContexts(newKeybindingContexts: KeybindingsContexts): void {
-    this._keyBindingsContexts = newKeybindingContexts;
+    this._keybindingsContexts = newKeybindingContexts;
+    this._keybindingsContexts.setEnabled(this._enabled);
     this._onChangeEventEmitter.fire(undefined);
+  }
+
+  setEnabled(enabled: boolean): void {
+    this._enabled = enabled;
+    if (this._keybindingsContexts != null) {
+      this._keybindingsContexts.setEnabled(this._enabled);
+    }
   }
 }
