@@ -8,7 +8,7 @@ import Vue from 'vue';
 import { KeybindingsKeyInput } from './KeyInputUi';
 import { KeybindingsFile, KeybindingsFileContext } from '../../../KeybindingsFile';
 
-const humanText = require('../keybindings/keybindingstext.json');
+const humanText = require('../../keybindings/keybindingstext.json');
 
 const CLASS_KEYCAP = "CLASS_KEYCAP";
 export const START_KEY_INPUT_EVENT = "start-key-input";

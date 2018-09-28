@@ -9,7 +9,7 @@ import { KeybindingsContext, START_KEY_INPUT_EVENT, END_KEY_INPUT_EVENT } from '
 import { KeybindingsFile } from '../../../KeybindingsFile';
 
 
-const humanText = require('../keybindings/keybindingstext.json');
+const humanText = require('../../keybindings/keybindingstext.json');
 
 
 @Component(
