@@ -13,31 +13,15 @@
  * @return string[] of arguments.
  */
 
+function charactersToStrip(element: string, index: number, array: string[]) {
+  return (element !== ' ' && element !== '');
+}
+
 export function shell_string_parser(args: string): string[] {
-  const arr: string[] = [];
-  let quote = false;  // true means we're inside a quoted field
+  let arr: string[] = [];
 
-  let c: number;
-  // iterate over each character, keep track of current field index (i)
-  for (let i = c = 0; c < args.length; c++) {
-      const cc = args[c];     // current character
-      const nc = args[c+1];   // next character
-      arr[i] = arr[i] || '';           // create a new array value (start with empty string) if necessary
-
-      // If it's just one quotation mark, begin/end quoted field
-      if (cc == '"' || cc == '\'') { 
-        quote = !quote; 
-        continue; 
-      }
-
-      // If it's a space, and we're not in a quoted field, move on to the next field
-      if (cc == ' ' && !quote) { 
-        ++i; 
-        continue; 
-      }
-
-      // Otherwise, append the current character to the current field
-      arr[i] += cc;
+  if (args !== undefined) {
+    arr = args.split(/('.*?'|".*?"|\S+)/g).filter(charactersToStrip);
   }
 
   return arr;
