@@ -52,6 +52,12 @@ function keyCode(key: string, ctrl=true): number {
   }
 }
 
+export function testEventKeyNameToConfigKeyName(test: nodeunit.Test): void {
+  test.equal(KeybindingsManager.eventKeyNameToConfigKeyName(" "), "Space");
+  test.equal(KeybindingsManager.eventKeyNameToConfigKeyName("ArrowUp"), "Up");
+  test.done();
+}
+
 export function testMapEventToCommand(test: nodeunit.Test): void {
   const cutsContexts = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
   const editorKeybindings = cutsContexts.context("editor");
@@ -85,15 +91,15 @@ export function testMapCommandToKeybindings(test: nodeunit.Test): void {
   const cutsContexts = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
   const editorKeybindings = cutsContexts.context("editor");
   
-  test.equal(editorKeybindings.mapCommandToKeybinding("open"), "Ctrl+O");
-  test.equal(editorKeybindings.mapCommandToKeybinding("smeg"), "Alt+Shift+S");
-  test.equal(editorKeybindings.mapCommandToKeybinding("sleep"), "Shift+Z");
-  test.equal(editorKeybindings.mapCommandToKeybinding("pageup"), "Page Up");
-  test.equal(editorKeybindings.mapCommandToKeybinding("gohome"), "Home");
-  test.equal(editorKeybindings.mapCommandToKeybinding("dedent"), "Alt+Tab");
-  test.equal(editorKeybindings.mapCommandToKeybinding("finish"), "End");
-  test.equal(editorKeybindings.mapCommandToKeybinding("up"), "Up");
-  test.equal(editorKeybindings.mapCommandToKeybinding("rename"), "F2");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("open"), "Ctrl+O");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("smeg"), "Alt+Shift+S");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("sleep"), "Shift+Z");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("pageup"), "Page Up");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("gohome"), "Home");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("dedent"), "Alt+Tab");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("finish"), "End");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("up"), "Up");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("rename"), "F2");
 
   test.done();
 }

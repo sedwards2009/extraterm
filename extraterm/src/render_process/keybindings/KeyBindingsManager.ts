@@ -16,21 +16,99 @@ export interface MinimalKeyboardEvent {
   altKey: boolean;
   ctrlKey: boolean;
   metaKey: boolean;
-  shiftKey: boolean;  
+  shiftKey: boolean;
   key: string;
   keyCode: number;
 }
 
-// Internal data structure for pairing a key binding with a command.
-interface Keybinding {
+export interface KeybindingOptions {
   altKey: boolean;
   ctrlKey: boolean;
+  shiftKey: boolean;
   metaKey: boolean;
-  shiftKey: boolean;  
-  key: string;
+  configKey: string;
+};
+
+// Internal data structure for pairing a key binding with a command.
+export class Keybinding {
+  readonly altKey: boolean;
+  readonly ctrlKey: boolean;
+  readonly metaKey: boolean;
+  readonly shiftKey: boolean;
+  readonly configKey: string;
+  readonly configKeyLowercase: string;
+  private _humanReadableString: string = null;
+
+  constructor(options: KeybindingOptions) {
+    this.altKey = options.altKey;
+    this.ctrlKey = options.ctrlKey;
+    this.metaKey = options.metaKey;
+    this.shiftKey = options.shiftKey;
+    this.configKey = options.configKey;
+    this.configKeyLowercase = options.configKey.toLowerCase();
+  }
+
+  static parseConfigString(keyBindingString: string): Keybinding {
+    const parts = keyBindingString.replace(/\s/g, "").split(/-/g);
+    const partSet = new Set(parts.map(part => part.length !== 1 ? part.toLowerCase() : part));
+    const hasShift = partSet.has("shift");
+    partSet.delete("shift");
+    const hasCtrl = partSet.has("ctrl");
+    partSet.delete("ctrl");
+    const hasAlt = partSet.has("alt");
+    partSet.delete("alt");
+    const hasMeta = partSet.has("meta") || partSet.has("cmd");
+    partSet.delete("meta");
+    partSet.delete("cmd");
   
-  command: string;
-  shortcut: string;
+    if (partSet.size !== 1) {
+      return null;
+    }
+  
+    const key = partSet.values().next().value;
+    const keybinding = new Keybinding({
+      altKey: hasAlt,
+      ctrlKey: hasCtrl,
+      shiftKey: hasShift,
+      metaKey: hasMeta,
+      configKey: key
+    });
+  
+    return keybinding;
+  }
+
+  formatHumanReadable(): string {
+    if (this._humanReadableString != null) {
+      return this._humanReadableString;
+    }
+
+    const parts: string[] = [];
+    if (this.ctrlKey) {
+      parts.push("Ctrl");
+    }
+    if (this.metaKey) {
+      parts.push("\u2318"); // Mac style 'pretzel' symbol
+    }
+    if (this.altKey) {
+      parts.push("Alt");
+    }
+    if (this.shiftKey) {
+      parts.push("Shift");
+    }
+  
+    if (eventKeyToHumanMapping[this.configKey.toLowerCase()] !== undefined) {
+      parts.push(eventKeyToHumanMapping[this.configKey.toLowerCase()]);
+    } else {
+      parts.push(_.capitalize(this.configKey));
+    }
+  
+    this._humanReadableString = parts.join("+");
+    return this._humanReadableString;
+  }
+    
+  hashString(): string {
+    return `${mapString(this.configKey)}:${mapBool(this.altKey)}:${mapBool(this.ctrlKey)}:${mapBool(this.metaKey)}:${mapBool(this.shiftKey)}`;
+  }
 }
 
 // Maps key names as found in our configuration files to the values used by browser keyboard events.
@@ -51,15 +129,14 @@ for (const key in configNameToEventKeyMapping) {
   lowerConfigNameToEventKeyMapping[key.toLowerCase()] = configNameToEventKeyMapping[key];
 }
 
-const eventKeyToHumanMapping = _.merge(configNameToEventKeyMapping, {
-  "PageUp": "Page Up",
-  "PageDown": "Page Down",
-  "ArrowLeft": "Left",
-  "ArrowRight": "Right",
-  "ArrowUp": "Up",
-  "ArrowDown": "Down",
-  " ": "Space",
-});
+const eventKeyToHumanMapping = {
+  "pageup": "Page Up",
+  "pagedown": "Page Down",
+};
+for (const key in configNameToEventKeyMapping) {
+  eventKeyToHumanMapping[configNameToEventKeyMapping[key].toLowerCase()] = key;
+}
+
 
 export function configKeyNameToEventKeyName(configKeyName: string): string {
   if (lowerConfigNameToEventKeyMapping[configKeyName.toLowerCase()] !== undefined) {
@@ -97,19 +174,22 @@ function mapString(s: string): string {
  * shortcut names.
  */
 export class KeybindingsMapping {
-  
-  public keyBindings: Keybinding[] = [];
-  private _log: Logger = null;  
+
+  public keybindingsList: Keybinding[] = [];
+  private _keybindingCommandMapping = new Map<Keybinding, string>();
+  private _log: Logger = null;
   private _platform: string;
   private _enabled = true;
 
   constructor(mappingName: string, allMappingsJson: Object, platform: string) {
     this._log = getLogger("KeybindingMapping", this);
     this._platform = platform;
-    this._gatherPairs(mappingName, allMappingsJson).forEach( (pair) => {
-      const parsedKeybinding = parseKeybinding(pair.key, pair.value);
-      if (parsedKeybinding !== null) {
-        this.keyBindings.push(parsedKeybinding);
+    this._gatherPairs(mappingName, allMappingsJson).forEach((pair) => {
+      const keybinding = Keybinding.parseConfigString(pair.key);
+      // pair.value
+      if (keybinding !== null) {
+        this._keybindingCommandMapping.set(keybinding, pair.value);
+        this.keybindingsList.push(keybinding);
       } else {
         this._log.warn(`Unable to parse key binding '${pair.key}'. Skipping.`);
       }
@@ -132,8 +212,8 @@ export class KeybindingsMapping {
       return false;
     }
 
-    const myBindings = this.keyBindings.map(this._makeKey);
-    const otherBindings = other.keyBindings.map(this._makeKey);
+    const myBindings = this.keybindingsList.map(b => this._makeKey(b));
+    const otherBindings = other.keybindingsList.map(b => this._makeKey(b));
     myBindings.sort();
     otherBindings.sort();
 
@@ -141,9 +221,8 @@ export class KeybindingsMapping {
   }
 
   private _makeKey(binding: Keybinding): string {
-    return `${mapString(binding.key)}:${mapString(binding.command)}:${mapString(binding.shortcut)}` +
-      `:${mapString(binding.normalizedShortcut)}:${mapBool(binding.altKey)}:${mapBool(binding.ctrlKey)}:` +
-      `${mapBool(binding.metaKey)}:${mapBool(binding.shiftKey)}`;
+    const command = this._keybindingCommandMapping.get(binding);
+    return mapString(command) + ":" + binding.hashString();
   }
 
   private _gatherPairs(name: string, allMappings: Object): { key: string, value: string}[] {
@@ -195,19 +274,21 @@ export class KeybindingsMapping {
       }
     }
 
-    for (let keybinding of this.keyBindings) {
+    for (let keybinding of this.keybindingsList) {
       // Note: We don't compare Shift. It is assumed to be automatically handled by the
       // case of the key sent, except in the case where a special key is used.
-      if (keybinding.key === key &&
+      const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
+      if (keybinding.configKeyLowercase === lowerKey &&
           keybinding.altKey === ev.altKey &&
           keybinding.ctrlKey === ev.ctrlKey &&
           keybinding.shiftKey === ev.shiftKey &&
           keybinding.metaKey === ev.metaKey) {
-        return keybinding.command;
+        return this._keybindingCommandMapping.get(keybinding);
       }
     }
     return null;
   }
+  // this._log.debug(`altKey: ${ev.altKey}, ctrlKey: ${ev.ctrlKey}, metaKey: ${ev.metaKey}, shiftKey: ${ev.shiftKey}, key: ${ev.key}, keyCode: ${ev.keyCode}`);
 
   /**
    * Maps a command name to a readable key binding name.
@@ -216,80 +297,26 @@ export class KeybindingsMapping {
    * @return the matching key binding string if there is one preset, otherwise
    *         null
    */
-  mapCommandToKeybinding(command: string): string {
-    for (let keyBinding of this.keyBindings) {
-      if (keyBinding.command === command) {
-        return keyBinding.shortcut;
+  mapCommandToHumanKeybinding(command: string): string {
+    for (let keybinding of this.keybindingsList) {
+      if (this._keybindingCommandMapping.get(keybinding) === command) {
+        return keybinding.formatHumanReadable();
       }
     }
     return null;
   }
 
-  mapCommandToKeybindings(command: string): string[] {
-    const result: string[] = [];
-    for (let keyBinding of this.keyBindings) {
-      if (keyBinding.command === command) {
-        result.push(keyBinding.shortcut);
-      }
-    }
-    return result;
-  }
+//   mapCommandToKeybindings(command: string): string[] {
+//     const result: string[] = [];
+//     for (let keyBinding of this.keyBindings) {
+//       if (keyBinding.command === command) {
+//         result.push(keyBinding.shortcut);
+//       }
+//     }
+//     return result;
+//   }
 }
 
-function parseKeybinding(keyBindingString: string, command: string): Keybinding {
-  const parts = keyBindingString.replace(/\s/g,"").split(/-/g);
-  const partSet = new Set( parts.map( part => part.length !== 1 ? part.toLowerCase() : part) );
-  const hasShift = partSet.has("shift");
-  partSet.delete("shift");
-  const hasCtrl = partSet.has("ctrl");
-  partSet.delete("ctrl");
-  const hasAlt = partSet.has("alt");
-  partSet.delete("alt");
-  const hasMeta = partSet.has("meta") || partSet.has("cmd");
-  partSet.delete("meta");
-  partSet.delete("cmd");
-
-  if (partSet.size !== 1) {
-    return null;
-  }
-  
-  const key = configKeyNameToEventKeyName(partSet.values().next().value);    
-  const keybinding: Keybinding = {
-    altKey: hasAlt,
-    ctrlKey: hasCtrl,
-    shiftKey: hasShift,
-    metaKey: hasMeta,
-    key: key,
-    command: command,
-    shortcut: ""
-  };
-  keybinding.shortcut = formatKeybinding(keybinding);
-  return keybinding;
-}
-
-function formatKeybinding(keybinding: Keybinding): string {
-  const parts: string[] = [];
-  if (keybinding.ctrlKey) {
-    parts.push("Ctrl");
-  }
-  if (keybinding.metaKey) {
-    parts.push("\u2318"); // Mac style 'pretzel' symbol
-  }
-  if (keybinding.altKey) {
-    parts.push("Alt");
-  }
-  if (keybinding.shiftKey) {
-    parts.push("Shift");
-  }
-  
-  if (eventKeyToHumanMapping[keybinding.key] !== undefined) {
-    parts.push(eventKeyToHumanMapping[keybinding.key]);
-  } else {
-    parts.push(_.capitalize(keybinding.key));
-  }
-  
-  return parts.join("+");
-}
 
 /**
  * Container for mapping context names to KeybindingMapper objects.

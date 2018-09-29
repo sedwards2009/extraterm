@@ -7,6 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
 import { KeybindingsFile, KeybindingsFileContext } from '../../../KeybindingsFile';
+import { Keybinding } from '../../keybindings/KeyBindingsManager';
 
 const humanText = require('../../keybindings/keybindingstext.json');
 
@@ -110,26 +111,8 @@ export class KeybindingsContext extends Vue {
     return str || commandCode;
   }
 
-  formatKey(code: string): string {
-    if (process.platform !== "darwin") {
-      return code;
-    }
-    let parts = code.split(/\+/g);
-    parts = parts.map( (p) => {
-      switch (p) {
-        case 'Cmd':
-          return '\u2318';
-        case 'Shift':
-          return '\u21E7';
-        case 'Alt':
-          return '\u2325';
-        case 'Ctrl':
-          return '^';
-        default:
-          return p;
-      }
-    } );
-    return parts.join("");
+  formatKey(keybindingString: string): string {
+    return Keybinding.parseConfigString(keybindingString).formatHumanReadable();
   }
 
   deleteKey(command: string, key: string): void {

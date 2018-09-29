@@ -622,7 +622,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
       };
     });
     
-    const shortcut = keyBindingManager.getKeybindingsContexts().context("main-ui").mapCommandToKeybinding("openCommandPalette");
+    const shortcut = keyBindingManager.getKeybindingsContexts().context("main-ui").mapCommandToHumanKeybinding("openCommandPalette");
     commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
     commandPalette.setEntries(paletteEntries);
     
