@@ -12,7 +12,7 @@ import { SettingsBase } from '../SettingsBase';
 import * as WebIpc from '../../WebIpc';
 import * as ThemeTypes from '../../../theme/Theme';
 import { KeybindingsManager } from '../../keybindings/KeyBindingsManager';
-import { START_KEY_INPUT_EVENT, END_KEY_INPUT_EVENT } from './ContextUi';
+import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 
@@ -36,13 +36,13 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
       // WebIpc.keybindings
     });
 
-    this._getUi().$on(START_KEY_INPUT_EVENT, () => {
+    this._getUi().$on(EVENT_START_KEY_INPUT, () => {
       if (this._keybindingsManager != null) {
         this._keybindingsManager.setEnabled(false);
       }
     });
 
-    this._getUi().$on(END_KEY_INPUT_EVENT, () => {
+    this._getUi().$on(EVENT_END_KEY_INPUT, () => {
       if (this._keybindingsManager != null) {
         this._keybindingsManager.setEnabled(true);
       }

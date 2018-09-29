@@ -8,7 +8,7 @@ import Vue from 'vue';
 import * as _ from 'lodash';
 import { KeybindingsInfo } from '../../../Config';
 import { KeybindingsFile } from '../../../KeybindingsFile';
-import { START_KEY_INPUT_EVENT, END_KEY_INPUT_EVENT } from './ContextUi';
+import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
 import { KeybindingsList } from './KeybindingsListUi';
 
 
@@ -45,8 +45,8 @@ import { KeybindingsList } from './KeybindingsListUi';
     v-if="keybindings !== null"
     :keybindings="keybindings"
     :readOnly="isSelectedKeybindingsReadOnly"
-    v-on:${START_KEY_INPUT_EVENT}="$emit('${START_KEY_INPUT_EVENT}')"
-    v-on:${END_KEY_INPUT_EVENT}="$emit('${END_KEY_INPUT_EVENT}')">
+    v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
+    v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
   </keybindings-contexts-list>
 </div>
 `

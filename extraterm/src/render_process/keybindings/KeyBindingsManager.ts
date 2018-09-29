@@ -31,27 +31,18 @@ interface Keybinding {
   
   command: string;
   shortcut: string;
-  normalizedShortcut: string;
 }
 
-// Maps key names to the values used by browser keyboard events.
+// Maps key names as found in our configuration files to the values used by browser keyboard events.
 const configNameToEventKeyMapping = {
   "Space": " ",
   "Plus": "+",
   "Minus": "-",
-  "PageUp": "PageUp",
-  "PageDown": "PageDown",
   "Esc": "Escape",
   "Up": "ArrowUp",
   "Down": "ArrowDown",
   "Left": "ArrowLeft",
-  "Right": "ArrowRight",
-  "ArrowUp": "ArrowUp",
-  "ArrowDown": "ArrowDown",
-  "ArrowLeft": "ArrowLeft",
-  "ArrowRight": "ArrowRight",
-  "NumLock": "NumLock",
-  "ScrollLock": "ScrollLock",
+  "Right": "ArrowRight"
 };
 
 // Maps special key names in all lower case back to mixed case.
@@ -70,13 +61,25 @@ const eventKeyToHumanMapping = _.merge(configNameToEventKeyMapping, {
   " ": "Space",
 });
 
-const eventKeyToCodeMirrorMapping = {
-  "ArrowLeft": "Left",
-  "ArrowRight": "Right",
-  "ArrowUp": "Up",
-  "ArrowDown": "Down",
-  "Escape": "Esc",
-};
+export function configKeyNameToEventKeyName(configKeyName: string): string {
+  if (lowerConfigNameToEventKeyMapping[configKeyName.toLowerCase()] !== undefined) {
+    return lowerConfigNameToEventKeyMapping[configKeyName.toLowerCase()];
+  } else {
+    return configKeyName.length === 1 ? configKeyName : _.capitalize(configKeyName.toLowerCase());
+  }
+}
+
+const eventKeyToConfigKeyMapping = new Map<string, string>();
+for (const configKey in configNameToEventKeyMapping) {
+  eventKeyToConfigKeyMapping.set(configNameToEventKeyMapping[configKey], configKey);
+}
+
+export function eventKeyNameToConfigKeyName(eventKeyName: string): string {
+  if (eventKeyToConfigKeyMapping.has(eventKeyName)) {
+    return eventKeyToConfigKeyMapping.get(eventKeyName);
+  }
+  return eventKeyName;
+}
 
 function mapBool(b: boolean): string {
   if (b === undefined) {
@@ -250,13 +253,7 @@ function parseKeybinding(keyBindingString: string, command: string): Keybinding 
     return null;
   }
   
-  let key = partSet.values().next().value;
-  if (lowerConfigNameToEventKeyMapping[key.toLowerCase()] !== undefined) {
-    key = lowerConfigNameToEventKeyMapping[key.toLowerCase()];
-  } else {
-    key = key.length === 1 ? key : _.capitalize(key.toLowerCase());
-  }
-  
+  const key = configKeyNameToEventKeyName(partSet.values().next().value);    
   const keybinding: Keybinding = {
     altKey: hasAlt,
     ctrlKey: hasCtrl,
@@ -264,10 +261,8 @@ function parseKeybinding(keyBindingString: string, command: string): Keybinding 
     metaKey: hasMeta,
     key: key,
     command: command,
-    shortcut: "",
-    normalizedShortcut: ""
+    shortcut: ""
   };
-  keybinding.normalizedShortcut = formatNormalizedKeybinding(keybinding);
   keybinding.shortcut = formatKeybinding(keybinding);
   return keybinding;
 }
@@ -294,33 +289,6 @@ function formatKeybinding(keybinding: Keybinding): string {
   }
   
   return parts.join("+");
-}
-
-/**
- * Creates a formatted string name of the key binding the same way CodeMirror does internally.
- */
-function formatNormalizedKeybinding(keybinding: Keybinding): string {
-  const parts: string[] = [];
-  if (keybinding.shiftKey) {
-    parts.push("Shift");
-  }
-  if (keybinding.metaKey) {
-    parts.push("Cmd");
-  }
-  if (keybinding.ctrlKey) {
-    parts.push("Ctrl");
-  }
-  if (keybinding.altKey) {
-    parts.push("Alt");
-  }
-  
-  if (eventKeyToCodeMirrorMapping[keybinding.key] !== undefined) {
-    parts.push(eventKeyToCodeMirrorMapping[keybinding.key]);
-  } else {
-    parts.push(_.capitalize(keybinding.key));
-  }
-  
-  return parts.join("-");
 }
 
 /**

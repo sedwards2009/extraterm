@@ -5,7 +5,7 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
-import { KeybindingsContext, START_KEY_INPUT_EVENT, END_KEY_INPUT_EVENT } from './ContextUi';
+import { KeybindingsContext, EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
 import { KeybindingsFile } from '../../../KeybindingsFile';
 
 
@@ -29,8 +29,8 @@ const humanText = require('../../keybindings/keybindingstext.json');
         :key="contextName"
         :keybindingsFileContext="keybindings[contextName]"
         :readOnly="readOnly"
-        v-on:${START_KEY_INPUT_EVENT}="$emit('${START_KEY_INPUT_EVENT}')"
-        v-on:${END_KEY_INPUT_EVENT}="$emit('${END_KEY_INPUT_EVENT}')">
+        v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
+        v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
       </keybindings-context>
     </div>`
   }

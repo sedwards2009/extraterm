@@ -5,14 +5,14 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
-import { KeybindingsKeyInput } from './KeyInputUi';
+import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
 import { KeybindingsFile, KeybindingsFileContext } from '../../../KeybindingsFile';
 
 const humanText = require('../../keybindings/keybindingstext.json');
 
 const CLASS_KEYCAP = "CLASS_KEYCAP";
-export const START_KEY_INPUT_EVENT = "start-key-input";
-export const END_KEY_INPUT_EVENT = "end-key-input";
+export const EVENT_START_KEY_INPUT = "start-key-input";
+export const EVENT_END_KEY_INPUT = "end-key-input";
 
 type KeybindingsKeyInputState = "read" | "edit" | "conflict";
 
@@ -47,9 +47,8 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
           </template>
           <button v-if="effectiveInputState(command) === 'read'" v-on:click="addKey(command)"><i class="fas fa-plus"></i></button>
           <keybindings-key-input v-if="effectiveInputState(command) === 'edit' && selectedCommand===command"
-            :commandHumanName="selectedCommandHumanName"
-            v-on:selected="onKeyInputSelected"
-            v-on:cancelled="onKeyInputCancelled"
+            v-on:${EVENT_SELECTED}="onKeyInputSelected"
+            v-on:${EVENT_CANCELED}="onKeyInputCancelled"
             >
           </keybindings-key-input>
         </td>
@@ -140,7 +139,7 @@ export class KeybindingsContext extends Vue {
   addKey(command: string): void {
     this.inputState = "edit";
     this.selectedCommand = command;
-    this.$emit(START_KEY_INPUT_EVENT);
+    this.$emit(EVENT_START_KEY_INPUT);
   }
 
   get selectedCommandHumanName(): string {
@@ -150,15 +149,16 @@ export class KeybindingsContext extends Vue {
   onKeyInputSelected(keyCode: string): void {
     console.log(`keyCode: ${keyCode}`);
 
-
     this.inputState = "read";
 
-    this.$emit(END_KEY_INPUT_EVENT);
 
+
+
+    this.$emit(EVENT_END_KEY_INPUT);
   }
 
   onKeyInputCancelled(): void {
     this.inputState = "read";
-    this.$emit(END_KEY_INPUT_EVENT);
+    this.$emit(EVENT_END_KEY_INPUT);
   }
 }
