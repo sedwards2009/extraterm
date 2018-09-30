@@ -39,15 +39,15 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
       <tr v-for="command in commands" :key="command">
         <td class="col-md-7" :title="command">{{commandHumanName(command)}}</td>
         <td class="col-md-5">
-          <template v-for="key in commandToKeysMapping.get(command)">
+          <template v-for="keybinding in commandToKeybindingsMapping.get(command)">
             <div class='${CLASS_KEYCAP}'>
-              <span>{{formatKey(key)}}</span>
+              <span>{{keybinding.formatHumanReadable()}}</span>
             </div>
-            <button v-if="!readOnly" v-on:click="deleteKey(command, key)"><i class="fas fa-times"></i></button>
+            <button v-if="!readOnly" v-on:click="deleteKey(command, keybinding)"><i class="fas fa-times"></i></button>
             <br />
           </template>
           <button v-if="effectiveInputState(command) === 'read'" v-on:click="addKey(command)"><i class="fas fa-plus"></i></button>
-          <keybindings-key-input v-if="effectiveInputState(command) === 'edit' && selectedCommand===command"
+          <keybindings-key-input v-if="effectiveInputState(command) === 'edit' && selectedCommand === command"
             v-on:${EVENT_SELECTED}="onKeyInputSelected"
             v-on:${EVENT_CANCELED}="onKeyInputCancelled"
             >
@@ -85,19 +85,19 @@ export class KeybindingsContext extends Vue {
     return commandCodes;
   }
 
-  get commandToKeysMapping(): Map<string, string[]> {
-    const result = new Map<string, string[]>();
+  get commandToKeybindingsMapping(): Map<string, Keybinding[]> {
+    const result = new Map<string, Keybinding[]>();
 
     for (const command of humanText.contexts[this.contextName]) {
       result.set(command, []);
     }
 
-    for (const key of Object.keys(this.keybindingsFileContext)) {
-      const command = this.keybindingsFileContext[key];
+    for (const configKeyString of Object.keys(this.keybindingsFileContext)) {
+      const command = this.keybindingsFileContext[configKeyString];
       if ( ! result.has(command)) {
         result.set(command, []);
       }
-      result.get(command).push(key);
+      result.get(command).push(Keybinding.parseConfigString(configKeyString));
     }
     return result;
   }
@@ -111,12 +111,21 @@ export class KeybindingsContext extends Vue {
     return str || commandCode;
   }
 
-  formatKey(keybindingString: string): string {
-    return Keybinding.parseConfigString(keybindingString).formatHumanReadable();
+  deleteKey(command: string, keybinding: Keybinding): void {
+    const configObjectKey = this._lookupConfigObjectKeyByKeybinding(keybinding);
+    if (configObjectKey != null) {
+        Vue.delete(this.keybindingsFileContext, configObjectKey);
+    }
   }
 
-  deleteKey(command: string, key: string): void {
-    Vue.delete(this.keybindingsFileContext, key);
+  private _lookupConfigObjectKeyByKeybinding(keybinding: Keybinding): string {
+    for (const keybindingString in this.keybindingsFileContext) {
+      const currentKeybinding = Keybinding.parseConfigString(keybindingString);
+      if (currentKeybinding.equals(keybinding)) {
+        return keybindingString;
+      }
+    }
+    return null;
   }
 
   addKey(command: string): void {
@@ -129,13 +138,14 @@ export class KeybindingsContext extends Vue {
     return this.commandHumanName(this.selectedCommand);
   }
 
-  onKeyInputSelected(keyCode: string): void {
-    console.log(`keyCode: ${keyCode}`);
+  onKeyInputSelected(keybindingString: string): void {
+console.log(`keyCode: ${keybindingString}`);
+    const newKeybinding = Keybinding.parseConfigString(keybindingString);
+    const existingConfigObjectKey = this._lookupConfigObjectKeyByKeybinding(newKeybinding);
+// FIXME
 
+    Vue.set(this.keybindingsFileContext, keybindingString, this.selectedCommand);
     this.inputState = "read";
-
-
-
 
     this.$emit(EVENT_END_KEY_INPUT);
   }

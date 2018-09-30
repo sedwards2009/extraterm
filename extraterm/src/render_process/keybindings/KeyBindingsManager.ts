@@ -77,6 +77,17 @@ export class Keybinding {
     return keybinding;
   }
 
+  equals(other: Keybinding): boolean {
+    if (other == null) {
+      return false;
+    }
+    return this.altKey === other.altKey &&
+      this.ctrlKey === other.ctrlKey &&
+      this.metaKey === other.metaKey &&
+      this.shiftKey === other.shiftKey &&
+      this.configKeyLowercase === other.configKeyLowercase;
+  }
+
   formatHumanReadable(): string {
     if (this._humanReadableString != null) {
       return this._humanReadableString;
