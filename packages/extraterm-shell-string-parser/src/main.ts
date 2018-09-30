@@ -9,6 +9,7 @@
  * 
  * Split spaces into an array, and supporting double and single quotes and nothing else, just the minimum. 
  * Then people can quote their strings which contain spaces and it will mostly work as they expect.
+ * Single and double quotes will not be removed. 
  *
  * @return string[] of arguments.
  */
@@ -21,7 +22,7 @@ export function shell_string_parser(args: string): string[] {
   let arr: string[] = [];
 
   if (args !== undefined) {
-    arr = args.split(/('.*?'|".*?"|\S+)/g).filter(charactersToStrip);
+    arr = args.split(/('.*?'|".*?"|\S+)/).filter(charactersToStrip);
   }
 
   return arr;
