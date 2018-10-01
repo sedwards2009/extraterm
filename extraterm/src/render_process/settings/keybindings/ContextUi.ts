@@ -33,12 +33,12 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
   <table class='table'>
     <tbody>
       <tr>
-        <th class="col-md-7">Command</th>
-        <th class="col-md-5">Key</th>
+        <th class="col-md-6">Command</th>
+        <th class="col-md-6">Key</th>
       </tr>
       <tr v-for="command in commands" :key="command">
-        <td class="col-md-7" :title="command">{{commandHumanName(command)}}</td>
-        <td class="col-md-5">
+        <td class="col-md-6" :title="command">{{commandHumanName(command)}}</td>
+        <td class="col-md-6">
           <template v-for="keybinding in commandToKeybindingsMapping.get(command)">
             <div class='${CLASS_KEYCAP}'>
               <span>{{keybinding.formatHumanReadable()}}</span>
@@ -52,6 +52,15 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
             v-on:${EVENT_CANCELED}="onKeyInputCancelled"
             >
           </keybindings-key-input>
+
+          <template v-if="effectiveInputState(command) === 'conflict'">
+            <div class='${CLASS_KEYCAP}'>
+              <span>{{conflictKeyHumanReadable}}</span>
+            </div>
+            conflicts with command "{{commandHumanName(conflictCommand)}}".
+            <button title="Replace" class="btn btn-default" v-on:click="onReplaceConflict">Replace</button>
+            <button title="Cancel" class="btn btn-default" v-on:click="onCancelConflict">Cancel</button>
+          </template>
         </td>
       </tr>
     </tbody>
@@ -67,6 +76,7 @@ export class KeybindingsContext extends Vue {
   inputState: KeybindingsKeyInputState = "read";
   selectedCommand = "";
   conflictKey = "";
+  conflictCommand = "";
 
   get contextHeading(): string {
     const str = humanText.contextNames[this.contextName];
@@ -103,7 +113,7 @@ export class KeybindingsContext extends Vue {
   }
 
   effectiveInputState(command: string): KeybindingsKeyInputState {
-    return command !== this.selectedCommand ? "read" : this.inputState;
+    return command === this.selectedCommand ? this.inputState : "read";
   }
 
   commandHumanName(commandCode: string): string {
@@ -142,10 +152,15 @@ export class KeybindingsContext extends Vue {
 console.log(`keyCode: ${keybindingString}`);
     const newKeybinding = Keybinding.parseConfigString(keybindingString);
     const existingConfigObjectKey = this._lookupConfigObjectKeyByKeybinding(newKeybinding);
-// FIXME
+    if (existingConfigObjectKey == null) {
+      Vue.set(this.keybindingsFileContext, keybindingString, this.selectedCommand);
+      this.inputState = "read";
+    } else {
 
-    Vue.set(this.keybindingsFileContext, keybindingString, this.selectedCommand);
-    this.inputState = "read";
+      this.conflictKey = keybindingString;
+      this.conflictCommand = this.keybindingsFileContext[existingConfigObjectKey];
+      this.inputState = "conflict";
+    }
 
     this.$emit(EVENT_END_KEY_INPUT);
   }
@@ -153,5 +168,25 @@ console.log(`keyCode: ${keybindingString}`);
   onKeyInputCancelled(): void {
     this.inputState = "read";
     this.$emit(EVENT_END_KEY_INPUT);
+  }
+
+  get conflictKeyHumanReadable(): string {
+    return Keybinding.parseConfigString(this.conflictKey).formatHumanReadable();
+  }
+
+  onReplaceConflict(): void {
+    const newKeybinding = Keybinding.parseConfigString(this.conflictKey);
+    const existingConfigObjectKey = this._lookupConfigObjectKeyByKeybinding(newKeybinding);
+    Vue.set(this.keybindingsFileContext, existingConfigObjectKey, this.selectedCommand);
+
+    this.selectedCommand = "";
+    this.conflictKey = "";
+    this.inputState = "read";
+  }
+
+  onCancelConflict(): void {
+    this.selectedCommand = "";
+    this.conflictKey = "";
+    this.inputState = "read";
   }
 }

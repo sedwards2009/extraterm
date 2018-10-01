@@ -33,12 +33,17 @@ export const EVENT_SELECTED = "selected";
     v-on:blur="onCancel" />`
 })
 export class KeybindingsKeyInput extends Vue {
+  private _emitted = false;
 
   mounted(): void {
     this.$nextTick(() => (<HTMLInputElement>this.$refs.input).focus());
   }
 
   onCancel(): void {
+    if (this._emitted) {
+      return;
+    }
+
     this.$emit(EVENT_CANCELED);
   }
 
@@ -83,6 +88,7 @@ export class KeybindingsKeyInput extends Vue {
     parts.push(eventKeyNameToConfigKeyName(key));
     const keyCode = parts.join("-");
 
+    this._emitted = true;
     this.$emit(EVENT_SELECTED, keyCode);
   }
 }
