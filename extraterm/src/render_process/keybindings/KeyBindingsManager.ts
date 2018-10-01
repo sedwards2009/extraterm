@@ -1,12 +1,12 @@
 /*
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event } from 'extraterm-extension-api';
 import * as _ from 'lodash';
 
-import {Logger, getLogger} from "extraterm-logging";
+import { Logger, getLogger, log } from "extraterm-logging";
 import * as SetUtils from '../../utils/SetUtils';
 
 const FALLTHROUGH = "fallthrough";
