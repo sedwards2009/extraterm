@@ -10,7 +10,7 @@ import * as _ from 'lodash';
 import { app } from 'electron';
 
 import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Pty, Terminal, SessionConfiguration, Backend, SessionBackend, EnvironmentMap} from 'extraterm-extension-api';
-import { shell_string_parser } from 'extraterm-shell-string-parser';
+import { ShellStringParser } from 'extraterm-shell-string-parser';
 
 import * as SourceDir from './SourceDir';
 import { ProxyPtyConnector, PtyOptions } from './ProxyPty';
@@ -94,7 +94,7 @@ export class CygwinProxySessionBackend implements SessionBackend {
     const {homeDir, defaultShell} = this._getDefaultCygwinConfig(sessionConfig.cygwinPath);
     const shell = sessionConfig.useDefaultShell ? defaultShell : sessionConfig.shell;
 
-    const args = ["-l"].concat(shell_string_parser(sessionConfig.args));
+    const args = ["-l"].concat(ShellStringParser(sessionConfig.args));
     
     const ptyEnv = _.cloneDeep(process.env);
     ptyEnv["TERM"] = "xterm-256color";

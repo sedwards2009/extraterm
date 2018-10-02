@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Nick Shanny <nshanny@mac.com>
+ * Copyright 2018 Nick Shanny <nshanny@shannymusings.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -14,15 +14,41 @@
  * @return string[] of arguments.
  */
 
-function charactersToStrip(element: string, index: number, array: string[]) {
-  return (element !== ' ' && element !== '');
-}
-
-export function shell_string_parser(args: string): string[] {
+export function ShellStringParser(args: string): string[] {
   let arr: string[] = [];
 
   if (args !== undefined) {
-    arr = args.split(/('.*?'|".*?"|\S+)/).filter(charactersToStrip);
+    let splitArgs = args.split (" ");
+    let joiningElements = false;
+    let joinedArg = '';
+
+    for (let i = 0; i < splitArgs.length; i++) {
+
+      if (splitArgs[i].startsWith("'") || splitArgs[i].startsWith('"')) {
+        joinedArg = splitArgs[i];
+        joiningElements = true;
+      } else if (joiningElements === true) {
+        joinedArg += (' ' + splitArgs[i]);
+
+        // End with the same quote we started with
+        if (splitArgs[i].endsWith(joinedArg[0])) {
+          // Remove the surrounding quotes
+          arr.push(joinedArg.slice(1, joinedArg.length - 1));
+          joiningElements = false;
+          joinedArg = '';
+        }
+      } else {
+        arr.push (splitArgs[i]);
+      }
+    }
+
+    // Deal with final case
+    if (joinedArg.length > 0) {
+      if (joinedArg.endsWith(joinedArg[0])) {
+        joinedArg = joinedArg.slice(1, joinedArg.length - 1);
+      }
+      arr.push(joinedArg);
+    }
   }
 
   return arr;

@@ -16,6 +16,7 @@
   "scripts": {
     "run": "false",
     "build-all": "yarn run build",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "yarn run build && nodeunit test/MainTest.js"
   }
 }
