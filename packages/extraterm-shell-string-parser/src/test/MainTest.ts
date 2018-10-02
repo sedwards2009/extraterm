@@ -23,6 +23,7 @@ const arrayEqual =
 export function testShellStringParser(test: nodeunit.Test): void {
 
   test.ok(arrayEqual (ShellStringParser("One"))  (["One"]));
+  test.ok(arrayEqual (ShellStringParser("One\'"))  (["One\'"]));
   test.ok(arrayEqual (ShellStringParser("One Two"))  (["One", "Two"]));
   test.ok(arrayEqual (ShellStringParser("One Two 'Three Four'"))  (["One", "Two", "Three Four"]));
   test.ok(arrayEqual (ShellStringParser("One Two \"Three Four\""))  (["One", "Two", "Three Four"]));
