@@ -17,7 +17,7 @@
 export function ShellStringParser(args: string): string[] {
   let arr: string[] = [];
 
-  if (args !== undefined) {
+  if (args !== undefined && args.length > 0) {
     let splitArgs = args.split (" ");
     let joiningElements = false;
     let joinedArg = '';
