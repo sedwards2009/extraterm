@@ -39,7 +39,13 @@ export const EVENT_RENAME = "rename";
         </div>
 
         <div v-else v-bind:class="{'col-sm-6': true, 'has-error': isTitleConflict}">
-          <input ref="titleInput" v-bind:title="isTitleConflict ? 'This name is already being used' : ''" v-model="selectedTitle" class="form-control" />
+          <input
+            ref="titleInput"
+            v-bind:title="isTitleConflict ? 'This name is already being used' : ''"
+            v-model="selectedTitle"
+            class="form-control" 
+            v-on:keydown.capture="onTitleKeyDown"
+            />
           <button title="Accept" class="btn btn-success" :disabled="isTitleConflict" v-on:click="onOkTitle">
             <i class="fas fa-check"></i>
           </button>
@@ -131,6 +137,20 @@ export class KeybindingsSettingsUi extends Vue {
     this.selectedTitle = this._selectedKeybindingsInfo().name;
     this.editingTitle = true;
     this.$nextTick(() => (<HTMLInputElement>this.$refs.titleInput).focus());
+  }
+
+  onTitleKeyDown(event: KeyboardEvent) {
+    if ( ! this._isCharValidInFilenames(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  private _isCharValidInFilenames(char: string): boolean {
+    if (process.platform === "win32") {
+      return ["<", ">", ":", '"', "/", "\\", "|", "?", "*"].indexOf(char) === -1;
+    } else {
+      return char !== "/";
+    }
   }
 
   onOkTitle(): void {
