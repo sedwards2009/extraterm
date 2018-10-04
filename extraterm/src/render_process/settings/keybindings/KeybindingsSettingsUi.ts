@@ -143,8 +143,11 @@ export class KeybindingsSettingsUi extends Vue {
   }
 
   get isTitleConflict(): boolean {
+    const lowerSelectedKeybindings= this.selectedKeybindings.toLowerCase();
+    const lowerSelectedTitle = this.selectedTitle.toLowerCase();
     for (const kbf of this.keybindingsInfoList) {
-      if (kbf.name !== this.selectedKeybindings && kbf.name === this.selectedTitle) {
+      const lowerKbfName = kbf.name.toLowerCase();
+      if (lowerKbfName !== lowerSelectedKeybindings && lowerKbfName === lowerSelectedTitle) {
         return true;
       }
     }
