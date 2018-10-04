@@ -230,3 +230,13 @@ export function keybindingsRequestRead(name: string): Promise<Messages.Keybindin
   };
   return <Promise<Messages.KeybindingsReadMessage>> request(msg, Messages.MessageType.READ_KEYBINDINGS);
 }
+
+export function keybindingsRename(sourceName: string, destName: string): void {
+  const msg: Messages.KeybindingsRenameMessage = {type: Messages.MessageType.RENAME_KEYBINDINGS, sourceName, destName};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function keybindingsDelete(name: string): void {
+  const msg: Messages.KeybindingsDeleteMessage = {type: Messages.MessageType.DELETE_KEYBINDINGS, targetName: name};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}

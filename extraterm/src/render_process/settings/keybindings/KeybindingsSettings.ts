@@ -4,7 +4,7 @@
 
 import { WebComponent } from 'extraterm-web-component-decorators';
 
-import { KeybindingsSettingsUi } from './KeybindingsSettingsUi';
+import { KeybindingsSettingsUi, EVENT_DUPLICATE, EVENT_DELETE, EVENT_RENAME } from './KeybindingsSettingsUi';
 import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -26,14 +26,19 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
     super(KeybindingsSettingsUi, [SYSTEM_CONFIG, GENERAL_CONFIG]);
     this._log = getLogger(KEY_BINDINGS_SETTINGS_TAG, this);
 
-    this._getUi().$on("duplicate", keybindingsName => {
+    this._getUi().$on(EVENT_DUPLICATE, keybindingsName => {
       const destName = keybindingsName + " copy";
       this._autoSelect = destName;
       WebIpc.keybindingsCopy(keybindingsName, destName);
     });
 
-    this._getUi().$on("delete", keybindingsFilename => {
-      // WebIpc.keybindings
+    this._getUi().$on(EVENT_DELETE, keybindingsFilename => {
+      WebIpc.keybindingsDelete(keybindingsFilename);
+    });
+    
+    this._getUi().$on(EVENT_RENAME, (keybindingsName, newKeybindingsName) => {
+      this._autoSelect = newKeybindingsName;
+      WebIpc.keybindingsRename(keybindingsName, newKeybindingsName);
     });
 
     this._getUi().$on(EVENT_START_KEY_INPUT, () => {

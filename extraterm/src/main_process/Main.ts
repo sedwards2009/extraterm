@@ -910,6 +910,14 @@ function handleIpc(event: Electron.Event, arg: any): void {
       handleKeybindingsCopy(<Messages.KeybindingsCopyMessage> msg);
       break;
 
+    case Messages.MessageType.DELETE_KEYBINDINGS:
+      handleKeybindingsDelete(<Messages.KeybindingsDeleteMessage> msg);
+      break;
+
+    case Messages.MessageType.RENAME_KEYBINDINGS:
+      handleKeybindingsRename(<Messages.KeybindingsRenameMessage> msg);
+      break;
+
     case Messages.MessageType.READ_KEYBINDINGS_REQUEST:
       reply = handleKeybindingsReadRequest(<Messages.KeybindingsReadRequestMessage>msg);
       break;
@@ -1180,6 +1188,38 @@ function handleKeybindingsCopy(msg: Messages.KeybindingsCopyMessage): void {
   const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+}
+
+function handleKeybindingsDelete(msg: Messages.KeybindingsDeleteMessage): void {
+  deleteKeybindings(msg.targetName);
+}
+
+function deleteKeybindings(targetName: string): void {
+  keybindingsIOManager.deleteKeybindings(targetName);
+
+  const generalConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
+  if (generalConfig.keybindingsName === targetName) {
+    generalConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+    configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
+  }
+
+  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+}
+
+function handleKeybindingsRename(msg: Messages.KeybindingsCopyMessage): void {
+  keybindingsIOManager.copyKeybindings(msg.sourceName, msg.destName);
+
+  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+
+  const generalConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
+  generalConfig.keybindingsName = msg.destName;
+  configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
+
+  deleteKeybindings(msg.sourceName);
 }
 
 function handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessage): Messages.KeybindingsReadMessage {

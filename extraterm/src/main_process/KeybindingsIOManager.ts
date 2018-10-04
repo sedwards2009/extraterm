@@ -132,4 +132,23 @@ export class KeybindingsIOManager {
 
     return true;
   }
+
+  deleteKeybindings(targetName: string): boolean {
+    const targetInfo = this._getInfoByName(targetName);
+    if (targetInfo == null) {
+      this._log.warn(`Unable to find keybindings file '${targetName}'`);
+      return false;
+    }
+
+    const targetPath = path.join(targetInfo.path, targetInfo.filename);
+    try {
+      fs.unlinkSync(targetPath);
+    } catch(err) {
+      this._log.warn(`Unable to delete '${targetPath}'. Error: ${err.message}`);
+      return false;
+    }
+
+    this.scan();
+    return true;
+  }
 }

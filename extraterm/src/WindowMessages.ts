@@ -484,3 +484,7 @@ export interface KeybindingsReadMessage extends Message {
   keybindings: KeybindingsFile;
 }
 
+export interface KeybindingsRenameMessage extends Message {
+  sourceName: string;
+  destName: string;
+}

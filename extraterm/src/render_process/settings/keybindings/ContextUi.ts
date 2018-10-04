@@ -46,7 +46,7 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
             <button v-if="!readOnly" v-on:click="deleteKey(command, keybinding)"><i class="fas fa-times"></i></button>
             <br />
           </template>
-          <button v-if="effectiveInputState(command) === 'read'" v-on:click="addKey(command)"><i class="fas fa-plus"></i></button>
+          <button v-if="!readOnly && effectiveInputState(command) === 'read'" v-on:click="addKey(command)"><i class="fas fa-plus"></i></button>
           <keybindings-key-input v-if="effectiveInputState(command) === 'edit' && selectedCommand === command"
             v-on:${EVENT_SELECTED}="onKeyInputSelected"
             v-on:${EVENT_CANCELED}="onKeyInputCancelled"
