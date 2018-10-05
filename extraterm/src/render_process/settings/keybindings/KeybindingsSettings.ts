@@ -5,7 +5,7 @@
 import { WebComponent } from 'extraterm-web-component-decorators';
 
 import { KeybindingsSettingsUi, EVENT_DUPLICATE, EVENT_DELETE, EVENT_RENAME } from './KeybindingsSettingsUi';
-import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
+import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig, KeybindingsInfo } from '../../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from '../SettingsBase';
@@ -97,6 +97,21 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
       this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
       this._loadKeybindings(ui.selectedKeybindings);
     }
+
+    if ( ! this._getSelectedKeybindingsInfo().readOnly) {
+      WebIpc.keybindingsUpdate(ui.selectedKeybindings, ui.keybindings);
+    }
+  }
+
+  private _getSelectedKeybindingsInfo(): KeybindingsInfo {
+    const ui = this._getUi();
+    const systemConfig = <SystemConfig> this._getConfig(SYSTEM_CONFIG);
+    for (const bindings of systemConfig.keybindingsInfoList) {
+      if (bindings.name === ui.selectedKeybindings) {
+        return bindings;
+      }
+    }
+    return null;
   }
 
   set keybindingsManager(keybindingsManager: KeybindingsManager) {

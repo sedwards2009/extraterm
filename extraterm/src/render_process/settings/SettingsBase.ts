@@ -73,6 +73,13 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     return null;
   }
 
+  protected _getConfig(key: ConfigKey): any {
+    if (this._configBinder.getConfigDatabase() != null) {
+      return this._configBinder.getConfigDatabase().getConfig(key);
+    }
+    return null;
+  }
+
   protected _updateConfig(key: ConfigKey, newConfig: any): void {
     if (this._configBinder.getConfigDatabase() != null) {
       this._configBinder.getConfigDatabase().setConfig(key, newConfig);

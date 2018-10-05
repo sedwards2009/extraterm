@@ -472,7 +472,7 @@ export interface KeybindingsCopyMessage extends Message {
 }
 
 export interface KeybindingsDeleteMessage extends Message {
-  targetName: string;
+  name: string;
 }
 
 export interface KeybindingsReadRequestMessage extends Message {
@@ -487,4 +487,9 @@ export interface KeybindingsReadMessage extends Message {
 export interface KeybindingsRenameMessage extends Message {
   sourceName: string;
   destName: string;
+}
+
+export interface KeybindingsUpdateMessage extends Message {
+  name: string;
+  keybindings: KeybindingsFile;
 }

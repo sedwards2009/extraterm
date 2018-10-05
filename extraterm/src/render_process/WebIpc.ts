@@ -14,6 +14,7 @@ import * as config from '../Config';
 import {Logger, getLogger} from "extraterm-logging";
 import { ExtensionMetadata } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
+import { KeybindingsFile } from '../KeybindingsFile';
 
 const _log = getLogger("WebIPC");
 
@@ -237,6 +238,11 @@ export function keybindingsRename(sourceName: string, destName: string): void {
 }
 
 export function keybindingsDelete(name: string): void {
-  const msg: Messages.KeybindingsDeleteMessage = {type: Messages.MessageType.DELETE_KEYBINDINGS, targetName: name};
+  const msg: Messages.KeybindingsDeleteMessage = {type: Messages.MessageType.DELETE_KEYBINDINGS, name: name};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function keybindingsUpdate(name: string, keybindings: KeybindingsFile): void {
+  const msg: Messages.KeybindingsUpdateMessage = {type: Messages.MessageType.UPDATE_KEYBINDINGS, name, keybindings};
   ipc.send(Messages.CHANNEL_NAME, msg);
 }

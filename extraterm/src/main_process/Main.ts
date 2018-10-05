@@ -922,6 +922,10 @@ function handleIpc(event: Electron.Event, arg: any): void {
       reply = handleKeybindingsReadRequest(<Messages.KeybindingsReadRequestMessage>msg);
       break;
 
+    case Messages.MessageType.UPDATE_KEYBINDINGS:
+      handleKeybindingsUpdate(<Messages.KeybindingsUpdateMessage>msg);
+      break;
+
     default:
       break;
   }
@@ -1191,7 +1195,7 @@ function handleKeybindingsCopy(msg: Messages.KeybindingsCopyMessage): void {
 }
 
 function handleKeybindingsDelete(msg: Messages.KeybindingsDeleteMessage): void {
-  deleteKeybindings(msg.targetName);
+  deleteKeybindings(msg.name);
 }
 
 function deleteKeybindings(targetName: string): void {
@@ -1230,6 +1234,16 @@ function handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessag
     keybindings
   };
   return reply;
+}
+
+function handleKeybindingsUpdate(msg: Messages.KeybindingsUpdateMessage): void {
+  keybindingsIOManager.updateKeybindings(msg.name, msg.keybindings);
+
+  // Broadcast the updated bindings.
+  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  systemConfig.keybindingsContexts = keybindingsIOManager.readKeybindingsJson(generalConfig.keybindingsName);
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 }
 
 main();
