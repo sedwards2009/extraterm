@@ -25,3 +25,23 @@
 .CLASS_KEYCAP {
   @include keycap;
 }
+
+TR.command-row {
+
+  height: calc(#{2*$table-cell-padding} + #{$line-height-computed + pxToRem(1px + 3px)});
+
+  BUTTON {
+    visibility: hidden;
+    margin-left: 0.5em;
+  }
+}
+
+TR.command-row:hover BUTTON {
+  visibility: visible;
+}
+
+INPUT.keyinput {
+  max-width: 7em;
+  font-size: $font-size-base;
+  padding: 0;
+}

@@ -30,27 +30,42 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
   template: `
 <div>
   <h2>{{contextHeading}}</h2>
-  <table class='table'>
-    <tbody>
+  <table class='table table-hover'>
+    <thead>
       <tr>
         <th class="col-md-6">Command</th>
         <th class="col-md-6">Key</th>
       </tr>
-      <tr v-for="command in commands" :key="command">
+    </thead>
+    <tbody>
+      <tr v-for="command in commands" :key="command" class="command-row">
         <td class="col-md-6" :title="command">{{commandHumanName(command)}}</td>
         <td class="col-md-6">
-          <template v-for="keybinding in commandToKeybindingsMapping.get(command)">
+          <template v-for="(keybinding, index) in commandToKeybindingsMapping.get(command)">
+            <br v-if="index !== 0" />
             <div class='${CLASS_KEYCAP}'>
               <span>{{keybinding.formatHumanReadable()}}</span>
             </div>
-            <button v-if="!readOnly" v-on:click="deleteKey(command, keybinding)"><i class="fas fa-times"></i></button>
-            <br />
+
+            <button
+                v-if="!readOnly"
+                v-on:click="deleteKey(command, keybinding)"
+                class="btn btn-microtool-danger">
+              <i class="fas fa-times"></i>
+            </button>
           </template>
-          <button v-if="!readOnly && effectiveInputState(command) === 'read'" v-on:click="addKey(command)"><i class="fas fa-plus"></i></button>
-          <keybindings-key-input v-if="effectiveInputState(command) === 'edit' && selectedCommand === command"
+
+          <button
+              v-if="!readOnly && effectiveInputState(command) === 'read'"
+              v-on:click="addKey(command)"
+              class="btn btn-microtool-success">
+            <i class="fas fa-plus"></i>
+          </button>
+
+          <keybindings-key-input
+            v-if="effectiveInputState(command) === 'edit' && selectedCommand === command"
             v-on:${EVENT_SELECTED}="onKeyInputSelected"
-            v-on:${EVENT_CANCELED}="onKeyInputCancelled"
-            >
+            v-on:${EVENT_CANCELED}="onKeyInputCancelled">
           </keybindings-key-input>
 
           <template v-if="effectiveInputState(command) === 'conflict'">

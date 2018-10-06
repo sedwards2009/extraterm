@@ -26,8 +26,8 @@ export const EVENT_SELECTED = "selected";
   },
   template: `<input
     ref="input"
-    class="form-control"
-    placeholder="Type a key"
+    class="form-control keyinput"
+    placeholder="Press a key"
     v-on:keypress.capture="onKey"
     v-on:keydown.capture="onKey"
     v-on:blur="onCancel" />`
