@@ -45,3 +45,32 @@ INPUT.keyinput {
   font-size: $font-size-base;
   padding: 0;
 }
+
+DIV.keybindings-select-group {
+  display: flex;
+  align-items: center;
+}
+
+DIV.keybindings-select, DIV.keybindings-title-input {
+  flex-grow: 1;
+}
+
+DIV.keybindings-copy-controls, DIV.keybindings-title-controls {
+  flex-grow: 0;
+  flex-shrink: 0;
+
+  display: flex;
+
+  > BUTTON {
+    display: block;
+    flex-grow: 0;
+    flex-shrink: 0;  
+  }
+}
+
+DIV.keybindings-copy-controls.keybindings-copy-controls.keybindings-copy-controls,
+DIV.keybindings-title-controls.keybindings-title-controls.keybindings-title-controls {
+  & > BUTTON:first-child {
+    margin-left: 1rem;
+  }
+}
