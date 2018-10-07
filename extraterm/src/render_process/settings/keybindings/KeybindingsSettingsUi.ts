@@ -48,6 +48,7 @@ export const EVENT_RENAME = "rename";
                 v-model="selectedTitle"
                 class="form-control" 
                 v-on:keydown.capture="onTitleKeyDown"
+                v-on:keypress.capture="onTitleKeyPress"
                 />
             </div>
             <div class="btn-group keybindings-title-controls">
@@ -146,9 +147,17 @@ export class KeybindingsSettingsUi extends Vue {
     this.$nextTick(() => (<HTMLInputElement>this.$refs.titleInput).focus());
   }
 
-  onTitleKeyDown(event: KeyboardEvent) {
-    if ( ! this._isCharValidInFilenames(event.key)) {
+  onTitleKeyDown(event: KeyboardEvent): void {
+    if (event.key === "Escape") {
+      this.onCancelTitle();
+    } else if ( ! this._isCharValidInFilenames(event.key)) {
       event.preventDefault();
+    }
+  }
+
+  onTitleKeyPress(event: KeyboardEvent): void {
+    if (event.key === "Enter" && ! this.isTitleConflict) {
+      this.onOkTitle();
     }
   }
 
