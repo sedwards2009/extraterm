@@ -155,6 +155,9 @@ export class KeybindingsSettingsUi extends Vue {
 
   onOkTitle(): void {
     this.editingTitle = false;
+    if (this.selectedKeybindings === this.selectedTitle) {
+      return;
+    }
     this.$emit(EVENT_RENAME, this.selectedKeybindings, this.selectedTitle);
   }
 
