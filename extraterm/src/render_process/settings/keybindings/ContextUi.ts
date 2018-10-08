@@ -53,7 +53,8 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
             <button
                 v-if="!readOnly"
                 v-on:click="deleteKey(command, keybinding)"
-                class="btn btn-microtool-danger">
+                class="btn btn-microtool-danger"
+                title="Remove keybinding">
               <i class="fas fa-times"></i>
             </button>
           </template>
@@ -61,7 +62,8 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
           <button
               v-if="!readOnly && effectiveInputState(command) === 'read'"
               v-on:click="addKey(command)"
-              class="btn btn-microtool-success">
+              class="btn btn-microtool-success"
+              title="Add keybinding">
             <i class="fas fa-plus"></i>
           </button>
 
