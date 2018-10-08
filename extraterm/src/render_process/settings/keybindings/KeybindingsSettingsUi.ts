@@ -25,54 +25,62 @@ export const EVENT_RENAME = "rename";
 <div class="settings-page">
   <h2><i class="far fa-keyboard"></i>&nbsp;&nbsp;Keybindings</h2>
 
-  <div className=''>
-    <div class="form-horizontal">
-      <div class="form-group">
-        <label for="theme-terminal" class="col-sm-2 control-label">Keybindings:</label>
+  <div class="form-horizontal">
+    <div class="form-group">
+      <label for="theme-terminal" class="col-sm-2 control-label">Keybindings:</label>
 
-        <div class="col-sm-10 keybindings-select-group">
+      <div class="col-sm-10 keybindings-select-group">
 
-          <div v-if=" ! editingTitle" class="keybindings-select">
-            <select class="form-control" id="keybindings-style" v-model="selectedKeybindings">
-              <option v-for="option in sortedKeybindingsInfoList" v-bind:value="option.name">
-                {{ option.name }} {{option.readOnly ? "   &#x1f512": ""}}
-              </option>
-            </select>
-          </div>
-
-          <template v-else>
-            <div v-bind:class="{'has-error': isTitleConflict, 'keybindings-title-input': true}">
-              <input
-                ref="titleInput"
-                v-bind:title="isTitleConflict ? 'This name is already being used' : ''"
-                v-model="selectedTitle"
-                class="form-control" 
-                v-on:keydown.capture="onTitleKeyDown"
-                v-on:keypress.capture="onTitleKeyPress"
-                />
-            </div>
-            <div class="btn-group keybindings-title-controls">
-              <button title="Accept" class="btn btn-success" :disabled="isTitleConflict" v-on:click="onOkTitle">
-                <i class="fas fa-check"></i>
-              </button>
-              <button title="Cancel" class="btn btn-danger" v-on:click="onCancelTitle">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          </template>
-
-          <div class="btn-group keybindings-copy-controls">
-            <button title="Duplicate" class="btn btn-default" v-on:click="duplicate">
-              <i class="fas fa-copy"></i>
-            </button>
-            <button title="Rename" class="btn btn-default" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="rename">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button title="Delete" class="btn btn-default" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="trash">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
+        <div v-if=" ! editingTitle" class="keybindings-select">
+          <select class="form-control" id="keybindings-style" v-model="selectedKeybindings">
+            <option v-for="option in sortedKeybindingsInfoList" v-bind:value="option.name">
+              {{ option.name }} {{option.readOnly ? "   &#x1f512": ""}}
+            </option>
+          </select>
         </div>
+
+        <template v-else>
+          <div v-bind:class="{'has-error': isTitleConflict, 'keybindings-title-input': true}">
+            <input
+              ref="titleInput"
+              v-bind:title="isTitleConflict ? 'This name is already being used' : ''"
+              v-model="selectedTitle"
+              class="form-control" 
+              v-on:keydown.capture="onTitleKeyDown"
+              v-on:keypress.capture="onTitleKeyPress"
+              />
+          </div>
+          <div class="btn-group keybindings-title-controls">
+            <button title="Accept" class="btn btn-success" :disabled="isTitleConflict" v-on:click="onOkTitle">
+              <i class="fas fa-check"></i>
+            </button>
+            <button title="Cancel" class="btn btn-danger" v-on:click="onCancelTitle">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </template>
+
+        <div class="btn-group keybindings-copy-controls">
+          <button title="Duplicate" class="btn btn-default" v-on:click="duplicate">
+            <i class="fas fa-copy"></i>
+          </button>
+          <button title="Rename" class="btn btn-default" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="rename">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button title="Delete" class="btn btn-default" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="trash">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-12">
+        <input
+          v-model="searchText"
+          class="form-control" 
+          placeholder="Filter commands by name"
+          />
       </div>
     </div>
   </div>
@@ -80,6 +88,7 @@ export const EVENT_RENAME = "rename";
     v-if="keybindings !== null"
     :keybindings="keybindings"
     :readOnly="isSelectedKeybindingsReadOnly"
+    :searchText="searchText"
     v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
     v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
   </keybindings-contexts-list>
@@ -95,6 +104,8 @@ export class KeybindingsSettingsUi extends Vue {
   editingTitle = false;
   titleKeybindingsInfo: KeybindingsInfo = null;
   selectedTitle: string = ""
+
+  searchText: string = "";
 
   get isSelectedKeybindingsReadOnly(): boolean {
     const info = this._selectedKeybindingsInfo();

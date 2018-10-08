@@ -19,7 +19,8 @@ const humanText = require('../../keybindings/keybindingstext.json');
     },
     props: {
       keybindings: Object, //KeybindingsFile,
-      readOnly: Boolean
+      readOnly: Boolean,
+      searchText: String
     },
     template: `
     <div>
@@ -29,6 +30,7 @@ const humanText = require('../../keybindings/keybindingstext.json');
         :key="contextName"
         :keybindingsFileContext="keybindings[contextName]"
         :readOnly="readOnly"
+        :searchText="searchText"
         v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
         v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
       </keybindings-context>
@@ -39,6 +41,7 @@ export class KeybindingsList extends Vue {
   // Props
   keybindings: KeybindingsFile;
   readOnly: boolean;
+  searchText: string;
 
   get humanContexts(): string[] {
     return Object.keys(humanText.contexts);

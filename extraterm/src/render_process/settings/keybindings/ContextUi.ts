@@ -25,12 +25,15 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
   props: {
     contextName: String,
     keybindingsFileContext: Object, //KeybindingsFileContext
-    readOnly: Boolean
+    readOnly: Boolean,
+    searchText: String,
   },
   template: `
 <div>
-  <h2>{{contextHeading}}</h2>
-  <table class='table table-hover'>
+  <h2>{{contextHeading}}
+    <span v-if="allCommands.length !== commands.length" class="badge">{{commands.length}} / {{allCommands.length}}</span>
+  </h2>
+  <table v-if="commands.length !== 0" v-bind:class="{table: true, 'table-hover': !readOnly}">
     <thead>
       <tr>
         <th class="col-md-6">Command</th>
@@ -87,6 +90,7 @@ export class KeybindingsContext extends Vue {
   contextName: string;
   keybindingsFileContext: KeybindingsFileContext;
   readOnly: boolean;
+  searchText: string;
 
   inputState: KeybindingsKeyInputState = "read";
   selectedCommand = "";
@@ -98,6 +102,10 @@ export class KeybindingsContext extends Vue {
     return str || this.contextName;
   }
 
+  get allCommands(): string[] {
+    return humanText.contexts[this.contextName];
+  }
+
   get commands(): string[] {
     const commandCodes: string[] = [...humanText.contexts[this.contextName]];
 
@@ -107,7 +115,12 @@ export class KeybindingsContext extends Vue {
       return nameA < nameB ? -1 : ( nameA > nameB ? 1 : 0);
     });
 
-    return commandCodes;
+    if (this.searchText.trim() !== "") {
+      const searchString = this.searchText.toLowerCase().trim();
+      return commandCodes.filter(a => this.commandHumanName(a).toLowerCase().indexOf(searchString)!==-1);
+    } else {
+      return commandCodes;
+    }
   }
 
   get commandToKeybindingsMapping(): Map<string, Keybinding[]> {
@@ -164,7 +177,6 @@ export class KeybindingsContext extends Vue {
   }
 
   onKeyInputSelected(keybindingString: string): void {
-console.log(`keyCode: ${keybindingString}`);
     const newKeybinding = Keybinding.parseConfigString(keybindingString);
     const existingConfigObjectKey = this._lookupConfigObjectKeyByKeybinding(newKeybinding);
     if (existingConfigObjectKey == null) {
