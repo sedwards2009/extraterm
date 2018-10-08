@@ -57,6 +57,7 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
           name: config.name,
           useDefaultShell: true,
           shell: "",
+          args: ""
         };
       }
 
@@ -64,13 +65,15 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
       this._ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
       this._ui.shell = fixedConfig.shell;
       this._ui.etcShells = [...etcShells];
+      this._ui.args = fixedConfig.args;
     }
 
     _dataChanged(): void {
       const changes = {
         name: this._ui.name,
         useDefaultShell: this._ui.useDefaultShell === 1,
-        shell: this._ui.shell
+        shell: this._ui.shell,
+        args: this._ui.args
       };
       this.updateSessionConfiguration(changes);
     }

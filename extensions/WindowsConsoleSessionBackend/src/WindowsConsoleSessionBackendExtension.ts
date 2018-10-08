@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
 import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap } from 'extraterm-extension-api';
+import { ShellStringParser } from 'extraterm-shell-string-parser';
 
 import { WindowsConsolePty, PtyOptions } from './WindowsConsolePty';
 
@@ -29,7 +30,8 @@ class WindowsConsoleBackend implements SessionBackend {
       uuid: "",
       name: "CMD",
       type: WINDOWS_CONSOLE_TYPE,
-      exe: "cmd.exe"
+      exe: "cmd.exe",
+      args: ""
     };
     defaultSessions.push(cmdSessionConfig);
 
@@ -38,7 +40,8 @@ class WindowsConsoleBackend implements SessionBackend {
         uuid: "",
         name: "PowerShell",
         type: WINDOWS_CONSOLE_TYPE,
-        exe: "powershell.exe"
+        exe: "powershell.exe",
+        args: ""
       };
       defaultSessions.push(powershellSessionConfig);
     }
@@ -48,7 +51,8 @@ class WindowsConsoleBackend implements SessionBackend {
         uuid: "",
         name: "PowerShell Core",
         type: WINDOWS_CONSOLE_TYPE,
-        exe: "pwsh.exe"
+        exe: "pwsh.exe",
+        args: ""
       };
       defaultSessions.push(powershellCoreSessionConfig);
     }
@@ -61,12 +65,13 @@ class WindowsConsoleBackend implements SessionBackend {
     
     let exe = sessionConfig.exe;
     let preMessage = "";
+    const args = ShellStringParser(sessionConfig.args);
+
     if ( ! this._validateExe(exe)) {
       preMessage = `\x0a\x0d\x0a\x0d*** Program '${exe}' couldn't be executed, falling back to 'cmd.exe' ***\x0a\x0d\x0a\x0d\x0a\x0d`;
       exe = "cmd.exe";
     }
 
-    const args = [];
     const ptyEnv = _.cloneDeep(process.env);
     let prop: string;
     for (prop in extraEnv) {
@@ -75,7 +80,7 @@ class WindowsConsoleBackend implements SessionBackend {
 
     const options: PtyOptions = {
       exe: exe,
-      args,
+      args: args,
       env: ptyEnv,
       cols: 80, //cols,
       rows: 24, //rows,
@@ -84,7 +89,7 @@ class WindowsConsoleBackend implements SessionBackend {
     };
     return new WindowsConsolePty(this._log, options);
   }
-
+  
   private _validateExe(exe: string): boolean {
     if (path.isAbsolute(exe)) {
       return this._validateExePath(exe);

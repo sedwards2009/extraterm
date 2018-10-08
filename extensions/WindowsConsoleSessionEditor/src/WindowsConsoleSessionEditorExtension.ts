@@ -56,17 +56,20 @@ export function activate(context: ExtensionContext): any {
           uuid: config.uuid,
           name: config.name,
           exe: "cmd.exe",
+          args: ""
         };
       }
 
       this._ui.name = fixedConfig.name;
       this._ui.exe = fixedConfig.exe;
+      this._ui.args = fixedConfig.args;
     }
 
     _dataChanged(): void {
       const changes: Partial<WindowsConsoleSessionConfiguration> = {
         name: this._ui.name,
-        exe: this._ui.exe
+        exe: this._ui.exe,
+        args: this._ui.args
       };
       this._checkExeField();
       this.updateSessionConfiguration(changes);

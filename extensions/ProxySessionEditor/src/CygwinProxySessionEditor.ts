@@ -61,7 +61,8 @@ export function getCygwinProxySessionEditorClass(context: ExtensionContext): any
           name: "Cygwin",
           useDefaultShell: true,
           shell: "",
-          cygwinPath: cygwinInstallationDir
+          cygwinPath: cygwinInstallationDir,
+          args: ""
         };
       }
 
@@ -69,6 +70,7 @@ export function getCygwinProxySessionEditorClass(context: ExtensionContext): any
       this._ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
       this._ui.shell = fixedConfig.shell;
       this._ui.cygwinPath = fixedConfig.cygwinPath;
+      this._ui.args = fixedConfig.args;
     }
 
     _dataChanged(): void {
@@ -76,7 +78,8 @@ export function getCygwinProxySessionEditorClass(context: ExtensionContext): any
         name: this._ui.name,
         useDefaultShell: this._ui.useDefaultShell === 1,
         shell: this._ui.shell,
-        cygwinPath: this._ui.cygwinPath
+        cygwinPath: this._ui.cygwinPath,
+        args: this._ui.args
       };
       this._checkPaths();
       this.updateSessionConfiguration(changes);

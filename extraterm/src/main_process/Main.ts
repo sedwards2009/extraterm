@@ -14,7 +14,7 @@ import * as SourceMapSupport from 'source-map-support';
 import * as child_process from 'child_process';
 import * as Commander from 'commander';
 import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
-import { BulkFileState, Event} from 'extraterm-extension-api';
+import { BulkFileState, Event, SessionConfiguration } from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
 import * as fs from 'fs';
@@ -610,6 +610,14 @@ function setConfigDefaults(config: UserStoredConfig): void {
   }
 
   config.sessions = defaultValue(config.sessions, []);
+
+  // Ensure that when reading a config file where args is not defined, we define it as an empty string
+  let sessionConfiguration: SessionConfiguration = null;
+  for (sessionConfiguration of config.sessions) {
+    if (sessionConfiguration.args === undefined) {
+      sessionConfiguration.args = "";
+    }
+  }
 }
 
 
