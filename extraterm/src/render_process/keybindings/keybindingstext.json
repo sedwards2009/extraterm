@@ -124,8 +124,10 @@
   },
   
   "contextNames": {
-    "image-viewer": "Image viewer",
+    "editor": "Text Editing",
+    "image-viewer": "Image Viewer",
     "main-ui": "Window",
+    "settings-tab": "Settings Tab",
     "terminal-default-mode": "Terminal Tab: Normal mode",
     "terminal-cursor-mode": "Terminal Tab: Cursor mode",
     "terminal-viewer-default-mode": "Terminal Frame: Normal mode",
