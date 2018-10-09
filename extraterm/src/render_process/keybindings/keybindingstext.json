@@ -135,6 +135,33 @@
     "text-viewer": "Text Frame",
     "viewer-tab": "Viewer Tab"
   },
+  "contextConflicts": {
+    "editor": [
+      "main-ui",
+      "viewer-tab",
+      "text-viewer",
+      "terminal-cursor-mode",
+      "terminal-viewer-cursor-mode"
+    ],
+    "image-viewer": ["main-ui"],
+    "main-ui": [
+      "editor",
+      "image-viewer",
+      "settings-tab",
+      "terminal-default-mode",
+      "terminal-cursor-mode",
+      "terminal-viewer-default-mode",
+      "terminal-viewer-cursor-mode",
+      "text-viewer",
+      "viewer-tab"],
+    "settings-tab": ["main-ui"],
+    "terminal-default-mode": ["main-ui"],
+    "terminal-cursor-mode": ["main-ui", "editor"],
+    "terminal-viewer-default-mode": ["main-ui"],
+    "terminal-viewer-cursor-mode": ["main-ui", "editor"],
+    "text-viewer": ["main-ui", "editor"],
+    "viewer-tab": ["main-ui", "editor"]
+  },
   "commands": {
     "addCursorAbove": "Add cursor above",
     "addCursorBelow": "Add cursor below",

@@ -18,13 +18,20 @@ export const EVENT_END_KEY_INPUT = "end-key-input";
 type KeybindingsKeyInputState = "read" | "edit" | "conflict";
 
 
+interface CommandKeybinding {
+  contextName: string;
+  command: string;
+  keybindingString: string;
+};
+
+
 @Component({
   components: {
     "keybindings-key-input": KeybindingsKeyInput
   },
   props: {
     contextName: String,
-    keybindingsFileContext: Object, //KeybindingsFileContext
+    keybindings: Object, //KeybindingsFile,
     readOnly: Boolean,
     searchText: String,
   },
@@ -52,7 +59,7 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
 
             <button
                 v-if="!readOnly"
-                v-on:click="deleteKey(command, keybinding)"
+                v-on:click="deleteKey(keybinding)"
                 class="btn btn-microtool-danger"
                 title="Remove keybinding">
               <i class="fas fa-times"></i>
@@ -90,13 +97,14 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
 export class KeybindingsContext extends Vue {
   // Props
   contextName: string;
-  keybindingsFileContext: KeybindingsFileContext;
+  keybindings: KeybindingsFile;
   readOnly: boolean;
   searchText: string;
 
   inputState: KeybindingsKeyInputState = "read";
   selectedCommand = "";
   conflictKey = "";
+  conflictContext = "";
   conflictCommand = "";
 
   get contextHeading(): string {
@@ -125,6 +133,14 @@ export class KeybindingsContext extends Vue {
     }
   }
 
+  get keybindingsFileContext(): Object {
+    return this.keybindings[this.contextName];
+  }
+
+  get conflictContextNames(): string[] {
+    return humanText.contextConflicts[this.contextName];
+  }
+
   get commandToKeybindingsMapping(): Map<string, Keybinding[]> {
     const result = new Map<string, Keybinding[]>();
 
@@ -151,18 +167,21 @@ export class KeybindingsContext extends Vue {
     return str || commandCode;
   }
 
-  deleteKey(command: string, keybinding: Keybinding): void {
-    const configObjectKey = this._lookupConfigObjectKeyByKeybinding(keybinding);
-    if (configObjectKey != null) {
-        Vue.delete(this.keybindingsFileContext, configObjectKey);
+  deleteKey(keybinding: Keybinding): void {
+    const commandConfig = this._findCommandByKeybinding(keybinding);
+    if (commandConfig != null) {
+        Vue.delete(this.keybindings[commandConfig.contextName], commandConfig.keybindingString);
     }
   }
 
-  private _lookupConfigObjectKeyByKeybinding(keybinding: Keybinding): string {
-    for (const keybindingString in this.keybindingsFileContext) {
-      const currentKeybinding = Keybinding.parseConfigString(keybindingString);
-      if (currentKeybinding.equals(keybinding)) {
-        return keybindingString;
+  private _findCommandByKeybinding(keybinding: Keybinding): CommandKeybinding {
+    for (const contextName of [this.contextName, ...this.conflictContextNames]) {
+      const context = this.keybindings[contextName];
+      for (const keybindingString in context) {
+        const currentKeybinding = Keybinding.parseConfigString(keybindingString);
+        if (currentKeybinding.equals(keybinding)) {
+          return {contextName, command: context[keybindingString], keybindingString};
+        }
       }
     }
     return null;
@@ -180,14 +199,16 @@ export class KeybindingsContext extends Vue {
 
   onKeyInputSelected(keybindingString: string): void {
     const newKeybinding = Keybinding.parseConfigString(keybindingString);
-    const existingConfigObjectKey = this._lookupConfigObjectKeyByKeybinding(newKeybinding);
-    if (existingConfigObjectKey == null) {
+
+    const existingCommandConfig = this._findCommandByKeybinding(newKeybinding);
+    if (existingCommandConfig == null) {
       Vue.set(this.keybindingsFileContext, keybindingString, this.selectedCommand);
       this.inputState = "read";
     } else {
 
       this.conflictKey = keybindingString;
-      this.conflictCommand = this.keybindingsFileContext[existingConfigObjectKey];
+      this.conflictContext = existingCommandConfig.contextName;
+      this.conflictCommand = existingCommandConfig.command;
       this.inputState = "conflict";
     }
 
@@ -205,8 +226,9 @@ export class KeybindingsContext extends Vue {
 
   onReplaceConflict(): void {
     const newKeybinding = Keybinding.parseConfigString(this.conflictKey);
-    const existingConfigObjectKey = this._lookupConfigObjectKeyByKeybinding(newKeybinding);
-    Vue.set(this.keybindingsFileContext, existingConfigObjectKey, this.selectedCommand);
+    const existingCommandConfig = this._findCommandByKeybinding(newKeybinding);
+    Vue.delete(this.keybindings[existingCommandConfig.contextName], existingCommandConfig.keybindingString);
+    Vue.set(this.keybindings[this.contextName], this.conflictKey, this.selectedCommand);
 
     this.selectedCommand = "";
     this.conflictKey = "";
