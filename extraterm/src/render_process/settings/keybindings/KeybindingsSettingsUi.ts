@@ -10,6 +10,8 @@ import { KeybindingsInfo } from '../../../Config';
 import { KeybindingsFile } from '../../../KeybindingsFile';
 import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
 import { KeybindingsList } from './KeybindingsListUi';
+import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
+import { Keybinding } from '../../keybindings/KeyBindingsManager';
 
 export const EVENT_DELETE = "delete";
 export const EVENT_DUPLICATE = "duplicate";
@@ -19,7 +21,8 @@ export const EVENT_RENAME = "rename";
 @Component(
   {
     components: {
-      "keybindings-contexts-list": KeybindingsList
+      "keybindings-contexts-list": KeybindingsList,
+      "keybindings-key-input": KeybindingsKeyInput,
     },
     template: `
 <div class="settings-page">
@@ -75,13 +78,26 @@ export const EVENT_RENAME = "rename";
     </div>
 
     <div class="form-group">
-      <div class="col-sm-12">
+      <div class="col-sm-12 keybindings-filter-controls">
         <input
+          v-if="! recordingKey"
           v-model="searchText"
-          class="form-control" 
+          class="form-control keybindings-filter-input" 
           placeholder="Filter commands by name"
           />
+        <keybindings-key-input v-else
+          v-on:${EVENT_SELECTED}="onKeyInputSelected"
+          v-on:${EVENT_CANCELED}="onKeyInputCancelled">
+        </keybindings-key-input>
+
+        <button
+            title="Input key"
+            v-bind:class="{'btn': true, 'btn-default': true, 'selected': recordingKey}"
+            v-on:click="onRecordKey">
+          <i class="fas fa-keyboard"></i>&nbsp;Record key
+        </button>
       </div>
+
     </div>
   </div>
   <keybindings-contexts-list
@@ -106,6 +122,9 @@ export class KeybindingsSettingsUi extends Vue {
   selectedTitle: string = ""
 
   searchText: string = "";
+
+  recordingKey: boolean = false;
+
 
   get isSelectedKeybindingsReadOnly(): boolean {
     const info = this._selectedKeybindingsInfo();
@@ -207,5 +226,26 @@ export class KeybindingsSettingsUi extends Vue {
       }
     }
     return false;
+  }
+
+  onRecordKey(): void {
+    this.recordingKey = ! this.recordingKey;
+    if (this.recordingKey) {
+      this.$emit(EVENT_START_KEY_INPUT);
+    } else {
+      this.$emit(EVENT_END_KEY_INPUT);
+    }
+  }
+
+  onKeyInputSelected(keybindingString: string): void {
+    const enteredKeybinding = Keybinding.parseConfigString(keybindingString);
+    this.searchText = enteredKeybinding.formatHumanReadable();
+    this.recordingKey = false;
+    this.$emit(EVENT_END_KEY_INPUT);
+  }
+
+  onKeyInputCancelled(): void {
+    this.recordingKey = false;
+    this.$emit(EVENT_END_KEY_INPUT);
   }
 }

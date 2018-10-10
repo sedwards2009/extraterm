@@ -50,7 +50,7 @@ interface CommandKeybinding {
     <tbody>
       <tr v-for="command in commands" :key="command" class="command-row">
         <td class="col-md-6" :title="command">{{commandHumanName(command)}}</td>
-        <td class="col-md-6">
+        <td class="col-md-6 keybindings-key-colomn">
           <template v-for="(keybinding, index) in commandToKeybindingsMapping.get(command)">
             <br v-if="index !== 0" />
             <div class='${CLASS_KEYCAP}'>

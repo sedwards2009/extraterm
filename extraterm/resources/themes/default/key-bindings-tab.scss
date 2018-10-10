@@ -40,22 +40,26 @@ TR.command-row:hover BUTTON[class*="btn-microtool-"] {
   visibility: visible;
 }
 
-INPUT.keyinput {
+.keybindings-key-colomn INPUT.keyinput {
   max-width: 7em;
   font-size: $font-size-base;
   padding: 0;
 }
 
-DIV.keybindings-select-group {
+DIV.keybindings-select-group, DIV.keybindings-filter-controls {
   display: flex;
   align-items: center;
+
+  > BUTTON {
+    margin-left: 1rem;
+  }
 }
 
-DIV.keybindings-select, DIV.keybindings-title-input {
+DIV.keybindings-select, DIV.keybindings-title-input, .keybindings-filter-input {
   flex-grow: 1;
 }
 
-DIV.keybindings-copy-controls, DIV.keybindings-title-controls {
+DIV.keybindings-copy-controls, DIV.keybindings-title-controls, DIV.keybindings-filter-controls {
   flex-grow: 0;
   flex-shrink: 0;
 
