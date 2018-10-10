@@ -27,3 +27,6 @@ packages/extraterm-shell-string-parser/main.d.ts
 packages/extraterm-shell-string-parser/test/MainTest.d.ts
 
 
+packages/extraterm-readonly-toolbox/test/MainTest.d.ts
+packages/extraterm-web-component-decorators/test/DecoratorsTest.d.ts
+packages/extraterm-web-component-decorators/test/TestCode.d.ts
