@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
-import { KeybindingsFile, KeybindingsFileContext } from '../../../KeybindingsFile';
+import { KeybindingsFile } from '../../../KeybindingsFile';
 import { Keybinding } from '../../keybindings/KeyBindingsManager';
 
 const humanText = require('../../keybindings/keybindingstext.json');

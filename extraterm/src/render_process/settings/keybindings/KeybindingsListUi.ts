@@ -44,10 +44,22 @@ export class KeybindingsList extends Vue {
   searchText: string;
 
   get humanContexts(): string[] {
-    return Object.keys(humanText.contexts);
+    return Object.keys(humanText.contexts).sort((a,b) => {
+      const aName = this._contextHumanName(a).toLowerCase();
+      const bName = this._contextHumanName(b).toLowerCase();
+      if (aName < bName) {
+        return -1;
+      }
+
+      if (aName > bName) {
+        return 1;
+      }
+      return 0;
+    });
   }
 
-  mounted() {
-    console.log("this.keybindingsContexts != null is", this.keybindings != null);
+  private _contextHumanName(name: string): string {
+    const str = humanText.contextNames[name];
+    return str || name;
   }
 }
