@@ -126,8 +126,28 @@ export class KeybindingsContext extends Vue {
     });
 
     if (this.searchText.trim() !== "") {
+      const commandToKeybindingsMapping = this.commandToKeybindingsMapping;
+
       const searchString = this.searchText.toLowerCase().trim();
-      return commandCodes.filter(a => this.commandHumanName(a).toLowerCase().indexOf(searchString)!==-1);
+      const filteredCommandCodes = commandCodes.filter((command): boolean => {
+        if (this.commandHumanName(command).toLowerCase().indexOf(searchString) !== -1) {
+          return true;
+        }
+
+        // Also match the search string against the current bindings for the command.
+        if ( ! commandToKeybindingsMapping.has(command)) {
+          return false;
+        }
+        const keybindingsList = commandToKeybindingsMapping.get(command);
+        for (const keybinding of keybindingsList) {
+          if (keybinding.formatHumanReadable().toLowerCase().indexOf(searchString) !== -1) {
+            return true;
+          }
+        }
+        return false;
+
+      });
+      return filteredCommandCodes;
     } else {
       return commandCodes;
     }
@@ -149,6 +169,10 @@ export class KeybindingsContext extends Vue {
     }
 
     for (const configKeyString of Object.keys(this.keybindingsFileContext)) {
+      if (configKeyString === "fallthrough") {
+        continue;
+      }
+
       const command = this.keybindingsFileContext[configKeyString];
       if ( ! result.has(command)) {
         result.set(command, []);
