@@ -73,7 +73,7 @@ export function activate(context: ExtensionContext): any {
         name: this._ui.name,
         useDefaultShell: this._ui.useDefaultShell === 1,
         shell: this._ui.shell,
-        args: this._ui.args,
+        args: this._ui.args
       };
       this._checkShellPath();
       this.updateSessionConfiguration(changes);
