@@ -65,8 +65,6 @@ export class TextMateSyntaxThemeProvider implements SyntaxThemeProvider {
     const fileContents = fs.readFileSync(fullPath, "utf8");
     const tmThemeContents = plist.parse(fileContents);
 
-    this._log.debug("plist value: ", JSON.stringify(tmThemeContents, null, "  "));
-    
     const foreground = this._readTextStyleValue(tmThemeContents, "settings.0.settings.foreground", "");
     const background = this._readTextStyleValue(tmThemeContents, "settings.0.settings.background", "");
     const cursor = this._readTextStyleValue(tmThemeContents, "settings.0.settings.caret", "");
