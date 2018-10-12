@@ -8,6 +8,7 @@ import Vue from 'vue';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
 import { KeybindingsFile } from '../../../KeybindingsFile';
 import { Keybinding } from '../../keybindings/KeyBindingsManager';
+import { Emulator } from '../../emulator/Term';
 
 const humanText = require('../../keybindings/keybindingstext.json');
 
@@ -56,6 +57,12 @@ interface CommandKeybinding {
             <div class='${CLASS_KEYCAP}'>
               <span>{{keybinding.formatHumanReadable()}}</span>
             </div>
+
+            <i
+                v-if="termConflict(keybinding)"
+                title="This may override the terminal emulation"
+                class="text-warning fas fa-exclamation-triangle"
+            ></i>
 
             <button
                 v-if="!readOnly"
@@ -191,6 +198,13 @@ export class KeybindingsContext extends Vue {
     return str || commandCode;
   }
 
+  termConflict(keybinding: Keybinding): boolean {
+    if (this.conflictContextNames.indexOf("emulation") === -1) {
+      return false;
+    }
+    return Emulator.isKeySupported(keybinding);
+  }
+
   deleteKey(keybinding: Keybinding): void {
     const commandConfig = this._findCommandByKeybinding(keybinding);
     if (commandConfig != null) {
@@ -201,6 +215,9 @@ export class KeybindingsContext extends Vue {
   private _findCommandByKeybinding(keybinding: Keybinding): CommandKeybinding {
     for (const contextName of [this.contextName, ...this.conflictContextNames]) {
       const context = this.keybindings[contextName];
+      if (context == null) {
+        continue;
+      }
       for (const keybindingString in context) {
         const currentKeybinding = Keybinding.parseConfigString(keybindingString);
         if (currentKeybinding.equals(keybinding)) {

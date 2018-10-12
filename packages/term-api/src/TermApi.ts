@@ -167,6 +167,13 @@ export interface ApplicationModeResponse {
   remainingData?: string
 }
 
+export interface MinimalKeyboardEvent {
+  altKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  shiftKey: boolean;
+  key: string;
+}
 
 
 export interface EmulatorApi {

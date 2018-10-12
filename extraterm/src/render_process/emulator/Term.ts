@@ -59,7 +59,8 @@ import {
   STRIKE_THROUGH_ATTR_FLAG,
   UNDERLINE_ATTR_FLAG,
   WriteBufferStatus,
-  WriteBufferSizeEventListener
+  WriteBufferSizeEventListener,
+  MinimalKeyboardEvent
 } from 'term-api';
 
 import { log } from "extraterm-logging";
@@ -112,7 +113,6 @@ interface Options {
   columns?: number;
   debug?: boolean;
   applicationModeCookie?: string;
-  userAgent?: string;
   performanceNowFunc?: () => number;
 };
 
@@ -147,6 +147,9 @@ function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
 function isCharAttrCursor(attr: CharAttr): boolean {
   return attr === -1;
 }
+
+const isMac = window.navigator.userAgent.indexOf('Mac') !== -1;
+
 
 export class Emulator implements EmulatorApi {
   private cols = 80;
@@ -239,15 +242,7 @@ export class Emulator implements EmulatorApi {
   private title: string = "";
   
   constructor(options: Options) {
-    const defaults = {
-      termName: 'xterm-256color',
-      geometry: [80, 24],
-      debug: false,
-      applicationModeCookie: null,
-      performanceNow: () => window.performance.now()
-    };
-    
-    this.termName = options.termName === undefined ? 'xterm' : options.termName;
+    this.termName = options.termName === undefined ? 'xterm-256color' : options.termName;
     this.rows = options.rows === undefined ? 24 : options.rows;
     this.cols = options.columns === undefined ? 80 : options.columns;
     this.debug = options.debug === undefined ? false : options.debug;
@@ -256,10 +251,6 @@ export class Emulator implements EmulatorApi {
       this._performanceNow = window.performance.now.bind(window.performance);
     } else {
       this._performanceNow = options.performanceNowFunc;
-    }
-
-    if (options.userAgent !== undefined) {
-      this.isMac = options.userAgent.indexOf('Mac') !== -1;
     }
     
     this.state = 0; // Escape code parsing state.
@@ -2186,10 +2177,14 @@ export class Emulator implements EmulatorApi {
     this.write(data + '\r\n');
   };
   
+  static isKeySupported(ev: MinimalKeyboardEvent): boolean {
+    return this._translateKey(ev, false, false) != null;
+  }
+
   /**
    * @return true if the event and key was understood and handled.
    */
-  keyDown(ev: KeyboardEvent): boolean {
+  private static _translateKey(ev: MinimalKeyboardEvent, applicationKeypad: boolean, applicationCursor: boolean): string {
     let key: string = null;
     
     // Modifiers keys are often encoded using this scheme.
@@ -2199,7 +2194,7 @@ export class Emulator implements EmulatorApi {
     switch (ev.key) {
       // backspace
       case 'Backspace':
-        if ((!this.isMac && ev.altKey) || (this.isMac && ev.metaKey)) {  // Alt modifier handling.
+        if ((!isMac && ev.altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
           key = '\x1b\x7f'; // ^[^?
           break;
         }
@@ -2228,7 +2223,7 @@ export class Emulator implements EmulatorApi {
 
       // left-arrow
       case 'ArrowLeft':
-        if (this.applicationCursor) {
+        if (applicationCursor) {
           key = '\x1bOD'; // SS3 as ^[O for 7-bit
           //key = '\x8fD'; // SS3 as 0x8f for 8-bit
           break;
@@ -2242,7 +2237,7 @@ export class Emulator implements EmulatorApi {
 
       // right-arrow
       case 'ArrowRight':
-        if (this.applicationCursor) {
+        if (applicationCursor) {
           key = '\x1bOC';
           break;
         }
@@ -2255,7 +2250,7 @@ export class Emulator implements EmulatorApi {
 
       // up-arrow
       case 'ArrowUp':
-        if (this.applicationCursor) {
+        if (applicationCursor) {
           key = '\x1bOA';
           break;
         }
@@ -2268,7 +2263,7 @@ export class Emulator implements EmulatorApi {
 
       // down-arrow
       case 'ArrowDown':
-        if (this.applicationCursor) {
+        if (applicationCursor) {
           key = '\x1bOB';
           break;
         }
@@ -2281,7 +2276,7 @@ export class Emulator implements EmulatorApi {
         
       // home
       case 'Home':
-        if (this.applicationKeypad) {
+        if (applicationKeypad) {
           key = '\x1bOH';
           break;
         }
@@ -2294,7 +2289,7 @@ export class Emulator implements EmulatorApi {
 
       // end
       case 'End':
-        if (this.applicationKeypad) {
+        if (applicationKeypad) {
           key = '\x1bOF';
           break;
         }
@@ -2368,7 +2363,7 @@ export class Emulator implements EmulatorApi {
               key = '\x00';
             }
 
-          } else if ((!this.isMac && ev.altKey) || (this.isMac && ev.metaKey)) {  // Alt modifier handling.
+          } else if ((!isMac && ev.altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
             if (ev.key.length === 1) {
               key = '\x1b' + ev.key;
             }
@@ -2376,6 +2371,11 @@ export class Emulator implements EmulatorApi {
         }
         break;
     }
+    return key;
+  }
+
+  keyDown(ev: KeyboardEvent): boolean {
+    const key = Emulator._translateKey(ev, this.applicationKeypad, this.applicationCursor);
 
     if (key === null) {
       return false;

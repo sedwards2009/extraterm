@@ -8,16 +8,12 @@ import * as _ from 'lodash';
 
 import { Logger, getLogger, log } from "extraterm-logging";
 import * as SetUtils from '../../utils/SetUtils';
+import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
 
 const FALLTHROUGH = "fallthrough";
 const NAME = "name";
 
-export interface MinimalKeyboardEvent {
-  altKey: boolean;
-  ctrlKey: boolean;
-  metaKey: boolean;
-  shiftKey: boolean;
-  key: string;
+export interface MinimalKeyboardEvent extends TermMinimalKeyboardEvent {
   keyCode: number;
 }
 
@@ -30,11 +26,12 @@ export interface KeybindingOptions {
 };
 
 // Internal data structure for pairing a key binding with a command.
-export class Keybinding {
+export class Keybinding implements TermMinimalKeyboardEvent {
   readonly altKey: boolean;
   readonly ctrlKey: boolean;
   readonly metaKey: boolean;
   readonly shiftKey: boolean;
+  readonly key: string;
   readonly configKey: string;
   readonly configKeyLowercase: string;
   private _humanReadableString: string = null;
@@ -44,6 +41,7 @@ export class Keybinding {
     this.ctrlKey = options.ctrlKey;
     this.metaKey = options.metaKey;
     this.shiftKey = options.shiftKey;
+    this.key = configKeyNameToEventKeyName(options.configKey);
     this.configKey = options.configKey;
     this.configKeyLowercase = options.configKey.toLowerCase();
   }
