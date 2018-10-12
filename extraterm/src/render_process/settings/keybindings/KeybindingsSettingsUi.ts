@@ -37,7 +37,7 @@ export const EVENT_RENAME = "rename";
         <div v-if=" ! editingTitle" class="keybindings-select">
           <select class="form-control" id="keybindings-style" v-model="selectedKeybindings">
             <option v-for="option in sortedKeybindingsInfoList" v-bind:value="option.name">
-              {{ option.name }} {{option.readOnly ? "   &#x1f512": ""}}
+              {{ option.name }}{{ ! option.readOnly ? "\u{00a0}\u{00a0}\u{00a0}\u{1f513}": ""}}
             </option>
           </select>
         </div>
