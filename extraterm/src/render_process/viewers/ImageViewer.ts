@@ -16,7 +16,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import {AcceptsKeyBindingsManager, KeyBindingsManager} from '../keybindings/KeyBindingsManager';
+import {AcceptsKeybindingsManager, KeybindingsManager} from '../keybindings/KeyBindingsManager';
 import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
 
 type SetterState = VirtualScrollArea.SetterState;
@@ -41,7 +41,7 @@ const DEBUG_SIZE = false;
 
 
 @WebComponent({tag: "et-image-viewer"})
-export class ImageViewer extends ViewerElement implements AcceptsKeyBindingsManager {
+export class ImageViewer extends ViewerElement implements AcceptsKeybindingsManager {
 
   static TAG_NAME = "ET-IMAGE-VIEWER";
   
@@ -56,7 +56,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingsMana
   }
   
   private _log: Logger;
-  private _keyBindingManager: KeyBindingsManager = null;
+  private _keybindingsManager: KeybindingsManager = null;
   private _bulkFileHandle: BulkFileHandle = null;
   private _metadataEventDoLater: DebouncedDoLater = null;
   private _text = null;
@@ -140,8 +140,8 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingsMana
     }
   }
 
-  setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {
-    this._keyBindingManager = newKeyBindingManager;
+  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
+    this._keybindingsManager = newKeybindingsManager;
   }
 
   getSelectionText(): string {    
@@ -399,10 +399,10 @@ export class ImageViewer extends ViewerElement implements AcceptsKeyBindingsMana
   }
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._keyBindingManager !== null && this._keyBindingManager.getKeyBindingsContexts() !== null &&
+    if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null &&
         this._mode === ViewerElementTypes.Mode.CURSOR) {
           
-      const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_SELECTION_MODE);
+      const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
         
         const command = keyBindings.mapEventToCommand(ev);

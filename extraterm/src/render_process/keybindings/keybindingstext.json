@@ -1,23 +1,166 @@
 {
-  "contexts": [
-    "main-ui",
-    "terminal-default-mode",
-    "terminal-cursor-mode",
-    "terminal-viewer-default-mode",
-    "terminal-viewer-cursor-mode",
-    "text-viewer",
-    "image-viewer",
-    "viewer-tab"
-  ],
+  "contexts": {
+    "main-ui": [
+      "closeTab",
+      "moveTabDown",
+      "moveTabLeft",
+      "moveTabRight",
+      "moveTabUp",
+      "newTerminal",
+      "selectPaneAbove",
+      "selectPaneBelow",
+      "selectPaneLeft",
+      "selectPaneRight",
+      "selectTabLeft",
+      "selectTabRight"
+    ],
+    "terminal-default-mode": [
+      "copyToClipboard",
+      "decreaseFontSize",
+      "deleteLastFrame",
+      "enterCursorMode",
+      "goToNextFrame",
+      "goToPreviousFrame",
+      "increaseFontSize",
+      "openLastFrame",
+      "pasteFromClipboard",
+      "resetFontSize",
+      "scrollPageDown",
+      "scrollPageUp"
+    ],
+    "terminal-cursor-mode": [
+      "copyToClipboard",
+      "decreaseFontSize",
+      "enterNormalMode",
+      "goToNextFrame",
+      "goToPreviousFrame",
+      "increaseFontSize",
+      "pasteFromClipboard",
+      "resetFontSize"
+    ],
+    "editor": [
+      "addCursorAbove",
+      "addCursorBelow",
+      "backSlashesToForward",
+      "backspace",
+      "blockIndent",
+      "blockOutdent",
+      "cursorColumn",
+      "del",
+      "escapeShellChars",
+      "findAll",
+      "forwardSlashesToBack",
+      "goLineDown",
+      "goLineUp",
+      "gotoFileEnd",
+      "gotoFileStart",
+      "gotoLeft",
+      "gotoLineEnd",
+      "gotoLineStart",
+      "gotoPageDown",
+      "gotoPageUp",
+      "gotoRight",
+      "gotoWordLeft",
+      "gotoWordRight",
+      "indent",
+      "outdent",
+      "overwrite",
+      "redo",
+      "removeLines",
+      "removeWordLeft",
+      "removeWordRight",
+      "scrollDown",
+      "scrollUp",
+      "selectAll",
+      "selectDown",
+      "selectLeft",
+      "selectLineEnd",
+      "selectLineStart",
+      "selectMoreAfter",
+      "selectPageDown",
+      "selectPageUp",
+      "selectRight",
+      "selectUp",
+      "selectWordLeft",
+      "selectWordRight",
+      "singleSelection",
+      "splitIntoLines",
+      "undo",
+      "undoSelection",
+      "unescapeShellChars"
+    ],
+    "terminal-viewer-default-mode": [
+      "openCommandPalette",
+      "typeSelection",
+      "typeSelectionAndCr"
+    ],
+    "terminal-viewer-cursor-mode": [
+      "editor",
+      "openCommandPalette",
+      "typeSelection",
+      "typeSelectionAndCr"
+    ],
+    "text-viewer": [
+      "editor",
+      "openCommandPalette",
+      "typeSelection",
+      "typeSelectionAndCr"
+    ],
+    "image-viewer": [
+      "goDown",
+      "goUp"
+    ],
+    "viewer-tab": [
+      "copyToClipboard",
+      "decreaseFontSize",
+      "increaseFontSize",
+      "pasteFromClipboard",
+      "resetFontSize"
+    ],
+    "settings-tab": [
+      "openCommandPalette"
+    ]
+  },
+  
   "contextNames": {
-    "image-viewer": "Image viewer",
+    "editor": "Text Editing",
+    "image-viewer": "Image Viewer",
     "main-ui": "Window",
+    "settings-tab": "Settings Tab",
     "terminal-default-mode": "Terminal Tab: Normal mode",
     "terminal-cursor-mode": "Terminal Tab: Cursor mode",
     "terminal-viewer-default-mode": "Terminal Frame: Normal mode",
     "terminal-viewer-cursor-mode": "Terminal Frame: Cursor mode",
     "text-viewer": "Text Frame",
     "viewer-tab": "Viewer Tab"
+  },
+  "contextConflicts": {
+    "editor": [
+      "main-ui",
+      "viewer-tab",
+      "text-viewer",
+      "terminal-cursor-mode",
+      "terminal-viewer-cursor-mode"
+    ],
+    "image-viewer": ["main-ui"],
+    "main-ui": [
+      "editor",
+      "image-viewer",
+      "settings-tab",
+      "terminal-default-mode",
+      "terminal-cursor-mode",
+      "terminal-viewer-default-mode",
+      "terminal-viewer-cursor-mode",
+      "text-viewer",
+      "viewer-tab",
+      "emulation"],
+    "settings-tab": ["main-ui"],
+    "terminal-default-mode": ["main-ui", "emulation"],
+    "terminal-cursor-mode": ["main-ui", "editor"],
+    "terminal-viewer-default-mode": ["main-ui", "emulation"],
+    "terminal-viewer-cursor-mode": ["main-ui", "editor"],
+    "text-viewer": ["main-ui", "editor"],
+    "viewer-tab": ["main-ui", "editor"]
   },
   "commands": {
     "addCursorAbove": "Add cursor above",

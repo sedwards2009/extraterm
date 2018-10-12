@@ -21,13 +21,14 @@ export interface ExtensionPlatform {
 }
 
 export interface ExtensionContributions {
-  viewer: ExtensionViewerContribution[];
-  sessionEditor: ExtensionSessionEditorContribution[];
+  keybindings: ExtensionKeybindingsContribution[];
   sessionBackend: ExtensionSessionBackendContribution[];
+  sessionEditor: ExtensionSessionEditorContribution[];
   syntaxTheme: ExtensionSyntaxThemeContribution[];
   syntaxThemeProvider: ExtensionSyntaxThemeProviderContribution[];
   terminalTheme: ExtensionTerminalThemeContribution[];
   terminalThemeProvider: ExtensionTerminalThemeProviderContribution[];
+  viewer: ExtensionViewerContribution[];
 }
 
 export interface ExtensionViewerContribution {
@@ -90,5 +91,9 @@ export interface ExtensionTerminalThemeProviderContribution {
 }
 
 export interface ExtensionTerminalThemeContribution {
+  path: string;
+}
+
+export interface ExtensionKeybindingsContribution {
   path: string;
 }

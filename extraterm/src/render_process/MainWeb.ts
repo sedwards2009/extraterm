@@ -44,7 +44,7 @@ import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
-import { KeyBindingsManager, injectKeyBindingsManager, loadKeyBindingsFromObject, KeyBindingsContexts } from './keybindings/KeyBindingsManager';
+import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject, KeybindingsContexts } from './keybindings/KeyBindingsManager';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -68,7 +68,7 @@ const _log = getLogger("mainweb");
  * starting up the main component and handling the window directly.
  */
 
-let keyBindingManager: KeyBindingsManager = null;
+let keyBindingManager: KeybindingsManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configDatabase: ConfigDatabaseImpl = null;
@@ -90,7 +90,7 @@ export function startUp(closeSplash: () => void): void {
 
   // Get the Config working.
   configDatabase = new ConfigDatabaseImpl();
-  keyBindingManager = new KeyBindingsManagerImpl();  // depends on the config.
+  keyBindingManager = new KeybindingsManagerImpl();  // depends on the config.
   const themePromise = WebIpc.requestConfig("*").then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
@@ -174,7 +174,7 @@ function loadFontFaces(): Promise<FontFace[]> {
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
   injectConfigDatabase(mainWebUi, configDatabase);
-  injectKeyBindingsManager(mainWebUi, keyBindingManager);
+  injectKeybindingsManager(mainWebUi, keyBindingManager);
   mainWebUi.setExtensionManager(extensionManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
     <div class="space"></div>
@@ -435,11 +435,11 @@ async function setupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
-  const keyBindingContexts = loadKeyBindingsFromObject(newSystemConfig.keyBindingsContexts,
+  const keyBindingContexts = loadKeybindingsFromObject(newSystemConfig.keybindingsContexts,
     process.platform);
 
-  if (! keyBindingContexts.equals(keyBindingManager.getKeyBindingsContexts())) {
-    keyBindingManager.setKeyBindingsContexts(keyBindingContexts);
+  if (! keyBindingContexts.equals(keyBindingManager.getKeybindingsContexts())) {
+    keyBindingManager.setKeybindingsContexts(keyBindingContexts);
   }
 
   if (oldSystemConfig === null ||
@@ -622,7 +622,7 @@ function handleCommandPaletteRequest(ev: CustomEvent): void {
       };
     });
     
-    const shortcut = keyBindingManager.getKeyBindingsContexts().context("main-ui").mapCommandToKeyBinding("openCommandPalette");
+    const shortcut = keyBindingManager.getKeybindingsContexts().context("main-ui").mapCommandToHumanKeybinding("openCommandPalette");
     commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
     commandPalette.setEntries(paletteEntries);
     
@@ -756,23 +756,32 @@ class ConfigDatabaseImpl implements ConfigDatabase {
   }
 }
 
-class KeyBindingsManagerImpl implements KeyBindingsManager {
-  private _keyBindingsContexts: KeyBindingsContexts = null;
+class KeybindingsManagerImpl implements KeybindingsManager {
+  private _keybindingsContexts: KeybindingsContexts = null;
   private _log: Logger;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
-  
+  private _enabled = true;
+
   constructor() {
-    this._log = getLogger("KeyBindingsManagerImpl", self);
+    this._log = getLogger("KeybindingsManagerImpl", self);
     this.onChange = this._onChangeEventEmitter.event;
   }
 
-  getKeyBindingsContexts(): KeyBindingsContexts {
-    return this._keyBindingsContexts;
+  getKeybindingsContexts(): KeybindingsContexts {
+    return this._keybindingsContexts;
   }
   
-  setKeyBindingsContexts(newKeyBindingContexts: KeyBindingsContexts): void {
-    this._keyBindingsContexts = newKeyBindingContexts;
+  setKeybindingsContexts(newKeybindingContexts: KeybindingsContexts): void {
+    this._keybindingsContexts = newKeybindingContexts;
+    this._keybindingsContexts.setEnabled(this._enabled);
     this._onChangeEventEmitter.fire(undefined);
+  }
+
+  setEnabled(enabled: boolean): void {
+    this._enabled = enabled;
+    if (this._keybindingsContexts != null) {
+      this._keybindingsContexts.setEnabled(this._enabled);
+    }
   }
 }

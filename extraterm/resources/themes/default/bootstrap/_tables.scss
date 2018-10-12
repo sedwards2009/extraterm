@@ -232,3 +232,11 @@ table {
     }
   }
 }
+
+TR, TD {
+  @for $i from (1 + 1) through $grid-columns {
+    > .col-xs-#{$i}, > .col-sm-#{$i}, > .col-md-#{$i}, .col-lg-#{$i} {
+      width: #{$i*100% /12};
+    }
+  }
+}

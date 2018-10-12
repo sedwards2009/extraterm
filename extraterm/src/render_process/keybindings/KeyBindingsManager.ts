@@ -1,57 +1,135 @@
 /*
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event } from 'extraterm-extension-api';
 import * as _ from 'lodash';
 
-import {Logger, getLogger} from "extraterm-logging";
+import { Logger, getLogger, log } from "extraterm-logging";
 import * as SetUtils from '../../utils/SetUtils';
+import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
 
 const FALLTHROUGH = "fallthrough";
 const NAME = "name";
 
-export interface MinimalKeyboardEvent {
-  altKey: boolean;
-  ctrlKey: boolean;
-  metaKey: boolean;
-  shiftKey: boolean;  
-  key: string;
+export interface MinimalKeyboardEvent extends TermMinimalKeyboardEvent {
   keyCode: number;
 }
 
-// Internal data structure for pairing a key binding with a command.
-interface KeyBinding {
+export interface KeybindingOptions {
   altKey: boolean;
   ctrlKey: boolean;
+  shiftKey: boolean;
   metaKey: boolean;
-  shiftKey: boolean;  
-  key: string;
+  configKey: string;
+};
+
+// Internal data structure for pairing a key binding with a command.
+export class Keybinding implements TermMinimalKeyboardEvent {
+  readonly altKey: boolean;
+  readonly ctrlKey: boolean;
+  readonly metaKey: boolean;
+  readonly shiftKey: boolean;
+  readonly key: string;
+  readonly configKey: string;
+  readonly configKeyLowercase: string;
+  private _humanReadableString: string = null;
+
+  constructor(options: KeybindingOptions) {
+    this.altKey = options.altKey;
+    this.ctrlKey = options.ctrlKey;
+    this.metaKey = options.metaKey;
+    this.shiftKey = options.shiftKey;
+    this.key = configKeyNameToEventKeyName(options.configKey);
+    this.configKey = options.configKey;
+    this.configKeyLowercase = options.configKey.toLowerCase();
+  }
+
+  static parseConfigString(keyBindingString: string): Keybinding {
+    const parts = keyBindingString.replace(/\s/g, "").split(/-/g);
+    const partSet = new Set(parts.map(part => part.length !== 1 ? part.toLowerCase() : part));
+    const hasShift = partSet.has("shift");
+    partSet.delete("shift");
+    const hasCtrl = partSet.has("ctrl");
+    partSet.delete("ctrl");
+    const hasAlt = partSet.has("alt");
+    partSet.delete("alt");
+    const hasMeta = partSet.has("meta") || partSet.has("cmd");
+    partSet.delete("meta");
+    partSet.delete("cmd");
   
-  command: string;
-  shortcut: string;
-  normalizedShortcut: string;
+    if (partSet.size !== 1) {
+      return null;
+    }
+  
+    const key = partSet.values().next().value;
+    const keybinding = new Keybinding({
+      altKey: hasAlt,
+      ctrlKey: hasCtrl,
+      shiftKey: hasShift,
+      metaKey: hasMeta,
+      configKey: key
+    });
+  
+    return keybinding;
+  }
+
+  equals(other: Keybinding): boolean {
+    if (other == null) {
+      return false;
+    }
+    return this.altKey === other.altKey &&
+      this.ctrlKey === other.ctrlKey &&
+      this.metaKey === other.metaKey &&
+      this.shiftKey === other.shiftKey &&
+      this.configKeyLowercase === other.configKeyLowercase;
+  }
+
+  formatHumanReadable(): string {
+    if (this._humanReadableString != null) {
+      return this._humanReadableString;
+    }
+
+    const parts: string[] = [];
+    if (this.ctrlKey) {
+      parts.push("Ctrl");
+    }
+    if (this.metaKey) {
+      parts.push("\u2318"); // Mac style 'pretzel' symbol
+    }
+    if (this.altKey) {
+      parts.push("Alt");
+    }
+    if (this.shiftKey) {
+      parts.push("Shift");
+    }
+  
+    if (eventKeyToHumanMapping[this.configKey.toLowerCase()] !== undefined) {
+      parts.push(eventKeyToHumanMapping[this.configKey.toLowerCase()]);
+    } else {
+      parts.push(_.capitalize(this.configKey));
+    }
+  
+    this._humanReadableString = parts.join("+");
+    return this._humanReadableString;
+  }
+    
+  hashString(): string {
+    return `${mapString(this.configKey)}:${mapBool(this.altKey)}:${mapBool(this.ctrlKey)}:${mapBool(this.metaKey)}:${mapBool(this.shiftKey)}`;
+  }
 }
 
-// Maps key names to the values used by browser keyboard events.
+// Maps key names as found in our configuration files to the values used by browser keyboard events.
 const configNameToEventKeyMapping = {
   "Space": " ",
   "Plus": "+",
   "Minus": "-",
-  "PageUp": "PageUp",
-  "PageDown": "PageDown",
   "Esc": "Escape",
   "Up": "ArrowUp",
   "Down": "ArrowDown",
   "Left": "ArrowLeft",
-  "Right": "ArrowRight",
-  "ArrowUp": "ArrowUp",
-  "ArrowDown": "ArrowDown",
-  "ArrowLeft": "ArrowLeft",
-  "ArrowRight": "ArrowRight",
-  "NumLock": "NumLock",
-  "ScrollLock": "ScrollLock",
+  "Right": "ArrowRight"
 };
 
 // Maps special key names in all lower case back to mixed case.
@@ -60,23 +138,34 @@ for (const key in configNameToEventKeyMapping) {
   lowerConfigNameToEventKeyMapping[key.toLowerCase()] = configNameToEventKeyMapping[key];
 }
 
-const eventKeyToHumanMapping = _.merge(configNameToEventKeyMapping, {
-  "PageUp": "Page Up",
-  "PageDown": "Page Down",
-  "ArrowLeft": "Left",
-  "ArrowRight": "Right",
-  "ArrowUp": "Up",
-  "ArrowDown": "Down",
-  " ": "Space",
-});
-
-const eventKeyToCodeMirrorMapping = {
-  "ArrowLeft": "Left",
-  "ArrowRight": "Right",
-  "ArrowUp": "Up",
-  "ArrowDown": "Down",
-  "Escape": "Esc",
+const eventKeyToHumanMapping = {
+  "pageup": "Page Up",
+  "pagedown": "Page Down",
 };
+for (const key in configNameToEventKeyMapping) {
+  eventKeyToHumanMapping[configNameToEventKeyMapping[key].toLowerCase()] = key;
+}
+
+
+export function configKeyNameToEventKeyName(configKeyName: string): string {
+  if (lowerConfigNameToEventKeyMapping[configKeyName.toLowerCase()] !== undefined) {
+    return lowerConfigNameToEventKeyMapping[configKeyName.toLowerCase()];
+  } else {
+    return configKeyName.length === 1 ? configKeyName : _.capitalize(configKeyName.toLowerCase());
+  }
+}
+
+const eventKeyToConfigKeyMapping = new Map<string, string>();
+for (const configKey in configNameToEventKeyMapping) {
+  eventKeyToConfigKeyMapping.set(configNameToEventKeyMapping[configKey], configKey);
+}
+
+export function eventKeyNameToConfigKeyName(eventKeyName: string): string {
+  if (eventKeyToConfigKeyMapping.has(eventKeyName)) {
+    return eventKeyToConfigKeyMapping.get(eventKeyName);
+  }
+  return eventKeyName;
+}
 
 function mapBool(b: boolean): string {
   if (b === undefined) {
@@ -93,26 +182,34 @@ function mapString(s: string): string {
  * Mapping from keyboard events to command strings, and command strings to
  * shortcut names.
  */
-export class KeyBindingsMapping {
-  
-  public keyBindings: KeyBinding[] = [];
-  private _log: Logger = null;  
+export class KeybindingsMapping {
+
+  public keybindingsList: Keybinding[] = [];
+  private _keybindingCommandMapping = new Map<Keybinding, string>();
+  private _log: Logger = null;
   private _platform: string;
-  
+  private _enabled = true;
+
   constructor(mappingName: string, allMappingsJson: Object, platform: string) {
-    this._log = getLogger("KeyBindingMapping", this);
+    this._log = getLogger("KeybindingMapping", this);
     this._platform = platform;
-    this._gatherPairs(mappingName, allMappingsJson).forEach( (pair) => {
-      const parsedKeyBinding = parseKeyBinding(pair.key, pair.value);
-      if (parsedKeyBinding !== null) {
-        this.keyBindings.push(parsedKeyBinding);
+    this._gatherPairs(mappingName, allMappingsJson).forEach((pair) => {
+      const keybinding = Keybinding.parseConfigString(pair.key);
+      // pair.value
+      if (keybinding !== null) {
+        this._keybindingCommandMapping.set(keybinding, pair.value);
+        this.keybindingsList.push(keybinding);
       } else {
         this._log.warn(`Unable to parse key binding '${pair.key}'. Skipping.`);
       }
     });
   }
-  
-  equals(other: KeyBindingsMapping): boolean {
+
+  setEnabled(enabled: boolean): void {
+    this._enabled = enabled;
+  }
+
+  equals(other: KeybindingsMapping): boolean {
     if (other == null) {
       return false;
     }
@@ -124,18 +221,17 @@ export class KeyBindingsMapping {
       return false;
     }
 
-    const myBindings = this.keyBindings.map(this._makeKey);
-    const otherBindings = other.keyBindings.map(this._makeKey);
+    const myBindings = this.keybindingsList.map(b => this._makeKey(b));
+    const otherBindings = other.keybindingsList.map(b => this._makeKey(b));
     myBindings.sort();
     otherBindings.sort();
 
     return _.isEqual(myBindings, otherBindings);
   }
 
-  private _makeKey(binding: KeyBinding): string {
-    return `${mapString(binding.key)}:${mapString(binding.command)}:${mapString(binding.shortcut)}` +
-      `:${mapString(binding.normalizedShortcut)}:${mapBool(binding.altKey)}:${mapBool(binding.ctrlKey)}:` +
-      `${mapBool(binding.metaKey)}:${mapBool(binding.shiftKey)}`;
+  private _makeKey(binding: Keybinding): string {
+    const command = this._keybindingCommandMapping.get(binding);
+    return mapString(command) + ":" + binding.hashString();
   }
 
   private _gatherPairs(name: string, allMappings: Object): { key: string, value: string}[] {
@@ -165,6 +261,11 @@ export class KeyBindingsMapping {
    *         key binding.
    */
   mapEventToCommand(ev: MinimalKeyboardEvent): string {
+    if ( ! this._enabled) {
+      return null;
+    }
+
+
     let key = "";
     if (ev.key.length === 1 && ev.key.charCodeAt(0) <= 31) {
       // Chrome on Windows sends us control codes directly in ev.key.
@@ -182,19 +283,21 @@ export class KeyBindingsMapping {
       }
     }
 
-    for (let keyBinding of this.keyBindings) {
+    for (let keybinding of this.keybindingsList) {
       // Note: We don't compare Shift. It is assumed to be automatically handled by the
       // case of the key sent, except in the case where a special key is used.
-      if (keyBinding.key === key &&
-          keyBinding.altKey === ev.altKey &&
-          keyBinding.ctrlKey === ev.ctrlKey &&
-          keyBinding.shiftKey === ev.shiftKey &&
-          keyBinding.metaKey === ev.metaKey) {
-        return keyBinding.command;
+      const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
+      if (keybinding.configKeyLowercase === lowerKey &&
+          keybinding.altKey === ev.altKey &&
+          keybinding.ctrlKey === ev.ctrlKey &&
+          keybinding.shiftKey === ev.shiftKey &&
+          keybinding.metaKey === ev.metaKey) {
+        return this._keybindingCommandMapping.get(keybinding);
       }
     }
     return null;
   }
+  // this._log.debug(`altKey: ${ev.altKey}, ctrlKey: ${ev.ctrlKey}, metaKey: ${ev.metaKey}, shiftKey: ${ev.shiftKey}, key: ${ev.key}, keyCode: ${ev.keyCode}`);
 
   /**
    * Maps a command name to a readable key binding name.
@@ -203,126 +306,52 @@ export class KeyBindingsMapping {
    * @return the matching key binding string if there is one preset, otherwise
    *         null
    */
-  mapCommandToKeyBinding(command: string): string {
-    for (let keyBinding of this.keyBindings) {
-      if (keyBinding.command === command) {
-        return keyBinding.shortcut;
+  mapCommandToHumanKeybinding(command: string): string {
+    for (let keybinding of this.keybindingsList) {
+      if (this._keybindingCommandMapping.get(keybinding) === command) {
+        return keybinding.formatHumanReadable();
       }
     }
     return null;
   }
+
+//   mapCommandToKeybindings(command: string): string[] {
+//     const result: string[] = [];
+//     for (let keyBinding of this.keyBindings) {
+//       if (keyBinding.command === command) {
+//         result.push(keyBinding.shortcut);
+//       }
+//     }
+//     return result;
+//   }
 }
 
-function parseKeyBinding(keyBindingString: string, command: string): KeyBinding {
-  const parts = keyBindingString.replace(/\s/g,"").split(/-/g);
-  const partSet = new Set( parts.map( part => part.length !== 1 ? part.toLowerCase() : part) );
-  const hasShift = partSet.has("shift");
-  partSet.delete("shift");
-  const hasCtrl = partSet.has("ctrl");
-  partSet.delete("ctrl");
-  const hasAlt = partSet.has("alt");
-  partSet.delete("alt");
-  const hasMeta = partSet.has("meta") || partSet.has("cmd");
-  partSet.delete("meta");
-  partSet.delete("cmd");
-
-  if (partSet.size !== 1) {
-    return null;
-  }
-  
-  let key = partSet.values().next().value;
-  if (lowerConfigNameToEventKeyMapping[key.toLowerCase()] !== undefined) {
-    key = lowerConfigNameToEventKeyMapping[key.toLowerCase()];
-  } else {
-    key = key.length === 1 ? key : _.capitalize(key.toLowerCase());
-  }
-  
-  const keyBinding: KeyBinding = {
-    altKey: hasAlt,
-    ctrlKey: hasCtrl,
-    shiftKey: hasShift,
-    metaKey: hasMeta,
-    key: key,
-    command: command,
-    shortcut: "",
-    normalizedShortcut: ""
-  };
-  keyBinding.normalizedShortcut = formatNormalizedKeyBinding(keyBinding);
-  keyBinding.shortcut = formatKeyBinding(keyBinding);
-  return keyBinding;
-}
-
-function formatKeyBinding(keyBinding: KeyBinding): string {
-  const parts: string[] = [];
-  if (keyBinding.ctrlKey) {
-    parts.push("Ctrl");
-  }
-  if (keyBinding.metaKey) {
-    parts.push("\u2318"); // Mac style 'pretzel' symbol
-  }
-  if (keyBinding.altKey) {
-    parts.push("Alt");
-  }
-  if (keyBinding.shiftKey) {
-    parts.push("Shift");
-  }
-  
-  if (eventKeyToHumanMapping[keyBinding.key] !== undefined) {
-    parts.push(eventKeyToHumanMapping[keyBinding.key]);
-  } else {
-    parts.push(_.capitalize(keyBinding.key));
-  }
-  
-  return parts.join("+");
-}
 
 /**
- * Creates a formatted string name of the key binding the same way CodeMirror does internally.
+ * Container for mapping context names to KeybindingMapper objects.
  */
-function formatNormalizedKeyBinding(keyBinding: KeyBinding): string {
-  const parts: string[] = [];
-  if (keyBinding.shiftKey) {
-    parts.push("Shift");
-  }
-  if (keyBinding.metaKey) {
-    parts.push("Cmd");
-  }
-  if (keyBinding.ctrlKey) {
-    parts.push("Ctrl");
-  }
-  if (keyBinding.altKey) {
-    parts.push("Alt");
-  }
-  
-  if (eventKeyToCodeMirrorMapping[keyBinding.key] !== undefined) {
-    parts.push(eventKeyToCodeMirrorMapping[keyBinding.key]);
-  } else {
-    parts.push(_.capitalize(keyBinding.key));
-  }
-  
-  return parts.join("-");
-}
-
-/**
- * Container for mapping context names ot KeyBindingMapper objects.
- */
-export class KeyBindingsContexts {
+export class KeybindingsContexts {
   private _log: Logger = null;
-  private _contexts = new Map<string, KeyBindingsMapping>();
+  private _contexts = new Map<string, KeybindingsMapping>();
   public contextNames: string[] = [];
-  
+  private _enabled = true;
+
   constructor(obj: object, platform: string) {
-    this._log = getLogger("KeyBindingContexts", this);
+    this._log = getLogger("KeybindingContexts", this);
     for (let key in obj) {
       if (key !== NAME) {
-        const mapper = new KeyBindingsMapping(key, obj, platform);
+        const mapper = new KeybindingsMapping(key, obj, platform);
         this.contextNames.push(key);
         this._contexts.set(key, mapper);
       }
     }
   }
 
-  equals(other: KeyBindingsContexts): boolean {
+  setEnabled(enabled: boolean): void {
+    this._enabled = enabled;
+  }
+
+  equals(other: KeybindingsContexts): boolean {
     if (other == null) {
       return false;
     }
@@ -349,14 +378,18 @@ export class KeyBindingsContexts {
   }
 
   /**
-   * Looks up the KeyBindingMapping for a context by name.
+   * Looks up the KeybindingMapping for a context by name.
    *
    * @parmam contextName the string name of the context to look up
-   * @return the `KeyBindingMapping` object for the context or `null` if the
+   * @return the `KeybindingMapping` object for the context or `null` if the
    *         context is unknown
    */
-  context(contextName: string): KeyBindingsMapping {
-    return this._contexts.get(contextName) || null;
+  context(contextName: string): KeybindingsMapping {
+    const mapping = this._contexts.get(contextName) || null;
+    if (mapping != null) {
+      mapping.setEnabled(this._enabled);
+    }
+    return mapping;
   }
 }
 
@@ -365,42 +398,44 @@ export class KeyBindingsContexts {
  *
  * @param obj the JSON style object with keys being context names and values
  *            being objects mapping key binding strings to command strings
- * @return the object which maps context names to `KeyBindingMapping` objects
+ * @return the object which maps context names to `KeybindingMapping` objects
  */
-export function loadKeyBindingsFromObject(obj: object, platform: string): KeyBindingsContexts {
-  return new KeyBindingsContexts(obj, platform);
+export function loadKeybindingsFromObject(obj: object, platform: string): KeybindingsContexts {
+  return new KeybindingsContexts(obj, platform);
 }
 
-export interface KeyBindingsManager {
+export interface KeybindingsManager {
   /**
-   * Gets the KeyBindingContexts object contain within.
+   * Gets the KeybindingContexts object contain within.
    *
-   * @return the KeyBindingContexts object or Null if one is not available.
+   * @return the KeybindingContexts object or Null if one is not available.
    */
-  getKeyBindingsContexts(): KeyBindingsContexts;
+  getKeybindingsContexts(): KeybindingsContexts;
   
-  setKeyBindingsContexts(newKeyBindingsContexts: KeyBindingsContexts): void;
+  setKeybindingsContexts(newKeybindingsContexts: KeybindingsContexts): void;
 
   /**
    * Register a listener to hear when the key bindings change.
    *
    */
   onChange: Event<void>;
+
+  setEnabled(on: boolean): void;
 }
 
-export interface AcceptsKeyBindingsManager {
-  setKeyBindingsManager(newKeyBindingsManager: KeyBindingsManager): void;
+export interface AcceptsKeybindingsManager {
+  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void;
 }
 
-export function isAcceptsKeyBindingsManager(instance: any): instance is AcceptsKeyBindingsManager {
+export function isAcceptsKeybindingsManager(instance: any): instance is AcceptsKeybindingsManager {
   if (instance === null || instance === undefined) {
     return false;
   }
-  return (<AcceptsKeyBindingsManager> instance).setKeyBindingsManager !== undefined;
+  return (<AcceptsKeybindingsManager> instance).setKeybindingsManager !== undefined;
 }
 
-export function injectKeyBindingsManager(instance: any, keyBindingsManager: KeyBindingsManager): void {
-  if (isAcceptsKeyBindingsManager(instance)) {
-    instance.setKeyBindingsManager(keyBindingsManager);
+export function injectKeybindingsManager(instance: any, keybindingsManager: KeybindingsManager): void {
+  if (isAcceptsKeybindingsManager(instance)) {
+    instance.setKeybindingsManager(keybindingsManager);
   }
 }

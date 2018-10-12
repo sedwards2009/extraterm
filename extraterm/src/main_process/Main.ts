@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, KeyBindingInfo, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent} from '../Config';
+import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent} from '../Config';
 import {FileLogWriter, Logger, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
@@ -34,6 +34,7 @@ import { MainExtensionManager } from './extension/MainExtensionManager';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
+import { KeybindingsIOManager } from './KeybindingsIOManager';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 type ThemeType = ThemeTypes.ThemeType;
@@ -55,9 +56,9 @@ const THEMES_DIRECTORY = "themes";
 const USER_THEMES_DIR = "themes"
 const USER_SYNTAX_THEMES_DIR = "syntax";
 const USER_TERMINAL_THEMES_DIR = "terminal";
-const KEYBINDINGS_DIRECTORY = "../../resources/keybindings";
-const KEYBINDINGS_OSX = "keybindings-osx.json";
-const KEYBINDINGS_PC = "keybindings.json";
+const USER_KEYBINDINGS_DIR = "keybindings";
+const KEYBINDINGS_OSX = "Mac OS X bindings";
+const KEYBINDINGS_PC = "PC style bindings";
 const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
 const DEFAULT_TERMINALFONT = "DejaVuSansMono";
 
@@ -76,6 +77,7 @@ let titleBarVisible = false;
 let bulkFileStorage: BulkFileStorage = null;
 let extensionManager: MainExtensionManager = null;
 let packageJson: any = null;
+let keybindingsIOManager: KeybindingsIOManager = null;
 
 function main(): void {
   let failed = false;
@@ -106,6 +108,7 @@ function main(): void {
     .parse(normalizedArgv);
 
   setupExtensionManager();
+  setupKeybindingsIOManager();
   setupThemeManager();
   setupConfig();
 
@@ -144,6 +147,11 @@ function setupExtensionManager(): void {
   extensionManager.startUp();
 }
 
+function setupKeybindingsIOManager(): void {
+  keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager);
+  keybindingsIOManager.scan();
+}
+
 function setupThemeManager(): void {
   // Themes
   const themesDir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
@@ -162,6 +170,10 @@ function getUserTerminalThemeDirectory(): string {
 function getUserSyntaxThemeDirectory(): string {
   const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
   return path.join(userThemesDir, USER_SYNTAX_THEMES_DIR);
+}
+
+function getUserKeybindingsDirectory(): string {
+  return path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_KEYBINDINGS_DIR);
 }
 
 function startUpWindows(): void {
@@ -352,15 +364,13 @@ const _log = getLogger("main");
 function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig): SystemConfig {
   let homeDir = app.getPath('home');
   
-  const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
-  const keyBindingsFiles = scanKeyBindingFiles(keyBindingsDir);
-  const keyBindingsJSON = loadKeyBindingsJson(config.keyBindingsFilename);
+  const keyBindingsJSON = keybindingsIOManager.readKeybindingsJson(config.keybindingsName);
 
   return {
     homeDir,
     applicationVersion: packageJson.version,
-    keyBindingsContexts: keyBindingsJSON,
-    keyBindingsFiles,
+    keybindingsContexts: keyBindingsJSON,
+    keybindingsInfoList: keybindingsIOManager.getInfoList(),
     availableFonts: getFonts(),
     titleBarVisible,
     currentScaleFactor: systemConfig == null ? 1 : systemConfig.currentScaleFactor,
@@ -369,14 +379,6 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
     userSyntaxThemeDirectory: getUserSyntaxThemeDirectory()
   };
 }
-
-function loadKeyBindingsJson(keyBindingsFilename: string): object {
-  const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
-  const defaultKeyBindingFilename = path.join(keyBindingsDir, keyBindingsFilename);
-  const keyBindingJsonString = fs.readFileSync(defaultKeyBindingFilename, { encoding: "UTF8" } );
-  const keyBindingsJSON = JSON.parse(keyBindingJsonString);
-  return keyBindingsJSON;
-}  
 
 function setupOSX(): void {
   child_process.execFileSync("defaults", ["write",
@@ -404,6 +406,17 @@ function setupAppData(): void {
     const statInfo = fs.statSync(configDir);
     if ( ! statInfo.isDirectory()) {
       _log.warn("Extraterm configuration path " + configDir + " is not a directory!");
+      return;
+    }
+  }
+
+  const userKeybindingsDir = path.join(configDir, USER_KEYBINDINGS_DIR);
+  if ( ! fs.existsSync(userKeybindingsDir)) {
+    fs.mkdirSync(userKeybindingsDir);
+  } else {
+    const statInfo = fs.statSync(userKeybindingsDir);
+    if ( ! statInfo.isDirectory()) {
+      _log.warn("Extraterm user keybindings path " + userKeybindingsDir + " is not a directory!");
       return;
     }
   }
@@ -486,12 +499,9 @@ function setupConfig(): void {
     userStoredConfig.frameByDefault = true;
   }
 
-  const keyBindingsDir = path.join(__dirname, KEYBINDINGS_DIRECTORY);
-  const keyBindingsFiles = scanKeyBindingFiles(keyBindingsDir);
-
   // Validate the selected keybindings config value.
-  if ( ! keyBindingsFiles.some( (t) => t.filename === userStoredConfig.keyBindingsFilename )) {
-    userStoredConfig.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+  if ( ! keybindingsIOManager.hasKeybindingsName(userStoredConfig.keybindingsName)) {
+    userStoredConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
   }
 
   if (userStoredConfig.sessions == null) {
@@ -523,9 +533,9 @@ function setupConfig(): void {
       const oldGeneralConfig = <GeneralConfig> event.oldConfig;
       const newGeneralConfig = <GeneralConfig> event.newConfig;
       if (newGeneralConfig != null) {
-        if (oldGeneralConfig == null || oldGeneralConfig.keyBindingsFilename !== newGeneralConfig.keyBindingsFilename) {
+        if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
           const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-          systemConfig.keyBindingsContexts = loadKeyBindingsJson(newGeneralConfig.keyBindingsFilename);
+          systemConfig.keybindingsContexts = keybindingsIOManager.readKeybindingsJson(newGeneralConfig.keybindingsName);
           configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
         }
       }
@@ -605,8 +615,8 @@ function setConfigDefaults(config: UserStoredConfig): void {
     config.commandLineActions = defaultCLA;
   }
   
-  if (config.keyBindingsFilename === undefined || config.keyBindingsFilename === "") {
-    config.keyBindingsFilename = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+  if (config.keybindingsName === undefined || config.keybindingsName === "") {
+    config.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
   }
 
   config.sessions = defaultValue(config.sessions, []);
@@ -712,35 +722,6 @@ function getThemes(): ThemeInfo[] {
   return themeManager.getAllThemes();
 }
 
-function scanKeyBindingFiles(keyBindingsDir: string): KeyBindingInfo[] {
-  const result: KeyBindingInfo[] = [];
-  if (fs.existsSync(keyBindingsDir)) {
-    const contents = fs.readdirSync(keyBindingsDir);
-    contents.forEach( (item) => {
-      if (item.endsWith(".json")) {
-        const infoPath = path.join(keyBindingsDir, item);
-        try {
-          const infoStr = fs.readFileSync(infoPath, {encoding: "utf8"});
-          const keyBindingJSON = JSON.parse(infoStr);
-          const name = keyBindingJSON.name;
-          if (name !== undefined) {
-            const info: KeyBindingInfo = {
-              name: name,
-              filename: item
-            };
-            result.push(info);
-          } else {
-            _log.warn(`Unable to get 'name' from JSON file '${item}'`);
-          }
-        } catch(err) {
-          _log.warn("Warning: Unable to read file ", infoPath, err);
-        }
-      }
-    });
-  }
-  return result;
-}
-
 function getFonts(): FontInfo[] {
   const allAvailableFonts = FontManager.getAvailableFontsSync();
   const usableFonts = allAvailableFonts.filter(fontInfo => {
@@ -831,6 +812,10 @@ function handleIpc(event: Electron.Event, arg: any): void {
       reply = handleConfigRequest(<Messages.ConfigRequestMessage> msg);
       break;
       
+    case Messages.MessageType.CONFIG:
+      handleConfig(<Messages.ConfigMessage> msg);
+      break;
+      
     case Messages.MessageType.FRAME_DATA_REQUEST:
       _log.debug('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
       break;
@@ -895,10 +880,6 @@ function handleIpc(event: Electron.Event, arg: any): void {
       }
       break;
 
-    case Messages.MessageType.CONFIG:
-      handleConfig(<Messages.ConfigMessage> msg);
-      break;
-      
     case Messages.MessageType.NEW_TAG_REQUEST:
       const ntrm = <Messages.NewTagRequestMessage> msg;
       reply = handleNewTagRequest(ntrm);
@@ -932,6 +913,26 @@ function handleIpc(event: Electron.Event, arg: any): void {
     case Messages.MessageType.EXTENSION_METADATA_REQUEST:
       event.returnValue = handleExtensionMetadataRequest();
       return;
+
+    case Messages.MessageType.COPY_KEYBINDINGS:
+      handleKeybindingsCopy(<Messages.KeybindingsCopyMessage> msg);
+      break;
+
+    case Messages.MessageType.DELETE_KEYBINDINGS:
+      handleKeybindingsDelete(<Messages.KeybindingsDeleteMessage> msg);
+      break;
+
+    case Messages.MessageType.RENAME_KEYBINDINGS:
+      handleKeybindingsRename(<Messages.KeybindingsRenameMessage> msg);
+      break;
+
+    case Messages.MessageType.READ_KEYBINDINGS_REQUEST:
+      reply = handleKeybindingsReadRequest(<Messages.KeybindingsReadRequestMessage>msg);
+      break;
+
+    case Messages.MessageType.UPDATE_KEYBINDINGS:
+      handleKeybindingsUpdate(<Messages.KeybindingsUpdateMessage>msg);
+      break;
 
     default:
       break;
@@ -1191,6 +1192,66 @@ function handleDerefBulkFile(msg: Messages.BulkFileDerefMessage): void {
 
 function handleExtensionMetadataRequest(): Messages.ExtensionMetadataMessage {
   return {type: Messages.MessageType.EXTENSION_METADATA, extensionMetadata: extensionManager.getExtensionMetadata()};
+}
+
+function handleKeybindingsCopy(msg: Messages.KeybindingsCopyMessage): void {
+  keybindingsIOManager.copyKeybindings(msg.sourceName, msg.destName);
+
+  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+}
+
+function handleKeybindingsDelete(msg: Messages.KeybindingsDeleteMessage): void {
+  deleteKeybindings(msg.name);
+}
+
+function deleteKeybindings(targetName: string): void {
+  keybindingsIOManager.deleteKeybindings(targetName);
+
+  const generalConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
+  if (generalConfig.keybindingsName === targetName) {
+    generalConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+    configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
+  }
+
+  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+}
+
+function handleKeybindingsRename(msg: Messages.KeybindingsCopyMessage): void {
+  keybindingsIOManager.copyKeybindings(msg.sourceName, msg.destName);
+
+  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+
+  const generalConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
+  generalConfig.keybindingsName = msg.destName;
+  configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
+
+  deleteKeybindings(msg.sourceName);
+}
+
+function handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessage): Messages.KeybindingsReadMessage {
+  const keybindings = keybindingsIOManager.readKeybindingsJson(msg.name);
+  const reply: Messages.KeybindingsReadMessage = {
+    type: Messages.MessageType.READ_KEYBINDINGS,
+    name: msg.name,
+    keybindings
+  };
+  return reply;
+}
+
+function handleKeybindingsUpdate(msg: Messages.KeybindingsUpdateMessage): void {
+  keybindingsIOManager.updateKeybindings(msg.name, msg.keybindings);
+
+  // Broadcast the updated bindings.
+  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  systemConfig.keybindingsContexts = keybindingsIOManager.readKeybindingsJson(generalConfig.keybindingsName);
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 }
 
 main();

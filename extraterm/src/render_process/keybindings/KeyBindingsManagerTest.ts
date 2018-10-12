@@ -6,7 +6,7 @@
 
 import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
-import * as KeyBindingsManager from './KeyBindingsManager';
+import * as KeybindingsManager from './KeyBindingsManager';
 
 SourceMapSupport.install();
 
@@ -36,11 +36,11 @@ const keyBindingsMap = {
 };
 
 export function testContext(test: nodeunit.Test): void {
-  const cutsContexts = KeyBindingsManager.loadKeyBindingsFromObject(keyBindingsMap, "linux");
-  const editorKeyBindings = cutsContexts.context("editor");
+  const cutsContexts = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
+  const editorKeybindings = cutsContexts.context("editor");
   
-  test.notEqual(editorKeyBindings, null);
-  test.notEqual(editorKeyBindings, undefined);
+  test.notEqual(editorKeybindings, null);
+  test.notEqual(editorKeybindings, undefined);
   test.done();
 }
 
@@ -52,48 +52,54 @@ function keyCode(key: string, ctrl=true): number {
   }
 }
 
-export function testMapEventToCommand(test: nodeunit.Test): void {
-  const cutsContexts = KeyBindingsManager.loadKeyBindingsFromObject(keyBindingsMap, "linux");
-  const editorKeyBindings = cutsContexts.context("editor");
+export function testEventKeyNameToConfigKeyName(test: nodeunit.Test): void {
+  test.equal(KeybindingsManager.eventKeyNameToConfigKeyName(" "), "Space");
+  test.equal(KeybindingsManager.eventKeyNameToConfigKeyName("ArrowUp"), "Up");
+  test.done();
+}
 
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "o", keyCode: keyCode("o") }), "open");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: " ", keyCode: keyCode(" ") }), "togglemode");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "+", keyCode: keyCode("+") }), "zoom");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: true, shiftKey: true, key: "A", keyCode: keyCode("A",false) }), "all");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: " ", keyCode: keyCode(" ",false) }), "makespace");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: true, key: "S", keyCode: keyCode("S",false) }), "smeg");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: true, key: "W", keyCode: keyCode("W") }), "closewindow");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: true, key: "Z", keyCode: keyCode("Z",false) }), "sleep");  
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "PageUp", keyCode: keyCode("PageUp",false) }), "pageup");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "Home", keyCode: keyCode("Home",false) }), "gohome");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "Home", keyCode: keyCode("Home",false) }), "gohome");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: false, key: "Tab", keyCode: keyCode("Tab",false) }), "dedent");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "End", keyCode: keyCode("End",false) }), "finish");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "ArrowUp", keyCode: keyCode("ArrowUp",false) }), "up");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "ArrowDown", keyCode: keyCode("ArrowDown",false) }), "down");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "F2", keyCode: keyCode("F2",false) }), "rename");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: false, key: "ArrowLeft", keyCode: keyCode("ArrowLeft",false) }), "select-left");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "Tab", keyCode: 9 }), "otherpane");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "c", keyCode: 67 }), "break");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: true, key: "C", keyCode: 67 }), "bigbreak");
-  test.equal(editorKeyBindings.mapEventToCommand({ altKey: true, ctrlKey: true, metaKey: false, shiftKey: false, key: ".", keyCode: 190 }), "moveTabRight");
+export function testMapEventToCommand(test: nodeunit.Test): void {
+  const cutsContexts = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
+  const editorKeybindings = cutsContexts.context("editor");
+
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "o", keyCode: keyCode("o") }), "open");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: " ", keyCode: keyCode(" ") }), "togglemode");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "+", keyCode: keyCode("+") }), "zoom");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: true, shiftKey: true, key: "A", keyCode: keyCode("A",false) }), "all");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: " ", keyCode: keyCode(" ",false) }), "makespace");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: true, key: "S", keyCode: keyCode("S",false) }), "smeg");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: true, key: "W", keyCode: keyCode("W") }), "closewindow");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: true, key: "Z", keyCode: keyCode("Z",false) }), "sleep");  
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "PageUp", keyCode: keyCode("PageUp",false) }), "pageup");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "Home", keyCode: keyCode("Home",false) }), "gohome");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "Home", keyCode: keyCode("Home",false) }), "gohome");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: false, key: "Tab", keyCode: keyCode("Tab",false) }), "dedent");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "End", keyCode: keyCode("End",false) }), "finish");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "ArrowUp", keyCode: keyCode("ArrowUp",false) }), "up");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "ArrowDown", keyCode: keyCode("ArrowDown",false) }), "down");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, key: "F2", keyCode: keyCode("F2",false) }), "rename");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: true, ctrlKey: false, metaKey: false, shiftKey: false, key: "ArrowLeft", keyCode: keyCode("ArrowLeft",false) }), "select-left");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "Tab", keyCode: 9 }), "otherpane");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: false, key: "c", keyCode: 67 }), "break");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: false, ctrlKey: true, metaKey: false, shiftKey: true, key: "C", keyCode: 67 }), "bigbreak");
+  test.equal(editorKeybindings.mapEventToCommand({ altKey: true, ctrlKey: true, metaKey: false, shiftKey: false, key: ".", keyCode: 190 }), "moveTabRight");
   
   test.done();
 }
 
-export function testMapCommandToKeyBindings(test: nodeunit.Test): void {
-  const cutsContexts = KeyBindingsManager.loadKeyBindingsFromObject(keyBindingsMap, "linux");
-  const editorKeyBindings = cutsContexts.context("editor");
+export function testMapCommandToKeybindings(test: nodeunit.Test): void {
+  const cutsContexts = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
+  const editorKeybindings = cutsContexts.context("editor");
   
-  test.equal(editorKeyBindings.mapCommandToKeyBinding("open"), "Ctrl+O");
-  test.equal(editorKeyBindings.mapCommandToKeyBinding("smeg"), "Alt+Shift+S");
-  test.equal(editorKeyBindings.mapCommandToKeyBinding("sleep"), "Shift+Z");
-  test.equal(editorKeyBindings.mapCommandToKeyBinding("pageup"), "Page Up");
-  test.equal(editorKeyBindings.mapCommandToKeyBinding("gohome"), "Home");
-  test.equal(editorKeyBindings.mapCommandToKeyBinding("dedent"), "Alt+Tab");
-  test.equal(editorKeyBindings.mapCommandToKeyBinding("finish"), "End");
-  test.equal(editorKeyBindings.mapCommandToKeyBinding("up"), "Up");
-  test.equal(editorKeyBindings.mapCommandToKeyBinding("rename"), "F2");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("open"), "Ctrl+O");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("smeg"), "Alt+Shift+S");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("sleep"), "Shift+Z");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("pageup"), "Page Up");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("gohome"), "Home");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("dedent"), "Alt+Tab");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("finish"), "End");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("up"), "Up");
+  test.equal(editorKeybindings.mapCommandToHumanKeybinding("rename"), "F2");
 
   test.done();
 }

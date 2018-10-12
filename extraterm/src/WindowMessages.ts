@@ -14,6 +14,7 @@ import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
 import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
 import { ExtensionMetadata } from './ExtensionMetadata';
+import { KeybindingsFile } from './KeybindingsFile';
 
 
 /**
@@ -66,6 +67,14 @@ export const enum MessageType {
   EXTENSION_METADATA,
 
   THEME_RESCAN,
+
+  READ_KEYBINDINGS_REQUEST,
+  READ_KEYBINDINGS,
+
+  COPY_KEYBINDINGS,
+  RENAME_KEYBINDINGS,
+  DELETE_KEYBINDINGS,
+  UPDATE_KEYBINDINGS,
 }
 
 /**
@@ -453,4 +462,34 @@ export interface ExtensionMetadataRequestMessage extends Message {
 
 export interface ExtensionMetadataMessage extends Message {
   extensionMetadata: ExtensionMetadata[];
+}
+
+// Keybindings
+
+export interface KeybindingsCopyMessage extends Message {
+  sourceName: string;
+  destName: string;
+}
+
+export interface KeybindingsDeleteMessage extends Message {
+  name: string;
+}
+
+export interface KeybindingsReadRequestMessage extends Message {
+  name: string;
+}
+
+export interface KeybindingsReadMessage extends Message {
+  name: string;
+  keybindings: KeybindingsFile;
+}
+
+export interface KeybindingsRenameMessage extends Message {
+  sourceName: string;
+  destName: string;
+}
+
+export interface KeybindingsUpdateMessage extends Message {
+  name: string;
+  keybindings: KeybindingsFile;
 }

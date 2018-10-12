@@ -17,7 +17,7 @@ import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {EmptyPaneMenu} from './EmptyPaneMenu';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
-import { KeyBindingsManager, AcceptsKeyBindingsManager, injectKeyBindingsManager } from './keybindings/KeyBindingsManager';
+import { KeybindingsManager, AcceptsKeybindingsManager, injectKeybindingsManager } from './keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
@@ -96,7 +96,7 @@ const staticLog = getLogger("Static ExtratermMainWebUI");
  *
  */
 @WebComponent({tag: "extraterm-mainwebui"})
-export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBindingsManager,
+export class MainWebUi extends ThemeableElementBase implements AcceptsKeybindingsManager,
     config.AcceptsConfigDatabase, Commandable {
   
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
@@ -114,7 +114,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
   private _ptyIpcBridge: PtyIpcBridge = null;
   private _tabIdCounter = 0;
   private _configManager: ConfigDatabase = null;
-  private _keyBindingManager: KeyBindingsManager = null;
+  private _keyBindingManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _lastFocus: Element = null;
@@ -151,7 +151,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
     this._configManager = configManager;
   }
   
-  setKeyBindingsManager(keyBindingManager: KeyBindingsManager): void {
+  setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
 
@@ -366,7 +366,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
         { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "fa fa-columns", label: "Vertical Split", commandExecutor: null },
         { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor: null }
       ];
-      this._insertCommandKeyBindings(commandList);
+      this._insertCommandKeybindings(commandList);
 
       for (const entry of commandList) {
         if (entry.commandArguments == null) {
@@ -558,7 +558,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setBulkFileBroker(this._fileBroker);
     config.injectConfigDatabase(newTerminal, this._configManager);
-    injectKeyBindingsManager(newTerminal, this._keyBindingManager);
+    injectKeybindingsManager(newTerminal, this._keyBindingManager);
     newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
@@ -622,7 +622,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
-    injectKeyBindingsManager(viewerTab, this._keyBindingManager);
+    injectKeybindingsManager(viewerTab, this._keyBindingManager);
     viewerTab.setTitle(embeddedViewer.getMetadata().title);
     viewerTab.setTag(embeddedViewer.getTag());
     
@@ -704,7 +704,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigDatabase(settingsTabElement, this._configManager);
-      injectKeyBindingsManager(settingsTabElement, this._keyBindingManager);
+      injectKeybindingsManager(settingsTabElement, this._keyBindingManager);
       injectExtensionManager(settingsTabElement, this._extensionManager);
 
       settingsTabElement.setThemes(this._themes);
@@ -723,7 +723,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
     } else {
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
       config.injectConfigDatabase(viewerElement, this._configManager);
-      injectKeyBindingsManager(viewerElement, this._keyBindingManager);
+      injectKeybindingsManager(viewerElement, this._keyBindingManager);
       this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);
     }
@@ -1032,11 +1032,11 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
   // ----------------------------------------------------------------------
 
   private _handleKeyDownCapture(tabContentElement: Element, ev: KeyboardEvent): void {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeyBindingsContexts() === null) {
+    if (this._keyBindingManager === null || this._keyBindingManager.getKeybindingsContexts() === null) {
       return;
     }
     
-    const bindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_MAIN_UI);
+    const bindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
     if (bindings === null) {
       return;
     }
@@ -1118,15 +1118,15 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeyBinding
       commandList.push( { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor, commandArguments } );
     }
 
-    this._insertCommandKeyBindings(commandList);
+    this._insertCommandKeybindings(commandList);
     return commandList;
   }
 
-  private _insertCommandKeyBindings(commandList: CommandEntry[]): void {
-    const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(KEYBINDINGS_MAIN_UI);
+  private _insertCommandKeybindings(commandList: CommandEntry[]): void {
+    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToKeyBinding(commandEntry.id)
+        const shortcut = keyBindings.mapCommandToHumanKeybinding(commandEntry.id)
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }    

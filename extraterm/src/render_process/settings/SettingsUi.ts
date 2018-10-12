@@ -11,9 +11,9 @@ import * as ThemeTypes from '../../theme/Theme';
 import { APPEARANCE_SETTINGS_TAG } from './AppearanceSettings';
 import { FRAME_SETTINGS_TAG } from './FrameSettings';
 import { GENERAL_SETTINGS_TAG} from './GeneralSettings';
-import { KEY_BINDINGS_SETTINGS_TAG } from './KeyBindingsSettings';
+import { KEY_BINDINGS_SETTINGS_TAG } from './keybindings/KeybindingsSettings';
 import { SESSION_SETTINGS_TAG } from './SessionSettings';
-import { KeyBindingsManager } from '../keybindings/KeyBindingsManager';
+import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { doLater } from '../../utils/DoLater';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { VUE_TEXT_ACE_VIEWER_ELEMENT_TAG } from './VueTextAceViewerElement';
@@ -91,7 +91,7 @@ interface MenuItem {
     <template v-if="firstShowComplete || selectedTab == 'keybindings'">
       <et-key-bindings-settings v-show="selectedTab == 'keybindings'"
         v-bind:configDatabase.prop="getConfigDatabase()"
-        v-bind:keyBindingsManager.prop="getKeyBindingsManager()">
+        v-bind:keybindingsManager.prop="getKeybindingsManager()">
       </et-key-bindings-settings>
     </template>
   </div>
@@ -100,7 +100,7 @@ interface MenuItem {
 })
 export class SettingsUi extends Vue {
   private _configDatabase: ConfigDatabase = null;
-  private _keyBindingsManager: KeyBindingsManager = null;
+  private _keybindingsManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
 
   firstShowComplete: boolean;
@@ -117,7 +117,7 @@ export class SettingsUi extends Vue {
       { id: "general", icon: "fa fa-sliders-h", title: "General"},
       { id: "appearance", icon: "fa fa-paint-brush", title: "Appearance"},
       { id: "session", icon: "fa fa-terminal", title: "Session Types"},
-      { id: "keybindings", icon: "far fa-keyboard", title: "Key Bindings"},
+      { id: "keybindings", icon: "far fa-keyboard", title: "Keybindings"},
       { id: "frame", icon: "far fa-window-maximize", title: "Frames"}
     ];
   }
@@ -145,13 +145,13 @@ export class SettingsUi extends Vue {
     return this._configDatabase;
   }
 
-  setKeyBindingsManager(newKeyBindingManager: KeyBindingsManager): void {
-    this._keyBindingsManager = newKeyBindingManager;
+  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
+    this._keybindingsManager = newKeybindingsManager;
     this.$forceUpdate();
   }
 
-  getKeyBindingsManager(): KeyBindingsManager {
-    return this._keyBindingsManager;
+  getKeybindingsManager(): KeybindingsManager {
+    return this._keybindingsManager;
   }
   
   setExtensionManager(extensionManager: ExtensionManager): void {

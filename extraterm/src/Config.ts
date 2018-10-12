@@ -19,8 +19,8 @@ export interface GeneralConfig {
 
   scrollbackMaxLines?: number;
   scrollbackMaxFrames?: number;
-  keyBindingsFilename?: string;
-  
+  keybindingsName?: string;
+
   showTips?: ShowTipsStrEnum;
   tipCounter?: number;
   tipTimestamp?: number;
@@ -52,9 +52,11 @@ export interface CommandLineAction {
   frame: boolean;
 }
 
-export interface KeyBindingInfo {
+export interface KeybindingsInfo {
   name: string;
   filename: string;
+  readOnly: boolean;
+  path: string;
 }
 
 export interface WindowConfiguration {
@@ -71,8 +73,8 @@ export interface SingleWindowConfiguration {
 export interface SystemConfig {
   homeDir: string;
   applicationVersion: string;
-  keyBindingsFiles: KeyBindingInfo[];
-  keyBindingsContexts: object;
+  keybindingsInfoList: KeybindingsInfo[];
+  keybindingsContexts: object;
   
   availableFonts: FontInfo[];
   titleBarVisible: boolean;

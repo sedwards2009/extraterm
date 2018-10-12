@@ -16,7 +16,7 @@ import * as config from '../../Config';
 type ConfigManager = config.ConfigDatabase;
 
 import * as keybindingmanager from '../keybindings/KeyBindingsManager';
-type KeyBindingManager = keybindingmanager.KeyBindingsManager;
+type KeybindingsManager = keybindingmanager.KeybindingsManager;
 
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -60,7 +60,7 @@ function loadTipFile(): string[] {
 const tipData = loadTipFile();
 
 @WebComponent({tag: "et-tip-viewer"})
-export class TipViewer extends ViewerElement implements config.AcceptsConfigDatabase, keybindingmanager.AcceptsKeyBindingsManager, Disposable {
+export class TipViewer extends ViewerElement implements config.AcceptsConfigDatabase, keybindingmanager.AcceptsKeybindingsManager, Disposable {
 
   static TAG_NAME = "ET-TIP-VIEWER";
   
@@ -78,11 +78,11 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
   
   private _log: Logger;
   private _configManager: ConfigManager = null;
-  private _keyBindingManager: KeyBindingManager = null;
+  private _keybindingsManager: KeybindingsManager = null;
   private _height = 0;
   private _tipIndex = 0;
   private _configManagerDisposable: Disposable = null;
-  private _keyBindingManagerDisposable: Disposable = null;
+  private _keybindingsManagerDisposable: Disposable = null;
 
   constructor() {
     super();
@@ -90,9 +90,9 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
   }
 
   dispose(): void {
-    if (this._keyBindingManagerDisposable != null) {
-      this._keyBindingManagerDisposable.dispose();
-      this._keyBindingManagerDisposable = null;
+    if (this._keybindingsManagerDisposable != null) {
+      this._keybindingsManagerDisposable.dispose();
+      this._keybindingsManagerDisposable = null;
     }
   }
 
@@ -181,15 +181,15 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
     }
   }
 
-  setKeyBindingsManager(newKeyBindingManager: KeyBindingManager): void {
-    if (this._keyBindingManagerDisposable !== null) {
-      this._keyBindingManagerDisposable.dispose();
-      this._keyBindingManagerDisposable = null;
+  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
+    if (this._keybindingsManagerDisposable !== null) {
+      this._keybindingsManagerDisposable.dispose();
+      this._keybindingsManagerDisposable = null;
     }
     
-    this._keyBindingManager = newKeyBindingManager;
-    if (this._keyBindingManager !== null) {
-      this._keyBindingManagerDisposable = this._keyBindingManager.onChange(this._keyBindingChanged.bind(this));
+    this._keybindingsManager = newKeybindingsManager;
+    if (this._keybindingsManager !== null) {
+      this._keybindingsManagerDisposable = this._keybindingsManager.onChange(this._keyBindingChanged.bind(this));
     }
   }
   
@@ -311,9 +311,9 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
       const dataContext = kbd.getAttribute("data-context");
       const dataCommand = kbd.getAttribute("data-command");
       if (dataContext !== null && dataCommand !== null) {
-        const keyBindings = this._keyBindingManager.getKeyBindingsContexts().context(dataContext);
+        const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(dataContext);
         if (keyBindings != null) {
-          const shortcut = keyBindings.mapCommandToKeyBinding(dataCommand);
+          const shortcut = keyBindings.mapCommandToHumanKeybinding(dataCommand);
           if (shortcut !== null) {
             kbd.innerHTML = `<span>${he.encode(shortcut)}</span>`;
           } else {
