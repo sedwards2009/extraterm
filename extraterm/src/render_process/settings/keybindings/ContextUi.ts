@@ -38,9 +38,9 @@ interface CommandKeybinding {
   },
   template: `
 <div>
-  <h2>{{contextHeading}}
+  <h3>{{contextHeading}}
     <span v-if="allCommands.length !== commands.length" class="badge">{{commands.length}} / {{allCommands.length}}</span>
-  </h2>
+  </h3>
   <table v-if="commands.length !== 0" v-bind:class="{table: true, 'table-hover': !readOnly}">
     <thead>
       <tr>

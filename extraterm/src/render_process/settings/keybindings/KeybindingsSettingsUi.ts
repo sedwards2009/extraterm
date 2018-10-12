@@ -97,17 +97,21 @@ export const EVENT_RENAME = "rename";
           <i class="fas fa-keyboard"></i>&nbsp;Record key
         </button>
       </div>
+    </div>
 
+    <div class="form-group">
+      <div class="col-sm-12">
+        <keybindings-contexts-list
+          v-if="keybindings !== null"
+          :keybindings="keybindings"
+          :readOnly="isSelectedKeybindingsReadOnly"
+          :searchText="searchText"
+          v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
+          v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
+        </keybindings-contexts-list>
+      </div>
     </div>
   </div>
-  <keybindings-contexts-list
-    v-if="keybindings !== null"
-    :keybindings="keybindings"
-    :readOnly="isSelectedKeybindingsReadOnly"
-    :searchText="searchText"
-    v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
-    v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
-  </keybindings-contexts-list>
 </div>
 `
 })
