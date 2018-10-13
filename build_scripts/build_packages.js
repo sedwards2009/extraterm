@@ -264,10 +264,32 @@ function main() {
     cd(prevDir);
   }
 
+  function makeDmg() {
+    echo("");
+    echo("---------------------------------------------------");
+    echo("Building dmg file for macOS");
+    echo("---------------------------------------------------");
+
+    const darwinPath = path.join(buildTmpPath, `extraterm-${packageData.version}-darwin-x64`);
+    for (const f of ls(darwinPath)) {
+      if ( ! f.endsWith(".app")) {
+        echo(`Deleting ${f}`);
+        rm(path.join(darwinPath, f));
+      }
+    }
+
+    mv(path.join(buildTmpPath, "extraterm.app"), "Extraterm.app");
+    
+    ln("-s", "/Applications", path.join(darwinPath, "Applications"));
+
+    exec(`docker run --rm -v "${buildTmpPath}:/files" sporsh/create-dmg Extraterm_${packageData.version} /files/extraterm-${packageData.version}-darwin-x64/ /files/extraterm_${packageData.version}.dmg`);
+  }
+
   makePackage("x64", "win32")
-    .then( () => makePackage("x64", "linux"))
-    .then( () => makePackage("x64", "darwin"))
-    .then( () => { log("Done"); } );
+    .then(() => makePackage("x64", "linux"))
+    .then(() => makePackage("x64", "darwin"))
+    .then(makeDmg)
+    .then(() => { log("Done"); } );
 }
 
 main();
