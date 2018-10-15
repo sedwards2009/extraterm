@@ -21,7 +21,7 @@ function main() {
     return;
   }
 
-  const srcRootDir = pwd();
+  const srcRootDir = "" + pwd();
   if (test('-d', BUILD_TMP)) {
     rm('-rf', BUILD_TMP);
   }
@@ -193,6 +193,7 @@ function main() {
         platform: platform,
         version: electronVersion,
         ignore: ignoreFunc,
+        name: platform === "darwin" ? "Extraterm" : "extraterm",
         overwrite: true,
         out: buildTmpPath,
         packageManager: "yarn",
@@ -278,11 +279,16 @@ function main() {
       }
     }
 
-    mv(path.join(buildTmpPath, "extraterm.app"), "Extraterm.app");
+    cp(path.join(srcRootDir, "build_scripts/resources/macos/.DS_Store"), path.join(darwinPath, ".DS_Store"));
+    cp(path.join(srcRootDir, "build_scripts/resources/macos/.VolumeIcon.icns"), path.join(darwinPath, ".VolumeIcon.icns"));
+    mkdir(path.join(darwinPath,".background"));
+    cp(path.join(srcRootDir, "build_scripts/resources/macos/.background/extraterm_background.png"), path.join(darwinPath, ".background/extraterm_background.png"));
+
+    mv(path.join(darwinPath, "extraterm.app"), path.join(darwinPath, "Extraterm.app"));
     
     ln("-s", "/Applications", path.join(darwinPath, "Applications"));
 
-    exec(`docker run --rm -v "${buildTmpPath}:/files" sporsh/create-dmg Extraterm_${packageData.version} /files/extraterm-${packageData.version}-darwin-x64/ /files/extraterm_${packageData.version}.dmg`);
+    exec(`docker run --rm -v "${buildTmpPath}:/files" sporsh/create-dmg Extraterm /files/extraterm-${packageData.version}-darwin-x64/ /files/extraterm_${packageData.version}.dmg`);
   }
 
   makePackage("x64", "win32")
