@@ -4613,7 +4613,7 @@ function isWide(ch: string): boolean {
   	  return true;
   	case 'H': //HalfWidth
   	  return false;
-  	case 'A': //Ambigous
+  	case 'A': //Ambiguous
   	  return true;
   	case 'N': //Neutral
   	  return false;
