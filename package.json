@@ -33,7 +33,6 @@
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
     "font-manager": "0.2.2",
-    "electron-rebuild": "1.7.3",
     "node-abi": "2.4.0"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",

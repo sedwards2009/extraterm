@@ -64,7 +64,7 @@ import {
 } from 'term-api';
 
 import { log } from "extraterm-logging";
-
+import * as easta from "easta";
 
 const DEBUG_RESIZE = false;
   
@@ -4595,7 +4595,7 @@ function cancelEvent(ev) {
 }
 
 function isWide(ch: string): boolean {
-  if (ch <= '\uff00') return false;
+/*  if (ch <= '\uff00') return false;
   return (ch >= '\uff01' && ch <= '\uffbe') ||
       (ch >= '\uffc2' && ch <= '\uffc7') ||
       (ch >= '\uffca' && ch <= '\uffcf') ||
@@ -4603,6 +4603,23 @@ function isWide(ch: string): boolean {
       (ch >= '\uffda' && ch <= '\uffdc') ||
       (ch >= '\uffe0' && ch <= '\uffe6') ||
       (ch >= '\uffe8' && ch <= '\uffee');
+      */
+  switch (easta(ch)) {
+  	case 'Na': //Narrow
+ 	  return false;
+  	case 'F': //FullWidth
+  	  return true;
+  	case 'W': // Wide
+  	  return true;
+  	case 'H': //HalfWidth
+  	  return false;
+  	case 'A': //Ambiguous
+  	  return true;
+  	case 'N': //Neutral
+  	  return false;
+  	default:
+  	  return false;
+  }
 }
 
 const matchColorCache = {};
