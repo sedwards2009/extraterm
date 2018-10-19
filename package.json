@@ -43,6 +43,7 @@
     "electron": "2.0.0",
     "electron-packager": "11.1.0",
     "git-repo-info": "^1.4.1",
+    "shelljs": "0.8.2",
     "wsrun": "^3.0.0"
   }
 }

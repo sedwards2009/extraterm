@@ -63,7 +63,7 @@
     "nodeunit": "0.11.0",
     "performance-now": "2.1.0",
     "serve-static": "1.10.0",
-    "shelljs": "0.8.1",
+    "shelljs": "0.8.2",
     "typedoc": "0.3.12",
     "typescript": "2.8.3",
     "webfont": "^4.0.0"
