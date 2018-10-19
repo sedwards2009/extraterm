@@ -4595,15 +4595,6 @@ function cancelEvent(ev) {
 }
 
 function isWide(ch: string): boolean {
-/*  if (ch <= '\uff00') return false;
-  return (ch >= '\uff01' && ch <= '\uffbe') ||
-      (ch >= '\uffc2' && ch <= '\uffc7') ||
-      (ch >= '\uffca' && ch <= '\uffcf') ||
-      (ch >= '\uffd2' && ch <= '\uffd7') ||
-      (ch >= '\uffda' && ch <= '\uffdc') ||
-      (ch >= '\uffe0' && ch <= '\uffe6') ||
-      (ch >= '\uffe8' && ch <= '\uffee');
-      */
   switch (easta(ch)) {
   	case 'Na': //Narrow
  	  return false;
@@ -4614,7 +4605,7 @@ function isWide(ch: string): boolean {
   	case 'H': //HalfWidth
   	  return false;
   	case 'A': //Ambiguous
-  	  return true;
+  	  return false;
   	case 'N': //Neutral
   	  return false;
   	default:
