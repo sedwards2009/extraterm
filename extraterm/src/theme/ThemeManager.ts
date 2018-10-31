@@ -32,7 +32,7 @@ import { log } from "extraterm-logging";
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
   cssFileToFilename, cssFileToExtension, SYNTAX_CSS_THEME, TERMINAL_CSS_THEME} from './Theme';
-import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from '../Config';
+import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, GeneralConfig } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 import { SyntaxTheme, TerminalTheme } from 'extraterm-extension-api';
@@ -60,7 +60,7 @@ interface CssDirectory {
   path: string;
 }
 
-interface ThemeTypePaths {
+export interface ThemeTypePaths {
   css: string[];
   syntax: string[];
   terminal: string[];
@@ -523,20 +523,20 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   async render(themeType: ThemeType, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
+    const config = <GeneralConfig> this._configDatabase.getConfig(GENERAL_CONFIG);
     switch (themeType) {
       case "gui":
-        return await this._renderGui(globalVariables);
+        return await this.renderGui(config.themeGUI, globalVariables);
       case "terminal":
-        return await this._renderTerminal(globalVariables);
+        return await this._renderTerminal(config.themeTerminal, globalVariables);
       case "syntax":
         return await this._renderSyntax(globalVariables);
     }
     return null;
   }
 
-  async _renderGui(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = this._configDatabase.getConfig(GENERAL_CONFIG);
-    let themeNameStack = [config.themeGUI, FALLBACK_UI_THEME];
+  async renderGui(themeGUI: string, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
+    let themeNameStack = [themeGUI, FALLBACK_UI_THEME];
     const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_GUI);
 
     // Add extra CSS files needed by extensions.
@@ -558,9 +558,8 @@ export class ThemeManager implements AcceptsConfigDatabase {
     return result;
   }
 
-  async _renderTerminal(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = this._configDatabase.getConfig(GENERAL_CONFIG);
-    const terminalThemeInfo = this._themes.get(config.themeTerminal);
+  private async _renderTerminal(themeTerminal: string, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
+    const terminalThemeInfo = this._themes.get(themeTerminal);
 
     const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_TERMINAL);
     try {
@@ -629,7 +628,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   async _renderSyntax(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = this._configDatabase.getConfig(GENERAL_CONFIG);
+    const config = <GeneralConfig> this._configDatabase.getConfig(GENERAL_CONFIG);
 
     const syntaxThemeInfo = this._themes.get(config.themeSyntax);
     const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_SYNTAX);
