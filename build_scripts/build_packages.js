@@ -85,7 +85,7 @@ function main() {
   };
 
   function appDir(platform) {
-    return platform === "darwin" ? "extraterm.app/Contents/Resources/app" : "resources/app";
+    return platform === "darwin" ? "Extraterm.app/Contents/Resources/app" : "resources/app";
   }
 
   function pruneNodeSass(versionedOutputDir, arch, platform) {
@@ -284,8 +284,6 @@ function main() {
     mkdir(path.join(darwinPath,".background"));
     cp(path.join(srcRootDir, "build_scripts/resources/macos/.background/extraterm_background.png"), path.join(darwinPath, ".background/extraterm_background.png"));
 
-    mv(path.join(darwinPath, "extraterm.app"), path.join(darwinPath, "Extraterm.app"));
-    
     ln("-s", "/Applications", path.join(darwinPath, "Applications"));
 
     exec(`docker run --rm -v "${buildTmpPath}:/files" sporsh/create-dmg Extraterm /files/extraterm-${packageData.version}-darwin-x64/ /files/extraterm_${packageData.version}.dmg`);
