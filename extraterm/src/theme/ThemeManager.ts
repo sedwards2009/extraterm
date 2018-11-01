@@ -49,7 +49,7 @@ export interface Color {
 
 type GlobalVariableMap = Map<string, number|boolean|string|Color>;
 
-interface RenderResult {
+export interface RenderResult {
   success: boolean;
   themeContents: ThemeContents;
   errorMessage: string;
