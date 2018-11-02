@@ -3,8 +3,10 @@
  */
 
 /* top UI */
-@import "bootstrap/variables";
+@import "general-gui/variables";
 @import "main-ui-titlebar";
+
+$tab-background-color-active: $background-color;
 
 :host {
   display: block;
@@ -137,7 +139,7 @@ DIV.tab_header_close > BUTTON {
 }
 
 DIV.tab_header_close:hover > BUTTON {
-  background-color: $btn-danger-bg;
+  background-color: $button-danger-bg-color;
   color: $tab-background-color-active;
 }
 

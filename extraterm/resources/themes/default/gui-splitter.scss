@@ -3,7 +3,7 @@
  */
 
 /* gui-splitter styles */
-@import "bootstrap/variables";
+@import "general-gui/variables";
 
 $divider-width: pxToRem(4px);
 
@@ -22,7 +22,7 @@ $divider-width: pxToRem(4px);
 
 .CLASS_DIVIDER {
   position: absolute;
-  background-color: $body-bg;
+  background-color: $background-color;
 
   #ID_TOP.CLASS_VERTICAL & {
     cursor: col-resize;

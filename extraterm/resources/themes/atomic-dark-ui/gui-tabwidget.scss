@@ -1,8 +1,10 @@
 /**
  * Copyright 2017 Simon Edwards <simon@simonzone.com>
  */
-@import "bootstrap/variables";
+@import "general-gui/variables";
 @import "extraicons-fontface";
+
+$tab-background-color-active: $background-color;
 
 /* gui-tabwidget */
 
@@ -74,7 +76,7 @@ DIV.show_frame > #ID_TABBAR {
   height: 100%;
   z-index: 2;
 
-  color: $background-color-selected;
+  color: $background-selected-color;
 
   pointer-events: none;
 

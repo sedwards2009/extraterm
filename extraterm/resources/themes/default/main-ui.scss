@@ -3,7 +3,7 @@
  */
 
 /* top UI */
-@import "bootstrap/variables";
+@import "general-gui/variables";
 @import "main-ui-titlebar";
 
 :host {
@@ -121,8 +121,8 @@ DIV.tab_header_close > BUTTON {
 }
 
 DIV.tab_header_close:hover > BUTTON {
-  background-color: $btn-danger-bg;
-  color: $btn-danger-color;
+  background-color: $button-danger-bg-color;
+  color: $button-danger-color;
 }
 
 DIV.tab_header_close > BUTTON:focus {

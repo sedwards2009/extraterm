@@ -6,11 +6,11 @@
   CSS variables which are made available globally available.
 */
 
-@import "bootstrap/variables";
+@import "general-gui/variables";
 
 BODY {
   --scrollbar-background-color: transparent;
   --scrollbar-track-background-color: transparent;
-  --scrollbar-thumb-background-color: #{lighten($base-background-color, 30%)};
-  --scrollbar-thumb-hover-background-color: #{lighten($base-background-color, 40%)};
+  --scrollbar-thumb-background-color: #{lighten($background-color, 30%)};
+  --scrollbar-thumb-hover-background-color: #{lighten($background-color, 40%)};
 }

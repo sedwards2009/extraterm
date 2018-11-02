@@ -3,9 +3,11 @@
  */
 
 /* top UI */
-@import "bootstrap/variables";
+@import "general-gui/variables";
 @import "main-ui-titlebar";
-@import "bootstrap/px-to-rem";
+@import "general-gui/pxToRem";
+
+$tab-background-color-active: $background-color;
 
 :host {
   display: block;
@@ -118,34 +120,15 @@ DIV.tab_header_close {
   align-self: center;
 }
 
-DIV.tab_header_close > BUTTON {
-  display: block;
-  width: pxToRem(16px);
-  height: pxToRem(16px);
-  border: 0;
-  padding: 0;
-  
-  border-radius: pxToRem(8px);
-  background-color: transparent;
-  text-align: center;
-
-  transition: background-color,color 0.2s ease-in-out;
-  
-  & > i {
-    position: relative;
-    top: pxToRem(-5px);
-  }
+DIV.tab_header_container:hover DIV.tab_header_close > BUTTON:not(:hover) {
+  color: $text-highlight-color;  
 }
 
 DIV.tab_header_close:hover > BUTTON {
-  background-color: $btn-danger-bg;
+  background-color: $button-danger-bg-color;
   color: $tab-background-color-active;
 }
 
 DIV.tab_header_close > BUTTON:focus {
-  outline: 0 solid transparent;
-}
-
-BUTTON.CLASS_NEW_TAB_BUTTON.CLASS_NEW_TAB_BUTTON.CLASS_NEW_TAB_BUTTON {
   outline: 0 solid transparent;
 }

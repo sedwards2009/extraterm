@@ -1,14 +1,7 @@
-/**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
- */
-
-/* keycaps styles */
-@import "bootstrap/_variables";
-
-@mixin keycap {
+.keycap {
   display: inline-block;
 
-  font-family: $font-family-base;
+  font-family: $font-family;
 
   color: #333333;
   border: 1px solid #cccccc;

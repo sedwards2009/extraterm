@@ -50,12 +50,17 @@ $resize-bar-height: pxToRem(4px);
     color: $text-color;
 
     background-color: transparent;
-    border: pxToRem(0px);
-
+    border: 0;
+    padding: 1px 6px;
+    border-radius: 0;
+    vertical-align: baseline;
+    background-image: none;
+    height: auto;
+    
     transition: color,background-color 0.2s ease-in-out;
 
     &:hover {
-      color: $text-color-highlight;
+      color: $text-highlight-color;
     }
 
     &:focus {
@@ -65,7 +70,7 @@ $resize-bar-height: pxToRem(4px);
 
   #ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON {
     &:hover {
-      background-color: $input-group-addon-bg;
+      background-color: $button-default-bg-color;
     }
   }
 

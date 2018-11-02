@@ -2,10 +2,10 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
-@import "bootstrap/variables";
+@import "general-gui/variables";
 
 .top_container {
-  background-color: $body-bg;
+  background-color: $background-color;
   padding: $panel-body-padding;
 }
 

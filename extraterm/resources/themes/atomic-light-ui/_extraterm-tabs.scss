@@ -7,8 +7,12 @@ $modified-icon-width: pxToRem(8px);
 $tab-skew: 30deg;
 $tab-top-padding: 0;
 $tab-bottom-border-height: pxToRem(5px);
+$tab-border-color: lighten($base-border-color, 10%);
 $tab-border: 1px solid $tab-border-color;
 $tab-max-width: 20rem;
+$tab-background-color-active: $background-color;
+$tab-height: pxToRem(26px);
+$tab-background-color: #e8e8e8;
 
 .extraterm-tabs {
   display: flex;
@@ -106,7 +110,7 @@ $tab-max-width: 20rem;
     }
 
     &.modified:hover .close-icon:hover {
-      color: $text-color-highlight;
+      color: $text-highlight-color;
     }
 
     & > * {
@@ -120,7 +124,7 @@ $tab-max-width: 20rem;
 
   & > LI.tab.active {
     z-index: 1;
-    color: $text-color-highlight;
+    color: $text-highlight-color;
     width: -webkit-fit-content;
     flex: 2;
     .close-icon {
@@ -136,7 +140,7 @@ $tab-max-width: 20rem;
   }
 
   & > LI.tab:hover {
-    color: $text-color-highlight;
+    color: $text-highlight-color;
   }
 
   & > LI.tab.active:hover .close-icon {

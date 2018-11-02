@@ -4,8 +4,7 @@
 
 /* about-tab styles */
 
-@import "extraterm-scrollbars";
-@import "bootstrap/_variables";
+@import "general-gui/variables";
 
 :host(:focus) {
   outline: 0 solid transparent;

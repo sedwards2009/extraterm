@@ -1,0 +1,48 @@
+
+.width-100pc {
+  width: 100%;
+}
+
+.width-800px {
+  width: 800px;
+}
+
+.gui-layout {
+  display: grid;
+  grid-auto-flow: row;
+  align-items: baseline;
+  grid-gap: 0.5rem 0rem;
+
+  &.cols-1-1 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  &.cols-1-2 {
+    grid-template-columns: 1fr 2fr;
+  }
+
+  &.cols-1-3 {
+    grid-template-columns: 1fr 3fr;
+  }
+}
+
+.gui-packed-row {
+  display: flex;
+  align-items: baseline;
+
+  & > * {
+    margin-left: 0.5rem;
+  }
+
+  & > *:first-child {
+    margin-left: 0;
+  }
+
+  & > .expand {
+    flex-grow: 1;
+  }
+
+  & > .compact {
+    flex-grow: 0;
+  }
+}

@@ -3,7 +3,9 @@
  */
 
 /* gui-tabwidget */
-@import "bootstrap/variables";
+@import "general-gui/variables";
+
+$tab-background-color-active: $background-color;
 
 #ID_TOP {
   display: flex;
@@ -69,7 +71,7 @@ DIV.show_frame > #ID_TABBAR {
   height: 100%;
   z-index: 2;
 
-  color: $background-color-selected;
+  color: $background-selected-color;
 
   pointer-events: none;
 

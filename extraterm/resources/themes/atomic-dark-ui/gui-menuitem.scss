@@ -4,7 +4,7 @@
 
 /* gui-menuitem styles */
 
-@import "bootstrap/_variables";
+@import "general-gui/variables";
 
 :host {
     display: block;
@@ -13,12 +13,12 @@
 #ID_CONTAINER {
     display: flex;
     cursor: default;
-    font-family: $font-family-base;
+    font-family: $font-family;
     font-size: $input-font-size;
     font-weight: normal;
     line-height: $line-height-base;
-    color: $dropdown-link-color;
-    background-color: $dropdown-bg;
+    color: $text-color;
+    background-color: $dropdown-bg-color;
     padding: 1px;
     white-space: nowrap;
 }

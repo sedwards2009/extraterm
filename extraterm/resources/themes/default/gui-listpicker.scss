@@ -3,8 +3,8 @@
  */
 
 /* Command Palette */
-@import "bootstrap/variables";
-@import "extraterm-scrollbars";
+@import "general-gui/variables";
+
 
 :host(:focus) {
   outline: none;
@@ -29,13 +29,13 @@
 
   &:hover {
     cursor: pointer;
-    outline: 1px solid $btn-primary-bg;
+    outline: 1px solid $button-primary-bg-color
     outline-offset: -1px;
   }
 
   &.CLASS_RESULT_SELECTED {
     outline: none;
-    color: $btn-primary-color;
-    background-color: $btn-primary-bg;
+    color: $button-primary-color;
+    background-color: $button-primary-bg-color
   }
 }

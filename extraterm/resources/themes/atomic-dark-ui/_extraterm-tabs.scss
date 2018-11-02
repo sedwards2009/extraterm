@@ -1,9 +1,12 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
-@import "bootstrap/px-to-rem";
+@import "general-gui/pxToRem";
 
- 
+$tab-border-color: #484848;
+$tab-height: pxToRem(26px);
+$tab-background-color-active: $background-color;
+
 $tab-radius: pxToRem(3px);
 $modified-icon-width: pxToRem(8px);
 $tab-skew: 30deg;
@@ -108,7 +111,7 @@ $tab-max-width: 20rem;
     }
 
     &.modified:hover .close-icon:hover {
-      color: $text-color-highlight;
+      color: $text-highlight-color;
     }
 
     & > * {
@@ -122,7 +125,7 @@ $tab-max-width: 20rem;
 
   & > LI.tab.active {
     z-index: 1;
-    color: $text-color-highlight;
+    color: $text-highlight-color;
     box-shadow: inset -1px 1px 0 $tab-border-color, pxToRem(4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0, 0.1);
     width: -webkit-fit-content;
     flex: 2;
@@ -146,7 +149,7 @@ $tab-max-width: 20rem;
   }
 
   & > LI.tab:hover {
-    color: $text-color-highlight;
+    color: $text-highlight-color;
   }
 
   & > LI.tab.active:hover .close-icon {

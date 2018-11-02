@@ -1,0 +1,32 @@
+
+.badge {
+  display: inline-block;
+  min-width: 1em;
+  padding: $badge-padding;
+  font-size: $badge-font-size;
+  font-weight: $badge-font-weight;
+  color: $badge-color;
+  line-height: $badge-line-height;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-align: center;
+  background-color: $badge-background-color;
+  border-radius: $badge-border-radius;
+
+  &.success {
+    background-color: $brand-success;
+  }
+
+  &.info {
+    background-color: $brand-info;
+  }
+
+  &.warning {
+    background-color: $brand-warning;
+  }
+
+  &.danger {
+    background-color: $brand-danger;
+  }
+
+}

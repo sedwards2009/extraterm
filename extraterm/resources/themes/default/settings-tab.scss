@@ -4,8 +4,10 @@
 
 /* settings-tab styles */
 
-@import "extraterm-scrollbars";
-@import "bootstrap/_variables";
+
+@import "general-gui/variables";
+
+$tab-background-color-active: $background-color;
 
 :host(:focus) {
   outline: 0 solid transparent;
@@ -24,8 +26,8 @@
 
   -webkit-user-select: none;
   user-select: none;
-  padding-top: $component-padding;
-  background-color: lighten($base-background-color, 2%);
+  padding-top: $component-padding-vertical;
+  background-color: lighten($background-color, 2%);
   border-right: 1px solid $base-border-color;
   overflow-x: auto;
   
@@ -39,25 +41,23 @@
       cursor: pointer;
 
       &.active, &.active:hover {
-        color: $text-color-selected;
-        background-color: $background-color-selected;
+        color: $text-selected-color;
+        background-color: $background-selected-color;
       }
 
       &:focus, &:hover {
-        color: $text-color-highlight;
-        background-color: $background-color-highlight;
+        color: $text-highlight-color;
+        background-color: $background-highlight-color;
       }
     }
   }
 }
-
 
 #settings_pane {  
   flex-grow: 1;
   padding: $panel-body-padding;
   overflow: auto;
 }
-
 
 #ID_COMMAND_OUTPUT_HANDLING > table td.CLASS_FRAME {
   min-width: 10em;
@@ -75,11 +75,10 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
 }
 
 .card {
-  padding: $component-padding*1.5;
-  margin-bottom: $component-padding;
+  padding: $component-padding-vertical*1.5 $component-padding-horizontal*1.5;
+  margin-bottom: $component-padding-vertical;
   list-style-type: none;
-  font-size: 1.2em;
-  border-radius: $component-border-radius*2;
+  border-radius: $border-radius*2;
   border: 1px solid $base-border-color;
   background-color: $package-card-background-color;
   overflow: hidden;
@@ -88,7 +87,6 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
 }
 
 .session-configuration {
-
   position: relative;
 
   & h3 {
@@ -97,66 +95,8 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
 
   & .session-card-buttons {
     position: absolute;
-    right: $component-padding*1.5;
-    top: $component-padding*1.5;
-  }
-
-  & BUTTON.delete-button {
-    font-size: 1.2em;
-
-    display: inline-block;
-    width: 1.3em;
-    height: 1.3em;
-    border: 0;
-    padding: 0;
-    
-    border-radius: 50%;
-    background-color: transparent;
-    text-align: center;
-    line-height: 1;
-    font-size: $font-size-base;
-
-    outline: 0 solid transparent;
-
-    transition: background-color,color 0.2s ease-in-out;
-
-    &:hover {
-      background-color: $btn-danger-bg;
-      color: $tab-background-color-active;
-    }
-
-    &:focus {
-      outline: 0 solid transparent;
-    }
-  }
-
-  & BUTTON.make-default-button {
-    font-size: 1.2em;
-
-    display: inline-block;
-    width: 1.3em;
-    height: 1.3em;
-    border: 0;
-    padding: 0;
-    
-    border-radius: 50%;
-    background-color: transparent;
-    text-align: center;
-    line-height: 1;
-    font-size: $font-size-base;
-
-    outline: 0 solid transparent;
-
-    transition: background-color,color 0.2s ease-in-out;
-
-    &:hover {
-      background-color: $btn-success-bg;
-      color: $tab-background-color-active;
-    }
-
-    &:focus {
-      outline: 0 solid transparent;
-    }
+    right: $component-padding-horizontal*1.5;
+    top: $component-padding-horizontal*1.5;
   }
 }
 
@@ -166,13 +106,13 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
 
 .session-type {
   display: block;
-  color: $text-muted;
+  color: $text-muted-color;
 
   font-size: $font-size-h5;
   font-family: $headings-font-family;
   font-weight: normal;
   line-height: $headings-line-height;
-  color: $text-muted;
+  color: $text-muted-color;
 
 //  margin-top: floor($line-height-computed / 2);
   margin-bottom: 0.5rem;

@@ -5,14 +5,14 @@
 /**
  * Audio viewer CSS
  */
-@import "bootstrap/_variables";
+@import "general-gui/variables";
 
 #top_container {
   display: flex;
   width: 100%;
   align-items: baseline;
 
-  background-color: $body-bg;
+  background-color: $background-color;
   
   padding: $panel-body-padding;
 

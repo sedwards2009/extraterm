@@ -1,7 +1,8 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016-2018 Simon Edwards <simon@simonzone.com>
  */
 
 /* gui-controls styles */
 
-@import "_extraterm_bootstrap";
+@import "general-gui/main";
+@import "_extraterm-tabs";

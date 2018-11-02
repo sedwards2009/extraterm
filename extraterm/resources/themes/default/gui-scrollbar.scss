@@ -3,7 +3,8 @@
  */
 
 /* gui-scrollbar styles */
-@import "extraterm-scrollbars";
+@import "general-gui/variables";
+@import "general-gui/scrollbars";
 
 :host {
   display: block;

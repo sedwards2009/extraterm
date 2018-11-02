@@ -1,8 +1,8 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
-@import "bootstrap/px-to-rem";
-@import "bootstrap/variables";
+@import "general-gui/pxToRem";
+@import "general-gui/variables";
 
 /* embedded-frame styles */
 
@@ -155,9 +155,13 @@ $ICON_FAIL_COLOR: $brand-text-danger;
 
 #ID_EXPAND_BUTTON, #ID_CLOSE_BUTTON, #ID_POP_OUT_BUTTON {
   flex: 0 0 auto;
-  padding: pxToRem(0px);
+  padding: 0;
   background-color: transparent;
-  border: pxToRem(0px);
+  border: 0;
+  border-radius: 0;
+  vertical-align: baseline;
+  background-image: none;
+  height: auto;
 
   transition: color 0.2s ease-in-out;
 }

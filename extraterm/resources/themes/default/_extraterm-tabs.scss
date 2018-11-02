@@ -27,7 +27,7 @@
     line-height: $line-height-base;
     border: 1px solid transparent;
     border-bottom-width: 0;
-    border-radius: $border-radius-base $border-radius-base 0 0;
+    border-radius: $border-radius $border-radius 0 0;
     padding: pxToRem(7px) pxToRem(7px) pxToRem(4px) pxToRem(7px);
 
     &:hover, &:focus {

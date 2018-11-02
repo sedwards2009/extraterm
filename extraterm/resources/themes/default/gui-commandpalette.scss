@@ -3,12 +3,12 @@
  */
 
 /* Command Palette */
-@import "bootstrap/variables";
+@import "general-gui/variables";
 @import "extraicons-fontface";
 
 .CLASS_RESULT_ENTRY {
   &.CLASS_RESULT_GROUP_HEAD {
-    border-top: 1px solid $dropdown-link-color;
+    border-top: 1px solid $text-color;
   }
 }
 

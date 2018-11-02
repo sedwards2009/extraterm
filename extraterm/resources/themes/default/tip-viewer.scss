@@ -2,18 +2,17 @@
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
 
-@import "bootstrap/_variables";
-@import "extraterm-keycaps";
+@import "general-gui/variables";
 
 #ID_CONTAINER {
   display: flex;
   align-items: stretch;
 
-  font-family: $font-family-base;
+  font-family: $font-family;
   font-size: $font-size-base;
   line-height: $line-height-base;
   color: $text-color;
-  background-color: $body-bg;
+  background-color: $background-color;
   
   padding: $panel-body-padding;
   
@@ -52,8 +51,4 @@
       width: 100%;
     }
   }
-}
-
-SPAN.CLASS_KEYCAP {
-  @include keycap;
 }

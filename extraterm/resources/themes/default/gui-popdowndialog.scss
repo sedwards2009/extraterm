@@ -3,8 +3,8 @@
  */
 
 /* Command Palette */
-@import "bootstrap/variables";
-@import "extraterm-scrollbars";
+@import "general-gui/variables";
+
 
 
 #ID_COVER {
@@ -30,16 +30,16 @@
   width: $width;
   left: calc(50% - #{$width} / 2);
   
-  font-family: $font-family-base;
+  font-family: $font-family;
   font-size: $font-size-base;
   font-weight: normal;
   line-height: $line-height-base;
-  color: $dropdown-link-color;
-  background-color: $dropdown-bg;
+  color: $text-color;
+  background-color: $dropdown-bg-color;
 
   padding: $padding-base-vertical $padding-base-horizontal;
   border: 1px solid $dropdown-border;
-  border-radius: $border-radius-base;
+  border-radius: $border-radius;
   box-shadow: 0 pxToRem(6px) pxToRem(12px) rgba(0,0,0,.175);
   background-clip: padding-box;
 
@@ -50,7 +50,7 @@
   width: 100%;
   display: flex;
 
-  font-family: $font-family-base;
+  font-family: $font-family;
   font-size: $font-size-base;
   line-height: $line-height-base;
   color: $text-color;
