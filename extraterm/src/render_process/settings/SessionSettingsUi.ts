@@ -22,9 +22,9 @@ import { ExtensionManager } from '../extension/InternalTypes';
     <div class="session-type">{{getSessionTypeName(item.type)}}</div>
 
     <div class="session-card-buttons">
-      <button v-if="index != 0" class="make-default-button" v-on:click="makeDefault(item.uuid)" title="Make default"><i class="fas fa-angle-double-up"></i></button>
+      <button v-if="index != 0" class="microtool primary" v-on:click="makeDefault(item.uuid)" title="Make default"><i class="fas fa-angle-double-up"></i></button>
       <div v-if="index == 0"><em>default</em></div>
-      <button v-if="index != 0" class="delete-button" v-on:click="deleteSession(item.uuid)"><i class="fa fa-times"></i></button>
+      <button v-if="index != 0" class="microtool danger" v-on:click="deleteSession(item.uuid)"><i class="fa fa-times"></i></button>
     </div>
     <div>
       <component
@@ -35,11 +35,7 @@ import { ExtensionManager } from '../extension/InternalTypes';
     </div>
   </div>
 
-  <ul class="list-inline">
-    <li v-for="item in sessionTypes" key="item.uuid">
-      <button class="btn btn-default" v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
-    </li>
-  </ul>
+  <button  v-for="item in sessionTypes" key="item.uuid" v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
 </div>
 `
 })

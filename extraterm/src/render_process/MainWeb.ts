@@ -178,7 +178,7 @@ function startUpMainWebUi(): void {
   mainWebUi.setExtensionManager(extensionManager);
   mainWebUi.innerHTML = `<div class="tab_bar_rest">
     <div class="space"></div>
-    <button id="${ID_MENU_BUTTON}" class="btn btn-quiet"><i class="fa fa-bars"></i></button>
+    <button id="${ID_MENU_BUTTON}" class="quiet"><i class="fa fa-bars"></i></button>
     </div>`;
 
   mainWebUi.setThemes(themes);

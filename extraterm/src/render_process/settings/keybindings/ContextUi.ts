@@ -12,7 +12,6 @@ import { Emulator } from '../../emulator/Term';
 
 const humanText = require('../../keybindings/keybindingstext.json');
 
-const CLASS_KEYCAP = "CLASS_KEYCAP";
 export const EVENT_START_KEY_INPUT = "start-key-input";
 export const EVENT_END_KEY_INPUT = "end-key-input";
 
@@ -41,33 +40,33 @@ interface CommandKeybinding {
   <h3>{{contextHeading}}
     <span v-if="allCommands.length !== commands.length" class="badge">{{commands.length}} / {{allCommands.length}}</span>
   </h3>
-  <table v-if="commands.length !== 0" v-bind:class="{table: true, 'table-hover': !readOnly}">
+  <table v-if="commands.length !== 0" v-bind:class="{'width-100pc': true, 'table-hover': !readOnly}">
     <thead>
       <tr>
-        <th class="col-md-6">Command</th>
-        <th class="col-md-6">Key</th>
+        <th width="50%">Command</th>
+        <th width="50%">Key</th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="command in commands" :key="command" class="command-row">
-        <td class="col-md-6" :title="command">{{commandHumanName(command)}}</td>
-        <td class="col-md-6 keybindings-key-colomn">
+        <td :title="command">{{commandHumanName(command)}}</td>
+        <td class="keybindings-key-colomn">
           <template v-for="(keybinding, index) in commandToKeybindingsMapping.get(command)">
             <br v-if="index !== 0" />
-            <div class='${CLASS_KEYCAP}'>
+            <div class="keycap">
               <span>{{keybinding.formatHumanReadable()}}</span>
             </div>
 
             <i
                 v-if="termConflict(keybinding)"
                 title="This may override the terminal emulation"
-                class="text-warning fas fa-exclamation-triangle"
+                class="fas fa-exclamation-triangle"
             ></i>
 
             <button
                 v-if="!readOnly"
                 v-on:click="deleteKey(keybinding)"
-                class="btn btn-microtool-danger"
+                class="microtool danger"
                 title="Remove keybinding">
               <i class="fas fa-times"></i>
             </button>
@@ -76,7 +75,7 @@ interface CommandKeybinding {
           <button
               v-if="!readOnly && effectiveInputState(command) === 'read'"
               v-on:click="addKey(command)"
-              class="btn btn-microtool-success"
+              class="microtool success"
               title="Add keybinding">
             <i class="fas fa-plus"></i>
           </button>
@@ -88,7 +87,7 @@ interface CommandKeybinding {
           </keybindings-key-input>
 
           <template v-if="effectiveInputState(command) === 'conflict'">
-            <div class='${CLASS_KEYCAP}'>
+            <div class="keycap">
               <span>{{conflictKeyHumanReadable}}</span>
             </div>
             conflicts with command "{{commandHumanName(conflictCommand)}}".
