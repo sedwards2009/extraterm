@@ -52,11 +52,11 @@ export function nextId(): string {
     </thead>
     <tbody>
       <tr v-if="commandLineActions.length !== 0" v-for="commandLineAction in commandLineActions" track-by="id">
-        <td class='${CLASS_MATCH_TYPE}'><select v-model="commandLineAction.matchType" class="form-control">
+        <td class='${CLASS_MATCH_TYPE}'><select v-model="commandLineAction.matchType">
           <option value="name">Match command name</option>
           <option value="regexp">Match regular expression</option>
           </select></td>
-        <td class='${CLASS_MATCH}'><input type="text" class="form-control" v-model="commandLineAction.match" debounce="500" /></td>
+        <td class='${CLASS_MATCH}'><input type="text" v-model="commandLineAction.match" debounce="500" /></td>
         <td class='${CLASS_FRAME}'>
           <label>
             <input type="checkbox" v-model="commandLineAction.frame" /> Frame

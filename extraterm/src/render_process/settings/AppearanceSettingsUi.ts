@@ -39,7 +39,7 @@ interface SelectableOption {
 
   <div class="gui-layout cols-1-2">
     <label for="terminal-font">Font:</label>
-    <select id="terminal-font" v-model="terminalFont">
+    <select id="terminal-font" v-model="terminalFont" class="char-width-20">
       <option v-for="option in terminalFontOptions" v-bind:value="option.postscriptName">
         {{ option.name }}
       </option>
@@ -60,7 +60,7 @@ interface SelectableOption {
         v-model.number="terminalFontSize" min='1' max='1024' debounce="100" /><span>pixels</span></span>
 
     <label for="theme-terminal">Theme:</label>
-    <select id="theme-terminal" v-model="themeTerminal">
+    <select id="theme-terminal" v-model="themeTerminal" class="char-width-20">
       <option v-for="option in themeTerminalOptions" v-bind:value="option.id">
         {{ option.name }}
       </option>
@@ -85,15 +85,18 @@ interface SelectableOption {
     <div>
       <p>{{themeTerminalFormatsMessage}}</p>
     </div>
-  </div>
 
-  <et-vue-terminal-ace-viewer-element id="terminal_theme_preview"></et-vue-terminal-ace-viewer-element>
+    <et-vue-terminal-ace-viewer-element
+      id="terminal_theme_preview"
+      class="full-width">
+    </et-vue-terminal-ace-viewer-element>
+  </div>
 
   <h3>Interface</h3>
 
   <div class="gui-layout cols-1-2">
     <label for="theme-terminal">Theme:</label>
-    <select id="theme-terminal" v-model="themeGUI">
+    <select id="theme-terminal" v-model="themeGUI" class="char-width-20">
       <option v-for="option in themeGUIOptions" v-bind:value="option.id">
         {{ option.name }}
       </option>
@@ -110,14 +113,14 @@ interface SelectableOption {
     </template>
 
     <label for="${ID_UI_ZOOM}">Zoom:</label>
-    <select class="form-control char-width-8" id="${ID_UI_ZOOM}" v-model="uiScalePercent">
+    <select class="char-width-6" id="${ID_UI_ZOOM}" v-model="uiScalePercent">
       <option v-for="option in uiScalePercentOptions" v-bind:value="option.id">
         {{ option.name }}
       </option>          
     </select>
 
     <label for="theme-terminal">Window Title Bar:</label>
-    <select id="title-bar" v-model="titleBar">
+    <select id="title-bar" v-model="titleBar" class="char-width-12">
       <option v-for="option in titleBarOptions" v-bind:value="option.id">
         {{ option.name }}
       </option>
@@ -128,7 +131,7 @@ interface SelectableOption {
 
   <div class="gui-layout cols-1-2">
     <label for="theme-terminal">Theme:</label>
-    <select id="theme-terminal" v-model="themeSyntax">
+    <select id="theme-terminal" v-model="themeSyntax" class="char-width-20">
       <option v-for="option in themeSyntaxOptions" v-bind:value="option.id">
         {{ option.name }}
       </option>
@@ -153,19 +156,20 @@ interface SelectableOption {
     <div>
       <p>{{themeSyntaxFormatsMessage}}</p>
     </div>
+
+    <et-vue-text-ace-viewer-element
+      id="syntax_theme_preview"
+      class="full-width"
+      :viewer-text="getThemeSyntaxPreviewText()"
+      :mime-type="getThemeSyntaxPreviewMimeType()"
+      :wrap-lines="getThemeSyntaxPreviewWrapLines()"></et-vue-text-ace-viewer-element>
+
+    <select class="char-width-20 full-width" id="syntax_theme_preview_contents" v-model="themeSyntaxPreviewContents">
+      <option v-for="(option, index) in themeSyntaxPreviewContentOptions" :value="index">
+        {{ option.name }}
+      </option>
+    </select>
   </div>
-
-  <et-vue-text-ace-viewer-element
-    id="syntax_theme_preview"
-    :viewer-text="getThemeSyntaxPreviewText()"
-    :mime-type="getThemeSyntaxPreviewMimeType()"
-    :wrap-lines="getThemeSyntaxPreviewWrapLines()"></et-vue-text-ace-viewer-element>
-
-  <select class="form-control" id="syntax_theme_preview_contents" v-model="themeSyntaxPreviewContents">
-    <option v-for="(option, index) in themeSyntaxPreviewContentOptions" :value="index">
-      {{ option.name }}
-    </option>
-  </select>
 </div>
 `)
 })

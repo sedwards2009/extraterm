@@ -56,15 +56,17 @@
   <button class="microtool warning">W</button><br />
   <button class="microtool danger">D</button><br />
 
-  <h1>Inputs</h1>
-  Text input: <input type="text" placeholder="Placeholder" value="Some text input" /><br />
-  Number input: <input type="number" value="5" min="0" max="100" /><br />
+  <button class="selected">Selected button</button><br />
 
-  Select: <select>
+
+  <h1>Inputs</h1>
+  <label>Text input:</label><input type="text" placeholder="Placeholder" value="Some text input" /><br />
+  <label>Number input:</label><input type="number" value="5" min="0" max="100" /><br />
+
+  <label>Select:</label><select>
     <option selected value="1">One</option>
     <option value="2">Two</option>
   </select><br />
-
 
 
   <label><input type="checkbox"> Checkbox</label><br />
@@ -75,14 +77,14 @@
 
 
   <h1>Inputs Sizes</h1>
-  Text input 4 char: <input type="text" class="char-width-4" placeholder="Placeholder" value="mmmm" /><br />
-  Number input 4 char: <input type="number" class="char-width-4" value="5555" min="0" max="9999" /><br />
+  <label>Text input 4 char:</label><input type="text" class="char-width-4" placeholder="Placeholder" value="mmmm" /><br />
+  <label>Number input 4 char:</label><input type="number" class="char-width-4" value="5555" min="0" max="9999" /><br />
 
-  Text input 8 char: <input type="text" class="char-width-8" placeholder="Placeholder" value="mmmmmmmm" /><br />
-  Number input 8 char: <input type="number" class="char-width-8" value="55555555" min="0" max="99999999" /><br />
+  <label>Text input 8 char:</label><input type="text" class="char-width-8" placeholder="Placeholder" value="mmmmmmmm" /><br />
+  <label>Number input 8 char:</label><input type="number" class="char-width-8" value="55555555" min="0" max="99999999" /><br />
 
-  Text input 12 char: <input type="text" class="char-width-12" placeholder="Placeholder" value="mmmmmmmmmmmm" /><br />
-  Number input 12 char: <input type="number" class="char-width-12" value="5555" min="0" max="9999" /><br />
+  <label>Text input 12 char:</label><input type="text" class="char-width-12" placeholder="Placeholder" value="mmmmmmmmmmmm" /><br />
+  <label>Number input 12 char:</label><input type="number" class="char-width-12" value="5555" min="0" max="9999" /><br />
 
 
   <h1>Input validation states</h1>
@@ -130,7 +132,7 @@
     <label class="compact">Enter long text:</label>
     <input type="text" class="expand" />
     <button class="small primary compact">Done</button>
-    <span class="compact">trailing text</span>
+    <label class="compact">trailing text</label>
   </div>
 
   <h1>Tables</h1>

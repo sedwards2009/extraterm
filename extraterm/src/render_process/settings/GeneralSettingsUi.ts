@@ -21,7 +21,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     
   <div class="gui-layout cols-1-2">
     <label for="tips">Show Tips:</label>
-    <select id="tips" v-model="showTips">
+    <select id="tips" v-model="showTips" class="char-width-12">
       <option v-for="option in showTipsOptions" v-bind:value="option.id">
         {{ option.name }}
       </option>

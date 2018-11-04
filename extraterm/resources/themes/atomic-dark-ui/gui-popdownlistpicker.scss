@@ -36,7 +36,8 @@
 .CLASS_RESULT_ENTRY {
   display: flex;
   width: 100%;
-  
+  box-sizing: border-box;
+
   padding-left: $padding-xs-horizontal;
   padding-right: $padding-xs-horizontal;
 

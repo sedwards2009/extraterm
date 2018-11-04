@@ -46,3 +46,8 @@ h5 {
 h6 {
   font-size: $font-size-h6;
 }
+
+hr {
+  border: 0;
+  border-top: 1px solid $hr-border-color;
+}

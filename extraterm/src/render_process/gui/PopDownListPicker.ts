@@ -86,7 +86,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
         <${PopDownDialog.TAG_NAME} id="${ID_DIALOG}">
           <div id="${ID_RESULTS_CONTAINER}">
-            <div class="form-group"><input type="text" id="${ID_FILTER}" class="form-control input-sm" /></div>
+            <div class="form-group"><input type="text" id="${ID_FILTER}" /></div>
             <div id="${ID_RESULTS}"></div>
           </div>
         </${PopDownDialog.TAG_NAME}>

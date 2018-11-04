@@ -35,13 +35,14 @@
 .CLASS_RESULT_ENTRY {
   display: flex;
   width: 100%;
+  box-sizing: border-box;
 
   padding-left: $padding-xs-horizontal;
   padding-right: $padding-xs-horizontal;
 
   &:hover {
     cursor: pointer;
-    outline: 1px solid $button-primary-bg-color
+    outline: 1px solid $button-primary-bg-color;
     outline-offset: -1px;
   }
 

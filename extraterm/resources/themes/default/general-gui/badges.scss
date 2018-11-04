@@ -2,12 +2,12 @@
 .badge {
   display: inline-block;
   min-width: 1em;
-  padding: $badge-padding;
+  padding: $badge-vertical-padding $badge-horizontal-padding;
   font-size: $badge-font-size;
   font-weight: $badge-font-weight;
   color: $badge-color;
   line-height: $badge-line-height;
-  vertical-align: middle;
+  vertical-align: $badge-vertical-align;
   white-space: nowrap;
   text-align: center;
   background-color: $badge-background-color;

@@ -40,23 +40,23 @@ export const EVENT_RENAME = "rename";
     </select>
 
     <template v-else>
-      <div v-bind:class="{'has-error': isTitleConflict, 'keybindings-title-input': true}">
+      <div class="gui-packed-row expand">
         <input
+          v-bind:class="{'expand': true, 'has-error': isTitleConflict}"
           ref="titleInput"
           v-bind:title="isTitleConflict ? 'This name is already being used' : ''"
           v-model="selectedTitle"
-          v-bind:class="{'has-error': isTitleConflict}"
           v-on:keydown.capture="onTitleKeyDown"
           v-on:keypress.capture="onTitleKeyPress"
           />
-      </div>
-      <div class="group">
-        <button title="Accept" class="success" :disabled="isTitleConflict" v-on:click="onOkTitle">
-          <i class="fas fa-check"></i>
-        </button>
-        <button title="Cancel" class="danger" v-on:click="onCancelTitle">
-          <i class="fas fa-times"></i>
-        </button>
+        <div class="group">
+          <button title="Accept" class="small success" :disabled="isTitleConflict" v-on:click="onOkTitle">
+            <i class="fas fa-check"></i>
+          </button>
+          <button title="Cancel" class="small danger" v-on:click="onCancelTitle">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
       </div>
     </template>
 

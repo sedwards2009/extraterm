@@ -17,17 +17,16 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
     <label>Shell:</label>
     <span>
-      <input type="radio" value="1" v-model.number="useDefaultShell">
-      Default login shell
+      <label><input type="radio" value="1" v-model.number="useDefaultShell">Default login shell</label>
     </span>
 
     <label></label>
     <span>
-      <input v-bind:class="{'has-error': shellErrorMsg != ''}" type="radio"
-        value="0" v-model.number="useDefaultShell">
-      Other
-      <input id="other_shell" type="text" :disabled="useDefaultShell===1"
-        v-model="shell" list="etcShells">
+      <label>
+        <input v-bind:class="{'has-error': shellErrorMsg != ''}" type="radio" value="0" v-model.number="useDefaultShell">
+          Other
+      </label>
+      <input id="other_shell" type="text" :disabled="useDefaultShell===1" v-model="shell" list="etcShells">
     </span>
 
     <template v-if="shellErrorMsg != ''">

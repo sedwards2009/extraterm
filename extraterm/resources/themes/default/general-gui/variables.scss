@@ -42,7 +42,7 @@ $background-highlight-color: rgba(255, 255, 255, 0.07) !default;
 $background-color:  lighten(#1d1f21, 5%) !default;
 $background-selected-color: #4182c4;
 
-$text-muted-color:           mix($text-color, $background-color, 75%) !default;
+$text-muted-color:      mix($text-color, $background-color, 75%) !default;
 
 $brand-primary:         darken(#428bca, 6.5%) !default; // #337ab7
 $brand-success:         #11ca65 !default;
@@ -132,12 +132,15 @@ $button-default-bg-selected-color: #5c6064 !default;
 // Inputs
 $base-border-color: rgba(0, 0, 0, 0.5);
 
-$input-font-size: $font-size-base !default;
-$input-color: $text-color !default;
-$input-background-color: #212224 !default;
-$input-border-color: $base-border-color !default;
-$input-border-radius: $border-radius !default;
-$input-border-focus-color: #66afe9 !default;
+$input-font-size:             1.2rem !default;
+$input-color:                 $text-color !default;
+$input-background-color:    #212224 !default;
+$input-border-color:          $base-border-color !default;
+$input-border-radius:         $border-radius !default;
+$input-border-focus-color:  #66afe9 !default;
+$input-padding-vertical:      0.25rem !default;
+$input-padding-horizontal:    0.5rem !default;
+$input-border-width:          1px !default;
 
 //-------------------------------------------------------------------------
 // Tables
@@ -150,12 +153,15 @@ $table-background-hover-color:  $background-highlight-color !default;
 //-------------------------------------------------------------------------
 // Badge
 $badge-font-weight:             bold !default;
-$badge-font-size:               0.75em !default;
-$badge-padding:                 0.25em 0.5em !default;
+$badge-font-ratio:              0.6;
+$badge-font-size:               $badge-font-ratio * 1em !default;
+$badge-vertical-padding:        0.2em !default;
+$badge-horizontal-padding:      0.5em !default;
 $badge-line-height:             1 !default;
 $badge-border-radius:           1.5em !default;
 $badge-background-color:        #777 !default;
 $badge-color:                   #fff !default;
+$badge-vertical-align:          1/$badge-font-ratio * $badge-vertical-padding !default;
 
 //-------------------------------------------------------------------------
 // Scrollbars
@@ -168,7 +174,14 @@ $scrollbar-radius: pxToRem(6px) !default;
 $scrollbar-pad: pxToRem(2px) !default;
 
 //-------------------------------------------------------------------------
+// Layouts
+$layout-vertical-spacing:   0.5rem !default;
+$layout-horizontal-spacing: 0 !default;
+
+
+//-------------------------------------------------------------------------
 // Misc but useful
+$hr-border-color:       $base-border-color !default;
 $panel-body-padding: pxToRem(15px) !default;
 $padding-xs-horizontal:     pxToRem(5px) !default;
 $dropdown-bg-color:         #202123 !default;
