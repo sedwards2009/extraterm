@@ -7,6 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 
 import {CommandLineAction} from '../../Config';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const CLASS_DELETE = "CLASS_DELETE";
 const CLASS_FRAME = "CLASS_FRAME";
@@ -30,7 +31,7 @@ export function nextId(): string {
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="far fa-window-maximize"></i>&nbsp;&nbsp;Frame Handling Rules</h2>
 
@@ -74,7 +75,7 @@ export function nextId(): string {
     </tbody>
   </table>
 </div>
-`
+`)
 })
 export class FrameSettingsUi extends Vue {
 

@@ -9,6 +9,7 @@ import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputU
 import { KeybindingsFile } from '../../../KeybindingsFile';
 import { Keybinding } from '../../keybindings/KeyBindingsManager';
 import { Emulator } from '../../emulator/Term';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const humanText = require('../../keybindings/keybindingstext.json');
 
@@ -35,7 +36,7 @@ interface CommandKeybinding {
     readOnly: Boolean,
     searchText: String,
   },
-  template: `
+  template: trimBetweenTags(`
 <div>
   <h3>{{contextHeading}}
     <span v-if="allCommands.length !== commands.length" class="badge">{{commands.length}} / {{allCommands.length}}</span>
@@ -98,7 +99,7 @@ interface CommandKeybinding {
       </tr>
     </tbody>
   </table>
-</div>`,
+</div>`),
 })
 export class KeybindingsContext extends Vue {
   // Props

@@ -7,6 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 
 import { ShowTipsStrEnum } from '../../Config';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const ID_SCROLLBACK = "ID_SCROLLBACK";
 const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
@@ -14,7 +15,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="fa fa-sliders-h"></i>&nbsp;&nbsp;General Settings</h2>
     
@@ -35,7 +36,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
         v-model.number="maxScrollbackFrames" min="1" max="1000" debounce="500" /><span>frames</span></span>
   </div>
 </div>
-`
+`)
 })
 export class GeneralSettingsUi extends Vue {
 

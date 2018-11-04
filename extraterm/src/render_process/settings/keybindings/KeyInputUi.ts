@@ -6,6 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { eventKeyNameToConfigKeyName } from '../../keybindings/KeyBindingsManager';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const modifierKeys = [
   "alt",
@@ -24,13 +25,13 @@ export const EVENT_SELECTED = "selected";
   props: {
     commandHumanName: String
   },
-  template: `<input
+  template: trimBetweenTags(`<input
     ref="input"
-    class="form-control keyinput"
+    class="keyinput"
     placeholder="Press a key"
     v-on:keypress.capture="onKey"
     v-on:keydown.capture="onKey"
-    v-on:blur="onCancel" />`
+    v-on:blur="onCancel" />`)
 })
 export class KeybindingsKeyInput extends Vue {
   private _emitted = false;

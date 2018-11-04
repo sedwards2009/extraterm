@@ -9,11 +9,12 @@ import { SessionConfiguration } from 'extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
 
 import { ExtensionManager } from '../extension/InternalTypes';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
 
@@ -37,7 +38,7 @@ import { ExtensionManager } from '../extension/InternalTypes';
 
   <button  v-for="item in sessionTypes" key="item.uuid" v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
 </div>
-`
+`)
 })
 export class SessionSettingsUi extends Vue {
   private _extensionManager: ExtensionManager = null;

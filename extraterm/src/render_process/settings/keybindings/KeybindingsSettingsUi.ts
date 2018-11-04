@@ -6,6 +6,8 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as _ from 'lodash';
+
+import { trimBetweenTags} from 'extraterm-trim-between-tags';
 import { KeybindingsInfo } from '../../../Config';
 import { KeybindingsFile } from '../../../KeybindingsFile';
 import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
@@ -24,7 +26,7 @@ export const EVENT_RENAME = "rename";
       "keybindings-contexts-list": KeybindingsList,
       "keybindings-key-input": KeybindingsKeyInput,
     },
-    template: `
+    template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="far fa-keyboard"></i>&nbsp;&nbsp;Keybindings</h2>
 
@@ -99,7 +101,7 @@ export const EVENT_RENAME = "rename";
     v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
   </keybindings-contexts-list>
 </div>
-`
+`)
 })
 export class KeybindingsSettingsUi extends Vue {
   keybindingsInfoList: KeybindingsInfo[] = [];

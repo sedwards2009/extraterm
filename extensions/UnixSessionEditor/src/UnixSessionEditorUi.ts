@@ -5,10 +5,11 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
 <div>
   <div class="gui-layout cols-1-2">
     <label for="name">Name:</label>
@@ -41,7 +42,7 @@ import Vue from 'vue';
   <datalist id="etcShells">
     <option v-for="item in etcShells" :value="item"></option>
   </datalist>
-</div>`
+</div>`)
 })
 export class UnixSessionEditorUi extends Vue {
   name: string = "";

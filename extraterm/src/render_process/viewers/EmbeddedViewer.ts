@@ -28,6 +28,7 @@ import * as ViewerElementTypes from './ViewerElementTypes';
 import {VisualState} from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import { SetterState } from '../VirtualScrollArea';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
 const ID = "EtEmbeddedViewerTemplate";
@@ -51,7 +52,7 @@ const DND_TEXT_SIZE_THRESHOLD = 1024 * 1024;
 
 @Component(
   {
-    template: `<div id="${ID_HEADER}" tabindex="0">
+    template: trimBetweenTags(`<div id="${ID_HEADER}" tabindex="0">
     <div class="left_block">
       <div id="ID_ICON_DIV" :title="toolTip"><i id="ID_ICON" :class="awesomeIconClass"></i></div>
       <div id="ID_COMMAND_LINE" :title="toolTip">{{commandLine}}</div>
@@ -70,7 +71,7 @@ const DND_TEXT_SIZE_THRESHOLD = 1024 * 1024;
       <div class="spacer"></div>
       <button v-if="enableClose" id="ID_CLOSE_BUTTON" v-on:click="closeClick" title="Close"><i class="fa fa-times-circle"></i></button>
     </div>
-  </div>`
+  </div>`)
   })
 class TitleBarUI extends Vue {
   commandLine = "";

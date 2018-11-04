@@ -10,6 +10,7 @@ import * as _ from 'lodash';
 import {FontInfo} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
 const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
@@ -30,7 +31,7 @@ interface SelectableOption {
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="fa fa-paint-brush"></i>&nbsp;&nbsp;Appearance</h2>
 
@@ -166,7 +167,7 @@ interface SelectableOption {
     </option>
   </select>
 </div>
-`
+`)
 })
 export class AppearanceSettingsUi extends Vue {
 
