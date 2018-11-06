@@ -50,10 +50,10 @@ export const EVENT_RENAME = "rename";
           v-on:keypress.capture="onTitleKeyPress"
           />
         <div class="group">
-          <button title="Accept" class="small success" :disabled="isTitleConflict" v-on:click="onOkTitle">
+          <button title="Accept" class="inline success" :disabled="isTitleConflict" v-on:click="onOkTitle">
             <i class="fas fa-check"></i>
           </button>
-          <button title="Cancel" class="small danger" v-on:click="onCancelTitle">
+          <button title="Cancel" class="inline danger" v-on:click="onCancelTitle">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -61,13 +61,13 @@ export const EVENT_RENAME = "rename";
     </template>
 
     <span class="group">
-      <button title="Duplicate" class="small" v-on:click="duplicate">
+      <button title="Duplicate" class="inline" v-on:click="duplicate">
         <i class="fas fa-copy"></i>
       </button>
-      <button title="Rename" class="small" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="rename">
+      <button title="Rename" class="inline" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="rename">
         <i class="fas fa-edit"></i>
       </button>
-      <button title="Delete" class="small" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="trash">
+      <button title="Delete" class="inline" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="trash">
         <i class="fas fa-trash"></i>
       </button>
     </span>
@@ -88,7 +88,7 @@ export const EVENT_RENAME = "rename";
 
     <button
         title="Record key"
-        v-bind:class="{'small': true, 'selected': recordingKey}"
+        v-bind:class="{'inline': true, 'selected': recordingKey}"
         v-on:click="onRecordKey"><i class="fas fa-keyboard"></i>&nbsp;Record key</button>
   </div>
 

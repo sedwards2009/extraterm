@@ -77,9 +77,9 @@ interface SelectableOption {
     </template>
 
     <label></label>
-    <span class="group"><button v-on:click="openUserTerminalThemesDir" class="small" title="Open user terminal theme directory in file manager">
+    <span class="group"><button v-on:click="openUserTerminalThemesDir" class="inline" title="Open user terminal theme directory in file manager">
         <i class="far fa-folder-open"></i>&nbsp;User themes
-      </button><button v-on:click="rescanUserTerminalThemesDir" class="small" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button></span>
+      </button><button v-on:click="rescanUserTerminalThemesDir" class="inline" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button></span>
 
     <label></label>
     <div>
@@ -148,9 +148,9 @@ interface SelectableOption {
     </template>
 
     <label></label>
-    <span class="group"><button v-on:click="openUserSyntaxThemesDir" class="small" title="Open user syntax theme directory in file manager">
+    <span class="group"><button v-on:click="openUserSyntaxThemesDir" class="inline" title="Open user syntax theme directory in file manager">
         <i class="far fa-folder-open"></i>&nbsp;User themes
-      </button><button v-on:click="rescanUserSyntaxThemesDir" class="small" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button></span>
+      </button><button v-on:click="rescanUserSyntaxThemesDir" class="inline" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button></span>
 
     <label></label>
     <div>

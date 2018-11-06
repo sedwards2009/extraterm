@@ -9,11 +9,6 @@ import Vue from 'vue';
 import {CommandLineAction} from '../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
-const CLASS_DELETE = "CLASS_DELETE";
-const CLASS_FRAME = "CLASS_FRAME";
-const CLASS_MATCH = "CLASS_MATCH";
-const CLASS_MATCH_TYPE = "CLASS_MATCH_TYPE";
-
 
 export interface Identifiable {
   id?: string;
@@ -44,25 +39,25 @@ export function nextId(): string {
   <table class="table">
     <thead v-if="commandLineActions.length !== 0">
       <tr>
-        <th>Match</th>
-        <th>Command</th>
-        <th>Frame</th>
-        <th></th>
+        <th width="35%">Match</th>
+        <th width="40%">Command</th>
+        <th width="15%">Frame</th>
+        <th width="10%"></th>
       </tr>
     </thead>
     <tbody>
       <tr v-if="commandLineActions.length !== 0" v-for="commandLineAction in commandLineActions" track-by="id">
-        <td class='${CLASS_MATCH_TYPE}'><select v-model="commandLineAction.matchType">
+        <td><select v-model="commandLineAction.matchType" class="width-100pc">
           <option value="name">Match command name</option>
           <option value="regexp">Match regular expression</option>
           </select></td>
-        <td class='${CLASS_MATCH}'><input type="text" v-model="commandLineAction.match" debounce="500" /></td>
-        <td class='${CLASS_FRAME}'>
+        <td><input type="text" class="width-100pc" v-model="commandLineAction.match" debounce="500" /></td>
+        <td>
           <label>
             <input type="checkbox" v-model="commandLineAction.frame" /> Frame
           </label>
         </td>
-        <td class='${CLASS_DELETE}'>
+        <td>
           <button @click="deleteCommandLineAction(commandLineAction.id);" class="small danger">Delete</button>
         </td>
       </tr>
