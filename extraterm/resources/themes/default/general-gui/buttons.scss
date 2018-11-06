@@ -22,11 +22,11 @@
     text-shadow: 0 0 pxToRem(2px) rgba(0, 0, 0, 0.3);
     background-image: -webkit-linear-gradient(darken($selected-color, 8%), $selected-color);
   }
+  
   &.selected:hover {
     box-shadow: $border-shadow;
     background-image: -webkit-linear-gradient($selected-color, darken($selected-color, 8%));
   }
-
 }
 
 @mixin atom-button-variant ($color) {
@@ -39,6 +39,7 @@
 }
 
 @mixin button-size($font-size, $line-height, $padding-vertical, $padding-horizontal, $border-width) {
+  box-sizing: border-box;
   font-size: $font-size;
   line-height: $line-height;
   padding: $padding-vertical $padding-horizontal;
@@ -47,6 +48,7 @@
 
 button {
   font-weight: $button-font-weight;
+  font-family: $font-family;
 
   @include button-size($button-font-size, $button-line-height, $button-padding-vertical, $button-padding-horizontal, $button-border-width);
 
@@ -62,6 +64,16 @@ button {
 
   &.small {
     @include button-size($button-font-size-small, $button-line-height-small, $button-padding-vertical-small, $button-padding-horizontal-small, $button-border-width-small);
+  }
+
+  &.inline {
+    display: inline-block;
+    box-sizing: border-box;
+    font-size: $input-font-size;
+    line-height: $line-height-base;
+    vertical-align: baseline;
+    height: unset;
+    padding: $input-padding-vertical $input-padding-horizontal;
   }
 
   &.primary {
@@ -167,13 +179,11 @@ button {
   }
 }
 
-
 div.group, span.group {
 
   & > button:not(:first-child) {
     border-left: 0;
     margin-left: 1px;
-    // border-left: 1px solid $button-default-border-color;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
   }
@@ -182,6 +192,5 @@ div.group, span.group {
     border-right: 0;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
-  }
-  
+  }  
 }

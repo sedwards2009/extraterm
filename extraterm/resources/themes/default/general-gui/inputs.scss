@@ -1,6 +1,7 @@
 
 input:not([type="radio"]), select {
   font-size: $input-font-size;
+  font-family: $font-family;
   padding: $input-padding-vertical $input-padding-horizontal;
 
   line-height: $line-height-base;
@@ -186,7 +187,8 @@ span.group {
 
   & > span {
     display: inline-block;
-    font-size: $input-font-size;
+    
+    font-size: $button-font-size-small;
     padding: $input-padding-vertical $input-padding-horizontal;
 
     background-color: $button-default-bg-color;
@@ -196,6 +198,11 @@ span.group {
     border-top: $input-border-width solid $input-border-color;
     border-bottom: $input-border-width solid $input-border-color;
     border-radius: 0;
+
+    &:after {
+      content: "\200a";
+      font-size: $input-font-size;
+    }
   }
 
   & > span:first-child {
