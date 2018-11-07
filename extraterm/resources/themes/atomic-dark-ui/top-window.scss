@@ -8,6 +8,9 @@
 @import "extraicons-fontface";
 @import "emoji-fontface";
 
+$control-size: pxToRem(21px);
+
+
 DIV.tab_bar_rest {
   display: flex;
   flex-grow: 1;
@@ -45,6 +48,21 @@ EXTRATERM-MAINWEBUI {
   border: pxToRem(1px) dashed red;
 }
 
-#ID_MENU_BUTTON:focus {
-  outline: 0 solid transparent;
+#ID_MENU_BUTTON {
+  position: relative;
+  align-self: center;
+
+  width: $control-size;
+  height: $control-size;
+
+  & > I {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -45%);
+  }
+
+  &:focus {
+    outline: 0 solid transparent;
+  }
 }

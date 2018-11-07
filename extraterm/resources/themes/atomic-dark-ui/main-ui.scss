@@ -53,6 +53,7 @@ $tab-background-color-active: $background-color;
 .CLASS_NEW_BUTTON_CONTAINER {
   display: flex;
   flex-grow: 1;
+  height: 100%;
 
   & > div.CLASS_SPACE {
     flex-grow: 1;
@@ -61,7 +62,12 @@ $tab-background-color-active: $background-color;
   & > button {
     flex-grow: 0;
   }
+
+  & > .CLASS_NEW_TAB_BUTTON {
+    align-self: center;
+  }
 }
+
 
 #ID_MAIN_CONTENTS.CLASS_MAIN_NOT_DRAGGING div.CLASS_SPACE {
   @if $extraterm-titlebar-visible == false {

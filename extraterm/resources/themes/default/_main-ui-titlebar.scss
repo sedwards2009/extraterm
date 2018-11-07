@@ -6,6 +6,9 @@
 $drag-bar-height: pxToRem(16px);
 $resize-bar-height: pxToRem(4px);
 
+$control-size: pxToRem(21px);
+
+
 @if($extraterm-titlebar-visible == true or $extraterm-platform == "darwin") {
   #ID_TITLE_BAR {
     display: none;
@@ -47,15 +50,18 @@ $resize-bar-height: pxToRem(4px);
     flex-grow: 0;
     flex-shrink: 0;
 
+    position: relative;
+
+    width: $control-size;
+    height: $control-size;
+
     color: $text-color;
 
     background-color: transparent;
     border: 0;
-    padding: 1px 6px;
     border-radius: 0;
     vertical-align: baseline;
     background-image: none;
-    height: auto;
     
     transition: color,background-color 0.2s ease-in-out;
 
@@ -66,9 +72,18 @@ $resize-bar-height: pxToRem(4px);
     &:focus {
       outline: pxToRem(0px) solid transparent;
     }
+
+    &:before {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
   }
 
   #ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON {
+    font-size: 1rem;
+
     &:hover {
       background-color: $button-default-bg-color;
     }
@@ -81,11 +96,13 @@ $resize-bar-height: pxToRem(4px);
   }
 
   #ID_MINIMIZE_BUTTON:before {
+    font-size: 1rem;
     font-family: extraicons;
     content: "\ea02";
   }
 
   #ID_MAXIMIZE_BUTTON:before {
+    font-size: 1rem;
     font-family: extraicons;
     content: "\ea01";
   }
@@ -93,7 +110,7 @@ $resize-bar-height: pxToRem(4px);
   #ID_CLOSE_BUTTON:before {
     font-family: "Font Awesome 5 Free";
     font-weight: 900;
-    font-size: 120%;
+    font-size: 1.2rem;
     content: "\f00d";  
   }
 

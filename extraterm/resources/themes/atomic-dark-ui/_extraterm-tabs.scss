@@ -11,6 +11,7 @@ $tab-radius: pxToRem(3px);
 $modified-icon-width: pxToRem(8px);
 $tab-skew: 30deg;
 $tab-top-padding: 0;
+
 $tab-bottom-border-height: pxToRem(5px);
 $tab-border: 1px solid $tab-border-color;
 $tab-bar-bottom-border-color: #111111;
@@ -33,6 +34,7 @@ $tab-max-width: 20rem;
     display: none;
   }
 
+  // The horizontal line which the tabs sit on.
   &:after {
     content: "";
     position: absolute;
@@ -103,17 +105,6 @@ $tab-max-width: 20rem;
       }
     }
 
-    &.modified:not(:hover) .close-icon {
-      right: 0;
-      top: $tab-height/2 - $modified-icon-width/2 + pxToRem(1px);
-      width: $modified-icon-width;
-      height: $modified-icon-width;
-    }
-
-    &.modified:hover .close-icon:hover {
-      color: $text-highlight-color;
-    }
-
     & > * {
       position: relative;
       z-index: 1;
@@ -162,6 +153,10 @@ $tab-max-width: 20rem;
 
   & > LI.remainder-left {
     margin: 0 pxToRem(20px) 0 pxToRem(5px);
+  }
+
+  & > LI.remainder {
+    padding-bottom: $tab-bottom-border-height;
   }
 
   .placeholder {
