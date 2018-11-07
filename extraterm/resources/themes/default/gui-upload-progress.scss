@@ -3,12 +3,19 @@
  */
 
 @import "general-gui/variables";
-
+ 
 .top_container {
+  border: 1px solid $overlay-border-color;
+  border-radius: $border-radius;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+
+  box-shadow: 0 0 pxToRem(10px) $base-border-color;
+  
   background-color: $background-color;
   padding: $panel-body-padding;
 }
 
 .upload_hide {
-    opacity: 0;
+  opacity: 0;
 }

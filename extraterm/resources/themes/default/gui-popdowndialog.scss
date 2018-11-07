@@ -2,7 +2,6 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
-/* Command Palette */
 @import "general-gui/variables";
 
 
@@ -31,16 +30,19 @@
   left: calc(50% - #{$width} / 2);
   
   font-family: $font-family;
-  font-size: $font-size-base;
+  font-size: $input-font-size;
   font-weight: normal;
   line-height: $line-height-base;
   color: $text-color;
-  background-color: $dropdown-bg-color;
+  background-color: $overlay-background-color;
 
-  padding: $padding-base-vertical $padding-base-horizontal;
-  border: 1px solid $dropdown-border;
+  padding: $component-padding-vertical $component-padding-horizontal;
+  border: 1px solid $overlay-border-color;
   border-radius: $border-radius;
-  box-shadow: 0 pxToRem(6px) pxToRem(12px) rgba(0,0,0,.175);
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+
+  box-shadow: 0 0 pxToRem(10px) $base-border-color;
   background-clip: padding-box;
 
   z-index: 101;  
@@ -51,7 +53,7 @@
   display: flex;
 
   font-family: $font-family;
-  font-size: $font-size-base;
+  font-size: $input-font-size;
   line-height: $line-height-base;
   color: $text-color;
   margin-bottom: pxToRem(5px);
@@ -59,7 +61,7 @@
 
 #ID_TITLE_PRIMARY {
   flex-grow: 1;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 #ID_TITLE_SECONDARY {
@@ -72,7 +74,7 @@
   right: 0;
   top: 0;
   bottom: 0;
-
+  
   &.CLASS_CONTEXT_COVER_OPEN {
   
   }

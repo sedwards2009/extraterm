@@ -8,14 +8,16 @@
 @import "extraicons-fontface";
 @import "emoji-fontface";
 
+$control-size: pxToRem(21px);
+
+
 DIV.tab_bar_rest {
   display: flex;
   flex-grow: 1;
-  height: pxToRem(36px);
-}
-
-DIV.tab_bar_rest > DIV.space {
-  flex-grow: 1;
+  
+  & > DIV.space {
+    flex-grow: 1;
+  }
 }
 
 BODY {
@@ -24,6 +26,7 @@ BODY {
   bottom: 0;
   left: 0;
   right: 0;
+  background: #222222;
 
   &.CLASS_MAIN_NOT_DRAGGING DIV.space {
     @if $extraterm-titlebar-visible == false {
@@ -35,16 +38,31 @@ BODY {
 EXTRATERM-MAINWEBUI {
   position: absolute; // or relative
   left: 0;
-  top: if($extraterm-titlebar-visible == true, pxToRem(4px), 0);
+  top: if($extraterm-titlebar-visible or $extraterm-platform == darwin, pxToRem(5px), 0);
   right: 0;
   bottom: 0;
 }
 
 *:unresolved {
   background-color: red;
-  border: 1px dashed red;
+  border: pxToRem(1px) dashed red;
 }
 
-#ID_MENU_BUTTON:focus {
-  outline: 0 solid transparent;
+#ID_MENU_BUTTON {
+  position: relative;
+  align-self: center;
+
+  width: $control-size;
+  height: $control-size;
+
+  & > I {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -45%);
+  }
+
+  &:focus {
+    outline: 0 solid transparent;
+  }
 }

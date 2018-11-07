@@ -5,6 +5,9 @@
 /* top UI */
 @import "general-gui/variables";
 @import "main-ui-titlebar";
+@import "general-gui/pxToRem";
+
+$tab-background-color-active: $background-color;
 
 :host {
   display: block;
@@ -28,12 +31,16 @@
 
 #ID_REST_DIV_LEFT {
   & > button {
-    margin-top: pxToRem(13px);
+    margin-top: pxToRem(7px);
   }
 }
 
+#ID_TITLE_BAR {
+  background: #222222;
+}
+
 #ID_MAIN_CONTENTS {
-  flex-grow: 1;  
+  flex-grow: 1;
   position: relative;
 
   & > * {
@@ -46,6 +53,7 @@
 .CLASS_NEW_BUTTON_CONTAINER {
   display: flex;
   flex-grow: 1;
+  height: 100%;
 
   & > div.CLASS_SPACE {
     flex-grow: 1;
@@ -54,7 +62,12 @@
   & > button {
     flex-grow: 0;
   }
+
+  & > .CLASS_NEW_TAB_BUTTON {
+    align-self: center;
+  }
 }
+
 
 #ID_MAIN_CONTENTS.CLASS_MAIN_NOT_DRAGGING div.CLASS_SPACE {
   @if $extraterm-titlebar-visible == false {
@@ -73,7 +86,7 @@ DIV.tab_content > * {
   position: absolute;
   width: 100%;
   
-  top: pxToRem(6px);
+  top: 0;
   bottom: 0;
   left: 0;
   right: 0;
@@ -86,11 +99,14 @@ ET-TAB:focus {
 DIV.tab_header_container {
   display: flex;
   width: 100%;
+  position: relative;
+  z-index: 1;
   font-size: 1rem;
 }
 
 DIV.tab_header_icon {
   flex: 0 0 auto;
+  font-size: 125%;
 }
 
 DIV.tab_header_middle {
@@ -110,25 +126,15 @@ DIV.tab_header_close {
   align-self: center;
 }
 
-DIV.tab_header_close > BUTTON {
-  vertical-align: text-bottom;
-  border: 0;
-  display: inline-block;
-  background-color: transparent;
-  border-radius: pxToRem(2px);
-
-  transition: background-color,color 0.2s ease-in-out;
+DIV.tab_header_container:hover DIV.tab_header_close > BUTTON:not(:hover) {
+  color: $text-highlight-color;  
 }
 
 DIV.tab_header_close:hover > BUTTON {
   background-color: $button-danger-bg-color;
-  color: $button-danger-color;
+  color: $tab-background-color-active;
 }
 
 DIV.tab_header_close > BUTTON:focus {
-  outline: 0 solid transparent;
-}
-
-BUTTON.CLASS_NEW_TAB_BUTTON.CLASS_NEW_TAB_BUTTON.CLASS_NEW_TAB_BUTTON {
   outline: 0 solid transparent;
 }
