@@ -30,7 +30,9 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
     </label>
 
     <input id="other_shell" type="text" :disabled="useDefaultShell===1" v-model="shell" list="etcShells">
-    <i v-if="shellErrorMsg != ''" class="fas fa-exclamation-triangle"></i> {{ shellErrorMsg }}
+    <span v-if="shellErrorMsg != ''">&nbsp;
+      <i class="fas fa-exclamation-triangle"></i> {{ shellErrorMsg }}
+    </span>
     <datalist id="etcShells">
       <option v-for="item in etcShells" :value="item"></option>
     </datalist>

@@ -15,6 +15,10 @@
   
   margin-bottom: $layout-vertical-spacing;
 
+  &.cols-1 {
+    grid-template-columns: 1fr;
+  }
+
   &.cols-1-1 {
     grid-template-columns: 1fr 1fr;
   }

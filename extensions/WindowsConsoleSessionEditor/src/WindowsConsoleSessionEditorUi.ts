@@ -18,7 +18,9 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   <label>Executable:</label>
   <span>
     <input type="text" list="exes" name="exe" v-bind:class="{'has-error': exeErrorMsg != ''}" v-model="exe">
-    <div class="text-center"><i class="fas fa-exclamation-triangle"></i> {{ exeErrorMsg }}</div>
+    <span v-if="exeErrorMsg != ''">&nbsp;
+      <i class="fas fa-exclamation-triangle"></i> {{ exeErrorMsg }}
+    </span>
     <datalist id="exes">
       <option v-for="item in availableExes" :value="item"></option>
     </datalist>

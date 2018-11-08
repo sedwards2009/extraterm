@@ -17,7 +17,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   <label for="cygwinPath">Cygwin path:</label>
   <span>
     <input type="text" name="cygwinPath" v-bind:class="{'has-error': cygwinPathErrorMsg != ''}" v-model="cygwinPath">
-    <span v-if="cygwinPathErrorMsg != ''" class="text-center">
+    <span v-if="cygwinPathErrorMsg != ''">&nbsp;
       <i class="fas fa-exclamation-triangle"></i> {{ cygwinPathErrorMsg }}
     </span>
   </span>

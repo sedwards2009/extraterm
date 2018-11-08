@@ -36,7 +36,11 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
     </div>
   </div>
 
-  <button  v-for="item in sessionTypes" key="item.uuid" v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
+  <div class="gui-layout cols-1">
+    <span v-for="item in sessionTypes" key="item.uuid">
+      <button v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
+    </span>
+  </div>
 </div>
 `)
 })
