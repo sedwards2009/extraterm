@@ -6,12 +6,6 @@
 @import "general-gui/variables";
 
 
-/*
-:host {
-  visibility: hidden;
-}
-*/
-
 :host(:focus) {
   outline: 0 solid transparent;
 }
@@ -28,6 +22,7 @@
 
 .CLASS_RESULT_ENTRY {
   display: flex;
+  
   width: 100%;
   box-sizing: border-box;
 

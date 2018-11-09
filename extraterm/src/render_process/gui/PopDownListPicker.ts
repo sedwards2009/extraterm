@@ -12,6 +12,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
 import {PopDownDialog} from './PopDownDialog';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const ID = "EtPopDownListPickerTemplate";
 const ID_DIALOG = "ID_DIALOG";
@@ -83,14 +84,16 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
+      template.innerHTML = trimBetweenTags(`<style id="${ThemeableElementBase.ID_THEME}"></style>
         <${PopDownDialog.TAG_NAME} id="${ID_DIALOG}">
           <div id="${ID_RESULTS_CONTAINER}">
-            <div class="form-group"><input type="text" id="${ID_FILTER}" /></div>
+            <div class="gui-packed-row">
+              <input class="expand" type="text" id="${ID_FILTER}" />
+            </div>
             <div id="${ID_RESULTS}"></div>
           </div>
         </${PopDownDialog.TAG_NAME}>
-        `;
+        `);
       window.document.body.appendChild(template);
     }
 

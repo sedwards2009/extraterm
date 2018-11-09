@@ -3,6 +3,7 @@
  */
 
 /* top-window */
+@import "general-gui/variables";
 @import 'general-gui/pxToRem';
 @import "fontawesome-fontface";
 @import "extraicons-fontface";
@@ -26,7 +27,7 @@ BODY {
   bottom: 0;
   left: 0;
   right: 0;
-  background: #222222;
+  background: $tab-bar-background-color;
 
   &.CLASS_MAIN_NOT_DRAGGING DIV.space {
     @if $extraterm-titlebar-visible == false {
@@ -54,6 +55,7 @@ EXTRATERM-MAINWEBUI {
 
   width: $control-size;
   height: $control-size;
+  box-shadow: none;
 
   & > I {
     position: absolute;

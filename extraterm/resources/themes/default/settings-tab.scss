@@ -77,6 +77,7 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
 .card {
   padding: $component-padding-vertical*1.5 $component-padding-horizontal*1.5;
   margin-bottom: $component-padding-vertical;
+  font-size: 1.2rem;
   list-style-type: none;
   border-radius: $border-radius*2;
   border: 1px solid $base-border-color;
@@ -108,7 +109,7 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
   display: block;
   color: $text-muted-color;
 
-  font-size: $font-size-h5;
+  font-size: 1.2rem;
   font-family: $headings-font-family;
   font-weight: normal;
   line-height: $headings-line-height;

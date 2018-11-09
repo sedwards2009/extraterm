@@ -1,16 +1,10 @@
-$progress-height: 16px;
-$progress-shine-gradient: -webkit-linear-gradient(top, rgba(255, 255, 255, .15), rgba(0, 0, 0, .15));
 
 progress {
   height: $progress-height;
   -webkit-appearance: none;
   border-radius: $border-radius;
-  background-color: #666;
-  background-image:
-     -webkit-linear-gradient(-30deg,
-                             transparent 33%, rgba(0, 0, 0, .1) 33%,
-                             rgba(0,0, 0, .1) 66%, transparent 66%),
-                             $progress-shine-gradient;
+  background-color: $progress-background-color;
+  background-image: $progress-background-image;
   border-radius: 2px;
   background-size: 25px $progress-height, 100% 100%, 100% 100%;
   -webkit-animation: animate-stripes 5s linear 6; // stop animation after 6 runs (30s) to limit CPU usage
@@ -23,7 +17,7 @@ progress::-webkit-progress-bar {
 progress::-webkit-progress-value {
   border-radius: $border-radius;
   background-image: $progress-shine-gradient;
-  background-color: $brand-success;
+  background-color: $progress-value-bg-color;
 }
 
 progress[value] {

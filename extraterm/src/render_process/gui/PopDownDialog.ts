@@ -8,6 +8,7 @@ import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorato
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const ID = "EtPopDownDialogTemplate";
 const ID_COVER = "ID_COVER";
@@ -60,14 +61,14 @@ export class PopDownDialog extends ThemeableElementBase {
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
+      template.innerHTML = trimBetweenTags(`<style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
         <div id='${ID_CONTEXT_COVER}' class='${CLASS_CONTEXT_COVER_CLOSED}'>
           <div id='${ID_CONTAINER}'>
             <div id="${ID_TITLE_CONTAINER}"><div id="${ID_TITLE_PRIMARY}"></div><div id="${ID_TITLE_SECONDARY}"></div></div>
             <slot></slot>
           </div>
-        </div>`;
+        </div>`);
       window.document.body.appendChild(template);
     }
 
