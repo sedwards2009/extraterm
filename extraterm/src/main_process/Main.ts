@@ -12,7 +12,7 @@
 import * as SourceMapSupport from 'source-map-support';
 
 import * as child_process from 'child_process';
-import * as Commander from 'commander';
+import { Command } from 'commander';
 import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
 import { BulkFileState, Event, SessionConfiguration } from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
@@ -99,9 +99,10 @@ function main(): void {
   // This is not the case when running from a packaged Electron app. Here you have first value 'appname' and then args.
   const normalizedArgv = process.argv[0].includes('extraterm') ? ["node", "extraterm", ...process.argv.slice(1)]
                             : process.argv;
+  const parsedArgs = new Command("extraterm");
 
   // The extra fields which appear on the command object are declared in extra_commander.d.ts.
-  Commander.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []')
+  parsedArgs.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []')
     .option('-d, --dev-tools [devTools]', 'Open the dev tools on start up')
     .option('--force-device-scale-factor []', '(This option is used by Electron)')
     .option(EXTRATERM_DEVICE_SCALE_FACTOR + ' []', '(Internal Extraterm option. Ignore)')
@@ -176,18 +177,18 @@ function getUserKeybindingsDirectory(): string {
   return path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_KEYBINDINGS_DIR);
 }
 
-function startUpWindows(): void {
-  if ( ! setupScale()) {
+function startUpWindows(parsedArgs: Command): void {
+  if ( ! setupScale(parsedArgs)) {
     return;
   }
   
   setupBulkFileStorage();
   setupIpc();  
-  openWindow();
+  openWindow(parsedArgs);
 }
 
-function setupScale(): boolean {
-  const deviceScaleFactor = <any>Commander.extratermDeviceScaleFactor;
+function setupScale(parsedArgs: Command): boolean {
+  const deviceScaleFactor = <any>parsedArgs.extratermDeviceScaleFactor;
   const {restartNeeded, originalScaleFactor, currentScaleFactor} = setScaleFactor(deviceScaleFactor);
   if (restartNeeded) {
     return false;
@@ -205,7 +206,7 @@ function setupBulkFileStorage(): void {
   bulkFileStorage.onClose(sendBulkFileStateChangeEvent);
 }
 
-function openWindow(): void {
+function openWindow(parsedArgs: Command): void {
   const generalConfig = configDatabase.getConfig(GENERAL_CONFIG);
   const themeInfo = themeManager.getTheme(generalConfig.themeGUI);
 
@@ -239,7 +240,7 @@ function openWindow(): void {
   titleBarVisible = generalConfig.showTitleBar;
   mainWindow = new BrowserWindow(options);
 
-  if ((<any>Commander).devTools) {
+  if ((<any>parsedArgs).devTools) {
     mainWindow.webContents.openDevTools();
   }
 
