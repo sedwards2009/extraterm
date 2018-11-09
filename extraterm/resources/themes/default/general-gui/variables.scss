@@ -100,6 +100,7 @@ $button-border-width-small:           1px !default;
 $button-default-color:        $text-color !default;
 $button-default-bg-color:   #43484d !default;
 $button-default-border-color: darken($button-default-bg-color, 5%) !default;
+$button-default-text-selected-color:  $button-default-color !default;
 
 $button-primary-color:        $text-color !default;
 $button-primary-bg-color:     $brand-primary !default;
