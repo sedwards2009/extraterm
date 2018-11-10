@@ -89,6 +89,9 @@ button {
       font-size: $input-font-size;
     }
 
+    &.toolbar {
+      min-width: calc(2 * #{$input-padding-horizontal} + 1.5em);
+    }
   }
 
   &.primary {

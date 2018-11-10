@@ -61,13 +61,13 @@ export const EVENT_RENAME = "rename";
     </template>
 
     <span class="group">
-      <button title="Duplicate" class="inline" v-on:click="duplicate">
+      <button title="Duplicate" class="inline toolbar" v-on:click="duplicate">
         <i class="fas fa-copy"></i>
       </button>
-      <button title="Rename" class="inline" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="rename">
+      <button title="Rename" class="inline toolbar" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="rename">
         <i class="fas fa-edit"></i>
       </button>
-      <button title="Delete" class="inline" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="trash">
+      <button title="Delete" class="inline toolbar" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="trash">
         <i class="fas fa-trash"></i>
       </button>
     </span>
