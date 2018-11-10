@@ -78,11 +78,17 @@ button {
   &.inline {
     display: inline-block;
     box-sizing: border-box;
-    font-size: $input-font-size;
+    font-size: $button-font-size-small;
     line-height: $line-height-base;
     vertical-align: baseline;
     height: unset;
     padding: $input-padding-vertical $input-padding-horizontal;
+
+    &:after {
+      content: "\200a";
+      font-size: $input-font-size;
+    }
+
   }
 
   &.primary {
