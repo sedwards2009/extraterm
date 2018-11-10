@@ -1,22 +1,22 @@
 /**
  * Copyright 2017 Simon Edwards <simon@simonzone.com>
  */
-@import "bootstrap/variables";
-@import "bootstrap/px-to-rem";
+@import "general-gui/variables";
+@import "general-gui/pxToRem";
 @import "font-awesome";
 
+$tab-height: pxToRem(26px);
 
 :host(:focus) {
-  outline: pxToRem(0px) solid transparent;
+  outline: 0 solid transparent;
 }
 
 #ID_EMPTY_PANE_MENU {
-  font-family: $font-family-base;
-  font-size: $font-size-base;
-  line-height: $line-height-base;
+  font-family: $font-family;
+  font-size: $input-font-size;
   color: $text-color;
 
-  background-color: $dropdown-bg;
+  background-color: $dropdown-bg-color;
 
   width: 100%;
   height: 100%;
@@ -42,23 +42,35 @@
 }
 
 #ID_CLOSE_BUTTON {
-  display: block;
   float: right;
 
   display: block;
-
-
+  width: pxToRem(16px);
+  height: pxToRem(16px);
   border: 0;
+  padding: 0;
+
+  font-size: 1rem;
+  line-height: $tab-height;
+  
+  border-radius: pxToRem(8px);
   background-color: transparent;
-  border-radius: pxToRem(2px);
+  text-align: center;
 
-
-  &:hover {
-    background-color: $btn-danger-bg;
-    color: $btn-danger-color;
+  z-index: 1;
+  
+  & > i {
+    position: relative;
+    top: pxToRem(-5px);
+    font-size: 1rem;
   }
 
   &:focus {
     outline: 0 solid transparent;
   }
+
+  &:hover {
+    background-color: $button-danger-bg-color;
+    color: $dropdown-bg-color;
+  }  
 }

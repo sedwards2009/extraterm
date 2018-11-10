@@ -468,7 +468,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _newTabRestAreaHtml(extraContents = ""): string {
-    return `<div class="${CLASS_NEW_BUTTON_CONTAINER}"><button class="btn btn-quiet ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>
+    return `<div class="${CLASS_NEW_BUTTON_CONTAINER}"><button class="microtool primary ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>
     <div class="${CLASS_SPACE}"></div>${extraContents}</div>`;
   }
 
@@ -508,7 +508,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
         `<div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>` +
         `<div class="${CLASS_TAB_HEADER_TAG}"></div>` +
         `<div class="${CLASS_TAB_HEADER_CLOSE}">` +
-          `<button id="close_tag_id_${newId}"><i class="fa fa-times"></i></button>` +
+          `<button id="close_tag_id_${newId}" class="microtool danger"><i class="fa fa-times"></i></button>` +
         `</div>` +
       `</div>`;
 

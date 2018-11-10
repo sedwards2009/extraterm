@@ -3,7 +3,7 @@
 packages/**/*.js
 !packages/**/webpack*.js
 extensions/**/*.js
-extraterm/**/*.js
+extraterm/src/**/*.js
 dist/
 
 .vscode/

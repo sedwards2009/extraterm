@@ -1,0 +1,207 @@
+@import "general-gui/pxToRem";
+
+//-------------------------------------------------------------------------
+// Basic fonts
+
+$font-family:  'BlinkMacSystemFont', 'Lucida Grande', 'Segoe UI', Ubuntu, Cantarell, sans-serif !default;
+
+$font-size-base:    1rem !default;
+$font-size-small:   ($font-size-base * 0.9) !default;
+
+$line-height-base:  1.428571429 !default; // 20/14
+$line-height-computed:    ($font-size-base * $line-height-base) !default;
+
+//-------------------------------------------------------------------------
+// Headings
+$font-size-h1:      2rem !default;
+$font-size-h2:      1.75rem !default;
+$font-size-h3:      1.4rem !default;
+$font-size-h4:      1.1rem !default;
+$font-size-h5:      1rem !default;
+$font-size-h6:      0.8rem !default;
+
+
+$headings-font-family: $font-family !default;
+$headings-font-weight:    bold !default;
+$headings-line-height:    1.1 !default;
+$headings-color:          #000 !default;
+
+//-------------------------------------------------------------------------
+// General colors
+
+// Default color for all text
+$text-color:                #444 !default;
+$text-color-subtle:         #999 !default;
+$text-minor-color:          lighten($text-color, 25%) !default;
+$text-highlight-color:      #000 !default;
+$text-selected-color:       #fff !default;
+$background-highlight-color: rgba(0, 0, 0, .1) !default;
+
+
+// Background color for `<body>`.
+$background-color:        #f4f4f4 !default;
+$background-selected-color: #6aa5e9;
+
+$text-muted-color:      mix($text-color, $background-color, 75%) !default;
+
+$brand-primary:         darken(#428bca, 6.5%) !default; // #337ab7
+$brand-success:         #17ca65 !default;
+$brand-info:            #0098ff !default;
+$brand-warning:         #ffaa2c !default;
+$brand-danger:          #cc0000 !default;
+
+$brand-text-primary:    #ffffff;
+$brand-text-success:    #ffffff;
+$brand-text-info:       #ffffff;
+$brand-text-warning:    #ffffff;
+$brand-text-danger:     #ffffff;
+
+//-------------------------------------------------------------------------
+// Links
+
+// Global textual link color.
+$link-color:            $brand-primary !default;
+// Link hover color set via `darken()` function.
+$link-hover-color:      darken($link-color, 15%) !default;
+// Link hover decoration.
+$link-hover-decoration: underline !default;
+
+//-------------------------------------------------------------------------
+//  Buttons
+$component-padding-vertical:          pxToRem(10px) !default;
+$component-padding-vertical-small:    pxToRem(5px) !default;
+
+$component-padding-horizontal:        pxToRem(12px) !default;
+$component-padding-horizontal-small:  pxToRem(10px) !default;
+
+$component-line-height:               $line-height-base !default;
+$component-line-height-small:         $line-height-base !default;
+$component-background-color:          mix($text-color, $background-color, 20%);
+
+
+$border-radius:                       3px !default;
+$border-radius-small:                 3px !default;
+
+$button-font-weight:                  normal !default;
+
+$button-border-radius:                $border-radius !default;
+$button-border-radius-small:          $border-radius-small !default;
+
+$button-font-size:                    $font-size-base !default;
+$button-font-size-small:              $font-size-small !default;
+
+$button-line-height:                  $component-line-height !default;
+$button-line-height-small:            $component-line-height-small !default;
+$button-padding-vertical:             0.5rem !default;
+$button-padding-vertical-small:       0.25rem !default;
+$button-padding-horizontal:           0.75rem !default;
+$button-padding-horizontal-small:     0.5rem !default;
+
+$button-border-width:                 0px !default;
+$button-border-width-small:           0px !default;
+
+$button-default-color:        #000 !default;
+$button-default-bg-color:     $background-color !default;
+$button-default-border-color: rgba(0, 0, 0, 0.15) !default;
+$button-default-text-selected-color:  #fff !default;
+
+$button-primary-color:        $text-color !default;
+$button-primary-bg-color:     $brand-primary !default;
+$button-primary-border-color: darken($button-primary-bg-color, 5%) !default;
+
+$button-success-color:        $text-color !default;
+$button-success-bg-color:     $brand-success !default;
+$button-success-border-color: darken($button-success-bg-color, 5%) !default;
+
+$button-info-color:           $text-color !default;
+$button-info-bg-color:        $brand-info !default;
+$button-info-border-color:    darken($button-info-bg-color, 5%) !default;
+
+$button-warning-color:        $text-color !default;
+$button-warning-bg-color:     $brand-warning !default;
+$button-warning-border-color: darken($button-warning-bg-color, 5%) !default;
+
+$button-danger-color:         $text-color !default;
+$button-danger-bg-color:      $brand-danger !default;
+$button-danger-border-color:  darken($button-danger-bg-color, 5%) !default;
+
+
+$button-default-bg-hover-color: lighten($button-default-bg-color, 5%) !default;
+$button-default-bg-selected-color: #888 !default;
+
+//-------------------------------------------------------------------------
+// Inputs
+$base-border-color:           #9f9f9f !default;
+$input-font-size:             1.2rem !default;
+$input-color:                 #555 !default;
+$input-background-color:      $background-color !default;
+$input-border-color:          #ccc !default;
+$input-border-radius:         $border-radius !default;
+$input-border-focus-color:    #66afe9 !default;
+$input-padding-vertical:      0.25rem !default;
+$input-padding-horizontal:    0.5rem !default;
+$input-border-width:          1px !default;
+$input-active-bg-color:       lighten($background-color, 5%) !default;
+
+//-------------------------------------------------------------------------
+// Tables
+$table-background-color:        transparent !default;
+$table-cell-padding:            pxToRem(8px) !default;
+$table-border-color:            $base-border-color !default;
+$table-border-width:            1px !default;
+$table-background-hover-color:  $background-highlight-color !default;
+
+//-------------------------------------------------------------------------
+// Badge
+$badge-font-weight:             bold !default;
+$badge-font-ratio:              0.6;
+$badge-font-size:               $badge-font-ratio * 1em !default;
+$badge-vertical-padding:        0.2em !default;
+$badge-horizontal-padding:      0.5em !default;
+$badge-line-height:             1 !default;
+$badge-border-radius:           1.5em !default;
+$badge-background-color:        #777 !default;
+$badge-color:                   #fff !default;
+$badge-vertical-align:          1/$badge-font-ratio * $badge-vertical-padding !default;
+
+//-------------------------------------------------------------------------
+// Scrollbars
+$scrollbar-background-color: $background-color !default;
+$scrollbar-track-background-color: lighten(#000, 93.5%) !default;
+$scrollbar-thumb-background-color: lighten(#000, 33.5%) !default;
+$scrollbar-thumb-hover-background-color: $link-hover-color !default;
+$scrollbar-size: pxToRem(12px) !default;
+$scrollbar-radius: pxToRem(6px) !default;
+$scrollbar-pad: pxToRem(2px) !default;
+
+//-------------------------------------------------------------------------
+// Layouts
+$layout-vertical-spacing:   0.5rem !default;
+$layout-horizontal-spacing: 0 !default;
+
+//-------------------------------------------------------------------------
+// Progress bar
+$progress-height: 16px;
+$progress-shine-gradient: -webkit-linear-gradient(top, rgba(255, 255, 255, .15), rgba(0, 0, 0, .15));
+$progress-background-color: #ccc;
+$progress-background-image: -webkit-linear-gradient(-30deg,
+                              transparent 33%, rgba(0, 0, 0, .1) 33%,
+                              rgba(0,0, 0, .1) 66%, transparent 66%),
+                              $progress-shine-gradient;
+$progress-value-bg-color: $brand-info;
+
+//-------------------------------------------------------------------------
+// Misc but useful
+$hr-border-color:       $base-border-color !default;
+$panel-body-padding: pxToRem(15px) !default;
+$padding-xs-horizontal:     pxToRem(5px) !default;
+$dropdown-bg-color:         #ececec !default;
+$dropdown-link-hover-color: $text-selected-color !default;
+$dropdown-link-hover-bg:    $background-selected-color !default;
+$dropdown-border:           $base-border-color !default;
+$nav-link-padding: pxToRem(10px) pxToRem(15px) !default;
+$tool-panel-background-color: $dropdown-bg-color;
+$overlay-background-color: $background-color;
+$overlay-border-color: $background-highlight-color;
+$tab-bar-background-color: #d8d8d8;
+$group-text-bg-color: lighten(#000, 93.5%);

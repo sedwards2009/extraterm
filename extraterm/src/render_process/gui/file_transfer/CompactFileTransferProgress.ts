@@ -14,14 +14,15 @@ import {SimpleElementBase} from '../SimpleElementBase';
 import * as ThemeTypes from '../../../theme/Theme';
 import { SpeedTracker } from './SpeedTracker';
 import { formatHumanBytes, formatHumanDuration } from '../../../utils/TextUtils';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
 @Component(
 {
-  template: `<div class="top_container" :title="formattedTooltip">
+  template: trimBetweenTags(`<div class="top_container" :title="formattedTooltip">
     <i v-if="!finished" class="fa fa-download"></i>
     {{status}}
-</div>`
+</div>`)
 })
 class FileTransferUI extends Vue {
   totalSize: number = 0;

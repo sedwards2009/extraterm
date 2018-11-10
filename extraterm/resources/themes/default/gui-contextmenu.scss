@@ -3,17 +3,17 @@
  */
 
 /* context menu */
-@import "bootstrap/variables";
+@import "general-gui/variables";
 
 #ID_CONTAINER {
     position: fixed;
-    z-index: $zindex-dropdown;
+    z-index: 1000;
     min-width: pxToRem(160px);
     padding: pxToRem(5px) 0;    
     font-size: $font-size-base;
-    background-color: $dropdown-bg;
+    background-color: $dropdown-bg-color;
     border: 1px solid $dropdown-border;
-    border-radius:  $border-radius-base;
+    border-radius:  $border-radius;
     box-shadow: 0 pxToRem(6px) pxToRem(12px) rgba(0,0,0,.175);
     background-clip: padding-box;
 }

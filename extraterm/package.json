@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "build-icons": "node resources/extra_icons/build.js",
+    "build-test-css": "node build_scripts/build_theme_css_test_page.js",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty,font-manager -f -v 2.0.0",
     "testpackagefileparser": "yarn run build && nodeunit src/main_process/extension/PackageFileParserTest.js",
     "testextensionloader": "yarn run build && nodeunit src/render_process/extension/ExtensionLoaderTest.js",
@@ -24,6 +25,7 @@
     "extraterm-ace-terminal-renderer": "0.1.0",
     "extraterm-logging": "1.0.0",
     "extraterm-readonly-toolbox": "0.1.0",
+    "extraterm-trim-between-tags": "1.0.0",
     "extraterm-web-component-decorators": "0.1.0",
     "file-type": "^7.6.0",
     "font-manager": "0.2.2",

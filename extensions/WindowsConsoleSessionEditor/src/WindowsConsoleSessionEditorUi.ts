@@ -6,37 +6,30 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
+
 @Component(
   {
-    template: `
-<div class="form-horizontal">
-  <div class="form-group">
-    <label for="name" class="col-sm-4 control-label">Name:</label>
-    <div class="input-group col-sm-8">
-      <input type="text" class="form-control" name="name" v-model="name">
-    </div>
-  </div>
+    template: trimBetweenTags(`
+<div class="gui-layout cols-1-2">
+  <label for="name">Name:</label>
+  <input type="text" name="name" v-model="name">
 
-  <div class="form-group">
-    <label class="col-sm-4 control-label">Executable:</label>
-    <div class="input-group col-sm-8" v-bind:class="{'has-error': exeErrorMsg != ''}">
-      <input type="text" class="form-control" list="exes" name="exe" v-model="exe">
-      <div v-if="exeErrorMsg != ''" class="text-center"><i class="fas fa-exclamation-triangle"></i> {{ exeErrorMsg }}</div>
-      <datalist id="exes">
-        <option v-for="item in availableExes" :value="item"></option>
-      </datalist>
-    </div>
-  </div>
+  <label>Executable:</label>
+  <span>
+    <input type="text" list="exes" name="exe" v-bind:class="{'has-error': exeErrorMsg != ''}" v-model="exe">
+    <span v-if="exeErrorMsg != ''">&nbsp;
+      <i class="fas fa-exclamation-triangle"></i> {{ exeErrorMsg }}
+    </span>
+    <datalist id="exes">
+      <option v-for="item in availableExes" :value="item"></option>
+    </datalist>
+  </span>
 
-  <div class="form-group">
-    <label for="name" class="col-sm-4 control-label">Arguments:</label>
-    <div class="input-group col-sm-8">
-      <input type="text" class="form-control" name="args" v-model="args">
-    </div>
-  </div>
-
-  </div>
-`
+  <label for="name">Arguments:</label>
+  <input type="text" name="args" v-model="args">
+</div>
+`)
 })
 export class WindowsConsoleSessionEditorUi extends Vue {
   name: string = "";

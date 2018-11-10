@@ -1,0 +1,21 @@
+{
+  "name": "extraterm-trim-between-tags",
+  "version": "1.0.0",
+  "description": "Trim whitespace between tags in a template string",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "main.js",
+  "types": "main.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "devDependencies": {
+    "typescript": "2.8.3"
+  },
+  "scripts": {
+    "run": "false",
+    "build-all": "yarn run build",
+    "build": "tsc"
+  }
+}

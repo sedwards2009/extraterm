@@ -7,6 +7,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "extraterm-trim-between-tags": "1.0.0",
     "fs-extra": "^5.0.0",
     "lodash": "^4.0.0",
     "vue": "2.5.9",

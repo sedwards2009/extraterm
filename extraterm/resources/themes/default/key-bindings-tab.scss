@@ -1,12 +1,11 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
 /* key-bindings-tab styles */
 
-@import "extraterm-scrollbars";
-@import "bootstrap/_variables";
-@import "extraterm-keycaps";
+
+@import "general-gui/variables";
 
 :host(:focus) {
   outline: 0 solid transparent;
@@ -22,59 +21,16 @@
   }
 }
 
-.CLASS_KEYCAP {
-  @include keycap;
-}
-
 TR.command-row {
 
   height: calc(#{2*$table-cell-padding} + #{$line-height-computed + pxToRem(1px + 3px)});
 
-  BUTTON[class*="btn-microtool-"] {
+  BUTTON[class*="microtool"] {
     visibility: hidden;
     margin-left: 0.5em;
   }
 }
 
-TR.command-row:hover BUTTON[class*="btn-microtool-"] {
+TR.command-row:hover BUTTON[class*="microtool"] {
   visibility: visible;
-}
-
-.keybindings-key-colomn INPUT.keyinput {
-  max-width: 7em;
-  font-size: $font-size-base;
-  padding: 0;
-}
-
-DIV.keybindings-select-group, DIV.keybindings-filter-controls {
-  display: flex;
-  align-items: center;
-
-  > BUTTON {
-    margin-left: 1rem;
-  }
-}
-
-DIV.keybindings-select, DIV.keybindings-title-input, .keybindings-filter-input {
-  flex-grow: 1;
-}
-
-DIV.keybindings-copy-controls, DIV.keybindings-title-controls, DIV.keybindings-filter-controls {
-  flex-grow: 0;
-  flex-shrink: 0;
-
-  display: flex;
-
-  > BUTTON {
-    display: block;
-    flex-grow: 0;
-    flex-shrink: 0;  
-  }
-}
-
-DIV.keybindings-copy-controls.keybindings-copy-controls.keybindings-copy-controls,
-DIV.keybindings-title-controls.keybindings-title-controls.keybindings-title-controls {
-  & > BUTTON:first-child {
-    margin-left: 1rem;
-  }
 }

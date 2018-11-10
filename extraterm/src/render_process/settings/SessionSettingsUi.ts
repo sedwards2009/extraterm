@@ -9,11 +9,12 @@ import { SessionConfiguration } from 'extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
 
 import { ExtensionManager } from '../extension/InternalTypes';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
 
@@ -22,9 +23,9 @@ import { ExtensionManager } from '../extension/InternalTypes';
     <div class="session-type">{{getSessionTypeName(item.type)}}</div>
 
     <div class="session-card-buttons">
-      <button v-if="index != 0" class="make-default-button" v-on:click="makeDefault(item.uuid)" title="Make default"><i class="fas fa-angle-double-up"></i></button>
+      <button v-if="index != 0" class="microtool primary" v-on:click="makeDefault(item.uuid)" title="Make default"><i class="fas fa-angle-double-up"></i></button>
       <div v-if="index == 0"><em>default</em></div>
-      <button v-if="index != 0" class="delete-button" v-on:click="deleteSession(item.uuid)"><i class="fa fa-times"></i></button>
+      <button v-if="index != 0" class="microtool danger" v-on:click="deleteSession(item.uuid)"><i class="fa fa-times"></i></button>
     </div>
     <div>
       <component
@@ -35,13 +36,13 @@ import { ExtensionManager } from '../extension/InternalTypes';
     </div>
   </div>
 
-  <ul class="list-inline">
-    <li v-for="item in sessionTypes" key="item.uuid">
-      <button class="btn btn-default" v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
-    </li>
-  </ul>
+  <div class="gui-layout cols-1">
+    <span v-for="item in sessionTypes" key="item.uuid">
+      <button v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
+    </span>
+  </div>
 </div>
-`
+`)
 })
 export class SessionSettingsUi extends Vue {
   private _extensionManager: ExtensionManager = null;

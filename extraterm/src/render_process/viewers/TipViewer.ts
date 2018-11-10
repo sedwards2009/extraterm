@@ -26,6 +26,7 @@ import * as DomUtils from '../DomUtils';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 type SetterState = VirtualScrollArea.SetterState;
 
@@ -259,25 +260,25 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}">
+      template.innerHTML = trimBetweenTags(`<style id="${ThemeableElementBase.ID_THEME}">
         </style>
-        <div id="${ID_CONTAINER}" class="container-fluid">
+        <div id="${ID_CONTAINER}">
           <div id="${ID_CONTENT}"></div>
-          <div id="${ID_CONTROLS}" class="form-inline">
-            <div class="btn-group">
-              <button id="${ID_PREVIOUS_BUTTON}" title="Previous Tip" class="btn btn-default btn-sm"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
-              <button id="${ID_NEXT_BUTTON}" title="Next Tip" class="btn btn-default btn-sm"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+          <div id="${ID_CONTROLS}">
+            <div class="group">
+              <button id="${ID_PREVIOUS_BUTTON}" title="Previous Tip" class="small"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+              <button id="${ID_NEXT_BUTTON}" title="Next Tip" class="small"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
             </div>
-            <div class="form-group form-group-sm">
+            <div class="form-group">
               <label for="">Show tips: </label>
-              <select id="${ID_SHOW_TIPS}" class="form-control">
+              <select id="${ID_SHOW_TIPS}">
                 <option value="always">Everytime</option>
                 <option value="daily">Daily</option>
                 <option value="never">Never</option>
               </select>
             </div>
           </div>
-        </div>`;
+        </div>`);
 
       window.document.body.appendChild(template);
     }

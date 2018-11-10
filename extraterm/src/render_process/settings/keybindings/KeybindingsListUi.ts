@@ -7,6 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import { KeybindingsContext, EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
 import { KeybindingsFile } from '../../../KeybindingsFile';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
 const humanText = require('../../keybindings/keybindingstext.json');
@@ -22,7 +23,7 @@ const humanText = require('../../keybindings/keybindingstext.json');
       readOnly: Boolean,
       searchText: String
     },
-    template: `
+    template: trimBetweenTags(`
     <div>
       <keybindings-context
         v-for="contextName in humanContexts"
@@ -34,7 +35,7 @@ const humanText = require('../../keybindings/keybindingstext.json');
         v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
         v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
       </keybindings-context>
-    </div>`
+    </div>`)
   }
 )
 export class KeybindingsList extends Vue {

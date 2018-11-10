@@ -14,13 +14,14 @@ import {SimpleElementBase} from '../SimpleElementBase';
 import * as ThemeTypes from '../../../theme/Theme';
 import { SpeedTracker } from './SpeedTracker';
 import { formatHumanBytes, formatHumanDuration } from '../../../utils/TextUtils';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 type ActionType = "download" | "upload";
 
 
 @Component(
 {
-  template: `<div class="top_container" :title="formattedTooltip">
+  template: trimBetweenTags(`<div class="top_container" :title="formattedTooltip">
     <div v-if="finished" class="filename"><i class='fa fa-download'></i>&nbsp;{{name}}</div>
     <div v-else class="filename"><i class='fa fa-download'></i>&nbsp;{{actionMessage}}</div>
 
@@ -43,7 +44,7 @@ type ActionType = "download" | "upload";
       </div>
     </template>
   </div>
-</div>`
+</div>`)
 })
 class FileTransferUI extends Vue {
   name: string = "-";

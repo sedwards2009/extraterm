@@ -52,7 +52,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
         <${PopDownDialog.TAG_NAME} id="${ID_DIALOG}">
-          <div class="form-group"><input type="number" id="${ID_INPUT}" min="0" max="10" class="form-control input-sm" value="1" /></div>
+          <div class="form-group"><input type="number" id="${ID_INPUT}" min="0" max="10" value="1" /></div>
         </${PopDownDialog.TAG_NAME}>
         `;
       window.document.body.appendChild(template);

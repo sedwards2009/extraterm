@@ -1,0 +1,57 @@
+
+// Body reset
+
+html, body {
+  font-family: $font-family;
+  font-size: $font-size-base;
+}
+
+body {
+  line-height: $line-height-base;
+  color: $text-color;
+  background-color: $background-color;
+}
+
+a {
+  color: $link-color;
+
+  &:hover {
+    color: $link-hover-color;
+    text-decoration: $link-hover-decoration;
+  }  
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $headings-font-family;
+  font-weight: $headings-font-weight;
+  line-height: $headings-line-height;
+  color: $headings-color;
+}
+
+h1 {
+  font-size: $font-size-h1;
+}
+h2 {
+  font-size: $font-size-h2;
+}
+h3 {
+  font-size: $font-size-h3;
+}
+h4 {
+  font-size: $font-size-h4;
+}
+h5 {
+  font-size: $font-size-h5;
+}
+h6 {
+  font-size: $font-size-h6;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid $hr-border-color;
+}
+
+p.minor, span.minor {
+  color: $text-minor-color;
+}

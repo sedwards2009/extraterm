@@ -1,10 +1,10 @@
 /**
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
 
 /* Command Palette */
-@import "bootstrap/variables";
-@import "extraterm-scrollbars";
+@import "general-gui/variables";
+
 
 :host(:focus) {
   outline: none;
@@ -32,23 +32,25 @@
   flex-shrink: 1;
 }
 
+
 .CLASS_RESULT_ENTRY {
   display: flex;
   width: 100%;
-  
+  box-sizing: border-box;
+
   padding-left: $padding-xs-horizontal;
   padding-right: $padding-xs-horizontal;
 
   &:hover {
     cursor: pointer;
-    outline: 1px solid $background-color-selected;
+    outline: 1px solid $background-selected-color;
     outline-offset: -1px;
   }
 
   &.CLASS_RESULT_SELECTED {
     outline: none;
-    color: $text-color-selected;
-    background-color: $background-color-selected;
+    color: $text-selected-color;
+    background-color: $background-selected-color;
   }
 }
 

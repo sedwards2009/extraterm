@@ -5,50 +5,45 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 @Component(
   {
-    template: `
-<div class="form-horizontal">
-  <div class="form-group">
-    <label for="name" class="col-sm-4 control-label">Name:</label>
-    <div class="input-group col-sm-8">
-      <input type="text" class="form-control" name="name" v-model="name">
-    </div>
-  </div>
+    template: trimBetweenTags(`
+<div class="gui-layout cols-1-2">
+  <label for="name">Name:</label>
+  <input type="text" name="name" v-model="name">
 
-  <div class="form-group">
-    <label for="cygwinPath" class="col-sm-4 control-label">Cygwin path:</label>
-    <div class="input-group col-sm-8" v-bind:class="{'has-error': cygwinPathErrorMsg != ''}">
-      <input type="text" class="form-control" name="cygwinPath" v-model="cygwinPath"><div v-if="cygwinPathErrorMsg != ''" class="text-center"><i class="fas fa-exclamation-triangle"></i> {{ cygwinPathErrorMsg }}</div>
-    </div>
-  </div>
+  <label for="cygwinPath">Cygwin path:</label>
+  <span>
+    <input type="text" name="cygwinPath" v-bind:class="{'has-error': cygwinPathErrorMsg != ''}" v-model="cygwinPath">
+    <span v-if="cygwinPathErrorMsg != ''">&nbsp;
+      <i class="fas fa-exclamation-triangle"></i> {{ cygwinPathErrorMsg }}
+    </span>
+  </span>
 
-  <div class="form-group">
-    <label class="col-sm-4 control-label">Shell:</label>
-    <div class="input-group col-sm-8">
+  <label>Shell:</label>
+  <span>
+    <label>
       <input class="input-radio" type="radio" value="1" v-model.number="useDefaultShell">
-      <div class="inline-text">Default shell</div>
-    </div>
-  </div>
-  <div class="form-group">
-    <div class="col-sm-4 control-label"></div>
-    <div class="input-group col-sm-8 form-inline" v-bind:class="{'has-error': shellErrorMsg != ''}">
-      <input class="input-radio" type="radio" value="0" v-model.number="useDefaultShell">
-      <div class="inline-text">Other</div>
-      <input id="other_shell" type="text" class="form-control" :disabled="useDefaultShell===1" v-model="shell">
-      <div v-if="shellErrorMsg != ''" class="text-center"><i class="fas fa-exclamation-triangle"></i> {{ shellErrorMsg }}</div>
-    </div>
-  </div>
-  
-  <div class="form-group">
-    <label for="name" class="col-sm-4 control-label">Arguments:</label>
-    <div class="input-group col-sm-8">
-      <input type="text" class="form-control" name="args" v-model="args">
-    </div>
-  </div>
+      Default shell
+    </label>
+  </span>
 
-</div>`
+  <label></label>
+  <span>
+    <label>
+      <input class="input-radio" type="radio" value="0" v-model.number="useDefaultShell">
+      Other
+    </label>
+    <input id="other_shell" type="text" :disabled="useDefaultShell===1" v-model="shell">
+    <i v-if="shellErrorMsg != ''" class="fas fa-exclamation-triangle"></i>
+    {{ shellErrorMsg }}
+  </span>
+
+  <label for="name">Arguments:</label>
+  <input type="text" class="form-control" name="args" v-model="args">
+</div>`)
 })
 export class CygwinProxySessionEditorUi extends Vue {
   name: string = "";

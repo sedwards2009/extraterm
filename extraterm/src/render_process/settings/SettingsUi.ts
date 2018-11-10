@@ -18,6 +18,7 @@ import { doLater } from '../../utils/DoLater';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { VUE_TEXT_ACE_VIEWER_ELEMENT_TAG } from './VueTextAceViewerElement';
 import { VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG } from './VueTerminalAceViewerElement';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
 for (const el of [
@@ -34,8 +35,6 @@ for (const el of [
   }
 }
 
-const ID_SETTINGS = "ID_SETTINGS";
-
 type MenuItemId = "general" | "appearance" | "frame" | "keybindings" | "session";
 
 interface MenuItem {
@@ -47,7 +46,7 @@ interface MenuItem {
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
 <div id="settings_top">
   <div id="settings_menu">
     <ul>
@@ -96,7 +95,7 @@ interface MenuItem {
     </template>
   </div>
 </div>
-`
+`)
 })
 export class SettingsUi extends Vue {
   private _configDatabase: ConfigDatabase = null;

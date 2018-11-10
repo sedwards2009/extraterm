@@ -1,0 +1,30 @@
+
+progress {
+  height: $progress-height;
+  -webkit-appearance: none;
+  border-radius: $border-radius;
+  background-color: $progress-background-color;
+  background-image: $progress-background-image;
+  border-radius: 2px;
+  background-size: 25px $progress-height, 100% 100%, 100% 100%;
+  -webkit-animation: animate-stripes 5s linear 6; // stop animation after 6 runs (30s) to limit CPU usage
+}
+
+progress::-webkit-progress-bar {
+  background-color: transparent;
+}
+
+progress::-webkit-progress-value {
+  border-radius: $border-radius;
+  background-image: $progress-shine-gradient;
+  background-color: $progress-value-bg-color;
+}
+
+progress[value] {
+  background-image: $progress-shine-gradient;
+  -webkit-animation: none;
+}
+
+@-webkit-keyframes animate-stripes {
+   100% { background-position: 100px 0px; }
+}

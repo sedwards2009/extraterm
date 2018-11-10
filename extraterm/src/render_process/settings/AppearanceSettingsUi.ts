@@ -10,6 +10,7 @@ import * as _ from 'lodash';
 import {FontInfo} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
 const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
@@ -30,201 +31,147 @@ interface SelectableOption {
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="fa fa-paint-brush"></i>&nbsp;&nbsp;Appearance</h2>
 
-  <div class="form-horizontal">
+  <h3>Terminal</h3>
 
-  <div class="form-group">
-    <div class="col-sm-12"><h3>Terminal</h3></div>
-  </div>
+  <div class="gui-layout cols-1-2">
+    <label for="terminal-font">Font:</label>
+    <select id="terminal-font" v-model="terminalFont" class="char-width-20">
+      <option v-for="option in terminalFontOptions" v-bind:value="option.postscriptName">
+        {{ option.name }}
+      </option>
+    </select>
 
-  <div class="form-group">
-      <label for="terminal-font" class="col-sm-4 control-label">Font:</label>
-      <div class="input-group col-sm-4">
-        <select class="form-control" id="terminal-font" v-model="terminalFont">
-          <option v-for="option in terminalFontOptions" v-bind:value="option.postscriptName">
-            {{ option.name }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <div v-if="titleBar != currentTitleBar" class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <p class="help-block">
+    <template v-if="titleBar != currentTitleBar">
+      <label></label>
+      <div>
+        <p class="minor">
           <i class="fa fa-info-circle"></i>
           A restart is requred before this change takes effect.
         </p>
       </div>
-    </div>
+    </template>
 
-    <div class="form-group">
-      <label for="${ID_TERMINAL_FONT_SIZE}" class="col-sm-4 control-label">Font Size:</label>
-      <div class="input-group col-sm-1">
-        <input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="form-control char-width-4" v-model.number="terminalFontSize" min='1'
-          max='1024' debounce="100" />
-        <div class="input-group-addon">pixels</div>
-      </div>
-    </div>
+    <label for="${ID_TERMINAL_FONT_SIZE}">Font Size:</label>
+    <span class="group"><input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="char-width-4"
+        v-model.number="terminalFontSize" min='1' max='1024' debounce="100" /><span>pixels</span></span>
 
-    <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Theme:</label>
-      <div class="input-group col-sm-4">
-        <select class="form-control" id="theme-terminal" v-model="themeTerminal">
-          <option v-for="option in themeTerminalOptions" v-bind:value="option.id">
-            {{ option.name }}
-          </option>
-        </select>
-      </div>
-    </div>
-    <div v-if="themeTerminalComment != ''" class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <p class="help-block">
+    <label for="theme-terminal">Theme:</label>
+    <select id="theme-terminal" v-model="themeTerminal" class="char-width-20">
+      <option v-for="option in themeTerminalOptions" v-bind:value="option.id">
+        {{ option.name }}
+      </option>
+    </select>
+    
+    <template v-if="themeTerminalComment != ''">
+      <label></label>
+      <div>
+        <p class="minor">
           <i class="fa fa-info-circle"></i>
           {{themeTerminalComment}}
         </p>
       </div>
+    </template>
+
+    <label></label>
+    <span class="group"><button v-on:click="openUserTerminalThemesDir" class="inline" title="Open user terminal theme directory in file manager">
+        <i class="far fa-folder-open"></i>&nbsp;User themes
+      </button><button v-on:click="rescanUserTerminalThemesDir" class="inline" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button></span>
+
+    <label></label>
+    <div>
+      <p class="minor">{{themeTerminalFormatsMessage}}</p>
     </div>
 
-    <div class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <button v-on:click="openUserTerminalThemesDir" class="btn" title="Open user terminal theme directory in file manager">
-          <i class="far fa-folder-open"></i>&nbsp;User themes
-        </button>
-        <button v-on:click="rescanUserTerminalThemesDir" class="btn" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button>
-      </div>
-    </div>
+    <et-vue-terminal-ace-viewer-element
+      id="terminal_theme_preview"
+      class="full-width">
+    </et-vue-terminal-ace-viewer-element>
+  </div>
 
-    <div class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <p>{{themeTerminalFormatsMessage}}</p>
-      </div>
-    </div>
+  <h3>Interface</h3>
 
-    <div class="form-group">
-      <div class="col-sm-12">
-        <et-vue-terminal-ace-viewer-element id="terminal_theme_preview"></et-vue-terminal-ace-viewer-element>
-      </div>
-    </div>
+  <div class="gui-layout cols-1-2">
+    <label for="theme-terminal">Theme:</label>
+    <select id="theme-terminal" v-model="themeGUI" class="char-width-20">
+      <option v-for="option in themeGUIOptions" v-bind:value="option.id">
+        {{ option.name }}
+      </option>
+    </select>
 
-    <div class="form-group">
-      <div class="col-sm-12"><h3>Interface</h3></div>
-    </div>
-
-    <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Theme:</label>
-      <div class="input-group col-sm-4">
-        <select class="form-control" id="theme-terminal" v-model="themeGUI">
-          <option v-for="option in themeGUIOptions" v-bind:value="option.id">
-            {{ option.name }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <div v-if="themeGUIComment != ''" class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <p class="help-block">
+    <template v-if="themeGUIComment != ''">
+      <label></label>
+      <div>
+        <p class="minor">
           <i class="fa fa-info-circle"></i>
           {{themeGUIComment}}
         </p>
       </div>
-    </div>
+    </template>
 
-    <div class="form-group">
-      <label for="${ID_UI_ZOOM}" class="col-sm-4 control-label">Zoom:</label>
-      <div class="input-group col-sm-8">
-        <select class="form-control char-width-4" id="${ID_UI_ZOOM}" v-model="uiScalePercent">
-          <option v-for="option in uiScalePercentOptions" v-bind:value="option.id">
-            {{ option.name }}
-          </option>          
-        </select>            
-      </div>
-    </div>
+    <label for="${ID_UI_ZOOM}">Zoom:</label>
+    <select class="char-width-6" id="${ID_UI_ZOOM}" v-model="uiScalePercent">
+      <option v-for="option in uiScalePercentOptions" v-bind:value="option.id">
+        {{ option.name }}
+      </option>          
+    </select>
 
-    <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Window Title Bar:</label>
-      <div class="input-group col-sm-4">
-        <select class="form-control" id="title-bar" v-model="titleBar">
-          <option v-for="option in titleBarOptions" v-bind:value="option.id">
-            {{ option.name }}
-          </option>
-        </select>
-      </div>
-    </div>
+    <label for="theme-terminal">Window Title Bar:</label>
+    <select id="title-bar" v-model="titleBar" class="char-width-12">
+      <option v-for="option in titleBarOptions" v-bind:value="option.id">
+        {{ option.name }}
+      </option>
+    </select>
+  </div>
 
-    <div class="form-group">
-      <div class="col-sm-12"><h3>Text Viewer</h3></div>
-    </div>
+  <h3>Text Viewer</h3>
 
-    <div class="form-group">
-      <label for="theme-terminal" class="col-sm-4 control-label">Theme:</label>
-      <div class="input-group col-sm-4">
-        <select class="form-control" id="theme-terminal" v-model="themeSyntax">
-          <option v-for="option in themeSyntaxOptions" v-bind:value="option.id">
-            {{ option.name }}
-          </option>
-        </select>
-      </div>
-    </div>
+  <div class="gui-layout cols-1-2">
+    <label for="theme-terminal">Theme:</label>
+    <select id="theme-terminal" v-model="themeSyntax" class="char-width-20">
+      <option v-for="option in themeSyntaxOptions" v-bind:value="option.id">
+        {{ option.name }}
+      </option>
+    </select>
 
-    <div v-if="themeSyntaxComment != ''" class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <p class="help-block">
+    <template v-if="themeSyntaxComment != ''">
+      <label></label>
+      <div>
+        <p class="minor">
           <i class="fa fa-info-circle"></i>
           {{themeSyntaxComment}}
         </p>
       </div>
+    </template>
+
+    <label></label>
+    <span class="group"><button v-on:click="openUserSyntaxThemesDir" class="inline" title="Open user syntax theme directory in file manager">
+        <i class="far fa-folder-open"></i>&nbsp;User themes
+      </button><button v-on:click="rescanUserSyntaxThemesDir" class="inline" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button></span>
+
+    <label></label>
+    <div>
+      <p class="minor">{{themeSyntaxFormatsMessage}}</p>
     </div>
 
-    <div class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <button v-on:click="openUserSyntaxThemesDir" class="btn" title="Open user syntax theme directory in file manager">
-          <i class="far fa-folder-open"></i>&nbsp;User themes
-        </button>
-        <button v-on:click="rescanUserSyntaxThemesDir" class="btn" title="Rescan theme list"><i class="fas fa-sync-alt"></i></button>
-      </div>
-    </div>
+    <et-vue-text-ace-viewer-element
+      id="syntax_theme_preview"
+      class="full-width"
+      :viewer-text="getThemeSyntaxPreviewText()"
+      :mime-type="getThemeSyntaxPreviewMimeType()"
+      :wrap-lines="getThemeSyntaxPreviewWrapLines()"></et-vue-text-ace-viewer-element>
 
-    <div class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <p>{{themeSyntaxFormatsMessage}}</p>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <div class="col-sm-12">
-        <et-vue-text-ace-viewer-element
-          id="syntax_theme_preview"
-          :viewer-text="getThemeSyntaxPreviewText()"
-          :mime-type="getThemeSyntaxPreviewMimeType()"
-          :wrap-lines="getThemeSyntaxPreviewWrapLines()"></et-vue-text-ace-viewer-element>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <div class="col-sm-12">
-        <select class="form-control" id="syntax_theme_preview_contents" v-model="themeSyntaxPreviewContents">
-          <option v-for="(option, index) in themeSyntaxPreviewContentOptions" :value="index">
-            {{ option.name }}
-          </option>
-        </select>
-      </div>
-    </div>
-
+    <select class="char-width-20 full-width" id="syntax_theme_preview_contents" v-model="themeSyntaxPreviewContents">
+      <option v-for="(option, index) in themeSyntaxPreviewContentOptions" :value="index">
+        {{ option.name }}
+      </option>
+    </select>
   </div>
 </div>
-`
+`)
 })
 export class AppearanceSettingsUi extends Vue {
 

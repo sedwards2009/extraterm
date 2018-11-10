@@ -7,6 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 
 import { ShowTipsStrEnum } from '../../Config';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const ID_SCROLLBACK = "ID_SCROLLBACK";
 const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
@@ -14,42 +15,28 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="fa fa-sliders-h"></i>&nbsp;&nbsp;General Settings</h2>
     
-  <div class="form-horizontal">
-    <div class="form-group">
-      <label for="tips" class="col-sm-4 control-label">Show Tips:</label>
-      <div class="input-group col-sm-4">
-        <select class="form-control" id="tips" v-model="showTips">
-          <option v-for="option in showTipsOptions" v-bind:value="option.id">
-            {{ option.name }}
-          </option>
-        </select>
-      </div>
-    </div>
-    
-    <div class="form-group">
-      <label for="${ID_SCROLLBACK}" class="col-sm-4 control-label">Max. Scrollback Lines:</label>
-      <div class="input-group col-sm-1">
-        <input id="${ID_SCROLLBACK}" type="number" class="form-control char-width-8" v-model.number="maxScrollbackLines" min="1"
-          max="10000000" debounce="500" />
-        <div class="input-group-addon">lines</div>
-      </div>
-    </div>
+  <div class="gui-layout cols-1-2">
+    <label for="tips">Show Tips:</label>
+    <select id="tips" v-model="showTips" class="char-width-12">
+      <option v-for="option in showTipsOptions" v-bind:value="option.id">
+        {{ option.name }}
+      </option>
+    </select>
+  
+    <label for="${ID_SCROLLBACK}">Max. Scrollback Lines:</label>
+    <span class="group"><input id="${ID_SCROLLBACK}" type="number" class="char-width-8"
+        v-model.number="maxScrollbackLines" min="1" max="10000000" debounce="500" /><span>lines</span></span>
 
-    <div class="form-group">
-      <label for="${ID_SCROLLBACK_FRAMES}" class="col-sm-4 control-label">Max. Scrollback Frames:</label>
-      <div class="input-group col-sm-1">
-        <input id="${ID_SCROLLBACK_FRAMES}" type="number" class="form-control char-width-4" v-model.number="maxScrollbackFrames" min="1"
-          max="1000" debounce="500" />
-        <div class="input-group-addon">frames</div>
-      </div>
-    </div>
+    <label for="${ID_SCROLLBACK_FRAMES}">Max. Scrollback Frames:</label>
+    <span class="group"><input id="${ID_SCROLLBACK_FRAMES}" type="number" class="char-width-4"
+        v-model.number="maxScrollbackFrames" min="1" max="1000" debounce="500" /><span>frames</span></span>
   </div>
 </div>
-`
+`)
 })
 export class GeneralSettingsUi extends Vue {
 
