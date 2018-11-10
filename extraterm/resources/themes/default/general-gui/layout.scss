@@ -41,6 +41,10 @@
   align-items: baseline;
   margin-bottom: $layout-vertical-spacing;
 
+  & > .gui-packed-row, & > .gui-layout {
+    margin-bottom: 0px;
+  }
+
   & > * {
     margin-left: 0.5rem;
   }
@@ -56,4 +60,8 @@
   & > .compact {
     flex-grow: 0;
   }
+}
+
+.gui-layout > .gui-packed-row {
+  margin-bottom: 0px;
 }
