@@ -25,6 +25,11 @@ select {
   &:hover {
     background-color: $button-default-bg-hover-color;
   }
+
+  &:focus {
+    background-color: $button-default-bg-hover-color;
+    outline: none;
+  }
 }
 
 input:not([type="radio"]) {
