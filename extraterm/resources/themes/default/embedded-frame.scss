@@ -149,8 +149,13 @@ $ICON_FAIL_COLOR: $brand-text-danger;
   }
 }
 
-.right_block, BUTTON {
+.right_block BUTTON {
+  box-shadow: none;
   color: $ICON_NEUTRAL_COLOR;
+
+  &:hover {
+    color: #ffffff - $ICON_NEUTRAL_COLOR;
+  }
 }
 
 #ID_EXPAND_BUTTON, #ID_CLOSE_BUTTON, #ID_POP_OUT_BUTTON {
@@ -166,8 +171,8 @@ $ICON_FAIL_COLOR: $brand-text-danger;
   transition: color 0.2s ease-in-out;
 }
 
-BUTTON:hover {
-  color: #ffffff - $ICON_NEUTRAL_COLOR;
+#ID_TAG_ICON, #ID_TAG_NAME {
+  color: $ICON_NEUTRAL_COLOR;
 }
 
 #ID_HEADER {
