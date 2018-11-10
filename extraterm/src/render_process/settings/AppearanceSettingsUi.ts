@@ -48,7 +48,7 @@ interface SelectableOption {
     <template v-if="titleBar != currentTitleBar">
       <label></label>
       <div>
-        <p class="help-block">
+        <p class="minor">
           <i class="fa fa-info-circle"></i>
           A restart is requred before this change takes effect.
         </p>
@@ -69,7 +69,7 @@ interface SelectableOption {
     <template v-if="themeTerminalComment != ''">
       <label></label>
       <div>
-        <p class="help-block">
+        <p class="minor">
           <i class="fa fa-info-circle"></i>
           {{themeTerminalComment}}
         </p>
@@ -83,7 +83,7 @@ interface SelectableOption {
 
     <label></label>
     <div>
-      <p>{{themeTerminalFormatsMessage}}</p>
+      <p class="minor">{{themeTerminalFormatsMessage}}</p>
     </div>
 
     <et-vue-terminal-ace-viewer-element
@@ -105,7 +105,7 @@ interface SelectableOption {
     <template v-if="themeGUIComment != ''">
       <label></label>
       <div>
-        <p class="help-block">
+        <p class="minor">
           <i class="fa fa-info-circle"></i>
           {{themeGUIComment}}
         </p>
@@ -140,7 +140,7 @@ interface SelectableOption {
     <template v-if="themeSyntaxComment != ''">
       <label></label>
       <div>
-        <p class="help-block">
+        <p class="minor">
           <i class="fa fa-info-circle"></i>
           {{themeSyntaxComment}}
         </p>
@@ -154,7 +154,7 @@ interface SelectableOption {
 
     <label></label>
     <div>
-      <p>{{themeSyntaxFormatsMessage}}</p>
+      <p class="minor">{{themeSyntaxFormatsMessage}}</p>
     </div>
 
     <et-vue-text-ace-viewer-element

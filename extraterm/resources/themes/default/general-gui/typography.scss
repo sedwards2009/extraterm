@@ -51,3 +51,7 @@ hr {
   border: 0;
   border-top: 1px solid $hr-border-color;
 }
+
+p.minor, span.minor {
+  color: $text-minor-color;
+}

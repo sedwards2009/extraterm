@@ -31,6 +31,7 @@ $headings-color:          #ffffff !default;
 // Default color for all text
 $text-color:                #aaa !default;
 $text-color-subtle:         #555 !default;
+$text-minor-color:          darken($text-color, 20%) !default;
 $text-highlight-color:      #fff !default;
 $text-selected-color:         $text-highlight-color !default;
 $background-highlight-color: rgba(255, 255, 255, 0.07) !default;
@@ -204,3 +205,4 @@ $overlay-background-color: #202123;
 $overlay-border-color: $background-highlight-color;
 $tab-bar-background-color: #222;
 $group-text-bg-color: $button-default-bg-color;
+
