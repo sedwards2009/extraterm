@@ -139,7 +139,7 @@ function main(): void {
 
   // This method will be called when Electron has done everything
   // initialization and ready for creating browser windows.
-  app.on('ready', startUpWindows);
+  app.on('ready', () => startUpWindows(parsedArgs));
 }
 
 function setupExtensionManager(): void {
