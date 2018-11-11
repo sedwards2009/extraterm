@@ -135,7 +135,7 @@ class ExtensionSessionEditorProxy extends ThemeableElementBase  {
     const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + cf);
 
     const fontAwesomeCss = cssDecl.fontAwesome ? [CssFile.FONT_AWESOME] : [];
-    return [CssFile.GUI_CONTROLS, ...fontAwesomeCss, ...cssFiles];
+    return [CssFile.GENERAL_GUI, ...fontAwesomeCss, ...cssFiles];
   }
 
   _sessionConfigurationChanged(): void {

@@ -86,7 +86,7 @@ export class Splitter extends ThemeableElementBase {
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_SPLITTER];
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.GUI_SPLITTER];
   }
   
   getSplitOrientation(): SplitOrientation {

@@ -89,6 +89,6 @@ export class AboutTab extends ViewerElement implements AcceptsConfigDatabase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.ABOUT_TAB];
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.ABOUT_TAB];
   }
 }

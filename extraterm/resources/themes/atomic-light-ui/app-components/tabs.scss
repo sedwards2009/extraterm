@@ -2,8 +2,10 @@
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
 @import "general-gui/pxToRem";
+@import "general-gui/variables";
 
-$tab-border-color: #484848;
+$tab-border-color: lighten($base-border-color, 10%);
+
 $tab-height: pxToRem(26px);
 $tab-background-color-active: $background-color;
 
@@ -17,6 +19,8 @@ $tab-border: 1px solid $tab-border-color;
 $tab-bar-bottom-border-color: #111111;
 $tab-max-width: 20rem;
 
+$tab-background-color: #e8e8e8;
+
 .extraterm-tabs {
   display: flex;
   -webkit-user-select: none;
@@ -24,7 +28,9 @@ $tab-max-width: 20rem;
   position: relative;
   margin: 0;
   height: $tab-height + $tab-top-padding + $tab-bottom-border-height;
-  background: $tab-bar-background-color;
+  background: $tab-background-color;
+  background-image: -webkit-linear-gradient(top, $tab-bar-background-color, lighten($tab-bar-background-color, 9%));
+
   box-shadow: inset 0 pxToRem(-8px) pxToRem(8px) pxToRem(-4px) rgba(0,0,0, .15);
   padding: 0 0 0 0;
   overflow-x: auto;
@@ -38,6 +44,7 @@ $tab-max-width: 20rem;
   &:after {
     content: "";
     position: absolute;
+    box-sizing: border-box;
     bottom: 0;
     height: $tab-bottom-border-height;
     left: 0;
@@ -51,6 +58,8 @@ $tab-max-width: 20rem;
     position: relative;
     display: inline-block;
     top: $tab-top-padding;
+
+    box-sizing: border-box;
     flex: 1;
     -webkit-user-drag: element;
     max-width: $tab-max-width;
@@ -65,14 +74,17 @@ $tab-max-width: 20rem;
     transition: color .1s ease-in;
 
     &, &:before, &:after {
-      background-image: -webkit-linear-gradient(top, lighten(#333, 7%), #333);
+      box-sizing: border-box;
+
+      background-image: -webkit-linear-gradient(top, $tab-background-color, darken($tab-background-color, 6%));
+      border-top: $tab-border;
       height: $tab-height;
     }
 
     &:before, &:after {
       content: '';
       position: absolute;
-      top: 0;
+      top: -1px;
       width: pxToRem(25px);
       height: $tab-height;
     }
@@ -81,7 +93,8 @@ $tab-max-width: 20rem;
     &:before {
       left: pxToRem(-14px);
       border-top-left-radius: $tab-radius;
-      box-shadow: inset 1px 1px 0 $tab-border-color, pxToRem(-4px) 0 pxToRem(4px) rgba(0,0,0,.1);
+      border-left: $tab-border;
+      box-shadow: inset 1px -1px 1px rgba(0,0,0, .05);
       -webkit-transform: skewX(-$tab-skew);
     }
 
@@ -89,8 +102,9 @@ $tab-max-width: 20rem;
     &:after {
       right: pxToRem(-14px);
       border-top-right-radius: $tab-radius;
-      box-shadow: inset -1px 1px 0 $tab-border-color, pxToRem(4px) 0 pxToRem(4px) rgba(0,0,0,.1);
-      -webkit-transform: skewX($tab-skew);
+      border-right: $tab-border;
+      box-shadow: inset pxToRem(-1px) pxToRem(-1px) pxToRem(1px) rgba(0,0,0, .05);
+      -webkit-transform: skewX($tab-skew);       
     }
 
     .close-icon {
@@ -117,7 +131,6 @@ $tab-max-width: 20rem;
   & > LI.tab.active {
     z-index: 1;
     color: $text-highlight-color;
-    box-shadow: inset -1px 1px 0 $tab-border-color, pxToRem(4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0, 0.1);
     width: -webkit-fit-content;
     flex: 2;
     .close-icon {
@@ -126,16 +139,9 @@ $tab-max-width: 20rem;
     }
 
     &, &:before, &:after {
-      background-image: -webkit-linear-gradient(top, lighten($tab-background-color-active, 7%), $tab-background-color-active);
+      background: $tab-background-color-active;
       height: $tab-height + pxToRem(1px);
-    }
-
-    &:before {
-      box-shadow: inset 1px 1px 0 $tab-border-color, pxToRem(-4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0,.1);
-    }
-
-    &:after {
-      box-shadow: inset -1px 1px 0 $tab-border-color, pxToRem(4px) pxToRem(-4px) pxToRem(4px) rgba(0,0,0,.1);
+      box-shadow: none;       
     }
   }
 

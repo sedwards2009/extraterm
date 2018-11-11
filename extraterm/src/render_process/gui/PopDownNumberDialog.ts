@@ -62,7 +62,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME, ...this._extraCssFiles];
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ...this._extraCssFiles];
   }
 
   getValue(): number {

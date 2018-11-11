@@ -149,7 +149,7 @@ const ID_RESULTS = "ID_RESULTS";
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.FONT_AWESOME,
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME,
       ThemeTypes.CssFile.GUI_LIST_PICKER, ...this._extraCssFiles]; // FIXME
   }
 

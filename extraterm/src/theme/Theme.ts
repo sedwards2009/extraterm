@@ -29,7 +29,7 @@ export const CSS_MODULE_INTERNAL_TERMINAL = "<terminal>";
 
 export type CssFile = string;
 export const CssFile = {
-  GUI_CONTROLS: CSS_MODULE_INTERNAL_GUI + ":" + "gui-controls.scss",
+  GENERAL_GUI: CSS_MODULE_INTERNAL_GUI + ":" + "general-gui/main.scss",
   TOP_WINDOW: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/top-window.scss",
   MAIN_UI: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/main-ui.scss",
   TERMINAL: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/terminal.scss",
@@ -58,12 +58,13 @@ export const CssFile = {
   GUI_SPLITTER: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-splitter.scss",
   EMPTY_PANE_MENU: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/empty-pane-menu.scss",
   GUI_SNAP_DROP_CONTAINER: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-snap-drop-container.scss",
-  THEME_VARS: CSS_MODULE_INTERNAL_GUI + ":" + "theme-vars.scss",
+  THEME_VARS: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/theme-vars.scss",
   GUI_FILE_TRANSFER_PROGRESS: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-file-transfer-progress.scss",
   UPLOAD_PROGRESS_BAR: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/upload-progress-bar.scss",
   GUI_COMPACT_FILE_TRANSFER_PROGRESS: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-compact-file-transfer-progress.scss",
   DOWNLOAD_VIEWER: CSS_MODULE_INTERNAL_GUI + ":" + "viewers/download-viewer.scss",
   VIRTUAL_SCROLL_CANVAS: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/virtual-scroll-canvas.scss",
+  TABS: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/tabs.scss",
 }
 
 export function cssFileToFilename(cssFile: CssFile): string {
@@ -77,7 +78,7 @@ export function cssFileToExtension(cssFile: CssFile): string {
 }
 
 export const cssFileEnumItems: CssFile[] = [
-  CssFile.GUI_CONTROLS,
+  CssFile.GENERAL_GUI,
   CssFile.TOP_WINDOW,
   CssFile.MAIN_UI,
   CssFile.TERMINAL,
@@ -109,7 +110,8 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.UPLOAD_PROGRESS_BAR,
   CssFile.GUI_COMPACT_FILE_TRANSFER_PROGRESS,
   CssFile.DOWNLOAD_VIEWER,
-  CssFile.VIRTUAL_SCROLL_CANVAS
+  CssFile.VIRTUAL_SCROLL_CANVAS,
+  CssFile.TABS,
 ];
 
 export class CssFileMap extends Map<CssFile, string> {

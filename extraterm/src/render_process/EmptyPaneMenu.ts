@@ -83,7 +83,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.EMPTY_PANE_MENU];
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.EMPTY_PANE_MENU];
   }
 
   focus(): void {

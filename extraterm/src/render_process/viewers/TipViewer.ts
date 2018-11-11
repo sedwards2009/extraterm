@@ -167,7 +167,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_CONTROLS];
+    return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GENERAL_GUI];
   }
 
   setConfigDatabase(newConfigManager: ConfigManager): void {

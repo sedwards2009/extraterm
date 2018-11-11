@@ -134,7 +134,7 @@ function startUpTheming(): void {
   const topThemeable: ThemeTypes.Themeable = {
     setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {      
       (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent =
-        cssMap.get(ThemeTypes.CssFile.GUI_CONTROLS) + "\n" + 
+        cssMap.get(ThemeTypes.CssFile.GENERAL_GUI) + "\n" + 
         cssMap.get(ThemeTypes.CssFile.FONT_AWESOME) + "\n" + 
         cssMap.get(ThemeTypes.CssFile.TOP_WINDOW) + "\n" +
         cssMap.get(ThemeTypes.CssFile.TERMINAL_VARS) + "\n" +

@@ -19,7 +19,7 @@ export class SimpleElementBase extends ThemeableElementBase {
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS];
+    return [ThemeTypes.CssFile.GENERAL_GUI];
   }
 
   private _containerDivElement: HTMLDivElement = null;

@@ -31,7 +31,7 @@ export class SimpleViewerElement extends ViewerElement {
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS];
+    return [ThemeTypes.CssFile.GENERAL_GUI];
   }
 
   private _rootElementHeight = -1;

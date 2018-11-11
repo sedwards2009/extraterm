@@ -90,7 +90,7 @@ export class TabWidget extends ThemeableElementBase {
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.GUI_TABWIDGET];
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.GUI_TABWIDGET, ThemeTypes.CssFile.TABS];
   }
   
   update(): void {

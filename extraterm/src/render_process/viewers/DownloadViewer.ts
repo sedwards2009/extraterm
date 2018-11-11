@@ -80,7 +80,7 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GUI_CONTROLS, ThemeTypes.CssFile.DOWNLOAD_VIEWER];
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.DOWNLOAD_VIEWER];
   }
 
   // From viewerelementtypes.SupportsMimeTypes
