@@ -114,6 +114,12 @@ class ThemeManagerUtility {
     contents.themeContents.cssFiles.forEach( item => {
       if (outputDir != null) {
         const cssFilename = cssFileToFilename(item.cssFileName).slice(0, -5) + ".css";
+
+        const filenameParts = path.parse(cssFilename);
+        if (filenameParts.dir != null && filenameParts.dir !== "") {
+          this._makeDirIfMissing(path.join(outputDir, filenameParts.dir));
+        }
+
         const output = path.join(outputDir, cssFilename);
         print(`Writing ${output}`);
         fs.writeFileSync(output, item.contents);

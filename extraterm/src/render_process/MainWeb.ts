@@ -584,7 +584,7 @@ function startUpCommandPalette(): void {
   
   commandPalette.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
   commandPalette.setFormatEntriesFunc(commandPaletteFormatEntries);
-  commandPalette.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
+  commandPalette.addExtraCss([ThemeTypes.CssFile.COMMAND_PALETTE]);
 
   commandPalette.addEventListener('selected', handleCommandPaletteSelected);
 }

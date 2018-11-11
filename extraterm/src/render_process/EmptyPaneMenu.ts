@@ -68,7 +68,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
 
       listPicker.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
       listPicker.setFormatEntriesFunc(commandPaletteFormatEntries);
-      listPicker.addExtraCss([ThemeTypes.CssFile.GUI_COMMANDPALETTE]);
+      listPicker.addExtraCss([ThemeTypes.CssFile.COMMAND_PALETTE]);
       
       listPicker.setEntries(this._entries);
       

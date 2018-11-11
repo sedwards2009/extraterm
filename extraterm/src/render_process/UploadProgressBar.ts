@@ -35,7 +35,7 @@ export class UploadProgressBar extends FileTransferProgress {
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     const types = super._themeCssFiles();
-    types.push(ThemeTypes.CssFile.GUI_UPLOAD_PROGRESS_BAR);
+    types.push(ThemeTypes.CssFile.UPLOAD_PROGRESS_BAR);
     return types;
   }
 }
