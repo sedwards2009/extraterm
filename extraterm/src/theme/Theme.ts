@@ -53,7 +53,7 @@ export const CssFile = {
   GUI_POP_DOWN_LIST_PICKER: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-popdownlistpicker.scss",
   GUI_LIST_PICKER: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-listpicker.scss",
   TIP_VIEWER: CSS_MODULE_INTERNAL_GUI + ":" + "viewers/tip-viewer.scss",
-  FONT_AWESOME: CSS_MODULE_INTERNAL_GUI + ":" + "font-awesome.scss",
+  FONT_AWESOME: CSS_MODULE_INTERNAL_GUI + ":" + "fonts/font-awesome.scss",
   VIEWER_TAB: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/viewer-tab.scss",
   GUI_SPLITTER: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-splitter.scss",
   EMPTY_PANE_MENU: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/empty-pane-menu.scss",

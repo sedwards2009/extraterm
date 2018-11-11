@@ -10,16 +10,16 @@
   font-family: 'Font Awesome 5 Brands';
   font-style: normal;
   font-weight: normal;
-  src: url($--source-dir-default + "/fa-brands-400.ttf") format("truetype"); }
+  src: url($--source-dir-default + "/fonts/fa-brands-400.ttf") format("truetype"); }
 
 @font-face {
   font-family: 'Font Awesome 5 Free';
   font-style: normal;
   font-weight: 400;
-  src: url($--source-dir-default + "/fa-regular-400.ttf") format("truetype"); }
+  src: url($--source-dir-default + "/fonts/fa-regular-400.ttf") format("truetype"); }
 
 @font-face {
   font-family: 'Font Awesome 5 Free';
   font-style: normal;
   font-weight: 900;
-  src: url($--source-dir-default + "/fa-solid-900.ttf") format("truetype") }
+  src: url($--source-dir-default + "/fonts/fa-solid-900.ttf") format("truetype") }

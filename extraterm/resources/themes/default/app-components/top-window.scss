@@ -5,9 +5,9 @@
 /* top-window */
 @import "general-gui/variables";
 @import 'general-gui/pxToRem';
-@import "fontawesome-fontface";
-@import "extraicons-fontface";
-@import "emoji-fontface";
+@import "fonts/fontawesome-fontface";
+@import "fonts/extraicons-fontface";
+@import "fonts/emoji-fontface";
 
 $control-size: pxToRem(21px);
 
