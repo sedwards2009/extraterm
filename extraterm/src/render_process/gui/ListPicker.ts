@@ -77,7 +77,7 @@ const ID_RESULTS = "ID_RESULTS";
       template.id = ID;
       template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
         <div id="${ID_DIALOG}">
-          <div class="form-group"><input type="text" id="${ID_FILTER}" /></div>
+          <div class="gui-packed-row"><input type="text" id="${ID_FILTER}" class="expand" /></div>
           <div id="${ID_RESULTS}"></div>
         </div>
         `;

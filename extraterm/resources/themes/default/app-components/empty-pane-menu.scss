@@ -31,46 +31,11 @@ $tab-height: pxToRem(26px);
   width: 100%;
   max-width: var(--empty-pane-menu-container-width);
 
+  margin-top: $layout-vertical-spacing;
   margin-left: auto;
   margin-right: auto;
 }
 
-#ID_TITLE {
-  width: 100%;
-
-  margin-bottom: pxToRem(5px);
-}
-
 #ID_CLOSE_BUTTON {
-  float: right;
-
-  display: block;
-  width: pxToRem(16px);
-  height: pxToRem(16px);
-  border: 0;
-  padding: 0;
-
-  font-size: 1rem;
-  line-height: $tab-height;
-  
-  border-radius: pxToRem(8px);
-  background-color: transparent;
-  text-align: center;
-
-  z-index: 1;
-  
-  & > i {
-    position: relative;
-    top: pxToRem(-5px);
-    font-size: 1rem;
-  }
-
-  &:focus {
-    outline: 0 solid transparent;
-  }
-
-  &:hover {
-    background-color: $button-danger-bg-color;
-    color: $dropdown-bg-color;
-  }  
+  align-self: top;
 }

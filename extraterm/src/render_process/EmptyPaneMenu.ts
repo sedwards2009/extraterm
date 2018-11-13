@@ -11,6 +11,7 @@ import {ThemeableElementBase} from './ThemeableElementBase';
 import {ListPicker} from './gui/ListPicker';
 import * as DomUtils from './DomUtils';
 import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandMenuItem} from './CommandPaletteFunctions';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 
@@ -31,7 +32,6 @@ export class EmptyPaneMenu extends ThemeableElementBase {
 
   private _log: Logger;
   private _entries: CommandMenuItem[] = [];
-  private _selectedId: string = null;
 
   constructor() {
     super();
@@ -50,12 +50,14 @@ export class EmptyPaneMenu extends ThemeableElementBase {
       
       const divContainer = document.createElement('div');
       divContainer.id = ID_EMPTY_PANE_MENU;
-      divContainer.innerHTML = `<div id="${ID_CONTAINER}">
-        <div id="${ID_TITLE}">Pane Menu<button id=${ID_CLOSE_BUTTON}><i class="fa fa-times"></i></button></div>
+      divContainer.innerHTML = trimBetweenTags(`<div id="${ID_CONTAINER}">
+        <div id="${ID_TITLE}" class="gui-packed-row">
+          <span class="expand">Pane Menu</span>
+          <button id="${ID_CLOSE_BUTTON}" class="compact microtool danger"><i class="fa fa-times"></i></button>
+        </div>
         <${ListPicker.TAG_NAME} id="${ID_LIST_PICKER}"></${ListPicker.TAG_NAME}>
-        
       </div>
-      `;
+      `);
 
       shadow.appendChild(themeStyle);
       shadow.appendChild(divContainer);    
@@ -99,7 +101,6 @@ export class EmptyPaneMenu extends ThemeableElementBase {
 
   setEntries(entries: CommandMenuItem[]): void {
     this._entries = entries;
-    this._selectedId = null;
     
     if (DomUtils.getShadowRoot(this) != null) {
       const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
