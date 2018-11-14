@@ -557,10 +557,14 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       }
 
       if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-        this._aceEditor.resize(false);
+        if ( ! this._aceEditor.resize(false)) {
+          return;
+        }
       } else {
         this._aceEditor.updateFontSize();
-        this._aceEditor.resize(true);
+        if ( ! this._aceEditor.resize(true)) {
+          return;
+        }
       }
     }
 
