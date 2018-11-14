@@ -26,11 +26,11 @@ export class WindowsConsolePty implements Pty {
 
   private realPty: pty.IPty;
   private _permittedDataSize = 0; 
-  private _paused = true;s
+  private _paused = true;
+  private _destroyed = false;
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
   private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
-  private _outstandingWriteDataCount = 0;
   private _emitBufferSizeLater: (() => void) & _.Cancelable = null;
 
   // Amount of data which went directly to the OS but still needs to 'announced' via an event.
@@ -94,6 +94,11 @@ export class WindowsConsolePty implements Pty {
   }
   
   destroy(): void {
+    if (this._destroyed) {
+      return;
+    }
+    this._destroyed = true;
+    this._log.warn("WindowsConsolePty.destroy()");
     this._emitBufferSizeLater.cancel();
     this.realPty.destroy();
   }
