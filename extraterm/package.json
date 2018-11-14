@@ -16,7 +16,7 @@
     "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
-    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.7.0/ace-ts-v0.7.0.tgz",
+    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.8.0/ace-ts-v0.8.0.tgz",
     "commander": "^2.9.0",
     "easta": "^2.0.0",
     "electron-rebuild": "^1.8.2",
