@@ -13,6 +13,7 @@ import {Logger, getLogger} from "extraterm-logging";
 import {PopDownListPicker} from '../gui/PopDownListPicker';
 import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';
 import {ViewerElement} from '../viewers/ViewerElement';
+import { SupportsDialogStack } from '../SupportsDialogStack';
 
 
 interface IdLabelPair {
@@ -30,10 +31,10 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
     this._log = getLogger("ExtensionUiUtilsImpl", this);
   }
 
-  showNumberInput(terminal: EtTerminal, options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
+  showNumberInput(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
     let lastFocus: HTMLElement = currentDeepFocusedViewerElement();
     if (lastFocus == null) {
-      lastFocus = terminal;
+      lastFocus = host;
     }
 
     if (this._numberInputDialog == null) {
@@ -44,7 +45,7 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
     this._numberInputDialog.setMaximum(options.maximum !== undefined ? options.maximum : Number.MAX_SAFE_INTEGER);
     this._numberInputDialog.setValue(options.value);
 
-    const dialogDisposable = terminal.showDialog(this._numberInputDialog);
+    const dialogDisposable = host.showDialog(this._numberInputDialog);
     this._numberInputDialog.open();
     this._numberInputDialog.focus();
 
@@ -60,10 +61,10 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
     });
   }
 
-  showListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
+  showListPicker(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
     let lastFocus: HTMLElement = currentDeepFocusedViewerElement();
     if (lastFocus == null) {
-      lastFocus = terminal;
+      lastFocus = host;
     }
 
     if (this._listPicker == null) {
@@ -85,7 +86,7 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
     this._listPicker.setEntries(convertedItems);
     this._listPicker.selected = "" + options.selectedItemIndex;
 
-    const dialogDisposable = terminal.showDialog(this._listPicker);
+    const dialogDisposable = host.showDialog(this._listPicker);
     this._listPicker.open();
     this._listPicker.focus();
 

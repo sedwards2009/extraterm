@@ -13,6 +13,7 @@ import {Logger, getLogger} from "extraterm-logging";
 import { WorkspaceCommandsRegistry } from './WorkspaceCommandsRegistry';
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
+import { EtViewerTab } from '../ViewerTab';
 
 
 export class WorkspaceProxy implements InternalWorkspace {
@@ -106,6 +107,23 @@ export class TerminalTabProxy implements ExtensionApi.Tab {
   }
 }
 
+export class ViewerTabProxy implements ExtensionApi.Tab {
+  constructor(private _internalExtensionContext: ProxyFactory, private _extensionUiUtils: ExtensionUiUtils,
+    private _viewerTab: EtViewerTab) {
+  }
+
+  getTerminal(): ExtensionApi.Terminal {
+    return null;
+  }
+
+  showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
+    return this._extensionUiUtils.showNumberInput(this._viewerTab, options);
+  }
+
+  showListPicker(options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
+    return this._extensionUiUtils.showListPicker(this._viewerTab, options);
+  }
+}
 
 export class TerminalProxy implements ExtensionApi.Terminal {
   

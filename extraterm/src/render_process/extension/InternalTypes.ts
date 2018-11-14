@@ -9,6 +9,8 @@ import {ViewerElement} from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import { ExtensionMetadata, ExtensionPlatform } from '../../ExtensionMetadata';
+import { EtViewerTab } from '../ViewerTab';
+import { SupportsDialogStack } from '../SupportsDialogStack';
 
 export interface ExtensionManager {
   startUp(): void;
@@ -39,14 +41,14 @@ export function isAcceptsExtensionManager(instance: any): instance is AcceptsExt
 }
 
 export interface ProxyFactory {
-  getTabProxy(terminal: EtTerminal): ExtensionApi.Tab;
+  getTabProxy(tabLike: EtTerminal | EtViewerTab): ExtensionApi.Tab;
   getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal;
   getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer;
 }
 
 export interface ExtensionUiUtils {
-  showNumberInput(terminal: EtTerminal, options: ExtensionApi.NumberInputOptions): Promise<number | undefined>;
-  showListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
+  showNumberInput(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.NumberInputOptions): Promise<number | undefined>;
+  showListPicker(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
 }
 
 export interface InternalWorkspace extends ExtensionApi.Workspace {
