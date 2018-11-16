@@ -20,14 +20,14 @@ input:not([type="radio"]):not([type="checkbox"]), select {
 }
 
 select {
-  background-color: $button-default-bg-color;
+  background-color: $select-background-color;
   color: $text-color;
   &:hover {
-    background-color: $button-default-bg-hover-color;
+    background-color: $select-background-hover-color;
   }
 
   &:focus {
-    background-color: $button-default-bg-hover-color;
+    background-color: $select-background-focus-color;
     outline: none;
   }
 }
