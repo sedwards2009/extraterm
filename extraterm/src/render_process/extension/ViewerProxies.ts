@@ -11,6 +11,7 @@ import {EtTerminal} from '../Terminal';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
 import {TerminalViewer} from '../viewers/TerminalAceViewer';
 import {TextViewer} from'../viewers/TextAceViewer';
+import { EtViewerTab } from '../ViewerTab';
 
 
 abstract class ViewerProxy implements ExtensionApi.ViewerBase {
@@ -22,13 +23,30 @@ abstract class ViewerProxy implements ExtensionApi.ViewerBase {
 
   getTab(): ExtensionApi.Tab {
     const terminal = this._getOwningEtTerminal();
-    return terminal == null ? null : this._proxyFactory.getTabProxy(terminal);
+    if (terminal != null) {
+      return this._proxyFactory.getTabProxy(terminal);
+    }
+    const viewerTab = this._getOwningEtViewerTab();
+    if (viewerTab != null) {
+      return this._proxyFactory.getTabProxy(viewerTab);
+    }
+    return null;
   }
 
   private _getOwningEtTerminal(): EtTerminal {
     const path = DomUtils.nodePathToRoot(this._viewer);
     for (const node of path) {
       if (node instanceof EtTerminal) {
+        return node;
+      }
+    }
+    return null;
+  }
+
+  private _getOwningEtViewerTab(): EtViewerTab {
+    const path = DomUtils.nodePathToRoot(this._viewer);
+    for (const node of path) {
+      if (node instanceof EtViewerTab) {
         return node;
       }
     }

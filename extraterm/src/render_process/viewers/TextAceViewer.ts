@@ -151,7 +151,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       }
       
       doLater( () => {
-        VirtualScrollAreaEmitResizeEvent(this);
+        this._emitVirtualResizeEvent();
       });
     });
 
@@ -303,6 +303,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _setText(newText: string): void {
     this._aceEditor.setValue(newText);
     this._aceEditor.selection.clearSelection();
+    this._isEmpty = false;
   }
   
   // From SupportsClipboardPaste interface.
@@ -542,7 +543,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     const endPos: Position = { row: linesToDelete, column: 0 };
     this._aceEditor.replaceRange({start: pos, end: endPos}, "");
 
-    VirtualScrollAreaEmitResizeEvent(this);
+    this._emitVirtualResizeEvent();
   }
 
   pixelHeightToRows(pixelHeight: number): number {
@@ -568,7 +569,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       }
     }
 
-    VirtualScrollAreaEmitResizeEvent(this);
+    this._emitVirtualResizeEvent();
   }
 
   private createClone(): Node {
@@ -882,7 +883,12 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     if (this._aceEditor == null) {
       return 0;
     }
-    const lineHeight = this._aceEditor.renderer.lineHeight;
+
+    let lineHeight = this._aceEditor.renderer.lineHeight;
+    if (lineHeight === 0) {
+      this._aceEditor.updateFontSize();
+    }
+    lineHeight = this._aceEditor.renderer.lineHeight;
     return this._isEmpty ? 0 : lineHeight * this._aceEditSession.getScreenLength();
   }
   

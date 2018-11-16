@@ -6,28 +6,40 @@
 import * as ExtensionApi from 'extraterm-extension-api';
 
 import {ExtensionUiUtils, ProxyFactory} from './InternalTypes';
-import {TerminalProxy, TerminalTabProxy} from './Proxies';
+import {TerminalProxy, TerminalTabProxy, ViewerTabProxy} from './Proxies';
 import {EtTerminal} from '../Terminal';
 import {FrameViewerProxy, TerminalOutputProxy, TextViewerProxy} from './ViewerProxies';
 import {ViewerElement} from '../viewers/ViewerElement';
 import {TextViewer} from'../viewers/TextAceViewer';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
 import {TerminalViewer} from '../viewers/TerminalAceViewer';
+import { EtViewerTab } from '../ViewerTab';
 
 
 export class ProxyFactoryImpl implements ProxyFactory {
-  private _tabProxyMap = new WeakMap<EtTerminal, ExtensionApi.Tab>();
+  private _terminalTabProxyMap = new WeakMap<EtTerminal, ExtensionApi.Tab>();
+  private _viewerTabProxyMap = new WeakMap<EtViewerTab, ExtensionApi.Tab>();
   private _terminalProxyMap = new WeakMap<EtTerminal, ExtensionApi.Terminal>();
   private _viewerProxyMap = new WeakMap<ViewerElement, ExtensionApi.Viewer>();
 
   constructor(public extensionUiUtils: ExtensionUiUtils) {
   }
 
-  getTabProxy(terminal: EtTerminal): ExtensionApi.Tab {
-    if ( ! this._tabProxyMap.has(terminal)) {
-      this._tabProxyMap.set(terminal, new TerminalTabProxy(this, this.extensionUiUtils, terminal));
+  getTabProxy(tabLike: EtTerminal | EtViewerTab): ExtensionApi.Tab {
+    if (tabLike instanceof EtTerminal) {
+      if ( ! this._terminalTabProxyMap.has(tabLike)) {
+        this._terminalTabProxyMap.set(tabLike, new TerminalTabProxy(this, this.extensionUiUtils, tabLike));
+      }
+      return this._terminalTabProxyMap.get(tabLike);
     }
-    return this._tabProxyMap.get(terminal);
+
+    if (tabLike instanceof EtViewerTab) {
+      if ( ! this._viewerTabProxyMap.has(tabLike)) {
+        this._viewerTabProxyMap.set(tabLike, new ViewerTabProxy(this, this.extensionUiUtils, tabLike));
+      }
+      return this._viewerTabProxyMap.get(tabLike);
+    }
+    return null;
   }
 
   getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal {
