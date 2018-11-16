@@ -76,7 +76,7 @@ class ThemeManagerUtility {
     globalVariables.set("extraterm-platform", process.platform);
     globalVariables.set("extraterm-titlebar-visible", false);
 
-    return this._tm.renderGui(themeInfo.id, globalVariables);
+    return this._tm.renderGui(themeInfo.id, null, globalVariables);
   }
 
   private async _renderAndOutputOneTheme(themeId: string, outputDir: string): Promise<void> {

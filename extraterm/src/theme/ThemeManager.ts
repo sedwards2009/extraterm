@@ -47,7 +47,7 @@ export interface Color {
   hex: string;
 }
 
-type GlobalVariableMap = Map<string, number|boolean|string|Color>;
+export type GlobalVariableMap = Map<string, number|boolean|string|Color>;
 
 export interface RenderResult {
   success: boolean;
@@ -526,7 +526,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
     const config = <GeneralConfig> this._configDatabase.getConfig(GENERAL_CONFIG);
     switch (themeType) {
       case "gui":
-        return await this.renderGui(config.themeGUI, globalVariables);
+        return await this.renderGui(config.themeGUI, config.themeTerminal, globalVariables);
       case "terminal":
         return await this._renderTerminal(config.themeTerminal, globalVariables);
       case "syntax":
@@ -535,21 +535,34 @@ export class ThemeManager implements AcceptsConfigDatabase {
     return null;
   }
 
-  async renderGui(themeGUI: string, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
+  async renderGui(themeGUI: string, themeTerminal: string=null, globalVariables: GlobalVariableMap=null): Promise<RenderResult> {
+    let terminalGlobalVariables: GlobalVariableMap = null;
+    if (themeTerminal != null) {    
+      const terminalThemeInfo = this._themes.get(themeTerminal);
+      terminalGlobalVariables = this._getTerminalThemeVariablesFromInfo(terminalThemeInfo);
+    } else {
+      terminalGlobalVariables = this._convertTerminalThemeToVariables(DEFAULT_TERMINAL_THEME);
+    }
+
+    const completeGlobalVariables = new Map([
+      ...terminalGlobalVariables,
+      ...(globalVariables == null ? new Map() : globalVariables)
+    ]);
+
     let themeNameStack = [themeGUI, FALLBACK_UI_THEME];
     const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_GUI);
 
     // Add extra CSS files needed by extensions.
-    let result = await this._renderThemes(themeNameStack, neededCssFiles, globalVariables);
+    let result = await this._renderThemes(themeNameStack, neededCssFiles, completeGlobalVariables);
     if ( ! result.success) {
       themeNameStack = [FALLBACK_UI_THEME];
-      const fallbackResult = await this._renderThemes(themeNameStack, neededCssFiles, globalVariables);
+      const fallbackResult = await this._renderThemes(themeNameStack, neededCssFiles, completeGlobalVariables);
       fallbackResult.errorMessage = result.errorMessage;
       result = fallbackResult;
     }
 
     // Now render the CSS files for the extensions.
-    const extensionResult = await this._renderAllExtensionCss(themeNameStack, globalVariables);
+    const extensionResult = await this._renderAllExtensionCss(themeNameStack, completeGlobalVariables);
     if ( ! extensionResult.success) {
       result.success = false;
     }
@@ -559,10 +572,9 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   private async _renderTerminal(themeTerminal: string, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const terminalThemeInfo = this._themes.get(themeTerminal);
-
     const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_TERMINAL);
     try {
+      const terminalThemeInfo = this._themes.get(themeTerminal);
       const completeGlobalVariables = new Map([...this._getTerminalThemeVariablesFromInfo(terminalThemeInfo),
                                         ...(globalVariables == null ? new Map() : globalVariables)]);
       const result = await this._renderThemes([TERMINAL_CSS_THEME], neededCssFiles, completeGlobalVariables);
