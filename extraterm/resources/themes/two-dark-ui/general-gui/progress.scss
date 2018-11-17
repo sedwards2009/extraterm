@@ -1,5 +1,5 @@
 
-$progress-buffer-color: adjust-color($progress-background-color, $alpha: 20%);
+$progress-buffer-color: change_color($progress-background-color, $alpha: 0.2);
 
 progress {
   height: $progress-height;
