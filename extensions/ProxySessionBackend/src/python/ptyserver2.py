@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+# Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
 #
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 # 
@@ -15,6 +15,7 @@ import array
 import threading
 import json
 import subprocess
+import time
 
 LOG_FINE = False
 LOG_FINER = False
@@ -294,6 +295,8 @@ def process_command(json_command):
         return process_resize_command(cmd)
     if cmd_type == "permit-data-size":
         return process_permit_data_size_command(cmd)
+    if cmd_type == "close":
+        return process_close_command(cmd)
     if cmd_type == "terminate":
         return process_terminate_command(cmd)
         
@@ -319,8 +322,11 @@ def process_create_command(cmd):
             env["PATH"] = env["Path"]
             del env["Path"]
         env["PATH"] = cygwin_convert_path_variable(env["PATH"])
+    try:
+        pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns), env=env) #cwd=, )
+    except FileNotFoundError:
+        pty = DeadPty(cmd["argv"])
 
-    pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns), env=env) #cwd=, )
     pty_reader = NonblockingFileReader(read=pty.read)
     pty_writer = NonblockingFileWriter(write=pty.write)
 
@@ -339,7 +345,7 @@ def process_create_command(cmd):
 def process_resize_command(cmd):
     pty = find_pty_by_id(cmd["id"])
     if pty is None:
-        log("Received a resize command for an unknown pty (id=" + str(cmd["id"]) + "")
+        log("Received a resize command for an unknown pty (id=" + str(cmd["id"]) + ")")
         return True
     pty.setwinsize(cmd["rows"], cmd["columns"])
     return True
@@ -347,7 +353,7 @@ def process_resize_command(cmd):
 def process_permit_data_size_command(cmd):
     reader = find_reader_by_id(cmd["id"])
     if reader is None:
-        log("Received a permit-data-size command for an unknown pty (id=" + str(cmd["id"]) + "")
+        log("Received a permit-data-size command for an unknown pty (id=" + str(cmd["id"]) + ")")
         return True
     reader.permitDataSize(cmd["size"])
     return True
@@ -357,9 +363,18 @@ def process_write_command(cmd):
         log("process_write_command()")
     pty_tuple = find_pty_tuple_by_id(cmd["id"])
     if pty_tuple is None:
-        log("Received a write command for an unknown pty (id=" + str(cmd["id"]) + "")
+        log("Received a write command for an unknown pty (id=" + str(cmd["id"]) + ")")
         return True
     pty_tuple["writer"].write(cmd["data"])
+    return True
+
+def process_close_command(cmd):
+    pty_tuple = find_pty_tuple_by_id(cmd["id"])
+    if pty_tuple is None:
+        log("Received a close command for an unknown pty (id=" + str(cmd["id"]) + ")")
+        return True
+
+    pty_tuple["pty"].terminate(True)
     return True
 
 def process_terminate_command(cmd):
@@ -470,4 +485,34 @@ def main():
     if LOG_FINE:
         log("pty server main thread exiting.")
     sys.exit(0)
+
+
+class DeadPty:
+    def __init__(self, cmd_argv):
+        self.__sent_error = False
+        self.__terminated = False
+        self.__cmd_argv = cmd_argv
+
+    def read(self, size=1024):
+        if self.__terminated:
+            raise EOFError()
+
+        if not self.__sent_error:
+            self.__sent_error = True
+            return ("\r\n\r\nShell or command '" + self.__cmd_argv[0] + "' could not be found!\r\n").encode("utf8")
+        time.sleep(60)
+        return b""
+
+    def write(self, s):
+        pass
+
+    def setwinsize(self, rows, columns):
+        pass
+
+    def isalive(self):
+        return not self.__terminated
+
+    def terminate(self, force=True):
+        self.__terminated = True
+
 main()

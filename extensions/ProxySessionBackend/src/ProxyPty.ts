@@ -3,14 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-
 import * as child_process from 'child_process';
 import {Event, BufferSizeChange, Pty, Logger} from 'extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
-import * as fs from 'fs';
-import * as path from 'path';
-
-import * as SourceDir from './SourceDir';
 
 export interface EnvironmentMap {
   [key:string]: string;
@@ -37,6 +32,7 @@ const TYPE_CREATED = "created";
 const TYPE_WRITE = "write";
 const TYPE_OUTPUT = "output";
 const TYPE_RESIZE = "resize";
+const TYPE_CLOSE = "close";
 const TYPE_CLOSED = "closed";
 const TYPE_TERMINATE = "terminate";
 const TYPE_PERMIT_DATA_SIZE = "permit-data-size";
@@ -67,6 +63,9 @@ interface WriteMessage extends ProxyMessage {
 interface ResizeMessage extends ProxyMessage {
   rows: number;
   columns: number;
+}
+
+interface CloseMessage extends ProxyMessage {
 }
 
 interface PermitDataSizeMessage extends ProxyMessage {
@@ -182,6 +181,8 @@ class ProxyPty implements Pty {
   }
   
   destroy(): void {    
+    const msg: CloseMessage = { type: TYPE_CLOSE, id: this._id };
+    this._writeMessage(this._id, msg);
   }
 }
 
