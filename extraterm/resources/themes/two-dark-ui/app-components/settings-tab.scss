@@ -1,0 +1,140 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* settings-tab styles */
+
+
+@import "general-gui/variables";
+
+$tab-background-color-active: $background-color;
+
+:host(:focus) {
+  outline: 0 solid transparent;
+}
+
+#settings_top {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+#settings_menu {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 180px;
+
+  -webkit-user-select: none;
+  user-select: none;
+  padding-top: $component-padding-vertical;
+  background-color: $background-color;
+  border-right: 1px solid $base-border-color;
+  overflow-x: auto;
+  
+  ul {
+    list-style: none;
+    padding-left: 0;
+
+    li {
+      display: block;
+      padding: $nav-link-padding;
+      cursor: pointer;
+
+      &.active, &.active:hover {
+        color: $text-selected-color;
+        background-color: $background-selected-color;
+      }
+
+      &:focus, &:hover {
+        color: $text-highlight-color;
+        background-color: $background-highlight-color;
+      }
+    }
+  }
+}
+
+#settings_pane {  
+  flex-grow: 1;
+  padding: $panel-body-padding;
+  overflow: auto;
+}
+
+#ID_COMMAND_OUTPUT_HANDLING > table td.CLASS_FRAME {
+  min-width: 10em;
+}
+
+div.input-group > select.form-control.form-control.form-control:first-child {
+  border-radius: $input-border-radius;
+}
+
+$package-card-background-color: lighten($tool-panel-background-color, 8%);
+
+
+.settings-page {
+  max-width: 50rem;
+}
+
+.card {
+  padding: $component-padding-vertical*1.5 $component-padding-horizontal*1.5;
+  margin-bottom: $component-padding-vertical;
+  font-size: 1.2rem;
+  list-style-type: none;
+  border-radius: $border-radius*2;
+  border: 1px solid $base-border-color;
+  background-color: $package-card-background-color;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-user-select: none;
+}
+
+.session-configuration {
+  position: relative;
+
+  & h3 {
+    margin-top: 0;
+  }
+
+  & .session-card-buttons {
+    position: absolute;
+    right: $component-padding-horizontal*1.5;
+    top: $component-padding-horizontal*1.5;
+  }
+}
+
+.session-name {
+  margin-bottom: 0.5rem;
+}
+
+.session-type {
+  display: block;
+  color: $text-muted-color;
+
+  font-size: 1.2rem;
+  font-family: $headings-font-family;
+  font-weight: normal;
+  line-height: $headings-line-height;
+  color: $text-muted-color;
+
+//  margin-top: floor($line-height-computed / 2);
+  margin-bottom: 0.5rem;
+}
+
+#syntax_theme_preview, #terminal_theme_preview {
+  display: block;
+  width: 100%;
+  height: 20rem;
+
+  & > et-virtual-scroll-canvas {
+    display: block;
+    height: 100%;  
+  }
+}
+
+.CLASS_VISITOR_DIALOG {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}

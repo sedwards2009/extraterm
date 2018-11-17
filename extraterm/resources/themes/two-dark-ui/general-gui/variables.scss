@@ -1,0 +1,290 @@
+@import "general-gui/pxToRem";
+
+//-------------------------------------------------------------------------
+
+
+@function contrast($base-color, $color-1, $color-2, $threshold) {
+  $bright-base: lightness($base-color);
+  $bright-1: lightness($color-1);
+  $bright-2: lightness($color-2);
+  
+  @return if(abs($bright-base - $bright-1) > abs($bright-base - $bright-2), $color-1, $color-2);
+}
+
+@function hsv($h, $s, $v) {
+  @return hsl($h, $s, $v/2);
+}
+
+@mixin focus() {
+  outline: none;
+  border-color: $accent-color;
+  box-shadow: 0 0 0 1px $accent-color;
+}
+
+$ui-syntax-color: $terminal-background-color;
+
+$ui-s-h: hue($ui-syntax-color);
+$ui-s-s: saturation($ui-syntax-color);
+$ui-s-l: lightness($ui-syntax-color);
+$ui-inv: 10%; // inverse lightness if below
+
+
+$ui-hue: if($ui-s-s == 0, 220, $ui-s-h);
+
+$ui-saturation: if($ui-s-h <= 80, min($ui-s-s,  5%), 
+  if(($ui-s-h > 80) and ($ui-s-h < 160), min($ui-s-s, 12%),
+  if(($ui-s-h >= 160) and ($ui-s-l < $ui-inv), min($ui-s-s, 48%),
+  $ui-s-s)));
+
+$ui-lightness: if($ui-s-l <  $ui-inv, $ui-s-l + 8%, min($ui-s-l, 20%));
+$ui-lightness-border: if($ui-s-l <  $ui-inv, $ui-lightness*0.3, $ui-lightness*0.6);
+
+$ui-fg: hsl($ui-hue, min($ui-saturation, 18%), max($ui-lightness*3, 66%) );
+$ui-bg: hsl($ui-hue, $ui-saturation, $ui-lightness);
+$ui-border: hsl($ui-hue, $ui-saturation, $ui-lightness-border);
+
+$accent-luma: lightness( hsl($ui-hue, 50%, 50%) ); // get lightness of current hue
+
+$accent-color: mix( hsl( $ui-hue, 100%, 33%), hsl( $ui-hue, 100%, 70%), $accent-luma ); // mix hsv + hsl (favor mostly hsl)
+
+$accent-text-color: contrast($accent-color, hsl($ui-hue,100%,10%), #fff, 25%);
+
+$accent-bg-color: mix( hsv( $ui-hue, 66%, 66%), hsl( $ui-hue, 66%, 60%), 
+  $accent-luma * 2 ); // mix hsv + hsl (favor hsl for dark, hsv for light colors)
+
+
+$accent-bg-text-color:    contrast($accent-bg-color, hsl($ui-hue,100%,10%), #fff, 30% );
+
+$level-1-color: lighten($ui-bg, 6%);
+$level-2-color: $ui-bg;
+$level-3-color: darken($ui-bg, 3%);
+
+
+//-------------------------------------------------------------------------
+// Basic fonts
+
+$font-family:  'BlinkMacSystemFont', 'Lucida Grande', 'Segoe UI', Ubuntu, Cantarell, sans-serif !default;
+
+$font-size-base:    1rem !default;
+$font-size-small:   ($font-size-base * 0.9) !default;
+
+$line-height-base:  1.428571429 !default; // 20/14
+$line-height-computed:    ($font-size-base * $line-height-base) !default;
+
+//-------------------------------------------------------------------------
+// Headings
+$font-size-h1:      2rem !default;
+$font-size-h2:      1.75rem !default;
+$font-size-h3:      1.4rem !default;
+$font-size-h4:      1.1rem !default;
+$font-size-h5:      1rem !default;
+$font-size-h6:      0.8rem !default;
+
+$headings-font-family: $font-family !default;
+$headings-font-weight:    bold !default;
+$headings-line-height:    1.1 !default;
+$headings-color:          #ffffff !default;
+
+//-------------------------------------------------------------------------
+// General colors
+
+// Default color for all text
+$text-color:                $ui-fg !default;
+$text-color-subtle:         change-color($text-color, $alpha: alpha($text-color) - 0.4) !default;
+$text-minor-color:          darken($text-color, 20%) !default;
+$text-highlight-color:      lighten($text-color, 20%) !default;
+$text-selected-color:       #fff !default;
+$background-highlight-color: rgba(255, 255, 255, 0.07) !default;
+
+// Background color for `<body>`.
+$background-color:          $ui-bg !default;
+$background-selected-color: lighten($background-color, 8%) !default;
+
+$text-muted-color:      mix($text-color, $background-color, 75%) !default;
+
+$brand-primary:         hsl(219,  79%, 66%) !default;
+$brand-success:         hsl(140,  44%, 62%) !default;
+$brand-info:            hsl(219,  79%, 66%) !default;
+$brand-warning:         hsl( 36,  60%, 72%) !default;
+$brand-danger:          hsl(  9, 100%, 64%) !default;
+
+$background-primary-color: $accent-bg-color;
+$background-success-color: hsl(132, 58%, 40%);
+$background-info-color: hsl(208, 88%, 48%);
+$background-warning-color: hsl( 42, 88%, 36%);
+$background-danger-color: hsl(  5, 64%, 50%);
+
+$brand-text-primary:    #ffffff;
+$brand-text-success:    #ffffff;
+$brand-text-info:       #ffffff;
+$brand-text-warning:    #ffffff;
+$brand-text-danger:     #ffffff;
+
+$base-border-color:           $ui-border;
+
+
+//-------------------------------------------------------------------------
+// Links
+
+// Global textual link color.
+$link-color:            $brand-primary !default;
+// Link hover color set via `darken()` function.
+$link-hover-color:      darken($link-color, 15%) !default;
+// Link hover decoration.
+$link-hover-decoration: underline !default;
+
+//-------------------------------------------------------------------------
+//  Buttons
+$component-padding-vertical:          pxToRem(10px) !default;
+$component-padding-vertical-small:    pxToRem(5px) !default;
+
+$component-padding-horizontal:        pxToRem(12px) !default;
+$component-padding-horizontal-small:  pxToRem(10px) !default;
+
+$component-line-height:               $line-height-base !default;
+$component-line-height-small:         $line-height-base !default;
+$component-background-color:          $text-color-subtle !default;
+
+
+$border-radius:                       4px !default;
+$border-radius-small:                 3px !default;
+
+$button-font-weight:                  normal !default;
+
+$button-border-radius:                $border-radius !default;
+$button-border-radius-small:          $border-radius-small !default;
+
+$button-font-size:                    $font-size-base !default;
+$button-font-size-small:              $font-size-small !default;
+
+$button-line-height:                  $component-line-height !default;
+$button-line-height-small:            $component-line-height-small !default;
+$button-padding-vertical:             0.8rem !default;
+$button-padding-vertical-small:       0.4rem !default;
+$button-padding-horizontal:           0.8rem !default;
+$button-padding-horizontal-small:     0.5rem !default;
+
+$button-border-width:                 1px !default;
+$button-border-width-small:           1px !default;
+
+$button-default-color:                $text-color !default;
+$button-default-bg-color:             $level-1-color !default;
+$button-default-border-color:         $base-border-color !default;
+$button-default-text-selected-color:  $button-default-color !default;
+$button-default-bg-hover-color: lighten($button-default-bg-color, 2%) !default;
+$button-default-bg-selected-color: $accent-bg-color !default;
+
+$button-primary-color:        $text-color !default;
+$button-primary-bg-color:     $background-primary-color !default;
+$button-primary-border-color: darken($button-primary-bg-color, 5%) !default;
+
+$button-success-color:        $text-color !default;
+$button-success-bg-color:     $background-success-color !default;
+$button-success-border-color: darken($button-success-bg-color, 5%) !default;
+
+$button-info-color:           $text-color !default;
+$button-info-bg-color:        $background-info-color !default;
+$button-info-border-color:    darken($button-info-bg-color, 5%) !default;
+
+$button-warning-color:        $text-color !default;
+$button-warning-bg-color:     $background-warning-color !default;
+$button-warning-border-color: darken($button-warning-bg-color, 5%) !default;
+
+$button-danger-color:         $text-color !default;
+$button-danger-bg-color:      $background-danger-color !default;
+$button-danger-border-color:  darken($button-danger-bg-color, 5%) !default;
+
+
+//-------------------------------------------------------------------------
+// Inputs
+$input-font-size:             1.2rem !default;
+$input-color:                 $text-color !default;
+$input-background-color:      darken($background-color, 6%) !default;
+$input-border-color:          $base-border-color !default;
+$input-border-radius:         $border-radius !default;
+$input-border-focus-color:    $accent-color !default;
+
+$input-padding-vertical:      0.25rem !default;
+$input-padding-horizontal:    0.5rem !default;
+$input-border-width:          1px !default;
+$input-active-bg-color:       mix($accent-bg-color, $input-background-color, 10%) !default;
+
+$select-background-color:       $level-1-color !default;
+$select-background-focus-color: lighten($ui-bg, 8%) !default;
+$select-background-hover-color: $select-background-focus-color !default;
+
+//-------------------------------------------------------------------------
+// Tables
+$table-background-color:        transparent !default;
+$table-cell-padding:            pxToRem(8px) !default;
+$table-border-color:            $base-border-color !default;
+$table-border-width:            1px !default;
+$table-background-hover-color:  $background-highlight-color !default;
+
+//-------------------------------------------------------------------------
+// Badge
+$badge-font-weight:             bold !default;
+$badge-font-ratio:              0.6;
+$badge-font-size:               $badge-font-ratio * 1em !default;
+$badge-vertical-padding:        0.2em !default;
+$badge-horizontal-padding:      0.5em !default;
+$badge-line-height:             1 !default;
+$badge-border-radius:           1.5em !default;
+$badge-background-color:        #777 !default;
+$badge-color:                   #fff !default;
+$badge-vertical-align:          1/$badge-font-ratio * $badge-vertical-padding !default;
+
+//-------------------------------------------------------------------------
+// Scrollbars
+$scrollbar-background-color: transparent !default;
+$scrollbar-track-background-color: transparent !default;
+$scrollbar-thumb-background-color: lighten($background-color, 30%) !default;
+$scrollbar-thumb-hover-background-color: lighten($background-color, 40%) !default;
+$scrollbar-size: pxToRem(12px) !default;
+$scrollbar-radius: pxToRem(6px) !default;
+$scrollbar-pad: pxToRem(2px) !default;
+
+//-------------------------------------------------------------------------
+// Layouts
+$layout-vertical-spacing:   0.5rem !default;
+$layout-horizontal-spacing: 0 !default;
+
+//-------------------------------------------------------------------------
+// Progress bar
+$progress-height: 8px;
+$progress-shine-gradient: -webkit-linear-gradient(top, rgba(255, 255, 255, .15), rgba(0, 0, 0, .15));
+$progress-background-color: $accent-color;
+// $progress-background-image: -webkit-linear-gradient(-30deg,
+//                               transparent 33%, rgba(0, 0, 0, .1) 33%,
+//                               rgba(0,0, 0, .1) 66%, transparent 66%),
+//                               $progress-shine-gradient;
+
+$progress-background-image: none;
+$progress-value-bg-color:   $accent-color;
+
+//-------------------------------------------------------------------------
+// Misc but useful
+$hr-border-color:             $base-border-color !default;
+$panel-body-padding:          pxToRem(15px) !default;
+$padding-xs-horizontal:       pxToRem(5px) !default;
+$dropdown-bg-color:           $level-3-color !default;
+$dropdown-link-hover-color:   $text-selected-color !default;
+$dropdown-link-hover-bg:      $background-selected-color !default;
+$dropdown-border:             $base-border-color !default;
+$nav-link-padding:            pxToRem(10px) pxToRem(15px) !default;
+$tool-panel-background-color: $level-3-color;
+$overlay-background-color:    mix($level-2-color, $level-3-color);
+$overlay-border-color:        $background-highlight-color;
+$group-text-bg-color:         $button-default-bg-color;
+
+$ui-tab-height: 2.5rem;
+
+$tab-bar-background-color:         $level-3-color;
+$tab-bar-border-color:             $base-border-color;
+$tab-background-color:             $level-3-color;
+$tab-background-color-active:      $level-2-color;
+$tab-border-color:                 $base-border-color;
+
+$tab-text-color:                   $text-color-subtle;
+$tab-text-color-active:            $text-highlight-color;
+$tab-text-color-editor:            contrast($ui-syntax-color, darken($ui-syntax-color, 50%), $text-highlight-color, 50%);
