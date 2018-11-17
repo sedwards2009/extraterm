@@ -299,12 +299,12 @@ $badge-vertical-align:          1/$badge-font-ratio * $badge-vertical-padding !d
 
 //-------------------------------------------------------------------------
 // Scrollbars
-$scrollbar-background-color: transparent !default;
-$scrollbar-track-background-color: transparent !default;
-$scrollbar-thumb-background-color: lighten($background-color, 30%) !default;
+$scrollbar-background-color: $level-3-color !default;
+$scrollbar-track-background-color: $level-3-color !default;
+$scrollbar-thumb-background-color: lighten($ui-syntax-color, 16%) !default;
 $scrollbar-thumb-hover-background-color: lighten($background-color, 40%) !default;
-$scrollbar-size: pxToRem(12px) !default;
-$scrollbar-radius: pxToRem(6px) !default;
+$scrollbar-size: pxToRem(10px) !default;
+$scrollbar-radius: pxToRem(5px) !default;
 $scrollbar-pad: pxToRem(2px) !default;
 
 //-------------------------------------------------------------------------
@@ -317,11 +317,6 @@ $layout-horizontal-spacing: 0 !default;
 $progress-height: 8px;
 $progress-shine-gradient: -webkit-linear-gradient(top, rgba(255, 255, 255, .15), rgba(0, 0, 0, .15));
 $progress-background-color: $accent-color;
-// $progress-background-image: -webkit-linear-gradient(-30deg,
-//                               transparent 33%, rgba(0, 0, 0, .1) 33%,
-//                               rgba(0,0, 0, .1) 66%, transparent 66%),
-//                               $progress-shine-gradient;
-
 $progress-background-image: none;
 $progress-value-bg-color:   $accent-color;
 
