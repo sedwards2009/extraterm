@@ -124,7 +124,7 @@ export function activate(context: ExtensionContext): any {
 const ETC_SHELLS = "/etc/shells";
 
 async function readEtcShells(): Promise<string[]> {
-  if (await fse.exists(ETC_SHELLS)) {
+  if (await fse.pathExists(ETC_SHELLS)) {
     const shellText = await fse.readFile("/etc/shells", "utf-8");
 
     const lines = shellText.split("\n");

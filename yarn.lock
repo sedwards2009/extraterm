@@ -201,10 +201,10 @@ abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
 
-"ace-ts@https://github.com/sedwards2009/ace-ts/releases/download/v0.7.0/ace-ts-v0.7.0.tgz":
-  version "0.7.0"
-  uid "481aeaab399f89631f2880e79fcf2366871205df"
-  resolved "https://github.com/sedwards2009/ace-ts/releases/download/v0.7.0/ace-ts-v0.7.0.tgz#481aeaab399f89631f2880e79fcf2366871205df"
+"ace-ts@https://github.com/sedwards2009/ace-ts/releases/download/v0.8.0/ace-ts-v0.8.0.tgz":
+  version "0.8.0"
+  uid e69cb8c60629930eb25cf7a1e808bdbdefde9c24
+  resolved "https://github.com/sedwards2009/ace-ts/releases/download/v0.8.0/ace-ts-v0.8.0.tgz#e69cb8c60629930eb25cf7a1e808bdbdefde9c24"
 
 acorn-dynamic-import@^2.0.0:
   version "2.0.2"
@@ -1712,6 +1712,10 @@ colors@^1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/colors/-/colors-1.1.2.tgz#168a4701756b6a7f51a12ce0c97bfa28c084ed63"
 
+colors@^1.2.0:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/colors/-/colors-1.3.2.tgz#2df8ff573dfbf255af562f8ce7181d6b971a359b"
+
 combined-stream@1.0.6, combined-stream@^1.0.5, combined-stream@~1.0.5:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/combined-stream/-/combined-stream-1.0.6.tgz#723e7df6e801ac5613113a7e445a9b69cb632818"
@@ -2163,6 +2167,10 @@ duplexify@^3.4.2, duplexify@^3.6.0:
     readable-stream "^2.0.0"
     stream-shift "^1.0.0"
 
+easta@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/easta/-/easta-2.0.0.tgz#e52898fbba6e9ce7b0e24d6ac4f31b5bac538f44"
+
 ecc-jsbn@~0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/ecc-jsbn/-/ecc-jsbn-0.1.1.tgz#0fc73a9ed5f0d53c38193398523ef7e543777505"
@@ -2256,11 +2264,11 @@ electron-packager@11.1.0:
     semver "^5.3.0"
     yargs-parser "^9.0.2"
 
-electron-rebuild@1.7.3:
-  version "1.7.3"
-  resolved "https://registry.yarnpkg.com/electron-rebuild/-/electron-rebuild-1.7.3.tgz#24ae06ad9dd61cb7e4d688961f49118c40a110eb"
+electron-rebuild@^1.8.2:
+  version "1.8.2"
+  resolved "https://registry.yarnpkg.com/electron-rebuild/-/electron-rebuild-1.8.2.tgz#bfffba64da78e1b403cb79d5150cfa3336645140"
   dependencies:
-    colors "^1.1.2"
+    colors "^1.2.0"
     debug "^2.6.3"
     detect-libc "^1.0.3"
     fs-extra "^3.0.1"
@@ -6201,9 +6209,9 @@ shebang-regex@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/shebang-regex/-/shebang-regex-1.0.0.tgz#da42f49740c0b42db2ca9728571cb190c98efea3"
 
-shelljs@0.8.1:
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/shelljs/-/shelljs-0.8.1.tgz#729e038c413a2254c4078b95ed46e0397154a9f1"
+shelljs@0.8.2, shelljs@^0.8.0:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/shelljs/-/shelljs-0.8.2.tgz#345b7df7763f4c2340d584abb532c5f752ca9e35"
   dependencies:
     glob "^7.0.0"
     interpret "^1.0.0"
@@ -6212,14 +6220,6 @@ shelljs@0.8.1:
 shelljs@^0.5.1:
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/shelljs/-/shelljs-0.5.3.tgz#c54982b996c76ef0c1e6b59fbdc5825f5b713113"
-
-shelljs@^0.8.0:
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/shelljs/-/shelljs-0.8.2.tgz#345b7df7763f4c2340d584abb532c5f752ca9e35"
-  dependencies:
-    glob "^7.0.0"
-    interpret "^1.0.0"
-    rechoir "^0.6.2"
 
 signal-exit@^3.0.0, signal-exit@^3.0.1, signal-exit@^3.0.2:
   version "3.0.2"
@@ -7002,9 +7002,9 @@ typedoc@0.3.12:
     typedoc-default-themes "0.3.4"
     typescript "1.6.2"
 
-typescript@1.6.2, typescript@2.8.3:
-  version "2.8.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.8.3.tgz#5d817f9b6f31bb871835f4edf0089f21abe6c170"
+typescript@1.6.2, typescript@3.1.6:
+  version "3.1.6"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.1.6.tgz#b6543a83cfc8c2befb3f4c8fba6896f5b0c9be68"
 
 uglify-es@^3.3.4:
   version "3.3.9"

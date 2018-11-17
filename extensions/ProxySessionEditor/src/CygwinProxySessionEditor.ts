@@ -115,7 +115,7 @@ export function getCygwinProxySessionEditorClass(context: ExtensionContext): any
         await fse.access(dirPath, fse.constants.R_OK);
 
         const binDir = path.join(dirPath, 'bin');
-        if (await fse.exists(binDir)) {
+        if (await fse.pathExists(binDir)) {
           const pythonRegexp = /^python3.*m\.exe$/;
           const binContents = await fse.readdir(binDir);
           const pythons = binContents.filter( name => pythonRegexp.test(name) );

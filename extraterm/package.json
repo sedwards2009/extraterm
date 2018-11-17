@@ -67,7 +67,7 @@
     "serve-static": "1.10.0",
     "shelljs": "0.8.2",
     "typedoc": "0.3.12",
-    "typescript": "2.8.3",
+    "typescript": "3.1.6",
     "webfont": "^4.0.0"
   },
   "jshintConfig": {

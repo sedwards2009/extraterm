@@ -873,7 +873,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     this._aceEditSession.setScrollTop(yCoord);
   }
   
-  private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => void): void {
+  private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => boolean): void {
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
     if (ev.ctrlKey) { 

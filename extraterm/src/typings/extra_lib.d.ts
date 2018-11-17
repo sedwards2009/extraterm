@@ -6,25 +6,17 @@
 
 // ---- Shadow DOM v1
 
-type ShadowRootMode = "open" | "closed";
-
 interface ShadowRootInit {
     mode: ShadowRootMode;
     delegatesFocus?: boolean;
 }
 
 interface CaretPosition {
-    offsetNode: Node;
-    offset: number;
     getClientRect(): ClientRect;
 }
 
 interface DocumentOrShadowRoot {
     caretPositionFromPoint(x: number, y: number): CaretPosition | null;
-}
-
-interface ShadowRoot extends DocumentFragment, DocumentOrShadowRoot {
-    mode: ShadowRootMode;
 }
 
 interface Document extends DocumentOrShadowRoot {}
