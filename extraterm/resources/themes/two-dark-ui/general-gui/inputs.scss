@@ -27,8 +27,9 @@ select {
   }
 
   &:focus {
-    background-color: $select-background-focus-color;
     outline: none;
+    border-color: $accent-color;
+    box-shadow: 0 0 0 1px $accent-color;
   }
 }
 
@@ -39,8 +40,10 @@ input:not([type="radio"]) {
   &:focus {
     color: $text-highlight-color;
     background-color: $input-active-bg-color;
-    box-shadow: none;
-    outline: 0;
+
+    outline: none;
+    border-color: $accent-color;
+    box-shadow: 0 0 0 1px $accent-color;
   }
 
   &.has-success {

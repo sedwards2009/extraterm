@@ -490,42 +490,30 @@ async function setupConfiguration(): Promise<void> {
 async function requestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[] = []): Promise<void> {
   const cssFileMap = new Map<ThemeTypes.CssFile, string>(ThemeConsumer.cssMap());
 
-  if (refreshThemeTypeList.length === 0 || refreshThemeTypeList.indexOf("terminal") !== -1) {
-    const terminalResult = await WebIpc.requestThemeContents("terminal");
-    if (terminalResult.success) {
-      for (const renderedCssFile of terminalResult.themeContents.cssFiles) {
-        cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
-      }
-    }
-    if (terminalResult.errorMessage !== "") {
-      _log.warn(terminalResult.errorMessage);
-    }
-  }
-
-  if (refreshThemeTypeList.length === 0 || refreshThemeTypeList.indexOf("syntax") !== -1) {
-    const syntaxResult = await WebIpc.requestThemeContents("syntax");
-    if (syntaxResult.success) {
-      for (const renderedCssFile of syntaxResult.themeContents.cssFiles) {
-        cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
-      }
-    }
-    if (syntaxResult.errorMessage !== "") {
-      _log.warn(syntaxResult.errorMessage);
+  const neededThemeTypes = new Set<ThemeTypes.ThemeType>(refreshThemeTypeList);
+  if (refreshThemeTypeList.length === 0) {
+    neededThemeTypes.add("terminal");
+    neededThemeTypes.add("gui");
+    neededThemeTypes.add("syntax");
+  } else {
+    if (refreshThemeTypeList.indexOf("terminal") !== -1) {
+      // GUI theme can also depend on the terminal theme. Thus, rerender.
+      neededThemeTypes.add("gui");
     }
   }
 
-  if (refreshThemeTypeList.length === 0 || refreshThemeTypeList.indexOf("gui") !== -1) {
-    const uiResult = await WebIpc.requestThemeContents("gui");
-    if (uiResult.success) {
-      for (const renderedCssFile of uiResult.themeContents.cssFiles) {
+  for (const themeType of neededThemeTypes) {
+    const renderResult = await WebIpc.requestThemeContents(themeType);
+    if (renderResult.success) {
+      for (const renderedCssFile of renderResult.themeContents.cssFiles) {
         cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
       }
     }
-    if (uiResult.errorMessage != null && uiResult.errorMessage.trim() !== "") {
-      _log.warn(uiResult.errorMessage);
+    if (renderResult.errorMessage !== "") {
+      _log.warn(renderResult.errorMessage);
     }
   }
-      
+
   // Distribute the CSS files to the classes which want them.
   ThemeConsumer.updateCss(cssFileMap);
 }

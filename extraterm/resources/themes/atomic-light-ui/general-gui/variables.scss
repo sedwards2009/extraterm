@@ -143,6 +143,10 @@ $input-padding-horizontal:    0.5rem !default;
 $input-border-width:          1px !default;
 $input-active-bg-color:       lighten($background-color, 5%) !default;
 
+$select-background-color:       $button-default-bg-color !default;
+$select-background-focus-color: $button-default-bg-hover-color !default;
+$select-background-hover-color: $button-default-bg-hover-color !default;
+
 //-------------------------------------------------------------------------
 // Tables
 $table-background-color:        transparent !default;

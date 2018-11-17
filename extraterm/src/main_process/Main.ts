@@ -28,7 +28,7 @@ import {FileLogWriter, Logger, getLogger, addLogWriter} from "extraterm-logging"
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
 import * as ThemeTypes from '../theme/Theme';
-import {ThemeManager} from '../theme/ThemeManager';
+import {ThemeManager, GlobalVariableMap} from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { EventEmitter } from '../utils/EventEmitter';
@@ -972,7 +972,7 @@ function handleThemeListRequest(): Messages.ThemeListMessage {
 async function handleThemeContentsRequest(webContents: Electron.WebContents, 
   msg: Messages.ThemeContentsRequestMessage): Promise<void> {
 
-  const globalVariables = new Map<string, number|boolean|string>();
+  const globalVariables: GlobalVariableMap = new Map();
   globalVariables.set("extraterm-titlebar-visible", titleBarVisible);
   globalVariables.set("extraterm-platform", process.platform);
 

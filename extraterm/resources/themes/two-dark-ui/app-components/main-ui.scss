@@ -1,0 +1,167 @@
+/**
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ */
+
+/* top UI */
+@import "general-gui/variables";
+@import "app-components/main-ui-titlebar";
+@import "general-gui/pxToRem";
+
+
+:host {
+  display: block;
+  position: relative;
+}
+
+:host(:focus) {
+  outline: 0 solid transparent;
+}
+
+#ID_TOP_LAYOUT {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+#ID_REST_DIV_LEFT {
+  & > button {
+    margin-top: pxToRem(7px);
+  }
+}
+
+#ID_TITLE_BAR {
+  background: $tab-bar-background-color;
+}
+
+#ID_MAIN_CONTENTS {
+  flex-grow: 1;
+  position: relative;
+
+  & > * {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.CLASS_NEW_BUTTON_CONTAINER {
+  display: flex;
+  flex-grow: 1;
+  height: 100%;
+
+  & > div.CLASS_SPACE {
+    flex-grow: 1;
+  }
+
+  & > button {
+    flex-grow: 0;
+  }
+
+  & > .CLASS_NEW_TAB_BUTTON {
+    align-self: center;
+  }
+}
+
+
+#ID_MAIN_CONTENTS.CLASS_MAIN_NOT_DRAGGING div.CLASS_SPACE {
+  @if $extraterm-titlebar-visible == false {
+    -webkit-app-region: drag;
+  }
+}
+
+/* Contents of the tabs at the top of the window. */
+DIV.tab_content {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+DIV.tab_content > * {
+  position: absolute;
+  width: 100%;
+  
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+ET-TAB:focus {
+  outline: none;
+}
+
+DIV.tab_header_container {
+  display: flex;
+  width: 100%;
+  // position: relative;
+  z-index: 1;
+  font-size: 1rem;
+}
+
+DIV.tab_header_icon {
+  flex: 1 1 auto;
+  font-size: 125%;
+  text-align: right;
+
+  margin-left: pxToRem(8px);
+}
+
+DIV.tab_header_middle {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: pxToRem(8px);
+  margin-right: pxToRem(8px);
+}
+
+DIV.tab_header_tag {
+  flex: 1 1 auto;
+}
+
+DIV.tab_header_close {
+  flex: 0 0 auto;
+  align-self: center;
+  min-width: $ui-tab-height;
+  text-align: center;
+}
+
+DIV.tab_header_container > DIV.tab_header_close > BUTTON > I {
+  transform: translate(-50%, -50%) scale(0, 0);
+  transition: transform .08s;
+}
+
+DIV.tab_header_container:hover > DIV.tab_header_close > BUTTON > I {
+  transform: translate(-50%, -50%) scale(1, 1);
+  transition-duration: .16s;
+}
+
+.CLASS_NEW_TAB_BUTTON {
+  margin-left: ($ui-tab-height - 1.5rem) / 2;
+}
+
+// DIV.tab_header_container:hover DIV.tab_header_close > BUTTON:not(:hover) {
+//   color: $text-highlight-color;  
+// }
+
+DIV.tab_header_close > BUTTON.microtool.danger {
+  background-image: none;
+
+  &:hover {
+    color: $tab-background-color;
+    background-color: $accent-color;
+  }
+
+  &:active {
+    color: $tab-background-color;
+    background-color: fade($accent-color, 50%);
+  }
+}
+
+DIV.tab_header_close > BUTTON:focus {
+  outline: 0 solid transparent;
+}

@@ -3,9 +3,6 @@
  */
 @import "general-gui/variables";
 
-$scrollbar-size: pxToRem(12px);
-$scrollbar-radius: pxToRem(6px);
-$scrollbar-pad: pxToRem(2px);
 
 ::-webkit-scrollbar {
   width: $scrollbar-size;
