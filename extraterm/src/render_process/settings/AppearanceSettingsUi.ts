@@ -51,16 +51,6 @@ interface SelectableOption {
       </div>
     </div>
 
-    <div v-if="titleBar != currentTitleBar" class="form-group">
-      <div class="col-sm-4"></div>
-      <div class="input-group col-sm-8">
-        <p class="help-block">
-          <i class="fa fa-info-circle"></i>
-          A restart is requred before this change takes effect.
-        </p>
-      </div>
-    </div>
-
     <div class="form-group">
       <label for="${ID_TERMINAL_FONT_SIZE}" class="col-sm-4 control-label">Font Size:</label>
       <div class="input-group col-sm-1">
@@ -157,6 +147,16 @@ interface SelectableOption {
             {{ option.name }}
           </option>
         </select>
+      </div>
+    </div>
+
+    <div v-if="titleBar != currentTitleBar" class="form-group">
+      <div class="col-sm-4"></div>
+      <div class="input-group col-sm-8">
+        <p class="help-block">
+          <i class="fa fa-info-circle"></i>
+          A restart is requred before this change takes effect.
+        </p>
       </div>
     </div>
 
