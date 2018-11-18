@@ -336,6 +336,31 @@ InstallDirRegKey HKLM "Software\\Extraterm" "InstallLocation"
 
 ShowInstDetails show # This will always show the installation details.
 
+Function .onInit
+  ReadRegStr $R0 HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "UninstallString" 
+  StrCmp $R0 "" done
+ 
+  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
+  "Extraterm is already installed. $\\n$\\nShutdown any running Extraterms and click 'OK' to remove the \
+previous version or 'Cancel' to cancel this upgrade." \
+  IDOK uninst
+  Abort
+ 
+;Run the uninstaller
+uninst:
+  ClearErrors
+  ExecWait '$R0 _?=$INSTDIR'
+ 
+  IfErrors no_remove_uninstaller done
+    ;You can either use Delete /REBOOTOK in the uninstaller or add some code
+    ;here to remove the uninstaller. Use a registry key to check
+    ;whether the user has chosen to uninstall. If you are using an uninstaller
+    ;components page, make sure all sections are uninstalled.
+  no_remove_uninstaller:
+done:
+ 
+FunctionEnd
+
 Section "Extraterm"
   SetOutPath $INSTDIR
   File /r "${windowsBuildDirName}\\*"
