@@ -37,6 +37,7 @@ import {EtViewerTab} from './ViewerTab';
 import {PtyIpcBridge} from './PtyIpcBridge';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
 import { ConfigDatabase, SESSION_CONFIG } from '../Config';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -131,7 +132,9 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._setUpShadowDom();   
     this._setUpMainContainer();
     this._setUpSplitLayout();
-    this._setUpWindowControls();
+    if (this._showWindowControls()) {
+      this._setUpWindowControls();
+    }
     this._setupPtyIpc();
   }
 
@@ -449,22 +452,37 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return window.document.importNode(template.content, true);
   }
 
+  private _showWindowControls(): boolean {
+    const systemConfig = <config.SystemConfig> this._configManager.getConfig(config.SYSTEM_CONFIG);
+    return systemConfig.titleBarStyle === "theme" && process.platform !== "darwin";
+  }
+
   private _html(): string {
-    return `
-    <style id="${ThemeableElementBase.ID_THEME}"></style>` +
-    `<div id="${ID_TOP_LAYOUT}">` +
-      `<div id="${ID_TITLE_BAR}">` +
-        `<div id="${ID_TITLE_BAR_SPACE}">` +
-          `<div id="${ID_TOP_RESIZE_BAR}"></div>` +
-          `<div id="${ID_DRAG_BAR}"></div>` +
-        `</div>` +
-        `<button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>` +
-        `<button id="${ID_MAXIMIZE_BUTTON}" tabindex="-1"></button>` +
-        `<button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>` +
-      `</div>` +
-      `<div id="${ID_MAIN_CONTENTS}">` +
-      `</div>` +
-    `</div>`;
+    let windowControls = "";
+    if (this._showWindowControls()) {
+      windowControls = this._windowControlsHtml();
+    }
+  
+    return trimBetweenTags(`
+    <style id="${ThemeableElementBase.ID_THEME}"></style>
+    <div id="${ID_TOP_LAYOUT}">
+      <div id="${ID_TITLE_BAR}">
+        <div id="${ID_TITLE_BAR_SPACE}">
+          <div id="${ID_TOP_RESIZE_BAR}"></div>
+          <div id="${ID_DRAG_BAR}"></div>
+        </div>
+        ${windowControls}
+      </div>
+      <div id="${ID_MAIN_CONTENTS}">
+      </div>
+    </div>`);
+  }
+
+  private _windowControlsHtml(): string {
+    return trimBetweenTags(
+      `<button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>
+      <button id="${ID_MAXIMIZE_BUTTON}" tabindex="-1"></button>
+      <button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>`);
   }
 
   private _newTabRestAreaHtml(extraContents = ""): string {

@@ -1,0 +1,77 @@
+/**
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ */
+@import "general-gui/variables";
+@import "general-gui/pxToRem";
+@import "fonts/extraicons-fontface";
+
+$control-size: pxToRem(21px);
+
+#ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON, #ID_CLOSE_BUTTON {
+  flex-grow: 0;
+  flex-shrink: 0;
+
+  position: relative;
+
+  width: $control-size;
+  height: $control-size;
+
+  color: $text-color;
+
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
+  vertical-align: baseline;
+  background-image: none;
+  box-shadow: none;
+  
+  transition: color,background-color 0.2s ease-in-out;
+
+  &:hover {
+    color: $text-highlight-color;
+  }
+
+  &:focus {
+    outline: pxToRem(0px) solid transparent;
+  }
+
+  &:before {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+#ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON {
+  font-size: 1rem;
+
+  &:hover {
+    background-color: $button-default-bg-color;
+  }
+}
+
+#ID_CLOSE_BUTTON {
+  &:hover {
+    background-color: $brand-danger;
+  }
+}
+
+#ID_MINIMIZE_BUTTON:before {
+  font-size: 1rem;
+  font-family: extraicons;
+  content: "\ea02";
+}
+
+#ID_MAXIMIZE_BUTTON:before {
+  font-size: 1rem;
+  font-family: extraicons;
+  content: "\ea01";
+}
+
+#ID_CLOSE_BUTTON:before {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  font-size: 1.2rem;
+  content: "\f00d";  
+}

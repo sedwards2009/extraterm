@@ -9,6 +9,9 @@
 @import "fonts/extraicons-fontface";
 @import "fonts/emoji-fontface";
 
+@import "app-components/window-controls";
+
+
 $control-size: pxToRem(21px);
 
 
@@ -30,7 +33,7 @@ BODY {
   background: $tab-bar-background-color;
 
   &.CLASS_MAIN_NOT_DRAGGING DIV.space {
-    @if $extraterm-titlebar-visible == false {
+    @if $extraterm-titlebar-style == "native" {
       -webkit-app-region: drag;
     }
   }
@@ -39,7 +42,7 @@ BODY {
 EXTRATERM-MAINWEBUI {
   position: absolute; // or relative
   left: 0;
-  top: if($extraterm-titlebar-visible or $extraterm-platform == darwin, pxToRem(5px), 0);
+  top: if($extraterm-titlebar-style == "native" or $extraterm-platform == darwin, pxToRem(5px), 0);
   right: 0;
   bottom: 0;
 }
@@ -51,7 +54,15 @@ EXTRATERM-MAINWEBUI {
 
 #ID_MENU_BUTTON {
   position: relative;
-  align-self: center;
+
+  @if $extraterm-titlebar-style != "compact" {
+    align-self: center;
+  } @else {
+    flex-grow: 0;
+    flex-shrink: 0;
+    vertical-align: baseline;
+    margin-right: $control-size;
+  }
 
   width: $control-size;
   height: $control-size;

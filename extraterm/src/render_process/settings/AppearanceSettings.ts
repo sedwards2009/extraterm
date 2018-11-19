@@ -50,7 +50,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
 
       this._userTerminalThemeDirectory = path.join(systemConfig.userTerminalThemeDirectory, "force_the_directory_open");
       this._userSyntaxThemeDirectory = path.join(systemConfig.userSyntaxThemeDirectory, "force_the_directory_open");
-      ui.currentTitleBar = systemConfig.titleBarVisible ? "native" : "theme";
+      ui.currentTitleBarStyle = systemConfig.titleBarStyle;
       const newFontOptions = [...systemConfig.availableFonts];
       newFontOptions.sort( (a,b) => {
         if (a.name === b.name) {
@@ -73,7 +73,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
       ui.themeGUI = generalConfig.themeGUI;
       ui.themeSyntax = generalConfig.themeSyntax;
       ui.themeTerminal = generalConfig.themeTerminal;
-      ui.titleBar = generalConfig.showTitleBar ? "native" : "theme";
+      ui.titleBarStyle = generalConfig.titleBarStyle;
       ui.uiScalePercent = generalConfig.uiScalePercent;
     }
   }
@@ -82,7 +82,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     const newConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
     const ui = this._getUi();
 
-    newConfig.showTitleBar = ui.titleBar === "native";
+    newConfig.titleBarStyle = ui.titleBarStyle;
     newConfig.terminalFont = ui.terminalFont;
     newConfig.terminalFontSize = ui.terminalFontSize;
     newConfig.themeGUI = ui.themeGUI;

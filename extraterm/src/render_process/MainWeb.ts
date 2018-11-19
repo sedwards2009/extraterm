@@ -45,6 +45,7 @@ import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
 import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject, KeybindingsContexts } from './keybindings/KeyBindingsManager';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -176,10 +177,19 @@ function startUpMainWebUi(): void {
   injectConfigDatabase(mainWebUi, configDatabase);
   injectKeybindingsManager(mainWebUi, keyBindingManager);
   mainWebUi.setExtensionManager(extensionManager);
-  mainWebUi.innerHTML = `<div class="tab_bar_rest">
+
+  const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
+  const showWindowControls = systemConfig.titleBarStyle === "compact" && process.platform !== "darwin";
+  let windowControls = "";
+  if (showWindowControls) {
+    windowControls = windowControlsHtml();
+  }
+
+  mainWebUi.innerHTML = trimBetweenTags(`<div class="tab_bar_rest">
     <div class="space"></div>
     <button id="${ID_MENU_BUTTON}" class="quiet"><i class="fa fa-bars"></i></button>
-    </div>`;
+    ${windowControls}
+    </div>`);
 
   mainWebUi.setThemes(themes);
   window.document.body.appendChild(mainWebUi);
@@ -195,6 +205,10 @@ function startUpMainWebUi(): void {
   mainWebUi.addEventListener(MainWebUi.EVENT_TITLE, (ev: CustomEvent) => {
     window.document.title = "Extraterm - " + ev.detail.title;
   });
+
+  if (showWindowControls) {
+    setUpWindowControls();
+  }
 
   mainWebUi.addEventListener(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST, () => {
     WebIpc.windowMinimizeRequest();
@@ -220,6 +234,32 @@ function startUpMainWebUi(): void {
 
   mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, handleCommandPaletteRequest);
 }
+
+const ID_MINIMIZE_BUTTON = "ID_MINIMIZE_BUTTON";
+const ID_MAXIMIZE_BUTTON = "ID_MAXIMIZE_BUTTON";
+const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
+
+function windowControlsHtml(): string {
+  return trimBetweenTags(
+    `<button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>
+    <button id="${ID_MAXIMIZE_BUTTON}" tabindex="-1"></button>
+    <button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>`);
+}
+
+function setUpWindowControls(): void {
+  document.getElementById(ID_MINIMIZE_BUTTON).addEventListener('click', () => {
+    WebIpc.windowMinimizeRequest();
+  });
+
+  document.getElementById(ID_MAXIMIZE_BUTTON).addEventListener('click', () => {
+    WebIpc.windowMaximizeRequest();
+  });
+
+  document.getElementById(ID_CLOSE_BUTTON).addEventListener('click', () => {
+    WebIpc.windowCloseRequest();
+  });
+}
+
 
 function startUpMainMenu(): void {
   const contextMenuFragment = DomUtils.htmlToFragment(`

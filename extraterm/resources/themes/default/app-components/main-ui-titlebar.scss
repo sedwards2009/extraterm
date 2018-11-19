@@ -1,15 +1,14 @@
 /**
  * Copyright 2016 Simon Edwards <simon@simonzone.com>
  */
+@import "app-components/window-controls";
 @import "fonts/extraicons-fontface";
 
-$drag-bar-height: pxToRem(16px);
-$resize-bar-height: pxToRem(4px);
-
-$control-size: pxToRem(21px);
+$drag-bar-height: if($extraterm-titlebar-style == "theme", pxToRem(16px), 0.333333rem);
+$resize-bar-height: if($extraterm-titlebar-style == "theme", pxToRem(4px), 0px);
 
 
-@if($extraterm-titlebar-visible == true or $extraterm-platform == "darwin") {
+@if($extraterm-titlebar-style == "native" or $extraterm-platform == "darwin") {
   #ID_TITLE_BAR {
     display: none;
   }
@@ -38,92 +37,15 @@ $control-size: pxToRem(21px);
   #ID_DRAG_BAR {
     position: absolute;
     top: $resize-bar-height;
-    bottom: pxToRem(0px);
     width: 100%;
 
     -webkit-app-region: drag;
+    cursor: move;
     height: $drag-bar-height;
-    cursor: move;
-  }
-
-  #ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON, #ID_CLOSE_BUTTON {
-    flex-grow: 0;
-    flex-shrink: 0;
-
-    position: relative;
-
-    width: $control-size;
-    height: $control-size;
-
-    color: $text-color;
-
-    background-color: transparent;
-    border: 0;
-    border-radius: 0;
-    vertical-align: baseline;
-    background-image: none;
-    box-shadow: none;
-    
-    transition: color,background-color 0.2s ease-in-out;
-
-    &:hover {
-      color: $text-highlight-color;
-    }
-
-    &:focus {
-      outline: pxToRem(0px) solid transparent;
-    }
-
-    &:before {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-    }
-  }
-
-  #ID_MINIMIZE_BUTTON, #ID_MAXIMIZE_BUTTON {
-    font-size: 1rem;
-
-    &:hover {
-      background-color: $button-default-bg-color;
-    }
-  }
-
-  #ID_CLOSE_BUTTON {
-    &:hover {
-      background-color: $brand-danger;
-    }
-  }
-
-  #ID_MINIMIZE_BUTTON:before {
-    font-size: 1rem;
-    font-family: extraicons;
-    content: "\ea02";
-  }
-
-  #ID_MAXIMIZE_BUTTON:before {
-    font-size: 1rem;
-    font-family: extraicons;
-    content: "\ea01";
-  }
-
-  #ID_CLOSE_BUTTON:before {
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    font-size: 1.2rem;
-    content: "\f00d";  
-  }
-
-  #ID_DRAG_BAR {
-    width: 100%;
-    -webkit-app-region: drag;
-    height: pxToRem(16px);
-    cursor: move;
   }
 }
 
-@if $extraterm-platform == "darwin" and $extraterm-titlebar-visible != true {
+@if $extraterm-platform == "darwin" and $extraterm-titlebar-style != "native" {
 
   // OSX style traffic light window controls.
   #ID_REST_DIV_LEFT {

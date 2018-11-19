@@ -6,7 +6,10 @@
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { Event, SessionConfiguration } from 'extraterm-extension-api';
 
-export type ShowTipsStrEnum = 'always' | 'daily' | 'never';
+export type ShowTipsStrEnum = "always" | "daily" | "never";
+
+export type TitleBarStyle = "native" | "theme" | "compact";
+
 
 export interface GeneralConfig {
   blinkingCursor?: boolean;
@@ -24,7 +27,7 @@ export interface GeneralConfig {
   showTips?: ShowTipsStrEnum;
   tipCounter?: number;
   tipTimestamp?: number;
-  showTitleBar?: boolean;
+  titleBarStyle?: TitleBarStyle;
 
   windowConfiguration?: WindowConfiguration;
 
@@ -77,7 +80,7 @@ export interface SystemConfig {
   keybindingsContexts: object;
   
   availableFonts: FontInfo[];
-  titleBarVisible: boolean;
+  titleBarStyle: TitleBarStyle;
   currentScaleFactor: number;
   originalScaleFactor: number;
 

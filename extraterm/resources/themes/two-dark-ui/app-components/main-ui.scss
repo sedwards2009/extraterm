@@ -69,7 +69,7 @@
 
 
 #ID_MAIN_CONTENTS.CLASS_MAIN_NOT_DRAGGING div.CLASS_SPACE {
-  @if $extraterm-titlebar-visible == false {
+  @if $extraterm-titlebar-style != "native" {
     -webkit-app-region: drag;
   }
 }

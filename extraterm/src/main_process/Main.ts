@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent} from '../Config';
+import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, TitleBarStyle} from '../Config';
 import {FileLogWriter, Logger, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
@@ -73,7 +73,7 @@ let themeManager: ThemeManager;
 let ptyManager: PtyManager;
 let configDatabase: ConfigDatabaseImpl;
 let tagCounter = 1;
-let titleBarVisible = false;
+let titleBarStyle: TitleBarStyle = "compact";
 let bulkFileStorage: BulkFileStorage = null;
 let extensionManager: MainExtensionManager = null;
 let packageJson: any = null;
@@ -207,7 +207,7 @@ function setupBulkFileStorage(): void {
 }
 
 function openWindow(parsedArgs: Command): void {
-  const generalConfig = configDatabase.getConfig(GENERAL_CONFIG);
+  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const themeInfo = themeManager.getTheme(generalConfig.themeGUI);
 
   // Create the browser window.
@@ -217,7 +217,7 @@ function openWindow(parsedArgs: Command): void {
     "webPreferences": {
       "experimentalFeatures": true,
     },
-    frame: generalConfig.showTitleBar,
+    frame: generalConfig.titleBarStyle === "native",
     title: "Extraterm",
     backgroundColor: themeInfo.loadingBackgroundColor
   };
@@ -237,7 +237,6 @@ function openWindow(parsedArgs: Command): void {
     options.icon = path.join(__dirname, PNG_ICON_PATH);
   }
 
-  titleBarVisible = generalConfig.showTitleBar;
   mainWindow = new BrowserWindow(options);
 
   if ((<any>parsedArgs).devTools) {
@@ -373,7 +372,7 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
     keybindingsContexts: keyBindingsJSON,
     keybindingsInfoList: keybindingsIOManager.getInfoList(),
     availableFonts: getFonts(),
-    titleBarVisible,
+    titleBarStyle,
     currentScaleFactor: systemConfig == null ? 1 : systemConfig.currentScaleFactor,
     originalScaleFactor: systemConfig == null ? 1 : systemConfig.originalScaleFactor,
     userTerminalThemeDirectory: getUserTerminalThemeDirectory(),
@@ -492,9 +491,10 @@ function setupConfig(): void {
 
   userStoredConfig.uiScalePercent = Math.min(500, Math.max(5, userStoredConfig.uiScalePercent || 100));
 
-  if (userStoredConfig.showTitleBar !== true && userStoredConfig.showTitleBar !== false) {
-    userStoredConfig.showTitleBar = false;
+  if (userStoredConfig.titleBarStyle == null) {
+    userStoredConfig.titleBarStyle = "compact";
   }
+  titleBarStyle = userStoredConfig.titleBarStyle;
 
   if (userStoredConfig.frameByDefault !== true && userStoredConfig.frameByDefault !== false) {
     userStoredConfig.frameByDefault = true;
@@ -599,7 +599,7 @@ function setConfigDefaults(config: UserStoredConfig): void {
   config.themeTerminal = defaultValue(config.themeTerminal, "default");
   config.themeSyntax = defaultValue(config.themeSyntax, "default");
   config.themeGUI = defaultValue(config.themeGUI, "atomic-dark-ui");
-  config.showTitleBar = defaultValue(config.showTitleBar, false);
+  config.titleBarStyle = defaultValue(config.titleBarStyle, "compact");
   config.frameByDefault = defaultValue(config.frameByDefault, true);
 
   if (config.commandLineActions === undefined) {
@@ -973,7 +973,7 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
   msg: Messages.ThemeContentsRequestMessage): Promise<void> {
 
   const globalVariables: GlobalVariableMap = new Map();
-  globalVariables.set("extraterm-titlebar-visible", titleBarVisible);
+  globalVariables.set("extraterm-titlebar-style", titleBarStyle);
   globalVariables.set("extraterm-platform", process.platform);
 
   try {

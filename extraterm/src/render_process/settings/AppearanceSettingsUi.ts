@@ -7,7 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as _ from 'lodash';
 
-import {FontInfo} from '../../Config';
+import {FontInfo, TitleBarStyle} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -16,10 +16,9 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
 const ID_UI_ZOOM = "ID_UI_ZOOM";
 
-type TitleBarType = 'native' | 'theme';
 
 interface TitleBarOption {
-  id: TitleBarType;
+  id: TitleBarStyle;
   name: string;
 }
 
@@ -44,16 +43,6 @@ interface SelectableOption {
         {{ option.name }}
       </option>
     </select>
-
-    <template v-if="titleBar != currentTitleBar">
-      <label></label>
-      <div>
-        <p class="minor">
-          <i class="fa fa-info-circle"></i>
-          A restart is requred before this change takes effect.
-        </p>
-      </div>
-    </template>
 
     <label for="${ID_TERMINAL_FONT_SIZE}">Font Size:</label>
     <span class="group"><input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="char-width-4"
@@ -120,11 +109,21 @@ interface SelectableOption {
     </select>
 
     <label for="theme-terminal">Window Title Bar:</label>
-    <select id="title-bar" v-model="titleBar" class="char-width-12">
+    <select id="title-bar" v-model="titleBarStyle" class="char-width-12">
       <option v-for="option in titleBarOptions" v-bind:value="option.id">
         {{ option.name }}
       </option>
     </select>
+
+    <template v-if="titleBarStyle != currentTitleBarStyle">
+      <label></label>
+      <div>
+        <p class="minor">
+          <i class="fa fa-info-circle"></i>
+          A restart is requred before this change takes effect.
+        </p>
+      </div>
+    </template>
   </div>
 
   <h3>Text Viewer</h3>
@@ -182,8 +181,8 @@ export class AppearanceSettingsUi extends Vue {
   themeSyntax: string;
   themeGUI: string;
 
-  titleBar: TitleBarType;
-  currentTitleBar: TitleBarType;
+  titleBarStyle: TitleBarStyle;
+  currentTitleBarStyle: TitleBarStyle;
   titleBarOptions: TitleBarOption[];
 
   terminalFont: string;
@@ -209,11 +208,12 @@ export class AppearanceSettingsUi extends Vue {
     this.terminalFont = "";
     this.terminalFontOptions = [];
 
-    this.titleBar = "theme";
-    this.currentTitleBar = "theme";
+    this.titleBarStyle = "theme";
+    this.currentTitleBarStyle = "theme";
     this.titleBarOptions = [
+      { id: "native", name: "Native title bar" },
       { id: "theme", name: "Theme title bar" },
-      { id: "native", name: "Native title bar" }
+      { id: "compact", name: "Compact title bar" },
     ];
 
     this.uiScalePercent = 100;
