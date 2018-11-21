@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
 /* top UI */
@@ -27,12 +27,6 @@ $tab-background-color-active: $background-color;
 
   display: flex;
   flex-direction: column;
-}
-
-#ID_REST_DIV_LEFT {
-  & > button {
-    margin-top: pxToRem(7px);
-  }
 }
 
 #ID_TITLE_BAR {

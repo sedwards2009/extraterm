@@ -5,8 +5,6 @@
 @import "general-gui/pxToRem";
 @import "fonts/font-awesome";
 
-$tab-height: pxToRem(26px);
-
 :host(:focus) {
   outline: 0 solid transparent;
 }

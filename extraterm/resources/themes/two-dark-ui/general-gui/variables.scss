@@ -346,3 +346,4 @@ $tab-border-color:                 $base-border-color;
 $tab-text-color:                   $text-color-subtle;
 $tab-text-color-active:            $text-highlight-color;
 $tab-text-color-editor:            contrast($ui-syntax-color, darken($ui-syntax-color, 50%), $text-highlight-color, 50%);
+$tab-height: $ui-tab-height;

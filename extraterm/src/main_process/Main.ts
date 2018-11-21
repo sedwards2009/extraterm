@@ -217,10 +217,24 @@ function openWindow(parsedArgs: Command): void {
     "webPreferences": {
       "experimentalFeatures": true,
     },
-    frame: generalConfig.titleBarStyle === "native",
     title: "Extraterm",
     backgroundColor: themeInfo.loadingBackgroundColor
   };
+
+  if (process.platform === "darwin") {
+    if (generalConfig.titleBarStyle === "native") {
+      options.frame = true;
+    } else {
+      if (generalConfig.titleBarStyle === "theme") {
+        options.titleBarStyle = "hidden";
+      } else {
+        // Compact
+        options.titleBarStyle = "hiddenInset";
+      }
+    }
+  } else {
+    options.frame = generalConfig.titleBarStyle === "native";
+  }
 
   // Restore the window position and size from the last session.
   const dimensions = getWindowDimensionsFromConfig(0);

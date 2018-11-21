@@ -28,12 +28,6 @@
   flex-direction: column;
 }
 
-#ID_REST_DIV_LEFT {
-  & > button {
-    margin-top: pxToRem(7px);
-  }
-}
-
 #ID_TITLE_BAR {
   background: $tab-bar-background-color;
 }

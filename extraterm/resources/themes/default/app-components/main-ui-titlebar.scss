@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016-2018 Simon Edwards <simon@simonzone.com>
  */
 @import "app-components/window-controls";
 @import "fonts/extraicons-fontface";
@@ -8,7 +8,7 @@ $drag-bar-height: if($extraterm-titlebar-style == "theme", pxToRem(16px), 0.3333
 $resize-bar-height: if($extraterm-titlebar-style == "theme", pxToRem(4px), 0px);
 
 
-@if($extraterm-titlebar-style == "native" or $extraterm-platform == "darwin") {
+@if($extraterm-titlebar-style == "native") {
   #ID_TITLE_BAR {
     display: none;
   }
@@ -45,71 +45,9 @@ $resize-bar-height: if($extraterm-titlebar-style == "theme", pxToRem(4px), 0px);
   }
 }
 
-@if $extraterm-platform == "darwin" and $extraterm-titlebar-style != "native" {
-
-  // OSX style traffic light window controls.
+@if($extraterm-platform == "darwin" and  $extraterm-titlebar-style == "compact") {
   #ID_REST_DIV_LEFT {
-
-    & > button {
-      display: inline-block;
-
-      width: pxToRem(12px);
-      height: pxToRem(12px);
-      padding: 0;
-      // margin-top: pxToRem(12px);
-      margin-left: pxToRem(4px);
-      margin-right: pxToRem(4px);
-
-      box-sizing: border-box;
-      border-radius: pxToRem(6px);
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      outline: none;
-
-      color: transparent;
-      position: relative;
-
-      font-size: pxToRem(11px);
-
-      &:before {
-        position: relative;
-        left: 0;
-        top: -2px;
-        font-size: pxToRem(10px);
-        font-family: extraicons;
-      }
-
-      &:focus {
-        outline: 0 solid transparent;
-      }
-    }
-
-    &:hover > button {
-      color: rgba(0,0,0,0.5);
-    }
-  }
-
-  #ID_OSX_CLOSE_BUTTON {
-    background-color: #fc5753;
-    margin-left: pxToRem(3px) !important;
-    &:before {
-      content: "\ea03";
-    }
-  }
-
-  #ID_OSX_MINIMIZE_BUTTON {
-    background-color: #fdbc40;
-
-    &:before {
-      content: "\ea05";
-    }
-  }
-
-  #ID_OSX_MAXIMIZE_BUTTON {
-    background-color: #33c748;
-
-    &:before {
-      content: "\ea04";
-    }
+    min-width: 76px;
   }
 } @else {
   #ID_REST_DIV_LEFT {

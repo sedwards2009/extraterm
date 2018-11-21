@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
 /* top-window */
@@ -40,9 +40,15 @@ BODY {
 }
 
 EXTRATERM-MAINWEBUI {
-  position: absolute; // or relative
+  position: absolute;
   left: 0;
-  top: if($extraterm-titlebar-style == "native" or $extraterm-platform == darwin, pxToRem(5px), 0);
+  top: if($extraterm-titlebar-style == "native",
+         pxToRem(5px),
+         if($extraterm-platform == darwin,
+           if($extraterm-titlebar-style == "theme",
+             22px,
+             calc(22px - #{$tab-height * 37 / 59})),
+           0));
   right: 0;
   bottom: 0;
 }
@@ -61,7 +67,10 @@ EXTRATERM-MAINWEBUI {
     flex-grow: 0;
     flex-shrink: 0;
     vertical-align: baseline;
-    margin-right: $control-size;
+
+    @if($extraterm-platform != "darwin") {
+      margin-right: $control-size;
+    }
   }
 
   width: $control-size;

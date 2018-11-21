@@ -416,28 +416,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   private _leftControls(): Element {
     const tempDiv = document.createElement("DIV");
-    tempDiv.innerHTML = 
-      `<div id="${ID_REST_DIV_LEFT}">` +
-        `<button id="${ID_OSX_CLOSE_BUTTON}" tabindex="-1"></button>` +
-        `<button id="${ID_OSX_MINIMIZE_BUTTON}" tabindex="-1"></button>` +
-        `<button id="${ID_OSX_MAXIMIZE_BUTTON}" tabindex="-1"></button>` +
-      `</div>`;
-    
-    tempDiv.querySelector("#" + ID_OSX_MINIMIZE_BUTTON).addEventListener('click', () => {
-      this.focus();
-      this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
-    });
-
-    tempDiv.querySelector("#" + ID_OSX_MAXIMIZE_BUTTON).addEventListener('click', () => {
-      this.focus();
-      this._sendWindowRequestEvent(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST);
-    });
-
-    tempDiv.querySelector("#" + ID_OSX_CLOSE_BUTTON).addEventListener('click', () => {
-      this.focus();
-      this._sendWindowRequestEvent(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST);
-    });
-
+    tempDiv.innerHTML = `<div id="${ID_REST_DIV_LEFT}"></div>`;
     return tempDiv.children.item(0);
   }
 
