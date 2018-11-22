@@ -211,9 +211,9 @@ export class AppearanceSettingsUi extends Vue {
     this.titleBarStyle = "theme";
     this.currentTitleBarStyle = "theme";
     this.titleBarOptions = [
-      { id: "native", name: "Native title bar" },
-      { id: "theme", name: "Theme title bar" },
-      { id: "compact", name: "Compact title bar" },
+      { id: "native", name: "Native" },
+      { id: "theme", name: "Theme" },
+      { id: "compact", name: "Compact Theme" },
     ];
 
     this.uiScalePercent = 100;
