@@ -42,12 +42,12 @@ $tab-background-color-active: $background-color;
 
       &.active, &.active:hover {
         color: $text-selected-color;
-        background-color: $background-selected-color;
+        background-color: $settings-bg-selected-color;
       }
 
       &:focus, &:hover {
         color: $text-highlight-color;
-        background-color: $background-highlight-color;
+        background-color: $settings-bg-selected-color;
       }
     }
   }

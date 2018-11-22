@@ -161,7 +161,7 @@ $background-highlight-color: rgba(255, 255, 255, 0.07) !default;
 
 // Background color for `<body>`.
 $background-color:          $ui-bg !default;
-$background-selected-color: lighten($background-color, 8%) !default;
+$background-selected-color: $accent-bg-color !default;
 
 $text-muted-color:      mix($text-color, $background-color, 75%) !default;
 
@@ -347,3 +347,5 @@ $tab-text-color:                   $text-color-subtle;
 $tab-text-color-active:            $text-highlight-color;
 $tab-text-color-editor:            contrast($ui-syntax-color, darken($ui-syntax-color, 50%), $text-highlight-color, 50%);
 $tab-height: $ui-tab-height;
+
+$settings-bg-selected-color: lighten($background-color, 8%) !default;
