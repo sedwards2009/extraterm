@@ -50,6 +50,7 @@ import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
@@ -71,6 +72,7 @@ export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 const ID_SCROLL_CONTAINER = "ID_SCROLL_CONTAINER";
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
+const ID_SCROLLBAR_CONTAINER = "ID_SCROLLBAR_CONTAINER";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_CSS_VARS = "ID_CSS_VARS";
 const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
@@ -634,14 +636,16 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       template = window.document.createElement('template');
       template.id = ID;
 
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
+      template.innerHTML = trimBetweenTags(`<style id="${ThemeableElementBase.ID_THEME}"></style>
       <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_CONTAINER}'>
             <div id='${ID_SCROLL_AREA}'></div>
           </div>
-          <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
-        </div>`;
+          <div id='${ID_SCROLLBAR_CONTAINER}'>
+            <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
+          </div>
+        </div>`);
       window.document.body.appendChild(template);
     }
 
@@ -1788,7 +1792,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._lastCommandLine = cleancommand;
 
     const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-    this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
+    this._virtualScrollArea.updateContainerHeight(scrollContainer.clientHeight);
   }
   
   private _moveCursorToFreshLine(): void {

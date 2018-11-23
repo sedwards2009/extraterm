@@ -17,21 +17,27 @@
   width: 100%;
   height: 100%;
   contain: strict;
+
+  background-color: var(--terminal-background-color);
 }
 
-#ID_SCROLLBAR {
-  flex: 0;
-  height: 100%;
-}
+$style-margin-size: if($extarterm-margin-style == "none", 0px,
+if($extarterm-margin-style == "thin", 0.5rem,
+  if($extarterm-margin-style == "normal", 1rem,
+  2rem)));
 
 #ID_SCROLL_CONTAINER {
   flex: 1;
   height: 100%;
+  width: 100%;
   overflow-x: hidden;
   overflow-y: hidden;
 
   position: relative;
   background-color: var(--terminal-background-color);
+
+  box-sizing: border-box;
+  border: $style-margin-size solid transparent;
 }
 
 #ID_SCROLL_AREA {
@@ -49,6 +55,22 @@
    left: pxToRem(4px);
    right: pxToRem(4px);
   }
+}
+
+#ID_SCROLLBAR_CONTAINER {
+  flex: 0;
+  height: 100%;
+  background-color: var(--scrollbar-background-color);
+}
+
+#ID_SCROLLBAR {
+  width: 100%;
+  height: 100%;
+
+  box-sizing: border-box;
+  
+  border-top: $style-margin-size solid var(--scrollbar-background-color);
+  border-bottom: $style-margin-size solid var(--scrollbar-background-color);
 }
 
 .CLASS_VISITOR_DIALOG {

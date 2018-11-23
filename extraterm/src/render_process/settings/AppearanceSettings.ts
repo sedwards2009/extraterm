@@ -75,6 +75,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
       ui.themeTerminal = generalConfig.themeTerminal;
       ui.titleBarStyle = generalConfig.titleBarStyle;
       ui.uiScalePercent = generalConfig.uiScalePercent;
+      ui.terminalMarginStyle = generalConfig.terminalMarginStyle;
     }
   }
 
@@ -89,7 +90,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     newConfig.themeSyntax = ui.themeSyntax;
     newConfig.themeTerminal = ui.themeTerminal;
     newConfig.uiScalePercent = ui.uiScalePercent;
-    
+    newConfig.terminalMarginStyle = ui.terminalMarginStyle;
     this._updateConfig(GENERAL_CONFIG, newConfig);
   }
 

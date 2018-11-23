@@ -72,8 +72,8 @@ export class ScrollBar extends ThemeableElementBase {
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
-<div id='${ID_CONTAINER}'><div id='${ID_AREA}'></div></div>`;
+      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>` +
+        `<div id='${ID_CONTAINER}'><div id='${ID_AREA}'></div></div>`;
       window.document.body.appendChild(template);
     }
     return window.document.importNode(template.content, true);
@@ -87,7 +87,7 @@ export class ScrollBar extends ThemeableElementBase {
 
   @Filter("length")
   private _sanitizeLength(value: number): number {
-    if (value === null || value === undefined) {
+    if (value == null) {
       return undefined;
     }
     

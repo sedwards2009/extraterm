@@ -513,9 +513,12 @@ async function setupConfiguration(): Promise<void> {
     if (oldGeneralConfig.themeSyntax !== newGeneralConfig.themeSyntax) {
       refreshThemeTypeList.push("syntax");
     }
-    if (oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI) {
+
+    if (oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI ||
+        oldGeneralConfig.terminalMarginStyle !== newGeneralConfig.terminalMarginStyle) {
       refreshThemeTypeList.push("gui");
     }
+
     oldGeneralConfig = newGeneralConfig;
     oldSystemConfig = newSystemConfig;
     if (refreshThemeTypeList.length !== 0) {

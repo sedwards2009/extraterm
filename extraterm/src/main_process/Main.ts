@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, TitleBarStyle} from '../Config';
+import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, TitleBarStyle, TerminalMarginStyle} from '../Config';
 import {FileLogWriter, Logger, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
@@ -483,13 +483,13 @@ function setupConfig(): void {
 
   userStoredConfig.blinkingCursor = _.isBoolean(userStoredConfig.blinkingCursor) ? userStoredConfig.blinkingCursor : false;
   
-  if (userStoredConfig.terminalFontSize === undefined || typeof userStoredConfig.terminalFontSize !== 'number') {
+  if (userStoredConfig.terminalFontSize == null || typeof userStoredConfig.terminalFontSize !== 'number') {
     userStoredConfig.terminalFontSize = 12;
   } else {
     userStoredConfig.terminalFontSize = Math.max(Math.min(1024, userStoredConfig.terminalFontSize), 4);
   }
 
-  if (userStoredConfig.terminalFont === undefined || userStoredConfig.terminalFont === null) {
+  if (userStoredConfig.terminalFont == null) {
     userStoredConfig.terminalFont = DEFAULT_TERMINALFONT;
   }
 
@@ -504,6 +504,10 @@ function setupConfig(): void {
   }
 
   userStoredConfig.uiScalePercent = Math.min(500, Math.max(5, userStoredConfig.uiScalePercent || 100));
+
+  if (userStoredConfig.terminalMarginStyle == null) {
+    userStoredConfig.terminalMarginStyle = "normal";
+  }
 
   if (userStoredConfig.titleBarStyle == null) {
     userStoredConfig.titleBarStyle = "compact";
@@ -614,6 +618,7 @@ function setConfigDefaults(config: UserStoredConfig): void {
   config.themeSyntax = defaultValue(config.themeSyntax, "default");
   config.themeGUI = defaultValue(config.themeGUI, "atomic-dark-ui");
   config.titleBarStyle = defaultValue(config.titleBarStyle, "compact");
+  config.terminalMarginStyle = defaultValue(config.terminalMarginStyle, "normal");
   config.frameByDefault = defaultValue(config.frameByDefault, true);
 
   if (config.commandLineActions === undefined) {
@@ -989,6 +994,9 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
   const globalVariables: GlobalVariableMap = new Map();
   globalVariables.set("extraterm-titlebar-style", titleBarStyle);
   globalVariables.set("extraterm-platform", process.platform);
+
+  const userStoredConfig = configDatabase.getConfigCopy(GENERAL_CONFIG);
+  globalVariables.set("extarterm-margin-style", userStoredConfig.terminalMarginStyle);
 
   try {
     const renderResult = await themeManager.render(msg.themeType, globalVariables);

@@ -7,7 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as _ from 'lodash';
 
-import {FontInfo, TitleBarStyle} from '../../Config';
+import {FontInfo, TitleBarStyle, TerminalMarginStyle} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -15,10 +15,15 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
 const ID_UI_ZOOM = "ID_UI_ZOOM";
-
+const ID_TERMINAL_MARGIN = "ID_TERMINAL_MARGIN";
 
 interface TitleBarOption {
   id: TitleBarStyle;
+  name: string;
+}
+
+interface TerminalMarginOption {
+  id: TerminalMarginStyle;
   name: string;
 }
 
@@ -124,6 +129,14 @@ interface SelectableOption {
         </p>
       </div>
     </template>
+
+    <label for="${ID_TERMINAL_MARGIN}">Margin:</label>
+    <select class="char-width-6" id="${ID_TERMINAL_MARGIN}" v-model="terminalMarginStyle">
+      <option v-for="option in terminalMarginOptions" v-bind:value="option.id">
+        {{ option.name }}
+      </option>          
+    </select>
+
   </div>
 
   <h3>Text Viewer</h3>
@@ -190,6 +203,8 @@ export class AppearanceSettingsUi extends Vue {
 
   uiScalePercent: number;
   uiScalePercentOptions: SelectableOption[];
+  terminalMarginStyle: TerminalMarginStyle;
+  terminalMarginOptions: TerminalMarginOption[];
 
   themeSyntaxPreviewContents: number;
   themeSyntaxPreviewContentOptions: ThemeSyntaxPreviewContents[];
@@ -232,6 +247,14 @@ export class AppearanceSettingsUi extends Vue {
       { id: 250, name: "250%"},
       { id: 300, name: "300%"},
     ];
+
+    this.terminalMarginOptions = [
+      { id: "none", name: "None"},
+      { id: "thin", name: "Thin"},
+      { id: "normal", name: "Normal"},
+      { id: "thick", name: "Thick"},
+    ];
+    this.terminalMarginStyle = "normal";
 
     this.themeSyntaxPreviewContents = 0;
     this.themeSyntaxPreviewContentOptions = ThemeSyntaxPreviewContents;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,8 +7,8 @@ import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { Event, SessionConfiguration } from 'extraterm-extension-api';
 
 export type ShowTipsStrEnum = "always" | "daily" | "never";
-
 export type TitleBarStyle = "native" | "theme" | "compact";
+export type TerminalMarginStyle = "none" | "thin" | "normal" | "thick";
 
 
 export interface GeneralConfig {
@@ -19,6 +19,7 @@ export interface GeneralConfig {
   terminalFont?: string;
   terminalFontSize?: number;  // px
   uiScalePercent?: number;
+  terminalMarginStyle?: TerminalMarginStyle;
 
   scrollbackMaxLines?: number;
   scrollbackMaxFrames?: number;
