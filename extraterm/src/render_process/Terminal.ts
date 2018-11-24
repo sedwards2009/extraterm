@@ -1071,7 +1071,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
       // --- DOM write ---
       const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-      this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
+      this._virtualScrollArea.updateContainerHeight(scrollContainer.clientHeight);
 
       // Build the list of elements we will resize right now.
       const childrenToResize: VirtualScrollable[] = [];
