@@ -2,6 +2,7 @@
 input:not([type="radio"]), select {
   font-size: $input-font-size;
   font-family: $font-family;
+  color: $text-color;
   padding: $input-padding-vertical $input-padding-horizontal;
 
   line-height: $line-height-base;
@@ -13,6 +14,10 @@ input:not([type="radio"]), select {
   &:disabled {
     cursor: not-allowed;
   }
+  
+  &:hover {
+    color: $text-highlight-color;
+  }
 }
 
 input:not([type="radio"]):not([type="checkbox"]), select {
@@ -22,7 +27,9 @@ input:not([type="radio"]):not([type="checkbox"]), select {
 select {
   background-color: $select-background-color;
   color: $text-color;
+
   &:hover {
+    color: $text-highlight-color;
     background-color: $select-background-hover-color;
   }
 
