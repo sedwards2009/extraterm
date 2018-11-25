@@ -95,7 +95,7 @@ export interface FontInfo {
   postscriptName: string;
 }
 
-export type ConfigKey = string;
+export type ConfigKey = "*" | "general" | "session" | "command_line_action" | "system";
 
 export interface ConfigChangeEvent {
   key: ConfigKey;

@@ -762,7 +762,7 @@ class ConfigDatabaseImpl implements ConfigDatabase {
     if (key === "*") {
       let changed = false;
       for (const objectKey of Object.getOwnPropertyNames(newConfig)) {
-        changed = this._setSingleConfigNoWrite(objectKey, newConfig[objectKey]) || changed;
+        changed = this._setSingleConfigNoWrite(<ConfigKey> objectKey, newConfig[objectKey]) || changed;
       }
       return changed;
     } else {

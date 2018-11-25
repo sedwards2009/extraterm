@@ -693,7 +693,7 @@ class ConfigDatabaseImpl implements ConfigDatabase {
   setConfigNoWrite(key: ConfigKey, newConfig: any): void {
     if (key === "*") {
       for (const objectKey of Object.getOwnPropertyNames(newConfig)) {
-        this._setSingleConfigNoWrite(objectKey, newConfig[objectKey]);
+        this._setSingleConfigNoWrite(<ConfigKey> objectKey, newConfig[objectKey]);
       }
     } else {
       this._setSingleConfigNoWrite(key, newConfig);
@@ -979,7 +979,6 @@ function handleConfig(msg: Messages.ConfigMessage): void {
   if (LOG_FINE) {
     _log.debug("Incoming new config: ", msg);
   }
-
   configDatabase.setConfig(msg.key, msg.config);
 }
 

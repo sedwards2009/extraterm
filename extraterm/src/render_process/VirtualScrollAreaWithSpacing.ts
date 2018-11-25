@@ -7,8 +7,6 @@
 import { VirtualScrollArea, VirtualAreaState, VirtualScrollableState, VirtualScrollable, SetterState, DumpState, VirtualScrollableHeight } from './VirtualScrollArea';
 import { EmbeddedViewer } from './viewers/EmbeddedViewer';
 
-const SPACING_PX = 30;
-
 
 class Spacer implements VirtualScrollable {
 
@@ -45,10 +43,17 @@ class Spacer implements VirtualScrollable {
 export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
 
   private _spacer: Spacer;
+  private _spacing: number;
 
-  constructor() {
+  constructor(spacing: number) {
     super();
-    this._spacer = new Spacer(SPACING_PX);
+    this._spacer = new Spacer(spacing);
+    this._spacing = spacing;
+  }
+
+  setSpacing(spacing: number): void {
+    this._spacing = spacing;
+    this._spacer.setSpacing(spacing);
   }
 
   protected _totalVirtualHeight(state: VirtualAreaState): number {
@@ -77,8 +82,8 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
         const spacingVirtualScrollableState: VirtualScrollableState = {
           scrollable: this._spacer,
           virtualHeight: 0,
-          minHeight: SPACING_PX,
-          reserveViewportHeight: SPACING_PX,
+          minHeight: this._spacing,
+          reserveViewportHeight: this._spacing,
         
           // Output - These values are set by the calculate() method.
           realHeight: 0,
@@ -124,7 +129,7 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
     for (let vss of this._currentState.scrollableStates) {
       const isFrame = vss.scrollable instanceof EmbeddedViewer;
       if (this._needsSpace(lastIsFrame, isFrame)) {
-        heights[i].height += SPACING_PX;
+        heights[i].height += this._spacing;
       }
 
       i++;

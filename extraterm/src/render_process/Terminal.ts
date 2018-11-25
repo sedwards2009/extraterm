@@ -46,7 +46,7 @@ import * as Messages from '../WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import { VirtualScrollAreaWithSpacing} from './VirtualScrollAreaWithSpacing';
 import {FrameFinder} from './FrameFinderType';
-import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG} from '../Config';
+import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, ConfigChangeEvent, SystemConfig, GeneralConfig} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
@@ -243,13 +243,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
 
-      this._virtualScrollArea = new VirtualScrollAreaWithSpacing();
+      this._virtualScrollArea = new VirtualScrollAreaWithSpacing(0);
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
         scrollArea.style.top = "-" + offset + "px";
       });
       this._virtualScrollArea.setScrollbar(scrollbar);
       this._virtualScrollArea.setSetTopFunction(this._setTopFunction.bind(this));
       this._virtualScrollArea.setMarkVisibleFunction(this._markVisible.bind(this));
+      this._updateScrollableSpacing();
 
       // Set up the emulator
       this._cookie = crypto.randomBytes(10).toString('hex');
@@ -408,8 +409,52 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   setConfigDatabase(configManager: ConfigDatabase): void {
     this._configDatabase = configManager;
+    this._configDatabase.onChange((event: ConfigChangeEvent) => {
+      if (event.key === "general") {
+        const oldConfig = <GeneralConfig> event.oldConfig;
+        const newConfig = <GeneralConfig> event.newConfig;
+        if (oldConfig.uiScalePercent !== newConfig.uiScalePercent ||
+            oldConfig.terminalMarginStyle !== newConfig.terminalMarginStyle) {
+          if (this._elementAttached) {
+            this._updateScrollableSpacing();
+            this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+          }
+        }
+      }
+    });
   }
-  
+
+  private _updateScrollableSpacing(): void {
+    const generalConfig = this._configDatabase.getConfig("general");
+    let spacing = 0;
+    switch (generalConfig.terminalMarginStyle) {
+      case "none":
+        spacing = 0;
+        break;
+      case "thin":
+        spacing = Math.round(this._rootFontSize()/2);
+        break;
+      case "normal":
+        spacing = this._rootFontSize();
+        break;
+      case "thick":
+        spacing = this._rootFontSize() * 2;
+        break;            
+    }
+    this._virtualScrollArea.setSpacing(spacing);
+  }
+
+  private _rootFontSize(): number {
+    const generalConfig = this._configDatabase.getConfig("general");
+    const systemConfig = this._configDatabase.getConfig("system");
+    
+    const dpiScaleFactor = systemConfig.originalScaleFactor / systemConfig.currentScaleFactor;
+    const unitHeightPx = 12;
+
+    const rootFontSize = Math.max(Math.floor(unitHeightPx * generalConfig.uiScalePercent * dpiScaleFactor / 100), 5);
+    return rootFontSize;
+  }
+
   setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
