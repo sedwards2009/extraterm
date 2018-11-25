@@ -138,10 +138,6 @@ DIV.tab_header_container:hover > DIV.tab_header_close > BUTTON > I {
   margin-left: ($ui-tab-height - 1.5rem) / 2;
 }
 
-// DIV.tab_header_container:hover DIV.tab_header_close > BUTTON:not(:hover) {
-//   color: $text-highlight-color;  
-// }
-
 DIV.tab_header_close > BUTTON.microtool.danger {
   background-image: none;
 
@@ -150,12 +146,15 @@ DIV.tab_header_close > BUTTON.microtool.danger {
     background-color: $accent-color;
   }
 
+  &:focus {
+    color: $tab-background-color;
+    box-shadow: none;
+    background-color: change_color($accent-color, $alpha: 0.5);
+    outline: 0 solid transparent;
+  }
+
   &:active {
     color: $tab-background-color;
-    background-color: fade($accent-color, 50%);
+    background-color: change_color($accent-color, $alpha: 0.5);
   }
-}
-
-DIV.tab_header_close > BUTTON:focus {
-  outline: 0 solid transparent;
 }
