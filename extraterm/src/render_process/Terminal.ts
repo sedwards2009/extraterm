@@ -44,6 +44,7 @@ import {UploadProgressBar} from './UploadProgressBar';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
+import { VirtualScrollAreaWithSpacing} from './VirtualScrollAreaWithSpacing';
 import {FrameFinder} from './FrameFinderType';
 import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
@@ -150,7 +151,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _log: Logger;
   private _pty: Pty = null;
-  private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea = null;
+  private _virtualScrollArea: VirtualScrollAreaWithSpacing = null;
   private _stashArea: DocumentFragment = null;
   private _childElementList: ChildElementStatus[] = [];
 
@@ -242,7 +243,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
 
-      this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
+      this._virtualScrollArea = new VirtualScrollAreaWithSpacing();
       this._virtualScrollArea.setScrollFunction( (offset: number): void => {
         scrollArea.style.top = "-" + offset + "px";
       });
@@ -1310,7 +1311,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _goToPreviousFrame(): void {
-    const heights = this._virtualScrollArea.getScrollableHeights();
+    const heights = this._virtualScrollArea.getScrollableHeightsIncSpacing();
 
     const y = this._virtualScrollArea.getScrollYOffset();
     let heightCount = 0;
@@ -1324,7 +1325,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _goToNextFrame(): void {
-    const heights = this._virtualScrollArea.getScrollableHeights();
+    const heights = this._virtualScrollArea.getScrollableHeightsIncSpacing();
 
     const y = this._virtualScrollArea.getScrollYOffset();
     let heightCount = 0;

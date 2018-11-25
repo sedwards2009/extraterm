@@ -80,7 +80,7 @@ export function emitResizeEvent(el: VirtualScrollable & HTMLElement): void {
 }
 
 // Describes the state of one Scrollable
-interface VirtualScrollableState {
+export interface VirtualScrollableState {
   scrollable: VirtualScrollable;
   virtualHeight: number;
   minHeight: number;
@@ -94,7 +94,7 @@ interface VirtualScrollableState {
   visible: boolean;
 }
 
-interface VirtualAreaState {
+export interface VirtualAreaState {
   scrollbar: ScrollBar;
   virtualScrollYOffset: number;
   containerHeight: number;
@@ -119,7 +119,7 @@ export interface ScrollBar {
 
 export interface VirtualScrollableHeight {
   readonly scrollable: VirtualScrollable;
-  readonly height: number;
+  height: number;
 }
 
 interface Mutator { 
@@ -142,12 +142,9 @@ const emptyState: VirtualAreaState = {
   realScrollYOffset: 0
 };
 
-/**
- * 
- */
 export class VirtualScrollArea {
   
-  private _currentState: VirtualAreaState = null;
+  protected _currentState: VirtualAreaState = null;
   
   private _log: Logger = null;
   
@@ -196,7 +193,11 @@ export class VirtualScrollArea {
   }
 
   getScrollableHeights(): VirtualScrollableHeight[] {
-    return this._currentState.scrollableStates.map<VirtualScrollableHeight>( (state): VirtualScrollableHeight => {
+    return this._computeScrollableHeights(this._currentState.scrollableStates);
+  }
+  
+  protected _computeScrollableHeights(vssList: VirtualScrollableState[]): VirtualScrollableHeight[] {
+    return vssList.map<VirtualScrollableHeight>( (state): VirtualScrollableHeight => {
       const smallState: VirtualScrollableHeight = {
         scrollable: state.scrollable,
         height: state.virtualHeight + state.reserveViewportHeight
@@ -204,7 +205,7 @@ export class VirtualScrollArea {
       return smallState;
     });
   }
-  
+
   //-----------------------------------------------------------------------
   //
   //  #####                                
@@ -547,7 +548,7 @@ export class VirtualScrollArea {
    * 
    * @param state the state which needs to be recomputed
    */
-  private _compute(state: VirtualAreaState): void {
+  protected _compute(state: VirtualAreaState): void {
     if (state.scrollFunction === null) {
       return;
     }
@@ -694,7 +695,7 @@ export class VirtualScrollArea {
    * @param  {VirtualAreaState} state [description]
    * @return {number}                 [description]
    */
-  private _totalVirtualHeight(state: VirtualAreaState): number {
+  protected _totalVirtualHeight(state: VirtualAreaState): number {
     const result = state.scrollableStates.reduce<number>(
       (accu: number, scrollable: VirtualScrollableState): number =>
         accu + Math.max(scrollable.minHeight, scrollable.virtualHeight + scrollable.reserveViewportHeight), 0);
@@ -786,10 +787,7 @@ export class VirtualScrollArea {
   }
 }
 
-/**
- * 
- */
-function DumpState(state: VirtualAreaState): void {  
+export function DumpState(state: VirtualAreaState): void {  
   console.log(VirtualAreaStateToString(state));
 }
 
@@ -801,7 +799,7 @@ function VirtualAreaStateToString(state: VirtualAreaState): string {
 
     // Output
     containerScrollYOffset: ${state.containerScrollYOffset},
-    scrollableStates: ${state.scrollableStates.map(VirtualScrollableStateToString).join(',\n')},
+    scrollableStates: [${state.scrollableStates.map(VirtualScrollableStateToString).join(',\n')}],
     intersectIndex: ${state.intersectIndex},
     realScrollYOffset: ${state.realScrollYOffset}
   }`;
