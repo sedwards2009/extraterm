@@ -293,8 +293,8 @@ $badge-vertical-padding:        0.2em !default;
 $badge-horizontal-padding:      0.5em !default;
 $badge-line-height:             1 !default;
 $badge-border-radius:           1.5em !default;
-$badge-background-color:        #777 !default;
-$badge-color:                   #fff !default;
+$badge-background-color:        lighten($background-highlight-color, 6%) !default;
+$badge-color:                   $text-highlight-color !default;
 $badge-vertical-align:          1/$badge-font-ratio * $badge-vertical-padding !default;
 
 //-------------------------------------------------------------------------
