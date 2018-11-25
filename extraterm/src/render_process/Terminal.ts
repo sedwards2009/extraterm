@@ -178,7 +178,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _mode: Mode = Mode.DEFAULT;
   
-  private _configManager: ConfigDatabase = null;
+  private _configDatabase: ConfigDatabase = null;
   private _keyBindingManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
 
@@ -407,7 +407,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   setConfigDatabase(configManager: ConfigDatabase): void {
-    this._configManager = configManager;
+    this._configDatabase = configManager;
   }
   
   setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
@@ -433,13 +433,13 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
     
     const commandParts = cleanCommandLine.split(/\s+/);
-    if (this._configManager === null) {
+    if (this._configDatabase === null) {
       return false;
     } else {
     
       const commandLineActions: DeepReadonly<CommandLineAction[]> = 
-        this._configManager.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
-      const frameByDefault = this._configManager.getConfig(GENERAL_CONFIG).frameByDefault;
+        this._configDatabase.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
+      const frameByDefault = this._configDatabase.getConfig(GENERAL_CONFIG).frameByDefault;
 
       for (const cla of commandLineActions) {
         if (this._commandLineActionMatches(commandLine, cla)) {
@@ -676,7 +676,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _showTip(): void {
-    const config = this._configManager.getConfigCopy(GENERAL_CONFIG);
+    const config = this._configDatabase.getConfigCopy(GENERAL_CONFIG);
     switch (config.showTips) {
       case 'always':
         break;
@@ -691,7 +691,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._appendMimeViewer(TipViewer.MIME_TYPE, null);
     config.tipTimestamp = Date.now();
     config.tipCounter = config.tipCounter + 1;
-    this._configManager.setConfig(GENERAL_CONFIG, config);
+    this._configDatabase.setConfig(GENERAL_CONFIG, config);
   }
   
   private _handleFocus(event: FocusEvent): void {
@@ -789,7 +789,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     // Create the TerminalViewer
     const terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
     injectKeybindingsManager(terminalViewer, this._keyBindingManager);
-    injectConfigDatabase(terminalViewer, this._configManager);
+    injectConfigDatabase(terminalViewer, this._configDatabase);
     
     terminalViewer.setEmulator(this._emulator);
 
@@ -1049,8 +1049,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
     this._virtualScrollArea.updateScrollableSize(virtualScrollable);
-    if (this._configManager != null) {
-      const config = this._configManager.getConfig(GENERAL_CONFIG);
+    if (this._configDatabase != null) {
+      const config = this._configDatabase.getConfig(GENERAL_CONFIG);
       this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
     }
   }
@@ -1100,8 +1100,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._virtualScrollArea.updateScrollableSizes(childrenToResize);
       this._virtualScrollArea.reapplyState();
 
-      if (this._configManager != null) {
-        const config = this._configManager.getConfig(GENERAL_CONFIG);
+      if (this._configDatabase != null) {
+        const config = this._configDatabase.getConfig(GENERAL_CONFIG);
         this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
     }
@@ -1173,8 +1173,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     const rc = func();
     this._enforceScrollbackLengthGuard = oldGuardFlag;
 
-    if (this._configManager != null) {
-      const config = this._configManager.getConfig(GENERAL_CONFIG);
+    if (this._configDatabase != null) {
+      const config = this._configDatabase.getConfig(GENERAL_CONFIG);
       this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
     }
     return rc;
@@ -1847,7 +1847,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     // Create and set up a new command-frame.
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
     injectKeybindingsManager(el, this._keyBindingManager);
-    injectConfigDatabase(el, this._configManager);
+    injectConfigDatabase(el, this._configDatabase);
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
       this.focus();
@@ -1967,7 +1967,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
       injectKeybindingsManager(outputTerminalViewer, this._keyBindingManager);
-      injectConfigDatabase(outputTerminalViewer, this._configManager);
+      injectConfigDatabase(outputTerminalViewer, this._configDatabase);
       newViewerElement.setViewerElement(outputTerminalViewer);
       
       outputTerminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
@@ -2126,8 +2126,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       viewerElement.setViewerElement(mimeViewerElement);
       this._appendScrollableElement(viewerElement);
 
-      if (this._configManager != null) {
-        const config = this._configManager.getConfig(GENERAL_CONFIG);
+      if (this._configDatabase != null) {
+        const config = this._configDatabase.getConfig(GENERAL_CONFIG);
         this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
     }
@@ -2150,7 +2150,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(tag);
     injectKeybindingsManager(dataViewer, this._keyBindingManager);
-    injectConfigDatabase(dataViewer, this._configManager);
+    injectConfigDatabase(dataViewer, this._configDatabase);
     if (bulkFileHandle !== null) {
       dataViewer.setBulkFileHandle(bulkFileHandle);
     }
