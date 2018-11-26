@@ -19,7 +19,7 @@
 		<key>foreground</key>
 		<string>#747369</string>
 		<key>selectionBackground</key>
-		<string>#515151</string>
+		<string>#0f82e6</string>
 		<key>selectionForeground</key>
 		<string>#a09f93</string>
 	</dict>
@@ -39,7 +39,7 @@
 				<key>lineHighlight</key>
 				<string>#4c576730</string>
 				<key>selection</key>
-				<string>#3D4350</string>
+				<string>#0f82e6</string>
 			</dict>
 		</dict>
 		<dict>
