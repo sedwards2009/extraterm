@@ -121,8 +121,8 @@ export interface Themeable {
   setThemeCssMap(cssFileMap: CssFileMap, themeTimeStamp: number): void;
 }
 
-export const FALLBACK_TERMINAL_THEME = "itermcolors-terminal-theme-provider:Extraterm Default.itermcolors";
-export const FALLBACK_SYNTAX_THEME = "textmate-syntax-theme-provider:Extraterm Default.tmTheme";
+export const FALLBACK_TERMINAL_THEME = "itermcolors-terminal-theme-provider:Two Dark.itermcolors";
+export const FALLBACK_SYNTAX_THEME = "textmate-syntax-theme-provider:Two Dark.tmTheme";
 export const FALLBACK_UI_THEME = "default";
 export const SYNTAX_CSS_THEME = "default-syntax";
 export const TERMINAL_CSS_THEME = "default-terminal";

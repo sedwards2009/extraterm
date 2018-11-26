@@ -500,7 +500,7 @@ function setupConfig(): void {
     userStoredConfig.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
   }
   if (userStoredConfig.themeGUI === "default" || ! isThemeType(themeManager.getTheme(userStoredConfig.themeGUI), 'gui')) {
-    userStoredConfig.themeGUI = "atomic-dark-ui";
+    userStoredConfig.themeGUI = "two-dark-ui";
   }
 
   userStoredConfig.uiScalePercent = Math.min(500, Math.max(5, userStoredConfig.uiScalePercent || 100));
