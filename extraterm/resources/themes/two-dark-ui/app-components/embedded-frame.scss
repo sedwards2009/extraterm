@@ -57,10 +57,11 @@ $TEAR_BORDER_HEIGHT: 2px;
   background-color: $header-bg-color;
 
   border: $border-width solid $neutral-bg-color;
-  border-bottom: 1px solid $neutral-bg-color;
-
+  border-bottom-width: 0px;
   border-top-left-radius: $corner-radius;
   border-top-right-radius: $corner-radius;
+
+  box-shadow: inset 0px -1px $neutral-bg-color;
 }
 
 #ID_OUTPUT_CONTAINER {
@@ -80,9 +81,25 @@ $TEAR_BORDER_HEIGHT: 2px;
   border-bottom-right-radius: $corner-radius;
 }
 
-// Running, Neutral
-#ID_CONTAINER.CLASS_NEUTRAL,
+// Running
 #ID_CONTAINER.CLASS_RUNNING {
+
+  & > #ID_HEADER {
+    border-color: $neutral-bg-color;
+    border-radius: $corner-radius;
+    border-bottom-width: $border-width;
+    box-shadow: none;
+  }
+
+  & > #ID_OUTPUT_CONTAINER {
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    border-right-color: transparent;
+  }
+}
+
+// Neutral
+#ID_CONTAINER.CLASS_NEUTRAL {
 
   & > #ID_HEADER {
     border-left-color: $neutral-bg-color;
@@ -96,6 +113,7 @@ $TEAR_BORDER_HEIGHT: 2px;
     border-right-color: $neutral-bg-color;
   }
 }
+
 
 // Succeeded
 #ID_CONTAINER.CLASS_SUCCEEDED {
