@@ -21,6 +21,7 @@ DIV.tab_bar_rest {
   
   & > DIV.space {
     flex-grow: 1;
+    -webkit-app-region: drag;
   }
 }
 
