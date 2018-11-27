@@ -80,6 +80,13 @@ interface SelectableOption {
       <p class="minor">{{themeTerminalFormatsMessage}}</p>
     </div>
 
+    <label for="${ID_TERMINAL_MARGIN}">Margin:</label>
+    <select class="char-width-6" id="${ID_TERMINAL_MARGIN}" v-model="terminalMarginStyle">
+      <option v-for="option in terminalMarginOptions" v-bind:value="option.id">
+        {{ option.name }}
+      </option>          
+    </select>
+
     <et-vue-terminal-ace-viewer-element
       id="terminal_theme_preview"
       class="full-width">
@@ -129,13 +136,6 @@ interface SelectableOption {
         </p>
       </div>
     </template>
-
-    <label for="${ID_TERMINAL_MARGIN}">Margin:</label>
-    <select class="char-width-6" id="${ID_TERMINAL_MARGIN}" v-model="terminalMarginStyle">
-      <option v-for="option in terminalMarginOptions" v-bind:value="option.id">
-        {{ option.name }}
-      </option>          
-    </select>
 
   </div>
 
