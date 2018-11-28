@@ -58,6 +58,10 @@
 
   & > .CLASS_NEW_TAB_BUTTON {
     align-self: center;
+
+    &:focus, &:active {
+      box-shadow: none;
+    }
   }
 }
 
