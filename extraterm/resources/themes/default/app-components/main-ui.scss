@@ -29,15 +29,46 @@ $tab-background-color-active: $background-color;
   flex-direction: column;
 }
 
-#ID_TITLE_BAR {
-  background: $tab-bar-background-color;
-}
-
 #ID_MAIN_CONTENTS {
-  flex-grow: 1;
   position: relative;
 
   & > * {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@if($extraterm-titlebar-style != "compact") {
+  #ID_TOP_LAYOUT {
+    display: flex;
+    flex-direction: column;
+  }  
+
+  #ID_TITLE_BAR {
+    background: $tab-bar-background-color;
+  }
+  
+  #ID_MAIN_CONTENTS {
+    flex-grow: 1;
+  }
+}
+
+@if($extraterm-titlebar-style == "compact") {
+  #ID_TITLE_BAR {
+    background: $tab-bar-background-color;
+  }
+
+  #ID_TITLE_BAR {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1rem;
+    height: $tab-height;
+    -webkit-app-region: drag;
+  }
+  
+  #ID_MAIN_CONTENTS {
     position: absolute;
     width: 100%;
     height: 100%;
