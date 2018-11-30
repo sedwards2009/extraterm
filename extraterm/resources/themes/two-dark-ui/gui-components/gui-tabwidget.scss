@@ -34,7 +34,8 @@ $tab-background-color-active: $background-color;
 #ID_TABBAR > li.remainder {
   flex-shrink: 0;
   flex-grow: 1;
-  height: $tab-height + pxToRem(1px);
+  border-top: 1px solid transparent;
+  height: $tab-height;
 }
 
 #ID_CONTENTS {

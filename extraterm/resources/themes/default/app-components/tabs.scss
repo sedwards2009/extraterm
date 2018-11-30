@@ -155,10 +155,6 @@ $tab-max-width: 20rem;
     margin: 0 pxToRem(20px) 0 pxToRem(5px);
   }
 
-  & > LI.remainder {
-    padding-bottom: $tab-bottom-border-height;
-  }
-
   .placeholder {
     height: $tab-height + $tab-top-padding + $tab-bottom-border-height;
     margin-left: pxToRem(-9px); // center between tabs

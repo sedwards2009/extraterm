@@ -172,7 +172,6 @@ DIV.tab_header_container:hover > DIV.tab_header_close > BUTTON > I {
 
 DIV.tab_header_close > BUTTON.microtool.danger {
   background-image: none;
-  vertical-align: -0.2rem;
   
   &:hover {
     color: $tab-background-color;
