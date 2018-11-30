@@ -316,8 +316,8 @@ function getWindowDimensionsFromConfig(windowId: number): Electron.Rectangle {
   return {
     x: singleWindowConfig.x,
     y: singleWindowConfig.y,
-    width: singleWindowConfig.width,
-    height: singleWindowConfig.height
+    width: Math.max(singleWindowConfig.width, 50),
+    height: Math.max(singleWindowConfig.height, 50)
   };
 }
 
