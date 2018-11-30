@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { VirtualScrollArea, VirtualAreaState, VirtualScrollableState, VirtualScrollable, SetterState, DumpState, VirtualScrollableHeight } from './VirtualScrollArea';
+import { VirtualScrollArea, VirtualAreaState, VirtualScrollableState, VirtualScrollable, SetterState, DumpState, VirtualScrollableHeight, Mutator } from './VirtualScrollArea';
 import { EmbeddedViewer } from './viewers/EmbeddedViewer';
 
 
-class Spacer implements VirtualScrollable {
+export class Spacer implements VirtualScrollable {
 
   _spacing: number;
 
@@ -56,19 +56,15 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
     this._spacer.setSpacing(spacing);
   }
 
-  protected _totalVirtualHeight(state: VirtualAreaState): number {
-    const previousList = state.scrollableStates;
-    state.scrollableStates = this._makeStatesListWithSpacing(previousList);
-    const result = super._totalVirtualHeight(state);
-    state.scrollableStates = previousList;
-    return result;
-  }
+  protected _updateAutoscrollBottom(...mutator: Mutator[]): void {
+    const patchedMutators = mutator.map(func => {
+      return (newState: VirtualAreaState): void => {
+        func(newState);
+        newState.scrollableStates = this._makeStatesListWithSpacing(newState.scrollableStates);
+      };
+    });
 
-  protected _compute(state: VirtualAreaState): void {
-    const previousList = state.scrollableStates;
-    state.scrollableStates = this._makeStatesListWithSpacing(previousList);
-    super._compute(state);
-    state.scrollableStates = previousList;
+    super._updateAutoscrollBottom(...patchedMutators);
   }
 
   private _makeStatesListWithSpacing(scrollableStates: VirtualScrollableState[]): VirtualScrollableState[] {
@@ -76,6 +72,10 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
 
     const newStateList: VirtualScrollableState[] = [];
     for (let vss of scrollableStates) {
+      if (vss.scrollable instanceof Spacer) {
+        continue;
+      }
+
       const isFrame = vss.scrollable instanceof EmbeddedViewer;
 
       if (this._needsSpace(lastIsFrame, isFrame)) {
@@ -124,17 +124,18 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
   getScrollableHeightsIncSpacing(): VirtualScrollableHeight[] {
     const heights = this.getScrollableHeights();
 
-    let lastIsFrame: boolean = null;
-    let i=0;
-    for (let vss of this._currentState.scrollableStates) {
-      const isFrame = vss.scrollable instanceof EmbeddedViewer;
-      if (this._needsSpace(lastIsFrame, isFrame)) {
-        heights[i].height += this._spacing;
+    const result: VirtualScrollableHeight[] = [];
+    let lastHeightInfo: VirtualScrollableHeight = null;
+    for (let heightInfo of heights) {
+      if (heightInfo.scrollable instanceof Spacer) {
+        lastHeightInfo.height += this._spacing;
+      } else {
+        result.push(heightInfo);
       }
 
-      i++;
-      lastIsFrame = isFrame;
+      lastHeightInfo = heightInfo;
     }
-    return heights;
+
+    return result;
   }
 }

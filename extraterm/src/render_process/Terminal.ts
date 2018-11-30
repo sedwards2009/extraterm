@@ -44,7 +44,7 @@ import {UploadProgressBar} from './UploadProgressBar';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import * as VirtualScrollArea from './VirtualScrollArea';
-import { VirtualScrollAreaWithSpacing} from './VirtualScrollAreaWithSpacing';
+import { VirtualScrollAreaWithSpacing, Spacer} from './VirtualScrollAreaWithSpacing';
 import {FrameFinder} from './FrameFinderType';
 import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, ConfigChangeEvent, SystemConfig, GeneralConfig} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
@@ -1040,6 +1040,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _markVisible(scrollable: VirtualScrollable, visible: boolean): void {
+    if (scrollable instanceof Spacer) {
+      return;
+    }
+
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     const element: ViewerElement = <any> scrollable;
     if ( ! visible) {
@@ -1153,6 +1157,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _setTopFunction(scrollable: VirtualScrollable, top: number):  void {
+    if (scrollable instanceof Spacer) {
+      return;
+    }
     (<HTMLElement> (<any> scrollable)).style.top = "" + top + "px";
   }
 

@@ -122,7 +122,7 @@ export interface VirtualScrollableHeight {
   height: number;
 }
 
-interface Mutator { 
+export interface Mutator { 
   (newState: VirtualAreaState): void;
 }
 
@@ -520,7 +520,7 @@ export class VirtualScrollArea {
     this._currentState = newState;
   }
 
-  private _updateAutoscrollBottom(...mutator: Mutator[]): void {
+  protected _updateAutoscrollBottom(...mutator: Mutator[]): void {
     // Carefully clone our state without jumping into any references to external objects.
     const newState = _.clone(this._currentState);
     newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
