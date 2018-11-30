@@ -235,13 +235,15 @@ function startUpMainWebUi(): void {
   mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, handleCommandPaletteRequest);
 }
 
+const ID_CONTROLS_SPACE = "ID_CONTROLS_SPACE";
 const ID_MINIMIZE_BUTTON = "ID_MINIMIZE_BUTTON";
 const ID_MAXIMIZE_BUTTON = "ID_MAXIMIZE_BUTTON";
 const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
 
 function windowControlsHtml(): string {
   return trimBetweenTags(
-    `<button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>
+    `<div id="${ID_CONTROLS_SPACE}"></div>
+    <button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>
     <button id="${ID_MAXIMIZE_BUTTON}" tabindex="-1"></button>
     <button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>`);
 }

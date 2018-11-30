@@ -68,10 +68,6 @@ EXTRATERM-MAINWEBUI {
     flex-grow: 0;
     flex-shrink: 0;
     vertical-align: baseline;
-
-    @if($extraterm-platform != "darwin") {
-      margin-right: $control-size;
-    }
   }
 
   width: $control-size;
@@ -87,5 +83,17 @@ EXTRATERM-MAINWEBUI {
 
   &:focus {
     outline: 0 solid transparent;
+  }
+}
+
+#ID_CONTROLS_SPACE {
+  @if $extraterm-titlebar-style != "compact" {
+  display: none;
+  } @else {
+    @if($extraterm-platform != "darwin") {
+      height: 100%;
+      width: $control-size;
+      -webkit-app-region: drag;
+    }
   }
 }
