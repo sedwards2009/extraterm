@@ -184,9 +184,11 @@ button {
     
     &:focus {
       outline: 0;
+      box-shadow: none;
     }
 
     &:hover, &:focus {
+      box-shadow: none;
       background-color: $button-default-bg-color;
       color: $background-color;
     }
