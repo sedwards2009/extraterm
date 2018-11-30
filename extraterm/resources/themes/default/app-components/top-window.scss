@@ -67,7 +67,12 @@ EXTRATERM-MAINWEBUI {
   } @else {
     flex-grow: 0;
     flex-shrink: 0;
-    vertical-align: baseline;
+
+    @if($extraterm-platform == "darwin") {
+      align-self: center;
+    } @else {
+      vertical-align: baseline;
+    }
   }
 
   width: $control-size;
