@@ -209,6 +209,7 @@ $TEAR_BORDER_HEIGHT: 2px;
 }
 
 #ID_CONTAINER.scrolling > #ID_HEADER {
+  box-shadow: none;
   border-bottom: $TEAR_BORDER_HEIGHT dashed var(--terminal-background-color);
   margin-bottom: -1 * $TEAR_BORDER_HEIGHT;
 }
