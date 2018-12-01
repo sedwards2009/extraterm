@@ -8,6 +8,7 @@ import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorato
 import * as DomUtils from '../DomUtils';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const ID = "EtbMenuItemTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -46,17 +47,18 @@ export class MenuItem extends ThemeableElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_MENUITEM];
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME,
+      ThemeTypes.CssFile.EXTRAICONS, ThemeTypes.CssFile.GUI_MENUITEM];
   }
 
   private _html(): string {
-    return `
+    return trimBetweenTags(`
       <style id='${ThemeableElementBase.ID_THEME}'></style>
       <div id='${ID_CONTAINER}'>
         <div id='${MenuItem.ID_ICON1}'><i class='fa fa-fw'></i></div>
         <div id='${ID_ICON2}'></div>
       <div id='${ID_LABEL}'><slot></slot></div>
-      </div>`;
+      </div>`);
   }
 
   private _createClone(): Node {

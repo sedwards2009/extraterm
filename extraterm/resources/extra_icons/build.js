@@ -26,7 +26,8 @@ function main() {
       'resources/extra_icons/5_osx_minimize.svg',
       'resources/extra_icons/6_triangle_down.svg',
       'resources/extra_icons/7_triangle_up.svg',
-      'resources/extra_icons/8_rows.svg'
+      'resources/extra_icons/8_rows.svg',
+      'resources/extra_icons/9_pocketknife.svg',
     ],
     fontName: 'extraicons',
     formats: ['ttf']

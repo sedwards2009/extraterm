@@ -266,7 +266,7 @@ function setUpWindowControls(): void {
 function startUpMainMenu(): void {
   const contextMenuFragment = DomUtils.htmlToFragment(`
     <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
-        <${MenuItem.TAG_NAME} icon="fa fa-wrench" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="extraicons extraicons-pocketknife" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
         <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
         <${MenuItem.TAG_NAME} icon="far fa-lightbulb" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
