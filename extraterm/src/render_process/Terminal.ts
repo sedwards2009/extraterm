@@ -404,7 +404,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
     doLater(() => {
       pty.resize(this._columns, this._rows);
-    })
+    });
   }
 
   setConfigDatabase(configManager: ConfigDatabase): void {

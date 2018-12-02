@@ -523,84 +523,76 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
 
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+    let resizeEventNeeded = false;
+
     if (this._aceEditSession !== null) {
       if (DEBUG_RESIZE) {
         this._log.debug("calling aceEditor.resize()");
       }
 
       if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
-        if ( ! this._aceEditor.resize(false)) {
-          return;
+        if (this._aceEditor.resize(false)) {
+          resizeEventNeeded = true;
         }
       } else {
         this._aceEditor.updateFontSize();
-        if ( ! this._aceEditor.resize(true)) {
-          return;
+        if (this._aceEditor.resize(true)) {
+          resizeEventNeeded = true;
         }
       }
     }
 
-    VirtualScrollArea.emitResizeEvent(this);
-    this.resizeEmulatorToParentContainer();
+    if (resizeEventNeeded) {
+      VirtualScrollArea.emitResizeEvent(this);
+      this._updateCssVars();
+    }
+
+    if (this.getEmulator() !== null) {
+      const newSize = this._computeTerminalSizeFromViewer();
+      if (newSize != null) {
+        const currentSize = this._emulator.size();
+        if (newSize.rows !== currentSize.rows || newSize.columns !== currentSize.columns) {
+          this._rows = newSize.rows;
+          this._columns = newSize.columns;
+
+          if (DEBUG_RESIZE) {
+            this._log.debug("Resizing emulator to rows: ", newSize.rows, " columns: ", newSize.columns);
+          }
+
+          this.getEmulator().resize(newSize);
+        }
+      }
+    }
   }
 
-  resizeEmulatorToParentContainer(): void {
-    if (DEBUG_RESIZE) {
-      this._log.debug("resizeEmulatorToParentContainer: ", this._emulator === null ? "(no emulator)" : "(have emulator)");
+  private _getViewportElement(): HTMLElement {
+    let viewportElement = this.parentElement;
+    while (window.getComputedStyle(viewportElement).position === 'absolute') {
+      viewportElement = viewportElement.parentElement;
     }
-    if (this._emulator !== null) {
-      let viewportElement = this.parentElement;
-      while (window.getComputedStyle(viewportElement).position === 'absolute') {
-        viewportElement = viewportElement.parentElement;
-      }
-      if (this.clientWidth !== 0) {
-        this.resizeEmulatorToBox(this.clientWidth, viewportElement.clientHeight);
-      }
-    }
-    this._updateCssVars();
+    return viewportElement;
   }
 
-  /**
-   * Resize the terminal to fill a given pixel box size.
-   * 
-   * @returns Object with the new colums (cols field) and rows (rows field) information.
-   */
-  resizeEmulatorToBox(widthPixels: number, heightPixels: number): {cols: number; rows: number;} {
-    const {columns: cols, rows: rows} = this.getEmulator().size();
-    
-    if (DEBUG_RESIZE) {
-      this._log.debug("resizeEmulatorToBox() this.effectiveFontFamily(): " + this._effectiveFontFamily());
-      this._log.debug("resizeEmulatorToBox() heightPixels: " + heightPixels);
-    }
-    
+  private _computeTerminalSizeFromViewer(): TermApi.TerminalSize | null {
     if ( ! this.isFontLoaded()) {
-      // Styles have not been applied yet.
       if (DEBUG_RESIZE) {
         this._log.debug("resizeEmulatorToBox() styles have not been applied yet.");
       }
-      return {cols: cols, rows: rows};
+      return null;
     }
-    
-    const newRowsCols = this._computeTerminalSize(widthPixels, heightPixels);
-    if (newRowsCols == null) {
-      return {cols: cols, rows: rows};
+    if (this.clientWidth === 0) {
+      return null;
     }
 
-    const {cols: newCols, rows: newRows} = newRowsCols;
-    if (newCols !== cols || newRows !== rows) {
-      this.getEmulator().resize( { rows: newRows, columns: newCols } );
+    const viewportElement = this._getViewportElement();
+    const newSize = this._computeTerminalSizeFromPixels(this.clientWidth, viewportElement.clientHeight);
+    if (newSize == null) {
+      return null;
     }
-    
-    if (DEBUG_RESIZE) {
-      this._log.debug("resizeEmulatorToBox() old cols: ",cols);
-      // this._log.debug("resizeEmulatorToBox() element height: ",this.element.clientHeight);
-      this._log.debug("resizeEmulatorToBox() new cols: ",newCols);
-      this._log.debug("resizeEmulatorToBox() new rows: ",newRows);
-    }
-    return {cols: newCols, rows: newRows};
+    return newSize;
   }
 
-  private _computeTerminalSize(widthPixels: number, heightPixels: number): {rows: number, cols: number} {
+  private _computeTerminalSizeFromPixels(widthPixels: number, heightPixels: number): TermApi.TerminalSize | null {
     const charHeight = this._aceEditor.renderer.lineHeight;
     const charWidth = this._aceEditor.renderer.characterWidth;
 
@@ -619,11 +611,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._log.debug("resizeEmulatorToBox() element width: ",width);
     }
 
-    return {rows: newRows, cols: newCols};
+    return {rows: newRows, columns: newCols};
   }
 
   pixelHeightToRows(pixelHeight: number): number {
-    const result = this._computeTerminalSize(1024, pixelHeight);
+    const result = this._computeTerminalSizeFromPixels(1024, pixelHeight);
     return result == null ? 2 : result.rows;
   }
 
