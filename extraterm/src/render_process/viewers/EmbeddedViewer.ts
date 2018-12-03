@@ -162,7 +162,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
   private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
   private _boundFocusHandler: (ev: FocusEvent) => void;
-  private _requestContainerHeight = false; // true if the container needs a height update.
   private _requestContainerScroll = false; // true if the container needs scroll to be set.
   private _requestContainerYScroll = 0; // the new scroll Y to use during update.
   private _headerTop = 0;
@@ -327,11 +326,13 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
 
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
-    const rect = headerDiv.getBoundingClientRect();
+    const headerHeightOrNull = this._getHeaderHeight();
+    const headerHeight = headerHeightOrNull == null ? 0 : Math.ceil(headerHeightOrNull);
 
-    headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - rect.height) + 'px';
+    headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - headerHeight) + 'px';
+
     const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
-    outputContainerDiv.style.top = "" + rect.height + "px";
+    outputContainerDiv.style.top = "" + headerHeight + "px";
     
     if (setterState.physicalTop > 0 || setterState.height < setterState.containerHeight) {
       // Bottom part is visible
@@ -345,9 +346,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
     this._titleBarUI.scrollName = "" + percent + "%";
 
-    if (setterState.heightChanged) {
-      this._requestContainerHeight = true;
-    }
     this._requestContainerScroll = true;
     this._requestContainerYScroll = setterState.yOffset;
 
@@ -355,7 +353,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       this._applyContainerChanges();
     }
 
-    if (setterState.physicalTopChanged || setterState.containerHeight || setterState.heightChanged) {
+    if (setterState.physicalTopChanged || setterState.containerHeightChanged || setterState.heightChanged) {
       const viewportBottomOffset = setterState.physicalTop + setterState.containerHeight - setterState.height;
       this._virtualScrollArea.setViewportBottomOffset(viewportBottomOffset);
     }
@@ -373,11 +371,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   private _applyContainerChanges(): void {
-    if (this._requestContainerHeight) {
-      this._requestContainerHeight = false;
-      const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT);
-      this._virtualScrollArea.updateContainerHeight(outputContainerDiv.getBoundingClientRect().height);
-    }
+    const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT);
+    this._virtualScrollArea.updateContainerHeight(outputContainerDiv.getBoundingClientRect().height);
     if (this._requestContainerScroll) {
       this._requestContainerScroll = false;
       this._virtualScrollArea.scrollTo(this._requestContainerYScroll);
@@ -718,12 +713,12 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       template = window.document.createElement('template');
       template.id = ID;
       
-      template.innerHTML = `
+      template.innerHTML = trimBetweenTags(`
         <style id=${ThemeableElementBase.ID_THEME}></style>
         <div id='${ID_CONTAINER}' style='display: none;' class='${CLASS_RUNNING}'>
           <div id='${ID_HEADER}' tabindex='0'></div>
           <div id='${ID_OUTPUT_CONTAINER}'><div id='${ID_OUTPUT}'><slot></slot></div></div>
-        </div>`;
+        </div>`);
       window.document.body.appendChild(template);
     }
 
@@ -735,23 +730,33 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   }
 
   private _borderSize(): {top: number; bottom: number;} {
-    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const outputContainerDiv =  <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
     const outputContainerStyle = window.getComputedStyle(outputContainerDiv);
 
-    const headerRect = headerDiv.getBoundingClientRect();
-
-    if (headerRect.width === 0) {
+    const headerHeight = this._getHeaderHeight();
+    if (headerHeight == null) {
       // Bogus info. This element most likely isn't in the DOM tree proper. Fall back to the last good read.
       return { top: this._headerTop, bottom: this._headerBottom };
     }
 
-    const top = Math.ceil(headerRect.height + DomUtils.pixelLengthToFloat(outputContainerStyle.borderTopWidth));
+    const top = Math.ceil(headerHeight + DomUtils.pixelLengthToFloat(outputContainerStyle.borderTopWidth));
     const bottom = Math.ceil(DomUtils.pixelLengthToFloat(outputContainerStyle.borderBottomWidth));
 
     this._headerTop = top;
     this._headerBottom = bottom;
     return {top, bottom};
+  }
+
+  private _getHeaderHeight(): number | null {
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    const headerRect = headerDiv.getBoundingClientRect();
+    if (headerRect.width === 0) {
+      return null;
+    }
+
+    const headerStyle = window.getComputedStyle(headerDiv);
+    const marginBottom = Math.min(0, DomUtils.pixelLengthToFloat(headerStyle.marginBottom));
+    return headerRect.height + marginBottom;
   }
 
   private _getViewerElement(): ViewerElement {
