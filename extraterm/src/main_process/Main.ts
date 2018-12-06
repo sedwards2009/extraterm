@@ -484,7 +484,7 @@ function setupConfig(): void {
   userStoredConfig.blinkingCursor = _.isBoolean(userStoredConfig.blinkingCursor) ? userStoredConfig.blinkingCursor : false;
   
   if (userStoredConfig.terminalFontSize == null || typeof userStoredConfig.terminalFontSize !== 'number') {
-    userStoredConfig.terminalFontSize = 12;
+    userStoredConfig.terminalFontSize = 13;
   } else {
     userStoredConfig.terminalFontSize = Math.max(Math.min(1024, userStoredConfig.terminalFontSize), 4);
   }
