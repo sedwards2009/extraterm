@@ -616,7 +616,7 @@ function setConfigDefaults(config: UserStoredConfig): void {
   
   config.themeTerminal = defaultValue(config.themeTerminal, "default");
   config.themeSyntax = defaultValue(config.themeSyntax, "default");
-  config.themeGUI = defaultValue(config.themeGUI, "atomic-dark-ui");
+  config.themeGUI = defaultValue(config.themeGUI, "two-dark-ui");
   config.titleBarStyle = defaultValue(config.titleBarStyle, "compact");
   config.terminalMarginStyle = defaultValue(config.terminalMarginStyle, "normal");
   config.frameByDefault = defaultValue(config.frameByDefault, true);
