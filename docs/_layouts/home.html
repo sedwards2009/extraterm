@@ -11,6 +11,106 @@
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
     <title>{{ site.title | default: site.github.repository_name }} by {{ site.github.owner_name }}</title>
+    <style>
+    .slideshow {
+      position: relative;
+      width: 800px;
+      height: 450px;
+    }
+
+    .slide {
+      position: absolute;
+      opacity: 0;
+      z-index: 0;
+    }
+
+    .slide.show-slide {
+      opacity: 1;
+      transition: opacity 0.5s;
+      z-index: 2;
+    }
+
+    .slide.hide-slide {
+      opacity: 1;
+      z-index: 1;
+    }
+
+    .slideshow-selector {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+
+      display: flex;
+      width: 96px;
+      justify-content: space-between;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .slideshow-selector > div {
+      cursor: pointer;
+      background-color: #aaa;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+    }
+
+    .slideshow-selector > div.selected {
+      background-color: #6d6d6d;
+    }
+
+    </style>
+    <script>
+      var selectedSlide = 0;
+      var NUMBER_OF_SLIDES = 4;
+      var run = true;
+
+      window.addEventListener("load", function() {
+
+        var slideshowSelector = document.getElementById("slideshow-selector");
+        slideshowSelector.addEventListener("mouseenter", function() {
+          run = false;
+        });
+        slideshowSelector.addEventListener("mouseleave", function() {
+          run = true;
+        });
+
+        for (var i=0; i<NUMBER_OF_SLIDES; i++) {
+          var selector = document.getElementById("slide_selector_" + i);
+          selector.addEventListener("click", (function(i) {
+            selectSlide(i);  
+          }).bind(null, i));
+        }
+
+        setInterval(function() {
+          if ( ! run) {
+            return;
+          }
+          selectSlide((selectedSlide + 1 ) % NUMBER_OF_SLIDES);
+        }, 4000);
+      });
+
+      function selectSlide(desiredSlide) {
+        for (var i=0; i<NUMBER_OF_SLIDES; i++) {
+          var slide = document.getElementById("slide_" + i);
+          var selector = document.getElementById("slide_selector_" + i);
+          if (i == desiredSlide) {
+            slide.classList.add("show-slide");
+            slide.classList.remove("hide-slide");
+            selector.classList.add("selected");
+          } else if (i === selectedSlide) {
+            slide.classList.add("hide-slide");
+            slide.classList.remove("show-slide");
+            selector.classList.remove("selected");
+          } else {
+            slide.classList.remove("hide-slide");
+            slide.classList.remove("show-slide");
+            selector.classList.remove("selected");
+          }
+        }
+        selectedSlide = desiredSlide;
+
+      }
+    </script>
   </head>
 
   <body>
@@ -28,6 +128,20 @@
             </div>
           </header>
         <hr>
+
+        <div id="slideshow" class="slideshow">
+          <img id="slide_0" class="slide show-slide" src="empty_terminal_450.png" width="800" height="450" />
+          <img id="slide_1" class="slide" src="command_palette_450.png" width="800" height="450" />
+          <img id="slide_2" class="slide" src="split_450.png" width="800" height="450" />
+          <img id="slide_3" class="slide" src="show_image_450.png" width="800" height="450" />
+        </div>
+        <div id="slideshow-selector" class="slideshow-selector">
+          <div id="slide_selector_0" class="selected"></div>
+          <div id="slide_selector_1"></div>
+          <div id="slide_selector_2"></div>
+          <div id="slide_selector_3"></div>
+        </div>
+
         <section id="main_content">
           {{ content }}
         </section>
