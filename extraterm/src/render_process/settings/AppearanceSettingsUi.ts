@@ -127,6 +127,9 @@ interface SelectableOption {
       </option>
     </select>
 
+    <label></label>
+    <span><label><input type="checkbox" v-model="showTrayIcon">Show icon in system tray</label></span>
+
     <template v-if="titleBarStyle != currentTitleBarStyle">
       <label></label>
       <div>
@@ -197,6 +200,7 @@ export class AppearanceSettingsUi extends Vue {
   titleBarStyle: TitleBarStyle;
   currentTitleBarStyle: TitleBarStyle;
   titleBarOptions: TitleBarOption[];
+  showTrayIcon: boolean;
 
   terminalFont: string;
   terminalFontOptions: FontInfo[];
