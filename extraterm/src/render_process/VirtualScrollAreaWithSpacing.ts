@@ -39,6 +39,13 @@ export class Spacer implements VirtualScrollable {
   }
 }
 
+enum ScrollableType {
+  NOTHING,
+  NON_FRAME,
+  FRAME,
+  RUNNING_FRAME
+}
+
 
 export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
 
@@ -68,7 +75,7 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
   }
 
   private _makeStatesListWithSpacing(scrollableStates: VirtualScrollableState[]): VirtualScrollableState[] {
-    let lastIsFrame: boolean = null;
+    let lastScrollableType = ScrollableType.NOTHING;
 
     const newStateList: VirtualScrollableState[] = [];
     for (let vss of scrollableStates) {
@@ -76,9 +83,18 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
         continue;
       }
 
-      const isFrame = vss.scrollable instanceof EmbeddedViewer;
+      let currentScrollableType = ScrollableType.NOTHING;
+      if (vss.scrollable instanceof EmbeddedViewer) {
+        if (vss.scrollable.getViewerElement() == null) {
+          currentScrollableType = ScrollableType.RUNNING_FRAME;
+        } else {
+          currentScrollableType = ScrollableType.FRAME;
+        }
+      } else {
+        currentScrollableType = ScrollableType.NON_FRAME;
+      }
 
-      if (this._needsSpace(lastIsFrame, isFrame)) {
+      if (this._needsSpace(lastScrollableType, currentScrollableType)) {
         const spacingVirtualScrollableState: VirtualScrollableState = {
           scrollable: this._spacer,
           virtualHeight: 0,
@@ -98,27 +114,30 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
 
       newStateList.push(vss);
 
-      lastIsFrame = isFrame;
+      lastScrollableType = currentScrollableType;
     }
     return newStateList;
   }
 
-  private _needsSpace(previousWasFrame: boolean, currentIsFrame: boolean): boolean {
+  private _needsSpace(previousType: ScrollableType, currentType: ScrollableType): boolean {
     /*
       This is the truth table we implement when deciding to add extra space.
 
-      LastVSS \ vss | not-frame | frame
-      --------------+-----------+-------
-      null          |    -      |   -
-      not-frame     |    -      | Add space
-      frame         | Add space | Add space
+      Previous \ Current | NOTHING | NON_FRAME | FRAME     | RUNNING_FRAME
+      -------------------+---------+-----------+-----------+---------------
+      NOTHING            |    -    |     -     |     -     |     -
+      NON_FRAME          |    -    |     -     | add space | add space
+      FRAME              |    -    | add space | add space | add space
+      RUNNING_FRAME      |    -    |     -     | add space | add space
     */
-    if (previousWasFrame != null) {
-      if ( ! (!previousWasFrame && !currentIsFrame)) {
-        return true;
-      }
+    if (previousType === ScrollableType.NOTHING || currentType === ScrollableType.NOTHING) {
+      return false;
     }
-    return false;
+    if (currentType === ScrollableType.NON_FRAME) {
+      return previousType === ScrollableType.FRAME;
+    } else {
+      return true;
+    }
   }
 
   getScrollableHeightsIncSpacing(): VirtualScrollableHeight[] {
