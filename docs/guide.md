@@ -2,8 +2,6 @@
 title: User Guide
 ---
 
-<!-- TOC -->
-
 - [Getting Started](#getting-started)
   - [Installation](#installation)
 - [Basics](#basics)
@@ -22,7 +20,6 @@ title: User Guide
   - [Keyboard Shortcuts](#keyboard-shortcuts)
   - [Mouse selections when an app grabs the mouse](#mouse-selections-when-an-app-grabs-the-mouse)
 
-<!-- /TOC -->
 
 Note: Keyboard shortcuts given in the documentation apply to the default Windows/Linux shortcuts.
 
@@ -31,17 +28,15 @@ Note: Keyboard shortcuts given in the documentation apply to the default Windows
 
 ## Installation
 
-Extraterm support Linux, Mac OS X and Cygwin on Windows. Download the zip file for your operating system on the [github releases page](https://github.com/sedwards2009/extraterm/releases).
+Extraterm supports Linux, macOS and WSL, CMD, PowerShell and Cygwin on Windows. Download the zip file, installer or DMG for your operating system on the [github releases page](https://github.com/sedwards2009/extraterm/releases).
 
-Unzip the file somewhere convenient.
 
 Start Extraterm:
 
-* **Linux** - Click to run the `extraterm` file inside the unzip directory.
-* **Mac OS X** - Just start the application via the Finder.
-* **Cygwin and Babun** - Double click to run the Extraterm application inside the unzip directory, or using the shell, execute the `extraterm` file inside the unzip directory. Note you must have Python 3 installed inside cygwin for Extraterm to run (see the [FAQ](faq.md) ). If you have trouble starting Extraterm on cygwin also consult the [FAQ](faq.md).
+* **Linux** - Unzip the file somewhere convenient. Click to run the `extraterm` file inside the unzip directory.
+* **macOS** - Open the DMG file and drag the Extraterm onto the Applications folder. Just start Extraterm via the Finder.
+* **Windows** - Run the installer to install. Start Extraterm from the start menu. Note you must have Python 3 installed inside cygwin for Extraterm to run (see the [FAQ](faq.md) ). If you have trouble starting Extraterm on cygwin also consult the [FAQ](faq.md).
 
-Extraterm doesn't need any further installation.
 
 -----------
 

@@ -5,6 +5,28 @@ Extraterm is a open source terminal emulator which aims to add many new features
 
 It is currently in heavy development and not ready for production use, although this has failed to stop the main developer from using it as their main terminal emulator.
 
+
+# Tiling and panes
+
+Extraterm also supports tiling and panes, text size scaling per terminal session and color emoji on all operating systems.
+
+![Tiling and panes](splits_and_panes.png)
+
+
+# Command Palette
+
+Extraterm is designed for keyboard use first. The Command Palette makes it easy to find and execute any command without leaving the keyboard.
+
+![Command palette](command_palette.png)
+
+
+# Image Support
+
+Extraterm supports directly viewing richer content than just text. Works across ssh too.
+
+![Show image](show_image.png)
+
+
 # Shell Integration
 
 Use the shell integration to unlock Extraterm’s power. 
@@ -31,27 +53,8 @@ The shell integration makes uploading and downloading files easy without requiri
 ![Download](download.png)
 
 
-# Tiling and panes
-
-Extraterm also supports tiling and panes, text size scaling per terminal session and color emoji on all operating systems.
-
-![Tiling and panes](splits_and_panes.png)
-
 # Compatible
 
 Backwards compatibility with the decades of existing terminal based applications and your decades of workflows and habits is very important. Extraterm supports your existing applications and doesn't require you to change your habits.
 
 ![Extraterm in action](action2.gif)
-
-# Command Palette
-
-Extraterm is designed for keyboard use first. The Command Palette makes it easy to find and execute any command without leaving the keyboard.
-
-![Command palette](command_palette.png)
-
-# Image Support
-
-Extraterm supports directly viewing richer content than just text. Works across ssh too.
-
-![Show image](show_image.png)
-
