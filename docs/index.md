@@ -25,14 +25,14 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 * Open source [MIT license](https://github.com/sedwards2009/extraterm/blob/master/LICENSE.txt)
 * [...much more to come](https://github.com/sedwards2009/extraterm/issues/30)
 
-Don't forget to {% include star.ext %} **Star** us on [GitHub](https://github.com/sedwards2009/extraterm), or Watch to follow release annoucements.
+Don't forget to {% include star.ext %} **Star** us on [GitHub](https://github.com/sedwards2009/extraterm).
 
 
 ## News
 {% include news_list_short.ext %}
 [More news](news.html)
 
-Follow [{% include twitter_logo.ext %}@ExtratermDev](https://twitter.com/ExtratermDev) or via {% include rss_feed_logo.ext %} <a rel="alternate" type="application/rss+xml" href="feed.xml">RSS feed</a> to receive news updates as they happen.
+Follow [{% include twitter_logo.ext %}@ExtratermDev](https://twitter.com/ExtratermDev) or via {% include rss_feed_logo.ext %} <a rel="alternate" type="application/rss+xml" href="feed.xml">RSS feed</a> or even Watch Releases on GitHub to receive news updates as they happen.
 
 
 ## Development and Contributing

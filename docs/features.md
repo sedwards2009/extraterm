@@ -3,7 +3,7 @@ title: Features
 ---
 Extraterm is a open source terminal emulator which aims to add many new features to bring the traditional terminal into the modern era.
 
-It is currently in heavy development and not ready for production use, although this has failed to stop the main developer from using it as their main terminal emulator.
+It is currently in steady development and although not at a 1.0 release yet, it is generally stable for everyday use provided you can tolerate the occasional bug. (Submit [bug reports here](https://github.com/sedwards2009/extraterm/issues) .)
 
 
 # Tiling and panes
