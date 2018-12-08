@@ -13,7 +13,7 @@ import * as SourceMapSupport from 'source-map-support';
 
 import * as child_process from 'child_process';
 import { Command } from 'commander';
-import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
+import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu} from 'electron';
 import { BulkFileState } from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
@@ -23,7 +23,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle } from '../Config';
+import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent } from '../Config';
 import {FileLogWriter, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
@@ -162,6 +162,12 @@ function electronReady(parsedArgs: Command): void {
   setupBulkFileStorage();
   setupIpc();
   setupTrayIcon();
+  configDatabase.onChange((e: ConfigChangeEvent) => {
+    if (e.key === "general") {
+      setupTrayIcon();
+    }
+  });
+
   openWindow(parsedArgs);
 }
 
@@ -184,10 +190,65 @@ function setupBulkFileStorage(): void {
   bulkFileStorage.onClose(sendBulkFileStateChangeEvent);
 }
 
+let tray: Tray = null;
+
 function setupTrayIcon(): void {
-  const generalConfig = configDatabase.getConfig(GENERAL_CONFIG);
+  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
 
+  if (generalConfig.showTrayIcon) {
+    if (tray == null) {
+      let iconFilename = path.join(__dirname, "../../resources/logo/extraterm_small_logo_256x256.png");
+      // iconFilename = "../../resources/logo/extraterm_small_logo.ico";
 
+      tray = new Tray(iconFilename);
+      tray.setToolTip("Extraterm");
+
+      const contextMenu = Menu.buildFromTemplate([
+        {label: "Minimize", type: "normal", click: minimizeAllWindows},
+        {label: "Restore", type: "normal", click: restoreAllWindows}
+      ]);
+      tray.setContextMenu(contextMenu);
+
+      tray.on("click", () => {
+        if (anyWindowsMinimized()) {
+          restoreAllWindows();
+        } else {
+          minimizeAllWindows();
+        }
+      })
+    }
+  } else {
+    if (tray != null) {
+      tray.destroy();
+      tray = null;
+    }
+  }
+}
+
+function anyWindowsMinimized(): boolean {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isMinimized()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function minimizeAllWindows(): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.minimize();
+    
+// FIXME electron upgrade needed to make this work    
+    // if (process.platform !== "linux") {
+    //   window.moveTop();
+    // }
+  }
+}
+
+function restoreAllWindows(): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.restore();
+  }
 }
 
 function openWindow(parsedArgs: Command): void {

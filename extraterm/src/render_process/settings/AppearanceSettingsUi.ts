@@ -234,6 +234,7 @@ export class AppearanceSettingsUi extends Vue {
       { id: "theme", name: "Theme" },
       { id: "compact", name: "Compact Theme" },
     ];
+    this.showTrayIcon = true;
 
     this.uiScalePercent = 100;
     this.uiScalePercentOptions = [
