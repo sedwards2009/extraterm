@@ -2190,6 +2190,11 @@ export class Emulator implements EmulatorApi {
     const isMac = platform === "darwin";
     let key: string = null;
 
+    if (ev.isComposing) {
+      // Electron on macOS reports key events even when the IME menu is shown.
+      return null;
+    }
+
     let altKey = ev.altKey;
     let ctrlKey = ev.ctrlKey;
     

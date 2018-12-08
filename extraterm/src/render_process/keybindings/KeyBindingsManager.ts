@@ -35,7 +35,8 @@ export class Keybinding implements TermMinimalKeyboardEvent {
   readonly configKey: string;
   readonly configKeyLowercase: string;
   private _humanReadableString: string = null;
-
+  readonly isComposing: boolean = false;
+  
   constructor(options: KeybindingOptions) {
     this.altKey = options.altKey;
     this.ctrlKey = options.ctrlKey;
