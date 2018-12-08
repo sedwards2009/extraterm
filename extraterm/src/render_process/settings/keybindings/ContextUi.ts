@@ -8,7 +8,7 @@ import Vue from 'vue';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
 import { KeybindingsFile } from '../../../KeybindingsFile';
 import { Keybinding } from '../../keybindings/KeyBindingsManager';
-import { Emulator } from '../../emulator/Term';
+import { Emulator, Platform } from '../../emulator/Term';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const humanText = require('../../keybindings/keybindingstext.json');
@@ -202,7 +202,7 @@ export class KeybindingsContext extends Vue {
     if (this.conflictContextNames.indexOf("emulation") === -1) {
       return false;
     }
-    return Emulator.isKeySupported(keybinding);
+    return Emulator.isKeySupported(<Platform> process.platform, keybinding);
   }
 
   deleteKey(keybinding: Keybinding): void {

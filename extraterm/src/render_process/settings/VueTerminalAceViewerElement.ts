@@ -38,7 +38,7 @@ export class VueTerminalAceViewerElement extends ViewerElement {
       this._terminalViewer.setEditable(false);
       this._terminalViewer.addEventListener(EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
 
-      const emulator = new Term.Emulator({});
+      const emulator = new Term.Emulator({platform: <Term.Platform> process.platform});
       this._terminalViewer.setEmulator(emulator);
 
       this._scrollCanvas.setViewerElement(this._terminalViewer);

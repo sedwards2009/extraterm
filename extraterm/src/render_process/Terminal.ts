@@ -804,6 +804,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _initEmulator(cookie: string): void {
     const emulator = new Term.Emulator({
+      platform: <Term.Platform> process.platform,
       applicationModeCookie: cookie,
       debug: true
     });
