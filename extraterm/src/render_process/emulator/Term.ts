@@ -2189,14 +2189,25 @@ export class Emulator implements EmulatorApi {
   private static _translateKey(platform: Platform, ev: MinimalKeyboardEvent, applicationKeypad: boolean, applicationCursor: boolean): string {
     const isMac = platform === "darwin";
     let key: string = null;
+
+    let altKey = ev.altKey;
+    let ctrlKey = ev.ctrlKey;
+    
+    if (platform === "win32" && altKey && ctrlKey) {
+      // This looks like AltGr on Windows being sent with Ctrl+Alt.
+      altKey = false;
+      ctrlKey = false;
+      // FIXME Remove this hack after the move to Electron 4 or later.
+    }
+
     // Modifiers keys are often encoded using this scheme.
-    const mod = (ev.shiftKey ? 1 : 0) + (ev.altKey ? 2 : 0) + (ev.ctrlKey ? 4: 0) + 1;
+    const mod = (ev.shiftKey ? 1 : 0) + (altKey ? 2 : 0) + (ctrlKey ? 4: 0) + 1;
     const modStr = mod === 1 ? "" : ";" + mod;
     
     switch (ev.key) {
       // backspace
       case 'Backspace':
-        if (( ! isMac && ev.altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
+        if (( ! isMac && altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
           key = '\x1b\x7f'; // ^[^?
           break;
         }
@@ -2355,7 +2366,7 @@ export class Emulator implements EmulatorApi {
       default:
         // Control codes
         if (ev.key.length === 1) {
-          if (ev.ctrlKey) {
+          if (ctrlKey) {
             if (ev.key >= '@' && ev.key <= '_') {
               key = String.fromCodePoint(ev.key.codePointAt(0)-'@'.codePointAt(0));
             } else if (ev.key >= 'a' && ev.key <= 'z') {
@@ -2365,7 +2376,7 @@ export class Emulator implements EmulatorApi {
               key = '\x00';
             }
 
-          } else if ((!isMac && ev.altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
+          } else if ((!isMac && altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
             if (ev.key.length === 1) {
               key = '\x1b' + ev.key;
             }
