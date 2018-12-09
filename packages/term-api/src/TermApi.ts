@@ -173,6 +173,7 @@ export interface MinimalKeyboardEvent {
   metaKey: boolean;
   shiftKey: boolean;
   key: string;
+  isComposing: boolean;
 }
 
 

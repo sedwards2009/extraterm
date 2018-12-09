@@ -6,12 +6,12 @@
 
 import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
-import {Emulator} from './Term';
+import {Emulator, Platform} from './Term';
 import {RenderEvent, Line} from 'term-api';
 const performanceNow = require('performance-now');
 
 export async function testBasic(test: nodeunit.Test): Promise<void> {
-  const emulator = new Emulator({performanceNowFunc: performanceNow});
+  const emulator = new Emulator({platform: <Platform> process.platform, performanceNowFunc: performanceNow});
   emulator.write('Hello');
 
   await waitOnEmulator(emulator);
@@ -21,7 +21,8 @@ export async function testBasic(test: nodeunit.Test): Promise<void> {
 }
 
 export async function testWrap(test: nodeunit.Test): Promise<void> {
-  const emulator = new Emulator({rows: 10, columns: 20, performanceNowFunc: performanceNow});
+  const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    performanceNowFunc: performanceNow});
   emulator.write('abcdefghijklmnopqrstuvwxyz');
 
   await waitOnEmulator(emulator);
@@ -32,7 +33,8 @@ export async function testWrap(test: nodeunit.Test): Promise<void> {
 }
 
 export async function testScrollOne(test: nodeunit.Test): Promise<void> {
-  const emulator = new Emulator({rows: 10, columns: 20, performanceNowFunc: performanceNow});
+  const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    performanceNowFunc: performanceNow});
 
   emulator.write('1\n');
   emulator.write('2\n');
@@ -53,7 +55,8 @@ export async function testScrollOne(test: nodeunit.Test): Promise<void> {
 }
 
 export async function testRenderDevice(test: nodeunit.Test): Promise<void> {
-  const emulator = new Emulator({rows: 10, columns: 20, performanceNowFunc: performanceNow});
+  const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    performanceNowFunc: performanceNow});
   const device = new RenderDevice();
   emulator.addRenderEventListener(device.renderEventListener.bind(device));
 
@@ -75,7 +78,8 @@ export async function testRenderDevice(test: nodeunit.Test): Promise<void> {
 }
 
 export async function testMoveCursor(test: nodeunit.Test): Promise<void> {
-  const emulator = new Emulator({rows: 10, columns: 20, performanceNowFunc: performanceNow});
+  const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    performanceNowFunc: performanceNow});
   const device = new RenderDevice();
   emulator.addRenderEventListener(device.renderEventListener.bind(device));
   emulator.write('1\r\n');
@@ -96,7 +100,8 @@ export async function testMoveCursor(test: nodeunit.Test): Promise<void> {
 }
 
 export async function testMoveRowsAboveCursorToScrollback(test: nodeunit.Test): Promise<void> {
-  const emulator = new Emulator({rows: 10, columns: 20, performanceNowFunc: performanceNow});
+  const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    performanceNowFunc: performanceNow});
   const device = new RenderDevice();
   emulator.addRenderEventListener(device.renderEventListener.bind(device));
   emulator.write('1\r\n');

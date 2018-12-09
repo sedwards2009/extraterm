@@ -34,7 +34,6 @@
  */
 import {
   ApplicationModeHandler,
-  ApplicationModeResponse,
   ApplicationModeResponseAction,
   BellEventListener,
   backgroundFromCharAttr,
@@ -104,10 +103,13 @@ const MAX_PROCESS_WRITE_SIZE = 4096;
 
 /*************************************************************************/
 
+export type Platform = "linux" | "win32" | "darwin";
+
 /**
  * Options
  */
 interface Options {
+  platform: Platform;
   termName?: string;
   rows?: number;
   columns?: number;
@@ -139,7 +141,6 @@ const WRITE_BUFFER_SIZE_EVENT = "WRITE_BUFFER_SIZE_EVENT";
 
 const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
-
 function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
   return (flags << 18) | (fg << 9) | bg;
 }
@@ -147,9 +148,6 @@ function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
 function isCharAttrCursor(attr: CharAttr): boolean {
   return attr === -1;
 }
-
-const isMac = window.navigator.userAgent.indexOf('Mac') !== -1;
-
 
 export class Emulator implements EmulatorApi {
   private cols = 80;
@@ -209,8 +207,9 @@ export class Emulator implements EmulatorApi {
   private applicationModeCookie: string;
   private _applicationModeHandler: ApplicationModeHandler = null;
 
-  private isMac = false;
-  
+  private isWindows = false;
+  private _platform: Platform = "linux";
+
   private _writeBuffers: string[] = [];                 // Buffer for incoming data waiting to be processed.
   private _processWriteChunkTimer: NodeJS.Timer = null; // Timer ID for our write chunk timer.  
   private _paused = false;
@@ -252,7 +251,10 @@ export class Emulator implements EmulatorApi {
     } else {
       this._performanceNow = options.performanceNowFunc;
     }
-    
+
+    this._platform = options.platform;
+    this.isWindows = options.platform === "win32";
+
     this.state = 0; // Escape code parsing state.
 
     this._resetVariables();
@@ -2177,24 +2179,40 @@ export class Emulator implements EmulatorApi {
     this.write(data + '\r\n');
   };
   
-  static isKeySupported(ev: MinimalKeyboardEvent): boolean {
-    return this._translateKey(ev, false, false) != null;
+  static isKeySupported(platform: Platform, ev: MinimalKeyboardEvent): boolean {
+    return this._translateKey(platform, ev, false, false) != null;
   }
 
   /**
    * @return true if the event and key was understood and handled.
    */
-  private static _translateKey(ev: MinimalKeyboardEvent, applicationKeypad: boolean, applicationCursor: boolean): string {
+  private static _translateKey(platform: Platform, ev: MinimalKeyboardEvent, applicationKeypad: boolean, applicationCursor: boolean): string {
+    const isMac = platform === "darwin";
     let key: string = null;
+
+    if (ev.isComposing) {
+      // Electron on macOS reports key events even when the IME menu is shown.
+      return null;
+    }
+
+    let altKey = ev.altKey;
+    let ctrlKey = ev.ctrlKey;
     
+    if (platform === "win32" && altKey && ctrlKey) {
+      // This looks like AltGr on Windows being sent with Ctrl+Alt.
+      altKey = false;
+      ctrlKey = false;
+      // FIXME Remove this hack after the move to Electron 4 or later.
+    }
+
     // Modifiers keys are often encoded using this scheme.
-    const mod = (ev.shiftKey ? 1 : 0) + (ev.altKey ? 2 : 0) + (ev.ctrlKey ? 4: 0) + 1;
+    const mod = (ev.shiftKey ? 1 : 0) + (altKey ? 2 : 0) + (ctrlKey ? 4: 0) + 1;
     const modStr = mod === 1 ? "" : ";" + mod;
     
     switch (ev.key) {
       // backspace
       case 'Backspace':
-        if ((!isMac && ev.altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
+        if (( ! isMac && altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
           key = '\x1b\x7f'; // ^[^?
           break;
         }
@@ -2353,7 +2371,7 @@ export class Emulator implements EmulatorApi {
       default:
         // Control codes
         if (ev.key.length === 1) {
-          if (ev.ctrlKey) {
+          if (ctrlKey) {
             if (ev.key >= '@' && ev.key <= '_') {
               key = String.fromCodePoint(ev.key.codePointAt(0)-'@'.codePointAt(0));
             } else if (ev.key >= 'a' && ev.key <= 'z') {
@@ -2363,7 +2381,7 @@ export class Emulator implements EmulatorApi {
               key = '\x00';
             }
 
-          } else if ((!isMac && ev.altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
+          } else if ((!isMac && altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
             if (ev.key.length === 1) {
               key = '\x1b' + ev.key;
             }
@@ -2375,7 +2393,7 @@ export class Emulator implements EmulatorApi {
   }
 
   keyDown(ev: KeyboardEvent): boolean {
-    const key = Emulator._translateKey(ev, this.applicationKeypad, this.applicationCursor);
+    const key = Emulator._translateKey(this._platform, ev, this.applicationKeypad, this.applicationCursor);
 
     if (key === null) {
       return false;
