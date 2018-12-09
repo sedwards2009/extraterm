@@ -199,18 +199,18 @@ function setupTrayIcon(): void {
     if (tray == null) {
       let iconFilename = "";
       if (process.platform === "darwin") {
-        iconFilename = path.join(__dirname, "../../resources/logo/macOSTrayIconTemplate.png");
+        iconFilename = path.join(__dirname, "../../resources/tray/macOSTrayIconTemplate.png");
       } else if (process.platform === "linux") {
-        iconFilename = path.join(__dirname, "../../resources/logo/extraterm_small_logo_256x256.png");
+        iconFilename = path.join(__dirname, "../../resources/tray/extraterm_tray.png");
       } else {
-        iconFilename = path.join(__dirname, "../../resources/logo/extraterm_small_logo.ico");
+        iconFilename = path.join(__dirname, "../../resources/tray/extraterm_small_logo.ico");
       }
 
       tray = new Tray(iconFilename);
       tray.setToolTip("Extraterm");
 
       if (process.platform === "darwin") {
-        tray.setPressedImage(path.join(__dirname, "../../resources/logo/macOSTrayIconHighlight.png"));
+        tray.setPressedImage(path.join(__dirname, "../../resources/tray/macOSTrayIconHighlight.png"));
       }
 
       const contextMenu = Menu.buildFromTemplate([
