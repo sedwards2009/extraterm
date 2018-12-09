@@ -130,6 +130,9 @@ interface SelectableOption {
     <label></label>
     <span><label><input type="checkbox" v-model="showTrayIcon">Show icon in system tray</label></span>
 
+    <label></label>
+    <span><label><input type="checkbox" v-bind:disabled="!showTrayIcon" v-model="minimizeToTray">Minimize window to tray</label></span>
+
     <template v-if="titleBarStyle != currentTitleBarStyle">
       <label></label>
       <div>
@@ -201,6 +204,7 @@ export class AppearanceSettingsUi extends Vue {
   currentTitleBarStyle: TitleBarStyle;
   titleBarOptions: TitleBarOption[];
   showTrayIcon: boolean;
+  minimizeToTray: boolean;
 
   terminalFont: string;
   terminalFontOptions: FontInfo[];
@@ -235,6 +239,7 @@ export class AppearanceSettingsUi extends Vue {
       { id: "compact", name: "Compact Theme" },
     ];
     this.showTrayIcon = true;
+    this.minimizeToTray = false;
 
     this.uiScalePercent = 100;
     this.uiScalePercentOptions = [

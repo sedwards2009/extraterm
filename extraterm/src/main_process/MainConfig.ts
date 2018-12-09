@@ -157,6 +157,10 @@ export function setupUserConfig(themeManager: ThemeManager, configDatabase: Conf
     userStoredConfig.showTrayIcon = true;
   }
 
+  if (userStoredConfig.minimizeToTray == null) {
+    userStoredConfig.minimizeToTray = false;
+  }
+
   if (userStoredConfig.frameByDefault !== true && userStoredConfig.frameByDefault !== false) {
     userStoredConfig.frameByDefault = true;
   }

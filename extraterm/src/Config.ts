@@ -31,6 +31,7 @@ export interface GeneralConfig {
   titleBarStyle?: TitleBarStyle;
 
   showTrayIcon?: boolean;
+  minimizeToTray?: boolean;
 
   windowConfiguration?: WindowConfiguration;
 

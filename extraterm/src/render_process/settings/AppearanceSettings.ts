@@ -75,6 +75,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
       ui.themeTerminal = generalConfig.themeTerminal;
       ui.titleBarStyle = generalConfig.titleBarStyle;
       ui.showTrayIcon = generalConfig.showTrayIcon;
+      ui.minimizeToTray = generalConfig.minimizeToTray;
       ui.uiScalePercent = generalConfig.uiScalePercent;
       ui.terminalMarginStyle = generalConfig.terminalMarginStyle;
     }
@@ -86,6 +87,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
 
     newConfig.titleBarStyle = ui.titleBarStyle;
     newConfig.showTrayIcon = ui.showTrayIcon;
+    newConfig.minimizeToTray = ui.minimizeToTray;
     newConfig.terminalFont = ui.terminalFont;
     newConfig.terminalFontSize = ui.terminalFontSize;
     newConfig.themeGUI = ui.themeGUI;

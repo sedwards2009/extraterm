@@ -246,8 +246,13 @@ function anyWindowsMinimized(): boolean {
 
 function minimizeAllWindows(): void {
   for (const window of BrowserWindow.getAllWindows()) {
-    window.minimize();
-    
+    const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+    if (generalConfig.minimizeToTray) {
+      window.hide();
+    } else {
+      window.minimize();
+    }
+
 // FIXME electron upgrade needed to make this work    
     // if (process.platform !== "linux") {
     //   window.moveTop();
@@ -257,6 +262,10 @@ function minimizeAllWindows(): void {
 
 function restoreAllWindows(): void {
   for (const window of BrowserWindow.getAllWindows()) {
+    const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+    if (generalConfig.minimizeToTray) {
+      window.show();
+    }
     window.restore();
   }
 }
