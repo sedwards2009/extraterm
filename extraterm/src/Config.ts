@@ -30,6 +30,9 @@ export interface GeneralConfig {
   tipTimestamp?: number;
   titleBarStyle?: TitleBarStyle;
 
+  showTrayIcon?: boolean;
+  minimizeToTray?: boolean;
+
   windowConfiguration?: WindowConfiguration;
 
   frameByDefault?: boolean;

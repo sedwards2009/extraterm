@@ -30,3 +30,4 @@ packages/extraterm-shell-string-parser/test/MainTest.d.ts
 packages/extraterm-readonly-toolbox/test/MainTest.d.ts
 packages/extraterm-web-component-decorators/test/DecoratorsTest.d.ts
 packages/extraterm-web-component-decorators/test/TestCode.d.ts
+packages/extraterm-trim-between-tags/main.d.ts

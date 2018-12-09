@@ -13,8 +13,8 @@ import * as SourceMapSupport from 'source-map-support';
 
 import * as child_process from 'child_process';
 import { Command } from 'commander';
-import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents} from 'electron';
-import { BulkFileState, Event, SessionConfiguration } from 'extraterm-extension-api';
+import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu} from 'electron';
+import { BulkFileState } from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
 import * as fs from 'fs';
@@ -23,21 +23,18 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import {CommandLineAction, SystemConfig, FontInfo, ShowTipsStrEnum, ConfigDatabase, injectConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, TitleBarStyle, TerminalMarginStyle} from '../Config';
-import {FileLogWriter, Logger, getLogger, addLogWriter} from "extraterm-logging";
+import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent } from '../Config';
+import {FileLogWriter, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeManager, GlobalVariableMap} from '../theme/ThemeManager';
 import * as Messages from '../WindowMessages';
 import { MainExtensionManager } from './extension/MainExtensionManager';
-import { EventEmitter } from '../utils/EventEmitter';
-import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
 import { KeybindingsIOManager } from './KeybindingsIOManager';
 
-type ThemeInfo = ThemeTypes.ThemeInfo;
-type ThemeType = ThemeTypes.ThemeType;
+import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupUserConfig, setupAppData, KEYBINDINGS_OSX, KEYBINDINGS_PC } from './MainConfig';
 
 const LOG_FINE = false;
 
@@ -50,18 +47,8 @@ SourceMapSupport.install();
 let mainWindow: Electron.BrowserWindow = null;
 
 const LOG_FILENAME = "extraterm.log";
-const EXTRATERM_CONFIG_DIR = "extraterm";
-const MAIN_CONFIG = "extraterm.json";
 const THEMES_DIRECTORY = "themes";
-const USER_THEMES_DIR = "themes"
-const USER_SYNTAX_THEMES_DIR = "syntax";
-const USER_TERMINAL_THEMES_DIR = "terminal";
-const USER_KEYBINDINGS_DIR = "keybindings";
-const KEYBINDINGS_OSX = "Mac OS X bindings";
-const KEYBINDINGS_PC = "PC style bindings";
 const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
-const DEFAULT_TERMINALFONT = "DejaVuSansMono";
-
 const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
 const PACKAGE_JSON_PATH = "../../../package.json";
@@ -111,7 +98,11 @@ function main(): void {
   setupExtensionManager();
   setupKeybindingsIOManager();
   setupThemeManager();
-  setupConfig();
+
+  const userStoredConfig = setupUserConfig(themeManager, configDatabase, keybindingsIOManager, getFonts());
+  packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
+  const systemConfig = systemConfiguration(userStoredConfig, null);
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 
   if ( ! setupPtyManager()) {
     failed = true;
@@ -139,7 +130,7 @@ function main(): void {
 
   // This method will be called when Electron has done everything
   // initialization and ready for creating browser windows.
-  app.on('ready', () => startUpWindows(parsedArgs));
+  app.on('ready', () => electronReady(parsedArgs));
 }
 
 function setupExtensionManager(): void {
@@ -163,27 +154,20 @@ function setupThemeManager(): void {
   injectConfigDatabase(themeManager, configDatabase);
 }
 
-function getUserTerminalThemeDirectory(): string {
-  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  return path.join(userThemesDir, USER_TERMINAL_THEMES_DIR);
-}
-
-function getUserSyntaxThemeDirectory(): string {
-  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  return path.join(userThemesDir, USER_SYNTAX_THEMES_DIR);
-}
-
-function getUserKeybindingsDirectory(): string {
-  return path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_KEYBINDINGS_DIR);
-}
-
-function startUpWindows(parsedArgs: Command): void {
+function electronReady(parsedArgs: Command): void {
   if ( ! setupScale(parsedArgs)) {
     return;
   }
   
   setupBulkFileStorage();
-  setupIpc();  
+  setupIpc();
+  setupTrayIcon();
+  configDatabase.onChange((e: ConfigChangeEvent) => {
+    if (e.key === "general") {
+      setupTrayIcon();
+    }
+  });
+
   openWindow(parsedArgs);
 }
 
@@ -204,6 +188,86 @@ function setupBulkFileStorage(): void {
   bulkFileStorage = new BulkFileStorage(os.tmpdir());
   bulkFileStorage.onWriteBufferSize(sendBulkFileWriteBufferSizeEvent);
   bulkFileStorage.onClose(sendBulkFileStateChangeEvent);
+}
+
+let tray: Tray = null;
+
+function setupTrayIcon(): void {
+  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+
+  if (generalConfig.showTrayIcon) {
+    if (tray == null) {
+      let iconFilename = "";
+      if (process.platform === "darwin") {
+        iconFilename = path.join(__dirname, "../../resources/tray/macOSTrayIconTemplate.png");
+      } else if (process.platform === "linux") {
+        iconFilename = path.join(__dirname, "../../resources/tray/extraterm_tray.png");
+      } else {
+        iconFilename = path.join(__dirname, "../../resources/tray/extraterm_small_logo.ico");
+      }
+
+      tray = new Tray(iconFilename);
+      tray.setToolTip("Extraterm");
+
+      if (process.platform === "darwin") {
+        tray.setPressedImage(path.join(__dirname, "../../resources/tray/macOSTrayIconHighlight.png"));
+      }
+
+      const contextMenu = Menu.buildFromTemplate([
+        {label: "Minimize", type: "normal", click: minimizeAllWindows},
+        {label: "Restore", type: "normal", click: restoreAllWindows}
+      ]);
+      tray.setContextMenu(contextMenu);
+
+      tray.on("click", () => {
+        if (anyWindowsMinimized()) {
+          restoreAllWindows();
+        } else {
+          minimizeAllWindows();
+        }
+      })
+    }
+  } else {
+    if (tray != null) {
+      tray.destroy();
+      tray = null;
+    }
+  }
+}
+
+function anyWindowsMinimized(): boolean {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isMinimized()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function minimizeAllWindows(): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+    if (generalConfig.minimizeToTray) {
+      window.hide();
+    } else {
+      window.minimize();
+    }
+
+// FIXME electron upgrade needed to make this work    
+    // if (process.platform !== "linux") {
+    //   window.moveTop();
+    // }
+  }
+}
+
+function restoreAllWindows(): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+    if (generalConfig.minimizeToTray) {
+      window.show();
+    }
+    window.restore();
+  }
 }
 
 function openWindow(parsedArgs: Command): void {
@@ -397,349 +461,6 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
 function setupOSX(): void {
   child_process.execFileSync("defaults", ["write",
     "com.electron.extraterm", "ApplePressAndHoldEnabled", "-bool", "false"]);
-}
-
-//-------------------------------------------------------------------------
-//
-//   #####                                
-//  #     #  ####  #    # ###### #  ####  
-//  #       #    # ##   # #      # #    # 
-//  #       #    # # #  # #####  # #      
-//  #       #    # #  # # #      # #  ### 
-//  #     # #    # #   ## #      # #    # 
-//   #####   ####  #    # #      #  ####  
-//
-//-------------------------------------------------------------------------
-
-// FIXME refactor this out into a different file and/or class.
-function setupAppData(): void {
-  const configDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR);
-  if ( ! fs.existsSync(configDir)) {
-    fs.mkdirSync(configDir);
-  } else {
-    const statInfo = fs.statSync(configDir);
-    if ( ! statInfo.isDirectory()) {
-      _log.warn("Extraterm configuration path " + configDir + " is not a directory!");
-      return;
-    }
-  }
-
-  const userKeybindingsDir = path.join(configDir, USER_KEYBINDINGS_DIR);
-  if ( ! fs.existsSync(userKeybindingsDir)) {
-    fs.mkdirSync(userKeybindingsDir);
-  } else {
-    const statInfo = fs.statSync(userKeybindingsDir);
-    if ( ! statInfo.isDirectory()) {
-      _log.warn("Extraterm user keybindings path " + userKeybindingsDir + " is not a directory!");
-      return;
-    }
-  }
-  
-  const userThemesDir = path.join(configDir, USER_THEMES_DIR);
-  if ( ! fs.existsSync(userThemesDir)) {
-    fs.mkdirSync(userThemesDir);
-  } else {
-    const statInfo = fs.statSync(userThemesDir);
-    if ( ! statInfo.isDirectory()) {
-      _log.warn("Extraterm user themes path " + userThemesDir + " is not a directory!");
-      return;
-    }
-  }
-
-  const userSyntaxThemesDir = path.join(userThemesDir, USER_SYNTAX_THEMES_DIR);
-  if ( ! fs.existsSync(userSyntaxThemesDir)) {
-    fs.mkdirSync(userSyntaxThemesDir);
-  } else {
-    const statInfo = fs.statSync(userSyntaxThemesDir);
-    if ( ! statInfo.isDirectory()) {
-      _log.warn("Extraterm user syntax themes path " + userSyntaxThemesDir + " is not a directory!");
-      return;
-    }
-  }
-
-  const userTerminalThemesDir = path.join(userThemesDir, USER_TERMINAL_THEMES_DIR);
-  if ( ! fs.existsSync(userTerminalThemesDir)) {
-    fs.mkdirSync(userTerminalThemesDir);
-  } else {
-    const statInfo = fs.statSync(userTerminalThemesDir);
-    if ( ! statInfo.isDirectory()) {
-      _log.warn("Extraterm user terminal themes path " + userTerminalThemesDir + " is not a directory!");
-      return;
-    }
-  }
-}
-
-function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
-  if (themeInfo === null) {
-    return false;
-  }
-  return themeInfo.type === themeType;
-}
-
-function setupConfig(): void {
-  packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
-
-  const userStoredConfig = readConfigurationFile();
-
-  userStoredConfig.blinkingCursor = _.isBoolean(userStoredConfig.blinkingCursor) ? userStoredConfig.blinkingCursor : false;
-  
-  if (userStoredConfig.terminalFontSize == null || typeof userStoredConfig.terminalFontSize !== 'number') {
-    userStoredConfig.terminalFontSize = 13;
-  } else {
-    userStoredConfig.terminalFontSize = Math.max(Math.min(1024, userStoredConfig.terminalFontSize), 4);
-  }
-
-  if (userStoredConfig.terminalFont == null) {
-    userStoredConfig.terminalFont = DEFAULT_TERMINALFONT;
-  }
-
-  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeTerminal), 'terminal')) {
-    userStoredConfig.themeTerminal = ThemeTypes.FALLBACK_TERMINAL_THEME;
-  }
-  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeSyntax), 'syntax')) {
-    userStoredConfig.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
-  }
-  if (userStoredConfig.themeGUI === "default" || ! isThemeType(themeManager.getTheme(userStoredConfig.themeGUI), 'gui')) {
-    userStoredConfig.themeGUI = "two-dark-ui";
-  }
-
-  userStoredConfig.uiScalePercent = Math.min(500, Math.max(5, userStoredConfig.uiScalePercent || 100));
-
-  if (userStoredConfig.terminalMarginStyle == null) {
-    userStoredConfig.terminalMarginStyle = "normal";
-  }
-
-  if (userStoredConfig.titleBarStyle == null) {
-    userStoredConfig.titleBarStyle = "compact";
-  }
-  titleBarStyle = userStoredConfig.titleBarStyle;
-
-  if (userStoredConfig.frameByDefault !== true && userStoredConfig.frameByDefault !== false) {
-    userStoredConfig.frameByDefault = true;
-  }
-
-  // Validate the selected keybindings config value.
-  if ( ! keybindingsIOManager.hasKeybindingsName(userStoredConfig.keybindingsName)) {
-    userStoredConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
-  }
-
-  if (userStoredConfig.sessions == null) {
-    configDatabase.setConfigNoWrite(SESSION_CONFIG, []);
-  } else {
-    configDatabase.setConfigNoWrite(SESSION_CONFIG, userStoredConfig.sessions);
-  }
-
-  if (userStoredConfig.commandLineActions == null) {
-    configDatabase.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, []);
-  } else {
-    configDatabase.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, userStoredConfig.commandLineActions);
-  }
-
-  const systemConfig = systemConfiguration(userStoredConfig, null);
-  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
-
-  if ( ! systemConfig.availableFonts.some( (font) => font.postscriptName === userStoredConfig.terminalFont)) {
-    userStoredConfig.terminalFont = DEFAULT_TERMINALFONT;
-  }
-  
-  delete userStoredConfig.sessions;
-  delete userStoredConfig.commandLineActions;
-  configDatabase.setConfig(GENERAL_CONFIG, userStoredConfig);
-
-  configDatabase.onChange((event: ConfigChangeEvent): void => {
-    if (event.key === GENERAL_CONFIG) {
-      //Check if the selected keybindings changed. If so update and broadcast the system config.
-      const oldGeneralConfig = <GeneralConfig> event.oldConfig;
-      const newGeneralConfig = <GeneralConfig> event.newConfig;
-      if (newGeneralConfig != null) {
-        if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
-          const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-          systemConfig.keybindingsContexts = keybindingsIOManager.readKeybindingsJson(newGeneralConfig.keybindingsName);
-          configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
-        }
-      }
-    }
-
-    broadcastConfigToWindows(event);
-  });
-}
-
-function broadcastConfigToWindows(event: ConfigChangeEvent): void {
-  const newConfigMsg: Messages.ConfigMessage = {
-    type: Messages.MessageType.CONFIG,
-    key: event.key,
-    config: event.newConfig
-  };
-  sendMessageToAllWindows(newConfigMsg);
-}
-
-function sendMessageToAllWindows(msg: Messages.Message): void {
-  for (const window of BrowserWindow.getAllWindows()) {
-    if (LOG_FINE) {
-      _log.debug("Broadcasting message to all windows");
-    }
-    window.webContents.send(Messages.CHANNEL_NAME, msg);
-  }
-}
-
-/**
- * Read the configuration.
- * 
- * @returns The configuration object.
- */
-function readConfigurationFile(): UserStoredConfig {
-  const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
-  let config: UserStoredConfig = { };
-
-  if (fs.existsSync(filename)) {
-    _log.info("Reading user configuration from " + filename);
-    const configJson = fs.readFileSync(filename, {encoding: "utf8"});
-    config = <UserStoredConfig>JSON.parse(configJson);
-  } else {
-    _log.info("Couldn't find user configuration file at " + filename);
-  }
-  setConfigDefaults(config);
-  return config;
-}
-
-function defaultValue<T>(value: T, defaultValue: T): T {
-  return value == null ? defaultValue : value;
-}
-
-function setConfigDefaults(config: UserStoredConfig): void {
-  config.blinkingCursor = defaultValue(config.blinkingCursor, false);
-  config.scrollbackMaxLines = defaultValue(config.scrollbackMaxLines, 500000);
-  config.scrollbackMaxFrames = defaultValue(config.scrollbackMaxFrames, 100);
-  config.showTips = defaultValue<ShowTipsStrEnum>(config.showTips, 'always');
-  config.tipTimestamp = defaultValue(config.tipTimestamp, 0);
-  config.tipCounter = defaultValue(config.tipCounter, 0);
-  
-  config.themeTerminal = defaultValue(config.themeTerminal, "default");
-  config.themeSyntax = defaultValue(config.themeSyntax, "default");
-  config.themeGUI = defaultValue(config.themeGUI, "two-dark-ui");
-  config.titleBarStyle = defaultValue(config.titleBarStyle, "compact");
-  config.terminalMarginStyle = defaultValue(config.terminalMarginStyle, "normal");
-  config.frameByDefault = defaultValue(config.frameByDefault, true);
-
-  if (config.commandLineActions === undefined) {
-    const defaultCLA: CommandLineAction[] = [
-      { match: 'cd', matchType: 'name', frame: false },      
-      { match: 'rm', matchType: 'name', frame: false },
-      { match: 'mkdir', matchType: 'name', frame: false },
-      { match: 'rmdir', matchType: 'name', frame: false },
-      { match: 'mv', matchType: 'name', frame: false },
-      { match: 'cp', matchType: 'name', frame: false },
-      { match: 'chmod', matchType: 'name', frame: false },
-      { match: 'show', matchType: 'name', frame: false }
-    ];
-    config.commandLineActions = defaultCLA;
-  }
-  
-  if (config.keybindingsName === undefined || config.keybindingsName === "") {
-    config.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
-  }
-
-  config.sessions = defaultValue(config.sessions, []);
-
-  // Ensure that when reading a config file where args is not defined, we define it as an empty string
-  let sessionConfiguration: SessionConfiguration = null;
-  for (sessionConfiguration of config.sessions) {
-    if (sessionConfiguration.args === undefined) {
-      sessionConfiguration.args = "";
-    }
-  }
-}
-
-
-class ConfigDatabaseImpl implements ConfigDatabase {
-  private _configDb = new Map<ConfigKey, any>();
-  private _onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
-  onChange: Event<ConfigChangeEvent>;
-  private _log: Logger;
-
-  constructor() {
-    this.onChange = this._onChangeEventEmitter.event;
-    this._log = getLogger("ConfigDatabaseImpl", this);
-  }
-
-  getConfig(key: ConfigKey): any {
-    if (key === "*") {
-      // Wildcard fetch all.
-      const result = {};
-
-      for (const [dbKey, value] of this._configDb.entries()) {
-        result[dbKey] = value;
-      }
-      freezeDeep(result);
-      return result;
-    } else {
-      const result = this._configDb.get(key);
-      if (result == null) {
-        this._log.warn("Unable to find config for key ", key);
-      } else {
-        return result;
-      }
-    }
-  }
-
-  getConfigCopy(key: ConfigKey): any {
-    const data = this.getConfig(key);
-    if (data == null) {
-      return null;
-    }
-    return _.cloneDeep(data);
-  }
-
-  setConfigNoWrite(key: ConfigKey, newConfig: any): void {
-    if (key === "*") {
-      for (const objectKey of Object.getOwnPropertyNames(newConfig)) {
-        this._setSingleConfigNoWrite(<ConfigKey> objectKey, newConfig[objectKey]);
-      }
-    } else {
-      this._setSingleConfigNoWrite(key, newConfig);
-    }
-  }
-
-  private _setSingleConfigNoWrite(key: ConfigKey, newConfig: any): void {
-    const oldConfig = this.getConfig(key);
-    if (_.isEqual(oldConfig, newConfig)) {
-      return;
-    }
-
-    if (Object.isFrozen(newConfig)) {
-      this._configDb.set(key, newConfig);
-    } else {
-      this._configDb.set(key, freezeDeep(_.cloneDeep(newConfig)));
-    }
-
-    this._onChangeEventEmitter.fire({key, oldConfig, newConfig: this.getConfig(key)});
-  }
-
-  setConfig(key: ConfigKey, newConfig: any): void {
-    if (newConfig == null) {
-      this._log.warn("setConfig() newConfig is null for key ", key);
-    }
-
-    this.setConfigNoWrite(key, newConfig);
-    if ([GENERAL_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, SESSION_CONFIG, "*"].indexOf(key) !== -1) {
-      this._writeConfigurationFile();
-    }
-  }
-  
-  private _writeConfigurationFile(): void {
-    const cleanConfig = <UserStoredConfig> this.getConfigCopy(GENERAL_CONFIG);
-    cleanConfig.commandLineActions = this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
-    cleanConfig.sessions = this.getConfig(SESSION_CONFIG);
-
-    const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
-    const formattedConfig = JSON.stringify(cleanConfig, null, "  ");
-    this._log.debug(formattedConfig);
-    fs.writeFileSync(filename, formattedConfig);
-  }
-}
-
-function getThemes(): ThemeInfo[] {
-  return themeManager.getAllThemes();
 }
 
 function getFonts(): FontInfo[] {
@@ -983,7 +704,7 @@ function handleConfig(msg: Messages.ConfigMessage): void {
 }
 
 function handleThemeListRequest(): Messages.ThemeListMessage {
-  const reply: Messages.ThemeListMessage = { type: Messages.MessageType.THEME_LIST, themeInfo: getThemes() };
+  const reply: Messages.ThemeListMessage = { type: Messages.MessageType.THEME_LIST, themeInfo: themeManager.getAllThemes() };
   return reply;
 }
 
@@ -991,7 +712,9 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
   msg: Messages.ThemeContentsRequestMessage): Promise<void> {
 
   const globalVariables: GlobalVariableMap = new Map();
-  globalVariables.set("extraterm-titlebar-style", titleBarStyle);
+
+  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+  globalVariables.set("extraterm-titlebar-style", generalConfig.titleBarStyle);
   globalVariables.set("extraterm-platform", process.platform);
 
   const userStoredConfig = configDatabase.getConfigCopy(GENERAL_CONFIG);
@@ -1198,6 +921,15 @@ function sendBulkFileStateChangeEvent(event: CloseEvent): void {
     state: event.success ? BulkFileState.COMPLETED : BulkFileState.FAILED
   };
   sendMessageToAllWindows(msg);
+}
+
+function sendMessageToAllWindows(msg: Messages.Message): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (LOG_FINE) {
+      _log.debug("Broadcasting message to all windows");
+    }
+    window.webContents.send(Messages.CHANNEL_NAME, msg);
+  }
 }
 
 function handleCloseBulkFile(msg: Messages.BulkFileCloseMessage): void {

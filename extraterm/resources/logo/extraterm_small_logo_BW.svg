@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 19.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   viewBox="0 0 1000 1000"
+   style="enable-background:new 0 0 1000 1000;"
+   xml:space="preserve"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="extraterm_small_logo_BW.svg"><metadata
+     id="metadata4279"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+     id="defs4277"><filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter1020"
+       x="-0.0023998662"
+       width="1.0047997"
+       y="-0.0024001338"
+       height="1.0048003"><feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="1.0000088"
+         id="feGaussianBlur1022" /></filter></defs><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1004"
+     id="namedview4275"
+     showgrid="false"
+     inkscape:zoom="0.944"
+     inkscape:cx="511.75182"
+     inkscape:cy="539.65101"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="XMLID_1_" /><style
+     type="text/css"
+     id="style4255">
+	.st0{fill:#939598;}
+	.st1{opacity:0.1;fill:#010101;}
+	.st2{opacity:0.2;}
+	.st3{fill:#FFFFFF;}
+	.st4{fill:#3DB54A;}
+	.st5{opacity:0.5;}
+	.st6{fill:#019547;}
+	.st7{opacity:0.15;}
+	.st8{fill:#010101;}
+	.st9{opacity:0.05;}
+</style><g
+     id="XMLID_1_"><path
+       style="display:inline;fill:#000000;fill-opacity:1;stroke-width:1.11564553;filter:url(#filter1020);stroke:none"
+       d="M 500.0332,-0.2578125 C 223.79938,-0.2578125 0,223.53985 0,499.66211 c 0,276.23383 223.79938,500.0332 500.0332,500.0332 276.12226,0 499.91966,-223.79961 500.0313,-499.92187 0,-276.23383 -223.90904,-500.0312525 -500.0313,-500.0312525 z M 320.41992,292.35938 c 1.69439,-0.061 3.45153,0.32373 5.125,1.24414 l 226.36524,123.83593 c 3.1238,1.78504 5.13086,5.01955 5.13086,8.70117 v 72.74024 c 0,3.68163 -2.00706,6.91809 -5.13086,8.70312 L 325.99219,631.19727 c -6.69388,3.68163 -14.72656,-1.11674 -14.72657,-8.70313 v -77.98242 c 0,-3.57007 2.00706,-6.91809 5.13086,-8.70313 L 450.7207,462.17578 316.39648,388.32031 c -3.1238,-1.67347 -5.13086,-5.01978 -5.13086,-8.58984 l -0.44726,-77.31445 c 0,-5.6898 4.5184,-9.87361 9.60156,-10.05664 z m 212.9707,366.95117 h 262.17579 c 3.4585,0 6.36003,1.00503 8.81445,3.23633 2.45442,2.11972 3.6814,5.24367 3.79297,9.14843 v 51.43164 c 0,1.33878 -0.33476,2.89904 -0.89258,4.46094 -0.55782,1.5619 -1.45076,3.01279 -2.56641,4.35156 -1.22721,1.33878 -2.45372,2.56647 -4.01562,3.45899 -1.5619,1.00408 -3.23622,1.44922 -5.13281,1.44922 H 533.39062 c -8.36734,0 -12.49609,-4.46109 -12.49609,-13.60938 v -51.43164 c 0,-8.36734 4.12875,-12.49609 12.49609,-12.49609 z"
+       id="XMLID_84_"
+       inkscape:connector-curvature="0" /><g
+       id="symbol_1_"
+       transform="matrix(1.1156455,0,0,1.1156455,-6.6938727,-65.746756)"
+       style="fill:#ff0000;fill-opacity:1" /></g></svg>
