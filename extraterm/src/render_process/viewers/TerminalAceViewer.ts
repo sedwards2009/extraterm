@@ -1013,7 +1013,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToHumanKeybinding(commandEntry.id)
+        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }

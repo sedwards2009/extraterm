@@ -9,7 +9,7 @@ import { Logger, getLogger, log } from "extraterm-logging";
 const FALLTHROUGH = "fallthrough";
 
 
-export interface KeybindingOptions {
+export interface KeyStrokeOptions {
   altKey: boolean;
   ctrlKey: boolean;
   shiftKey: boolean;
@@ -18,8 +18,8 @@ export interface KeybindingOptions {
 };
 
 
-// Internal data structure for pairing a key binding with a command.
-export class Keybinding {
+// Defines a single key stroke which the user can press using one or a more keys.
+export class KeyStroke {
   readonly altKey: boolean;
   readonly ctrlKey: boolean;
   readonly metaKey: boolean;
@@ -29,7 +29,7 @@ export class Keybinding {
   private _humanReadableString: string = null;
   readonly isComposing: boolean = false;
   
-  constructor(options: KeybindingOptions) {
+  constructor(options: KeyStrokeOptions) {
     this.altKey = options.altKey;
     this.ctrlKey = options.ctrlKey;
     this.metaKey = options.metaKey;
@@ -38,11 +38,11 @@ export class Keybinding {
     this.configKeyLowercase = options.configKey.toLowerCase();
   }
 
-  static parseConfigString(keybindingString: string): Keybinding {
-    return parseConfigString((options: KeybindingOptions) => new Keybinding(options), keybindingString);
+  static parseConfigString(keyStrokeString: string): KeyStroke {
+    return parseConfigKeyStrokeString((options: KeyStrokeOptions) => new KeyStroke(options), keyStrokeString);
   }
 
-  equals(other: Keybinding): boolean {
+  equals(other: KeyStroke): boolean {
     if (other == null) {
       return false;
     }
@@ -98,8 +98,8 @@ function mapString(s: string): string {
   return s === undefined ? "" : s;
 }
 
-export function parseConfigString<KB extends Keybinding>(construct: (options: KeybindingOptions) => KB, keybindingString: string): KB {
-  const parts = keybindingString.replace(/\s/g, "").split(/-/g);
+export function parseConfigKeyStrokeString<KS extends KeyStroke>(construct: (options: KeyStrokeOptions) => KS, keyStrokeString: string): KS {
+  const parts = keyStrokeString.replace(/\s/g, "").split(/-/g);
   const partSet = new Set(parts.map(part => part.length !== 1 ? part.toLowerCase() : part));
   const hasShift = partSet.has("shift");
   partSet.delete("shift");
@@ -116,7 +116,7 @@ export function parseConfigString<KB extends Keybinding>(construct: (options: Ke
   }
 
   const key = partSet.values().next().value;
-  const keybinding = construct({
+  const keyStroke = construct({
     altKey: hasAlt,
     ctrlKey: hasCtrl,
     shiftKey: hasShift,
@@ -124,9 +124,8 @@ export function parseConfigString<KB extends Keybinding>(construct: (options: Ke
     configKey: key
   });
 
-  return keybinding;
+  return keyStroke;
 }
-
 
 
 // Maps key names as found in our configuration files to the values used by browser keyboard events.
@@ -180,25 +179,26 @@ export function eventKeyNameToConfigKeyName(eventKeyName: string): string {
  * Mapping from keyboard events to command strings, and command strings to
  * shortcut names.
  */
-export class KeybindingsMapping<KB extends Keybinding=Keybinding> {
+export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
 
-  readonly keybindingsList: KB[] = [];
-  protected _keybindingCommandMapping = new Map<KB, string>();
+  readonly keyStrokeList: KS[] = [];
+  protected _keyStrokeToCommandMapping = new Map<KS, string>();
   private _log: Logger = null;
   private _platform: string;
   private _enabled = true;
-  private _parseConfigString: (config: string) => KB = null;
 
-  constructor(parseConfigString: (config: string) => KB, mappingName: string, allMappingsJson: Object, platform: string) {
+  // FIXME remove this and the param below
+  private _parseConfigKeyStrokeString: (config: string) => KS = null;
+
+  constructor(parseConfigString: (config: string) => KS, mappingName: string, allMappingsJson: Object, platform: string) {
     this._log = getLogger("KeybindingMapping", this);
-    this._parseConfigString = parseConfigString;
+    this._parseConfigKeyStrokeString = parseConfigString;
     this._platform = platform;
     this._gatherPairs(mappingName, allMappingsJson).forEach((pair) => {
-      const keybinding = this._parseConfigString(pair.key);
-      // pair.value
+      const keybinding = this._parseConfigKeyStrokeString(pair.key);
       if (keybinding !== null) {
-        this._keybindingCommandMapping.set(keybinding, pair.value);
-        this.keybindingsList.push(keybinding);
+        this._keyStrokeToCommandMapping.set(keybinding, pair.value);
+        this.keyStrokeList.push(keybinding);
       } else {
         this._log.warn(`Unable to parse key binding '${pair.key}'. Skipping.`);
       }
@@ -213,7 +213,7 @@ export class KeybindingsMapping<KB extends Keybinding=Keybinding> {
     this._enabled = enabled;
   }
 
-  equals(other:  KeybindingsMapping<KB>): boolean {
+  equals(other:  KeybindingsMapping<KS>): boolean {
     if (other == null) {
       return false;
     }
@@ -225,16 +225,16 @@ export class KeybindingsMapping<KB extends Keybinding=Keybinding> {
       return false;
     }
 
-    const myBindings = this.keybindingsList.map(b => this._makeKey(b));
-    const otherBindings = other.keybindingsList.map(b => this._makeKey(b));
+    const myBindings = this.keyStrokeList.map(b => this._makeKey(b));
+    const otherBindings = other.keyStrokeList.map(b => this._makeKey(b));
     myBindings.sort();
     otherBindings.sort();
 
     return _.isEqual(myBindings, otherBindings);
   }
 
-  private _makeKey(binding: KB): string {
-    const command = this._keybindingCommandMapping.get(binding);
+  private _makeKey(binding: KS): string {
+    const command = this._keyStrokeToCommandMapping.get(binding);
     return mapString(command) + ":" + binding.hashString();
   }
 
@@ -256,5 +256,4 @@ export class KeybindingsMapping<KB extends Keybinding=Keybinding> {
     }
     return result;
   }
-  
 }

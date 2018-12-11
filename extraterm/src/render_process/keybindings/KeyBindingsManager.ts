@@ -6,15 +6,15 @@
 import { Event } from 'extraterm-extension-api';
 
 import { Logger, getLogger, log } from "extraterm-logging";
-import { Keybinding, KeybindingsMapping, KeybindingOptions, parseConfigString, configKeyNameToEventKeyName, eventKeyNameToConfigKeyName } from "../../keybindings/KeybindingsMapping";
+import { KeyStroke, KeybindingsMapping, KeyStrokeOptions, parseConfigKeyStrokeString, configKeyNameToEventKeyName, eventKeyNameToConfigKeyName } from "../../keybindings/KeybindingsMapping";
 import * as SetUtils from '../../utils/SetUtils';
 import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
 
 const NAME = "name";
 
-export class TermKeybindingsMapping extends KeybindingsMapping<TermKeybinding> {
+export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
   constructor(mappingName: string, allMappingsJson: Object, platform: string) {
-    super(TermKeybinding.parseConfigString, mappingName, allMappingsJson, platform);
+    super(TermKeyStroke.parseConfigString, mappingName, allMappingsJson, platform);
   }
 
   /**
@@ -47,7 +47,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeybinding> {
       }
     }
 
-    for (let keybinding of this.keybindingsList) {
+    for (let keybinding of this.keyStrokeList) {
       // Note: We don't compare Shift. It is assumed to be automatically handled by the
       // case of the key sent, except in the case where a special key is used.
       const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
@@ -56,7 +56,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeybinding> {
           keybinding.ctrlKey === ev.ctrlKey &&
           keybinding.shiftKey === ev.shiftKey &&
           keybinding.metaKey === ev.metaKey) {
-        return this._keybindingCommandMapping.get(keybinding);
+        return this._keyStrokeToCommandMapping.get(keybinding);
       }
     }
     return null;
@@ -67,12 +67,12 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeybinding> {
    * Maps a command name to a readable key binding name.
    * 
    * @param  command the command to map
-   * @return the matching key binding string if there is one preset, otherwise
+   * @return the matching key stroke string if there is one preset, otherwise
    *         null
    */
-  mapCommandToHumanKeybinding(command: string): string {
-    for (let keybinding of this.keybindingsList) {
-      if (this._keybindingCommandMapping.get(keybinding) === command) {
+  mapCommandToReadableKeyStroke(command: string): string {
+    for (let keybinding of this.keyStrokeList) {
+      if (this._keyStrokeToCommandMapping.get(keybinding) === command) {
         return keybinding.formatHumanReadable();
       }
     }
@@ -86,20 +86,19 @@ export interface MinimalKeyboardEvent extends TermMinimalKeyboardEvent {
 }
 
 // Internal data structure for pairing a key binding with a command.
-export class TermKeybinding extends Keybinding implements TermMinimalKeyboardEvent {
+export class TermKeyStroke extends KeyStroke implements TermMinimalKeyboardEvent {
 
   readonly key: string;
 
-  constructor(options: KeybindingOptions) {
+  constructor(options: KeyStrokeOptions) {
     super(options);
     this.key = configKeyNameToEventKeyName(options.configKey);
   }
 
-  static parseConfigString(keybindingString: string): TermKeybinding {
-    return parseConfigString((options: KeybindingOptions) => new TermKeybinding(options), keybindingString);
+  static parseConfigString(keybindingString: string): TermKeyStroke {
+    return parseConfigKeyStrokeString((options: KeyStrokeOptions) => new TermKeyStroke(options), keybindingString);
   }
 }
-
 
 
 /**

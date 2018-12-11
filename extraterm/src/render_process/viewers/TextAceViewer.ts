@@ -790,7 +790,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToHumanKeybinding(commandEntry.id)
+        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }
