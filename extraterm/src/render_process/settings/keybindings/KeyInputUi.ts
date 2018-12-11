@@ -5,7 +5,7 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
-import { eventKeyNameToConfigKeyName } from '../../keybindings/KeyBindingsManager';
+import { eventKeyNameToConfigKeyName } from '../../../keybindings/KeybindingsMapping';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const modifierKeys = [

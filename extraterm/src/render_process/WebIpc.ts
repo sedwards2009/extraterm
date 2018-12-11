@@ -14,7 +14,7 @@ import * as config from '../Config';
 import {Logger, getLogger} from "extraterm-logging";
 import { ExtensionMetadata } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
-import { KeybindingsFile } from '../KeybindingsFile';
+import { KeybindingsFile } from '../keybindings/KeybindingsFile';
 
 const _log = getLogger("WebIPC");
 

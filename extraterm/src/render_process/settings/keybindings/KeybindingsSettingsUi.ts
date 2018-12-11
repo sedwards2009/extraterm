@@ -9,11 +9,11 @@ import * as _ from 'lodash';
 
 import { trimBetweenTags} from 'extraterm-trim-between-tags';
 import { KeybindingsInfo } from '../../../Config';
-import { KeybindingsFile } from '../../../KeybindingsFile';
+import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
 import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
 import { KeybindingsList } from './KeybindingsListUi';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
-import { Keybinding } from '../../keybindings/KeyBindingsManager';
+import { TermKeybinding } from '../../keybindings/KeyBindingsManager';
 
 export const EVENT_DELETE = "delete";
 export const EVENT_DUPLICATE = "duplicate";
@@ -230,7 +230,7 @@ export class KeybindingsSettingsUi extends Vue {
   }
 
   onKeyInputSelected(keybindingString: string): void {
-    const enteredKeybinding = Keybinding.parseConfigString(keybindingString);
+    const enteredKeybinding = TermKeybinding.parseConfigString(keybindingString);
     this.searchText = enteredKeybinding.formatHumanReadable();
     this.recordingKey = false;
     this.$emit(EVENT_END_KEY_INPUT);

@@ -7,6 +7,7 @@
 import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
 import * as KeybindingsManager from './KeyBindingsManager';
+import { eventKeyNameToConfigKeyName } from '../../keybindings/KeybindingsMapping';
 
 SourceMapSupport.install();
 
@@ -53,8 +54,8 @@ function keyCode(key: string, ctrl=true): number {
 }
 
 export function testEventKeyNameToConfigKeyName(test: nodeunit.Test): void {
-  test.equal(KeybindingsManager.eventKeyNameToConfigKeyName(" "), "Space");
-  test.equal(KeybindingsManager.eventKeyNameToConfigKeyName("ArrowUp"), "Up");
+  test.equal(eventKeyNameToConfigKeyName(" "), "Space");
+  test.equal(eventKeyNameToConfigKeyName("ArrowUp"), "Up");
   test.done();
 }
 

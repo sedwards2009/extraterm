@@ -14,7 +14,7 @@ import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
 import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
 import { ExtensionMetadata } from './ExtensionMetadata';
-import { KeybindingsFile } from './KeybindingsFile';
+import { KeybindingsFile } from './keybindings/KeybindingsFile';
 
 
 /**
