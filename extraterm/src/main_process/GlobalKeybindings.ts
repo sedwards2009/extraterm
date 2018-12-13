@@ -23,19 +23,22 @@ export class GlobalKeybindingsManager {
   private _log: Logger = null;
   private _configuredKeybindingsName = "";
 
-  private _onToggleShowHideWindowEventEmitter = new EventEmitter<null>();
-  onToggleShowHideWindow: Event<null>;
-  private _onShowWindowEventEmitter = new EventEmitter<null>();
-  onShowWindow: Event<null>;
-  private _onHideWindowEventEmitter = new EventEmitter<null>();
-  onHideWindow: Event<null>;
+  private _onToggleShowHideWindowEventEmitter = new EventEmitter<void>();
+  onToggleShowHideWindow: Event<void>;
+  private _onShowWindowEventEmitter = new EventEmitter<void>();
+  onShowWindow: Event<void>;
+  private _onHideWindowEventEmitter = new EventEmitter<void>();
+  onHideWindow: Event<void>;
+  private _onMaximizeEventEmitter = new EventEmitter<void>();
+  onMaximizeWindow: Event<void>;
 
   constructor(private keybindingsIOManager: KeybindingsIOManager, private configDatabase: ConfigDatabaseImpl) {
     this._log = getLogger("GlobalKeybindingsManager", this);
 
-    this.onToggleShowHideWindow = this._onToggleShowHideWindowEventEmitter.event;
-    this.onShowWindow = this._onShowWindowEventEmitter.event;
+    this.onMaximizeWindow = this._onMaximizeEventEmitter.event;
     this.onHideWindow = this._onHideWindowEventEmitter.event;
+    this.onShowWindow = this._onShowWindowEventEmitter.event;
+    this.onToggleShowHideWindow = this._onToggleShowHideWindowEventEmitter.event;
 
     this._createGlobalKeybindings();
   
@@ -61,15 +64,16 @@ export class GlobalKeybindingsManager {
                                                       process.platform);
   
     const commandsToEmitters = {
-      "globalToggleShowHide": this._onToggleShowHideWindowEventEmitter,
-      "globalShow": this._onShowWindowEventEmitter,
+      "globalMaximize": this._onMaximizeEventEmitter,
       "globalHide": this._onHideWindowEventEmitter,
+      "globalShow": this._onShowWindowEventEmitter,
+      "globalToggleShowHide": this._onToggleShowHideWindowEventEmitter,
     };
 
     for (const command in commandsToEmitters) {
       for (const keyStroke of globalKeybindings.getKeyStrokesForCommand(command)) {
         globalShortcut.register(keyStrokeToAccelerator(keyStroke), () => {
-          commandsToEmitters[command].fire(null);
+          commandsToEmitters[command].fire();
         });
       }
     }

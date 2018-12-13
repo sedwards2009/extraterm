@@ -121,6 +121,7 @@
       "openCommandPalette"
     ],
     "global": [
+      "globalMaximize",
       "globalShow",
       "globalHide",
       "globalToggleShowHide"
@@ -223,6 +224,7 @@
     "escapeShellChars": "Escape special shell characters in selection",
     "findAll": "Select all occurences of current word",
     "forwardSlashesToBack": "Convert forward slashes to backslashes in selection",
+    "globalMaximize": "Maximize window",
     "globalHide": "Hide window",
     "globalShow": "Show and focus window",
     "globalToggleShowHide": "Toogle show/hide window",

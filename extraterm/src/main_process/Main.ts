@@ -224,8 +224,9 @@ function createTrayIcon(): void {
       }
 
       const contextMenu = Menu.buildFromTemplate([
+        {label: "Maximize", type: "normal", click: maximizeAllWindows},
         {label: "Minimize", type: "normal", click: minimizeAllWindows},
-        {label: "Restore", type: "normal", click: restoreAllWindows}
+        {label: "Restore", type: "normal", click: restoreAllWindows},
       ]);
       tray.setContextMenu(contextMenu);
 
@@ -256,6 +257,17 @@ function anyWindowsMinimized(): boolean {
   return false;
 }
 
+function maximizeAllWindows(): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.show();
+    window.maximize();
+// FIXME electron upgrade needed to make this work    
+    // if (process.platform !== "linux") {
+    //   window.moveTop();
+    // }
+  }
+}
+
 function minimizeAllWindows(): void {
   for (const window of BrowserWindow.getAllWindows()) {
     const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
@@ -264,11 +276,6 @@ function minimizeAllWindows(): void {
     } else {
       window.minimize();
     }
-
-// FIXME electron upgrade needed to make this work    
-    // if (process.platform !== "linux") {
-    //   window.moveTop();
-    // }
   }
 }
 
@@ -284,6 +291,7 @@ function restoreAllWindows(): void {
 
 function setupGlobalKeybindingsManager(): void {
   globalKeybindingsManager = new GlobalKeybindingsManager(keybindingsIOManager, configDatabase);
+  globalKeybindingsManager.onMaximizeWindow(maximizeAllWindows);
   globalKeybindingsManager.onToggleShowHideWindow(toggleAllWindows);
   globalKeybindingsManager.onShowWindow(restoreAllWindows);
   globalKeybindingsManager.onHideWindow(minimizeAllWindows);
