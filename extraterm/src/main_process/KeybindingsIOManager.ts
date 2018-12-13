@@ -10,7 +10,11 @@ import {Logger, getLogger, log} from "extraterm-logging";
 
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { KeybindingsInfo } from '../Config';
-import { KeybindingsFile } from '../KeybindingsFile';
+import { KeybindingsFile } from '../keybindings/KeybindingsFile';
+import { EventEmitter } from '../utils/EventEmitter';
+import { Event } from 'extraterm-extension-api';
+
+const humanText = require('../render_process/keybindings/keybindingstext.json');
 
 
 export class KeybindingsIOManager {
@@ -18,8 +22,12 @@ export class KeybindingsIOManager {
   private _log: Logger = null;
   private _keybindingsList: KeybindingsInfo[] = [];
 
+  private _onUpdateEventEmitter = new EventEmitter<string>();
+  onUpdate: Event<string>;
+
   constructor(private _userPath: string, private _mainExtensionManager: MainExtensionManager) {
     this._log = getLogger("KeybindingsIOManager", this);
+    this.onUpdate = this._onUpdateEventEmitter.event;
   }
 
   scan(): void {
@@ -88,7 +96,19 @@ export class KeybindingsIOManager {
     const info = this._getInfoByName(name);
     const fullPath = path.join(info.path, info.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
-    const keyBindingsJSON = JSON.parse(keyBindingJsonString);
+    let keyBindingsJSON = JSON.parse(keyBindingJsonString);
+
+    if (keyBindingsJSON == null) {
+      keyBindingsJSON = {};
+    }
+
+    // Eensure that an object exists for every context.
+    for (const key of Object.keys(humanText.contexts)) {
+      if (keyBindingsJSON[key] == null) {
+        keyBindingsJSON[key] = {};
+      }
+    }
+
     return keyBindingsJSON;
   }
 
@@ -128,8 +148,7 @@ export class KeybindingsIOManager {
       return false;
     }
 
-// FIXME broadcast changes    
-
+    this._onUpdateEventEmitter.fire(name);
     return true;
   }
 

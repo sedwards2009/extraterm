@@ -6,8 +6,8 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
-import { KeybindingsFile } from '../../../KeybindingsFile';
-import { Keybinding } from '../../keybindings/KeyBindingsManager';
+import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
+import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
 import { Emulator, Platform } from '../../emulator/Term';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
@@ -168,8 +168,8 @@ export class KeybindingsContext extends Vue {
     return humanText.contextConflicts[this.contextName];
   }
 
-  get commandToKeybindingsMapping(): Map<string, Keybinding[]> {
-    const result = new Map<string, Keybinding[]>();
+  get commandToKeybindingsMapping(): Map<string, TermKeyStroke[]> {
+    const result = new Map<string, TermKeyStroke[]>();
 
     for (const command of humanText.contexts[this.contextName]) {
       result.set(command, []);
@@ -184,7 +184,7 @@ export class KeybindingsContext extends Vue {
       if ( ! result.has(command)) {
         result.set(command, []);
       }
-      result.get(command).push(Keybinding.parseConfigString(configKeyString));
+      result.get(command).push(TermKeyStroke.parseConfigString(configKeyString));
     }
     return result;
   }
@@ -198,28 +198,28 @@ export class KeybindingsContext extends Vue {
     return str || commandCode;
   }
 
-  termConflict(keybinding: Keybinding): boolean {
+  termConflict(keybinding: TermKeyStroke): boolean {
     if (this.conflictContextNames.indexOf("emulation") === -1) {
       return false;
     }
     return Emulator.isKeySupported(<Platform> process.platform, keybinding);
   }
 
-  deleteKey(keybinding: Keybinding): void {
+  deleteKey(keybinding: TermKeyStroke): void {
     const commandConfig = this._findCommandByKeybinding(keybinding);
     if (commandConfig != null) {
         Vue.delete(this.keybindings[commandConfig.contextName], commandConfig.keybindingString);
     }
   }
 
-  private _findCommandByKeybinding(keybinding: Keybinding): CommandKeybinding {
+  private _findCommandByKeybinding(keybinding: TermKeyStroke): CommandKeybinding {
     for (const contextName of [this.contextName, ...this.conflictContextNames]) {
       const context = this.keybindings[contextName];
       if (context == null) {
         continue;
       }
       for (const keybindingString in context) {
-        const currentKeybinding = Keybinding.parseConfigString(keybindingString);
+        const currentKeybinding = TermKeyStroke.parseConfigString(keybindingString);
         if (currentKeybinding.equals(keybinding)) {
           return {contextName, command: context[keybindingString], keybindingString};
         }
@@ -239,7 +239,7 @@ export class KeybindingsContext extends Vue {
   }
 
   onKeyInputSelected(keybindingString: string): void {
-    const newKeybinding = Keybinding.parseConfigString(keybindingString);
+    const newKeybinding = TermKeyStroke.parseConfigString(keybindingString);
 
     const existingCommandConfig = this._findCommandByKeybinding(newKeybinding);
     if (existingCommandConfig == null) {
@@ -262,11 +262,11 @@ export class KeybindingsContext extends Vue {
   }
 
   get conflictKeyHumanReadable(): string {
-    return Keybinding.parseConfigString(this.conflictKey).formatHumanReadable();
+    return TermKeyStroke.parseConfigString(this.conflictKey).formatHumanReadable();
   }
 
   onReplaceConflict(): void {
-    const newKeybinding = Keybinding.parseConfigString(this.conflictKey);
+    const newKeybinding = TermKeyStroke.parseConfigString(this.conflictKey);
     const existingCommandConfig = this._findCommandByKeybinding(newKeybinding);
     Vue.delete(this.keybindings[existingCommandConfig.contextName], existingCommandConfig.keybindingString);
     Vue.set(this.keybindings[this.contextName], this.conflictKey, this.selectedCommand);

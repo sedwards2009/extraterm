@@ -4,256 +4,19 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event } from 'extraterm-extension-api';
-import * as _ from 'lodash';
 
 import { Logger, getLogger, log } from "extraterm-logging";
+import { KeyStroke, KeybindingsMapping, KeyStrokeOptions, parseConfigKeyStrokeString, configKeyNameToEventKeyName, eventKeyNameToConfigKeyName } from "../../keybindings/KeybindingsMapping";
 import * as SetUtils from '../../utils/SetUtils';
 import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
 
-const FALLTHROUGH = "fallthrough";
 const NAME = "name";
 
-export interface MinimalKeyboardEvent extends TermMinimalKeyboardEvent {
-  keyCode: number;
-}
-
-export interface KeybindingOptions {
-  altKey: boolean;
-  ctrlKey: boolean;
-  shiftKey: boolean;
-  metaKey: boolean;
-  configKey: string;
-};
-
-// Internal data structure for pairing a key binding with a command.
-export class Keybinding implements TermMinimalKeyboardEvent {
-  readonly altKey: boolean;
-  readonly ctrlKey: boolean;
-  readonly metaKey: boolean;
-  readonly shiftKey: boolean;
-  readonly key: string;
-  readonly configKey: string;
-  readonly configKeyLowercase: string;
-  private _humanReadableString: string = null;
-  readonly isComposing: boolean = false;
-  
-  constructor(options: KeybindingOptions) {
-    this.altKey = options.altKey;
-    this.ctrlKey = options.ctrlKey;
-    this.metaKey = options.metaKey;
-    this.shiftKey = options.shiftKey;
-    this.key = configKeyNameToEventKeyName(options.configKey);
-    this.configKey = options.configKey;
-    this.configKeyLowercase = options.configKey.toLowerCase();
-  }
-
-  static parseConfigString(keyBindingString: string): Keybinding {
-    const parts = keyBindingString.replace(/\s/g, "").split(/-/g);
-    const partSet = new Set(parts.map(part => part.length !== 1 ? part.toLowerCase() : part));
-    const hasShift = partSet.has("shift");
-    partSet.delete("shift");
-    const hasCtrl = partSet.has("ctrl");
-    partSet.delete("ctrl");
-    const hasAlt = partSet.has("alt");
-    partSet.delete("alt");
-    const hasMeta = partSet.has("meta") || partSet.has("cmd");
-    partSet.delete("meta");
-    partSet.delete("cmd");
-  
-    if (partSet.size !== 1) {
-      return null;
-    }
-  
-    const key = partSet.values().next().value;
-    const keybinding = new Keybinding({
-      altKey: hasAlt,
-      ctrlKey: hasCtrl,
-      shiftKey: hasShift,
-      metaKey: hasMeta,
-      configKey: key
-    });
-  
-    return keybinding;
-  }
-
-  equals(other: Keybinding): boolean {
-    if (other == null) {
-      return false;
-    }
-    return this.altKey === other.altKey &&
-      this.ctrlKey === other.ctrlKey &&
-      this.metaKey === other.metaKey &&
-      this.shiftKey === other.shiftKey &&
-      this.configKeyLowercase === other.configKeyLowercase;
-  }
-
-  formatHumanReadable(): string {
-    if (this._humanReadableString != null) {
-      return this._humanReadableString;
-    }
-
-    const parts: string[] = [];
-    if (this.ctrlKey) {
-      parts.push("Ctrl");
-    }
-    if (this.metaKey) {
-      parts.push("\u2318"); // Mac style 'pretzel' symbol
-    }
-    if (this.altKey) {
-      parts.push("Alt");
-    }
-    if (this.shiftKey) {
-      parts.push("Shift");
-    }
-  
-    if (eventKeyToHumanMapping[this.configKey.toLowerCase()] !== undefined) {
-      parts.push(eventKeyToHumanMapping[this.configKey.toLowerCase()]);
-    } else {
-      parts.push(_.capitalize(this.configKey));
-    }
-  
-    this._humanReadableString = parts.join("+");
-    return this._humanReadableString;
-  }
-    
-  hashString(): string {
-    return `${mapString(this.configKey)}:${mapBool(this.altKey)}:${mapBool(this.ctrlKey)}:${mapBool(this.metaKey)}:${mapBool(this.shiftKey)}`;
-  }
-}
-
-// Maps key names as found in our configuration files to the values used by browser keyboard events.
-const configNameToEventKeyMapping = {
-  "Space": " ",
-  "Plus": "+",
-  "Minus": "-",
-  "Esc": "Escape",
-  "Up": "ArrowUp",
-  "Down": "ArrowDown",
-  "Left": "ArrowLeft",
-  "Right": "ArrowRight"
-};
-
-// Maps special key names in all lower case back to mixed case.
-const lowerConfigNameToEventKeyMapping = {};
-for (const key in configNameToEventKeyMapping) {
-  lowerConfigNameToEventKeyMapping[key.toLowerCase()] = configNameToEventKeyMapping[key];
-}
-
-const eventKeyToHumanMapping = {
-  "pageup": "Page Up",
-  "pagedown": "Page Down",
-};
-for (const key in configNameToEventKeyMapping) {
-  eventKeyToHumanMapping[configNameToEventKeyMapping[key].toLowerCase()] = key;
-}
-
-
-export function configKeyNameToEventKeyName(configKeyName: string): string {
-  if (lowerConfigNameToEventKeyMapping[configKeyName.toLowerCase()] !== undefined) {
-    return lowerConfigNameToEventKeyMapping[configKeyName.toLowerCase()];
-  } else {
-    return configKeyName.length === 1 ? configKeyName : _.capitalize(configKeyName.toLowerCase());
-  }
-}
-
-const eventKeyToConfigKeyMapping = new Map<string, string>();
-for (const configKey in configNameToEventKeyMapping) {
-  eventKeyToConfigKeyMapping.set(configNameToEventKeyMapping[configKey], configKey);
-}
-
-export function eventKeyNameToConfigKeyName(eventKeyName: string): string {
-  if (eventKeyToConfigKeyMapping.has(eventKeyName)) {
-    return eventKeyToConfigKeyMapping.get(eventKeyName);
-  }
-  return eventKeyName;
-}
-
-function mapBool(b: boolean): string {
-  if (b === undefined) {
-    return "?";
-  }
-  return b ? "T" : "F";
-}
-
-function mapString(s: string): string {
-  return s === undefined ? "" : s;
-}
-
-/**
- * Mapping from keyboard events to command strings, and command strings to
- * shortcut names.
- */
-export class KeybindingsMapping {
-
-  public keybindingsList: Keybinding[] = [];
-  private _keybindingCommandMapping = new Map<Keybinding, string>();
-  private _log: Logger = null;
-  private _platform: string;
-  private _enabled = true;
-
+export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
   constructor(mappingName: string, allMappingsJson: Object, platform: string) {
-    this._log = getLogger("KeybindingMapping", this);
-    this._platform = platform;
-    this._gatherPairs(mappingName, allMappingsJson).forEach((pair) => {
-      const keybinding = Keybinding.parseConfigString(pair.key);
-      // pair.value
-      if (keybinding !== null) {
-        this._keybindingCommandMapping.set(keybinding, pair.value);
-        this.keybindingsList.push(keybinding);
-      } else {
-        this._log.warn(`Unable to parse key binding '${pair.key}'. Skipping.`);
-      }
-    });
+    super(TermKeyStroke.parseConfigString, mappingName, allMappingsJson, platform);
   }
 
-  setEnabled(enabled: boolean): void {
-    this._enabled = enabled;
-  }
-
-  equals(other: KeybindingsMapping): boolean {
-    if (other == null) {
-      return false;
-    }
-    if (other === this) {
-      return true;
-    }
-
-    if (other._platform !== this._platform) {
-      return false;
-    }
-
-    const myBindings = this.keybindingsList.map(b => this._makeKey(b));
-    const otherBindings = other.keybindingsList.map(b => this._makeKey(b));
-    myBindings.sort();
-    otherBindings.sort();
-
-    return _.isEqual(myBindings, otherBindings);
-  }
-
-  private _makeKey(binding: Keybinding): string {
-    const command = this._keybindingCommandMapping.get(binding);
-    return mapString(command) + ":" + binding.hashString();
-  }
-
-  private _gatherPairs(name: string, allMappings: Object): { key: string, value: string}[] {
-    const mapping = allMappings[name];
-    if (mapping === undefined) {
-      this._log.warn(`Unable to find mapping with name '${name}'.`);
-      return [];
-    }
-    
-    let result = [];
-    if (mapping[FALLTHROUGH] !== undefined) {
-      result = this._gatherPairs(mapping[FALLTHROUGH], allMappings);
-    }
-    for (let key in mapping) {
-      if (key !== FALLTHROUGH) {
-        result.push( { key: key, value: mapping[key] } );
-      }
-    }
-    return result;
-  }
-  
   /**
    * Maps a keyboard event to a command string.
    *
@@ -262,7 +25,7 @@ export class KeybindingsMapping {
    *         key binding.
    */
   mapEventToCommand(ev: MinimalKeyboardEvent): string {
-    if ( ! this._enabled) {
+    if ( ! this.isEnabled()) {
       return null;
     }
 
@@ -284,7 +47,7 @@ export class KeybindingsMapping {
       }
     }
 
-    for (let keybinding of this.keybindingsList) {
+    for (let keybinding of this.keyStrokeList) {
       // Note: We don't compare Shift. It is assumed to be automatically handled by the
       // case of the key sent, except in the case where a special key is used.
       const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
@@ -293,7 +56,7 @@ export class KeybindingsMapping {
           keybinding.ctrlKey === ev.ctrlKey &&
           keybinding.shiftKey === ev.shiftKey &&
           keybinding.metaKey === ev.metaKey) {
-        return this._keybindingCommandMapping.get(keybinding);
+        return this._keyStrokeToCommandMapping.get(keybinding);
       }
     }
     return null;
@@ -304,27 +67,37 @@ export class KeybindingsMapping {
    * Maps a command name to a readable key binding name.
    * 
    * @param  command the command to map
-   * @return the matching key binding string if there is one preset, otherwise
+   * @return the matching key stroke string if there is one preset, otherwise
    *         null
    */
-  mapCommandToHumanKeybinding(command: string): string {
-    for (let keybinding of this.keybindingsList) {
-      if (this._keybindingCommandMapping.get(keybinding) === command) {
+  mapCommandToReadableKeyStroke(command: string): string {
+    for (let keybinding of this.keyStrokeList) {
+      if (this._keyStrokeToCommandMapping.get(keybinding) === command) {
         return keybinding.formatHumanReadable();
       }
     }
     return null;
   }
+}
 
-//   mapCommandToKeybindings(command: string): string[] {
-//     const result: string[] = [];
-//     for (let keyBinding of this.keyBindings) {
-//       if (keyBinding.command === command) {
-//         result.push(keyBinding.shortcut);
-//       }
-//     }
-//     return result;
-//   }
+
+export interface MinimalKeyboardEvent extends TermMinimalKeyboardEvent {
+  keyCode: number;
+}
+
+// Internal data structure for pairing a key binding with a command.
+export class TermKeyStroke extends KeyStroke implements TermMinimalKeyboardEvent {
+
+  readonly key: string;
+
+  constructor(options: KeyStrokeOptions) {
+    super(options);
+    this.key = configKeyNameToEventKeyName(options.configKey);
+  }
+
+  static parseConfigString(keybindingString: string): TermKeyStroke {
+    return parseConfigKeyStrokeString((options: KeyStrokeOptions) => new TermKeyStroke(options), keybindingString);
+  }
 }
 
 
@@ -333,7 +106,7 @@ export class KeybindingsMapping {
  */
 export class KeybindingsContexts {
   private _log: Logger = null;
-  private _contexts = new Map<string, KeybindingsMapping>();
+  private _contexts = new Map<string, TermKeybindingsMapping>();
   public contextNames: string[] = [];
   private _enabled = true;
 
@@ -341,7 +114,7 @@ export class KeybindingsContexts {
     this._log = getLogger("KeybindingContexts", this);
     for (let key in obj) {
       if (key !== NAME) {
-        const mapper = new KeybindingsMapping(key, obj, platform);
+        const mapper = new TermKeybindingsMapping(key, obj, platform);
         this.contextNames.push(key);
         this._contexts.set(key, mapper);
       }
@@ -385,7 +158,7 @@ export class KeybindingsContexts {
    * @return the `KeybindingMapping` object for the context or `null` if the
    *         context is unknown
    */
-  context(contextName: string): KeybindingsMapping {
+  context(contextName: string): TermKeybindingsMapping {
     const mapping = this._contexts.get(contextName) || null;
     if (mapping != null) {
       mapping.setEnabled(this._enabled);

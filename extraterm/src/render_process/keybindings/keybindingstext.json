@@ -119,11 +119,17 @@
     ],
     "settings-tab": [
       "openCommandPalette"
+    ],
+    "global": [
+      "globalShow",
+      "globalHide",
+      "globalToggleShowHide"
     ]
   },
   
   "contextNames": {
     "editor": "Text Editing",
+    "global": "Global",
     "image-viewer": "Image Viewer",
     "main-ui": "Window",
     "settings-tab": "Settings Tab",
@@ -142,7 +148,22 @@
       "terminal-cursor-mode",
       "terminal-viewer-cursor-mode"
     ],
-    "image-viewer": ["main-ui"],
+    "global": [
+      "editor",
+      "image-viewer",
+      "main-ui",
+      "settings-tab",
+      "terminal-default-mode",
+      "terminal-cursor-mode",
+      "terminal-viewer-default-mode",
+      "terminal-viewer-cursor-mode",
+      "text-viewer",
+      "viewer-tab",
+      "emulation"
+    ],
+    "image-viewer": [
+      "main-ui"
+    ],
     "main-ui": [
       "editor",
       "image-viewer",
@@ -153,14 +174,35 @@
       "terminal-viewer-cursor-mode",
       "text-viewer",
       "viewer-tab",
-      "emulation"],
-    "settings-tab": ["main-ui"],
-    "terminal-default-mode": ["main-ui", "emulation"],
-    "terminal-cursor-mode": ["main-ui", "editor"],
-    "terminal-viewer-default-mode": ["main-ui", "emulation"],
-    "terminal-viewer-cursor-mode": ["main-ui", "editor"],
-    "text-viewer": ["main-ui", "editor"],
-    "viewer-tab": ["main-ui", "editor"]
+      "emulation"
+    ],
+    "settings-tab": [
+      "main-ui"
+    ],
+    "terminal-default-mode": [
+      "main-ui",
+      "emulation"
+    ],
+    "terminal-cursor-mode": [
+      "main-ui",
+      "editor"
+    ],
+    "terminal-viewer-default-mode": [
+      "main-ui",
+      "emulation"
+    ],
+    "terminal-viewer-cursor-mode": [
+      "main-ui",
+      "editor"
+    ],
+    "text-viewer": [
+      "main-ui",
+      "editor"
+    ],
+    "viewer-tab": [
+      "main-ui",
+      "editor"
+    ]
   },
   "commands": {
     "addCursorAbove": "Add cursor above",
@@ -181,6 +223,9 @@
     "escapeShellChars": "Escape special shell characters in selection",
     "findAll": "Select all occurences of current word",
     "forwardSlashesToBack": "Convert forward slashes to backslashes in selection",
+    "globalHide": "Hide window",
+    "globalShow": "Show and focus window",
+    "globalToggleShowHide": "Toogle show/hide window",
     "goDown": "Move down",
     "goLineDown": "Move cursor down one line",
     "goLineUp": "Move cursor up one line",

@@ -1479,7 +1479,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToHumanKeybinding(commandEntry.id)
+        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }    

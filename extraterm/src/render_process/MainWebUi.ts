@@ -1121,7 +1121,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToHumanKeybinding(commandEntry.id)
+        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
         commandEntry.shortcut = shortcut === null ? "" : shortcut;
       });
     }    

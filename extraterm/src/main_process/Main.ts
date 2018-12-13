@@ -13,7 +13,7 @@ import * as SourceMapSupport from 'source-map-support';
 
 import * as child_process from 'child_process';
 import { Command } from 'commander';
-import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu} from 'electron';
+import {app, BrowserWindow, globalShortcut, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu} from 'electron';
 import { BulkFileState } from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
@@ -35,6 +35,8 @@ import { log } from "extraterm-logging";
 import { KeybindingsIOManager } from './KeybindingsIOManager';
 
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupUserConfig, setupAppData, KEYBINDINGS_OSX, KEYBINDINGS_PC } from './MainConfig';
+import { KeyStroke, KeybindingsMapping } from '../keybindings/KeybindingsMapping';
+import { GlobalKeybindingsManager } from './GlobalKeybindings';
 
 const LOG_FINE = false;
 
@@ -65,6 +67,8 @@ let bulkFileStorage: BulkFileStorage = null;
 let extensionManager: MainExtensionManager = null;
 let packageJson: any = null;
 let keybindingsIOManager: KeybindingsIOManager = null;
+let globalKeybindingsManager: GlobalKeybindingsManager = null;
+
 
 function main(): void {
   let failed = false;
@@ -162,12 +166,7 @@ function electronReady(parsedArgs: Command): void {
   setupBulkFileStorage();
   setupIpc();
   setupTrayIcon();
-  configDatabase.onChange((e: ConfigChangeEvent) => {
-    if (e.key === "general") {
-      setupTrayIcon();
-    }
-  });
-
+  setupGlobalKeybindingsManager();
   openWindow(parsedArgs);
 }
 
@@ -190,9 +189,20 @@ function setupBulkFileStorage(): void {
   bulkFileStorage.onClose(sendBulkFileStateChangeEvent);
 }
 
+//-------------------------------------------------------------------------
+
 let tray: Tray = null;
 
 function setupTrayIcon(): void {
+  createTrayIcon();
+  configDatabase.onChange((e: ConfigChangeEvent) => {
+    if (e.key === "general") {
+      createTrayIcon();
+    }
+  });
+}
+
+function createTrayIcon(): void {
   const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
 
   if (generalConfig.showTrayIcon) {
@@ -219,19 +229,21 @@ function setupTrayIcon(): void {
       ]);
       tray.setContextMenu(contextMenu);
 
-      tray.on("click", () => {
-        if (anyWindowsMinimized()) {
-          restoreAllWindows();
-        } else {
-          minimizeAllWindows();
-        }
-      })
+      tray.on("click", toggleAllWindows);
     }
   } else {
     if (tray != null) {
       tray.destroy();
       tray = null;
     }
+  }
+}
+
+function toggleAllWindows(): void {
+  if (anyWindowsMinimized()) {
+    restoreAllWindows();
+  } else {
+    minimizeAllWindows();
   }
 }
 
@@ -268,6 +280,13 @@ function restoreAllWindows(): void {
     }
     window.restore();
   }
+}
+
+function setupGlobalKeybindingsManager(): void {
+  globalKeybindingsManager = new GlobalKeybindingsManager(keybindingsIOManager, configDatabase);
+  globalKeybindingsManager.onToggleShowHideWindow(toggleAllWindows);
+  globalKeybindingsManager.onShowWindow(restoreAllWindows);
+  globalKeybindingsManager.onHideWindow(minimizeAllWindows);
 }
 
 function openWindow(parsedArgs: Command): void {

@@ -314,7 +314,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
       if (dataContext !== null && dataCommand !== null) {
         const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(dataContext);
         if (keyBindings != null) {
-          const shortcut = keyBindings.mapCommandToHumanKeybinding(dataCommand);
+          const shortcut = keyBindings.mapCommandToReadableKeyStroke(dataCommand);
           if (shortcut !== null) {
             kbd.innerHTML = `<span>${he.encode(shortcut)}</span>`;
           } else {

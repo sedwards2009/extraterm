@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { KeybindingsContext, EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
-import { KeybindingsFile } from '../../../KeybindingsFile';
+import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
