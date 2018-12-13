@@ -82,7 +82,11 @@ input[type="checkbox"] {
   transition: background-color .16s cubic-bezier(0.5, 0.15, 0.2, 1);
 
   &:focus {
-    box-shadow: 0 0 0 1px $base-border-color;
+    background-color: $component-background-color;
+  }
+
+  &:disabled {
+    background-color: $level-1-color;
   }
 
   &:active {
@@ -119,6 +123,10 @@ input[type="checkbox"] {
     &:active {
       background-color: $text-color-subtle;
     }
+    &:disabled {
+      background-color: $level-1-color;
+    }
+
     &::before,
     &::after {
       opacity: 1;
