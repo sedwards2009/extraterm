@@ -246,3 +246,8 @@ export function keybindingsUpdate(name: string, keybindings: KeybindingsFile): v
   const msg: Messages.KeybindingsUpdateMessage = {type: Messages.MessageType.UPDATE_KEYBINDINGS, name, keybindings};
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
+
+export function enableGlobalKeybindings(enabled: boolean): void {
+  const msg: Messages.GlobalKeybindingsEnableMessage = {type: Messages.MessageType.GLOBAL_KEYBINDINGS_ENABLE, enabled};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}

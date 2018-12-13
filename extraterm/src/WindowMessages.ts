@@ -75,6 +75,7 @@ export const enum MessageType {
   RENAME_KEYBINDINGS,
   DELETE_KEYBINDINGS,
   UPDATE_KEYBINDINGS,
+  GLOBAL_KEYBINDINGS_ENABLE,
 }
 
 /**
@@ -492,4 +493,8 @@ export interface KeybindingsRenameMessage extends Message {
 export interface KeybindingsUpdateMessage extends Message {
   name: string;
   keybindings: KeybindingsFile;
+}
+
+export interface GlobalKeybindingsEnableMessage extends Message {
+  enabled: boolean;
 }

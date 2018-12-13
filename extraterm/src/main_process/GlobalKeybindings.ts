@@ -21,6 +21,7 @@ import { globalShortcut } from 'electron';
 export class GlobalKeybindingsManager {
 
   private _log: Logger = null;
+  private _enabled = true;
   private _configuredKeybindingsName = "";
 
   private _onToggleShowHideWindowEventEmitter = new EventEmitter<void>();
@@ -40,20 +41,36 @@ export class GlobalKeybindingsManager {
     this.onShowWindow = this._onShowWindowEventEmitter.event;
     this.onToggleShowHideWindow = this._onToggleShowHideWindowEventEmitter.event;
 
-    this._createGlobalKeybindings();
+    this._updateGlobalKeybindings();
   
     keybindingsIOManager.onUpdate((name: string) => {
-      this._createGlobalKeybindings();
+      this._updateGlobalKeybindings();
     });
   
     configDatabase.onChange((e: ConfigChangeEvent) => {
       if (e.key === GENERAL_CONFIG) {
         const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
         if (generalConfig.keybindingsName !== this._configuredKeybindingsName) {
-          this._createGlobalKeybindings();
+          this._updateGlobalKeybindings();
         }
       }
     });
+  }
+
+  setEnabled(enabled: boolean): void {
+    if (enabled === this._enabled) {
+      return;
+    }
+    this._enabled = enabled;
+    this._updateGlobalKeybindings();
+  }
+
+  private _updateGlobalKeybindings(): void {
+    if (this._enabled) {
+      this._createGlobalKeybindings();
+    } else {
+      globalShortcut.unregisterAll();
+    }
   }
 
   private _createGlobalKeybindings(): void {

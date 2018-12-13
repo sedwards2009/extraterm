@@ -816,5 +816,7 @@ class KeybindingsManagerImpl implements KeybindingsManager {
     if (this._keybindingsContexts != null) {
       this._keybindingsContexts.setEnabled(this._enabled);
     }
+
+    WebIpc.enableGlobalKeybindings(enabled);
   }
 }

@@ -13,7 +13,7 @@ import * as SourceMapSupport from 'source-map-support';
 
 import * as child_process from 'child_process';
 import { Command } from 'commander';
-import {app, BrowserWindow, globalShortcut, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu} from 'electron';
+import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu} from 'electron';
 import { BulkFileState } from 'extraterm-extension-api';
 import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
@@ -35,7 +35,6 @@ import { log } from "extraterm-logging";
 import { KeybindingsIOManager } from './KeybindingsIOManager';
 
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupUserConfig, setupAppData, KEYBINDINGS_OSX, KEYBINDINGS_PC } from './MainConfig';
-import { KeyStroke, KeybindingsMapping } from '../keybindings/KeybindingsMapping';
 import { GlobalKeybindingsManager } from './GlobalKeybindings';
 
 const LOG_FINE = false;
@@ -702,6 +701,10 @@ function handleIpc(event: Electron.Event, arg: any): void {
       handleKeybindingsUpdate(<Messages.KeybindingsUpdateMessage>msg);
       break;
 
+    case Messages.MessageType.GLOBAL_KEYBINDINGS_ENABLE:
+      handleGlobalKeybindingsEnable(<Messages.GlobalKeybindingsEnableMessage>msg);
+      break;
+
     default:
       break;
   }
@@ -1033,6 +1036,10 @@ function handleKeybindingsUpdate(msg: Messages.KeybindingsUpdateMessage): void {
   const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   systemConfig.keybindingsContexts = keybindingsIOManager.readKeybindingsJson(generalConfig.keybindingsName);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+}
+
+function handleGlobalKeybindingsEnable(msg: Messages.GlobalKeybindingsEnableMessage): void {
+  globalKeybindingsManager.setEnabled(msg.enabled);
 }
 
 main();
