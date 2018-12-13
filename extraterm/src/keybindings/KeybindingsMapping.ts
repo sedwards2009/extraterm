@@ -256,4 +256,15 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
     }
     return result;
   }
+  
+  getKeyStrokesForCommand(command: string): KS[] {
+    const result: KS[] = [];
+    for (const keyStroke of this.keyStrokeList) {
+      const keyStrokeCommand = this._keyStrokeToCommandMapping.get(keyStroke);
+      if (command === keyStrokeCommand) {
+        result.push(keyStroke);
+      }
+    }
+    return result;
+  }
 }
