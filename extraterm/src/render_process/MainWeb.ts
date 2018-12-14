@@ -591,7 +591,7 @@ function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor:
 }
 
 function startUpCommandPalette(): void {
-  commandPalette = new CommandPalette(extensionManager, keyBindingManager, {executeCommand, getCommandPaletteEntries});
+  commandPalette = new CommandPalette(extensionManager, keyBindingManager, {executeCommand, getCommands: getCommandPaletteEntries});
 }
 
 function startUpApplicationContextMenu(): void {

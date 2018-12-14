@@ -113,7 +113,7 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
     this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
   }
 
-  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
+  getCommands(commandableStack: Commandable[]): BoundCommand[] {
     const entries: BoundCommand[] = [];
     return entries;
   }

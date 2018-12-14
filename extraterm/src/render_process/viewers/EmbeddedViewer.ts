@@ -803,7 +803,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     return true;
   }
 
-  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
+  getCommands(commandableStack: Commandable[]): BoundCommand[] {
     return [];
   }
 

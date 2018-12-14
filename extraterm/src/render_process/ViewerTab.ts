@@ -478,7 +478,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     }
   }
 
-  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
+  getCommands(commandableStack: Commandable[]): BoundCommand[] {
     const commandList: BoundCommand[] = [];
 
     commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "far fa-copy", label: "Copy to Clipboard", commandExecutor: this } );

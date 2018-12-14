@@ -20,12 +20,12 @@ export interface CommandExecutor {
 }
 
 export interface Commandable extends CommandExecutor {
-  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[];
+  getCommands(commandableStack: Commandable[]): BoundCommand[];
 }
 
 export function isCommandable(instance: any): instance is Commandable {
   if (instance === null || instance === undefined) {
     return false;
   }
-  return (<Commandable> instance).executeCommand !== undefined && (<Commandable> instance).getCommandPaletteEntries !== undefined;
+  return (<Commandable> instance).executeCommand !== undefined && (<Commandable> instance).getCommands !== undefined;
 }

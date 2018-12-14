@@ -1001,7 +1001,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
   }
 
-  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
+  getCommands(commandableStack: Commandable[]): BoundCommand[] {
     let commandList: BoundCommand[] = [
       { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection", commandExecutor: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this }

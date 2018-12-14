@@ -1055,7 +1055,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   //
   //-----------------------------------------------------------------------
 
-  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
+  getCommands(commandableStack: Commandable[]): BoundCommand[] {
     
     const thisIndex = commandableStack.indexOf(this);
     const tabContentElement = commandableStack[thisIndex-1];
