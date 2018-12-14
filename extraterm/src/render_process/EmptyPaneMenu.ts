@@ -10,10 +10,11 @@ import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import {ListPicker} from './gui/ListPicker';
 import * as DomUtils from './DomUtils';
-import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandMenuItem} from './CommandPaletteFunctions';
+import {commandPaletteFilterEntries, commandPaletteFormatEntries } from './CommandPalette';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
+import { CommandMenuItem } from './CommandPaletteRequestTypes';
 
 const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
 const ID_CONTAINER = "ID_CONTAINER";

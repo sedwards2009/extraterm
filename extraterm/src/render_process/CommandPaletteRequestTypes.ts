@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as CommandPaletteFunctons from './CommandPaletteFunctions';
+import * as ExtensionApi from 'extraterm-extension-api';
 
 export interface CommandExecutor {
   executeCommand(commandId: string, commandArguments?: object): void;
@@ -26,7 +26,11 @@ export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement
   element.dispatchEvent(commandPaletteRequestEvent);
 }
 
-export interface CommandEntry extends CommandPaletteFunctons.CommandMenuItem {
+export interface CommandMenuItem extends ExtensionApi.CommandEntry {
+  shortcut?: string;
+}
+
+export interface CommandEntry extends CommandMenuItem {
   commandExecutor: CommandExecutor;
   commandArguments?: object;
 }

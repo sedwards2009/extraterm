@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as _ from 'lodash';
+import * as he from 'he';
 
 import { Disposable, Logger } from 'extraterm-extension-api';
 import { doLater } from '../utils/DoLater';
-import { CommandEntry, Commandable, isCommandable } from './CommandPaletteRequestTypes';
-import { CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries } from './CommandPaletteFunctions';
+import { CommandEntry, Commandable, isCommandable, CommandMenuItem } from './CommandPaletteRequestTypes';
 import { PopDownListPicker } from './gui/PopDownListPicker';
 import { CssFile } from '../theme/Theme';
 import { EtTerminal } from './Terminal';
@@ -115,6 +115,62 @@ export class CommandPalette {
         this._commandPaletteRequestSource = null;
         this._commandPaletteRequestEntries = null;
       });
+    }
+  }
+}
+
+const CLASS_RESULT_GROUP_HEAD = "CLASS_RESULT_GROUP_HEAD";
+const CLASS_RESULT_ICON_LEFT = "CLASS_RESULT_ICON_LEFT";
+const CLASS_RESULT_ICON_RIGHT = "CLASS_RESULT_ICON_RIGHT";
+const CLASS_RESULT_LABEL = "CLASS_RESULT_LABEL";
+const CLASS_RESULT_SHORTCUT = "CLASS_RESULT_SHORTCUT";
+
+export function commandPaletteFilterEntries(entries: CommandMenuItem[], filter: string): CommandMenuItem[] {
+  const lowerFilter = filter.toLowerCase();
+  return entries.filter( (entry) => entry.label.toLowerCase().includes(lowerFilter) );
+}
+
+export function commandPaletteFormatEntries(entries: CommandMenuItem[], selectedId: string, filterInputValue: string): string {
+    return (filterInputValue.trim() === "" ? commandPaletteFormatEntriesWithGroups : commandPaletteFormatEntriesAsList)(entries, selectedId);
+}
+
+function commandPaletteFormatEntriesAsList(entries: CommandMenuItem[], selectedId: string): string {
+  return entries.map( (entry) => commandPaletteFormatEntry(entry, entry.id === selectedId) ).join("");
+}
+
+function commandPaletteFormatEntriesWithGroups(entries: CommandMenuItem[], selectedId: string): string {
+  let currentGroup: string = null;
+  const htmlParts: string[] = [];
+
+  for (let entry of entries) {
+    let extraClass = "";
+    if (entry.group !== undefined && entry.group !== currentGroup && currentGroup !== null) {
+      extraClass = CLASS_RESULT_GROUP_HEAD;
+    }
+    currentGroup = entry.group;
+    htmlParts.push(commandPaletteFormatEntry(entry, entry.id === selectedId, extraClass));
+  }
+  
+  return htmlParts.join("");
+}
+
+function commandPaletteFormatEntry(entry: CommandMenuItem, selected: boolean, extraClassString = ""): string {
+  return `<div class='${PopDownListPicker.CLASS_RESULT_ENTRY} ${selected ? PopDownListPicker.CLASS_RESULT_SELECTED : ""} ${extraClassString}' ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>
+    <div class='${CLASS_RESULT_ICON_LEFT}'>${commandPaletteFormatIcon(entry.iconLeft)}</div>
+    <div class='${CLASS_RESULT_ICON_RIGHT}'>${commandPaletteFormatIcon(entry.iconRight)}</div>
+    <div class='${CLASS_RESULT_LABEL}'>${he.encode(entry.label)}</div>
+    <div class='${CLASS_RESULT_SHORTCUT}'>${entry.shortcut !== undefined && entry.shortcut !== null ? he.encode(entry.shortcut) : ""}</div>
+  </div>`;
+}
+
+function commandPaletteFormatIcon(iconName?: string): string {
+  if (iconName != null && iconName.startsWith('extraicon-')) {
+    return `<span class='fa-fw CLASS_EXTRAICON'>&${iconName.substr('extraicon-'.length)};</span>`;
+  } else {
+    if (iconName == null) {
+      return `<i class='fa-fw fa'>&nbsp;</i>`;
+    } else {
+      return `<i class='fa-fw ${iconName != null ? iconName : ""}'></i>`;
     }
   }
 }
