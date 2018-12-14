@@ -26,13 +26,12 @@ export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement
   element.dispatchEvent(commandPaletteRequestEvent);
 }
 
-export interface CommandMenuItem extends ExtensionApi.CommandEntry {
+export interface CommandMenuItem extends ExtensionApi.Command {
   shortcut?: string;
 }
 
 export interface CommandEntry extends CommandMenuItem {
   commandExecutor: CommandExecutor;
-  commandArguments?: object;
 }
 
 export const EVENT_COMMAND_PALETTE_REQUEST = "EVENT_COMMAND_PALETTE_REQUEST";

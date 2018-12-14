@@ -7,10 +7,9 @@ import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
-import { app } from 'electron';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
-import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Pty, Terminal, SessionConfiguration, Backend, SessionBackend, EnvironmentMap} from 'extraterm-extension-api';
+import { Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap} from 'extraterm-extension-api';
 
 import { ProxyPtyConnector, PtyOptions } from './ProxyPty';
 import * as SourceDir from './SourceDir';

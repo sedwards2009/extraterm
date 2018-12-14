@@ -209,7 +209,7 @@ export type Viewer = FrameViewer | TerminalOutputViewer | TextViewer;
 /**
  * Defines a command for display in the Command Palette.
  */
-export interface CommandEntry {
+export interface Command {
   /**
    * Identifier for this command. This ID is used internally and should only
    * consist of alphanumeric characters ([A-Z0-9]+). It must be unique
@@ -251,11 +251,11 @@ export interface Workspace {
 
   // onWillDestroyTerminal: Event<Terminal>;
   registerCommandsOnTerminal(
-    commandLister: (terminal: Terminal) => CommandEntry[],
+    commandLister: (terminal: Terminal) => Command[],
     commandExecutor: (terminal: Terminal, commandId: string, commandArguments?: object) => void): Disposable;
 
   registerCommandsOnTextViewer(
-    commandLister: (textViewer: TextViewer) => CommandEntry[],
+    commandLister: (textViewer: TextViewer) => Command[],
     commandExecutor: (textViewer: TextViewer, commandId: string, commandArguments?: object) => void): Disposable;
 
   extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;

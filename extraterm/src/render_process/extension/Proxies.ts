@@ -44,7 +44,7 @@ export class WorkspaceProxy implements InternalWorkspace {
   }
 
   registerCommandsOnTerminal(
-      commandLister: (terminal: ExtensionApi.Terminal) => ExtensionApi.CommandEntry[],
+      commandLister: (terminal: ExtensionApi.Terminal) => ExtensionApi.Command[],
       commandExecutor: (terminal: ExtensionApi.Terminal, commandId: string, commandArguments?: object) => void
       ): ExtensionApi.Disposable {
 
@@ -56,7 +56,7 @@ export class WorkspaceProxy implements InternalWorkspace {
   }
 
   registerCommandsOnTextViewer(
-      commandLister: (textViewer: ExtensionApi.TextViewer) => ExtensionApi.CommandEntry[],
+      commandLister: (textViewer: ExtensionApi.TextViewer) => ExtensionApi.Command[],
       commandExecutor: (textViewer: ExtensionApi.TextViewer, commandId: string, commandArguments?: object) => void
     ): ExtensionApi.Disposable {
       return this._workspaceCommandsRegistry.registerCommandsOnTextViewer(commandLister, commandExecutor);

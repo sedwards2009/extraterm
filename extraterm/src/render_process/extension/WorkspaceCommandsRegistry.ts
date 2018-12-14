@@ -12,7 +12,7 @@ import {DisposableItemList} from '../../utils/DisposableUtils';
 
 
 interface CommandRegistration<V> {
-  commandLister: (viewer: V) => ExtensionApi.CommandEntry[];
+  commandLister: (viewer: V) => ExtensionApi.Command[];
   commandExecutor: (viewer: V, commandId: string, commandArguments?: object) => void;
 }
 
@@ -20,7 +20,7 @@ interface CommandRegistration<V> {
 export class WorkspaceCommandsRegistry {
   private _commandOnTerminalList = new DisposableItemList<CommandRegistration<ExtensionApi.Terminal>>();
   registerCommandsOnTerminal(
-      commandLister: (terminal: ExtensionApi.Terminal) => ExtensionApi.CommandEntry[],
+      commandLister: (terminal: ExtensionApi.Terminal) => ExtensionApi.Command[],
       commandExecutor: (terminal: ExtensionApi.Terminal, commandId: string, commandArguments?: object) => void
       ): ExtensionApi.Disposable {
 
@@ -43,7 +43,7 @@ export class WorkspaceCommandsRegistry {
   }
 
   private _formatCommands(
-      rawCommands: ExtensionApi.CommandEntry[],
+      rawCommands: ExtensionApi.Command[],
       commandExecutor: CommandPaletteRequestTypes.CommandExecutor,
       commandPrefix: string): CommandPaletteRequestTypes.CommandEntry[] {
 
@@ -65,7 +65,7 @@ export class WorkspaceCommandsRegistry {
 
   private _commandOnTextViewerList = new DisposableItemList<CommandRegistration<ExtensionApi.TextViewer>>();
   registerCommandsOnTextViewer(
-      commandLister: (textViewer: ExtensionApi.TextViewer) => ExtensionApi.CommandEntry[],
+      commandLister: (textViewer: ExtensionApi.TextViewer) => ExtensionApi.Command[],
       commandExecutor: (textViewer: ExtensionApi.TextViewer, commandId: string, commandArguments?: object) => void
     ): ExtensionApi.Disposable {
 

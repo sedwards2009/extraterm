@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {BulkFileHandle, BulkFileState, CommandEntry, ExtensionContext, Logger, Terminal} from 'extraterm-extension-api';
-import {AudioViewerUi} from './AudioViewerUi';
+import { BulkFileHandle, BulkFileState, ExtensionContext, Logger } from 'extraterm-extension-api';
+import { AudioViewerUi } from './AudioViewerUi';
 
 
 let log: Logger = null;
@@ -14,7 +14,6 @@ export function activate(context: ExtensionContext): any {
 
   class AudioViewer extends context.workspace.extensionViewerBaseConstructor {
     private _bulkFileHandle: BulkFileHandle = null;
-    private _audioElement: HTMLAudioElement = null;
     private _ui: AudioViewerUi = null;
 
     created(): void {

@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {CommandEntry, ExtensionContext, Logger, Terminal} from 'extraterm-extension-api';
+import { Command, ExtensionContext, Logger, Terminal } from 'extraterm-extension-api';
 import {BashScriptBuilder, FishScriptBuilder, ScriptCommand, ZshScriptBuilder} from './ScriptBuilders';
 
 
@@ -18,7 +18,7 @@ const COMMAND_INJECT_BASH_INTEGRATION = "injectBashIntegration";
 const COMMAND_INJECT_FISH_INTEGRATION = "injectFishIntegration";
 const COMMAND_INJECT_ZSH_INTEGRATION = "injectZshIntegration";
 
-function terminalCommandLister(terminal: Terminal): CommandEntry[] {
+function terminalCommandLister(terminal: Terminal): Command[] {
   return [{
     id: COMMAND_INJECT_BASH_INTEGRATION,
     label: "Inject Bash Shell Integration"

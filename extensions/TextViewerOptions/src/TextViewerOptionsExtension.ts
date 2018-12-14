@@ -4,7 +4,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {ExtensionContext, CommandEntry, TextViewer} from 'extraterm-extension-api';
+import {ExtensionContext, Command, TextViewer} from 'extraterm-extension-api';
 
 let extensionContext: ExtensionContext = null;
 
@@ -18,7 +18,7 @@ const COMMAND_SET_TAB_WIDTH = "setTabWidth";
 const COMMAND_SHOW_LINE_NUMBERS = "showLineNumbers";
 
 
-function textViewerCommandLister(textViewer: TextViewer): CommandEntry[] {
+function textViewerCommandLister(textViewer: TextViewer): Command[] {
   return [{
     id: COMMAND_SET_SYNTAX_HIGHLIGHTING,
     label: "Syntax: " + getMimeTypeName(textViewer)

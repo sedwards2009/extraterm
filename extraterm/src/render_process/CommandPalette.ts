@@ -61,7 +61,7 @@ export class CommandPalette {
       }
 
       this._commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => {
-        let result: CommandEntry[] = commandable.getCommandPaletteEntries(commandableStack);
+        let result = commandable.getCommandPaletteEntries(commandableStack);
         if (commandable instanceof EtTerminal) {
           result = [...result, ...this.extensionManager.getWorkspaceTerminalCommands(commandable)];
         } else if (commandable instanceof TextViewer) {
