@@ -8,7 +8,7 @@ import * as he from 'he';
 
 import { Disposable, Logger } from 'extraterm-extension-api';
 import { doLater } from '../utils/DoLater';
-import { CommandEntry, Commandable, isCommandable, CommandMenuItem } from './CommandPaletteRequestTypes';
+import { BoundCommand, Commandable, isCommandable, CommandMenuItem } from './CommandPaletteRequestTypes';
 import { PopDownListPicker } from './gui/PopDownListPicker';
 import { CssFile } from '../theme/Theme';
 import { EtTerminal } from './Terminal';
@@ -27,7 +27,7 @@ export class CommandPalette {
   private _commandPalette: PopDownListPicker<CommandMenuItem> = null;
   private _commandPaletteDisposable: Disposable = null;
   private _commandPaletteRequestSource: HTMLElement = null;
-  private _commandPaletteRequestEntries: CommandEntry[] = null;
+  private _commandPaletteRequestEntries: BoundCommand[] = null;
   
   constructor(private extensionManager: ExtensionManager, private keyBindingManager: KeybindingsManager, 
       private rootCommandable: Commandable) {

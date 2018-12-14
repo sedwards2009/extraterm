@@ -8,7 +8,7 @@ import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-ap
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import { COMMAND_OPEN_COMMAND_PALETTE, isCommandable,
-  Commandable, CommandEntry} from './CommandPaletteRequestTypes';
+  Commandable, BoundCommand} from './CommandPaletteRequestTypes';
 import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
@@ -478,8 +478,8 @@ export class EtViewerTab extends ViewerElement implements Commandable,
     }
   }
 
-  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
-    const commandList: CommandEntry[] = [];
+  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
+    const commandList: BoundCommand[] = [];
 
     commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "far fa-copy", label: "Copy to Clipboard", commandExecutor: this } );
     commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "fa fa-clipboard", label: "Paste from Clipboard", commandExecutor: this } );

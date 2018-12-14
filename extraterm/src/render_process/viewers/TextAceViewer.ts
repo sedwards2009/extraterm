@@ -9,11 +9,10 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
-import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
+import {Commandable, BoundCommand, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
 from '../CommandPaletteRequestTypes';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
-import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 import * as GeneralEvents from '../GeneralEvents';
 import {KeybindingsManager, AcceptsKeybindingsManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
@@ -781,8 +780,8 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
   }
   
-  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
-    let commandList: CommandEntry[] = [
+  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
+    let commandList: BoundCommand[] = [
       { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection", commandExecutor: this },
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this }
     ];

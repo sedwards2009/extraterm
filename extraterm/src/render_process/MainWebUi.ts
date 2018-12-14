@@ -9,7 +9,7 @@ import { WebComponent } from 'extraterm-web-component-decorators';
 
 import {AboutTab} from './AboutTab';
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
-import { Commandable, CommandEntry } from './CommandPaletteRequestTypes';
+import { Commandable, BoundCommand } from './CommandPaletteRequestTypes';
 import * as config from '../Config';
 import * as DisposableUtils from '../utils/DisposableUtils';
 import * as DomUtils from './DomUtils';
@@ -345,7 +345,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
 
-      const sessionCommandList: CommandEntry[] = [];
+      const sessionCommandList: BoundCommand[] = [];
       const sessions = this._configManager.getConfig(SESSION_CONFIG);
       for (let i=0; i<sessions.length; i++) {
         const sessionConfig = sessions[i];
@@ -360,7 +360,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
         });
       }
 
-      const commandList: CommandEntry[] = [
+      const commandList: BoundCommand[] = [
         ...sessionCommandList,
         { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", commandExecutor: null },
         { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "fa fa-columns", label: "Vertical Split", commandExecutor: null },
@@ -1055,7 +1055,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   //
   //-----------------------------------------------------------------------
 
-  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
+  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
     
     const thisIndex = commandableStack.indexOf(this);
     const tabContentElement = commandableStack[thisIndex-1];
@@ -1067,12 +1067,12 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
 
-  private _commandPaletteEntriesWithTarget(tabContentElement: Element, tabWidget: TabWidget): CommandEntry[] {
+  private _commandPaletteEntriesWithTarget(tabContentElement: Element, tabWidget: TabWidget): BoundCommand[] {
 
     const commandExecutor = this;
     const commandArguments = {tabElement: tabContentElement};
 
-    const sessionCommandList: CommandEntry[] = [];
+    const sessionCommandList: BoundCommand[] = [];
     const sessions = this._configManager.getConfig(SESSION_CONFIG);
     for (let i = 0; i < sessions.length; i++) {
       const sessionConfig  = sessions[i];
@@ -1087,7 +1087,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       });
     }
 
-    const commandList: CommandEntry[] = [
+    const commandList: BoundCommand[] = [
       ...sessionCommandList,
       { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "fa fa-times", label: "Close Tab", commandExecutor, commandArguments },
       { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", commandExecutor, commandArguments },
@@ -1117,7 +1117,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return commandList;
   }
 
-  private _insertCommandKeybindings(commandList: CommandEntry[]): void {
+  private _insertCommandKeybindings(commandList: BoundCommand[]): void {
     const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
     if (keyBindings !== null) {
       commandList.forEach( (commandEntry) => {

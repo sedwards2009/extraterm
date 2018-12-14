@@ -31,7 +31,7 @@ import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
-import {Commandable, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE}
+import {Commandable, BoundCommand, COMMAND_OPEN_COMMAND_PALETTE}
   from './CommandPaletteRequestTypes';
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
@@ -1449,8 +1449,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  getCommandPaletteEntries(commandableStack): CommandEntry[] {
-    const commandList: CommandEntry[] = [];
+  getCommandPaletteEntries(commandableStack): BoundCommand[] {
+    const commandList: BoundCommand[] = [];
     if (this._mode === Mode.DEFAULT) {
       commandList.push( { id: COMMAND_ENTER_CURSOR_MODE, group: PALETTE_GROUP, iconRight: "fa fa-i-cursor", label: "Enter cursor mode", commandExecutor: this } );
     } else {

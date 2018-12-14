@@ -14,7 +14,7 @@ import { log } from "extraterm-logging";
 import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi } from './SettingsUi';
 import { AcceptsExtensionManager, ExtensionManager } from '../extension/InternalTypes';
-import { Commandable, dispatchCommandPaletteRequest, CommandEntry, COMMAND_OPEN_COMMAND_PALETTE } from '../CommandPaletteRequestTypes';
+import { Commandable, dispatchCommandPaletteRequest, BoundCommand, COMMAND_OPEN_COMMAND_PALETTE } from '../CommandPaletteRequestTypes';
 import * as SupportsDialogStack from "../SupportsDialogStack";
 
 
@@ -112,8 +112,8 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
     this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
   }
 
-  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
-    const entries: CommandEntry[] = [];
+  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
+    const entries: BoundCommand[] = [];
     return entries;
   }
 

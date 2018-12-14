@@ -51,7 +51,7 @@ export class WorkspaceProxy implements InternalWorkspace {
     return this._workspaceCommandsRegistry.registerCommandsOnTerminal(commandLister, commandExecutor);
   }
 
-  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.CommandEntry[] {
+  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.BoundCommand[] {
     return this._workspaceCommandsRegistry.getTerminalCommands(extensionName, terminal);
   }
 
@@ -62,7 +62,7 @@ export class WorkspaceProxy implements InternalWorkspace {
       return this._workspaceCommandsRegistry.registerCommandsOnTextViewer(commandLister, commandExecutor);
   }
 
-  getTextViewerCommands(extensionName: string, textViewer: ExtensionApi.TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
+  getTextViewerCommands(extensionName: string, textViewer: ExtensionApi.TextViewer): CommandPaletteRequestTypes.BoundCommand[] {
     return this._workspaceCommandsRegistry.getTextViewerCommands(extensionName, textViewer);
   }
 

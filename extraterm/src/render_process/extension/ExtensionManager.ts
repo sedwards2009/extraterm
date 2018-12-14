@@ -51,7 +51,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     }
   }
 
-  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[] {
+  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.BoundCommand[] {
     return _.flatten(
       this._activeExtensions.map(activeExtension => {
         const ownerExtensionContext = activeExtension.contextImpl;
@@ -61,7 +61,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }));
   }
 
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
+  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.BoundCommand[] {
     return _.flatten(
       this._activeExtensions.map(activeExtension => {
         const extensionContext = activeExtension.contextImpl;

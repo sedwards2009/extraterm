@@ -27,7 +27,7 @@ export class WorkspaceCommandsRegistry {
     return this._commandOnTerminalList.add({commandLister, commandExecutor});
   }
 
-  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.CommandEntry[] {
+  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.BoundCommand[] {
     return _.flatten(this._commandOnTerminalList.map((registration) => {
       const rawCommands = registration.commandLister(terminal);
           
@@ -45,9 +45,9 @@ export class WorkspaceCommandsRegistry {
   private _formatCommands(
       rawCommands: ExtensionApi.Command[],
       commandExecutor: CommandPaletteRequestTypes.CommandExecutor,
-      commandPrefix: string): CommandPaletteRequestTypes.CommandEntry[] {
+      commandPrefix: string): CommandPaletteRequestTypes.BoundCommand[] {
 
-    const commands: CommandPaletteRequestTypes.CommandEntry[] = [];
+    const commands: CommandPaletteRequestTypes.BoundCommand[] = [];
     for (const rawCommand of rawCommands) {
       commands.push({
         id: commandPrefix + '.' + rawCommand.id,
@@ -72,7 +72,7 @@ export class WorkspaceCommandsRegistry {
     return this._commandOnTextViewerList.add({commandLister, commandExecutor});
   }
 
-  getTextViewerCommands(extensionName: string, textViewer: ExtensionApi.TextViewer): CommandPaletteRequestTypes.CommandEntry[] {
+  getTextViewerCommands(extensionName: string, textViewer: ExtensionApi.TextViewer): CommandPaletteRequestTypes.BoundCommand[] {
     return _.flatten(this._commandOnTextViewerList.map((registration) => {
       const rawCommands = registration.commandLister(textViewer);
           

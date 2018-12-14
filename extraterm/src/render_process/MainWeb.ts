@@ -14,7 +14,7 @@ import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./CommandPalette";
-import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandExecutor}
+import {BoundCommand, Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandExecutor}
     from './CommandPaletteRequestTypes';
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
@@ -593,11 +593,15 @@ function startUpCommandPalette(): void {
   commandPalette = new CommandPalette(extensionManager, keyBindingManager, {executeCommand, getCommandPaletteEntries});
 }
 
-function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
+function startUpApplicationContextMenu(): void {
+  applicationContextMenu = new ApplicationContextMenu(keyBindingManager);
+}
+
+function getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   const devToolsOpen = developerToolMenu.checked;
   const commandExecutor: CommandExecutor = {executeCommand};
-  const commandList: CommandEntry[] = [
+  const commandList: BoundCommand[] = [
     { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "fa fa-wrench", label: "Settings", commandExecutor },
     { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "far fa-check-square" : "far fa-square", iconRight: "fa fa-cogs", label: "Developer Tools", commandExecutor },
     { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "fa fa-sync", label: "Reload Theme", commandExecutor },

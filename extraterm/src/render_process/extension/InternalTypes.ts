@@ -14,8 +14,8 @@ import { SupportsDialogStack } from '../SupportsDialogStack';
 
 export interface ExtensionManager {
   startUp(): void;
-  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.CommandEntry[];
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.CommandEntry[];
+  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.BoundCommand[];
+  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.BoundCommand[];
 
   findViewerElementTagByMimeType(mimeType: string): string;
 
@@ -52,8 +52,8 @@ export interface ExtensionUiUtils {
 }
 
 export interface InternalWorkspace extends ExtensionApi.Workspace {
-  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.CommandEntry[];
-  getTextViewerCommands(extensionName: string, terminal: ExtensionApi.TextViewer): CommandPaletteRequestTypes.CommandEntry[];
+  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.BoundCommand[];
+  getTextViewerCommands(extensionName: string, terminal: ExtensionApi.TextViewer): CommandPaletteRequestTypes.BoundCommand[];
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
 }

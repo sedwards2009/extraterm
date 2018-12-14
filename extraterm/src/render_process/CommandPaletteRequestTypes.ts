@@ -5,12 +5,21 @@
  */
 import * as ExtensionApi from 'extraterm-extension-api';
 
+export interface CommandMenuItem extends ExtensionApi.Command {
+  shortcut?: string;
+}
+
+// A Command which is bound to a specific object/Commandable
+export interface BoundCommand extends CommandMenuItem {
+  commandExecutor: CommandExecutor;
+}
+
 export interface CommandExecutor {
   executeCommand(commandId: string, commandArguments?: object): void;
 }
 
 export interface Commandable extends CommandExecutor {
-  getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[];
+  getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[];
 }
 
 export function isCommandable(instance: any): instance is Commandable {
@@ -24,14 +33,6 @@ export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement
   const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST, {bubbles: true, composed: true});
   commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true, null);
   element.dispatchEvent(commandPaletteRequestEvent);
-}
-
-export interface CommandMenuItem extends ExtensionApi.Command {
-  shortcut?: string;
-}
-
-export interface CommandEntry extends CommandMenuItem {
-  commandExecutor: CommandExecutor;
 }
 
 export const EVENT_COMMAND_PALETTE_REQUEST = "EVENT_COMMAND_PALETTE_REQUEST";
