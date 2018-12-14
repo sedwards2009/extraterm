@@ -13,12 +13,11 @@ const ElectronMenu = Electron.remote.Menu;
 import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
-import {CommandMenuItem, commandPaletteFilterEntries, commandPaletteFormatEntries} from './CommandPaletteFunctions';
-import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, isCommandable, CommandExecutor}
+import { CommandPalette } from "./CommandPalette";
+import {CommandEntry, Commandable, EVENT_COMMAND_PALETTE_REQUEST, CommandExecutor}
     from './CommandPaletteRequestTypes';
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
-import {doLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
@@ -32,7 +31,6 @@ import {PopDownListPicker} from './gui/PopDownListPicker';
 import {ResizeCanary} from './ResizeCanary';
 import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {SettingsTab} from './settings/SettingsTab';
-import * as SupportsDialogStack from './SupportsDialogStack';
 import {TabWidget} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
 import {TerminalViewer} from './viewers/TerminalAceViewer';
@@ -56,7 +54,6 @@ const MENU_ITEM_SETTINGS = 'settings';
 const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
 const MENU_ITEM_ABOUT = 'about';
 const MENU_ITEM_RELOAD_CSS = 'reload_css';
-const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
 const ID_MAIN_MENU = "ID_MAIN_MENU";
 const ID_MENU_BUTTON = "ID_MENU_BUTTON";
 const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
@@ -74,8 +71,7 @@ let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configDatabase: ConfigDatabaseImpl = null;
 let extensionManager: ExtensionManager = null;
-let commandPalette: PopDownListPicker<CommandMenuItem> = null;
-let commandPaletteDisposable: Disposable = null;
+let commandPalette: CommandPalette = null;
 
 
 /**
@@ -98,8 +94,7 @@ export function startUp(closeSplash: () => void): void {
   
   // Get the config and theme info in and then continue starting up.
   const allPromise = Promise.all<void>( [themePromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
-  allPromise.then(loadFontFaces)
-            .then( () => {
+  allPromise.then(loadFontFaces).then( () => {
 
     const doc = window.document;
     doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
@@ -232,7 +227,9 @@ function startUpMainWebUi(): void {
     window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
   });
 
-  mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, handleCommandPaletteRequest);
+  mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
+    commandPalette.handleCommandPaletteRequest(ev);
+  });
 }
 
 const ID_CONTROLS_SPACE = "ID_CONTROLS_SPACE";
@@ -592,84 +589,8 @@ function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor:
   window.document.documentElement.style.fontSize = rootFontSize;
 }
 
-//-----------------------------------------------------------------------
-//
-//   #####                                               ######                                          
-//  #     #  ####  #    # #    #   ##   #    # #####     #     #   ##   #      ###### ##### ##### ###### 
-//  #       #    # ##  ## ##  ##  #  #  ##   # #    #    #     #  #  #  #      #        #     #   #      
-//  #       #    # # ## # # ## # #    # # #  # #    #    ######  #    # #      #####    #     #   #####  
-//  #       #    # #    # #    # ###### #  # # #    #    #       ###### #      #        #     #   #      
-//  #     # #    # #    # #    # #    # #   ## #    #    #       #    # #      #        #     #   #      
-//   #####   ####  #    # #    # #    # #    # #####     #       #    # ###### ######   #     #   ###### 
-//                                                                                                      
-//-----------------------------------------------------------------------
-let commandPaletteRequestSource: HTMLElement = null;
-let commandPaletteRequestEntries: CommandEntry[] = null;
-
 function startUpCommandPalette(): void {
-  const doc = window.document;
-
-  // Command palette
-  commandPalette = <PopDownListPicker<CommandMenuItem>> doc.createElement(PopDownListPicker.TAG_NAME);
-  commandPalette.id = ID_COMMAND_PALETTE;
-  commandPalette.titlePrimary = "Command Palette";
-  commandPalette.titleSecondary = "Ctrl+Shift+P";
-  
-  commandPalette.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
-  commandPalette.setFormatEntriesFunc(commandPaletteFormatEntries);
-  commandPalette.addExtraCss([ThemeTypes.CssFile.COMMAND_PALETTE]);
-
-  commandPalette.addEventListener('selected', handleCommandPaletteSelected);
-}
-
-function handleCommandPaletteRequest(ev: CustomEvent): void {
-  const path = ev.composedPath();
-  const requestCommandableStack: Commandable[] = <any> path.filter(el => isCommandable(el));
-
-  doLater( () => {
-    const commandableStack: Commandable[] = [...requestCommandableStack, {executeCommand, getCommandPaletteEntries}];
-    
-    const firstCommandable = commandableStack[0];
-    if (firstCommandable instanceof HTMLElement) {
-      commandPaletteRequestSource = firstCommandable;
-    }
-
-    commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => {
-      let result: CommandEntry[] = commandable.getCommandPaletteEntries(commandableStack);
-      if (commandable instanceof EtTerminal) {
-        result = [...result, ...extensionManager.getWorkspaceTerminalCommands(commandable)];
-      } else if (commandable instanceof TextViewer) {
-        result = [...result, ...extensionManager.getWorkspaceTextViewerCommands(commandable)];
-      }
-      return result;
-    }));
-
-    const paletteEntries = commandPaletteRequestEntries.map( (entry, index): CommandMenuItem => {
-      return {
-        id: "" + index,
-        group: entry.group,
-        iconLeft: entry.iconLeft,
-        iconRight: entry.iconRight,
-        label: entry.label,
-        shortcut: entry.shortcut
-      };
-    });
-    
-    const shortcut = keyBindingManager.getKeybindingsContexts().context("main-ui").mapCommandToReadableKeyStroke("openCommandPalette");
-    commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
-    commandPalette.setEntries(paletteEntries);
-    
-    const contextElement = requestCommandableStack[requestCommandableStack.length-2];
-
-    if (SupportsDialogStack.isSupportsDialogStack(contextElement)) {
-      commandPaletteDisposable = contextElement.showDialog(commandPalette);
-    
-      commandPalette.open();
-      commandPalette.focus();
-    } else {
-      _log.warn("Command palette context element doesn't support DialogStack. ", contextElement);
-    }
-  });
+  commandPalette = new CommandPalette(extensionManager, keyBindingManager, {executeCommand, getCommandPaletteEntries});
 }
 
 function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry[] {
@@ -683,26 +604,6 @@ function getCommandPaletteEntries(commandableStack: Commandable[]): CommandEntry
     { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "far fa-lightbulb", label: "About", commandExecutor },
   ];
   return commandList;
-}
-
-function handleCommandPaletteSelected(ev: CustomEvent): void {
-  commandPalette.close();
-  commandPaletteDisposable.dispose();
-  commandPaletteDisposable = null;
-  if (commandPaletteRequestSource !== null) {
-    commandPaletteRequestSource.focus();
-  }
-  
-  const selectedId = ev.detail.selected;
-  if (selectedId !== null) {
-    const commandIndex = Number.parseInt(selectedId);
-    const commandEntry = commandPaletteRequestEntries[commandIndex];
-    doLater( () => {
-      commandEntry.commandExecutor.executeCommand(commandEntry.id, commandEntry.commandArguments);
-      commandPaletteRequestSource = null;
-      commandPaletteRequestEntries = null;
-    });
-  }
 }
 
 class ConfigDatabaseImpl implements ConfigDatabase {
