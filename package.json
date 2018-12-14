@@ -25,11 +25,13 @@
     "node-abi": "2.4.0"    
   },
   "private": true,
-  "workspaces": [
-    "extraterm",
-    "packages/*",
-    "extensions/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "extraterm",
+      "packages/*",
+      "extensions/*"
+    ]
+  },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
     "font-manager": "0.2.2",
@@ -43,6 +45,7 @@
     "electron": "2.0.13",
     "electron-packager": "11.1.0",
     "git-repo-info": "^1.4.1",
+    "jest": "^23.6.0",
     "shelljs": "0.8.2",
     "wsrun": "^3.0.0"
   }

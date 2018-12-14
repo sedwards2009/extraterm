@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as jschardet from 'jschardet';
-import * as mime from 'mime';
+import * as mimeTypes from 'mime-types';
 import * as filetype from 'file-type';
 
 
@@ -29,8 +29,8 @@ export function detect(filename: string=null, buffer: Buffer=null): DetectionRes
       return {mimeType, charset: null };
     }
 
-    const imageMimeType = mime.getType(filename);
-    if (imageMimeType !== null) {
+    const imageMimeType = mimeTypes.lookup(filename);
+    if (imageMimeType !== null && imageMimeType !== false) {
       return { mimeType: imageMimeType, charset: null };
     }
   }
