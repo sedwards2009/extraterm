@@ -12,8 +12,8 @@ import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from 'extr
 
 import {guessMimetype} from '../bulk_file_handling/BulkFileUtils';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
-import {COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, BoundCommand, Commandable, isCommandable}
-from '../CommandPaletteRequestTypes';
+import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest } from '../CommandPaletteRequestTypes';
+import { BoundCommand, Commandable, isCommandable } from '../CommandTypes';
 import * as DomUtils from '../DomUtils';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {FrameMimeType} from '../InternalMimeTypes';

@@ -31,8 +31,8 @@ import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
-import {Commandable, BoundCommand, COMMAND_OPEN_COMMAND_PALETTE}
-  from './CommandPaletteRequestTypes';
+import { Commandable, BoundCommand } from './CommandTypes';
+import { COMMAND_OPEN_COMMAND_PALETTE } from './CommandPaletteRequestTypes';
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';

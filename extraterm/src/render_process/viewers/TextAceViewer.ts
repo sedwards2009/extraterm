@@ -9,12 +9,12 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
-import {Commandable, BoundCommand, COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest}
-from '../CommandPaletteRequestTypes';
-import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
+import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest } from '../CommandPaletteRequestTypes';
+import { Commandable, BoundCommand } from '../CommandTypes';
+import { doLater, doLaterFrame, DebouncedDoLater } from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as GeneralEvents from '../GeneralEvents';
-import {KeybindingsManager, AcceptsKeybindingsManager, MinimalKeyboardEvent} from '../keybindings/KeyBindingsManager';
+import { KeybindingsManager, AcceptsKeybindingsManager } from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
@@ -23,7 +23,7 @@ import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
-import {emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState, VirtualScrollable} from '../VirtualScrollArea';
+import { emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState } from '../VirtualScrollArea';
 
 import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Renderer, Position, UndoManager } from "ace-ts";

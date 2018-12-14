@@ -9,7 +9,6 @@ import * as ExtensionApi from 'extraterm-extension-api';
 import * as Ace from 'ace-ts';
 
 import {Logger, getLogger} from "extraterm-logging";
-import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextAceViewer';
 import {ProxyFactoryImpl} from './ProxyFactoryImpl';
@@ -18,6 +17,7 @@ import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';
 import {WorkspaceProxy} from './Proxies';
 import { ExtensionMetadata } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
+import { BoundCommand } from '../CommandTypes';
 
 
 interface ActiveExtension {
@@ -51,7 +51,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     }
   }
 
-  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.BoundCommand[] {
+  getWorkspaceTerminalCommands(terminal: EtTerminal): BoundCommand[] {
     return _.flatten(
       this._activeExtensions.map(activeExtension => {
         const ownerExtensionContext = activeExtension.contextImpl;
@@ -61,7 +61,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }));
   }
 
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.BoundCommand[] {
+  getWorkspaceTextViewerCommands(textViewer: TextViewer): BoundCommand[] {
     return _.flatten(
       this._activeExtensions.map(activeExtension => {
         const extensionContext = activeExtension.contextImpl;

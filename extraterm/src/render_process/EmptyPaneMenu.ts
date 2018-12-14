@@ -14,7 +14,7 @@ import {commandPaletteFilterEntries, commandPaletteFormatEntries } from './Comma
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import { CommandMenuItem } from './CommandPaletteRequestTypes';
+import { CommandMenuItem } from './CommandTypes';
 
 const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
 const ID_CONTAINER = "ID_CONTAINER";

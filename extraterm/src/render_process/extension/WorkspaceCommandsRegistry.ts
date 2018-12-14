@@ -9,6 +9,7 @@ import * as _ from 'lodash';
 
 import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {DisposableItemList} from '../../utils/DisposableUtils';
+import { BoundCommand, CommandExecutor } from '../CommandTypes';
 
 
 interface CommandRegistration<V> {
@@ -27,11 +28,11 @@ export class WorkspaceCommandsRegistry {
     return this._commandOnTerminalList.add({commandLister, commandExecutor});
   }
 
-  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.BoundCommand[] {
+  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): BoundCommand[] {
     return _.flatten(this._commandOnTerminalList.map((registration) => {
       const rawCommands = registration.commandLister(terminal);
           
-      const target: CommandPaletteRequestTypes.CommandExecutor = {
+      const target: CommandExecutor = {
         executeCommand(commandId: string, options?: object): void {
           const commandIdWithoutPrefix = commandId.slice(extensionName.length+1);
           registration.commandExecutor(terminal, commandIdWithoutPrefix, options);
@@ -44,10 +45,10 @@ export class WorkspaceCommandsRegistry {
 
   private _formatCommands(
       rawCommands: ExtensionApi.Command[],
-      commandExecutor: CommandPaletteRequestTypes.CommandExecutor,
-      commandPrefix: string): CommandPaletteRequestTypes.BoundCommand[] {
+      commandExecutor: CommandExecutor,
+      commandPrefix: string): BoundCommand[] {
 
-    const commands: CommandPaletteRequestTypes.BoundCommand[] = [];
+    const commands: BoundCommand[] = [];
     for (const rawCommand of rawCommands) {
       commands.push({
         id: commandPrefix + '.' + rawCommand.id,
@@ -72,11 +73,11 @@ export class WorkspaceCommandsRegistry {
     return this._commandOnTextViewerList.add({commandLister, commandExecutor});
   }
 
-  getTextViewerCommands(extensionName: string, textViewer: ExtensionApi.TextViewer): CommandPaletteRequestTypes.BoundCommand[] {
+  getTextViewerCommands(extensionName: string, textViewer: ExtensionApi.TextViewer): BoundCommand[] {
     return _.flatten(this._commandOnTextViewerList.map((registration) => {
       const rawCommands = registration.commandLister(textViewer);
           
-      const target: CommandPaletteRequestTypes.CommandExecutor = {
+      const target: CommandExecutor = {
         executeCommand(commandId: string, options?: object): void {
           const commandIdWithoutPrefix = commandId.slice(extensionName.length+1);
           registration.commandExecutor(textViewer, commandIdWithoutPrefix, options);

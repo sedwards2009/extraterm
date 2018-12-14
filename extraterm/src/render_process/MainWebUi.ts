@@ -9,7 +9,7 @@ import { WebComponent } from 'extraterm-web-component-decorators';
 
 import {AboutTab} from './AboutTab';
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
-import { Commandable, BoundCommand } from './CommandPaletteRequestTypes';
+import { Commandable, BoundCommand } from './CommandTypes';
 import * as config from '../Config';
 import * as DisposableUtils from '../utils/DisposableUtils';
 import * as DomUtils from './DomUtils';

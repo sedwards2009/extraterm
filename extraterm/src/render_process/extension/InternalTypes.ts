@@ -11,11 +11,12 @@ import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import { ExtensionMetadata, ExtensionPlatform } from '../../ExtensionMetadata';
 import { EtViewerTab } from '../ViewerTab';
 import { SupportsDialogStack } from '../SupportsDialogStack';
+import { BoundCommand } from '../CommandTypes';
 
 export interface ExtensionManager {
   startUp(): void;
-  getWorkspaceTerminalCommands(terminal: EtTerminal): CommandPaletteRequestTypes.BoundCommand[];
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): CommandPaletteRequestTypes.BoundCommand[];
+  getWorkspaceTerminalCommands(terminal: EtTerminal): BoundCommand[];
+  getWorkspaceTextViewerCommands(textViewer: TextViewer): BoundCommand[];
 
   findViewerElementTagByMimeType(mimeType: string): string;
 
@@ -52,8 +53,8 @@ export interface ExtensionUiUtils {
 }
 
 export interface InternalWorkspace extends ExtensionApi.Workspace {
-  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): CommandPaletteRequestTypes.BoundCommand[];
-  getTextViewerCommands(extensionName: string, terminal: ExtensionApi.TextViewer): CommandPaletteRequestTypes.BoundCommand[];
+  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): BoundCommand[];
+  getTextViewerCommands(extensionName: string, terminal: ExtensionApi.TextViewer): BoundCommand[];
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
 }

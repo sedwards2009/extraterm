@@ -8,7 +8,7 @@ import * as he from 'he';
 
 import { Disposable, Logger } from 'extraterm-extension-api';
 import { doLater } from '../utils/DoLater';
-import { BoundCommand, Commandable, isCommandable, CommandMenuItem } from './CommandPaletteRequestTypes';
+import { BoundCommand, Commandable, isCommandable, CommandMenuItem } from './CommandTypes';
 import { PopDownListPicker } from './gui/PopDownListPicker';
 import { CssFile } from '../theme/Theme';
 import { EtTerminal } from './Terminal';
