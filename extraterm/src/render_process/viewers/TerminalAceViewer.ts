@@ -6,7 +6,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import {BulkFileHandle, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
-import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest} from '../command/CommandPaletteRequestTypes';
+import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest} from '../command/CommandUtils';
 import { Commandable, BoundCommand } from '../command/CommandTypes';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';

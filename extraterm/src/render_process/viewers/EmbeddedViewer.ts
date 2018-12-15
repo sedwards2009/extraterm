@@ -12,7 +12,7 @@ import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from 'extr
 
 import {guessMimetype} from '../bulk_file_handling/BulkFileUtils';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
-import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest } from '../command/CommandPaletteRequestTypes';
+import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest } from '../command/CommandUtils';
 import { BoundCommand, Commandable, isCommandable } from '../command/CommandTypes';
 import * as DomUtils from '../DomUtils';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';

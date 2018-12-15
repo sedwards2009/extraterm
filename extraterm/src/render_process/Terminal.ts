@@ -32,7 +32,7 @@ import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
 import { Commandable, BoundCommand } from './command/CommandTypes';
-import { COMMAND_OPEN_COMMAND_PALETTE } from './command/CommandPaletteRequestTypes';
+import { COMMAND_OPEN_COMMAND_PALETTE } from './command/CommandUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';

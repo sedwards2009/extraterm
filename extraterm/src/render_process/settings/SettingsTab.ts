@@ -14,7 +14,7 @@ import { log } from "extraterm-logging";
 import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi } from './SettingsUi';
 import { AcceptsExtensionManager, ExtensionManager } from '../extension/InternalTypes';
-import { dispatchCommandPaletteRequest, COMMAND_OPEN_COMMAND_PALETTE } from '../command/CommandPaletteRequestTypes';
+import { dispatchCommandPaletteRequest, COMMAND_OPEN_COMMAND_PALETTE } from '../command/CommandUtils';
 import { Commandable, BoundCommand } from '../command/CommandTypes';
 import * as SupportsDialogStack from "../SupportsDialogStack";
 

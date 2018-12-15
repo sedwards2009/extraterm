@@ -14,7 +14,7 @@ import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
-import { EVENT_COMMAND_PALETTE_REQUEST } from './command/CommandPaletteRequestTypes';
+import { EVENT_COMMAND_PALETTE_REQUEST } from './command/CommandUtils';
 import { BoundCommand, Commandable, CommandExecutor } from './command/CommandTypes';
 
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
