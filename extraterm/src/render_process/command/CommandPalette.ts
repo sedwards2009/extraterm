@@ -49,8 +49,7 @@ export class CommandPalette {
   }
 
   handleCommandPaletteRequest(ev: CustomEvent): void {
-    const path = ev.composedPath();
-    const requestCommandableStack: Commandable[] = <any> path.filter(el => isCommandable(el));
+    const requestCommandableStack = eventToCommandableStack(ev);
 
     doLater( () => {
       const commandableStack: Commandable[] = [...requestCommandableStack, this.rootCommandable];
@@ -60,30 +59,13 @@ export class CommandPalette {
         this._commandPaletteRequestSource = firstCommandable;
       }
 
-      this._commandPaletteRequestEntries = _.flatten(commandableStack.map(commandable => {
-        let result = commandable.getCommands(commandableStack);
-        if (commandable instanceof EtTerminal) {
-          result = [...result, ...this.extensionManager.getWorkspaceTerminalCommands(commandable)];
-        } else if (commandable instanceof TextViewer) {
-          result = [...result, ...this.extensionManager.getWorkspaceTextViewerCommands(commandable)];
-        }
-        return result;
-      }));
+      this._commandPaletteRequestEntries = commandableStackToBoundCommands(commandableStack, this.extensionManager);
 
-      const paletteEntries = this._commandPaletteRequestEntries.map( (entry, index): CommandMenuItem => {
-        return {
-          id: "" + index,
-          group: entry.group,
-          iconLeft: entry.iconLeft,
-          iconRight: entry.iconRight,
-          label: entry.label,
-          shortcut: entry.shortcut
-        };
-      });
-      
+      // FIXME this never gives anything
       const shortcut = this.keyBindingManager.getKeybindingsContexts().context("main-ui").mapCommandToReadableKeyStroke("openCommandPalette");
-      this._commandPalette.titleSecondary = shortcut !== null ? shortcut : "";
-      this._commandPalette.setEntries(paletteEntries);
+      this._commandPalette.titleSecondary = shortcut !== null ? shortcut : "#";
+
+      this._commandPalette.setEntries(this._commandPaletteRequestEntries);
       
       const contextElement = requestCommandableStack[requestCommandableStack.length-2];
 
@@ -108,15 +90,36 @@ export class CommandPalette {
     
     const selectedId = ev.detail.selected;
     if (selectedId !== null) {
-      const commandIndex = Number.parseInt(selectedId);
-      const commandEntry = this._commandPaletteRequestEntries[commandIndex];
-      doLater( () => {
-        commandEntry.commandExecutor.executeCommand(commandEntry.id, commandEntry.commandArguments);
-        this._commandPaletteRequestSource = null;
-        this._commandPaletteRequestEntries = null;
-      });
+      for (const commandEntry of this._commandPaletteRequestEntries) {
+        if (commandEntry.id === selectedId) {
+          doLater( () => {
+            commandEntry.commandExecutor.executeCommand(commandEntry.id, commandEntry.commandArguments);
+            this._commandPaletteRequestSource = null;
+            this._commandPaletteRequestEntries = null;
+          });
+          break;
+        }
+      }
     }
   }
+}
+
+export function eventToCommandableStack(ev: CustomEvent): Commandable[] {
+  const path = ev.composedPath();
+  return <any> path.filter(el => isCommandable(el))
+}
+
+export function commandableStackToBoundCommands(commandableStack: Commandable[],
+                                                extensionManager: ExtensionManager): BoundCommand [] {
+  return _.flatten(commandableStack.map(commandable => {
+    let result = commandable.getCommands(commandableStack);
+    if (commandable instanceof EtTerminal) {
+      result = [...result, ...extensionManager.getWorkspaceTerminalCommands(commandable)];
+    } else if (commandable instanceof TextViewer) {
+      result = [...result, ...extensionManager.getWorkspaceTextViewerCommands(commandable)];
+    }
+    return result;
+  }));
 }
 
 const CLASS_RESULT_GROUP_HEAD = "CLASS_RESULT_GROUP_HEAD";
