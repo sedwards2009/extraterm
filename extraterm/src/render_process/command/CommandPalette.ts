@@ -3,20 +3,18 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as _ from 'lodash';
 import * as he from 'he';
 
 import { Disposable, Logger } from 'extraterm-extension-api';
 import { doLater } from '../../utils/DoLater';
-import { BoundCommand, Commandable, isCommandable, CommandMenuItem } from './CommandTypes';
+import { BoundCommand, Commandable, CommandMenuItem } from './CommandTypes';
 import { PopDownListPicker } from '../gui/PopDownListPicker';
 import { CssFile } from '../../theme/Theme';
-import { EtTerminal } from '../Terminal';
-import { TextViewer } from'../viewers/TextAceViewer';
 import { isSupportsDialogStack } from '../SupportsDialogStack';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { getLogger } from 'extraterm-logging';
+import { eventToCommandableStack, commandableStackToBoundCommands } from './CommandUtils';
 
 
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
@@ -104,23 +102,6 @@ export class CommandPalette {
   }
 }
 
-export function eventToCommandableStack(ev: CustomEvent): Commandable[] {
-  const path = ev.composedPath();
-  return <any> path.filter(el => isCommandable(el))
-}
-
-export function commandableStackToBoundCommands(commandableStack: Commandable[],
-                                                extensionManager: ExtensionManager): BoundCommand [] {
-  return _.flatten(commandableStack.map(commandable => {
-    let result = commandable.getCommands(commandableStack);
-    if (commandable instanceof EtTerminal) {
-      result = [...result, ...extensionManager.getWorkspaceTerminalCommands(commandable)];
-    } else if (commandable instanceof TextViewer) {
-      result = [...result, ...extensionManager.getWorkspaceTextViewerCommands(commandable)];
-    }
-    return result;
-  }));
-}
 
 const CLASS_RESULT_GROUP_HEAD = "CLASS_RESULT_GROUP_HEAD";
 const CLASS_RESULT_ICON_LEFT = "CLASS_RESULT_ICON_LEFT";
