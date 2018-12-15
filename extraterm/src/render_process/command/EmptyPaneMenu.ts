@@ -6,10 +6,10 @@
 
 import { WebComponent } from 'extraterm-web-component-decorators';
 
-import * as ThemeTypes from '../theme/Theme';
-import {ThemeableElementBase} from './ThemeableElementBase';
-import {ListPicker} from './gui/ListPicker';
-import * as DomUtils from './DomUtils';
+import * as ThemeTypes from '../../theme/Theme';
+import {ThemeableElementBase} from '../ThemeableElementBase';
+import {ListPicker} from '../gui/ListPicker';
+import * as DomUtils from '../DomUtils';
 import {commandPaletteFilterEntries, commandPaletteFormatEntries } from './CommandPalette';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import {Logger, getLogger} from "extraterm-logging";

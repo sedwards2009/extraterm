@@ -7,15 +7,15 @@ import * as _ from 'lodash';
 import * as he from 'he';
 
 import { Disposable, Logger } from 'extraterm-extension-api';
-import { doLater } from '../utils/DoLater';
+import { doLater } from '../../utils/DoLater';
 import { BoundCommand, Commandable, isCommandable, CommandMenuItem } from './CommandTypes';
-import { PopDownListPicker } from './gui/PopDownListPicker';
-import { CssFile } from '../theme/Theme';
-import { EtTerminal } from './Terminal';
-import { TextViewer } from'./viewers/TextAceViewer';
-import { isSupportsDialogStack } from './SupportsDialogStack';
-import { ExtensionManager } from './extension/InternalTypes';
-import { KeybindingsManager } from './keybindings/KeyBindingsManager';
+import { PopDownListPicker } from '../gui/PopDownListPicker';
+import { CssFile } from '../../theme/Theme';
+import { EtTerminal } from '../Terminal';
+import { TextViewer } from'../viewers/TextAceViewer';
+import { isSupportsDialogStack } from '../SupportsDialogStack';
+import { ExtensionManager } from '../extension/InternalTypes';
+import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { getLogger } from 'extraterm-logging';
 
 

@@ -17,7 +17,7 @@ import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';
 import {WorkspaceProxy} from './Proxies';
 import { ExtensionMetadata } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
-import { BoundCommand } from '../CommandTypes';
+import { BoundCommand } from '../command/CommandTypes';
 
 
 interface ActiveExtension {

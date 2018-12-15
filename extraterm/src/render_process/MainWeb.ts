@@ -13,9 +13,9 @@ const ElectronMenu = Electron.remote.Menu;
 import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
-import { CommandPalette } from "./CommandPalette";
-import { EVENT_COMMAND_PALETTE_REQUEST } from './CommandPaletteRequestTypes';
-import { BoundCommand, Commandable, CommandExecutor } from './CommandTypes';
+import { CommandPalette } from "./command/CommandPalette";
+import { EVENT_COMMAND_PALETTE_REQUEST } from './command/CommandPaletteRequestTypes';
+import { BoundCommand, Commandable, CommandExecutor } from './command/CommandTypes';
 
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';

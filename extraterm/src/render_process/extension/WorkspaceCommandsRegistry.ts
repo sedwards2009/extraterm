@@ -7,9 +7,8 @@
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as _ from 'lodash';
 
-import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {DisposableItemList} from '../../utils/DisposableUtils';
-import { BoundCommand, CommandExecutor } from '../CommandTypes';
+import { BoundCommand, CommandExecutor } from '../command/CommandTypes';
 
 
 interface CommandRegistration<V> {

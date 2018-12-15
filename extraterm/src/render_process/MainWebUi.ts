@@ -9,12 +9,12 @@ import { WebComponent } from 'extraterm-web-component-decorators';
 
 import {AboutTab} from './AboutTab';
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
-import { Commandable, BoundCommand } from './CommandTypes';
+import { Commandable, BoundCommand } from './command/CommandTypes';
 import * as config from '../Config';
 import * as DisposableUtils from '../utils/DisposableUtils';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
-import {EmptyPaneMenu} from './EmptyPaneMenu';
+import {EmptyPaneMenu} from './command/EmptyPaneMenu';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
 import { KeybindingsManager, AcceptsKeybindingsManager, injectKeybindingsManager } from './keybindings/KeyBindingsManager';

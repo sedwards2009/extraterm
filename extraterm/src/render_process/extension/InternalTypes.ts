@@ -7,11 +7,10 @@ import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextAceViewer';
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
-import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import { ExtensionMetadata, ExtensionPlatform } from '../../ExtensionMetadata';
 import { EtViewerTab } from '../ViewerTab';
 import { SupportsDialogStack } from '../SupportsDialogStack';
-import { BoundCommand } from '../CommandTypes';
+import { BoundCommand } from '../command/CommandTypes';
 
 export interface ExtensionManager {
   startUp(): void;

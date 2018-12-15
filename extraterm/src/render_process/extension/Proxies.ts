@@ -5,7 +5,6 @@
  */
 import * as ExtensionApi from 'extraterm-extension-api';
 
-import * as CommandPaletteRequestTypes from '../CommandPaletteRequestTypes';
 import {DisposableItemList} from '../../utils/DisposableUtils';
 import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
 import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalTypes';
@@ -14,7 +13,7 @@ import { WorkspaceCommandsRegistry } from './WorkspaceCommandsRegistry';
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
 import { EtViewerTab } from '../ViewerTab';
-import { BoundCommand } from '../CommandTypes';
+import { BoundCommand } from '../command/CommandTypes';
 
 
 export class WorkspaceProxy implements InternalWorkspace {
