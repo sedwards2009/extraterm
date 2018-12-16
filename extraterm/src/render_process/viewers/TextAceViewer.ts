@@ -9,7 +9,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
-import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest } from '../command/CommandUtils';
+import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, dispatchContextMenuRequest, COMMAND_OPEN_CONTEXT_MENU } from '../command/CommandUtils';
 import { Commandable, BoundCommand } from '../command/CommandTypes';
 import { doLater, doLaterFrame, DebouncedDoLater } from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
@@ -776,8 +776,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   private _handleContextMenuCapture(ev: MouseEvent): void {
     ev.stopImmediatePropagation();
     ev.preventDefault();
-
-    this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
+    this.executeCommand(COMMAND_OPEN_CONTEXT_MENU, { x: ev.clientX, y: ev.clientY});
   }
   
   getCommands(commandableStack: Commandable[]): BoundCommand[] {
@@ -797,11 +796,11 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     return commandList;
   }
   
-  executeCommand(commandId: string): void {
+  executeCommand(commandId: string, commandArguments?: any): void {
     this._executeCommand(commandId);
   }
 
-  private _executeCommand(command): boolean {
+  private _executeCommand(command: string, commandArguments?: any): boolean {
     switch (command) {
       case COMMAND_TYPE_AND_CR_SELECTION:
       case COMMAND_TYPE_SELECTION:
@@ -824,6 +823,10 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
         
       case COMMAND_OPEN_COMMAND_PALETTE:
         dispatchCommandPaletteRequest(this);
+        break;
+
+      case COMMAND_OPEN_CONTEXT_MENU:
+        dispatchContextMenuRequest(this, commandArguments.x, commandArguments.y);
         break;
 
       default:

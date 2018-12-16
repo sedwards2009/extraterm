@@ -14,7 +14,7 @@ import { log } from "extraterm-logging";
 import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi } from './SettingsUi';
 import { AcceptsExtensionManager, ExtensionManager } from '../extension/InternalTypes';
-import { dispatchCommandPaletteRequest, COMMAND_OPEN_COMMAND_PALETTE } from '../command/CommandUtils';
+import { dispatchCommandPaletteRequest, COMMAND_OPEN_COMMAND_PALETTE, dispatchContextMenuRequest, COMMAND_OPEN_CONTEXT_MENU } from '../command/CommandUtils';
 import { Commandable, BoundCommand } from '../command/CommandTypes';
 import * as SupportsDialogStack from "../SupportsDialogStack";
 
@@ -109,8 +109,7 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
   private _handleContextMenuCapture(ev: MouseEvent): void {
     ev.stopImmediatePropagation();
     ev.preventDefault();
-
-    this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
+    this.executeCommand(COMMAND_OPEN_CONTEXT_MENU, { x: ev.clientX, y: ev.clientY});
   }
 
   getCommands(commandableStack: Commandable[]): BoundCommand[] {
@@ -118,17 +117,22 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
     return entries;
   }
 
-  executeCommand(commandId: string): void {
+  executeCommand(commandId: string, commandArguments?: any): void {
     this._executeCommand(commandId);
   }
   
-  private _executeCommand(command: string): boolean {
-    if (command === COMMAND_OPEN_COMMAND_PALETTE) {
-      dispatchCommandPaletteRequest(this);
-      return true;
-    }
+  private _executeCommand(command: string, commandArguments?: any): boolean {
+    switch (command) {
+      case COMMAND_OPEN_COMMAND_PALETTE:
+        dispatchCommandPaletteRequest(this);
+        return true;
 
-    return false;
+      case COMMAND_OPEN_CONTEXT_MENU:
+        dispatchContextMenuRequest(this, commandArguments.x, commandArguments.y);
+        return true;
+      default:
+        return false;
+    }
   }
 
   showDialog(dialogElement: HTMLElement): Disposable {

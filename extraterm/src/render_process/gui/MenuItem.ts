@@ -14,6 +14,7 @@ const ID = "EtbMenuItemTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_ICON2 = "ID_ICON2";
 const ID_LABEL = "ID_LABEL";
+const ID_SHORTCUT = "ID_SHORTCUT";
 const CLASS_SELECTED = "selected";
 
 /**
@@ -22,27 +23,31 @@ const CLASS_SELECTED = "selected";
 @WebComponent({tag: "et-menuitem"})
 export class MenuItem extends ThemeableElementBase {
   
-  static TAG_NAME = 'ET-MENUITEM';
-  
+  static TAG_NAME = "ET-MENUITEM";
   static ID_ICON1 = "ID_ICON1";
 
   constructor() {
     super();
 
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+    const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
     const clone = this._createClone();
     shadow.appendChild(clone);
     this.installThemeCss();
 
     let iconhtml = "";
-    const icon = this.getAttribute('icon');
+    const icon = this.getAttribute("icon");
     if (icon !== null && icon !== "") {
       iconhtml += "<i class='fa-fw " + icon + "'></i>";
     } else {
       iconhtml += "<i class='fa-fw'></i>";
     }
     (<HTMLElement>shadow.querySelector("#" + ID_ICON2)).innerHTML = iconhtml;
-    
+
+    const shortcut = this.getAttribute("shortcut");
+    if (shortcut != null && shortcut !== "") {
+      (<HTMLElement>shadow.querySelector("#" + ID_SHORTCUT)).innerHTML = shortcut;
+    }
+
     this.updateKeyboardSelected();
   }
   
@@ -57,7 +62,8 @@ export class MenuItem extends ThemeableElementBase {
       <div id='${ID_CONTAINER}'>
         <div id='${MenuItem.ID_ICON1}'><i class='fa fa-fw'></i></div>
         <div id='${ID_ICON2}'></div>
-      <div id='${ID_LABEL}'><slot></slot></div>
+        <div id='${ID_LABEL}'><slot></slot></div>
+        <div id='${ID_SHORTCUT}'></div>
       </div>`);
   }
 

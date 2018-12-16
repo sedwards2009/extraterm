@@ -12,7 +12,7 @@ import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from 'extr
 
 import {guessMimetype} from '../bulk_file_handling/BulkFileUtils';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
-import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest } from '../command/CommandUtils';
+import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, dispatchContextMenuRequest, COMMAND_OPEN_CONTEXT_MENU } from '../command/CommandUtils';
 import { BoundCommand, Commandable, isCommandable } from '../command/CommandTypes';
 import * as DomUtils from '../DomUtils';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
@@ -563,7 +563,6 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     DomUtils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
     DomUtils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
 
-    // Right mouse button click opens up the command palette.
     DomUtils.getShadowId(this, ID_CONTAINER).addEventListener('contextmenu', (ev: MouseEvent): void => {
       ev.stopPropagation();
       ev.preventDefault();
@@ -574,9 +573,9 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       }
 
       if (isCommandable(viewerElement)) {
-        viewerElement.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
+        viewerElement.executeCommand(COMMAND_OPEN_COMMAND_PALETTE, {x: ev.clientX, y: ev.clientY});
       } else {
-        this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
+        this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE, {x: ev.clientX, y: ev.clientY});
       }
     });
   }
@@ -703,8 +702,8 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.EMBEDDED_FRAME];
   }
 
-  executeCommand(commandId: string): void {
-    this._executeCommand(commandId);
+  executeCommand(commandId: string, commandArgs?: any): void {
+    this._executeCommand(commandId, commandArgs);
   }
 
   private _createClone(): Node {
@@ -788,7 +787,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     }
   }
 
-  private _executeCommand(command): boolean {
+  private _executeCommand(command: string, commandArguments?: any): boolean {
     switch (command) {
       case COMMAND_OPEN_COMMAND_PALETTE:
         const metadata = this._getMetadata();
@@ -796,7 +795,11 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
           dispatchCommandPaletteRequest(this);
         }
         break;
-        
+
+      case COMMAND_OPEN_CONTEXT_MENU:
+        dispatchContextMenuRequest(this, commandArguments.x, commandArguments.y);
+        break;
+
       default:
           return false;
     }

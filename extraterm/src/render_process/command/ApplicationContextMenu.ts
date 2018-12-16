@@ -50,6 +50,6 @@ export class ApplicationContextMenu {
   }
 
   private _boundCommandToHtml(command: BoundCommand): string {
-    return `<${MenuItem.TAG_NAME}>${he.encode(command.label)}</${MenuItem.TAG_NAME}>`;
+    return `<${MenuItem.TAG_NAME} shortcut="${command.shortcut}">${he.encode(command.label)}</${MenuItem.TAG_NAME}>`;
   }
 }
