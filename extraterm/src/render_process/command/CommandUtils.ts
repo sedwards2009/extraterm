@@ -25,6 +25,11 @@ export const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
 export const EVENT_CONTEXT_MENU_REQUEST = "EVENT_CONTEXT_MENU_REQUEST";
 export const COMMAND_OPEN_CONTEXT_MENU = "COMMAND_OPEN_CONTEXT_MENU";
 
+export enum CommandType {
+  COMMAND_PALETTE,
+  CONTEXT_MENU
+}
+
 export function dispatchContextMenuRequest(element: Commandable & HTMLElement, x: number, y: number): void {
   const detail = {x, y};
   const commandPaletteRequestEvent = new CustomEvent(EVENT_CONTEXT_MENU_REQUEST,
@@ -38,15 +43,20 @@ export function eventToCommandableStack(ev: CustomEvent): Commandable[] {
   return <any> path.filter(el => isCommandable(el))
 }
 
-export function commandableStackToBoundCommands(commandableStack: Commandable[],
+export function commandableStackToBoundCommands(commandType: CommandType, commandableStack: Commandable[],
                                                 extensionManager: ExtensionManager): BoundCommand [] {
+  const filterPredicate = commandType === CommandType.COMMAND_PALETTE ?
+    (command: BoundCommand): boolean => command.commandPalette !== false :
+    (command: BoundCommand): boolean => command.contextMenu;
+
   return _.flatten(commandableStack.map(commandable => {
-    let result = commandable.getCommands(commandableStack);
+    let commands = commandable.getCommands(commandableStack);
     if (commandable instanceof EtTerminal) {
-      result = [...result, ...extensionManager.getWorkspaceTerminalCommands(commandable)];
+      commands = [...commands, ...extensionManager.getWorkspaceTerminalCommands(commandable)];
     } else if (commandable instanceof TextViewer) {
-      result = [...result, ...extensionManager.getWorkspaceTextViewerCommands(commandable)];
+      commands = [...commands, ...extensionManager.getWorkspaceTextViewerCommands(commandable)];
     }
-    return result;
+
+    return commands.filter(filterPredicate);
   }));
 }

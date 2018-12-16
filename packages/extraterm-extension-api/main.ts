@@ -240,6 +240,18 @@ export interface Command {
     * command is run.
     */
   commandArguments?: object;
+
+  /**
+   * Set this to true if the command should appear in context menus.
+   * Defaults to false, don't show.
+   */
+  contextMenu?: boolean;
+
+  /**
+   * Set this to true if the command should appear in the Command Palette.
+   * Default to true, show.
+   */
+  commandPalette?: boolean;
 }
 
 

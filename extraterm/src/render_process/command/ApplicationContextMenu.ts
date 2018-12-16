@@ -11,7 +11,7 @@ import { Logger } from 'extraterm-extension-api';
 import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import * as DomUtils from '../DomUtils';
-import { eventToCommandableStack, commandableStackToBoundCommands } from "./CommandUtils";
+import { eventToCommandableStack, commandableStackToBoundCommands, CommandType } from "./CommandUtils";
 import { Commandable, BoundCommand } from "./CommandTypes";
 import { doLater } from "../../utils/DoLater";
 import { ExtensionManager } from "../extension/InternalTypes";
@@ -41,7 +41,8 @@ export class ApplicationContextMenu {
     const requestCommandableStack = eventToCommandableStack(ev);
 
     doLater( () => {
-      this._menuEntries = commandableStackToBoundCommands(requestCommandableStack, this.extensionManager);
+      this._menuEntries = commandableStackToBoundCommands(CommandType.CONTEXT_MENU, requestCommandableStack,
+                                                           this.extensionManager);
       this._contextMenuElement.innerHTML = this._menuEntries.map(this._boundCommandToHtml).join("");
 
       this._contextMenuElement.open(ev.detail.x, ev.detail.y);

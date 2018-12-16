@@ -14,7 +14,7 @@ import { isSupportsDialogStack } from '../SupportsDialogStack';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { getLogger } from 'extraterm-logging';
-import { eventToCommandableStack, commandableStackToBoundCommands } from './CommandUtils';
+import { eventToCommandableStack, commandableStackToBoundCommands, CommandType } from './CommandUtils';
 
 
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
@@ -57,7 +57,8 @@ export class CommandPalette {
         this._commandPaletteRequestSource = firstCommandable;
       }
 
-      this._commandPaletteRequestEntries = commandableStackToBoundCommands(commandableStack, this.extensionManager);
+      this._commandPaletteRequestEntries = commandableStackToBoundCommands(CommandType.COMMAND_PALETTE,
+                                                                          commandableStack, this.extensionManager);
 
       // FIXME this never gives anything
       const shortcut = this.keyBindingManager.getKeybindingsContexts().context("main-ui").mapCommandToReadableKeyStroke("openCommandPalette");
