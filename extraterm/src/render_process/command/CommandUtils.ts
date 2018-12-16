@@ -9,14 +9,29 @@ import { ExtensionManager } from "../extension/InternalTypes";
 import { EtTerminal } from "../Terminal";
 import { TextViewer } from "../viewers/TextAceViewer";
 
-export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement): void {
-  const commandPaletteRequestEvent = new CustomEvent(EVENT_COMMAND_PALETTE_REQUEST, {bubbles: true, composed: true});
-  commandPaletteRequestEvent.initCustomEvent(EVENT_COMMAND_PALETTE_REQUEST, true, true, null);
+function dispatchCommandRequest(eventName: string, element: Commandable & HTMLElement): void {
+  const commandPaletteRequestEvent = new CustomEvent(eventName, {bubbles: true, composed: true});
+  commandPaletteRequestEvent.initCustomEvent(eventName, true, true, null);
   element.dispatchEvent(commandPaletteRequestEvent);
+}
+
+export function dispatchCommandPaletteRequest(element: Commandable & HTMLElement): void {
+  dispatchCommandRequest(EVENT_COMMAND_PALETTE_REQUEST, element);
 }
 
 export const EVENT_COMMAND_PALETTE_REQUEST = "EVENT_COMMAND_PALETTE_REQUEST";
 export const COMMAND_OPEN_COMMAND_PALETTE = "openCommandPalette";
+
+export const EVENT_CONTEXT_MENU_REQUEST = "EVENT_CONTEXT_MENU_REQUEST";
+export const COMMAND_OPEN_CONTEXT_MENU = "COMMAND_OPEN_CONTEXT_MENU";
+
+export function dispatchContextMenuRequest(element: Commandable & HTMLElement, x: number, y: number): void {
+  const detail = {x, y};
+  const commandPaletteRequestEvent = new CustomEvent(EVENT_CONTEXT_MENU_REQUEST,
+                                                     {bubbles: true, composed: true, detail});
+  commandPaletteRequestEvent.initCustomEvent(EVENT_CONTEXT_MENU_REQUEST, true, true, detail);
+  element.dispatchEvent(commandPaletteRequestEvent);
+}
 
 export function eventToCommandableStack(ev: CustomEvent): Commandable[] {
   const path = ev.composedPath();

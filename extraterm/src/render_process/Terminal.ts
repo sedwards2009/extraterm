@@ -266,7 +266,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
           ev.stopPropagation();
           this._terminalViewer.focus();
           if (ev.buttons & 2) { // Right Mouse Button
-            this._handleContextMenu();
+            this._handleContextMenu(ev.clientX, ev.clientY);
           }
         }
       });
@@ -1443,9 +1443,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  private _handleContextMenu(): void {
+  private _handleContextMenu(x: number, y: number): void {
     if (this._terminalViewer !== null) {
-      this._terminalViewer.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
+      this._terminalViewer.executeCommand(COMMAND_OPEN_COMMAND_PALETTE, {x, y});
     }
   }
 

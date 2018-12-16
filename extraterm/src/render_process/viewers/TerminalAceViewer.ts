@@ -6,7 +6,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import {BulkFileHandle, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
-import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest} from '../command/CommandUtils';
+import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, COMMAND_OPEN_CONTEXT_MENU, dispatchContextMenuRequest} from '../command/CommandUtils';
 import { Commandable, BoundCommand } from '../command/CommandTypes';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
@@ -997,8 +997,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     // Prevent Ace from seeing this event and messing with the hidden textarea and the focus.
     ev.stopImmediatePropagation();
     ev.preventDefault();
-
-    this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
+    this.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x: ev.clientX, y: ev.clientY});
   }
 
   getCommands(commandableStack: Commandable[]): BoundCommand[] {
@@ -1021,11 +1020,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return commandList;
   }
   
-  executeCommand(commandId: string): void {
-    this._executeCommand(commandId);
+  executeCommand(commandId: string, commandArguments?: any): void {
+    this._executeCommand(commandId, commandArguments);
   }
   
-  private _executeCommand(command): boolean {
+  private _executeCommand(command: string, commandArguments?: any): boolean {
     switch (command) {
       case COMMAND_TYPE_AND_CR_SELECTION:
       case COMMAND_TYPE_SELECTION:
@@ -1051,7 +1050,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       case COMMAND_OPEN_COMMAND_PALETTE:
         dispatchCommandPaletteRequest(this);
         break;
-        
+
+      case COMMAND_OPEN_CONTEXT_MENU:
+        dispatchContextMenuRequest(this, commandArguments.x, commandArguments.y);
+        break;
+
       default:
         return false;
     }

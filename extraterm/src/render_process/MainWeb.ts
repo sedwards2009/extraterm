@@ -14,7 +14,7 @@ import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
-import { EVENT_COMMAND_PALETTE_REQUEST } from './command/CommandUtils';
+import { EVENT_COMMAND_PALETTE_REQUEST, EVENT_CONTEXT_MENU_REQUEST } from './command/CommandUtils';
 import { BoundCommand, Commandable, CommandExecutor } from './command/CommandTypes';
 
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
@@ -45,6 +45,7 @@ import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
 import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject, KeybindingsContexts } from './keybindings/KeyBindingsManager';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { ApplicationContextMenu } from "./command/ApplicationContextMenu";
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -73,11 +74,9 @@ let mainWebUi: MainWebUi = null;
 let configDatabase: ConfigDatabaseImpl = null;
 let extensionManager: ExtensionManager = null;
 let commandPalette: CommandPalette = null;
+let applicationContextMenu: ApplicationContextMenu = null;
 
 
-/**
- * 
- */
 export function startUp(closeSplash: () => void): void {
   if (process.platform === "darwin") {
     setupOSXEmptyMenus();
@@ -108,6 +107,7 @@ export function startUp(closeSplash: () => void): void {
     startUpMainMenu();
     startUpResizeCanary();
     startUpCommandPalette();
+    startUpApplicationContextMenu();
     startUpWindowEvents();
 
     if (process.platform === "darwin") {
@@ -231,6 +231,10 @@ function startUpMainWebUi(): void {
   mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
     commandPalette.handleCommandPaletteRequest(ev);
   });
+
+  mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
+    applicationContextMenu.handleContextMenuRequest(ev);
+  });
 }
 
 const ID_CONTROLS_SPACE = "ID_CONTROLS_SPACE";
@@ -262,13 +266,13 @@ function setUpWindowControls(): void {
 
 
 function startUpMainMenu(): void {
-  const contextMenuFragment = DomUtils.htmlToFragment(`
+  const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
     <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
         <${MenuItem.TAG_NAME} icon="extraicons extraicons-pocketknife" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
         <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
         <${MenuItem.TAG_NAME} icon="far fa-lightbulb" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
-  `);
+  `));
   window.document.body.appendChild(contextMenuFragment)
 
   const mainMenu = window.document.getElementById(ID_MAIN_MENU);
@@ -595,7 +599,7 @@ function startUpCommandPalette(): void {
 }
 
 function startUpApplicationContextMenu(): void {
-  applicationContextMenu = new ApplicationContextMenu(keyBindingManager);
+  applicationContextMenu = new ApplicationContextMenu(keyBindingManager, extensionManager);
 }
 
 function getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
