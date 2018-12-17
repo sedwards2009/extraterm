@@ -30,7 +30,7 @@ Getting started from source:
 
 Note: Run these commands from a terminal which *isn't* Extraterm < v0.30.0. (An environment variable is set inside every extraterm session which confuses `node-sass` when building from source, namely in the `yarn install` step. This problem is fixed in Extraterm 0.30.0 though.)
 
-Extraterm uses (yarn)[http://yarnpkg.com/] for package management. It is easiest to have it available in your path or just globally.
+Extraterm uses (yarn)[http://yarnpkg.com/] for package management. It is easiest to have it available in your path or just globally. Ensure you have a recent version (1.12 or later).
 
 * Clone the repository from github to your local machine.
 * Make sure that you are using node version 7.4.0. :warning: This is important. Using the same node version as the version of Electron simplifies installation of the one native node module that Extraterm depends on (pty.js). You can fetch it from https://nodejs.org/dist/v7.4.0/

@@ -249,7 +249,7 @@ function toggleAllWindows(): void {
 
 function anyWindowsMinimized(): boolean {
   for (const window of BrowserWindow.getAllWindows()) {
-    if (window.isMinimized()) {
+    if (window.isMinimized() || ! window.isVisible()) {
       return true;
     }
   }
@@ -493,7 +493,7 @@ function getFonts(): FontInfo[] {
   const allAvailableFonts = FontManager.getAvailableFontsSync();
   const usableFonts = allAvailableFonts.filter(fontInfo => {
     const path = fontInfo.path.toLowerCase();
-    if ( ! path.endsWith(".ttf") && ! path.endsWith(".otf")) {
+    if ( ! path.endsWith(".ttf") && ! path.endsWith(".otf") && ! path.endsWith(".dfont")) {
       return false;
     }
     if (fontInfo.italic || fontInfo.style.indexOf("Oblique") !== -1) {
@@ -636,7 +636,7 @@ function handleIpc(event: Electron.Event, arg: any): void {
       break;
       
     case Messages.MessageType.WINDOW_MINIMIZE_REQUEST:
-      mainWindow.minimize();
+      minimizeAllWindows();
       break;
 
     case Messages.MessageType.WINDOW_MAXIMIZE_REQUEST:
