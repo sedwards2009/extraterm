@@ -16,6 +16,7 @@ import { getLogger, Logger } from "extraterm-logging";
 import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from 'extraterm-extension-api';
 import { globalShortcut } from 'electron';
+import { doLater } from '../utils/DoLater';
 
 
 export class GlobalKeybindingsManager {
@@ -90,7 +91,7 @@ export class GlobalKeybindingsManager {
     for (const command in commandsToEmitters) {
       for (const keyStroke of globalKeybindings.getKeyStrokesForCommand(command)) {
         globalShortcut.register(keyStrokeToAccelerator(keyStroke), () => {
-          commandsToEmitters[command].fire();
+          doLater(() => commandsToEmitters[command].fire());
         });
       }
     }
