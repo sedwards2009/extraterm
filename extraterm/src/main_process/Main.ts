@@ -249,7 +249,7 @@ function toggleAllWindows(): void {
 
 function anyWindowsMinimized(): boolean {
   for (const window of BrowserWindow.getAllWindows()) {
-    if (window.isMinimized()) {
+    if (window.isMinimized() || ! window.isVisible()) {
       return true;
     }
   }
