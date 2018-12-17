@@ -493,7 +493,7 @@ function getFonts(): FontInfo[] {
   const allAvailableFonts = FontManager.getAvailableFontsSync();
   const usableFonts = allAvailableFonts.filter(fontInfo => {
     const path = fontInfo.path.toLowerCase();
-    if ( ! path.endsWith(".ttf") && ! path.endsWith(".otf")) {
+    if ( ! path.endsWith(".ttf") && ! path.endsWith(".otf") && ! path.endsWith(".dfont")) {
       return false;
     }
     if (fontInfo.italic || fontInfo.style.indexOf("Oblique") !== -1) {
