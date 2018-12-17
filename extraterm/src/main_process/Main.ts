@@ -636,7 +636,7 @@ function handleIpc(event: Electron.Event, arg: any): void {
       break;
       
     case Messages.MessageType.WINDOW_MINIMIZE_REQUEST:
-      mainWindow.minimize();
+      minimizeAllWindows();
       break;
 
     case Messages.MessageType.WINDOW_MAXIMIZE_REQUEST:
