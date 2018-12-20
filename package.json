@@ -14,7 +14,8 @@
     "run-release": "electron extraterm/src/main_process/Main.js",
     "build": "wsrun build --exclude-missing --stages",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty,font-manager -f -v 2.0.0",
-    "package": "node build_scripts/build_packages.js"
+    "package": "node build_scripts/build_packages.js",
+    "package-linux-zip-only": "node build_scripts/build_packages.js --linux-zip-only"
   },
   "jshintConfig": {
     "esversion": 6

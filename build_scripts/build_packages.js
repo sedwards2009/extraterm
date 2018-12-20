@@ -21,6 +21,8 @@ function main() {
     return;
   }
 
+  const linuxZipOnly = process.argv.indexOf("--linux-zip-only") !== -1;
+
   const srcRootDir = "" + pwd();
   if (test('-d', BUILD_TMP)) {
     rm('-rf', BUILD_TMP);
@@ -387,13 +389,17 @@ SectionEnd
 
     exec(`docker run -t -v ${buildTmpPath}:/wine/drive_c/src/ cdrx/nsis`);
   }
-  
-  makePackage("x64", "win32")
-    .then(() => makePackage("x64", "linux"))
-    .then(() => makePackage("x64", "darwin"))
-    .then(makeDmg)
-    .then(makeNsis)
-    .then(() => { log("Done"); } );
+
+  if (linuxZipOnly) {
+    makePackage("x64", "linux");
+  } else {
+    makePackage("x64", "win32")
+      .then(() => makePackage("x64", "linux"))
+      .then(() => makePackage("x64", "darwin"))
+      .then(makeDmg)
+      .then(makeNsis)
+      .then(() => { log("Done"); } );
+  }
 }
 
 main();
