@@ -36,6 +36,7 @@ import { KeybindingsIOManager } from './KeybindingsIOManager';
 
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupUserConfig, setupAppData, KEYBINDINGS_OSX, KEYBINDINGS_PC } from './MainConfig';
 import { GlobalKeybindingsManager } from './GlobalKeybindings';
+import { doLater } from '../utils/DoLater';
 
 const LOG_FINE = false;
 
@@ -281,10 +282,31 @@ function minimizeAllWindows(): void {
 function restoreAllWindows(): void {
   for (const window of BrowserWindow.getAllWindows()) {
     const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
-    if (generalConfig.minimizeToTray) {
-      window.show();
+
+    if (process.platform === "linux") {
+      // On Linux, if a window is the width or height of the screen then
+      // Electron (2.0.13) resizes them (!) to be smaller for some annoying
+      // reason. This is a hack to make sure that windows are restored with
+      // the correct dimensions.
+      const bounds = generalConfig.windowConfiguration[0];
+      window.setBounds(bounds);
+        window.setMinimumSize(bounds.width, bounds.height);
+      if (generalConfig.minimizeToTray) {
+        window.show();
+      }
+      window.restore();
+  
+      doLater(() => {
+        window.setMinimumSize(10, 10);
+      }, 100);
+    } else {
+
+      // Windows and macOS
+      if (generalConfig.minimizeToTray) {
+        window.show();
+      }
+      window.restore();
     }
-    window.restore();
   }
 }
 
