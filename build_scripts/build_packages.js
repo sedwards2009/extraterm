@@ -32,7 +32,7 @@ function main() {
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
   
-  const gitUrl = packageData.repository.url.replace("git://github.com/", "https://github.com/");
+  const gitUrl = exec("git config --get remote.origin.url").trim();
   const info = getRepoInfo();
 
   echo("Fetching a clean copy of the source code from " + gitUrl);
