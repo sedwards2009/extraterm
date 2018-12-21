@@ -599,7 +599,7 @@ function startUpCommandPalette(): void {
 }
 
 function startUpApplicationContextMenu(): void {
-  applicationContextMenu = new ApplicationContextMenu(keyBindingManager, extensionManager);
+  applicationContextMenu = new ApplicationContextMenu(extensionManager);
 }
 
 function getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {

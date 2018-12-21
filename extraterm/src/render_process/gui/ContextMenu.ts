@@ -174,11 +174,12 @@ export class ContextMenu extends ThemeableElementBase {
   private activateItem(item: MenuItem): void {
     item._clicked();
 
+    const id = item.getAttribute("id");
     const name = item.getAttribute('name');
     const checked = item.getAttribute('checked');
     this.close();
 
-    const event = new CustomEvent('selected', { detail: {name: name, checked: checked } });
+    const event = new CustomEvent('selected', { detail: { id, name, checked } });
     this.dispatchEvent(event);
   }
 
