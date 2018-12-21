@@ -32,7 +32,7 @@ import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
 import { Commandable, BoundCommand } from './command/CommandTypes';
-import { COMMAND_OPEN_COMMAND_PALETTE } from './command/CommandUtils';
+import { COMMAND_OPEN_COMMAND_PALETTE, COMMAND_OPEN_CONTEXT_MENU } from './command/CommandUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';
@@ -1445,7 +1445,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _handleContextMenu(x: number, y: number): void {
     if (this._terminalViewer !== null) {
-      this._terminalViewer.executeCommand(COMMAND_OPEN_COMMAND_PALETTE, {x, y});
+      this._terminalViewer.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x, y});
     }
   }
 

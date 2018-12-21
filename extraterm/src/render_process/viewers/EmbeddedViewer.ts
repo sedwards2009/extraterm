@@ -573,9 +573,9 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
       }
 
       if (isCommandable(viewerElement)) {
-        viewerElement.executeCommand(COMMAND_OPEN_COMMAND_PALETTE, {x: ev.clientX, y: ev.clientY});
+        viewerElement.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x: ev.clientX, y: ev.clientY});
       } else {
-        this.executeCommand(COMMAND_OPEN_COMMAND_PALETTE, {x: ev.clientX, y: ev.clientY});
+        this.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x: ev.clientX, y: ev.clientY});
       }
     });
   }
