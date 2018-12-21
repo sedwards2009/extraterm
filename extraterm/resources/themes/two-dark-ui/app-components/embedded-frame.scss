@@ -32,6 +32,7 @@ $TEAR_BORDER_HEIGHT: 2px;
   display: block;
   width: 100%;
   contain: strict;
+  outline: none;
 }
  
 #ID_CONTAINER {
@@ -62,6 +63,7 @@ $TEAR_BORDER_HEIGHT: 2px;
   border-top-right-radius: $corner-radius;
 
   box-shadow: inset 0px -1px $neutral-bg-color;
+  outline: none;
 }
 
 #ID_OUTPUT_CONTAINER {

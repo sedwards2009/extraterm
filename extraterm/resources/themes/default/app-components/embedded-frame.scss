@@ -31,6 +31,7 @@ $ICON_FAIL_COLOR: $brand-text-danger;
   display: block;
   width: 100%;
   contain: strict;
+  outline: none;
 }
 
 #ID_CONTAINER {
@@ -51,6 +52,7 @@ $ICON_FAIL_COLOR: $brand-text-danger;
   width: 100%;
   z-index: 5;
   font-size: 0.8rem;
+  outline: none;
 }
 
 #ID_OUTPUT_CONTAINER {

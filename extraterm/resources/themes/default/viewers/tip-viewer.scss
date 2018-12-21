@@ -4,6 +4,10 @@
 
 @import "general-gui/variables";
 
+:host {
+  outline: none;
+}
+
 #ID_CONTAINER {
   display: flex;
   align-items: stretch;
