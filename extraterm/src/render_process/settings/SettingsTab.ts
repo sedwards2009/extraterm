@@ -118,7 +118,7 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
   }
 
   executeCommand(commandId: string, commandArguments?: any): void {
-    this._executeCommand(commandId);
+    this._executeCommand(commandId, commandArguments);
   }
   
   private _executeCommand(command: string, commandArguments?: any): boolean {

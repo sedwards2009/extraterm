@@ -3,19 +3,19 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as he from 'he';
+import * as he from "he";
 
-import { KeybindingsManager } from "../keybindings/KeyBindingsManager";
-import { getLogger } from 'extraterm-logging';
-import { Logger } from 'extraterm-extension-api';
+import { getLogger } from "extraterm-logging";
+import { Logger } from "extraterm-extension-api";
 import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
-import * as DomUtils from '../DomUtils';
+import * as DomUtils from "../DomUtils";
 import { eventToCommandableStack, commandableStackToBoundCommands, CommandType } from "./CommandUtils";
-import { Commandable, BoundCommand } from "./CommandTypes";
+import { BoundCommand } from "./CommandTypes";
 import { doLater } from "../../utils/DoLater";
 import { ExtensionManager } from "../extension/InternalTypes";
-import { MenuItem } from '../gui/MenuItem';
+import { MenuItem } from "../gui/MenuItem";
+import { DividerMenuItem } from "../gui/DividerMenuItem";
 
 
 const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
@@ -63,10 +63,24 @@ export class ApplicationContextMenu {
         return;
       }
       
-      this._contextMenuElement.innerHTML = this._menuEntries.map(
-        (command: BoundCommand, index: number): string => this._boundCommandToHtml("index_" + index, command)).join("");
+      this._contextMenuElement.innerHTML = this._formatMenuHtml(this._menuEntries);
       this._contextMenuElement.open(ev.detail.x, ev.detail.y);
     });
+  }
+
+  private _formatMenuHtml(menuEntries: BoundCommand[]): string {
+    const htmlParts: string[] = [];
+    let lastGroup = "";
+    let index = 0;
+    for (const command of menuEntries) {
+      if (command.group !== lastGroup && lastGroup !== "") {
+        htmlParts.push(`<${DividerMenuItem.TAG_NAME}></${DividerMenuItem.TAG_NAME}>`);
+      }
+      lastGroup = command.group;
+      htmlParts.push(this._boundCommandToHtml("index_" + index, command));
+      index++;
+    }
+    return htmlParts.join("");
   }
 
   private _boundCommandToHtml(name: string, command: BoundCommand): string {

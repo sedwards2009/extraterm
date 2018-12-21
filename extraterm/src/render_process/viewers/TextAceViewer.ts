@@ -797,7 +797,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   }
   
   executeCommand(commandId: string, commandArguments?: any): void {
-    this._executeCommand(commandId);
+    this._executeCommand(commandId, commandArguments);
   }
 
   private _executeCommand(command: string, commandArguments?: any): boolean {
