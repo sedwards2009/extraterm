@@ -21,6 +21,8 @@ function main() {
     return;
   }
 
+  const linuxZipOnly = process.argv.indexOf("--linux-zip-only") !== -1;
+
   const srcRootDir = "" + pwd();
   if (test('-d', BUILD_TMP)) {
     rm('-rf', BUILD_TMP);
@@ -30,17 +32,17 @@ function main() {
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
   
-  const gitUrl = packageData.repository.url.replace("git://github.com/", "git@github.com:");
-   
+  const gitUrl = exec("git config --get remote.origin.url").trim();
   const info = getRepoInfo();
 
   echo("Fetching a clean copy of the source code from " + gitUrl);
+
   cd(BUILD_TMP);
 
   // For some reason pwd() is returning "not quite strings" which path.join() doesn't like. Thus "" + ...
   const buildTmpPath = "" + pwd();
   
-  exec("git clone --depth 1 -b " + info.branch + " " + gitUrl);
+  exec("git clone -b " + info.branch + " " + gitUrl);
   cd("extraterm");
 
   echo("Setting up the run time dependencies in " + BUILD_TMP);
@@ -387,13 +389,17 @@ SectionEnd
 
     exec(`docker run -t -v ${buildTmpPath}:/wine/drive_c/src/ cdrx/nsis`);
   }
-  
-  makePackage("x64", "win32")
-    .then(() => makePackage("x64", "linux"))
-    .then(() => makePackage("x64", "darwin"))
-    .then(makeDmg)
-    .then(makeNsis)
-    .then(() => { log("Done"); } );
+
+  if (linuxZipOnly) {
+    makePackage("x64", "linux");
+  } else {
+    makePackage("x64", "win32")
+      .then(() => makePackage("x64", "linux"))
+      .then(() => makePackage("x64", "darwin"))
+      .then(makeDmg)
+      .then(makeNsis)
+      .then(() => { log("Done"); } );
+  }
 }
 
 main();

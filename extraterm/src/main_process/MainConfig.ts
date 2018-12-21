@@ -154,7 +154,7 @@ export function setupUserConfig(themeManager: ThemeManager, configDatabase: Conf
   }
 
   if (userStoredConfig.showTrayIcon == null) {
-    userStoredConfig.showTrayIcon = true;
+    userStoredConfig.showTrayIcon = false;
   }
 
   if (userStoredConfig.minimizeToTray == null) {
