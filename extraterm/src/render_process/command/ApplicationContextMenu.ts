@@ -58,6 +58,11 @@ export class ApplicationContextMenu {
     doLater( () => {
       this._menuEntries = commandableStackToBoundCommands(CommandType.CONTEXT_MENU, requestCommandableStack,
                                                            this.extensionManager);
+      if (this._menuEntries.length === 0) {
+        this._menuEntries = null;
+        return;
+      }
+      
       this._contextMenuElement.innerHTML = this._menuEntries.map(
         (command: BoundCommand, index: number): string => this._boundCommandToHtml("index_" + index, command)).join("");
       this._contextMenuElement.open(ev.detail.x, ev.detail.y);
