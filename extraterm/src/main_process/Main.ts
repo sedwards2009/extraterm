@@ -271,7 +271,7 @@ function maximizeAllWindows(): void {
 function minimizeAllWindows(): void {
   for (const window of BrowserWindow.getAllWindows()) {
     const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
-    if (generalConfig.minimizeToTray) {
+    if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
       window.hide();
     } else {
       window.minimize();
@@ -291,7 +291,7 @@ function restoreAllWindows(): void {
       const bounds = generalConfig.windowConfiguration[0];
       window.setBounds(bounds);
         window.setMinimumSize(bounds.width, bounds.height);
-      if (generalConfig.minimizeToTray) {
+      if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
         window.show();
       }
       window.restore();
@@ -302,7 +302,7 @@ function restoreAllWindows(): void {
     } else {
 
       // Windows and macOS
-      if (generalConfig.minimizeToTray) {
+      if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
         window.show();
       }
       window.restore();
