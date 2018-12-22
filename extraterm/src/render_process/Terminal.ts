@@ -1451,6 +1451,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   getCommands(commandableStack): BoundCommand[] {
     const commandList: BoundCommand[] = [];
+
+    commandList.push({ id: COMMAND_OPEN_COMMAND_PALETTE, group: PALETTE_GROUP, label: "Command Palette", commandExecutor: this, contextMenu: true, commandPalette: false});
+
     if (this._mode === Mode.DEFAULT) {
       commandList.push( { id: COMMAND_ENTER_CURSOR_MODE, group: PALETTE_GROUP, iconRight: "fa fa-i-cursor", label: "Enter cursor mode", commandExecutor: this, contextMenu: true } );
     } else {

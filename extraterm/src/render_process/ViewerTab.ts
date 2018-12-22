@@ -480,7 +480,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
 
   getCommands(commandableStack: Commandable[]): BoundCommand[] {
     const commandList: BoundCommand[] = [];
-
+    commandList.push( { id: COMMAND_OPEN_COMMAND_PALETTE, group: PALETTE_GROUP, label: "Command Palette", commandExecutor: this, contextMenu: true, commandPalette: false});
     commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "far fa-copy", label: "Copy to Clipboard", commandExecutor: this, contextMenu: true } );
     commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "fa fa-clipboard", label: "Paste from Clipboard", commandExecutor: this, contextMenu: true } );
     commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", commandExecutor: this, contextMenu: true } );

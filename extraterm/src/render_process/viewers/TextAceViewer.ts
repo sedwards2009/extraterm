@@ -781,6 +781,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   getCommands(commandableStack: Commandable[]): BoundCommand[] {
     let commandList: BoundCommand[] = [
+      { id: COMMAND_OPEN_COMMAND_PALETTE, group: PALETTE_GROUP, label: "Command Palette", commandExecutor: this, contextMenu: true, commandPalette: false},
       { id: COMMAND_TYPE_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection", commandExecutor: this, contextMenu: true },
       { id: COMMAND_TYPE_AND_CR_SELECTION, group: PALETTE_GROUP, iconRight: "fa fa-terminal", label: "Type Selection & Execute", commandExecutor: this, contextMenu: true }
     ];
