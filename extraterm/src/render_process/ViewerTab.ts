@@ -479,13 +479,15 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   }
 
   getCommands(commandableStack: Commandable[]): BoundCommand[] {
-    const commandList: BoundCommand[] = [];
-    commandList.push( { id: COMMAND_OPEN_COMMAND_PALETTE, group: PALETTE_GROUP, label: "Command Palette", commandExecutor: this, contextMenu: true, commandPalette: false});
-    commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "far fa-copy", label: "Copy to Clipboard", commandExecutor: this, contextMenu: true } );
-    commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "fa fa-clipboard", label: "Paste from Clipboard", commandExecutor: this, contextMenu: true } );
-    commandList.push( { id: COMMAND_FONT_SIZE_INCREASE, group: PALETTE_GROUP, label: "Increase Font Size", commandExecutor: this, contextMenu: true } );
-    commandList.push( { id: COMMAND_FONT_SIZE_DECREASE, group: PALETTE_GROUP, label: "Decrease Font Size", commandExecutor: this, contextMenu: true } );
-    commandList.push( { id: COMMAND_FONT_SIZE_RESET, group: PALETTE_GROUP, label: "Reset Font Size", commandExecutor: this, contextMenu: true } );
+    const defaults = { group: PALETTE_GROUP, commandExecutor: this, contextMenu: true };
+    const commandList: BoundCommand[] = [
+      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, iconRight: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
+      { ...defaults, id: COMMAND_COPY_TO_CLIPBOARD, iconRight: "far fa-copy", label: "Copy to Clipboard" },
+      { ...defaults, id: COMMAND_PASTE_FROM_CLIPBOARD, iconRight: "fa fa-clipboard", label: "Paste from Clipboard" },
+      { ...defaults, id: COMMAND_FONT_SIZE_INCREASE, label: "Increase Font Size" },
+      { ...defaults, id: COMMAND_FONT_SIZE_DECREASE, label: "Decrease Font Size" },
+      { ...defaults, id: COMMAND_FONT_SIZE_RESET, label: "Reset Font Size" },
+    ];
 
     const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
     if (keyBindings !== null) {
