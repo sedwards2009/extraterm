@@ -84,7 +84,7 @@ export class ApplicationContextMenu {
   }
 
   private _boundCommandToHtml(name: string, command: BoundCommand): string {
-    return `<${MenuItem.TAG_NAME} name="${name}" shortcut="${command.shortcut}">${he.encode(command.label)}</${MenuItem.TAG_NAME}>`;
+    return `<${MenuItem.TAG_NAME} name="${name}" icon="${command.iconRight}" shortcut="${command.shortcut}">${he.encode(command.label)}</${MenuItem.TAG_NAME}>`;
   }
 
   private _executeMenuCommand(id: string): void {

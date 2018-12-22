@@ -37,9 +37,7 @@ export class MenuItem extends ThemeableElementBase {
     let iconhtml = "";
     const icon = this.getAttribute("icon");
     if (icon !== null && icon !== "") {
-      iconhtml += "<i class='fa-fw " + icon + "'></i>";
-    } else {
-      iconhtml += "<i class='fa-fw'></i>";
+      iconhtml = "<i class='" + icon + "'></i>";
     }
     (<HTMLElement>shadow.querySelector("#" + ID_ICON2)).innerHTML = iconhtml;
 
