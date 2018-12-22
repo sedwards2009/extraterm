@@ -1462,8 +1462,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     commandList.push( { id: COMMAND_SCROLL_PAGE_UP, group: PALETTE_GROUP, iconRight: "fa fa-angle-double-up", label: "Scroll Page Up", commandExecutor: this } );
     commandList.push( { id: COMMAND_SCROLL_PAGE_DOWN, group: PALETTE_GROUP, iconRight: "fa fa-angle-double-down", label: "Scroll Page Down", commandExecutor: this } );
 
-    commandList.push( { id: COMMAND_GO_TO_PREVIOUS_FRAME, group: PALETTE_GROUP, label: "Go to Previous Frame", commandExecutor: this, contextMenu: true } );
-    commandList.push( { id: COMMAND_GO_TO_NEXT_FRAME, group: PALETTE_GROUP, label: "Go to Next Frame", commandExecutor: this, contextMenu: true } );
+    commandList.push( { id: COMMAND_GO_TO_PREVIOUS_FRAME, group: PALETTE_GROUP, label: "Go to Previous Frame",
+                        iconRight: "fas fa-step-backward fa-rotate-90", commandExecutor: this, contextMenu: true } );
+    commandList.push( { id: COMMAND_GO_TO_NEXT_FRAME, group: PALETTE_GROUP, label: "Go to Next Frame",
+                        iconRight: "fas fa-step-forward fa-rotate-90", commandExecutor: this, contextMenu: true } );
     
     commandList.push( { id: COMMAND_COPY_TO_CLIPBOARD, group: PALETTE_GROUP, iconRight: "far fa-copy", label: "Copy to Clipboard", commandExecutor: this, contextMenu: true } );
     commandList.push( { id: COMMAND_PASTE_FROM_CLIPBOARD, group: PALETTE_GROUP, iconRight: "fa fa-clipboard", label: "Paste from Clipboard", commandExecutor: this, contextMenu: true } );
