@@ -10,7 +10,7 @@ import { Logger } from "extraterm-extension-api";
 import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import * as DomUtils from "../DomUtils";
-import { eventToCommandableStack, commandableStackToBoundCommands, CommandType } from "./CommandUtils";
+import { eventToCommandableStack, commandableStackToBoundCommands, CommandType, COMMAND_OPEN_COMMAND_PALETTE } from "./CommandUtils";
 import { BoundCommand } from "./CommandTypes";
 import { doLater } from "../../utils/DoLater";
 import { ExtensionManager } from "../extension/InternalTypes";
@@ -56,8 +56,10 @@ export class ApplicationContextMenu {
     const requestCommandableStack = eventToCommandableStack(ev);
 
     doLater( () => {
-      this._menuEntries = commandableStackToBoundCommands(CommandType.CONTEXT_MENU, requestCommandableStack,
-                                                           this.extensionManager);
+      const entries = commandableStackToBoundCommands(CommandType.CONTEXT_MENU, requestCommandableStack,
+                                                      this.extensionManager);
+      this._menuEntries = this._filterOutDuplicateSpecialCommands(entries);
+
       if (this._menuEntries.length === 0) {
         this._menuEntries = null;
         return;
@@ -81,6 +83,23 @@ export class ApplicationContextMenu {
       index++;
     }
     return htmlParts.join("");
+  }
+
+  private _filterOutDuplicateSpecialCommands(commands: BoundCommand[]): BoundCommand[] {
+    const specialCommands = new Set<string>([COMMAND_OPEN_COMMAND_PALETTE]);
+    const seenSpecialCommands = new Set<string>();
+
+    const result: BoundCommand[] = [];
+    for (const command of commands) {
+      if (specialCommands.has(command.id)) {
+        if (seenSpecialCommands.has(command.id)) {
+          continue;
+        }
+        seenSpecialCommands.add(command.id);
+      }
+      result.push(command);
+    }
+    return result;
   }
 
   private _boundCommandToHtml(name: string, command: BoundCommand): string {
