@@ -66,6 +66,7 @@ export const CssFile = {
   VIRTUAL_SCROLL_CANVAS: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/virtual-scroll-canvas.scss",
   TABS: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/tabs.scss",
   EXTRAICONS: CSS_MODULE_INTERNAL_GUI + ":" + "fonts/extraicons.scss",
+  GUI_DIVIDER_MENU_ITEM: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-dividermenuitem.scss"
 }
 
 export function cssFileToFilename(cssFile: CssFile): string {
@@ -114,6 +115,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.VIRTUAL_SCROLL_CANVAS,
   CssFile.TABS,
   CssFile.EXTRAICONS,
+  CssFile.GUI_DIVIDER_MENU_ITEM,
 ];
 
 export class CssFileMap extends Map<CssFile, string> {

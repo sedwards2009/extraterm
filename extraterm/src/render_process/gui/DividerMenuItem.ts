@@ -32,7 +32,7 @@ export class DividerMenuItem extends ThemeableElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GENERAL_GUI]; //, ThemeTypes.CssFile.GUI_DIVIDER_MENU_ITEM];
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.GUI_DIVIDER_MENU_ITEM];
   }
 
   private _html(): string {
