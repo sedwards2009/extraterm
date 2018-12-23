@@ -609,13 +609,12 @@ function getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand
   const devToolsOpen = developerToolMenu.checked;
   const commandExecutor: CommandExecutor = {executeCommand};
 
-
-
+  const defaults = { group: PALETTE_GROUP, commandExecutor };
   const commandList: BoundCommand[] = [
-    { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "fa fa-wrench", label: "Settings", commandExecutor },
-    { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "far fa-check-square" : "far fa-square", iconRight: "fa fa-cogs", label: "Developer Tools", commandExecutor },
-    { id: MENU_ITEM_RELOAD_CSS, group: PALETTE_GROUP, iconRight: "fa fa-sync", label: "Reload Theme", commandExecutor },
-    { id: MENU_ITEM_ABOUT, group: PALETTE_GROUP, iconRight: "far fa-lightbulb", label: "About", commandExecutor },
+    { ...defaults, id: MENU_ITEM_SETTINGS,  iconRight: "fa fa-wrench", label: "Settings" },
+    { ...defaults, id: MENU_ITEM_DEVELOPER_TOOLS, iconLeft: devToolsOpen ? "far fa-check-square" : "far fa-square", iconRight: "fa fa-cogs", label: "Developer Tools" },
+    { ...defaults, id: MENU_ITEM_RELOAD_CSS, iconRight: "fa fa-sync", label: "Reload Theme" },
+    { ...defaults, id: MENU_ITEM_ABOUT, iconRight: "far fa-lightbulb", label: "About" },
   ];
   return commandList;
 }
