@@ -481,9 +481,9 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   getCommands(commandableStack: Commandable[]): BoundCommand[] {
     const defaults = { group: PALETTE_GROUP, commandExecutor: this, contextMenu: true };
     const commandList: BoundCommand[] = [
-      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, iconRight: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
-      { ...defaults, id: COMMAND_COPY_TO_CLIPBOARD, iconRight: "far fa-copy", label: "Copy to Clipboard" },
-      { ...defaults, id: COMMAND_PASTE_FROM_CLIPBOARD, iconRight: "fa fa-clipboard", label: "Paste from Clipboard" },
+      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, icon: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
+      { ...defaults, id: COMMAND_COPY_TO_CLIPBOARD, icon: "far fa-copy", label: "Copy to Clipboard" },
+      { ...defaults, id: COMMAND_PASTE_FROM_CLIPBOARD, icon: "fa fa-clipboard", label: "Paste from Clipboard" },
       { ...defaults, id: COMMAND_FONT_SIZE_INCREASE, label: "Increase Font Size" },
       { ...defaults, id: COMMAND_FONT_SIZE_DECREASE, label: "Decrease Font Size" },
       { ...defaults, id: COMMAND_FONT_SIZE_RESET, label: "Reset Font Size" },

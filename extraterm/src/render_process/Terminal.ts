@@ -1452,25 +1452,25 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   getCommands(commandableStack): BoundCommand[] {
     const defaults = { group: PALETTE_GROUP, commandExecutor: this, contextMenu: true };
     const commands: BoundCommand[] = [
-      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, iconRight: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
+      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, icon: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
 
       this._mode === Mode.DEFAULT
-        ? { ...defaults, id: COMMAND_ENTER_CURSOR_MODE, iconRight: "fa fa-i-cursor", label: "Enter cursor mode" }
+        ? { ...defaults, id: COMMAND_ENTER_CURSOR_MODE, icon: "fa fa-i-cursor", label: "Enter cursor mode" }
         : { ...defaults, id: COMMAND_ENTER_NORMAL_MODE, label: "Exit cursor mode" },
     
-      { ...defaults, id: COMMAND_SCROLL_PAGE_UP, iconRight: "fa fa-angle-double-up", label: "Scroll Page Up", contextMenu: false },
-      { ...defaults, id: COMMAND_SCROLL_PAGE_DOWN, iconRight: "fa fa-angle-double-down", label: "Scroll Page Down", contextMenu: false },
-      { ...defaults, id: COMMAND_GO_TO_PREVIOUS_FRAME, label: "Go to Previous Frame", iconRight: "fas fa-step-backward fa-rotate-90" },
-      { ...defaults, id: COMMAND_GO_TO_NEXT_FRAME, label: "Go to Next Frame", iconRight: "fas fa-step-forward fa-rotate-90" },
-      { ...defaults, id: COMMAND_COPY_TO_CLIPBOARD, iconRight: "far fa-copy", label: "Copy to Clipboard" },
-      { ...defaults, id: COMMAND_PASTE_FROM_CLIPBOARD, iconRight: "fa fa-clipboard", label: "Paste from Clipboard" },
-      { ...defaults, id: COMMAND_OPEN_LAST_FRAME, iconRight: "fa fa-external-link-alt", label: "Open Last Frame", contextMenu: false },
-      { ...defaults, id: COMMAND_DELETE_LAST_FRAME, iconRight: "fa fa-times-circle", label: "Delete Last Frame", contextMenu: false },
+      { ...defaults, id: COMMAND_SCROLL_PAGE_UP, icon: "fa fa-angle-double-up", label: "Scroll Page Up", contextMenu: false },
+      { ...defaults, id: COMMAND_SCROLL_PAGE_DOWN, icon: "fa fa-angle-double-down", label: "Scroll Page Down", contextMenu: false },
+      { ...defaults, id: COMMAND_GO_TO_PREVIOUS_FRAME, label: "Go to Previous Frame", icon: "fas fa-step-backward fa-rotate-90" },
+      { ...defaults, id: COMMAND_GO_TO_NEXT_FRAME, label: "Go to Next Frame", icon: "fas fa-step-forward fa-rotate-90" },
+      { ...defaults, id: COMMAND_COPY_TO_CLIPBOARD, icon: "far fa-copy", label: "Copy to Clipboard" },
+      { ...defaults, id: COMMAND_PASTE_FROM_CLIPBOARD, icon: "fa fa-clipboard", label: "Paste from Clipboard" },
+      { ...defaults, id: COMMAND_OPEN_LAST_FRAME, icon: "fa fa-external-link-alt", label: "Open Last Frame", contextMenu: false },
+      { ...defaults, id: COMMAND_DELETE_LAST_FRAME, icon: "fa fa-times-circle", label: "Delete Last Frame", contextMenu: false },
       { ...defaults, id: COMMAND_FONT_SIZE_INCREASE, label: "Increase Font Size" },
       { ...defaults, id: COMMAND_FONT_SIZE_DECREASE, label: "Decrease Font Size" },
       { ...defaults, id: COMMAND_FONT_SIZE_RESET, label: "Reset Font Size" },
-      { ...defaults, id: COMMAND_CLEAR_SCROLLBACK, iconRight: "fa fa-eraser", label: "Clear Scrollback" },
-      { ...defaults, id: COMMAND_RESET_VT, iconRight: "fa fa-sync", label: "Reset VT" },
+      { ...defaults, id: COMMAND_CLEAR_SCROLLBACK, icon: "fa fa-eraser", label: "Clear Scrollback" },
+      { ...defaults, id: COMMAND_RESET_VT, icon: "fa fa-sync", label: "Reset VT" },
     ];
     
     const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT

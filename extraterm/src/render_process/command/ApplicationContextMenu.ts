@@ -16,7 +16,7 @@ import { doLater } from "../../utils/DoLater";
 import { ExtensionManager } from "../extension/InternalTypes";
 import { MenuItem } from "../gui/MenuItem";
 import { DividerMenuItem } from "../gui/DividerMenuItem";
-
+import { CheckboxMenuItem } from "../gui/CheckboxMenuItem";
 
 const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
 
@@ -103,7 +103,13 @@ export class ApplicationContextMenu {
   }
 
   private _boundCommandToHtml(name: string, command: BoundCommand): string {
-    return `<${MenuItem.TAG_NAME} name="${name}" icon="${command.iconRight}" shortcut="${command.shortcut}">${he.encode(command.label)}</${MenuItem.TAG_NAME}>`;
+    if (command.checked != null) {
+      return `<${CheckboxMenuItem.TAG_NAME} name="${name}" icon="${command.icon}" checked="${command.checked}"
+        shortcut="${command.shortcut}">${he.encode(command.label)}</${CheckboxMenuItem.TAG_NAME}>`;
+    } else {
+      return `<${MenuItem.TAG_NAME} name="${name}" icon="${command.icon}"
+        shortcut="${command.shortcut}">${he.encode(command.label)}</${MenuItem.TAG_NAME}>`;
+    }
   }
 
   private _executeMenuCommand(id: string): void {

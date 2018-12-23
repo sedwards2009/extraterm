@@ -1004,9 +1004,9 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   getCommands(commandableStack: Commandable[]): BoundCommand[] {
     const defaults = { group: PALETTE_GROUP, commandExecutor: this, contextMenu: true };
     const commandList: BoundCommand[] = [
-      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, iconRight: "fas fa-toolbox", label: "Command Palette", commandPalette: false },
-      { ...defaults, id: COMMAND_TYPE_SELECTION, iconRight: "fa fa-terminal", label: "Type Selection" },
-      { ...defaults, id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "fa fa-terminal", label: "Type Selection & Execute" },
+      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, icon: "fas fa-toolbox", label: "Command Palette", commandPalette: false },
+      { ...defaults, id: COMMAND_TYPE_SELECTION, icon: "fa fa-terminal", label: "Type Selection" },
+      { ...defaults, id: COMMAND_TYPE_AND_CR_SELECTION, icon: "fa fa-terminal", label: "Type Selection & Execute" },
       { ...defaults, id: COMMAND_SELECT_ALL, label: "Select All" },
     ];
     

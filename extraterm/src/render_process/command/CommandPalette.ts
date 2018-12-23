@@ -141,8 +141,8 @@ function commandPaletteFormatEntriesWithGroups(entries: CommandMenuItem[], selec
 
 function commandPaletteFormatEntry(entry: CommandMenuItem, selected: boolean, extraClassString = ""): string {
   return `<div class='${PopDownListPicker.CLASS_RESULT_ENTRY} ${selected ? PopDownListPicker.CLASS_RESULT_SELECTED : ""} ${extraClassString}' ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>
-    <div class='${CLASS_RESULT_ICON_LEFT}'>${commandPaletteFormatIcon(entry.iconLeft)}</div>
-    <div class='${CLASS_RESULT_ICON_RIGHT}'>${commandPaletteFormatIcon(entry.iconRight)}</div>
+    <div class='${CLASS_RESULT_ICON_LEFT}'>${commandPaletteFormatCheckboxIcon(entry.checked)}</div>
+    <div class='${CLASS_RESULT_ICON_RIGHT}'>${commandPaletteFormatIcon(entry.icon)}</div>
     <div class='${CLASS_RESULT_LABEL}'>${he.encode(entry.label)}</div>
     <div class='${CLASS_RESULT_SHORTCUT}'>${entry.shortcut !== undefined && entry.shortcut !== null ? he.encode(entry.shortcut) : ""}</div>
   </div>`;
@@ -157,5 +157,13 @@ function commandPaletteFormatIcon(iconName?: string): string {
     } else {
       return `<i class='fa-fw ${iconName != null ? iconName : ""}'></i>`;
     }
+  }
+}
+
+function commandPaletteFormatCheckboxIcon(checked?: boolean): string {
+  if (checked == null) {
+    return commandPaletteFormatIcon(null);
+  } else {
+    return commandPaletteFormatIcon(checked ? "far fa-check-square" : "far fa-square");
   }
 }

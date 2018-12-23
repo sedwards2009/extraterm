@@ -226,14 +226,20 @@ export interface Command {
    */
   group?: string;
 
-  iconLeft?: string;
-  iconRight?: string;
+  icon?: string;
 
   /**
    * Label for this command. This string is shown in the Command Palette to
    * the user.
    */
   label: string;
+
+  /**
+   * If this is set then a checkbox will be displayed in front of the menu
+   * item. Setting this to true or false controls whether it is
+   * checked/selected.
+   */
+  checked?: boolean;
 
    /**
     * Optional object which will be passed to the command executor when this

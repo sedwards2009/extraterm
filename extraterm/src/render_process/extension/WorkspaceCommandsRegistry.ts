@@ -52,8 +52,8 @@ export class WorkspaceCommandsRegistry {
       commands.push({
         id: commandPrefix + '.' + rawCommand.id,
         group: rawCommand.group,
-        iconLeft: rawCommand.iconLeft,
-        iconRight: rawCommand.iconRight,
+        checked: rawCommand.checked,
+        icon: rawCommand.icon,
         label: rawCommand.label,
         shortcut: '',
         commandExecutor,

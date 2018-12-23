@@ -353,7 +353,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
         sessionCommandList.push({
           id: commandId,
           group: PALETTE_GROUP,
-          iconRight: "fa fa-plus",
+          icon: "fa fa-plus",
           label: "New Terminal: " + sessionConfig.name,
           commandExecutor: null,
           commandArguments: {sessionUuid: sessionConfig.uuid}
@@ -362,8 +362,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
       const commandList: BoundCommand[] = [
         ...sessionCommandList,
-        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", commandExecutor: null },
-        { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "fa fa-columns", label: "Vertical Split", commandExecutor: null },
+        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, icon: "extraicon-#xea08", label: "Horizontal Split", commandExecutor: null },
+        { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, icon: "fa fa-columns", label: "Vertical Split", commandExecutor: null },
         { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor: null }
       ];
       this._insertCommandKeybindings(commandList);
@@ -1080,7 +1080,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       sessionCommandList.push({
         id: commandId,
         group: PALETTE_GROUP,
-        iconRight: "fa fa-plus",
+        icon: "fa fa-plus",
         label: "New Terminal: " + sessionConfig.name,
         commandExecutor,
         commandArguments: {tabElement: tabContentElement, sessionUuid: sessionConfig.uuid}
@@ -1090,15 +1090,15 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const defaults = { group: PALETTE_GROUP, commandExecutor, commandArguments };
     const commandList: BoundCommand[] = [
       ...sessionCommandList,
-      { ...defaults, id: COMMAND_CLOSE_TAB, iconRight: "fa fa-times", label: "Close Tab" },
+      { ...defaults, id: COMMAND_CLOSE_TAB, icon: "fa fa-times", label: "Close Tab" },
       { ...defaults, id: COMMAND_SELECT_TAB_LEFT, label: "Select Previous Tab" },
       { ...defaults, id: COMMAND_SELECT_TAB_RIGHT, label: "Select Next Tab" },
       { ...defaults, id: COMMAND_SELECT_PANE_LEFT, label: " Select pane left" },
       { ...defaults, id: COMMAND_SELECT_PANE_RIGHT, label: " Select pane right" },
       { ...defaults, id: COMMAND_SELECT_PANE_ABOVE, label: " Select pane above" },
       { ...defaults, id: COMMAND_SELECT_PANE_BELOW, label: " Select pane below" },
-      { ...defaults, id: COMMAND_HORIZONTAL_SPLIT, iconRight: "extraicon-#xea08", label: "Horizontal Split", contextMenu:true },
-      { ...defaults, id: COMMAND_VERTICAL_SPLIT, iconRight: "fa fa-columns", label: "Vertical Split", contextMenu:true },
+      { ...defaults, id: COMMAND_HORIZONTAL_SPLIT, icon: "extraicon-#xea08", label: "Horizontal Split", contextMenu:true },
+      { ...defaults, id: COMMAND_VERTICAL_SPLIT, icon: "fa fa-columns", label: "Vertical Split", contextMenu:true },
       { ...defaults, id: COMMAND_MOVE_TAB_LEFT, label: "Move Tab Left" },
       { ...defaults, id: COMMAND_MOVE_TAB_RIGHT, label: "Move Tab Right" },
       { ...defaults, id: COMMAND_MOVE_TAB_UP, label: "Move Tab Up" },

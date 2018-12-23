@@ -32,8 +32,8 @@ function textViewerCommandLister(textViewer: TextViewer): Command[] {
   {
     id: COMMAND_SHOW_LINE_NUMBERS,
     label: "Line Numbers",
-    iconLeft: textViewer.getShowLineNumbers() ? "far fa-check-square" : "far fa-square",
-    iconRight: "fa fa-list-ol",
+    icon: "fa fa-list-ol",
+    checked: textViewer.getShowLineNumbers(),
     contextMenu: true,
   }];
 }
