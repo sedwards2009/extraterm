@@ -1087,30 +1087,27 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       });
     }
 
+    const defaults = { group: PALETTE_GROUP, commandExecutor, commandArguments };
     const commandList: BoundCommand[] = [
       ...sessionCommandList,
-      { id: COMMAND_CLOSE_TAB, group: PALETTE_GROUP, iconRight: "fa fa-times", label: "Close Tab", commandExecutor, commandArguments },
-      { id: COMMAND_SELECT_TAB_LEFT, group: PALETTE_GROUP, label: "Select Previous Tab", commandExecutor, commandArguments },
-      { id: COMMAND_SELECT_TAB_RIGHT, group: PALETTE_GROUP, label: "Select Next Tab", commandExecutor, commandArguments },
-
-      { id: COMMAND_SELECT_PANE_LEFT, group: PALETTE_GROUP, label: " Select pane left", commandExecutor, commandArguments },
-      { id: COMMAND_SELECT_PANE_RIGHT, group: PALETTE_GROUP, label: " Select pane right", commandExecutor, commandArguments },
-      { id: COMMAND_SELECT_PANE_ABOVE, group: PALETTE_GROUP, label: " Select pane above", commandExecutor, commandArguments },
-      { id: COMMAND_SELECT_PANE_BELOW, group: PALETTE_GROUP, label: " Select pane below", commandExecutor, commandArguments },
-
-      { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, iconRight: "extraicon-#xea08", label: "Horizontal Split", commandExecutor, commandArguments },
-      { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, iconRight: "fa fa-columns", label: "Vertical Split", commandExecutor, commandArguments },
-
-      { id: COMMAND_MOVE_TAB_LEFT, group: PALETTE_GROUP, label: "Move Tab Left", commandExecutor, commandArguments },
-      { id: COMMAND_MOVE_TAB_RIGHT, group: PALETTE_GROUP, label: "Move Tab Right", commandExecutor, commandArguments },
-      { id: COMMAND_MOVE_TAB_UP, group: PALETTE_GROUP, label: "Move Tab Up", commandExecutor, commandArguments },
-      { id: COMMAND_MOVE_TAB_DOWN, group: PALETTE_GROUP, label: "Move Tab Down", commandExecutor, commandArguments },
+      { ...defaults, id: COMMAND_CLOSE_TAB, iconRight: "fa fa-times", label: "Close Tab" },
+      { ...defaults, id: COMMAND_SELECT_TAB_LEFT, label: "Select Previous Tab" },
+      { ...defaults, id: COMMAND_SELECT_TAB_RIGHT, label: "Select Next Tab" },
+      { ...defaults, id: COMMAND_SELECT_PANE_LEFT, label: " Select pane left" },
+      { ...defaults, id: COMMAND_SELECT_PANE_RIGHT, label: " Select pane right" },
+      { ...defaults, id: COMMAND_SELECT_PANE_ABOVE, label: " Select pane above" },
+      { ...defaults, id: COMMAND_SELECT_PANE_BELOW, label: " Select pane below" },
+      { ...defaults, id: COMMAND_HORIZONTAL_SPLIT, iconRight: "extraicon-#xea08", label: "Horizontal Split", contextMenu:true },
+      { ...defaults, id: COMMAND_VERTICAL_SPLIT, iconRight: "fa fa-columns", label: "Vertical Split", contextMenu:true },
+      { ...defaults, id: COMMAND_MOVE_TAB_LEFT, label: "Move Tab Left" },
+      { ...defaults, id: COMMAND_MOVE_TAB_RIGHT, label: "Move Tab Right" },
+      { ...defaults, id: COMMAND_MOVE_TAB_UP, label: "Move Tab Up" },
+      { ...defaults, id: COMMAND_MOVE_TAB_DOWN, label: "Move Tab Down" },
     ];
 // FIXME
     if (tabWidget != null && tabWidget.parentElement instanceof Splitter ||
         tabContentElement instanceof EmptyPaneMenu) {
-
-      commandList.push( { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor, commandArguments } );
+      commandList.push( { ...defaults, id: COMMAND_CLOSE_PANE, label: "Close Pane", contextMenu: true } );
     }
 
     this._insertCommandKeybindings(commandList);

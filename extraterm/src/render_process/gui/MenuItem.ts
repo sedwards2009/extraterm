@@ -34,12 +34,7 @@ export class MenuItem extends ThemeableElementBase {
     shadow.appendChild(clone);
     this.installThemeCss();
 
-    let iconhtml = "";
-    const icon = this.getAttribute("icon");
-    if (icon != null && icon !== "") {
-      iconhtml = "<i class='" + icon + "'></i>";
-    }
-    (<HTMLElement>shadow.querySelector("#" + ID_ICON2)).innerHTML = iconhtml;
+    (<HTMLElement>shadow.querySelector("#" + ID_ICON2)).innerHTML = this._formatIcon(this.getAttribute("icon"));
 
     const shortcut = this.getAttribute("shortcut");
     if (shortcut != null && shortcut !== "") {
@@ -47,6 +42,18 @@ export class MenuItem extends ThemeableElementBase {
     }
 
     this.updateKeyboardSelected();
+  }
+
+  protected _formatIcon(iconName?: string): string {
+    if (iconName != null && iconName.startsWith('extraicon-')) {
+      return `<span class='extraicon'>&${iconName.substr('extraicon-'.length)};</span>`;
+    } else {
+      if (iconName == null) {
+        return `<i class='fa-fw fa'>&nbsp;</i>`;
+      } else {
+        return `<i class='fa-fw ${iconName != null ? iconName : ""}'></i>`;
+      }
+    }
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

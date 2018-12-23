@@ -1,5 +1,5 @@
 
-.extraicons {
+.extraicon {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   display: inline-block;
@@ -9,8 +9,11 @@
   line-height: 1;
 
   font-family: "extraicons";
+
+  text-align: center;
+  width: 1.25em;
 }
 
-.extraicons-pocketknife:before {
+.extraicon-pocketknife:before {
   content: "\ea09";
 }

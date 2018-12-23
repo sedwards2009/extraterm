@@ -58,7 +58,7 @@ export class SettingsTab extends ViewerElement implements Commandable, AcceptsCo
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Settings";
-    metadata.icon = "extraicons extraicons-pocketknife";
+    metadata.icon = "extraicon extraicon-pocketknife";
     return metadata;
   }
 

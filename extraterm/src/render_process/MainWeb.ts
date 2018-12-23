@@ -268,7 +268,7 @@ function setUpWindowControls(): void {
 function startUpMainMenu(): void {
   const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
     <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
-        <${MenuItem.TAG_NAME} icon="extraicons extraicons-pocketknife" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="extraicon extraicon-pocketknife" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
         <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
         <${MenuItem.TAG_NAME} icon="far fa-lightbulb" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
@@ -595,17 +595,22 @@ function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor:
 }
 
 function startUpCommandPalette(): void {
-  commandPalette = new CommandPalette(extensionManager, keyBindingManager, {executeCommand, getCommands: getCommandPaletteEntries});
+  commandPalette = new CommandPalette(extensionManager, keyBindingManager,
+                                      { executeCommand, getCommands: getCommandPaletteEntries });
 }
 
 function startUpApplicationContextMenu(): void {
-  applicationContextMenu = new ApplicationContextMenu(extensionManager);
+  applicationContextMenu = new ApplicationContextMenu(extensionManager,
+                                                      { executeCommand, getCommands: getCommandPaletteEntries });
 }
 
 function getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   const devToolsOpen = developerToolMenu.checked;
   const commandExecutor: CommandExecutor = {executeCommand};
+
+
+
   const commandList: BoundCommand[] = [
     { id: MENU_ITEM_SETTINGS, group: PALETTE_GROUP, iconRight: "fa fa-wrench", label: "Settings", commandExecutor },
     { id: MENU_ITEM_DEVELOPER_TOOLS, group: PALETTE_GROUP, iconLeft: devToolsOpen ? "far fa-check-square" : "far fa-square", iconRight: "fa fa-cogs", label: "Developer Tools", commandExecutor },

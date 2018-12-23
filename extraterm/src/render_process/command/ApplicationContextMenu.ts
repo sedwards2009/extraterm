@@ -11,7 +11,7 @@ import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import * as DomUtils from "../DomUtils";
 import { eventToCommandableStack, commandableStackToBoundCommands, CommandType, COMMAND_OPEN_COMMAND_PALETTE } from "./CommandUtils";
-import { BoundCommand } from "./CommandTypes";
+import { BoundCommand, Commandable } from "./CommandTypes";
 import { doLater } from "../../utils/DoLater";
 import { ExtensionManager } from "../extension/InternalTypes";
 import { MenuItem } from "../gui/MenuItem";
@@ -26,7 +26,7 @@ export class ApplicationContextMenu {
   private _contextMenuElement: ContextMenu = null
   private _menuEntries: BoundCommand[] = null;
   
-  constructor(private extensionManager: ExtensionManager) {
+  constructor(private extensionManager: ExtensionManager, private rootCommandable: Commandable) {
     this._log = getLogger("ApplicationContextMenu", this);
     
     const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
@@ -53,7 +53,7 @@ export class ApplicationContextMenu {
   }
 
   handleContextMenuRequest(ev: CustomEvent): void {
-    const requestCommandableStack = eventToCommandableStack(ev);
+    const requestCommandableStack = [...eventToCommandableStack(ev), this.rootCommandable];
 
     doLater( () => {
       const entries = commandableStackToBoundCommands(CommandType.CONTEXT_MENU, requestCommandableStack,

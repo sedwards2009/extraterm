@@ -150,7 +150,7 @@ function commandPaletteFormatEntry(entry: CommandMenuItem, selected: boolean, ex
 
 function commandPaletteFormatIcon(iconName?: string): string {
   if (iconName != null && iconName.startsWith('extraicon-')) {
-    return `<span class='fa-fw CLASS_EXTRAICON'>&${iconName.substr('extraicon-'.length)};</span>`;
+    return `<span class='extraicon'>&${iconName.substr('extraicon-'.length)};</span>`;
   } else {
     if (iconName == null) {
       return `<i class='fa-fw fa'>&nbsp;</i>`;

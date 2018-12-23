@@ -45,6 +45,7 @@ const KEYBINDINGS_CURSOR_MODE = "text-viewer";
 const PALETTE_GROUP = "textviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
+const COMMAND_SELECT_ALL = "selectAll";
 
 
 // Electron on Linux under conditions and configuration which happen on one
@@ -785,6 +786,7 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, iconRight: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
       { ...defaults, id: COMMAND_TYPE_SELECTION, iconRight: "fa fa-terminal", label: "Type Selection" },
       { ...defaults, id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "fa fa-terminal", label: "Type Selection & Execute" },
+      { ...defaults, id: COMMAND_SELECT_ALL, label: "Select All" },
     ];
     
     const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
@@ -830,6 +832,11 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
       case COMMAND_OPEN_CONTEXT_MENU:
         dispatchContextMenuRequest(this, commandArguments.x, commandArguments.y);
         break;
+
+      case COMMAND_SELECT_ALL:
+        this._aceEditor.selectAll();
+        break;
+
 
       default:
         return false;

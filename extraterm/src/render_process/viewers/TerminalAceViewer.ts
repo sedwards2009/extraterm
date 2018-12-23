@@ -53,6 +53,7 @@ const KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE = "terminal-viewer-cursor-mode";
 const PALETTE_GROUP = "terminalviewer";
 const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
 const COMMAND_TYPE_SELECTION = "typeSelection";
+const COMMAND_SELECT_ALL = "selectAll";
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
@@ -1005,7 +1006,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     const commandList: BoundCommand[] = [
       { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, iconRight: "fas fa-toolbox", label: "Command Palette", commandPalette: false },
       { ...defaults, id: COMMAND_TYPE_SELECTION, iconRight: "fa fa-terminal", label: "Type Selection" },
-      { ...defaults, id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "fa fa-terminal", label: "Type Selection & Execute" }
+      { ...defaults, id: COMMAND_TYPE_AND_CR_SELECTION, iconRight: "fa fa-terminal", label: "Type Selection & Execute" },
+      { ...defaults, id: COMMAND_SELECT_ALL, label: "Select All" },
     ];
     
     const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
@@ -1055,6 +1057,10 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
       case COMMAND_OPEN_CONTEXT_MENU:
         dispatchContextMenuRequest(this, commandArguments.x, commandArguments.y);
+        break;
+
+      case COMMAND_SELECT_ALL:
+        this._aceEditor.selectAll();
         break;
 
       default:
