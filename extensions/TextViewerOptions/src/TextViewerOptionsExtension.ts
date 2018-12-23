@@ -21,17 +21,20 @@ const COMMAND_SHOW_LINE_NUMBERS = "showLineNumbers";
 function textViewerCommandLister(textViewer: TextViewer): Command[] {
   return [{
     id: COMMAND_SET_SYNTAX_HIGHLIGHTING,
-    label: "Syntax: " + getMimeTypeName(textViewer)
+    label: "Syntax: " + getMimeTypeName(textViewer),
+    contextMenu: true,
   },
   {
     id: COMMAND_SET_TAB_WIDTH,
-    label: "Tab Size: " + textViewer.getTabSize()
+    label: "Tab Size: " + textViewer.getTabSize(),
+    contextMenu: true,
   },
   {
     id: COMMAND_SHOW_LINE_NUMBERS,
     label: "Line Numbers",
     iconLeft: textViewer.getShowLineNumbers() ? "far fa-check-square" : "far fa-square",
     iconRight: "fa fa-list-ol",
+    contextMenu: true,
   }];
 }
 

@@ -57,7 +57,9 @@ export class WorkspaceCommandsRegistry {
         label: rawCommand.label,
         shortcut: '',
         commandExecutor,
-        commandArguments: rawCommand.commandArguments
+        commandArguments: rawCommand.commandArguments,
+        commandPalette: rawCommand.commandPalette,
+        contextMenu: rawCommand.contextMenu,
       });
     }
     return commands;
