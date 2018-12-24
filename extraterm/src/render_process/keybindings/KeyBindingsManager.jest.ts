@@ -85,7 +85,7 @@ describe.each([
   [{ isComposing: false, altKey: false, ctrlKey: true, metaKey: false, shiftKey: true, key: "C", keyCode: 67 }, "bigbreak"],
   [{ isComposing: false, altKey: true, ctrlKey: true, metaKey: false, shiftKey: false, key: ".", keyCode: 190 }, "moveTabRight"],
 ])("", (input, output: string) => {
-  test.only(`mapEventToCommand() -> ${output}"`, () => {  
+  test(`mapEventToCommand() -> ${output}"`, () => {  
     const cutsContexts = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
     const editorKeybindings = cutsContexts.context("editor");
     expect(editorKeybindings.mapEventToCommand(input)).toBe(output);
