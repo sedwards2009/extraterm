@@ -3,10 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as nodeunit from 'nodeunit';
+import 'jest';
+
 import { freezeDeep } from '../main';
 
-export function testFreezeDeep(test: nodeunit.Test): void {
+test("", () => {
   const testObject = {
     foo: "foo",
     aNumber: 123,
@@ -22,8 +23,8 @@ export function testFreezeDeep(test: nodeunit.Test): void {
 
   freezeDeep(testObject);
 
-  test.ok(Object.isFrozen(testObject));
-  test.ok(Object.isFrozen(testObject.barArray));
-  test.ok(Object.isFrozen(testObject.zyzzObject.nested));
-  test.done();
-}
+  expect(Object.isFrozen(testObject)).toBe(true);
+  expect(Object.isFrozen(testObject.barArray)).toBe(true);
+  expect(Object.isFrozen(testObject.zyzzObject.nested)).toBe(true);
+});
+
