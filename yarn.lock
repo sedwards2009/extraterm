@@ -78,9 +78,19 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@7.0.5", "@types/node@7.0.52", "@types/node@^7.0.4", "@types/node@^8.0.24":
+"@types/node@*", "@types/node@7.0.52", "@types/node@^7.0.4":
   version "7.0.52"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.52.tgz#8990d3350375542b0c21a83cd0331e6a8fc86716"
+
+"@types/node@7.0.5":
+  version "7.0.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.5.tgz#96a0f0a618b7b606f1ec547403c00650210bfbb7"
+  integrity sha1-lqDwphi3tgbx7FR0A8AGUCEL+7c=
+
+"@types/node@^8.0.24":
+  version "8.10.39"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.39.tgz#e7e87ad00364dd7bc485c940926345b8ec1a26ca"
+  integrity sha512-rE7fktr02J8ybFf6eysife+WF+L4sAHWzw09DgdCebEu+qDwMvv4zl6Bc+825ttGZP73kCKxa3dhJOoGJ8+5mA==
 
 "@types/nodeunit@0.0.30":
   version "0.0.30"
@@ -8049,7 +8059,12 @@ typedoc@0.3.12:
     typedoc-default-themes "0.3.4"
     typescript "1.6.2"
 
-typescript@1.6.2, typescript@3.1.6:
+typescript@1.6.2:
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-1.6.2.tgz#5b27254abeb111027cbf9450d3431bc5843191dd"
+  integrity sha1-WyclSr6xEQJ8v5RQ00MbxYQxkd0=
+
+typescript@3.1.6:
   version "3.1.6"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.1.6.tgz#b6543a83cfc8c2befb3f4c8fba6896f5b0c9be68"
 
