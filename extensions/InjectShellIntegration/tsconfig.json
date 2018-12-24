@@ -16,12 +16,10 @@
     },
     "filesGlob": [
         "./src/*.ts",
-        "./src/*.tsx"
+        "./src/test/*.ts"
     ],
-    "files": [
-        "./src/InjectShellIntegrationExtension.ts",
-        "./src/InjectShellIntegrationExtensionTest.ts",
-        "./src/ScriptBuilders.ts"
-    ],
-    "exclude": []
+    "exclude": [
+        "./*.ts",
+        "./test/*.ts"
+    ]
 }
