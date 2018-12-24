@@ -9,7 +9,6 @@
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty,font-manager -f -v 2.0.0",
     "test": "jest",
     "testsplitlayout": "yarn run build && nodeunit src/render_process/SplitLayoutTest.js",
-    "testterm": "tsc && nodeunit src/render_process/emulator/TermTest.js",
     "typedoc": "node build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
     "serve-test": "node src/test/httpserver.js"
   },
