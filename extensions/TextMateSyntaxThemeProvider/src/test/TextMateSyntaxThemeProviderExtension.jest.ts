@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as nodeunit from "nodeunit";
+import "jest";
 import * as path from "path";
 
 import { getLogger } from "extraterm-logging";
@@ -13,33 +13,30 @@ import { TextMateSyntaxThemeProvider } from "../TextMateSyntaxThemeProviderExten
 
 const themePaths = [path.join(__dirname, "..", "..", "src", "test")];
 
-export function testScan(test: nodeunit.Test): void {
+test("scan", () => {
   const logger = getLogger("TextMateSyntaxThemeProvider");
 
   const provider = new TextMateSyntaxThemeProvider(logger);
   const themeList = provider.scanThemes(themePaths);
 
-  test.equal(themeList.length, 1);
-  test.equal(themeList[0].name, "3024 Night");
-  test.done();
-}
+  expect(themeList.length).toBe(1);
+  expect(themeList[0].name).toBe("3024 Night");
+});
 
-export function testRead(test: nodeunit.Test): void {
+test("read", () => {
   const logger = getLogger("TextMateSyntaxThemeProvider");
 
   const provider = new TextMateSyntaxThemeProvider(logger);
   const themeContents = provider.readTheme(themePaths, "3024 Night.tmTheme");
 
-  test.equal(themeContents.foreground, "#a5a2a2");
+  expect(themeContents.foreground).toBe("#a5a2a2");
   const invalidIllegalList = themeContents.syntaxTokenRule.filter(rule => rule.scope === "invalid.illegal");
-  test.equals(invalidIllegalList.length, 1);
-  test.equals(invalidIllegalList[0].textStyle.foregroundColor, "#090300");
-  test.equals(invalidIllegalList[0].textStyle.backgroundColor, "#db2d20");
+  expect(invalidIllegalList.length).toBe(1);
+  expect(invalidIllegalList[0].textStyle.foregroundColor).toBe("#090300");
+  expect(invalidIllegalList[0].textStyle.backgroundColor).toBe("#db2d20");
 
   const markupItalicList = themeContents.syntaxTokenRule.filter(rule => rule.scope === "markup.italic");
-  test.equals(markupItalicList.length, 1);
-  test.equals(markupItalicList[0].textStyle.italic, true);
-  test.notEqual(markupItalicList[0].textStyle.underline, true);
- 
-  test.done();
-}
+  expect(markupItalicList.length).toBe(1);
+  expect(markupItalicList[0].textStyle.italic).toBe(true);
+  expect(markupItalicList[0].textStyle.underline).not.toBe(true);
+});

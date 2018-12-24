@@ -5,23 +5,26 @@
   "main": "dist/TextMateSyntaxThemeProviderExtension.js",
   "scripts": {
     "build": "tsc",
-    "test": "yarn run build && nodeunit dist/test/TextMateSyntaxThemeProviderExtensionTest.js"
+    "test": "yarn run build && jest"
   },
   "dependencies": {
     "extraterm-logging": "1.0.0",
     "plist": "^3.0.1"
   },
   "devDependencies": {
-    "@types/nodeunit": "0.0.30",
+    "@types/jest": "^23.3.10",
     "extraterm-extension-api": "0.1.0",
-    "nodeunit": "0.11.0",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5",
     "typescript": "3.1.6"
   },
   "contributions": {
     "syntaxThemeProvider": [
       {
         "name": "TextMate",
-        "humanFormatNames": ["TextMate Syntax Theme"]
+        "humanFormatNames": [
+          "TextMate Syntax Theme"
+        ]
       }
     ]
   }
