@@ -2,10 +2,10 @@
 *.map
 packages/**/*.js
 !packages/**/webpack*.js
-!jest.config.js
-
 extensions/**/*.js
 extraterm/src/**/*.js
+!jest.config.js
+
 dist/
 
 .vscode/
