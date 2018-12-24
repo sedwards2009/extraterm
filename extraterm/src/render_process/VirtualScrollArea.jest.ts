@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import "jest";
 import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
 import * as VirtualScrollArea from './VirtualScrollArea';
@@ -127,7 +128,7 @@ function SetupScrollbar(vsa: VirtualScrollArea.VirtualScrollArea): SuperScrollba
 //    #    ######  ####    #    ####  
 //-------------------------------------------------------------------------
 
-export function testBasic(test: nodeunit.Test): void {
+test("basic", () => {
   const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
@@ -136,12 +137,11 @@ export function testBasic(test: nodeunit.Test): void {
   
   vsa.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
   
-  test.equal(scrollbar.getPosition(), 0);
-  test.equal(scrollable.getScrollOffset(), 0);
-  test.done();
-}
+  expect(scrollbar.getPosition()).toBe(0);
+  expect(scrollable.getScrollOffset()).toBe(0);
+});
 
-export function testLong(test: nodeunit.Test): void {
+test("long", () => {
   const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
@@ -150,19 +150,17 @@ export function testLong(test: nodeunit.Test): void {
   
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
-  test.equal(scrollbar.getPosition(), 1000);
-  test.equal(scrollbar.getLength(), 1500);
-  test.equal(scrollable.getScrollOffset(), 1000);
+  expect(scrollbar.getPosition()).toBe(1000);
+  expect(scrollbar.getLength()).toBe(1500);
+  expect(scrollable.getScrollOffset()).toBe(1000);
   
   vsa.scrollTo(750);
-  test.equal(scrollbar.getPosition(), 750);
-  test.equal(container.scrollTop, 0);
-  test.equal(scrollable.getScrollOffset(), 750);
+  expect(scrollbar.getPosition()).toBe(750);
+  expect(container.scrollTop).toBe(0);
+  expect(scrollable.getScrollOffset()).toBe(750);
+});
 
-  test.done();
-}
-
-export function test3Scrollables(test: nodeunit.Test): void {
+test("3 Scrollables", () => {
   const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
@@ -173,42 +171,40 @@ export function test3Scrollables(test: nodeunit.Test): void {
   
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
-  test.equal(scrollbar.getPosition(), 4000);
-  test.equal(scrollbar.getLength(), 4500);
-  test.equal(scrollable1.getScrollOffset(), 1000);
+  expect(scrollbar.getPosition()).toBe(4000);
+  expect(scrollbar.getLength()).toBe(4500);
+  expect(scrollable1.getScrollOffset()).toBe(1000);
   
   vsa.scrollTo(750);
-  test.equal(scrollbar.getPosition(), 750);
-  test.equal(container.scrollTop, 0);
-  test.equal(scrollable1.getScrollOffset(), 750);
-  test.equal(scrollable2.getScrollOffset(), 0);
-  test.equal(scrollable3.getScrollOffset(), 0);
+  expect(scrollbar.getPosition()).toBe(750);
+  expect(container.scrollTop).toBe(0);
+  expect(scrollable1.getScrollOffset()).toBe(750);
+  expect(scrollable2.getScrollOffset()).toBe(0);
+  expect(scrollable3.getScrollOffset()).toBe(0);
   
   vsa.scrollTo(1500);
-  test.equal(scrollbar.getPosition(), 1500);
-  test.equal(container.scrollTop, 500);
-  test.equal(scrollable1.getScrollOffset(), 1000);
-  test.equal(scrollable2.getScrollOffset(), 0);
-  test.equal(scrollable3.getScrollOffset(), 0);
+  expect(scrollbar.getPosition()).toBe(1500);
+  expect(container.scrollTop).toBe(500);
+  expect(scrollable1.getScrollOffset()).toBe(1000);
+  expect(scrollable2.getScrollOffset()).toBe(0);
+  expect(scrollable3.getScrollOffset()).toBe(0);
   
   vsa.scrollTo(2500);
-  test.equal(scrollbar.getPosition(), 2500);
-  test.equal(container.scrollTop, 500);
-  test.equal(scrollable1.getScrollOffset(), 1000);
-  test.equal(scrollable2.getScrollOffset(), 1000);
-  test.equal(scrollable3.getScrollOffset(), 0);
+  expect(scrollbar.getPosition()).toBe(2500);
+  expect(container.scrollTop).toBe(500);
+  expect(scrollable1.getScrollOffset()).toBe(1000);
+  expect(scrollable2.getScrollOffset()).toBe(1000);
+  expect(scrollable3.getScrollOffset()).toBe(0);
   
   vsa.scrollTo(3500);
-  test.equal(scrollbar.getPosition(), 3500);
-  test.equal(container.scrollTop, 1000);
-  test.equal(scrollable1.getScrollOffset(), 1000);
-  test.equal(scrollable2.getScrollOffset(), 1000);
-  test.equal(scrollable3.getScrollOffset(), 500);
+  expect(scrollbar.getPosition()).toBe(3500);
+  expect(container.scrollTop).toBe(1000);
+  expect(scrollable1.getScrollOffset()).toBe(1000);
+  expect(scrollable2.getScrollOffset()).toBe(1000);
+  expect(scrollable3.getScrollOffset()).toBe(500);
+});
 
-  test.done();
-}
-
-export function testVirtualHeightUpdate(test: nodeunit.Test): void {
+test("Virtual Height Update", () => {
   const vsa = new VirtualScrollArea.VirtualScrollArea();
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 500);
@@ -217,23 +213,21 @@ export function testVirtualHeightUpdate(test: nodeunit.Test): void {
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   vsa.scrollTo(750);
-  test.equal(scrollbar.getPosition(), 750);
-  test.equal(container.scrollTop, 0);
-  test.equal(scrollable.getScrollOffset(), 750);
+  expect(scrollbar.getPosition()).toBe(750);
+  expect(container.scrollTop).toBe(0);
+  expect(scrollable.getScrollOffset()).toBe(750);
   
   scrollable.setMinHeight(10);
   scrollable.setVirtualHeight(2000);
   scrollable.setReserveViewportHeight(0);
   vsa.updateScrollableSize(scrollable);
   
-  test.equal(scrollbar.getPosition(), 750);
-  test.equal(container.scrollTop, 0);
-  test.equal(scrollable.getScrollOffset(), 750);
-  
-  test.done();
-}
+  expect(scrollbar.getPosition()).toBe(750);
+  expect(container.scrollTop).toBe(0);
+  expect(scrollable.getScrollOffset()).toBe(750);
+});
 
-export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
+test("VirtualHeightUpdateAtBottom", () => {
   const vsa = new VirtualScrollArea.VirtualScrollArea();
   const scrollbar = SetupScrollbar(vsa);
   const container = SetUpScrollContainer(vsa, 500);
@@ -242,23 +236,21 @@ export function testVirtualHeightUpdateAtBottom(test: nodeunit.Test): void {
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
   vsa.scrollTo(1000);
-  test.equal(scrollbar.getPosition(), 1000);
-  test.equal(container.scrollTop, 0);
-  test.equal(scrollable.getScrollOffset(), 1000);
+  expect(scrollbar.getPosition()).toBe(1000);
+  expect(container.scrollTop).toBe(0);
+  expect(scrollable.getScrollOffset()).toBe(1000);
   
   scrollable.setMinHeight(10);
   scrollable.setVirtualHeight(2000);
   scrollable.setReserveViewportHeight(0);
   vsa.updateScrollableSize(scrollable);
   
-  test.equal(scrollbar.getPosition(), 1500);
-  test.equal(container.scrollTop, 0);
-  test.equal(scrollable.getScrollOffset(), 1500);
-  
-  test.done();
-}
+  expect(scrollbar.getPosition()).toBe(1500);
+  expect(container.scrollTop).toBe(0);
+  expect(scrollable.getScrollOffset()).toBe(1500);
+});
 
-export function testShortWithReserve(test: nodeunit.Test): void {
+test("ShortWithReserve", () => {
   const vsa = new VirtualScrollArea.VirtualScrollArea();
   
   const scrollbar = SetupScrollbar(vsa);
@@ -267,12 +259,11 @@ export function testShortWithReserve(test: nodeunit.Test): void {
   
   vsa.updateContainerHeight(container.getBoundingClientRect().height);
   
-  test.equal(scrollbar.getPosition(), 0);
-  test.equal(scrollable.getHeight(), 700);
-  test.equal(scrollable.getScrollOffset(), 0);
-  test.equal(scrollbar.getLength(), 700);
-  test.done();
-}
+  expect(scrollbar.getPosition()).toBe(0);
+  expect(scrollable.getHeight()).toBe(700);
+  expect(scrollable.getScrollOffset()).toBe(0);
+  expect(scrollbar.getLength()).toBe(700);
+});
 
 export function testHeightWithReserve(test: nodeunit.Test): void {
   const vsa = new VirtualScrollArea.VirtualScrollArea();
