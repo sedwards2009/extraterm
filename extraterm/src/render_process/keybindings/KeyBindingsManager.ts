@@ -29,7 +29,6 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
       return null;
     }
 
-
     let key = "";
     if (ev.key.length === 1 && ev.key.charCodeAt(0) <= 31) {
       // Chrome on Windows sends us control codes directly in ev.key.
