@@ -5,6 +5,7 @@
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 # 
 
+if [ -z "`alias | grep from`" ]; then
 if [ -n "$LC_EXTRATERM_COOKIE" ]; then
     echo "Setting up Extraterm support."
 
@@ -47,4 +48,5 @@ if [ -n "$LC_EXTRATERM_COOKIE" ]; then
         alias from="exfrom.py"
         alias show="exshow.py"
     fi
+fi
 fi
