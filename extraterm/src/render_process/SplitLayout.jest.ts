@@ -4,44 +4,26 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-const nodeunit = require('nodeunit');
-const sandbox = nodeunit.utils.sandbox;
+import "jest";
+jest.mock("./gui/Splitter");
+jest.mock("./gui/Tab");
+jest.mock("./gui/TabWidget");
+import { Splitter } from "./gui/Splitter";
+import { Tab } from "./gui/Tab";
+import { TabWidget } from "./gui/TabWidget";
+
+import { SplitLayout } from "./SplitLayout";
 
 const SplitOrientation = {
   VERTICAL: 0,
   HORIZONTAL: 1
 };
 
-const moduleRemap = {
-  "./gui/Splitter": {
-    Splitter: {
-      TAG_NAME: "et-splitter"
-    },
-    SplitOrientation: SplitOrientation
-  },
-
-  "./gui/TabWidget": {
-    TabWidget: {
-      TAG_NAME: "et-tabwidget"
-    }
-  },
-
-  "./gui/Tab": {
-    Tab: {
-      TAG_NAME: "et-tab"
-    }
-  }
-}
-
-function requireWedge(modName) {
-  console.log("Requiring " + modName);
-  if (moduleRemap[modName] != null) {
-    return moduleRemap[modName];
-  }
-  return require(modName);
-}
-
 class FakeChildrenArray {
+
+  _children = [];
+  length = 0;
+
   constructor() {
     this._children = [];
     this.length = 0;
@@ -84,9 +66,12 @@ class FakeChildrenArray {
 }
 
 class FakeElement {
+  name = "";
+  children = new FakeChildrenArray();
+  parent = null;
+
   constructor(name) {
     this.name = name;
-    this.children = new FakeChildrenArray();
     this.parent = null;
   }
 
@@ -115,20 +100,20 @@ class FakeElement {
   }
 
   _toFlatObject() {
-    return { name: this.name, children: this.children._children.map( c => c._toFlatObject() ) };
+    return { orientation: SplitOrientation.HORIZONTAL, name: this.name, children: this.children._children.map( c => c._toFlatObject() ) };
   }
 }
 
 let splitterCounter = 0;
 class FakeSplitter extends FakeElement {
+  _orientation = SplitOrientation.VERTICAL;
+  _dividerSize = 4;
+  _width = 100;
+  _height = 200;
+
   constructor() {
     super("Splitter " + splitterCounter);
     splitterCounter++;
-    this._orientation = SplitOrientation.VERTICAL;
-
-    this._dividerSize = 4;
-    this._width = 100;
-    this._height = 200;
   }
 
   getDividerSize() {
@@ -226,114 +211,107 @@ function flattenSplitLayout(layout) {
   return flatResult;
 }
 
-function setUp(callback) {
+document.createElement = (elName) => {
+  if (elName === "et-splitter") {
+    return <any> new FakeSplitter();
+  } else if (elName === "et-tabwidget") {
+    return <any> new FakeTabWidget();
+  } else if (elName === "et-tab") {
+    return <any> makeFakeTab();
+  } else if (elName === "DIV") {
+    return <any> makeFakeDiv();
+  }
+  console.log("Create element "+elName);
+  return null;
+};
+
+
+function makeFakeElement(): Element {
+  return <Element> <unknown> new FakeElement("Root");
+}
+
+function makeFakeDiv(name: string=""): HTMLDivElement {
+  return <HTMLDivElement> <unknown> new FakeDiv(name);
+}
+
+function makeFakeTab(): Tab {
+  return <Tab> <unknown> new FakeTab();
+}
+
+beforeEach(() => {
   splitterCounter = 0;
   tabWidgetCounter = 0;
   tabCounter = 0;
   divCounter = 0;
-  callback();
-}
-exports.setUp = setUp;
+});
 
-const context = {
-  require: requireWedge,
-  console: console,
-  exports: {},
-  document: {
-    createElement: (elName) => {
-
-      if (elName === "et-splitter") {
-        return new FakeSplitter();
-      } else if (elName === "et-tabwidget") {
-        return new FakeTabWidget();
-      } else if (elName === "et-tab") {
-        return new FakeTab();
-      } else if (elName === "DIV") {
-        return new FakeDiv();
-      }
-      console.log("Create element "+elName);
-      return null;
-    }
-  }
-};
-const SplitLayout = sandbox("./src/render_process/SplitLayout.js", context).exports.SplitLayout;
-
-function testEmpty(test) {
+test("empty", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = <Element> <unknown> new FakeElement("Root");
   splitLayout.setRootContainer(container);
   splitLayout.update();
 
-  test.equal(container.children.length, 1);
-  test.equal(container.children.item(0).children.length, 0);
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).children.length).toBe(0);
+});
 
-  // console.log(JSON.stringify(container,null,2));
-  test.done();
-}
-exports.testEmpty = testEmpty;
-
-function testOneTab(test) {
+test("OneTab", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = <Element> <unknown> new FakeElement("Root");
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return <Element> <unknown> makeFakeDiv();
     });
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = <any> makeFakeTab();
+  const tabContents = <Element> <unknown> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
   splitLayout.update();
 
   // console.log(JSON.stringify(container,null,2));
-  test.equal(container.children.length, 1);
-  test.equal(container.children.item(0).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).children.length).toBe(2);
+});
 
-  test.done();
-}
-exports.testOneTab = testOneTab;
-
-function testTwoTabs(test) {
+test("TwoTabs", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = <Element> <unknown> new FakeElement("Root");
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return <Element> <unknown> makeFakeDiv();
     });
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = <any> makeFakeTab();
+  const tabContents = <Element> <unknown> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = <any> makeFakeTab();
+  const tabContents2 = <Element> <unknown> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
   splitLayout.update();
 
   // console.log(JSON.stringify(container,null,2));
-  test.equal(container.children.length, 1);
-  test.equal(container.children.item(0).children.length, 4);
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).children.length).toBe(4);
+});
 
-  test.done();
-}
-exports.testTwoTabs = testTwoTabs;
 
-function testSplit(test) {
+test("split", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = <Element> <unknown> new FakeElement("Root");
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return <Element> <unknown> makeFakeDiv();
     });
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = <any> makeFakeTab();
+  const tabContents = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = <any> makeFakeTab();
+  const tabContents2 = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
   splitLayout.update();
@@ -344,30 +322,27 @@ function testSplit(test) {
 
 // console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
 // console.log(JSON.stringify(container,null,2));
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect((<any> container.children.item(0)).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+});
 
-  test.done();
-}
-exports.testSplit = testSplit;
-
-function testCloseSplit(test) {
+test("Close Split", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = <Element> <unknown> new FakeElement("Root");
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return <Element> <unknown> makeFakeDiv();
     });
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = <any> makeFakeTab();
+  const tabContents = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = <any> makeFakeTab();
+  const tabContents2 = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
   splitLayout.update();
@@ -378,31 +353,29 @@ function testCloseSplit(test) {
   splitLayout.update();
 
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
-  test.equal(container.children.length, 1);
-  test.equal(container.children.item(0).children.length, 4);
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).children.length).toBe(4);
+});
 
-  test.done();
-}
-exports.testCloseSplit = testCloseSplit;
 
-function testSplit2(test) {
+test("Split2", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = <any> new FakeElement("Root");
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return <any> makeFakeDiv();
     });
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = <any> makeFakeTab();
+  const tabContents = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = <any> makeFakeTab();
+  const tabContents2 = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
-  const tab3 = new FakeTab();
-  const tabContents3 = new FakeDiv();
+  const tab3 = <any> makeFakeTab();
+  const tabContents3 = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
 
   splitLayout.update();
@@ -416,31 +389,28 @@ function testSplit2(test) {
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 // console.log(JSON.stringify(splitLayout._rootInfoNode, null, 2));
 
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 3);
-  test.equal(container.children.item(0).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
-  test.equal(container.children.item(0).children.item(2).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(3);
+  expect(container.children.item(0).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+  expect(container.children.item(0).children.item(2).children.length).toBe(2);
+});
 
-  test.done();
-}
-exports.testSplit2 = testSplit2;
-
-function testSplitRemoveContent(test) {
+test("Split Remove Content", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = <any> new FakeElement("Root");
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return <any> makeFakeDiv();
     });
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = <any> makeFakeTab();
+  const tabContents = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = <any> makeFakeTab();
+  const tabContents2 = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
   splitLayout.update();
@@ -455,69 +425,62 @@ function testSplitRemoveContent(test) {
 // console.log(JSON.stringify(splitLayout._rootInfoNode, null, 2));
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 0);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(0);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+});
 
-  test.done();
-}
-exports.testSplitRemoveContent = testSplitRemoveContent;
-
-
-function testOneTabWithRestContent(test) {
+test("One Tab With Rest Content", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = <any> new FakeElement("Root");
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return <any> makeFakeDiv();
     });
 
   splitLayout.setRightSpaceDefaultElementFactory( () => {
-    const div = new FakeDiv();
+    const div = <any> makeFakeDiv();
     div.name = "space";
     return div;
   } );
 
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = <any> makeFakeTab();
+  const tabContents = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
   splitLayout.update();
 
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
   // console.log(JSON.stringify(container,null,2));
-  test.equal(container.children.length, 1);
-  test.equal(container.children.item(0).children.length, 3);
-  test.equal(container.children.item(0).children.item(2).name, "space");
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).children.length).toBe(3);
+  expect(container.children.item(0).children.item(2).name).toBe("space");
+});
 
-  test.done();
-}
-exports.testOneTabWithRestContent = testOneTabWithRestContent;
-
-function testSplitWithRestContent(test) {
+test("Split With Rest Content", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = <any> new FakeElement("Root");
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return <any> makeFakeDiv();
     });
 
   splitLayout.setRightSpaceDefaultElementFactory( () => {
-    const div = new FakeDiv();
+    const div = <any> makeFakeDiv();
     div.name = "space";
     return div;
   } );
 
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = <any> makeFakeTab();
+  const tabContents = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = <any> makeFakeTab();
+  const tabContents2 = <any> makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
   splitLayout.update();
@@ -528,37 +491,34 @@ function testSplitWithRestContent(test) {
 
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 // console.log(JSON.stringify(container,null,2));
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 3);
-  test.equal(container.children.item(0).children.item(1).children.length, 3);
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(3);
+  expect(container.children.item(0).children.item(1).children.length).toBe(3);
+});
 
-  test.done();
-}
-exports.testSplitWithRestContent = testSplitWithRestContent;
-
-function testSplitRemoveContentWithSpace(test) {
+test("Split Remove Content With Space" ,() => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
   splitLayout.setRightSpaceDefaultElementFactory( () => {
-    const div = new FakeDiv();
-    div.name = "space";
+    const div = makeFakeDiv();
+    (<any> div).name = "space";
     return div;
   } );
 
 
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = makeFakeTab();
+  const tabContents = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = makeFakeTab();
+  const tabContents2 = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
   splitLayout.update();
@@ -572,100 +532,91 @@ function testSplitRemoveContentWithSpace(test) {
 
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 1);
-  test.equal(container.children.item(0).children.item(1).children.length, 3);
-
-  test.done();
-}
-exports.testSplitRemoveContentWithSpace = testSplitRemoveContentWithSpace;
+  expect(container.children.length).toBe(1);
+  expect((<any> container.children.item(0)).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(1);
+  expect(container.children.item(0).children.item(1).children.length).toBe(3);
+});
 
 
-function testOneTabWithTopRight(test) {
+test("One Tab With Top Right", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
 
-  const topRight = new FakeDiv();
-  topRight.name = "top right";
+  const topRight = makeFakeDiv();
+  (<any> topRight).name = "top right";
   splitLayout.setTopRightElement(topRight);
 
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = makeFakeTab();
+  const tabContents = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
   splitLayout.update();
 
-  test.equal(container.children.length, 1);
-  test.equal(container.children.item(0).children.length, 3);
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).children.length).toBe(3);
+});
 
-  test.done();
-}
-exports.testOneTabWithTopRight = testOneTabWithTopRight;
-
-function testOneTabWithTopRightAndSpace(test) {
+test("One Tab With Top Right And Space", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
   splitLayout.setRightSpaceDefaultElementFactory( () => {
-    const div = new FakeDiv();
-    div.name = "space";
+    const div = makeFakeDiv();
+    (<any> div).name = "space";
     return div;
   } );
 
-  const topRight = new FakeDiv();
-  topRight.name = "top right";
+  const topRight = makeFakeDiv();
+  (<any> topRight).name = "top right";
   splitLayout.setTopRightElement(topRight);
 
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = makeFakeTab();
+  const tabContents = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
   splitLayout.update();
 
-  test.equal(container.children.length, 1);
-  test.equal(container.children.item(0).children.length, 3);
-  test.equal(container.children.item(0).children.item(2).name, "top right");
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).children.length).toBe(3);
+  expect((<any> container.children.item(0).children.item(2)).name).toBe("top right");
+});
 
-  test.done();
-}
-exports.testOneTabWithTopRightAndSpace = testOneTabWithTopRightAndSpace;
-
-function testTwoTabSplitWithTopRightAndSpace(test) {
+test("Two Tab Split With Top Right And Space", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
   splitLayout.setRightSpaceDefaultElementFactory( () => {
-    const div = new FakeDiv();
-    div.name = "space";
+    const div = makeFakeDiv();
+    (<any> div).name = "space";
     return div;
   } );
 
-  const topRight = new FakeDiv();
-  topRight.name = "top right";
+  const topRight = makeFakeDiv();
+  (<any> topRight).name = "top right";
   splitLayout.setTopRightElement(topRight);
 
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = makeFakeTab();
+  const tabContents = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
   splitLayout.update();
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = makeFakeTab();
+  const tabContents2 = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
   splitLayout.update();
 
@@ -673,55 +624,50 @@ function testTwoTabSplitWithTopRightAndSpace(test) {
   splitLayout.update();
 
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
-  test.equal(container.children.length, 1);
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.item(2).name, "top right");
-  test.equal(container.children.item(0).children.item(0).children.length, 3);
-  test.equal(container.children.item(0).children.item(0).children.item(2).name, "space");
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect((<any> container.children.item(0).children.item(1).children.item(2)).name).toBe("top right");
+  expect(container.children.item(0).children.item(0).children.length).toBe(3);
+  expect((<any> container.children.item(0).children.item(0).children.item(2)).name).toBe("space");
+});
 
-  test.done();
-}
-exports.testTwoTabSplitWithTopRightAndSpace = testTwoTabSplitWithTopRightAndSpace;
-
-function testEmptyWithFallback(test) {
+test("Empty With Fallback", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setEmptySplitElementFactory( () => {
-    const div = new FakeDiv();
-    div.name = "fallback";
+    const div = makeFakeDiv();
+    (<any> div).name = "fallback";
     return div;
   });
   splitLayout.update();
 
-  test.equal(container.children.length, 1);
-  test.equal(container.children.item(0).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect(container.children.item(0).children.length).toBe(2);
 
   // console.log(JSON.stringify(container,null,2));
-  test.done();
-}
-exports.testEmptyWithFallback = testEmptyWithFallback;
+});
 
-function testSplit2WithFallback(test) {
+test("Split 2 With Fallback", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
   splitLayout.setEmptySplitElementFactory( () => {
-    const div = new FakeDiv();
-    div.name = "fallback";
+    const div = makeFakeDiv();
+    (<any>div).name = "fallback";
     return div;
   });
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = makeFakeTab();
+  const tabContents = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
   splitLayout.update();
 
-  const { tabWidget } = splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
+  const tabWidget = splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
   splitLayout.update();
  
   splitLayout.splitAfterTabWidget(tabWidget, SplitOrientation.VERTICAL);
@@ -730,31 +676,28 @@ function testSplit2WithFallback(test) {
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 // console.log(JSON.stringify(splitLayout._rootInfoNode, null, 2));
 
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.item(1).children.item(0).name, "fallback");
+  expect(container.children.length).toBe(1);
+  expect((<any> container.children.item(0)).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(3);
+  expect(container.children.item(0).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+  expect((<any>container.children.item(0).children.item(1).children.item(1).children.item(0)).name).toBe("fallback");
+});
 
-  test.done();
-}
-exports.testSplit2WithFallback = testSplit2WithFallback;
-
-function testHorizontalSplit(test) {
+test("Horizontal Split", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = makeFakeTab();
+  const tabContents = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = makeFakeTab();
+  const tabContents2 = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
   splitLayout.update();
@@ -766,35 +709,32 @@ function testHorizontalSplit(test) {
 // console.log(JSON.stringify(splitLayout._rootInfoNode, null, 2));
 
 // console.log(JSON.stringify(container,null,2));
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equals(container.children.item(0)._orientation, SplitOrientation.HORIZONTAL);
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect((<any>container.children.item(0)).name.startsWith("Splitter")).toBe(true);
+  expect((<any>container.children.item(0))._orientation).toBe(SplitOrientation.HORIZONTAL);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+});
 
-  test.done();
-}
-exports.testHorizontalSplit = testHorizontalSplit;
-
-function testMixSplit(test) {
+test("Mix Split", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv();
+  const tab = makeFakeTab();
+  const tabContents = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv();
+  const tab2 = makeFakeTab();
+  const tabContents2 = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
-  const tab3 = new FakeTab();
-  const tabContents3 = new FakeDiv();
+  const tab3 = makeFakeTab();
+  const tabContents3 = makeFakeDiv();
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
 
   splitLayout.update();
@@ -808,42 +748,39 @@ function testMixSplit(test) {
 // console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.item(1).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect((<any> container.children.item(0)).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.item(1).children.length).toBe(2);
+});
 
-  test.done();
-}
-exports.testMixSplit = testMixSplit;
-
-function testMixSplit2(test) {
+test("Mix Split 2", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
 
-  const tab1_1 = new FakeTab();
-  const tabContents1_1 = new FakeDiv("tabContents1_1");
+  const tab1_1 = makeFakeTab();
+  const tabContents1_1 = makeFakeDiv("tabContents1_1");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab1_1, tabContents1_1);
 
-  const tab = new FakeTab();
-  const tabContents = new FakeDiv("tabContents");
+  const tab = makeFakeTab();
+  const tabContents = makeFakeDiv("tabContents");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab, tabContents);
 
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv("tabContents2");
+  const tab2 = makeFakeTab();
+  const tabContents2 = makeFakeDiv("tabContents2");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
-  const tab3 = new FakeTab();
-  const tabContents3 = new FakeDiv("tabContents3");
+  const tab3 = makeFakeTab();
+  const tabContents3 = makeFakeDiv("tabContents3");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
 
   splitLayout.update();
@@ -860,42 +797,39 @@ function testMixSplit2(test) {
 // console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.item(1).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect((<any> container.children.item(0)).name.startsWith("Splitter"), ).toBe(true);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.item(1).children.length).toBe(2);
+});
 
-  test.done();
-}
-exports.testMixSplit2 = testMixSplit2;
-
-function testCloseMixSplit(test) {
+test("Close Mix Split", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
 
-  const tab1 = new FakeTab();
-  const tabContents1 = new FakeDiv("tabContents1");
+  const tab1 = makeFakeTab();
+  const tabContents1 = makeFakeDiv("tabContents1");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab1, tabContents1);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv("tabContents2");
+  const tab2 = makeFakeTab();
+  const tabContents2 = makeFakeDiv("tabContents2");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
 
-  const tab3 = new FakeTab();
-  const tabContents3 = new FakeDiv("tabContents3");
+  const tab3 = makeFakeTab();
+  const tabContents3 = makeFakeDiv("tabContents3");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
 
-  const tab4 = new FakeTab();
-  const tabContents4 = new FakeDiv("tabContents4");
+  const tab4 = makeFakeTab();
+  const tabContents4 = makeFakeDiv("tabContents4");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab4, tabContents4);
 
   splitLayout.update();
@@ -915,29 +849,26 @@ function testCloseMixSplit(test) {
 // console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 4);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.item(1).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect((<any> container.children.item(0)).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(4);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.item(1).children.length).toBe(2);
+});
 
-  test.done();
-}
-exports.testCloseMixSplit = testCloseMixSplit;
-
-function testNestedSplits(test) {
+test("Nested Splits", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
 
-  const tab1 = new FakeTab();
-  const tabContents1 = new FakeDiv("tabContents1");
+  const tab1 = makeFakeTab();
+  const tabContents1 = makeFakeDiv("tabContents1");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab1, tabContents1);
 
   const newTabWidget = splitLayout.splitAfterTabContent(tabContents1, SplitOrientation.HORIZONTAL);
@@ -949,40 +880,36 @@ function testNestedSplits(test) {
 // console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
+  expect(container.children.length).toBe(1);
+  expect((<any> container.children.item(0)).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+});
 
-  test.done();
-}
-exports.testCloseMixSplitestNestedSplits = testNestedSplits;
-
-
-function testNavigation(test) {
+test("Navigation", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
 
-  const tab1 = new FakeTab();
-  const tabContents1 = new FakeDiv("tabContents1");
+  const tab1 = makeFakeTab();
+  const tabContents1 = makeFakeDiv("tabContents1");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab1, tabContents1);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv("tabContents2");
+  const tab2 = makeFakeTab();
+  const tabContents2 = makeFakeDiv("tabContents2");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
-  const tab3 = new FakeTab();
-  const tabContents3 = new FakeDiv("tabContents3");
+  const tab3 = makeFakeTab();
+  const tabContents3 = makeFakeDiv("tabContents3");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
 
-  const tab4 = new FakeTab();
-  const tabContents4 = new FakeDiv("tabContents4");
+  const tab4 = makeFakeTab();
+  const tabContents4 = makeFakeDiv("tabContents4");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab4, tabContents4);
 
   splitLayout.splitAfterTabContent(tabContents2, SplitOrientation.VERTICAL);
@@ -998,35 +925,32 @@ function testNavigation(test) {
 // console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
-  test.equal(splitLayout.getTabWidgetBelow(tabWidget1).name, tabWidget2.name);
-  test.equal(splitLayout.getTabWidgetAbove(tabWidget2).name, tabWidget1.name);
-  test.equal(splitLayout.getTabWidgetBelow(tabWidget3).name, tabWidget4.name);
-  test.equal(splitLayout.getTabWidgetAbove(tabWidget4).name, tabWidget3.name);
+  expect((<any> splitLayout.getTabWidgetBelow(tabWidget1)).name).toBe((<any> tabWidget2).name);
+  expect((<any> splitLayout.getTabWidgetAbove(tabWidget2)).name).toBe((<any> tabWidget1).name);
+  expect((<any> splitLayout.getTabWidgetBelow(tabWidget3)).name).toBe((<any> tabWidget4).name);
+  expect((<any> splitLayout.getTabWidgetAbove(tabWidget4)).name).toBe((<any> tabWidget3).name);
+});
 
-  test.done();
-}
-exports.testNavigation = testNavigation;
-
-function testClose3MixSplit(test) {
+test("Close 3 Mix Split", () => {
   const splitLayout = new SplitLayout();
-  const container = new FakeElement("Root");
+  const container = makeFakeElement();
   splitLayout.setRootContainer(container);
   splitLayout.setTabContainerFactory(
     (tabWidget, tab, tabContent) => {
-      return new FakeDiv();
+      return makeFakeDiv();
     });
 
-  const tab1 = new FakeTab();
-  const tabContents1 = new FakeDiv("tabContents1");
+  const tab1 = makeFakeTab();
+  const tabContents1 = makeFakeDiv("tabContents1");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab1, tabContents1);
 
-  const tab2 = new FakeTab();
-  const tabContents2 = new FakeDiv("tabContents2");
+  const tab2 = makeFakeTab();
+  const tabContents2 = makeFakeDiv("tabContents2");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab2, tabContents2);
 
 
-  const tab3 = new FakeTab();
-  const tabContents3 = new FakeDiv("tabContents3");
+  const tab3 = makeFakeTab();
+  const tabContents3 = makeFakeDiv("tabContents3");
   splitLayout.appendTab(splitLayout.firstTabWidget(), tab3, tabContents3);
 
   splitLayout.update();
@@ -1043,12 +967,9 @@ function testClose3MixSplit(test) {
 // console.log(JSON.stringify(flattenSplitLayout(splitLayout._rootInfoNode), null, 2));
 // console.log(JSON.stringify(container._toFlatObject(), null, 2));
 
-  test.equal(container.children.length, 1);
-  test.ok(container.children.item(0).name.startsWith("Splitter"));
-  test.equal(container.children.item(0).children.length, 2);
-  test.equal(container.children.item(0).children.item(0).children.length, 4);
-  test.equal(container.children.item(0).children.item(1).children.length, 2);
-
-  test.done();
-}
-exports.testClose3MixSplit = testClose3MixSplit;
+  expect(container.children.length).toBe(1);
+  expect((<any> container.children.item(0)).name.startsWith("Splitter")).toBe(true);
+  expect(container.children.item(0).children.length).toBe(2);
+  expect(container.children.item(0).children.item(0).children.length).toBe(4);
+  expect(container.children.item(0).children.item(1).children.length).toBe(2);
+});
