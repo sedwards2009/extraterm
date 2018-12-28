@@ -38,6 +38,7 @@ import {PtyIpcBridge} from './PtyIpcBridge';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
 import { ConfigDatabase, SESSION_CONFIG } from '../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { NewTerminalContextArea, EVENT_NEW_SESSION_REQUEST } from './NewTerminalContextArea';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -52,6 +53,7 @@ const ID_TOP_RESIZE_BAR = "ID_TOP_RESIZE_BAR";
 const ID_MINIMIZE_BUTTON = "ID_MINIMIZE_BUTTON";
 const ID_MAXIMIZE_BUTTON = "ID_MAXIMIZE_BUTTON";
 const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
+const ID_NEW_TERMINAL_CONTEXT_AREA = "ID_NEW_TERMINAL_CONTEXT_AREA";
 
 const ID_REST_SLOT = "ID_REST_SLOT";
 const ID_REST_DIV_LEFT = "ID_REST_DIV_LEFT";
@@ -194,6 +196,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     mainContainer.addEventListener(EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
     mainContainer.addEventListener(EVENT_DRAG_ENDED, this._handleDragEndedEvent.bind(this));
     mainContainer.addEventListener('click', this._handleMainContainerClickEvent.bind(this));
+    mainContainer.addEventListener(EVENT_NEW_SESSION_REQUEST, (ev: CustomEvent) => this._handleNewSessionRequest(ev));
   }
 
   private _handleTabWidgetDroppedEvent(ev: CustomEvent): void {
@@ -337,6 +340,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.setRightSpaceDefaultElementFactory( (): Element => {
       const tempDiv = document.createElement("DIV");
       tempDiv.innerHTML = this._newTabRestAreaHtml();
+      (<NewTerminalContextArea> tempDiv.querySelector("#" + ID_NEW_TERMINAL_CONTEXT_AREA)).setConfigDatabase(this._configManager);
       return tempDiv.children.item(0);
     });
     this._splitLayout.setTopLeftElement(this._leftControls());
@@ -408,6 +412,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _menuControls(): Element {
     const tempDiv = document.createElement("DIV");
     tempDiv.innerHTML = this._newTabRestAreaHtml(`<slot id="${ID_REST_SLOT}"></slot>`);
+    (<NewTerminalContextArea> tempDiv.querySelector("#" + ID_NEW_TERMINAL_CONTEXT_AREA)).setConfigDatabase(this._configManager);
     return tempDiv.children.item(0);
   }
 
@@ -464,8 +469,12 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _newTabRestAreaHtml(extraContents = ""): string {
     return trimBetweenTags(`
       <div class="${CLASS_NEW_BUTTON_CONTAINER}">
-        <button class="microtool primary ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>
-      <div class="${CLASS_SPACE}"></div>${extraContents}</div>
+        <${NewTerminalContextArea.TAG_NAME} id="${ID_NEW_TERMINAL_CONTEXT_AREA}">
+          <button class="microtool primary ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>
+        </${NewTerminalContextArea.TAG_NAME}>
+        <div class="${CLASS_SPACE}"></div>
+        ${extraContents}
+      </div>
       `);
   }
 
@@ -1059,9 +1068,13 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   //-----------------------------------------------------------------------
 
   getCommands(commandableStack: Commandable[]): BoundCommand[] {
-    
     const thisIndex = commandableStack.indexOf(this);
     const tabContentElement = commandableStack[thisIndex-1];
+
+    if (tabContentElement instanceof NewTerminalContextArea) {
+      return [];
+    }
+
     if (tabContentElement instanceof Element) {
       return this._commandPaletteEntriesWithTarget(tabContentElement, this._tabWidgetFromElement(tabContentElement));
     } else {
@@ -1219,8 +1232,15 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._ptyIpcBridge = new PtyIpcBridge();
   }
   
-  private _getById(id: string): HTMLElement {
-    return <HTMLElement>DomUtils.getShadowRoot(this).querySelector('#'+id);
+  private _handleNewSessionRequest(ev: CustomEvent): void {
+    for (const el of ev.path) {
+      if (el instanceof TabWidget) {
+        const elements = this._splitLayout.getTabContentsByTabWidget(el);
+        const tabElement = elements[el.getSelectedIndex()];
+        const options = { tabElement, sessionUuid: ev.detail.sessionUuid };
+        this.executeCommand(COMMAND_NEW_TERMINAL, options);
+      }
+    }
   }
 }
 

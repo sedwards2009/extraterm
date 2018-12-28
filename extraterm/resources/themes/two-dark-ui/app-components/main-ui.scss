@@ -84,11 +84,13 @@
     flex-grow: 0;
   }
 
-  & > .CLASS_NEW_TAB_BUTTON {
+  &  > #ID_NEW_TERMINAL_CONTEXT_AREA {
     align-self: center;
 
-    &:focus, &:active {
-      box-shadow: none;
+    & > .CLASS_NEW_TAB_BUTTON {
+      &:focus, &:active {
+        box-shadow: none;
+      }
     }
   }
 }
