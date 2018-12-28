@@ -11,7 +11,7 @@ export const ID_CONTAINER = "ID_CONTAINER";
 /**
  * A simple base class for elements. It setups up an empty Shadow DOM.
  */
-export class SimpleElementBase extends TemplatedElementBase {
+export class ThemedContainerElementBase extends TemplatedElementBase {
 
   constructor() {
     super({ delegatesFocus: false });

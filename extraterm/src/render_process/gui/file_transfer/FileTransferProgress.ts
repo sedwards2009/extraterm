@@ -10,11 +10,11 @@ import {WebComponent, Attribute, Observe} from 'extraterm-web-component-decorato
 import {DebouncedDoLater} from '../../../utils/DoLater';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import {SimpleElementBase} from '../SimpleElementBase';
 import * as ThemeTypes from '../../../theme/Theme';
 import { SpeedTracker } from './SpeedTracker';
 import { formatHumanBytes, formatHumanDuration } from '../../../utils/TextUtils';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { ThemedContainerElementBase } from '../ThemedContainerElementBase';
 
 type ActionType = "download" | "upload";
 
@@ -108,7 +108,7 @@ at ${formatHumanBytes(this.speedBytesPerSecond)}/s`;
 }
 
 @WebComponent({tag: "et-file-transfer-progress"})
-export class FileTransferProgress extends SimpleElementBase implements Disposable {
+export class FileTransferProgress extends ThemedContainerElementBase implements Disposable {
 
   static TAG_NAME = "et-file-transfer-progress";
 
