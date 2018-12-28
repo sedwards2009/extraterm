@@ -5,14 +5,12 @@
  */
 import { WebComponent } from 'extraterm-web-component-decorators';
 
-import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as DomUtils from '../DomUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-
-const ID = "EtSplitterTemplate";
+import { TemplatedElementBase } from './TemplatedElementBase';
 
 const ID_TOP = "ID_TOP";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -40,7 +38,7 @@ export enum SplitOrientation {
  *
  */
 @WebComponent({tag: "et-splitter"})
-export class Splitter extends ThemeableElementBase {
+export class Splitter extends TemplatedElementBase {
   
   static TAG_NAME = "ET-SPLITTER";
   
@@ -52,25 +50,21 @@ export class Splitter extends ThemeableElementBase {
   private _dividerDragOffset: number = 0;
 
   constructor() {
-    super();
+    super({ delegatesFocus: false });
 
     this._log = getLogger(Splitter.TAG_NAME, this);
     this._paneSizes = new PaneSizes();
 
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
+    const topDiv = this._elementById(ID_TOP);
     topDiv.classList.add(CLASS_NORMAL);
     topDiv.addEventListener('mousedown', this._handleMouseDown.bind(this));
     topDiv.addEventListener('mouseup', this._handleMouseUp.bind(this));
     topDiv.addEventListener('mousemove', this._handleMouseMove.bind(this));
 
-    const coverDiv = DomUtils.getShadowId(this, ID_COVER);
+    const coverDiv = this._elementById(ID_COVER);
     coverDiv.addEventListener('mouseleave', this._handleMouseLeave.bind(this));
 
-    const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
+    const indicatorDiv = this._elementById(ID_INDICATOR);
     indicatorDiv.style.width = "" + DIVIDER_SIZE + "px";
 
     const rect = topDiv.getBoundingClientRect();
@@ -96,14 +90,14 @@ export class Splitter extends ThemeableElementBase {
   setSplitOrientation(orientation: SplitOrientation): void {
     if (this._orientation !== orientation) {
       this._orientation = orientation;
-      const topDiv = DomUtils.getShadowId(this, ID_TOP);
+      const topDiv = this._elementById(ID_TOP);
       const rect = topDiv.getBoundingClientRect();
 
       const rectSize = this._orientation === SplitOrientation.VERTICAL ? rect.width : rect.height;
       const size = rectSize === 0 ? 1024 : rectSize;
       this._paneSizes = PaneSizes.equalPaneSizes(size, DomUtils.toArray(this.children));
 
-      const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
+      const indicatorDiv = this._elementById(ID_INDICATOR);
       if (this._orientation === SplitOrientation.HORIZONTAL) {
         indicatorDiv.style.width = null;
         indicatorDiv.style.height = "" + DIVIDER_SIZE + "px";
@@ -142,7 +136,7 @@ export class Splitter extends ThemeableElementBase {
         this._createLayout(this._paneSizes);
       }
 
-      const topDiv = DomUtils.getShadowId(this, ID_TOP);
+      const topDiv = this._elementById(ID_TOP);
       const rect = topDiv.getBoundingClientRect();
       const size = this._orientation === SplitOrientation.VERTICAL ? rect.width : rect.height;
       if (size !== 0) {
@@ -155,20 +149,11 @@ export class Splitter extends ThemeableElementBase {
     }
   }
 
-  private createClone() {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
-<div id='${ID_TOP}'>
-<div id='${ID_CONTAINER}'></div>
-<div id='${ID_COVER}'><div id='${ID_INDICATOR}'></div></div>
-</div>`;
-      window.document.body.appendChild(template);
-    }
-    
-    return window.document.importNode(template.content, true);
+  protected _html(): string {
+    return `<div id='${ID_TOP}'>
+      <div id='${ID_CONTAINER}'></div>
+      <div id='${ID_COVER}'><div id='${ID_INDICATOR}'></div></div>
+    </div>`;
   }
 
   //-----------------------------------------------------------------------
@@ -194,7 +179,7 @@ export class Splitter extends ThemeableElementBase {
     ev.stopPropagation();
 
     // Figure out which divider was hit.
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = this._elementById(ID_CONTAINER);
     let dividerIndex = -1;
     for (let i=0; i<containerDiv.children.length; i++) {
       if (containerDiv.children.item(i) === target) {
@@ -214,11 +199,11 @@ export class Splitter extends ThemeableElementBase {
       this._dividerDragOffset = ev.offsetY;
     }
 
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
+    const topDiv = this._elementById(ID_TOP);
     topDiv.classList.add(CLASS_DRAG);
     topDiv.classList.remove(CLASS_NORMAL);
 
-    const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
+    const indicatorDiv = this._elementById(ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
 
     if (this._orientation === SplitOrientation.VERTICAL) {
@@ -239,8 +224,8 @@ export class Splitter extends ThemeableElementBase {
     ev.stopPropagation();
 
     // Now actually move the divider.
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
-    const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
+    const topDiv = this._elementById(ID_TOP);
+    const indicatorDiv = this._elementById(ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
 
     let newIndicatorPosition = 0;
@@ -260,7 +245,7 @@ export class Splitter extends ThemeableElementBase {
   }
 
   private _stopDrag(): void {
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
+    const topDiv = this._elementById(ID_TOP);
     if (this._dividerDrag === NOT_DRAGGING) {
       return;
     }
@@ -280,8 +265,8 @@ export class Splitter extends ThemeableElementBase {
       return;
     }
 
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
-    const indicatorDiv = DomUtils.getShadowId(this, ID_INDICATOR);
+    const topDiv = this._elementById(ID_TOP);
+    const indicatorDiv = this._elementById(ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
 
     let newIndicatorPosition = 0;
@@ -323,7 +308,7 @@ export class Splitter extends ThemeableElementBase {
   //-----------------------------------------------------------------------
                                           
   private _createLayout(paneSizes: PaneSizes): void {
-    const topDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    const topDiv = this._elementById(ID_CONTAINER);
 
     topDiv.innerHTML = "";
 
@@ -350,7 +335,7 @@ export class Splitter extends ThemeableElementBase {
   }
 
   private _setSizes(paneSizes: PaneSizes, orientation: SplitOrientation): void {
-    const topDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    const topDiv = this._elementById(ID_CONTAINER);
 
     let position = 0;
     for (let i=0; i<paneSizes.length(); i++) {

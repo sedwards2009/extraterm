@@ -1,15 +1,13 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
-import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
-import * as DomUtils from '../DomUtils';
+import { TemplatedElementBase } from './TemplatedElementBase';
 
-const ID = "EtStackedWidgetTemplate";
 const ID_CONTAINER = 'ID_CONTAINER';
 
 
@@ -17,47 +15,32 @@ const ID_CONTAINER = 'ID_CONTAINER';
  * A widget which displays one of its DIV contents at a time.
  */
 @WebComponent({tag: "et-stackedwidget"})
-export class StackedWidget extends ThemeableElementBase {
+export class StackedWidget extends TemplatedElementBase {
   
   static TAG_NAME = 'ET-STACKEDWIDGET';
   
   private _currentIndex: number;
-  
+  private _initialized = false;
+
   constructor() {
-    super();
+    super({ delegatesFocus: true });
     this._currentIndex = -1;
   }
   
   connectedCallback(): void {
     super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) !== null) {
+
+    if (this._initialized) {
       return;
     }
+    this._initialized = true;
 
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.updateThemeCss();
     this.createPageHolders();
-    
     this.showIndex(0);
   }
   
-  private createClone() {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<style id='${ThemeableElementBase.ID_THEME}'></style>
-<div id='${ID_CONTAINER}'></div>`;
-      window.document.body.appendChild(template);
-    }
-
-    return window.document.importNode(template.content, true);
-  }
-
-  private __getById(id:string): Element {
-    return DomUtils.getShadowRoot(this).querySelector('#'+id);
+  protected _html(): string {
+    return `<div id='${ID_CONTAINER}'></div>`;
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -69,10 +52,6 @@ export class StackedWidget extends ThemeableElementBase {
   // Override
   appendChild<T extends Node>(newNode: T): T {
     const result = super.appendChild(newNode);
-
-    if (DomUtils.getShadowRoot(this) === null) {
-      return result;
-    }
 
     this.createPageHolders();
     if (this._currentIndex === -1) {
@@ -109,11 +88,7 @@ export class StackedWidget extends ThemeableElementBase {
   }
   
   private showIndex(index: number): void {
-    if (DomUtils.getShadowRoot(this) === null) {
-      return;
-    }
-    
-    const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
+    const container = <HTMLDivElement>this._elementById(ID_CONTAINER);
     for (let i=0; i<container.children.length; i++) {
       const kid = <HTMLElement>container.children.item(i);
       if (i === index) {
@@ -127,7 +102,7 @@ export class StackedWidget extends ThemeableElementBase {
   }
 
   private createPageHolders(): void {
-    const container = <HTMLDivElement>this.__getById(ID_CONTAINER);
+    const container = <HTMLDivElement>this._elementById(ID_CONTAINER);
     
     for (let i=0; i<this.children.length; i++) {
       const kid = this.children.item(i);

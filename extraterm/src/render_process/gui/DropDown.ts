@@ -6,9 +6,9 @@
 import { WebComponent } from 'extraterm-web-component-decorators';
 
 import {ContextMenu} from './ContextMenu';
+import { TemplatedElementBase } from './TemplatedElementBase';
 
 
-const ID = "EtDropDownTemplate";
 const SLOT_CONTEXTMENU = "et-contextmenu";
 
 /**
@@ -19,15 +19,12 @@ const SLOT_CONTEXTMENU = "et-contextmenu";
  * the button, the ContextMenu is displayed.
  */
 @WebComponent({tag: "et-dropdown"})
-export class DropDown extends HTMLElement {
+export class DropDown extends TemplatedElementBase {
   
   static TAG_NAME = 'ET-DROPDOWN';
 
   constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
+    super( {delegatesFocus: false} );
 
     const clickHandler = (ev: MouseEvent) => {
       const cm = <ContextMenu>this.querySelector(ContextMenu.TAG_NAME);
@@ -50,17 +47,9 @@ export class DropDown extends HTMLElement {
         this.dispatchEvent(event);
     });
   }
-  
-  private createClone() {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<div><slot name='${SLOT_CONTEXTMENU}'></slot></div><div><slot></slot></div>`;
-      window.document.body.appendChild(template);
-    }
 
-    return window.document.importNode(template.content, true);
+  protected _html(): string {
+    return `<div><slot name='${SLOT_CONTEXTMENU}'></slot></div><div><slot></slot></div>`;
   }
 
   private _assignSlotContent(): void {

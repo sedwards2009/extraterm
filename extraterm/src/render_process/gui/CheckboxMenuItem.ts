@@ -5,7 +5,6 @@
  */
 import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
-import * as DomUtils from '../DomUtils';
 import {MenuItem} from './MenuItem';
 
 
@@ -26,9 +25,8 @@ export class CheckboxMenuItem extends MenuItem {
 
   @Observe("checked")
   private _updateChecked(): void {
-    const shadow = DomUtils.getShadowRoot(this);
     const checkedhtml = "<i class='fa-fw " + (this.checked ? "far fa-check-square" : "far fa-square") + " '></i>";
-    (<HTMLDivElement>shadow.querySelector("#" + MenuItem.ID_ICON1)).innerHTML = checkedhtml; 
+    (<HTMLDivElement> this._elementById(MenuItem.ID_ICON1)).innerHTML = checkedhtml; 
   }
 
   _clicked(): void {

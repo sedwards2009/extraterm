@@ -8,13 +8,10 @@ import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorato
 
 import {doLater} from '../../utils/DoLater';
 import {Logger, getLogger} from "extraterm-logging";
-import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
-import * as DomUtils from '../DomUtils';
 import {PopDownDialog} from './PopDownDialog';
-import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { TemplatedElementBase } from './TemplatedElementBase';
 
-const ID = "EtPopDownListPickerTemplate";
 const ID_DIALOG = "ID_DIALOG";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
@@ -25,7 +22,7 @@ const ID_RESULTS_CONTAINER = "ID_RESULTS_CONTAINER";
  * A Pop Down List Picker.
  */
 @WebComponent({tag: "et-popdownlistpicker"})
-export class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase {
+export class PopDownListPicker<T extends { id: string; }> extends TemplatedElementBase {
   
   static TAG_NAME = "ET-POPDOWNLISTPICKER";
   static ATTR_DATA_ID = "data-id";
@@ -40,16 +37,12 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
 
   constructor() {
-    super();
+    super({ delegatesFocus: true });
+
     this._log = getLogger(PopDownListPicker.TAG_NAME, this);
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;
     this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): string => 
       filteredEntries.map(entry => `<div ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
-
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.installThemeCss();
 
     const dialog = this._getDialog();
     dialog.titlePrimary = this.titlePrimary;
@@ -59,14 +52,14 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
       this._okId(null);
     });
 
-    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
     filterInput.addEventListener('input', (ev: Event) => {
       this._updateEntries();
     });
     
     filterInput.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); }, true);
     
-    const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
+    const resultsDiv = this._elementById(ID_RESULTS);
     resultsDiv.addEventListener('click', (ev: Event) => {
       for (let node of ev.path) {
         if (node instanceof HTMLElement) {
@@ -79,34 +72,27 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     });
   }
   
-  private createClone(): Node {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = trimBetweenTags(`<style id="${ThemeableElementBase.ID_THEME}"></style>
-        <${PopDownDialog.TAG_NAME} id="${ID_DIALOG}">
-          <div id="${ID_RESULTS_CONTAINER}">
-            <div class="gui-packed-row">
-              <input class="expand" type="text" id="${ID_FILTER}" />
-            </div>
-            <div id="${ID_RESULTS}"></div>
+  protected _html(): string {
+    return `
+      <${PopDownDialog.TAG_NAME} id="${ID_DIALOG}">
+        <div id="${ID_RESULTS_CONTAINER}">
+          <div class="gui-packed-row">
+            <input class="expand" type="text" id="${ID_FILTER}" />
           </div>
-        </${PopDownDialog.TAG_NAME}>
-        `);
-      window.document.body.appendChild(template);
-    }
-
-    return window.document.importNode(template.content, true);
+          <div id="${ID_RESULTS}"></div>
+        </div>
+      </${PopDownDialog.TAG_NAME}>
+      `;
   }
 
   private _getDialog(): PopDownDialog {
-    return <PopDownDialog> DomUtils.getShadowId(this, ID_DIALOG);
+    return <PopDownDialog> this._elementById(ID_DIALOG);
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    const extraCssFiles = this._extraCssFiles == null? [] : this._extraCssFiles;
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.EXTRAICONS,
-      ThemeTypes.CssFile.GUI_POP_DOWN_LIST_PICKER, ...this._extraCssFiles];
+      ThemeTypes.CssFile.GUI_POP_DOWN_LIST_PICKER, ...extraCssFiles];
   }
 
   private _programmaticSet = false;
@@ -133,7 +119,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     this._entries = entries;
     this.selected = null;
     
-    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
     if (filterInput !== null) {
       filterInput.value = "";
     }
@@ -183,7 +169,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   }
 
   private _updateEntries(): void {
-    const filterInputValue = (<HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER)).value;
+    const filterInputValue = (<HTMLInputElement> this._elementById(ID_FILTER)).value;
     const filteredEntries = this._filterEntries(this._entries, filterInputValue);
     
     if (filteredEntries.length === 0) {
@@ -197,11 +183,11 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     }
     
     const html = this._formatEntries(filteredEntries, this.selected, filterInputValue);
-    DomUtils.getShadowId(this, ID_RESULTS).innerHTML = html;
+    this._elementById(ID_RESULTS).innerHTML = html;
   }
 
   private _scrollToSelected(): void {
-    const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
+    const resultsDiv = this._elementById(ID_RESULTS);
     const selectedElement = <HTMLElement> resultsDiv.querySelector("." + PopDownListPicker.CLASS_RESULT_SELECTED);
     if (selectedElement == null) {
       return;
@@ -231,7 +217,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
       ev.preventDefault();
       ev.stopPropagation();
       
-      const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+      const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
       const filteredEntries = this._filterEntries(this._entries, filterInput.value);
       if (filteredEntries.length === 0) {
         return;
@@ -246,7 +232,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
         }
       } else {
         
-        const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
+        const resultsDiv = this._elementById(ID_RESULTS);
         
         // Determine the step size.
         let stepSize = 1;
@@ -290,13 +276,13 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   }
 
   open(): void {
-    const resultsDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_RESULTS);
+    const resultsDiv = <HTMLDivElement> this._elementById(ID_RESULTS);
 
     const dialog = this._getDialog();
     const rect = dialog.getBoundingClientRect();
     resultsDiv.style.maxHeight = `${Math.floor(rect.height * 0.75)}px`;
 
-    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
     filterInput.value = "";
     this._updateEntries();
     filterInput.focus();

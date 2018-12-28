@@ -12,6 +12,7 @@ import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
 
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
+import { TemplatedElementBase } from './TemplatedElementBase';
 
 
 const ID = "EtSnapDropContainerTemplate";
@@ -54,20 +55,15 @@ const SUPPORTED_MIMETYPES = [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE];
  * A container which supports splitting and snapping for dragged items.
  */
 @WebComponent({tag: "et-snapdropcontainer"})
-export class SnapDropContainer extends ThemeableElementBase {
+export class SnapDropContainer extends TemplatedElementBase {
   
   static TAG_NAME = "ET-SNAPDROPCONTAINER";
   static EVENT_DROPPED = "snapdropcontainer-dropped";
   private _log: Logger;
 
   constructor() {
-    super();
+    super({ delegatesFocus: false });
     this._log = getLogger(SnapDropContainer.TAG_NAME, this);
-
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.updateThemeCss();
 
     const topDiv = DomUtils.getShadowId(this, ID_TOP);
     topDiv.classList.add(CLASS_NOT_DRAGGING);
@@ -78,21 +74,12 @@ export class SnapDropContainer extends ThemeableElementBase {
     topDiv.addEventListener("drop", this._handleDrop.bind(this), true);
   }
 
-  private createClone() {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
-<div id='${ID_TOP}'>
-  <div id='${ID_CONTENTS}'><slot></slot></div>
-  <div id='${ID_DRAG_COVER}'></div>
-</div>
-`;
-      window.document.body.appendChild(template);
-    }
-    
-    return window.document.importNode(template.content, true);
+  protected _html(): string {
+    return `<div id='${ID_TOP}'>
+      <div id='${ID_CONTENTS}'><slot></slot></div>
+      <div id='${ID_DRAG_COVER}'></div>
+    </div>
+    `;
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

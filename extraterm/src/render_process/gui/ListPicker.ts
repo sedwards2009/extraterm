@@ -6,15 +6,14 @@
 import { Disposable } from 'extraterm-extension-api';
 import { WebComponent } from 'extraterm-web-component-decorators';
 
-import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
 import {doLater} from '../../utils/DoLater';
 import {PopDownDialog} from './PopDownDialog';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
+import { TemplatedElementBase } from './TemplatedElementBase';
 
-const ID = "EtListPickerTemplate";
 const ID_DIALOG = "ID_DIALOG";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
@@ -23,7 +22,7 @@ const ID_RESULTS = "ID_RESULTS";
  * A List Picker.
  */
 @WebComponent({tag: "et-listpicker"})
- export class ListPicker<T extends { id: string; }> extends ThemeableElementBase {
+ export class ListPicker<T extends { id: string; }> extends TemplatedElementBase {
   
   static TAG_NAME = "ET-LISTPICKER";
   static ATTR_DATA_ID = "data-id";
@@ -39,18 +38,13 @@ const ID_RESULTS = "ID_RESULTS";
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
 
   constructor() {
-    super();
+    super({ delegatesFocus: true });
     this._log = getLogger(ListPicker.TAG_NAME, this);
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;
     this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): string => 
     filteredEntries.map(entry => `<div ${ListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
 
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.installThemeCss();
-
-    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
     filterInput.addEventListener('input', (ev: Event) => {
       this._updateEntries();
     });
@@ -70,21 +64,13 @@ const ID_RESULTS = "ID_RESULTS";
     });
   }
 
-  private createClone(): Node {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
-        <div id="${ID_DIALOG}">
-          <div class="gui-packed-row"><input type="text" id="${ID_FILTER}" class="expand" /></div>
-          <div id="${ID_RESULTS}"></div>
-        </div>
-        `;
-      window.document.body.appendChild(template);
-    }
-
-    return window.document.importNode(template.content, true);
+  protected _html(): string {
+    return `
+      <div id="${ID_DIALOG}">
+        <div class="gui-packed-row"><input type="text" id="${ID_FILTER}" class="expand" /></div>
+        <div id="${ID_RESULTS}"></div>
+      </div>
+    `;
   }
 
   focus(): void {
@@ -149,8 +135,9 @@ const ID_RESULTS = "ID_RESULTS";
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    const extraCssFiles = this._extraCssFiles == null ? [] : this._extraCssFiles;
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.EXTRAICONS,
-      ThemeTypes.CssFile.GUI_LIST_PICKER, ...this._extraCssFiles]; // FIXME
+      ThemeTypes.CssFile.GUI_LIST_PICKER, ...extraCssFiles]; // FIXME
   }
 
   private _updateEntries(): void {

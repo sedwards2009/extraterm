@@ -10,7 +10,6 @@ import {doLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import { log } from "extraterm-logging";
 import {Logger, getLogger} from "extraterm-logging";
-import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import {StackedWidget} from './StackedWidget';
 import {Tab} from './Tab';
@@ -18,8 +17,7 @@ import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail} from '.
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
 import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-
-const ID = "EtTabWidgetTemplate";
+import { TemplatedElementBase } from './TemplatedElementBase';
 
 const ATTR_TAG_REST_LEFT = "rest-left";
 const ATTR_TAG_REST_RIGHT = "rest";
@@ -51,7 +49,7 @@ export interface DroppedEventDetail {
  * See Tab.
  */
 @WebComponent({tag: "et-tabwidget"})
-export class TabWidget extends ThemeableElementBase {
+export class TabWidget extends TemplatedElementBase {
   
   static TAG_NAME = "ET-TABWIDGET";
   static EVENT_TAB_SWITCH = "tab-switch";
@@ -61,14 +59,9 @@ export class TabWidget extends ThemeableElementBase {
   private _mutationObserver: MutationObserver = null;
 
   constructor() {
-    super();
+    super({ delegatesFocus: false });
 
     this._log = getLogger(TabWidget.TAG_NAME, this);
-
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.updateThemeCss();
     
     this.createTabHolders();
     this.setSelectedIndex(0);
@@ -105,43 +98,31 @@ export class TabWidget extends ThemeableElementBase {
     }
   }
 
-  private createClone() {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
-<div id='${ID_TOP}'>
-  <div id='${ID_TABBAR_CONTAINER}'>
-    <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
-  </div>
-  <div id='${ID_CONTENTS}'>
-    <${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}'>
-      <${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></$ {StackedWidget.TAG_NAME}>
-    </${SnapDropContainer.TAG_NAME}>
-  </div>
-</div>
-`;
-      window.document.body.appendChild(template);
-    }
-    
-    return window.document.importNode(template.content, true);
+  protected _html(): string {
+    return `
+      <div id='${ID_TOP}'>
+        <div id='${ID_TABBAR_CONTAINER}'>
+          <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
+        </div>
+        <div id='${ID_CONTENTS}'>
+          <${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}'>
+            <${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></$ {StackedWidget.TAG_NAME}>
+          </${SnapDropContainer.TAG_NAME}>
+        </div>
+      </div>
+      `;
   }
 
-  private __getById(id:string): Element {
-    return DomUtils.getShadowRoot(this).querySelector('#'+id);
-  }
-  
   private _getTop(): HTMLDivElement {
-    return <HTMLDivElement> this.__getById(ID_TOP);
+    return <HTMLDivElement> this._elementById(ID_TOP);
   }
   
   private _getTabbar(): HTMLDivElement {
-    return <HTMLDivElement> this.__getById(ID_TABBAR);
+    return <HTMLDivElement> this._elementById(ID_TABBAR);
   }
   
   private _getContentsStack(): StackedWidget {
-    return <StackedWidget> this.__getById(ID_CONTENTSTACK);
+    return <StackedWidget> this._elementById(ID_CONTENTSTACK);
   }
   
   private createTabHolders(): void {

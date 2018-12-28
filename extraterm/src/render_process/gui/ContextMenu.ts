@@ -5,16 +5,14 @@
  */
 import { WebComponent } from "extraterm-web-component-decorators";
 
-import { ThemeableElementBase } from "../ThemeableElementBase";
 import * as ThemeTypes from "../../theme/Theme";
 import { MenuItem } from "./MenuItem";
 import { CheckboxMenuItem } from "./CheckboxMenuItem";
-import * as DomUtils from "../DomUtils";
 import * as Util from "./Util";
 import { Logger, getLogger } from "extraterm-logging";
+import { TemplatedElementBase } from "./TemplatedElementBase";
 
 
-const ID = "EtContextMenuTemplate";
 const ID_COVER = "ID_COVER";
 const ID_CONTAINER = "ID_CONTAINER";
 const CLASS_COVER_CLOSED = "CLASS_COVER_CLOSED";
@@ -22,26 +20,22 @@ const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
 const CLASS_CONTAINER_CLOSED = "CLASS_CONTAINER_CLOSED";
 const CLASS_CONTAINER_OPEN = "CLASS_CONTAINER_OPEN";
 
+
 /**
  * A context menu.
  */
 @WebComponent({tag: "et-contextmenu"})
-export class ContextMenu extends ThemeableElementBase {
+export class ContextMenu extends TemplatedElementBase {
    
   static TAG_NAME = "ET-CONTEXTMENU";
   
   private _log: Logger;
   
   constructor() {
-    super();
+    super({ delegatesFocus: false });
     this._log = getLogger(ContextMenu.TAG_NAME, this);
-    
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.installThemeCss();
 
-    const cover = <HTMLDivElement>DomUtils.getShadowId(this, ID_COVER);
+    const cover = <HTMLDivElement> this._elementById(ID_COVER);
     cover.addEventListener('mousedown', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
@@ -56,7 +50,7 @@ export class ContextMenu extends ThemeableElementBase {
       this.close();
     }, true);
     
-    const container = <HTMLDivElement>DomUtils.getShadowId(this, ID_CONTAINER);
+    const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
     container.addEventListener('mousedown', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
@@ -85,22 +79,13 @@ export class ContextMenu extends ThemeableElementBase {
     container.addEventListener('keypress', (ev: KeyboardEvent) => { this.handleKeyPress(ev); });
   }
 
+  protected _html(): string {
+    return `<div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
+       <div id='${ID_CONTAINER}' class='${CLASS_CONTAINER_CLOSED}' tabindex='0'><slot></slot></div>`;
+  }
+  
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTEXTMENU];
-  }
-
-  private createClone() {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}"></style>
-          <div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
-          <div id='${ID_CONTAINER}' class='${CLASS_CONTAINER_CLOSED}' tabindex='0'><slot></slot></div>`;
-      window.document.body.appendChild(template);
-    }
-
-    return window.document.importNode(template.content, true);
   }
 
   private fetchMenuItems(kids: NodeList): MenuItem[] {
@@ -204,7 +189,7 @@ export class ContextMenu extends ThemeableElementBase {
     // Nuke any style like 'display: none' which can be use to prevent flicker.
     this.setAttribute('style', '');
     
-    const container = <HTMLDivElement>DomUtils.getShadowId(this, ID_CONTAINER);
+    const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
     container.classList.remove(CLASS_CONTAINER_CLOSED);
     container.classList.add(CLASS_CONTAINER_OPEN);
 
@@ -230,7 +215,7 @@ export class ContextMenu extends ThemeableElementBase {
   }
 
   private _openCover(): void {
-    const cover = <HTMLDivElement> DomUtils.getShadowId(this, ID_COVER);
+    const cover = <HTMLDivElement> this._elementById(ID_COVER);
     cover.className = CLASS_COVER_OPEN;
   }
 
@@ -252,7 +237,7 @@ export class ContextMenu extends ThemeableElementBase {
     this.setAttribute('style', '');
     
     const targetElementRect = targetElement.getBoundingClientRect();
-    const container = <HTMLDivElement>DomUtils.getShadowId(this, ID_CONTAINER);
+    const container = <HTMLDivElement>this._elementById(ID_CONTAINER);
     container.classList.remove(CLASS_CONTAINER_CLOSED);
     container.classList.add(CLASS_CONTAINER_OPEN);  
     const containerRect = container.getBoundingClientRect();
@@ -279,10 +264,10 @@ export class ContextMenu extends ThemeableElementBase {
     let event = new CustomEvent('before-close', { detail: null });
     this.dispatchEvent(event);
 
-    const cover = <HTMLDivElement>DomUtils.getShadowId(this, ID_COVER);
+    const cover = <HTMLDivElement>this._elementById(ID_COVER);
     cover.className = CLASS_COVER_CLOSED;
 
-    const container = <HTMLDivElement>DomUtils.getShadowId(this, ID_CONTAINER);
+    const container = <HTMLDivElement>this._elementById(ID_CONTAINER);
     container.classList.remove(CLASS_CONTAINER_OPEN);
     container.classList.add(CLASS_CONTAINER_CLOSED);
 

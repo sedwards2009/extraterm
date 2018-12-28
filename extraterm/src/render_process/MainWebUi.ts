@@ -462,8 +462,11 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _newTabRestAreaHtml(extraContents = ""): string {
-    return `<div class="${CLASS_NEW_BUTTON_CONTAINER}"><button class="microtool primary ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>
-    <div class="${CLASS_SPACE}"></div>${extraContents}</div>`;
+    return trimBetweenTags(`
+      <div class="${CLASS_NEW_BUTTON_CONTAINER}">
+        <button class="microtool primary ${CLASS_NEW_TAB_BUTTON}"><i class="fa fa-plus"></i></button>
+      <div class="${CLASS_SPACE}"></div>${extraContents}</div>
+      `);
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
