@@ -23,6 +23,9 @@ import { ThemeManager } from '../theme/ThemeManager';
 import { KeybindingsIOManager } from './KeybindingsIOManager';
 
 export const EXTRATERM_CONFIG_DIR = "extraterm";
+const PATHS_CONFIG_FILENAME = "application_paths.json";
+const PATHS_CONFIGURATION_KEY = "configurationPath";
+
 const USER_KEYBINDINGS_DIR = "keybindings";
 const USER_THEMES_DIR = "themes"
 const USER_SYNTAX_THEMES_DIR = "syntax";
@@ -228,13 +231,49 @@ function sendMessageToAllWindows(msg: Messages.Message): void {
   }
 }
 
+let configurationFilename: string = null;
+function getConfigurationFilename(): string {
+  if (configurationFilename == null) {
+    configurationFilename = getConfigurationFilenameFromPathsConfig();
+  }
+  if (configurationFilename == null) {
+    configurationFilename = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
+  }
+  return configurationFilename;
+}
+
+function getConfigurationFilenameFromPathsConfig(): string {
+  const exeDir = path.dirname(app.getPath("exe"));
+  const pathsConfigFilename = path.join(exeDir, PATHS_CONFIG_FILENAME);
+  _log.info(`Looking for ${PATHS_CONFIG_FILENAME} at '${pathsConfigFilename}'`);
+  if (fs.existsSync(pathsConfigFilename)) {
+    try {
+      const pathsConfigString = fs.readFileSync(pathsConfigFilename, {encoding: "utf8"});
+      const pathsConfig = JSON.parse(pathsConfigString);
+      const configurationValue = pathsConfig[PATHS_CONFIGURATION_KEY];
+      if (configurationValue != null) {
+        if (typeof configurationValue !== "string") {
+          _log.warn(`Value of key ${PATHS_CONFIGURATION_KEY} in file ${pathsConfigFilename} isn't a string.`);
+        } else {
+          const configurationPath = path.join(exeDir, configurationValue);
+          _log.info(`Using '${configurationPath}' for the configuration file.`);
+          return configurationPath;
+        }
+      }
+    } catch(ex) {
+      _log.warn(`Unable to parse json file '${pathsConfigFilename}',`, ex);
+    }
+  }
+  return null;
+}
+
 /**
  * Read the configuration.
  * 
  * @returns The configuration object.
  */
 function readConfigurationFile(): UserStoredConfig {
-  const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
+  const filename = getConfigurationFilename();
   let config: UserStoredConfig = { };
 
   if (fs.existsSync(filename)) {
@@ -377,7 +416,7 @@ export class ConfigDatabaseImpl implements ConfigDatabase {
     cleanConfig.commandLineActions = this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
     cleanConfig.sessions = this.getConfig(SESSION_CONFIG);
 
-    const filename = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
+    const filename = getConfigurationFilename();
     const formattedConfig = JSON.stringify(cleanConfig, null, "  ");
     this._log.debug(formattedConfig);
     fs.writeFileSync(filename, formattedConfig);
