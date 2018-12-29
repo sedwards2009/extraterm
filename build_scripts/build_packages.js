@@ -10,7 +10,6 @@ const packager = require('electron-packager');
 const getRepoInfo = require('git-repo-info');
 
 const log = console.log.bind(console);
-const BUILD_TMP = 'build_tmp';
 const MODULE_VERSON = 53; // This version number also appears in thememanager.ts
 
 function main() {
@@ -22,30 +21,30 @@ function main() {
   }
 
   const linuxZipOnly = process.argv.indexOf("--linux-zip-only") !== -1;
-
-  const srcRootDir = "" + pwd();
-  if (test('-d', BUILD_TMP)) {
-    rm('-rf', BUILD_TMP);
+  
+  const ROOT_SRC_DIR = "" + pwd();
+  const BUILD_TMP_DIR = path.join(ROOT_SRC_DIR, 'build_tmp');
+  if (test('-d', BUILD_TMP_DIR)) {
+    rm('-rf', BUILD_TMP_DIR);
   }
-  mkdir(BUILD_TMP);
+  mkdir(BUILD_TMP_DIR);
   
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
-  
+
   const gitUrl = exec("git config --get remote.origin.url").trim();
   const info = getRepoInfo();
 
   echo("Fetching a clean copy of the source code from " + gitUrl);
 
-  cd(BUILD_TMP);
-
-  // For some reason pwd() is returning "not quite strings" which path.join() doesn't like. Thus "" + ...
-  const buildTmpPath = "" + pwd();
+  cd(BUILD_TMP_DIR);
   
   exec("git clone -b " + info.branch + " " + gitUrl);
   cd("extraterm");
+  const SRC_DIR = "" + pwd();
+  cd(SRC_DIR);
 
-  echo("Setting up the run time dependencies in " + BUILD_TMP);
+  echo("Setting up the run time dependencies in " + SRC_DIR);
 
   exec("yarn install");
   exec("yarn run electron-rebuild");
@@ -57,11 +56,10 @@ function main() {
   // Create the commands zip
   echo("Creating commands.zip");
   const commandsDir = packageData.name + "-commands-" + packageData.version;
-  cp("-r", "extraterm/src/commands", path.join(buildTmpPath, commandsDir));
-  const codeDir = pwd();
-  cd(buildTmpPath);
+  cp("-r", "extraterm/src/commands", path.join(BUILD_TMP_DIR, commandsDir));
+  cd(BUILD_TMP_DIR);
   exec(`zip -y -r ${commandsDir}.zip ${commandsDir}`);
-  cd(codeDir);
+  cd(SRC_DIR);
 
   const electronVersion = packageData.devDependencies['electron'];
 
@@ -144,7 +142,6 @@ function main() {
 
   function pruneSpecificNodeModules() {
     [
-      "codemirror/src",
       "node-sass/src",
       "node-sass/node_modules/nan",
       "node-sass/vendor",
@@ -187,7 +184,7 @@ function main() {
         rm('-rf', versionedOutputDir);
       }
       
-      const outputZip = path.join(buildTmpPath, versionedOutputDir + ".zip");
+      const outputZip = path.join(BUILD_TMP_DIR, versionedOutputDir + ".zip");
 
       const packagerOptions = {
         arch: arch,
@@ -197,11 +194,11 @@ function main() {
         ignore: ignoreFunc,
         name: platform === "darwin" ? "Extraterm" : "extraterm",
         overwrite: true,
-        out: buildTmpPath,
+        out: BUILD_TMP_DIR,
         packageManager: "yarn",
         afterPrune: [
           (buildPath, electronVersion, platform, arch, callback) => {
-            replaceDirs(path.join(buildPath, "node_modules"), path.join("" + codeDir,`build_scripts/node_modules-${platform}-${arch}`));
+            replaceDirs(path.join(buildPath, "node_modules"), path.join("" + SRC_DIR,`build_scripts/node_modules-${platform}-${arch}`));
             callback();
           }
         ]
@@ -223,10 +220,10 @@ function main() {
           reject();
         } else {
           // Rename the output dir to a one with a version number in it.
-          mv(appPath[0], path.join(buildTmpPath, versionedOutputDir));
+          mv(appPath[0], path.join(BUILD_TMP_DIR, versionedOutputDir));
           
           const thisCD = pwd();
-          cd(buildTmpPath);
+          cd(BUILD_TMP_DIR);
 
           hoistSubprojectsModules(versionedOutputDir, platform);
           pruneNodeModules(versionedOutputDir, platform);
@@ -255,7 +252,7 @@ function main() {
   
   function replaceDirs(targetDir, replacementsDir) {
     const prevDir = pwd();
-    cd(srcRootDir);
+    cd(ROOT_SRC_DIR);
     const replacements = ls(replacementsDir);
     replacements.forEach( (rDir) => {
       const targetSubDir = path.join(targetDir, rDir);
@@ -273,7 +270,7 @@ function main() {
     echo("Building dmg file for macOS");
     echo("---------------------------------------------------");
 
-    const darwinPath = path.join(buildTmpPath, `extraterm-${packageData.version}-darwin-x64`);
+    const darwinPath = path.join(BUILD_TMP_DIR, `extraterm-${packageData.version}-darwin-x64`);
     for (const f of ls(darwinPath)) {
       if ( ! f.endsWith(".app")) {
         echo(`Deleting ${f}`);
@@ -281,14 +278,14 @@ function main() {
       }
     }
 
-    cp(path.join(srcRootDir, "build_scripts/resources/macos/.DS_Store"), path.join(darwinPath, ".DS_Store"));
-    cp(path.join(srcRootDir, "build_scripts/resources/macos/.VolumeIcon.icns"), path.join(darwinPath, ".VolumeIcon.icns"));
+    cp(path.join(ROOT_SRC_DIR, "build_scripts/resources/macos/.DS_Store"), path.join(darwinPath, ".DS_Store"));
+    cp(path.join(ROOT_SRC_DIR, "build_scripts/resources/macos/.VolumeIcon.icns"), path.join(darwinPath, ".VolumeIcon.icns"));
     mkdir(path.join(darwinPath,".background"));
-    cp(path.join(srcRootDir, "build_scripts/resources/macos/.background/extraterm_background.png"), path.join(darwinPath, ".background/extraterm_background.png"));
+    cp(path.join(ROOT_SRC_DIR, "build_scripts/resources/macos/.background/extraterm_background.png"), path.join(darwinPath, ".background/extraterm_background.png"));
 
     ln("-s", "/Applications", path.join(darwinPath, "Applications"));
 
-    exec(`docker run --rm -v "${buildTmpPath}:/files" sporsh/create-dmg Extraterm /files/extraterm-${packageData.version}-darwin-x64/ /files/extraterm_${packageData.version}.dmg`);
+    exec(`docker run --rm -v "${BUILD_TMP_DIR}:/files" sporsh/create-dmg Extraterm /files/extraterm-${packageData.version}-darwin-x64/ /files/extraterm_${packageData.version}.dmg`);
   }
 
   function makeNsis() {
@@ -298,8 +295,6 @@ function main() {
     echo("---------------------------------------------------");
 
     const windowsBuildDirName = `extraterm-${packageData.version}-win32-x64`;
-    const windowsPath = path.join(buildTmpPath, windowsBuildDirName);
-
     const versionSplit = packageData.version.split(".");
     const majorVersion = versionSplit[0];
     const minorVersion = versionSplit[1];
@@ -385,9 +380,9 @@ Section "Uninstall"
   DeleteRegKey HKLM "Software\\Extraterm"
 SectionEnd  
 `;
-    fs.writeFileSync(path.join(buildTmpPath, "installer.nsi"), installerScript, {encoding: "utf-8"});
+    fs.writeFileSync(path.join(BUILD_TMP_DIR, "installer.nsi"), installerScript, {encoding: "utf-8"});
 
-    exec(`docker run -t -v ${buildTmpPath}:/wine/drive_c/src/ cdrx/nsis`);
+    exec(`docker run -t -v ${BUILD_TMP_DIR}:/wine/drive_c/src/ cdrx/nsis`);
   }
 
   if (linuxZipOnly) {
