@@ -9,7 +9,7 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 
 import { COMMAND_OPEN_COMMAND_PALETTE } from './command/CommandUtils';
 import { isCommandable, Commandable, BoundCommand} from './command/CommandTypes';
-import {doLater} from '../utils/DoLater';
+import {doLater, DebouncedDoLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from "extraterm-logging";
@@ -26,6 +26,7 @@ import {ViewerElement} from "./viewers/ViewerElement";
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as WebIpc from './WebIpc';
+import { AcceptsConfigDatabase, ConfigDatabase } from '../Config';
 
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -58,7 +59,7 @@ const SCROLL_STEP = 1;
  * A viewer tab which can contain any ViewerElement.
  */
 @WebComponent({tag: "et-viewer-tab"})
-export class EtViewerTab extends ViewerElement implements Commandable,
+export class EtViewerTab extends ViewerElement implements Commandable, AcceptsConfigDatabase,
     AcceptsKeybindingsManager, SupportsClipboardPaste.SupportsClipboardPaste,
     SupportsDialogStack.SupportsDialogStack {
 
@@ -71,16 +72,19 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   private _tag: string = null;
 
   private _keyBindingManager: KeybindingsManager = null;
+  private _configDatabase: ConfigDatabase = null;
   private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
   private _needsCompleteRefresh = true;
   private _fontSizeAdjustment = 0;
   private _armResizeCanary = false;  // Controls when the resize canary is allowed to chirp.
   private _dialogStack: HTMLElement[] = [];
+  private _copyToClipboardLater: DebouncedDoLater = null;
 
   constructor() {
     super();
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
+    this._copyToClipboardLater = new DebouncedDoLater(() => this.copyToClipboard(), 100);
   }
    
   getMetadata(): ViewerMetadata {
@@ -172,6 +176,7 @@ export class EtViewerTab extends ViewerElement implements Commandable,
   }
   
   dispose(): void {
+    this._copyToClipboardLater.cancel();
     const element = this.getViewerElement();
     if (element !== null) {
       element.dispose();
@@ -180,6 +185,10 @@ export class EtViewerTab extends ViewerElement implements Commandable,
       this._resizePollHandle.dispose();
       this._resizePollHandle = null;
     }
+  }
+
+  setConfigDatabase(newConfigDatabase: ConfigDatabase): void {
+    this._configDatabase = newConfigDatabase;
   }
 
   // FIXME delete
@@ -546,7 +555,10 @@ export class EtViewerTab extends ViewerElement implements Commandable,
 
   private _handleBeforeSelectionChange(ev: CustomEvent): void {
     if (ev.detail.originMouse) {
-      doLater( () => { this.copyToClipboard() } );
+      const generalConfig = this._configDatabase.getConfig("general");
+      if (generalConfig.autoCopySelectionToClipboard) {
+        this._copyToClipboardLater.trigger();
+      }
     }
   }
 

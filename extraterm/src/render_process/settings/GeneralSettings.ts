@@ -38,6 +38,9 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
       if (ui.maxScrollbackFrames !== generalConfig.scrollbackMaxFrames) {
         ui.maxScrollbackFrames = generalConfig.scrollbackMaxFrames;
       }
+      if (ui.autoCopySelectionToClipboard !== generalConfig.autoCopySelectionToClipboard) {
+        ui.autoCopySelectionToClipboard = generalConfig.autoCopySelectionToClipboard;
+      }
     }
   }
 
@@ -48,6 +51,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
     newGeneralConfig.showTips = ui.showTips;
     newGeneralConfig.scrollbackMaxLines = ui.maxScrollbackLines;
     newGeneralConfig.scrollbackMaxFrames = ui.maxScrollbackFrames;
+    newGeneralConfig.autoCopySelectionToClipboard = ui.autoCopySelectionToClipboard;
 
     this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
   }

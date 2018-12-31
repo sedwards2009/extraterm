@@ -36,7 +36,7 @@ import { COMMAND_OPEN_COMMAND_PALETTE, COMMAND_OPEN_CONTEXT_MENU } from './comma
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';
-import {doLater} from '../utils/DoLater';
+import {doLater, DebouncedDoLater} from '../utils/DoLater';
 import * as Term from './emulator/Term';
 import * as TermApi from 'term-api';
 import {ScrollBar} from './gui/ScrollBar';
@@ -211,9 +211,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _inputStreamFilters: InputStreamFilter[] = [];
   private _dialogStack: HTMLElement[] = [];
 
+  private _copyToClipboardLater: DebouncedDoLater = null;
+
+
   constructor() {
     super();
     this._log = getLogger(EtTerminal.TAG_NAME, this);
+    this._copyToClipboardLater = new DebouncedDoLater(() => this.copyToClipboard(), 100);
+
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
     this._fetchNextTag();
   }
@@ -342,6 +347,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   dispose(): void {
+    this._copyToClipboardLater.cancel();
     this._disposeChildren();
   }
 
@@ -775,7 +781,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     });
 
     if (ev.detail.originMouse) {
-      doLater( () => { this.copyToClipboard() } ); // FIXME This should be debounced slightly.
+      const generalConfig = this._configDatabase.getConfig("general");
+      if (generalConfig.autoCopySelectionToClipboard) {
+        this._copyToClipboardLater.trigger();
+      }
     }
   }
 

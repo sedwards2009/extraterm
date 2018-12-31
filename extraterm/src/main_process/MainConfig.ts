@@ -216,6 +216,10 @@ export function setupUserConfig(themeManager: ThemeManager, configDatabase: Conf
     userStoredConfig.minimizeToTray = false;
   }
 
+  if (userStoredConfig.autoCopySelectionToClipboard == null) {
+    userStoredConfig.autoCopySelectionToClipboard = true;
+  }
+
   if (userStoredConfig.frameByDefault !== true && userStoredConfig.frameByDefault !== false) {
     userStoredConfig.frameByDefault = true;
   }

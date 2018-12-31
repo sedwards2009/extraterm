@@ -36,6 +36,7 @@ export interface GeneralConfig {
   windowConfiguration?: WindowConfiguration;
 
   frameByDefault?: boolean;
+  autoCopySelectionToClipboard?: boolean;
 }
 
 // This is the format of the user config JSON file as stored on the filesystem.

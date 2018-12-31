@@ -34,6 +34,10 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     <label for="${ID_SCROLLBACK_FRAMES}">Max. Scrollback Frames:</label>
     <span class="group"><input id="${ID_SCROLLBACK_FRAMES}" type="number" class="char-width-4"
         v-model.number="maxScrollbackFrames" min="1" max="1000" debounce="500" /><span>frames</span></span>
+
+    <label></label>
+    <span><label><input type="checkbox" v-model="autoCopySelectionToClipboard">Automatically copy selection to clipboard</label></span>
+    
   </div>
 </div>
 `)
@@ -45,6 +49,7 @@ export class GeneralSettingsUi extends Vue {
   
   maxScrollbackLines: number;
   maxScrollbackFrames: number;
+  autoCopySelectionToClipboard: boolean;
 
   constructor() {
     super();
@@ -52,5 +57,6 @@ export class GeneralSettingsUi extends Vue {
     this.showTipsOptions = [ { id: 'always', name: 'Everytime' }, { id: 'daily', name: 'Daily'}, { id: 'never', name: 'Never'} ];
     this.maxScrollbackLines = 500000;
     this.maxScrollbackFrames = 100;
+    this.autoCopySelectionToClipboard = true;
   }
 }
