@@ -19,6 +19,7 @@ title: User Guide
 - [Tips](#tips)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
   - [Mouse selections when an app grabs the mouse](#mouse-selections-when-an-app-grabs-the-mouse)
+  - [Changing where the configuration settings are stored](#changing-where-the-configuration-settings-are-stored)
 
 
 Note: Keyboard shortcuts given in the documentation apply to the default Windows/Linux shortcuts.
@@ -209,3 +210,18 @@ menu" in the top right corner of the window.
 
 Some applications use the mouse input themselves and prevent normal mouse selection from working. In these cases it is possible to hold the Control key and then make a selection with the mouse.
 
+
+## Changing where the configuration settings are stored
+
+By default Extraterm stores the user configuration in a directory deep in the user's home directory/profile. The location of 
+this directory can be changed by placing a `application_paths.json` file in the same directory as the extraterm executable. It is in json format. A simple `application_paths.json` is:
+
+```
+{
+  "userSettingsPath": "user_settings"
+}
+```
+
+It contains one setting which specifies which directory to use for user settings. If this is empty or not set, then the default location is used. If this path is relative then it is relative to the directory containing the extraterm executable.
+
+`../user_settings` can be used to place it along side the location where extraterm is installed. This can be usefull when running Extraterm as a "portable app" from removable media like a USB drive.
