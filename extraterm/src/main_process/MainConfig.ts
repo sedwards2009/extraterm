@@ -24,12 +24,13 @@ import { KeybindingsIOManager } from './KeybindingsIOManager';
 
 export const EXTRATERM_CONFIG_DIR = "extraterm";
 const PATHS_CONFIG_FILENAME = "application_paths.json";
-const PATHS_CONFIGURATION_KEY = "configurationPath";
+const PATHS_USER_SETTINGS_KEY = "userSettingsPath";
 
 const USER_KEYBINDINGS_DIR = "keybindings";
 const USER_THEMES_DIR = "themes"
 const USER_SYNTAX_THEMES_DIR = "syntax";
 const USER_TERMINAL_THEMES_DIR = "terminal";
+
 const DEFAULT_TERMINALFONT = "DejaVuSansMono";
 
 export const KEYBINDINGS_OSX = "Mac OS X bindings";
@@ -43,7 +44,7 @@ const _log = getLogger("MainConfig");
 
 
 export function setupAppData(): void {
-  const configDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR);
+  const configDir = getUserSettingsDirectory();
   if ( ! fs.existsSync(configDir)) {
     fs.mkdirSync(configDir);
   } else {
@@ -54,7 +55,7 @@ export function setupAppData(): void {
     }
   }
 
-  const userKeybindingsDir = path.join(configDir, USER_KEYBINDINGS_DIR);
+  const userKeybindingsDir = getUserKeybindingsDirectory();
   if ( ! fs.existsSync(userKeybindingsDir)) {
     fs.mkdirSync(userKeybindingsDir);
   } else {
@@ -65,7 +66,7 @@ export function setupAppData(): void {
     }
   }
   
-  const userThemesDir = path.join(configDir, USER_THEMES_DIR);
+  const userThemesDir = getUserThemeDirectory();
   if ( ! fs.existsSync(userThemesDir)) {
     fs.mkdirSync(userThemesDir);
   } else {
@@ -76,7 +77,7 @@ export function setupAppData(): void {
     }
   }
 
-  const userSyntaxThemesDir = path.join(userThemesDir, USER_SYNTAX_THEMES_DIR);
+  const userSyntaxThemesDir = getUserSyntaxThemeDirectory();
   if ( ! fs.existsSync(userSyntaxThemesDir)) {
     fs.mkdirSync(userSyntaxThemesDir);
   } else {
@@ -87,7 +88,7 @@ export function setupAppData(): void {
     }
   }
 
-  const userTerminalThemesDir = path.join(userThemesDir, USER_TERMINAL_THEMES_DIR);
+  const userTerminalThemesDir = getUserTerminalThemeDirectory();
   if ( ! fs.existsSync(userTerminalThemesDir)) {
     fs.mkdirSync(userTerminalThemesDir);
   } else {
@@ -99,19 +100,70 @@ export function setupAppData(): void {
   }
 }
 
+
+let userSettingsPath: string = null;
+
+function getUserSettingsDirectory(): string {
+  if (userSettingsPath == null) {
+    const overridePath = getUserSettingsDirectoryFromPathsConfig();
+    if (overridePath != null) {
+      userSettingsPath = overridePath;
+    } else {
+      userSettingsPath = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR)    
+    }
+  }
+  return userSettingsPath;
+}
+
+function getUserSettingsDirectoryFromPathsConfig(): string {
+  const exeDir = path.dirname(app.getPath("exe"));
+  const pathsConfigFilename = path.join(exeDir, PATHS_CONFIG_FILENAME);
+  _log.info(`Looking for ${PATHS_CONFIG_FILENAME} at '${pathsConfigFilename}'`);
+  if (fs.existsSync(pathsConfigFilename)) {
+    try {
+      const pathsConfigString = fs.readFileSync(pathsConfigFilename, {encoding: "utf8"});
+      const pathsConfig = JSON.parse(pathsConfigString);
+      const value = pathsConfig[PATHS_USER_SETTINGS_KEY];
+      if (value != null) {
+        if (typeof value !== "string") {
+          _log.warn(`Value of key ${PATHS_USER_SETTINGS_KEY} in file ${pathsConfigFilename} isn't a string.`);
+        } else {
+          if (value === "") {
+            _log.info(`Using default location for user settings because ${PATHS_USER_SETTINGS_KEY} in file ${pathsConfigFilename} is empty.`);
+            return null;
+          }
+          const userSettingsPath = path.join(exeDir, value);
+          _log.info(`Using '${userSettingsPath}' for storing user settings.`);
+          return userSettingsPath;
+        }
+      }
+    } catch(ex) {
+      _log.warn(`Unable to parse json file '${pathsConfigFilename}',`, ex);
+    }
+  }
+  return null;
+}
+
+function getUserThemeDirectory(): string {
+  return path.join(getUserSettingsDirectory(), USER_THEMES_DIR);
+}
+
 export function getUserTerminalThemeDirectory(): string {
-  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  return path.join(userThemesDir, USER_TERMINAL_THEMES_DIR);
+  return path.join(getUserThemeDirectory(), USER_TERMINAL_THEMES_DIR);
 }
 
 export function getUserSyntaxThemeDirectory(): string {
-  const userThemesDir = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_THEMES_DIR);
-  return path.join(userThemesDir, USER_SYNTAX_THEMES_DIR);
+  return path.join(getUserThemeDirectory(), USER_SYNTAX_THEMES_DIR);
 }
 
 export function getUserKeybindingsDirectory(): string {
-  return path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, USER_KEYBINDINGS_DIR);
+  return path.join(getUserSettingsDirectory(), USER_KEYBINDINGS_DIR);
 }
+
+function getConfigurationFilename(): string {
+  return path.join(getUserSettingsDirectory(), MAIN_CONFIG);
+}
+
 
 export function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
   if (themeInfo === null) {
@@ -231,41 +283,6 @@ function sendMessageToAllWindows(msg: Messages.Message): void {
   }
 }
 
-let configurationFilename: string = null;
-function getConfigurationFilename(): string {
-  if (configurationFilename == null) {
-    configurationFilename = getConfigurationFilenameFromPathsConfig();
-  }
-  if (configurationFilename == null) {
-    configurationFilename = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR, MAIN_CONFIG);
-  }
-  return configurationFilename;
-}
-
-function getConfigurationFilenameFromPathsConfig(): string {
-  const exeDir = path.dirname(app.getPath("exe"));
-  const pathsConfigFilename = path.join(exeDir, PATHS_CONFIG_FILENAME);
-  _log.info(`Looking for ${PATHS_CONFIG_FILENAME} at '${pathsConfigFilename}'`);
-  if (fs.existsSync(pathsConfigFilename)) {
-    try {
-      const pathsConfigString = fs.readFileSync(pathsConfigFilename, {encoding: "utf8"});
-      const pathsConfig = JSON.parse(pathsConfigString);
-      const configurationValue = pathsConfig[PATHS_CONFIGURATION_KEY];
-      if (configurationValue != null) {
-        if (typeof configurationValue !== "string") {
-          _log.warn(`Value of key ${PATHS_CONFIGURATION_KEY} in file ${pathsConfigFilename} isn't a string.`);
-        } else {
-          const configurationPath = path.join(exeDir, configurationValue);
-          _log.info(`Using '${configurationPath}' for the configuration file.`);
-          return configurationPath;
-        }
-      }
-    } catch(ex) {
-      _log.warn(`Unable to parse json file '${pathsConfigFilename}',`, ex);
-    }
-  }
-  return null;
-}
 
 /**
  * Read the configuration.
