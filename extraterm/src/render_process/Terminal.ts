@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -11,7 +11,6 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 import {BulkFileUploader} from './bulk_file_handling/BulkFileUploader';
 import * as BulkFileUtils from './bulk_file_handling/BulkFileUtils';
-import * as DisposableUtils from '../utils/DisposableUtils';
 import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 import {DownloadViewer} from './viewers/DownloadViewer';
 import {Pty} from '../pty/Pty';
@@ -43,10 +42,11 @@ import {ScrollBar} from './gui/ScrollBar';
 import {UploadProgressBar} from './UploadProgressBar';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
+import { TerminalCanvas } from './TerminalCanvas';
 import * as VirtualScrollArea from './VirtualScrollArea';
-import { VirtualScrollAreaWithSpacing, Spacer} from './VirtualScrollAreaWithSpacing';
 import {FrameFinder} from './FrameFinderType';
-import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, ConfigChangeEvent, SystemConfig, GeneralConfig} from '../Config';
+import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG,
+  GENERAL_CONFIG } from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
@@ -54,19 +54,15 @@ import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
-type VirtualScrollArea = VirtualScrollArea.VirtualScrollArea;
 const VisualState = ViewerElementTypes.VisualState;
-type VisualState = ViewerElementTypes.VisualState;
+type ScrollableElement = VirtualScrollable & HTMLElement;
 
 type Mode = ViewerElementTypes.Mode;  // This is the enum type.
 const Mode = ViewerElementTypes.Mode; // This gets us access to the object holding the enum values.
 
-type ScrollableElement = VirtualScrollable & HTMLElement;
-
 const log = LogDecorator;
 
 const DEBUG_APPLICATION_MODE = false;
-
 
 const ID = "EtTerminalTemplate";
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
@@ -96,10 +92,7 @@ const COMMAND_FONT_SIZE_RESET = "resetFontSize";
 const COMMAND_GO_TO_PREVIOUS_FRAME = "goToPreviousFrame";
 const COMMAND_GO_TO_NEXT_FRAME = "goToNextFrame";
 
-const CHILD_RESIZE_BATCH_SIZE = 3;
-
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
-const SCROLL_STEP = 1;
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 
 const enum ApplicationMode {
@@ -120,12 +113,6 @@ viewerClasses.push(ImageViewer);
 viewerClasses.push(TextViewer);
 viewerClasses.push(TipViewer);
 viewerClasses.push(DownloadViewer);
-
-interface ChildElementStatus {
-  element: VirtualScrollable & HTMLElement;
-  needsRefresh: boolean;
-  refreshLevel: ResizeRefreshElementBase.RefreshLevel;
-}
 
 interface WriteBufferStatus {
   bufferSize: number;
@@ -151,10 +138,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   
   private _log: Logger;
   private _pty: Pty = null;
-  private _virtualScrollArea: VirtualScrollAreaWithSpacing = null;
-  private _stashArea: DocumentFragment = null;
-  private _childElementList: ChildElementStatus[] = [];
 
+  private _terminalCanvas: TerminalCanvas = null;
   private _terminalViewer: TerminalViewer = null;
   
   private _emulator: Term.Emulator = null;
@@ -189,14 +174,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
-  private _needsCompleteRefresh = true;
-
-  // This flag is needed to prevent the _enforceScrollbackLength() method from being run recursively
-  private _enforceScrollbackLengthGuard= false;
-  
-  private _scheduleLaterHandle: Disposable = null;
-  private _scheduleLaterQueue: Function[] = [];
-  private _stashedChildResizeTask: () => void = null;
 
   private _scheduleResizeBound: any;
 
@@ -206,20 +183,15 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _fontSizeAdjustment = 0;
   private _armResizeCanary = false;  // Controls when the resize canary is allowed to chirp.
 
-  private _childFocusHandlerFunc: (ev: FocusEvent) => void;
-
   private _inputStreamFilters: InputStreamFilter[] = [];
   private _dialogStack: HTMLElement[] = [];
 
   private _copyToClipboardLater: DebouncedDoLater = null;
 
-
   constructor() {
     super();
     this._log = getLogger(EtTerminal.TAG_NAME, this);
     this._copyToClipboardLater = new DebouncedDoLater(() => this.copyToClipboard(), 100);
-
-    this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
     this._fetchNextTag();
   }
    
@@ -231,8 +203,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     if ( ! this._elementAttached) {
       this._elementAttached = true;
 
-      this._stashArea = window.document.createDocumentFragment();
-      this._stashArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const clone = this._createClone();
       shadow.appendChild(clone);
@@ -240,22 +210,21 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this.addEventListener('focus', this._handleFocus.bind(this));
       this.addEventListener('blur', this._handleBlur.bind(this));
 
-      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-      const scrollArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-      const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
+      const scrollBar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+      const scrollArea = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_AREA);
+      const scrollContainer = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
       DomUtils.preventScroll(scrollContainer);
+      this._terminalCanvas = new TerminalCanvas(scrollContainer, scrollArea, scrollBar);
+      this._terminalCanvas.setConfigDatabase(this._configDatabase);
+      this._terminalCanvas.onBeforeSelectionChange(ev => this._handleBeforeSelectionChange(ev));
+
+      scrollArea.addEventListener("keypress", (ev) => this._handleKeyPressCapture(ev), true);
+      scrollArea.addEventListener('keydown', (ev) => this._handleKeyDownCapture(ev), true);
 
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
       DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
 
-      this._virtualScrollArea = new VirtualScrollAreaWithSpacing(0);
-      this._virtualScrollArea.setScrollFunction( (offset: number): void => {
-        scrollArea.style.top = "-" + offset + "px";
-      });
-      this._virtualScrollArea.setScrollbar(scrollbar);
-      this._virtualScrollArea.setSetTopFunction(this._setTopFunction.bind(this));
-      this._virtualScrollArea.setMarkVisibleFunction(this._markVisible.bind(this));
-      this._updateScrollableSpacing();
+      this._terminalCanvas.connectedCallback();
 
       // Set up the emulator
       this._cookie = crypto.randomBytes(10).toString('hex');
@@ -269,42 +238,18 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         if (ev.target === scrollContainer) {
           ev.preventDefault();
           ev.stopPropagation();
-          this._terminalViewer.focus();
+          this._terminalCanvas.focus();
           if (ev.buttons & 2) { // Right Mouse Button
             this._handleContextMenu(ev.clientX, ev.clientY);
           }
         }
       });
       
-      scrollArea.addEventListener('mousedown', (ev: MouseEvent): void => {
-        if (ev.target === scrollArea) {
-          this._terminalViewer.focus();
-          ev.preventDefault();
-          ev.stopPropagation();
-        }
-      });
-      
-      scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-        this._virtualScrollArea.scrollTo(scrollbar.getPosition());
-      });
-
-      scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
       scrollContainer.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
-      scrollArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
-      scrollArea.addEventListener("keypress", (ev) => this._handleKeyPressCapture(ev), true);
-
-      scrollArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-      scrollArea.addEventListener(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
-        this._virtualScrollArea.scrollToBottom();
-      });
-      scrollArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
-        this._handleBeforeSelectionChange.bind(this));
-      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleViewerCursor.bind(this));
-      scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleViewerCursorEdge.bind(this));
       
       scrollArea.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
-        this.send(ev.detail.text);
+        this.send(detail.text);
       });
 
       // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
@@ -323,12 +268,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       });
 
       this._showTip();
-      
-      this._scheduleResize();
     } else {
 
       // This was already attached at least once.
-      this._scheduleResize();
+      this._terminalCanvas.scheduleResize();
     }
 
     this._setFontSizeInCss(this._fontSizeAdjustment);
@@ -339,7 +282,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    */
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this._needsCompleteRefresh = true;
+    this._terminalCanvas.disconnectedCallback();
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -348,34 +291,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   dispose(): void {
     this._copyToClipboardLater.cancel();
-    this._disposeChildren();
+    this._terminalCanvas.dispose();
   }
 
-  private _disposeChildren(): void {
-    for (const kid of this._childElementList) {
-      if (DisposableUtils.isDisposable(kid.element)) {
-        kid.element.dispose();
-      }
-    }
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  //   ######                                
-  //   #     # #    # #####  #      #  ####  
-  //   #     # #    # #    # #      # #    # 
-  //   ######  #    # #####  #      # #      
-  //   #       #    # #    # #      # #      
-  //   #       #    # #    # #      # #    # 
-  //   #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
-  
-  /**
-   * Blinking cursor
-   * 
-   * True means the cursor should blink, otherwise it doesn't.
-   */
   setBlinkingCursor(blink: boolean): void {
     // this._blinkingCursor = blink;
     // if (this._term !== null) {
@@ -413,52 +331,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     });
   }
 
-  setConfigDatabase(configManager: ConfigDatabase): void {
-    this._configDatabase = configManager;
-    this._configDatabase.onChange((event: ConfigChangeEvent) => {
-      if (event.key === "general") {
-        const oldConfig = <GeneralConfig> event.oldConfig;
-        const newConfig = <GeneralConfig> event.newConfig;
-        if (oldConfig.uiScalePercent !== newConfig.uiScalePercent ||
-            oldConfig.terminalMarginStyle !== newConfig.terminalMarginStyle) {
-          if (this._elementAttached) {
-            this._updateScrollableSpacing();
-            this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
-          }
-        }
-      }
-    });
-  }
-
-  private _updateScrollableSpacing(): void {
-    const generalConfig = this._configDatabase.getConfig("general");
-    let spacing = 0;
-    switch (generalConfig.terminalMarginStyle) {
-      case "none":
-        spacing = 0;
-        break;
-      case "thin":
-        spacing = Math.round(this._rootFontSize()/2);
-        break;
-      case "normal":
-        spacing = this._rootFontSize();
-        break;
-      case "thick":
-        spacing = this._rootFontSize() * 2;
-        break;            
+  setConfigDatabase(configDatabase: ConfigDatabase): void {
+    this._configDatabase = configDatabase;
+    if (this._terminalCanvas != null) {
+      this._terminalCanvas.setConfigDatabase(configDatabase);
     }
-    this._virtualScrollArea.setSpacing(spacing);
-  }
-
-  private _rootFontSize(): number {
-    const generalConfig = this._configDatabase.getConfig("general");
-    const systemConfig = this._configDatabase.getConfig("system");
-    
-    const dpiScaleFactor = systemConfig.originalScaleFactor / systemConfig.currentScaleFactor;
-    const unitHeightPx = 12;
-
-    const rootFontSize = Math.max(Math.floor(unitHeightPx * generalConfig.uiScalePercent * dpiScaleFactor / 100), 5);
-    return rootFontSize;
   }
 
   setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
@@ -483,7 +360,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       return false;
     }
     
-    const commandParts = cleanCommandLine.split(/\s+/);
     if (this._configDatabase === null) {
       return false;
     } else {
@@ -537,9 +413,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._sendTitleEvent(title);
   }
 
-  /**
-   * Destroy the terminal.
-   */
   destroy(): void {
     if (this._resizePollHandle !== null) {
       this._resizePollHandle.dispose();
@@ -553,25 +426,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._emulator = null;
   }
 
-  /**
-   * Focus on this terminal.
-   */
   focus(): void {
     if (this._dialogStack.length !== 0) {
       this._dialogStack[this._dialogStack.length-1].focus();
       return;
     }
-
-    if (this._terminalViewer !== null) {
-      DomUtils.focusWithoutScroll(this._terminalViewer);
-    }
+    this._terminalCanvas.focus();
   }
   
-  /**
-   * Returns true if this terminal has the input focus.
-   *
-   * @return true if the terminal has the focus.
-   */
   hasFocus(): boolean {
     const shadowRoot = DomUtils.getShadowRoot(this);
     if (shadowRoot === null) {
@@ -581,9 +443,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   /**
-   * Write data to the terminal screen.
+   * Write VT data to the terminal screen.
    * 
-   * @param text the stream of data to write.
+   * @param text the stream of text and VT codes to write.
    */
   write(text: string): WriteBufferStatus {
     return this._emulator.write(text);
@@ -598,7 +460,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
     
   resizeToContainer(): void {
-    this._scheduleResize();
+    this._terminalCanvas.scheduleResize();
   }
   
   setFrameFinder(func: FrameFinder): void {
@@ -619,8 +481,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       return null;
     }
     
-    for (const elementStat of this._childElementList) {
-      const element = elementStat.element;
+    for (const element of this._terminalCanvas.getChildElements()) {
       if (EmbeddedViewer.is(element) && element.getTag() === frameId) {
         return element;
       }
@@ -637,15 +498,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   getViewerElements(): ViewerElement[] {
-    return <ViewerElement[]> this._childElementList
-      .map(status => status.element)
-      .filter(el => el instanceof ViewerElement);
+    return <ViewerElement[]> this._terminalCanvas.getChildElements().filter(el => el instanceof ViewerElement);
   }
     
   getExtratermCookieValue(): string {
     return this._cookie;
   }
-
 
   protected updateThemeCss() {
     super.updateThemeCss();
@@ -653,7 +511,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    this._processRefresh(level);
+    this._terminalCanvas.refresh(level);
   }
 
   showDialog(dialogElement: HTMLElement): Disposable {
@@ -670,18 +528,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     };
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //   ######                                      
-  //   #     # #####  # #    #   ##   ##### ###### 
-  //   #     # #    # # #    #  #  #    #   #      
-  //   ######  #    # # #    # #    #   #   #####  
-  //   #       #####  # #    # ######   #   #      
-  //   #       #   #  #  #  #  #    #   #   #      
-  //   #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
-  
   private _createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -689,7 +535,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       template.id = ID;
 
       template.innerHTML = trimBetweenTags(`<style id="${ThemeableElementBase.ID_THEME}"></style>
-      <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
+        <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_CONTAINER}'>
             <div id='${ID_SCROLL_AREA}'></div>
@@ -770,46 +616,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       }
     });
   }
-  
-  private _handleBeforeSelectionChange(ev: CustomEvent): void {
-    const target = ev.target;
-    this._childElementList.forEach( (nodeInfo): void => {
-      const node = nodeInfo.element;
-      if (ViewerElement.isViewerElement(node) && node !== target) {
-        node.clearSelection();
-      }
-    });
-
-    if (ev.detail.originMouse) {
-      const generalConfig = this._configDatabase.getConfig("general");
-      if (generalConfig.autoCopySelectionToClipboard) {
-        this._copyToClipboardLater.trigger();
-      }
-    }
-  }
-
-  private _handleChildFocus(ev: FocusEvent): void {
-    // This needs to be done later otherwise it tickles a bug in
-    // Chrome/Blink and prevents drag and drop from working.
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=726248
-    doLater( () => {
-      if (this._mode === Mode.DEFAULT) {
-        this.focus();
-      }
-    });
-  }
-
-  // ----------------------------------------------------------------------
-  //
-  // #######                                                 
-  // #       #    # #    # #        ##   #####  ####  #####  
-  // #       ##  ## #    # #       #  #    #   #    # #    # 
-  // #####   # ## # #    # #      #    #   #   #    # #    # 
-  // #       #    # #    # #      ######   #   #    # #####  
-  // #       #    # #    # #      #    #   #   #    # #   #  
-  // ####### #    #  ####  ###### #    #   #    ####  #    # 
-  //                                                         
-  // ----------------------------------------------------------------------
 
   private _initEmulator(cookie: string): void {
     const emulator = new Term.Emulator({
@@ -850,38 +656,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
     this._terminalViewer = terminalViewer;  // Putting this in _terminalViewer now prevents the VirtualScrollArea 
                                             // removing it from the DOM in the next method call.
-    this._appendScrollable(terminalViewer)
+    this._terminalCanvas.appendScrollable(terminalViewer)
+    this._terminalCanvas.setTerminalViewer(terminalViewer);
     
     terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
 
     this._emulator.refreshScreen();
-  }
-
-  private _appendScrollable(el: HTMLElement & VirtualScrollable): void {
-    el.addEventListener('focus', this._childFocusHandlerFunc);
-    
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: ResizeRefreshElementBase.RefreshLevel.RESIZE } );
-    scrollerArea.appendChild(el);
-    this._virtualScrollArea.appendScrollable(el);
-  }
-
-  private _removeScrollable(el: HTMLElement & VirtualScrollable): void {
-    el.removeEventListener('focus', this._childFocusHandlerFunc);
-
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    if (el.parentElement === scrollerArea) {
-      scrollerArea.removeChild(el);
-    } else if(el.parentNode === this._stashArea) {
-      this._stashArea.removeChild(el);
-    }
-
-    const pos = this._childElementListIndexOf(el);
-    this._childElementList.splice(pos, 1);
-
-    this._virtualScrollArea.removeScrollable(el);
   }
 
   /**
@@ -901,7 +683,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._terminalViewer.setEmulator(null);
       this._terminalViewer.deleteScreen();
       this._terminalViewer.setUseVPad(false);
-      this._virtualScrollArea.updateScrollableSize(this._terminalViewer);
+      this._terminalCanvas.updateScrollableSize(this._terminalViewer);
       this._terminalViewer = null;
     }
   }
@@ -918,20 +700,20 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
       if (currentTerminalViewer.isEmpty()) {
         // Keep this terminal viewer and re-use it later in the new position.
-        this._removeScrollable(currentTerminalViewer);
+        this._terminalCanvas.removeScrollable(currentTerminalViewer);
       } else {
         // This terminal viewer has stuff in it.
         currentTerminalViewer.setEmulator(null);
         currentTerminalViewer.setUseVPad(false);
-        this._virtualScrollArea.updateScrollableSize(currentTerminalViewer);
+        this._terminalCanvas.updateScrollableSize(currentTerminalViewer);
         this._terminalViewer = null;
         currentTerminalViewer = null;
       }
     }
-    this._appendScrollable(el);
+    this._terminalCanvas.appendScrollable(el);
       
     if (currentTerminalViewer !== null) {
-      this._appendScrollable(currentTerminalViewer);
+      this._terminalCanvas.appendScrollable(currentTerminalViewer);
       if (currentTerminalViewerHadFocus) {
         currentTerminalViewer.focus();
       }
@@ -993,364 +775,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _enterCursorMode(): void {
-    this._setModeAndVisualState(ViewerElementTypes.Mode.CURSOR, VisualState.AUTO);
+    this._terminalCanvas.setModeAndVisualState(ViewerElementTypes.Mode.CURSOR, VisualState.AUTO);
     this._mode = Mode.CURSOR;
   }
   
   private _exitCursorMode(): void {
-    this._setModeAndVisualState(ViewerElementTypes.Mode.DEFAULT, VisualState.FOCUSED);
+    this._terminalCanvas.setModeAndVisualState(ViewerElementTypes.Mode.DEFAULT, VisualState.FOCUSED);
     this._mode = Mode.DEFAULT;
     this._refocus();
-  }
-
-  private _setModeAndVisualState(mode: ViewerElementTypes.Mode, visualState: VisualState): void {
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    const childNodes = <ViewerElement[]> DomUtils.nodeListToArray(scrollerArea.childNodes).filter(ViewerElement.isViewerElement);
-    childNodes.forEach( (node) => node.setMode(mode));
-    childNodes.forEach( (node) => node.setVisualState(visualState));
-  }
-
-  private _childElementListIndexOf(element: HTMLElement & VirtualScrollable): number {
-    const list = this._childElementList;;
-    const len = list.length;
-    for (let i=0; i<len; i++) {
-      const item = list[i];
-      if (item.element === element) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  // ----------------------------------------------------------------------
-  //
-  //    #####                                                          ##        #####                           
-  //   #     #  ####  #####   ####  #      #      # #    #  ####      #  #      #     # # ###### # #    #  ####  
-  //   #       #    # #    # #    # #      #      # ##   # #    #      ##       #       #     #  # ##   # #    # 
-  //    #####  #      #    # #    # #      #      # # #  # #          ###        #####  #    #   # # #  # #      
-  //         # #      #####  #    # #      #      # #  # # #  ###    #   # #          # #   #    # #  # # #  ### 
-  //   #     # #    # #   #  #    # #      #      # #   ## #    #    #    #     #     # #  #     # #   ## #    # 
-  //    #####   ####  #    #  ####  ###### ###### # #    #  ####      ###  #     #####  # ###### # #    #  ####  
-  //
-  // ----------------------------------------------------------------------
-  private _handleMouseWheel(ev: WheelEvent): void {
-    ev.stopPropagation();
-    ev.preventDefault();
-    const delta = ev.deltaY * SCROLL_STEP;
-    this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset() + delta);
-  }
-
-  private _handleVirtualScrollableResize(ev: CustomEvent): void {
-    const el = <HTMLElement & VirtualScrollable> ev.target;
-    if (el.parentNode === this._stashArea) {
-      this._scheduleStashedChildResize(el);
-    } else {
-      this._updateVirtualScrollableSize(el);
-    }
-  }
-
-  private _markVisible(scrollable: VirtualScrollable, visible: boolean): void {
-    if (scrollable instanceof Spacer) {
-      return;
-    }
-
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    const element: ViewerElement = <any> scrollable;
-    if ( ! visible) {
-
-      if (this._terminalViewer !== element && ! (ViewerElement.isViewerElement(element) && element.hasFocus())) {
-        // Move the scrollable into the stash area.
-        this._stashArea.appendChild(element);
-      }
-
-    } else {
-
-      if (element.parentElement !== scrollerArea) {
-        // Move the element to the scroll area and place it in the correct position relative to the other child elements.
-
-        const scrollerAreaChildrenCount = scrollerArea.children.length;
-        if (scrollerAreaChildrenCount === 0) {
-          scrollerArea.appendChild(element);
-        } else {
-
-          let scrollerIndex = 0;
-          let childIndex = 0;
-          while (childIndex < this._childElementList.length) {
-
-            const currentElement = this._childElementList[childIndex].element;
-            if (currentElement === element) {
-              scrollerArea.insertBefore(element, scrollerArea.children[scrollerIndex]);
-              break;
-            }
-
-            if (scrollerArea.children[scrollerIndex] === currentElement) {
-              scrollerIndex++;
-              if (scrollerIndex >= scrollerAreaChildrenCount) {
-                scrollerArea.appendChild(element);
-                break;
-              }
-            }
-            childIndex++;
-          }
-        }
-
-        // Set the current mode on the scrollable.
-        const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
-        element.setMode(this._mode);
-        element.setVisualState(visualState);
-      }
-    }
-  }
-
-  private _makeVisible(element: HTMLElement & VirtualScrollable): void {
-    this._markVisible(element, true);
-  }
-
-  private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
-    this._virtualScrollArea.updateScrollableSize(virtualScrollable);
-    if (this._configDatabase != null) {
-      const config = this._configDatabase.getConfig(GENERAL_CONFIG);
-      this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
-    }
-  }
-
-  private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): void {
-    let level = requestedLevel;
-    if (this._needsCompleteRefresh) {
-      level = ResizeRefreshElementBase.RefreshLevel.COMPLETE;
-      this._needsCompleteRefresh = false;
-    }
-
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    if (scrollerArea !== null) {
-      // --- DOM Read ---
-      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
-
-      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-      scrollbar.refresh(level);
-
-      // --- DOM write ---
-      const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-      this._virtualScrollArea.updateContainerHeight(scrollContainer.clientHeight);
-
-      // Build the list of elements we will resize right now.
-      const childrenToResize: VirtualScrollable[] = [];
-      const len = scrollerArea.children.length;
-      for (let i=0; i<len; i++) {
-        const child = scrollerArea.children[i];
-        if (ViewerElement.isViewerElement(child)) {
-          childrenToResize.push(child);
-        }
-      }
-
-      // Keep track of which children will need a resize later on.
-      const childrenToResizeSet = new Set(childrenToResize);
-      for (const childStatus of this._childElementList) {
-        if ( ! childrenToResizeSet.has(childStatus.element)) {
-          childStatus.needsRefresh = true;
-          childStatus.refreshLevel = level;
-        }
-      }
-
-      if (childrenToResize.length !== this._childElementList.length) {
-        this._scheduleStashedChildResizeTask();
-      }
-
-      this._virtualScrollArea.updateScrollableSizes(childrenToResize);
-      this._virtualScrollArea.reapplyState();
-
-      if (this._configDatabase != null) {
-        const config = this._configDatabase.getConfig(GENERAL_CONFIG);
-        this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
-      }
-    }
-  }
-
-  private _setTopFunction(scrollable: VirtualScrollable, top: number):  void {
-    if (scrollable instanceof Spacer) {
-      return;
-    }
-    (<HTMLElement> (<any> scrollable)).style.top = "" + top + "px";
-  }
-
-  private _handleViewerCursor(ev: CustomEvent): void {
-    const node = <Node> ev.target;
-    if (ViewerElement.isViewerElement(node)) {
-      this._scrollViewerCursorIntoView(node);
-    } else {
-      this._log.warn("_handleTerminalViewerCursor(): node is not a ViewerElement.");
-    }
-  }
-  
-  private _scrollViewerCursorIntoView(viewer: ViewerElement): void {
-    const pos = viewer.getCursorPosition();
-    const nodeTop = this._virtualScrollArea.getScrollableTop(viewer);
-    const top = pos.top + nodeTop;
-    const bottom = pos.bottom + nodeTop;
-    this._virtualScrollArea.scrollIntoView(top, bottom);
-  }
-
-  private _handleViewerCursorEdge(ev: CustomEvent): void {
-    const detail = <ViewerElementTypes.CursorEdgeDetail> ev.detail;
-    const index = this._childElementListIndexOf(<any> ev.target);
-    if (index === -1) {
-      this._log.warn("_handleTerminalViewerCursorEdge(): Couldn't find the target.");
-      return;
-    }
-
-    if (detail.edge === ViewerElementTypes.Edge.TOP) {
-      // A top edge was hit. Move the cursor to the bottom of the ViewerElement above it.
-      for (let i=index-1; i>=0; i--) {
-        const node = this._childElementList[i].element;
-        if (ViewerElement.isViewerElement(node)) {
-          this._makeVisible(node);
-          if (node.setCursorPositionBottom(detail.ch)) {
-            DomUtils.focusWithoutScroll(node);
-            this._scrollViewerCursorIntoView(node);
-            break;
-          }
-        }
-      }
-    
-    } else {
-      // Bottom edge. Move the cursor to the top of the next ViewerElement.
-      for (let i=index+1; i<this._childElementList.length; i++) {
-        const node = this._childElementList[i].element;
-        if (ViewerElement.isViewerElement(node)) {
-          this._makeVisible(node);
-          if (node.setCursorPositionTop(detail.ch)) {
-            DomUtils.focusWithoutScroll(node);
-            this._scrollViewerCursorIntoView(node);
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  // Run a function and only afterwards check the size of the scrollback.
-  private _enforceScrollbackLengthAfter(func: () => any): any {
-    const oldGuardFlag = this._enforceScrollbackLengthGuard;
-    this._enforceScrollbackLengthGuard = true;
-    const rc = func();
-    this._enforceScrollbackLengthGuard = oldGuardFlag;
-
-    if (this._configDatabase != null) {
-      const config = this._configDatabase.getConfig(GENERAL_CONFIG);
-      this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
-    }
-    return rc;
-  }
-  
-  private _enforceScrollbackSize(maxScrollbackLines: number, maxScrollbackFrames: number): void {
-    // Prevent the scrollback check from running multiple times.
-    if (this._enforceScrollbackLengthGuard) {
-      return;
-    }
-    this._enforceScrollbackLengthGuard = true;
-    const hasFocus = this.hasFocus();
-    this._enforceScrollbackSize2(maxScrollbackLines, maxScrollbackFrames);
-    if (hasFocus && ! this.hasFocus()) {
-      this.focus();
-    }
-    this._enforceScrollbackLengthGuard = false;
-  }
-
-  private _enforceScrollbackSize2(maxScrollbackLines: number, maxScrollbackFrames: number): void {
-    const windowHeight = window.screen.height;
-    const killList: (VirtualScrollable & HTMLElement)[] = [];
-
-    const childrenReverse = Array.from(this._childElementList);
-    childrenReverse.reverse();
-
-    // Skip past everything which could fit on one screen.
-    let i = 0;
-    let currentHeight = 0;
-    while (i < childrenReverse.length) {
-      const scrollableKid: VirtualScrollable & HTMLElement = <any> childrenReverse[i].element;
-      const kidVirtualHeight = this._virtualScrollArea.getScrollableVirtualHeight(scrollableKid);
-      if (currentHeight + kidVirtualHeight > windowHeight) {
-        break;
-      }
-      currentHeight += kidVirtualHeight;
-      i++;
-    }
-
-    let linesInScrollback = 0;
-
-    // We may have found the element which straddles the visible top of the screen.
-    if (i < childrenReverse.length) {
-      const scrollableKid: VirtualScrollable & HTMLElement = <any> childrenReverse[i].element;
-      i++;
-
-      const textLikeViewer = this._castToTextLikeViewer(scrollableKid);
-      if (textLikeViewer != null) {
-        const visibleRows = textLikeViewer.pixelHeightToRows(windowHeight - currentHeight);
-        linesInScrollback = textLikeViewer.lineCount() - visibleRows;
-        if (linesInScrollback > maxScrollbackLines) {
-
-          if (TerminalViewer.is(scrollableKid)) {
-            // Trim it.
-            textLikeViewer.deleteTopLines(linesInScrollback - maxScrollbackLines);
-          } else {
-            // Delete it outright.
-            killList.push(scrollableKid);
-          }
-
-          while (i < childrenReverse.length) {
-            killList.push(childrenReverse[i].element);
-            i++;
-          }
-          i = childrenReverse.length;
-        }
-      }
-    }
-
-    let frameCount = 0;
-    while (i < childrenReverse.length) {
-      const scrollableKid: VirtualScrollable & HTMLElement = <any> childrenReverse[i].element;
-      i++;
-      frameCount++;
-
-      const textLikeViewer = this._castToTextLikeViewer(scrollableKid);
-      if (textLikeViewer != null) {
-        linesInScrollback += textLikeViewer.lineCount();
-        if (frameCount > maxScrollbackFrames || linesInScrollback > maxScrollbackLines) {
-          
-          // We've hit a limit. Delete the rest.
-          killList.push(scrollableKid);
-          while (i < childrenReverse.length) {
-            killList.push(childrenReverse[i].element);
-            i++;
-          }
-          i = childrenReverse.length;
-        }
-
-        linesInScrollback += textLikeViewer.lineCount();
-      }
-    }
-
-    for (const scrollableKid of killList) {
-      this._removeScrollable(scrollableKid);
-    }
-  }
-
-  private _castToTextLikeViewer(kidNode: HTMLElement): {
-      deleteTopLines(lines: number): void;
-      lineCount(): number;
-      pixelHeightToRows(pixelHeight: number): number; } {
-
-    if (TerminalViewer.is(kidNode)) {
-      return kidNode;
-    } else if (EmbeddedViewer.is(kidNode)) {
-      const viewer = kidNode.getViewerElement();
-      if (TerminalViewer.is(viewer)) {
-        return viewer;  
-      } else if (TextViewer.is(viewer)) {
-        return viewer;
-      }
-    }
-    return null;
   }
 
   private _adjustFontSize(delta: number): void {
@@ -1372,45 +804,15 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._adjustFontSize(-this._fontSizeAdjustment);
   }
 
-  private _goToPreviousFrame(): void {
-    const heights = this._virtualScrollArea.getScrollableHeightsIncSpacing();
-
-    const y = this._virtualScrollArea.getScrollYOffset();
-    let heightCount = 0;
-    for (let i=0; i<heights.length; i++) {
-      if (y <= (heightCount + heights[i].height)) {
-        this._virtualScrollArea.scrollTo(heightCount);
-        break;
+  private _handleBeforeSelectionChange(ev: {sourceMouse: boolean}): void {
+    if (ev.sourceMouse) {
+      const generalConfig = this._configDatabase.getConfig("general");
+      if (generalConfig.autoCopySelectionToClipboard) {
+        this._copyToClipboardLater.trigger();
       }
-      heightCount += heights[i].height;
     }
   }
 
-  private _goToNextFrame(): void {
-    const heights = this._virtualScrollArea.getScrollableHeightsIncSpacing();
-
-    const y = this._virtualScrollArea.getScrollYOffset();
-    let heightCount = 0;
-    for (let i=0; i<heights.length; i++) {
-      if (y < (heightCount + heights[i].height)) {
-        this._virtualScrollArea.scrollTo(heightCount + heights[i].height);
-        break;
-      }
-      heightCount += heights[i].height;
-    }
-  }
-
-  // ----------------------------------------------------------------------
-  //
-  //   #    #                                                 
-  //   #   #  ###### #   # #####   ####    ##   #####  #####  
-  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
-  //   ###    #####    #   #####  #    # #    # #    # #    # 
-  //   #  #   #        #   #    # #    # ###### #####  #    # 
-  //   #   #  #        #   #    # #    # #    # #   #  #    # 
-  //   #    # ######   #   #####   ####  #    # #    # #####  
-  //                                                        
-  // ----------------------------------------------------------------------
   private _registerInputStreamFilter(filter: InputStreamFilter): Disposable {
     this._inputStreamFilters.push(filter);
     return {
@@ -1508,21 +910,19 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         break;
         
       case COMMAND_SCROLL_PAGE_UP:
-        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-          - this._virtualScrollArea.getScrollContainerHeight() / 2);
+        this._terminalCanvas.scrollPageUp();
         break;
           
       case COMMAND_SCROLL_PAGE_DOWN:
-        this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset()
-          + this._virtualScrollArea.getScrollContainerHeight() / 2);
+        this._terminalCanvas.scrollPageDown();
         break;
 
       case COMMAND_GO_TO_PREVIOUS_FRAME:
-        this._goToPreviousFrame();
+        this._terminalCanvas.goToPreviousFrame();
         break;
 
       case COMMAND_GO_TO_NEXT_FRAME:
-        this._goToNextFrame();
+        this._terminalCanvas.goToNextFrame();
         break;
 
       case COMMAND_COPY_TO_CLIPBOARD:
@@ -1546,7 +946,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         break;
 
       case COMMAND_CLEAR_SCROLLBACK:
-        this._enforceScrollbackSize(0, 0);
+        this._terminalCanvas.enforceScrollbackSize(0, 0);
         break;
 
       case COMMAND_FONT_SIZE_INCREASE:
@@ -1566,118 +966,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
     return true;
   }
-
-  // ********************************************************************
-  //
-  //    #####                                                            
-  //   #     #  ####  #    # ###### #####  #    # #      # #    #  ####  
-  //   #       #    # #    # #      #    # #    # #      # ##   # #    # 
-  //    #####  #      ###### #####  #    # #    # #      # # #  # #      
-  //         # #      #    # #      #    # #    # #      # #  # # #  ### 
-  //   #     # #    # #    # #      #    # #    # #      # #   ## #    # 
-  //    #####   ####  #    # ###### #####   ####  ###### # #    #  ####  
-  //
-  // ********************************************************************
-    
-  private _scheduleResize(): void {
-    this._scheduleLaterProcessing( () => {
-      this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
-    });
-  }
-
-  private _scheduleStashedChildResize(el: HTMLElement & VirtualScrollable): void {
-    if(el.parentNode !== this._stashArea) {
-      return;
-    }
-
-    for (const childInfo of this._childElementList) {
-      if (childInfo.element === el) {
-        if ( ! childInfo.needsRefresh) {
-          childInfo.needsRefresh = true;
-          childInfo.refreshLevel = ResizeRefreshElementBase.RefreshLevel.RESIZE;
-          this._scheduleStashedChildResizeTask();
-        }
-        return;
-      }
-    }
-
-    this._log.warn("_scheduleStashedChildResize() called with an unknown element instance.");
-  }
-
-  private _scheduleStashedChildResizeTask(): void {
-    if (this._stashedChildResizeTask == null) {
-      this._stashedChildResizeTask = () => {
-        // Gather the list of elements/scrollables that need refreshing and updating.
-        const processList: ChildElementStatus[] = [];
-        for (let i=this._childElementList.length-1; i>=0 && processList.length < CHILD_RESIZE_BATCH_SIZE; i--) {
-          const childStatus = this._childElementList[i];
-          if (childStatus.needsRefresh) {
-            processList.push(childStatus);
-            childStatus.needsRefresh = false;
-          }
-        }
-
-        if (processList.length !== 0) {
-          // Find the elements which need to be moved into the scroll area.
-          const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-          const stashedList: (HTMLElement & VirtualScrollable)[] = [];
-          for (const childStatus of processList) {
-            const element = childStatus.element;
-            if (element.parentElement !== scrollerArea) {
-              stashedList.push(element);
-            }
-          }
-
-          stashedList.forEach(el => this._markVisible(el, true));
-
-          for (const childStatus of processList) {
-            const el = childStatus.element;
-            if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
-              el.refresh(childStatus.refreshLevel);
-            }
-          }
-
-          this._virtualScrollArea.updateScrollableSizes(processList.map(childStatus => childStatus.element));
-
-          if (stashedList.length !== 0) {
-            stashedList.filter( (el) => ! this._virtualScrollArea.getScrollableVisible(el))
-              .forEach( (el) => this._markVisible(el, false) );
-          }
-
-          this._scheduleStashedChildResizeTask();
-        }
-      };
-    }
-
-    if (this._scheduleLaterQueue.indexOf(this._stashedChildResizeTask) === -1) {
-      this._scheduleLaterProcessing(this._stashedChildResizeTask);
-    }
-  }  
-
-  private _scheduleLaterProcessing(func: Function): void {
-    this._scheduleLaterQueue.push(func);
-    
-    if (this._scheduleLaterHandle === null) {
-      this._scheduleLaterHandle = doLater( () => {
-        this._scheduleLaterHandle = null;
-        const queue = this._scheduleLaterQueue;
-        this._scheduleLaterQueue = [];
-        queue.forEach( (func) => func() );
-      });
-    }
-  }
-
-  // ********************************************************************
-  //
-  //      #                                                                  #     #                      
-  //     # #   #####  #####  #      #  ####    ##   ##### #  ####  #    #    ##   ##  ####  #####  ###### 
-  //    #   #  #    # #    # #      # #    #  #  #    #   # #    # ##   #    # # # # #    # #    # #      
-  //   #     # #    # #    # #      # #      #    #   #   # #    # # #  #    #  #  # #    # #    # #####  
-  //   ####### #####  #####  #      # #      ######   #   # #    # #  # #    #     # #    # #    # #      
-  //   #     # #      #      #      # #    # #    #   #   # #    # #   ##    #     # #    # #    # #      
-  //   #     # #      #      ###### #  ####  #    #   #   #  ####  #    #    #     #  ####  #####  ###### 
-  //
-  // ********************************************************************
 
   /**
    * Handle when the embedded term.js enters start of application mode.
@@ -1772,9 +1060,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
    * Handle the exit from application mode.
    */
   private _handleApplicationModeEnd(): TermApi.ApplicationModeResponse {
-    let el: HTMLElement;
-    let startdivs: NodeList;
-    
     switch (this._applicationMode) {
       case ApplicationMode.APPLICATION_MODE_HTML:
         // el = this._getWindow().document.createElement("div");
@@ -1811,8 +1096,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _handleApplicationModeBracketStart(): void {
-    for (const kidInfo of this._childElementList) {
-      const element = kidInfo.element;
+    for (const element of this._terminalCanvas.getChildElements()) {
       if ((EmbeddedViewer.is(element) && element.children.length === 0) || CommandPlaceHolder.is(element)) {
         return;  // Don't open a new frame.
       }
@@ -1852,8 +1136,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
     this._lastCommandLine = cleancommand;
 
-    const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-    this._virtualScrollArea.updateContainerHeight(scrollContainer.clientHeight);
+    // const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
+    // this._virtualScrollArea.updateContainerHeight(scrollContainer.clientHeight);
+// FIXME ^    
   }
   
   private _moveCursorToFreshLine(): void {
@@ -1864,24 +1149,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   public deleteEmbeddedViewer(viewer: EmbeddedViewer): void {
-    this._removeScrollable(viewer);
+    this._terminalCanvas.removeScrollable(viewer);
     viewer.dispose();
-  }
-  
-  private _getLastEmbeddedViewer(): EmbeddedViewer {
-    const kids = this._childElementList;
-    const len = this._childElementList.length;
-    for (let i=len-1; i>=0;i--) {
-      const kid = kids[i].element;
-      if (EmbeddedViewer.is(kid)) {
-        return kid;
-      }
-    }
-    return null;
   }
 
   private _popOutLastEmbeddedViewer(): void {
-    const viewer = this._getLastEmbeddedViewer();
+    const viewer = this._terminalCanvas.getLastEmbeddedViewer();
     if (viewer === null) {
       return;
     }
@@ -1892,7 +1165,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _deleteLastEmbeddedViewer(): void {
-    const viewer = this._getLastEmbeddedViewer();
+    const viewer = this._terminalCanvas.getLastEmbeddedViewer();
     if (viewer === null) {
       return;
     }
@@ -1933,12 +1206,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       ev.stopPropagation();
     });
 
-    // el.addEventListener('copy-clipboard-request', (function(ev: CustomEvent) {
-    //   var clipboard = gui.Clipboard.get();
-    //   clipboard.set(ev.detail, 'text');
-    // }).bind(this));
-// FIXME
-    
     el.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
@@ -1947,7 +1214,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _handleApplicationModeBracketEnd(): void {
-    this._enforceScrollbackLengthAfter( () => {
+    this._terminalCanvas.enforceScrollbackLengthAfter( () => {
       this._closeLastEmbeddedViewer(this._htmlData);
     });
   }
@@ -1955,8 +1222,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _closeLastEmbeddedViewer(returnCode: string): void {
     // Find the terminal viewer which has no return code set on it.
     let startElement: HTMLElement & VirtualScrollable = null;
-    for (let i=this._childElementList.length-1; i>=0; i--) {
-      const el = this._childElementList[i].element;
+    for (const el of this._terminalCanvas.getChildElements()) {
       if (el instanceof EmbeddedViewer && el.children.length === 0) {
         startElement = el;
         break;
@@ -1984,9 +1250,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       embeddedViewerElement.setViewerElement(activeTerminalViewer);
       activeTerminalViewer.setEditable(true);
 
-      this._removeScrollable(activeTerminalViewer);
+      this._terminalCanvas.removeScrollable(activeTerminalViewer);
 
-      this._virtualScrollArea.updateScrollableSize(embeddedViewerElement);
+      this._terminalCanvas.updateScrollableSize(embeddedViewerElement);
       this._appendNewTerminalViewer();
       
       if (restoreFocus) {
@@ -2022,7 +1288,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         // Hang the terminal viewer under the Embedded viewer.
       newViewerElement.className = "extraterm_output";
 
-      this._appendScrollable(newViewerElement);
+      this._terminalCanvas.appendScrollable(newViewerElement);
       
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
@@ -2044,36 +1310,17 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._appendNewTerminalViewer();
       this._refocus();
       const activeTerminalViewer = this._terminalViewer;
-      this._virtualScrollArea.updateScrollableSize(activeTerminalViewer);
+      this._terminalCanvas.updateScrollableSize(activeTerminalViewer);
     }
   }
-
-  // ********************************************************************
-  //
-  //   #     #                 
-  //   ##   ## #  ####   ####  
-  //   # # # # # #      #    # 
-  //   #  #  # #  ####  #      
-  //   #     # #      # #      
-  //   #     # # #    # #    # 
-  //   #     # #  ####   ####  
-  //
-  // ********************************************************************
 
   /**
    * Copy the selection to the clipboard.
    */
   copyToClipboard(): void {
-    let text: string = null;
-    for (let i=0; i<this._childElementList.length; i++) {
-      const node = this._childElementList[i].element;
-      if (ViewerElement.isViewerElement(node)) {
-        text = node.getSelectionText();
-        if (text !== null) {
-          WebIpc.clipboardWrite(text);
-          break;
-        }
-      }
+    const text = this._terminalCanvas.getSelectionText();
+    if (text !== null) {
+      WebIpc.clipboardWrite(text);
     }
   }
   
@@ -2188,7 +1435,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
       if (this._configDatabase != null) {
         const config = this._configDatabase.getConfig(GENERAL_CONFIG);
-        this._enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
+        this._terminalCanvas.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
     }
     return mimeViewerElement;
