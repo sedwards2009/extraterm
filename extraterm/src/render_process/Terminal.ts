@@ -66,11 +66,18 @@ const DEBUG_APPLICATION_MODE = false;
 
 const ID = "EtTerminalTemplate";
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
+const ID_TOP = "ID_TOP";
 const ID_SCROLL_CONTAINER = "ID_SCROLL_CONTAINER";
 const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_SCROLLBAR_CONTAINER = "ID_SCROLLBAR_CONTAINER";
-const ID_CONTAINER = "ID_CONTAINER";
+const ID_CENTER_COLUMN = "ID_CENTER_COLUMN";
+const ID_CENTER_CONTAINER = "ID_CENTER_CONTAINER";
+const ID_NORTH_CONTAINER = "ID_NORTH_CONTAINER";
+const ID_SOUTH_CONTAINER = "ID_SOUTH_CONTAINER";
+const ID_EAST_CONTAINER = "ID_EAST_CONTAINER";
+const ID_WEST_CONTAINER = "ID_WEST_CONTAINER";
+
 const ID_CSS_VARS = "ID_CSS_VARS";
 const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
 const KEYBINDINGS_CURSOR_MODE = "terminal-cursor-mode";
@@ -253,7 +260,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       });
 
       // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+      const containerDiv = DomUtils.getShadowId(this, ID_CENTER_CONTAINER);
       const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
       resizeCanary.setCss(`
           font-family: var(--terminal-font);
@@ -515,7 +522,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   showDialog(dialogElement: HTMLElement): Disposable {
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CENTER_CONTAINER);
     dialogElement.classList.add(CLASS_VISITOR_DIALOG);
     containerDiv.appendChild(dialogElement);
     this._dialogStack.push(dialogElement);
@@ -534,16 +541,26 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       template = window.document.createElement('template');
       template.id = ID;
 
-      template.innerHTML = trimBetweenTags(`<style id="${ThemeableElementBase.ID_THEME}"></style>
+      template.innerHTML = trimBetweenTags(`
+        <style id="${ThemeableElementBase.ID_THEME}"></style>
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
-        <div id='${ID_CONTAINER}'>
-          <div id='${ID_SCROLL_CONTAINER}'>
-            <div id='${ID_SCROLL_AREA}'></div>
+        <div id='${ID_TOP}'>
+          <div id ='${ID_WEST_CONTAINER}'></div>
+          <div id='${ID_CENTER_COLUMN}'>
+            <div id='${ID_NORTH_CONTAINER}'></div>
+            <div id='${ID_CENTER_CONTAINER}'>
+              <div id='${ID_SCROLL_CONTAINER}'>
+                <div id='${ID_SCROLL_AREA}'></div>
+              </div>
+              <div id='${ID_SCROLLBAR_CONTAINER}'>
+                <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
+              </div>
+            </div>
+            <div id ='${ID_SOUTH_CONTAINER}'></div>
           </div>
-          <div id='${ID_SCROLLBAR_CONTAINER}'>
-            <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
-          </div>
-        </div>`);
+          <div id ='${ID_EAST_CONTAINER}'></div>
+        </div>
+        `);
       window.document.body.appendChild(template);
     }
 
@@ -552,7 +569,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _getCssVarsRules(): string {
     return `
-    #${ID_CONTAINER} {
+    #${ID_CENTER_CONTAINER} {
         ${this._getCssFontSizeRule(this._fontSizeAdjustment)}
     }
     `;
@@ -1373,7 +1390,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
     const uploader = new BulkFileUploader(bulkFileHandle, this._pty);
 
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    const containerDiv = DomUtils.getShadowId(this, ID_CENTER_CONTAINER);
     const uploadProgressBar = <UploadProgressBar> document.createElement(UploadProgressBar.TAG_NAME);
     
     if ("filename" in bulkFileHandle.getMetadata()) {

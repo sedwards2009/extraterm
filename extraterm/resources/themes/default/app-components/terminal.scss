@@ -9,7 +9,42 @@
   contain: strict;
 }
 
-#ID_CONTAINER {
+
+#ID_TOP {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  contain: strict;
+}
+
+#ID_WEST_CONTAINER, #ID_EAST_CONTAINER, #ID_NORTH_CONTAINER, #ID_SOUTH_CONTAINER {
+  flex: 0 0 auto;
+}
+
+#ID_WEST_CONTAINER {
+  background-color: #ff0000;
+}
+
+#ID_EAST_CONTAINER {
+  background-color: #ffff00;
+}
+#ID_NORTH_CONTAINER {
+  background-color: #ff00ff;
+}
+#ID_SOUTH_CONTAINER {
+  background-color: #00ff00;
+}
+
+
+#ID_CENTER_COLUMN {
+  flex: 1 1 auto;
+
+  display: flex;
+  flex-direction: column;
+}
+
+#ID_CENTER_CONTAINER {
   position: relative;
 
   display: flex;
