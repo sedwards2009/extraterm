@@ -3,6 +3,7 @@
  */
 /* terminal styles */
 @import 'general-gui/pxToRem';
+@import 'general-gui/variables';
 
 :host {
   display: block;
@@ -20,22 +21,35 @@
 
 #ID_WEST_CONTAINER, #ID_EAST_CONTAINER, #ID_NORTH_CONTAINER, #ID_SOUTH_CONTAINER {
   flex: 0 0 auto;
+
+  background: $tab-bar-background-color;
+
+  & > * {
+    margin: $panel-body-padding;
+    display: block;
+  }
+}
+
+#ID_NORTH_CONTAINER {
+  border-bottom: 1px solid $tab-border-color;
+  padding-bottom: -1px;
+
+}
+
+#ID_SOUTH_CONTAINER {
+  border-top: 1px solid $tab-border-color;
+  padding-top: -1px;
 }
 
 #ID_WEST_CONTAINER {
-  background-color: #ff0000;
+  border-right: 1px solid $tab-border-color;
+  padding-right: -1px;
 }
 
 #ID_EAST_CONTAINER {
-  background-color: #ffff00;
+  border-left: 1px solid $tab-border-color;
+  padding-left: -1px;
 }
-#ID_NORTH_CONTAINER {
-  background-color: #ff00ff;
-}
-#ID_SOUTH_CONTAINER {
-  background-color: #00ff00;
-}
-
 
 #ID_CENTER_COLUMN {
   flex: 1 1 auto;
