@@ -52,6 +52,8 @@ import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { FindPanel } from "./FindPanel";
+
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 const VisualState = ViewerElementTypes.VisualState;
@@ -98,6 +100,8 @@ const COMMAND_FONT_SIZE_DECREASE = "decreaseFontSize";
 const COMMAND_FONT_SIZE_RESET = "resetFontSize";
 const COMMAND_GO_TO_PREVIOUS_FRAME = "goToPreviousFrame";
 const COMMAND_GO_TO_NEXT_FRAME = "goToNextFrame";
+const COMMAND_FIND = "find";
+
 
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -127,6 +131,12 @@ interface WriteBufferStatus {
 
 type InputStreamFilter = (input: string) => string;
 
+enum BorderSide {
+  NORTH,
+  SOUTH,
+  EAST,
+  WEST
+}
 
 /**
  * An Extraterm terminal.
@@ -886,6 +896,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         ? { ...defaults, id: COMMAND_ENTER_CURSOR_MODE, icon: "fa fa-i-cursor", label: "Enter cursor mode" }
         : { ...defaults, id: COMMAND_ENTER_NORMAL_MODE, label: "Exit cursor mode" },
     
+      { ...defaults, id: COMMAND_FIND, icon: "fas fa-search", label: "Find", contextMenu: true },
       { ...defaults, id: COMMAND_SCROLL_PAGE_UP, icon: "fa fa-angle-double-up", label: "Scroll Page Up", contextMenu: false },
       { ...defaults, id: COMMAND_SCROLL_PAGE_DOWN, icon: "fa fa-angle-double-down", label: "Scroll Page Down", contextMenu: false },
       { ...defaults, id: COMMAND_GO_TO_PREVIOUS_FRAME, label: "Go to Previous Frame", icon: "fas fa-step-backward fa-rotate-90" },
@@ -976,6 +987,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
       case COMMAND_FONT_SIZE_RESET:
         this._resetFontSize();
+        break;
+
+      case COMMAND_FIND:
+        this._openFindPanel();
         break;
 
       default:
@@ -1498,6 +1513,24 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._nextTag = msg.tag;
     });
   }
+
+  private _appendElementToBorder(element: HTMLElement, borderSide: BorderSide): void {
+    // borderSize
+    const sideToIdMapping = {
+      [BorderSide.NORTH]: ID_NORTH_CONTAINER,
+      [BorderSide.SOUTH]: ID_SOUTH_CONTAINER,
+      [BorderSide.EAST]: ID_EAST_CONTAINER,
+      [BorderSide.WEST]: ID_WEST_CONTAINER,
+    };
+    const borderSideElement = DomUtils.getShadowId(this, sideToIdMapping[borderSide]);
+    borderSideElement.appendChild(element);
+  }
+
+  private _openFindPanel(): void {
+    const findPanel = <FindPanel> document.createElement(FindPanel.TAG_NAME);
+    this._appendElementToBorder(findPanel, BorderSide.SOUTH);
+  }
+
 }
 
 // interface ApplicationModeHandler {
