@@ -468,6 +468,18 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
   }
 
+  find(needle: string): void {
+    this._aceEditor.find(needle);
+  }
+
+  findNext(needle: string): void {
+    this._aceEditor.findNext(needle);
+  }
+
+  findPrevious(needle: string): void {
+    this._aceEditor.findPrevious(needle);
+  } 
+
   /**
    * Gets the height of this element.
    * 

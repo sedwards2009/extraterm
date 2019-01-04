@@ -52,7 +52,7 @@ import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { FindPanel } from "./FindPanel";
+import { FindPanel, TempFindPanelViewer_FIXME } from "./FindPanel";
 
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -204,6 +204,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _dialogStack: HTMLElement[] = [];
 
   private _copyToClipboardLater: DebouncedDoLater = null;
+  private _findPanel: FindPanel = null;
 
   constructor() {
     super();
@@ -1526,9 +1527,44 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     borderSideElement.appendChild(element);
   }
 
+  private _removeElementFromBorder(element: HTMLElement): void {
+    const borderIds = [ID_NORTH_CONTAINER, ID_SOUTH_CONTAINER, ID_EAST_CONTAINER, ID_WEST_CONTAINER];
+    for (const borderId of borderIds) {
+      const borderSideElement = DomUtils.getShadowId(this, borderId);
+      if (borderSideElement === element.parentElement) {
+        borderSideElement.removeChild(element);
+        break;
+      }
+    }
+  }
+
   private _openFindPanel(): void {
-    const findPanel = <FindPanel> document.createElement(FindPanel.TAG_NAME);
-    this._appendElementToBorder(findPanel, BorderSide.SOUTH);
+    if (this._findPanel == null) {
+      this._findPanel = <FindPanel> document.createElement(FindPanel.TAG_NAME);
+
+//----    
+      const fakeTerminal = {
+        getViewers: (): TempFindPanelViewer_FIXME[] => {
+          const result: TempFindPanelViewer_FIXME[] = [];
+          for (const v of this.getViewerElements()) {
+            if (v instanceof TerminalViewer) {
+              result.push(v);
+            }
+          }
+          return result;
+        }
+      };
+//----    
+
+      this._findPanel.setTerminal(fakeTerminal);
+      this._findPanel.addEventListener("close", () => {
+        this._removeElementFromBorder(this._findPanel);
+        this._findPanel = null;
+      });
+
+      this._appendElementToBorder(this._findPanel, BorderSide.SOUTH);
+    }
+    this._findPanel.focus();
   }
 
 }

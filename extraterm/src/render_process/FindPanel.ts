@@ -13,16 +13,32 @@ import { ThemedContainerElementBase } from "./gui/ThemedContainerElementBase";
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
+export interface TempFindPanelViewer_FIXME {
+  find(needle: string): void;
+  findNext(needle: string): void;
+  findPrevious(needle: string): void;
+}
+
+export interface TempFindPanelTerminal_FIXME {
+  getViewers(): TempFindPanelViewer_FIXME[];
+}
+
+
 @Component(
   {
     template: trimBetweenTags(`
       <div class="gui-packed-row width-100pc">
         <label class="compact"><i class="fas fa-search"></i></label>
-        <input type="text" class="char-width-20" v-model="needle" placeholder="Find" />
-        <button v-on:click="findNext" class="inline">Find Next</button>
-        <button v-on:click="findPrevious" class="inline">Find Previous</button>
+        <input ref="needle" type="text" class="char-width-20"
+          v-model="needle"
+          placeholder="Find"
+          v-on:keydown.capture="onNeedleKeyDown"
+          v-on:keypress.capture="onNeedleKeyPress"
+          />
+        <button v-on:click="$emit('findNext')" class="inline"><i class="fas fa-arrow-up"></i> Find Next</button>
+        <button v-on:click="$emit('findPrevious')" class="inline"><i class="fas fa-arrow-down"></i> Find Previous</button>
         <span class="expand"></span>
-        <button v-on:click="close" class="compact microtool danger"><i class="fa fa-times"></i></button>
+        <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>
       </div>`)
   })
 class FindPanelUI extends Vue {
@@ -33,16 +49,21 @@ class FindPanelUI extends Vue {
     this.needle = "";
   }
 
-  findNext(): void {
-
+  focus(): void {
+    if (this.$refs.needle != null) {
+      (<HTMLInputElement> this.$refs.needle).focus();
+    }
   }
 
-  findPrevious(): void {
-
+  onNeedleKeyDown(event: KeyboardEvent): void {
+    if (event.key === "Escape") {
+      this.$emit("close");
+    }
   }
-  
-  close(): void {
-
+  onNeedleKeyPress(event: KeyboardEvent): void {
+    if (event.key === "Enter") {
+      this.$emit("findNext");
+    }
   }
 }
 
@@ -53,17 +74,64 @@ export class FindPanel extends ThemedContainerElementBase {
 
   private _log: Logger;
   private _ui: FindPanelUI = null;
+  private _terminal: TempFindPanelTerminal_FIXME = null;
 
   constructor() {
     super();
     this._log = getLogger(FindPanel.TAG_NAME, this);
 
     this._ui = new FindPanelUI();
+    this._ui.$on("find", () => {
+      this._find();
+    });
+    this._ui.$on("findNext", () => {
+      this._findNext();
+    });
+    this._ui.$on("findPrevious", () => {
+      this._findPrevious();
+    });
+    this._ui.$on("close", () => {
+      this._close();
+    });
+
     const component = this._ui.$mount();
     this.getContainerNode().appendChild(component.$el);
   }
 
+  focus(): void {
+    this._ui.focus();
+  }
+
+  setTerminal(terminal: TempFindPanelTerminal_FIXME): void {
+    this._terminal = terminal;
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [...super._themeCssFiles(), ThemeTypes.CssFile.FONT_AWESOME];
+  }
+
+  private _find(): void {
+// FIXME
+    for (const viewer of this._terminal.getViewers()) {
+      viewer.find(this._ui.needle);
+    }
+  }
+
+  private _findNext(): void {
+    for (const viewer of this._terminal.getViewers()) {
+      viewer.findNext(this._ui.needle);
+    }
+  }
+
+  private _findPrevious(): void {
+    for (const viewer of this._terminal.getViewers()) {
+      viewer.findPrevious(this._ui.needle);
+    }
+  }
+
+  private _close(): void {
+    const closeRequestEvent = new CustomEvent("close", {bubbles: true, composed: false});
+    closeRequestEvent.initCustomEvent("close", true, true, null);
+    this.dispatchEvent(closeRequestEvent);  
   }
 }
