@@ -106,7 +106,7 @@ interface ResizeCallback {
   (target: Element, contentRect: DOMRectReadOnly): void;
 }
 
-class ResizeHandler {
+class ResizeNotifier {
   private _resizeObserver: ResizeObserver;
   private _observedElementsMap = new WeakMap<Element, ResizeCallback>();
 
@@ -145,7 +145,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';
   static EVENT_SCROLL_MOVE = 'scroll-move';
 
-  private static _resizeHandler = new ResizeHandler();
+  private static _resizeHandler = new ResizeNotifier();
 
   /**
    * Type guard for detecting a EtEmbeddedViewer instance.
