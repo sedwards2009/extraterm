@@ -1,0 +1,21 @@
+{
+  "name": "extraterm-resize-notifier",
+  "version": "0.1.0",
+  "description": "Simple wrapper around the browser ResizeObserver",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "main.js",
+  "types": "main.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "devDependencies": {
+    "typescript": "3.1.6"
+  },
+  "scripts": {
+    "run": "false",
+    "build-all": "yarn run build",
+    "build": "tsc"
+  }
+}

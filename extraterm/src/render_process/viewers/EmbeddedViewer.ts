@@ -9,6 +9,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import { ResizeNotifier } from 'extraterm-resize-notifier';
 
 import {guessMimetype} from '../bulk_file_handling/BulkFileUtils';
 import {CheckboxMenuItem} from '../gui/CheckboxMenuItem';
@@ -102,35 +103,6 @@ class TitleBarUI extends Vue {
   }
 }
 
-interface ResizeCallback {
-  (target: Element, contentRect: DOMRectReadOnly): void;
-}
-
-class ResizeNotifier {
-  private _resizeObserver: ResizeObserver;
-  private _observedElementsMap = new WeakMap<Element, ResizeCallback>();
-
-  constructor() {
-     this._resizeObserver = new ResizeObserver(entries => {
-       for (const entry of entries) {
-        const callback = this._observedElementsMap.get(entry.target);
-        if (callback != null) {
-          callback(entry.target, entry.contentRect);
-        }
-      }
-    });
-  }
-
-  observe(element: Element, callback: ResizeCallback): void {
-    this._resizeObserver.observe(element);
-    this._observedElementsMap.set(element, callback);
-  }
-
-  unobserve(element: Element): void {
-    this._resizeObserver.unobserve(element);
-    this._observedElementsMap.delete(element);
-  }
-}
 
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
