@@ -117,7 +117,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';
   static EVENT_SCROLL_MOVE = 'scroll-move';
 
-  private static _resizeHandler = new ResizeNotifier();
+  private static _resizeNotifier = new ResizeNotifier();
 
   /**
    * Type guard for detecting a EtEmbeddedViewer instance.
@@ -160,7 +160,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
     this._setUpEventHandlers();
 
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
-    EmbeddedViewer._resizeHandler.observe(headerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+    EmbeddedViewer._resizeNotifier.observe(headerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
       VirtualScrollArea.emitResizeEvent(this);
     });
   }
@@ -197,7 +197,7 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
   dispose(): void {
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     if (headerDiv != null) {
-      EmbeddedViewer._resizeHandler.unobserve(headerDiv);
+      EmbeddedViewer._resizeNotifier.unobserve(headerDiv);
     }
 
     const viewerElement = this._getViewerElement();

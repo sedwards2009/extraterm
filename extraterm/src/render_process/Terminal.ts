@@ -7,6 +7,7 @@
 import * as crypto from 'crypto';
 import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
+import { ResizeNotifier } from 'extraterm-resize-notifier';
 
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 import {BulkFileUploader} from './bulk_file_handling/BulkFileUploader';
@@ -153,6 +154,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   static EVENT_TITLE = "title";
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
   
+  private static _resizeNotifier = new ResizeNotifier();
+
   private _log: Logger;
   private _pty: Pty = null;
 
@@ -232,6 +235,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const scrollArea = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_AREA);
       const scrollContainer = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
       DomUtils.preventScroll(scrollContainer);
+      EtTerminal._resizeNotifier.observe(scrollContainer, (target: Element, contentRect: DOMRectReadOnly) => {
+        this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+      });
       this._terminalCanvas = new TerminalCanvas(scrollContainer, scrollArea, scrollBar);
       this._terminalCanvas.setConfigDatabase(this._configDatabase);
       this._terminalCanvas.onBeforeSelectionChange(ev => this._handleBeforeSelectionChange(ev));
