@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
 "use strict";
@@ -11,24 +11,16 @@ import * as he from 'he';
 import * as SourceDir from '../../SourceDir';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
-
-import * as config from '../../Config';
-type ConfigManager = config.ConfigDatabase;
-
-import * as keybindingmanager from '../keybindings/KeyBindingsManager';
-type KeybindingsManager = keybindingmanager.KeybindingsManager;
-
+import {Logger, getLogger} from "extraterm-logging";
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { ResizeNotifier } from 'extraterm-resize-notifier';
+import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, ShowTipsStrEnum } from '../../Config';
+import { KeybindingsManager, AcceptsKeybindingsManager } from '../keybindings/KeyBindingsManager';
 import {ViewerElement} from '../viewers/ViewerElement';
-import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
-import * as VirtualScrollArea from '../VirtualScrollArea';
-import {Logger, getLogger} from "extraterm-logging";
-import { log } from "extraterm-logging";
-import { trimBetweenTags } from 'extraterm-trim-between-tags';
-
-type SetterState = VirtualScrollArea.SetterState;
+import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
 
 const ID = "EtTipViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -38,8 +30,6 @@ const ID_PREVIOUS_BUTTON = "ID_PREVIOUS_BUTTON";
 const ID_NEXT_BUTTON = "ID_NEXT_BUTTON";
 const ID_SHOW_TIPS = "ID_SHOW_TIPS";
 const CLASS_KEYCAP = "CLASS_KEYCAP";
-
-const DEBUG_SIZE = false;
 
 
 /**
@@ -61,11 +51,11 @@ function loadTipFile(): string[] {
 const tipData = loadTipFile();
 
 @WebComponent({tag: "et-tip-viewer"})
-export class TipViewer extends ViewerElement implements config.AcceptsConfigDatabase, keybindingmanager.AcceptsKeybindingsManager, Disposable {
+export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, AcceptsKeybindingsManager, Disposable {
 
   static TAG_NAME = "ET-TIP-VIEWER";
-  
   static MIME_TYPE = "application/x-extraterm-tip";
+  private static _resizeNotifier = new ResizeNotifier();
   
   /**
    * Type guard for detecting a EtTipViewer instance.
@@ -78,7 +68,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
   }
   
   private _log: Logger;
-  private _configManager: ConfigManager = null;
+  private _configManager: ConfigDatabase = null;
   private _keybindingsManager: KeybindingsManager = null;
   private _height = 0;
   private _tipIndex = 0;
@@ -106,7 +96,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
   
   connectedCallback(): void {
     super.connectedCallback();
-    this._tipIndex = this._configManager.getConfig(config.GENERAL_CONFIG).tipCounter % this._getTipCount();
+    this._tipIndex = this._configManager.getConfig(GENERAL_CONFIG).tipCounter % this._getTipCount();
     
     if (DomUtils.getShadowRoot(this) !== null) {
       return;
@@ -118,7 +108,12 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
     this.updateThemeCss();
     
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-    
+    TipViewer._resizeNotifier.observe(containerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+      const rect = containerDiv.getBoundingClientRect();
+      this._height = rect.height;
+      emitResizeEvent(this);
+    });
+
     // Intercept link clicks and open them in an external browser.
     containerDiv.addEventListener('click', (ev: MouseEvent) => {
       const source = <HTMLElement> ev.target;
@@ -150,11 +145,11 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
     });
     
     const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
-    showTipsSelect.value = this._configManager.getConfig(config.GENERAL_CONFIG).showTips;
+    showTipsSelect.value = this._configManager.getConfig(GENERAL_CONFIG).showTips;
     showTipsSelect.addEventListener('change', () => {
-      const newConfig = this._configManager.getConfigCopy(config.GENERAL_CONFIG);
-      newConfig.showTips = <config.ShowTipsStrEnum> showTipsSelect.value;
-      this._configManager.setConfig(config.GENERAL_CONFIG, newConfig);
+      const newConfig = this._configManager.getConfigCopy(GENERAL_CONFIG);
+      newConfig.showTips = <ShowTipsStrEnum> showTipsSelect.value;
+      this._configManager.setConfig(GENERAL_CONFIG, newConfig);
     });
   }
   
@@ -170,7 +165,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
     return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GENERAL_GUI];
   }
 
-  setConfigDatabase(newConfigManager: ConfigManager): void {
+  setConfigDatabase(newConfigManager: ConfigDatabase): void {
     if (this._configManagerDisposable !== null) {
       this._configManagerDisposable.dispose();
       this._configManagerDisposable = null;
@@ -218,10 +213,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
   
   // VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
-    if (DEBUG_SIZE) {
-      this._log.debug("setDimensionsAndScroll(): ", setterState.height, setterState.heightChanged,
-        setterState.yOffset, setterState.yOffsetChanged);
-    }
   }
 
   // VirtualScrollable
@@ -231,17 +222,11 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
 
    // VirtualScrollable
   getVirtualHeight(containerHeight: number): number {
-    if (DEBUG_SIZE) {
-      this._log.debug("getVirtualHeight: ", this._height);
-    }
     return this._height;
   }
   
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
-    if (DEBUG_SIZE) {
-      this._log.debug("getReserveViewportHeight: ", 0);
-    }
     return 0;
   }
   
@@ -250,11 +235,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
     return [TipViewer.MIME_TYPE].indexOf(mimeType) !== -1;
   }
   
-  
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    this._processRefresh(level);
-  }
-
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -288,7 +268,7 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
   
   private _configChanged(): void {
     const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
-    showTipsSelect.value = this._configManager.getConfig(config.GENERAL_CONFIG).showTips;
+    showTipsSelect.value = this._configManager.getConfig(GENERAL_CONFIG).showTips;
   }
 
   private _keyBindingChanged(): void {
@@ -301,8 +281,6 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
 
     this._substituteKeycaps(contentDiv);
     this._fixImgRelativeUrls(contentDiv);
-    
-    this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
   }
 
   private _substituteKeycaps(contentDiv: HTMLElement): void {
@@ -334,31 +312,11 @@ export class TipViewer extends ViewerElement implements config.AcceptsConfigData
     });
   }
 
-  private _processRefresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-    if (containerDiv !== null) {
-      // --- DOM Read ---
-      const rect = containerDiv.getBoundingClientRect();
-      this._height = rect.height;
-
-      this._adjustHeight(this._height);
-      VirtualScrollArea.emitResizeEvent(this);
-    }
-  }
-
   private _getTipHTML(tipNumber: number): string {
     return tipData[tipNumber];
   }
   
   private _getTipCount(): number {
     return tipData.length;
-  }
-  
-  private _adjustHeight(newHeight: number): void {
-    this._height = newHeight;
-    if (this.parentNode === null || DomUtils.getShadowRoot(this) === null) {
-      return;
-    }
-    this.style.height = "" + newHeight + "px";
-  }
+  }  
 }
