@@ -1,10 +1,13 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
 "use strict";
-import {WebComponent} from 'extraterm-web-component-decorators';
-import {BulkFileHandle, ViewerMetadata} from 'extraterm-extension-api';
+import { WebComponent } from 'extraterm-web-component-decorators';
+import { BulkFileHandle, ViewerMetadata } from 'extraterm-extension-api';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { Logger, getLogger } from "extraterm-logging";
+import { log } from "extraterm-logging";
 
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import {DebouncedDoLater} from '../../utils/DoLater';
@@ -12,17 +15,11 @@ import {ViewerElement} from './ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
-import * as ViewerElementTypes from './ViewerElementTypes';
-import * as VirtualScrollArea from '../VirtualScrollArea';
-import {Logger, getLogger} from "extraterm-logging";
-import { log } from "extraterm-logging";
+import { VisualState, Mode, CursorMoveDetail, CursorEdgeDetail, Edge } from './ViewerElementTypes';
+import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
 import {AcceptsKeybindingsManager, KeybindingsManager} from '../keybindings/KeyBindingsManager';
 import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
-
-type SetterState = VirtualScrollArea.SetterState;
-type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
-type VisualState = ViewerElementTypes.VisualState;
-const VisualState = ViewerElementTypes.VisualState;
+import { ResizeNotifier } from '../../../../packages/extraterm-resize-notifier/main';
 
 const ID = "EtImageViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -44,6 +41,7 @@ const DEBUG_SIZE = false;
 export class ImageViewer extends ViewerElement implements AcceptsKeybindingsManager {
 
   static TAG_NAME = "ET-IMAGE-VIEWER";
+  private static _resizeNotifier = new ResizeNotifier();
   
   /**
    * Type guard for detecting a EtTerminalViewer instance.
@@ -59,17 +57,13 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
   private _keybindingsManager: KeybindingsManager = null;
   private _bulkFileHandle: BulkFileHandle = null;
   private _metadataEventDoLater: DebouncedDoLater = null;
-  private _text = null;
-  private _buffer: Buffer = null;
   private _mimeType: string = null;
   private _imageWidth = -1;
   private _imageHeight = -1;
   private _cursorTop = 0;
   private _height = 0;
-  private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
-  private document: Document = null;
+  private _mode: Mode = Mode.DEFAULT;
   private _visualState: VisualState = VisualState.UNFOCUSED;
-  private _viewportHeight = -1;  // Used to detect changes in the viewport size when in CURSOR mode.
   
   // The current element height. This is a cached value used to prevent touching the DOM.
   private _currentElementHeight = -1;
@@ -77,7 +71,6 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
   constructor() {
     super();
     this._log = getLogger(ImageViewer.TAG_NAME, this);
-    this.document = document;
 
     this._metadataEventDoLater = new DebouncedDoLater(() => {
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
@@ -119,7 +112,11 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
     } );
     
     const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
-    imgElement.addEventListener('load', this._handleImageLoad.bind(this));
+    imgElement.addEventListener('load', () => this._handleImageLoad());
+    ImageViewer._resizeNotifier.observe(imgElement, (target: Element, contentRect: DOMRectReadOnly) => {
+      emitResizeEvent(this);
+    });
+
     this._applyVisualState(this._visualState);
 
     if (this._bulkFileHandle !== null) {
@@ -161,7 +158,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
     return hasFocus;
   }
   
-  setVisualState(newVisualState: ViewerElementTypes.VisualState): void {
+  setVisualState(newVisualState: VisualState): void {
     if (newVisualState !== this._visualState) {
       if (DomUtils.getShadowRoot(this) !== null) {
         this._applyVisualState(newVisualState);
@@ -170,7 +167,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
     }
   }
   
-  getVisualState(): ViewerElementTypes.VisualState {
+  getVisualState(): VisualState {
     return this._visualState;
   }
   
@@ -204,11 +201,11 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
     return newImmediateResolvePromise();
   }
 
-  setMode(newMode: ViewerElementTypes.Mode): void {
+  setMode(newMode: Mode): void {
     this._mode = newMode;
   }
   
-  getMode(): ViewerElementTypes.Mode {
+  getMode(): Mode {
     return this._mode;
   }
   
@@ -218,11 +215,6 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
   getEditable(): boolean {
     return false;
   }  
-
-  // VirtualScrollable
-  getHeight(): number {
-    return this._height;
-  }
   
   // VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
@@ -267,11 +259,6 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
     return 0;
   }
   
-  // isFontLoaded(): boolean {
-  //   return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
-  // }
-
-
   getCursorPosition(): CursorMoveDetail {
     const detail: CursorMoveDetail = {
       left: 0,
@@ -299,28 +286,17 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
     return ["image/x-bmp", "image/bmp", "image/png", "image/gif", "image/jpeg",  "image/webp"].indexOf(mimeType) !== -1;
   }
   
-  //-----------------------------------------------------------------------
-  //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
-  //
-  //-----------------------------------------------------------------------
-  /**
-   * 
-   */
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<style id="${ThemeableElementBase.ID_THEME}">
-        </style>
-        <div id="${ID_CONTAINER}" class="${CLASS_FORCE_UNFOCUSED}" tabindex="-1"><div id="${ID_CURSOR}"></div><img id="${ID_IMAGE}" /></div>`
+      template.innerHTML = trimBetweenTags(`
+        <style id="${ThemeableElementBase.ID_THEME}"></style>
+        <div id="${ID_CONTAINER}" class="${CLASS_FORCE_UNFOCUSED}" tabindex="-1">
+          <div id="${ID_CURSOR}"></div>
+          <img id="${ID_IMAGE}" />
+        </div>`);
 
       window.document.body.appendChild(template);
     }
@@ -350,18 +326,6 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
     }
   }
   
-  private _emitVirtualResizeEvent(): void {
-    if (DEBUG_SIZE) {
-      this._log.debug("_emitVirtualResizeEvent");
-    }
-    VirtualScrollArea.emitResizeEvent(this);
-  }
-  
-  private _emitBeforeSelectionChangeEvent(): void {
-    const event = new CustomEvent(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, { bubbles: true });
-    this.dispatchEvent(event);
-  }
-  
   private _setImageUrl(url: string): void {
     const imageEl = DomUtils.getShadowId(this, ID_IMAGE);
     imageEl.setAttribute("src", url);
@@ -373,21 +337,8 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
     
     const cursorDiv = DomUtils.getShadowId(this, ID_CURSOR);
     cursorDiv.style.height = "" + imgElement.height + "px";
-    
-    this._emitVirtualResizeEvent()
+    emitResizeEvent(this);
   }
-    
-  // ----------------------------------------------------------------------
-  //
-  //   #    #                                                 
-  //   #   #  ###### #   # #####   ####    ##   #####  #####  
-  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
-  //   ###    #####    #   #####  #    # #    # #    # #    # 
-  //   #  #   #        #   #    # #    # ###### #####  #    # 
-  //   #   #  #        #   #    # #    # #    # #   #  #    # 
-  //   #    # ######   #   #####   ####  #    # #    # #####  
-  //                                                        
-  // ----------------------------------------------------------------------
   
   public dispatchEvent(ev: Event): boolean {
     if (ev.type === 'keydown' || ev.type === 'keypress') {
@@ -400,14 +351,13 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
     if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null &&
-        this._mode === ViewerElementTypes.Mode.CURSOR) {
+        this._mode === Mode.CURSOR) {
           
       const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_SELECTION_MODE);
       if (keyBindings !== null) {
         
         const command = keyBindings.mapEventToCommand(ev);
         if (command !== null) {
-          const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
           ev.preventDefault();
           ev.stopPropagation();
           
@@ -421,7 +371,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
                 this.dispatchEvent(event);
 
               } else {
-                const detail: ViewerElementTypes.CursorEdgeDetail = { edge: ViewerElementTypes.Edge.TOP, ch: 0 };
+                const detail: CursorEdgeDetail = { edge: Edge.TOP, ch: 0 };
                 const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
                 this.dispatchEvent(event);
               }
@@ -429,7 +379,6 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
             
             case COMMAND_GO_DOWN:
               // Cursor down          
-              const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
               if (this._cursorTop + this._height < this._imageHeight) {
                 const newTop = Math.min(this._imageHeight - this._height, this._cursorTop + SCROLL_STEP);
                 this._cursorTop = newTop;
@@ -437,7 +386,7 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
                 this.dispatchEvent(event);
 
               } else {
-                const detail: ViewerElementTypes.CursorEdgeDetail = { edge: ViewerElementTypes.Edge.BOTTOM, ch: 0 };
+                const detail: CursorEdgeDetail = { edge: Edge.BOTTOM, ch: 0 };
                 const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
                 this.dispatchEvent(event);
               }
@@ -450,10 +399,6 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
         }
       }
     }    
-  }
-  
-  private _getClientYScrollRange(): number {
-    return Math.max(0, this.getVirtualHeight(this.getHeight()) - this.getHeight() + this.getReserveViewportHeight(this.getHeight()));
   }
 
   private _adjustHeight(newHeight: number): void {
@@ -470,9 +415,3 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
   }
 }
 
-function px(value) {
-  if (value === null || value === undefined || value === "") {
-    return 0;
-  }
-  return parseInt(value.slice(0,-2),10);
-}  
