@@ -4,13 +4,14 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { WebComponent } from 'extraterm-web-component-decorators';
-
-import * as ThemeTypes from '../../theme/Theme';
-import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
-import * as DomUtils from '../DomUtils';
+import { ResizeNotifier } from 'extraterm-resize-notifier';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
+
+import * as ThemeTypes from '../../theme/Theme';
+import * as DomUtils from '../DomUtils';
 import { TemplatedElementBase } from './TemplatedElementBase';
+import { RefreshLevel } from '../viewers/ViewerElementTypes';
 
 const ID_TOP = "ID_TOP";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -41,6 +42,7 @@ export enum SplitOrientation {
 export class Splitter extends TemplatedElementBase {
   
   static TAG_NAME = "ET-SPLITTER";
+  private static _resizeNotifier = new ResizeNotifier();
   
   private _log: Logger;
   private _mutationObserver: MutationObserver = null;
@@ -57,6 +59,9 @@ export class Splitter extends TemplatedElementBase {
 
     const topDiv = this._elementById(ID_TOP);
     topDiv.classList.add(CLASS_NORMAL);
+    Splitter._resizeNotifier.observe(topDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+      this._refresh(RefreshLevel.COMPLETE);
+    });
     topDiv.addEventListener('mousedown', this._handleMouseDown.bind(this));
     topDiv.addEventListener('mouseup', this._handleMouseUp.bind(this));
     topDiv.addEventListener('mousemove', this._handleMouseMove.bind(this));
@@ -128,10 +133,10 @@ export class Splitter extends TemplatedElementBase {
     return result;
   }
   
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+  private _refresh(level: RefreshLevel): void {
     if (DomUtils.getShadowRoot(this) !== null && DomUtils.isNodeInDom(this)) {
       // DOM read
-      if (level === ResizeRefreshElementBase.RefreshLevel.COMPLETE) {
+      if (level === RefreshLevel.COMPLETE) {
         this._paneSizes = this._paneSizes.update(DomUtils.toArray(this.children));
         this._createLayout(this._paneSizes);
       }
@@ -145,7 +150,6 @@ export class Splitter extends TemplatedElementBase {
         this._paneSizes = newPaneSizes;
         this._setSizes(newPaneSizes, this._orientation);
       }
-      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(this, level);
     }
   }
 
@@ -218,14 +222,11 @@ export class Splitter extends TemplatedElementBase {
       return;
     }
     
-    const target = <HTMLElement> ev.target;
-
     ev.preventDefault();
     ev.stopPropagation();
 
     // Now actually move the divider.
     const topDiv = this._elementById(ID_TOP);
-    const indicatorDiv = this._elementById(ID_INDICATOR);
     const topRect = topDiv.getBoundingClientRect();
 
     let newIndicatorPosition = 0;
@@ -239,9 +240,6 @@ export class Splitter extends TemplatedElementBase {
     this._setSizes(this._paneSizes, this._orientation);
 
     this._stopDrag();
-
-    // Refresh the kids.
-    this.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
   }
 
   private _stopDrag(): void {

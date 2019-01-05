@@ -1,9 +1,9 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable, Event} from 'extraterm-extension-api';
+import { Event} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as SourceMapSupport from 'source-map-support';
@@ -30,7 +30,6 @@ import {MainWebUi} from './MainWebUi';
 import {MenuItem} from './gui/MenuItem';
 import {PopDownListPicker} from './gui/PopDownListPicker';
 import {ResizeCanary} from './ResizeCanary';
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {SettingsTab} from './settings/SettingsTab';
 import {TabWidget} from './gui/TabWidget';
 import {EtTerminal} from './Terminal';
@@ -105,7 +104,6 @@ export function startUp(closeSplash: () => void): void {
     closeSplash();
 
     startUpMainMenu();
-    startUpResizeCanary();
     startUpCommandPalette();
     startUpApplicationContextMenu();
     startUpWindowEvents();
@@ -287,30 +285,11 @@ function startUpMainMenu(): void {
   });
 }
 
-function startUpResizeCanary(): void {
-  // A special element for tracking when terminal fonts are effectively changed in the DOM.
-  const resizeCanary = <ResizeCanary> window.document.createElement(ResizeCanary.TAG_NAME);
-  resizeCanary.setCss(`
-  font-family: var(--terminal-font);
-  font-size: var(--default-terminal-font-size);
-`);
-  window.document.body.appendChild(resizeCanary);
-  resizeCanary.addEventListener('resize', () => {
-    mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
-  });
-}    
-
 function startUpWindowEvents(): void {
   // Make sure something sensible is focussed if only the window gets the focus.
   window.addEventListener('focus', (ev: FocusEvent) => {
     if (ev.target === window) {
       mainWebUi.focus();
-    }
-  });
-
-  window.addEventListener('resize', () => {
-    if (mainWebUi !== null) {
-      mainWebUi.refresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
     }
   });
   

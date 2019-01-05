@@ -1,40 +1,39 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as he from 'he';
 import { BulkFileHandle } from 'extraterm-extension-api';
 import { WebComponent } from 'extraterm-web-component-decorators';
+import { Logger, getLogger } from "extraterm-logging";
+import { log } from "extraterm-logging";
 
-import {AboutTab} from './AboutTab';
-import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
+import { AboutTab } from './AboutTab';
+import { BulkFileBroker } from './bulk_file_handling/BulkFileBroker';
 import { Commandable, BoundCommand } from './command/CommandTypes';
 import * as config from '../Config';
 import * as DisposableUtils from '../utils/DisposableUtils';
 import * as DomUtils from './DomUtils';
-import {EmbeddedViewer} from './viewers/EmbeddedViewer';
-import {EmptyPaneMenu} from './command/EmptyPaneMenu';
-import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
-import {ElementMimeType, FrameMimeType} from './InternalMimeTypes';
+import { EmbeddedViewer } from './viewers/EmbeddedViewer';
+import { EmptyPaneMenu } from './command/EmptyPaneMenu';
+import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
+import { ElementMimeType, FrameMimeType } from './InternalMimeTypes';
 import { KeybindingsManager, AcceptsKeybindingsManager, injectKeybindingsManager } from './keybindings/KeyBindingsManager';
-import {Logger, getLogger} from "extraterm-logging";
-import { log } from "extraterm-logging";
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
-import {SettingsTab} from './settings/SettingsTab';
-import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation} from './gui/SnapDropContainer';
-import {SplitLayout} from './SplitLayout';
-import {Splitter, SplitOrientation} from './gui/Splitter';
+import { SettingsTab } from './settings/SettingsTab';
+import { SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation } from './gui/SnapDropContainer';
+import { SplitLayout } from './SplitLayout';
+import { Splitter, SplitOrientation } from './gui/Splitter';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
-import {Tab} from './gui/Tab';
-import {TabWidget, DroppedEventDetail} from './gui/TabWidget';
-import {EtTerminal, EXTRATERM_COOKIE_ENV} from './Terminal';
+import { Tab } from './gui/Tab';
+import { TabWidget, DroppedEventDetail } from './gui/TabWidget';
+import { EtTerminal, EXTRATERM_COOKIE_ENV } from './Terminal';
 import * as ThemeTypes from '../theme/Theme';
-import {ThemeableElementBase} from './ThemeableElementBase';
-import {ViewerElement} from './viewers/ViewerElement';
+import { ThemeableElementBase } from './ThemeableElementBase';
+import { ViewerElement } from './viewers/ViewerElement';
 import * as ViewerElementTypes from './viewers/ViewerElementTypes';
-import {EtViewerTab} from './ViewerTab';
-import {PtyIpcBridge} from './PtyIpcBridge';
+import { EtViewerTab } from './ViewerTab';
+import { PtyIpcBridge } from './PtyIpcBridge';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
 import { ConfigDatabase, SESSION_CONFIG } from '../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -87,9 +86,6 @@ const COMMAND_CLOSE_TAB = "closeTab";
 const COMMAND_HORIZONTAL_SPLIT = "horizontalSplit";
 const COMMAND_VERTICAL_SPLIT = "verticalSplit";
 const COMMAND_CLOSE_PANE = "closePane";
-
-const staticLog = getLogger("Static ExtratermMainWebUI");
-
 
 /**
  * Top level UI component for a normal terminal window
@@ -173,10 +169,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return this._splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu)).length;
   }
   
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    this._refresh(level);
-  }
- 
   private _setUpShadowDom(): void {
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this._createClone();
@@ -292,7 +284,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
         this._handleFrameDroppedEvent(newTabWidget, 0, detail.dropData);
       }
-      this._refreshSplitLayout();
     }    
   }
 
@@ -445,18 +436,18 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   
     return trimBetweenTags(`
-    <style id="${ThemeableElementBase.ID_THEME}"></style>
-    <div id="${ID_TOP_LAYOUT}">
-      <div id="${ID_TITLE_BAR}">
-        <div id="${ID_TITLE_BAR_SPACE}">
-          <div id="${ID_TOP_RESIZE_BAR}"></div>
-          <div id="${ID_DRAG_BAR}"></div>
+      <style id="${ThemeableElementBase.ID_THEME}"></style>
+      <div id="${ID_TOP_LAYOUT}">
+        <div id="${ID_TITLE_BAR}">
+          <div id="${ID_TITLE_BAR_SPACE}">
+            <div id="${ID_TOP_RESIZE_BAR}"></div>
+            <div id="${ID_DRAG_BAR}"></div>
+          </div>
+          ${windowControls}
         </div>
-        ${windowControls}
-      </div>
-      <div id="${ID_MAIN_CONTENTS}">
-      </div>
-    </div>`);
+        <div id="${ID_MAIN_CONTENTS}">
+        </div>
+      </div>`);
   }
 
   private _windowControlsHtml(): string {
@@ -486,7 +477,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   destroy(): void {
   }
   
-
   // ----------------------------------------------------------------------
   //
   //   #######                      
@@ -499,25 +489,21 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   //
   // ----------------------------------------------------------------------
 
-  /**
-   * Initialise and insert a tab.
-   * 
-   */
   private _addTab(tabWidget: TabWidget, tabContentElement: Element): Tab {
     const newId = this._tabIdCounter;
     this._tabIdCounter++;
     const newTab = <Tab> document.createElement(Tab.TAG_NAME);
     newTab.setAttribute('id', "tab_id_" + newId);
     newTab.tabIndex = -1;
-    newTab.innerHTML = 
-      `<div class="${CLASS_TAB_HEADER_CONTAINER}">` +
-        `<div class="${CLASS_TAB_HEADER_ICON}"></div>` +
-        `<div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>` +
-        `<div class="${CLASS_TAB_HEADER_TAG}"></div>` +
-        `<div class="${CLASS_TAB_HEADER_CLOSE}">` +
-          `<button id="close_tag_id_${newId}" class="microtool danger"><i class="fa fa-times"></i></button>` +
-        `</div>` +
-      `</div>`;
+    newTab.innerHTML = trimBetweenTags(`
+      <div class="${CLASS_TAB_HEADER_CONTAINER}">
+        <div class="${CLASS_TAB_HEADER_ICON}"></div>
+        <div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>
+        <div class="${CLASS_TAB_HEADER_TAG}"></div>
+        <div class="${CLASS_TAB_HEADER_CLOSE}">
+          <button id="close_tag_id_${newId}" class="microtool danger"><i class="fa fa-times"></i></button>
+        </div>
+      </div>`);
 
     this._splitLayout.appendTab(tabWidget, newTab, tabContentElement);
     this._splitLayout.update();
@@ -584,7 +570,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
-    newTerminal.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     return newTerminal;
   }
 
@@ -635,7 +620,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
     viewerElement.setVisualState(VisualState.AUTO);
-    const result = this._openViewerTab(this._firstTabWidget(), viewerTab);
+    this._openViewerTab(this._firstTabWidget(), viewerTab);
     viewerTab.setViewerElement(viewerElement);
 
     this._updateTabTitle(viewerTab);
@@ -885,7 +870,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _split(tabContentElement: Element, orientation: SplitOrientation): void {
     const newTabWidget = this._splitLayout.splitAfterTabContent(tabContentElement, orientation);
     this._splitLayout.update();
-    this._refreshSplitLayout();
     if (newTabWidget != null) {
       const element = this._splitLayout.getEmptyContentByTabWidget(newTabWidget);
       if (element != null) {
@@ -900,14 +884,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
           tabContentElement.focus();
         }
       }
-    }
-  }
-
-  private _refreshSplitLayout(): void {
-    const rootContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
-    const firstKid = rootContainer.children.item(0);
-    if (firstKid instanceof Splitter || firstKid instanceof TabWidget) {
-      firstKid.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
     }
   }
 
@@ -928,7 +904,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     this._splitLayout.closeSplitAtTabContent(tabContentElement);
     this._splitLayout.update();
-    this._refreshSplitLayout();
 
     if (focusInfo == null) {
       const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
@@ -979,16 +954,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     if (elWithFocus != null && SupportsClipboardPaste.isSupportsClipboardPaste(elWithFocus)) {
       elWithFocus.pasteText(text);
     }
-  }
-
-  //-----------------------------------------------------------------------
-  private _refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    const mainContents = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
-    if (mainContents == null) {
-      return;
-    }
-    ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(
-      mainContents, level);
   }
 
   private _sendTabOpenedEvent(): void {

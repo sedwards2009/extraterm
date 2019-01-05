@@ -6,7 +6,6 @@
 import {Logger, getLogger} from "extraterm-logging";
 
 import * as DisposableUtils from '../utils/DisposableUtils';
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import { ScrollBar } from "./gui/ScrollBar";
 import { VirtualScrollAreaWithSpacing, Spacer } from "./VirtualScrollAreaWithSpacing";
 import { EVENT_RESIZE, VirtualScrollable } from "./VirtualScrollArea";
@@ -18,7 +17,7 @@ import { doLater } from "../utils/DoLater";
 import * as DomUtils from './DomUtils';
 import { EmbeddedViewer } from "./viewers/EmbeddedViewer";
 import { TextViewer } from "./viewers/TextAceViewer";
-import { VisualState, Mode, CursorEdgeDetail, Edge } from "./viewers/ViewerElementTypes";
+import { VisualState, Mode, CursorEdgeDetail, Edge, RefreshLevel } from "./viewers/ViewerElementTypes";
 import { EventEmitter } from "../utils/EventEmitter";
 import { Event } from 'extraterm-extension-api';
 
@@ -30,7 +29,7 @@ const CHILD_RESIZE_BATCH_SIZE = 3;
 interface ChildElementStatus {
   element: VirtualScrollable & HTMLElement;
   needsRefresh: boolean;
-  refreshLevel: ResizeRefreshElementBase.RefreshLevel;
+  refreshLevel: RefreshLevel;
 }
 
 
@@ -153,7 +152,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
             oldConfig.terminalMarginStyle !== newConfig.terminalMarginStyle) {
           if (this._elementAttached) {
             this._updateScrollableSpacing();
-            this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+            this.refresh(RefreshLevel.COMPLETE);
           }
         }
       }
@@ -213,7 +212,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
   appendScrollable(el: HTMLElement & VirtualScrollable): void {
     el.addEventListener('focus', this._childFocusHandlerFunc);
     
-    this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: ResizeRefreshElementBase.RefreshLevel.RESIZE } );
+    this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: RefreshLevel.RESIZE } );
     this._scrollArea.appendChild(el);
     this._virtualScrollArea.appendScrollable(el);
   }
@@ -330,25 +329,22 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     }
   }
 
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    this._processRefresh(level);
-  }
-  
-  private _processRefresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): void {
+  refresh(requestedLevel: RefreshLevel): void {
     let level = requestedLevel;
     if (this._needsCompleteRefresh) {
-      level = ResizeRefreshElementBase.RefreshLevel.COMPLETE;
+      level = RefreshLevel.COMPLETE;
       this._needsCompleteRefresh = false;
     }
 
     const scrollerArea = this._scrollArea;
     if (scrollerArea !== null) {
-      // --- DOM Read ---
-      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
+      // Refresh the visible children
+      for (const kid of scrollerArea.children) {
+        if (kid instanceof ViewerElement) {
+          kid.refresh(level);
+        }
+      }
 
-      this._scrollBar.refresh(level);
-
-      // --- DOM write ---
       this._virtualScrollArea.updateContainerHeight(this._scrollContainer.clientHeight);
 
       // Build the list of elements we will resize right now.
@@ -414,7 +410,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
   private _scheduleResize(): void {
     this._scheduleLaterProcessing( () => {
-      this._processRefresh(ResizeRefreshElementBase.RefreshLevel.RESIZE);
+      this.refresh(RefreshLevel.RESIZE);
     });
   }
 
@@ -427,7 +423,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
       if (childInfo.element === el) {
         if ( ! childInfo.needsRefresh) {
           childInfo.needsRefresh = true;
-          childInfo.refreshLevel = ResizeRefreshElementBase.RefreshLevel.RESIZE;
+          childInfo.refreshLevel = RefreshLevel.RESIZE;
           this._scheduleStashedChildResizeTask();
         }
         return;
@@ -463,7 +459,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
           for (const childStatus of processList) {
             const el = childStatus.element;
-            if (ResizeRefreshElementBase.ResizeRefreshElementBase.is(el)) {
+            if (el instanceof ViewerElement) {
               el.refresh(childStatus.refreshLevel);
             }
           }

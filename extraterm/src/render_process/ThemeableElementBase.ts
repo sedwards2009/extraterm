@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,12 +7,11 @@
 import * as ThemeTypes from '../theme/Theme';
 import * as DomUtils from './DomUtils';
 import * as ThemeConsumer from '../theme/ThemeConsumer';
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 
 /**
  * A base class for HTMLElements which also want theming CSS support.
  */
-export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefreshElementBase implements ThemeTypes.Themeable {
+export class ThemeableElementBase extends HTMLElement implements ThemeTypes.Themeable {
 
   static ID_THEME = "__ID_THEMEABLE_ELEMENT_BASE_STYLE__";
 
@@ -65,7 +64,6 @@ export class ThemeableElementBase extends ResizeRefreshElementBase.ResizeRefresh
    */
   protected updateThemeCss(): void {
     this.installThemeCss();
-    this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
   }
   
   /**

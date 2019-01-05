@@ -6,6 +6,7 @@ import { ConfigElementLifecycleBinder } from './ConfigElementLifecycleBinder';
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import Vue from 'vue';
+import { log } from 'extraterm-logging/dist/LogDecorator';
 
 
 export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {

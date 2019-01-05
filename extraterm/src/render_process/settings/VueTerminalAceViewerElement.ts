@@ -1,18 +1,15 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent, Attribute, Observe } from 'extraterm-web-component-decorators';
-import { ViewerElement } from '../viewers/ViewerElement';
+import { WebComponent } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from 'extraterm-logging';
+
+import { ViewerElement } from '../viewers/ViewerElement';
 import { TerminalViewer } from '../viewers/TerminalAceViewer';
 import { VirtualScrollCanvas } from '../VirtualScrollCanvas';
 import * as Term from '../emulator/Term';
-import { VirtualScrollArea, EVENT_RESIZE, VirtualScrollable } from '../VirtualScrollArea';
-import { doLater } from '../../utils/DoLater';
-import { ResizeRefreshElementBase, RefreshLevel } from '../ResizeRefreshElementBase';
-
 
 export const VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG = "et-vue-terminal-ace-viewer-element";
 
@@ -36,7 +33,6 @@ export class VueTerminalAceViewerElement extends ViewerElement {
 
       this._terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
       this._terminalViewer.setEditable(false);
-      this._terminalViewer.addEventListener(EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
 
       const emulator = new Term.Emulator({platform: <Term.Platform> process.platform});
       this._terminalViewer.setEmulator(emulator);
@@ -47,13 +43,6 @@ export class VueTerminalAceViewerElement extends ViewerElement {
       emulator.write(demoContents());
     }
   }
-  
-  private _handleVirtualScrollableResize(ev: CustomEvent): void {
-    doLater(() => {
-      this._terminalViewer.refresh(RefreshLevel.RESIZE);
-    });
-  }
-
 }
 
 function demoContents(): string {

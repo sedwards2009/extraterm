@@ -17,8 +17,7 @@ import {DownloadViewer} from './viewers/DownloadViewer';
 import {Pty} from '../pty/Pty';
 
 import {ViewerElement} from './viewers/ViewerElement';
-import * as ViewerElementTypes from './viewers/ViewerElementTypes';
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
+import { SupportsMimeTypes, Mode, RefreshLevel, VisualState } from './viewers/ViewerElementTypes';
 import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from '../theme/Theme';
@@ -55,13 +54,8 @@ import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { FindPanel, TempFindPanelViewer_FIXME } from "./FindPanel";
 
-
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
-const VisualState = ViewerElementTypes.VisualState;
 type ScrollableElement = VirtualScrollable & HTMLElement;
-
-type Mode = ViewerElementTypes.Mode;  // This is the enum type.
-const Mode = ViewerElementTypes.Mode; // This gets us access to the object holding the enum values.
 
 const log = LogDecorator;
 
@@ -120,7 +114,7 @@ const MINIMUM_FONT_SIZE = -3;
 const MAXIMUM_FONT_SIZE = 4;
 
 // List of viewer classes.
-const viewerClasses: ViewerElementTypes.SupportsMimeTypes[] = [];
+const viewerClasses: SupportsMimeTypes[] = [];
 viewerClasses.push(ImageViewer);
 viewerClasses.push(TextViewer);
 viewerClasses.push(TipViewer);
@@ -236,7 +230,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const scrollContainer = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
       DomUtils.preventScroll(scrollContainer);
       EtTerminal._resizeNotifier.observe(scrollContainer, (target: Element, contentRect: DOMRectReadOnly) => {
-        this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+        this._refresh(RefreshLevel.COMPLETE);
       });
       this._terminalCanvas = new TerminalCanvas(scrollContainer, scrollArea, scrollBar);
       this._terminalCanvas.setConfigDatabase(this._configDatabase);
@@ -287,7 +281,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       resizeCanary.addEventListener('resize', () => {
         if (this._armResizeCanary) {
           this._armResizeCanary = false;
-          this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+          this._refresh(RefreshLevel.COMPLETE);
         }
       });
 
@@ -533,8 +527,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     super.updateThemeCss();
     this.resizeToContainer();
   }
-  
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+
+  private _refresh(level: RefreshLevel): void {
     this._terminalCanvas.refresh(level);
   }
 
@@ -809,12 +803,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _enterCursorMode(): void {
-    this._terminalCanvas.setModeAndVisualState(ViewerElementTypes.Mode.CURSOR, VisualState.AUTO);
+    this._terminalCanvas.setModeAndVisualState(Mode.CURSOR, VisualState.AUTO);
     this._mode = Mode.CURSOR;
   }
   
   private _exitCursorMode(): void {
-    this._terminalCanvas.setModeAndVisualState(ViewerElementTypes.Mode.DEFAULT, VisualState.FOCUSED);
+    this._terminalCanvas.setModeAndVisualState(Mode.DEFAULT, VisualState.FOCUSED);
     this._mode = Mode.DEFAULT;
     this._refocus();
   }

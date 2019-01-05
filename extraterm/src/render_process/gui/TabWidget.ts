@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -16,8 +16,8 @@ import {Tab} from './Tab';
 import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail} from './SnapDropContainer';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
 import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
-import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import { TemplatedElementBase } from './TemplatedElementBase';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const ATTR_TAG_REST_LEFT = "rest-left";
 const ATTR_TAG_REST_RIGHT = "rest";
@@ -90,16 +90,8 @@ export class TabWidget extends TemplatedElementBase {
     this.createTabHolders();
   }  
   
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    const contentsStack = this._getContentsStack();
-    if (contentsStack !== null) {
-      super.refresh(level);
-      contentsStack.refresh(level);
-    }
-  }
-
   protected _html(): string {
-    return `
+    return trimBetweenTags(`
       <div id='${ID_TOP}'>
         <div id='${ID_TABBAR_CONTAINER}'>
           <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
@@ -110,7 +102,7 @@ export class TabWidget extends TemplatedElementBase {
           </${SnapDropContainer.TAG_NAME}>
         </div>
       </div>
-      `;
+      `);
   }
 
   private _getTop(): HTMLDivElement {

@@ -1,13 +1,12 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-
 import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
-import {Mode, VisualState, CursorMoveDetail} from './ViewerElementTypes';
+import {Mode, VisualState, CursorMoveDetail, RefreshLevel} from './ViewerElementTypes';
 
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {
@@ -143,5 +142,9 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
 
   dispose(): void {
+  }
+
+  refresh(level: RefreshLevel): void {
+    
   }
 }

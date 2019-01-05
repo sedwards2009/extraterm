@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
 import {WebComponent} from 'extraterm-web-component-decorators';
@@ -15,7 +15,6 @@ import * as GeneralEvents from '../GeneralEvents';
 import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as Term from '../emulator/Term';
 import * as TermApi from 'term-api';
@@ -23,20 +22,14 @@ import { BookmarkRef } from './TerminalViewerTypes';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from './ViewerElement';
-import * as ViewerElementTypes from './ViewerElementTypes';
-import * as VirtualScrollArea from '../VirtualScrollArea';
+import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
+import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
 
 import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
-import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Renderer, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
-
+import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
 
 type KeybindingsManager = keybindingmanager.KeybindingsManager;
-
-type SetterState = VirtualScrollArea.SetterState;
-type CursorMoveDetail = ViewerElementTypes.CursorMoveDetail;
-const VisualState = ViewerElementTypes.VisualState;
-type VisualState = ViewerElementTypes.VisualState;
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -79,7 +72,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
-  
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
 
   /**
@@ -106,7 +98,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _aceEditSession: TerminalEditSession = null;
   private _height = 0;
   private _isEmpty = true;
-  private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
+  private _mode: Mode = Mode.DEFAULT;
   private _editable = false;
   private _useVPad = true;
   private _visualState: VisualState = VisualState.AUTO;
@@ -183,7 +175,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
       this.style.height = "0px";
-      this._mode = ViewerElementTypes.Mode.DEFAULT;
+      this._mode = Mode.DEFAULT;
 
       this._aceEditSession = new TerminalEditSession(new TerminalDocument(""));
       this._aceEditSession.setUndoManager(new UndoManager());
@@ -206,7 +198,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
       this.__updateHasTerminalClass();
       this._aceEditor.on("keyPress", ev => {
-        if (this._emulator != null && this._mode == ViewerElementTypes.Mode.DEFAULT) {
+        if (this._emulator != null && this._mode == Mode.DEFAULT) {
           if (this._emulator.plainKeyPress(ev.text)) {
             this._emitKeyboardActivityEvent();
           }
@@ -214,7 +206,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       });
       this._aceEditor.on("compositionStart", () => this._onCompositionStart());
       this._aceEditor.on("change", (data, editor) => {
-        if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
+        if (this._mode !== Mode.CURSOR) {
           return;
         }
         
@@ -222,15 +214,15 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         if (heightRows !== this._documentHeightRows) {
           this._documentHeightRows = heightRows;
           doLater( () => {
-            VirtualScrollArea.emitResizeEvent(this);
+            emitResizeEvent(this);
           });
         }
       });
 
       this._aceEditor.selection.on("changeCursor", () => {
-        const effectiveFocus = this._visualState === ViewerElementTypes.VisualState.FOCUSED ||
-                                (this._visualState === ViewerElementTypes.VisualState.AUTO && this.hasFocus());
-        if (this._mode !== ViewerElementTypes.Mode.DEFAULT && effectiveFocus) {
+        const effectiveFocus = this._visualState === VisualState.FOCUSED ||
+                                (this._visualState === VisualState.AUTO && this.hasFocus());
+        if (this._mode !== Mode.DEFAULT && effectiveFocus) {
           const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
           this.dispatchEvent(event);
         }
@@ -266,11 +258,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       });
 
       this._aceEditor.onCursorTopHit((column: number) => {
-        this._emitCursorEdgeEvent(ViewerElementTypes.Edge.TOP, column);
+        this._emitCursorEdgeEvent(Edge.TOP, column);
       });
 
       this._aceEditor.onCursorBottomHit((column: number) => {
-        this._emitCursorEdgeEvent(ViewerElementTypes.Edge.BOTTOM, column);
+        this._emitCursorEdgeEvent(Edge.BOTTOM, column);
       });
 
       this._exitCursorMode();
@@ -298,9 +290,9 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return [ThemeTypes.CssFile.TERMINAL_VIEWER];
   }
 
-  private _emitCursorEdgeEvent(edge: ViewerElementTypes.Edge, column: number): void {
+  private _emitCursorEdgeEvent(edge: Edge, column: number): void {
     doLater( () => {
-      const detail: ViewerElementTypes.CursorEdgeDetail = { edge, ch: column };
+      const detail: CursorEdgeDetail = { edge, ch: column };
       const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
       this.dispatchEvent(event);
     });
@@ -364,7 +356,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   // From SupportsClipboardPaste interface.
   canPaste(): boolean {
-    return this._mode === ViewerElementTypes.Mode.CURSOR;
+    return this._mode === Mode.CURSOR;
   }
 
   // From SupportsClipboardPaste interface.
@@ -434,14 +426,14 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return this._emulator;
   }
   
-  setMode(newMode: ViewerElementTypes.Mode): void {
+  setMode(newMode: Mode): void {
     if (newMode !== this._mode) {
       this._mode = newMode;
       this._applyMode();
     }
   }
   
-  getMode(): ViewerElementTypes.Mode {
+  getMode(): Mode {
     return this._mode;
   }
   
@@ -457,12 +449,12 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
 
   private _applyMode(): void {
     switch (this._mode) {
-      case ViewerElementTypes.Mode.CURSOR:
+      case Mode.CURSOR:
         // Enter cursor mode.
         this._enterCursorMode();
         break;
         
-      case ViewerElementTypes.Mode.DEFAULT:
+      case Mode.DEFAULT:
         this._exitCursorMode();
         break;
     }
@@ -535,7 +527,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     return reserve;
   }
 
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+  refresh(level: RefreshLevel): void {
     let resizeEventNeeded = false;
 
     if (this._aceEditSession !== null) {
@@ -543,7 +535,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         this._log.debug("calling aceEditor.resize()");
       }
 
-      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+      if (level === RefreshLevel.RESIZE) {
         if (this._aceEditor.resize(false)) {
           resizeEventNeeded = true;
         }
@@ -556,7 +548,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
 
     if (resizeEventNeeded) {
-      VirtualScrollArea.emitResizeEvent(this);
+      emitResizeEvent(this);
       this._updateCssVars();
     }
 
@@ -685,7 +677,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     this._aceEditor.replaceRange({start: pos, end: endPos}, "");
 
     this._terminalFirstRow -= linesToDelete;
-    VirtualScrollArea.emitResizeEvent(this);
+    emitResizeEvent(this);
   }
   
   deleteLines(startLineOrBookmark: number | BookmarkRef, endLineOrBookmark?: number | BookmarkRef): void {
@@ -704,7 +696,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
     
     this._deleteLines(startLine, endLine);
-    VirtualScrollArea.emitResizeEvent(this);
+    emitResizeEvent(this);
   }
 
   getTerminalLines(startLineOrBookmark: number | BookmarkRef): TermApi.Line[] {
@@ -727,7 +719,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       this._aceEditor.setTerminalLine(i, lines[i]);
     }
     this._isEmpty = false;
-    VirtualScrollArea.emitResizeEvent(this);
+    emitResizeEvent(this);
   }
 
   bookmarkLine(lineNumber: number): BookmarkRef {
@@ -952,7 +944,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       return;
     }
 
-    const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
+    const context = this._mode === Mode.DEFAULT ?
                       KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
                       KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
     const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
@@ -968,7 +960,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     let command: string = null;
     if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null) {
-      const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
+      const context = this._mode === Mode.DEFAULT ?
                         KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
                         KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
       const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
@@ -979,7 +971,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
           ev.preventDefault();
           return;
         } else {
-          if (this._mode === ViewerElementTypes.Mode.CURSOR) {
+          if (this._mode === Mode.CURSOR) {
             if (command == null) {
               return;
             }
@@ -997,7 +989,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       }
     }
     
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
+    if (this._mode === Mode.DEFAULT) {
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
         ev.stopPropagation();
         this._emitKeyboardActivityEvent();
@@ -1022,7 +1014,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       { ...defaults, id: COMMAND_SELECT_ALL, label: "Select All" },
     ];
     
-    const context = this._mode === ViewerElementTypes.Mode.DEFAULT ?
+    const context = this._mode === Mode.DEFAULT ?
                       KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
                       KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
     const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
@@ -1050,7 +1042,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
         if (text !== "") {
           if (command === COMMAND_TYPE_AND_CR_SELECTION) {
             // Exit selection mode.
-            const setModeDetail: GeneralEvents.SetModeEventDetail = { mode: ViewerElementTypes.Mode.DEFAULT };
+            const setModeDetail: GeneralEvents.SetModeEventDetail = { mode: Mode.DEFAULT };
             const setModeEvent = new CustomEvent(GeneralEvents.EVENT_SET_MODE, { detail: setModeDetail });
             setModeEvent.initCustomEvent(GeneralEvents.EVENT_SET_MODE, true, true, setModeDetail);
             this.dispatchEvent(setModeEvent);
@@ -1185,7 +1177,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
     
     if (emitVirtualResizeEventFlag) {
-      VirtualScrollArea.emitResizeEvent(this);
+      emitResizeEvent(this);
     }
 
     this._cursorRow = event.cursorRow;
@@ -1193,7 +1185,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
 
   private _onCompositionStart(): void {
-    if (this._mode == ViewerElementTypes.Mode.DEFAULT) {
+    if (this._mode == Mode.DEFAULT) {
       this._aceEditor.selection.setSelectionRange({
         start: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn},
         end: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn}

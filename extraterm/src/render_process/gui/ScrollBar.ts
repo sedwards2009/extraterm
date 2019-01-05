@@ -7,13 +7,11 @@ import {Attribute, Filter, Observe, WebComponent} from 'extraterm-web-component-
 
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import { TemplatedElementBase } from './TemplatedElementBase';
 
 const ID_AREA = "ID_AREA";
 const ID_CONTAINER = "ID_CONTAINER";
-
 
 /**
  * A scrollbar.
@@ -120,9 +118,5 @@ export class ScrollBar extends TemplatedElementBase {
   
   getThumbSize(): number {
     return 7734;  // FIXME bogus.
-  }
-
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
-    this._updatePosition("position");
   }
 }

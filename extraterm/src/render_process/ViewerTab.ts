@@ -16,23 +16,19 @@ import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import {AcceptsKeybindingsManager, KeybindingsManager} from './keybindings/KeyBindingsManager';
 import {ResizeCanary} from './ResizeCanary';
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ScrollBar} from'./gui/ScrollBar';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
-import * as ThemeTypes from '../theme/Theme';
+import { CssFile } from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import {ViewerElement} from "./viewers/ViewerElement";
-import * as ViewerElementTypes from './viewers/ViewerElementTypes';
+import { RefreshLevel, Mode, VisualState } from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as WebIpc from './WebIpc';
 import { AcceptsConfigDatabase, ConfigDatabase } from '../Config';
 
-
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type ScrollableElement = VirtualScrollable & HTMLElement;
-type VisualState = ViewerElementTypes.VisualState;
-const VisualState = ViewerElementTypes.VisualState;
 
 const ID = "EtTabViewerTemplate";
 
@@ -161,7 +157,7 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
     resizeCanary.addEventListener('resize', () => {
       if (this._armResizeCanary) {
         this._armResizeCanary = false;
-        this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+        this.refresh(RefreshLevel.COMPLETE);
       }
     });
 
@@ -237,7 +233,7 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
     
     if (element !== null) {
       // element.visualState = ViewerElementTypes. this._visualState; FIXME
-      element.setMode(ViewerElementTypes.Mode.CURSOR);
+      element.setMode(Mode.CURSOR);
       this._appendScrollableElement(element);
     }
   }
@@ -258,8 +254,8 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
     return viewerElement.getBulkFileHandle();
   }
 
-  getMode(): ViewerElementTypes.Mode {
-    return ViewerElementTypes.Mode.CURSOR;
+  getMode(): Mode {
+    return Mode.CURSOR;
   }
   
   setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
@@ -274,27 +270,26 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
     this._adjustFontSize(delta)
   }
 
-  protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.VIEWER_TAB];
+  protected _themeCssFiles(): CssFile[] {
+    return [CssFile.VIEWER_TAB];
   }
 
-
-  refresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): void {
+  refresh(requestedLevel: RefreshLevel): void {
     let level = requestedLevel;
     if (this._needsCompleteRefresh) {
-      level = ResizeRefreshElementBase.RefreshLevel.COMPLETE;
+      level = RefreshLevel.COMPLETE;
       this._needsCompleteRefresh = false;
     }
 
     const viewerElement = this._getViewerElement();
     if (viewerElement != null) {        
-      // --- DOM read ---
       const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
-      scrollbar.refresh(level);
+      for (const kid of scrollerArea.children) {
+        if (kid instanceof ViewerElement) {
+          kid.refresh(level);
+        }
+      }
       
-      // --- DOM write ---
       const scrollContainer = DomUtils.getShadowId(this, ID_CONTAINER);
       this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 

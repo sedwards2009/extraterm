@@ -12,15 +12,13 @@ import * as DomUtils from './DomUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import {ResizeCanary} from './ResizeCanary';
-import * as ResizeRefreshElementBase from './ResizeRefreshElementBase';
 import {ScrollBar} from'./gui/ScrollBar';
 import * as ThemeTypes from '../theme/Theme';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import {ViewerElement} from "./viewers/ViewerElement";
-import * as VirtualScrollArea from './VirtualScrollArea';
+import { VirtualScrollable, VirtualScrollArea, EVENT_RESIZE } from './VirtualScrollArea';
+import { RefreshLevel } from './viewers/ViewerElementTypes';
 
-
-type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type ScrollableElement = VirtualScrollable & HTMLElement;
 
 const ID = "EtVirtualScrollCanvasTemplate";
@@ -54,7 +52,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
   static TAG_NAME = "ET-VIRTUAL-SCROLL-CANVAS";
 
   private _log: Logger;
-  private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea = null;
+  private _virtualScrollArea: VirtualScrollArea = null;
 
   private _resizePollHandle: Disposable = null;
   private _needsCompleteRefresh = true;
@@ -70,7 +68,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
 
     const clone = this._createClone();
     shadow.appendChild(clone);
-    this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
+    this._virtualScrollArea = new VirtualScrollArea();
 
     const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
@@ -88,7 +86,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
       this._virtualScrollArea.scrollTo(scrollbar.getPosition());
     });
 
-    scrollerArea.addEventListener(VirtualScrollArea.EVENT_RESIZE,
+    scrollerArea.addEventListener(EVENT_RESIZE,
       (ev: CustomEvent) => this._handleVirtualScrollableResize(ev));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE,
       (ev: CustomEvent) => this._handleTerminalViewerCursor(ev));
@@ -104,7 +102,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
     resizeCanary.addEventListener('resize', () => {
       if (this._armResizeCanary) {
         this._armResizeCanary = false;
-        this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+        this.refresh(RefreshLevel.COMPLETE);
       }
     });
 
@@ -114,7 +112,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
   connectedCallback(): void {
     super.connectedCallback();
     intersectionObserver.observe(this);
-    doLater(() => this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE));
+    doLater(() => this.refresh(RefreshLevel.COMPLETE));
   }
 
   disconnectedCallback(): void {
@@ -190,26 +188,26 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
   }
 
   _elementIsVisibleEvent(): void {
-    this.refresh(ResizeRefreshElementBase.RefreshLevel.COMPLETE);
+    this.refresh(RefreshLevel.COMPLETE);
     intersectionObserver.unobserve(this);
   }
 
-  refresh(requestedLevel: ResizeRefreshElementBase.RefreshLevel): void {
+  refresh(requestedLevel: RefreshLevel): void {
     let level = requestedLevel;
     if (this._needsCompleteRefresh) {
-      level = ResizeRefreshElementBase.RefreshLevel.COMPLETE;
+      level = RefreshLevel.COMPLETE;
       this._needsCompleteRefresh = false;
     }
 
     const viewerElement = this._getViewerElement();
     if (viewerElement != null) {        
-      // --- DOM read ---
       const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-      const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-      ResizeRefreshElementBase.ResizeRefreshElementBase.refreshChildNodes(scrollerArea, level);
-      scrollbar.refresh(level);
+      for (const kid of scrollerArea.children) {
+        if (kid instanceof ViewerElement) {
+          kid.refresh(level);
+        }
+      }
       
-      // --- DOM write ---
       const scrollContainer = DomUtils.getShadowId(this, ID_CONTAINER);
       this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 

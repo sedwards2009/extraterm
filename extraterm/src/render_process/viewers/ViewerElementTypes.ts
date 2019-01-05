@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -36,4 +36,9 @@ export interface CursorEdgeDetail {
 export interface SupportsMimeTypes {
   TAG_NAME: string;
   supportsMimeType(mimeType): boolean;
+}
+
+export enum RefreshLevel {
+  COMPLETE,
+  RESIZE
 }

@@ -1,10 +1,13 @@
 /**
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-
 "use strict";
 import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
+import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
+import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Renderer, Position, UndoManager } from "ace-ts";
+import {Logger, getLogger} from "extraterm-logging";
+import { log } from "extraterm-logging";
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
@@ -15,19 +18,14 @@ import { doLater, doLaterFrame, DebouncedDoLater } from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import * as GeneralEvents from '../GeneralEvents';
 import { KeybindingsManager, AcceptsKeybindingsManager } from '../keybindings/KeyBindingsManager';
-import {Logger, getLogger} from "extraterm-logging";
-import { log } from "extraterm-logging";
-import * as ResizeRefreshElementBase from '../ResizeRefreshElementBase';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import { emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState } from '../VirtualScrollArea';
-
-import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
-import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Renderer, Position, UndoManager } from "ace-ts";
 import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
+import { RefreshLevel } from '../viewers/ViewerElementTypes';
 
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
@@ -551,13 +549,13 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
     return Math.floor(pixelHeight / charHeight);
   }
 
-  refresh(level: ResizeRefreshElementBase.RefreshLevel): void {
+  refresh(level: RefreshLevel): void {
     if (this._aceEditSession !== null) {
       if (DEBUG_RESIZE) {
         this._log.debug("calling aceEditor.resize()");
       }
 
-      if (level === ResizeRefreshElementBase.RefreshLevel.RESIZE) {
+      if (level === RefreshLevel.RESIZE) {
         if ( ! this._aceEditor.resize(false)) {
           return;
         }
