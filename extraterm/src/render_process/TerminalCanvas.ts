@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {Logger, getLogger} from "extraterm-logging";
+import { ResizeNotifier } from "extraterm-resize-notifier";
+import { Disposable, Event } from 'extraterm-extension-api';
 
 import * as DisposableUtils from '../utils/DisposableUtils';
 import { ScrollBar } from "./gui/ScrollBar";
@@ -11,7 +13,6 @@ import { VirtualScrollAreaWithSpacing, Spacer } from "./VirtualScrollAreaWithSpa
 import { EVENT_RESIZE, VirtualScrollable } from "./VirtualScrollArea";
 import { ViewerElement } from "./viewers/ViewerElement";
 import { TerminalViewer } from "./viewers/TerminalAceViewer";
-import { Disposable } from "extraterm-extension-api";
 import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, GeneralConfig, ConfigChangeEvent } from "../Config";
 import { doLater } from "../utils/DoLater";
 import * as DomUtils from './DomUtils';
@@ -19,12 +20,13 @@ import { EmbeddedViewer } from "./viewers/EmbeddedViewer";
 import { TextViewer } from "./viewers/TextAceViewer";
 import { VisualState, Mode, CursorEdgeDetail, Edge, RefreshLevel } from "./viewers/ViewerElementTypes";
 import { EventEmitter } from "../utils/EventEmitter";
-import { Event } from 'extraterm-extension-api';
-
+import { ResizeCanary } from "./ResizeCanary";
 
 const SCROLL_STEP = 1;
 const CHILD_RESIZE_BATCH_SIZE = 3;
 
+const MINIMUM_FONT_SIZE = -3;
+const MAXIMUM_FONT_SIZE = 4;
 
 interface ChildElementStatus {
   element: VirtualScrollable & HTMLElement;
@@ -34,6 +36,8 @@ interface ChildElementStatus {
 
 
 export class TerminalCanvas implements AcceptsConfigDatabase {
+  private static _resizeNotifier = new ResizeNotifier();
+
   private _log: Logger;
   private _configDatabase: ConfigDatabase = null;
   private _virtualScrollArea: VirtualScrollAreaWithSpacing = null;
@@ -52,15 +56,21 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
   private _terminalViewer: TerminalViewer = null; // FIXME rename to 'focusTarget'?
 
+  private _fontSizeAdjustment = 0;
+
   private _onBeforeSelectionChangeEmitter = new EventEmitter<{sourceMouse: boolean}>();
   onBeforeSelectionChange: Event<{sourceMouse: boolean}>;
 
   constructor(private _scrollContainer: HTMLDivElement, private _scrollArea: HTMLDivElement,
-      private _scrollBar: ScrollBar) {
+      private _scrollBar: ScrollBar, private _cssStyleElement: HTMLStyleElement) {
 
     this._log = getLogger("TerminalCanvas", this);
     this.onBeforeSelectionChange = this._onBeforeSelectionChangeEmitter.event;
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
+
+    TerminalCanvas._resizeNotifier.observe(this._scrollContainer, (target: Element, contentRect: DOMRectReadOnly) => {
+      this.refresh(RefreshLevel.COMPLETE);
+    });
 
     this._stashArea = window.document.createDocumentFragment();
     this._stashArea.addEventListener(EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
@@ -88,7 +98,6 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
     this._scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
 
-
     this._scrollArea.addEventListener(EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     this._scrollArea.addEventListener(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
       this._virtualScrollArea.scrollToBottom();
@@ -98,7 +107,22 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     this._scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleViewerCursor.bind(this));
     this._scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleViewerCursorEdge.bind(this));
     
+    this._setFontSizeInCss(this._fontSizeAdjustment);
+    this._setupFontResizeDetector();
     this._scheduleResize();
+  }
+
+  private _setupFontResizeDetector(): void {
+    // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
+    const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
+    resizeCanary.setCss(`
+        font-family: var(--terminal-font);
+        font-size: var(--terminal-font-size);
+    `);
+    this._scrollContainer.appendChild(resizeCanary);
+    resizeCanary.addEventListener('resize', () => {
+      this.refresh(RefreshLevel.COMPLETE);
+    });
   }
 
   private _handleChildFocus(ev: FocusEvent): void {
@@ -493,6 +517,41 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
       });
     }
   }
+
+  getFontSizeAdjustment(): number {
+    return this._fontSizeAdjustment;
+  }
+
+  setFontSizeAdjustment(delta: number): void {
+    this._adjustFontSize(delta);
+  }
+
+  private _adjustFontSize(delta: number): void {
+    const newAdjustment = Math.min(Math.max(this._fontSizeAdjustment + delta, MINIMUM_FONT_SIZE), MAXIMUM_FONT_SIZE);
+    if (newAdjustment !== this._fontSizeAdjustment) {
+      this._fontSizeAdjustment = newAdjustment;
+      this._setFontSizeInCss(newAdjustment);
+    }
+  }
+
+  private _setFontSizeInCss(size: number): void {
+    (<any>this._cssStyleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(size);
+    // Type stubs are missing cssRules.
+  }
+
+  private _resetFontSize(): void {
+    this._adjustFontSize(-this._fontSizeAdjustment);
+  }
+
+  resetFontSize(): void {
+    this._resetFontSize();
+  }
+
+  private _getCssFontSizeRule(adjustment: number): string {
+    const scale = [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3][adjustment-MINIMUM_FONT_SIZE];
+    return `--terminal-font-size: calc(var(--default-terminal-font-size) * ${scale});`;
+  }
+
   private _handleViewerCursorEdge(ev: CustomEvent): void {
     const detail = <CursorEdgeDetail> ev.detail;
     const index = this._childElementListIndexOf(<any> ev.target);

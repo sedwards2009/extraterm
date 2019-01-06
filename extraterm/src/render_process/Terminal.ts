@@ -7,7 +7,6 @@
 import * as crypto from 'crypto';
 import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
-import { ResizeNotifier } from 'extraterm-resize-notifier';
 
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 import {BulkFileUploader} from './bulk_file_handling/BulkFileUploader';
@@ -18,7 +17,6 @@ import {Pty} from '../pty/Pty';
 
 import {ViewerElement} from './viewers/ViewerElement';
 import { SupportsMimeTypes, Mode, RefreshLevel, VisualState } from './viewers/ViewerElementTypes';
-import {ResizeCanary} from './ResizeCanary';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from '../theme/Theme';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
@@ -110,9 +108,6 @@ const enum ApplicationMode {
   APPLICATION_MODE_SHOW_FILE = 5,
 }
 
-const MINIMUM_FONT_SIZE = -3;
-const MAXIMUM_FONT_SIZE = 4;
-
 // List of viewer classes.
 const viewerClasses: SupportsMimeTypes[] = [];
 viewerClasses.push(ImageViewer);
@@ -148,8 +143,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   static EVENT_TITLE = "title";
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
   
-  private static _resizeNotifier = new ResizeNotifier();
-
   private _log: Logger;
   private _pty: Pty = null;
 
@@ -194,8 +187,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   // The current size of the emulator. This is used to detect changes in size.
   private _columns = -1;
   private _rows = -1;
-  private _fontSizeAdjustment = 0;
-  private _armResizeCanary = false;  // Controls when the resize canary is allowed to chirp.
 
   private _inputStreamFilters: InputStreamFilter[] = [];
   private _dialogStack: HTMLElement[] = [];
@@ -229,10 +220,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       const scrollArea = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_AREA);
       const scrollContainer = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
       DomUtils.preventScroll(scrollContainer);
-      EtTerminal._resizeNotifier.observe(scrollContainer, (target: Element, contentRect: DOMRectReadOnly) => {
-        this._refresh(RefreshLevel.COMPLETE);
-      });
-      this._terminalCanvas = new TerminalCanvas(scrollContainer, scrollArea, scrollBar);
+
+      const cssStyleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
+      this._terminalCanvas = new TerminalCanvas(scrollContainer, scrollArea, scrollBar, cssStyleElement);
       this._terminalCanvas.setConfigDatabase(this._configDatabase);
       this._terminalCanvas.onBeforeSelectionChange(ev => this._handleBeforeSelectionChange(ev));
 
@@ -268,21 +258,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       scrollArea.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
         this.send(detail.text);
-      });
-
-      // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
-      const containerDiv = DomUtils.getShadowId(this, ID_CENTER_CONTAINER);
-      const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
-      resizeCanary.setCss(`
-          font-family: var(--terminal-font);
-          font-size: var(--terminal-font-size);
-      `);
-      containerDiv.appendChild(resizeCanary);
-      resizeCanary.addEventListener('resize', () => {
-        if (this._armResizeCanary) {
-          this._armResizeCanary = false;
-          this._refresh(RefreshLevel.COMPLETE);
-        }
       });
 
       this._showTip();
@@ -508,11 +483,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   getFontAdjust(): number {
-    return this._fontSizeAdjustment;
+    return this._terminalCanvas.getFontSizeAdjustment();
   }
 
   setFontAdjust(delta: number): void {
-    this._adjustFontSize(delta)
+    this._terminalCanvas.setFontSizeAdjustment(delta);
   }
 
   getViewerElements(): ViewerElement[] {
@@ -554,7 +529,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
       template.innerHTML = trimBetweenTags(`
         <style id="${ThemeableElementBase.ID_THEME}"></style>
-        <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
+        <style id="${ID_CSS_VARS}">#${ID_CENTER_CONTAINER} {}</style>
         <div id='${ID_TOP}'>
           <div id ='${ID_WEST_CONTAINER}'></div>
           <div id='${ID_CENTER_COLUMN}'>
@@ -576,19 +551,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
 
     return window.document.importNode(template.content, true);
-  }
-
-  private _getCssVarsRules(): string {
-    return `
-    #${ID_CENTER_CONTAINER} {
-        ${this._getCssFontSizeRule(this._fontSizeAdjustment)}
-    }
-    `;
-  }
-
-  private _getCssFontSizeRule(adjustment: number): string {
-    const scale = [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3][adjustment-MINIMUM_FONT_SIZE];
-    return `--terminal-font-size: calc(var(--default-terminal-font-size) * ${scale});`;
   }
 
   /**
@@ -813,25 +775,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._refocus();
   }
 
-  private _adjustFontSize(delta: number): void {
-    const newAdjustment = Math.min(Math.max(this._fontSizeAdjustment + delta, MINIMUM_FONT_SIZE), MAXIMUM_FONT_SIZE);
-    if (newAdjustment !== this._fontSizeAdjustment) {
-      this._fontSizeAdjustment = newAdjustment;
-      this._setFontSizeInCss(newAdjustment);
-    }
-  }
-
-  private _setFontSizeInCss(size: number): void {
-    const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
-    (<any>styleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(size);  // Type stubs are missing cssRules.
-    this._armResizeCanary = true;
-    // Don't refresh. Let the Resize Canary detect the real change in the DOM when it arrives.
-  }
-
-  private _resetFontSize(): void {
-    this._adjustFontSize(-this._fontSizeAdjustment);
-  }
-
   private _handleBeforeSelectionChange(ev: {sourceMouse: boolean}): void {
     if (ev.sourceMouse) {
       const generalConfig = this._configDatabase.getConfig("general");
@@ -979,15 +922,15 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         break;
 
       case COMMAND_FONT_SIZE_INCREASE:
-        this._adjustFontSize(1);
+        this._terminalCanvas.setFontSizeAdjustment(1);
         break;
 
       case COMMAND_FONT_SIZE_DECREASE:
-        this._adjustFontSize(-1);
+      this._terminalCanvas.setFontSizeAdjustment(-1);
         break;
 
       case COMMAND_FONT_SIZE_RESET:
-        this._resetFontSize();
+        this._terminalCanvas.resetFontSize();
         break;
 
       case COMMAND_FIND:
