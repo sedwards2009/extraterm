@@ -1,15 +1,14 @@
 /*
- * Copyright 2016-2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
-
-import * as DomUtils from './DomUtils';
-import {doLater} from '../utils/DoLater';
+import { ResizeNotifier } from 'extraterm-resize-notifier';
 import {Logger, getLogger} from "extraterm-logging";
-import ElementResizeDetectorMaker = require('element-resize-detector');
+
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { htmlToFragment, getShadowRoot, getShadowId } from './DomUtils';
 
 const ID_SIZER = "ID_SIZER";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -18,10 +17,9 @@ const ID_CONTAINER = "ID_CONTAINER";
 export class ResizeCanary extends HTMLElement {
   
   static TAG_NAME = "ET-RESIZE-CANARY";
+  private static _resizeNotifier = new ResizeNotifier();
 
   private _log: Logger = null;
-  private _erd: any; //ElementResizeDetector.Detector;
-  private _laterHandle: Disposable = null;
   private _css: string = "";
 
   setCss(css: string): void {
@@ -34,29 +32,21 @@ export class ResizeCanary extends HTMLElement {
   }
 
   connectedCallback(): void {
-    if (DomUtils.getShadowRoot(this) != null) {
+    if (getShadowRoot(this) != null) {
       return;
     }
 
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     shadow.appendChild(this._createNodes());
-    this._erd = ElementResizeDetectorMaker(); // Use the 'object' strategy, 'scroll' doesn't work here.
-    const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_SIZER);
-    
-    this._erd.listenTo(container, (el: HTMLElement) => {
-      if (this._laterHandle === null) {
-        this._laterHandle = doLater( () => {
-          const event = new CustomEvent('resize', { detail: { } });
-          this.dispatchEvent(event);
-          this._laterHandle = null;
-        }, 40);
-      }
+    const container = <HTMLDivElement> getShadowId(this, ID_SIZER);
+    ResizeCanary._resizeNotifier.observe(container,  (target: Element, contentRect: DOMRectReadOnly) => {
+      const event = new CustomEvent('resize', { detail: { } });
+      this.dispatchEvent(event);
     });
   }
   
   private _createNodes(): Node {
-    const div = <HTMLDivElement> window.document.createElement('div');
-    div.innerHTML = `<style>
+    return htmlToFragment(trimBetweenTags(`<style>
       #${ID_CONTAINER} {
         position: absolute;
         top: 0px;
@@ -71,16 +61,8 @@ export class ResizeCanary extends HTMLElement {
         ${this._css}
       }
       </style>
-` +
-`      <div id='${ID_CONTAINER}'>` +
-`<div id='${ID_SIZER}'>mmmmmlllll<br />mmmmmlllll<br />mmmmmlllll</div>` +
-`</div>`;
-;
-
-    const frag = window.document.createDocumentFragment();
-    for (const kid of DomUtils.nodeListToArray(div.childNodes)) { 
-      frag.appendChild(kid);
-    }
-    return frag;
+      <div id='${ID_CONTAINER}'>
+        <div id='${ID_SIZER}'>mmmmmlllll<br />mmmmmlllll<br />mmmmmlllll</div>
+      </div>`));
   }
 }
