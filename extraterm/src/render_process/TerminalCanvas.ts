@@ -28,8 +28,8 @@ const CHILD_RESIZE_BATCH_SIZE = 3;
 const MINIMUM_FONT_SIZE = -3;
 const MAXIMUM_FONT_SIZE = 4;
 
-interface ChildElementStatus {
-  element: VirtualScrollable & HTMLElement;
+interface ViewerElementStatus {
+  element: ViewerElement;
   needsRefresh: boolean;
   refreshLevel: RefreshLevel;
 }
@@ -42,7 +42,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
   private _configDatabase: ConfigDatabase = null;
   private _virtualScrollArea: VirtualScrollAreaWithSpacing = null;
   private _stashArea: DocumentFragment = null;
-  private _childElementList: ChildElementStatus[] = [];
+  private _childElementList: ViewerElementStatus[] = [];
   private _needsCompleteRefresh = true;
   private _scheduleLaterHandle: Disposable = null;
   private _scheduleLaterQueue: Function[] = [];
@@ -52,11 +52,11 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
   private _enforceScrollbackLengthGuard= false;
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
   private _mode: Mode = Mode.DEFAULT;
+  private _fontSizeAdjustment = 0;
+
   private _elementAttached = false;
 
   private _terminalViewer: TerminalViewer = null; // FIXME rename to 'focusTarget'?
-
-  private _fontSizeAdjustment = 0;
 
   private _onBeforeSelectionChangeEmitter = new EventEmitter<{sourceMouse: boolean}>();
   onBeforeSelectionChange: Event<{sourceMouse: boolean}>;
@@ -140,7 +140,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     const target = ev.target;
     this._childElementList.forEach( (nodeInfo): void => {
       const node = nodeInfo.element;
-      if (ViewerElement.isViewerElement(node) && node !== target) {
+      if (node !== target) {
         node.clearSelection();
       }
     });
@@ -215,11 +215,9 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
   }
 
   setModeAndVisualState(mode: Mode, visualState: VisualState): void {
-    for (const element of this.getChildElements()) {
-      if (ViewerElement.isViewerElement(element)) {
-        element.setMode(mode);
-        element.setVisualState(visualState);
-      }
+    for (const element of this.getViewerElements()) {
+      element.setMode(mode);
+      element.setVisualState(visualState);
     }
   }
 
@@ -233,7 +231,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     }
   }
 
-  appendScrollable(el: HTMLElement & VirtualScrollable): void {
+  appendViewerElement(el: ViewerElement): void {
     el.addEventListener('focus', this._childFocusHandlerFunc);
     
     this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: RefreshLevel.RESIZE } );
@@ -241,7 +239,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     this._virtualScrollArea.appendScrollable(el);
   }
 
-  removeScrollable(el: HTMLElement & VirtualScrollable): void {
+  removeViewerElement(el: ViewerElement): void {
     el.removeEventListener('focus', this._childFocusHandlerFunc);
 
     if (el.parentElement === this._scrollArea) {
@@ -256,7 +254,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     this._virtualScrollArea.removeScrollable(el);
   }
 
-  private _childElementListIndexOf(element: HTMLElement & VirtualScrollable): number {
+  private _childElementListIndexOf(element: ViewerElement): number {
     const list = this._childElementList;;
     const len = list.length;
     for (let i=0; i<len; i++) {
@@ -268,8 +266,8 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     return -1;
   }
 
-  updateScrollableSize(scrollable: VirtualScrollable): void {
-    this._virtualScrollArea.updateScrollableSize(scrollable);
+  updateSize(element: ViewerElement): void {
+    this._virtualScrollArea.updateScrollableSize(element);
   }
 
   private _handleMouseWheel(ev: WheelEvent): void {
@@ -297,7 +295,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     const element: ViewerElement = <any> scrollable;
     if ( ! visible) {
 
-      if (this._terminalViewer !== element && ! (ViewerElement.isViewerElement(element) && element.hasFocus())) {
+      if (this._terminalViewer !== element && ! element.hasFocus()) {
         // Move the scrollable into the stash area.
         this._stashArea.appendChild(element);
       }
@@ -373,9 +371,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
       // Build the list of elements we will resize right now.
       const childrenToResize: VirtualScrollable[] = [];
-      const len = scrollerArea.children.length;
-      for (let i=0; i<len; i++) {
-        const child = scrollerArea.children[i];
+      for (const child of scrollerArea.children) {
         if (ViewerElement.isViewerElement(child)) {
           childrenToResize.push(child);
         }
@@ -460,7 +456,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     if (this._stashedChildResizeTask == null) {
       this._stashedChildResizeTask = () => {
         // Gather the list of elements/scrollables that need refreshing and updating.
-        const processList: ChildElementStatus[] = [];
+        const processList: ViewerElementStatus[] = [];
         for (let i=this._childElementList.length-1; i>=0 && processList.length < CHILD_RESIZE_BATCH_SIZE; i--) {
           const childStatus = this._childElementList[i];
           if (childStatus.needsRefresh) {
@@ -564,13 +560,11 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
       // A top edge was hit. Move the cursor to the bottom of the ViewerElement above it.
       for (let i=index-1; i>=0; i--) {
         const node = this._childElementList[i].element;
-        if (ViewerElement.isViewerElement(node)) {
-          this._makeVisible(node);
-          if (node.setCursorPositionBottom(detail.ch)) {
-            DomUtils.focusWithoutScroll(node);
-            this._scrollViewerCursorIntoView(node);
-            break;
-          }
+        this._makeVisible(node);
+        if (node.setCursorPositionBottom(detail.ch)) {
+          DomUtils.focusWithoutScroll(node);
+          this._scrollViewerCursorIntoView(node);
+          break;
         }
       }
     
@@ -578,13 +572,11 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
       // Bottom edge. Move the cursor to the top of the next ViewerElement.
       for (let i=index+1; i<this._childElementList.length; i++) {
         const node = this._childElementList[i].element;
-        if (ViewerElement.isViewerElement(node)) {
-          this._makeVisible(node);
-          if (node.setCursorPositionTop(detail.ch)) {
-            DomUtils.focusWithoutScroll(node);
-            this._scrollViewerCursorIntoView(node);
-            break;
-          }
+        this._makeVisible(node);
+        if (node.setCursorPositionTop(detail.ch)) {
+          DomUtils.focusWithoutScroll(node);
+          this._scrollViewerCursorIntoView(node);
+          break;
         }
       }
     }
@@ -621,7 +613,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
   private _enforceScrollbackSize2(maxScrollbackLines: number, maxScrollbackFrames: number): void {
     const windowHeight = window.screen.height;
-    const killList: (VirtualScrollable & HTMLElement)[] = [];
+    const killList: ViewerElement[] = [];
 
     const childrenReverse = Array.from(this._childElementList);
     childrenReverse.reverse();
@@ -630,7 +622,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     let i = 0;
     let currentHeight = 0;
     while (i < childrenReverse.length) {
-      const scrollableKid: VirtualScrollable & HTMLElement = <any> childrenReverse[i].element;
+      const scrollableKid = childrenReverse[i].element;
       const kidVirtualHeight = this._virtualScrollArea.getScrollableVirtualHeight(scrollableKid);
       if (currentHeight + kidVirtualHeight > windowHeight) {
         break;
@@ -643,7 +635,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
     // We may have found the element which straddles the visible top of the screen.
     if (i < childrenReverse.length) {
-      const scrollableKid: VirtualScrollable & HTMLElement = <any> childrenReverse[i].element;
+      const scrollableKid = childrenReverse[i].element;
       i++;
 
       const textLikeViewer = this._castToTextLikeViewer(scrollableKid);
@@ -671,7 +663,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
     let frameCount = 0;
     while (i < childrenReverse.length) {
-      const scrollableKid: VirtualScrollable & HTMLElement = <any> childrenReverse[i].element;
+      const scrollableKid = childrenReverse[i].element;
       i++;
       frameCount++;
 
@@ -694,11 +686,11 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     }
 
     for (const scrollableKid of killList) {
-      this.removeScrollable(scrollableKid);
+      this.removeViewerElement(scrollableKid);
     }
   }
 
-  private _castToTextLikeViewer(kidNode: HTMLElement): {
+  private _castToTextLikeViewer(kidNode: ViewerElement): {
       deleteTopLines(lines: number): void;
       lineCount(): number;
       pixelHeightToRows(pixelHeight: number): number; } {
@@ -721,12 +713,12 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
     const y = this._virtualScrollArea.getScrollYOffset();
     let heightCount = 0;
-    for (let i=0; i<heights.length; i++) {
-      if (y <= (heightCount + heights[i].height)) {
+    for (const heightInfo of heights) {
+      if (y <= (heightCount + heightInfo.height)) {
         this._virtualScrollArea.scrollTo(heightCount);
         break;
       }
-      heightCount += heights[i].height;
+      heightCount += heightInfo.height;
     }
   }
 
@@ -735,12 +727,12 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
     const y = this._virtualScrollArea.getScrollYOffset();
     let heightCount = 0;
-    for (let i=0; i<heights.length; i++) {
-      if (y < (heightCount + heights[i].height)) {
-        this._virtualScrollArea.scrollTo(heightCount + heights[i].height);
+    for (const heightInfo of heights) {
+      if (y < (heightCount + heightInfo.height)) {
+        this._virtualScrollArea.scrollTo(heightCount + heightInfo.height);
         break;
       }
-      heightCount += heights[i].height;
+      heightCount += heightInfo.height;
     }
   }
 
@@ -766,19 +758,16 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     return null;
   }
 
-  getChildElements(): HTMLElement[] {
+  getViewerElements(): ViewerElement[] {
     return this._childElementList.map(x => x.element);
   }
 
   getSelectionText(): string {
     let text: string = null;
-    for (let i=0; i<this._childElementList.length; i++) {
-      const node = this._childElementList[i].element;
-      if (ViewerElement.isViewerElement(node)) {
-        text = node.getSelectionText();
-        if (text !== null) {
-          return text;
-        }
+    for (const viewerInfo of this._childElementList) {
+      text = viewerInfo.element.getSelectionText();
+      if (text !== null) {
+        return text;
       }
     }
     return null;

@@ -41,7 +41,6 @@ import {UploadProgressBar} from './UploadProgressBar';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { TerminalCanvas } from './TerminalCanvas';
-import * as VirtualScrollArea from './VirtualScrollArea';
 import {FrameFinder} from './FrameFinderType';
 import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG,
   GENERAL_CONFIG } from '../Config';
@@ -51,9 +50,6 @@ import { ExtensionManager } from './extension/InternalTypes';
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { FindPanel, TempFindPanelViewer_FIXME } from "./FindPanel";
-
-type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
-type ScrollableElement = VirtualScrollable & HTMLElement;
 
 const log = LogDecorator;
 
@@ -201,9 +197,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     this._fetchNextTag();
   }
    
-  /**
-   * Custom Element 'connected' life cycle hook.
-   */
   connectedCallback(): void {
     super.connectedCallback();
     if ( ! this._elementAttached) {
@@ -266,8 +259,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       // This was already attached at least once.
       this._terminalCanvas.scheduleResize();
     }
-
-    this._setFontSizeInCss(this._fontSizeAdjustment);
   }
   
   /**
@@ -474,7 +465,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       return null;
     }
     
-    for (const element of this._terminalCanvas.getChildElements()) {
+    for (const element of this._terminalCanvas.getViewerElements()) {
       if (EmbeddedViewer.is(element) && element.getTag() === frameId) {
         return element;
       }
@@ -491,7 +482,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   getViewerElements(): ViewerElement[] {
-    return <ViewerElement[]> this._terminalCanvas.getChildElements().filter(el => el instanceof ViewerElement);
+    return this._terminalCanvas.getViewerElements();
   }
     
   getExtratermCookieValue(): string {
@@ -501,10 +492,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   protected updateThemeCss() {
     super.updateThemeCss();
     this.resizeToContainer();
-  }
-
-  private _refresh(level: RefreshLevel): void {
-    this._terminalCanvas.refresh(level);
   }
 
   showDialog(dialogElement: HTMLElement): Disposable {
@@ -582,13 +569,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _handleFocus(event: FocusEvent): void {
-    // Forcefully set the visual state of each thing in the terminal to appear focused.
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    DomUtils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
-      if (ViewerElement.isViewerElement(node)) {
-        node.setVisualState(this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED);
-      }
-    });
+    this._terminalCanvas.setModeAndVisualState(this._mode,
+      this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED);
   }
   
   private _refocus(): void {
@@ -598,13 +580,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _handleBlur(event: FocusEvent): void {
-    // Forcefully set the visual state of each thing in the terminal to appear unfocused.
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    DomUtils.nodeListToArray(scrollerArea.childNodes).forEach( (node): void => {
-      if (ViewerElement.isViewerElement(node)) {
-        node.setVisualState(VisualState.UNFOCUSED);
-      }
-    });
+    this._terminalCanvas.setModeAndVisualState(this._mode, VisualState.UNFOCUSED);
   }
 
   private _initEmulator(cookie: string): void {
@@ -646,7 +622,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
     this._terminalViewer = terminalViewer;  // Putting this in _terminalViewer now prevents the VirtualScrollArea 
                                             // removing it from the DOM in the next method call.
-    this._terminalCanvas.appendScrollable(terminalViewer)
+    this._terminalCanvas.appendViewerElement(terminalViewer)
     this._terminalCanvas.setTerminalViewer(terminalViewer);
     
     terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
@@ -673,12 +649,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._terminalViewer.setEmulator(null);
       this._terminalViewer.deleteScreen();
       this._terminalViewer.setUseVPad(false);
-      this._terminalCanvas.updateScrollableSize(this._terminalViewer);
+      this._terminalCanvas.updateSize(this._terminalViewer);
       this._terminalViewer = null;
     }
   }
   
-  private _appendScrollableElement(el: ScrollableElement): void {
+  private _appendViewerElement(el: ViewerElement): void {
     this._emulator.moveRowsAboveCursorToScrollback();
     this._emulator.flushRenderQueue();
     let currentTerminalViewer = this._terminalViewer;
@@ -690,20 +666,20 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
       if (currentTerminalViewer.isEmpty()) {
         // Keep this terminal viewer and re-use it later in the new position.
-        this._terminalCanvas.removeScrollable(currentTerminalViewer);
+        this._terminalCanvas.removeViewerElement(currentTerminalViewer);
       } else {
         // This terminal viewer has stuff in it.
         currentTerminalViewer.setEmulator(null);
         currentTerminalViewer.setUseVPad(false);
-        this._terminalCanvas.updateScrollableSize(currentTerminalViewer);
+        this._terminalCanvas.updateSize(currentTerminalViewer);
         this._terminalViewer = null;
         currentTerminalViewer = null;
       }
     }
-    this._terminalCanvas.appendScrollable(el);
+    this._terminalCanvas.appendViewerElement(el);
       
     if (currentTerminalViewer !== null) {
-      this._terminalCanvas.appendScrollable(currentTerminalViewer);
+      this._terminalCanvas.appendViewerElement(currentTerminalViewer);
       if (currentTerminalViewerHadFocus) {
         currentTerminalViewer.focus();
       }
@@ -1072,7 +1048,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _handleApplicationModeBracketStart(): void {
-    for (const element of this._terminalCanvas.getChildElements()) {
+    for (const element of this._terminalCanvas.getViewerElements()) {
       if ((EmbeddedViewer.is(element) && element.children.length === 0) || CommandPlaceHolder.is(element)) {
         return;  // Don't open a new frame.
       }
@@ -1100,7 +1076,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       };
       el.setDefaultMetadata(defaultMetadata);
 
-      this._appendScrollableElement(el);
+      this._appendViewerElement(el);
     } else {
 
       this._moveCursorToFreshLine();
@@ -1111,10 +1087,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._lastCommandTerminalViewer = this._terminalViewer;
     }
     this._lastCommandLine = cleancommand;
-
-    // const scrollContainer = DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-    // this._virtualScrollArea.updateContainerHeight(scrollContainer.clientHeight);
-// FIXME ^    
   }
   
   private _moveCursorToFreshLine(): void {
@@ -1124,8 +1096,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
   }
 
-  public deleteEmbeddedViewer(viewer: EmbeddedViewer): void {
-    this._terminalCanvas.removeScrollable(viewer);
+  deleteEmbeddedViewer(viewer: EmbeddedViewer): void {
+    this._terminalCanvas.removeViewerElement(viewer);
     viewer.dispose();
   }
 
@@ -1197,8 +1169,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   private _closeLastEmbeddedViewer(returnCode: string): void {
     // Find the terminal viewer which has no return code set on it.
-    let startElement: HTMLElement & VirtualScrollable = null;
-    for (const el of this._terminalCanvas.getChildElements()) {
+    let startElement: ViewerElement = null;
+    for (const el of this._terminalCanvas.getViewerElements()) {
       if (el instanceof EmbeddedViewer && el.children.length === 0) {
         startElement = el;
         break;
@@ -1226,9 +1198,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       embeddedViewerElement.setViewerElement(activeTerminalViewer);
       activeTerminalViewer.setEditable(true);
 
-      this._terminalCanvas.removeScrollable(activeTerminalViewer);
+      this._terminalCanvas.removeViewerElement(activeTerminalViewer);
 
-      this._terminalCanvas.updateScrollableSize(embeddedViewerElement);
+      this._terminalCanvas.updateSize(embeddedViewerElement);
       this._appendNewTerminalViewer();
       
       if (restoreFocus) {
@@ -1264,7 +1236,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         // Hang the terminal viewer under the Embedded viewer.
       newViewerElement.className = "extraterm_output";
 
-      this._terminalCanvas.appendScrollable(newViewerElement);
+      this._terminalCanvas.appendViewerElement(newViewerElement);
       
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
@@ -1286,7 +1258,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._appendNewTerminalViewer();
       this._refocus();
       const activeTerminalViewer = this._terminalViewer;
-      this._terminalCanvas.updateScrollableSize(activeTerminalViewer);
+      this._terminalCanvas.updateSize(activeTerminalViewer);
     }
   }
 
@@ -1306,11 +1278,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
   pasteText(text: string): void {
     if (this._mode === Mode.CURSOR) {
-      const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-      for (const node of scrollerArea.childNodes) {
-        if (ViewerElement.isViewerElement(node) && node.hasFocus()) {
-          if (SupportsClipboardPaste.isSupportsClipboardPaste(node) && node.canPaste()) {
-            node.pasteText(text);
+      for (const viewerElement of this._terminalCanvas.getViewerElements()) {
+        if (viewerElement.hasFocus()) {
+          if (SupportsClipboardPaste.isSupportsClipboardPaste(viewerElement) && viewerElement.canPaste()) {
+            viewerElement.pasteText(text);
           }
           break;
         }
@@ -1407,7 +1378,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._closeLastEmbeddedViewer("0");
       const viewerElement = this._createEmbeddedViewerElement();
       viewerElement.setViewerElement(mimeViewerElement);
-      this._appendScrollableElement(viewerElement);
+      this._appendViewerElement(viewerElement);
 
       if (this._configDatabase != null) {
         const config = this._configDatabase.getConfig(GENERAL_CONFIG);
