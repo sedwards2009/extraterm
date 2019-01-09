@@ -246,33 +246,7 @@ export function getEventDeepPath(ev: Event): Node[] {
  * @param el the element to focus
  */
 export function focusWithoutScroll(el: HTMLElement): void {
-  const preScrollTops: {element: Element, top: number}[] = [];
-
-  let p: Element = el;
-  do {
-    preScrollTops.push( { element: p, top: p.scrollTop } );
-
-
-    let parent: Element = p.parentElement;
-    if (parent == null) {
-      const nodeParent = p.parentNode;
-      if (nodeParent != null && nodeParent.nodeName === "#document-fragment") {
-        parent = (<ShadowRoot> nodeParent).host;
-      }
-    }
-    p = parent;
-  } while (p != null);
-
-  el.focus();
-
-  if (preScrollTops.length !== 0) {
-    // Restore the previous scroll top values.
-    preScrollTops.forEach( (pair) => {
-      if (pair.element.scrollTop !== pair.top) {
-        pair.element.scrollTop = pair.top;
-      }
-    });
-  }
+  el.focus({preventScroll: true});
 }
 
 /**

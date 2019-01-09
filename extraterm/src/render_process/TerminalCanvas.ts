@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Logger, getLogger} from "extraterm-logging";
+import {Logger, getLogger, log} from "extraterm-logging";
 import { ResizeNotifier } from "extraterm-resize-notifier";
 import { Disposable, Event } from 'extraterm-extension-api';
 
@@ -21,6 +21,11 @@ import { TextViewer } from "./viewers/TextAceViewer";
 import { VisualState, Mode, CursorEdgeDetail, Edge, RefreshLevel } from "./viewers/ViewerElementTypes";
 import { EventEmitter } from "../utils/EventEmitter";
 import { ResizeCanary } from "./ResizeCanary";
+import { WebComponent } from "extraterm-web-component-decorators";
+import { ThemeableElementBase } from "./ThemeableElementBase";
+import { trimBetweenTags } from "extraterm-trim-between-tags";
+import { CssFile } from '../theme/Theme';
+import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
 
 const SCROLL_STEP = 1;
 const CHILD_RESIZE_BATCH_SIZE = 3;
@@ -34,11 +39,27 @@ interface ViewerElementStatus {
   refreshLevel: RefreshLevel;
 }
 
+const ID = "EtTerminalCanvasTemplate";
+const ID_CONTAINER = "ID_CONTAINER";
+const ID_CSS_VARS = "ID_CSS_VARS";
+const ID_SCROLL_AREA = "ID_SCROLL_AREA";
+const ID_SCROLL_CONTAINER = "ID_SCROLL_CONTAINER";
+const ID_SCROLLBAR_CONTAINER = "ID_SCROLLBAR_CONTAINER";
+const ID_SCROLLBAR = "ID_SCROLLBAR";
 
-export class TerminalCanvas implements AcceptsConfigDatabase {
+@WebComponent({tag: "et-terminal-canvas"})
+export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfigDatabase {
+
+  static TAG_NAME = "et-terminal-canvas";
   private static _resizeNotifier = new ResizeNotifier();
 
   private _log: Logger;
+
+  private _scrollContainer: HTMLDivElement;
+  private _scrollArea: HTMLDivElement;
+  private _scrollBar: ScrollBar;
+  private _cssStyleElement: HTMLStyleElement;
+
   private _configDatabase: ConfigDatabase = null;
   private _virtualScrollArea: VirtualScrollAreaWithSpacing = null;
   private _stashArea: DocumentFragment = null;
@@ -55,22 +76,51 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
   private _fontSizeAdjustment = 0;
 
   private _elementAttached = false;
+  private _initialized = false;
 
   private _terminalViewer: TerminalViewer = null; // FIXME rename to 'focusTarget'?
 
   private _onBeforeSelectionChangeEmitter = new EventEmitter<{sourceMouse: boolean}>();
   onBeforeSelectionChange: Event<{sourceMouse: boolean}>;
 
-  constructor(private _scrollContainer: HTMLDivElement, private _scrollArea: HTMLDivElement,
-      private _scrollBar: ScrollBar, private _cssStyleElement: HTMLStyleElement) {
-
+  constructor() {
+    super();
     this._log = getLogger("TerminalCanvas", this);
+    this._elementAttached = false;
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+
+    this._elementAttached = true;
+    if (this._initialized) {
+      this._updateScrollableSpacing();
+      return;
+    }
+
+    this._initialized = true;
+
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+
+    const clone = this._createClone();
+    shadow.appendChild(clone);
+
+    this._scrollContainer = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
+    this._scrollArea = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_AREA);
+    this._scrollBar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
+    this._cssStyleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
+
     this.onBeforeSelectionChange = this._onBeforeSelectionChangeEmitter.event;
     this._childFocusHandlerFunc = this._handleChildFocus.bind(this);
+
+    DomUtils.preventScroll(this._scrollContainer);
 
     TerminalCanvas._resizeNotifier.observe(this._scrollContainer, (target: Element, contentRect: DOMRectReadOnly) => {
       this.refresh(RefreshLevel.COMPLETE);
     });
+
+    DomUtils.addCustomEventResender(this._scrollContainer, EVENT_DRAG_STARTED, this);
+    DomUtils.addCustomEventResender(this._scrollContainer, EVENT_DRAG_ENDED, this);
 
     this._stashArea = window.document.createDocumentFragment();
     this._stashArea.addEventListener(EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
@@ -107,9 +157,36 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     this._scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleViewerCursor.bind(this));
     this._scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleViewerCursorEdge.bind(this));
     
-    this._setFontSizeInCss(this._fontSizeAdjustment);
+    this.updateThemeCss();
     this._setupFontResizeDetector();
     this._scheduleResize();
+  }
+  
+  private _createClone(): Node {
+    let template = <HTMLTemplateElement>window.document.getElementById(ID);
+    if (template === null) {
+      template = window.document.createElement('template');
+      template.id = ID;
+
+      template.innerHTML = trimBetweenTags(`
+        <style id="${ThemeableElementBase.ID_THEME}"></style>
+        <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
+        <div id='${ID_CONTAINER}'>
+          <div id='${ID_SCROLL_CONTAINER}'>
+            <div id='${ID_SCROLL_AREA}'></div>
+          </div>
+          <div id='${ID_SCROLLBAR_CONTAINER}'>
+            <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
+          </div>
+        </div>`);
+      window.document.body.appendChild(template);
+    }
+
+    return window.document.importNode(template.content, true);
+  }
+
+  protected _themeCssFiles(): CssFile[] {
+    return [CssFile.TERMINAL_CANVAS];
   }
 
   private _setupFontResizeDetector(): void {
@@ -123,6 +200,16 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     resizeCanary.addEventListener('resize', () => {
       this.refresh(RefreshLevel.COMPLETE);
     });
+  }
+
+  disconnectedCallback(): void {
+    this._needsCompleteRefresh = true;
+    this._elementAttached = false;
+  }
+
+  addKeyboardEventListener(type: "keydown" | "keypress", listener: (this: Element, ev: KeyboardEvent) => any,
+        capture=false): void {
+    this._scrollContainer.addEventListener(type, listener, capture);
   }
 
   private _handleChildFocus(ev: FocusEvent): void {
@@ -154,16 +241,6 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
         kid.element.dispose();
       }
     }
-  }
-
-  connectedCallback(): void {
-    this._updateScrollableSpacing();
-    this._elementAttached = true;
-  }
-
-  disconnectedCallback(): void {
-    this._needsCompleteRefresh = true;
-    this._elementAttached = false;
   }
 
   setConfigDatabase(configManager: ConfigDatabase): void {
@@ -223,12 +300,18 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
   setTerminalViewer(terminalViewer: TerminalViewer): void {
     this._terminalViewer = terminalViewer;
+    this._markVisible(this._terminalViewer, true);
   }
 
   focus(): void {
+    super.focus({preventScroll: true});
     if (this._terminalViewer !== null) {
       DomUtils.focusWithoutScroll(this._terminalViewer);
     }
+  }
+
+  hasFocus(): boolean {
+    return DomUtils.getShadowRoot(this).activeElement !== null;
   }
 
   appendViewerElement(el: ViewerElement): void {
@@ -252,6 +335,10 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
     this._childElementList.splice(pos, 1);
 
     this._virtualScrollArea.removeScrollable(el);
+
+    if (this._terminalViewer === el) {
+      this._terminalViewer = null;
+    }
   }
 
   private _childElementListIndexOf(element: ViewerElement): number {
@@ -278,7 +365,7 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
   }
 
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
-    const el = <HTMLElement & VirtualScrollable> ev.target;
+    const el = <ViewerElement> ev.target;
     if (el.parentNode === this._stashArea) {
       this._scheduleStashedChildResize(el);
     } else {
@@ -541,6 +628,14 @@ export class TerminalCanvas implements AcceptsConfigDatabase {
 
   resetFontSize(): void {
     this._resetFontSize();
+  }
+
+  private _getCssVarsRules(): string {
+    return `
+    #${ID_CONTAINER} {
+        ${this._getCssFontSizeRule(this._fontSizeAdjustment)}
+    }
+    `;
   }
 
   private _getCssFontSizeRule(adjustment: number): string {

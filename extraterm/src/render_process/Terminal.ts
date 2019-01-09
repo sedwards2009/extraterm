@@ -57,11 +57,8 @@ const DEBUG_APPLICATION_MODE = false;
 
 const ID = "EtTerminalTemplate";
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
+
 const ID_TOP = "ID_TOP";
-const ID_SCROLL_CONTAINER = "ID_SCROLL_CONTAINER";
-const ID_SCROLL_AREA = "ID_SCROLL_AREA";
-const ID_SCROLLBAR = "ID_SCROLLBAR";
-const ID_SCROLLBAR_CONTAINER = "ID_SCROLLBAR_CONTAINER";
 const ID_CENTER_COLUMN = "ID_CENTER_COLUMN";
 const ID_CENTER_CONTAINER = "ID_CENTER_CONTAINER";
 const ID_NORTH_CONTAINER = "ID_NORTH_CONTAINER";
@@ -209,21 +206,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this.addEventListener('focus', this._handleFocus.bind(this));
       this.addEventListener('blur', this._handleBlur.bind(this));
 
-      const scrollBar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
-      const scrollArea = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_AREA);
-      const scrollContainer = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
-      DomUtils.preventScroll(scrollContainer);
-
-      const cssStyleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
-      this._terminalCanvas = new TerminalCanvas(scrollContainer, scrollArea, scrollBar, cssStyleElement);
+      this._terminalCanvas = new TerminalCanvas();
       this._terminalCanvas.setConfigDatabase(this._configDatabase);
+      DomUtils.getShadowId(this, ID_CENTER_CONTAINER).appendChild(this._terminalCanvas);
+
       this._terminalCanvas.onBeforeSelectionChange(ev => this._handleBeforeSelectionChange(ev));
 
-      scrollArea.addEventListener("keypress", (ev) => this._handleKeyPressCapture(ev), true);
-      scrollArea.addEventListener('keydown', (ev) => this._handleKeyDownCapture(ev), true);
-
-      DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_STARTED, this);
-      DomUtils.addCustomEventResender(scrollContainer, GeneralEvents.EVENT_DRAG_ENDED, this);
+      this._terminalCanvas.addKeyboardEventListener("keypress", (ev) => this._handleKeyPressCapture(ev), true);
+      this._terminalCanvas.addKeyboardEventListener('keydown', (ev) => this._handleKeyDownCapture(ev), true);
 
       this._terminalCanvas.connectedCallback();
 
@@ -235,8 +225,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
       this.updateThemeCss();
 
-      scrollContainer.addEventListener('mousedown', (ev: MouseEvent): void => {
-        if (ev.target === scrollContainer) {
+      this._terminalCanvas.addEventListener('mousedown', (ev: MouseEvent): void => {
+        if (ev.target === this._terminalCanvas) {
           ev.preventDefault();
           ev.stopPropagation();
           this._terminalCanvas.focus();
@@ -246,9 +236,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         }
       });
       
-      scrollContainer.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+      this._terminalCanvas.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
       
-      scrollArea.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
+      this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
         this.send(detail.text);
       });
@@ -518,20 +508,13 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         <style id="${ThemeableElementBase.ID_THEME}"></style>
         <style id="${ID_CSS_VARS}">#${ID_CENTER_CONTAINER} {}</style>
         <div id='${ID_TOP}'>
-          <div id ='${ID_WEST_CONTAINER}'></div>
+          <div id='${ID_WEST_CONTAINER}'></div>
           <div id='${ID_CENTER_COLUMN}'>
             <div id='${ID_NORTH_CONTAINER}'></div>
-            <div id='${ID_CENTER_CONTAINER}'>
-              <div id='${ID_SCROLL_CONTAINER}'>
-                <div id='${ID_SCROLL_AREA}'></div>
-              </div>
-              <div id='${ID_SCROLLBAR_CONTAINER}'>
-                <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
-              </div>
-            </div>
-            <div id ='${ID_SOUTH_CONTAINER}'></div>
+            <div id='${ID_CENTER_CONTAINER}'></div>
+            <div id='${ID_SOUTH_CONTAINER}'></div>
           </div>
-          <div id ='${ID_EAST_CONTAINER}'></div>
+          <div id='${ID_EAST_CONTAINER}'></div>
         </div>
         `);
       window.document.body.appendChild(template);
@@ -574,7 +557,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
   
   private _refocus(): void {
-    if (this.hasFocus() && this._mode === Mode.DEFAULT && this._terminalViewer != null && ! this._terminalViewer.hasFocus()) {
+    if (this.hasFocus() && this._mode === Mode.DEFAULT &&
+        this._terminalViewer != null && ! this._terminalViewer.hasFocus()) {
       DomUtils.focusWithoutScroll(this._terminalViewer);
     }
   }
@@ -680,8 +664,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
     if (currentTerminalViewer !== null) {
       this._terminalCanvas.appendViewerElement(currentTerminalViewer);
+      this._terminalCanvas.setTerminalViewer(currentTerminalViewer);
       if (currentTerminalViewerHadFocus) {
-        currentTerminalViewer.focus();
+        this._terminalCanvas.focus();
       }
     } else {
       this._appendNewTerminalViewer();
@@ -1193,18 +1178,17 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
       // Some focus management to make sure that activeTerminalViewer still keeps
       // the focus after we remove it from the DOM and place it else where.
-      const restoreFocus = DomUtils.getShadowRoot(this).activeElement === activeTerminalViewer;
+      const restoreFocus = this._terminalCanvas.hasFocus();
       
       embeddedViewerElement.setViewerElement(activeTerminalViewer);
       activeTerminalViewer.setEditable(true);
-
       this._terminalCanvas.removeViewerElement(activeTerminalViewer);
 
       this._terminalCanvas.updateSize(embeddedViewerElement);
       this._appendNewTerminalViewer();
       
       if (restoreFocus) {
-        this._terminalViewer.focus();
+        this._terminalCanvas.focus();
       }
     } else {
       
