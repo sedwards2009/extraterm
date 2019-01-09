@@ -146,7 +146,9 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
       this._virtualScrollArea.scrollTo(this._scrollBar.getPosition());
     });
 
-    this._scrollArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
+    this._scrollContainer.addEventListener('wheel', (ev: WheelEvent): void => {
+      this._handleMouseWheel(ev);
+    }, true);
 
     this._scrollArea.addEventListener(EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     this._scrollArea.addEventListener(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
