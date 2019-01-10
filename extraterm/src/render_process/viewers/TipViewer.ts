@@ -109,6 +109,9 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
     
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     TipViewer._resizeNotifier.observe(containerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+      if ( ! this.isConnected) {
+        return;
+      }
       const rect = containerDiv.getBoundingClientRect();
       this._height = rect.height;
       emitResizeEvent(this);

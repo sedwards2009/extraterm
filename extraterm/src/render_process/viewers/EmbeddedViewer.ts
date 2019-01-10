@@ -161,6 +161,9 @@ export class EmbeddedViewer extends ViewerElement implements Commandable,
 
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     EmbeddedViewer._resizeNotifier.observe(headerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+      if ( ! this.isConnected) {
+        return;
+      }
       VirtualScrollArea.emitResizeEvent(this);
     });
   }

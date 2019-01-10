@@ -60,6 +60,9 @@ export class Splitter extends TemplatedElementBase {
     const topDiv = this._elementById(ID_TOP);
     topDiv.classList.add(CLASS_NORMAL);
     Splitter._resizeNotifier.observe(topDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+      if ( ! this.isConnected) {
+        return;
+      }
       this._refresh(RefreshLevel.COMPLETE);
     });
     topDiv.addEventListener('mousedown', this._handleMouseDown.bind(this));

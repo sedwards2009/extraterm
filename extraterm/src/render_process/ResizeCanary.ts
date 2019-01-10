@@ -40,6 +40,9 @@ export class ResizeCanary extends HTMLElement {
     shadow.appendChild(this._createNodes());
     const container = <HTMLDivElement> getShadowId(this, ID_SIZER);
     ResizeCanary._resizeNotifier.observe(container,  (target: Element, contentRect: DOMRectReadOnly) => {
+      if ( ! this.isConnected) {
+        return;
+      }
       const event = new CustomEvent('resize', { detail: { } });
       this.dispatchEvent(event);
     });

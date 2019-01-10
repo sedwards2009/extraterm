@@ -116,6 +116,9 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     DomUtils.preventScroll(this._scrollContainer);
 
     TerminalCanvas._resizeNotifier.observe(this._scrollContainer, (target: Element, contentRect: DOMRectReadOnly) => {
+      if ( ! this.isConnected) {
+        return;
+      }      
       this.refresh(RefreshLevel.COMPLETE);
     });
 

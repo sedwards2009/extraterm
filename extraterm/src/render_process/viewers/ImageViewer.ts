@@ -114,6 +114,9 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
     const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
     imgElement.addEventListener('load', () => this._handleImageLoad());
     ImageViewer._resizeNotifier.observe(imgElement, (target: Element, contentRect: DOMRectReadOnly) => {
+      if ( ! this.isConnected) {
+        return;
+      }
       emitResizeEvent(this);
     });
 
