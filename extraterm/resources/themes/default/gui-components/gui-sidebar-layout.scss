@@ -24,23 +24,34 @@
 
 #ID_NORTH_CONTAINER {
   border-bottom: 1px solid $tab-border-color;
-  padding-bottom: -1px;
 
+  &.empty {
+    border-bottom: 0px;
+  }
 }
 
 #ID_SOUTH_CONTAINER {
   border-top: 1px solid $tab-border-color;
-  padding-top: -1px;
+
+  &.empty {
+    border-top: 0px;
+  }
 }
 
 #ID_WEST_CONTAINER {
   border-right: 1px solid $tab-border-color;
-  padding-right: -1px;
+
+  &.empty {
+    border-right: 0px;
+  }
 }
 
 #ID_EAST_CONTAINER {
   border-left: 1px solid $tab-border-color;
-  padding-left: -1px;
+
+  &.empty {
+    border-left: 0px;
+  }
 }
 
 #ID_CENTER_COLUMN {

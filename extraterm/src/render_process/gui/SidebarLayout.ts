@@ -29,6 +29,18 @@ export class SidebarLayout extends TemplatedElementBase {
   constructor() {
     super({ delegatesFocus: true });
     this._log = getLogger(SidebarLayout.TAG_NAME, this);
+
+    for (const slotElement of this.shadowRoot.querySelectorAll("slot")) {
+      slotElement.addEventListener("slotchange", (ev) => {
+        const slot = <HTMLSlotElement> ev.target;
+        if (slot.assignedNodes().length === 0) {
+          slot.parentElement.classList.add("empty")
+        } else {
+          slot.parentElement.classList.remove("empty")
+        }
+      });
+    }
+
   }
 
   protected _themeCssFiles(): CssFile[] {
@@ -38,13 +50,13 @@ export class SidebarLayout extends TemplatedElementBase {
   protected _html(): string {
     return trimBetweenTags(`
       <div id='${ID_TOP}'>
-        <div id='${ID_WEST_CONTAINER}'><slot name='west'></slot></div>
+        <div id='${ID_WEST_CONTAINER}' class='empty'><slot name='west'></slot></div>
         <div id='${ID_CENTER_COLUMN}'>
-          <div id='${ID_NORTH_CONTAINER}'><slot name='north'></slot></div>
+          <div id='${ID_NORTH_CONTAINER}' class='empty'><slot name='north'></slot></div>
           <div id='${ID_CENTER_CONTAINER}'><slot></slot></div>
-          <div id='${ID_SOUTH_CONTAINER}'><slot name='south'></slot></div>
+          <div id='${ID_SOUTH_CONTAINER}' class='empty'><slot name='south'></slot></div>
         </div>
-        <div id='${ID_EAST_CONTAINER}'><slot name='east'></slot></div>
+        <div id='${ID_EAST_CONTAINER}' class='empty'><slot name='east'></slot></div>
       </div>`);
   }
 }
