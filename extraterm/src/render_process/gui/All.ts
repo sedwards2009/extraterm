@@ -21,3 +21,4 @@ import "./Tab";
 import "./TabWidget";
 import "./file_transfer/CompactFileTransferProgress";
 import "./file_transfer/FileTransferProgress";
+import "./SidebarLayout";

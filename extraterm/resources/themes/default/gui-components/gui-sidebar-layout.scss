@@ -1,0 +1,63 @@
+/**
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ */
+@import 'general-gui/variables';
+
+#ID_TOP {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  contain: strict;
+}
+
+#ID_WEST_CONTAINER, #ID_EAST_CONTAINER, #ID_NORTH_CONTAINER, #ID_SOUTH_CONTAINER {
+  flex: 0 0 auto;
+
+  background: $tab-bar-background-color;
+
+  & > * {
+    margin: $panel-body-padding;
+    display: block;
+  }
+}
+
+#ID_NORTH_CONTAINER {
+  border-bottom: 1px solid $tab-border-color;
+  padding-bottom: -1px;
+
+}
+
+#ID_SOUTH_CONTAINER {
+  border-top: 1px solid $tab-border-color;
+  padding-top: -1px;
+}
+
+#ID_WEST_CONTAINER {
+  border-right: 1px solid $tab-border-color;
+  padding-right: -1px;
+}
+
+#ID_EAST_CONTAINER {
+  border-left: 1px solid $tab-border-color;
+  padding-left: -1px;
+}
+
+#ID_CENTER_COLUMN {
+  flex: 1 1 auto;
+
+  display: flex;
+  flex-direction: column;
+}
+
+#ID_CENTER_CONTAINER {
+  position: relative;
+
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  contain: strict;
+
+  background-color: var(--terminal-background-color);
+}

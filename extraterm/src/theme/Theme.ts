@@ -67,7 +67,8 @@ export const CssFile = {
   TABS: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/tabs.scss",
   EXTRAICONS: CSS_MODULE_INTERNAL_GUI + ":" + "fonts/extraicons.scss",
   GUI_DIVIDER_MENU_ITEM: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-dividermenuitem.scss",
-  TERMINAL_CANVAS: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/terminal-canvas.scss"
+  TERMINAL_CANVAS: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/terminal-canvas.scss",
+  GUI_SIDEBAR_LAYOUT: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-sidebar-layout.scss"
 }
 
 export function cssFileToFilename(cssFile: CssFile): string {
@@ -118,6 +119,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.EXTRAICONS,
   CssFile.GUI_DIVIDER_MENU_ITEM,
   CssFile.TERMINAL_CANVAS,
+  CssFile.GUI_SIDEBAR_LAYOUT
 ];
 
 export class CssFileMap extends Map<CssFile, string> {

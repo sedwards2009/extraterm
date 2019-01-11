@@ -16,7 +16,7 @@ import {DownloadViewer} from './viewers/DownloadViewer';
 import {Pty} from '../pty/Pty';
 
 import {ViewerElement} from './viewers/ViewerElement';
-import { SupportsMimeTypes, Mode, RefreshLevel, VisualState } from './viewers/ViewerElementTypes';
+import { SupportsMimeTypes, Mode, VisualState } from './viewers/ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
 import * as ThemeTypes from '../theme/Theme';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
@@ -36,11 +36,11 @@ import * as DomUtils from './DomUtils';
 import {doLater, DebouncedDoLater} from '../utils/DoLater';
 import * as Term from './emulator/Term';
 import * as TermApi from 'term-api';
-import {ScrollBar} from './gui/ScrollBar';
 import {UploadProgressBar} from './UploadProgressBar';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { TerminalCanvas } from './TerminalCanvas';
+import { SidebarLayout, BorderSide } from './gui/SidebarLayout';
 import {FrameFinder} from './FrameFinderType';
 import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG,
   GENERAL_CONFIG } from '../Config';
@@ -58,15 +58,8 @@ const DEBUG_APPLICATION_MODE = false;
 const ID = "EtTerminalTemplate";
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
-const ID_TOP = "ID_TOP";
-const ID_CENTER_COLUMN = "ID_CENTER_COLUMN";
-const ID_CENTER_CONTAINER = "ID_CENTER_CONTAINER";
-const ID_NORTH_CONTAINER = "ID_NORTH_CONTAINER";
-const ID_SOUTH_CONTAINER = "ID_SOUTH_CONTAINER";
-const ID_EAST_CONTAINER = "ID_EAST_CONTAINER";
-const ID_WEST_CONTAINER = "ID_WEST_CONTAINER";
+const ID_CONTAINER = "ID_CONTAINER";
 
-const ID_CSS_VARS = "ID_CSS_VARS";
 const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
 const KEYBINDINGS_CURSOR_MODE = "terminal-cursor-mode";
 
@@ -114,12 +107,6 @@ interface WriteBufferStatus {
 
 type InputStreamFilter = (input: string) => string;
 
-enum BorderSide {
-  NORTH,
-  SOUTH,
-  EAST,
-  WEST
-}
 
 /**
  * An Extraterm terminal.
@@ -139,6 +126,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _log: Logger;
   private _pty: Pty = null;
 
+  private _containerElement: HTMLElement = null;
   private _terminalCanvas: TerminalCanvas = null;
   private _terminalViewer: TerminalViewer = null;
   
@@ -208,7 +196,8 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
       this._terminalCanvas = new TerminalCanvas();
       this._terminalCanvas.setConfigDatabase(this._configDatabase);
-      DomUtils.getShadowId(this, ID_CENTER_CONTAINER).appendChild(this._terminalCanvas);
+      this._containerElement = DomUtils.getShadowId(this, ID_CONTAINER);
+      this._containerElement.appendChild(this._terminalCanvas);
 
       this._terminalCanvas.onBeforeSelectionChange(ev => this._handleBeforeSelectionChange(ev));
 
@@ -485,15 +474,14 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   showDialog(dialogElement: HTMLElement): Disposable {
-    const containerDiv = DomUtils.getShadowId(this, ID_CENTER_CONTAINER);
     dialogElement.classList.add(CLASS_VISITOR_DIALOG);
-    containerDiv.appendChild(dialogElement);
+    this._containerElement.appendChild(dialogElement);
     this._dialogStack.push(dialogElement);
     return {
       dispose: () => {
         dialogElement.classList.remove(CLASS_VISITOR_DIALOG);
         this._dialogStack = this._dialogStack.filter(el => el !== dialogElement);
-        containerDiv.removeChild(dialogElement);
+        this._containerElement.removeChild(dialogElement);
       }
     };
   }
@@ -506,16 +494,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
       template.innerHTML = trimBetweenTags(`
         <style id="${ThemeableElementBase.ID_THEME}"></style>
-        <style id="${ID_CSS_VARS}">#${ID_CENTER_CONTAINER} {}</style>
-        <div id='${ID_TOP}'>
-          <div id='${ID_WEST_CONTAINER}'></div>
-          <div id='${ID_CENTER_COLUMN}'>
-            <div id='${ID_NORTH_CONTAINER}'></div>
-            <div id='${ID_CENTER_CONTAINER}'></div>
-            <div id='${ID_SOUTH_CONTAINER}'></div>
-          </div>
-          <div id='${ID_EAST_CONTAINER}'></div>
-        </div>
+        <${SidebarLayout.TAG_NAME} id='${ID_CONTAINER}'></${SidebarLayout.TAG_NAME}>
         `);
       window.document.body.appendChild(template);
     }
@@ -1303,8 +1282,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
 
     const uploader = new BulkFileUploader(bulkFileHandle, this._pty);
-
-    const containerDiv = DomUtils.getShadowId(this, ID_CENTER_CONTAINER);
     const uploadProgressBar = <UploadProgressBar> document.createElement(UploadProgressBar.TAG_NAME);
     
     if ("filename" in bulkFileHandle.getMetadata()) {
@@ -1329,7 +1306,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     });
 
     uploader.onFinished(() => {
-      containerDiv.removeChild(uploadProgressBar);
+      this._containerElement.removeChild(uploadProgressBar);
       inputFilterRegistration.dispose();
       doLater(() => {
         uploader.dispose();
@@ -1337,7 +1314,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     });
 
     uploadProgressBar.hide();
-    containerDiv.appendChild(uploadProgressBar);
+    this._containerElement.appendChild(uploadProgressBar);
     uploadProgressBar.show(200);  // Show after delay
 
     uploader.upload();
@@ -1414,26 +1391,12 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _appendElementToBorder(element: HTMLElement, borderSide: BorderSide): void {
-    // borderSize
-    const sideToIdMapping = {
-      [BorderSide.NORTH]: ID_NORTH_CONTAINER,
-      [BorderSide.SOUTH]: ID_SOUTH_CONTAINER,
-      [BorderSide.EAST]: ID_EAST_CONTAINER,
-      [BorderSide.WEST]: ID_WEST_CONTAINER,
-    };
-    const borderSideElement = DomUtils.getShadowId(this, sideToIdMapping[borderSide]);
-    borderSideElement.appendChild(element);
+    element.slot = borderSide;
+    this._containerElement.appendChild(element);
   }
 
   private _removeElementFromBorder(element: HTMLElement): void {
-    const borderIds = [ID_NORTH_CONTAINER, ID_SOUTH_CONTAINER, ID_EAST_CONTAINER, ID_WEST_CONTAINER];
-    for (const borderId of borderIds) {
-      const borderSideElement = DomUtils.getShadowId(this, borderId);
-      if (borderSideElement === element.parentElement) {
-        borderSideElement.removeChild(element);
-        break;
-      }
-    }
+    this._containerElement.removeChild(element);
   }
 
   private _openFindPanel(): void {
@@ -1460,7 +1423,7 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
         this._findPanel = null;
       });
 
-      this._appendElementToBorder(this._findPanel, BorderSide.SOUTH);
+      this._appendElementToBorder(this._findPanel, "south");
     }
     this._findPanel.focus();
   }
