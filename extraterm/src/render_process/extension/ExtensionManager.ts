@@ -110,8 +110,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
   getAllSessionTypes(): { name: string, type: string }[] {
     return _.flatten(
       this._activeExtensions.map(activeExtension => {
-        if (activeExtension.metadata.contributions.sessionEditor != null) {
-          return activeExtension.metadata.contributions.sessionEditor.map(se => ({name: se.name, type: se.type}));
+        if (activeExtension.metadata.contributes.sessionEditors != null) {
+          return activeExtension.metadata.contributes.sessionEditors.map(se => ({name: se.name, type: se.type}));
         } else {
           return [];
         }
@@ -120,7 +120,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   getSessionEditorTagForType(sessionType: string): string {
-    const seExtensions = this._activeExtensions.filter(ae => ae.metadata.contributions.sessionEditor != null);
+    const seExtensions = this._activeExtensions.filter(ae => ae.metadata.contributes.sessionEditors != null);
     for (const extension of seExtensions) {
       const tag = extension.contextImpl.internalWorkspace.getSessionEditorTagForType(sessionType);
       if (tag != null) {
@@ -133,7 +133,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   getAllTerminalThemeFormats(): {name: string, formatName: string}[] {
     const results = [];
     for (const metadata of this._extensionMetadata) {
-      for (const provider of metadata.contributions.terminalThemeProvider) {
+      for (const provider of metadata.contributes.terminalThemeProviders) {
         for (const formatName of provider.humanFormatNames) {
           results.push( { name: provider.name, formatName } );
         }
@@ -145,7 +145,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   getAllSyntaxThemeFormats(): {name: string, formatName: string}[] {
     const results = [];
     for (const metadata of this._extensionMetadata) {
-      for (const provider of metadata.contributions.syntaxThemeProvider) {
+      for (const provider of metadata.contributes.syntaxThemeProviders) {
         for (const formatName of provider.humanFormatNames) {
           results.push( { name: provider.name, formatName } );
         }

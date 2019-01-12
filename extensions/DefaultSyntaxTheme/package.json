@@ -2,8 +2,8 @@
   "name": "default-syntax-theme",
   "description": "Extraterm Default Syntax theme",
   "version": "1.0.0",
-  "contributions": {
-    "syntaxTheme": [
+  "contributes": {
+    "syntaxThemes": [
       {
         "path": "theme"
       }

@@ -28,7 +28,7 @@ export class WorkspaceViewerRegistry {
 
   registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor): void {
     let viewerMetadata: ExtensionViewerContribution = null;
-    for (const vmd of this._internalExtensionContext.extensionMetadata.contributions.viewer) {
+    for (const vmd of this._internalExtensionContext.extensionMetadata.contributes.viewers) {
       if (vmd.name === name) {
         viewerMetadata = vmd;
         break;

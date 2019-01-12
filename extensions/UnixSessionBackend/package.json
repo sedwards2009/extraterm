@@ -22,8 +22,8 @@
       "os": "win32"
     }
   ],
-  "contributions": {
-    "sessionBackend": [
+  "contributes": {
+    "sessionBackends": [
       {
         "name": "Unix",
         "type": "unix"

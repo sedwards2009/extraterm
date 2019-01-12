@@ -24,8 +24,8 @@
       "os": "win32"
     }
   ],
-  "contributions": {
-    "sessionEditor": [
+  "contributes": {
+    "sessionEditors": [
       {
         "name": "Cygwin",
         "type": "cygwin",

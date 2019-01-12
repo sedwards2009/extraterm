@@ -10,7 +10,7 @@ export interface ExtensionMetadata {
   main: string;
   version?: string;
   description?: string;
-  contributions: ExtensionContributions;
+  contributes: ExtensionContributes;
   includePlatform?: ExtensionPlatform[];
   excludePlatform?: ExtensionPlatform[];
 }
@@ -20,15 +20,24 @@ export interface ExtensionPlatform {
   arch?: string;
 }
 
-export interface ExtensionContributions {
+export interface ExtensionContributes {
   keybindings: ExtensionKeybindingsContribution[];
-  sessionBackend: ExtensionSessionBackendContribution[];
-  sessionEditor: ExtensionSessionEditorContribution[];
-  syntaxTheme: ExtensionSyntaxThemeContribution[];
-  syntaxThemeProvider: ExtensionSyntaxThemeProviderContribution[];
-  terminalTheme: ExtensionTerminalThemeContribution[];
-  terminalThemeProvider: ExtensionTerminalThemeProviderContribution[];
-  viewer: ExtensionViewerContribution[];
+  sessionBackends: ExtensionSessionBackendContribution[];
+  sessionEditors: ExtensionSessionEditorContribution[];
+  syntaxThemes: ExtensionSyntaxThemeContribution[];
+  syntaxThemeProviders: ExtensionSyntaxThemeProviderContribution[];
+  terminalThemes: ExtensionTerminalThemeContribution[];
+  terminalThemeProviders: ExtensionTerminalThemeProviderContribution[];
+  viewers: ExtensionViewerContribution[];
+}
+
+  // commands: ExtensionCommandContribution[];
+export interface ExtensionCommandContribution {
+  command: string;
+  title: string;
+  when?: string;
+  // commandPalette?: boolean;
+  // contextMenu?: boolean;
 }
 
 export interface ExtensionViewerContribution {

@@ -48,7 +48,7 @@ export class KeybindingsIOManager {
   private _getKeybindingsExtensionPaths(): string [] {
     const paths: string[] = [];
     for (const extension of this._mainExtensionManager.getExtensionMetadata()) {
-      for (const st of extension.contributions.keybindings) {
+      for (const st of extension.contributes.keybindings) {
         paths.push(path.join(extension.path, st.path));
       }
     }

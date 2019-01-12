@@ -13,26 +13,26 @@ test("metadata", () => {
   expect(parsed.name).toBe("Foo");
   expect(parsed.version).toBe("1.0.0");
   expect(parsed.description).toBe("Foobar");
-  expect(parsed.contributions.viewer.length).toBe(0);
+  expect(parsed.contributes.viewers.length).toBe(0);
 });
 
-test("contributions", () => {
+test("contributes", () => {
   const parsed = parsePackageJson({
     name: "Foo",
     version: "1.0.0",
     description: "Foobar",
-    contributions: {
-      viewer: [{name: "SmegViewer", mimeTypes: ["foo/bar"]}]
+    contributes: {
+      viewers: [{name: "SmegViewer", mimeTypes: ["foo/bar"]}]
     }
   }, "");
 
   expect(parsed.name).toBe("Foo");
   expect(parsed.version).toBe("1.0.0");
   expect(parsed.description).toBe("Foobar");
-  expect(parsed.contributions.viewer.length).toBe(1);
-  expect(parsed.contributions.viewer[0].name).toBe("SmegViewer");
-  expect(parsed.contributions.viewer[0].mimeTypes.length).toBe(1);
-  expect(parsed.contributions.viewer[0].mimeTypes[0]).toBe("foo/bar");
+  expect(parsed.contributes.viewers.length).toBe(1);
+  expect(parsed.contributes.viewers[0].name).toBe("SmegViewer");
+  expect(parsed.contributes.viewers[0].mimeTypes.length).toBe(1);
+  expect(parsed.contributes.viewers[0].mimeTypes[0]).toBe("foo/bar");
 });
 
 test("platform", () => {

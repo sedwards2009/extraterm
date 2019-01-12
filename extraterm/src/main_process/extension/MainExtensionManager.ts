@@ -189,7 +189,7 @@ class BackendImpl implements Backend {
   }
 
   registerSessionBackend(name: string, backend: SessionBackend): void {
-    for (const backendMeta of this.__extensionMetadata.contributions.sessionBackend) {
+    for (const backendMeta of this.__extensionMetadata.contributes.sessionBackends) {
       if (backendMeta.name === name) {
         this.__BackendImpl__sessionBackends.push({
           metadata: this.__extensionMetadata,
@@ -207,7 +207,7 @@ class BackendImpl implements Backend {
   }
 
   registerSyntaxThemeProvider(name: string, provider: SyntaxThemeProvider): void {
-    for (const backendMeta of this.__extensionMetadata.contributions.syntaxThemeProvider) {
+    for (const backendMeta of this.__extensionMetadata.contributes.syntaxThemeProviders) {
       if (backendMeta.name === name) {
         this.__BackendImpl__syntaxThemeProviders.push({
           metadata: this.__extensionMetadata,
@@ -224,7 +224,7 @@ class BackendImpl implements Backend {
   }
 
   registerTerminalThemeProvider(name: string, provider: TerminalThemeProvider): void {
-    for (const backendMeta of this.__extensionMetadata.contributions.terminalThemeProvider) {
+    for (const backendMeta of this.__extensionMetadata.contributes.terminalThemeProviders) {
       if (backendMeta.name === name) {
         this.__BackendImpl__terminalThemeProviders.push({
           metadata: this.__extensionMetadata,

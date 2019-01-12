@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContributions, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution, ExtensionKeybindingsContribution } from "../../ExtensionMetadata";
+import { ExtensionContributes, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution, ExtensionKeybindingsContribution } from "../../ExtensionMetadata";
 
 const FONT_AWESOME_DEFAULT = false;
 
@@ -18,7 +18,7 @@ export function parsePackageJson(packageJson: any, extensionPath: string): Exten
     includePlatform: parsePlatformsJson(packageJson, "includePlatform"),
     excludePlatform: parsePlatformsJson(packageJson, "excludePlatform"),
     description: assertJsonStringField(packageJson, "description"),
-    contributions: parseContributionsJson(packageJson)
+    contributes: parseContributesJson(packageJson)
   };
   return result;
 }
@@ -100,53 +100,62 @@ function parsePlatformJson(packageJson: any): ExtensionPlatform {
   }
 }
 
-function parseContributionsJson(packageJson: any): ExtensionContributions {
-  const contributions = packageJson["contributions"];
-  if (contributions == null) {
+function parseContributesJson(packageJson: any): ExtensionContributes {
+  const contributes = packageJson["contributes"];
+  if (contributes == null) {
     return {
       keybindings: [],
-      sessionBackend: [],
-      sessionEditor: [],
-      syntaxTheme: [],
-      syntaxThemeProvider: [],
-      terminalTheme: [],
-      terminalThemeProvider: [],
-      viewer: [],
+      sessionBackends: [],
+      sessionEditors: [],
+      syntaxThemes: [],
+      syntaxThemeProviders: [],
+      terminalThemes: [],
+      terminalThemeProviders: [],
+      viewers: [],
     };
   }
 
-  if (typeof contributions !== "object") {
-    throw `'contributions' field is not an object.`;
+  if (typeof contributes !== "object") {
+    throw `'contributes' field is not an object.`;
   }
 
-  const knownContributions = ["keybindings", "viewer", "sessionEditor", "sessionBackend", "syntaxTheme", "syntaxThemeProvider", "terminalTheme", "terminalThemeProvider"];
-  for (const key in contributions) {
-    if (contributions.hasOwnProperty(key)) {
-      if (knownContributions.indexOf(key) === -1) {
-        throw `'contributions' contains an unknown property '${key}'`;
+  const knownContributions: (keyof ExtensionContributes)[] = [
+    "keybindings",
+    "viewers",
+    "sessionEditors",
+    "sessionBackends",
+    "syntaxThemes",
+    "syntaxThemeProviders",
+    "terminalThemes",
+    "terminalThemeProviders"
+  ];
+  for (const key in contributes) {
+    if (contributes.hasOwnProperty(key)) {
+      if (knownContributions.indexOf(<any> key) === -1) {
+        throw `'contributes' contains an unknown property '${key}'`;
       }
     }
   }
 
   return {
-    keybindings: parseKeybindingsContributionsListJson(contributions),
-    sessionBackend: parseSessionBackendContributionsListJson(contributions),
-    sessionEditor: parseSessionEditorContributionsListJson(contributions),
-    syntaxTheme: parseSyntaxThemeContributionsListJson(contributions),
-    syntaxThemeProvider: parseSyntaxThemeProviderContributionsListJson(contributions),
-    terminalTheme: parseTerminalThemeContributionsListJson(contributions),
-    terminalThemeProvider: parseTerminalThemeProviderContributionsListJson(contributions),
-    viewer: parseViewerContributionsListJson(contributions),
+    keybindings: parseKeybindingsContributionsListJson(contributes),
+    sessionBackends: parseSessionBackendContributionsListJson(contributes),
+    sessionEditors: parseSessionEditorContributionsListJson(contributes),
+    syntaxThemes: parseSyntaxThemeContributionsListJson(contributes),
+    syntaxThemeProviders: parseSyntaxThemeProviderContributionsListJson(contributes),
+    terminalThemes: parseTerminalThemeContributionsListJson(contributes),
+    terminalThemeProviders: parseTerminalThemeProviderContributionsListJson(contributes),
+    viewers: parseViewerContributionsListJson(contributes),
   };
 }
 
 function parseViewerContributionsListJson(packageJson: any): ExtensionViewerContribution[] {
-  const value = packageJson["viewer"];
+  const value = packageJson["viewers"];
   if (value == null) {
     return [];
   }
   if ( ! Array.isArray(value)) {
-    throw `Field 'viewers' of in the 'contributions' object is not an array.`;
+    throw `Field 'viewers' of in the 'contributes' object is not an array.`;
   }
 
   const result: ExtensionViewerContribution[] = [];
@@ -189,13 +198,29 @@ function  parseCss(packageJson: any): ExtensionCss {
   }
 }
 
-function parseSessionEditorContributionsListJson(packageJson: any): ExtensionSessionEditorContribution[] {
-  const value = packageJson["sessionEditor"];
+function parseCommandContributionsListJson(packageJson: any): ExtensionCommandContribution[] {
+  const value = packageJson["commands"];
   if (value == null) {
     return [];
   }
   if ( ! Array.isArray(value)) {
-    throw `Field 'sessionEditor' of in the 'contributions' object is not an array.`;
+    throw `Field 'sessionEditor' of in the 'contributes' object is not an array.`;
+  }
+
+  const result: ExtensionSessionEditorContribution[] = [];
+  for (const item of value) {
+    result.push(parseSessionEditorConstributionJson(item));
+  }
+  return result;
+}
+
+function parseSessionEditorContributionsListJson(packageJson: any): ExtensionSessionEditorContribution[] {
+  const value = packageJson["sessionEditors"];
+  if (value == null) {
+    return [];
+  }
+  if ( ! Array.isArray(value)) {
+    throw `Field 'sessionEditors' of in the 'contributes' object is not an array.`;
   }
 
   const result: ExtensionSessionEditorContribution[] = [];
@@ -218,12 +243,12 @@ function parseSessionEditorConstributionJson(packageJson: any): ExtensionSession
 }
 
 function parseSessionBackendContributionsListJson(packageJson: any): ExtensionSessionBackendContribution[] {
-  const value = packageJson["sessionBackend"];
+  const value = packageJson["sessionBackends"];
   if (value == null) {
     return [];
   }
   if ( ! Array.isArray(value)) {
-    throw `Field 'sessionBackend' of in the 'contributions' object is not an array.`;
+    throw `Field 'sessionBackends' of in the 'contributes' object is not an array.`;
   }
 
   const result: ExtensionSessionBackendContribution[] = [];
@@ -245,12 +270,12 @@ function parseSessionBackendConstributionJson(packageJson: any): ExtensionSessio
 }
 
 function parseSyntaxThemeContributionsListJson(packageJson: any): ExtensionSyntaxThemeContribution[] {
-  const value = packageJson["syntaxTheme"];
+  const value = packageJson["syntaxThemes"];
   if (value == null) {
     return [];
   }
   if ( ! Array.isArray(value)) {
-    throw `Field 'syntaxTheme' of in the 'contributions' object is not an array.`;
+    throw `Field 'syntaxThemes' of in the 'contributes' object is not an array.`;
   }
 
   const result: ExtensionSyntaxThemeContribution[] = [];
@@ -271,12 +296,12 @@ function parseSyntaxThemeContributionsJson(packageJson: any): ExtensionSyntaxThe
 }
 
 function parseSyntaxThemeProviderContributionsListJson(packageJson: any): ExtensionSyntaxThemeProviderContribution[] {
-  const value = packageJson["syntaxThemeProvider"];
+  const value = packageJson["syntaxThemeProviders"];
   if (value == null) {
     return [];
   }
   if ( ! Array.isArray(value)) {
-    throw `Field 'syntaxThemeProvider' of in the 'contributions' object is not an array.`;
+    throw `Field 'syntaxThemeProviders' of in the 'contributes' object is not an array.`;
   }
 
   const result: ExtensionSyntaxThemeProviderContribution[] = [];
@@ -298,12 +323,12 @@ function parseSyntaxThemeProviderContributionsJson(packageJson: any): ExtensionS
 }
 
 function parseTerminalThemeContributionsListJson(packageJson: any): ExtensionTerminalThemeContribution[] {
-  const value = packageJson["terminalTheme"];
+  const value = packageJson["terminalThemes"];
   if (value == null) {
     return [];
   }
   if ( ! Array.isArray(value)) {
-    throw `Field 'terminalTheme' of in the 'contributions' object is not an array.`;
+    throw `Field 'terminalTheme' of in the 'contributes' object is not an array.`;
   }
 
   const result: ExtensionTerminalThemeContribution[] = [];
@@ -324,12 +349,12 @@ function parseTerminalThemeContributionsJson(packageJson: any): ExtensionTermina
 }
 
 function parseTerminalThemeProviderContributionsListJson(packageJson: any): ExtensionTerminalThemeProviderContribution[] {
-  const value = packageJson["terminalThemeProvider"];
+  const value = packageJson["terminalThemeProviders"];
   if (value == null) {
     return [];
   }
   if ( ! Array.isArray(value)) {
-    throw `Field 'terminalThemeProvider' of in the 'contributions' object is not an array.`;
+    throw `Field 'terminalThemeProviders' of in the 'contributes' object is not an array.`;
   }
 
   const result: ExtensionTerminalThemeProviderContribution[] = [];
@@ -356,7 +381,7 @@ function parseKeybindingsContributionsListJson(packageJson: any): ExtensionKeybi
     return [];
   }
   if ( ! Array.isArray(value)) {
-    throw `Field 'keybindings' of in the 'contributions' object is not an array.`;
+    throw `Field 'keybindings' of in the 'contributes' object is not an array.`;
   }
 
   const result: ExtensionKeybindingsContribution[] = [];
