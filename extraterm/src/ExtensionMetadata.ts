@@ -21,6 +21,7 @@ export interface ExtensionPlatform {
 }
 
 export interface ExtensionContributes {
+  commands: ExtensionCommandContribution[];
   keybindings: ExtensionKeybindingsContribution[];
   sessionBackends: ExtensionSessionBackendContribution[];
   sessionEditors: ExtensionSessionEditorContribution[];
@@ -36,8 +37,8 @@ export interface ExtensionCommandContribution {
   command: string;
   title: string;
   when?: string;
-  // commandPalette?: boolean;
-  // contextMenu?: boolean;
+  commandPalette?: boolean;
+  contextMenu?: boolean;
 }
 
 export interface ExtensionViewerContribution {
