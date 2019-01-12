@@ -59,7 +59,6 @@ With that out of the way, the primary author does use it as their main terminal 
 * [User Guide](http://extraterm.org/guide.html)
 * [Downloads and Releases](https://github.com/sedwards2009/extraterm/releases) (Linux, Windows and OS X supported)
 * [FAQ](http://extraterm.org/faq.html)
-* [How to Create Themes](http://extraterm.org/theming.html)
 * [Development and Contributing](http://extraterm.org/development.html)
 * [Current Development Roadmap](https://github.com/sedwards2009/extraterm/issues/30)
 * :octocat: Github: https://github.com/sedwards2009/extraterm
