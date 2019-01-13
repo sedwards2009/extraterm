@@ -3,9 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {EtTerminal} from '../Terminal';
-import {TextViewer} from'../viewers/TextAceViewer';
-import {ViewerElement} from '../viewers/ViewerElement';
+import { EtTerminal } from '../Terminal';
+import { TextViewer } from'../viewers/TextAceViewer';
+import { ViewerElement } from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
 import { ExtensionMetadata, ExtensionPlatform } from '../../ExtensionMetadata';
 import { EtViewerTab } from '../ViewerTab';
@@ -24,6 +24,7 @@ export interface ExtensionManager {
 
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
+  setActiveTerminal(terminal: EtTerminal): void;
 }
 
 export interface AcceptsExtensionManager {

@@ -291,6 +291,9 @@ export interface Commands {
 }
 
 export interface Window {
+
+  activeTerminal: Terminal;
+  
   getTerminals(): Terminal[];
 
   onDidCreateTerminal: Event<Terminal>;

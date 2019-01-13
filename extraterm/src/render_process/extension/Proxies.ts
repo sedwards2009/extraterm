@@ -14,6 +14,7 @@ import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from '
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
 import { EtViewerTab } from '../ViewerTab';
 import { BoundCommand } from '../command/CommandTypes';
+import { CommonExtensionState } from './CommonExtensionState';
 
 export class WindowProxy implements InternalWindow {
 
@@ -22,7 +23,7 @@ export class WindowProxy implements InternalWindow {
   private _windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
   private _windowViewerRegistry: WorkspaceViewerRegistry = null;
 
-  constructor(private _internalExtensionContext: InternalExtensionContext) {
+  constructor(private _internalExtensionContext: InternalExtensionContext, private _commonExtensionState: CommonExtensionState) {
     this._log = getLogger("WorkspaceProxy", this);
     this._workspaceCommandsRegistry = new WorkspaceCommandsRegistry();
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
@@ -30,6 +31,10 @@ export class WindowProxy implements InternalWindow {
     
     this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;    
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
+  }
+
+  get activeTerminal(): ExtensionApi.Terminal {
+    return this._internalExtensionContext.proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
   }
 
   getTerminals(): ExtensionApi.Terminal[] {

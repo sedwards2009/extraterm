@@ -26,6 +26,9 @@ export class ProxyFactoryImpl implements ProxyFactory {
   }
 
   getTabProxy(tabLike: EtTerminal | EtViewerTab): ExtensionApi.Tab {
+    if (tabLike == null) {
+      return null;
+    }
     if (tabLike instanceof EtTerminal) {
       if ( ! this._terminalTabProxyMap.has(tabLike)) {
         this._terminalTabProxyMap.set(tabLike, new TerminalTabProxy(this, this.extensionUiUtils, tabLike));
@@ -43,6 +46,9 @@ export class ProxyFactoryImpl implements ProxyFactory {
   }
 
   getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal {
+    if (terminal == null) {
+      return null;
+    }
     if ( ! this._terminalProxyMap.has(terminal)) {
       this._terminalProxyMap.set(terminal, new TerminalProxy(this, terminal));
     }
@@ -50,6 +56,9 @@ export class ProxyFactoryImpl implements ProxyFactory {
   }
 
   getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer {
+    if (viewer == null) {
+      return null;
+    }
     if ( ! this._viewerProxyMap.has(viewer)) {
       const proxy = this._createViewerProxy(viewer);
       if (proxy === null) {

@@ -19,6 +19,7 @@ import { ExtensionMetadata } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { BoundCommand } from '../command/CommandTypes';
 import { CommandsRegistry } from './CommandsRegistry';
+import { CommonExtensionState } from './CommonExtensionState';
 
 
 interface ActiveExtension {
@@ -35,6 +36,9 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _activeExtensions: ActiveExtension[] = [];
   private _extensionUiUtils: ExtensionUiUtils = null;
   private _proxyFactory: ProxyFactory = null;
+  private _commonExtensionState: CommonExtensionState = {
+    activeTerminal: null
+  };
 
   constructor() {
     this._log = getLogger("ExtensionManager", this);
@@ -88,7 +92,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     if (module != null) {
       try {
         const contextImpl = new InternalExtensionContextImpl(this._extensionUiUtils, metadata,
-                                      this._proxyFactory);
+                                      this._proxyFactory, this._commonExtensionState);
         const publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
         this._activeExtensions.push({metadata, publicApi, contextImpl, module});
       } catch(ex) {
@@ -154,6 +158,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
     }
     return results;
   }
+
+  setActiveTerminal(terminal: EtTerminal): void {
+    this._commonExtensionState.activeTerminal = terminal;
+  }
 }
 
 
@@ -165,9 +173,9 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   logger: ExtensionApi.Logger = null;
   isBackendProcess = false;
 
-  constructor(public extensionUiUtils: ExtensionUiUtils, public extensionMetadata: ExtensionMetadata, public proxyFactory: ProxyFactory) {
+  constructor(public extensionUiUtils: ExtensionUiUtils, public extensionMetadata: ExtensionMetadata, public proxyFactory: ProxyFactory, commonExtensionState: CommonExtensionState) {
     this.commands = new CommandsRegistry();
-    this.window = new WindowProxy(this);
+    this.window = new WindowProxy(this, commonExtensionState);
     this.internalWindow = this.window;
     this.logger = getLogger(extensionMetadata.name);
   }

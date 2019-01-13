@@ -588,6 +588,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _setUpNewTerminalEventHandlers(newTerminal: EtTerminal): void {
     newTerminal.addEventListener('focus', (ev: FocusEvent) => {
       this._lastFocus = newTerminal;
+      this._extensionManager.setActiveTerminal(newTerminal);
     });
 
     newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (ev: CustomEvent): void => {
