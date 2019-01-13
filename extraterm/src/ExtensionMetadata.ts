@@ -32,11 +32,11 @@ export interface ExtensionContributes {
   viewers: ExtensionViewerContribution[];
 }
 
-  // commands: ExtensionCommandContribution[];
 export interface ExtensionCommandContribution {
   command: string;
   title: string;
   when?: string;
+  category?: string;
   commandPalette?: boolean;
   contextMenu?: boolean;
 }

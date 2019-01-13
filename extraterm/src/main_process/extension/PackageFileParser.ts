@@ -220,10 +220,10 @@ function parseCommandContributionsListJson(packageJson: any): ExtensionCommandCo
 function parseCommandConstributionJson(packageJson: any): ExtensionCommandContribution {
   try {
     return {
-
       command: assertJsonStringField(packageJson, "command"),
       title: assertJsonStringField(packageJson, "title"),
       when: assertJsonStringField(packageJson, "when", ""),
+      category: assertJsonStringField(packageJson, "category", ""),
       commandPalette: assertJsonBooleanField(packageJson, "commandPalette", true),
       contextMenu: assertJsonBooleanField(packageJson, "contextMenu", false)
     };

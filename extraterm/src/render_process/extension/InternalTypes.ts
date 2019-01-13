@@ -51,7 +51,7 @@ export interface ExtensionUiUtils {
   showListPicker(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
 }
 
-export interface InternalWorkspace extends ExtensionApi.Workspace {
+export interface InternalWindow extends ExtensionApi.Window {
   getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): BoundCommand[];
   getTextViewerCommands(extensionName: string, terminal: ExtensionApi.TextViewer): BoundCommand[];
   findViewerElementTagByMimeType(mimeType: string): string;
@@ -61,7 +61,7 @@ export interface InternalWorkspace extends ExtensionApi.Workspace {
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
   extensionUiUtils: ExtensionUiUtils;
   extensionMetadata: ExtensionMetadata;
-  internalWorkspace: InternalWorkspace;
+  internalWindow: InternalWindow;
   proxyFactory: ProxyFactory;
 
   findViewerElementTagByMimeType(mimeType: string): string;

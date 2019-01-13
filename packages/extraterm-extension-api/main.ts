@@ -260,9 +260,37 @@ export interface Command {
   commandPalette?: boolean;
 }
 
+export interface CustomizedCommand {
+  title: string;
+  checked?: boolean;
+}
 
-export interface Workspace {
+export interface Commands {
+  /**
+   * Register the function to handle a command.
+   * 
+   * @param name the name of the command as specified in the `package.json` contributes/commands section.
+   * @param commandFunc the function to execute when the command is selected.
+   * @param customizer an optional function to customize the title or state of the command.
+   */
+  registerCommand(name: string, commandFunc: (args: any) => any, customizer?: () => (CustomizedCommand | null)): void;
 
+  /**
+   * Execute a command by name.
+   * 
+   * @param name the full name of the command.
+   * @param args arguments for the command.
+   * @returns an optional return value.
+   */
+  executeCommand<T>(name: string, args: any): Promise<T> | null;
+
+  /**
+   * Get a list of all available commands.
+   */
+  getCommands(): string[];
+}
+
+export interface Window {
   getTerminals(): Terminal[];
 
   onDidCreateTerminal: Event<Terminal>;
@@ -705,30 +733,33 @@ export interface Backend {
  * convenience class and objects.
  */
 export interface ExtensionContext {
+
+  readonly commands: Commands;
+
   /**
    * Extension APIs which can be used from a front-end render process.
    */
-  workspace: Workspace;
+  readonly window: Window;
 
   /**
    * Access to Extraterm's own Ace module.
    */
-  aceModule: typeof Ace;
+  readonly aceModule: typeof Ace;
 
   /**
    * True if this process is the backend process. False if it is a render process.
    */
-  isBackendProcess: boolean;
+  readonly isBackendProcess: boolean;
 
   /**
    * Extension APIs which may only be used from the backend process.
    */
-  backend: Backend;
+  readonly backend: Backend;
 
   /**
    * Logger object which the extension can use.
    */
-  logger: Logger;
+  readonly logger: Logger;
 }
 
 

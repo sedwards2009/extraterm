@@ -12,7 +12,7 @@ let log: Logger = null;
 export function activate(context: ExtensionContext): any {
   log = context.logger;
 
-  class AudioViewer extends context.workspace.extensionViewerBaseConstructor {
+  class AudioViewer extends context.window.extensionViewerBaseConstructor {
     private _bulkFileHandle: BulkFileHandle = null;
     private _ui: AudioViewerUi = null;
 
@@ -76,5 +76,5 @@ export function activate(context: ExtensionContext): any {
     }
   }
 
-  context.workspace.registerViewer("AudioViewer", AudioViewer);
+  context.window.registerViewer("AudioViewer", AudioViewer);
 }

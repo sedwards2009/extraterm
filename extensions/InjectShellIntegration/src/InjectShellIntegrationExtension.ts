@@ -11,7 +11,19 @@ let log: Logger = null;
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
-  context.workspace.registerCommandsOnTerminal(terminalCommandLister, terminalCommandExecutor);
+  context.window.registerCommandsOnTerminal(terminalCommandLister, terminalCommandExecutor);
+
+  const commands = context.commands;
+  commands.registerCommand("inject-shell-integration:injectBashIntegration", () => {
+    log.debug("Pretending to run command inject-shell-integration:injectBashIntegration");
+  });
+  commands.registerCommand("inject-shell-integration:injectFishIntegration", () => {
+    log.debug("Pretending to run command inject-shell-integration:injectFishIntegration");
+  });
+  commands.registerCommand("inject-shell-integration:injectZshIntegration", () => {
+    log.debug("Pretending to run command inject-shell-integration:injectZshIntegration");
+  });
+
 }
 
 const COMMAND_INJECT_BASH_INTEGRATION = "injectBashIntegration";

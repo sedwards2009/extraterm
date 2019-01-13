@@ -25,7 +25,7 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
   log.info("WslProxySessionEditorExtension activate");
   readEtcShellsSpawn();
 
-  class WslProxySessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
+  class WslProxySessionEditor extends context.window.extensionSessionEditorBaseConstructor {
     private _ui: WslProxySessionEditorUi = null;
     private _debouncedDataChanged: ()=> void = null;
 

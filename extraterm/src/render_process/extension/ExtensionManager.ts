@@ -12,12 +12,13 @@ import {Logger, getLogger} from "extraterm-logging";
 import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextAceViewer';
 import {ProxyFactoryImpl} from './ProxyFactoryImpl';
-import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory, isMainProcessExtension, isSupportedOnThisPlatform} from './InternalTypes';
+import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory, isMainProcessExtension, isSupportedOnThisPlatform} from './InternalTypes';
 import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';
-import {WorkspaceProxy} from './Proxies';
+import {WindowProxy} from './Proxies';
 import { ExtensionMetadata } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { BoundCommand } from '../command/CommandTypes';
+import { CommandsRegistry } from './CommandsRegistry';
 
 
 interface ActiveExtension {
@@ -56,7 +57,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       this._activeExtensions.map(activeExtension => {
         const ownerExtensionContext = activeExtension.contextImpl;
         const terminalProxy = ownerExtensionContext.proxyFactory.getTerminalProxy(terminal);
-        return activeExtension.contextImpl.internalWorkspace.getTerminalCommands(
+        return activeExtension.contextImpl.internalWindow.getTerminalCommands(
           activeExtension.metadata.name, terminalProxy);
       }));
   }
@@ -66,7 +67,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       this._activeExtensions.map(activeExtension => {
         const extensionContext = activeExtension.contextImpl;
         const textViewerProxy = <ExtensionApi.TextViewer> extensionContext.proxyFactory.getViewerProxy(textViewer);
-        return extensionContext.internalWorkspace.getTextViewerCommands(
+        return extensionContext.internalWindow.getTextViewerCommands(
           activeExtension.metadata.name, textViewerProxy);
       }));
   }
@@ -122,7 +123,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   getSessionEditorTagForType(sessionType: string): string {
     const seExtensions = this._activeExtensions.filter(ae => ae.metadata.contributes.sessionEditors != null);
     for (const extension of seExtensions) {
-      const tag = extension.contextImpl.internalWorkspace.getSessionEditorTagForType(sessionType);
+      const tag = extension.contextImpl.internalWindow.getSessionEditorTagForType(sessionType);
       if (tag != null) {
         return tag;
       }
@@ -157,15 +158,17 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
 
 class InternalExtensionContextImpl implements InternalExtensionContext {
-  workspace: InternalWorkspace = null;
-  internalWorkspace: InternalWorkspace = null;
+  commands: CommandsRegistry = null;
+  window: InternalWindow = null;
+  internalWindow: InternalWindow = null;
   aceModule: typeof Ace = Ace;
   logger: ExtensionApi.Logger = null;
   isBackendProcess = false;
 
   constructor(public extensionUiUtils: ExtensionUiUtils, public extensionMetadata: ExtensionMetadata, public proxyFactory: ProxyFactory) {
-    this.workspace = new WorkspaceProxy(this);
-    this.internalWorkspace = this.workspace;
+    this.commands = new CommandsRegistry();
+    this.window = new WindowProxy(this);
+    this.internalWindow = this.window;
     this.logger = getLogger(extensionMetadata.name);
   }
 
@@ -175,6 +178,6 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   findViewerElementTagByMimeType(mimeType: string): string {
-    return this.internalWorkspace.findViewerElementTagByMimeType(mimeType);
+    return this.internalWindow.findViewerElementTagByMimeType(mimeType);
   }
 }

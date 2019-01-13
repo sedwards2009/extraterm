@@ -25,7 +25,7 @@ export function activate(context: ExtensionContext): any {
   
   log.info("UnixSessionEditorExtension activate");
   
-  class UnixSessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
+  class UnixSessionEditor extends context.window.extensionSessionEditorBaseConstructor {
     private _ui: UnixSessionEditorUi = null;
     private _debouncedDataChanged: ()=> void = null;
 
@@ -114,7 +114,7 @@ export function activate(context: ExtensionContext): any {
     }
   }
 
-  context.workspace.registerSessionEditor("unix", UnixSessionEditor);
+  context.window.registerSessionEditor("unix", UnixSessionEditor);
   
   readEtcShells().then(result => {
     etcShells = result;

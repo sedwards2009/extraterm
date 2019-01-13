@@ -10,7 +10,7 @@ let extensionContext: ExtensionContext = null;
 
 export function activate(context: ExtensionContext): any {
   extensionContext = context;
-  context.workspace.registerCommandsOnTextViewer(textViewerCommandLister, textViewerCommandExecutor);
+  context.window.registerCommandsOnTextViewer(textViewerCommandLister, textViewerCommandExecutor);
 }
 
 const COMMAND_SET_SYNTAX_HIGHLIGHTING = "setSyntaxHighlighting";

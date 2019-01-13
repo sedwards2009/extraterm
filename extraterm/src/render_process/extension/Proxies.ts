@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,7 +7,7 @@ import * as ExtensionApi from 'extraterm-extension-api';
 
 import {DisposableItemList} from '../../utils/DisposableUtils';
 import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
-import {ExtensionUiUtils, InternalExtensionContext, InternalWorkspace, ProxyFactory} from './InternalTypes';
+import {ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory} from './InternalTypes';
 import {Logger, getLogger} from "extraterm-logging";
 import { WorkspaceCommandsRegistry } from './WorkspaceCommandsRegistry';
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
@@ -15,18 +15,18 @@ import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceVie
 import { EtViewerTab } from '../ViewerTab';
 import { BoundCommand } from '../command/CommandTypes';
 
+export class WindowProxy implements InternalWindow {
 
-export class WorkspaceProxy implements InternalWorkspace {
   private _log: Logger = null;
-  private _workspaceCommandsRegistry: WorkspaceCommandsRegistry = null;
-  private _workspaceSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
-  private _workspaceViewerRegistry: WorkspaceViewerRegistry = null;
+  private _workspaceCommandsRegistry: WorkspaceCommandsRegistry = null; // FIXME obsolete
+  private _windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
+  private _windowViewerRegistry: WorkspaceViewerRegistry = null;
 
   constructor(private _internalExtensionContext: InternalExtensionContext) {
     this._log = getLogger("WorkspaceProxy", this);
     this._workspaceCommandsRegistry = new WorkspaceCommandsRegistry();
-    this._workspaceSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
-    this._workspaceViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
+    this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
+    this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
     
     this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;    
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
@@ -69,21 +69,21 @@ export class WorkspaceProxy implements InternalWorkspace {
   extensionViewerBaseConstructor: ExtensionApi.ExtensionViewerBaseConstructor;
 
   registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor): void {
-    this._workspaceViewerRegistry.registerViewer(name, viewerClass);
+    this._windowViewerRegistry.registerViewer(name, viewerClass);
   }
    
   findViewerElementTagByMimeType(mimeType: string): string {
-    return this._workspaceViewerRegistry.findViewerElementTagByMimeType(mimeType);
+    return this._windowViewerRegistry.findViewerElementTagByMimeType(mimeType);
   }
 
   extensionSessionEditorBaseConstructor: ExtensionApi.ExtensionSessionEditorBaseConstructor;
 
   registerSessionEditor(type: string, sessionEditorClass: ExtensionApi.ExtensionSessionEditorBaseConstructor): void {
-    this._workspaceSessionEditorRegistry.registerSessionEditor(type, sessionEditorClass);
+    this._windowSessionEditorRegistry.registerSessionEditor(type, sessionEditorClass);
   }
 
   getSessionEditorTagForType(sessionType: string): string {
-    return this._workspaceSessionEditorRegistry.getSessionEditorTagForType(sessionType);
+    return this._windowSessionEditorRegistry.getSessionEditorTagForType(sessionType);
   }
 }
 

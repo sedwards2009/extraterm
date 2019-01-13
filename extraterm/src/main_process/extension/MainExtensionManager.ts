@@ -158,6 +158,10 @@ export class MainExtensionManager {
 }
 
 class ExtensionContextImpl implements ExtensionContext {
+  get commands(): never {
+    this.logger.warn("'ExtensionContext.commands' is only available from a window process, not the main process.");
+    throw Error("'ExtensionContext.commands' is only available from a window process, not the main process.");
+  }
   logger: ExtensionApi.Logger = null;
   isBackendProcess = true;
   backend: BackendImpl = null;
@@ -167,14 +171,14 @@ class ExtensionContextImpl implements ExtensionContext {
     this.backend = new BackendImpl(this.__extensionMetadata);
   }
   
-  get workspace(): never {
-    this.logger.warn("'ExtensionContext.workspace' is not available from a render process.");
-    throw Error("'ExtensionContext.workspace' is not available from a render process.");    
+  get window(): never {
+    this.logger.warn("'ExtensionContext.window' is only available from a window process, not the main process.");
+    throw Error("'ExtensionContext.window' is only available from a window process, not the main process.");    
   }
 
   get aceModule(): never {
-    this.logger.warn("'ExtensionContext.aceModule' is not available from a render process.");
-    throw Error("'ExtensionContext.aceModule' is not available from a render process.");    
+    this.logger.warn("'ExtensionContext.aceModule' is only available from a window process, not the main process.");
+    throw Error("'ExtensionContext.aceModule' is only available from a window process, not the main process.");
   }
 }
 
