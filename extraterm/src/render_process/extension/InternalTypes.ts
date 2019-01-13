@@ -7,10 +7,16 @@ import { EtTerminal } from '../Terminal';
 import { TextViewer } from'../viewers/TextAceViewer';
 import { ViewerElement } from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
-import { ExtensionMetadata, ExtensionPlatform } from '../../ExtensionMetadata';
+import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution } from '../../ExtensionMetadata';
 import { EtViewerTab } from '../ViewerTab';
 import { SupportsDialogStack } from '../SupportsDialogStack';
 import { BoundCommand } from '../command/CommandTypes';
+
+export interface CommandQueryOptions {
+  categories?: Category[];
+  commandPalette?: boolean;
+  contextMenu?: boolean;
+}
 
 export interface ExtensionManager {
   startUp(): void;
@@ -25,6 +31,10 @@ export interface ExtensionManager {
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
   setActiveTerminal(terminal: EtTerminal): void;
+
+  queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
+  
+  executeCommand(command: string): any;
 }
 
 export interface AcceptsExtensionManager {

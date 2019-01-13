@@ -12,10 +12,10 @@ import {Logger, getLogger} from "extraterm-logging";
 import {EtTerminal} from '../Terminal';
 import {TextViewer} from'../viewers/TextAceViewer';
 import {ProxyFactoryImpl} from './ProxyFactoryImpl';
-import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory, isMainProcessExtension, isSupportedOnThisPlatform} from './InternalTypes';
+import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory, isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions} from './InternalTypes';
 import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';
 import {WindowProxy} from './Proxies';
-import { ExtensionMetadata } from '../../ExtensionMetadata';
+import { ExtensionMetadata, ExtensionCommandContribution } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { BoundCommand } from '../command/CommandTypes';
 import { CommandsRegistry } from './CommandsRegistry';
@@ -161,6 +161,41 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   setActiveTerminal(terminal: EtTerminal): void {
     this._commonExtensionState.activeTerminal = terminal;
+  }
+
+  queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[] {
+
+    let commandPalettePredicate = (command: ExtensionCommandContribution): boolean => true;
+    if (options.commandPalette != null) {
+      const commandPalette = options.commandPalette;
+      commandPalettePredicate = command => command.commandPalette === commandPalette;
+    }
+
+    let contextMenuPredicate = (command: ExtensionCommandContribution): boolean => true;
+    if (options.contextMenu != null) {
+      const contextMenu = options.contextMenu;
+      contextMenuPredicate = command => command.contextMenu === contextMenu;
+    }
+
+    let categoryPredicate = (command: ExtensionCommandContribution): boolean => true;
+    if (options.categories != null) {
+      const categories = options.categories;
+      categoryPredicate = command => categories.indexOf(command.category) !== -1;
+    }
+
+    const results: ExtensionCommandContribution[] = [];
+    for (const metadata of this._extensionMetadata) {
+      for (const command of metadata.contributes.commands) {
+        if (commandPalettePredicate(command) && contextMenuPredicate(command) && categoryPredicate(command)) {
+          results.push(command);
+        }
+      }
+    }
+    return results;
+  }
+  
+  executeCommand(command: string): any {
+
   }
 }
 
