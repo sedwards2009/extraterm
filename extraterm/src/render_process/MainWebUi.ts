@@ -71,12 +71,12 @@ const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
 
 const KEYBINDINGS_MAIN_UI = "main-ui";
 const PALETTE_GROUP = "mainwebui";
-const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
-const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
-const COMMAND_SELECT_PANE_LEFT = "selectPaneLeft";
-const COMMAND_SELECT_PANE_RIGHT = "selectPaneRight";
-const COMMAND_SELECT_PANE_ABOVE = "selectPaneAbove";
-const COMMAND_SELECT_PANE_BELOW = "selectPaneBelow";
+const COMMAND_FOCUS_TAB_LEFT = "focusTabLeft";
+const COMMAND_FOCUS_TAB_RIGHT = "focusTabRight";
+const COMMAND_FOCUS_PANE_LEFT = "focusPaneLeft";
+const COMMAND_FOCUS_PANE_RIGHT = "focusPaneRight";
+const COMMAND_FOCUS_PANE_ABOVE = "focusPaneAbove";
+const COMMAND_FOCUS_PANE_BELOW = "focusPaneBelow";
 const COMMAND_MOVE_TAB_LEFT = "moveTabLeft";
 const COMMAND_MOVE_TAB_RIGHT = "moveTabRight";
 const COMMAND_MOVE_TAB_UP = "moveTabUp";
@@ -774,27 +774,23 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._focusTabContent(contents[i]);
   }
 
-  focusPane(): void {
-    // FIXME
+  private _focusPaneLeft(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
   }
 
-  private _selectPaneLeft(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
+  private _focusPaneRight(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
   }
 
-  private _selectPaneRight(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
+  private _focusPaneAbove(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
   }
 
-  private _selectPaneAbove(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
+  private _focusPaneBelow(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
   }
 
-  private _selectPaneBelow(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
-  }
-
-  private _selectPaneInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget):
+  private _focusPaneInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget):
       { tabWidget: TabWidget, tabContent: Element} {
 
     const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
@@ -891,13 +887,13 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _closeSplit(tabContentElement: Element): void {
     let focusInfo: {tabWidget: TabWidget, tabContent: Element} = null;
     if (tabContentElement instanceof EmptyPaneMenu) {
-      focusInfo = this._selectPaneLeft(tabContentElement);
+      focusInfo = this._focusPaneLeft(tabContentElement);
       if (focusInfo.tabWidget == null) {
-        focusInfo = this._selectPaneRight(tabContentElement);
+        focusInfo = this._focusPaneRight(tabContentElement);
         if (focusInfo.tabWidget == null) {
-          focusInfo = this._selectPaneAbove(tabContentElement);
+          focusInfo = this._focusPaneAbove(tabContentElement);
           if (focusInfo.tabWidget == null) {
-            focusInfo = this._selectPaneBelow(tabContentElement);
+            focusInfo = this._focusPaneBelow(tabContentElement);
           }
         }
       }
@@ -1073,12 +1069,12 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const commandList: BoundCommand[] = [
       ...sessionCommandList,
       { ...defaults, id: COMMAND_CLOSE_TAB, icon: "fa fa-times", label: "Close Tab" },
-      { ...defaults, id: COMMAND_SELECT_TAB_LEFT, label: "Select Previous Tab" },
-      { ...defaults, id: COMMAND_SELECT_TAB_RIGHT, label: "Select Next Tab" },
-      { ...defaults, id: COMMAND_SELECT_PANE_LEFT, label: " Select pane left" },
-      { ...defaults, id: COMMAND_SELECT_PANE_RIGHT, label: " Select pane right" },
-      { ...defaults, id: COMMAND_SELECT_PANE_ABOVE, label: " Select pane above" },
-      { ...defaults, id: COMMAND_SELECT_PANE_BELOW, label: " Select pane below" },
+      { ...defaults, id: COMMAND_FOCUS_TAB_LEFT, label: "Focus Previous Tab" },
+      { ...defaults, id: COMMAND_FOCUS_TAB_RIGHT, label: "Focus Next Tab" },
+      { ...defaults, id: COMMAND_FOCUS_PANE_LEFT, label: " Focus Pane Left" },
+      { ...defaults, id: COMMAND_FOCUS_PANE_RIGHT, label: " Focus Pane Right" },
+      { ...defaults, id: COMMAND_FOCUS_PANE_ABOVE, label: " Focus Pane Above" },
+      { ...defaults, id: COMMAND_FOCUS_PANE_BELOW, label: " Focus Pane Below" },
       { ...defaults, id: COMMAND_HORIZONTAL_SPLIT, icon: "extraicon-#xea08", label: "Horizontal Split", contextMenu:true },
       { ...defaults, id: COMMAND_VERTICAL_SPLIT, icon: "fa fa-columns", label: "Vertical Split", contextMenu:true },
       { ...defaults, id: COMMAND_MOVE_TAB_LEFT, label: "Move Tab Left" },
@@ -1123,28 +1119,28 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const command = parts[0];
 
     switch (command) {
-      case COMMAND_SELECT_TAB_LEFT:
+      case COMMAND_FOCUS_TAB_LEFT:
         this._shiftTab(this._tabWidgetFromElement(tabElement), -1);
         break;
         
-      case COMMAND_SELECT_TAB_RIGHT:
+      case COMMAND_FOCUS_TAB_RIGHT:
         this._shiftTab(this._tabWidgetFromElement(tabElement), 1);
         break;
 
-      case COMMAND_SELECT_PANE_LEFT:
-        this._selectPaneLeft(tabElement);
+      case COMMAND_FOCUS_PANE_LEFT:
+        this._focusPaneLeft(tabElement);
         break;
 
-      case COMMAND_SELECT_PANE_RIGHT:
-        this._selectPaneRight(tabElement);
+      case COMMAND_FOCUS_PANE_RIGHT:
+        this._focusPaneRight(tabElement);
         break;
 
-      case COMMAND_SELECT_PANE_ABOVE:
-        this._selectPaneAbove(tabElement);
+      case COMMAND_FOCUS_PANE_ABOVE:
+        this._focusPaneAbove(tabElement);
         break;
 
-      case COMMAND_SELECT_PANE_BELOW:
-        this._selectPaneBelow(tabElement);
+      case COMMAND_FOCUS_PANE_BELOW:
+        this._focusPaneBelow(tabElement);
         break;
 
       case COMMAND_NEW_TERMINAL:
