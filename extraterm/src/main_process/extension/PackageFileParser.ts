@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContributes, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution, ExtensionKeybindingsContribution, ExtensionCommandContribution } from "../../ExtensionMetadata";
+import { ExtensionContributes, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution, ExtensionKeybindingsContribution, ExtensionCommandContribution, Category } from "../../ExtensionMetadata";
 
 const FONT_AWESOME_DEFAULT = false;
 
@@ -34,6 +34,27 @@ function assertJsonStringField(packageJson: any, fieldName: string, defaultValue
 
   if (typeof value !== "string") {
     throw `Field '${fieldName}' is not a string.`;
+  }
+  return value;
+}
+
+const categoryList: Category[] = [
+  "global",
+  "window",
+  "textEditing",
+  "terminal",
+  "terminalCursorMode",
+  "viewer"
+];
+
+function assertJsonCategoryField(packageJson: any, fieldName: string): Category {
+  const value = packageJson[fieldName];
+  if (value == null) {
+    return "window";
+  }
+
+  if (categoryList.indexOf(value) === -1) {
+    throw `Field '${fieldName}' is not one of ${categoryList.join(", ")}.`;
   }
   return value;
 }
@@ -223,7 +244,7 @@ function parseCommandConstributionJson(packageJson: any): ExtensionCommandContri
       command: assertJsonStringField(packageJson, "command"),
       title: assertJsonStringField(packageJson, "title"),
       when: assertJsonStringField(packageJson, "when", ""),
-      category: assertJsonStringField(packageJson, "category", ""),
+      category: assertJsonCategoryField(packageJson, "category"),
       commandPalette: assertJsonBooleanField(packageJson, "commandPalette", true),
       contextMenu: assertJsonBooleanField(packageJson, "contextMenu", false)
     };

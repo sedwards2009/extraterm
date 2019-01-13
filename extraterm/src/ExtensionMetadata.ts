@@ -32,11 +32,13 @@ export interface ExtensionContributes {
   viewers: ExtensionViewerContribution[];
 }
 
+export type Category = "global" | "window" | "textEditing" | "terminal" | "terminalCursorMode" | "viewer";
+
 export interface ExtensionCommandContribution {
   command: string;
   title: string;
   when?: string;
-  category?: string;
+  category?: Category;
   commandPalette?: boolean;
   contextMenu?: boolean;
 }
