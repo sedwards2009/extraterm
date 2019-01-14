@@ -88,17 +88,25 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   private _startExtension(metadata: ExtensionMetadata): void {
     this._log.info(`Starting extension '${metadata.name}' in the render process.`);
-    const module = this._loadExtensionModule(metadata);
-    if (module != null) {
+
+    let module = null;
+    let publicApi = null;
+    const contextImpl = new InternalExtensionContextImpl(this._extensionUiUtils, metadata,
+      this._proxyFactory, this._commonExtensionState);
+    if (metadata.main != null) {
+      module = this._loadExtensionModule(metadata);
+      if (module != null) {
+        return;
+      }
+
       try {
-        const contextImpl = new InternalExtensionContextImpl(this._extensionUiUtils, metadata,
-                                      this._proxyFactory, this._commonExtensionState);
-        const publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
-        this._activeExtensions.push({metadata, publicApi, contextImpl, module});
+        publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
       } catch(ex) {
         this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
-      }
+        return;
+      }      
     }
+    this._activeExtensions.push({metadata, publicApi, contextImpl, module});
   }
 
   private _loadExtensionModule(extension: ExtensionMetadata): any {

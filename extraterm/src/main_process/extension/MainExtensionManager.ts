@@ -132,16 +132,24 @@ export class MainExtensionManager {
 
   private _startExtension(metadata: ExtensionMetadata): void {
     this._log.info(`Starting extension '${metadata.name}' in the main process.`);
-    const module = this._loadExtensionModule(metadata);
-    if (module != null) {
+
+    let module = null;
+    let publicApi = null;
+    const contextImpl = new ExtensionContextImpl(metadata);
+    if (metadata.main != null) {
+      module = this._loadExtensionModule(metadata);
+      if (module == null) {
+        return;
+      }
       try {
-        const contextImpl = new ExtensionContextImpl(metadata);
-        const publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
-        this._activeExtensions.push({metadata, publicApi, contextImpl, module});
+        publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
       } catch(ex) {
         this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
+        return;
       }
     }
+
+    this._activeExtensions.push({metadata, publicApi, contextImpl, module});
   }
 
   private _loadExtensionModule(extension: ExtensionMetadata): any {

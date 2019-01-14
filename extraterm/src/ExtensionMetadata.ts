@@ -7,7 +7,7 @@
 export interface ExtensionMetadata {
   name: string;
   path: string;
-  main: string;
+  main?: string;
   version?: string;
   description?: string;
   contributes: ExtensionContributes;

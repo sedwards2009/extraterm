@@ -13,7 +13,7 @@ export function parsePackageJson(packageJson: any, extensionPath: string): Exten
   const result: ExtensionMetadata = {
     name: assertJsonStringField(packageJson, "name"),
     path: extensionPath,
-    main: assertJsonStringField(packageJson, "main", "main.js"),
+    main: assertJsonStringField(packageJson, "main", null),
     version: assertJsonStringField(packageJson, "version"),
     includePlatform: parsePlatformsJson(packageJson, "includePlatform"),
     excludePlatform: parsePlatformsJson(packageJson, "excludePlatform"),
