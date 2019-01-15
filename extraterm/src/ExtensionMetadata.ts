@@ -34,6 +34,9 @@ export interface ExtensionContributes {
 
 export type Category = "global" | "window" | "textEditing" | "terminal" | "terminalCursorMode" | "viewer";
 
+export type WhenTerm = "terminalFocus"| "viewerFocus" | "viewerType" | "isCursorMode" | "isNormalMode" | "isTextEditor";
+
+
 export interface ExtensionCommandContribution {
   command: string;
   title: string;

@@ -8,18 +8,20 @@ import * as _ from 'lodash';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as Ace from 'ace-ts';
 
-import {Logger, getLogger} from "extraterm-logging";
-import {EtTerminal} from '../Terminal';
-import {TextViewer} from'../viewers/TextAceViewer';
-import {ProxyFactoryImpl} from './ProxyFactoryImpl';
-import {ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory, isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions} from './InternalTypes';
-import {ExtensionUiUtilsImpl} from './ExtensionUiUtilsImpl';
-import {WindowProxy} from './Proxies';
-import { ExtensionMetadata, ExtensionCommandContribution } from '../../ExtensionMetadata';
+import { Logger, getLogger, log } from "extraterm-logging";
+import { EtTerminal } from '../Terminal';
+import { TextViewer } from'../viewers/TextAceViewer';
+import { ProxyFactoryImpl } from './ProxyFactoryImpl';
+import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory,
+  isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions } from './InternalTypes';
+import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
+import { WindowProxy } from './Proxies';
+import { ExtensionMetadata, ExtensionCommandContribution, WhenTerm } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { BoundCommand } from '../command/CommandTypes';
 import { CommandsRegistry } from './CommandsRegistry';
 import { CommonExtensionState } from './CommonExtensionState';
+import { Mode } from '../viewers/ViewerElementTypes';
 
 
 interface ActiveExtension {
@@ -39,6 +41,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _commonExtensionState: CommonExtensionState = {
     activeTerminal: null
   };
+  private _activeTabContents: HTMLElement = null;
 
   constructor() {
     this._log = getLogger("ExtensionManager", this);
@@ -171,6 +174,14 @@ export class ExtensionManagerImpl implements ExtensionManager {
     this._commonExtensionState.activeTerminal = terminal;
   }
 
+  setActiveTabContents(tabContents: HTMLElement): void {
+    this._activeTabContents = tabContents;
+  }
+  
+  getActiveTabContents(): HTMLElement {
+    return this._activeTabContents;
+  }
+
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[] {
 
     let commandPalettePredicate = (command: ExtensionCommandContribution): boolean => true;
@@ -191,17 +202,38 @@ export class ExtensionManagerImpl implements ExtensionManager {
       categoryPredicate = command => categories.indexOf(command.category) !== -1;
     }
 
+    const whenPredicate = this._createWhenPredicate();
+
     const results: ExtensionCommandContribution[] = [];
     for (const metadata of this._extensionMetadata) {
       for (const command of metadata.contributes.commands) {
-        if (commandPalettePredicate(command) && contextMenuPredicate(command) && categoryPredicate(command)) {
+        if (commandPalettePredicate(command) && contextMenuPredicate(command) &&
+            categoryPredicate(command) && whenPredicate(command)) {
           results.push(command);
         }
       }
     }
     return results;
   }
-  
+
+  private _createWhenPredicate(): (ecc: ExtensionCommandContribution) => boolean {
+    const positiveFlags = new Set<WhenTerm>();
+    if (this._commonExtensionState.activeTerminal != null) {
+      positiveFlags.add("terminalFocus");
+      if (this._commonExtensionState.activeTerminal.getMode() === Mode.CURSOR) {
+        positiveFlags.add("isCursorMode");
+      } else {
+        positiveFlags.add("isNormalMode");
+      }
+    }
+    return (ecc: ExtensionCommandContribution): boolean => {
+      if (ecc.when === "") {
+        return true;
+      }
+      return positiveFlags.has(<any> ecc.when);
+    };
+  }
+
   executeCommand(command: string): any {
 
   }

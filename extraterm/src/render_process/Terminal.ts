@@ -703,7 +703,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
     this.dispatchEvent(event);    
   }
-  
+
+  getMode(): Mode {
+    return this._mode;
+  }
+
   private _enterCursorMode(): void {
     this._terminalCanvas.setModeAndVisualState(Mode.CURSOR, VisualState.AUTO);
     this._mode = Mode.CURSOR;
