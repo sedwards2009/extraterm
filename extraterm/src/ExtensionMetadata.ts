@@ -41,6 +41,7 @@ export interface ExtensionCommandContribution {
   category?: Category;
   commandPalette?: boolean;
   contextMenu?: boolean;
+  icon?: string;
 }
 
 export interface ExtensionViewerContribution {

@@ -246,7 +246,8 @@ function parseCommandConstributionJson(packageJson: any): ExtensionCommandContri
       when: assertJsonStringField(packageJson, "when", ""),
       category: assertJsonCategoryField(packageJson, "category"),
       commandPalette: assertJsonBooleanField(packageJson, "commandPalette", true),
-      contextMenu: assertJsonBooleanField(packageJson, "contextMenu", false)
+      contextMenu: assertJsonBooleanField(packageJson, "contextMenu", false),
+      icon: assertJsonStringField(packageJson, "icon", ""),
     };
   } catch (ex) {
     throw `Failed to process a command contribution: ${ex}`;
