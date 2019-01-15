@@ -31,6 +31,15 @@ interface ActiveExtension {
   module: any;
 }
 
+const allCategories = [
+  "textEditing",
+  "terminalCursorMode",
+  "terminal",
+  "viewer",
+  "window",
+  "global",
+];
+
 
 export class ExtensionManagerImpl implements ExtensionManager {
   private _log: Logger = null;
@@ -204,16 +213,17 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
     const whenPredicate = this._createWhenPredicate();
 
-    const results: ExtensionCommandContribution[] = [];
+    const entries: ExtensionCommandContribution[] = [];
     for (const metadata of this._extensionMetadata) {
       for (const command of metadata.contributes.commands) {
         if (commandPalettePredicate(command) && contextMenuPredicate(command) &&
             categoryPredicate(command) && whenPredicate(command)) {
-          results.push(command);
+          entries.push(command);
         }
       }
     }
-    return results;
+    this._sortCommandsInPlace(entries);
+    return entries;
   }
 
   private _createWhenPredicate(): (ecc: ExtensionCommandContribution) => boolean {
@@ -232,6 +242,22 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
       return positiveFlags.has(<any> ecc.when);
     };
+  }
+
+  private _sortCommandsInPlace(entries: ExtensionCommandContribution[]): void {
+    entries.sort(this._sortCompareFunc);
+  }
+
+  private _sortCompareFunc(a: ExtensionCommandContribution, b: ExtensionCommandContribution): number {
+    if (a.category === b.category) {
+      if (a.title === b.title) {
+        return 0;
+      }
+      return a.title < b.title ? -1 : 1;
+    }
+    const aIndex = allCategories.indexOf(a.category);
+    const bIndex = allCategories.indexOf(b.category);
+    return aIndex < bIndex ? -1 : 1;
   }
 
   executeCommand(command: string): any {
