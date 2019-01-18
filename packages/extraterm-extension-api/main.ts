@@ -205,61 +205,6 @@ export interface TextViewer extends ViewerBase {
 
 export type Viewer = FrameViewer | TerminalOutputViewer | TextViewer;
 
-
-/**
- * Defines a command for display in the Command Palette.
- */
-export interface Command {
-  /**
-   * Identifier for this command. This ID is used internally and should only
-   * consist of alphanumeric characters ([A-Z0-9]+). It must be unique
-   * to this extension and stable between calls.
-   */
-  id: string;
-
-  /**
-   * Optional identifier used to grouping related commands in the command
-   * palette.
-   * 
-   * Commands with the same group name are visually separated from the
-   * surrounding commands.
-   */
-  group?: string;
-
-  icon?: string;
-
-  /**
-   * Label for this command. This string is shown in the Command Palette to
-   * the user.
-   */
-  label: string;
-
-  /**
-   * If this is set then a checkbox will be displayed in front of the menu
-   * item. Setting this to true or false controls whether it is
-   * checked/selected.
-   */
-  checked?: boolean;
-
-   /**
-    * Optional object which will be passed to the command executor when this
-    * command is run.
-    */
-  commandArguments?: object;
-
-  /**
-   * Set this to true if the command should appear in context menus.
-   * Defaults to false, don't show.
-   */
-  contextMenu?: boolean;
-
-  /**
-   * Set this to true if the command should appear in the Command Palette.
-   * Default to true, show.
-   */
-  commandPalette?: boolean;
-}
-
 export interface CustomizedCommand {
   title: string;
   checked?: boolean;
@@ -299,13 +244,6 @@ export interface Window {
   onDidCreateTerminal: Event<Terminal>;
 
   // onWillDestroyTerminal: Event<Terminal>;
-  registerCommandsOnTerminal(
-    commandLister: (terminal: Terminal) => Command[],
-    commandExecutor: (terminal: Terminal, commandId: string, commandArguments?: object) => void): Disposable;
-
-  registerCommandsOnTextViewer(
-    commandLister: (textViewer: TextViewer) => Command[],
-    commandExecutor: (textViewer: TextViewer, commandId: string, commandArguments?: object) => void): Disposable;
 
   extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;
   registerViewer(name: string, viewerClass: ExtensionViewerBaseConstructor): void;

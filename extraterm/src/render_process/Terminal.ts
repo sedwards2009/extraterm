@@ -28,7 +28,6 @@ import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
-import { Commandable, BoundCommand } from './command/CommandTypes';
 import { COMMAND_OPEN_COMMAND_PALETTE, COMMAND_OPEN_CONTEXT_MENU } from './command/CommandUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
@@ -115,7 +114,7 @@ type InputStreamFilter = (input: string) => string;
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
 @WebComponent({tag: "et-terminal"})
-export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeybindingsManager,
+export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindingsManager,
   AcceptsConfigDatabase, Disposable, SupportsClipboardPaste.SupportsClipboardPaste,
   SupportsDialogStack.SupportsDialogStack {
   
@@ -758,18 +757,18 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._terminalViewer === null || this._keyBindingManager === null ||
-        this._keyBindingManager.getKeybindingsContexts() === null) {
-      return;
-    }
+    // if (this._terminalViewer === null || this._keyBindingManager === null ||
+    //     this._keyBindingManager.getKeybindingsContexts() === null) {
+    //   return;
+    // }
     
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
-        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
-    const command = keyBindings.mapEventToCommand(ev);
-    if (this._executeCommand(command)) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
+    // const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
+    //     ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
+    // const command = keyBindings.mapEventToCommand(ev);
+    // if (this._executeCommand(command)) {
+    //   ev.stopPropagation();
+    //   ev.preventDefault();
+    // }
   }
 
   private _handleKeyPressCapture(ev :KeyboardEvent): void {
@@ -790,121 +789,10 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   }
 
   private _handleContextMenu(x: number, y: number): void {
-    if (this._terminalViewer !== null) {
-      this._terminalViewer.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x, y});
-    }
-  }
-
-  getCommands(commandableStack): BoundCommand[] {
-    const defaults = { group: PALETTE_GROUP, commandExecutor: this, contextMenu: true };
-    const commands: BoundCommand[] = [
-      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, icon: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
-
-      this._mode === Mode.DEFAULT
-        ? { ...defaults, id: COMMAND_ENTER_CURSOR_MODE, icon: "fa fa-i-cursor", label: "Enter cursor mode" }
-        : { ...defaults, id: COMMAND_ENTER_NORMAL_MODE, label: "Exit cursor mode" },
-    
-      { ...defaults, id: COMMAND_FIND, icon: "fas fa-search", label: "Find", contextMenu: true },
-      { ...defaults, id: COMMAND_SCROLL_PAGE_UP, icon: "fa fa-angle-double-up", label: "Scroll Page Up", contextMenu: false },
-      { ...defaults, id: COMMAND_SCROLL_PAGE_DOWN, icon: "fa fa-angle-double-down", label: "Scroll Page Down", contextMenu: false },
-      { ...defaults, id: COMMAND_GO_TO_PREVIOUS_FRAME, label: "Go to Previous Frame", icon: "fas fa-step-backward fa-rotate-90" },
-      { ...defaults, id: COMMAND_GO_TO_NEXT_FRAME, label: "Go to Next Frame", icon: "fas fa-step-forward fa-rotate-90" },
-      { ...defaults, id: COMMAND_COPY_TO_CLIPBOARD, icon: "far fa-copy", label: "Copy to Clipboard" },
-      { ...defaults, id: COMMAND_PASTE_FROM_CLIPBOARD, icon: "fa fa-clipboard", label: "Paste from Clipboard" },
-      { ...defaults, id: COMMAND_OPEN_LAST_FRAME, icon: "fa fa-external-link-alt", label: "Open Last Frame", contextMenu: false },
-      { ...defaults, id: COMMAND_DELETE_LAST_FRAME, icon: "fa fa-times-circle", label: "Delete Last Frame", contextMenu: false },
-      { ...defaults, id: COMMAND_FONT_SIZE_INCREASE, label: "Increase Font Size" },
-      { ...defaults, id: COMMAND_FONT_SIZE_DECREASE, label: "Decrease Font Size" },
-      { ...defaults, id: COMMAND_FONT_SIZE_RESET, label: "Reset Font Size" },
-      { ...defaults, id: COMMAND_CLEAR_SCROLLBACK, icon: "fa fa-eraser", label: "Clear Scrollback" },
-      { ...defaults, id: COMMAND_RESET_VT, icon: "fa fa-sync", label: "Reset VT" },
-    ];
-    
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
-        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
-    if (keyBindings !== null) {
-      commands.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
-        commandEntry.shortcut = shortcut === null ? "" : shortcut;
-      });
-    }    
-    return commands;
-  }
-
-  executeCommand(commandId: string): void {
-    this._executeCommand(commandId);
-  }
-  
-  private _executeCommand(command: string): boolean {
-    switch (command) {
-      case COMMAND_ENTER_CURSOR_MODE:
-        this._enterCursorMode();
-        break;
-
-      case COMMAND_ENTER_NORMAL_MODE:
-        this._exitCursorMode();
-        break;
-        
-      case COMMAND_SCROLL_PAGE_UP:
-        this._terminalCanvas.scrollPageUp();
-        break;
-          
-      case COMMAND_SCROLL_PAGE_DOWN:
-        this._terminalCanvas.scrollPageDown();
-        break;
-
-      case COMMAND_GO_TO_PREVIOUS_FRAME:
-        this._terminalCanvas.goToPreviousFrame();
-        break;
-
-      case COMMAND_GO_TO_NEXT_FRAME:
-        this._terminalCanvas.goToNextFrame();
-        break;
-
-      case COMMAND_COPY_TO_CLIPBOARD:
-        this.copyToClipboard();
-        break;
-
-      case COMMAND_PASTE_FROM_CLIPBOARD:
-        this._pasteFromClipboard();
-        break;
-
-      case COMMAND_DELETE_LAST_FRAME:
-        this._deleteLastEmbeddedViewer();
-        break;
-
-      case COMMAND_OPEN_LAST_FRAME:
-        this._popOutLastEmbeddedViewer();
-        break;
-
-      case COMMAND_RESET_VT:
-        this._emulator.reset();
-        break;
-
-      case COMMAND_CLEAR_SCROLLBACK:
-        this._terminalCanvas.enforceScrollbackSize(0, 0);
-        break;
-
-      case COMMAND_FONT_SIZE_INCREASE:
-        this._terminalCanvas.setFontSizeAdjustment(1);
-        break;
-
-      case COMMAND_FONT_SIZE_DECREASE:
-      this._terminalCanvas.setFontSizeAdjustment(-1);
-        break;
-
-      case COMMAND_FONT_SIZE_RESET:
-        this._terminalCanvas.resetFontSize();
-        break;
-
-      case COMMAND_FIND:
-        this._openFindPanel();
-        break;
-
-      default:
-        return false;
-    }
-    return true;
+// FIXME    
+    // if (this._terminalViewer !== null) {
+    //   this._terminalViewer.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x, y});
+    // }
   }
 
   commandEnterCursorMode(): void {
@@ -970,11 +858,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   commandFind(): void {
     this._openFindPanel();
   }
-
-
-
-
-
 
   /**
    * Handle when the embedded term.js enters start of application mode.

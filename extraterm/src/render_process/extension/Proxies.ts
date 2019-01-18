@@ -9,23 +9,19 @@ import {DisposableItemList} from '../../utils/DisposableUtils';
 import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
 import {ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory} from './InternalTypes';
 import {Logger, getLogger} from "extraterm-logging";
-import { WorkspaceCommandsRegistry } from './WorkspaceCommandsRegistry';
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
 import { EtViewerTab } from '../ViewerTab';
-import { BoundCommand } from '../command/CommandTypes';
 import { CommonExtensionState } from './CommonExtensionState';
 
 export class WindowProxy implements InternalWindow {
 
   private _log: Logger = null;
-  private _workspaceCommandsRegistry: WorkspaceCommandsRegistry = null; // FIXME obsolete
   private _windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
   private _windowViewerRegistry: WorkspaceViewerRegistry = null;
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _commonExtensionState: CommonExtensionState) {
     this._log = getLogger("WorkspaceProxy", this);
-    this._workspaceCommandsRegistry = new WorkspaceCommandsRegistry();
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
     this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
     
@@ -46,29 +42,6 @@ export class WindowProxy implements InternalWindow {
   private _onDidCreateTerminalListenerList = new DisposableItemList<(e: ExtensionApi.Terminal) => any>();
   onDidCreateTerminal(listener: (e: ExtensionApi.Terminal) => any): ExtensionApi.Disposable {
     return this._onDidCreateTerminalListenerList.add(listener);
-  }
-
-  registerCommandsOnTerminal(
-      commandLister: (terminal: ExtensionApi.Terminal) => ExtensionApi.Command[],
-      commandExecutor: (terminal: ExtensionApi.Terminal, commandId: string, commandArguments?: object) => void
-      ): ExtensionApi.Disposable {
-
-    return this._workspaceCommandsRegistry.registerCommandsOnTerminal(commandLister, commandExecutor);
-  }
-
-  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): BoundCommand[] {
-    return this._workspaceCommandsRegistry.getTerminalCommands(extensionName, terminal);
-  }
-
-  registerCommandsOnTextViewer(
-      commandLister: (textViewer: ExtensionApi.TextViewer) => ExtensionApi.Command[],
-      commandExecutor: (textViewer: ExtensionApi.TextViewer, commandId: string, commandArguments?: object) => void
-    ): ExtensionApi.Disposable {
-      return this._workspaceCommandsRegistry.registerCommandsOnTextViewer(commandLister, commandExecutor);
-  }
-
-  getTextViewerCommands(extensionName: string, textViewer: ExtensionApi.TextViewer): BoundCommand[] {
-    return this._workspaceCommandsRegistry.getTextViewerCommands(extensionName, textViewer);
   }
 
   extensionViewerBaseConstructor: ExtensionApi.ExtensionViewerBaseConstructor;

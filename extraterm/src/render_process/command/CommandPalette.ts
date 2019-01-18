@@ -13,7 +13,7 @@ import { isSupportsDialogStack } from '../SupportsDialogStack';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { getLogger } from 'extraterm-logging';
-import { eventToCommandableStack } from './CommandUtils';
+// import { eventToCommandableStack } from './CommandUtils';
 import { ExtensionCommandContribution } from '../../ExtensionMetadata';
 
 
@@ -51,12 +51,6 @@ export class CommandPalette {
   }
 
   handleCommandPaletteRequest(ev: CustomEvent): void {
-    const commandableStack = eventToCommandableStack(ev);
-    const firstCommandable = commandableStack[0];
-    if (firstCommandable instanceof HTMLElement) {
-      this._commandPaletteRequestSource = firstCommandable;
-    }
-
     doLater( () => {
       const entries = this.extensionManager.queryCommands({
         commandPalette: true,
@@ -66,18 +60,20 @@ export class CommandPalette {
       const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {
         return { id: entry.command + "_" + entry.category, shortcut: "", ...entry };
       });
+      // FIXME set shortcuts.
+      
       this._commandPaletteEntries = entriesAndShortcuts;
       this._commandPalette.setEntries(entriesAndShortcuts);
       
-      const contextElement = commandableStack[commandableStack.length-2];
-      if (isSupportsDialogStack(contextElement)) {
-        this._commandPaletteDisposable = contextElement.showDialog(this._commandPalette);
+      // const contextElement = commandableStack[commandableStack.length-2];
+      // if (isSupportsDialogStack(contextElement)) {
+      //   this._commandPaletteDisposable = contextElement.showDialog(this._commandPalette);
       
-        this._commandPalette.open();
-        this._commandPalette.focus();
-      } else {
-        this._log.warn("Command palette context element doesn't support DialogStack. ", contextElement);
-      }
+      //   this._commandPalette.open();
+      //   this._commandPalette.focus();
+      // } else {
+      //   this._log.warn("Command palette context element doesn't support DialogStack. ", contextElement);
+      // }
     });
   }
 
@@ -85,9 +81,6 @@ export class CommandPalette {
     this._commandPalette.close();
     this._commandPaletteDisposable.dispose();
     this._commandPaletteDisposable = null;
-    if (this._commandPaletteRequestSource !== null) {
-      this._commandPaletteRequestSource.focus();
-    }
     
     const selectedId = ev.detail.selected;
     if (selectedId !== null) {

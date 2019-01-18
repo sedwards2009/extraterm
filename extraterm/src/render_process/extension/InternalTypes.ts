@@ -10,7 +10,6 @@ import * as ExtensionApi from 'extraterm-extension-api';
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution } from '../../ExtensionMetadata';
 import { EtViewerTab } from '../ViewerTab';
 import { SupportsDialogStack } from '../SupportsDialogStack';
-import { BoundCommand } from '../command/CommandTypes';
 import { CommandsRegistry } from './CommandsRegistry';
 import { TextEditor } from '../viewers/TextEditorType';
 
@@ -23,8 +22,6 @@ export interface CommandQueryOptions {
 export interface ExtensionManager {
   startUp(): void;
   getExtensionContextByName(name: string): InternalExtensionContext;
-  getWorkspaceTerminalCommands(terminal: EtTerminal): BoundCommand[];
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): BoundCommand[];
 
   findViewerElementTagByMimeType(mimeType: string): string;
 
@@ -69,8 +66,6 @@ export interface ExtensionUiUtils {
 }
 
 export interface InternalWindow extends ExtensionApi.Window {
-  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): BoundCommand[];
-  getTextViewerCommands(extensionName: string, terminal: ExtensionApi.TextViewer): BoundCommand[];
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
 }

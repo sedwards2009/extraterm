@@ -4,55 +4,55 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {ExtensionContext, Command, TextViewer} from 'extraterm-extension-api';
+import {ExtensionContext, TextViewer} from 'extraterm-extension-api';
 
 let extensionContext: ExtensionContext = null;
 
 export function activate(context: ExtensionContext): any {
   extensionContext = context;
-  context.window.registerCommandsOnTextViewer(textViewerCommandLister, textViewerCommandExecutor);
+  // context.window.registerCommandsOnTextViewer(textViewerCommandLister, textViewerCommandExecutor);
 }
-
+// FIXME
 const COMMAND_SET_SYNTAX_HIGHLIGHTING = "setSyntaxHighlighting";
 const COMMAND_SET_TAB_WIDTH = "setTabWidth";
 const COMMAND_SHOW_LINE_NUMBERS = "showLineNumbers";
 
 
-function textViewerCommandLister(textViewer: TextViewer): Command[] {
-  return [{
-    id: COMMAND_SET_SYNTAX_HIGHLIGHTING,
-    label: "Syntax: " + getMimeTypeName(textViewer),
-    contextMenu: true,
-  },
-  {
-    id: COMMAND_SET_TAB_WIDTH,
-    label: "Tab Size: " + textViewer.getTabSize(),
-    contextMenu: true,
-  },
-  {
-    id: COMMAND_SHOW_LINE_NUMBERS,
-    label: "Line Numbers",
-    icon: "fa fa-list-ol",
-    checked: textViewer.getShowLineNumbers(),
-    contextMenu: true,
-  }];
-}
+// function textViewerCommandLister(textViewer: TextViewer): Command[] {
+//   return [{
+//     id: COMMAND_SET_SYNTAX_HIGHLIGHTING,
+//     label: "Syntax: " + getMimeTypeName(textViewer),
+//     contextMenu: true,
+//   },
+//   {
+//     id: COMMAND_SET_TAB_WIDTH,
+//     label: "Tab Size: " + textViewer.getTabSize(),
+//     contextMenu: true,
+//   },
+//   {
+//     id: COMMAND_SHOW_LINE_NUMBERS,
+//     label: "Line Numbers",
+//     icon: "fa fa-list-ol",
+//     checked: textViewer.getShowLineNumbers(),
+//     contextMenu: true,
+//   }];
+// }
 
-async function textViewerCommandExecutor(textViewer: TextViewer, commandId: string, commandArguments?: object): Promise<any> {
-  switch(commandId) {
-    case COMMAND_SET_TAB_WIDTH:
-      return tabCommand(textViewer);
+// async function textViewerCommandExecutor(textViewer: TextViewer, commandId: string, commandArguments?: object): Promise<any> {
+//   switch(commandId) {
+//     case COMMAND_SET_TAB_WIDTH:
+//       return tabCommand(textViewer);
 
-    case COMMAND_SET_SYNTAX_HIGHLIGHTING:
-      return syntaxHighlightingCommandExecutor(textViewer);
+//     case COMMAND_SET_SYNTAX_HIGHLIGHTING:
+//       return syntaxHighlightingCommandExecutor(textViewer);
 
-    case COMMAND_SHOW_LINE_NUMBERS:
-      return toggleLineNumbers(textViewer);
+//     case COMMAND_SHOW_LINE_NUMBERS:
+//       return toggleLineNumbers(textViewer);
 
-    default:
-      break;
-  }
-}
+//     default:
+//       break;
+//   }
+// }
 
 //-------------------------------------------------------------------------
 

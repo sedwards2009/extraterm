@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Command, ExtensionContext, Logger, Terminal } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal } from 'extraterm-extension-api';
 import {BashScriptBuilder, FishScriptBuilder, ScriptCommand, ZshScriptBuilder} from './ScriptBuilders';
 
 
@@ -11,8 +11,8 @@ let log: Logger = null;
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
-  context.window.registerCommandsOnTerminal(terminalCommandLister, terminalCommandExecutor);
-
+  // context.window.registerCommandsOnTerminal(terminalCommandLister, terminalCommandExecutor);
+// FIXME
   const commands = context.commands;
   commands.registerCommand("inject-shell-integration:injectBashIntegration", () => {
     log.debug("Pretending to run command inject-shell-integration:injectBashIntegration");
@@ -30,20 +30,20 @@ const COMMAND_INJECT_BASH_INTEGRATION = "injectBashIntegration";
 const COMMAND_INJECT_FISH_INTEGRATION = "injectFishIntegration";
 const COMMAND_INJECT_ZSH_INTEGRATION = "injectZshIntegration";
 
-function terminalCommandLister(terminal: Terminal): Command[] {
-  return [{
-    id: COMMAND_INJECT_BASH_INTEGRATION,
-    label: "Inject Bash Shell Integration"
-  },
-  {
-    id: COMMAND_INJECT_FISH_INTEGRATION,
-    label: "Inject Fish Shell Integration"
-  },
-  {
-    id: COMMAND_INJECT_ZSH_INTEGRATION,
-    label: "Inject Zsh Shell Integration"
-  }];
-}
+// function terminalCommandLister(terminal: Terminal): Command[] {
+//   return [{
+//     id: COMMAND_INJECT_BASH_INTEGRATION,
+//     label: "Inject Bash Shell Integration"
+//   },
+//   {
+//     id: COMMAND_INJECT_FISH_INTEGRATION,
+//     label: "Inject Fish Shell Integration"
+//   },
+//   {
+//     id: COMMAND_INJECT_ZSH_INTEGRATION,
+//     label: "Inject Zsh Shell Integration"
+//   }];
+// }
 
 async function terminalCommandExecutor(terminal: Terminal, commandId: string, commandArguments?: object): Promise<any> {
   const scriptCommands = getScriptCommands(terminal, commandId);

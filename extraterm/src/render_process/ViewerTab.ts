@@ -8,7 +8,6 @@ import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-ap
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import { COMMAND_OPEN_COMMAND_PALETTE } from './command/CommandUtils';
-import { isCommandable, Commandable, BoundCommand} from './command/CommandTypes';
 import {doLater, DebouncedDoLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
@@ -55,7 +54,7 @@ const SCROLL_STEP = 1;
  * A viewer tab which can contain any ViewerElement.
  */
 @WebComponent({tag: "et-viewer-tab"})
-export class EtViewerTab extends ViewerElement implements Commandable, AcceptsConfigDatabase,
+export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     AcceptsKeybindingsManager, SupportsClipboardPaste.SupportsClipboardPaste,
     SupportsDialogStack.SupportsDialogStack {
 
@@ -120,20 +119,6 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
     this._virtualScrollArea.setScrollbar(scrollbar);
 
     scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
-    scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
-      if (ev.target === scrollerArea) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        this.focus();
-        if (ev.buttons & 2) { // Right Mouse Button
-          const viewerElement = this._getViewerElement();
-          if (viewerElement !== null && isCommandable(viewerElement)) {
-            viewerElement.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
-          }
-        }
-      }
-    });
-    
     scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
       this._virtualScrollArea.scrollTo(scrollbar.getPosition());
     });
@@ -476,64 +461,11 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
 
     const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
     const command = keyBindings.mapEventToCommand(ev);
-    if (this._executeCommand(command)) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
-  }
-
-  getCommands(commandableStack: Commandable[]): BoundCommand[] {
-    const defaults = { group: PALETTE_GROUP, commandExecutor: this, contextMenu: true };
-    const commandList: BoundCommand[] = [
-      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, icon: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
-      { ...defaults, id: COMMAND_COPY_TO_CLIPBOARD, icon: "far fa-copy", label: "Copy to Clipboard" },
-      { ...defaults, id: COMMAND_PASTE_FROM_CLIPBOARD, icon: "fa fa-clipboard", label: "Paste from Clipboard" },
-      { ...defaults, id: COMMAND_FONT_SIZE_INCREASE, label: "Increase Font Size" },
-      { ...defaults, id: COMMAND_FONT_SIZE_DECREASE, label: "Decrease Font Size" },
-      { ...defaults, id: COMMAND_FONT_SIZE_RESET, label: "Reset Font Size" },
-    ];
-
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
-    if (keyBindings !== null) {
-      commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
-        commandEntry.shortcut = shortcut === null ? "" : shortcut;
-      });
-    }    
-    return commandList;
-  }
-
-
-  executeCommand(commandId: string): void {
-    this._executeCommand(commandId);
-  }
-  
-  private _executeCommand(command: string): boolean {
-    switch (command) {
-      case COMMAND_COPY_TO_CLIPBOARD:
-        this.copyToClipboard();
-        break;
-
-      case COMMAND_PASTE_FROM_CLIPBOARD:
-        this._pasteFromClipboard();
-        break;
-
-      case COMMAND_FONT_SIZE_INCREASE:
-        this._adjustFontSize(1);
-        break;
-
-      case COMMAND_FONT_SIZE_DECREASE:
-        this._adjustFontSize(-1);
-        break;
-
-      case COMMAND_FONT_SIZE_RESET:
-        this._resetFontSize();
-        break;
-
-      default:
-        return false;
-    }
-    return true;
+// FIXME    
+    // if (this._executeCommand(command)) {
+    //   ev.stopPropagation();
+    //   ev.preventDefault();
+    // }
   }
 
   // ********************************************************************

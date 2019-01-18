@@ -11,7 +11,6 @@ import { log } from "extraterm-logging";
 
 import { AboutTab } from './AboutTab';
 import { BulkFileBroker } from './bulk_file_handling/BulkFileBroker';
-import { Commandable, BoundCommand } from './command/CommandTypes';
 import * as config from '../Config';
 import * as DisposableUtils from '../utils/DisposableUtils';
 import * as DomUtils from './DomUtils';
@@ -93,7 +92,7 @@ const COMMAND_CLOSE_PANE = "closePane";
  */
 @WebComponent({tag: "extraterm-mainwebui"})
 export class MainWebUi extends ThemeableElementBase implements AcceptsKeybindingsManager,
-    config.AcceptsConfigDatabase, Commandable {
+    config.AcceptsConfigDatabase {
   
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
   static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
@@ -332,7 +331,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.setRightSpaceDefaultElementFactory( (): Element => {
       const tempDiv = document.createElement("DIV");
       tempDiv.innerHTML = this._newTabRestAreaHtml();
-      (<NewTerminalContextArea> tempDiv.querySelector("#" + ID_NEW_TERMINAL_CONTEXT_AREA)).setConfigDatabase(this._configManager);
       return tempDiv.children.item(0);
     });
     this._splitLayout.setTopLeftElement(this._leftControls());
@@ -341,45 +339,18 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
 
-      const sessionCommandList: BoundCommand[] = [];
-      const sessions = this._configManager.getConfig(SESSION_CONFIG);
-      for (let i=0; i<sessions.length; i++) {
-        const sessionConfig = sessions[i];
-        const commandId = i === 0 ? COMMAND_NEW_TERMINAL : COMMAND_NEW_TERMINAL + ":" + sessionConfig.uuid;
-        sessionCommandList.push({
-          id: commandId,
-          group: PALETTE_GROUP,
-          icon: "fa fa-plus",
-          label: "New Terminal: " + sessionConfig.name,
-          commandExecutor: null,
-          commandArguments: {sessionUuid: sessionConfig.uuid}
-        });
-      }
-
-      const commandList: BoundCommand[] = [
-        ...sessionCommandList,
-        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, icon: "extraicon-#xea08", label: "Horizontal Split", commandExecutor: null },
-        { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, icon: "fa fa-columns", label: "Vertical Split", commandExecutor: null },
-        { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor: null }
-      ];
-
+// FIXME
       // this._insertCommandKeybindings(commandList);
 
-      for (const entry of commandList) {
-        if (entry.commandArguments == null) {
-          entry.commandArguments = {};
-        }
-        entry.commandArguments["tabElement"] = emptyPaneMenu;
-      }
 // FIXME
       // emptyPaneMenu.setEntries(commandList);
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
-        emptyPaneMenu.setFilter("");
-        for (const entry of commandList) {
-          if (entry.id === ev.detail.selected) {
-            this.executeCommand(ev.detail.selected, entry.commandArguments);
-          }
-        }
+        // emptyPaneMenu.setFilter("");
+        // for (const entry of commandList) {
+        //   if (entry.id === ev.detail.selected) {
+        //     this.executeCommand(ev.detail.selected, entry.commandArguments);
+        //   }
+        // }
       });
       return emptyPaneMenu;
     });
@@ -405,7 +376,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _menuControls(): Element {
     const tempDiv = document.createElement("DIV");
     tempDiv.innerHTML = this._newTabRestAreaHtml(`<slot id="${ID_REST_SLOT}"></slot>`);
-    (<NewTerminalContextArea> tempDiv.querySelector("#" + ID_NEW_TERMINAL_CONTEXT_AREA)).setConfigDatabase(this._configManager);
     return tempDiv.children.item(0);
   }
 
@@ -1013,185 +983,21 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
     
     const command = bindings.mapEventToCommand(ev);
-    if (this.executeCommand(command, {tabElement: tabContentElement})) {
+    if (this._extensionManager.executeCommand(command)) {
       ev.stopPropagation();
       ev.preventDefault();
     }
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //    #####                                               ######                                          
-  //   #     #  ####  #    # #    #   ##   #    # #####     #     #   ##   #      ###### ##### ##### ###### 
-  //   #       #    # ##  ## ##  ##  #  #  ##   # #    #    #     #  #  #  #      #        #     #   #      
-  //   #       #    # # ## # # ## # #    # # #  # #    #    ######  #    # #      #####    #     #   #####  
-  //   #       #    # #    # #    # ###### #  # # #    #    #       ###### #      #        #     #   #      
-  //   #     # #    # #    # #    # #    # #   ## #    #    #       #    # #      #        #     #   #      
-  //    #####   ####  #    # #    # #    # #    # #####     #       #    # ###### ######   #     #   ###### 
-  //
-  //-----------------------------------------------------------------------
-
-  getCommands(commandableStack: Commandable[]): BoundCommand[] {
-    const thisIndex = commandableStack.indexOf(this);
-    const tabContentElement = commandableStack[thisIndex-1];
-
-    if (tabContentElement instanceof NewTerminalContextArea) {
-      return [];
-    }
-
-    if (tabContentElement instanceof Element) {
-      return this._commandPaletteEntriesWithTarget(tabContentElement, this._tabWidgetFromElement(tabContentElement));
-    } else {
-      this._log.severe("commandableStack[thisIndex-1] wasn't an Element");
-      return [];
-    }
-  }
-
-  private _commandPaletteEntriesWithTarget(tabContentElement: Element, tabWidget: TabWidget): BoundCommand[] {
-
-    const commandExecutor = this;
-    const commandArguments = {tabElement: tabContentElement};
-
-    const sessionCommandList: BoundCommand[] = [];
-    const sessions = this._configManager.getConfig(SESSION_CONFIG);
-    for (let i = 0; i < sessions.length; i++) {
-      const sessionConfig  = sessions[i];
-      const commandId = i === 0 ? COMMAND_NEW_TERMINAL : COMMAND_NEW_TERMINAL + ":" + sessionConfig.uuid;
-      sessionCommandList.push({
-        id: commandId,
-        group: PALETTE_GROUP,
-        icon: "fa fa-plus",
-        label: "New Terminal: " + sessionConfig.name,
-        commandExecutor,
-        commandArguments: {tabElement: tabContentElement, sessionUuid: sessionConfig.uuid}
-      });
-    }
-
-    const defaults = { group: PALETTE_GROUP, commandExecutor, commandArguments };
-    const commandList: BoundCommand[] = [
-      ...sessionCommandList,
-      { ...defaults, id: COMMAND_CLOSE_TAB, icon: "fa fa-times", label: "Close Tab" },
-      { ...defaults, id: COMMAND_FOCUS_TAB_LEFT, label: "Focus Previous Tab" },
-      { ...defaults, id: COMMAND_FOCUS_TAB_RIGHT, label: "Focus Next Tab" },
-      { ...defaults, id: COMMAND_FOCUS_PANE_LEFT, label: " Focus Pane Left" },
-      { ...defaults, id: COMMAND_FOCUS_PANE_RIGHT, label: " Focus Pane Right" },
-      { ...defaults, id: COMMAND_FOCUS_PANE_ABOVE, label: " Focus Pane Above" },
-      { ...defaults, id: COMMAND_FOCUS_PANE_BELOW, label: " Focus Pane Below" },
-      { ...defaults, id: COMMAND_HORIZONTAL_SPLIT, icon: "extraicon-#xea08", label: "Horizontal Split", contextMenu:true },
-      { ...defaults, id: COMMAND_VERTICAL_SPLIT, icon: "fa fa-columns", label: "Vertical Split", contextMenu:true },
-      { ...defaults, id: COMMAND_MOVE_TAB_LEFT, label: "Move Tab Left" },
-      { ...defaults, id: COMMAND_MOVE_TAB_RIGHT, label: "Move Tab Right" },
-      { ...defaults, id: COMMAND_MOVE_TAB_UP, label: "Move Tab Up" },
-      { ...defaults, id: COMMAND_MOVE_TAB_DOWN, label: "Move Tab Down" },
-    ];
-// FIXME
-    if (tabWidget != null && tabWidget.parentElement instanceof Splitter ||
-        tabContentElement instanceof EmptyPaneMenu) {
-      commandList.push( { ...defaults, id: COMMAND_CLOSE_PANE, label: "Close Pane", contextMenu: true } );
-    }
-
-    this._insertCommandKeybindings(commandList);
-    return commandList;
-  }
-
-  private _insertCommandKeybindings(commandList: BoundCommand[]): void {
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
-    if (keyBindings !== null) {
-      commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
-        commandEntry.shortcut = shortcut === null ? "" : shortcut;
-      });
-    }    
-  }
-  
-  executeCommand(commandId: string, options?: object): boolean {
-    if (options == null) {
-      return false;
-    }
-    const tabElement = <Element> options["tabElement"];
-    if (tabElement == null) {
-      return false;
-    }
-
-    if (commandId == null) {
-      return false;
-    }
-    
-    const parts = commandId.split(":");
-    const command = parts[0];
-
-    switch (command) {
-      case COMMAND_FOCUS_TAB_LEFT:
-        this._shiftTab(this._tabWidgetFromElement(tabElement), -1);
-        break;
-        
-      case COMMAND_FOCUS_TAB_RIGHT:
-        this._shiftTab(this._tabWidgetFromElement(tabElement), 1);
-        break;
-
-      case COMMAND_FOCUS_PANE_LEFT:
-        this._focusPaneLeft(tabElement);
-        break;
-
-      case COMMAND_FOCUS_PANE_RIGHT:
-        this._focusPaneRight(tabElement);
-        break;
-
-      case COMMAND_FOCUS_PANE_ABOVE:
-        this._focusPaneAbove(tabElement);
-        break;
-
-      case COMMAND_FOCUS_PANE_BELOW:
-        this._focusPaneBelow(tabElement);
-        break;
-
-      case COMMAND_NEW_TERMINAL:
-        let sessionUuid = (<any>options).sessionUuid;
-        if (sessionUuid == null) {
-          sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
-        }
-
-        this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement), sessionUuid));
-        break;
-        
-      case COMMAND_CLOSE_TAB:
-        this.closeTab(tabElement);
-        break;
-
-      case COMMAND_HORIZONTAL_SPLIT:
-        this._horizontalSplit(tabElement);
-        break;
-
-      case COMMAND_VERTICAL_SPLIT:
-        this._verticalSplit(tabElement);
-        break;
-
-      case COMMAND_CLOSE_PANE:
-        this._closeSplit(tabElement);
-        break;
-
-      case COMMAND_MOVE_TAB_LEFT:
-        this._moveTabElementLeft(tabElement);
-        break;
-
-      case COMMAND_MOVE_TAB_RIGHT:
-        this._moveTabElementRight(tabElement);
-        break;
-
-      case COMMAND_MOVE_TAB_UP:
-        this._moveTabElementUp(tabElement);
-        break;
-
-      case COMMAND_MOVE_TAB_DOWN:
-        this._moveTabElementDown(tabElement);
-        break;
-
-      default:
-        return false;
-    }
-    return true;
-  }
-
+  // private _insertCommandKeybindings(commandList: BoundCommand[]): void {
+  //   const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
+  //   if (keyBindings !== null) {
+  //     commandList.forEach( (commandEntry) => {
+  //       const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
+  //       commandEntry.shortcut = shortcut === null ? "" : shortcut;
+  //     });
+  //   }    
+  // }
 
   private _registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
@@ -1283,26 +1089,20 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._moveTabElementDown(this._getActiveTabElement());
   }
 
-
-
-
-
-
-
-
   private _setupPtyIpc(): void {
     this._ptyIpcBridge = new PtyIpcBridge();
   }
   
+  // FIXME probably obsolete.
   private _handleNewSessionRequest(ev: CustomEvent): void {
-    for (const el of ev.path) {
-      if (el instanceof TabWidget) {
-        const elements = this._splitLayout.getTabContentsByTabWidget(el);
-        const tabElement = elements[el.getSelectedIndex()];
-        const options = { tabElement, sessionUuid: ev.detail.sessionUuid };
-        this.executeCommand(COMMAND_NEW_TERMINAL, options);
-      }
-    }
+    // for (const el of ev.path) {
+    //   if (el instanceof TabWidget) {
+    //     const elements = this._splitLayout.getTabContentsByTabWidget(el);
+    //     const tabElement = elements[el.getSelectedIndex()];
+    //     const options = { tabElement, sessionUuid: ev.detail.sessionUuid };
+    //     this.executeCommand(COMMAND_NEW_TERMINAL, options);
+    //   }
+    // }
   }
 }
 

@@ -18,7 +18,6 @@ import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
 import { WindowProxy } from './Proxies';
 import { ExtensionMetadata, ExtensionCommandContribution, WhenTerm, Category } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
-import { BoundCommand } from '../command/CommandTypes';
 import { CommandsRegistry } from './CommandsRegistry';
 import { CommonExtensionState } from './CommonExtensionState';
 import { Mode } from '../viewers/ViewerElementTypes';
@@ -81,26 +80,6 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       }
     }
     return null;
-  }
-
-  getWorkspaceTerminalCommands(terminal: EtTerminal): BoundCommand[] {
-    return _.flatten(
-      this._activeExtensions.map(activeExtension => {
-        const ownerExtensionContext = activeExtension.contextImpl;
-        const terminalProxy = ownerExtensionContext.proxyFactory.getTerminalProxy(terminal);
-        return activeExtension.contextImpl.internalWindow.getTerminalCommands(
-          activeExtension.metadata.name, terminalProxy);
-      }));
-  }
-
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): BoundCommand[] {
-    return _.flatten(
-      this._activeExtensions.map(activeExtension => {
-        const extensionContext = activeExtension.contextImpl;
-        const textViewerProxy = <ExtensionApi.TextViewer> extensionContext.proxyFactory.getViewerProxy(textViewer);
-        return extensionContext.internalWindow.getTextViewerCommands(
-          activeExtension.metadata.name, textViewerProxy);
-      }));
   }
 
   findViewerElementTagByMimeType(mimeType: string): string {

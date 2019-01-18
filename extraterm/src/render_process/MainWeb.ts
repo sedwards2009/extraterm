@@ -15,7 +15,6 @@ import './gui/All'; // Need to load all of the GUI web components into the brows
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
 import { EVENT_COMMAND_PALETTE_REQUEST, EVENT_CONTEXT_MENU_REQUEST } from './command/CommandUtils';
-import { BoundCommand, Commandable, CommandExecutor } from './command/CommandTypes';
 
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
@@ -605,23 +604,7 @@ function startUpCommandPalette(): void {
 }
 
 function startUpApplicationContextMenu(): void {
-  applicationContextMenu = new ApplicationContextMenu(extensionManager,
-                                                      { executeCommand, getCommands: getCommandPaletteEntries });
-}
-
-function getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
-  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-  const devToolsOpen = developerToolMenu.checked;
-  const commandExecutor: CommandExecutor = {executeCommand};
-
-  const defaults = { group: PALETTE_GROUP, commandExecutor };
-  const commandList: BoundCommand[] = [
-    { ...defaults, id: MENU_ITEM_SETTINGS,  icon: "fa fa-wrench", label: "Settings" },
-    { ...defaults, id: MENU_ITEM_DEVELOPER_TOOLS, icon: "fa fa-cogs", checked: devToolsOpen, label: "Developer Tools" },
-    { ...defaults, id: MENU_ITEM_RELOAD_CSS, icon: "fa fa-sync", label: "Reload Theme" },
-    { ...defaults, id: MENU_ITEM_ABOUT, icon: "far fa-lightbulb", label: "About" },
-  ];
-  return commandList;
+  applicationContextMenu = new ApplicationContextMenu(extensionManager);
 }
 
 class ConfigDatabaseImpl implements ConfigDatabase {

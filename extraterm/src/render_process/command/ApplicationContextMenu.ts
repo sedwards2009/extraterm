@@ -10,8 +10,6 @@ import { Logger } from "extraterm-extension-api";
 import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import * as DomUtils from "../DomUtils";
-import { eventToCommandableStack, commandableStackToBoundCommands, CommandType, COMMAND_OPEN_COMMAND_PALETTE } from "./CommandUtils";
-import { BoundCommand, Commandable } from "./CommandTypes";
 import { doLater } from "../../utils/DoLater";
 import { ExtensionManager } from "../extension/InternalTypes";
 import { MenuItem } from "../gui/MenuItem";
@@ -27,7 +25,7 @@ export class ApplicationContextMenu {
   private _contextMenuElement: ContextMenu = null
   private _menuEntries: CommandAndShortcut[] = null;
   
-  constructor(private extensionManager: ExtensionManager, private rootCommandable: Commandable) {
+  constructor(private extensionManager: ExtensionManager) {
     this._log = getLogger("ApplicationContextMenu", this);
     
     const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
