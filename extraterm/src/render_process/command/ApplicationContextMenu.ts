@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -17,6 +17,7 @@ import { ExtensionManager } from "../extension/InternalTypes";
 import { MenuItem } from "../gui/MenuItem";
 import { DividerMenuItem } from "../gui/DividerMenuItem";
 import { CheckboxMenuItem } from "../gui/CheckboxMenuItem";
+import { CommandAndShortcut } from "./CommandPalette";
 
 const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
 
@@ -24,7 +25,7 @@ const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
 export class ApplicationContextMenu {
   private _log: Logger;
   private _contextMenuElement: ContextMenu = null
-  private _menuEntries: BoundCommand[] = null;
+  private _menuEntries: CommandAndShortcut[] = null;
   
   constructor(private extensionManager: ExtensionManager, private rootCommandable: Commandable) {
     this._log = getLogger("ApplicationContextMenu", this);
@@ -53,12 +54,17 @@ export class ApplicationContextMenu {
   }
 
   handleContextMenuRequest(ev: CustomEvent): void {
-    const requestCommandableStack = [...eventToCommandableStack(ev), this.rootCommandable];
+    // const requestCommandableStack = [...eventToCommandableStack(ev), this.rootCommandable];
 
     doLater( () => {
-      const entries = commandableStackToBoundCommands(CommandType.CONTEXT_MENU, requestCommandableStack,
-                                                      this.extensionManager);
-      this._menuEntries = this._filterOutDuplicateSpecialCommands(entries);
+      const entries = this.extensionManager.queryCommands({
+        contextMenu: true,
+        categories: ["window", "textEditing", "terminal", "terminalCursorMode", "viewer"]
+      });
+
+      this._menuEntries = entries.map((entry): CommandAndShortcut => {
+        return { id: entry.command + "_" + entry.category, shortcut: "", ...entry };
+      });
 
       if (this._menuEntries.length === 0) {
         this._menuEntries = null;
@@ -70,45 +76,28 @@ export class ApplicationContextMenu {
     });
   }
 
-  private _formatMenuHtml(menuEntries: BoundCommand[]): string {
+  private _formatMenuHtml(menuEntries: CommandAndShortcut[]): string {
     const htmlParts: string[] = [];
     let lastGroup = "";
     let index = 0;
     for (const command of menuEntries) {
-      if (command.group !== lastGroup && lastGroup !== "") {
+      if (command.category !== lastGroup && lastGroup !== "") {
         htmlParts.push(`<${DividerMenuItem.TAG_NAME}></${DividerMenuItem.TAG_NAME}>`);
       }
-      lastGroup = command.group;
-      htmlParts.push(this._boundCommandToHtml("index_" + index, command));
+      lastGroup = command.category;
+      htmlParts.push(this._commandAndShortcutToHtml("index_" + index, command));
       index++;
     }
     return htmlParts.join("");
   }
 
-  private _filterOutDuplicateSpecialCommands(commands: BoundCommand[]): BoundCommand[] {
-    const specialCommands = new Set<string>([COMMAND_OPEN_COMMAND_PALETTE]);
-    const seenSpecialCommands = new Set<string>();
-
-    const result: BoundCommand[] = [];
-    for (const command of commands) {
-      if (specialCommands.has(command.id)) {
-        if (seenSpecialCommands.has(command.id)) {
-          continue;
-        }
-        seenSpecialCommands.add(command.id);
-      }
-      result.push(command);
-    }
-    return result;
-  }
-
-  private _boundCommandToHtml(name: string, command: BoundCommand): string {
+  private _commandAndShortcutToHtml(name: string, command: CommandAndShortcut): string {
     if (command.checked != null) {
       return `<${CheckboxMenuItem.TAG_NAME} name="${name}" icon="${command.icon}" checked="${command.checked}"
-        shortcut="${command.shortcut}">${he.encode(command.label)}</${CheckboxMenuItem.TAG_NAME}>`;
+        shortcut="${command.shortcut}">${he.encode(command.title)}</${CheckboxMenuItem.TAG_NAME}>`;
     } else {
       return `<${MenuItem.TAG_NAME} name="${name}" icon="${command.icon}"
-        shortcut="${command.shortcut}">${he.encode(command.label)}</${MenuItem.TAG_NAME}>`;
+        shortcut="${command.shortcut}">${he.encode(command.title)}</${MenuItem.TAG_NAME}>`;
     }
   }
 
@@ -118,9 +107,9 @@ export class ApplicationContextMenu {
     }
 
     const index = Number.parseInt(id.substr("index_".length), 10);
-    const boundCommand = this._menuEntries[index];
+    const entry = this._menuEntries[index];
     doLater( () => {
-      boundCommand.commandExecutor.executeCommand(boundCommand.id, boundCommand.commandArguments);
+      this.extensionManager.executeCommand(entry.command);
     });
   }
 }

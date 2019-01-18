@@ -362,7 +362,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
         { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, icon: "fa fa-columns", label: "Vertical Split", commandExecutor: null },
         { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor: null }
       ];
-      this._insertCommandKeybindings(commandList);
+
+      // this._insertCommandKeybindings(commandList);
 
       for (const entry of commandList) {
         if (entry.commandArguments == null) {
@@ -370,8 +371,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
         }
         entry.commandArguments["tabElement"] = emptyPaneMenu;
       }
-
-      emptyPaneMenu.setEntries(commandList);
+// FIXME
+      // emptyPaneMenu.setEntries(commandList);
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
         emptyPaneMenu.setFilter("");
         for (const entry of commandList) {
