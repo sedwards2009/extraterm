@@ -40,6 +40,7 @@ function assertJsonStringField(packageJson: any, fieldName: string, defaultValue
 
 const categoryList: Category[] = [
   "global",
+  "application",
   "window",
   "textEditing",
   "terminal",

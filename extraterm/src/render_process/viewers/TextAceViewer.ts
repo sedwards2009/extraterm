@@ -26,6 +26,7 @@ import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import { emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState } from '../VirtualScrollArea';
 import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
 import { RefreshLevel } from '../viewers/ViewerElementTypes';
+import { TextEditor } from './TextEditorType';
 
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
@@ -66,7 +67,7 @@ function getCssText(): string {
 
 @WebComponent({tag: "et-text-viewer"})
 export class TextViewer extends ViewerElement implements Commandable, AcceptsKeybindingsManager,
-    SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
+    SupportsClipboardPaste.SupportsClipboardPaste, TextEditor, Disposable {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
   
@@ -250,6 +251,15 @@ export class TextViewer extends ViewerElement implements Commandable, AcceptsKey
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TEXT_VIEWER];
+  }
+
+  executeAceCommand(command: string): void {
+    const aceCommand = this._aceEditor.commands.getCommandByName(command);
+    if (aceCommand == null) {
+      this._log.warn(`executeAceCommand() couldn't find Ace command '${command}'.`);
+      return;
+    }
+    this._aceEditor.commands.exec(aceCommand, this._aceEditor);
   }
 
   dispose(): void {

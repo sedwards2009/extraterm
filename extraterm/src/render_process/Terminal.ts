@@ -175,6 +175,26 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _copyToClipboardLater: DebouncedDoLater = null;
   private _findPanel: FindPanel = null;
 
+  static registerCommands(extensionManager: ExtensionManager): void {
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+    commands.registerCommand("extraterm:terminal.enterCursorMode", (args: any) => extensionManager.getActiveTerminal().commandEnterCursorMode());
+    commands.registerCommand("extraterm:terminal.enterNormalMode", (args: any) => extensionManager.getActiveTerminal().commandExitCursorMode());
+    commands.registerCommand("extraterm:terminal.scrollPageUp", (args: any) => extensionManager.getActiveTerminal().commandScrollPageUp());
+    commands.registerCommand("extraterm:terminal.scrollPageDown", (args: any) => extensionManager.getActiveTerminal().commandScrollPageDown());
+    commands.registerCommand("extraterm:terminal.goToPreviousFrame", (args: any) => extensionManager.getActiveTerminal().commandGoToPreviousFrame());
+    commands.registerCommand("extraterm:terminal.goToNextFrame", (args: any) => extensionManager.getActiveTerminal().commandGoToNextFrame());
+    commands.registerCommand("extraterm:terminal.copyToClipboard", (args: any) => extensionManager.getActiveTerminal().commandCopyToClipboard());
+    commands.registerCommand("extraterm:terminal.pasteFromClipboard", (args: any) => extensionManager.getActiveTerminal().commandPasteFromClipboard());
+    commands.registerCommand("extraterm:terminal.deleteLastFrame", (args: any) => extensionManager.getActiveTerminal().commandDeleteLastFrame());
+    commands.registerCommand("extraterm:terminal.openLastFrame", (args: any) => extensionManager.getActiveTerminal().commandOpenLastFrame());
+    commands.registerCommand("extraterm:terminal.resetVT", (args: any) => extensionManager.getActiveTerminal().commandResetVT());
+    commands.registerCommand("extraterm:terminal.clearScrollback", (args: any) => extensionManager.getActiveTerminal().commandClearScrollback());
+    commands.registerCommand("extraterm:terminal.increaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
+    commands.registerCommand("extraterm:terminal.decreaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeDecrease());
+    commands.registerCommand("extraterm:terminal.resetFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
+    // commands.registerCommand("", (args: any) => extensionManager.getActiveTerminal().commandFind());
+  }
+  
   constructor() {
     super();
     this._log = getLogger(EtTerminal.TAG_NAME, this);
@@ -886,6 +906,75 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     }
     return true;
   }
+
+  commandEnterCursorMode(): void {
+    this._enterCursorMode();
+  }
+
+  commandExitCursorMode(): void {
+    this._exitCursorMode();
+  }
+  
+  commandScrollPageUp(): void {
+    this._terminalCanvas.scrollPageUp();
+  }
+    
+  commandScrollPageDown(): void {
+    this._terminalCanvas.scrollPageDown();
+  }
+
+  commandGoToPreviousFrame(): void {
+    this._terminalCanvas.goToPreviousFrame();
+  }
+
+  commandGoToNextFrame(): void {
+    this._terminalCanvas.goToNextFrame();
+  }
+
+  commandCopyToClipboard(): void {
+    this.copyToClipboard();
+  }
+
+  commandPasteFromClipboard(): void {
+    this._pasteFromClipboard();
+  }
+
+  commandDeleteLastFrame(): void {
+    this._deleteLastEmbeddedViewer();
+  }
+
+  commandOpenLastFrame(): void {
+    this._popOutLastEmbeddedViewer();
+  }
+
+  commandResetVT(): void {
+    this._emulator.reset();
+  }
+
+  commandClearScrollback(): void {
+    this._terminalCanvas.enforceScrollbackSize(0, 0);
+  }
+
+  commandFontSizeIncrease(): void {
+    this._terminalCanvas.setFontSizeAdjustment(1);
+  }
+
+  commandFontSizeDecrease(): void {
+  this._terminalCanvas.setFontSizeAdjustment(-1);
+  }
+
+  commandFontSizeReset(): void {
+    this._terminalCanvas.resetFontSize();
+  }
+
+  commandFind(): void {
+    this._openFindPanel();
+  }
+
+
+
+
+
 
   /**
    * Handle when the embedded term.js enters start of application mode.

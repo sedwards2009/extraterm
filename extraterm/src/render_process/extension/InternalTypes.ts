@@ -11,6 +11,8 @@ import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContrib
 import { EtViewerTab } from '../ViewerTab';
 import { SupportsDialogStack } from '../SupportsDialogStack';
 import { BoundCommand } from '../command/CommandTypes';
+import { CommandsRegistry } from './CommandsRegistry';
+import { TextEditor } from '../viewers/TextEditorType';
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -20,6 +22,7 @@ export interface CommandQueryOptions {
 
 export interface ExtensionManager {
   startUp(): void;
+  getExtensionContextByName(name: string): InternalExtensionContext;
   getWorkspaceTerminalCommands(terminal: EtTerminal): BoundCommand[];
   getWorkspaceTextViewerCommands(textViewer: TextViewer): BoundCommand[];
 
@@ -31,10 +34,13 @@ export interface ExtensionManager {
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
   setActiveTerminal(terminal: EtTerminal): void;
-
+  getActiveTerminal(): EtTerminal;
+  setActiveTextEditor(textEditor: TextEditor): void;
+  getActiveTextEditor(): TextEditor;
+    
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
   
-  executeCommand(command: string): any;
+  executeCommand<T>(command: string, args?: any): Promise<T>;
 }
 
 export interface AcceptsExtensionManager {
@@ -70,12 +76,14 @@ export interface InternalWindow extends ExtensionApi.Window {
 }
 
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
+  commands: CommandsRegistry;
   extensionUiUtils: ExtensionUiUtils;
   extensionMetadata: ExtensionMetadata;
   internalWindow: InternalWindow;
   proxyFactory: ProxyFactory;
 
   findViewerElementTagByMimeType(mimeType: string): string;
+  debugRegisteredCommands(): void;
 }
 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {

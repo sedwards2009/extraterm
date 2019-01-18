@@ -32,7 +32,7 @@ export interface ExtensionContributes {
   viewers: ExtensionViewerContribution[];
 }
 
-export type Category = "global" | "window" | "textEditing" | "terminal" | "terminalCursorMode" | "viewer";
+export type Category = "global" | "application" | "window" | "textEditing" | "terminal" | "terminalCursorMode" | "viewer";
 
 export type WhenTerm = "terminalFocus"| "viewerFocus" | "viewerType" | "isCursorMode" | "isNormalMode" | "isTextEditor";
 

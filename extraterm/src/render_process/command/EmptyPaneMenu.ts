@@ -10,11 +10,10 @@ import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ListPicker} from '../gui/ListPicker';
 import * as DomUtils from '../DomUtils';
-import {commandPaletteFilterEntries, commandPaletteFormatEntries } from './CommandPalette';
+import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandAndShortcut } from './CommandPalette';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import { CommandMenuItem } from './CommandTypes';
 
 const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -32,7 +31,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   static TAG_NAME = "ET-EMPTY-PANE-MENU";
 
   private _log: Logger;
-  private _entries: CommandMenuItem[] = [];
+  private _entries: CommandAndShortcut[] = [];
 
   constructor() {
     super();
@@ -63,7 +62,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
       shadow.appendChild(themeStyle);
       shadow.appendChild(divContainer);    
 
-      const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+      const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
       listPicker.addEventListener("selected", (ev: CustomEvent): void => {
         const event = new CustomEvent("selected", { detail: {selected: ev.detail.selected } });
         this.dispatchEvent(event);
@@ -100,26 +99,26 @@ export class EmptyPaneMenu extends ThemeableElementBase {
     return false;
   }
 
-  setEntries(entries: CommandMenuItem[]): void {
+  setEntries(entries: CommandAndShortcut[]): void {
     this._entries = entries;
     
     if (DomUtils.getShadowRoot(this) != null) {
-      const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+      const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
       listPicker.setEntries(entries);
     }
   }
 
-  getEntries(): CommandMenuItem[] {
+  getEntries(): CommandAndShortcut[] {
     return this._entries;
   }
 
   getFilter(): string {
-    const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+    const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
     return listPicker.getFilter();
   }
 
   setFilter(text: string): void {
-    const listPicker = <ListPicker<CommandMenuItem>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+    const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
     listPicker.setFilter(text);
   }
 }

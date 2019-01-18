@@ -16,12 +16,13 @@ import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalW
   isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions } from './InternalTypes';
 import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
 import { WindowProxy } from './Proxies';
-import { ExtensionMetadata, ExtensionCommandContribution, WhenTerm } from '../../ExtensionMetadata';
+import { ExtensionMetadata, ExtensionCommandContribution, WhenTerm, Category } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { BoundCommand } from '../command/CommandTypes';
 import { CommandsRegistry } from './CommandsRegistry';
 import { CommonExtensionState } from './CommonExtensionState';
 import { Mode } from '../viewers/ViewerElementTypes';
+import { TextEditor } from '../viewers/TextEditorType';
 
 
 interface ActiveExtension {
@@ -31,12 +32,13 @@ interface ActiveExtension {
   module: any;
 }
 
-const allCategories = [
+const allCategories: Category[] = [
   "textEditing",
   "terminalCursorMode",
   "terminal",
   "viewer",
   "window",
+  "application",
   "global",
 ];
 
@@ -51,6 +53,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     activeTerminal: null
   };
   private _activeTabContents: HTMLElement = null;
+  private _activeTextEditor: TextEditor = null;
 
   constructor() {
     this._log = getLogger("ExtensionManager", this);
@@ -66,6 +69,18 @@ export class ExtensionManagerImpl implements ExtensionManager {
         this._startExtension(extensionInfo);
       }
     }
+  }
+
+  getExtensionContextByName(name: string): InternalExtensionContext {
+    for (const ext of this._activeExtensions) {
+
+this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.name}`);
+
+      if (ext.metadata.name === name) {
+        return ext.contextImpl;
+      }
+    }
+    return null;
   }
 
   getWorkspaceTerminalCommands(terminal: EtTerminal): BoundCommand[] {
@@ -103,7 +118,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
     let module = null;
     let publicApi = null;
-    const contextImpl = new InternalExtensionContextImpl(this._extensionUiUtils, metadata,
+    const contextImpl = new InternalExtensionContextImpl(this, this._extensionUiUtils, metadata,
       this._proxyFactory, this._commonExtensionState);
     if (metadata.main != null) {
       module = this._loadExtensionModule(metadata);
@@ -182,6 +197,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
   setActiveTerminal(terminal: EtTerminal): void {
     this._commonExtensionState.activeTerminal = terminal;
   }
+  
+  getActiveTerminal(): EtTerminal {
+    return this._commonExtensionState.activeTerminal;
+  }
 
   setActiveTabContents(tabContents: HTMLElement): void {
     this._activeTabContents = tabContents;
@@ -189,6 +208,13 @@ export class ExtensionManagerImpl implements ExtensionManager {
   
   getActiveTabContents(): HTMLElement {
     return this._activeTabContents;
+  }
+
+  setActiveTextEditor(textEditor: TextEditor): void {
+    this._activeTextEditor = textEditor;
+  }
+  getActiveTextEditor(): TextEditor {
+    return this._activeTextEditor;
   }
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[] {
@@ -260,13 +286,39 @@ export class ExtensionManagerImpl implements ExtensionManager {
     return aIndex < bIndex ? -1 : 1;
   }
 
-  executeCommand(command: string): any {
+  executeCommand<T>(command: string, args?: any): Promise<T> {
+    const parts = command.split(":");
+    if (parts.length !== 2) {
+      this._log.warn(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
+      return null;
+    }
+    let extensionName = parts[0];
+    if (extensionName === "extraterm") {
+      extensionName = "internal-commands";
+    }
 
+    // FIXME parse out any args.
+
+    for (const ext of this._activeExtensions) {
+      if (ext.metadata.name === extensionName) {
+        const commandFunc = ext.contextImpl.commands.getCommandFunction(command);
+        if (commandFunc == null) {
+          this._log.warn(`Unable to find command '${command}' in extension '${extensionName}'.`);
+          return null;
+        }
+        return commandFunc(null); // FIXME send args
+      }
+    }
+
+    this._log.warn(`Unable to find extension with name '${extensionName}' for command '${command}'.`);
+    return null;
   }
 }
 
 
 class InternalExtensionContextImpl implements InternalExtensionContext {
+  private _log: Logger = null;
+
   commands: CommandsRegistry = null;
   window: InternalWindow = null;
   internalWindow: InternalWindow = null;
@@ -274,8 +326,14 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   logger: ExtensionApi.Logger = null;
   isBackendProcess = false;
 
-  constructor(public extensionUiUtils: ExtensionUiUtils, public extensionMetadata: ExtensionMetadata, public proxyFactory: ProxyFactory, commonExtensionState: CommonExtensionState) {
-    this.commands = new CommandsRegistry();
+  constructor(private _extensionManager: ExtensionManager, public extensionUiUtils: ExtensionUiUtils,
+              public extensionMetadata: ExtensionMetadata, public proxyFactory: ProxyFactory,
+              commonExtensionState: CommonExtensionState) {
+
+    this._log = getLogger("InternalExtensionContextImpl", this);
+
+    this.commands = new CommandsRegistry(this._extensionManager, extensionMetadata.name,
+                                         extensionMetadata.contributes.commands);
     this.window = new WindowProxy(this, commonExtensionState);
     this.internalWindow = this.window;
     this.logger = getLogger(extensionMetadata.name);
@@ -288,5 +346,13 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
 
   findViewerElementTagByMimeType(mimeType: string): string {
     return this.internalWindow.findViewerElementTagByMimeType(mimeType);
+  }
+
+  debugRegisteredCommands(): void {
+    for (const command of this.extensionMetadata.contributes.commands) {
+      if (this.commands.getCommandFunction(command.command) == null) {
+        this._log.debug(`Command '${command.command}' from extension '${this.extensionMetadata.name}' has no function registered.`);
+      }
+    }
   }
 }

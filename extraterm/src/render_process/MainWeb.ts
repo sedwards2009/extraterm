@@ -45,6 +45,7 @@ import { log } from "extraterm-logging";
 import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject, KeybindingsContexts } from './keybindings/KeyBindingsManager';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ApplicationContextMenu } from "./command/ApplicationContextMenu";
+import { registerCommands as TextCommandsRegisterCommands } from "./viewers/TextCommands";
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -100,6 +101,7 @@ export function startUp(closeSplash: () => void): void {
 
     startUpExtensions();
     startUpMainWebUi();
+    registerCommands(extensionManager);
 
     closeSplash();
 
@@ -115,7 +117,7 @@ export function startUp(closeSplash: () => void): void {
     if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
       mainWebUi.newTerminalTab(null, configDatabase.getConfig(SESSION_CONFIG)[0].uuid);
     } else {
-      mainWebUi.openSettingsTab("session");
+      mainWebUi.commandOpenSettingsTab("session");
       Electron.remote.dialog.showErrorBox("No session types available",
         "Extraterm doesn't have any session types configured.");
     }
@@ -332,27 +334,52 @@ function executeMenuCommand(command: string): boolean {
 function executeCommand(commandId: string, options?: object): boolean {
   switch(commandId) {
     case MENU_ITEM_SETTINGS:
-      mainWebUi.openSettingsTab();
+      mainWebUi.commandOpenSettingsTab();
       break;
       
     case MENU_ITEM_DEVELOPER_TOOLS:
-      const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-      developerToolMenu.checked = ! developerToolMenu.checked;
-      WebIpc.devToolsRequest(developerToolMenu.checked);
+      commandToogleDeveloperTools();
       break;
 
     case MENU_ITEM_ABOUT:
-      mainWebUi.openAboutTab();
+      mainWebUi.commandOpenAboutTab();
       break;
       
     case MENU_ITEM_RELOAD_CSS:
-      reloadThemeContents();
+      commandReloadThemeContents();
       break;
 
     default:
       return false;
   }
   return true;  
+}
+// FIXME ^ obsolete ----------------------------
+
+
+
+
+
+
+function registerCommands(extensionManager: ExtensionManager): void {
+  const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+  commands.registerCommand("extraterm:window.toggleDeveloperTools", commandToogleDeveloperTools);
+  commands.registerCommand("extraterm:window.reloadCss", commandReloadThemeContents);
+
+  EtTerminal.registerCommands(extensionManager);
+  TextCommandsRegisterCommands(extensionManager);
+
+  extensionManager.getExtensionContextByName("internal-commands").debugRegisteredCommands();
+}
+
+function commandToogleDeveloperTools(): void {
+  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
+  developerToolMenu.checked = ! developerToolMenu.checked;
+  WebIpc.devToolsRequest(developerToolMenu.checked);
+}
+
+function commandReloadThemeContents(): void {
+  reloadThemeContents();
 }
 
 function setupOSXEmptyMenus(): void {
@@ -371,7 +398,7 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
       {
         label: 'About Extraterm',
         click(item, focusedWindow) {
-          mainWebUi.openAboutTab();
+          mainWebUi.commandOpenAboutTab();
         },
       },
       {
@@ -380,7 +407,7 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
       {
         label: 'Preferences...',
         click(item, focusedWindow) {
-          mainWebUi.openSettingsTab();
+          mainWebUi.commandOpenSettingsTab();
         },
       },
       {
@@ -574,8 +601,7 @@ function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor:
 }
 
 function startUpCommandPalette(): void {
-  commandPalette = new CommandPalette(extensionManager, keyBindingManager,
-                                      { executeCommand, getCommands: getCommandPaletteEntries });
+  commandPalette = new CommandPalette(extensionManager, keyBindingManager);
 }
 
 function startUpApplicationContextMenu(): void {

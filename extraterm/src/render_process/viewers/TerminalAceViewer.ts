@@ -28,6 +28,7 @@ import { Disposable } from 'extraterm-extension-api';
 
 import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
+import { TextEditor } from './TextEditorType';
 
 type KeybindingsManager = keybindingmanager.KeybindingsManager;
 
@@ -69,7 +70,7 @@ function getCssText(): string {
 
 @WebComponent({tag: "et-terminal-ace-viewer"})
 export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeybindingsManager,
-    SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
+    SupportsClipboardPaste.SupportsClipboardPaste, TextEditor, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
@@ -927,6 +928,15 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
   }
   
+  executeAceCommand(command: string): void {
+    const aceCommand = this._aceEditor.commands.getCommandByName(command);
+    if (aceCommand == null) {
+      this._log.warn(`executeAceCommand() couldn't find Ace command '${command}'.`);
+      return;
+    }
+    this._aceEditor.commands.exec(aceCommand, this._aceEditor);
+  }
+
   // ----------------------------------------------------------------------
   //
   //   #    #                                                 

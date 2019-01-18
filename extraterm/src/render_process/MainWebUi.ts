@@ -155,6 +155,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._extensionManager = extensionManager;
+    this._registerCommands(extensionManager);
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
@@ -690,7 +691,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
 
-  openSettingsTab(tabName: string=null): void {
+  commandOpenSettingsTab(tabName: string=null): void {
     const settingsTab = this._getSettingsTab();
     if (settingsTab != null) {
       this._switchToTab(settingsTab);
@@ -709,7 +710,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
   
-  openAboutTab(): void {
+  commandOpenAboutTab(): void {
     const aboutTabs = this._splitLayout.getAllTabContents().filter( (el) => el instanceof AboutTab );
     if (aboutTabs.length !== 0) {
       this._switchToTab(aboutTabs[0]);
@@ -1189,6 +1190,104 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
     return true;
   }
+
+
+  private _registerCommands(extensionManager: ExtensionManager): void {
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+    commands.registerCommand("extraterm:window.newTerminal", (args: any) => this._commandNewTerminal(args));
+    commands.registerCommand("extraterm:window.focusTabLeft", (args: any) => this._commandFocusTabLeft());
+    commands.registerCommand("extraterm:window.focusTabRight", (args: any) => this._commandFocusTabRight());
+    commands.registerCommand("extraterm:window.focusPaneLeft", (args: any) => this._commandFocusPaneLeft());
+    commands.registerCommand("extraterm:window.focusPaneRight", (args: any) => this._commandFocusPaneRight());
+    commands.registerCommand("extraterm:window.focusPaneAbove", (args: any) => this._commandFocusPaneAbove());
+    commands.registerCommand("extraterm:window.focusPaneBelow", (args: any) => this._commandFocusPaneBelow());
+    commands.registerCommand("extraterm:window.closeTab", (args: any) => this._commandCloseTab());
+    commands.registerCommand("extraterm:window.horizontalSplit", (args: any) => this._commandHorizontalSplit());
+    commands.registerCommand("extraterm:window.verticalSplit", (args: any) => this._commandVerticalSplit());
+    commands.registerCommand("extraterm:window.closePane", (args: any) => this._commandClosePane());
+    commands.registerCommand("extraterm:window.moveTabLeft", (args: any) => this._commandMoveTabLeft());
+    commands.registerCommand("extraterm:window.moveTabRight", (args: any) => this._commandMoveTabRight());
+    commands.registerCommand("extraterm:window.moveTabUp", (args: any) => this._commandMoveTabUp());
+    commands.registerCommand("extraterm:window.moveTabDown", (args: any) => this._commandMoveTabDown());
+    commands.registerCommand("extraterm:window.openAbout", (args: any) => this.commandOpenAboutTab());
+    commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettingsTab());
+  }
+
+  private _getActiveTabElement(): Element {
+    return this._extensionManager.getActiveTerminal();
+  }
+
+  private _commandNewTerminal(args: any): void {
+    let sessionUuid = (<any>args).sessionUuid;
+    if (sessionUuid == null) {
+      sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
+    }
+
+    this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(this._getActiveTabElement()), sessionUuid));
+  }
+
+  private _commandFocusTabLeft(): void {
+    this._shiftTab(this._tabWidgetFromElement(this._getActiveTabElement()), -1);
+  }
+    
+  private _commandFocusTabRight(): void {
+    this._shiftTab(this._tabWidgetFromElement(this._getActiveTabElement()), 1);
+  }
+
+  private _commandFocusPaneLeft(): void {
+    this._focusPaneLeft(this._getActiveTabElement());
+  }
+
+  private _commandFocusPaneRight(): void {
+    this._focusPaneRight(this._getActiveTabElement());
+  }
+
+  private _commandFocusPaneAbove(): void {
+    this._focusPaneAbove(this._getActiveTabElement());
+  }
+
+  private _commandFocusPaneBelow(): void {
+    this._focusPaneBelow(this._getActiveTabElement());
+  }
+
+  private _commandCloseTab(): void {
+    this.closeTab(this._getActiveTabElement());
+  }
+
+  private _commandHorizontalSplit(): void {
+    this._horizontalSplit(this._getActiveTabElement());
+  }
+
+  private _commandVerticalSplit(): void {
+    this._verticalSplit(this._getActiveTabElement());
+  }
+
+  private _commandClosePane(): void {
+    this._closeSplit(this._getActiveTabElement());
+  }
+
+  private _commandMoveTabLeft(): void {
+    this._moveTabElementLeft(this._getActiveTabElement());
+  }
+
+  private _commandMoveTabRight(): void {
+    this._moveTabElementRight(this._getActiveTabElement());
+  }
+
+  private _commandMoveTabUp(): void {
+    this._moveTabElementUp(this._getActiveTabElement());
+  }
+
+  private _commandMoveTabDown(): void {
+    this._moveTabElementDown(this._getActiveTabElement());
+  }
+
+
+
+
+
+
+
 
   private _setupPtyIpc(): void {
     this._ptyIpcBridge = new PtyIpcBridge();
