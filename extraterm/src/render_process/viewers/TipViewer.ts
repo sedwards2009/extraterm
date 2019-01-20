@@ -290,14 +290,13 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
     // Replace the kbd elements with the requested keyboard short cuts.
     const kbdElements = contentDiv.querySelectorAll("span."+CLASS_KEYCAP);
     DomUtils.toArray(kbdElements).forEach( (kbd) => {
-      const dataContext = kbd.getAttribute("data-context");
       const dataCommand = kbd.getAttribute("data-command");
-      if (dataContext !== null && dataCommand !== null) {
-        const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(dataContext);
+      if (dataCommand !== null) {
+        const keyBindings = this._keybindingsManager.getKeybindingsMapping();
         if (keyBindings != null) {
-          const shortcut = keyBindings.mapCommandToReadableKeyStroke(dataCommand);
-          if (shortcut !== null) {
-            kbd.innerHTML = `<span>${he.encode(shortcut)}</span>`;
+          const shortcut = keyBindings.mapCommandToReadableKeyStrokes(dataCommand);
+          if (shortcut.length !== 0) {
+            kbd.innerHTML = `<span>${he.encode(shortcut[0])}</span>`;
           } else {
             kbd.parentNode.removeChild(kbd);
           }

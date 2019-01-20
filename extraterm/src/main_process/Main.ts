@@ -490,12 +490,11 @@ const _log = getLogger("main");
 function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig): SystemConfig {
   let homeDir = app.getPath('home');
   
-  const keyBindingsJSON = keybindingsIOManager.readKeybindingsJson(config.keybindingsName);
-
+  const keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(config.keybindingsName);
   return {
     homeDir,
     applicationVersion: packageJson.version,
-    keybindingsContexts: keyBindingsJSON,
+    keybindingsFile,
     keybindingsInfoList: keybindingsIOManager.getInfoList(),
     availableFonts: getFonts(),
     titleBarStyle,
@@ -1041,7 +1040,7 @@ function handleKeybindingsRename(msg: Messages.KeybindingsCopyMessage): void {
 }
 
 function handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessage): Messages.KeybindingsReadMessage {
-  const keybindings = keybindingsIOManager.readKeybindingsJson(msg.name);
+  const keybindings = keybindingsIOManager.readKeybindingsFileByName(msg.name);
   const reply: Messages.KeybindingsReadMessage = {
     type: Messages.MessageType.READ_KEYBINDINGS,
     name: msg.name,
@@ -1056,7 +1055,7 @@ function handleKeybindingsUpdate(msg: Messages.KeybindingsUpdateMessage): void {
   // Broadcast the updated bindings.
   const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-  systemConfig.keybindingsContexts = keybindingsIOManager.readKeybindingsJson(generalConfig.keybindingsName);
+  systemConfig.keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(generalConfig.keybindingsName);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 }
 

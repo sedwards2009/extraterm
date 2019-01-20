@@ -257,7 +257,7 @@ export function setupUserConfig(themeManager: ThemeManager, configDatabase: Conf
       if (newGeneralConfig != null) {
         if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
           const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-          systemConfig.keybindingsContexts = keybindingsIOManager.readKeybindingsJson(newGeneralConfig.keybindingsName);
+          systemConfig.keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(newGeneralConfig.keybindingsName);
           configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
         }
       }

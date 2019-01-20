@@ -13,6 +13,7 @@ import * as WebIpc from '../../WebIpc';
 import * as ThemeTypes from '../../../theme/Theme';
 import { KeybindingsManager } from '../../keybindings/KeyBindingsManager';
 import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
+import { ExtensionManager } from '../../extension/InternalTypes';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 
@@ -21,6 +22,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   private _log: Logger = null;
   private _autoSelect: string = null;
   private _keybindingsManager: KeybindingsManager = null;
+  private _extensionManager: ExtensionManager = null;
 
   constructor() {
     super(KeybindingsSettingsUi, [SYSTEM_CONFIG, GENERAL_CONFIG]);
@@ -120,5 +122,14 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
 
   get keybindingsManager(): KeybindingsManager {
     return this._keybindingsManager;
-  }  
+  } 
+
+  set extensionManager(extensionManager: ExtensionManager) {
+    this._extensionManager = extensionManager;
+    this._getUi().setExtensionManager(extensionManager);
+  }
+  
+  get extensionManager(): ExtensionManager {
+    return this._extensionManager;
+  }
 }

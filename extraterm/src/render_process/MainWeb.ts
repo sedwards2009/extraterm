@@ -41,7 +41,7 @@ import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
-import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject, KeybindingsContexts } from './keybindings/KeyBindingsManager';
+import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject, TermKeybindingsMapping } from './keybindings/KeyBindingsManager';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ApplicationContextMenu } from "./command/ApplicationContextMenu";
 import { registerCommands as TextCommandsRegisterCommands } from "./viewers/TextCommands";
@@ -67,7 +67,7 @@ const _log = getLogger("mainweb");
  * starting up the main component and handling the window directly.
  */
 
-let keyBindingManager: KeybindingsManager = null;
+let keybindingsManager: KeybindingsManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configDatabase: ConfigDatabaseImpl = null;
@@ -86,7 +86,7 @@ export function startUp(closeSplash: () => void): void {
 
   // Get the Config working.
   configDatabase = new ConfigDatabaseImpl();
-  keyBindingManager = new KeybindingsManagerImpl();  // depends on the config.
+  keybindingsManager = new KeybindingsManagerImpl();  // depends on the config.
   const themePromise = WebIpc.requestConfig("*").then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
@@ -170,7 +170,7 @@ function loadFontFaces(): Promise<FontFace[]> {
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
   injectConfigDatabase(mainWebUi, configDatabase);
-  injectKeybindingsManager(mainWebUi, keyBindingManager);
+  injectKeybindingsManager(mainWebUi, keybindingsManager);
   mainWebUi.setExtensionManager(extensionManager);
 
   const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
@@ -484,11 +484,9 @@ async function setupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
-  const keyBindingContexts = loadKeybindingsFromObject(newSystemConfig.keybindingsContexts,
-    process.platform);
-
-  if (! keyBindingContexts.equals(keyBindingManager.getKeybindingsContexts())) {
-    keyBindingManager.setKeybindingsContexts(keyBindingContexts);
+  const keybindingsFile = loadKeybindingsFromObject(newSystemConfig.keybindingsFile, process.platform);
+  if (! keybindingsFile.equals(keybindingsManager.getKeybindingsMapping())) {
+    keybindingsManager.setKeybindingsMapping(keybindingsFile);
   }
 
   if (oldSystemConfig === null ||
@@ -600,7 +598,7 @@ function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor:
 }
 
 function startUpCommandPalette(): void {
-  commandPalette = new CommandPalette(extensionManager, keyBindingManager);
+  commandPalette = new CommandPalette(extensionManager, keybindingsManager);
 }
 
 function startUpApplicationContextMenu(): void {
@@ -692,7 +690,7 @@ class ConfigDatabaseImpl implements ConfigDatabase {
 }
 
 class KeybindingsManagerImpl implements KeybindingsManager {
-  private _keybindingsContexts: KeybindingsContexts = null;
+  private _keybindingsContexts: TermKeybindingsMapping = null;
   private _log: Logger;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
@@ -703,11 +701,11 @@ class KeybindingsManagerImpl implements KeybindingsManager {
     this.onChange = this._onChangeEventEmitter.event;
   }
 
-  getKeybindingsContexts(): KeybindingsContexts {
+  getKeybindingsMapping(): TermKeybindingsMapping {
     return this._keybindingsContexts;
   }
   
-  setKeybindingsContexts(newKeybindingContexts: KeybindingsContexts): void {
+  setKeybindingsMapping(newKeybindingContexts: TermKeybindingsMapping): void {
     this._keybindingsContexts = newKeybindingContexts;
     this._keybindingsContexts.setEnabled(this._enabled);
     this._onChangeEventEmitter.fire(undefined);

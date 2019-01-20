@@ -10,8 +10,8 @@ import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
 import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
 import { Emulator, Platform } from '../../emulator/Term';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-
-const humanText = require('../../keybindings/keybindingstext.json');
+import { ExtensionManager } from '../../extension/InternalTypes';
+import { Category, ExtensionCommandContribution } from '../../../ExtensionMetadata';
 
 export const EVENT_START_KEY_INPUT = "start-key-input";
 export const EVENT_END_KEY_INPUT = "end-key-input";
@@ -19,10 +19,10 @@ export const EVENT_END_KEY_INPUT = "end-key-input";
 type KeybindingsKeyInputState = "read" | "edit" | "conflict";
 
 
-interface CommandKeybinding {
-  contextName: string;
+interface CommandKeybindingPair {
   command: string;
   keybindingString: string;
+  index: number;
 };
 
 
@@ -31,14 +31,22 @@ interface CommandKeybinding {
     "keybindings-key-input": KeybindingsKeyInput
   },
   props: {
-    contextName: String,
-    keybindings: Object, //KeybindingsFile,
+    category: String,
+    categoryName: String,
+    keybindings: Object,      // KeybindingsFile,
+    extensionManager: Object, // ExtensionManager
     readOnly: Boolean,
     searchText: String,
   },
+  watch: {
+    keybindings: {
+      deep: true,
+      handler: () => {},
+    }
+  },
   template: trimBetweenTags(`
 <div>
-  <h3>{{contextHeading}}
+  <h3>{{categoryName}}
     <span v-if="allCommands.length !== commands.length" class="badge">{{commands.length}} / {{allCommands.length}}</span>
   </h3>
   <table v-if="commands.length !== 0" v-bind:class="{'width-100pc': true, 'table-hover': !readOnly}">
@@ -49,10 +57,10 @@ interface CommandKeybinding {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="command in commands" :key="command" class="command-row">
-        <td :title="command">{{commandHumanName(command)}}</td>
+      <tr v-for="command in commands" :key="command.command" class="command-row">
+        <td :title="command">{{command.title}}</td>
         <td class="keybindings-key-colomn">
-          <template v-for="(keybinding, index) in commandToKeybindingsMapping.get(command)">
+          <template v-for="(keybinding, index) in commandToKeybindingsMapping.get(command.command)">
             <br v-if="index !== 0" />
             <div class="keycap">
               <span>{{keybinding.formatHumanReadable()}}</span>
@@ -75,14 +83,14 @@ interface CommandKeybinding {
 
           <button
               v-if="!readOnly && effectiveInputState(command) === 'read'"
-              v-on:click="addKey(command)"
+              v-on:click="addKey(command.command)"
               class="microtool success"
               title="Add keybinding">
             <i class="fas fa-plus"></i>
           </button>
 
           <keybindings-key-input
-            v-if="effectiveInputState(command) === 'edit' && selectedCommand === command"
+            v-if="effectiveInputState(command) === 'edit' && selectedCommand === command.command"
             v-on:${EVENT_SELECTED}="onKeyInputSelected"
             v-on:${EVENT_CANCELED}="onKeyInputCancelled">
           </keybindings-key-input>
@@ -101,51 +109,45 @@ interface CommandKeybinding {
   </table>
 </div>`),
 })
-export class KeybindingsContext extends Vue {
+export class KeybindingsCategory extends Vue {
   // Props
-  contextName: string;
+  category: Category;
+  categoryName: string;
   keybindings: KeybindingsFile;
   readOnly: boolean;
   searchText: string;
+  extensionManager: ExtensionManager;
 
   inputState: KeybindingsKeyInputState = "read";
   selectedCommand = "";
   conflictKey = "";
-  conflictContext = "";
   conflictCommand = "";
 
-  get contextHeading(): string {
-    const str = humanText.contextNames[this.contextName];
-    return str || this.contextName;
+  get allCommands(): ExtensionCommandContribution[] {
+    if (this.extensionManager == null) {
+      return [];
+    }
+    const result = this.extensionManager.queryCommands({categories: [this.category]});
+    return result;
   }
 
-  get allCommands(): string[] {
-    return humanText.contexts[this.contextName];
-  }
-
-  get commands(): string[] {
-    const commandCodes: string[] = [...humanText.contexts[this.contextName]];
-
-    commandCodes.sort( (a,b): number => {
-      const nameA = this.commandHumanName(a);
-      const nameB = this.commandHumanName(b);
-      return nameA < nameB ? -1 : ( nameA > nameB ? 1 : 0);
-    });
+  get commands(): ExtensionCommandContribution[] {
+    const commands = this.allCommands;
 
     if (this.searchText.trim() !== "") {
-      const commandToKeybindingsMapping = this.commandToKeybindingsMapping;
-
       const searchString = this.searchText.toLowerCase().trim();
-      const filteredCommandCodes = commandCodes.filter((command): boolean => {
-        if (this.commandHumanName(command).toLowerCase().indexOf(searchString) !== -1) {
+      const filteredCommands = commands.filter((command): boolean => {
+        if (command.title.toLowerCase().indexOf(searchString) !== -1) {
           return true;
         }
+        const commandToKeybindingsMapping = this.commandToKeybindingsMapping;
 
         // Also match the search string against the current bindings for the command.
-        if ( ! commandToKeybindingsMapping.has(command)) {
+        if ( ! commandToKeybindingsMapping.has(command.command)) {
           return false;
         }
-        const keybindingsList = commandToKeybindingsMapping.get(command);
+
+        const keybindingsList = commandToKeybindingsMapping.get(command.command);
         for (const keybinding of keybindingsList) {
           if (keybinding.formatHumanReadable().toLowerCase().indexOf(searchString) !== -1) {
             return true;
@@ -154,74 +156,54 @@ export class KeybindingsContext extends Vue {
         return false;
 
       });
-      return filteredCommandCodes;
+      return filteredCommands;
     } else {
-      return commandCodes;
+      return commands;
     }
-  }
-
-  get keybindingsFileContext(): Object {
-    return this.keybindings[this.contextName];
-  }
-
-  get conflictContextNames(): string[] {
-    return humanText.contextConflicts[this.contextName];
   }
 
   get commandToKeybindingsMapping(): Map<string, TermKeyStroke[]> {
     const result = new Map<string, TermKeyStroke[]>();
-
-    for (const command of humanText.contexts[this.contextName]) {
-      result.set(command, []);
+    for (const command of this.allCommands) {
+      result.set(command.command, []);
     }
 
-    for (const configKeyString of Object.keys(this.keybindingsFileContext)) {
-      if (configKeyString === "fallthrough") {
-        continue;
-      }
-
-      const command = this.keybindingsFileContext[configKeyString];
-      if ( ! result.has(command)) {
-        result.set(command, []);
-      }
-      result.get(command).push(TermKeyStroke.parseConfigString(configKeyString));
+    for (const commandName of Object.keys(this.keybindings.bindings)) {
+      const shortcuts = this.keybindings.bindings[commandName];
+      result.set(commandName, shortcuts.map(TermKeyStroke.parseConfigString));
     }
     return result;
   }
 
-  effectiveInputState(command: string): KeybindingsKeyInputState {
-    return command === this.selectedCommand ? this.inputState : "read";
-  }
-
-  commandHumanName(commandCode: string): string {
-    const str = humanText.commands[commandCode];
-    return str || commandCode;
+  effectiveInputState(command: ExtensionCommandContribution): KeybindingsKeyInputState {
+    return command.command === this.selectedCommand ? this.inputState : "read";
   }
 
   termConflict(keybinding: TermKeyStroke): boolean {
-    if (this.conflictContextNames.indexOf("emulation") === -1) {
+    if (["application", "window", "terminal", "viewer"].indexOf(this.category) === -1) {
       return false;
     }
+
     return Emulator.isKeySupported(<Platform> process.platform, keybinding);
   }
 
   deleteKey(keybinding: TermKeyStroke): void {
     const commandConfig = this._findCommandByKeybinding(keybinding);
     if (commandConfig != null) {
-        Vue.delete(this.keybindings[commandConfig.contextName], commandConfig.keybindingString);
+      const list = this.keybindings.bindings[commandConfig.command];
+      Vue.delete(list, commandConfig.index);
     }
   }
 
-  private _findCommandByKeybinding(keybinding: TermKeyStroke): CommandKeybinding {
-    for (const contextName of [this.contextName, ...this.conflictContextNames]) {
-      const context = this.keybindings[contextName];
-      if (context == null) {
-        continue;
-      }
-      for (const keybindingString in context) {
-        const currentKeybinding = TermKeyStroke.parseConfigString(keybindingString);
-        if (currentKeybinding.equals(keybinding)) {
-          return {contextName, command: context[keybindingString], keybindingString};
+  private _findCommandByKeybinding(keybinding: TermKeyStroke): CommandKeybindingPair {
+    for (const commandContrib of this.allCommands) {
+      const shortcuts = this.keybindings.bindings[commandContrib.command];
+      if (shortcuts != null) {
+        for (let i=0; i<shortcuts.length; i++) {
+          const currentKeybinding = TermKeyStroke.parseConfigString(shortcuts[i]);
+          if (currentKeybinding.equals(keybinding)) {
+            return { command: commandContrib.command, keybindingString: shortcuts[i], index: i };
+          }
         }
       }
     }
@@ -234,21 +216,21 @@ export class KeybindingsContext extends Vue {
     this.$emit(EVENT_START_KEY_INPUT);
   }
 
-  get selectedCommandHumanName(): string {
-    return this.commandHumanName(this.selectedCommand);
-  }
-
   onKeyInputSelected(keybindingString: string): void {
     const newKeybinding = TermKeyStroke.parseConfigString(keybindingString);
 
     const existingCommandConfig = this._findCommandByKeybinding(newKeybinding);
     if (existingCommandConfig == null) {
-      Vue.set(this.keybindingsFileContext, keybindingString, this.selectedCommand);
+      let newShortcuts: string[] = null;
+      if (this.keybindings.bindings[this.selectedCommand] == null) {
+        newShortcuts = [keybindingString];
+      } else {
+        newShortcuts = [...this.keybindings.bindings[this.selectedCommand], keybindingString];
+      }
+      Vue.set(this.keybindings.bindings, this.selectedCommand, newShortcuts);
       this.inputState = "read";
     } else {
-
       this.conflictKey = keybindingString;
-      this.conflictContext = existingCommandConfig.contextName;
       this.conflictCommand = existingCommandConfig.command;
       this.inputState = "conflict";
     }
@@ -268,8 +250,12 @@ export class KeybindingsContext extends Vue {
   onReplaceConflict(): void {
     const newKeybinding = TermKeyStroke.parseConfigString(this.conflictKey);
     const existingCommandConfig = this._findCommandByKeybinding(newKeybinding);
-    Vue.delete(this.keybindings[existingCommandConfig.contextName], existingCommandConfig.keybindingString);
-    Vue.set(this.keybindings[this.contextName], this.conflictKey, this.selectedCommand);
+
+    const shortcutsList = this.keybindings.bindings[existingCommandConfig.command];
+    Vue.delete(shortcutsList, existingCommandConfig.index);
+    
+    const newShortcuts = [...shortcutsList, this.conflictKey];
+    Vue.set(this.keybindings.bindings, existingCommandConfig.command, newShortcuts);
 
     this.selectedCommand = "";
     this.conflictKey = "";

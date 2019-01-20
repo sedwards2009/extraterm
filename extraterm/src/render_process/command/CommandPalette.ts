@@ -54,7 +54,8 @@ export class CommandPalette {
     doLater( () => {
       const entries = this.extensionManager.queryCommands({
         commandPalette: true,
-        categories: ["application", "window", "textEditing", "terminal", "terminalCursorMode", "viewer"]
+        categories: ["application", "window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
+        when: true
       });
   
       const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {

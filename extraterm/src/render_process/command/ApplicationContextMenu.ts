@@ -57,7 +57,8 @@ export class ApplicationContextMenu {
     doLater( () => {
       const entries = this.extensionManager.queryCommands({
         contextMenu: true,
-        categories: ["window", "textEditing", "terminal", "terminalCursorMode", "viewer"]
+        categories: ["window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
+        when: true
       });
 
       this._menuEntries = entries.map((entry): CommandAndShortcut => {

@@ -1,13 +1,11 @@
 /*
- * Copyright 2016-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as _ from 'lodash';
 import { Logger, getLogger, log } from "extraterm-logging";
-
-const FALLTHROUGH = "fallthrough";
-
+import { KeybindingsFile } from './KeybindingsFile';
 
 export interface KeyStrokeOptions {
   altKey: boolean;
@@ -182,7 +180,8 @@ export function eventKeyNameToConfigKeyName(eventKeyName: string): string {
 export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
 
   readonly keyStrokeList: KS[] = [];
-  protected _keyStrokeToCommandMapping = new Map<KS, string>();
+  protected _keyStrokeHashToCommandsMapping = new Map<string, string[]>();
+  protected _commandToKeyStrokesMapping = new Map<string, KS[]>();
   private _log: Logger = null;
   private _platform: string;
   private _enabled = true;
@@ -190,19 +189,37 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
   // FIXME remove this and the param below
   private _parseConfigKeyStrokeString: (config: string) => KS = null;
 
-  constructor(parseConfigString: (config: string) => KS, mappingName: string, allMappingsJson: Object, platform: string) {
+  constructor(parseConfigString: (config: string) => KS, keybindingsFile: KeybindingsFile, platform: string) {
     this._log = getLogger("KeybindingMapping", this);
     this._parseConfigKeyStrokeString = parseConfigString;
     this._platform = platform;
-    this._gatherPairs(mappingName, allMappingsJson).forEach((pair) => {
-      const keybinding = this._parseConfigKeyStrokeString(pair.key);
-      if (keybinding !== null) {
-        this._keyStrokeToCommandMapping.set(keybinding, pair.value);
-        this.keyStrokeList.push(keybinding);
-      } else {
-        this._log.warn(`Unable to parse key binding '${pair.key}'. Skipping.`);
+
+    this._buildIndex(keybindingsFile.bindings);
+  }
+
+  private _buildIndex(bindings: {[key: string]: string[]}): void {
+    for (const key in bindings) {
+      const shortcutList = bindings[key];
+
+      const ksList = shortcutList.map(this._parseConfigKeyStrokeString);
+
+      for (const ks of ksList) {
+        this.keyStrokeList.push(ks);
       }
-    });
+
+      const ksHashList = ksList.map(ks => ks.hashString());
+
+      this._commandToKeyStrokesMapping.set(key, ksList);
+
+      for (const ksHash of ksHashList) {
+        let list = this._keyStrokeHashToCommandsMapping.get(ksHash);
+        if (list == null) {
+          list = [];
+          this._keyStrokeHashToCommandsMapping.set(ksHash, list);
+        }
+        list.push(key);
+      }
+    }
   }
 
   isEnabled(): boolean {
@@ -225,46 +242,16 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
       return false;
     }
 
-    const myBindings = this.keyStrokeList.map(b => this._makeKey(b));
-    const otherBindings = other.keyStrokeList.map(b => this._makeKey(b));
+    const myBindings = [...this._keyStrokeHashToCommandsMapping.keys()];
+    const otherBindings = [...other._keyStrokeHashToCommandsMapping.keys()];
     myBindings.sort();
     otherBindings.sort();
 
     return _.isEqual(myBindings, otherBindings);
   }
 
-  private _makeKey(binding: KS): string {
-    const command = this._keyStrokeToCommandMapping.get(binding);
-    return mapString(command) + ":" + binding.hashString();
-  }
-
-  private _gatherPairs(name: string, allMappings: Object): { key: string, value: string}[] {
-    const mapping = allMappings[name];
-    if (mapping === undefined) {
-      this._log.warn(`Unable to find mapping with name '${name}'.`);
-      return [];
-    }
-    
-    let result = [];
-    if (mapping[FALLTHROUGH] !== undefined) {
-      result = this._gatherPairs(mapping[FALLTHROUGH], allMappings);
-    }
-    for (let key in mapping) {
-      if (key !== FALLTHROUGH) {
-        result.push( { key: key, value: mapping[key] } );
-      }
-    }
-    return result;
-  }
-  
   getKeyStrokesForCommand(command: string): KS[] {
-    const result: KS[] = [];
-    for (const keyStroke of this.keyStrokeList) {
-      const keyStrokeCommand = this._keyStrokeToCommandMapping.get(keyStroke);
-      if (command === keyStrokeCommand) {
-        result.push(keyStroke);
-      }
-    }
-    return result;
+    const result = this._commandToKeyStrokesMapping.get(command);
+    return result || [];
   }
 }

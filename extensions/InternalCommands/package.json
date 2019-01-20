@@ -513,7 +513,7 @@
         "when": "isTextEditor"
       },
       {
-        "command": "extraterm:openCommandPalette",
+        "command": "extraterm:application.openCommandPalette",
         "title": "Open command palette",
         "category": "window",
         "when": "",

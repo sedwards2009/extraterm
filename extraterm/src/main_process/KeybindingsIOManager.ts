@@ -14,8 +14,6 @@ import { KeybindingsFile } from '../keybindings/KeybindingsFile';
 import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from 'extraterm-extension-api';
 
-const humanText = require('../render_process/keybindings/keybindingstext.json');
-
 
 export class KeybindingsIOManager {
 
@@ -92,7 +90,7 @@ export class KeybindingsIOManager {
     return null;
   }
 
-  readKeybindingsJson(name: string): KeybindingsFile {
+  readKeybindingsFileByName(name: string): KeybindingsFile {
     const info = this._getInfoByName(name);
     const fullPath = path.join(info.path, info.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
@@ -101,14 +99,9 @@ export class KeybindingsIOManager {
     if (keyBindingsJSON == null) {
       keyBindingsJSON = {};
     }
-
-    // Eensure that an object exists for every context.
-    for (const key of Object.keys(humanText.contexts)) {
-      if (keyBindingsJSON[key] == null) {
-        keyBindingsJSON[key] = {};
-      }
+    if (keyBindingsJSON.bindings == null) {
+      keyBindingsJSON.bindings = {};
     }
-
     return keyBindingsJSON;
   }
 

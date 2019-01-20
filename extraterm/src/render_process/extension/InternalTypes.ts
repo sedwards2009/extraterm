@@ -17,6 +17,7 @@ export interface CommandQueryOptions {
   categories?: Category[];
   commandPalette?: boolean;
   contextMenu?: boolean;
+  when?: boolean;
 }
 
 export interface ExtensionManager {

@@ -197,26 +197,27 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
   }
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[] {
+    const truePredicate = (command: ExtensionCommandContribution): boolean => true;
 
-    let commandPalettePredicate = (command: ExtensionCommandContribution): boolean => true;
+    let commandPalettePredicate = truePredicate;
     if (options.commandPalette != null) {
       const commandPalette = options.commandPalette;
       commandPalettePredicate = command => command.commandPalette === commandPalette;
     }
 
-    let contextMenuPredicate = (command: ExtensionCommandContribution): boolean => true;
+    let contextMenuPredicate = truePredicate;
     if (options.contextMenu != null) {
       const contextMenu = options.contextMenu;
       contextMenuPredicate = command => command.contextMenu === contextMenu;
     }
 
-    let categoryPredicate = (command: ExtensionCommandContribution): boolean => true;
+    let categoryPredicate = truePredicate;
     if (options.categories != null) {
       const categories = options.categories;
       categoryPredicate = command => categories.indexOf(command.category) !== -1;
     }
 
-    const whenPredicate = this._createWhenPredicate();
+    const whenPredicate = options.when === true ? this._createWhenPredicate() : truePredicate;
 
     const entries: ExtensionCommandContribution[] = [];
     for (const metadata of this._extensionMetadata) {

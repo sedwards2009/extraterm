@@ -8,37 +8,38 @@ import "jest"
 import * as SourceMapSupport from 'source-map-support';
 import * as KeybindingsManager from './KeyBindingsManager';
 import { eventKeyNameToConfigKeyName } from '../../keybindings/KeybindingsMapping';
+import { KeybindingsFile } from "../../keybindings/KeybindingsFile";
 
 SourceMapSupport.install();
 
-const keyBindingsMap = {
-  "editor": {
-    "Ctrl-o": "open",
-    "Ctrl-Space": "togglemode",
-    "Ctrl-Plus": "zoom",
-    "Alt-Shift-Cmd-A": "all",
-    "space": "makespace",
-    "alt - shift - S": "smeg",
-    "W-ctrl-shift": "closewindow",
-    "shift-shift-shift-Z": "sleep",
-    "PageUp": "pageup",
-    "home": "gohome",
-    "Alt-Tab": "dedent",
-    "Ctrl-Tab": "otherpane",
-    "End": "finish",
-    "Up": "up",
-    "Down": "down",
-    "F2": "rename",
-    "Alt-Left": "select-left",
-    "Ctrl-c": "break",
-    "Ctrl-Shift-C": "bigbreak",
-    "Ctrl-Alt-.": "moveTabRight"
+const keyBindingsMap: KeybindingsFile = {
+  name: "Test file",
+  bindings: {
+    "open": ["Ctrl-o"],
+    "togglemode": ["Ctrl-Space"],
+    "zoom": ["Ctrl-Plus"],
+    "all": ["Alt-Shift-Cmd-A"],
+    "makespace": ["space"],
+    "smeg": ["alt - shift - S"],
+    "closewindow": ["W-ctrl-shift"],
+    "sleep": ["shift-shift-shift-Z"],
+    "pageup": ["PageUp"],
+    "gohome": ["home"],
+    "dedent": ["Alt-Tab"],
+    "otherpane": ["Ctrl-Tab"],
+    "finish": ["End"],
+    "up": ["Up"],
+    "down": ["Down"],
+    "rename": ["F2"],
+    "select-left": ["Alt-Left"],
+    "break": ["Ctrl-c"],
+    "bigbreak": ["Ctrl-Shift-C"],
+    "moveTabRight": ["Ctrl-Alt-."],
   }
 };
 
 test("context", () => {
-  const cutsContexts = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
-  const editorKeybindings = cutsContexts.context("editor");
+  const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
   
   expect(editorKeybindings).not.toBe(null);
   expect(editorKeybindings).not.toBe(undefined);
@@ -86,9 +87,8 @@ describe.each([
   [{ isComposing: false, altKey: true, ctrlKey: true, metaKey: false, shiftKey: false, key: ".", keyCode: 190 }, "moveTabRight"],
 ])("", (input, output: string) => {
   test(`mapEventToCommand() -> ${output}"`, () => {  
-    const cutsContexts = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
-    const editorKeybindings = cutsContexts.context("editor");
-    expect(editorKeybindings.mapEventToCommand(input)).toBe(output);
+    const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
+    expect(editorKeybindings.mapEventToCommands(input)).toEqual([output]);
   });
 });
 
@@ -104,8 +104,7 @@ describe.each([
   ["rename", "F2"],
 ])("", (input, output) => {
   test(`mapCommandToReadableKeyStroke("${input}")`, () => {
-    const cutsContexts = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
-    const editorKeybindings = cutsContexts.context("editor");
-    expect(editorKeybindings.mapCommandToReadableKeyStroke(input)).toBe(output);
+    const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
+    expect(editorKeybindings.mapCommandToReadableKeyStrokes(input)).toEqual([output]);
   });
 });

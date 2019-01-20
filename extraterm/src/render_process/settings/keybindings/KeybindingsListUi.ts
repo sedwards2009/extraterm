@@ -1,66 +1,76 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
-import { KeybindingsContext, EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
+import { KeybindingsCategory, EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
 import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { ExtensionManager } from '../../extension/InternalTypes';
+import { Category } from '../../../ExtensionMetadata';
 
-
-const humanText = require('../../keybindings/keybindingstext.json');
+const categoryNames = {
+  "global": "Global",
+  "application": "Application",
+  "window": "Window",
+  "textEditing": "Text Editor",
+  "terminal": "Terminal",
+  "terminalCursorMode": "Terminal: Cursor Mode",
+  "viewer": "Viewers"
+};
 
 
 @Component(
   {
     components: {
-      "keybindings-context": KeybindingsContext
+      "keybindings-category": KeybindingsCategory
     },
     props: {
-      keybindings: Object, //KeybindingsFile,
+      extensionManager: Object, // ExtensionManager;
+      keybindings: Object,      // KeybindingsFile,
       readOnly: Boolean,
       searchText: String
     },
     template: trimBetweenTags(`
     <div>
-      <keybindings-context
-        v-for="contextName in humanContexts"
-        :contextName="contextName"
-        :key="contextName"
+      <keybindings-category
+        v-for="category in categories"
+        :key="category"
+        :category="category"
+        :categoryName="getCategoryName(category)"
         :keybindings="keybindings"
         :readOnly="readOnly"
         :searchText="searchText"
+        :extensionManager="extensionManager"
         v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
         v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
-      </keybindings-context>
+      </keybindings-category>
     </div>`)
   }
 )
 export class KeybindingsList extends Vue {
   // Props
   keybindings: KeybindingsFile;
+  extensionManager: ExtensionManager;
   readOnly: boolean;
   searchText: string;
 
-  get humanContexts(): string[] {
-    return Object.keys(humanText.contexts).sort((a,b) => {
-      const aName = this._contextHumanName(a).toLowerCase();
-      const bName = this._contextHumanName(b).toLowerCase();
-      if (aName < bName) {
-        return -1;
-      }
-
-      if (aName > bName) {
-        return 1;
-      }
-      return 0;
-    });
+  get categories(): Category[] {
+    const categories: Category[] = [
+      "global",
+      "application",
+      "window",
+      "textEditing",
+      "terminal",
+      "terminalCursorMode",
+      "viewer"
+    ];
+    return categories;
   }
 
-  private _contextHumanName(name: string): string {
-    const str = humanText.contextNames[name];
-    return str || name;
+  getCategoryName(category: Category): string {
+    return categoryNames[category];
   }
 }

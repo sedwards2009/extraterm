@@ -5,6 +5,7 @@
  */
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { Event, SessionConfiguration } from 'extraterm-extension-api';
+import { KeybindingsFile } from './keybindings/KeybindingsFile';
 
 export type ShowTipsStrEnum = "always" | "daily" | "never";
 export type TitleBarStyle = "native" | "theme" | "compact";
@@ -82,7 +83,7 @@ export interface SystemConfig {
   homeDir: string;
   applicationVersion: string;
   keybindingsInfoList: KeybindingsInfo[];
-  keybindingsContexts: object;
+  keybindingsFile: KeybindingsFile;
   
   availableFonts: FontInfo[];
   titleBarStyle: TitleBarStyle;
