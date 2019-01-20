@@ -12,7 +12,7 @@ import { SettingsBase } from '../SettingsBase';
 import * as WebIpc from '../../WebIpc';
 import * as ThemeTypes from '../../../theme/Theme';
 import { KeybindingsManager } from '../../keybindings/KeyBindingsManager';
-import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
+import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategoryUi';
 import { ExtensionManager } from '../../extension/InternalTypes';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";

@@ -10,7 +10,7 @@ import * as _ from 'lodash';
 import { trimBetweenTags} from 'extraterm-trim-between-tags';
 import { KeybindingsInfo } from '../../../Config';
 import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
-import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
+import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategoryUi';
 import { KeybindingsList } from './KeybindingsListUi';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
 import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
