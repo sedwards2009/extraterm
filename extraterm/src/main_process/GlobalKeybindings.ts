@@ -10,13 +10,13 @@ import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { GeneralConfig } from "../Config";
 import { GENERAL_CONFIG } from "../Config";
 import { ConfigChangeEvent } from "../Config";
-import { KeyStroke } from "../keybindings/KeybindingsMapping";
-import { KeybindingsMapping } from "../keybindings/KeybindingsMapping";
+import { KeyStroke, KeybindingsMapping } from "../keybindings/KeybindingsMapping";
 import { getLogger, Logger } from "extraterm-logging";
 import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from 'extraterm-extension-api';
 import { globalShortcut } from 'electron';
 import { doLater } from '../utils/DoLater';
+import { TermKeybindingsMapping } from '../render_process/keybindings/KeyBindingsManager';
 
 
 export class GlobalKeybindingsManager {
@@ -77,15 +77,14 @@ export class GlobalKeybindingsManager {
   private _createGlobalKeybindings(): void {
     globalShortcut.unregisterAll();
     const generalConfig = <GeneralConfig> this.configDatabase.getConfig(GENERAL_CONFIG);
-    const keybindings = this.keybindingsIOManager.readKeybindingsJson(generalConfig.keybindingsName);
-    const globalKeybindings = new KeybindingsMapping(KeyStroke.parseConfigString, "global", keybindings,
-                                                      process.platform);
+    const keybindingsFile = this.keybindingsIOManager.readKeybindingsFileByName(generalConfig.keybindingsName);
+    const globalKeybindings = new KeybindingsMapping(KeyStroke.parseConfigString, keybindingsFile, process.platform);
   
     const commandsToEmitters = {
-      "globalMaximize": this._onMaximizeEventEmitter,
-      "globalHide": this._onHideWindowEventEmitter,
-      "globalShow": this._onShowWindowEventEmitter,
-      "globalToggleShowHide": this._onToggleShowHideWindowEventEmitter,
+      "extraterm:global.globalMaximize": this._onMaximizeEventEmitter,
+      "extraterm:global.globalHide": this._onHideWindowEventEmitter,
+      "extraterm:global.globalShow": this._onShowWindowEventEmitter,
+      "extraterm:global.globalToggleShowHide": this._onToggleShowHideWindowEventEmitter,
     };
 
     for (const command in commandsToEmitters) {
