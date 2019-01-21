@@ -50,11 +50,7 @@ type ThemeInfo = ThemeTypes.ThemeInfo;
 
 SourceMapSupport.install();
 
-const PALETTE_GROUP = "mainweb";
-const MENU_ITEM_SETTINGS = 'settings';
 const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
-const MENU_ITEM_ABOUT = 'about';
-const MENU_ITEM_RELOAD_CSS = 'reload_css';
 const ID_MAIN_MENU = "ID_MAIN_MENU";
 const ID_MENU_BUTTON = "ID_MENU_BUTTON";
 const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
@@ -263,20 +259,19 @@ function setUpWindowControls(): void {
   });
 }
 
-
 function startUpMainMenu(): void {
   const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
     <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
-        <${MenuItem.TAG_NAME} icon="extraicon extraicon-pocketknife" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
-        <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
-        <${MenuItem.TAG_NAME} icon="far fa-lightbulb" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="extraicon extraicon-pocketknife" data-command="extraterm:window.openSettings">Settings</${MenuItem.TAG_NAME}>
+        <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" data-command="extraterm:window.toggleDeveloperTools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="far fa-lightbulb" data-command="extraterm:window.openAbout">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
   `));
   window.document.body.appendChild(contextMenuFragment)
 
   const mainMenu = window.document.getElementById(ID_MAIN_MENU);
   mainMenu.addEventListener('selected', (ev: CustomEvent) => {
-    executeMenuCommand(ev.detail.name);
+    extensionManager.executeCommand((<HTMLElement> ev.detail.menuItem).getAttribute("data-command"));
   });
 
   const menuButton = document.getElementById(ID_MENU_BUTTON);
@@ -319,47 +314,6 @@ function startUpExtensions() {
   extensionManager.startUp();
 }
 
-function executeMenuCommand(command: string): boolean {
-  if (command === MENU_ITEM_DEVELOPER_TOOLS) {
-    // Unflip what the user did to the state of the developer tools check box for a moment.
-    // Let executeCommand() toggle the checkbox itself. 
-    const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-    developerToolMenu.checked = ! developerToolMenu.checked;
-  }
-
-  return executeCommand(command);
-}
-
-function executeCommand(commandId: string, options?: object): boolean {
-  switch(commandId) {
-    case MENU_ITEM_SETTINGS:
-      mainWebUi.commandOpenSettingsTab();
-      break;
-      
-    case MENU_ITEM_DEVELOPER_TOOLS:
-      commandToogleDeveloperTools();
-      break;
-
-    case MENU_ITEM_ABOUT:
-      mainWebUi.commandOpenAboutTab();
-      break;
-      
-    case MENU_ITEM_RELOAD_CSS:
-      commandReloadThemeContents();
-      break;
-
-    default:
-      return false;
-  }
-  return true;  
-}
-// FIXME ^ obsolete ----------------------------
-
-
-
-
-
-
 function registerCommands(extensionManager: ExtensionManager): void {
   const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
   commands.registerCommand("extraterm:window.toggleDeveloperTools", commandToogleDeveloperTools);
@@ -397,7 +351,7 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
       {
         label: 'About Extraterm',
         click(item, focusedWindow) {
-          mainWebUi.commandOpenAboutTab();
+          extensionManager.executeCommand("extraterm:window.openAbout");
         },
       },
       {
@@ -406,7 +360,7 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
       {
         label: 'Preferences...',
         click(item, focusedWindow) {
-          mainWebUi.commandOpenSettingsTab();
+          extensionManager.executeCommand("extraterm:window.openSettings");
         },
       },
       {
