@@ -324,7 +324,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.setTabContainerFactory( (tabWidget: TabWidget, tab: Tab, tabContent: Element): Element => {
       const divContainer = document.createElement("DIV");
       divContainer.classList.add(CLASS_TAB_CONTENT);
-      divContainer.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabContent), true);
       return divContainer;
     });
 
@@ -959,45 +958,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
     return null;
   }
-
-  // ----------------------------------------------------------------------
-  //
-  //   #    #                                                 
-  //   #   #  ###### #   # #####   ####    ##   #####  #####  
-  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
-  //   ###    #####    #   #####  #    # #    # #    # #    # 
-  //   #  #   #        #   #    # #    # ###### #####  #    # 
-  //   #   #  #        #   #    # #    # #    # #   #  #    # 
-  //   #    # ######   #   #####   ####  #    # #    # #####  
-  //                                                        
-  // ----------------------------------------------------------------------
-
-  private _handleKeyDownCapture(tabContentElement: Element, ev: KeyboardEvent): void {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeybindingsContexts() === null) {
-      return;
-    }
-    
-    const bindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
-    if (bindings === null) {
-      return;
-    }
-    
-    const command = bindings.mapEventToCommand(ev);
-    if (this._extensionManager.executeCommand(command)) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
-  }
-
-  // private _insertCommandKeybindings(commandList: BoundCommand[]): void {
-  //   const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
-  //   if (keyBindings !== null) {
-  //     commandList.forEach( (commandEntry) => {
-  //       const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
-  //       commandEntry.shortcut = shortcut === null ? "" : shortcut;
-  //     });
-  //   }    
-  // }
 
   private _registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;

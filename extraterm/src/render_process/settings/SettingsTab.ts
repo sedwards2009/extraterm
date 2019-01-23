@@ -17,7 +17,6 @@ import { AcceptsExtensionManager, ExtensionManager } from '../extension/Internal
 import * as SupportsDialogStack from "../SupportsDialogStack";
 
 
-const SETTINGS_TAB = "settings-tab";
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 
 
@@ -48,7 +47,6 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     this.updateThemeCss();
     
     shadow.appendChild(component.$el);
-    component.$el.addEventListener('keydown', ev => this._handleKeyDownCapture(ev), true);
     component.$el.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
   }
 
@@ -88,20 +86,6 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._ui.themes = themes;
-  }
-
-  private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._keybindingsManager === null || this._keybindingsManager.getKeybindingsContexts() === null) {
-      return;
-    }
-
-    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(SETTINGS_TAB);
-    const command = keyBindings.mapEventToCommand(ev);
-// FIXME    
-    // if (this._executeCommand(command)) {
-    //   ev.stopPropagation();
-    //   ev.preventDefault();
-    // }
   }
   
   private _handleContextMenuCapture(ev: MouseEvent): void {

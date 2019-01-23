@@ -17,7 +17,7 @@ import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
 import { VisualState, Mode, CursorMoveDetail, CursorEdgeDetail, Edge } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
-import {AcceptsKeybindingsManager, KeybindingsManager} from '../keybindings/KeyBindingsManager';
+import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
 import { ResizeNotifier } from '../../../../packages/extraterm-resize-notifier/main';
 
@@ -38,7 +38,7 @@ const DEBUG_SIZE = false;
 
 
 @WebComponent({tag: "et-image-viewer"})
-export class ImageViewer extends ViewerElement implements AcceptsKeybindingsManager {
+export class ImageViewer extends ViewerElement {
 
   static TAG_NAME = "ET-IMAGE-VIEWER";
   private static _resizeNotifier = new ResizeNotifier();
@@ -54,7 +54,6 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
   }
   
   private _log: Logger;
-  private _keybindingsManager: KeybindingsManager = null;
   private _bulkFileHandle: BulkFileHandle = null;
   private _metadataEventDoLater: DebouncedDoLater = null;
   private _mimeType: string = null;
@@ -138,10 +137,6 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
       this._bulkFileHandle.deref();
       this._bulkFileHandle = null;
     }
-  }
-
-  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
-    this._keybindingsManager = newKeybindingsManager;
   }
 
   getSelectionText(): string {    
@@ -353,55 +348,55 @@ export class ImageViewer extends ViewerElement implements AcceptsKeybindingsMana
   }
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null &&
-        this._mode === Mode.CURSOR) {
+    // if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null &&
+    //     this._mode === Mode.CURSOR) {
           
-      const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_SELECTION_MODE);
-      if (keyBindings !== null) {
+    //   const keyBindings = this._keybindingsManager.getKeybindingsContexts();
+    //   if (keyBindings !== null) {
         
-        const command = keyBindings.mapEventToCommand(ev);
-        if (command !== null) {
-          ev.preventDefault();
-          ev.stopPropagation();
+    //     const command = keyBindings.mapEventToCommand(ev);
+    //     if (command !== null) {
+    //       ev.preventDefault();
+    //       ev.stopPropagation();
           
-          switch (command) {        
-            case COMMAND_GO_UP:
-              // Cursor up
-              if (this._cursorTop !== 0) {
-                const newTop = Math.max(this._cursorTop - SCROLL_STEP, 0);
-                this._cursorTop = newTop;
-                const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-                this.dispatchEvent(event);
+    //       switch (command) {        
+    //         case COMMAND_GO_UP:
+    //           // Cursor up
+    //           if (this._cursorTop !== 0) {
+    //             const newTop = Math.max(this._cursorTop - SCROLL_STEP, 0);
+    //             this._cursorTop = newTop;
+    //             const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+    //             this.dispatchEvent(event);
 
-              } else {
-                const detail: CursorEdgeDetail = { edge: Edge.TOP, ch: 0 };
-                const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-                this.dispatchEvent(event);
-              }
-              break;
+    //           } else {
+    //             const detail: CursorEdgeDetail = { edge: Edge.TOP, ch: 0 };
+    //             const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+    //             this.dispatchEvent(event);
+    //           }
+    //           break;
             
-            case COMMAND_GO_DOWN:
-              // Cursor down          
-              if (this._cursorTop + this._height < this._imageHeight) {
-                const newTop = Math.min(this._imageHeight - this._height, this._cursorTop + SCROLL_STEP);
-                this._cursorTop = newTop;
-                const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-                this.dispatchEvent(event);
+    //         case COMMAND_GO_DOWN:
+    //           // Cursor down          
+    //           if (this._cursorTop + this._height < this._imageHeight) {
+    //             const newTop = Math.min(this._imageHeight - this._height, this._cursorTop + SCROLL_STEP);
+    //             this._cursorTop = newTop;
+    //             const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+    //             this.dispatchEvent(event);
 
-              } else {
-                const detail: CursorEdgeDetail = { edge: Edge.BOTTOM, ch: 0 };
-                const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-                this.dispatchEvent(event);
-              }
-              break;
+    //           } else {
+    //             const detail: CursorEdgeDetail = { edge: Edge.BOTTOM, ch: 0 };
+    //             const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
+    //             this.dispatchEvent(event);
+    //           }
+    //           break;
               
-            default:
-              break;
-          }
-          return;
-        }
-      }
-    }    
+    //         default:
+    //           break;
+    //       }
+    //       return;
+    //     }
+    //   }
+    // }    
   }
 
   private _adjustHeight(newHeight: number): void {

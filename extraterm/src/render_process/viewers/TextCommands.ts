@@ -56,12 +56,14 @@ export function registerCommands(extensionManager: ExtensionManager): void {
     "undo",
     "undoSelection",
     "unescapeShellChars",
-    "goDown",
-    "goUp"
+    "goLineDown",
+    "goLineUp"
   ];
 
   for (const command of aceCommandNames) {
     commands.registerCommand("extraterm:textEditor." + command,
-      (args: any) => extensionManager.getActiveTextEditor().executeAceCommand(command));
+      (args: any) => {
+        extensionManager.getActiveTextEditor().executeAceCommand(command);
+      });
   }
 }

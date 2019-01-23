@@ -124,7 +124,6 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     });
 
     scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
-    scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
 
     scrollerArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
@@ -441,44 +440,6 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   private _resetFontSize(): void {
     this._adjustFontSize(-this._fontSizeAdjustment);
   }
-  
-  // ----------------------------------------------------------------------
-  //
-  //   #    #                                                 
-  //   #   #  ###### #   # #####   ####    ##   #####  #####  
-  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
-  //   ###    #####    #   #####  #    # #    # #    # #    # 
-  //   #  #   #        #   #    # #    # ###### #####  #    # 
-  //   #   #  #        #   #    # #    # #    # #   #  #    # 
-  //   #    # ######   #   #####   ####  #    # #    # #####  
-  //                                                        
-  // ----------------------------------------------------------------------
-
-  private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeybindingsContexts() === null) {
-      return;
-    }
-
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
-    const command = keyBindings.mapEventToCommand(ev);
-// FIXME    
-    // if (this._executeCommand(command)) {
-    //   ev.stopPropagation();
-    //   ev.preventDefault();
-    // }
-  }
-
-  // ********************************************************************
-  //
-  //   #     #                 
-  //   ##   ## #  ####   ####  
-  //   # # # # # #      #    # 
-  //   #  #  # #  ####  #      
-  //   #     # #      # #      
-  //   #     # # #    # #    # 
-  //   #     # #  ####   ####  
-  //
-  // ********************************************************************
 
   private _handleBeforeSelectionChange(ev: CustomEvent): void {
     if (ev.detail.originMouse) {
@@ -533,18 +494,5 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
    */
   private _pasteFromClipboard(): void {
     WebIpc.clipboardReadRequest();
-  }
-  
-  /**
-   * Find a command frame by ID.
-   */
-  private _findFrame(frameId: string): EmbeddedViewer {
-    if (/[^0-9]/.test(frameId)) {
-      return null;
-    }
-    
-    const scrollArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    const matches = scrollArea.querySelectorAll(EmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
-    return matches.length === 0 ? null : <EmbeddedViewer>matches[0];
   }
 }

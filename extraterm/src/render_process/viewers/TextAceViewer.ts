@@ -197,9 +197,7 @@ export class TextViewer extends ViewerElement implements AcceptsKeybindingsManag
     });
 
     // Filter the keyboard events before they reach Ace.
-    containerDiv.addEventListener('keydown', this._handleContainerKeyDownCapture.bind(this), true);
     containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
-    containerDiv.addEventListener('keypress', this._handleContainerKeyPressCapture.bind(this), true);    
     containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
     containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
 
@@ -690,37 +688,6 @@ export class TextViewer extends ViewerElement implements AcceptsKeybindingsManag
     this._aceEditSession.setScrollLeft(xCoord);
     this._aceEditSession.setScrollTop(yCoord);
   }
-    
-  // ----------------------------------------------------------------------
-  //
-  //   #    #                                                 
-  //   #   #  ###### #   # #####   ####    ##   #####  #####  
-  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
-  //   ###    #####    #   #####  #    # #    # #    # #    # 
-  //   #  #   #        #   #    # #    # ###### #####  #    # 
-  //   #   #  #        #   #    # #    # #    # #   #  #    # 
-  //   #    # ######   #   #####   ####  #    # #    # #####  
-  //                                                        
-  // ----------------------------------------------------------------------
-
-  private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
-    if (this._keybindingsManager == null || this._keybindingsManager.getKeybindingsContexts() == null) {
-      return;
-    }
-
-    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
-    if (keyBindings !== null) {
-      const command = keyBindings.mapEventToCommand(ev);
-      if (command != null) {
-        ev.stopPropagation();
-        return;
-      }
-    }
-
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-    }
-  }
 
   public dispatchEvent(ev: Event): boolean {
     if (ev.type === 'keydown' || ev.type === 'keypress') {
@@ -732,52 +699,16 @@ export class TextViewer extends ViewerElement implements AcceptsKeybindingsManag
   }
   
   private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-    }
-  }
-
-  private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
-    let command: string = null;
-
-    if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null) {
-      const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(KEYBINDINGS_CURSOR_MODE);
-      if (keyBindings !== null) {
-        command = keyBindings.mapEventToCommand(ev);
-// FIXME        
-        // if (this._executeCommand(command)) {
-        //   ev.stopPropagation();
-        //   ev.preventDefault();
-        //   return;
-        // } else {
-        //   if (this._mode === ViewerElementTypes.Mode.CURSOR) {
-        //     if (command == null) {
-        //       return;
-        //     }
-        //     const aceCommand = this._aceEditor.commands.getCommandByName(command);
-        //     if (aceCommand != null) {
-        //       this._aceEditor.commands.exec(aceCommand, this._aceEditor);
-        //       ev.stopPropagation();
-        //       ev.preventDefault();
-        //       return;
-        //     } else {
-        //       this._log.warn(`Unable to find command '${command}'.`);
-        //     }
-        //   }
-        // }
-      }
-    }
-
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-    }
+    // if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
+    //   ev.stopPropagation();
+    // }
   }
 
   private _handleContainerKeyUpCapture(ev: KeyboardEvent): void {
-    if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
+    // if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
+    //   ev.stopPropagation();
+    //   ev.preventDefault();
+    // }
   }
 
   private _handleContextMenuCapture(ev: MouseEvent): void {

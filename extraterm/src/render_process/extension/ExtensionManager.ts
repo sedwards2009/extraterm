@@ -22,6 +22,7 @@ import { CommandsRegistry } from './CommandsRegistry';
 import { CommonExtensionState } from './CommonExtensionState';
 import { Mode } from '../viewers/ViewerElementTypes';
 import { TextEditor } from '../viewers/TextEditorType';
+import { TerminalViewer } from '../viewers/TerminalAceViewer';
 
 
 interface ActiveExtension {
@@ -49,7 +50,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _extensionUiUtils: ExtensionUiUtils = null;
   private _proxyFactory: ProxyFactory = null;
   private _commonExtensionState: CommonExtensionState = {
-    activeTerminal: null
+    activeTerminal: null,
+    activeTextEditor: null,
   };
   private _activeTabContents: HTMLElement = null;
   private _activeTextEditor: TextEditor = null;
@@ -189,11 +191,8 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     return this._activeTabContents;
   }
 
-  setActiveTextEditor(textEditor: TextEditor): void {
-    this._activeTextEditor = textEditor;
-  }
   getActiveTextEditor(): TextEditor {
-    return this._activeTextEditor;
+    return this._commonExtensionState.activeTextEditor;
   }
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[] {
@@ -217,12 +216,18 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       categoryPredicate = command => categories.indexOf(command.category) !== -1;
     }
 
-    const whenPredicate = options.when === true ? this._createWhenPredicate() : truePredicate;
+    let commandPredicate = truePredicate;
+    if (options.commands != null) {
+      const commands = options.commands;
+      commandPredicate = command => commands.indexOf(command.command) !== -1;
+    }
+
+    const whenPredicate = options.when ? this._createWhenPredicate() : truePredicate;
 
     const entries: ExtensionCommandContribution[] = [];
     for (const metadata of this._extensionMetadata) {
       for (const command of metadata.contributes.commands) {
-        if (commandPalettePredicate(command) && contextMenuPredicate(command) &&
+        if (commandPredicate(command) && commandPalettePredicate(command) && contextMenuPredicate(command) &&
             categoryPredicate(command) && whenPredicate(command)) {
           entries.push(command);
         }
@@ -242,6 +247,14 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
         positiveFlags.add("isNormalMode");
       }
     }
+
+    if (this._commonExtensionState.activeTextEditor != null) {
+      positiveFlags.add("textEditorFocus");
+      if (this._commonExtensionState.activeTextEditor.getEditable()) {
+        positiveFlags.add("isTextEditing");
+      }
+    }
+
     return (ecc: ExtensionCommandContribution): boolean => {
       if (ecc.when === "") {
         return true;
@@ -278,6 +291,9 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     }
 
     // FIXME parse out any args.
+    if (args === undefined) {
+      args = {};
+    }
 
     for (const ext of this._activeExtensions) {
       if (ext.metadata.name === extensionName) {
@@ -286,12 +302,31 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
           this._log.warn(`Unable to find command '${command}' in extension '${extensionName}'.`);
           return null;
         }
-        return commandFunc(null); // FIXME send args
+        return commandFunc(args);
       }
     }
 
     this._log.warn(`Unable to find extension with name '${extensionName}' for command '${command}'.`);
     return null;
+  }
+
+  updateExtensionStateFromEvent(ev: Event) {
+    const newState: CommonExtensionState = {
+      activeTerminal: null,
+      activeTextEditor: null
+    };
+
+    for (const target of ev.composedPath()) {
+      if (target instanceof EtTerminal) {
+        newState.activeTerminal = target;
+      } else if (target instanceof TerminalViewer || target instanceof TextViewer) {
+        newState.activeTextEditor = target;
+      }
+    }
+
+    for (const key in newState) {
+      this._commonExtensionState[key] = newState[key];
+    }
   }
 }
 

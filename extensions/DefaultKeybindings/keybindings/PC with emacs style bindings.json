@@ -230,12 +230,6 @@
     ],
     "extraterm:application.openCommandPalette": [
       "Ctrl-Shift-P"
-    ],
-    "extraterm:textEditor.goUp": [
-      "Up"
-    ],
-    "extraterm:textEditor.goDown": [
-      "Down"
     ]
   }
 }

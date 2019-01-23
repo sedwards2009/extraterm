@@ -164,7 +164,7 @@ export class ContextMenu extends TemplatedElementBase {
     const checked = item.getAttribute('checked');
     this.close();
 
-    const event = new CustomEvent('selected', { detail: { id, name, checked } });
+    const event = new CustomEvent('selected', { detail: { id, name, checked, menuItem: item } });
     this.dispatchEvent(event);
   }
 

@@ -18,6 +18,7 @@ export interface CommandQueryOptions {
   commandPalette?: boolean;
   contextMenu?: boolean;
   when?: boolean;
+  commands?: string[];
 }
 
 export interface ExtensionManager {
@@ -33,12 +34,13 @@ export interface ExtensionManager {
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
   setActiveTerminal(terminal: EtTerminal): void;
   getActiveTerminal(): EtTerminal;
-  setActiveTextEditor(textEditor: TextEditor): void;
   getActiveTextEditor(): TextEditor;
     
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
   
   executeCommand<T>(command: string, args?: any): Promise<T>;
+  updateExtensionStateFromEvent(ev: Event): void;
+
 }
 
 export interface AcceptsExtensionManager {

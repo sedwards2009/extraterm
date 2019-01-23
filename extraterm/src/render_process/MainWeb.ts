@@ -230,6 +230,47 @@ function startUpMainWebUi(): void {
   mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
     applicationContextMenu.handleContextMenuRequest(ev);
   });
+
+  window.addEventListener("keydown", handleKeyDownCapture, true);
+  window.addEventListener("keypress", handleKeyPressCapture, true);
+  window.addEventListener("focus", handleFocusCapture, true);
+  // ^ It would be nice to just have these on mainWebUi too, but bug
+  // https://github.com/whatwg/dom/issues/685 prevents event capture on shadow DOM hosts from working as expected and
+  // arriving in the right order wrt to things deeper in the tree. The fix arrives in Chrome 71.
+}
+
+function handleKeyDownCapture(ev: KeyboardEvent): void {
+  _log.debug(`handleKeyDownCapture() event: `, ev);  
+  handleKeyCapture(ev);
+}
+
+function handleKeyPressCapture(ev: KeyboardEvent): void {
+  _log.debug(`handleKeyPressCapture() event: `, ev);  
+  handleKeyCapture(ev);
+}
+
+function handleKeyCapture(ev: KeyboardEvent): void {
+  const commands = keybindingsManager.getKeybindingsMapping().mapEventToCommands(ev);
+_log.debug(`handleKeyCapture() commands '${commands}'`);  
+
+  extensionManager.updateExtensionStateFromEvent(ev);
+
+  const filteredCommands = extensionManager.queryCommands({ commands, when: true });
+  if (filteredCommands.length !== 0) {
+_log.debug(`filtered Commands is ${filteredCommands.map(fc => fc.command).join(", ")}`);
+
+    if (filteredCommands.length !== 1) {
+      _log.warn(`Commands ${filteredCommands.map(fc => fc.command).join(", ")} have conflicting keybindings.`);
+    }
+
+    extensionManager.executeCommand(filteredCommands[0].command);
+    ev.stopPropagation();
+    ev.preventDefault();
+  }
+}
+
+function handleFocusCapture(ev: FocusEvent): void {
+  extensionManager.updateExtensionStateFromEvent(ev);
 }
 
 const ID_CONTROLS_SPACE = "ID_CONTROLS_SPACE";

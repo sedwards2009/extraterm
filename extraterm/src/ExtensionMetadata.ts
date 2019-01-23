@@ -32,9 +32,21 @@ export interface ExtensionContributes {
   viewers: ExtensionViewerContribution[];
 }
 
-export type Category = "global" | "application" | "window" | "textEditing" | "terminal" | "terminalCursorMode" | "viewer";
+export type Category = "global" |
+                        "application" |
+                        "window" |
+                        "textEditing" |
+                        "terminal" |
+                        "terminalCursorMode" |
+                        "viewer";
 
-export type WhenTerm = "terminalFocus"| "viewerFocus" | "viewerType" | "isCursorMode" | "isNormalMode" | "isTextEditor";
+export type WhenTerm = "terminalFocus" |
+                        "viewerFocus" |
+                        "viewerType" |
+                        "textEditorFocus" |
+                        "isCursorMode" |
+                        "isNormalMode" |
+                        "isTextEditing";
 
 
 export interface ExtensionCommandContribution {

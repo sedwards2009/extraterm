@@ -443,7 +443,7 @@ export class TerminalViewer extends ViewerElement implements keybindingmanager.A
   
   getEditable(): boolean {
     return this._editable;
-  }  
+  }
 
   private _applyMode(): void {
     switch (this._mode) {
@@ -933,70 +933,8 @@ export class TerminalViewer extends ViewerElement implements keybindingmanager.A
     }
     this._aceEditor.commands.exec(aceCommand, this._aceEditor);
   }
-
-  // ----------------------------------------------------------------------
-  //
-  //   #    #                                                 
-  //   #   #  ###### #   # #####   ####    ##   #####  #####  
-  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
-  //   ###    #####    #   #####  #    # #    # #    # #    # 
-  //   #  #   #        #   #    # #    # ###### #####  #    # 
-  //   #   #  #        #   #    # #    # #    # #   #  #    # 
-  //   #    # ######   #   #####   ####  #    # #    # #####  
-  //                                                        
-  // ----------------------------------------------------------------------
-
-  private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
-    if (this._keybindingsManager == null || this._keybindingsManager.getKeybindingsContexts() == null) {
-      return;
-    }
-
-    const context = this._mode === Mode.DEFAULT ?
-                      KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
-                      KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
-    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
-    if (keyBindings !== null) {
-      const command = keyBindings.mapEventToCommand(ev);
-      if (command != null) {
-        ev.stopPropagation();
-        return;
-      }
-    }
-  }
   
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
-    let command: string = null;
-    if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null) {
-      const context = this._mode === Mode.DEFAULT ?
-                        KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
-                        KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
-      const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
-      if (keyBindings !== null) {
-// FIXME        
-        // command = keyBindings.mapEventToCommand(ev);
-        // if (command != null && this._executeCommand(command)) {
-        //   ev.stopPropagation();
-        //   ev.preventDefault();
-        //   return;
-        // } else {
-        //   if (this._mode === Mode.CURSOR) {
-        //     if (command == null) {
-        //       return;
-        //     }
-        //     const aceCommand = this._aceEditor.commands.getCommandByName(command);
-        //     if (aceCommand != null) {
-        //       this._aceEditor.commands.exec(aceCommand, this._aceEditor);
-        //       ev.stopPropagation();
-        //       ev.preventDefault();
-        //       return;
-        //     } else {
-        //       this._log.warn(`Unable to find command '${command}'.`);
-        //     }
-        //   }
-        // }
-      }
-    }
-    
     if (this._mode === Mode.DEFAULT) {
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
         ev.stopPropagation();

@@ -220,9 +220,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
       this._terminalCanvas.onBeforeSelectionChange(ev => this._handleBeforeSelectionChange(ev));
 
-      this._terminalCanvas.addKeyboardEventListener("keypress", (ev) => this._handleKeyPressCapture(ev), true);
-      this._terminalCanvas.addKeyboardEventListener('keydown', (ev) => this._handleKeyDownCapture(ev), true);
-
       this._terminalCanvas.connectedCallback();
 
       // Set up the emulator
@@ -754,38 +751,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         this._inputStreamFilters = this._inputStreamFilters.filter(f => f !== filter);
       }
     };
-  }
-
-  private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    // if (this._terminalViewer === null || this._keyBindingManager === null ||
-    //     this._keyBindingManager.getKeybindingsContexts() === null) {
-    //   return;
-    // }
-    
-    // const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
-    //     ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
-    // const command = keyBindings.mapEventToCommand(ev);
-    // if (this._executeCommand(command)) {
-    //   ev.stopPropagation();
-    //   ev.preventDefault();
-    // }
-  }
-
-  private _handleKeyPressCapture(ev :KeyboardEvent): void {
-    if (this._terminalViewer === null || this._keyBindingManager === null ||
-        this._keyBindingManager.getKeybindingsContexts() === null) {
-      return;
-    }
-    
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
-        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
-    const command = keyBindings.mapEventToCommand(ev);
-    if (command != null) {
-      // We merely have to detech the key press as belonging to one of our shortcuts and then prevent
-      // it from reaching the layers below such as the terminal viewer and term emulation.
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
   }
 
   private _handleContextMenu(x: number, y: number): void {

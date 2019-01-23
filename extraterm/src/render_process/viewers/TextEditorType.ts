@@ -4,4 +4,5 @@
 
 export interface TextEditor {
   executeAceCommand(command: string): void;
+  getEditable(): boolean;
 }

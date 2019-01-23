@@ -8,10 +8,15 @@ import { Event } from 'extraterm-extension-api';
 import { KeyStroke, KeybindingsMapping, KeyStrokeOptions, parseConfigKeyStrokeString, configKeyNameToEventKeyName, eventKeyNameToConfigKeyName } from "../../keybindings/KeybindingsMapping";
 import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
 import { KeybindingsFile } from '../../keybindings/KeybindingsFile';
+import { Logger, getLogger } from 'extraterm-logging';
 
 export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
+
+  private _term_log: Logger = null;
+
   constructor(keybindingsFile: KeybindingsFile, platform: string) {
     super(TermKeyStroke.parseConfigString, keybindingsFile, platform);
+    this._term_log = getLogger("TermKeybindingsMapping", this);
   }
 
   /**
@@ -23,7 +28,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
    */
   mapEventToCommands(ev: MinimalKeyboardEvent): string[] {
     if ( ! this.isEnabled()) {
-      return null;
+      return [];
     }
 
     let key = "";
@@ -43,10 +48,10 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
       }
     }
 
+    const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
     for (let keybinding of this.keyStrokeList) {
       // Note: We don't compare Shift. It is assumed to be automatically handled by the
       // case of the key sent, except in the case where a special key is used.
-      const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
       if (keybinding.configKeyLowercase === lowerKey &&
           keybinding.altKey === ev.altKey &&
           keybinding.ctrlKey === ev.ctrlKey &&
@@ -55,7 +60,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
         return this._keyStrokeHashToCommandsMapping.get(keybinding.hashString());
       }
     }
-    return null;
+    return [];
   }
   // this._log.debug(`altKey: ${ev.altKey}, ctrlKey: ${ev.ctrlKey}, metaKey: ${ev.metaKey}, shiftKey: ${ev.shiftKey}, key: ${ev.key}, keyCode: ${ev.keyCode}`);
 
