@@ -12,7 +12,7 @@
   "scripts": {
     "run": "electron extraterm/src/main_process/Main.js --dev-tools",
     "run-release": "electron extraterm/src/main_process/Main.js",
-    "build": "wsrun build --exclude-missing --stages",
+    "build": "wsrun --concurrency 2 --exclude-missing --stages build",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty,font-manager -f -v 2.0.0",
     "package": "node build_scripts/build_packages.js",
     "package-linux-zip-only": "node build_scripts/build_packages.js --linux-zip-only"
@@ -48,6 +48,6 @@
     "git-repo-info": "^1.4.1",
     "jest": "^23.6.0",
     "shelljs": "0.8.2",
-    "wsrun": "^3.0.0"
+    "wsrun": "3.6.2"
   }
 }
