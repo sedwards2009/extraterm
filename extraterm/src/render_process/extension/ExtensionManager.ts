@@ -316,14 +316,24 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       activeTextEditor: null
     };
 
-    for (const target of ev.composedPath()) {
+    const composedPath = ev.composedPath();
+    for (const target of composedPath) {
       if (target instanceof EtTerminal) {
         newState.activeTerminal = target;
-      } else if (target instanceof TerminalViewer || target instanceof TextViewer) {
-        newState.activeTextEditor = target;
       }
     }
 
+    if (newState.activeTerminal == null || newState.activeTerminal.getMode() === Mode.CURSOR) {
+      // ^ If a terminal is focussed but in normal mode, then we don't consider it
+      // every having an active text editor. In Cursor mode it is possible.
+
+      for (const target of composedPath) {
+        if (target instanceof TerminalViewer || target instanceof TextViewer) {
+          newState.activeTextEditor = target;
+        }
+      }
+    }
+    
     for (const key in newState) {
       this._commonExtensionState[key] = newState[key];
     }

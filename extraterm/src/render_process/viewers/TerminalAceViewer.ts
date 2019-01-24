@@ -267,7 +267,6 @@ export class TerminalViewer extends ViewerElement implements keybindingmanager.A
       
       // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
-      containerDiv.addEventListener('keypress', ev => this._handleContainerKeyPressCapture(ev), true);
       containerDiv.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
 
       const aceElement = this._aceEditor.renderer.scroller;
