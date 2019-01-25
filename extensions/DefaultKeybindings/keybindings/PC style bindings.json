@@ -53,8 +53,7 @@
       "Ctrl-Shift-PageDown"
     ],
     "extraterm:terminal.copyToClipboard": [
-      "Ctrl-Shift-C",
-      "Ctrl-c"
+      "Ctrl-Shift-C"
     ],
     "extraterm:terminal.pasteFromClipboard": [
       "Shift-Insert",

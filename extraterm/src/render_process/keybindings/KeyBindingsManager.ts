@@ -50,8 +50,6 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
 
     const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
     for (let keybinding of this.keyStrokeList) {
-      // Note: We don't compare Shift. It is assumed to be automatically handled by the
-      // case of the key sent, except in the case where a special key is used.
       if (keybinding.configKeyLowercase === lowerKey &&
           keybinding.altKey === ev.altKey &&
           keybinding.ctrlKey === ev.ctrlKey &&

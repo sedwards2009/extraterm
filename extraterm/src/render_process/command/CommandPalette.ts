@@ -9,11 +9,10 @@ import { Disposable, Logger } from 'extraterm-extension-api';
 import { doLater } from '../../utils/DoLater';
 import { PopDownListPicker } from '../gui/PopDownListPicker';
 import { CssFile } from '../../theme/Theme';
-import { isSupportsDialogStack, SupportsDialogStack } from '../SupportsDialogStack';
+import { SupportsDialogStack } from '../SupportsDialogStack';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { getLogger } from 'extraterm-logging';
-// import { eventToCommandableStack } from './CommandUtils';
 import { ExtensionCommandContribution } from '../../ExtensionMetadata';
 import { CommonExtensionWindowState } from '../extension/CommonExtensionState';
 

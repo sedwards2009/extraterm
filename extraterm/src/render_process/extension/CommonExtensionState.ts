@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {EtTerminal} from '../Terminal';
+import { EtTerminal } from '../Terminal';
 import { TextEditor } from '../viewers/TextEditorType';
 
 // This is a way of passing through all of the state which is common across all extension contexts.
