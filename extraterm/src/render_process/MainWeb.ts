@@ -377,7 +377,7 @@ function commandOpenCommandPalette(): void {
   if (extensionManager.getActiveTerminal() == null) {
     return;
   }
-  commandPalette.open(extensionManager.getActiveTerminal());
+  commandPalette.open(extensionManager.getActiveTerminal(), extensionManager.getActiveTerminal());
 }
 
 function setupOSXEmptyMenus(): void {

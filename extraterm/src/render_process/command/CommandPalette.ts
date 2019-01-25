@@ -32,9 +32,9 @@ export class CommandPalette {
   private _commandPaletteDisposable: Disposable = null;
   private _extensionWindowState: CommonExtensionWindowState = null;
   private _commandPaletteEntries: CommandAndShortcut[] = [];
+  private _returnFocusElement: HTMLElement = null;
 
   constructor(private extensionManager: ExtensionManager, private keybindingsManager: KeybindingsManager) {
-
     this._log = getLogger("CommandPalette", this);
     const doc = window.document;
   
@@ -50,7 +50,8 @@ export class CommandPalette {
     this._commandPalette.addEventListener('selected', (ev: CustomEvent) => this._handleCommandPaletteSelected(ev));
   }
 
-  open(contextElement: SupportsDialogStack): void {
+  open(contextElement: SupportsDialogStack, returnFocusElement: HTMLElement): void {
+    this._returnFocusElement = returnFocusElement;
     this._extensionWindowState = this.extensionManager.copyExtensionWindowState();
 
     doLater( () => {
@@ -79,6 +80,10 @@ export class CommandPalette {
     this._commandPalette.close();
     this._commandPaletteDisposable.dispose();
     this._commandPaletteDisposable = null;
+    if (this._returnFocusElement != null) {
+      this._returnFocusElement.focus();
+      this._returnFocusElement = null;
+    }
     
     const selectedId = ev.detail.selected;
     if (selectedId !== null) {
