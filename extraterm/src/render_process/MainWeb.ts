@@ -14,7 +14,7 @@ import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
-import { EVENT_COMMAND_PALETTE_REQUEST, EVENT_CONTEXT_MENU_REQUEST } from './command/CommandUtils';
+import { EVENT_CONTEXT_MENU_REQUEST } from './command/CommandUtils';
 
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
@@ -223,10 +223,6 @@ function startUpMainWebUi(): void {
     window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
   });
 
-  mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-    commandPalette.handleCommandPaletteRequest(ev);
-  });
-
   mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
     applicationContextMenu.handleContextMenuRequest(ev);
   });
@@ -253,7 +249,7 @@ function handleKeyCapture(ev: KeyboardEvent): void {
   const commands = keybindingsManager.getKeybindingsMapping().mapEventToCommands(ev);
 _log.debug(`handleKeyCapture() commands '${commands}'`);  
 
-  extensionManager.updateExtensionStateFromEvent(ev);
+  extensionManager.updateExtensionWindowStateFromEvent(ev);
 
   const filteredCommands = extensionManager.queryCommands({ commands, when: true });
   if (filteredCommands.length !== 0) {
@@ -270,7 +266,7 @@ _log.debug(`filtered Commands is ${filteredCommands.map(fc => fc.command).join("
 }
 
 function handleFocusCapture(ev: FocusEvent): void {
-  extensionManager.updateExtensionStateFromEvent(ev);
+  extensionManager.updateExtensionWindowStateFromEvent(ev);
 }
 
 const ID_CONTROLS_SPACE = "ID_CONTROLS_SPACE";
@@ -359,6 +355,7 @@ function registerCommands(extensionManager: ExtensionManager): void {
   const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
   commands.registerCommand("extraterm:window.toggleDeveloperTools", commandToogleDeveloperTools);
   commands.registerCommand("extraterm:window.reloadCss", commandReloadThemeContents);
+  commands.registerCommand("extraterm:application.openCommandPalette", commandOpenCommandPalette);
 
   EtTerminal.registerCommands(extensionManager);
   TextCommandsRegisterCommands(extensionManager);
@@ -374,6 +371,13 @@ function commandToogleDeveloperTools(): void {
 
 function commandReloadThemeContents(): void {
   reloadThemeContents();
+}
+
+function commandOpenCommandPalette(): void {
+  if (extensionManager.getActiveTerminal() == null) {
+    return;
+  }
+  commandPalette.open(extensionManager.getActiveTerminal());
 }
 
 function setupOSXEmptyMenus(): void {

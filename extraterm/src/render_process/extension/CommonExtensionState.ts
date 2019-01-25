@@ -8,7 +8,7 @@ import { TextEditor } from '../viewers/TextEditorType';
 
 // This is a way of passing through all of the state which is common across all extension contexts.
 
-export interface CommonExtensionState {
+export interface CommonExtensionWindowState {
   activeTerminal: EtTerminal;
   activeTextEditor: TextEditor;
 }

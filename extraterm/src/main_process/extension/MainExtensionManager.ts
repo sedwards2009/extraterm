@@ -118,7 +118,7 @@ export class MainExtensionManager {
       return result;
     } catch(ex) {
       this._log.warn(`An error occurred while processing '${packageJsonPath}': ` + ex);
-      return null;   
+      return null;
     }
   }
 

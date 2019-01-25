@@ -12,6 +12,7 @@ import { EtViewerTab } from '../ViewerTab';
 import { SupportsDialogStack } from '../SupportsDialogStack';
 import { CommandsRegistry } from './CommandsRegistry';
 import { TextEditor } from '../viewers/TextEditorType';
+import { CommonExtensionWindowState } from './CommonExtensionState';
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -38,9 +39,11 @@ export interface ExtensionManager {
     
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
   
-  executeCommand<T>(command: string, args?: any): Promise<T>;
-  updateExtensionStateFromEvent(ev: Event): void;
+  executeCommand(command: string, args?: any): any;
+  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any;
 
+  updateExtensionWindowStateFromEvent(ev: Event): void;
+  copyExtensionWindowState(): CommonExtensionWindowState;
 }
 
 export interface AcceptsExtensionManager {

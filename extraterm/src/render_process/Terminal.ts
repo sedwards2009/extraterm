@@ -28,7 +28,7 @@ import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
-import { COMMAND_OPEN_COMMAND_PALETTE, COMMAND_OPEN_CONTEXT_MENU } from './command/CommandUtils';
+import { COMMAND_OPEN_CONTEXT_MENU } from './command/CommandUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';

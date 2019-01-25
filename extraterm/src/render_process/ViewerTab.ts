@@ -7,7 +7,6 @@
 import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import { COMMAND_OPEN_COMMAND_PALETTE } from './command/CommandUtils';
 import {doLater, DebouncedDoLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';

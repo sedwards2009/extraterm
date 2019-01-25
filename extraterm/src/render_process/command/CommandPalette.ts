@@ -9,12 +9,13 @@ import { Disposable, Logger } from 'extraterm-extension-api';
 import { doLater } from '../../utils/DoLater';
 import { PopDownListPicker } from '../gui/PopDownListPicker';
 import { CssFile } from '../../theme/Theme';
-import { isSupportsDialogStack } from '../SupportsDialogStack';
+import { isSupportsDialogStack, SupportsDialogStack } from '../SupportsDialogStack';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { getLogger } from 'extraterm-logging';
 // import { eventToCommandableStack } from './CommandUtils';
 import { ExtensionCommandContribution } from '../../ExtensionMetadata';
+import { CommonExtensionWindowState } from '../extension/CommonExtensionState';
 
 
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
@@ -30,10 +31,10 @@ export class CommandPalette {
   private _log: Logger;
   private _commandPalette: PopDownListPicker<CommandAndShortcut> = null;
   private _commandPaletteDisposable: Disposable = null;
-  private _commandPaletteRequestSource: HTMLElement = null;
+  private _extensionWindowState: CommonExtensionWindowState = null;
   private _commandPaletteEntries: CommandAndShortcut[] = [];
 
-  constructor(private extensionManager: ExtensionManager, private keyBindingManager: KeybindingsManager) {
+  constructor(private extensionManager: ExtensionManager, private keybindingsManager: KeybindingsManager) {
 
     this._log = getLogger("CommandPalette", this);
     const doc = window.document;
@@ -50,7 +51,9 @@ export class CommandPalette {
     this._commandPalette.addEventListener('selected', (ev: CustomEvent) => this._handleCommandPaletteSelected(ev));
   }
 
-  handleCommandPaletteRequest(ev: CustomEvent): void {
+  open(contextElement: SupportsDialogStack): void {
+    this._extensionWindowState = this.extensionManager.copyExtensionWindowState();
+
     doLater( () => {
       const entries = this.extensionManager.queryCommands({
         commandPalette: true,
@@ -58,23 +61,18 @@ export class CommandPalette {
         when: true
       });
   
+      const termKeybindingsMapping = this.keybindingsManager.getKeybindingsMapping();
       const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {
-        return { id: entry.command + "_" + entry.category, shortcut: "", ...entry };
+        const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
+        const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
+        return { id: entry.command + "_" + entry.category, shortcut, ...entry };
       });
-      // FIXME set shortcuts.
-      
+
       this._commandPaletteEntries = entriesAndShortcuts;
       this._commandPalette.setEntries(entriesAndShortcuts);
-      
-      // const contextElement = commandableStack[commandableStack.length-2];
-      // if (isSupportsDialogStack(contextElement)) {
-      //   this._commandPaletteDisposable = contextElement.showDialog(this._commandPalette);
-      
-      //   this._commandPalette.open();
-      //   this._commandPalette.focus();
-      // } else {
-      //   this._log.warn("Command palette context element doesn't support DialogStack. ", contextElement);
-      // }
+      this._commandPaletteDisposable = contextElement.showDialog(this._commandPalette);
+      this._commandPalette.open();
+      this._commandPalette.focus();
     });
   }
 
@@ -88,10 +86,14 @@ export class CommandPalette {
       doLater( () => {
         for (const entry of this._commandPaletteEntries) {
           if (entry.id === selectedId) {
-            this.extensionManager.executeCommand(entry.command);
+            this.extensionManager.executeCommandWithExtensionWindowState(this._extensionWindowState, entry.command);
+            break;
           }
         }
+        this._extensionWindowState = null;
       });
+    } else {
+      this._extensionWindowState = null;
     }
   }
 }
@@ -145,7 +147,7 @@ function commandPaletteFormatIcon(iconName?: string): string {
   if (iconName != null && iconName.startsWith('extraicon-')) {
     return `<span class='extraicon'>&${iconName.substr('extraicon-'.length)};</span>`;
   } else {
-    if (iconName == null) {
+    if (iconName == null || iconName === "") {
       return `<i class='fa-fw fa'>&nbsp;</i>`;
     } else {
       return `<i class='fa-fw ${iconName != null ? iconName : ""}'></i>`;

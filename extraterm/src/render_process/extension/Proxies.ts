@@ -12,7 +12,7 @@ import {Logger, getLogger} from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
 import { EtViewerTab } from '../ViewerTab';
-import { CommonExtensionState } from './CommonExtensionState';
+import { CommonExtensionWindowState } from './CommonExtensionState';
 
 export class WindowProxy implements InternalWindow {
 
@@ -20,7 +20,7 @@ export class WindowProxy implements InternalWindow {
   private _windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
   private _windowViewerRegistry: WorkspaceViewerRegistry = null;
 
-  constructor(private _internalExtensionContext: InternalExtensionContext, private _commonExtensionState: CommonExtensionState) {
+  constructor(private _internalExtensionContext: InternalExtensionContext, private _commonExtensionState: CommonExtensionWindowState) {
     this._log = getLogger("WorkspaceProxy", this);
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
     this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);

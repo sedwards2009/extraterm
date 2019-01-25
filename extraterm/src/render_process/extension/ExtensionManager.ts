@@ -19,7 +19,7 @@ import { WindowProxy } from './Proxies';
 import { ExtensionMetadata, ExtensionCommandContribution, WhenTerm, Category } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { CommandsRegistry } from './CommandsRegistry';
-import { CommonExtensionState } from './CommonExtensionState';
+import { CommonExtensionWindowState } from './CommonExtensionState';
 import { Mode } from '../viewers/ViewerElementTypes';
 import { TextEditor } from '../viewers/TextEditorType';
 import { TerminalViewer } from '../viewers/TerminalAceViewer';
@@ -49,12 +49,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _activeExtensions: ActiveExtension[] = [];
   private _extensionUiUtils: ExtensionUiUtils = null;
   private _proxyFactory: ProxyFactory = null;
-  private _commonExtensionState: CommonExtensionState = {
+  private _commonExtensionWindowState: CommonExtensionWindowState = {
     activeTerminal: null,
     activeTextEditor: null,
   };
-  private _activeTabContents: HTMLElement = null;
-  private _activeTextEditor: TextEditor = null;
 
   constructor() {
     this._log = getLogger("ExtensionManager", this);
@@ -100,7 +98,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     let module = null;
     let publicApi = null;
     const contextImpl = new InternalExtensionContextImpl(this, this._extensionUiUtils, metadata,
-      this._proxyFactory, this._commonExtensionState);
+      this._proxyFactory, this._commonExtensionWindowState);
     if (metadata.main != null) {
       module = this._loadExtensionModule(metadata);
       if (module != null) {
@@ -176,26 +174,22 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
   }
 
   setActiveTerminal(terminal: EtTerminal): void {
-    this._commonExtensionState.activeTerminal = terminal;
+    this._commonExtensionWindowState.activeTerminal = terminal;
   }
   
   getActiveTerminal(): EtTerminal {
-    return this._commonExtensionState.activeTerminal;
-  }
-
-  setActiveTabContents(tabContents: HTMLElement): void {
-    this._activeTabContents = tabContents;
-  }
-  
-  getActiveTabContents(): HTMLElement {
-    return this._activeTabContents;
+    return this._commonExtensionWindowState.activeTerminal;
   }
 
   getActiveTextEditor(): TextEditor {
-    return this._commonExtensionState.activeTextEditor;
+    return this._commonExtensionWindowState.activeTextEditor;
   }
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[] {
+    return this.queryCommandsWithExtensionWindowState(options, this._commonExtensionWindowState);
+  }
+
+  queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[] {
     const truePredicate = (command: ExtensionCommandContribution): boolean => true;
 
     let commandPalettePredicate = truePredicate;
@@ -222,7 +216,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       commandPredicate = command => commands.indexOf(command.command) !== -1;
     }
 
-    const whenPredicate = options.when ? this._createWhenPredicate() : truePredicate;
+    const whenPredicate = options.when ? this._createWhenPredicate(context) : truePredicate;
 
     const entries: ExtensionCommandContribution[] = [];
     for (const metadata of this._extensionMetadata) {
@@ -237,20 +231,20 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     return entries;
   }
 
-  private _createWhenPredicate(): (ecc: ExtensionCommandContribution) => boolean {
+  private _createWhenPredicate(context: CommonExtensionWindowState): (ecc: ExtensionCommandContribution) => boolean {
     const positiveFlags = new Set<WhenTerm>();
-    if (this._commonExtensionState.activeTerminal != null) {
+    if (this._commonExtensionWindowState.activeTerminal != null) {
       positiveFlags.add("terminalFocus");
-      if (this._commonExtensionState.activeTerminal.getMode() === Mode.CURSOR) {
+      if (this._commonExtensionWindowState.activeTerminal.getMode() === Mode.CURSOR) {
         positiveFlags.add("isCursorMode");
       } else {
         positiveFlags.add("isNormalMode");
       }
     }
 
-    if (this._commonExtensionState.activeTextEditor != null) {
+    if (this._commonExtensionWindowState.activeTextEditor != null) {
       positiveFlags.add("textEditorFocus");
-      if (this._commonExtensionState.activeTextEditor.getEditable()) {
+      if (this._commonExtensionWindowState.activeTextEditor.getEditable()) {
         positiveFlags.add("isTextEditing");
       }
     }
@@ -279,7 +273,19 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     return aIndex < bIndex ? -1 : 1;
   }
 
-  executeCommand<T>(command: string, args?: any): Promise<T> {
+  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any {
+    const oldState = this.copyExtensionWindowState();
+    this._setExtensionWindowState(tempState);
+    const result = this.executeCommand(command, args);
+    this._setExtensionWindowState(oldState);
+    return result;
+  }
+
+  copyExtensionWindowState(): CommonExtensionWindowState {
+    return { ...this._commonExtensionWindowState };
+  }
+
+  executeCommand(command: string, args?: any): any {
     const parts = command.split(":");
     if (parts.length !== 2) {
       this._log.warn(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
@@ -302,7 +308,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
           this._log.warn(`Unable to find command '${command}' in extension '${extensionName}'.`);
           return null;
         }
-        return commandFunc(args);
+        return this._runCommandFunc(command, commandFunc, args);
       }
     }
 
@@ -310,8 +316,28 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     return null;
   }
 
-  updateExtensionStateFromEvent(ev: Event) {
-    const newState: CommonExtensionState = {
+  private _runCommandFunc(name: string, commandFunc: (args: any) => any, args: any): any {
+    try {
+      return commandFunc(args);
+    } catch(ex) {
+      this._log.warn(`Command '${name}' threw an exception.`, ex);
+    }
+    return null;
+  }
+
+  updateExtensionWindowStateFromEvent(ev: Event): void {
+    const newState = this.getExtensionWindowStateFromEvent(ev);
+    this._setExtensionWindowState(newState);
+  }
+
+  private _setExtensionWindowState(newState: CommonExtensionWindowState): void {
+    for (const key in newState) {
+      this._commonExtensionWindowState[key] = newState[key];
+    }
+  }
+
+  getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState {
+    const newState: CommonExtensionWindowState = {
       activeTerminal: null,
       activeTextEditor: null
     };
@@ -333,10 +359,8 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
         }
       }
     }
-    
-    for (const key in newState) {
-      this._commonExtensionState[key] = newState[key];
-    }
+
+    return newState;
   }
 }
 
@@ -353,7 +377,7 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
 
   constructor(private _extensionManager: ExtensionManager, public extensionUiUtils: ExtensionUiUtils,
               public extensionMetadata: ExtensionMetadata, public proxyFactory: ProxyFactory,
-              commonExtensionState: CommonExtensionState) {
+              commonExtensionState: CommonExtensionWindowState) {
 
     this._log = getLogger("InternalExtensionContextImpl", this);
 
