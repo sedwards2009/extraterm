@@ -31,6 +31,7 @@
         "command": "extraterm:window.closePane",
         "title": "Close Pane",
         "category": "window",
+        "icon": "far fa-window-close",
         "when": "",
         "contextMenu": true
       },
@@ -105,6 +106,7 @@
         "command": "extraterm:terminal.copyToClipboard",
         "title": "Copy to clipboard",
         "category": "terminal",
+        "icon": "far fa-copy",
         "when": "terminalFocus"
       },
       {
@@ -158,6 +160,7 @@
         "command": "extraterm:terminal.pasteFromClipboard",
         "title": "Paste from clipboard",
         "category": "terminal",
+        "icon": "fa fa-clipboard",
         "when": "terminalFocus"
       },
       {
@@ -193,35 +196,10 @@
         "when": "terminalFocus"
       },
       {
-        "command": "extraterm:terminal.copyToClipboard",
-        "title": "Copy to clipboard",
-        "category": "terminalCursorMode",
-        "icon": "far fa-copy",
-        "when": "isCursorMode"
-      },
-      {
         "command": "extraterm:terminal.enterNormalMode",
         "title": "Exit cursor mode",
         "category": "terminalCursorMode",
         "when": "isCursorMode"
-      },
-      {
-        "command": "extraterm:terminal.goToNextFrame",
-        "title": "Go to next frame",
-        "category": "terminalCursorMode",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.goToPreviousFrame",
-        "title": "Go to previous frame",
-        "category": "terminalCursorMode",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.increaseFontSize",
-        "title": "Increase font size",
-        "category": "terminalCursorMode",
-        "when": "terminalFocus"
       },
       {
         "command": "extraterm:textEditor.addCursorAbove",
@@ -530,37 +508,6 @@
         "command": "extraterm:typeSelection",
         "title": "Type selection",
         "category": "terminal",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.copyToClipboard",
-        "title": "Copy to clipboard",
-        "category": "viewer",
-        "when": "viewerFocus"
-      },
-      {
-        "command": "extraterm:terminal.decreaseFontSize",
-        "title": "Decrease font size",
-        "category": "viewer",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.increaseFontSize",
-        "title": "Increase font size",
-        "category": "viewer",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.pasteFromClipboard",
-        "title": "Paste from clipboard",
-        "category": "viewer",
-        "icon": "fa fa-clipboard",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.resetFontSize",
-        "title": "Reset font size",
-        "category": "viewer",
         "when": "terminalFocus"
       },
       {
