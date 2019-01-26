@@ -28,7 +28,7 @@ import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
-import { COMMAND_OPEN_CONTEXT_MENU } from './command/CommandUtils';
+import { dispatchContextMenuRequest } from './command/CommandUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';
@@ -754,10 +754,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   private _handleContextMenu(x: number, y: number): void {
-// FIXME    
-    // if (this._terminalViewer !== null) {
-    //   this._terminalViewer.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x, y});
-    // }
+    if (this._terminalViewer !== null) {
+      dispatchContextMenuRequest(this._terminalViewer, x, y);
+    }
   }
 
   commandEnterCursorMode(): void {

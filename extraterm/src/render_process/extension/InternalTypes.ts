@@ -38,12 +38,14 @@ export interface ExtensionManager {
   getActiveTextEditor(): TextEditor;
     
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
+  queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
   
   executeCommand(command: string, args?: any): any;
   executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any;
 
   updateExtensionWindowStateFromEvent(ev: Event): void;
   copyExtensionWindowState(): CommonExtensionWindowState;
+  getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState;
 }
 
 export interface AcceptsExtensionManager {

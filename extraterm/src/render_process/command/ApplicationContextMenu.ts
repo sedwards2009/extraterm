@@ -16,6 +16,8 @@ import { MenuItem } from "../gui/MenuItem";
 import { DividerMenuItem } from "../gui/DividerMenuItem";
 import { CheckboxMenuItem } from "../gui/CheckboxMenuItem";
 import { CommandAndShortcut } from "./CommandPalette";
+import { KeybindingsManager } from "../keybindings/KeyBindingsManager";
+import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 
 const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
 
@@ -24,8 +26,9 @@ export class ApplicationContextMenu {
   private _log: Logger;
   private _contextMenuElement: ContextMenu = null
   private _menuEntries: CommandAndShortcut[] = null;
-  
-  constructor(private extensionManager: ExtensionManager) {
+  private _contextWindowState : CommonExtensionWindowState = null;
+
+  constructor(private extensionManager: ExtensionManager, private keybindingsManager: KeybindingsManager) {
     this._log = getLogger("ApplicationContextMenu", this);
     
     const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
@@ -41,28 +44,38 @@ export class ApplicationContextMenu {
 
     this._contextMenuElement.addEventListener("close", () => {
       const oldMenuEntries = this._menuEntries;
+      const oldContextWindowState = this._contextWindowState;
+
+      this._contextWindowState.activeTerminal.focus();
+
       // We do this to avoid holding refs to objects after the context menu has closed. (-> GC). The delay
       // is needed because a 'selected' event may need the list immediately after this 'close' event.
       doLater( () => {
         if (oldMenuEntries === this._menuEntries) {
           this._menuEntries = null;
         }
+        if (oldContextWindowState === this._contextWindowState) {
+          this._contextWindowState = null;
+        }
       });
     });
   }
 
-  handleContextMenuRequest(ev: CustomEvent): void {
-    // const requestCommandableStack = [...eventToCommandableStack(ev), this.rootCommandable];
+  open(ev: CustomEvent): void {
+    this._contextWindowState = this.extensionManager.getExtensionWindowStateFromEvent(ev);
 
     doLater( () => {
-      const entries = this.extensionManager.queryCommands({
+      const entries = this.extensionManager.queryCommandsWithExtensionWindowState({
         contextMenu: true,
         categories: ["window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
         when: true
-      });
+      }, this._contextWindowState);
 
+      const termKeybindingsMapping = this.keybindingsManager.getKeybindingsMapping();
       this._menuEntries = entries.map((entry): CommandAndShortcut => {
-        return { id: entry.command + "_" + entry.category, shortcut: "", ...entry };
+        const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
+        const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
+        return { id: entry.command + "_" + entry.category, shortcut, ...entry };
       });
 
       if (this._menuEntries.length === 0) {
@@ -101,14 +114,14 @@ export class ApplicationContextMenu {
   }
 
   private _executeMenuCommand(id: string): void {
-    if (this._menuEntries == null) {
+    if (this._menuEntries == null || this._contextWindowState == null) {
       return;
     }
 
     const index = Number.parseInt(id.substr("index_".length), 10);
     const entry = this._menuEntries[index];
     doLater( () => {
-      this.extensionManager.executeCommand(entry.command);
+      this.extensionManager.executeCommandWithExtensionWindowState(this._contextWindowState, entry.command);
     });
   }
 }

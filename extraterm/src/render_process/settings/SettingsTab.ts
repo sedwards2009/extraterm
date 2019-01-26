@@ -15,6 +15,7 @@ import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi } from './SettingsUi';
 import { AcceptsExtensionManager, ExtensionManager } from '../extension/InternalTypes';
 import * as SupportsDialogStack from "../SupportsDialogStack";
+import { dispatchContextMenuRequest } from '../command/CommandUtils';
 
 
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
@@ -91,8 +92,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   private _handleContextMenuCapture(ev: MouseEvent): void {
     ev.stopImmediatePropagation();
     ev.preventDefault();
-// FIXME
-    // this.executeCommand(COMMAND_OPEN_CONTEXT_MENU, { x: ev.clientX, y: ev.clientY});
+    dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
   }
 
   showDialog(dialogElement: HTMLElement): Disposable {

@@ -24,6 +24,7 @@ import { emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState } from
 import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
 import { RefreshLevel } from '../viewers/ViewerElementTypes';
 import { TextEditor } from './TextEditorType';
+import { dispatchContextMenuRequest } from '../command/CommandUtils';
 
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
@@ -714,8 +715,7 @@ export class TextViewer extends ViewerElement implements AcceptsKeybindingsManag
   private _handleContextMenuCapture(ev: MouseEvent): void {
     ev.stopImmediatePropagation();
     ev.preventDefault();
-// FIXME    
-    // this.executeCommand(COMMAND_OPEN_CONTEXT_MENU, { x: ev.clientX, y: ev.clientY});
+    dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
   }
 
   //-----------------------------------------------------------------------

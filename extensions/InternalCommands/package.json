@@ -494,6 +494,7 @@
         "command": "extraterm:application.openCommandPalette",
         "title": "Open command palette",
         "category": "window",
+        "icon": "fas fa-toolbox",
         "when": "",
         "contextMenu": true,
         "commandPalette": false

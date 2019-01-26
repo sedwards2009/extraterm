@@ -224,7 +224,7 @@ function startUpMainWebUi(): void {
   });
 
   mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
-    applicationContextMenu.handleContextMenuRequest(ev);
+    applicationContextMenu.open(ev);
   });
 
   window.addEventListener("keydown", handleKeyDownCapture, true);
@@ -601,7 +601,7 @@ function startUpCommandPalette(): void {
 }
 
 function startUpApplicationContextMenu(): void {
-  applicationContextMenu = new ApplicationContextMenu(extensionManager);
+  applicationContextMenu = new ApplicationContextMenu(extensionManager, keybindingsManager);
 }
 
 class ConfigDatabaseImpl implements ConfigDatabase {

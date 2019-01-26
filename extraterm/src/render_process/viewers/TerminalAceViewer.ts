@@ -947,8 +947,7 @@ export class TerminalViewer extends ViewerElement implements keybindingmanager.A
     // Prevent Ace from seeing this event and messing with the hidden textarea and the focus.
     ev.stopImmediatePropagation();
     ev.preventDefault();
-// FIXME    
-    // this.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x: ev.clientX, y: ev.clientY});
+    dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
   }
   
   //-----------------------------------------------------------------------
