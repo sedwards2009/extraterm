@@ -9,7 +9,6 @@ import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
-import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
@@ -22,12 +21,10 @@ import {ViewerElement} from './ViewerElement';
 import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
-
 import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
 import { TextEditor } from './TextEditorType';
-
-type KeybindingsManager = keybindingmanager.KeybindingsManager;
+import { dispatchContextMenuRequest } from '../command/CommandUtils';
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -37,14 +34,6 @@ const CLASS_HIDE_CURSOR = "hide-cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 const CLASS_HAS_TERMINAL = "CLASS_HAS_TERMINAL";
-
-const KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE = "terminal-viewer-default-mode";
-const KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE = "terminal-viewer-cursor-mode";
-
-const PALETTE_GROUP = "terminalviewer";
-const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
-const COMMAND_TYPE_SELECTION = "typeSelection";
-const COMMAND_SELECT_ALL = "selectAll";
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
@@ -66,8 +55,8 @@ function getCssText(): string {
 
 
 @WebComponent({tag: "et-terminal-ace-viewer"})
-export class TerminalViewer extends ViewerElement implements keybindingmanager.AcceptsKeybindingsManager,
-    SupportsClipboardPaste.SupportsClipboardPaste, TextEditor, Disposable {
+export class TerminalViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
+    TextEditor, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
@@ -83,7 +72,6 @@ export class TerminalViewer extends ViewerElement implements keybindingmanager.A
   }
 
   private _log: Logger;
-  private _keybindingsManager: KeybindingsManager = null;
   private _emulator: Term.Emulator = null;
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
@@ -312,22 +300,6 @@ export class TerminalViewer extends ViewerElement implements keybindingmanager.A
     this._aceEditor.commands.addCommands(commandsWithoutKeys);
   }
 
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
-
-  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
-    this._keybindingsManager = newKeybindingsManager;
-  }
-
   setCommandLine(commandLine: string): void {
     this._commandLine = commandLine;
     this._metadataEventDoLater.trigger();
@@ -402,9 +374,8 @@ export class TerminalViewer extends ViewerElement implements keybindingmanager.A
   isEmpty(): boolean {
     return this._isEmpty;
   }
-    
-  setEmulator(emulator: Term.Emulator): void {
-    
+
+  setEmulator(emulator: Term.Emulator): void {    
     if (this._emulator !== null) {
       // Disconnect the last emulator.
       this._emulator.removeRenderEventListener(this._renderEventListener);

@@ -59,28 +59,6 @@ export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
 const ID_CONTAINER = "ID_CONTAINER";
 
-const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
-const KEYBINDINGS_CURSOR_MODE = "terminal-cursor-mode";
-
-const PALETTE_GROUP = "terminal";
-const COMMAND_ENTER_CURSOR_MODE = "enterCursorMode";
-const COMMAND_ENTER_NORMAL_MODE = "enterNormalMode";
-const COMMAND_SCROLL_PAGE_UP = "scrollPageUp";
-const COMMAND_SCROLL_PAGE_DOWN = "scrollPageDown";
-const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
-const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
-const COMMAND_DELETE_LAST_FRAME = "deleteLastFrame";
-const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
-const COMMAND_RESET_VT = "resetVT";
-const COMMAND_CLEAR_SCROLLBACK = "clearScrollback";
-const COMMAND_FONT_SIZE_INCREASE = "increaseFontSize";
-const COMMAND_FONT_SIZE_DECREASE = "decreaseFontSize";
-const COMMAND_FONT_SIZE_RESET = "resetFontSize";
-const COMMAND_GO_TO_PREVIOUS_FRAME = "goToPreviousFrame";
-const COMMAND_GO_TO_NEXT_FRAME = "goToNextFrame";
-const COMMAND_FIND = "find";
-
-
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
 

@@ -29,7 +29,6 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   
   private _log: Logger = null;
   private _ui: SettingsUi = null;
-  private _keybindingsManager: KeybindingsManager = null;
   private _dialogStack: HTMLElement[] = [];
 
   constructor() {
@@ -77,7 +76,6 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   }
   
   setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
-    this._keybindingsManager = newKeybindingsManager;
     this._ui.setKeybindingsManager(newKeybindingsManager);
   }
 
@@ -108,5 +106,4 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
       }
     };
   }
-
 }

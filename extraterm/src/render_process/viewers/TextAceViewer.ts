@@ -14,7 +14,6 @@ import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
 import { doLater, doLaterFrame, DebouncedDoLater } from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
-import { KeybindingsManager, AcceptsKeybindingsManager } from '../keybindings/KeyBindingsManager';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
 import {ThemeableElementBase} from '../ThemeableElementBase';
@@ -38,13 +37,6 @@ const CLASS_HIDE_CURSOR = "hide-cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 
-const KEYBINDINGS_CURSOR_MODE = "text-viewer";
-const PALETTE_GROUP = "textviewer";
-const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
-const COMMAND_TYPE_SELECTION = "typeSelection";
-const COMMAND_SELECT_ALL = "selectAll";
-
-
 // Electron on Linux under conditions and configuration which happen on one
 // of my machines, will render underscore characters below the text line and
 // into the line below it. If this is the last line in the viewer, then the
@@ -64,8 +56,8 @@ function getCssText(): string {
 
 
 @WebComponent({tag: "et-text-viewer"})
-export class TextViewer extends ViewerElement implements AcceptsKeybindingsManager,
-    SupportsClipboardPaste.SupportsClipboardPaste, TextEditor, Disposable {
+export class TextViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
+    TextEditor, Disposable {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
   
@@ -80,7 +72,6 @@ export class TextViewer extends ViewerElement implements AcceptsKeybindingsManag
   }
   
   private _log: Logger;
-  private _keybindingsManager: KeybindingsManager = null;
   private _title = "";
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
@@ -264,10 +255,6 @@ export class TextViewer extends ViewerElement implements AcceptsKeybindingsManag
       this._bulkFileHandle = null;
     }
     super.dispose();
-  }
-
-  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
-    this._keybindingsManager = newKeybindingsManager;
   }
 
   getSelectionText(): string {    
