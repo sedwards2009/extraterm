@@ -5,16 +5,219 @@
   "contributes": {
     "commands": [
       {
+        "command": "extraterm:application.openCommandPalette",
+        "title": "Command Palette",
+        "category": "window",
+        "icon": "fas fa-toolbox",
+        "when": "",
+        "order": 900,
+        "contextMenu": true,
+        "commandPalette": false
+      },
+      {
+        "command": "extraterm:typeSelection",
+        "title": "Type selection",
+        "category": "terminal",
+        "order": 1000,
+        "icon": "fa fa-terminal",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:typeSelectionAndCr",
+        "title": "Type Selection & execute",
+        "category": "terminal",
+        "order": 1001,
+        "icon": "fa fa-terminal",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectAll",
+        "title": "Select all",
+        "category": "textEditing",
+        "order": 1100,
+        "when": "textEditorFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.enterCursorMode",
+        "title": "Enter cursor mode",
+        "category": "terminal",
+        "order": 1200,
+        "icon": "fa fa-i-cursor",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.enterNormalMode",
+        "title": "Exit cursor mode",
+        "category": "terminalCursorMode",
+        "order": 1200,
+        "when": "isCursorMode"
+      },
+      {
+        "command": "extraterm:terminal.scrollPageUp",
+        "title": "Scroll page up",
+        "category": "terminal",
+        "order": 1300,
+        "icon": "fa fa-angle-double-up",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.scrollPageDown",
+        "title": "Scroll page down",
+        "category": "terminal",
+        "order": 1301,
+        "icon": "fa fa-angle-double-down",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.goToPreviousFrame",
+        "title": "Go to previous frame",
+        "category": "terminal",
+        "order": 1400,
+        "icon": "fas fa-step-backward fa-rotate-90",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.goToNextFrame",
+        "title": "Go to next frame",
+        "category": "terminal",
+        "order": 1401,
+        "icon": "fas fa-step-forward fa-rotate-90",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.copyToClipboard",
+        "title": "Copy to Clipboard",
+        "category": "terminal",
+        "order": 1500,
+        "icon": "far fa-copy",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.pasteFromClipboard",
+        "title": "Paste from Clipboard",
+        "category": "terminal",
+        "order": 1501,
+        "icon": "fa fa-clipboard",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.openLastFrame",
+        "title": "Open Last Frame",
+        "category": "terminal",
+        "order": 1600,
+        "icon": "fa fa-external-link-alt",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.deleteLastFrame",
+        "title": "Delete the last frame",
+        "category": "terminal",
+        "order": 1601,
+        "icon": "fa fa-times-circle",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.increaseFontSize",
+        "title": "Increase font size",
+        "category": "terminal",
+        "order": 1700,
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.decreaseFontSize",
+        "title": "Decrease font size",
+        "category": "terminal",
+        "order": 1701,
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.resetFontSize",
+        "title": "Reset font size",
+        "category": "terminal",
+        "order": 1702,
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.clearScrollback",
+        "title": "Clear Scrollback",
+        "category": "terminal",
+        "order": 1800,
+        "icon": "fa fa-eraser",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.resetVT",
+        "title": "Reset VT",
+        "category": "terminal",
+        "order": 1801,
+        "icon": "fa fa-sync",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:window.newTerminal",
+        "title": "New Terminal",
+        "category": "window",
+        "order": 1000,
+        "when": "",
+        "icon": "fa fa-plus",
+        "contextMenu": true
+      },
+      {
         "command": "extraterm:window.closeTab",
         "title": "Close tab",
         "category": "window",
+        "order": 1100,
         "icon": "fa fa-times",
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusTabLeft",
+        "title": "Focus Tab left",
+        "category": "window",
+        "order": 1200,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusTabRight",
+        "title": "Focus Tab Right",
+        "category": "window",
+        "order": 1201,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusPaneLeft",
+        "title": "Focus Pane Left",
+        "category": "window",
+        "order": 1300,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusPaneRight",
+        "title": "Focus Pane Right",
+        "category": "window",
+        "order": 1301,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusPaneAbove",
+        "title": "Focus Pane Above",
+        "category": "window",
+        "order": 1302,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusPaneBelow",
+        "title": "Focus Pane Below",
+        "category": "window",
+        "order": 1303,
         "when": ""
       },
       {
         "command": "extraterm:window.horizontalSplit",
         "title": "Horizontal Split",
         "category": "window",
+        "order": 1400,
         "icon": "extraicon-#xea08",
         "when": "",
         "contextMenu": true
@@ -23,6 +226,7 @@
         "command": "extraterm:window.verticalSplit",
         "title": "Vertical Split",
         "category": "window",
+        "order": 1401,
         "icon": "fa fa-columns",
         "when": "",
         "contextMenu": true
@@ -31,176 +235,72 @@
         "command": "extraterm:window.closePane",
         "title": "Close Pane",
         "category": "window",
+        "order": 1402,
         "icon": "far fa-window-close",
         "when": "",
         "contextMenu": true
       },
       {
-        "command": "extraterm:window.moveTabDown",
-        "title": "Move tab down",
-        "category": "window",
-        "when": ""
-      },
-      {
         "command": "extraterm:window.moveTabLeft",
-        "title": "Move tab left",
+        "title": "Move Tab Left",
         "category": "window",
+        "order": 1500,
         "when": ""
       },
       {
         "command": "extraterm:window.moveTabRight",
-        "title": "Move tab right",
+        "title": "Move Tab Right",
         "category": "window",
+        "order": 1501,
         "when": ""
       },
       {
         "command": "extraterm:window.moveTabUp",
-        "title": "Move tab up",
+        "title": "Move Tab Up",
         "category": "window",
+        "order": 1502,
         "when": ""
       },
       {
-        "command": "extraterm:window.newTerminal",
-        "title": "New Terminal",
+        "command": "extraterm:window.moveTabDown",
+        "title": "Move Tab Down",
         "category": "window",
-        "when": "",
-        "contextMenu": true
-      },
-      {
-        "command": "extraterm:window.focusPaneAbove",
-        "title": "Focus the pane above",
-        "category": "window",
+        "order": 1503,
         "when": ""
       },
       {
-        "command": "extraterm:window.focusPaneBelow",
-        "title": "Focus the pane below",
-        "category": "window",
+        "command": "extraterm:window.openSettings",
+        "title": "Settings",
+        "category": "application",
+        "order": 2000,
+        "icon": "fa fa-wrench",
         "when": ""
       },
       {
-        "command": "extraterm:window.focusPaneLeft",
-        "title": "Focus the pane to the left",
-        "category": "window",
+        "command": "extraterm:window.reloadCss",
+        "title": "Reload Theme",
+        "category": "application",
+        "order": 3000,
+        "icon": "fa fa-sync",
         "when": ""
       },
       {
-        "command": "extraterm:window.focusPaneRight",
-        "title": "Focus the pane to the right",
-        "category": "window",
+        "command": "extraterm:window.toggleDeveloperTools",
+        "title": "Toogle Developer Tools",
+        "category": "application",
+        "order": 3001,
+        "icon": "fa fa-cogs",
         "when": ""
       },
       {
-        "command": "extraterm:window.focusTabLeft",
-        "title": "Focus the tab to the left",
-        "category": "window",
+        "command": "extraterm:window.openAbout",
+        "title": "About",
+        "category": "application",
+        "order": 4000,
+        "icon": "far fa-lightbulb",
         "when": ""
       },
-      {
-        "command": "extraterm:window.focusTabRight",
-        "title": "Focus the tab to the right",
-        "category": "window",
-        "when": ""
-      },
-      {
-        "command": "extraterm:terminal.copyToClipboard",
-        "title": "Copy to clipboard",
-        "category": "terminal",
-        "icon": "far fa-copy",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.decreaseFontSize",
-        "title": "Decrease font size",
-        "category": "terminal",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.deleteLastFrame",
-        "title": "Delete the last frame",
-        "category": "terminal",
-        "icon": "fa fa-times-circle",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.enterCursorMode",
-        "title": "Enter cursor mode",
-        "category": "terminal",
-        "icon": "fa fa-i-cursor",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.goToNextFrame",
-        "title": "Go to next frame",
-        "category": "terminal",
-        "icon": "fas fa-step-forward fa-rotate-90",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.goToPreviousFrame",
-        "title": "Go to previous frame",
-        "category": "terminal",
-        "icon": "fas fa-step-backward fa-rotate-90",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.increaseFontSize",
-        "title": "Increase font size",
-        "category": "terminal",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.openLastFrame",
-        "title": "Open the last frame in a tab",
-        "category": "terminal",
-        "icon": "fa fa-external-link-alt",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.pasteFromClipboard",
-        "title": "Paste from clipboard",
-        "category": "terminal",
-        "icon": "fa fa-clipboard",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.resetFontSize",
-        "title": "Reset font size",
-        "category": "terminal",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.resetVT",
-        "title": "Reset VT",
-        "category": "terminal",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.clearScrollback",
-        "title": "Clear Scrollback",
-        "category": "terminal",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.scrollPageDown",
-        "title": "Scroll page down",
-        "category": "terminal",
-        "icon": "fa fa-angle-double-down",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.scrollPageUp",
-        "title": "Scroll page up",
-        "category": "terminal",
-        "icon": "fa fa-angle-double-up",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:terminal.enterNormalMode",
-        "title": "Exit cursor mode",
-        "category": "terminalCursorMode",
-        "when": "isCursorMode"
-      },
+
       {
         "command": "extraterm:textEditor.addCursorAbove",
         "title": "Add cursor above",
@@ -388,13 +488,6 @@
         "when": "textEditorFocus"
       },
       {
-        "command": "extraterm:textEditor.selectAll",
-        "title": "Select all",
-        "category": "textEditing",
-        "when": "textEditorFocus",
-        "contextMenu": true
-      },
-      {
         "command": "extraterm:textEditor.selectDown",
         "title": "Select down one line",
         "category": "textEditing",
@@ -491,27 +584,6 @@
         "when": "isTextEditing"
       },
       {
-        "command": "extraterm:application.openCommandPalette",
-        "title": "Open command palette",
-        "category": "window",
-        "icon": "fas fa-toolbox",
-        "when": "",
-        "contextMenu": true,
-        "commandPalette": false
-      },
-      {
-        "command": "extraterm:typeSelectionAndCr",
-        "title": "Type selection and press enter",
-        "category": "terminal",
-        "when": "terminalFocus"
-      },
-      {
-        "command": "extraterm:typeSelection",
-        "title": "Type selection",
-        "category": "terminal",
-        "when": "terminalFocus"
-      },
-      {
         "command": "extraterm:global.globalMaximize",
         "title": "Maximize window",
         "category": "global",
@@ -533,34 +605,6 @@
         "command": "extraterm:global.globalToggleShowHide",
         "title": "Toogle show/hide window",
         "category": "global",
-        "when": ""
-      },
-      {
-        "command": "extraterm:window.toggleDeveloperTools",
-        "title": "Toogle Developer Tools",
-        "category": "application",
-        "icon": "fa fa-cogs",
-        "when": ""
-      },
-      {
-        "command": "extraterm:window.reloadCss",
-        "title": "Reload Theme",
-        "category": "application",
-        "icon": "fa fa-sync",
-        "when": ""
-      },
-      {
-        "command": "extraterm:window.openSettings",
-        "title": "Settings",
-        "category": "application",
-        "icon": "fa fa-wrench",
-        "when": ""
-      },
-      {
-        "command": "extraterm:window.openAbout",
-        "title": "About",
-        "category": "application",
-        "icon": "far fa-lightbulb",
         "when": ""
       }
     ]
