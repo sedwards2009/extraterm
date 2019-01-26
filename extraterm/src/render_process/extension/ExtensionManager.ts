@@ -23,6 +23,9 @@ import { CommonExtensionWindowState } from './CommonExtensionState';
 import { Mode } from '../viewers/ViewerElementTypes';
 import { TextEditor } from '../viewers/TextEditorType';
 import { TerminalViewer } from '../viewers/TerminalAceViewer';
+import { ViewerElement } from '../viewers/ViewerElement';
+import { EmbeddedViewer } from '../viewers/EmbeddedViewer';
+import { TabWidget } from '../gui/TabWidget';
 
 
 interface ActiveExtension {
@@ -52,6 +55,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _commonExtensionWindowState: CommonExtensionWindowState = {
     activeTerminal: null,
     activeTextEditor: null,
+    activeTabsWidget: null,
+    activeViewerElement: null,
   };
 
   constructor() {
@@ -233,16 +238,17 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
   private _createWhenPredicate(context: CommonExtensionWindowState): (ecc: ExtensionCommandContribution) => boolean {
     const positiveFlags = new Set<WhenTerm>();
-    if (this._commonExtensionWindowState.activeTerminal != null) {
+    const state = this._commonExtensionWindowState;
+    if (state.activeTerminal != null) {
       positiveFlags.add("terminalFocus");
-      if (this._commonExtensionWindowState.activeTerminal.getMode() === Mode.CURSOR) {
+      if (state.activeTerminal.getMode() === Mode.CURSOR) {
         positiveFlags.add("isCursorMode");
       } else {
         positiveFlags.add("isNormalMode");
       }
     }
 
-    if (this._commonExtensionWindowState.activeTextEditor != null) {
+    if (state.activeTextEditor != null) {
       positiveFlags.add("textEditorFocus");
       if (this._commonExtensionWindowState.activeTextEditor.getEditable()) {
         positiveFlags.add("isTextEditing");
@@ -344,24 +350,23 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
   getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState {
     const newState: CommonExtensionWindowState = {
       activeTerminal: null,
-      activeTextEditor: null
+      activeTextEditor: null,
+      activeTabsWidget: null,
+      activeViewerElement: null,
     };
 
     const composedPath = ev.composedPath();
     for (const target of composedPath) {
       if (target instanceof EtTerminal) {
         newState.activeTerminal = target;
-      }
-    }
-
-    if (newState.activeTerminal == null || newState.activeTerminal.getMode() === Mode.CURSOR) {
-      // ^ If a terminal is focussed but in normal mode, then we don't consider it
-      // every having an active text editor. In Cursor mode it is possible.
-
-      for (const target of composedPath) {
-        if (target instanceof TerminalViewer || target instanceof TextViewer) {
-          newState.activeTextEditor = target;
+      } else if (target instanceof TerminalViewer || target instanceof TextViewer) {
+        newState.activeTextEditor = target;
+      } else if (target instanceof ViewerElement) {
+        if (newState.activeViewerElement == null || newState.activeViewerElement instanceof EmbeddedViewer) {
+          newState.activeViewerElement = target;
         }
+      } else if (target instanceof TabWidget) {
+        newState.activeTabsWidget = target;
       }
     }
 

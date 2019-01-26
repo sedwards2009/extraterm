@@ -5,10 +5,14 @@
  */
 import { EtTerminal } from '../Terminal';
 import { TextEditor } from '../viewers/TextEditorType';
+import { TabWidget } from '../gui/TabWidget';
+import { ViewerElement } from '../viewers/ViewerElement';
 
 // This is a way of passing through all of the state which is common across all extension contexts.
 
 export interface CommonExtensionWindowState {
   activeTerminal: EtTerminal;
   activeTextEditor: TextEditor;
+  activeTabsWidget: TabWidget;
+  activeViewerElement: ViewerElement;
 }
